@@ -419,8 +419,10 @@ class WaterlvlData():
         self.lvl = []
         self.name_well = []
         self.well_info = []
-        self.lat = []
-        self.lon = []
+        
+        self.LAT = []
+        self.LON = []
+        self.ALT = []
         
     def load(self, fname):
         reader = open_workbook(fname)
@@ -438,6 +440,7 @@ class WaterlvlData():
         self.name_well = header[0]
         self.lat = header[1]
         self.lon = header[2]
+        self.ALT = header[3]
         
     #----------------------------------------------------------- WELL INFO ----- 
         
