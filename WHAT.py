@@ -141,9 +141,8 @@ class MainWindow(QtGui.QMainWindow):
              
         #------------------------------------------------ LOAD PREFERENCES -----
              
-        self.rainbird_pref = WHATPref(self)
-        self.rainbird_pref.ConsoleSignal.connect(self.write2console)
-        self.rainbird_pref.load_pref_file()
+        self.what_pref = WHATPref(self)
+        self.what_pref.load_pref_file()
         
         #------------------------------------------------------ TAB WIDGET -----
         
@@ -227,7 +226,7 @@ class MainWindow(QtGui.QMainWindow):
             
     #---------------------------------------------------------------- INIT -----
             
-        self.load_project_dir(self.rainbird_pref.project_dir)
+        self.load_project_dir(self.what_pref.project_dir)
         
     #===========================================================================  
     def write2console(self, console_text):
@@ -252,10 +251,9 @@ class MainWindow(QtGui.QMainWindow):
                                    getcwd() + '/Projects')
         
         if dirname:
-            self.rainbird_pref.project_dir = dirname
-            self.rainbird_pref.save_pref_file()
-                          
-            self.load_project_dir(self.rainbird_pref.project_dir)                       
+            self.what_pref.project_dir = dirname
+            self.what_pref.save_pref_file()
+            self.load_project_dir(self.what_pref.project_dir)                       
                                    
     #===========================================================================
     def load_project_dir(self, dirname):
@@ -318,9 +316,9 @@ class TabHydrograph(QtGui.QWidget):
         
         # ----- UI Memory Variables -----
         
-        self.meteo_dir = self.parent.rainbird_pref.project_dir + '/Output'
-        self.waterlvl_dir = self.parent.rainbird_pref.project_dir
-        self.save_fig_dir = self.parent.rainbird_pref.project_dir
+        self.meteo_dir = self.parent.what_pref.project_dir + '/Output'
+        self.waterlvl_dir = self.parent.what_pref.project_dir
+        self.save_fig_dir = self.parent.what_pref.project_dir
         
         # ----- Variables Init -----
         
@@ -739,7 +737,7 @@ class TabHydrograph(QtGui.QWidget):
             
     def select_closest_meteo_file(self):
                 
-        meteo_folder = self.parent.rainbird_pref.project_dir + '/Output'
+        meteo_folder = self.parent.what_pref.project_dir + '/Output'
         
         if path.exists(meteo_folder) and self.fwaterlvl:
             
@@ -1285,7 +1283,7 @@ class TabDwnldData(QtGui.QWidget):
     # file with the method <concatenate_and_display>.        
     #===========================================================================
         
-        project_dir = self.parent.rainbird_pref.project_dir
+        project_dir = self.parent.what_pref.project_dir
         dialog_fir = project_dir + '/Raw'
         
         fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files', 
@@ -1326,7 +1324,7 @@ class TabDwnldData(QtGui.QWidget):
             trantab = maketrans(intab, outtab)
             StaName = StaName.translate(trantab)
             
-            project_dir = self.parent.rainbird_pref.project_dir
+            project_dir = self.parent.what_pref.project_dir
             save_dir = project_dir + '/Input/'
             if not path.exists(save_dir):
                 makedirs(save_dir)
@@ -1354,7 +1352,7 @@ class TabDwnldData(QtGui.QWidget):
             trantab = maketrans(intab, outtab)
             StaName = StaName.translate(trantab)
             
-            project_dir = self.parent.rainbird_pref.project_dir
+            project_dir = self.parent.what_pref.project_dir
             filename = StaName + '_' + YearStart + '-' + YearEnd + '.csv'            
             dialog_dir = project_dir + '/Input/' + filename
                           
@@ -1434,7 +1432,7 @@ class TabDwnldData(QtGui.QWidget):
                 self.btn_get.setIcon(iconDB.stop)
                 
                 # push the raw data directory to the class instance
-                dirname = self.parent.rainbird_pref.project_dir + '/Raw'           
+                dirname = self.parent.what_pref.project_dir + '/Raw'           
                 self.download_raw_datafiles.dirname = dirname
                                                                            
                 self.download_raw_datafiles.start()
@@ -1492,7 +1490,7 @@ class TabDwnldData(QtGui.QWidget):
 
       self.station_list_path, _ = QtGui.QFileDialog.getOpenFileName(
                                 self, 'Select a valid station list', 
-                                self.parent.rainbird_pref.project_dir , '*.lst')        
+                                self.parent.what_pref.project_dir , '*.lst')        
       
       if self.station_list_path:
           self.load_stationList()
@@ -1873,7 +1871,7 @@ class TabFill(QtGui.QWidget):
         self.CORRFLAG = 'off' # Correlation calculation won't be triggered when
                               # this is s'off'
         
-        input_folder = self.parent.rainbird_pref.project_dir + '/Input'
+        input_folder = self.parent.what_pref.project_dir + '/Input'
         
         if path.exists(input_folder):            
             
@@ -1885,8 +1883,7 @@ class TabFill(QtGui.QWidget):
             
             if len(Sta_path) > 0:
                 self.WEATHER.load_and_format_data(Sta_path)
-                self.WEATHER.generate_summary(
-                                          self.parent.rainbird_pref.project_dir)
+                self.WEATHER.generate_summary(self.parent.what_pref.project_dir)
                 self.set_fill_and_save_dates()
                 
                 self.target_station.addItems(self.WEATHER.STANAME)
@@ -2068,7 +2065,7 @@ class TabFill(QtGui.QWidget):
                 self.correlation_UI()
                 
                 # Pass information to the worker.
-                self.fillworker.project_dir = self.parent.rainbird_pref.project_dir
+                self.fillworker.project_dir = self.parent.what_pref.project_dir
                 
                 self.fillworker.time_start = time_start
                 self.fillworker.time_end = time_end                       
@@ -2139,7 +2136,7 @@ class TabFill(QtGui.QWidget):
                 self.btn_fill_all.setEnabled(False)
                 
                 # Pass information to the worker.
-                self.fillworker.project_dir = self.parent.rainbird_pref.project_dir
+                self.fillworker.project_dir = self.parent.what_pref.project_dir
                 
                 self.fillworker.time_start = time_start
                 self.fillworker.time_end = time_end                       
@@ -4080,70 +4077,50 @@ class WHATPref(QtCore.QThread):
     
     def __init__(self, parent=None):
         super(WHATPref, self).__init__(parent)
-
-        self.project_dir = ''  
+        
+        now = datetime.now()
+        now = (now.year, now.month, now.day)
+        
+        self.project_dir = getcwd() + '/Projects/New_%d%d%d' % now
     
     #===========================================================================
     def load_pref_file(self):
     #===========================================================================
         
-        if not path.exists('WHAT.pref'):
-            self.create_new_pref_file()
+        if not path.exists('WHAT.pref'):            
+            # Default values will be kept and a new .pref file will be
+            # generated
             
-        reader = open('WHAT.pref', 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
+            print 'No "WHAT.pref" file found. A new one has been created.'
         
-        self.project_dir = reader[0][1]
+            self.save_pref_file()
         
-        if not path.exists(self.project_dir):
-            self.project_dir = ''    
+        else:
+            
+            reader = open('WHAT.pref', 'rb')
+            reader = csv.reader(reader, delimiter='\t')
+            reader = list(reader)
+            
+            self.project_dir = reader[0][1]
+            
+        if not path.exists( self.project_dir):
+            makedirs( self.project_dir)        
+        if not path.exists( self.project_dir + '/Raw'):
+            makedirs( self.project_dir + '/Raw')
+        if not path.exists( self.project_dir + '/Input'):
+            makedirs( self.project_dir + '/Input')
+        if not path.exists( self.project_dir + '/Output'):
+            makedirs( self.project_dir + '/Output')
     
     #===========================================================================
     def save_pref_file(self):
     #===========================================================================
         
-        if not path.exists('WHAT.pref'):
-            self.create_new_pref_file()
-        
-        reader = open('WHAT.pref', 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        
-        reader[0][1] = self.project_dir
-        
-        with open('WHAT.pref', 'wb') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(reader)
-            
-    #===========================================================================
-    def create_new_pref_file(self):
-    #===========================================================================
-    
-        self.ConsoleSignal.emit(
-            '''<font color=black>No "WHAT.pref" file found. A new
-                 one has been created.
-               </font>''')
-        
-        now = datetime.now()
-        now = (now.year, now.month, now.day)
-        project_dir = getcwd() + '/Projects/New_%d%d%d' % now
-        
-        content = [['Last Project :', project_dir]]
-        
-        if not path.exists(project_dir):
-            makedirs(project_dir)        
-        if not path.exists(project_dir + '/Raw'):
-            makedirs(project_dir + '/Raw')
-        if not path.exists(project_dir + '/Input'):
-            makedirs(project_dir + '/Input')
-        if not path.exists(project_dir + '/Output'):
-            makedirs(project_dir + '/Output')
-               
-        with open('WHAT.pref', 'wb') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(content)
+        fcontent = [['Project Dir:', self.project_dir]]
        
+        with open('WHAT.pref', 'wb') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(fcontent)
        
 ################################################################################
 #                                                                           
