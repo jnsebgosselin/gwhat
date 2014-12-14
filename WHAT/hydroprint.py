@@ -25,7 +25,8 @@ class LabelDatabase():
     def __init__(self, language): #------------------------------- English -----
         
         self.temperature = u'Tmax weekly (°C)'
-        self.water_level = 'Water Level at Well %s (mbgs)'
+        self.mbgs = 'Water Level at Well %s (mbgs)'
+        self.masl = 'Water Level at Well %s (masl)'
         self.precip = 'Ptot weekly (mm)'
         self.station_meteo = 'Climatological Station = %s (located %s km from the well)'
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
@@ -134,10 +135,24 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
         water_lvl = WaterLvlObj.ALT - WaterLvlObj.lvl
     else:
         water_lvl = WaterLvlObj.lvl
+        
+    if GraphParamObj.WLref == 0: # Y axis is inverted
     
-    WLmax = GraphParamObj.WLmax
-    WLscale = GraphParamObj.WLscale    
-    WLmin = WLmax - NZGrid * WLscale
+        WLmax = GraphParamObj.WLmin
+        WLscale = GraphParamObj.WLscale    
+        WLmin = WLmax - NZGrid * WLscale
+        
+        yticks_position = np.arange(
+                            WLmax, WLmax - (NZGrid - 8) * WLscale, -WLscale * 2)
+                            
+    if GraphParamObj.WLref == 1:
+        
+        WLmin = GraphParamObj.WLmin
+        WLscale = GraphParamObj.WLscale
+        WLmax = WLmin + NZGrid * WLscale
+        
+        yticks_position = np.arange(
+                            WLmin, WLmin + (NZGrid - 8) * WLscale, WLscale * 2)
     
     ax2.axis([TIMEmin, TIMEmax, WLmin, WLmax])
     
@@ -145,8 +160,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     ax2.xaxis.set_ticklabels([])
     ax2.tick_params(axis='x', length=0, direction='out')
     
-    yticks_position = np.arange(
-                            WLmax, WLmax - (NZGrid - 8) * WLscale, -WLscale * 2)
+    
 
     ax2.set_yticks(yticks_position)
     ax2.yaxis.set_ticks_position('left')
@@ -346,8 +360,13 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
         i += 1
             
     #------------------------------------------------------------- ylabels -----
+    
+    if GraphParamObj.WLref == 0:       
+        lab_ax2 = labelDB.mbgs % name_well
+    elif GraphParamObj.WLref == 1:
+        lab_ax2 = labelDB.masl % name_well
         
-    ax2.set_ylabel(labelDB.water_level % name_well,rotation=90,
+    ax2.set_ylabel(lab_ax2,rotation=90,
                    fontsize=label_font_size, verticalalignment='top',
                    horizontalalignment='center')
                    
@@ -426,7 +445,7 @@ class GraphParameters():
 
         self.fmeteo = []
         self.finfo = []      
-        self.WLmax = 0
+        self.WLmin = 0
         self.WLscale = 0
         self.TIMEmin = 36526
         self.TIMEmax = 36526
@@ -489,7 +508,7 @@ class GraphParameters():
 
         print 'No "graph_layout.lst" file found. A new one has been created.'
 
-        header = [['Name Well', 'Station Meteo', 'Waterlvl Max',
+        header = [['Name Well', 'Station Meteo', 'Min. Waterlvl',
                    'Waterlvl Scale', 'Date Start', 'Date End',
                    'Fig. Title State', 'Fig. Title Text']]
 
@@ -514,7 +533,7 @@ class GraphParameters():
         self.fmeteo = reader[1]
         self.finfo = self.fmeteo[:-3] + 'log'
                           
-        self.WLmax = reader[2].astype(float)
+        self.WLmin = reader[2].astype(float)
         self.WLscale = reader[3].astype(float)
             
         self.TIMEmin = reader[4].astype(float)
@@ -535,7 +554,7 @@ class GraphParameters():
          
         rowx = np.where(reader[:,0] == name_well)[0]
         
-        new = [name_well, self.fmeteo, self.WLmax, self.WLscale, 
+        new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
                self.TIMEmin, self.TIMEmax,self.title_state, self.title_text]
                
         if len(rowx) == 0:
@@ -549,16 +568,30 @@ class GraphParameters():
             writer.writerows(reader)
             
     def best_fit_waterlvl(self, WL):
-        
-        WL = WL[~np.isnan(WL)]
 
+        WL = WL[~np.isnan(WL)]
         dWL = np.max(WL) - np.min(WL)
         ygrid = self.ygrid_divnumber - 10
-            
-        self.WLscale = round(dWL / ygrid * 100) / 100.
-        self.WLmax = np.floor(np.max(WL) * 100) / 100 + self.WLscale
         
-        return self.WLscale, self.WLmax
+        #----- WL Scale -----
+        
+        SCALE = np.hstack((np.arange(0.05, 0.30, 0.05), 
+                           np.arange(0.3, 5.1, 0.1)))
+        dSCALE = np.abs(SCALE - dWL / ygrid)
+        indx = np.where(dSCALE == np.min(dSCALE))[0][0]
+        
+        self.WLscale = SCALE[indx]
+        
+        #-----WL Min Value-----
+        
+        if self.WLref == 0:
+            N = np.ceil(np.max(WL) / self.WLscale)
+        elif self.WLref == 1:
+            N = np.floor(np.min(WL) / self.WLscale)
+        
+        self.WLmin = self.WLscale * N
+        
+        return self.WLscale, self.WLmin
     
     def best_fit_time(self, TIME):
         
@@ -755,9 +788,9 @@ def LatLong2Dist(LAT1, LON1, LAT2, LON2):
     ---- OUTPUT ----
     DIST = horizontal distance between the two points in km
 
-     ---- SOURCE ----
-     www.stackoverflow.com/questions/19412462 (last accessed on 17/01/2014)
-     """
+    ---- SOURCE ----
+    www.stackoverflow.com/questions/19412462 (last accessed on 17/01/2014)
+    """
 #===============================================================================    
   
     R = 6373.0 # R = Earth radius in km
@@ -794,7 +827,12 @@ if __name__ == '__main__':
     meteoObj.load(fmeteo)
     
     graphParamObj = GraphParameters()
-    _, _ = graphParamObj.best_fit_waterlvl(waterLvlObj.lvl)
+    if graphParamObj.WLref == 0:
+        WL = waterLvlObj.lvl
+    elif graphParamObj.WLref == 1:
+        WL = waterLvlObj.ALT - waterLvlObj.lvl
+    
+    _, _ = graphParamObj.best_fit_waterlvl(WL)
     _, _ = graphParamObj.best_fit_time(waterLvlObj.time)
     graphParamObj.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
     
