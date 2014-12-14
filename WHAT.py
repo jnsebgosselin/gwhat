@@ -819,7 +819,7 @@ class TabHydrograph(QtGui.QWidget):
             self.graph_params.TIMEmax = date
             
             self.graph_params.WLscale = self.waterlvl_scale.value()
-            self.graph_params.WLmax = self.waterlvl_max.value()
+            self.graph_params.WLmin = self.waterlvl_max.value()
             
             if self.graph_status.isChecked():
                 self.graph_params.title_state = 1
@@ -891,7 +891,7 @@ class TabHydrograph(QtGui.QWidget):
                 self.date_end_widget.setDate(QDate(date[0], date[1], date[2]))
                                             
                 self.waterlvl_scale.setValue(self.graph_params.WLscale)
-                self.waterlvl_max.setValue(self.graph_params.WLmax)
+                self.waterlvl_max.setValue(self.graph_params.WLmin)
                  
                 if self.graph_params.title_state == 1:
                     self.graph_status.setCheckState(QtCore.Qt.Checked)
@@ -950,10 +950,10 @@ class TabHydrograph(QtGui.QWidget):
         if len(self.waterlvl_data.lvl)!=0:
             
             WL = self.waterlvl_data.lvl
-            WLscale, WLmax = self.graph_params.best_fit_waterlvl(WL)
+            WLscale, WLmin = self.graph_params.best_fit_waterlvl(WL)
             
             self.waterlvl_scale.setValue(WLscale)
-            self.waterlvl_max.setValue(WLmax)
+            self.waterlvl_max.setValue(WLmin)
             
     def best_fit_time(self):
             

@@ -354,10 +354,17 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD):
     #----- Precip (host) -----
     
     ax0.yaxis.set_ticks_position('left')
-    yticks0_position = np.arange(Ymin0, Ymax0 - (Ymax0 - Ymin0) * 0.1,
-                                 Yscale0)
-    ax0.set_yticks(yticks0_position)
+    
+    yticks = np.arange(Ymin0, Ymax0 - (Ymax0 - Ymin0) * 0.1, Yscale0)
+    ax0.set_yticks(yticks)
     ax0.tick_params(axis='y', direction='out', labelcolor='blue', gridOn=True)
+    
+    yticks_minor = np.arange(yticks[0], yticks[-1], 5)
+    ax0.set_yticks(yticks_minor, minor=True)
+    ax0.tick_params(axis='y', which='minor', direction='out', gridOn=True)
+    ax0.yaxis.set_ticklabels([], minor=True)
+    
+    ax0.set_axisbelow(True)
     
     #----- Air Temp -----
     
@@ -365,7 +372,7 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD):
                                  Yscale1)    
     ax1.yaxis.set_ticks_position('right')
     ax1.set_yticks(yticks1_position)
-    ax1.tick_params(axis='y', direction='out', labelcolor='red', gridOn=True)
+    ax1.tick_params(axis='y', direction='out', labelcolor='red', gridOn=False)
     
     #------------------------------------------------------ SET AXIS RANGE ----- 
 
