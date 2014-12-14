@@ -742,22 +742,22 @@ def filt_data(time, waterlvl, period):
 
 #===============================================================================
 def LatLong2Dist(LAT1, LON1, LAT2, LON2):
-#
-# Computes the horizontal distance in km between 2 points from geographic 
-# coordinates given in decimal degrees.
-# 
-# ---- INPUT ----
-# LAT1 = latitute coordinate of first point
-# LON1 = longitude coordinate of first point
-# LAT2 = latitude coordinate of second point
-# LON2 = longitude coordinate of second point
-#
-# ---- OUTPUT ----
-# DIST = horizontal distance between the two points in km
-#
-# ---- SOURCE ----
-# www.stackoverflow.com/questions/19412462 (last accessed on 17/01/2014)
-# 
+    """
+    Computes the horizontal distance in km between 2 points from geographic 
+    coordinates given in decimal degrees.
+ 
+    ---- INPUT ----
+    LAT1 = latitute coordinate of first point
+    LON1 = longitude coordinate of first point
+    LAT2 = latitude coordinate of second point
+    LON2 = longitude coordinate of second point
+    
+    ---- OUTPUT ----
+    DIST = horizontal distance between the two points in km
+
+     ---- SOURCE ----
+     www.stackoverflow.com/questions/19412462 (last accessed on 17/01/2014)
+     """
 #===============================================================================    
   
     R = 6373.0 # R = Earth radius in km

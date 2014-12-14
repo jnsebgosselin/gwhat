@@ -36,13 +36,13 @@ from meteo import calculate_normals
 
 #===============================================================================
 def calculate_ETP(fmeteo):
-#===============================================================================
     """
     Daily potential evapotranspiration (mm) is calculated with a method adapted
     from Thornwaite (1948).
     
     Requires at least a year of data.            
     """
+#===============================================================================
     
     METEO = MeteoObj()
     METEO.load(fmeteo)
@@ -118,9 +118,7 @@ def calculate_daylength(TIME, LAT):
 if __name__ == '__main__':
     
     import matplotlib.pyplot as plt
-    
-    help(calculate_ETP)
-       
+      
     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
     
