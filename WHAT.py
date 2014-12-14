@@ -36,6 +36,8 @@ from datetime import datetime
 #----- THIRD PARTY IMPORTS -----
 
 from PySide import QtGui, QtCore
+from PySide.QtCore import QDate
+
 import numpy as np
 from numpy.linalg import lstsq as linalg_lstsq
 from xlrd.xldate import xldate_from_date_tuple
@@ -738,8 +740,8 @@ class TabHydrograph(QtGui.QWidget):
         
         if path.exists(meteo_folder) and self.fwaterlvl:
             
-            LAT1 = self.waterlvl_data.lat
-            LON1 = self.waterlvl_data.lon
+            LAT1 = self.waterlvl_data.LAT
+            LON1 = self.waterlvl_data.LON
             
             # Generate a list of data file paths.            
             fmeteo_paths = []
@@ -882,13 +884,11 @@ class TabHydrograph(QtGui.QWidget):
                          
                 date = self.graph_params.TIMEmin
                 date = xldate_as_tuple(date, 0)
-                self.date_start_widget.setDate(
-                                        QtCore.QDate(date[0], date[1], date[2]))
+                self.date_start_widget.setDate(QDate(date[0], date[1], date[2]))
                 
                 date = self.graph_params.TIMEmax
                 date = xldate_as_tuple(date, 0)
-                self.date_end_widget.setDate(
-                                        QtCore.QDate(date[0], date[1], date[2]))
+                self.date_end_widget.setDate(QDate(date[0], date[1], date[2]))
                                             
                 self.waterlvl_scale.setValue(self.graph_params.WLscale)
                 self.waterlvl_max.setValue(self.graph_params.WLmax)
@@ -950,13 +950,7 @@ class TabHydrograph(QtGui.QWidget):
         if len(self.waterlvl_data.lvl)!=0:
             
             WL = self.waterlvl_data.lvl
-            WL = WL[~np.isnan(WL)]
-
-            dWL = np.max(WL) - np.min(WL)
-            ygrid = self.graph_params.ygrid_divnumber - 10
-            
-            WLscale = round(dWL / ygrid * 100) / 100.
-            WLmax = np.floor(np.max(WL) * 100) / 100 + WLscale
+            WLscale, WLmax = self.graph_params.best_fit_waterlvl(WL)
             
             self.waterlvl_scale.setValue(WLscale)
             self.waterlvl_max.setValue(WLmax)
@@ -965,26 +959,11 @@ class TabHydrograph(QtGui.QWidget):
             
         if len(self.waterlvl_data.time)!=0:
             
-            date = self.waterlvl_data.time[0]
-            date = xldate_as_tuple(date, 0)
+            TIME = self.waterlvl_data.time 
+            date0, date1 = self.graph_params.best_fit_time(TIME)
             
-            year = date[0]
-            month = date[1]
-            day = 1
-            
-            self.date_start_widget.setDate(QtCore.QDate(year, month, day))                                                        
-            
-            date = self.waterlvl_data.time[-1]
-            date = xldate_as_tuple(date, 0)
-            
-            year = date[0]
-            month = date[1] + 1
-            if month > 12:
-                month = 1
-                year += 1
-            day = 1
-            
-            self.date_end_widget.setDate(QtCore.QDate(year, month, day))
+            self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))                                                        
+            self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
             
     def select_save_path(self):
        
@@ -1006,10 +985,10 @@ class TabHydrograph(QtGui.QWidget):
             
     def save_figure(self, fname):
         
-        hydroprint.generate_figure(self.hydrograph2save,
-                                   self.waterlvl_data,
-                                   self.meteo_data,
-                                   self.graph_params)
+        hydroprint.generate_hydrograph(self.hydrograph2save,
+                                       self.waterlvl_data,
+                                       self.meteo_data,
+                                       self.graph_params)
                                        
         self.hydrograph2save.savefig(fname)
     
@@ -1024,10 +1003,10 @@ class TabHydrograph(QtGui.QWidget):
             
             self.update_graph_layout_parameter()
             
-            hydroprint.generate_figure(self.hydrograph2display,
-                                       self.waterlvl_data,
-                                       self.meteo_data,
-                                       self.graph_params)
+            hydroprint.generate_hydrograph(self.hydrograph2display,
+                                           self.waterlvl_data,
+                                           self.meteo_data,
+                                           self.graph_params)
                                        
             self.hydrograph_widget.draw()    
           
@@ -1925,8 +1904,8 @@ class TabFill(QtGui.QWidget):
             
             DATE = self.WEATHER.DATE
             
-            DateMin = QtCore.QDate(DATE[0, 0], DATE[0, 1], DATE[0, 2])
-            DateMax = QtCore.QDate(DATE[-1, 0], DATE[-1, 1], DATE[-1, 2])
+            DateMin = QDate(DATE[0, 0], DATE[0, 1], DATE[0, 2])
+            DateMax = QDate(DATE[-1, 0], DATE[-1, 1], DATE[-1, 2])
             
             self.date_start_widget.setDate(DateMin)
             self.date_start_widget.setMinimumDate(DateMin)

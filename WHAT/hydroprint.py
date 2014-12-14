@@ -41,12 +41,14 @@ class LabelDatabase():
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 
 #===============================================================================        
-def generate_figure(fig, WaterLvlObj, MeteoObj, GraphParamObj):
+def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
 # This method generate the figure with the paramters that are entered in
 # the UI.
 #===============================================================================
                     
     fig.clf()
+    
+    fig.patch.set_facecolor('white')
     
     fheight = fig.get_figheight()
     fwidth = fig.get_figwidth()
@@ -545,8 +547,44 @@ class GraphParameters():
         with open('graph_layout.lst', 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(reader)
+            
+    def best_fit_waterlvl(self, WL):
+        
+        WL = WL[~np.isnan(WL)]
 
-
+        dWL = np.max(WL) - np.min(WL)
+        ygrid = self.ygrid_divnumber - 10
+            
+        self.WLscale = round(dWL / ygrid * 100) / 100.
+        self.WLmax = np.floor(np.max(WL) * 100) / 100 + self.WLscale
+        
+        return self.WLscale, self.WLmax
+    
+    def best_fit_time(self, TIME):
+        
+        # ----- Data Start -----
+        
+        date0 = xldate_as_tuple(TIME[0], 0)
+        date0 = (date0[0], date0[1], 1)
+        
+        self.TIMEmin = xldate_from_date_tuple(date0, 0)
+        
+        # ----- Date End -----
+        
+        date1 = xldate_as_tuple(TIME[-1], 0)
+        
+        year =  date1[0]
+        month = date1[1] + 1
+        if month > 12:
+            month = 1
+            year += 1
+        
+        date1 = (year, month, 1)
+        
+        self.TIMEmax = xldate_from_date_tuple(date1, 0)
+        
+        return date0, date1
+        
 #===============================================================================             
 class WaterlvlData():
 #===============================================================================
@@ -741,4 +779,25 @@ def LatLong2Dist(LAT1, LON1, LAT2, LON2):
     return DIST
     
 if __name__ == '__main__':
-    pass
+    
+    from meteo import MeteoObj
+    
+    plt.close('all')
+    
+    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
+    fwaterlvl = 'Files4testing/PO16A.xls'
+    
+    waterLvlObj = WaterlvlData()
+    waterLvlObj.load(fwaterlvl)
+    
+    meteoObj = MeteoObj()
+    meteoObj.load(fmeteo)
+    
+    graphParamObj = GraphParameters()
+    _, _ = graphParamObj.best_fit_waterlvl(waterLvlObj.lvl)
+    _, _ = graphParamObj.best_fit_time(waterLvlObj.time)
+    graphParamObj.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+    
+    fig = plt.figure(figsize=(11, 8.5))
+    fig.set_size_inches(11, 8.5)
+    generate_hydrograph(fig, waterLvlObj, meteoObj, graphParamObj)

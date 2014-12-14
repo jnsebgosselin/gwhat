@@ -496,13 +496,12 @@ if __name__ == '__main__':
     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     TNORM, PNORM, RNORM, TSTD = calculate_normals(fmeteo)
     
-    fig = plt.figure()        
-    fig.set_size_inches(8.5, 5)
+    fig = plt.figure(figsize=(8.5, 5))        
+#    fig.set_size_inches(8.5, 5)
     plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD)
     
     fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
     TNORM, PNORM, RNORM, TSTD = calculate_normals(fmeteo)
     
-    fig = plt.figure()        
-    fig.set_size_inches(8.5, 5)
+    fig = plt.figure(figsize=(8.5, 5))        
     plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD)
