@@ -324,7 +324,7 @@ class TabHydrograph(QtGui.QWidget):
         
         self.UpdateUI = True
         self.fwaterlvl = []
-        self.graph_params = GraphParameters(self)
+        self.graph_params = hydroprint.GraphParameters(self)
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
@@ -634,9 +634,6 @@ class TabHydrograph(QtGui.QWidget):
         btn_waterlvl_dir.clicked.connect(self.select_waterlvl_file)
         btn_weather_dir.clicked.connect(self.select_meteo_file)
         self.graph_status.stateChanged.connect(self.enable_graph_title)
-                
-        self.graph_params.ConsoleSignal.connect(self.parent.write2console) 
-        self.graph_params.ErrorSignal.connect(self.emit_error_message)
     
     def initUI_weather_normals(self):
         
@@ -713,9 +710,9 @@ class TabHydrograph(QtGui.QWidget):
     
     def check_if_config_exist(self, name_well):
         
-        ConfigExist  = self.graph_params.checkConfig(name_well)
+        layoutExist  = self.graph_params.checkConfig(name_well)
                         
-        if ConfigExist == True:
+        if layoutExist == True:
             self.parent.write2console(
             '''<font color=black>A graph layout exists for well %s.
                </font>''' % name_well)
@@ -731,7 +728,7 @@ class TabHydrograph(QtGui.QWidget):
             elif override == self.msgBox.No:
                 self.select_closest_meteo_file()
                 
-        elif ConfigExist == False:            
+        elif layoutExist == False:            
             self.select_closest_meteo_file()
         
             
@@ -792,13 +789,13 @@ class TabHydrograph(QtGui.QWidget):
         '''<font color=black>Weather data set loaded successfully for
              station %s.</font>''' % self.meteo_data.station_name)
           
-        self.display_meteo_info()        
-            
-    def display_meteo_info(self):
-        self.display_weather_info.setText(self.meteo_data.info)
+        self.display_meteo_info(self.meteo_data.info )        
+           
+    def display_meteo_info(self, content):
+        self.display_weather_info.setText(content)
     
     #===========================================================================
-    def update_graph_config_parameter(self):
+    def update_graph_layout_parameter(self):
     # This method is called either by the methods 
     # <save_graph_layout> or by <draw_hydrograph>. It takes the parameters
     # that are currently displayer in the UI and save them in the 
@@ -844,9 +841,10 @@ class TabHydrograph(QtGui.QWidget):
             
         else:
             name_well = self.waterlvl_data.name_well
-            ConfigExist  = self.graph_params.checkConfig(name_well)
+            layoutExist  = self.graph_params.checkConfig(name_well)
                         
-            if ConfigExist == False:
+            if layoutExist == False:
+                
                 self.parent.write2console(
                 '''<font color=red>No graph layout exists for well %s.
                    </font>''' % name_well)
@@ -854,13 +852,34 @@ class TabHydrograph(QtGui.QWidget):
                 self.emit_error_message('''<b>No graph layout exists 
                                              for well %s.</b>''' % name_well)
             
-            else:
-                # Load graph layout for this well
+            else: # Load graph layout for this well
+                
                 self.graph_params.load(name_well)
                 
-                # Update UI 
-                self.UpdateUI = False     
+            #--------------------------------------------------- Update UI -----
                 
+                self.UpdateUI = False
+                
+                #----- Check if Weather Data File exists -----
+                
+                if path.exists(self.graph_params.fmeteo):
+                    self.meteo_data.load(self.graph_params.fmeteo)
+                    self.display_meteo_info(self.meteo_data.info )
+                    self.parent.write2console(
+                    '''<font color=black>Graph layout loaded successfully for 
+                       well %s.</font>''' % name_well)
+                else:
+                    self.display_meteo_info('')
+                    self.parent.write2console(
+                    '''<font color=red>Unable to read the weather data file. %s
+                       does not exist.</font>''' % self.graph_params.fmeteo)
+                    self.emit_error_message(
+                    '''<b>Unable to read the weather data file.<br><br>
+                       %s does not exist.<br><br> Please select another weather
+                       data file.<b>''' % self.graph_params.fmeteo)
+                    self.graph_params.fmeteo = []
+                    self.graph_params.finfo = []
+                         
                 date = self.graph_params.TIMEmin
                 date = xldate_as_tuple(date, 0)
                 self.date_start_widget.setDate(
@@ -873,12 +892,6 @@ class TabHydrograph(QtGui.QWidget):
                                             
                 self.waterlvl_scale.setValue(self.graph_params.WLscale)
                 self.waterlvl_max.setValue(self.graph_params.WLmax)
-                
-                if self.graph_params.fmeteo:                      
-                    self.meteo_data.load(self.graph_params.fmeteo)
-                    self.display_meteo_info()
-                else:
-                    self.display_weather_info.setText('')
                  
                 if self.graph_params.title_state == 1:
                     self.graph_status.setCheckState(QtCore.Qt.Checked)
@@ -905,9 +918,9 @@ class TabHydrograph(QtGui.QWidget):
         else:
             name_well = self.waterlvl_data.name_well
             
-            ConfigExist = self.graph_params.checkConfig(name_well)
+            layoutExist = self.graph_params.checkConfig(name_well)
 
-            if ConfigExist == True:
+            if layoutExist == True:
                 self.msgBox.setText('<b>A graph layout already exists ' +
                                     'for well ' + name_well + '.<br><br> Do ' +
                                      'you want to replace it?</b>')
@@ -926,7 +939,7 @@ class TabHydrograph(QtGui.QWidget):
               
     def save_graph_layout(self, name_well):
         
-        self.update_graph_config_parameter()
+        self.update_graph_layout_parameter()
         self.graph_params.save(name_well)
         self.parent.write2console(
         '''<font color=black>Graph layout saved successfully
@@ -935,6 +948,7 @@ class TabHydrograph(QtGui.QWidget):
     def best_fit_waterlvl(self):
         
         if len(self.waterlvl_data.lvl)!=0:
+            
             WL = self.waterlvl_data.lvl
             WL = WL[~np.isnan(WL)]
 
@@ -1000,7 +1014,7 @@ class TabHydrograph(QtGui.QWidget):
             self.parent.write2console(console_text)
         elif self.fwaterlvl and self.graph_params.fmeteo:
             
-            self.update_graph_config_parameter()
+            self.update_graph_layout_parameter()
 
             hydroprint.generate_figure(self.hydrograph2save,
                                        self.waterlvl_data,
@@ -2268,166 +2282,6 @@ class TabAbout(QtGui.QWidget):
                         software_version, last_modification)
         
         AboutTextBox.setText(about_text)
-
-################################################################################
-#                                                                           
-#                      @SECTION WORKER HYDROGRAPH                              
-#                                                                          
-################################################################################            
-
-#===============================================================================
-class GraphParameters(QtCore.QThread):
-# This class contains the saved graph layout for a well. It also
-# contains methods to load and save a new graph layout from the
-# config file <graph_layout.lst>.
-#===============================================================================
-   
-    ConsoleSignal = QtCore.Signal(str)
-    ErrorSignal = QtCore.Signal(str)
-    
-    def __init__(self, parent=None):
-        super(GraphParameters, self).__init__(parent)
-
-        self.fmeteo = []
-        self.finfo = []      
-        self.WLmax = 0
-        self.WLscale = 0
-        self.TIMEmin = 36526
-        self.TIMEmax = 36526
-        self.ygrid_divnumber = 20#17 #26
-        
-        self.title_state = 0
-        self.title_text = 'Add A Title To The Figure Here'
-        self.language = 'English'
-        
-    def checkConfig(self, name_well): # old var. names: check, isConfigExist
-        
-        # Check first if a layout file is present in the folder.
-        # If not, initiate the creation of a new one.
-        if not path.exists('graph_layout.lst'):
-            self.create_new_config_file()
-                
-        reader = open('graph_layout.lst', 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
-       
-        # Check if config file is from an old version of Hydroprint
-        # and if yes, convert it to the new version.
-        nCONFG, nPARA = np.shape(reader)
-
-        if nPARA == 6:
-            col2add = np.zeros((nCONFG, 2)).astype(int)
-            col2add = col2add.astype(str)
-            
-            reader = np.hstack((reader, col2add))
-            reader[0, 6] = 'Title Exists'
-            reader[0, 7] = 'Title Text'
-            reader[1:, 7] = 'Add A Title To The Figure Here'
-            
-            with open('graph_layout.lst', 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
-                
-            self.ConsoleSignal.emit(
-            '''<font color=black> The "graph_layout.lst" file is from and
-                 older version of Hydroprint. The old file has been converted to
-                 the newer version.
-               </font>''') 
-        
-        # Check if there is a layout stored for the current 
-        # selected observation well.
-        row = np.where(reader[:,0] == name_well)[0]
-           
-        if len(row) > 0:
-            ConfigExist = True
-        else:
-            ConfigExist = False
-           
-        return ConfigExist
-        
-    def create_new_config_file(self):
-
-        self.ConsoleSignal.emit(
-            '''<font color=black>No "graph_layout.lst" file found. A new
-                 one has been created.
-               </font>''')
-
-        header = [['Name Well', 'Station Meteo', 'Waterlvl Max',
-                  'Waterlvl Scale', 'Date Start', 'Date End',
-                  'Fig. Title State', 'Fig. Title Text']]
-
-        with open('graph_layout.lst', 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(header)
-        
-    def load(self, name_well):
-        # A <checkConfig> is supposed to have been carried before this method
-        # is called. So it can be supposed at this point that everything is
-        # fine with the graph layout for this well.
-            
-        reader = open('graph_layout.lst', 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
-     
-        row = np.where(reader[:,0] == name_well)[0]
-        
-        reader = reader[row][0]
-
-        # check if the weather data file exists
-        if not path.exists(reader[1]):
-            self.ConsoleSignal.emit(
-            '''<font color=red>Unable to read the weather data file. %s does not
-                 exist.</font>''' % reader[1])
-                 
-            self.ErrorSignal.emit(
-            '''<b>Unable to read the weather data file.
-                 <br><br>%s does not exist.<br><br>
-                 Please select another weather data file.<b>''' % reader[1])
-            self.fmeteo = []
-            
-        else:
-            self.fmeteo = reader[1]
-            self.finfo = self.fmeteo[:-3] + 'log'
-            
-            self.ConsoleSignal.emit(
-            '''<font color=black>Graph layout loaded successfully for 
-                 well %s.</font>''' % name_well)
-                          
-        self.WLmax = reader[2].astype(float)
-        self.WLscale = reader[3].astype(float)
-            
-        self.TIMEmin = reader[4].astype(float)
-        self.TIMEmax = reader[5].astype(float)
-        
-        self.title_state = reader[6].astype(float)
-        if self.title_state != 0:
-            self.title_state = 1
-        
-        self.title_text = reader[7].astype(str)
-        
-    def save(self, name_well):
-            
-        reader = open('graph_layout.lst', 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
-         
-        rowx = np.where(reader[:,0] == name_well)[0]
-        
-        new = [name_well, self.fmeteo, self.WLmax, self.WLscale, 
-               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text]
-               
-        if len(rowx) == 0:
-            reader = np.vstack((reader, new))
-        else:
-            reader = np.delete(reader, rowx, 0)
-            reader = np.vstack((reader, new))
-            
-        with open('graph_layout.lst', 'wb') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(reader)
 
        
 ################################################################################
@@ -4070,17 +3924,12 @@ class LabelDataBase(): # Default language is English.
                 self.TAB4 = u'À propos'
 
     
-class WHATPref(QtCore.QThread):
-    
-    ConsoleSignal = QtCore.Signal(str)
-    ErrorSignal = QtCore.Signal(str)
+class WHATPref():
     
     def __init__(self, parent=None):
-        super(WHATPref, self).__init__(parent)
         
         now = datetime.now()
         now = (now.year, now.month, now.day)
-        
         self.project_dir = getcwd() + '/Projects/New_%d%d%d' % now
     
     #===========================================================================

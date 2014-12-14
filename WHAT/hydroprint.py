@@ -66,8 +66,8 @@ def generate_figure(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     
     date_labels_display_pattern = 2
     NZGrid = GraphParamObj.ygrid_divnumber            
-    RAInscale = 20
-    filt = False
+    RAINscale = 20
+    
     LEGEND = False
     
     # Font size is multiplied by a ratio in order to keep the preview
@@ -126,8 +126,12 @@ def generate_figure(fig, WaterLvlObj, MeteoObj, GraphParamObj):
                      
     #========================================================= WATER LEVEL =====
         
-    time = WaterLvlObj.time            
-    water_lvl = WaterLvlObj.lvl
+    time = WaterLvlObj.time   
+    
+    if GraphParamObj.WLref == 1:        
+        water_lvl = WaterLvlObj.ALT - WaterLvlObj.lvl
+    else:
+        water_lvl = WaterLvlObj.lvl
     
     WLmax = GraphParamObj.WLmax
     WLscale = GraphParamObj.WLscale    
@@ -145,11 +149,12 @@ def generate_figure(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     ax2.set_yticks(yticks_position)
     ax2.yaxis.set_ticks_position('left')
     ax2.tick_params(axis='y', direction='out', labelsize=10)            
-    ax2.invert_yaxis()
+    if GraphParamObj.WLref == 0:
+        ax2.invert_yaxis()
     
     #------------------------------------------------------------ PLOTTING -----
 
-    if filt == True:
+    if GraphParamObj.trend_line == 1:
         tfilt, wlfilt = filt_data(time, water_lvl, 24*2)
     
         ax2.plot(tfilt, wlfilt, '-', zorder = 10, linewidth=1,
@@ -206,12 +211,12 @@ def generate_figure(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     Rain = Rain[istart:iend]
     
     RAINmin = 0
-    RAINmax = RAINmin + RAInscale * 6
+    RAINmax = RAINmin + RAINscale * 6
     
     ax3.axis([TIMEmin, TIMEmax, 
-              RAINmin - (RAInscale*4), 
-              RAINmin - (RAInscale*4) + NZGrid*RAInscale])    
-    yticks_position = np.arange(0, RAINmax + RAInscale, RAInscale)
+              RAINmin - (RAINscale*4), 
+              RAINmin - (RAINscale*4) + NZGrid*RAINscale])    
+    yticks_position = np.arange(0, RAINmax + RAINscale, RAINscale)
     
     ax3.set_xticks(xticks_position)
     ax3.xaxis.set_ticklabels([])
@@ -243,20 +248,20 @@ def generate_figure(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     
         line_missing_Ptot = ax3.plot(
             Ptot_missing_time, 
-            np.ones(len(Ptot_missing_time)) * -5 * RAInscale / 20., '.')
+            np.ones(len(Ptot_missing_time)) * -5 * RAINscale / 20., '.')
         plt.setp(line_missing_Ptot, markerfacecolor=(1, 0.25, 0.25),
                  markeredgecolor='none', markersize=5)
     
     # Calculate horizontal distance between weather station and
     # observation well.
-    LAT1 = float(WaterLvlObj.lat)
-    LON1 = float(WaterLvlObj.lon)
+    LAT1 = float(WaterLvlObj.LAT)
+    LON1 = float(WaterLvlObj.LON)
     LAT2 = float(MeteoObj.LAT)
     LON2 = float(MeteoObj.LON)
         
     dist = round(LatLong2Dist(LAT1, LON1, LAT2, LON2), 1)
      
-    text_top_margin_yposition = RAINmin - (RAInscale*4) - 1.5 * RAInscale / 20.  
+    text_top_margin_yposition = RAINmin - (RAINscale*4) - 1.5 * RAINscale / 20.  
     text_top_margin = labelDB.station_meteo % (name_meteo,
                                                        str(dist))
         
@@ -408,6 +413,139 @@ def generate_xticks_informations(TIMEmin, TIMEmax, n, datemode, month_names):
         
     return xticks_position, xticks_labels_position, xticks_labels
 
+#===============================================================================
+class GraphParameters():
+# This class contains the saved graph layout for a well. It also
+# contains methods to load and save a new graph layout from the
+# config file <graph_layout.lst>.
+#===============================================================================
+      
+    def __init__(self, parent=None):
+
+        self.fmeteo = []
+        self.finfo = []      
+        self.WLmax = 0
+        self.WLscale = 0
+        self.TIMEmin = 36526
+        self.TIMEmax = 36526
+        self.ygrid_divnumber = 20#17 #26
+        
+        self.title_state = 0
+        self.title_text = 'Add A Title To The Figure Here'
+        self.language = 'English'
+        
+        self.WLref = 0 # 0 -> mbgs 1 -> masl
+        self.trend_line = 1
+        
+    def checkConfig(self, name_well): # old var. names: check, isConfigExist
+        
+        # Check first if a layout file is present in the folder.
+        # If not, initiate the creation of a new one.
+        if not path.exists('graph_layout.lst'):
+            self.create_new_config_file()
+                
+        reader = open('graph_layout.lst', 'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+        reader = np.array(reader)
+       
+        # Check if config file is from an old version of Hydroprint
+        # and if yes, convert it to the new version.
+        nCONFG, nPARA = np.shape(reader)
+
+        if nPARA == 6:
+            col2add = np.zeros((nCONFG, 2)).astype(int)
+            col2add = col2add.astype(str)
+            
+            reader = np.hstack((reader, col2add))
+            reader[0, 6] = 'Title Exists'
+            reader[0, 7] = 'Title Text'
+            reader[1:, 7] = 'Add A Title To The Figure Here'
+            
+            with open('graph_layout.lst', 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(reader)
+             
+            msg = '''
+                  The "graph_layout.lst" file is from an older version of WHAT.
+                  The old file has been converted to the newer version.
+                  ''' 
+            print msg
+        
+        # Check if there is a layout stored for the current 
+        # selected observation well.
+        row = np.where(reader[:,0] == name_well)[0]
+           
+        if len(row) > 0:
+            layoutExist = True
+        else:
+            layoutExist = False
+           
+        return layoutExist
+        
+    def create_new_config_file(self):
+
+        print 'No "graph_layout.lst" file found. A new one has been created.'
+
+        header = [['Name Well', 'Station Meteo', 'Waterlvl Max',
+                   'Waterlvl Scale', 'Date Start', 'Date End',
+                   'Fig. Title State', 'Fig. Title Text']]
+
+        with open('graph_layout.lst', 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(header)
+        
+    def load(self, name_well):
+        # A <checkConfig> is supposed to have been carried before this method
+        # is called. So it can be supposed at this point that everything is
+        # fine with the graph layout for this well.
+            
+        reader = open('graph_layout.lst', 'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+        reader = np.array(reader)
+     
+        row = np.where(reader[:,0] == name_well)[0]
+        
+        reader = reader[row][0]
+        
+        self.fmeteo = reader[1]
+        self.finfo = self.fmeteo[:-3] + 'log'
+                          
+        self.WLmax = reader[2].astype(float)
+        self.WLscale = reader[3].astype(float)
+            
+        self.TIMEmin = reader[4].astype(float)
+        self.TIMEmax = reader[5].astype(float)
+        
+        self.title_state = reader[6].astype(float)
+        if self.title_state != 0:
+            self.title_state = 1
+        
+        self.title_text = reader[7].astype(str)
+        
+    def save(self, name_well):
+            
+        reader = open('graph_layout.lst', 'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+        reader = np.array(reader)
+         
+        rowx = np.where(reader[:,0] == name_well)[0]
+        
+        new = [name_well, self.fmeteo, self.WLmax, self.WLscale, 
+               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text]
+               
+        if len(rowx) == 0:
+            reader = np.vstack((reader, new))
+        else:
+            reader = np.delete(reader, rowx, 0)
+            reader = np.vstack((reader, new))
+            
+        with open('graph_layout.lst', 'wb') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(reader)
+
 
 #===============================================================================             
 class WaterlvlData():
@@ -438,8 +576,8 @@ class WaterlvlData():
         header = reader.sheet_by_index(0).col_values(
                                                     1, start_rowx=0, end_rowx=5)
         self.name_well = header[0]
-        self.lat = header[1]
-        self.lon = header[2]
+        self.LAT = header[1]
+        self.LON = header[2]
         self.ALT = header[3]
         
     #----------------------------------------------------------- WELL INFO ----- 
@@ -561,8 +699,6 @@ def filt_data(time, waterlvl, period):
     # Centered Moving Average Window        
     for i in range(len(wlfilt)):
         wlfilt[i] = np.mean(waterlvl[i:i+win+1])
-        
-    print len(waterlvl[i:i+win+1])
     
     return tfilt, wlfilt
 
@@ -603,3 +739,6 @@ def LatLong2Dist(LAT1, LON1, LAT2, LON2):
     DIST = R * c 
     
     return DIST
+    
+if __name__ == '__main__':
+    pass
