@@ -706,9 +706,9 @@ class TabHydrograph(QtGui.QWidget):
             self.best_fit_waterlvl()
             self.best_fit_time()
             
-            self.check_if_config_exist(self.waterlvl_data.name_well)
+            self.check_if_layout_exist(self.waterlvl_data.name_well)
     
-    def check_if_config_exist(self, name_well):
+    def check_if_layout_exist(self, name_well):
         
         layoutExist  = self.graph_params.checkConfig(name_well)
                         
@@ -1005,21 +1005,24 @@ class TabHydrograph(QtGui.QWidget):
             self.save_figure(fname)
             
     def save_figure(self, fname):
+        
+        hydroprint.generate_figure(self.hydrograph2save,
+                                   self.waterlvl_data,
+                                   self.meteo_data,
+                                   self.graph_params)
+                                       
         self.hydrograph2save.savefig(fname)
     
     def draw_hydrograph(self):
+        
         if not self.fwaterlvl or not self.graph_params.fmeteo:
             console_text = ('<font color=red>Please select a valid water ' +
                             'level and a valid weather data file</font>')
             self.parent.write2console(console_text)
+            
         elif self.fwaterlvl and self.graph_params.fmeteo:
             
             self.update_graph_layout_parameter()
-
-            hydroprint.generate_figure(self.hydrograph2save,
-                                       self.waterlvl_data,
-                                       self.meteo_data,
-                                       self.graph_params)
             
             hydroprint.generate_figure(self.hydrograph2display,
                                        self.waterlvl_data,
