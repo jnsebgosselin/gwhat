@@ -30,7 +30,7 @@ class icons():
     
     def __init__(self):
         
-        self.rainbird = QIcon('Icons/Hydroprint.png')
+        self.WHAT = QIcon('Icons/WHAT.png')
         
         self.play = QIcon('Icons/start.png')
         self.forward = QIcon('Icons/start_all.png')

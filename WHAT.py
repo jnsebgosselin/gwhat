@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
 software_version = 'WHAT Beta 4.0.5'
-last_modification = '12/12/2014'
+last_modification = '15/12/2014'
 
 #----- STANDARD LIBRARY IMPORTS -----
 
@@ -126,7 +126,7 @@ class MainWindow(QtGui.QMainWindow):
                             
 #        self.setGeometry(350, 75, 800, 750)
         self.setWindowTitle(software_version)
-        self.setWindowIcon(iconDB.rainbird) 
+        self.setWindowIcon(iconDB.WHAT) 
                         
         #---------------------------------------------------- MAIN CONSOLE -----
         
