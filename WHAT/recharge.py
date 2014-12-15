@@ -56,7 +56,7 @@ class SoilTypes():
     #----- OUTPUT -----
     
     TEXTURE: Texture Class Name    
-    POROEFF: Effective Porosity (cm**3/cm**3)
+    POREFF:  Effective Porosity (cm**3/cm**3)
     RSAT:    Residual Saturation (cm**3/cm**3)
     PSD:     Pore Size Distribution - Geometric mean
     BP:      Bubbling Pressure - Geometric mean (cm)
@@ -75,8 +75,10 @@ class SoilTypes():
                         'Sandy clay loam', 'Clay loam', 'Silty clay loam',
                         'Sandy clay', 'Silty clay', 'Clay'][indx]
                          
-        self.POROEFF = [0.417, 0.401, 0.412, 0.434, 0.486, 0.330, 0.390, 0.432,
-                        0.321, 0.423, 0.385][indx]
+        self.POREFF = [0.417, 0.401, 0.412, 0.434, 0.486, 0.330, 0.390, 0.432,
+                       0.321, 0.423, 0.385][indx]
+        self.POREFFmax = [][indx]
+        self.POREFFmin = [][indx]
                         
         self.RSAT =  [0.020, 0.035, 0.041, 0.027, 0.015, 0.068, 0.075, 0.040,
                         0.109, 0.056, 0.090][indx]        
