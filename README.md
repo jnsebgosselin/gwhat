@@ -2,7 +2,7 @@
 ====
 What is WHAT
 ============
-WHAT is a free, open source, and cross-platform interactive computer program which ultimate aim is to ease the interpretation and valorization of groundwater level time series measured in observation wells. A user guide is currently being prepared and should be available shortly. If you have any questions or comments, please contact Jean-Sébastien Gosselin at jnsebgosselin@gmail.com.
+WHAT is a free, open source, and cross-platform interactive computer program which ultimate aim is to ease the interpretation and valorization of groundwater level time series measured in observation wells. A user guide is currently being prepared and should be available shortly. WHAT is currently under heavy development and is unfortunately not yet complete or free of bugs. If you have any questions or comments, please contact Jean-Sébastien Gosselin at jnsebgosselin@gmail.com.
 
 Presently, are available in WHAT v4.0.5:
 ----------------------------------------
