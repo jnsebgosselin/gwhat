@@ -1,4 +1,4 @@
-WHAT ![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Icons/WHAT.png)
+WHAT
 ====
 
 Well Hydrograph Analysis Toolbox
