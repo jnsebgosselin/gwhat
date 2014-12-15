@@ -153,11 +153,11 @@ class MainWindow(QtGui.QMainWindow):
         self.tab_dwnld_data = TabDwnldData(self)
         self.tab_fill = TabFill(self)
         tab_about = TabAbout(self)
-        tab_hydrograph = TabHydrograph(self)
+        self.tab_hydrograph = TabHydrograph(self)
         
         Tab_widget.addTab(self.tab_dwnld_data, labelDB.text.TAB1)        
         Tab_widget.addTab(self.tab_fill, labelDB.text.TAB2) 
-        Tab_widget.addTab(tab_hydrograph, labelDB.text.TAB3) 
+        Tab_widget.addTab(self.tab_hydrograph, labelDB.text.TAB3) 
         Tab_widget.addTab(tab_about, labelDB.text.TAB4)
         
         #------------------------------------------------- SPLITTER WIDGET -----
@@ -271,6 +271,8 @@ class MainWindow(QtGui.QMainWindow):
             makedirs(dirname + '/Input')
         if not path.exists(dirname + '/Output'):
             makedirs(dirname + '/Output')
+        if not path.exists(dirname + '/Water Levels'):
+            makedirs(dirname + '/Water Levels')
             
         #---- Load Station List ----
                 
@@ -289,6 +291,12 @@ class MainWindow(QtGui.QMainWindow):
         #---- Load Weather Input Files ----
         
         self.tab_fill.load_data_dir_content()
+        
+        # ----- RESET UI Memory Variables -----
+        
+        self.tab_hydrograph.meteo_dir = dirname + '/Output'
+        self.tab_hydrograph.waterlvl_dir = dirname + '/Water Levels'
+        self.tab_hydrograph.save_fig_dir = dirname
                     
 ################################################################ @TAB HYDROGRAPH
         
@@ -318,12 +326,6 @@ class TabHydrograph(QtGui.QWidget):
     #                 --------------------------------------------
     #
     #===========================================================================
-        
-        # ----- UI Memory Variables -----
-        
-        self.meteo_dir = self.parent.what_pref.project_dir + '/Output'
-        self.waterlvl_dir = self.parent.what_pref.project_dir
-        self.save_fig_dir = self.parent.what_pref.project_dir
         
         # ----- Variables Init -----
         
@@ -2350,7 +2352,7 @@ def concatenate(fname):
     StaName = np.zeros(len(fname)).astype('str')  # station names
     StaMatch = np.zeros(len(fname)).astype('str') # station match 
     for i in range(len(fname)):
-        reader = open(fname[i],"rb")
+        reader = open(fname[i],'rb')
         reader = csv.reader(reader, delimiter=',')
         reader = list(reader)
                   
@@ -2364,40 +2366,42 @@ def concatenate(fname):
         
         ALLDATA = np.vstack((ALLDATA, DATA)) 
     
-   
-    LOG = ('<font>Number of Missing Data for Years ' + 
-                  str(int(np.min(ALLDATA[:,0]))) + ' to ' + 
-                  str(int(np.max(ALLDATA[:,0]))) + 
-                  ' for station '+StaName[0]+' : <br></font>')    
-                                    
-    LOG += '''<table border="0" cellpadding="2" 
-                                cellspacing="0" 
-                                align="left">'''                                   
-             # 
-             # <td align="center"> Neighboring <br> Stations </td>'''
-    
     FIELDS = ['Temp. Max.', 'Temp. Min.', 'Temp. Avg.', 'Prec. Tot.', 'Total']
     
-    ndata = float(len(ALLDATA[:,0]))
-    Ndata = float(len(ALLDATA[:,0])*6)        
-    for i in range(0, len(FIELDS)-1):
-         LOG += '<tr><td width=60></td>'
-         LOG += '<td align="left">' + FIELDS[i] + '</td>'
-         LOG += '<td align="left" width=20>:</td>'
-         nonan = sum(np.isnan(ALLDATA[:,i+3]))
-         LOG += ('<td align="right">' + str(nonan) + '/' + 
-                 str(int(ndata)) + '</td>' +
-                 '<td align="center">(' + str(round(nonan/ndata*100,1)) +
-                 '%)</td></tr>' )
+    ndata = float(len(ALLDATA[:, 0]))
+    Ndata = float(len(ALLDATA[:, 0]) * 4) 
     
-    LOG += '<tr></tr><tr><td></td><td align="left">' + FIELDS[-1] + '</td>'
-    LOG += '<td align="left" width=20>:</td>'
-    nonan = np.sum(np.isnan(ALLDATA[:,3:]))
-    LOG += '<td align="right">' + str(nonan) + '/' + str(int(Ndata)) + '</td>'
-    LOG += ('<td align="center">(' + str(round(nonan/Ndata*100,1)) +
-            '%)</td></tr>')
-       
-    LOG += '</table>'
+    LOG = '''
+          <p>
+            Number of Missing Data for Years %d to %d for station %s :
+          </p>
+          <br>
+          <table border="0" cellpadding="2" cellspacing="0" align="left">
+          ''' % (np.min(ALLDATA[:,0]), np.max(ALLDATA[:,0]), StaName[0])
+    for i in range(0, len(FIELDS)-1):
+         nonan = sum(np.isnan(ALLDATA[:, i+3]))
+         LOG += '''
+                <tr>
+                  <td width=60></td>
+                  <td align="left">%s</td>
+                  <td align="left" width=20>:</td>          
+                  <td align="right">%d/%d</td>
+                  <td align="center">(%0.1f%%)</td>
+                </tr>
+                ''' % (FIELDS[i], nonan, ndata, nonan/ndata*100)
+               
+    nonan = np.sum(np.isnan(ALLDATA[:, 3:]))
+    LOG += '''
+             <tr></tr>
+             <tr>
+               <td></td>
+               <td align="left">%s</td>
+               <td align="left" width=20>:</td>
+               <td align="right">%d/%d</td>
+               <td align="center">(%0.1f%%)</td>
+             </tr>
+           </table>
+           ''' % (FIELDS[-1], nonan, Ndata, nonan/Ndata*100)
     
     HEADER = np.zeros((8, len(COLN))).astype('str')
     HEADER[:] = ''
@@ -3900,14 +3904,18 @@ class LabelDataBase(): # Default language is English.
                 self.TAB3 = u'Hydrogramme'
                 self.TAB4 = u'À propos'
 
-    
+#===============================================================================    
 class WHATPref():
+#===============================================================================
+
     
     def __init__(self, parent=None):
         
-        now = datetime.now()
-        now = (now.year, now.month, now.day)
-        self.project_dir = getcwd() + '/Projects/New_%d%d%d' % now
+        # now = datetime.now()
+        # now = (now.year, now.month, now.day)
+        # self.project_dir = getcwd() + '/Projects/New_%d%d%d' % now
+        self.project_dir = getcwd() + '/Projects/Example'
+        self.first_startup = 0
     
     #===========================================================================
     def load_pref_file(self):
@@ -3929,14 +3937,14 @@ class WHATPref():
             
             self.project_dir = reader[0][1]
             
-        if not path.exists( self.project_dir):
-            makedirs( self.project_dir)        
         if not path.exists( self.project_dir + '/Raw'):
             makedirs( self.project_dir + '/Raw')
         if not path.exists( self.project_dir + '/Input'):
             makedirs( self.project_dir + '/Input')
         if not path.exists( self.project_dir + '/Output'):
             makedirs( self.project_dir + '/Output')
+        if not path.exists( self.project_dir + '/Water Levels'):
+            makedirs( self.project_dir + '/Water Levels')
     
     #===========================================================================
     def save_pref_file(self):

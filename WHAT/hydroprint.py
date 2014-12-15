@@ -34,7 +34,8 @@ class LabelDatabase():
                             
         if language == 'French': #--------------------------------- French -----
             
-            self.water_level = "Niveau d'eau au puits %s (m sous la surface du sol)"
+            self.mbgs = "Niveau d'eau au puits %s (mbgs)"
+            self.masl = "Niveau d'eau au puits %s (masl)"
             self.precip = 'Ptot hebdo (mm)'
             self.temperature = u'Tmax hebdo (°C)'
             self.station_meteo = u'Station climatologique = %s (située à %s km du puits)'
@@ -456,7 +457,7 @@ class GraphParameters():
         self.language = 'English'
         
         self.WLref = 0 # 0 -> mbgs 1 -> masl
-        self.trend_line = 1
+        self.trend_line = 0
         
     def checkConfig(self, name_well): # old var. names: check, isConfigExist
         
