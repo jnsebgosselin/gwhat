@@ -280,8 +280,11 @@ class MainWindow(QtGui.QMainWindow):
                 station_list.append(dirname + '/' + files)
         
         if len(station_list) > 0:
-            self.tab_dwnld_data.station_list_path = station_list[0]
-            self.tab_dwnld_data.load_stationList()
+            self.tab_dwnld_data.station_list_path = station_list[0]            
+        else:
+            self.tab_dwnld_data.station_list_path = []
+            
+        self.tab_dwnld_data.load_stationList()
             
         #---- Load Weather Input Files ----
         
@@ -1451,18 +1454,6 @@ class TabDwnldData(QtGui.QWidget):
         self.concatenate_and_display(fname)
         
     
-#    #===========================================================================
-#    def select_raw_dir(self):
-#    # <select_raw_dir> is called by the event <btn_target_dir.clicked>.
-#    # It allows the user to select an output directory for the raw data files 
-#    # that are downloaded from the Environment Canada website.        
-#    #===========================================================================
-#        dialog = QtGui.QFileDialog(self)
-#        dialog.setReadOnly(False)         
-#        dirname = dialog.getExistingDirectory(self, 'Select a directory')
-#        self.target_dir_display.setText(dirname)
-    
-    
     #===========================================================================
     def select_stationList(self):
     # The folowing method is called by the event "btn_load_sationlist.clicked". 
@@ -1488,8 +1479,7 @@ class TabDwnldData(QtGui.QWidget):
                                 self, 'Select a valid station list', 
                                 self.parent.what_pref.project_dir , '*.lst')        
       
-      if self.station_list_path:
-          self.load_stationList()
+      self.load_stationList()
     
     #===========================================================================
     def load_stationList(self): # refresh_stationList(self):
@@ -1500,14 +1490,19 @@ class TabDwnldData(QtGui.QWidget):
     # in the "staName_display" QComboBox widget.
     #===========================================================================
         
-        reader = open(self.station_list_path,'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)        
-        self.staList = np.array(reader[1:])
-        self.staName_display.clear()
-        self.staName_display.addItems(self.staList[:,0])
-        self.parent.write2console(
-        '''<font color=black>Station list loaded successfully.</font>''')
+        if self.station_list_path:
+            
+            reader = open(self.station_list_path,'rb')
+            reader = csv.reader(reader, delimiter='\t')
+            reader = list(reader)        
+            self.staList = np.array(reader[1:])
+            self.staName_display.clear()
+            self.staName_display.addItems(self.staList[:,0])
+            self.parent.write2console(
+            '''<font color=black>Station list loaded successfully.</font>''')
+        else:
+            self.staName_display.clear()
+            self.staList = []
     
     #=========================================================================== 
     def staName_isChanged(self):
