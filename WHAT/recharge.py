@@ -33,6 +33,7 @@ from xlrd import xldate_as_tuple
 
 from meteo import MeteoObj
 from meteo import calculate_normals
+from hydroprint import WaterlvlData
 
 #===============================================================================
 class SoilTypes():
@@ -105,50 +106,77 @@ class SoilTypes():
         self.KSAT = [21.00, 6.11, 2.59, 1.32, 0.68, 0.43, 0.23, 0.15, 0.12,
                      0.09, 0.06][indx]
 
-#def calculate_recharge(Tmelt, CM, Cru, RASmax, ETP, Ptot, Tmean):
-#    
-#    N = len(ETP)    
-#    Pavail = np.zeros(N)  # Available Precipitation
-#    Pacc = np.zeros(N)    # Accumulated Precipitation
-#    Mp = np.zeros(N)      # Potential Melt
-#    Ru = np.zeros(N)      # Runoff
-#    I = np.zeros(N)       # Infiltration
-#    ETr = np.zeros(N)     # Evapotranspiration Real
-#    dRAS = np.zeros(N)    # Variation of RAW
-#    RAS = np.zeros(N)     # Readily Available Water
-#    Re = np.zeros(N)      # Recharge (m)
-#
-#    Pacc[0] = 0
-#    RAS[0] = RASmax
-#    
-#    for i in range(0, n - 1):            
-#        Mp[i] = CM * max(0, Tmean[i] - Tmelt) #Potential melt
-#        if Tmean[i] > Tmelt:     # RAIN
-#            if Mp[i] >= Pacc[i]: # RAIN on BAREGROUND
-#                Pavail[i+1] = Pacc[i] + Ptot[i]
-#                Pacc[i+1] = 0
-#            elif Mp[i] < Pacc[i]: #RAIN on SNOW
-#                Pavail[i+1] = Mp[i]
-#                Pacc[i+1] = Pacc[i] - Mp[i] + Ptot[i]                
-#        elif Tmean[i] <= Tmelt: #SNOW on SNOW
-#            Pavail[i+1] = 0
-#            Pacc[i+1] = Pacc[i] + Ptot[i]
-#        
-#        Ru[i] = Cru * Pavail[i]
-#        I[i] = Pavail[i] - Ru[i]
-#        
-#        dRAS[i] = min(I[i], RASmax - RAS[i])
-#        RAS[i+1] = RAS[i] + dRAS[i] #intermediate step
-#        Re[i] = I[i] - dRAS[i]
-#        
-#        ETr[i] = min(ETP[i], RAS[i])
-#        
-#        RAS[i+1] = RAS[i+1] - ETr[i]
-#    
-#    return Re
+#===============================================================================
+def calculate_recharge(TMELT, CM, CRU, RASmax, ETP, PTOT, TAVG):
+#===============================================================================
+    
+    N = len(ETP)    
+    PAVL = np.zeros(N)    # Available Precipitation
+    PACC = np.zeros(N)    # Accumulated Precipitation
+    RU = np.zeros(N)      # Runoff
+    I = np.zeros(N)       # Infiltration
+    ETR = np.zeros(N)     # Evapotranspiration Real
+    dRAS = np.zeros(N)    # Variation of RAW
+    RAS = np.zeros(N)     # Readily Available Storage
+    RECHG = np.zeros(N)   # Recharge (mm)
+    
+    MP = CM * (TAVG - TMELT)  # Potential Melt
+    MP[MP < 0] = 0
+    
+    PACC[0] = 0
+    RAS[0] = RASmax
+    
+    for i in range(0, N - 1):
+
+        #----- Precipitation -----          
+
+        if TAVG[i] > TMELT:  # Rain
+        
+            if MP[i] >= PACC[i]: # Rain on Bareground
+                PAVL[i+1] = PACC[i] + PTOT[i]
+                PACC[i+1] = 0
+                
+            elif MP[i] < PACC[i]: #Rain on Snow
+                PAVL[i+1] = MP[i]
+                PACC[i+1] = PACC[i] - MP[i] + PTOT[i]                
+                
+        elif TAVG[i] <= TMELT: #Snow
+            PAVL[i+1] = 0
+            PACC[i+1] = PACC[i] + PTOT[i]
+            
+        #----- Infiltration and Runoff -----
+        
+        RU[i] = CRU * PAVL[i]
+        I[i] = PAVL[i] - RU[i]
+        
+        #----- ETR, Recharge and Storage change -----
+        
+        dRAS[i] = min(I[i], RASmax - RAS[i])
+        RAS[i+1] = RAS[i] + dRAS[i] #intermediate step
+        RECHG[i] = I[i] - dRAS[i]
+        
+        ETR[i] = min(ETP[i], RAS[i])
+        
+        RAS[i+1] = RAS[i+1] - ETR[i]
+    
+    return RECHG
 
 #===============================================================================
-def calculate_ETP(meteoObj):
+def calculate_hydrograph(RECHG, RECESS, WLobs):
+#===============================================================================
+     
+    Sy = sum(RECHG) / (sum(RECESS) + WLobs[-1] - WLobs[0])
+     
+    WLsim = np.zeros(len(WLobs))
+    WLsim[0] = WLobs[0]
+     
+    for i in range(0, len(WLobs) - 1):            
+        WLsim[i+1] = WLsim[i] + (RECHG[i] / Sy) - RECESS[i]
+
+    return WLsim, Sy
+
+#===============================================================================
+def calculate_ETP(TIME, TAVG, LAT):
     """
     Daily potential evapotranspiration (mm) is calculated with a method adapted
     from Thornwaite (1948).
@@ -157,7 +185,9 @@ def calculate_ETP(meteoObj):
     
     #----- INPUT -----
     
-    meteoObj: Meteo instance of class meteo.MeteoObj()
+    TIME = Numeric time in days
+    TAVG = Daily temperature average (deg C)
+    LAT = Latitude in degrees    
     
     #----- OUTPUT -----
 
@@ -170,15 +200,7 @@ def calculate_ETP(meteoObj):
         Management, 66, 251-257.
     """
 #===============================================================================
-    
-#    meteoObj.load(fmeteo)
-    
-    TAVG = meteoObj.TAVG  # Daily temperature average
-    TIME = meteoObj.TIME  # Time in days 
-    LAT = float(meteoObj.LAT)  # Latitude in degrees
-    
-#----------------------------------------------------------- CALCULATE ETP -----
-    
+        
     Ta, _, _, _ = calculate_normals(fmeteo) # Monthly normals
     Ta[Ta < 0] = 0    
     
@@ -239,20 +261,97 @@ def calculate_daylength(TIME, LAT):
     DAYLEN = OMEGA * 2 * 24 / (2 * np.pi) # Day length in hours
     
     return DAYLEN
+
+#=============================================================================== 
+def bestfit_waterlvl(fmeteo, fwaterlvl):
+#===============================================================================
+   
+    import matplotlib.pyplot as plt
+    
+    meteoObj = MeteoObj()
+    meteoObj.load(fmeteo)
+    
+    TAVG = meteoObj.TAVG
+    TIMEmeteo = meteoObj.TIME
+    LAT = float(meteoObj.LAT)
+    
+    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT)
+    
+    PTOT = meteoObj.PTOT
+    TAVG = meteoObj.TAVG
+    
+    TMELT = 0
+    CM = 4 # Daily melt coefficient
+#    RASmax = 100
+#    CRU = 0.1
+    
+#    RECHG = calculate_recharge(TMELT, CM, CRU, RASmax, ETP, PTOT, TAVG)
+
+    waterlvlObj = WaterlvlData()
+    waterlvlObj.load(fwaterlvl)
+    
+    WLobs = waterlvlObj.lvl * 1000
+    TIMEwater = waterlvlObj.time
+    
+    # Resample observed water level on a daily basis.
+    WLobs = np.interp(TIMEmeteo, TIMEwater, WLobs)
+    
+#-------------------------------------------------------------------------------
+    
+    CRU = np.arange(0, 0.41, 0.05)
+    RASmax = np.arange(0, 51, 5)
+    Sy = np.ones((len(CRU), len(RASmax)))
+    RMSE = np.ones((len(CRU), len(RASmax)))
+    
+    RECESS = np.ones(len(WLobs)) * 0.69 # mm/d
+    
+    plt.plot(WLobs)
+    
+    for it in range(0, len(CRU)):
+        for it2 in range(0, len(RASmax)):
+            RECHG = calculate_recharge(TMELT, CM, CRU[it], RASmax[it2],
+                                       ETP, PTOT, TAVG)
+                                    
+            WLsim, Sy[it, it2] = calculate_hydrograph(RECHG, RECESS, WLobs)
+    
+            RMSE[it, it2] = (np.mean((WLsim - WLobs)**2))**0.5
+            
+            plt.plot(WLsim, color=(0.75, 0.75, 0.75))
+            plt.plot(WLobs, color=(0,0,1))
+            plt.pause(0.1)
+            plt.pause(0.1)
+    
+    best_it = np.where(RMSE == np.min(RMSE))[0][0]
+    best_it2 = np.where(RMSE == np.min(RMSE))[1][0]
+    
+    RECHG = calculate_recharge(TMELT, CM, CRU[best_it], RASmax[best_it2],
+                               ETP, PTOT, TAVG)
+    WLsim, _ = calculate_hydrograph(RECHG, RECESS, WLobs)
+   
+    #plt.cla()                                  
+    plt.plot(WLsim, color=(1,0,0))
+    print ' '
+    print 'Cru = ', CRU[best_it]
+    print 'RASmax = ', RASmax[best_it2] * 1000
+    print 'Sy =', Sy[best_it, best_it2]
+    print 'Recharge = ', sum(RECHG) / sum(PTOT) * 100, ' % de Ptot'
     
     
 if __name__ == '__main__':
     
-    import matplotlib.pyplot as plt
-      
-    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
+#    import matplotlib.pyplot as plt
+     
+#     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
+     
     fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
+    fwaterlvl = 'Files4testing/P19 2013-2014.xls'
     
-    meteoObj = MeteoObj()
-    meteoObj.load(fmeteo)
-    ETP =  calculate_ETP(meteoObj)
+    bestfit_waterlvl(fmeteo, fwaterlvl)
     
-    plt.close('all')
-    plt.figure()
-    plt.plot(ETP)
+    
+#    print np.mean(RECHG) * 365
+    
+#    plt.close('all')
+#    plt.figure()
+#    plt.plot(ETP)
     
