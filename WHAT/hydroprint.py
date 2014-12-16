@@ -44,7 +44,7 @@ class LabelDatabase():
 
 #===============================================================================        
 def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
-# This method generate the figure with the paramters that are entered in
+# This method generate the figure with the parameters that are entered in
 # the UI.
 #===============================================================================
                     
@@ -638,15 +638,15 @@ class WaterlvlData():
         reader = open_workbook(fname)
             
         self.time = reader.sheet_by_index(0).col_values(0, start_rowx=11,
-                                                      end_rowx=None) 
+                                                           end_rowx=None) 
         self.time = np.array(self.time)
         
         self.lvl = reader.sheet_by_index(0).col_values(1, start_rowx=11, 
-                                                      end_rowx=None) 
+                                                          end_rowx=None) 
         self.lvl = np.array(self.lvl).astype('float')
         
-        header = reader.sheet_by_index(0).col_values(
-                                                    1, start_rowx=0, end_rowx=5)
+        header = reader.sheet_by_index(0).col_values(1, start_rowx=0, 
+                                                        end_rowx=5)
         self.name_well = header[0]
         self.LAT = header[1]
         self.LON = header[2]
@@ -657,8 +657,10 @@ class WaterlvlData():
         FIELDS = ['Well Name', 'Latitude', 'Longitude', 'Altitude',
                   'Municipality']
                   
-        well_info = '''<table border="0" cellpadding="2" cellspacing="0" 
-                         align="left">'''
+        well_info = '''
+                    <table border="0" cellpadding="2" cellspacing="0" 
+                    align="left">
+                    '''
         
         for i in range(len(FIELDS)):
             
@@ -667,12 +669,14 @@ class WaterlvlData():
              except:
                  VAL = header[i]
                  
-             well_info += '''<tr>
-                               <td width=10></td>
-                               <td align="left">%s</td>
-                               <td align="left" width=20>:</td>
-                               <td align="left">%s</td>
-                             </tr>''' % (FIELDS[i], VAL)
+             well_info += '''
+                          <tr>
+                            <td width=10></td>
+                            <td align="left">%s</td>
+                            <td align="left" width=20>:</td>
+                            <td align="left">%s</td>
+                          </tr>
+                          ''' % (FIELDS[i], VAL)
         well_info += '</table>'
         
         self.well_info = well_info
