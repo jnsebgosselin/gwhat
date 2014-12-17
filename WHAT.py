@@ -31,7 +31,7 @@ from sys import argv
 from time import ctime, strftime, sleep
 from os import getcwd, listdir, makedirs, path
 from string import maketrans
-from datetime import datetime
+#from datetime import datetime
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -431,23 +431,23 @@ class TabHydrograph(QtGui.QWidget):
        
         btn_waterlvl_dir = QtGui.QPushButton('    Water Level Data File')
         btn_waterlvl_dir.setIcon(iconDB.openFile)
-        self.display_well_info = QtGui.QTextEdit()
-        self.display_well_info.setReadOnly(True)
-        self.display_well_info.setFixedHeight(150)
+        self.well_info_widget = QtGui.QTextEdit()
+        self.well_info_widget.setReadOnly(True)
+        self.well_info_widget.setFixedHeight(150)
         
         btn_weather_dir = QtGui.QPushButton('    Weather Data File')
         btn_weather_dir.setIcon(iconDB.openFile)
-        self.display_weather_info = QtGui.QTextEdit()
-        self.display_weather_info.setReadOnly(True)
-        self.display_weather_info.setFixedHeight(150)
+        self.meteo_info_widget = QtGui.QTextEdit()
+        self.meteo_info_widget.setReadOnly(True)
+        self.meteo_info_widget.setFixedHeight(150)
         
         subgrid = QtGui.QGridLayout()
         subgrid_widget = QtGui.QWidget()
                 
         subgrid.addWidget(btn_waterlvl_dir, 0, 0)
-        subgrid.addWidget(self.display_well_info, 1, 0)
+        subgrid.addWidget(self.well_info_widget, 1, 0)
         subgrid.addWidget(btn_weather_dir, 2, 0)        
-        subgrid.addWidget(self.display_weather_info, 3, 0)
+        subgrid.addWidget(self.meteo_info_widget, 3, 0)
                 
         subgrid.setSpacing(5)
         subgrid.setColumnMinimumWidth(0, 250)
@@ -689,31 +689,67 @@ class TabHydrograph(QtGui.QWidget):
             self.graph_title.setEnabled(False)
             
     def emit_error_message(self, error_text):
+        
         self.msgError.setText(error_text)
         self.msgError.exec_()
-        
+    
+    #===========================================================================
     def select_waterlvl_file(self):
+        '''
+        This method is called by <btn_waterlvl_dir.clicked.connect>. It prompts
+        the user to select a valid Water Level Data file.        
+        '''
+    #===========================================================================
         
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                    self, 'Select a valid water level data file', 
                                    self.waterlvl_dir, '*.xls')
+                                   
+        self.load_waterlvl(filename)
+        
+    #===========================================================================                          
+    def load_waterlvl(self, filename):
+        '''
+        If <filename> exists, the (1) water level time series, (2) observation 
+        well info and (3) the manual measures are loaded and saved in the class 
+        instance <waterlvl_data>.
+        '''
+    #===========================================================================   
+        
         if filename:
-            self.waterlvl_dir = getcwd()
+            
+            #----- Update UI Memory Var -----
+            
             self.waterlvl_dir = path.dirname(filename)
             self.fwaterlvl = filename
-            self.waterlvl_data.load(self.fwaterlvl)                         
             
-            well_info = self.waterlvl_data.well_info
-            self.display_well_info.setText(well_info)
+            #----- Load Data -----
             
-            self.parent.write2console(
-            '''<font color=black>Water level data set loaded successfully for
-                 well %s.</font>''' % self.waterlvl_data.name_well)
+            self.waterlvl_data.load(filename)
+            
+            name_well = self.waterlvl_data.name_well
             
             self.best_fit_waterlvl()
             self.best_fit_time()
             
-            self.check_if_layout_exist(self.waterlvl_data.name_well)
+            #----- Load Manual Measures -----
+            
+            filename = self.parent.what_pref.project_dir
+            filename += '/waterlvl_manual_measurements.csv'
+            
+            self.waterlvl_data.load_waterlvl_measures(filename, name_well)
+            
+            #----- Load and Display Well Info in UI -----
+            
+            self.well_info_widget.setText(self.waterlvl_data.well_info)
+            
+            self.parent.write2console(
+            '''<font color=black>Water level data set loaded successfully for
+                 well %s.</font>''' % name_well)
+            
+            #----- Check if Layout -----
+            
+            self.check_if_layout_exist(name_well)
     
     def check_if_layout_exist(self, name_well):
         
@@ -775,31 +811,36 @@ class TabHydrograph(QtGui.QWidget):
                 index = np.where(DIST == np.min(DIST))[0][0]
                           
                 self.load_meteo_file(fmeteo_paths[index])
-            
+    
+    #===========================================================================       
     def select_meteo_file(self):
-        
+        '''
+        This method is called by <btn_weather_dir.clicked.connect>. It prompts
+        the user to select a valid Weather Data file.        
+        '''
+    #===========================================================================
+    
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                       self, 'Select a valid weather data file', 
                                       self.meteo_dir, '*.out')       
-        if filename:
-            self.load_meteo_file(filename)
+
+        self.load_meteo_file(filename)
             
     def load_meteo_file(self, filename):
         
-        self.meteo_dir = path.dirname(filename)
-        self.graph_params.fmeteo = filename
-        self.graph_params.finfo = filename[:-3] + 'log'
-        
-        self.meteo_data.load(filename)
-        
-        self.parent.write2console(
-        '''<font color=black>Weather data set loaded successfully for
-             station %s.</font>''' % self.meteo_data.station_name)
-          
-        self.display_meteo_info(self.meteo_data.info )        
-           
-    def display_meteo_info(self, content):
-        self.display_weather_info.setText(content)
+        if filename:
+            
+            self.meteo_dir = path.dirname(filename)
+            self.graph_params.fmeteo = filename
+            self.graph_params.finfo = filename[:-3] + 'log'
+            
+            self.meteo_data.load(filename)
+            
+            self.parent.write2console(
+            '''<font color=black>Weather data set loaded successfully for
+                 station %s.</font>''' % self.meteo_data.station_name)
+              
+            self.meteo_info_widget.setText(self.meteo_data.info )        
     
     #===========================================================================
     def update_graph_layout_parameter(self):
@@ -871,12 +912,12 @@ class TabHydrograph(QtGui.QWidget):
                 
                 if path.exists(self.graph_params.fmeteo):
                     self.meteo_data.load(self.graph_params.fmeteo)
-                    self.display_meteo_info(self.meteo_data.info )
+                    self.meteo_info_widget.setText(self.meteo_data.info )
                     self.parent.write2console(
                     '''<font color=black>Graph layout loaded successfully for 
                        well %s.</font>''' % name_well)
                 else:
-                    self.display_meteo_info('')
+                    self.meteo_info_widget.setText('')
                     self.parent.write2console(
                     '''<font color=red>Unable to read the weather data file. %s
                        does not exist.</font>''' % self.graph_params.fmeteo)

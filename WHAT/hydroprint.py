@@ -170,7 +170,9 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
         ax2.invert_yaxis()
     
     #------------------------------------------------------------ PLOTTING -----
-
+    
+    #----- Water Levels -----
+    
     if GraphParamObj.trend_line == 1:
         tfilt, wlfilt = filt_data(time, water_lvl, 24*2)
     
@@ -182,17 +184,18 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
         ax2.plot(time, water_lvl, '-', zorder = 10, linewidth=1, 
                  label='Water Level')                
     
-    if path.exists('validation_niveau.xls'):
-        
-        time_measured, WLmeasured = load_water_level_measurements(name_well)
-        
-        line_measured_waterlevel = ax2.plot(time_measured,
-                                            WLmeasured, 'o', zorder = 15,
-                                            label='Manual measures')
-                                            
-        plt.setp(line_measured_waterlevel, markerfacecolor='none',
-                 markeredgecolor=(1, 0.25, 0.25), markersize=5,
-                 markeredgewidth=1.5)
+    #----- Manual Measures -----
+       
+    TIMEmes = WaterLvlObj.TIMEmes
+    WLmes = WaterLvlObj.WLmes
+    
+    h_WLmes = ax2.plot(TIMEmes, WLmes, 'o', zorder = 15,
+                       label='Manual measures')
+                                        
+    plt.setp(h_WLmes, markerfacecolor='none', markersize=5,
+             markeredgecolor=(1, 0.25, 0.25), markeredgewidth=1.5)
+                 
+    #----- Recession -----
         
         # Plot a Recession line for Dundurn Report
 #            trecess = np.arange(41548, 41760)
@@ -201,7 +204,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
 #            ax2.plot(trecess, hrecess, '--r', zorder = 10, linewidth=1.5,
 #                         label='Water Level Recession')
                      
-    #-------------------------------------------------------------- legend -----
+    #-------------------------------------------------------------- LEGEND -----
     
     if LEGEND == True:
         ax2.legend(loc=4, numpoints=1, fontsize=10)    
@@ -630,11 +633,15 @@ class WaterlvlData():
         self.name_well = []
         self.well_info = []
         
+        self.WLmes = []
+        self.TIMEmes = []
+        
         self.LAT = []
         self.LON = []
         self.ALT = []
         
     def load(self, fname):
+        
         reader = open_workbook(fname)
             
         self.time = reader.sheet_by_index(0).col_values(0, start_rowx=11,
@@ -651,7 +658,7 @@ class WaterlvlData():
         self.LAT = header[1]
         self.LON = header[2]
         self.ALT = header[3]
-        
+    
     #----------------------------------------------------------- WELL INFO ----- 
         
         FIELDS = ['Well Name', 'Latitude', 'Longitude', 'Altitude',
@@ -681,6 +688,35 @@ class WaterlvlData():
         
         self.well_info = well_info
         
+    def load_waterlvl_measures(self, fname, name_well):
+    
+        if path.exists(fname):
+            
+            reader = open(fname, 'rb')
+            reader = csv.reader(reader, delimiter='\t')
+            reader = list(reader)[1:]
+            reader = np.array(reader)
+            
+            puits_names_list = reader[:, 0] 
+           
+            rowx = np.where(puits_names_list == name_well)[0]
+            
+            if len(rowx) == 0:
+                WLmes = []
+                TIMEmes = []
+            else:        
+                WLmes = reader[rowx, 2].astype(float)
+                TIMEmes = reader[rowx, 1].astype(float)
+                
+        else:
+            
+            WLmes = []
+            TIMEmes = []
+            
+        self.TIMEmes = TIMEmes
+        self.WLmes = WLmes
+        
+        return TIMEmes, WLmes
         
 #===============================================================================      
 def load_weather_log(fname, variable_name, time_week, value_week):
@@ -713,33 +749,6 @@ def load_weather_log(fname, variable_name, time_week, value_week):
     missing_value = missing_value[indices]
     
     return time2, missing_value
-
-#===============================================================================
-def load_water_level_measurements(name_well):
-#===============================================================================
-    
-    reader = open_workbook('validation_niveau.xls')
-    
-    puits_names_list = reader.sheet_by_index(0).col_values(
-                                                 0, start_rowx=0, end_rowx=None) 
-    puits_names_list = np.array(puits_names_list).astype('str')
-   
-    rowx = np.where(puits_names_list == name_well)[0]
-    
-    if len(rowx)==0:
-        WLmeasured = []
-        time_measured = []
-    else:
-    
-        WLmeasured = reader.sheet_by_index(0).col_values(
-                                     5, start_rowx=rowx[0], end_rowx=rowx[-1]+1)
-        WLmeasured = np.array(WLmeasured).astype('float') * -1
-        
-        time_measured = reader.sheet_by_index(0).col_values(
-                                     2, start_rowx=rowx[0], end_rowx=rowx[-1]+1)
-        time_measured = np.array(time_measured).astype('float')
-
-    return time_measured, WLmeasured
     
 #===============================================================================    
 def filt_data(time, waterlvl, period):
