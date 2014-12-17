@@ -28,6 +28,7 @@ from datetime import date
 
 import numpy as np
 from xlrd import xldate_as_tuple
+import matplotlib.pyplot as plt
 
 #----- RAINBIRD LIBRARY IMPORTS -----
 
@@ -130,7 +131,7 @@ def soil_char_curves(P, SOIL):
     return VLC, K
     
 #===============================================================================
-def calculate_recharge(TMELT, CM, CRU, RASmax, ETP, PTOT, TAVG):
+def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
 #===============================================================================
     
     N = len(ETP)    
@@ -141,7 +142,10 @@ def calculate_recharge(TMELT, CM, CRU, RASmax, ETP, PTOT, TAVG):
     ETR = np.zeros(N)     # Evapotranspiration Real
     dRAS = np.zeros(N)    # Variation of RAW
     RAS = np.zeros(N)     # Readily Available Storage
-    RECHG = np.zeros(N)   # Recharge (mm)
+    RECHG = np.zeros(N-1) # Recharge (mm)
+    
+    TMELT = 0 # Temperature treshold for snowmelt
+    CM = 4 # Daily melt coefficient
     
     MP = CM * (TAVG - TMELT)  # Potential Melt
     MP[MP < 0] = 0
@@ -272,7 +276,7 @@ def calculate_daylength(TIME, LAT):
     return DAYLEN
     
 #===============================================================================
-def calculate_hydrograph(RECHG, RECESS, WLobs):
+def calc_hydrograph_old(RECHG, RECESS, WLobs):
 #===============================================================================
      
     Sy = -sum(RECHG) / (-sum(RECESS) + WLobs[-1] - WLobs[0])
@@ -288,98 +292,111 @@ def calculate_hydrograph(RECHG, RECESS, WLobs):
             WLsim[i+1] = WLsim[i] - (RECHG[i] / Sy) + RECESS[i]
 
     return WLsim, Sy
+    
+#===============================================================================
+def calc_hydrograph(RECHG, RECESS, WL0, Sy):
+#===============================================================================
+     
+    WLsim = np.zeros(len(RECHG)+1)
+    WLsim[0] = WL0
+    for i in range(len(RECHG)):            
+        WLsim[i+1] = WLsim[i] - (RECHG[i] / Sy) + RECESS[i]
+
+    return WLsim
 
 #=============================================================================== 
-def bestfit_waterlvl(fmeteo, fwaterlvl):
+def bestfit_hydrograph(meteoObj, waterlvlObj):
 #===============================================================================
    
-    import matplotlib.pyplot as plt
-    
     plt.close('all')
     
-    meteoObj = MeteoObj()
-    meteoObj.load(fmeteo)
+    #---- Load Meteo -----
     
-    TAVG = meteoObj.TAVG
-    TIMEmeteo = meteoObj.TIME
-    LAT = float(meteoObj.LAT)
+    PTOT = meteoObj.PTOT # Daily total precipitation (mm)
+    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
+    TIMEmeteo = meteoObj.TIME # Time (days)
+    LAT = float(meteoObj.LAT) # Latitude (deg)
     
-    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT)
+    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
+                                              # evapotranspiration (mm)
     
-    PTOT = meteoObj.PTOT
-    TAVG = meteoObj.TAVG
+    #---- Load Waterlvl -----
     
-    TMELT = 0
-    CM = 4 # Daily melt coefficient
-#    RASmax = 100
-#    CRU = 0.1
+    WLobs = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
+    TIMEwater = waterlvlObj.time  # Time (days)
     
-#    RECHG = calculate_recharge(TMELT, CM, CRU, RASmax, ETP, PTOT, TAVG)
+#----------------------------------------------------- LONG TREND ANALYSIS -----
+    
+#    indx0 = np.where(TIMEmeteo <= TIMEwater[0])[0][-1]
+#    indxE = np.where(TIMEmeteo >= TIMEwater[-1])[0][0]
+    
+#    Resample observed water level on a daily basis.
+#    WLobs = np.interp(TIMEmeteo[indx0:indxE], TIMEwater, WLobs)
+#    plt.plot(-WLobs)
 
-    waterlvlObj = WaterlvlData()
-    waterlvlObj.load(fwaterlvl)
-    
-    WLobs = waterlvlObj.lvl * 1000
-    TIMEwater = waterlvlObj.time
-    
-#-------------------------------------------------------------------------------
-    
     CRU = np.arange(0, 0.41, 0.05)
-    RASmax = np.arange(0, 101, 5)
-    Sy = np.ones((len(CRU), len(RASmax)))
-    RMSE = np.ones((len(CRU), len(RASmax)))
+    RASmax = np.zeros(len(CRU))
+    RECHyr = np.zeros(len(CRU))
     
-    indx0 = np.where(TIMEmeteo <= TIMEwater[0])[0][-1]
-    indxE = np.where(TIMEmeteo >= TIMEwater[-1])[0][0]
+    RECESS = np.ones(len(TIMEmeteo)) * 0.69 # Water level recession (mm/d)
+    WL0 = np.mean(WLobs) #Initial water level (mm)
+    Sy = 0.30
+    for it in range(len(CRU)):
+        
+        RECHG = calc_recharge(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+        WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
+        
+        SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
+        
+        delta_RAS = 10
+        while abs(delta_RAS) >= 0.001:
+            while 1:
+                SLOPEold = np.copy(SLOPEnew)
+                
+                RASmax[it] += delta_RAS
+                
+                RECHG = calc_recharge(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
+                
+                
+                SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
+                
+                print SLOPEnew                
+                
+                if np.sign(SLOPEold) != np.sign(SLOPEnew):
+                    delta_RAS /= -10.
+                    break
+                
+                if abs(SLOPEold) < abs(SLOPEnew):
+                    delta_RAS *= -1
+                    break
+                
+        RECHyr[it] = np.mean(RECHG) * 365
+        print 'NEW solution'
+        plt.plot(TIMEmeteo, -WLsim, color=(0.75, 0.75, 0.75))
+        plt.pause(0.1)
     
-    # Resample observed water level on a daily basis.
-    WLobs = np.interp(TIMEmeteo[indx0:indxE], TIMEwater, WLobs)
+    print CRU
+    print RASmax  
+    print RECHyr          
+            
+    plt.plot(TIMEwater, -WLobs, color='b')
 
-    RECESS = np.ones(len(WLobs)) * 0.69 # mm/d
-    plt.plot(-WLobs)
-    
-    for it in range(0, len(CRU)):
-        for it2 in range(0, len(RASmax)):
-            RECHG = calculate_recharge(TMELT, CM, CRU[it], RASmax[it2],
-                                       ETP, PTOT, TAVG)
-                                    
-            WLsim, Sy[it, it2] = calculate_hydrograph(
-                                              RECHG[indx0:indxE], RECESS, WLobs)
-            RMSE[it, it2] = (np.mean((WLsim - WLobs)**2))**0.5
-            
-            plt.plot(-WLsim, color=(0.75, 0.75, 0.75))
-            plt.plot(-WLobs, color=(0,0,1))
-            plt.pause(0.1)
-            plt.pause(0.1)
-            
-    RMSE[np.isnan(RMSE)] = 99999
-    
-    best_it = np.where(RMSE == np.min(RMSE))[0][0]
-    best_it2 = np.where(RMSE == np.min(RMSE))[1][0]
-    
-    RECHG = calculate_recharge(TMELT, CM, CRU[best_it], RASmax[best_it2],
-                               ETP, PTOT, TAVG)
-    WLsim, _ = calculate_hydrograph(RECHG[indx0:indxE], RECESS, WLobs)
-   
-    #plt.cla()                                  
-    plt.plot(-WLsim, color=(1,0,0))
-    print ' '
-    print 'Cru = ', CRU[best_it]
-    print 'RASmax = ', RASmax[best_it2]
-    print 'Sy =', Sy[best_it, best_it2]
-    print 'Recharge = ', sum(RECHG) / sum(PTOT) * 100, ' % de Ptot'
-    
     
 if __name__ == '__main__':
     
 #    import matplotlib.pyplot as plt
      
-#     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-     
+    # fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
-    fwaterlvl = 'Files4testing/P19 2013-2014.xls'
+    meteoObj = MeteoObj()
+    meteoObj.load(fmeteo)
     
-    bestfit_waterlvl(fmeteo, fwaterlvl)
+    fwaterlvl = 'Files4testing/P19 2013-2014.xls'
+    waterlvlObj = WaterlvlData()
+    waterlvlObj.load(fwaterlvl)
+    
+    bestfit_hydrograph(meteoObj, fwaterlvl)
     
     
 #    print np.mean(RECHG) * 365
