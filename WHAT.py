@@ -825,9 +825,11 @@ class TabHydrograph(QtGui.QWidget):
                                       self.meteo_dir, '*.out')       
 
         self.load_meteo_file(filename)
-            
+    
+    #===========================================================================       
     def load_meteo_file(self, filename):
-        
+    #===========================================================================
+    
         if filename:
             
             self.meteo_dir = path.dirname(filename)
@@ -844,10 +846,13 @@ class TabHydrograph(QtGui.QWidget):
     
     #===========================================================================
     def update_graph_layout_parameter(self):
-    # This method is called either by the methods 
-    # <save_graph_layout> or by <draw_hydrograph>. It takes the parameters
-    # that are currently displayer in the UI and save them in the 
-    # GraphParameters class that is used to plot the graph.
+        '''
+        This method is called either by the methods <save_graph_layout>
+        or by <draw_hydrograph>. It fetches the values that are currently 
+        displayed in the UI and save them in the class instance <graph_params>
+        of the class <GraphParameters>.  <graph_params> is an input 
+        of the function <hydroprint.generate_hydrograph>.
+        '''
     #===========================================================================
         
         if self.UpdateUI == True:
