@@ -457,7 +457,7 @@ class GraphParameters():
         self.language = 'English'
         
         self.WLref = 0 # 0 -> mbgs 1 -> masl
-        self.trend_line = 0
+        self.trend_line = 1
         
     def checkConfig(self, name_well): # old var. names: check, isConfigExist
         

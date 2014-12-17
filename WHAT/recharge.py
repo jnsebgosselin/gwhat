@@ -107,6 +107,29 @@ class SoilTypes():
                      0.09, 0.06][indx]
 
 #===============================================================================
+def soil_char_curves(P, SOIL):
+    # Calculate soil water content, matric potential and unsaturated hydraulic 
+    # conductivity after Campbel, 1974
+#===============================================================================
+    
+    Pe = np.mean(SIMOUT.Pe)
+    PDI = np.mean(SIMOUT.PDI)
+    VLCsat = np.mean(SIMOUT.VLCsat)
+    Ksat = np.mean(SIMOUT.Ksat)
+    VLCres = np.mean(SIMOUT.VLCres)               
+   
+    VLC = np.zeros(len(P)) # soil volumetric water content (m3/m3)
+    K = np.zeros(len(P)) # soil unsaturated hydraulic conductivity (cm/h)
+    for i in range(len(P)):
+        if Pe > P[i]:
+            VLC[i] = VLCres + (VLCsat - VLCres) * (Pe / P[i]) ** PDI
+            K[i] = Ksat * (Pe / P[i]) ** (2 + 3*PDI)
+        elif Pe <= P[i]:
+            VLC[i] = VLCsat
+            K[i] = Ksat
+    return VLC, K
+    
+#===============================================================================
 def calculate_recharge(TMELT, CM, CRU, RASmax, ETP, PTOT, TAVG):
 #===============================================================================
     
@@ -160,20 +183,6 @@ def calculate_recharge(TMELT, CM, CRU, RASmax, ETP, PTOT, TAVG):
         RAS[i+1] = RAS[i+1] - ETR[i]
     
     return RECHG
-
-#===============================================================================
-def calculate_hydrograph(RECHG, RECESS, WLobs):
-#===============================================================================
-     
-    Sy = sum(RECHG) / (sum(RECESS) + WLobs[-1] - WLobs[0])
-     
-    WLsim = np.zeros(len(WLobs))
-    WLsim[0] = WLobs[0]
-     
-    for i in range(0, len(WLobs) - 1):            
-        WLsim[i+1] = WLsim[i] + (RECHG[i] / Sy) - RECESS[i]
-
-    return WLsim, Sy
 
 #===============================================================================
 def calculate_ETP(TIME, TAVG, LAT):
@@ -261,12 +270,32 @@ def calculate_daylength(TIME, LAT):
     DAYLEN = OMEGA * 2 * 24 / (2 * np.pi) # Day length in hours
     
     return DAYLEN
+    
+#===============================================================================
+def calculate_hydrograph(RECHG, RECESS, WLobs):
+#===============================================================================
+     
+    Sy = -sum(RECHG) / (-sum(RECESS) + WLobs[-1] - WLobs[0])
+    
+    WLsim = np.zeros(len(WLobs))
+    print '%0.2f' % Sy
+    if Sy > 0.4 or Sy < 0.3:
+        WLsim[:] = np.nan
+    else:
+        WLsim[0] = WLobs[0]
+         
+        for i in range(0, len(WLobs) - 1):            
+            WLsim[i+1] = WLsim[i] - (RECHG[i] / Sy) + RECESS[i]
+
+    return WLsim, Sy
 
 #=============================================================================== 
 def bestfit_waterlvl(fmeteo, fwaterlvl):
 #===============================================================================
    
     import matplotlib.pyplot as plt
+    
+    plt.close('all')
     
     meteoObj = MeteoObj()
     meteoObj.load(fmeteo)
@@ -293,46 +322,50 @@ def bestfit_waterlvl(fmeteo, fwaterlvl):
     WLobs = waterlvlObj.lvl * 1000
     TIMEwater = waterlvlObj.time
     
-    # Resample observed water level on a daily basis.
-    WLobs = np.interp(TIMEmeteo, TIMEwater, WLobs)
-    
 #-------------------------------------------------------------------------------
     
     CRU = np.arange(0, 0.41, 0.05)
-    RASmax = np.arange(0, 51, 5)
+    RASmax = np.arange(0, 101, 5)
     Sy = np.ones((len(CRU), len(RASmax)))
     RMSE = np.ones((len(CRU), len(RASmax)))
     
-    RECESS = np.ones(len(WLobs)) * 0.69 # mm/d
+    indx0 = np.where(TIMEmeteo <= TIMEwater[0])[0][-1]
+    indxE = np.where(TIMEmeteo >= TIMEwater[-1])[0][0]
     
-    plt.plot(WLobs)
+    # Resample observed water level on a daily basis.
+    WLobs = np.interp(TIMEmeteo[indx0:indxE], TIMEwater, WLobs)
+
+    RECESS = np.ones(len(WLobs)) * 0.69 # mm/d
+    plt.plot(-WLobs)
     
     for it in range(0, len(CRU)):
         for it2 in range(0, len(RASmax)):
             RECHG = calculate_recharge(TMELT, CM, CRU[it], RASmax[it2],
                                        ETP, PTOT, TAVG)
                                     
-            WLsim, Sy[it, it2] = calculate_hydrograph(RECHG, RECESS, WLobs)
-    
+            WLsim, Sy[it, it2] = calculate_hydrograph(
+                                              RECHG[indx0:indxE], RECESS, WLobs)
             RMSE[it, it2] = (np.mean((WLsim - WLobs)**2))**0.5
             
-            plt.plot(WLsim, color=(0.75, 0.75, 0.75))
-            plt.plot(WLobs, color=(0,0,1))
+            plt.plot(-WLsim, color=(0.75, 0.75, 0.75))
+            plt.plot(-WLobs, color=(0,0,1))
             plt.pause(0.1)
             plt.pause(0.1)
+            
+    RMSE[np.isnan(RMSE)] = 99999
     
     best_it = np.where(RMSE == np.min(RMSE))[0][0]
     best_it2 = np.where(RMSE == np.min(RMSE))[1][0]
     
     RECHG = calculate_recharge(TMELT, CM, CRU[best_it], RASmax[best_it2],
                                ETP, PTOT, TAVG)
-    WLsim, _ = calculate_hydrograph(RECHG, RECESS, WLobs)
+    WLsim, _ = calculate_hydrograph(RECHG[indx0:indxE], RECESS, WLobs)
    
     #plt.cla()                                  
-    plt.plot(WLsim, color=(1,0,0))
+    plt.plot(-WLsim, color=(1,0,0))
     print ' '
     print 'Cru = ', CRU[best_it]
-    print 'RASmax = ', RASmax[best_it2] * 1000
+    print 'RASmax = ', RASmax[best_it2]
     print 'Sy =', Sy[best_it, best_it2]
     print 'Recharge = ', sum(RECHG) / sum(PTOT) * 100, ' % de Ptot'
     
