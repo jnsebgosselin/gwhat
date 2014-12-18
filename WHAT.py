@@ -126,7 +126,9 @@ class MainWindow(QtGui.QMainWindow):
                             
 #        self.setGeometry(350, 75, 800, 750)
         self.setWindowTitle(software_version)
-        self.setWindowIcon(iconDB.WHAT) 
+        self.setWindowIcon(iconDB.WHAT)
+        
+        self.what_pref = WHATPref(self)
                         
         #---------------------------------------------------- MAIN CONSOLE -----
         
@@ -140,11 +142,6 @@ class MainWindow(QtGui.QMainWindow):
         '''<font color=black>Please report any bug or wishful feature to 
              Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
            </font>''')
-             
-        #------------------------------------------------ LOAD PREFERENCES -----
-             
-        self.what_pref = WHATPref(self)
-        self.what_pref.load_pref_file()
         
         #------------------------------------------------------ TAB WIDGET -----
         
@@ -222,18 +219,18 @@ class MainWindow(QtGui.QMainWindow):
     #-------------------------------------------------------------- EVENTS -----
         
         self.btn_project_dir.clicked.connect(self.select_project_dir)
-        
-        if not path.exists('WHAT.pref'):
-            self.create_new_pref_file()
-            
+       
     #---------------------------------------------------------------- INIT -----
-            
+        
+        self.what_pref.load_pref_file()
         self.load_project_dir(self.what_pref.project_dir)
         
     #===========================================================================  
     def write2console(self, console_text):
-    # This function is the bottle neck through which all messages writen in the
-    # console window must go through.
+        '''
+        This function is the bottle neck through which all messages writen in
+        the console window must go through.
+        '''
     #===========================================================================
         
         textime = '<font color=black>[' + ctime()[4:-8] + '] </font>'
@@ -242,61 +239,60 @@ class MainWindow(QtGui.QMainWindow):
         
     #===========================================================================
     def select_project_dir(self):
-    # <select_project_dir> is called by the event <btn_project_dir.clicked>.
-    # It allows the user to select a new active project directory.        
+        '''
+        <select_project_dir> is called by the event <btn_project_dir.clicked>.
+        It allows the user to select a new active project directory.
+        '''
     #===========================================================================
         
         dialog = QtGui.QFileDialog(self)
         dialog.setReadOnly(False)         
-        dirname = dialog.getExistingDirectory(self, 
+        project_dir = dialog.getExistingDirectory(self, 
                                    'Select a new or existing project directory',
                                    getcwd() + '/Projects')
         
-        if dirname:
-            self.what_pref.project_dir = dirname
-            self.what_pref.save_pref_file()
-            self.load_project_dir(self.what_pref.project_dir)                       
+        self.load_project_dir(project_dir)                                   
                                    
     #===========================================================================
-    def load_project_dir(self, dirname):
-    # This method is called either on startup during <initUI> or when a new
-    # project folder is chosen with <select_project_dir>.
+    def load_project_dir(self, project_dir):
+        '''
+        This method is called either on startup during <initUI> or when a new
+        project folder is chosen with <select_project_dir>.        
+        '''
     #===========================================================================
+        
+        if project_dir:
             
-        self.project_dir_display.setText(dirname)
+            self.what_pref.project_dir = project_dir
+            
+            self.what_pref.save_pref_file()            
+            self.what_pref.load_pref_file()
+            
+            self.project_dir_display.setText(project_dir)
+            
+            #---- Load Station List ----
+                    
+#            station_list = []
+#            for files in listdir(project_dir):
+#                if files.endswith('.lst'):
+#                    station_list.append(project_dir + '/' + files)
+#            
+#            if len(station_list) > 0:
+#                self.tab_dwnld_data.station_list_path = station_list[0]            
+#            else:
+#                self.tab_dwnld_data.station_list_path = []
+
+            self.tab_dwnld_data.load_stationList()
                 
-        if not path.exists(dirname + '/Raw'):
-            makedirs(dirname + '/Raw')
-        if not path.exists(dirname + '/Input'):
-            makedirs(dirname + '/Input')
-        if not path.exists(dirname + '/Output'):
-            makedirs(dirname + '/Output')
-        if not path.exists(dirname + '/Water Levels'):
-            makedirs(dirname + '/Water Levels')
+            #---- Load Weather Input Files ----
             
-        #---- Load Station List ----
-                
-        station_list = []
-        for files in listdir(dirname):
-            if files.endswith('.lst'):
-                station_list.append(dirname + '/' + files)
-        
-        if len(station_list) > 0:
-            self.tab_dwnld_data.station_list_path = station_list[0]            
-        else:
-            self.tab_dwnld_data.station_list_path = []
+            self.tab_fill.load_data_dir_content()
             
-        self.tab_dwnld_data.load_stationList()
+            # ----- RESET UI Memory Variables -----
             
-        #---- Load Weather Input Files ----
-        
-        self.tab_fill.load_data_dir_content()
-        
-        # ----- RESET UI Memory Variables -----
-        
-        self.tab_hydrograph.meteo_dir = dirname + '/Output'
-        self.tab_hydrograph.waterlvl_dir = dirname + '/Water Levels'
-        self.tab_hydrograph.save_fig_dir = dirname
+            self.tab_hydrograph.meteo_dir = project_dir + '/Meteo/Output'
+            self.tab_hydrograph.waterlvl_dir = project_dir + '/Water Levels'
+            self.tab_hydrograph.save_fig_dir = project_dir
                     
 ################################################################ @TAB HYDROGRAPH
         
@@ -777,7 +773,7 @@ class TabHydrograph(QtGui.QWidget):
             
     def select_closest_meteo_file(self):
                 
-        meteo_folder = self.parent.what_pref.project_dir + '/Output'
+        meteo_folder = self.parent.what_pref.project_dir + '/Meteo/Output'
         
         if path.exists(meteo_folder) and self.fwaterlvl:
             
@@ -1101,14 +1097,12 @@ class TabDwnldData(QtGui.QWidget):
         self.yStart_edit = QtGui.QSpinBox()
         self.yStart_edit.setAlignment(QtCore.Qt.AlignCenter)        
         self.yStart_edit.setSingleStep(1)
-        self.yStart_edit.setEnabled(False)
         self.yStart_edit.setValue(0)        
         year_label2 = QtGui.QLabel('to')
         year_label2.setAlignment(QtCore.Qt.AlignCenter)
         self.yEnd_edit = QtGui.QSpinBox()
         self.yEnd_edit.setAlignment(QtCore.Qt.AlignCenter)
         self.yEnd_edit.setSingleStep(1)
-        self.yEnd_edit.setEnabled(False)
         self.yEnd_edit.setValue(0)
         
         subgrid_year_widget = QtGui.QFrame()
@@ -1134,9 +1128,6 @@ class TabDwnldData(QtGui.QWidget):
         self.staName_display = QtGui.QComboBox()
         self.staName_display.setEditable(False)
         self.staName_display.setInsertPolicy(QtGui.QComboBox.NoInsert)
-        btn_load_sationlist = QtGui.QPushButton(labelDB.btn_load_text) 
-        btn_load_sationlist.setToolTip(labelDB.btn_load_help) 
-        btn_load_sationlist.setIcon(iconDB.openFile)
         btn_refresh_staList = QtGui.QToolButton()
         btn_refresh_staList.setAutoRaise(True)
         btn_refresh_staList.setIcon(iconDB.refresh)
@@ -1149,8 +1140,7 @@ class TabDwnldData(QtGui.QWidget):
         row = 0
         subgrid_Station.addWidget(staName_label, row, 1)
         subgrid_Station.addWidget(self.staName_display, row, 3)
-        subgrid_Station.addWidget(btn_load_sationlist, row, 4)
-        subgrid_Station.addWidget(btn_refresh_staList, row, 5)
+        subgrid_Station.addWidget(btn_refresh_staList, row, 4)
         row += 1
         subgrid_Station.addWidget(staID_label, row, 1)
         subgrid_Station.addWidget(grid_staID_widget, row, 3)
@@ -1179,8 +1169,6 @@ class TabDwnldData(QtGui.QWidget):
         TOP_widget = QtGui.QFrame()
         
         row = 0
-#        grid_TOP.addWidget(rawDir_widget, row, 0, 1, 2)
-#        row += 1
         grid_TOP.addWidget(Station_widget, row, 0, 1, 2)
         row += 1
         grid_TOP.addWidget(self.btn_get, row, 0)
@@ -1218,7 +1206,7 @@ class TabDwnldData(QtGui.QWidget):
         btn_save = QtGui.QPushButton('Save')
         btn_save.setIcon(iconDB.save)
         self.saveAuto_checkbox = QtGui.QCheckBox(
-                         'Automatically save concatened data in "Input" folder')
+                                           'Automatically save concatened data')
               
         grid_BOTTOM = QtGui.QGridLayout()
         BOTTOM_widget = QtGui.QFrame()
@@ -1285,21 +1273,18 @@ class TabDwnldData(QtGui.QWidget):
         
         #----------------------------------------------------VARIABLES INIT-----
                     
-        self.station_list_path = []
         self.MergeOutput = np.array([])
-        self.download_raw_datafiles = DownloadRawDataFiles(self)
+        self.dwnl_rawfiles = DownloadRawDataFiles(self)
         
         #------------------------------------------------------------EVENTS-----       
                 
-        self.download_raw_datafiles.ProgBarSignal.connect(self.setProgBarSignal)
-        self.download_raw_datafiles.ConsoleSignal.connect(self.setConsoleSignal)
-        self.download_raw_datafiles.MergeSignal.connect(
-                                                      self.download_is_finished)
+        self.dwnl_rawfiles.ProgBarSignal.connect(self.setProgBarSignal)
+        self.dwnl_rawfiles.ConsoleSignal.connect(self.parent.write2console)
+        self.dwnl_rawfiles.MergeSignal.connect(self.download_is_finished)
         
         self.staName_display.currentIndexChanged.connect(self.staName_isChanged)
         self.btn_get.clicked.connect(self.fetch_start_and_stop)      
         btn_refresh_staList.clicked.connect(self.load_stationList)
-        btn_load_sationlist.clicked.connect(self.select_stationList)
         
         btn_select.clicked.connect(self.select_raw_files)
         btn_save.clicked.connect(self.select_concatened_save_path)
@@ -1309,29 +1294,35 @@ class TabDwnldData(QtGui.QWidget):
     
     def start_year_changed(self):
         
-        index = self.staName_display.currentIndex()
-        min_year = max(self.yStart_edit.value(), int(self.staList[index, 2]))
-        max_year = int(self.staList[index, 3])
+        if len(self.staList) > 0:
+        
+            index = self.staName_display.currentIndex()
+            min_yr = max(self.yStart_edit.value(), int(self.staList[index, 2]))
+            max_yr = int(self.staList[index, 3])
                 
-        self.yEnd_edit.setRange(min_year, max_year)
+            self.yEnd_edit.setRange(min_yr, max_yr)
    
     def end_year_changed(self):
-        index = self.staName_display.currentIndex()
-        min_year = int(self.staList[index, 2])
-        max_year = min(self.yEnd_edit.value(), int(self.staList[index, 3]))
-                
-        self.yStart_edit.setRange(min_year, max_year)
+        
+        if len(self.staList) > 0:
+            
+            index = self.staName_display.currentIndex()
+            min_yr = int(self.staList[index, 2])
+            max_yr = min(self.yEnd_edit.value(), int(self.staList[index, 3]))
+                    
+            self.yStart_edit.setRange(min_yr, max_yr)
     
     #===========================================================================
     def select_raw_files(self):
-    # <select_raw_files> is called by the event <btn_select.clicked.connect>.
-    # It allows the user to select a group of raw data file belonging to a
-    # given meteorological station in order to concatenate them into a single
-    # file with the method <concatenate_and_display>.        
+        '''
+        This method is called by the event <btn_select.clicked.connect>.
+        It allows the user to select a group of raw data files belonging to a
+        given meteorological station in order to concatenate them into a single
+        file with the method <concatenate_and_display>.
+        '''
     #===========================================================================
         
-        project_dir = self.parent.what_pref.project_dir
-        dialog_fir = project_dir + '/Raw'
+        dialog_fir = self.parent.what_pref.project_dir + '/Meteo/Raw'
         
         fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files', 
                                                       dialog_fir, '*.csv')
@@ -1344,7 +1335,7 @@ class TabDwnldData(QtGui.QWidget):
     # files and display the results in the <merge_stats_display> widget. 
     # 
     # It is started either from the method <select_raw_files> or by the event
-    # <download_raw_datafiles.MergeSignal> that is emitted after the
+    # <dwnl_rawfiles.MergeSignal> that is emitted after the
     # downloading of a serie of raw data files is completed. 
     #===========================================================================
         
@@ -1372,7 +1363,7 @@ class TabDwnldData(QtGui.QWidget):
             StaName = StaName.translate(trantab)
             
             project_dir = self.parent.what_pref.project_dir
-            save_dir = project_dir + '/Input/'
+            save_dir = project_dir + '/Meteo/Input/'
             if not path.exists(save_dir):
                 makedirs(save_dir)
                 
@@ -1401,7 +1392,7 @@ class TabDwnldData(QtGui.QWidget):
             
             project_dir = self.parent.what_pref.project_dir
             filename = StaName + '_' + YearStart + '-' + YearEnd + '.csv'            
-            dialog_dir = project_dir + '/Input/' + filename
+            dialog_dir = project_dir + '/Meteo/Input/' + filename
                           
             fname, ftype = QtGui.QFileDialog.getSaveFileName(
                                          self, 'Save file', dialog_dir, '*.csv')
@@ -1435,7 +1426,7 @@ class TabDwnldData(QtGui.QWidget):
     #
     # Also, this method manages the stopping of the downloading process through
     # the state of the "btn_get". Right before the downloading process is
-    # started with "self.download_raw_datafiles.start()", the text and icon of
+    # started with "self.dwnl_rawfiles.start()", the text and icon of
     # "btn_get" is changed to look like a stop button. As long as the button 
     # is in 'stop' state, the downloading process continue. If "btn_get" is
     # clicked again by the user during the downloading process, its state 
@@ -1444,11 +1435,11 @@ class TabDwnldData(QtGui.QWidget):
     # downloading process of raw data files.
     #===========================================================================
         
-        if self.download_raw_datafiles.isRunning():
+        if self.dwnl_rawfiles.isRunning():
             
             # Stop the Download process and reset UI
             
-            self.download_raw_datafiles.STOP = True
+            self.dwnl_rawfiles.STOP = True
 
             self.btn_get.setIcon(iconDB.download)
         
@@ -1479,10 +1470,10 @@ class TabDwnldData(QtGui.QWidget):
                 self.btn_get.setIcon(iconDB.stop)
                 
                 # push the raw data directory to the class instance
-                dirname = self.parent.what_pref.project_dir + '/Raw'           
-                self.download_raw_datafiles.dirname = dirname
+                dirname = self.parent.what_pref.project_dir + '/Meteo/Raw'           
+                self.dwnl_rawfiles.dirname = dirname
                                                                            
-                self.download_raw_datafiles.start()
+                self.dwnl_rawfiles.start()
     
     #===========================================================================
     def download_is_finished(self, fname):
@@ -1500,75 +1491,104 @@ class TabDwnldData(QtGui.QWidget):
         self.btn_get.setIcon(iconDB.download)
         
         self.concatenate_and_display(fname)
-        
-    
-    #===========================================================================
-    def select_stationList(self):
-    # The folowing method is called by the event "btn_load_sationlist.clicked". 
-    # It allows the user to select a *.csv file that contains a list of
-    # meteorological station names, along with some corresponding information. 
-    # The fields of the file should be: station names, station ID , dates 
-    # between which data are availables, and the province to which the station 
-    # belongs.
-    #
-    # The only field that is used to download the data from the Environment
-    # Canada (EC) website is the StationID. This ID can be found on the EC
-    # website in the address bar of the web browser when a station is selected. 
-    # Note that this ID is not the same as the Climate ID of the station.
-    # For example, the ID for the station Abercorn is 5308, as it can be found
-    # in the following address:
-    #
-    # "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
-    #  2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=1985&Month=
-    #  1&Day=01"
-    #===========================================================================
-
-      self.station_list_path, _ = QtGui.QFileDialog.getOpenFileName(
-                                self, 'Select a valid station list', 
-                                self.parent.what_pref.project_dir , '*.lst')        
-      
-      self.load_stationList()
     
     #===========================================================================
     def load_stationList(self): # refresh_stationList(self):
-    # This method is started either by the method "select_stationList"
-    # or by the event "btn_refresh_staList.clicked". It simply load the
-    # informations of the station list file provided by the user with the method
-    # "select_stationList" into memory and displays the list of the stations
-    # in the "staName_display" QComboBox widget.
+        '''
+        This method is started either by the event <btn_refresh_staList.clicked>
+        or when a new project folder is loaded in <MainWindow.load_project_dir>.
+        
+        It loads the informations in the "weather_stations.lst" file that is
+        located in the project folder and save it as a table in <self.staList>
+        and displays the station list in the QComboBox widget.
+        
+        ----- weather_stations.lst -----
+        
+        The weather_station.lst is a tabulation separated csv file that contains
+        the following information:  station names, station ID , date at which
+        the data records begin and date at which the data records end, and the
+        provinces to which each station belongs.
+        
+        The only field that is used to download the data from the Environment
+        Canada (EC) website is the StationID. This ID can be found on the EC
+        website in the address bar of the web browser when a station is
+        selected. Note that this ID is not the same as the Climate ID of the
+        station. For example, the ID for the station Abercorn is 5308, as it
+        can be found in the following address:
+        
+        "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
+         2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
+         1985&Month=1&Day=01"
+        '''
     #===========================================================================
         
-        if self.station_list_path:
+        self.staName_display.clear()
+        self.staList = []
+        
+        station_list_path = (self.parent.what_pref.project_dir + 
+                             '/weather_stations.lst')
+        
+        if not path.exists(station_list_path):
+            # Force the creation of a new "weather_station.lst" file
+            self.parent.what_pref.load_pref_file()
             
-            reader = open(self.station_list_path,'rb')
-            reader = csv.reader(reader, delimiter='\t')
-            reader = list(reader)        
+        reader = open(station_list_path,'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+        
+        if len(reader) > 1:
+            
+            self.parent.write2console('''<font color=black>
+                                           Weather station list loaded 
+                                           successfully.
+                                         </font>''')
+                                         
+            #----- Enable and Refresh UI ----
+                                         
+            self.staName_display.setEnabled(True)
+            self.staID_display.setEnabled(True)
+            self.yStart_edit.setEnabled(True)
+            self.yEnd_edit.setEnabled(True)
+            
             self.staList = np.array(reader[1:])
-            self.staName_display.clear()
-            self.staName_display.addItems(self.staList[:,0])
-            self.parent.write2console(
-            '''<font color=black>Station list loaded successfully.</font>''')
-        else:
-            self.staName_display.clear()
-            self.staList = []
+            self.staName_display.addItems(self.staList[:, 0])
+                                         
+        else: 
+            
+            self.parent.write2console('''<font color=red>
+                                           Weather Station list is empty.
+                                         </font>''')
+        
+            #----- Disable UI ----
+        
+            self.staName_display.setEnabled(False)
+            self.yStart_edit.setEnabled(False)
+            self.yStart_edit.setRange(0, 1)
+            self.yStart_edit.setValue(0)
+            self.yEnd_edit.setEnabled(False)
+            self.yEnd_edit.setRange(0, 1)
+            self.yEnd_edit.setValue(0)
+            self.staID_display.setEnabled(False)
+            self.staID_display.setText('')            
     
     #=========================================================================== 
     def staName_isChanged(self):
-    # The following method updates the fields StationId and Years when the 
-    # station name is changed by the user. It is called by the event
-    # "self.staName_display.currentIndexChanged".
+        '''
+        The following method updates the fields StationId and Years when the 
+        station name is changed by the user. It is called by the event
+        <self.staName_display.currentIndexChanged>.
+        '''
     #===========================================================================
+        
         sta_index = self.staName_display.currentIndex()
+        
         year_start = int(self.staList[sta_index, 2])
         year_end = int(self.staList[sta_index, 3])
         
         self.yStart_edit.setRange(year_start, year_end)
         self.yEnd_edit.setRange(year_start, year_end)
         
-        self.yStart_edit.setEnabled(True)
         self.yStart_edit.setValue(year_start)
-                
-        self.yEnd_edit.setEnabled(True)
         self.yEnd_edit.setValue(year_end)
         
         self.staID_display.setText(self.staList[sta_index, 1])
@@ -1578,20 +1598,12 @@ class TabDwnldData(QtGui.QWidget):
     # <setProgBarSignal> updates the value of the progression bar widget
     # of the main window in order to display the raw data files downloading
     # progress. The method is called by the event signal 
-    # <self.download_raw_datafiles.ProgBarSignal> that is being emitted by the 
-    # instance <self.download_raw_datafiles> of the <DownloadRawDataFiles>
+    # <self.dwnl_rawfiles.ProgBarSignal> that is being emitted by the 
+    # instance <self.dwnl_rawfiles> of the <DownloadRawDataFiles>
     # thread class.
     #===========================================================================
     
         self.parent.pbar.setValue(progress)
-        
-    #===========================================================================
-    def setConsoleSignal(self, console_text):
-    # print comments to the "main_console" that are issued from the instance 
-    # of the <DownloadRawDataFiles> Thread class.
-    #===========================================================================
-
-        self.parent.write2console(console_text)
 
 ###################################################################### @TAB FILL  
                                         
@@ -1897,9 +1909,11 @@ class TabFill(QtGui.QWidget):
    
     #===========================================================================
     def load_data_dir_content(self) : # def set_comboBox_item(self):
-    # Initiale the loading of weater data files contained in the 
-    # <Input> folder and display the resulting station list in the Target 
-    # station combo box.
+        '''
+        Initiale the loading of Weater Data Files contained in the 
+        </Meteo/Input> folder and display the resulting station list in the
+        Target station combo box widget.
+        '''
     #===========================================================================
                 
         self.FillTextBox.setText('')
@@ -1910,7 +1924,7 @@ class TabFill(QtGui.QWidget):
         self.CORRFLAG = 'off' # Correlation calculation won't be triggered when
                               # this is s'off'
         
-        input_folder = self.parent.what_pref.project_dir + '/Input'
+        input_folder = self.parent.what_pref.project_dir + '/Meteo/Input'
         
         if path.exists(input_folder):            
             
@@ -3684,8 +3698,9 @@ class FillWorker(QtCore.QThread):
             trantab = maketrans(intab, outtab)
             target_station_name = target_station_name.translate(trantab)
             
-            output_path = (self.project_dir + '/Output/' + target_station_name +
-                           '_' + YearStart + '-' + YearEnd + '.log')
+            output_path = (self.project_dir + '/Meteo/Output/' + 
+                           target_station_name + '_' + YearStart + '-' + 
+                           YearEnd + '.log')
             
             with open(output_path, 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
@@ -3710,7 +3725,7 @@ class FillWorker(QtCore.QThread):
             for i in range(len(ALLDATA)):
                 DATA2SAVE.append(ALLDATA[i])
             
-            output_path = (self.project_dir + '/Output/' + target_station_name +            
+            output_path = (self.project_dir + '/Meteo/Output/' + target_station_name +            
                            '_' + YearStart + '-' + YearEnd + '.out')
             
             with open(output_path, 'wb') as f:
@@ -3740,7 +3755,7 @@ class FillWorker(QtCore.QThread):
                 for i in range(len(ALLDATA)):
                     error_analysis_report.append(ALLDATA[i])
                 
-                output_path = (self.project_dir + '/Output/' + 
+                output_path = (self.project_dir + '/Meteo/Output/' + 
                                target_station_name + '_' + YearStart + '-' + 
                                YearEnd + '.err')
                                
@@ -3963,10 +3978,16 @@ class WHATPref():
         self.project_dir = getcwd() + '/Projects/Example'
         self.first_startup = 0
     
-    #===========================================================================
+    def save_pref_file(self):
+            
+        fcontent = [['Project Dir:', self.project_dir]]
+       
+        with open('WHAT.pref', 'wb') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(fcontent)
+            
     def load_pref_file(self):
-    #===========================================================================
-        
+            
         if not path.exists('WHAT.pref'):            
             # Default values will be kept and a new .pref file will be
             # generated
@@ -3982,25 +4003,45 @@ class WHATPref():
             reader = list(reader)
             
             self.project_dir = reader[0][1]
-            
-        if not path.exists( self.project_dir + '/Raw'):
-            makedirs( self.project_dir + '/Raw')
-        if not path.exists( self.project_dir + '/Input'):
-            makedirs( self.project_dir + '/Input')
-        if not path.exists( self.project_dir + '/Output'):
-            makedirs( self.project_dir + '/Output')
-        if not path.exists( self.project_dir + '/Water Levels'):
-            makedirs( self.project_dir + '/Water Levels')
-    
-    #===========================================================================
-    def save_pref_file(self):
-    #===========================================================================
         
-        fcontent = [['Project Dir:', self.project_dir]]
-       
-        with open('WHAT.pref', 'wb') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(fcontent)
+        #----- System files generation -----
+        
+        if not path.exists( self.project_dir + '/Meteo/Raw'):
+            makedirs(self.project_dir + '/Meteo/Raw')
+        if not path.exists( self.project_dir + '/Meteo/Input'):
+            makedirs(self.project_dir + '/Meteo/Input')
+        if not path.exists( self.project_dir + '/Meteo/Output'):
+            makedirs(self.project_dir + '/Meteo/Output')
+        if not path.exists( self.project_dir + '/Water Levels'):
+            makedirs(self.project_dir + '/Water Levels')
+        
+        fname = self.project_dir + '/waterlvl_manual_measurements.csv'
+        if not path.exists(fname):
+            
+            msg = ('No "waterlvl_manual_measurements.csv" file found. ' +
+                   'A new one has been created.')
+            print msg
+            
+            fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
+            
+            with open(fname, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(fcontent)
+                
+        fname = self.project_dir + '/weather_stations.lst'
+        if not path.exists(fname):
+            
+            msg = ('No "weather_stations.lst" file found. ' +
+                   'A new one has been created.')
+            print msg
+            
+            fcontent = [['stationName', 'stationId', 'First_Year', 'Last_Year',
+                         'Province']]
+            
+            with open(fname, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(fcontent)
+                               
        
 ################################################################################
 #                                                                           
