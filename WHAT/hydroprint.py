@@ -689,7 +689,10 @@ class WaterlvlData():
         self.well_info = well_info
         
     def load_waterlvl_measures(self, fname, name_well):
-    
+        
+        WLmes = []
+        TIMEmes = []
+            
         if path.exists(fname):
             
             reader = open(fname, 'rb')
@@ -697,21 +700,13 @@ class WaterlvlData():
             reader = list(reader)[1:]
             reader = np.array(reader)
             
-            puits_names_list = reader[:, 0] 
-           
-            rowx = np.where(puits_names_list == name_well)[0]
+            if len(reader) > 1:
+                puits_names_list = reader[:, 0] 
+                rowx = np.where(puits_names_list == name_well)[0]
             
-            if len(rowx) == 0:
-                WLmes = []
-                TIMEmes = []
-            else:        
-                WLmes = reader[rowx, 2].astype(float)
-                TIMEmes = reader[rowx, 1].astype(float)
-                
-        else:
-            
-            WLmes = []
-            TIMEmes = []
+                if len(rowx) > 0:                         
+                    WLmes = reader[rowx, 2].astype(float)
+                    TIMEmes = reader[rowx, 1].astype(float)
             
         self.TIMEmes = TIMEmes
         self.WLmes = WLmes

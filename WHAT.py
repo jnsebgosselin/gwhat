@@ -733,6 +733,10 @@ class TabHydrograph(QtGui.QWidget):
             filename = self.parent.what_pref.project_dir
             filename += '/waterlvl_manual_measurements.csv'
             
+            if not path.exists(filename):
+                # Force the creation of a new 'waterlvl_manual_measurements.csv'
+                self.parent.what_pref.load_pref_file()
+            
             self.waterlvl_data.load_waterlvl_measures(filename, name_well)
             
             #----- Load and Display Well Info in UI -----
