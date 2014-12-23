@@ -28,7 +28,7 @@ import csv
 from copy import copy
 from urllib import urlretrieve
 from sys import argv
-from time import ctime, strftime, sleep
+from time import ctime, strftime, sleep, gmtime
 from os import getcwd, listdir, makedirs, path
 from string import maketrans
 #from datetime import datetime
@@ -972,18 +972,17 @@ class TabHydrograph(QtGui.QWidget):
             layoutExist = self.graph_params.checkConfig(name_well)
 
             if layoutExist == True:
-                self.msgBox.setText('<b>A graph layout already exists ' +
-                                    'for well ' + name_well + '.<br><br> Do ' +
-                                     'you want to replace it?</b>')
+                self.msgBox.setText(
+                '''<b>A graph layout already exists for well %s.<br><br> Do 
+                     you want to replace it?</b>''' % name_well)
                 override = self.msgBox.exec_()
 
                 if override == self.msgBox.Yes:
                     self.save_graph_layout(name_well)
                                 
                 elif override == self.msgBox.No:
-                    self.parent.write2console(
-                    '''<font color=black>Graph layout 
-                         not saved for well %s.</font>''' % name_well)
+                    self.parent.write2console('''<font color=black>Graph layout 
+                                   not saved for well %s.</font>''' % name_well)
                     
             else:            
                 self.save_graph_layout(name_well)
@@ -2336,10 +2335,15 @@ class TabAbout(QtGui.QWidget):
         
 #===============================================================================        
 class DownloadRawDataFiles(QtCore.QThread):        
-# This thread is called when the "Fetch" button of the Tab named 
-# "Fetch and Merge" is clicked on. It downloads the raw data files from
-# www.climate.weather.gc.ca and saves them in the folder whose path
-# is writen in the text box next to the "Target Directory" button.        
+    '''
+    This thread is called when the "Get Data" button of the Tab named 
+    "Download Data" is clicked on. It downloads the raw data files from
+    www.climate.weather.gc.ca and saves them automatically in
+    <Project_directory>/Meteo/Raw/<station_name>.
+
+    New in 4.0.6: Raw data files that already exists in the Raw directory
+                  won't be downloaded again from the server.      
+    '''
 #===============================================================================   
     
     MergeSignal = QtCore.Signal(list)
@@ -2349,9 +2353,9 @@ class DownloadRawDataFiles(QtCore.QThread):
     def __init__(self, parent):
         super(DownloadRawDataFiles, self).__init__(parent)
         self.parent = parent
-        self.STOP = False
         
-        self.dirname = []
+        self.STOP = False # Flag to stop the downloading process on the UI side    
+        self.dirname = [] # Directory where the downloaded files are saved
         
     def run(self): 
        
@@ -2371,36 +2375,57 @@ class DownloadRawDataFiles(QtCore.QThread):
             makedirs(self.dirname)
             
         # Data are downloaded on a yearly basis from yStart to yEnd from the
-        # specified url to the path defined by dirname+fname:
+        # specified url to the path defined by dirname+fname.
+         
         fname4merge = []
         for Year in range(yr_start, yr_end+1):
             
-            fname = ('/eng-daily-0101' + str(Year) + '-1231' +
-                     str(Year) + '.csv')    
-    
+            if self.STOP == True : # User stopped the downloading process.
+                
+                self.STOP = False
+                self.ConsoleSignal.emit('''<font color=red>Downloading process                  
+                                             for station %s stopped.
+                                           </font>''' % StaName)
+                break
+            
+            #----- File And URL Paths -----
+            
+            fname = '/eng-daily-0101%s-1231%s.csv' % (Year, Year) 
+            
             url = ('http://climate.weather.gc.ca/climateData/bulkdata_e.html?' +
                    'format=csv&stationID=' + str(staID) + '&Year=' + str(Year) +
                    '&Month=1&Day=1&timeframe=2&submit=Download+Data')
-                                    
-            if self.STOP == True :
-                # User stopped the downloading process.
-                self.STOP = False
-
-                self.ConsoleSignal.emit(
-                               '''<font color=red>Downloading process                  
-                                  for station %s stopped</font>''' % StaName)
-                break
             
-            urlretrieve(url, self.dirname + fname)
+            #----- Download Data For That Year -----
+            
+            if path.exists(self.dirname + fname):
+                
+                # If the file was downloaded in the same year that of the data
+                # record, data will be downloaded again in case the data series
+                # was not complete.
+                
+                myear = path.getmtime(self.dirname + fname)
+                myear = gmtime(myear)[0]
+
+                if myear == Year:
+                    urlretrieve(url, self.dirname + fname)
+                
+            else:
+                urlretrieve(url, self.dirname + fname)
+            
+            #----- Update UI -----
             
             progress = (Year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
             self.ProgBarSignal.emit(int(progress))
             fname4merge.append(self.dirname + fname)
             
-            if Year == yr_end:
-                self.ConsoleSignal.emit('<font color=black>Data downloaded ' +
-                                        'successfully for station ' + 
-                                        StaName + '</font>')
+            #----- End Of Task -----
+            
+            if Year == yr_end: # Downloading process ended successfully
+                
+                self.ConsoleSignal.emit('''<font color=black>Data downloaded
+                                             successfully for station %s.
+                                           </font>''' % StaName)
                 self.MergeSignal.emit(fname4merge)
                 self.ProgBarSignal.emit(0)
 
