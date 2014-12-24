@@ -2345,8 +2345,9 @@ class DownloadRawDataFiles(QtCore.QThread):
 
     New in 4.0.6: Raw data files that already exists in the Raw directory
                   won't be downloaded again from the server.
-                  
-    ----- Input ----
+    ----- Input -----
+
+    self.STOP = Flag that is used to stop the thread from the UI side.
     
     ----- Output ----
     
@@ -2365,7 +2366,7 @@ class DownloadRawDataFiles(QtCore.QThread):
         super(DownloadRawDataFiles, self).__init__(parent)
         self.parent = parent
         
-        self.STOP = False # Flag to stop the downloading process on the UI side    
+        self.STOP = False  
         self.dirname = [] # Directory where the downloaded files are saved
         self.ERRFLAG = [] 
           
@@ -2418,7 +2419,7 @@ class DownloadRawDataFiles(QtCore.QThread):
                 # record, data will be downloaded again in case the data series
                 # was not complete.
                 
-                myear = path.getmtime(fname)
+                myear = path.getmtime(fname) # Year of file last modification
                 myear = gmtime(myear)[0]
                 
                 if myear == year:

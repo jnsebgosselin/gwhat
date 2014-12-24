@@ -832,6 +832,15 @@ if __name__ == '__main__':
     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fwaterlvl = 'Files4testing/PO16A.xls'
     
+    import os
+    import datetime
+    import time
+    
+    t = os.path.getmtime(fmeteo)
+    t = time.gmtime(t)
+    
+    print t[:3]
+    
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
     

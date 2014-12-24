@@ -58,11 +58,11 @@ class SoilTypes():
     #----- OUTPUT -----
     
     TEXTURE: Texture Class Name    
-    POREFF:  Effective Porosity (cm**3/cm**3)
-    RSAT:    Residual Saturation (cm**3/cm**3)
-    PSD:     Pore Size Distribution - Geometric mean
-    BP:      Bubbling Pressure - Geometric mean (cm)
-    KSAT:    Saturated Hydraulic Conductivity (cm/hr)
+    POREFF: Effective Porosity (cm**3/cm**3)
+    VWCres: Volumetric residual water content (cm**3/cm**3)
+    PSD: Pore Size Distribution - Geometric mean
+    Pb: Pressure entry / Bubbling Pressure - Geometric mean (cm)
+    Kw: Saturated Hydraulic Conductivity (cm/hr)
     
     #----- SOURCE -----
     
@@ -84,11 +84,11 @@ class SoilTypes():
         self.POREFFmin = [0.354, 0.329, 0.283, 0.334, 0.394, 0.235, 0.279,
                           0.347, 0.207, 0.334, 0.269][indx]
                         
-        self.RSAT =  [0.020, 0.035, 0.041, 0.027, 0.015, 0.068, 0.075, 0.040,
+        self.VWCres =  [0.020, 0.035, 0.041, 0.027, 0.015, 0.068, 0.075, 0.040,
                         0.109, 0.056, 0.090][indx]        
-        self.RSATmax = [0.039, 0.067, 0.106, 0.074, 0.058, 0.137, 0.174,
+        self.VWCres_max = [0.039, 0.067, 0.106, 0.074, 0.058, 0.137, 0.174,
                           0.118, 0.205, 0.136, 0.195][indx]
-        self.RSATmin = [0.001, 0.003, 0., 0., 0., 0., 0., 0., 0., 0., 0.]
+        self.VWCres_min = [0.001, 0.003, 0., 0., 0., 0., 0., 0., 0., 0., 0.]
         
         self.PSD = [0.592, 0.474, 0.322, 0.220, 0.211, 0.250, 0.194, 0.151,
                     0.168, 0.127, 0.131][indx]
@@ -97,41 +97,77 @@ class SoilTypes():
         self.PSDmin = [0.334, 0.271, 0.186, 0.137, 0.136, 0.125, 0.100, 0.090,
                        0.078, 0.074, 0.068][indx]
                        
-        self.BP = [7.26, 8.69, 14.66, 11.15, 20.76, 28.08, 25.89, 32.56, 29.17,
+        self.Pb = [7.26, 8.69, 14.66, 11.15, 20.76, 28.08, 25.89, 32.56, 29.17,
                    34.19, 37.30][indx]
-        self.BPmax = [38.74, 41.85, 62.24, 76.40, 120.40, 141.50, 115.70,
-                      158.7, 171.6, 166.2, 187.2][indx]
-        self.BPmin = [1.36, 1.80, 3.45, 1.63, 3.58, 5.57, 5.80, 6.68, 4.96,
-                      7.04, 7.43][indx]
+        self.Pb_max = [38.74, 41.85, 62.24, 76.40, 120.40, 141.50, 115.70,
+                       158.7, 171.6, 166.2, 187.2][indx]
+        self.Pb_min = [1.36, 1.80, 3.45, 1.63, 3.58, 5.57, 5.80, 6.68, 4.96,
+                       7.04, 7.43][indx]
                       
-        self.KSAT = [21.00, 6.11, 2.59, 1.32, 0.68, 0.43, 0.23, 0.15, 0.12,
-                     0.09, 0.06][indx]
+        self.Kw = [21.00, 6.11, 2.59, 1.32, 0.68, 0.43, 0.23, 0.15, 0.12,
+                   0.09, 0.06][indx]
 
 #===============================================================================
-def soil_char_curves(P, SOIL):
-    # Calculate soil water content, matric potential and unsaturated hydraulic 
-    # conductivity after Campbel, 1974
+def calc_Krw(VWC, SoilObj):
+    '''
+    Calculate soil water content, matric potential and unsaturated hydraulic 
+    conductivity after Brooks and Corey, 1964
+    
+    ----- Inputs -----
+    
+    VWC: Volumetric Water Content (m**3/m**3)
+    PSD: Pore Size Distribution
+    Kw: Saturated Hydraulic Conductivity for water (cm/hr)
+    Pb: Pressure entry / Bubbling Pressure - Geometric mean (cm)
+    VWCres: Volumetric residual water content (cm**3/cm**3)
+    '''
 #===============================================================================
     
-    Pe = np.mean(SIMOUT.Pe)
-    PDI = np.mean(SIMOUT.PDI)
-    VLCsat = np.mean(SIMOUT.VLCsat)
-    Ksat = np.mean(SIMOUT.Ksat)
-    VLCres = np.mean(SIMOUT.VLCres)               
-   
-    VLC = np.zeros(len(P)) # soil volumetric water content (m3/m3)
-    K = np.zeros(len(P)) # soil unsaturated hydraulic conductivity (cm/h)
-    for i in range(len(P)):
-        if Pe > P[i]:
-            VLC[i] = VLCres + (VLCsat - VLCres) * (Pe / P[i]) ** PDI
-            K[i] = Ksat * (Pe / P[i]) ** (2 + 3*PDI)
-        elif Pe <= P[i]:
-            VLC[i] = VLCsat
-            K[i] = Ksat
-    return VLC, K
+    N = len(VWC)
+    
+    #----- Soil Properties -----
+    
+    PSD = SoilObj.PSD
+    Kw = SoilObj.Kw * 10 #(mm/hr)
+    VWCsat = SoilObj.POREFF
+    VWCres = SoilObj.VWCres
+    Pb = SoilObj.Pb * 10 # (mm)
+    
+    P = np.zeros(N) # soil volumetric water content (mm)
+    Krw = np.zeros(N) # soil unsaturated hydraulic conductivity (mm/hr)
+    
+    for i in range(N):
+        if VWC >= VWCsat:
+            P[i] = Pb
+            Krw[i] = Kw
+        else:
+            Se = (VWC[i] - VWCres) / (VWCsat - VWCres)
+            P[i] = Pb / Se**(1/PSD)
+            Kw[i] = Se**(2/PDI+3)
+                
+#    for i in range(len(P)):
+#        if Pe > P[i]:
+#            VLC[i] = VLCres + (VLCsat - VLCres) * (Pe / P[i]) ** PDI
+#            Kh[i] = Ksat * (Se) ** ((2 + 3*PDI)/PDI)
+#        elif Pe <= P[i]:
+#            VLC[i] = VLCsat
+#            Kh[i] = Ksat
+            
+    return VWCsat, Krw
     
 #===============================================================================
 def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
+    '''
+    ----- Inputs -----
+    
+    VWCRES = Volumetric residual water content (mm**3 / mm**3)
+    VWCSAT = Volumetric saturated water content - Porosity (mm**3 / mm**3)
+    HROOTS = Thickness of the root zone (mm)
+    
+    ----- Outputs -----
+    
+    HWT = Water table depth (mmbgs)
+    '''
 #===============================================================================
     
     N = len(ETP)    
@@ -143,6 +179,13 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     dRAS = np.zeros(N)    # Variation of RAW
     RAS = np.zeros(N)     # Readily Available Storage
     RECHG = np.zeros(N-1) # Recharge (mm)
+    HWT = np.zeros(N)
+    
+    SoilObj = SoilTypes(0)
+    VWCres = SoilObj.VWCRES
+    VWCsat = SoilObj.POREFF
+    Sy = VWCSAT - VWCRES
+    HROOTS = 300
     
     TMELT = 0 # Temperature treshold for snowmelt
     CM = 4 # Daily melt coefficient
@@ -152,10 +195,25 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     
     PACC[0] = 0
     RAS[0] = RASmax
-    
-    for i in range(0, N - 1):
 
-        #----- Precipitation -----          
+#----------------------------------------------------------- MESH CREATION -----
+    
+    HWT[0] = 6000
+    
+    # First layer thickness is equal to that of the root zone
+    z = np.array([150, 650, 1150, 1650, 2150, 2650, 3150, 3650, 4150, 4650,
+                  5150, 5650, 6150])
+    
+    VWC = np.zeros(len(z)) + VWCres
+
+#-------------------------------------------------------------- SIMULATION -----
+
+
+    for i in range(0, N-1):
+        
+    #------------------------------------ SURFACE STORAGE and INFILTRATION -----
+
+        #----- Precipitation and Snowmelt -----          
 
         if TAVG[i] > TMELT:  # Rain
         
@@ -168,6 +226,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
                 PACC[i+1] = PACC[i] - MP[i] + PTOT[i]                
                 
         elif TAVG[i] <= TMELT: #Snow
+        
             PAVL[i+1] = 0
             PACC[i+1] = PACC[i] + PTOT[i]
             
@@ -185,6 +244,10 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
         ETR[i] = min(ETP[i], RAS[i])
         
         RAS[i+1] = RAS[i+1] - ETR[i]
+        
+    #-------------------------------------------------- SUBSURFACE ROUTING -----
+        
+        
     
     return RECHG
 
@@ -320,6 +383,8 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
                                               # evapotranspiration (mm)
     
+    print np.mean(ETP)
+    
     #---- Load Waterlvl -----
     
     WLobs = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
@@ -396,7 +461,17 @@ if __name__ == '__main__':
     waterlvlObj = WaterlvlData()
     waterlvlObj.load(fwaterlvl)
     
-    bestfit_hydrograph(meteoObj, fwaterlvl)
+    PTOT = meteoObj.PTOT # Daily total precipitation (mm)
+    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
+    TIMEmeteo = meteoObj.TIME # Time (days)
+    LAT = float(meteoObj.LAT) # Latitude (deg)
+    
+    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
+                                              # evapotranspiration (mm)
+    
+    RECHG = calc_recharge(0.1, 25, ETP, PTOT, TAVG)
+    
+#    bestfit_hydrograph(meteoObj, waterlvlObj)
     
     
 #    print np.mean(RECHG) * 365
