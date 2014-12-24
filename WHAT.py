@@ -26,8 +26,8 @@ last_modification = '15/12/2014'
 
 import csv
 from copy import copy
-from urllib import urlretrieve
-from urllib2 import urlopen, URLError, HTTPError
+#from urllib import urlretrieve
+from urllib2 import urlopen, URLError
 from sys import argv
 from time import ctime, strftime, sleep, gmtime
 from os import getcwd, listdir, makedirs, path
@@ -2338,7 +2338,7 @@ class TabAbout(QtGui.QWidget):
 #===============================================================================        
 class DownloadRawDataFiles(QtCore.QThread):        
     '''
-    This thread is called when the "Get Data" button of the Tab named 
+    This thread is called when the "Get Data" button of the Tab 
     "Download Data" is clicked on. It downloads the raw data files from
     www.climate.weather.gc.ca and saves them automatically in
     <Project_directory>/Meteo/Raw/<station_name>.
@@ -2346,12 +2346,14 @@ class DownloadRawDataFiles(QtCore.QThread):
     New in 4.0.6: Raw data files that already exists in the Raw directory
                   won't be downloaded again from the server.
                   
+    ----- Input ----
+    
     ----- Output ----
     
     self.ERRFLAG = Flag for the download of files - np.arrays
-                       0 -> File downloaded successfully
-                       1 -> Problem downloading the file
-                       3 -> File NOT downloaded because it already exists
+                   0 -> File downloaded successfully
+                   1 -> Problem downloading the file
+                   3 -> File NOT downloaded because it already exists
     '''
 #===============================================================================   
     
@@ -2390,22 +2392,22 @@ class DownloadRawDataFiles(QtCore.QThread):
             
         #-------------------------------------------------------- DOWNLOAD -----
             
-        # Data are downloaded on a yearly basis from yStart to yEnd from the
-        # specified url to the path defined by dirname+fname.
+        # Data are downloaded on a yearly basis from yStart to yEnd
          
-        fname4merge = []
+        fname4merge = [] # list of paths of the yearly raw data files that will
+                         # be pass to contatenate and merge function.
         i = 0
-        for Year in range(yr_start, yr_end+1):
+        for year in range(yr_start, yr_end+1):
             
             if self.STOP == True : # User stopped the downloading process.                
                 break
             
-            #----- File And URL Paths -----
+            #----- File and URL Paths -----
             
-            fname = self.dirname + '/eng-daily-0101%s-1231%s.csv' % (Year, Year) 
+            fname = self.dirname + '/eng-daily-0101%s-1231%s.csv' % (year, year) 
             
             url = ('http://climate.weather.gc.ca/climateData/bulkdata_e.html?' +
-                   'format=csv&stationID=' + str(staID) + '&Year=' + str(Year) +
+                   'format=csv&stationID=' + str(staID) + '&Year=' + str(year) +
                    '&Month=1&Day=1&timeframe=2&submit=Download+Data')
             
             #----- Download Data For That Year -----
@@ -2419,7 +2421,7 @@ class DownloadRawDataFiles(QtCore.QThread):
                 myear = path.getmtime(fname)
                 myear = gmtime(myear)[0]
                 
-                if myear == Year:
+                if myear == year:
                     self.ERRFLAG[i] = self.dwndfile(url, fname)
                 else:
                     self.ERRFLAG[i] = 3
@@ -2430,20 +2432,34 @@ class DownloadRawDataFiles(QtCore.QThread):
 
             #----- Update UI -----
             
-            progress = (Year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
+            progress = (year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
             self.ProgBarSignal.emit(int(progress))
             
-            if self.ERRFLAG[i] != 1:
-                fname4merge.append(fname)
-            else:
+            if self.ERRFLAG[i] == 1:
+                
                 self.ConsoleSignal.emit(
                 '''<font color=red>There was a problem downloading the data 
                      of station %s for year %d.
-                   </font>''' % (StaName, Year))
-            
+                   </font>''' % (StaName, year))                
+
+            elif self.ERRFLAG[i] == 0:
+                
+                self.ConsoleSignal.emit(
+                '''<font color=black>Weather data for station %s downloaded
+                     successfully for year %d.</font>''' % (StaName, year))
+                fname4merge.append(fname)
+                
+            elif self.ERRFLAG[i] == 3:
+                
+                self.ConsoleSignal.emit(
+                '''<font color=green>A weather data file already existed for
+                     station %s for year %d. Downloading is skipped.
+                   </font>''' % (StaName, year))
+                fname4merge.append(fname)
+                            
             i += 1
             
-    #--------------------------------------------------------- End Of Task -----
+    #--------------------------------------------------------- End of Task -----
         
         if self.STOP == True:
             
@@ -2451,11 +2467,7 @@ class DownloadRawDataFiles(QtCore.QThread):
             self.ConsoleSignal.emit('''<font color=red>Downloading process for
                                          station %s stopped.
                                        </font>''' % StaName)
-                                       
         else:
-            self.ConsoleSignal.emit(
-            '''<font color=black>Downloading process ended successfully for 
-                 station %s.</font>''' % StaName)
                  
             self.MergeSignal.emit(fname4merge)
             self.ProgBarSignal.emit(0)
