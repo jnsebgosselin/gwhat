@@ -4137,7 +4137,7 @@ class WHATPref():
                    'A new one has been created.')
             print msg
             
-            fcontent = [['stationName', 'stationId', 'First_Year', 'Last_Year',
+            fcontent = [['staName', 'stationId', 'StartYear', 'EndYear',
                          'Province']]
             
             with open(fname, 'wb') as f:
