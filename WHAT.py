@@ -1280,8 +1280,6 @@ class TabDwnldData(QtGui.QWidget):
         
         #----------------------------------------------------VARIABLES INIT-----
         
-        self.station_list_path = (self.parent.what_pref.project_dir + 
-                                  '/weather_stations.lst')
         self.MergeOutput = np.array([])
         self.dwnl_rawfiles = DownloadRawDataFiles(self)
         self.initUI_search4stations()
@@ -1430,8 +1428,8 @@ class TabDwnldData(QtGui.QWidget):
         #----- Save List -----
         
         projectdir = self.parent.what_pref.project_dir        
-        self.station_list_path = projectdir + '/weather_stations.lst'    
-        with open(self.station_list_path, 'wb') as f:
+        fname = projectdir + '/weather_stations.lst'    
+        with open(fname, 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(staList)
         
@@ -1619,9 +1617,11 @@ class TabDwnldData(QtGui.QWidget):
     
     #===========================================================================
     def download_is_finished(self, fname):
-    # This method is started by the signal <MergeSignal> that is emitted after
-    # a downloading task has ended. The signal contains the list of raw
-    # data files that has been downloaded.
+        '''   
+        This method is started by the signal <MergeSignal> that is emitted after
+        a downloading task has ended. The signal contains the list of raw
+        data files that has been downloaded.
+        '''
     #===========================================================================    
         
         # Reset UI and start the concatenation of the data.         
@@ -1637,14 +1637,37 @@ class TabDwnldData(QtGui.QWidget):
     
     #===========================================================================
     def select_stationList(self):
+        '''
+        This method is called when the <btn_browse_staList> is clicked.
+        It allows the user to select and load a custom weather station list.
+        Info are loaded into memory and saved in the file named
+        "weather_stations.lst".
+        '''
     #===========================================================================
         
         dirname = self.parent.what_pref.project_dir
         
-        self.station_list_path, _ = QtGui.QFileDialog.getOpenFileName(
+        fname, _ = QtGui.QFileDialog.getOpenFileName(
                          self, 'Select a valid station list', dirname, '*.lst')        
         
-        self.load_stationList()
+        if fname:
+            
+            #----- Load List -----
+            
+            reader = open(fname,'rb')
+            reader = csv.reader(reader, delimiter='\t')
+            
+            #----- Save List -----
+            
+            fname = self.parent.what_pref.project_dir + '/weather_stations.lst'
+                                 
+            with open(fname, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(reader)
+            
+            #----- Load List in UI-----
+            
+            self.load_stationList()
             
     #===========================================================================
     def load_stationList(self): # refresh_stationList(self):
@@ -1682,14 +1705,14 @@ class TabDwnldData(QtGui.QWidget):
         
         self.staName_display.clear()
         self.staList = []        
-        
+        station_list_path = (self.parent.what_pref.project_dir + 
+                             '/weather_stations.lst')
+                                      
         # Force the creation of a new "weather_station.lst" file
-        if not path.exists(self.station_list_path):
-            self.station_list_path = (self.parent.what_pref.project_dir + 
-                                      '/weather_stations.lst')
+        if not path.exists(station_list_path):
             self.parent.what_pref.load_pref_file()
             
-        reader = open(self.station_list_path,'rb')
+        reader = open(station_list_path,'rb')
         reader = csv.reader(reader, delimiter='\t')
         reader = list(reader)
         
