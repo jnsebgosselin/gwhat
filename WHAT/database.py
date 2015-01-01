@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014 Jean-Sebastien Gosselin
+Copyright 2015 Jean-Sebastien Gosselin
 
 email: jnsebgosselin@gmail.com
 
@@ -38,7 +38,8 @@ class icons():
         self.openFile = QIcon('Icons/open_file.png')
         self.openFolder = QIcon('Icons/folder')
         self.download = QIcon('Icons/download.png')
-        self.stop = QIcon('Icons/process-stop')
+        self.stop = QIcon('Icons/process-stop.png')
+        self.search = QIcon('Icons/search.png')
         
         #----- HYDROGRAPH TOOLBAR -----
         
