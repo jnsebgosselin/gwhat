@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014 Jean-Sebastien Gosselin
+Copyright 2015 Jean-Sebastien Gosselin
 
 email: jnsebgosselin@gmail.com
 
@@ -29,133 +29,189 @@ from urllib2 import urlopen, URLError
 
 import numpy as np
 
-LAT = 45.4
-LON = -73.13
-Nmax = 25
-
+#===============================================================================
 def decdeg2dms(dd):
+    '''
+    Convert decimal degree lat/lon coordinate to decimal, minute, second format.
+    '''    
+#===============================================================================
+    
     mnt,sec = divmod(dd*3600, 60)
     deg,mnt = divmod(mnt, 60)
     
-    return deg,mnt,sec
-    
+    return deg, mnt, sec
+
+#===============================================================================   
 def dms2decdeg(deg, mnt, sec):
+    '''
+    Convert decimal, minute, second format lat/lon coordinate to decimal degree.
+    '''
+#===============================================================================
+    
     dd = deg + mnt/60. + sec/3600.    
     
     return dd
 
-url = ('http://climate.weather.gc.ca/advanceSearch/'+
-       'searchHistoricDataStations_e.html?' +
-       'searchType=stnProx&timeframe=1&txtRadius=25&selCity=&' +
-       'selPark=&optProxType=custom&txt')
+#===============================================================================
+def search4meteo(LAT, LON, RADIUS):
+    """
+    Search on the Government of Canada website for weather stations with daily 
+    meteo data around a decimal degree Lat, Lon coordinate with a radius 
+    given in km.
+    
+    The results are returned in a list formatted ready to be read by WHAT UI.
+    
+    If no results are found, or there is an error with the search, only the list
+    header is return with an empty list of station.
+    """
+#===============================================================================
+    
+    Nmax = 100
+    
+    StationID = ['stationId']
+    Prov = ['Province']
+    StartYear = ['StartYear']
+    EndYear = ['EndYear']
+    staName = ['staName']    
+    
+    #----------------------------------------------------------------- url -----
+    
+    url =  'http://climate.weather.gc.ca/advanceSearch/'
+    url += 'searchHistoricDataStations_e.html?'
+    url += 'searchType=stnProx&timeframe=1&txtRadius=%d' % RADIUS
+    url += '&selCity=&selPark=&optProxType=custom'
        
-deg, mnt, sec = decdeg2dms(np.abs(LAT))
-url += 'CentralLatDeg=%d' % deg
-url += '&txtCentralLatMin=%d' % mnt
-url += '&txtCentralLatSec=%d' % sec
+    deg, mnt, sec = decdeg2dms(np.abs(LAT))
+    url += '&txtCentralLatDeg=%d' % deg
+    url += '&txtCentralLatMin=%d' % mnt
+    url += '&txtCentralLatSec=%d' % sec
                                                                      
-deg, mnt, sec = decdeg2dms(np.abs(LON))
-url += '&txtCentralLongDeg=%d' % deg
-url += '&txtCentralLongMin=%d' % mnt
-url += '&txtCentralLongSec=%d' % sec
+    deg, mnt, sec = decdeg2dms(np.abs(LON))
+    url += '&txtCentralLongDeg=%d' % deg
+    url += '&txtCentralLongMin=%d' % mnt
+    url += '&txtCentralLongSec=%d' % sec
 
-url += '&optLimit=yearRange&StartYear=1840&EndYear=2014&Year=2013&Month=6&Day=4'
-url += '&selRowPerPage=%d&cmdProxSubmit=Search' % (Nmax)
-
-try:
-    f = urlopen(url)
-
-    # write downlwaded content to local file
-#    with open("url.txt", "wb") as local_file:
-#        local_file.write(f.read())
+    url += '&optLimit=yearRange&StartYear=1840'
+    url += '&EndYear=2014&Year=2013&Month=6&Day=4'
+    url += '&selRowPerPage=%d&cmdProxSubmit=Search' % (Nmax)
+    
+    #-------------------------------------------------------------- Querry -----
+    
+    try:
+        f = urlopen(url)
+    
+    #    # write downlwaded content to local file
+    #    with open("url.txt", "wb") as local_file:
+    #        local_file.write(f.read())
+    #
+    #    f = urlopen(url)
+    
+        #---------------------------------------------- Results Extraction -----
         
-except URLError as e:
-    
-    if hasattr(e, 'reason'):
-        print('Failed to reach a server.')
-        print('Reason: ', e.reason)
+        stnresults = f.read()
         
-    elif hasattr(e, 'code'):
-        print('The server couldn\'t fulfill the request.')
-        print('Error code: ', e.code)
+        #----- Number of Stations Found -----
+    
+        txt2find = ' locations match your customized search.'
+        indx_e =stnresults.find(txt2find, 0)
+        if indx_e == -1:
+            N = 0
+            print 'No weather stations found.'
+            
+            cmt = '<font color=red>No weather stations found.</font>'
+            
+        else:        
+            indx_0 = stnresults.find('<p>', indx_e-10)
+            N = int(stnresults[indx_0+3:indx_e])
+            print '%d weather stations found.' % N
+            
+            cmt = '<font color=red>%d weather stations found.</font>' % N
+       
+        for i in range(N):
         
-stnresults = f.read()
-
-txt2find = ' locations match your customized search.'
-indx_e =stnresults.find(txt2find, 0)
-indx_0 = stnresults.find('<p>', indx_e-10)
-
-N = int(stnresults[indx_0+3:indx_e])
-print N, 'weather stations found'
-
-StationID = np.zeros(N)
-Prov = np.zeros(N).astype(str)
-StartYear = np.zeros(N)
-EndYear = np.zeros(N)
-staName = np.zeros(N).astype(str)
-
-indx_e = 0
-for i in range(N):
-    
-    #----- StartDate -----
-    
-    txt2find = '<input type="hidden" name="dlyRange" value="'
-    n = len(txt2find)
-    indx_0 = stnresults.find(txt2find, indx_e)
-    indx_e = stnresults.find('|', indx_0)
-    try:        
-        StartYear[i] = stnresults[indx_0+n:indx_0+n+4]
-        EndYear[i] = stnresults[indx_e+1:indx_e+1+4]
-    except:       
-        StartYear[i] = np.nan
-        EndYear[i] = np.nan
+            #----- StartDate and EndDate -----
+            
+            txt2find = '<input type="hidden" name="dlyRange" value="'
+            n = len(txt2find)
+            indx_0 = stnresults.find(txt2find, indx_e)
+            indx_e = stnresults.find('|', indx_0)
+            try:        
+                StartYear.append(stnresults[indx_0+n:indx_0+n+4])
+                EndYear.append(stnresults[indx_e+1:indx_e+1+4])
+                
+                #----- StationID -----
+            
+                txt2find = '<input type="hidden" name="StationID" value="'
+                n = len(txt2find)
+                indx_0 = stnresults.find(txt2find, indx_e)
+                indx_e = stnresults.find('" />', indx_0)
+                
+                StationID.append(stnresults[indx_0+n:indx_e])
+                
+                #----- Province -----
+            
+                txt2find = '<input type="hidden" name="Prov" value="'
+                n = len(txt2find)
+                indx_0 = stnresults.find(txt2find, indx_e)
+                indx_e = stnresults.find('" />', indx_0)
+                
+                Prov.append(stnresults[indx_0+n:indx_e])
+                
+                #----- Name -----
+            
+                txt2find = ('<div class="span-2 row-end row-start margin' +
+                            '-bottom-none station wordWrap stnWidth">')
+                n = len(txt2find)
+                indx_0 = stnresults.find(txt2find, indx_e)
+                indx_e = stnresults.find('\t', indx_0)
+                
+                staName.append(stnresults[indx_0+n:indx_e])
+                               
+            except:       
+                pass
+            
+    except URLError as e:
         
-#    indx_0 = stnresults.find(txt2find, indx_e)
-#    indx_e = stnresults.find('|', indx_0)
-    
-#    EndDate[i] =
-    
-    #----- StationID -----
-    
-    txt2find = '<input type="hidden" name="StationID" value="'
-    n = len(txt2find)
-    indx_0 = stnresults.find(txt2find, indx_e)
-    indx_e = stnresults.find('" />', indx_0)
-    
-    StationID[i] = stnresults[indx_0+n:indx_e]
-    
-    #----- Province -----
-    
-    txt2find = '<input type="hidden" name="Prov" value="'
-    n = len(txt2find)
-    indx_0 = stnresults.find(txt2find, indx_e)
-    indx_e = stnresults.find('" />', indx_0)
-    
-    Prov[i] = stnresults[indx_0+n:indx_e]
-   
-    #----- Name -----
-    
-    txt2find = ('<div class="span-2 row-end row-start margin-bottom' +
-                '-none station wordWrap stnWidth">')
-    n = len(txt2find)
-    indx_0 = stnresults.find(txt2find, indx_e)
-    indx_e = stnresults.find('\t', indx_0)
-    
-    staName[i] = stnresults[indx_0+n:indx_e]
+        if hasattr(e, 'reason'):
+            print('Failed to reach a server.')
+            print('Reason: ', e.reason)
+            print
+            
+            cmt = '<font color=red>Failed to reach a server.</font>'
+            
+        elif hasattr(e, 'code'):
+            print('The server couldn\'t fulfill the request.')
+            print('Error code: ', e.code)
+            print
+            
+            cmt = '''<font color=red>
+                       The server couldn\'t fulfill the request.
+                     </font>'''
 
-fcontent = [['staName', 'stationId', 'StartYear', 'EndYear', 'Province']]
+    #----------------------------------------------------- Arrange Results -----
+    
+    staList = [staName, StationID, StartYear, EndYear, Prov]
+    staList = np.transpose(staList)
+    
+    return staList, cmt
 
-indx = np.where(~np.isnan(StartYear))[0]
-for i in indx:
-    fcontent.append([staName[i], StationID[i], StartYear[i], EndYear[i],
-                     Prov[i]])
-                                          
-fname = 'weather_stations.lst'    
-with open(fname, 'wb') as f:
-    writer = csv.writer(f, delimiter='\t')
-    writer.writerows(fcontent)
-                       
-# ----- EXAMPLE -----
+if __name__ == '__main__':
+
+    LAT = 45.4
+    LON = -73.13
+    RADIUS = 50
+    
+    staList, cmt = search4meteo(LAT, LON, RADIUS)
+    
+    print staList
+    print cmt
+    
+    fname = 'weather_stations.lst'    
+    with open(fname, 'wb') as f:
+        writer = csv.writer(f, delimiter='\t')
+        writer.writerows(staList)
+        
+# ----- EXAMPLE url output (reformated from original) -----
 
 #</div></div><div class="clear"> </div><p>17 locations match your customized search.
 #<div class="span-2 row-end row-start margin-bottom-none station stnWidth">Station</div>
