@@ -57,10 +57,18 @@ class tooltips():
     
     def __init__(self, language): #------------------------------- ENGLISH -----
         
+        #----- DOWNLOAD TAB -----        
+        
+        self.refresh_staList = 'Refresh the current weather station list.'
+        
+        self.search4stations = ('Search for weather stations on \n' +
+                                'www.climate.weather.gc.ca.')
+        self.btn_GetData = 'Download data for the selected weather station.'
+        
         #----- HYDROGRAPH TOOLBAR -----
         
-        self.loadConfig = '''<p>Load graph layout for the current
-            Water Level Data File if it exists.</p>'''
+        self.loadConfig = ('Load graph layout for the current \n' +
+                           'Water Level Data File if it exists.')
                              
         self.saveConfig = 'Save current graph layout.'
         
@@ -69,7 +77,7 @@ class tooltips():
         self.fit_x = 'Best fit the time scale.'
         
         self.closest_meteo = '''<p>Search and Load the Weather Data File
-            of the station located the closest from the well.</p>'''
+        of the station located the closest from the well.</p>'''
                                 
         self.draw_hydrograph = 'Draw the well hydrograph.'
         
