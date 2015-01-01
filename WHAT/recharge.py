@@ -58,11 +58,11 @@ class SoilTypes():
     #----- OUTPUT -----
     
     TEXTURE: Texture Class Name    
-    POREFF: Effective Porosity (cm**3/cm**3)
-    VWCres: Volumetric residual water content (cm**3/cm**3)
+    POREFF: Effective Porosity (mm**3/mm**3)
+    VWCres: Volumetric residual water content (mm**3/mm**3)
     PSD: Pore Size Distribution - Geometric mean
-    Pb: Pressure entry / Bubbling Pressure - Geometric mean (cm)
-    Kw: Saturated Hydraulic Conductivity (cm/hr)
+    Pb: Pressure entry / Bubbling Pressure - Geometric mean (mm)
+    Kw: Saturated Hydraulic Conductivity (mm/hr)
     
     #----- SOURCE -----
     
@@ -97,29 +97,36 @@ class SoilTypes():
         self.PSDmin = [0.334, 0.271, 0.186, 0.137, 0.136, 0.125, 0.100, 0.090,
                        0.078, 0.074, 0.068][indx]
                        
-        self.Pb = [7.26, 8.69, 14.66, 11.15, 20.76, 28.08, 25.89, 32.56, 29.17,
-                   34.19, 37.30][indx]
-        self.Pb_max = [38.74, 41.85, 62.24, 76.40, 120.40, 141.50, 115.70,
-                       158.7, 171.6, 166.2, 187.2][indx]
-        self.Pb_min = [1.36, 1.80, 3.45, 1.63, 3.58, 5.57, 5.80, 6.68, 4.96,
-                       7.04, 7.43][indx]
+        self.Pb = [72.6, 86.9, 146.6, 111.5, 207.6, 280.8, 258.9, 325.6, 291.7,
+                   341.9, 373.0][indx]
+        self.Pb_max = [387.4, 418.5, 622.4, 764.0, 1204.0, 1415.0, 1157.0,
+                       1587., 1716., 1662., 1872.][indx]
+        self.Pb_min = [13.6, 18.0, 34.5, 16.3, 35.8, 55.7, 58.0, 66.8, 49.6,
+                       70.4, 74.3][indx]
                       
-        self.Kw = [21.00, 6.11, 2.59, 1.32, 0.68, 0.43, 0.23, 0.15, 0.12,
-                   0.09, 0.06][indx]
+        self.Kw = [210.0, 61.1, 25.9, 13.2, 6.8, 4.3, 2.3, 1.5, 1.2,
+                   0.9, 0.6][indx]
 
 #===============================================================================
-def calc_Krw(VWC, SoilObj):
+def calc_Pc(VWC, SoilObj):
     '''
-    Calculate soil water content, matric potential and unsaturated hydraulic 
-    conductivity after Brooks and Corey, 1964
+    Calculate soil matric potential and unsaturated hydraulic conductivity 
+    from the water content after Brooks and Corey, 1964
     
     ----- Inputs -----
     
-    VWC: Volumetric Water Content (m**3/m**3)
+    VWC: Volumetric Water Content (mm**3/mm**3)
+    
     PSD: Pore Size Distribution
-    Kw: Saturated Hydraulic Conductivity for water (cm/hr)
-    Pb: Pressure entry / Bubbling Pressure - Geometric mean (cm)
+    Kw: Saturated Hydraulic Conductivity for water (mm/hr)
+    Pb: Pressure entry / Bubbling Pressure - Geometric mean (mm)
+    Pc: Capillary pressure (mm)
     VWCres: Volumetric residual water content (cm**3/cm**3)
+    
+    ----- Outputs -----
+    
+    Pc: Capillary pressure (mm)
+    Krw: Soil unsaturated hydraulic conductivity (mm/hr)
     '''
 #===============================================================================
     
@@ -128,32 +135,70 @@ def calc_Krw(VWC, SoilObj):
     #----- Soil Properties -----
     
     PSD = SoilObj.PSD
-    Kw = SoilObj.Kw * 10 #(mm/hr)
+    Kw = SoilObj.Kw
     VWCsat = SoilObj.POREFF
     VWCres = SoilObj.VWCres
-    Pb = SoilObj.Pb * 10 # (mm)
+    Pb = SoilObj.Pb
     
-    P = np.zeros(N) # soil volumetric water content (mm)
-    Krw = np.zeros(N) # soil unsaturated hydraulic conductivity (mm/hr)
+    Pc = np.zeros(N)
+    Krw = np.zeros(N)
     
     for i in range(N):
         if VWC >= VWCsat:
-            P[i] = Pb
+            Pc[i] = Pb
             Krw[i] = Kw
         else:
             Se = (VWC[i] - VWCres) / (VWCsat - VWCres)
-            P[i] = Pb / Se**(1/PSD)
-            Kw[i] = Se**(2/PDI+3)
-                
-#    for i in range(len(P)):
-#        if Pe > P[i]:
-#            VLC[i] = VLCres + (VLCsat - VLCres) * (Pe / P[i]) ** PDI
-#            Kh[i] = Ksat * (Se) ** ((2 + 3*PDI)/PDI)
-#        elif Pe <= P[i]:
-#            VLC[i] = VLCsat
-#            Kh[i] = Ksat
+            Pc[i] = Pb / Se**(1/PSD)
+            Kw[i] = Se**(2/PSD+3)
             
-    return VWCsat, Krw
+    return Pc, Krw
+    
+#===============================================================================
+def calc_VWC(Pc, SoilObj):
+    '''
+    Calculate soil water content and unsaturated hydraulic conductivity 
+    from matric potential after Brooks and Corey, 1964
+    
+    ----- Inputs -----
+    
+    Pc: Capillary pressure (mm)
+    
+    PSD: Pore Size Distribution
+    Kw: Saturated Hydraulic Conductivity for water (mm/hr)
+    Pb: Pressure entry / Bubbling Pressure - Geometric mean (mm)
+    Pc: Capillary pressure (mm)
+    VWCres: Volumetric residual water content (cm**3/cm**3)
+    
+    ----- Outputs -----
+    
+    VWC: Volumetric Water Content (mm**3/mm**3)  
+    Krw: Soil unsaturated hydraulic conductivity (mm/hr)
+    '''
+#===============================================================================
+    
+    N = len(Pc)
+    
+    #----- Soil Properties -----
+    
+    PSD = SoilObj.PSD
+    Kw = SoilObj.Kw
+    VWCsat = SoilObj.POREFF
+    VWCres = SoilObj.VWCres
+    Pb = SoilObj.Pb
+    
+    VWC = np.zeros(N)
+    Krw = np.zeros(N)
+    
+    for i in range(N):
+        if Pc[i] < Pb:
+            VWC[i] = VWCres + (VWCsat - VWCres) * (Pb / Pc[i]) ** PSD
+            Krw[i] = Kw * (Pb/Pc[i]) ** ((2 + 3*PDI)/PDI)
+        else:
+            VWC[i] = VWCsat
+            Krw[i] = Kw
+            
+    return VWC, Krw
     
 #===============================================================================
 def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
