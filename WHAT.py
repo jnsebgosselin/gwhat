@@ -1463,7 +1463,13 @@ class TabDwnldData(QtGui.QWidget):
             
             default_list_name = dirname + '/weather_stations.lst'
             
-            if fname != default_list_name:
+            if fname == default_list_name:
+                 
+                 #----- Load List in UI-----
+            
+                self.load_stationList()   
+                
+            else:
             
                 #----- Load List -----
             
@@ -1476,9 +1482,9 @@ class TabDwnldData(QtGui.QWidget):
                     writer = csv.writer(f, delimiter='\t')
                     writer.writerows(reader)
             
-            #----- Load List in UI-----
-            
-            self.load_stationList()
+                #----- Load List in UI-----
+                
+                self.load_stationList()
             
     #===========================================================================
     def load_stationList(self): # refresh_stationList(self):
