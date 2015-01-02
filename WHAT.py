@@ -1341,21 +1341,21 @@ class TabDwnldData(QtGui.QWidget):
         label_radius = QtGui.QLabel('Radius :')
         
         self.latitude_SpinBox = QtGui.QDoubleSpinBox()
-        self.latitude_SpinBox.setAlignment(QtCore.Qt.AlignLeft)        
+        self.latitude_SpinBox.setAlignment(QtCore.Qt.AlignCenter)        
         self.latitude_SpinBox.setSingleStep(0.1)
         self.latitude_SpinBox.setValue(0)
         self.latitude_SpinBox.setMinimum(0)
         self.latitude_SpinBox.setSuffix(u' °')
         
         self.longitude_SpinBox = QtGui.QDoubleSpinBox()
-        self.longitude_SpinBox.setAlignment(QtCore.Qt.AlignLeft)
+        self.longitude_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
         self.longitude_SpinBox.setSingleStep(0.1)
         self.longitude_SpinBox.setValue(0)
         self.longitude_SpinBox.setMinimum(0)
         self.longitude_SpinBox.setSuffix(u' °')
         
         self.radius_SpinBox = QtGui.QSpinBox()
-        self.radius_SpinBox.setAlignment(QtCore.Qt.AlignLeft)
+        self.radius_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
         self.radius_SpinBox.setSingleStep(1)
         self.radius_SpinBox.setValue(0)
         self.radius_SpinBox.setMinimum(0)
@@ -1455,23 +1455,26 @@ class TabDwnldData(QtGui.QWidget):
         
         dirname = self.parent.what_pref.project_dir
         
+        
         fname, _ = QtGui.QFileDialog.getOpenFileName(
                          self, 'Select a valid station list', dirname, '*.lst')        
-        
+                        
         if fname:
             
-            #----- Load List -----
+            default_list_name = dirname + '/weather_stations.lst'
             
-            reader = open(fname,'rb')
-            reader = csv.reader(reader, delimiter='\t')
+            if fname != default_list_name:
             
-            #----- Save List -----
+                #----- Load List -----
             
-            fname = self.parent.what_pref.project_dir + '/weather_stations.lst'
-                                 
-            with open(fname, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
+                reader = open(fname,'rb')
+                reader = csv.reader(reader, delimiter='\t')
+          
+                #----- Save List -----
+            
+                with open(default_list_name, 'wb') as f:
+                    writer = csv.writer(f, delimiter='\t')
+                    writer.writerows(reader)
             
             #----- Load List in UI-----
             
