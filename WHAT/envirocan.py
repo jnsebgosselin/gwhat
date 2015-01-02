@@ -125,7 +125,7 @@ def search4meteo(LAT, LON, RADIUS):
             N = int(stnresults[indx_0+3:indx_e])
             print '%d weather stations found.' % N
             
-            cmt = '<font color=red>%d weather stations found.</font>' % N
+            cmt = '<font color=black>%d weather stations found.</font>' % N
        
         for i in range(N):
         
@@ -135,39 +135,47 @@ def search4meteo(LAT, LON, RADIUS):
             n = len(txt2find)
             indx_0 = stnresults.find(txt2find, indx_e)
             indx_e = stnresults.find('|', indx_0)
-            try:        
-                StartYear.append(stnresults[indx_0+n:indx_0+n+4])
-                EndYear.append(stnresults[indx_e+1:indx_e+1+4])
-                
-                #----- StationID -----
             
-                txt2find = '<input type="hidden" name="StationID" value="'
-                n = len(txt2find)
-                indx_0 = stnresults.find(txt2find, indx_e)
-                indx_e = stnresults.find('" />', indx_0)
-                
-                StationID.append(stnresults[indx_0+n:indx_e])
-                
-                #----- Province -----
+            start_year = stnresults[indx_0+n:indx_0+n+4]
+            end_year = stnresults[indx_e+1:indx_e+1+4] 
             
-                txt2find = '<input type="hidden" name="Prov" value="'
-                n = len(txt2find)
-                indx_0 = stnresults.find(txt2find, indx_e)
-                indx_e = stnresults.find('" />', indx_0)
-                
-                Prov.append(stnresults[indx_0+n:indx_e])
-                
-                #----- Name -----
+            #----- StationID -----
             
-                txt2find = ('<div class="span-2 row-end row-start margin' +
-                            '-bottom-none station wordWrap stnWidth">')
-                n = len(txt2find)
-                indx_0 = stnresults.find(txt2find, indx_e)
-                indx_e = stnresults.find('\t', indx_0)
+            txt2find = '<input type="hidden" name="StationID" value="'
+            n = len(txt2find)
+            indx_0 = stnresults.find(txt2find, indx_e)
+            indx_e = stnresults.find('" />', indx_0)
+            
+            station_id = stnresults[indx_0+n:indx_e]
+            
+            #----- Province -----
+            
+            txt2find = '<input type="hidden" name="Prov" value="'
+            n = len(txt2find)
+            indx_0 = stnresults.find(txt2find, indx_e)
+            indx_e = stnresults.find('" />', indx_0)
+            
+            province = stnresults[indx_0+n:indx_e]
+            
+            #----- Name -----
+            
+            txt2find = ('<div class="span-2 row-end row-start margin' +
+                        '-bottom-none station wordWrap stnWidth">')
+            n = len(txt2find)
+            indx_0 = stnresults.find(txt2find, indx_e)
+            indx_e = stnresults.find('\t', indx_0)
+            
+            station_name = stnresults[indx_0+n:indx_e]            
+            
+            if start_year.isdigit(): # Daily data exists for this station
                 
-                staName.append(stnresults[indx_0+n:indx_e])
+                StartYear.append(start_year)
+                EndYear.append(end_year)
+                StationID.append(station_id)
+                Prov.append(province)
+                staName.append(station_name)
                                
-            except:       
+            else:       
                 pass
             
     except URLError as e:
