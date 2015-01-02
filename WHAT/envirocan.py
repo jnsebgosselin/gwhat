@@ -66,15 +66,17 @@ def search4meteo(LAT, LON, RADIUS):
     """
 #===============================================================================
     
-    Nmax = 100
+    Nmax = 100.
+    YearMin = 1840
+    YearMax = 2014
     
-    StationID = ['stationId']
-    Prov = ['Province']
-    StartYear = ['StartYear']
-    EndYear = ['EndYear']
-    staName = ['staName']    
+    StationID = np.array(['stationId'])
+    Prov = np.array(['Province'])
+    StartYear = np.array(['StartYear'])
+    EndYear = np.array(['EndYear'])
+    staName = np.array(['staName'])    
     
-    #----------------------------------------------------------------- url -----
+    #------------------------------------------------------------------ url ----
     
     url =  'http://climate.weather.gc.ca/advanceSearch/'
     url += 'searchHistoricDataStations_e.html?'
@@ -91,92 +93,125 @@ def search4meteo(LAT, LON, RADIUS):
     url += '&txtCentralLongMin=%d' % mnt
     url += '&txtCentralLongSec=%d' % sec
 
-    url += '&optLimit=yearRange&StartYear=1840'
-    url += '&EndYear=2014&Year=2013&Month=6&Day=4'
-    url += '&selRowPerPage=%d&cmdProxSubmit=Search' % (Nmax)
+    url += '&optLimit=yearRange'
+    url += '&StartYear=%d' % YearMin
+    url += '&EndYear=%d' % YearMax
+    url += '&Year=2013&Month=6&Day=4'
+    url += '&selRowPerPage=%d' % Nmax
+    url += '&cmdProxSubmit=Search' 
     
-    #-------------------------------------------------------------- Querry -----
+    #--------------------------------------------------------------- Querry ----
     
     try:
         f = urlopen(url)
     
-    #    # write downlwaded content to local file
-    #    with open("url.txt", "wb") as local_file:
-    #        local_file.write(f.read())
-    #
-    #    f = urlopen(url)
+        # write downlwaded content to local file
+#        with open("url.txt", "wb") as local_file:
+#            local_file.write(f.read())
+#    
+#        f = urlopen(url)
     
-        #---------------------------------------------- Results Extraction -----
+        #----------------------------------------------- Results Extraction ----
         
         stnresults = f.read()
         
-        #----- Number of Stations Found -----
+        #---- Number of Stations Found ----
     
         txt2find = ' locations match your customized search.'
         indx_e =stnresults.find(txt2find, 0)
         if indx_e == -1:
-            N = 0
-            print 'No weather stations found.'
-            
+            print 'No weather stations found.'            
             cmt = '<font color=red>No weather stations found.</font>'
+            Nsta = 0
             
-        else:        
+        else:
             indx_0 = stnresults.find('<p>', indx_e-10)
-            N = int(stnresults[indx_0+3:indx_e])
-            print '%d weather stations found.' % N
+            Nsta = int(stnresults[indx_0+3:indx_e])
+            print '%d weather stations found.' % Nsta
             
-            cmt = '<font color=green>%d weather stations found.</font>' % N
-       
-        for i in range(N):
-        
-            #----- StartDate and EndDate -----
+            Npage = int(np.ceil(Nsta / Nmax))
             
-            txt2find = '<input type="hidden" name="dlyRange" value="'
-            n = len(txt2find)
-            indx_0 = stnresults.find(txt2find, indx_e)
-            indx_e = stnresults.find('|', indx_0)
-            
-            start_year = stnresults[indx_0+n:indx_0+n+4]
-            end_year = stnresults[indx_e+1:indx_e+1+4] 
-            
-            #----- StationID -----
-            
-            txt2find = '<input type="hidden" name="StationID" value="'
-            n = len(txt2find)
-            indx_0 = stnresults.find(txt2find, indx_e)
-            indx_e = stnresults.find('" />', indx_0)
-            
-            station_id = stnresults[indx_0+n:indx_e]
-            
-            #----- Province -----
-            
-            txt2find = '<input type="hidden" name="Prov" value="'
-            n = len(txt2find)
-            indx_0 = stnresults.find(txt2find, indx_e)
-            indx_e = stnresults.find('" />', indx_0)
-            
-            province = stnresults[indx_0+n:indx_e]
-            
-            #----- Name -----
-            
-            txt2find = ('<div class="span-2 row-end row-start margin' +
-                        '-bottom-none station wordWrap stnWidth">')
-            n = len(txt2find)
-            indx_0 = stnresults.find(txt2find, indx_e)
-            indx_e = stnresults.find('\t', indx_0)
-            
-            station_name = stnresults[indx_0+n:indx_e]            
-            
-            if start_year.isdigit(): # Daily data exists for this station
+            for page in range(Npage):
                 
-                StartYear.append(start_year)
-                EndYear.append(end_year)
-                StationID.append(station_id)
-                Prov.append(province)
-                staName.append(station_name)
-                               
-            else:       
-                pass
+                print 'Page :', page
+                
+                startRow = (Nmax * page) + 1
+                url4page = url + '&startRow=%d' % startRow
+                f = urlopen(url4page)
+                    
+                stnresults = f.read()
+                
+                indx_e = 0
+               
+                for row in range(int(Nmax)):
+
+                    #---- StartDate and EndDate ----
+                    
+                    txt2find = '<input type="hidden" name="dlyRange" value="'                    
+                    n = len(txt2find)
+                    indx_0 = stnresults.find(txt2find, indx_e)
+                    if indx_0 == -1: # No result left on this page                       
+                        break
+                    else:
+                        pass
+                    indx_e = stnresults.find('|', indx_0)
+                    
+                    start_year = stnresults[indx_0+n:indx_0+n+4]
+                    end_year = stnresults[indx_e+1:indx_e+1+4]
+                    
+                    #---- StationID ----
+                    
+                    txt2find = '<input type="hidden" name="StationID" value="'
+                    n = len(txt2find)
+                    indx_0 = stnresults.find(txt2find, indx_e)
+                    indx_e = stnresults.find('" />', indx_0)
+                    
+                    station_id = stnresults[indx_0+n:indx_e]
+                    
+                    #---- Province ----
+                    
+                    txt2find = '<input type="hidden" name="Prov" value="'
+                    n = len(txt2find)
+                    indx_0 = stnresults.find(txt2find, indx_e)
+                    indx_e = stnresults.find('" />', indx_0)
+                    
+                    province = stnresults[indx_0+n:indx_e]
+                    
+                    #---- Name ----
+                    
+                    txt2find = ('<div class="span-2 row-end row-start margin' +
+                                '-bottom-none station wordWrap stnWidth">')
+                    n = len(txt2find)
+                    indx_0 = stnresults.find(txt2find, indx_e)
+                    indx_e = stnresults.find('\t', indx_0)
+                    
+                    station_name = stnresults[indx_0+n:indx_e]            
+                    
+                    if start_year.isdigit(): # Daily data exist
+                        print 'adding', station_name
+                        StartYear = np.append(StartYear, start_year)
+                        EndYear = np.append(EndYear, end_year)
+                        StationID = np.append(StationID, station_id)
+                        Prov = np.append(Prov, province)
+                        staName = np.append(staName, station_name)
+                    else: # No Daily data  
+                        pass
+                    
+            cmt = '''<font color=green>%d weather stations found with daily 
+                       data.</font>''' % (len(staName) - 1)
+                     
+            print '%d weather stations with daily data.' % (len(staName) - 1)
+                     
+            #---------------------------------- SORT STATION ALPHABETICALLY ----
+
+            sort_indx = np.argsort(staName[1:])
+            sort_indx += 1
+            
+            StartYear[1:] = StartYear[sort_indx]
+            EndYear[1:] = EndYear[sort_indx]
+            StationID[1:] = StationID[sort_indx]
+            Prov[1:] = Prov[sort_indx]
+            staName[1:] = staName[sort_indx]
             
     except URLError as e:
         
@@ -196,7 +231,7 @@ def search4meteo(LAT, LON, RADIUS):
                        The server couldn\'t fulfill the request.
                      </font>'''
 
-    #----------------------------------------------------- Arrange Results -----
+    #------------------------------------------------------ Arrange Results ----
     
     staList = [staName, StationID, StartYear, EndYear, Prov]
     staList = np.transpose(staList)
@@ -211,8 +246,8 @@ if __name__ == '__main__':
     
     staList, cmt = search4meteo(LAT, LON, RADIUS)
     
-    print staList
-    print cmt
+#    print staList
+#    print cmt
     
     fname = 'weather_stations.lst'    
     with open(fname, 'wb') as f:
