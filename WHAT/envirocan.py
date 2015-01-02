@@ -125,7 +125,7 @@ def search4meteo(LAT, LON, RADIUS):
             N = int(stnresults[indx_0+3:indx_e])
             print '%d weather stations found.' % N
             
-            cmt = '<font color=black>%d weather stations found.</font>' % N
+            cmt = '<font color=green>%d weather stations found.</font>' % N
        
         for i in range(N):
         
