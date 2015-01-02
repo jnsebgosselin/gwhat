@@ -1093,10 +1093,10 @@ class TabDwnldData(QtGui.QWidget):
         btn_browse_staList.setAutoRaise(True)
         btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
         
-        btn_refresh_staList = QtGui.QToolButton()
-        btn_refresh_staList.setAutoRaise(True)
-        btn_refresh_staList.setIcon(iconDB.refresh)
-        btn_refresh_staList.setToolTip(ttipDB.refresh_staList)
+        #btn_refresh_staList = QtGui.QToolButton()
+        #btn_refresh_staList.setAutoRaise(True)
+        #btn_refresh_staList.setIcon(iconDB.refresh)
+        #btn_refresh_staList.setToolTip(ttipDB.refresh_staList)
         
         widget_weather_station = QtGui.QFrame()
         subgrid_weather_station = QtGui.QGridLayout()
@@ -1105,12 +1105,12 @@ class TabDwnldData(QtGui.QWidget):
         subgrid_weather_station.addWidget(self.staName_display, row, 0)
         subgrid_weather_station.addWidget(btn_search4station, row, 1)
         subgrid_weather_station.addWidget(btn_browse_staList, row, 2)
-        subgrid_weather_station.addWidget(btn_refresh_staList, row, 3)
+        #subgrid_weather_station.addWidget(btn_refresh_staList, row, 3)
         
         widget_weather_station.setLayout(subgrid_weather_station)
         subgrid_weather_station.setContentsMargins(0, 0, 0, 0) # Left, Top, 
                                                                # Right, Bottom 
-        subgrid_weather_station.setSpacing(15)
+        subgrid_weather_station.setSpacing(10)
         subgrid_weather_station.setColumnStretch(3, 500)
         subgrid_weather_station.setColumnMinimumWidth(0, 200)
                 
@@ -1293,7 +1293,7 @@ class TabDwnldData(QtGui.QWidget):
         
         self.staName_display.currentIndexChanged.connect(self.staName_isChanged)
         self.btn_get.clicked.connect(self.fetch_start_and_stop)      
-        btn_refresh_staList.clicked.connect(self.load_stationList)
+        #btn_refresh_staList.clicked.connect(self.load_stationList)
         btn_search4station.clicked.connect(self.show_search4stations)
         self.btn_go_search4station.clicked.connect(self.search4stations)
         btn_browse_staList.clicked.connect(self.select_stationList)
@@ -1481,10 +1481,9 @@ class TabDwnldData(QtGui.QWidget):
     def load_stationList(self): # refresh_stationList(self):
         '''
         This method is started either by :
-        (1) the event <btn_refresh_staList.clicked>
-        (2) when a new project folder is loaded in 
+        (1) when a new project folder is loaded in 
             <MainWindow.load_project_dir>
-        (3) after a search has been completed for weather stations with 
+        (2) after a search has been completed for weather stations with 
             <search4stations>
         
         It loads the informations in the "weather_stations.lst" file that is
