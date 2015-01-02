@@ -1335,9 +1335,9 @@ class TabDwnldData(QtGui.QWidget):
         #----- Widgets -----
         
         label_Lat = QtGui.QLabel('Latitude :')
-        label_Lat2 = QtGui.QLabel('W')
+        label_Lat2 = QtGui.QLabel('N')
         label_Lon = QtGui.QLabel('Longitude :')
-        label_Lon2 = QtGui.QLabel('N')
+        label_Lon2 = QtGui.QLabel('W')
         label_radius = QtGui.QLabel('Radius :')
         
         self.latitude_SpinBox = QtGui.QDoubleSpinBox()
@@ -1385,7 +1385,7 @@ class TabDwnldData(QtGui.QWidget):
         grid_search4stations.addWidget(self.btn_go_search4station, row, 1)
                 
         self.widget_search4stations.setLayout(grid_search4stations)
-        grid_search4stations.setContentsMargins(10, 10, 10, 10) # Left, Top,
+        grid_search4stations.setContentsMargins(50, 25, 50, 25) # Left, Top,
                                                                 # Right, Bottom 
         grid_search4stations.setSpacing(10)
         grid_search4stations.setColumnStretch(0, 500)
@@ -1417,11 +1417,11 @@ class TabDwnldData(QtGui.QWidget):
         '''
     #===========================================================================
         
-        #----- Close sub-window -----
+        #---- Close sub-window ----
         
         self.widget_search4stations.close()
                
-        #----- Generate New List -----
+        #---- Generate New List ----
                
         self.parent.write2console('''<font color=black>
                                        Searching for weather stations...
@@ -1437,7 +1437,7 @@ class TabDwnldData(QtGui.QWidget):
         
         self.parent.write2console(cmt)
         
-        #----- Save List -----
+        #---- Save List ----
         
         projectdir = self.parent.what_pref.project_dir        
         fname = projectdir + '/weather_stations.lst'    
@@ -1445,7 +1445,7 @@ class TabDwnldData(QtGui.QWidget):
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(staList)
         
-        #----- Load List -----
+        #---- Load List ----
         
         self.load_stationList()
         
