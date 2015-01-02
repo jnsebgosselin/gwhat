@@ -1417,7 +1417,17 @@ class TabDwnldData(QtGui.QWidget):
         '''
     #===========================================================================
         
+        #----- Close sub-window -----
+        
+        self.widget_search4stations.close()
+               
         #----- Generate New List -----
+               
+        self.parent.write2console('''<font color=black>
+                                       Searching for weather stations...
+                                     </font>''')
+                                     
+        QtCore.QCoreApplication.processEvents() 
         
         LAT = self.latitude_SpinBox.value()
         LON = self.longitude_SpinBox.value()
@@ -1438,10 +1448,6 @@ class TabDwnldData(QtGui.QWidget):
         #----- Load List -----
         
         self.load_stationList()
-        
-        #----- Close sub-window -----
-        
-        self.widget_search4stations.close()
         
     #===========================================================================
     def select_stationList(self):
