@@ -1091,6 +1091,7 @@ class TabDwnldData(QtGui.QWidget):
         btn_browse_staList = QtGui.QToolButton()
         btn_browse_staList.setIcon(iconDB.openFolder)
         btn_browse_staList.setAutoRaise(True)
+        btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
         
         btn_refresh_staList = QtGui.QToolButton()
         btn_refresh_staList.setAutoRaise(True)
@@ -1390,10 +1391,11 @@ class TabDwnldData(QtGui.QWidget):
         grid_search4stations.setColumnStretch(0, 500)
         grid_search4stations.setColumnStretch(4, 500)
         grid_search4stations.setRowStretch(0, 500)
-        grid_search4stations.setRowStretch(4, 500)
+        grid_search4stations.setRowStretch(5, 500)
         
         self.widget_search4stations.setWindowTitle(
         'Search For Weather Stations on www.climate.weather.gc.ca')
+#        self.widget_search4stations.setGeometry(250, 800, 250, 150)
 #        self.widget_search4stations.resize(350, 150)
     
     #===========================================================================
@@ -1440,7 +1442,140 @@ class TabDwnldData(QtGui.QWidget):
         #----- Close sub-window -----
         
         self.widget_search4stations.close()
-    
+        
+    #===========================================================================
+    def select_stationList(self):
+        '''
+        This method is called when the <btn_browse_staList> is clicked.
+        It allows the user to select and load a custom weather station list.
+        Info are loaded into memory and saved in the file named
+        "weather_stations.lst".
+        '''
+    #===========================================================================
+        
+        dirname = self.parent.what_pref.project_dir
+        
+        fname, _ = QtGui.QFileDialog.getOpenFileName(
+                         self, 'Select a valid station list', dirname, '*.lst')        
+        
+        if fname:
+            
+            #----- Load List -----
+            
+            reader = open(fname,'rb')
+            reader = csv.reader(reader, delimiter='\t')
+            
+            #----- Save List -----
+            
+            fname = self.parent.what_pref.project_dir + '/weather_stations.lst'
+                                 
+            with open(fname, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(reader)
+            
+            #----- Load List in UI-----
+            
+            self.load_stationList()
+            
+    #===========================================================================
+    def load_stationList(self): # refresh_stationList(self):
+        '''
+        This method is started either by :
+        (1) the event <btn_refresh_staList.clicked>
+        (2) when a new project folder is loaded in 
+            <MainWindow.load_project_dir>
+        (3) after a search has been completed for weather stations with 
+            <search4stations>
+        
+        It loads the informations in the "weather_stations.lst" file that is
+        located in the project folder and save it as a table in <self.staList>
+        and displays the station list in the QComboBox widget.
+        
+        ----- weather_stations.lst -----
+        
+        The weather_station.lst is a tabulation separated csv file that contains
+        the following information:  station names, station ID , date at which
+        the data records begin and date at which the data records end, and the
+        provinces to which each station belongs.
+        
+        The only field that is used to download the data from the Environment
+        Canada (EC) website is the StationID. This ID can be found on the EC
+        website in the address bar of the web browser when a station is
+        selected. Note that this ID is not the same as the Climate ID of the
+        station. For example, the ID for the station Abercorn is 5308, as it
+        can be found in the following address:
+        
+        "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
+         2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
+         1985&Month=1&Day=01"
+        '''
+    #===========================================================================
+        
+        self.staName_display.clear()
+        self.staList = []        
+        station_list_path = (self.parent.what_pref.project_dir + 
+                             '/weather_stations.lst')
+                                      
+        # Force the creation of a new "weather_station.lst" file
+        if not path.exists(station_list_path):
+            self.parent.what_pref.load_pref_file()
+            
+        reader = open(station_list_path,'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+        
+        if len(reader) > 1:
+            
+            self.parent.write2console('''<font color=black>
+                                           Weather station list loaded 
+                                           successfully.
+                                         </font>''')
+                                         
+            #----- Enable and Refresh UI ----
+                                         
+            self.staName_display.setEnabled(True)
+            self.yStart_edit.setEnabled(True)
+            self.yEnd_edit.setEnabled(True)
+            
+            self.staList = np.array(reader[1:])
+            self.staName_display.addItems(self.staList[:, 0])
+                                         
+        else: 
+            
+            self.parent.write2console('''<font color=red>
+                                           Weather Station list is empty.
+                                         </font>''')
+        
+            #----- Disable UI ----
+        
+            self.staName_display.setEnabled(False)
+            self.yStart_edit.setEnabled(False)
+            self.yStart_edit.setRange(0, 1)
+            self.yStart_edit.setValue(0)
+            self.yEnd_edit.setEnabled(False)
+            self.yEnd_edit.setRange(0, 1)
+            self.yEnd_edit.setValue(0)
+        
+    #=========================================================================== 
+    def staName_isChanged(self):
+        '''
+        The following method updates the fields StationId and Years when the 
+        station name is changed by the user. It is called by the event
+        <self.staName_display.currentIndexChanged>.
+        '''
+    #===========================================================================
+        
+        sta_index = self.staName_display.currentIndex()
+        
+        year_start = int(self.staList[sta_index, 2])
+        year_end = int(self.staList[sta_index, 3])
+        
+        self.yStart_edit.setRange(year_start, year_end)
+        self.yEnd_edit.setRange(year_start, year_end)
+        
+        self.yStart_edit.setValue(year_start)
+        self.yEnd_edit.setValue(year_end)
+        
     #===========================================================================
     def select_raw_files(self):
         '''
@@ -1457,7 +1592,7 @@ class TabDwnldData(QtGui.QWidget):
                                                       dialog_fir, '*.csv')
         if fname:
            self.concatenate_and_display(fname)           
-    
+        
     #===========================================================================      
     def concatenate_and_display(self, fname):              
     # <concatenate_and_display> handles the concatenation process of raw data 
@@ -1500,12 +1635,14 @@ class TabDwnldData(QtGui.QWidget):
             fname = save_dir + filename
             
             self.save_concatened_data(fname)            
-    
+        
     #===========================================================================        
     def select_concatened_save_path(self):
-    # <select_concatened_save_path> is called by the event <btn_save.clicked>.
-    # It allows the user to select a path for the file in which the 
-    # concatened data are going to be saved.
+        '''        
+        <select_concatened_save_path> is called by the event <btn_save.clicked>.
+        It allows the user to select a path for the file in which the 
+        concatened data are going to be saved.
+        '''
     #===========================================================================
         
         if np.size(self.MergeOutput) != 0:
@@ -1634,139 +1771,6 @@ class TabDwnldData(QtGui.QWidget):
         
         if len(fname) > 0:
             self.concatenate_and_display(fname)
-    
-    #===========================================================================
-    def select_stationList(self):
-        '''
-        This method is called when the <btn_browse_staList> is clicked.
-        It allows the user to select and load a custom weather station list.
-        Info are loaded into memory and saved in the file named
-        "weather_stations.lst".
-        '''
-    #===========================================================================
-        
-        dirname = self.parent.what_pref.project_dir
-        
-        fname, _ = QtGui.QFileDialog.getOpenFileName(
-                         self, 'Select a valid station list', dirname, '*.lst')        
-        
-        if fname:
-            
-            #----- Load List -----
-            
-            reader = open(fname,'rb')
-            reader = csv.reader(reader, delimiter='\t')
-            
-            #----- Save List -----
-            
-            fname = self.parent.what_pref.project_dir + '/weather_stations.lst'
-                                 
-            with open(fname, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
-            
-            #----- Load List in UI-----
-            
-            self.load_stationList()
-            
-    #===========================================================================
-    def load_stationList(self): # refresh_stationList(self):
-        '''
-        This method is started either by :
-        (1) the event <btn_refresh_staList.clicked>
-        (2) when a new project folder is loaded in 
-            <MainWindow.load_project_dir>
-        (3) after a search has been completed for weather stations with 
-            <search4stations>
-        
-        It loads the informations in the "weather_stations.lst" file that is
-        located in the project folder and save it as a table in <self.staList>
-        and displays the station list in the QComboBox widget.
-        
-        ----- weather_stations.lst -----
-        
-        The weather_station.lst is a tabulation separated csv file that contains
-        the following information:  station names, station ID , date at which
-        the data records begin and date at which the data records end, and the
-        provinces to which each station belongs.
-        
-        The only field that is used to download the data from the Environment
-        Canada (EC) website is the StationID. This ID can be found on the EC
-        website in the address bar of the web browser when a station is
-        selected. Note that this ID is not the same as the Climate ID of the
-        station. For example, the ID for the station Abercorn is 5308, as it
-        can be found in the following address:
-        
-        "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
-         2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
-         1985&Month=1&Day=01"
-        '''
-    #===========================================================================
-        
-        self.staName_display.clear()
-        self.staList = []        
-        station_list_path = (self.parent.what_pref.project_dir + 
-                             '/weather_stations.lst')
-                                      
-        # Force the creation of a new "weather_station.lst" file
-        if not path.exists(station_list_path):
-            self.parent.what_pref.load_pref_file()
-            
-        reader = open(station_list_path,'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        
-        if len(reader) > 1:
-            
-            self.parent.write2console('''<font color=black>
-                                           Weather station list loaded 
-                                           successfully.
-                                         </font>''')
-                                         
-            #----- Enable and Refresh UI ----
-                                         
-            self.staName_display.setEnabled(True)
-            self.yStart_edit.setEnabled(True)
-            self.yEnd_edit.setEnabled(True)
-            
-            self.staList = np.array(reader[1:])
-            self.staName_display.addItems(self.staList[:, 0])
-                                         
-        else: 
-            
-            self.parent.write2console('''<font color=red>
-                                           Weather Station list is empty.
-                                         </font>''')
-        
-            #----- Disable UI ----
-        
-            self.staName_display.setEnabled(False)
-            self.yStart_edit.setEnabled(False)
-            self.yStart_edit.setRange(0, 1)
-            self.yStart_edit.setValue(0)
-            self.yEnd_edit.setEnabled(False)
-            self.yEnd_edit.setRange(0, 1)
-            self.yEnd_edit.setValue(0)
-    
-    #=========================================================================== 
-    def staName_isChanged(self):
-        '''
-        The following method updates the fields StationId and Years when the 
-        station name is changed by the user. It is called by the event
-        <self.staName_display.currentIndexChanged>.
-        '''
-    #===========================================================================
-        
-        sta_index = self.staName_display.currentIndex()
-        
-        year_start = int(self.staList[sta_index, 2])
-        year_end = int(self.staList[sta_index, 3])
-        
-        self.yStart_edit.setRange(year_start, year_end)
-        self.yEnd_edit.setRange(year_start, year_end)
-        
-        self.yStart_edit.setValue(year_start)
-        self.yEnd_edit.setValue(year_end)
     
     #===========================================================================       
     def setProgBarSignal(self, progress):
@@ -4168,12 +4172,8 @@ class LabelDataBase(): # Default language is English.
                  <b>Concatenate and Format Raw Data Files :</b>
                </font>''')
                 
-        self.btn_load_text = 'Load'
-        self.btn_load_help = (
-        '''Load a weather station list.''')
-        
-        self.btn_get_text = 'Get Data'
-                              
+        self.btn_load_text = 'Load'        
+        self.btn_get_text = 'Get Data'                              
         self.btn_get_all_text = 'Get All'
         self.btn_get_all_help = (
             '''<p>Download weather data for all the weather station in the 
