@@ -66,7 +66,7 @@ def search4meteo(LAT, LON, RADIUS):
     """
 #===============================================================================
     
-    Nmax = 100.
+    Nmax = 100. # Number of results per page (maximum possible is 100)
     YearMin = 1840
     YearMax = 2014
     
@@ -100,8 +100,6 @@ def search4meteo(LAT, LON, RADIUS):
     url += '&selRowPerPage=%d' % Nmax
     url += '&cmdProxSubmit=Search' 
     
-    #--------------------------------------------------------------- Querry ----
-    
     try:
         f = urlopen(url)
     
@@ -118,7 +116,7 @@ def search4meteo(LAT, LON, RADIUS):
         #---- Number of Stations Found ----
     
         txt2find = ' locations match your customized search.'
-        indx_e =stnresults.find(txt2find, 0)
+        indx_e = stnresults.find(txt2find, 0)
         if indx_e == -1:
             print 'No weather stations found.'            
             cmt = '<font color=red>No weather stations found.</font>'
@@ -143,7 +141,7 @@ def search4meteo(LAT, LON, RADIUS):
                 
                 indx_e = 0
                
-                for row in range(int(Nmax)):
+                for row in range(int(Nmax)): # Scan each row of the current page
 
                     #---- StartDate and EndDate ----
                     
@@ -202,7 +200,7 @@ def search4meteo(LAT, LON, RADIUS):
                      
             print '%d weather stations with daily data.' % (len(staName) - 1)
                      
-            #---------------------------------- SORT STATION ALPHABETICALLY ----
+            #--------------------------------- SORT STATIONS ALPHABETICALLY ----
 
             sort_indx = np.argsort(staName[1:])
             sort_indx += 1
