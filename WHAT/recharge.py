@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014 Jean-Sebastien Gosselin
+Copyright 2015 Jean-Sebastien Gosselin
 
 email: jnsebgosselin@gmail.com
 
@@ -98,11 +98,11 @@ class SoilTypes():
                        0.078, 0.074, 0.068][indx]
                        
         self.Pb = [72.6, 86.9, 146.6, 111.5, 207.6, 280.8, 258.9, 325.6, 291.7,
-                   341.9, 373.0][indx]
+                   341.9, 373.0][indx] * -1
         self.Pb_max = [387.4, 418.5, 622.4, 764.0, 1204.0, 1415.0, 1157.0,
-                       1587., 1716., 1662., 1872.][indx]
+                       1587., 1716., 1662., 1872.][indx] * -1
         self.Pb_min = [13.6, 18.0, 34.5, 16.3, 35.8, 55.7, 58.0, 66.8, 49.6,
-                       70.4, 74.3][indx]
+                       70.4, 74.3][indx] * -1
                       
         self.Kw = [210.0, 61.1, 25.9, 13.2, 6.8, 4.3, 2.3, 1.5, 1.2,
                    0.9, 0.6][indx]
@@ -144,13 +144,13 @@ def calc_Pc(VWC, SoilObj):
     Krw = np.zeros(N)
     
     for i in range(N):
-        if VWC >= VWCsat:
+        if VWC[i] >= VWCsat:
             Pc[i] = Pb
             Krw[i] = Kw
         else:
             Se = (VWC[i] - VWCres) / (VWCsat - VWCres)
             Pc[i] = Pb / Se**(1/PSD)
-            Kw[i] = Se**(2/PSD+3)
+            Krw[i] = Se**(2/PSD + 3)
             
     return Pc, Krw
     
@@ -193,12 +193,70 @@ def calc_VWC(Pc, SoilObj):
     for i in range(N):
         if Pc[i] < Pb:
             VWC[i] = VWCres + (VWCsat - VWCres) * (Pb / Pc[i]) ** PSD
-            Krw[i] = Kw * (Pb/Pc[i]) ** ((2 + 3*PDI)/PDI)
+            Krw[i] = Kw * (Pb / Pc[i]) ** (2 + 3*PSD)
         else:
             VWC[i] = VWCsat
             Krw[i] = Kw
             
     return VWC, Krw
+    
+#===============================================================================
+def calc_recharge_old(CRU, RASmax, ETP, PTOT, TAVG):
+#===============================================================================
+    
+    N = len(ETP)    
+    PAVL = np.zeros(N)    # Available Precipitation
+    PACC = np.zeros(N)    # Accumulated Precipitation
+    RU = np.zeros(N)      # Runoff
+    I = np.zeros(N)       # Infiltration
+    ETR = np.zeros(N)     # Evapotranspiration Real
+    dRAS = np.zeros(N)    # Variation of RAW
+    RAS = np.zeros(N)     # Readily Available Storage
+    RECHG = np.zeros(N)   # Recharge (mm)
+    
+    TMELT = 0 # Temperature treshold for snowmelt
+    CM = 4 # Daily melt coefficient
+    
+    MP = CM * (TAVG - TMELT)  # Potential Melt
+    MP[MP < 0] = 0
+    
+    PACC[0] = 0
+    RAS[0] = RASmax
+    
+    for i in range(0, N - 1):
+
+        #----- Precipitation -----          
+
+        if TAVG[i] > TMELT:  # Rain
+        
+            if MP[i] >= PACC[i]: # Rain on Bareground
+                PAVL[i+1] = PACC[i] + PTOT[i]
+                PACC[i+1] = 0
+                
+            elif MP[i] < PACC[i]: #Rain on Snow
+                PAVL[i+1] = MP[i]
+                PACC[i+1] = PACC[i] - MP[i] + PTOT[i]                
+                
+        elif TAVG[i] <= TMELT: #Snow
+            PAVL[i+1] = 0
+            PACC[i+1] = PACC[i] + PTOT[i]
+            
+        #----- Infiltration and Runoff -----
+        
+        RU[i] = CRU * PAVL[i]
+        I[i] = PAVL[i] - RU[i]
+        
+        #----- ETR, Recharge and Storage change -----
+        
+        dRAS[i] = min(I[i], RASmax - RAS[i])
+        RAS[i+1] = RAS[i] + dRAS[i] #intermediate step
+        RECHG[i] = I[i] - dRAS[i]
+        
+        ETR[i] = min(ETP[i], RAS[i])
+        
+        RAS[i+1] = RAS[i+1] - ETR[i]
+    
+    return RECHG
     
 #===============================================================================
 def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
@@ -225,12 +283,16 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     RAS = np.zeros(N)     # Readily Available Storage
     RECHG = np.zeros(N-1) # Recharge (mm)
     HWT = np.zeros(N)
+        
+    #---- Soil Properties ----
     
     SoilObj = SoilTypes(0)
-    VWCres = SoilObj.VWCRES
+    VWCres = SoilObj.VWCres
     VWCsat = SoilObj.POREFF
-    Sy = VWCSAT - VWCRES
+    Sy = VWCsat - VWCres
     HROOTS = 300
+    
+    #---- Snow Melt ----
     
     TMELT = 0 # Temperature treshold for snowmelt
     CM = 4 # Daily melt coefficient
@@ -241,24 +303,34 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     PACC[0] = 0
     RAS[0] = RASmax
 
-#----------------------------------------------------------- MESH CREATION -----
+    #-------------------------------------------------------- MESH CREATION ----
     
-    HWT[0] = 6000
+    HWT[0] = 6400
     
     # First layer thickness is equal to that of the root zone
     z = np.array([150, 650, 1150, 1650, 2150, 2650, 3150, 3650, 4150, 4650,
                   5150, 5650, 6150])
+    dz = z[1:] - z[:-1]
+    dt = 1
+                  
+    nz = len(z)
+    nt = len(ETP)
     
-    VWC = np.zeros(len(z)) + VWCres
+    VWC = np.zeros((nz, nt))
+    
+    #--------------------------------------------------- INITIAL CONDITIONS ----
+    
+    Pc = z - HWT[0]
+    VWC[:, 0], Krw = calc_VWC(Pc, SoilObj)
+    
+    #----------------------------------------------------------- SIMULATION ----
 
-#-------------------------------------------------------------- SIMULATION -----
 
-
-    for i in range(0, N-1):
+    for i in range(20): #range(0, N-1):
         
-    #------------------------------------ SURFACE STORAGE and INFILTRATION -----
+        #--------------------------------- SURFACE STORAGE and INFILTRATION ----
 
-        #----- Precipitation and Snowmelt -----          
+        #---- Precipitation and Snowmelt ----          
 
         if TAVG[i] > TMELT:  # Rain
         
@@ -275,12 +347,12 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
             PAVL[i+1] = 0
             PACC[i+1] = PACC[i] + PTOT[i]
             
-        #----- Infiltration and Runoff -----
+        #---- Infiltration and Runoff ----
         
         RU[i] = CRU * PAVL[i]
-        I[i] = PAVL[i] - RU[i]
+        PI = PAVL[i] - RU[i] # Potential Infiltration
         
-        #----- ETR, Recharge and Storage change -----
+        #---- ETR, Recharge and Storage change ----
         
         dRAS[i] = min(I[i], RASmax - RAS[i])
         RAS[i+1] = RAS[i] + dRAS[i] #intermediate step
@@ -290,9 +362,53 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
         
         RAS[i+1] = RAS[i+1] - ETR[i]
         
-    #-------------------------------------------------- SUBSURFACE ROUTING -----
+        #------------------------------------------------- POTENTIAL FLUXES ----
+        PI = 25
         
+        Pc, Krw = calc_Pc(VWC[:, i], SoilObj)
         
+        dhw = ((Pc[1:] - Pc[:-1])/ dz - 1)  # vertical hydraulic gradient (mm)
+        
+        qw = -(Krw[:-1] * Krw[1:])**0.5 * dhw * 24. # vertical water flux (mm/dy)
+#        qw = -(Krw[:-1] + Krw[1:])*0.5 * dhw * 24. # vertical water flux (mm/dy)
+        
+        #---- SUP LIMIT ----
+        VWC[0, i+1] = (PI - qw[0]) / (2 * dz[0]) / VWCsat * dt + VWC[0, i]
+
+        #---- MIDDLE CELLS ----     
+        VWC[1:-1, i+1] = (qw[:-1] - qw[1:]) / (dz[1:]/2.+dz[:-1]/2.) / VWCsat * dt + VWC[1:-1, i]
+        
+        #---- LOWER LIMIT ----        
+        VWC[-1, i+1] = qw[-1] / (2 * dz[-1]) / VWCsat * dt + VWC[-1, i]
+        
+        #----------------------------------------------- SUBSURFACE ROUTING ----
+
+        for j in range(len(z)):
+            
+            if VWC[j, i+1] < VWCres:
+#                print 'PATATE'
+                VWC[j, i+1] = VWCres
+            elif VWC[j, i+1] > VWCsat:
+#                print 'Orange'
+                VWC[j, i+1] = VWCsat
+        
+#        #Residual water taking into account water table position
+#        VWCres_z, _ = calc_VWC(z - HWT[0], SoilObj)
+            
+#        print dhw
+#        print Krw
+#        print Pc[1] - Pc[0]
+#        print (Krw[0] * Krw[1])**0.5
+#        print VWC[:, i+1]
+        print qw[0]
+        
+#    plt.plot(VWC[:, :i+1])
+
+#        qw_pot =  
+
+
+#            qw = Krw[] *     
+            
     
     return RECHG
 
@@ -405,9 +521,9 @@ def calc_hydrograph_old(RECHG, RECESS, WLobs):
 def calc_hydrograph(RECHG, RECESS, WL0, Sy):
 #===============================================================================
      
-    WLsim = np.zeros(len(RECHG)+1)
+    WLsim = np.zeros(len(RECHG))
     WLsim[0] = WL0
-    for i in range(len(RECHG)):            
+    for i in range(len(RECHG)-1):            
         WLsim[i+1] = WLsim[i] - (RECHG[i] / Sy) + RECESS[i]
 
     return WLsim
@@ -453,7 +569,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     Sy = 0.30
     for it in range(len(CRU)):
         
-        RECHG = calc_recharge(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+        RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
         WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
         
         SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
@@ -465,7 +581,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
                 
                 RASmax[it] += delta_RAS
                 
-                RECHG = calc_recharge(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+                RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
                 WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
                 
                 
@@ -511,12 +627,18 @@ if __name__ == '__main__':
     TIMEmeteo = meteoObj.TIME # Time (days)
     LAT = float(meteoObj.LAT) # Latitude (deg)
     
-    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
+#    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
                                               # evapotranspiration (mm)
     
-    RECHG = calc_recharge(0.1, 25, ETP, PTOT, TAVG)
+#    RECHG = calc_recharge(0.1, 25, ETP, PTOT, TAVG)
     
-#    bestfit_hydrograph(meteoObj, waterlvlObj)
+    #---- OLD VERSION WITH NO UNSATURATED TRANSPORT ----
+    
+    # The program search for solutions with a long time trend that is close to
+    # zero. There is no unique solution, but each solution gives mean recharge
+    # rates that are equivalent and equal to the recession.
+    
+    bestfit_hydrograph(meteoObj, waterlvlObj)
     
     
 #    print np.mean(RECHG) * 365
