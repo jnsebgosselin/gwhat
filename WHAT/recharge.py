@@ -97,8 +97,8 @@ class SoilTypes():
         self.PSDmin = [0.334, 0.271, 0.186, 0.137, 0.136, 0.125, 0.100, 0.090,
                        0.078, 0.074, 0.068][indx]
                        
-        self.Pb = [72.6, 86.9, 146.6, 111.5, 207.6, 280.8, 258.9, 325.6, 291.7,
-                   341.9, 373.0][indx] * -1
+        self.Pb = -1 * [72.6, 86.9, 146.6, 111.5, 207.6, 280.8, 258.9, 325.6,
+                        291.7, 341.9, 373.0][indx]
         self.Pb_max = [387.4, 418.5, 622.4, 764.0, 1204.0, 1415.0, 1157.0,
                        1587., 1716., 1662., 1872.][indx] * -1
         self.Pb_min = [13.6, 18.0, 34.5, 16.3, 35.8, 55.7, 58.0, 66.8, 49.6,
@@ -201,6 +201,65 @@ def calc_VWC(Pc, SoilObj):
     return VWC, Krw
     
 #===============================================================================
+def plot_P_vs_VWC(Pc, VWC, VWCsat, VWCres):
+    """
+    Plot Volumetric Water Content(VWC) vs. Soil Matric Potential (Pc)
+    
+    Pc = Capillary pressure (m)
+    
+    """
+#===============================================================================
+    
+    fig1 = plt.figure(figsize=(5, 6))
+    fig1.patch.set_facecolor('white')
+    
+    fheight = fig1.get_figheight()
+    fwidth = fig1.get_figwidth()
+               
+    left_margin  = 0.85
+    right_margin = 0.25
+    bottom_margin = 0.75
+    top_margin = 0.25
+    
+    x0 = left_margin / fwidth
+    y0 = bottom_margin / fheight
+    w = 1 - (left_margin + right_margin) / fwidth
+    h = 1 - (bottom_margin + top_margin) / fheight
+    
+    ax1  = fig1.add_axes([x0, y0, w, h], zorder=1)
+    
+    xticks_position = np.arange(0, 1, 0.1)
+    
+    ax1.set_xticks(xticks_position)
+    ax1.xaxis.set_ticks_position('bottom')
+    ax1.tick_params(axis='both',direction='out', gridOn=True)
+    
+    xticks_minor_position = np.arange(0, 1, 0.02)
+    ax1.set_xticks(xticks_minor_position, minor=True)
+    ax1.tick_params(axis='x', which='minor', direction='out', gridOn=False)
+    
+    yticks_position = np.arange(0, 3)
+    ax1.set_yticks(yticks_position)
+    ax1.yaxis.set_ticks_position('left')
+    
+    yticks_minor_position = np.arange(0, 3, 0.1)
+    ax1.set_yticks(yticks_minor_position, minor=True)
+    ax1.tick_params(axis='y', which='minor', direction='out', gridOn=False)
+    
+    ax1.axis([0, 0.5, 0.01, 100])
+    
+    ax1.set_yscale('log')
+    
+    ax1.set_ylabel(u'Soil matric potential, ψ (m)', fontsize=12,
+                   verticalalignment='bottom')
+    ax1.set_xlabel(u'Soil volumetric water content, θ (m³/m³)', fontsize=12,
+                   verticalalignment='top')
+                
+    ax1.plot(VWC, Pc, '-')
+    ax1.plot([VWCres, VWCres], [0.001, 1000], '--', color='blue')
+    ax1.plot([VWCsat, VWCsat], [0.001, 1000], '--', color='blue')
+    
+#===============================================================================
 def calc_recharge_old(CRU, RASmax, ETP, PTOT, TAVG):
 #===============================================================================
     
@@ -289,8 +348,13 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     SoilObj = SoilTypes(0)
     VWCres = SoilObj.VWCres
     VWCsat = SoilObj.POREFF
-    Sy = VWCsat - VWCres
-    HROOTS = 300
+    # Sy = VWCsat - VWCres
+    # HROOTS = 300
+    
+#    Pc = -np.arange(0, 6000)
+#    VWC, _ = calc_VWC(Pc, SoilObj)
+    
+#    plot_P_vs_VWC(-Pc/1000., VWC, VWCsat, VWCres)
     
     #---- Snow Melt ----
     
@@ -310,6 +374,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     # First layer thickness is equal to that of the root zone
     z = np.array([150, 650, 1150, 1650, 2150, 2650, 3150, 3650, 4150, 4650,
                   5150, 5650, 6150])
+                  
     dz = z[1:] - z[:-1]
     dt = 1
                   
@@ -326,7 +391,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     #----------------------------------------------------------- SIMULATION ----
 
 
-    for i in range(20): #range(0, N-1):
+    for i in range(10): #range(0, N-1):
         
         #--------------------------------- SURFACE STORAGE and INFILTRATION ----
 
@@ -352,62 +417,88 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
         RU[i] = CRU * PAVL[i]
         PI = PAVL[i] - RU[i] # Potential Infiltration
         
-        #---- ETR, Recharge and Storage change ----
-        
-        dRAS[i] = min(I[i], RASmax - RAS[i])
-        RAS[i+1] = RAS[i] + dRAS[i] #intermediate step
-        RECHG[i] = I[i] - dRAS[i]
-        
-        ETR[i] = min(ETP[i], RAS[i])
-        
-        RAS[i+1] = RAS[i+1] - ETR[i]
-        
-        #------------------------------------------------- POTENTIAL FLUXES ----
         PI = 25
         
-        Pc, Krw = calc_Pc(VWC[:, i], SoilObj)
+        #---- ETR, Recharge and Storage change ----
         
-        dhw = ((Pc[1:] - Pc[:-1])/ dz - 1)  # vertical hydraulic gradient (mm)
+        # dRAS[i] = min(I[i], RASmax - RAS[i])
+        # RAS[i+1] = RAS[i] + dRAS[i] #intermediate step
+        # RECHG[i] = I[i] - dRAS[i]
         
-        qw = -(Krw[:-1] * Krw[1:])**0.5 * dhw * 24. # vertical water flux (mm/dy)
-#        qw = -(Krw[:-1] + Krw[1:])*0.5 * dhw * 24. # vertical water flux (mm/dy)
+        # ETR[i] = min(ETP[i], RAS[i])
         
-        #---- SUP LIMIT ----
-        VWC[0, i+1] = (PI - qw[0]) / (2 * dz[0]) / VWCsat * dt + VWC[0, i]
-
-        #---- MIDDLE CELLS ----     
-        VWC[1:-1, i+1] = (qw[:-1] - qw[1:]) / (dz[1:]/2.+dz[:-1]/2.) / VWCsat * dt + VWC[1:-1, i]
+        # RAS[i+1] = RAS[i+1] - ETR[i]
         
-        #---- LOWER LIMIT ----        
-        VWC[-1, i+1] = qw[-1] / (2 * dz[-1]) / VWCsat * dt + VWC[-1, i]
+        VWCt = VWC[:, i]
+        VWCdt = VWC[:, i]
         
-        #----------------------------------------------- SUBSURFACE ROUTING ----
-
-        for j in range(len(z)):
+        for t in  range(24):
+        
+            #--------------------------------------------- POTENTIAL FLUXES ----
+#            print VWCt[0] 
+            Pc, Krw = calc_Pc(VWCt, SoilObj)
+            print '%0.2f, %0.2f, %0.2f, %0.2f' % (VWCt[0] , Krw[0], VWCt[1], Krw[1])
+        
+            dhw = ((Pc[1:] - Pc[:-1]) / dz) - 1  # vertical hydraulic gradient (mm)
+        
+#            qw = -(Krw[:-1] * Krw[1:])**0.5 * dhw  # vertical water flux (mm/hr)
+            qw = -0.5*(Krw[:-1] + Krw[1:]) * dhw # vertical water flux (mm/hr)
+        
+            Krw1 = (Krw[0] * Krw[1])**0.5
+            Krw2 = 0.5*(Krw[0] + Krw[1])
+            _, Krw3 = calc_Pc([0.5*(VWCt[0]+VWCt[1])], SoilObj)
             
-            if VWC[j, i+1] < VWCres:
-#                print 'PATATE'
-                VWC[j, i+1] = VWCres
-            elif VWC[j, i+1] > VWCsat:
-#                print 'Orange'
-                VWC[j, i+1] = VWCsat
+#            print Krw[0], Krw1, Krw2, Krw3[0]                     
         
-#        #Residual water taking into account water table position
-#        VWCres_z, _ = calc_VWC(z - HWT[0], SoilObj)
+            #---- SUP LIMIT ----
+            VWCdt[0] = (PI/24. - qw[0]) / (2 * dz[0]) / VWCsat * dt + VWCt[0]
+
+            #---- INNER CELLS ----     
+            VWCdt[1:-1] = (qw[:-1] - qw[1:]) / (dz[1:]/2.+dz[:-1]/2.) / VWCsat * dt + VWCt[1:-1]
+        
+            #---- LOWER LIMIT ----        
+            VWCdt[-1] = qw[-1] / (2 * dz[-1]) / VWCsat * dt + VWCt[-1]
             
+            for j in range(len(VWCdt)):
+                
+                if VWCdt[j] < VWCres:
+    #                print 'PATATE'
+                    VWCdt[j] = VWCres
+                elif VWCdt[j] > VWCsat:
+    #                print 'Orange'
+                    VWCdt[j] = VWCsat
+       
+        VWC[:, i+1]=  VWCdt
+        
+            #------------------------------------------- SUBSURFACE ROUTING ----
+
+#            for j in range(len(z)):
+#                
+#                if VWC[j, i+1] < VWCres:
+#    #                print 'PATATE'
+#                    VWC[j, i+1] = VWCres
+#                elif VWC[j, i+1] > VWCsat:
+#    #                print 'Orange'
+#                    VWC[j, i+1] = VWCsat
+        
+    #        #Residual water taking into account water table position
+    #        VWCres_z, _ = calc_VWC(z - HWT[0], SoilObj)
+                
+#    print VWC[:, :8]
 #        print dhw
-#        print Krw
-#        print Pc[1] - Pc[0]
-#        print (Krw[0] * Krw[1])**0.5
-#        print VWC[:, i+1]
-        print qw[0]
+    #        print Krw
+    #        print Pc[1] - Pc[0]
+    #        print (Krw[0] * Krw[1])**0.5
+    #        print VWC[:, i+1]
+#        print qw[0]
         
-#    plt.plot(VWC[:, :i+1])
-
-#        qw_pot =  
-
-
-#            qw = Krw[] *     
+    plt.figure()            
+    plt.plot(VWC[:, :i+1])
+    
+    #        qw_pot =  
+    
+    
+    #            qw = Krw[] *     
             
     
     return RECHG
@@ -611,8 +702,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     
 if __name__ == '__main__':
     
-#    import matplotlib.pyplot as plt
-     
+    plt.close('all')
     # fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
     meteoObj = MeteoObj()
@@ -626,11 +716,11 @@ if __name__ == '__main__':
     TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
     TIMEmeteo = meteoObj.TIME # Time (days)
     LAT = float(meteoObj.LAT) # Latitude (deg)
-    
-#    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
+        
+    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
                                               # evapotranspiration (mm)
     
-#    RECHG = calc_recharge(0.1, 25, ETP, PTOT, TAVG)
+    RECHG = calc_recharge(0.1, 25, ETP, PTOT, TAVG)
     
     #---- OLD VERSION WITH NO UNSATURATED TRANSPORT ----
     
@@ -638,12 +728,5 @@ if __name__ == '__main__':
     # zero. There is no unique solution, but each solution gives mean recharge
     # rates that are equivalent and equal to the recession.
     
-    bestfit_hydrograph(meteoObj, waterlvlObj)
-    
-    
-#    print np.mean(RECHG) * 365
-    
-#    plt.close('all')
-#    plt.figure()
-#    plt.plot(ETP)
+#    bestfit_hydrograph(meteoObj, waterlvlObj)
     
