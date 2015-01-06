@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
-software_version = 'WHAT Beta 4.0.6'
-last_modification = '01/01/2015'
+software_version = 'WHAT Beta 4.0.7'
+last_modification = '04/01/2015'
 
 #----- STANDARD LIBRARY IMPORTS -----
 
@@ -533,9 +533,9 @@ class TabHydrograph(QtGui.QWidget):
         grid_RIGHT.setSpacing(15)
         grid_RIGHT.setRowStretch(row+1, 500)
         
-    #----------------------------------------------------------- GRID LEFT -----
+    #------------------------------------------------------------ GRID LEFT ----
         
-        #----- SubGrid Figure -----
+        #---- SubGrid Figure Frame ----
         
         # Two figures are generated. (1) One as a preview to display in the
         # UI and (2) the other to be saved as the final figure. This is to
@@ -559,19 +559,26 @@ class TabHydrograph(QtGui.QWidget):
         
         frame_layout =  QtGui.QGridLayout() 
         
-        frame_layout.addWidget(self.hydrograph_widget, 1, 1)
+        frame_layout.addWidget(self.hydrograph_widget, 0, 0)
         
         hydrograph_frame.setLayout(frame_layout)
-        
-        self.hydrograph_widget.setFixedWidth(1100/1.5)
-        self.hydrograph_widget.setFixedHeight(800/1.5)
-        
-        #----- ASSEMBLING SubGrids -----
         
         frame_layout.setRowStretch(0, 500)
         frame_layout.setRowStretch(2, 500)
         frame_layout.setColumnStretch(0, 500)
         frame_layout.setColumnStretch(2, 500)
+        
+        self.hydrograph_widget.setFixedWidth(1100/1.5)
+        self.hydrograph_widget.setFixedHeight(800/1.5)
+        
+#        self.hydrograph_widget.setFixedWidth(1100/2.)
+#        self.hydrograph_widget.setFixedHeight(800/2.)
+#        policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
+#        policy.setHeightForWidth(True)
+#        self.hydrograph_widget.setSizePolicy(policy)
+        
+        #----- ASSEMBLING SubGrids -----
+                
         graph_title_label = QtGui.QLabel('Figure Title :')
         self.graph_title = QtGui.QLineEdit()
         self.graph_title.setMaxLength(65)
@@ -1345,6 +1352,7 @@ class TabDwnldData(QtGui.QWidget):
         self.latitude_SpinBox.setSingleStep(0.1)
         self.latitude_SpinBox.setValue(0)
         self.latitude_SpinBox.setMinimum(0)
+        self.latitude_SpinBox.setMaximum(180)
         self.latitude_SpinBox.setSuffix(u' °')
         
         self.longitude_SpinBox = QtGui.QDoubleSpinBox()
@@ -1352,6 +1360,7 @@ class TabDwnldData(QtGui.QWidget):
         self.longitude_SpinBox.setSingleStep(0.1)
         self.longitude_SpinBox.setValue(0)
         self.longitude_SpinBox.setMinimum(0)
+        self.longitude_SpinBox.setMaximum(180)
         self.longitude_SpinBox.setSuffix(u' °')
         
         self.radius_SpinBox = QtGui.QSpinBox()
@@ -1394,9 +1403,10 @@ class TabDwnldData(QtGui.QWidget):
         grid_search4stations.setRowStretch(5, 500)
         
         self.widget_search4stations.setWindowTitle(
-        'Search For Weather Stations on www.climate.weather.gc.ca')
+                                                  'Search For Weather Stations')
 #        self.widget_search4stations.setGeometry(250, 800, 250, 150)
-#        self.widget_search4stations.resize(350, 150)
+        self.widget_search4stations.setFixedSize(300, 200)
+        self.widget_search4stations.setWindowIcon(iconDB.WHAT)
     
     #===========================================================================
     def show_search4stations(self):

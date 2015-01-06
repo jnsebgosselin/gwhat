@@ -715,6 +715,8 @@ class WaterlvlData():
             reader = list(reader)[1:]
             reader = np.array(reader)
             
+            print reader
+            
             if len(reader) > 1:
                 puits_names_list = reader[:, 0] 
                 rowx = np.where(puits_names_list == name_well)[0]
