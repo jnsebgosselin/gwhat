@@ -32,7 +32,7 @@ from sys import argv
 from time import ctime, strftime, sleep, gmtime
 from os import getcwd, listdir, makedirs, path
 from string import maketrans
-#from datetime import datetime
+from datetime import datetime
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -1310,6 +1310,11 @@ class TabDwnldData(QtGui.QWidget):
                         
         self.yStart_edit.valueChanged.connect(self.start_year_changed)
         self.yEnd_edit.valueChanged.connect(self.end_year_changed)
+        
+        self.search4station_minYear.valueChanged.connect(
+                                            self.search4station_minYear_changed)
+        self.search4station_maxYear.valueChanged.connect(
+                                            self.search4station_maxYear_changed)
     
     def start_year_changed(self):
         
@@ -1330,6 +1335,24 @@ class TabDwnldData(QtGui.QWidget):
             max_yr = min(self.yEnd_edit.value(), int(self.staList[index, 3]))
                     
             self.yStart_edit.setRange(min_yr, max_yr)
+            
+    def search4station_minYear_changed(self):
+            
+            min_yr = min_yr = max(self.search4station_minYear.value(), 1840)
+            
+            now = datetime.now()
+            max_yr = now.year
+                    
+            self.search4station_maxYear.setRange(min_yr, max_yr)
+            
+    def search4station_maxYear_changed(self):
+        
+            min_yr = 1840
+            
+            now = datetime.now()
+            max_yr = min(self.search4station_maxYear.value(), now.year)
+                    
+            self.search4station_minYear.setRange(min_yr, max_yr)
     
     #===========================================================================
     def initUI_search4stations(self):
@@ -1339,7 +1362,7 @@ class TabDwnldData(QtGui.QWidget):
         '''
     #===========================================================================
         
-        #----- Widgets -----
+        #---- Widgets ----
         
         label_Lat = QtGui.QLabel('Latitude :')
         label_Lat2 = QtGui.QLabel('N')
@@ -1365,16 +1388,38 @@ class TabDwnldData(QtGui.QWidget):
         
         self.radius_SpinBox = QtGui.QSpinBox()
         self.radius_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
-        self.radius_SpinBox.setSingleStep(1)
-        self.radius_SpinBox.setValue(0)
-        self.radius_SpinBox.setMinimum(0)
+        self.radius_SpinBox.setSingleStep(5)
+        self.radius_SpinBox.setMinimum(5)
         self.radius_SpinBox.setMaximum(500)
         self.radius_SpinBox.setSuffix(' km')
+        
+        now = datetime.now()
+
+        label_startYear = QtGui.QLabel('Start Year :')
+        
+        self.search4station_minYear = QtGui.QSpinBox()
+        self.search4station_minYear.setAlignment(QtCore.Qt.AlignCenter)
+        self.search4station_minYear.setSingleStep(1)
+        self.search4station_minYear.setMinimum(1840)
+        self.search4station_minYear.setMaximum(now.year)
+        self.search4station_minYear.setValue(1840)
+        
+        label_endYear = QtGui.QLabel('End Year :')
+        
+        self.search4station_maxYear = QtGui.QSpinBox()
+        self.search4station_maxYear.setAlignment(QtCore.Qt.AlignCenter)
+        self.search4station_maxYear.setSingleStep(1)
+        self.search4station_maxYear.setMinimum(1840)
+        self.search4station_maxYear.setMaximum(now.year)
+        self.search4station_maxYear.setValue(now.year)
         
         self.btn_go_search4station = QtGui.QPushButton('Search')
         self.btn_go_search4station.setIcon(iconDB.search)
         
-        #----- Grid -----
+        line1 = QtGui.QFrame()
+        line1.setFrameStyle(StyleDB.VLine)
+        
+        #---- GRID ----
                         
         self.widget_search4stations = QtGui.QWidget()
         grid_search4stations = QtGui.QGridLayout()
@@ -1383,29 +1428,34 @@ class TabDwnldData(QtGui.QWidget):
         grid_search4stations.addWidget(label_Lat, row, 1, 1, 2)
         grid_search4stations.addWidget(self.latitude_SpinBox, row, 3)
         grid_search4stations.addWidget(label_Lat2, row, 4)
+        grid_search4stations.addWidget(line1, row, 5, 3, 1)
+        grid_search4stations.addWidget(label_startYear, row, 6)
+        grid_search4stations.addWidget(self.search4station_minYear, row, 7) 
         row += 1
         grid_search4stations.addWidget(label_Lon, row, 1, 1, 2)
         grid_search4stations.addWidget(self.longitude_SpinBox, row, 3)
         grid_search4stations.addWidget(label_Lon2, row, 4)
+        grid_search4stations.addWidget(label_endYear, row, 6)
+        grid_search4stations.addWidget(self.search4station_maxYear, row, 7)
         row += 1
         grid_search4stations.addWidget(label_radius, row, 1, 1, 2)
         grid_search4stations.addWidget(self.radius_SpinBox, row, 3)
         row += 1
-        grid_search4stations.addWidget(self.btn_go_search4station, row, 1)
+        grid_search4stations.addWidget(self.btn_go_search4station, row, 1, 1, 7)
                 
         self.widget_search4stations.setLayout(grid_search4stations)
         grid_search4stations.setContentsMargins(50, 25, 50, 25) # Left, Top,
                                                                 # Right, Bottom 
         grid_search4stations.setSpacing(10)
         grid_search4stations.setColumnStretch(0, 500)
-        grid_search4stations.setColumnStretch(4, 500)
+        grid_search4stations.setColumnStretch(8, 500)
         grid_search4stations.setRowStretch(0, 500)
-        grid_search4stations.setRowStretch(5, 500)
+        grid_search4stations.setRowStretch(row + 1, 500)
         
         self.widget_search4stations.setWindowTitle(
                                                   'Search For Weather Stations')
 #        self.widget_search4stations.setGeometry(250, 800, 250, 150)
-        self.widget_search4stations.setFixedSize(300, 200)
+        self.widget_search4stations.setFixedSize(500, 200)
         self.widget_search4stations.setWindowIcon(iconDB.WHAT)
     
     #===========================================================================
@@ -1442,8 +1492,11 @@ class TabDwnldData(QtGui.QWidget):
         LAT = self.latitude_SpinBox.value()
         LON = self.longitude_SpinBox.value()
         RADIUS = self.radius_SpinBox.value()
+        startYear = self.search4station_minYear.value()
+        endYear = self.search4station_maxYear.value()
       
-        staList, cmt = envirocan.search4meteo(LAT, LON, RADIUS)
+        staList, cmt = envirocan.search4meteo(LAT, LON, RADIUS, 
+                                              startYear, endYear)
         
         self.parent.write2console(cmt)
         

@@ -106,14 +106,27 @@ class styleUI():
         
         self.frame = 22
         self.HLine = 52
+        self.VLine = 53
         
         # 17 = QtGui.QFrame.Box | QtGui.QFrame.Plain
         # 22 = QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain
         # 20 = QtGui.QFrame.HLine | QtGui.QFrame.Plain
         # 52 = QtGui.QFrame.HLine | QtGui.QFrame.Sunken
-        
-#        style = QtGui.QFrame()
-#        style.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
-#        print style.frameStyle()
+        # 53 = QtGui.QFrame.VLine | QtGui.QFrame.Sunken
+
         
 #        print Station_widget.frameStyle()
+if __name__ == '__main__':
+    pass
+    
+#    style = QtGui.QFrame()
+#    style.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
+#    print style.frameStyle()
+    
+    
+    
+    
+    
+    
+    
+    

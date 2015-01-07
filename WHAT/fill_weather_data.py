@@ -91,8 +91,6 @@ class Weather_File_Info():
             reader = csv.reader(reader, delimiter='\t')
             reader = list(reader)
             
-            print reader[0][1]
-            
             STADAT = np.array(reader[8:]).astype('float')
             
             self.DATE_START[i, :] = STADAT[0, :3]

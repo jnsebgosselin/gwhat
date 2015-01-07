@@ -53,7 +53,7 @@ def dms2decdeg(deg, mnt, sec):
     return dd
 
 #===============================================================================
-def search4meteo(LAT, LON, RADIUS):
+def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
     """
     Search on the Government of Canada website for weather stations with daily 
     meteo data around a decimal degree Lat, Lon coordinate with a radius 
@@ -67,9 +67,7 @@ def search4meteo(LAT, LON, RADIUS):
 #===============================================================================
     
     Nmax = 100. # Number of results per page (maximum possible is 100)
-    YearMin = 1840
-    YearMax = 2014
-    
+        
     StationID = np.array(['stationId'])
     Prov = np.array(['Province'])
     StartYear = np.array(['StartYear'])
@@ -242,7 +240,7 @@ if __name__ == '__main__':
     LON = -73.13
     RADIUS = 50
     
-    staList, cmt = search4meteo(LAT, LON, RADIUS)
+    staList, cmt = search4meteo(LAT, LON, RADIUS, 1840, 2015)
     
 #    print staList
 #    print cmt
