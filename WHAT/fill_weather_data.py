@@ -134,83 +134,88 @@ class Weather_File_Info():
             else:
                 pass
                 
-        #--------------------------------------------------- DATA RESHAPING ----
+        #---------------------------------------- <DATA> & <TIME> RESHAPING ----
             
             # This part of the function fits neighboring data series to the
             # target data serie in the 3D data matrix. Default values in the
             # 3D data matrix are nan.
         
-            #---- START TIME ----
-        
             if self.TIME[0] <= time_new[0]:
                 
-                ifirst = np.where(self.TIME == time_new[0])[0]
-                
-                if len(ifirst)>0:
+                if self.TIME[-1] >= time_new[-1]:
                     
-                    #    [--------------]    self.TIME
-                    #        [----------]    time_new
+                    #    [---------------]    self.TIME
+                    #         [-----]         time_new
                     
-                    ifirst = ifirst[0]
-                
-                else: # new data serie and DATA are mutually exclusive
-                
-                    #    [--------------]              self.TIME
-                    #                      [------]    time_new
-                
-                    # Expand matrixes <DATA> and <TIME>
-                    MFILL = np.empty((time_new[-1] - self.TIME[-1],
+                    pass
+                    
+                else:
+                    
+                    #    [--------------]         self.TIME
+                    #         [--------------]    time_new
+                    #                    
+                    #           OR
+                    #
+                    #    [--------------]           self.TIME
+                    #                     [----]    time_new
+                                        
+                    FLAG_date = True
+                    
+                    # Expand <DATA> and <TIME> to fit the new data serie
+                    
+                    EXPND = np.zeros((time_new[-1] - self.TIME[-1],
                                       nSTA, nVAR)) * np.nan
-                                                                          
-                    self.DATA = np.vstack((self.DATA, MFILL))
                     
+                    self.DATA = np.vstack((self.DATA, EXPND))
+                
                     self.TIME = np.arange(self.TIME[0], time_new[-1] + 1)
-                    
-                    ifirst = np.where(self.TIME == time_new[0])[0][0]
-                
+                 
             elif self.TIME[0] > time_new[0]:
+                
+                if self.TIME[-1] >= time_new[-1]:
             
-                #        [----------]    self.TIME
-                #    [--------------]    time_new
-            
-                FLAG_date = True
-                
-                ifirst = 0
-                
-                # Expand <METEO> to fit the new data serie
-                MFILL = np.zeros((self.TIME[0] - time_new[0],
-                                  nSTA, nVAR)) * np.nan
-                self.DATA = np.vstack((MFILL, self.DATA))
-                
-                self.TIME = np.arange(time_new[0], self.TIME[-1] + 1)
-                
-            #---- END TIME ----
-                
-            if self.TIME[-1] >= time_new[-1]:
-            
-                #     [--------------]    self.TIME
-                #     [----------]        time_new 
-                
-                ilast = np.where(self.TIME == time_new[-1])[0][0]
-            
-            elif self.TIME[-1] < time_new[-1]:
-            
-                #     [----------]        self.TIME
-                #     [--------------]    time_new
-                
-                FLAG_date = True
+                    #        [----------]    self.TIME
+                    #    [----------]        time_new
+                    #           
+                    #            OR
+                    #           [----------]    self.TIME
+                    #    [----]                 time_new
                     
-                # Expand <METEO> to fit the new data serie
-                MFILL = np.zeros((time_new[-1] - self.TIME[-1],
+                    FLAG_date = True
+                    
+                    # Expand <DATA> and <TIME> to fit the new data serie
+                    
+                    EXPND = np.zeros((self.TIME[0] - time_new[0],
                                   nSTA, nVAR)) * np.nan
-                self.DATA = np.vstack((self.DATA, MFILL))
+                                  
+                    self.DATA = np.vstack((EXPND, self.DATA))
                 
-                self.TIME = np.arange(self.TIME[0], time_new[-1] + 1)
-                
-                ilast = len(self.TIME) - 1
-                
-        #----------------------------------------------- FILL DATA MATRICES ----
-
+                    self.TIME = np.arange(time_new[0], self.TIME[-1] + 1)
+            
+                else:
+                    
+                    #        [----------]        self.TIME
+                    #    [------------------]    time_new
+                    
+                    FLAG_date = True
+                    
+                    # Expand <DATA> and <TIME> to fit the new data serie
+                    
+                    EXPNDbeg = np.zeros((self.TIME[0] - time_new[0],
+                                         nSTA, nVAR)) * np.nan
+                    
+                    EXPNDend = np.zeros((time_new[-1] - self.TIME[-1],
+                                         nSTA, nVAR)) * np.nan
+                    
+                    self.DATA = np.vstack((EXPNDbeg, self.DATA, EXPNDend))
+                    
+                    self.TIME = np.copy(time_new)
+                    
+        #---------------------------------------------------- FILL MATRICES ----
+         
+            ifirst = np.where(self.TIME == time_new[0])[0][0]
+            ilast = np.where(self.TIME == time_new[-1])[0][0]
+            
             self.DATA[ifirst:ilast+1, i, :] = STADAT[:, 3:]
             
             # Calculate number of missing data.
@@ -222,9 +227,17 @@ class Weather_File_Info():
             
             isNameExist = np.where(reader[0][1] == self.STANAME)[0]
             if len(isNameExist) > 0:
+                
                 print 'Station name already exists, adding a number at the end'
-                newname = '%s (%s)' % (reader[0][1], len(isNameExist)+1)
+                
+                count = 2
+                while len(isNameExist) > 0:
+                    newname = '%s (%d)' % (reader[0][1], count)
+                    isNameExist = np.where(newname == self.STANAME)[0]
+                    count += 1
+                
                 self.STANAME[i] = newname
+                
             else:
                 self.STANAME[i] = reader[0][1]
                         
