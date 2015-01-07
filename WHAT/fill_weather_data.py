@@ -69,7 +69,7 @@ class Weather_File_Info():
     
         nSTA = len(fnames) # Number of weather data file
         
-    #-------------------------------------------------INITIALIZED VARIABLES-----
+    #------------------------------------------------ INITIALIZED VARIABLES ----
         
         self.STANAME = np.zeros(nSTA).astype('str')
         self.ALT = np.zeros(nSTA)
@@ -122,7 +122,7 @@ class Weather_File_Info():
             
             time_new = np.arange(time_start, time_end + 1)
             
-        #------------------------------------------------FIRST TIME ROUTINE-----
+        #----------------------------------------------- FIRST TIME ROUTINE ----
             
             if i == 0:
                 self.VARNAME = reader[7][3:]
@@ -247,7 +247,7 @@ class Weather_File_Info():
             self.ALT[i] = float(reader[4][1])
             self.ClimateID[i] = str(reader[5][1])
             
-    #-------------------------------------------SORT STATION ALPHABETICALLY-----
+    #------------------------------------------ SORT STATION ALPHABETICALLY ----
 
         sort_index = np.argsort(self.STANAME)
         
@@ -263,7 +263,7 @@ class Weather_File_Info():
         self.DATE_START = self.DATE_START[sort_index]
         self.DATE_END = self.DATE_END[sort_index]
         
-    #---------------------------------------------------GENERATE DATE SERIE-----
+    #-------------------------------------------------- GENERATE DATE SERIE ----
     
         # Rebuild a date matrix if <DATA> size changed.
     
