@@ -1444,7 +1444,7 @@ class TabDwnldData(QtGui.QWidget):
         grid_search4stations.addWidget(self.btn_go_search4station, row, 1, 1, 7)
                 
         self.widget_search4stations.setLayout(grid_search4stations)
-        grid_search4stations.setContentsMargins(50, 25, 50, 25) # Left, Top,
+        grid_search4stations.setContentsMargins(25, 25, 25, 25) # Left, Top,
                                                                 # Right, Bottom 
         grid_search4stations.setSpacing(10)
         grid_search4stations.setColumnStretch(0, 500)
@@ -1455,7 +1455,7 @@ class TabDwnldData(QtGui.QWidget):
         self.widget_search4stations.setWindowTitle(
                                                   'Search For Weather Stations')
 #        self.widget_search4stations.setGeometry(250, 800, 250, 150)
-        self.widget_search4stations.setFixedSize(500, 200)
+        self.widget_search4stations.setFixedSize(450, 200)
         self.widget_search4stations.setWindowIcon(iconDB.WHAT)
     
     #===========================================================================
