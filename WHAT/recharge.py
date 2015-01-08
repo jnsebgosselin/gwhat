@@ -676,62 +676,62 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
         RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
         WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
         
-#        SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
-#        
-#        delta_RAS = 10
-#        while abs(delta_RAS) >= 0.001:
-#            while 1:
-#                SLOPEold = np.copy(SLOPEnew)
-#                
-#                RASmax[it] += delta_RAS
-#                
-#                RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
-#                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
-#                
-#                dWL = WLobs[0] - WL[indx[0]]
-#                WLobs -= dWL
-#                
-#                print (np.mean(WLsim[indx] - WLobs)**2)**0.5
-#                
-#                SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
-#                
-##                print SLOPEnew                
-#                
-#                if np.sign(SLOPEold) != np.sign(SLOPEnew):
-#                    delta_RAS /= -10.
-#                    break
-#                
-#                if abs(SLOPEold) < abs(SLOPEnew):
-#                    delta_RAS *= -1
-#                    break
-                
-                
-        RMSEnew = 10**6
+        SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
+        
         delta_RAS = 10
-        while abs(delta_RAS) >= 0.1:
+        while abs(delta_RAS) >= 0.001:
             while 1:
-                RMSEold = np.copy(RMSEnew)
+                SLOPEold = np.copy(SLOPEnew)
                 
                 RASmax[it] += delta_RAS
-                RMSE[it] = RMSEold
                 
                 RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
                 WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
                 
-                dWL = WLobs[0] - WLsim[indx[0]]
+                dWL = WLobs[0] - WL[indx[0]]
                 WLobs -= dWL
                 
-                RMSEnew = (np.mean((WLsim[indx] - WLobs)**2))**0.5
+                print (np.mean(WLsim[indx] - WLobs)**2)**0.5
                 
-                print RMSEnew                
+                SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
                 
-                if RMSEnew > RMSEold:
+#                print SLOPEnew                
+                
+                if np.sign(SLOPEold) != np.sign(SLOPEnew):
                     delta_RAS /= -10.
                     break
                 
-#                if abs(SLOPEold) < abs(SLOPEnew):
-#                    delta_RAS *= -1
+                if abs(SLOPEold) < abs(SLOPEnew):
+                    delta_RAS *= -1
+                    break
+                
+                
+#        RMSEnew = 10**6
+#        delta_RAS = 10
+#        while abs(delta_RAS) >= 0.1:
+#            while 1:
+#                RMSEold = np.copy(RMSEnew)
+#                
+#                RASmax[it] += delta_RAS
+#                RMSE[it] = RMSEold
+#                
+#                RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+#                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
+#                
+#                dWL = WLobs[0] - WLsim[indx[0]]
+#                WLobs -= dWL
+#                
+#                RMSEnew = (np.mean((WLsim[indx] - WLobs)**2))**0.5
+#                
+#                print RMSEnew                
+#                
+#                if RMSEnew > RMSEold:
+#                    delta_RAS /= -10.
 #                    break
+#                
+##                if abs(SLOPEold) < abs(SLOPEnew):
+##                    delta_RAS *= -1
+##                    break
                 
         RECHyr[it] = np.mean(RECHG) * 365
         print 'NEW solution'
@@ -746,7 +746,6 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     print RMSE     
     
     WLintrp = np.interp(TIMEwater, TIMEmeteo, WLsim)
-    
     dWL = np.mean(WLintrp) - np.mean(WLogger)
     WLogger += dWL
     print dWL
@@ -1057,7 +1056,7 @@ def plot_water_budget_monthly(YEAR, MONTH, years2plot):
     ax0.legend(loc=1, ncol=1)
 
 #===============================================================================
-def plot_synth_hydrograph(WL, TIME):
+def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
 #===============================================================================
     
     WL = np.abs(WL) / 1000.
@@ -1078,6 +1077,13 @@ def plot_synth_hydrograph(WL, TIME):
     y0 = bottom_margin / fheight
     w0 = 1 - (left_margin + right_margin) / fwidth
     h0 = 1 - (bottom_margin + top_margin) / fheight
+    
+    WLogger = waterlvlObj.lvl        # Observed groundwater level (mbgs)
+    TIMELogger = waterlvlObj.time    # Time (days)
+    
+    WLintrp = np.interp(TIMELogger, TIME, WL)
+    dWL = np.mean(WLintrp) - np.mean(WLogger)
+    WLogger += dWL
    
     #---------------------------------------------------------AXES CREATION-----
 
@@ -1146,6 +1152,8 @@ def plot_synth_hydrograph(WL, TIME):
     #--------------------------------------------------------------PLOTTING-----
     
     ax1.plot(TIME, WL, color='blue', linestyle='-')
+    
+    ax1.plot(TIMELogger, WLogger, color='red', linestyle='-')
 #    print WL
 #             marker='None', label='Trend Line ETP', clip_on=False,
 #             zorder=100) 
@@ -1154,7 +1162,7 @@ def plot_synth_hydrograph(WL, TIME):
     TIMEobs = np.array([35034, 35400, 35674, 40878, 41214, 41609, 41791])
     
     indx = np.where(TIMEobs[0] == TIME)[0][0]
-    WL_P1A = 505 - np.array([504.95, 505.98, np.nan, 505.51, 505.82, 505.96, 506.107])
+    WL_P1A = 505 - np.array([504.95, np.nan, np.nan, 505.51, 505.82, 505.96, 506.107])
     dWL = WL_P1A[0] - WL[indx]
     WL_P1A -= dWL
     
@@ -1191,57 +1199,57 @@ def plot_synth_hydrograph(WL, TIME):
                       [504.93, 505.04, 504.99, 505.6, 505.94, 506.12, 506.277],
                       [np.nan, np.nan,	np.nan, 505.77, 506.1, 506.28, 506.42]])
                        
-    WLobs_mean = np.zeros(7)
-    for i in range(7):
-        indx = np.where(~np.isnan(WLobs[:, i]))
-        WLobs_mean[i] = np.mean(WLobs[indx, i])
-    
-    WLobs_mean = 510 - WLobs_mean
-    indx = np.where(TIMEobs[0] == TIME)[0][0]
-    dWL = WLobs_mean[0] - WL[indx]
-    WLobs_mean -= dWL
-    
+#    WLobs_mean = np.zeros(7)
+#    for i in range(7):
+#        indx = np.where(~np.isnan(WLobs[:, i]))
+#        WLobs_mean[i] = np.mean(WLobs[indx, i])
+#    
+#    WLobs_mean = 510 - WLobs_mean
+#    indx = np.where(TIMEobs[0] == TIME)[0][0]
+#    dWL = WLobs_mean[0] - WL[indx]
+#    WLobs_mean -= dWL
+#    
     marker_size = 10
     marker_style = 'o'
-    alpha_val = 0.5 
-    
-    ax1.plot(TIMEobs, WLobs_mean,
-             markerfacecolor='red', markeredgecolor='red', marker=marker_style,
-             markersize=marker_size, linestyle='None', label='ETP',
-             clip_on=False, zorder=100, alpha = alpha_val)
-#    ax1.plot(TIMEobs, WL_P1A,
+    alpha_val = 1
+#    
+#    ax1.plot(TIMEobs, WLobs_mean,
 #             markerfacecolor='red', markeredgecolor='red', marker=marker_style,
 #             markersize=marker_size, linestyle='None', label='ETP',
 #             clip_on=False, zorder=100, alpha = alpha_val)
-#             
-#    ax1.plot(TIMEobs, WL_P1B,
-#             markerfacecolor='green', markeredgecolor='green', marker=marker_style,
-#             markersize=marker_size, linestyle='None', label='ETP',
-#             clip_on=False, zorder=100, alpha = alpha_val)
-#             
-#    ax1.plot(TIMEobs, WL_P2A,
-#             markerfacecolor='blue', markeredgecolor='blue', marker=marker_style,
-#             markersize=marker_size, linestyle='None', label='ETP',
-#             clip_on=False, zorder=100, alpha = alpha_val)
-#             
-#    ax1.plot(TIMEobs, WL_P2B,
-#             markerfacecolor='orange', markeredgecolor='orange', marker=marker_style,
-#             markersize=marker_size, linestyle='None', label='ETP',
-#             clip_on=False, zorder=100, alpha = alpha_val)
-#             
-#    ax1.plot(TIMEobs, WL_P3A,
-#             markerfacecolor='magenta', markeredgecolor='magenta', marker=marker_style,
-#             markersize=marker_size, linestyle='None', label='ETP',
-#             clip_on=False, zorder=100, alpha = alpha_val)
-#    ax1.plot(TIMEobs, WL_P3A,
-#             markerfacecolor='cyan', markeredgecolor='cyan', marker=marker_style,
-#             markersize=marker_size, linestyle='None', label='ETP',
-#             clip_on=False, zorder=100, alpha = alpha_val)
-#             
-#    ax1.plot(TIMEobs, WL_P19,
-#             markerfacecolor='black', markeredgecolor='black', marker=marker_style,
-#             markersize=marker_size, linestyle='None', label='ETP',
-#             clip_on=False, zorder=90, alpha = alpha_val)
+    ax1.plot(TIMEobs, WL_P1A,
+             markerfacecolor='red', markeredgecolor='red', marker=marker_style,
+             markersize=marker_size, linestyle='None', label='ETP',
+             clip_on=False, zorder=100, alpha = alpha_val)
+             
+    ax1.plot(TIMEobs, WL_P1B,
+             markerfacecolor='green', markeredgecolor='green', marker=marker_style,
+             markersize=marker_size, linestyle='None', label='ETP',
+             clip_on=False, zorder=100, alpha = alpha_val)
+             
+    ax1.plot(TIMEobs, WL_P2A,
+             markerfacecolor='blue', markeredgecolor='blue', marker=marker_style,
+             markersize=marker_size, linestyle='None', label='ETP',
+             clip_on=False, zorder=100, alpha = alpha_val)
+             
+    ax1.plot(TIMEobs, WL_P2B,
+             markerfacecolor='orange', markeredgecolor='orange', marker=marker_style,
+             markersize=marker_size, linestyle='None', label='ETP',
+             clip_on=False, zorder=100, alpha = alpha_val)
+             
+    ax1.plot(TIMEobs, WL_P3A,
+             markerfacecolor='magenta', markeredgecolor='magenta', marker=marker_style,
+             markersize=marker_size, linestyle='None', label='ETP',
+             clip_on=False, zorder=100, alpha = alpha_val)
+    ax1.plot(TIMEobs, WL_P3A,
+             markerfacecolor='cyan', markeredgecolor='cyan', marker=marker_style,
+             markersize=marker_size, linestyle='None', label='ETP',
+             clip_on=False, zorder=100, alpha = alpha_val)
+             
+    ax1.plot(TIMEobs, WL_P19,
+             markerfacecolor='black', markeredgecolor='black', marker=marker_style,
+             markersize=marker_size, linestyle='None', label='ETP',
+             clip_on=False, zorder=90, alpha = alpha_val)
     
 #    #----- RUNOF -----    
 #    
@@ -1281,12 +1289,14 @@ if __name__ == '__main__':
     plt.close('all')
     # fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
+#    fmeteo = 'Files4testing/OUTLOOK PFRA_1980-2014.out'
     meteoObj = MeteoObj()
     meteoObj.load(fmeteo)
     
     fwaterlvl = 'Files4testing/P19 2013-2014.xls'
     waterlvlObj = WaterlvlData()
     waterlvlObj.load(fwaterlvl)
+    
     
     PTOT = meteoObj.PTOT # Daily total precipitation (mm)
     TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
@@ -1307,7 +1317,10 @@ if __name__ == '__main__':
     RECHG, WL = bestfit_hydrograph(meteoObj, waterlvlObj)    
 #    YEAR = np.arange(1986, 2006).astype('int')       
 #    plot_water_budget_yearly(meteoObj.PTOT, RECHG, meteoObj.YEAR)
-    plot_synth_hydrograph(WL, meteoObj.TIME)
+    
+    WLogger = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
+    TIMELogger = waterlvlObj.time  # Time (days)
+    plot_synth_hydrograph(WL, meteoObj.TIME, WLogger, TIMELogger)
     
     # Estimation of the wilting point for plants
     
