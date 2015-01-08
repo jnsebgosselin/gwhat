@@ -54,12 +54,12 @@ import matplotlib.pyplot as plt
 
 #---- PERSONAL IMPORTS ----
 
-from WHAT import database as db
-from WHAT import hydroprint
-from WHAT import meteo
-from WHAT import envirocan
-from WHAT.hydroprint import LatLong2Dist
-from WHAT.fill_weather_data import Weather_File_Info
+import database as db
+import hydroprint
+from hydroprint import LatLong2Dist
+import meteo
+import envirocan
+from fill_weather_data import Weather_File_Info
 
 # The code is segmented in two main sections: the GUI section and the
 # WORKER sections.
@@ -251,7 +251,7 @@ class MainWindow(QtGui.QMainWindow):
         dialog.setReadOnly(False)         
         project_dir = dialog.getExistingDirectory(self, 
                                    'Select a new or existing project directory',
-                                   getcwd() + '/Projects')
+                                   getcwd() + '/../Projects')
         
         self.load_project_dir(project_dir)                                   
                                    
@@ -4059,7 +4059,7 @@ class WHATPref():
         # now = datetime.now()
         # now = (now.year, now.month, now.day)
         # self.project_dir = getcwd() + '/Projects/New_%d%d%d' % now
-        self.project_dir = getcwd() + '/Projects/Example'
+        self.project_dir = getcwd() + '/../Projects/Example'
         self.first_startup = 0
     
     def save_pref_file(self):
