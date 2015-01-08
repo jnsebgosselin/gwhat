@@ -1,4 +1,4 @@
-[Logo](https://raw.githubusercontent.com/jnsebgosselin/WHAT/master/WHAT/Icons/WHAT_banner.png)
+![Logo](https://raw.githubusercontent.com/jnsebgosselin/WHAT/master/WHAT/Icons/WHAT_banner.png)
 ====
 What is WHAT
 ============
