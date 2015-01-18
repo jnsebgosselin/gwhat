@@ -21,4 +21,11 @@ Future developments include:
 - Barometric Response Function (BRF) analysis.
 - Master Recession Curve (MRC) estimation.
 
-Last edited: 15/12/2014
+Output Samples:
+---------------
+
+![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Projects/Example/Normals_Marieville.png)
+
+![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Projects/Example/hydrograph_PO07.png)
+
+Last edited: 18/01/2015
