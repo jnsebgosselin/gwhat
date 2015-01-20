@@ -132,7 +132,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.what_pref = WHATPref(self)
                         
-        #---------------------------------------------------- MAIN CONSOLE -----
+        #----------------------------------------------------- MAIN CONSOLE ----
         
         self.main_console = QtGui.QTextEdit()        
         self.main_console.setReadOnly(True)
@@ -145,7 +145,7 @@ class MainWindow(QtGui.QMainWindow):
              Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
            </font>''')
         
-        #------------------------------------------------------ TAB WIDGET -----
+        #------------------------------------------------------- TAB WIDGET ----
         
         Tab_widget = QtGui.QTabWidget()
         
@@ -159,7 +159,7 @@ class MainWindow(QtGui.QMainWindow):
         Tab_widget.addTab(self.tab_hydrograph, labelDB.text.TAB3) 
         Tab_widget.addTab(tab_about, labelDB.text.TAB4)
         
-        #------------------------------------------------- SPLITTER WIDGET -----
+        #-------------------------------------------------- SPLITTER WIDGET ----
                 
         splitter = QtGui.QSplitter(self)
         splitter.setOrientation(QtCore.Qt.Vertical)
@@ -173,7 +173,7 @@ class MainWindow(QtGui.QMainWindow):
         # Forces initially the main_console to its minimal height.
         splitter.setSizes([100, 1])          
 
-        #--------------------------------------------- PROJECT DIR SUBGRID -----
+        #---------------------------------------------- PROJECT DIR SUBGRID ----
                         
         project_label = QtGui.QLabel('Project Directory :')
         project_label.setAlignment(QtCore.Qt.AlignCenter)
@@ -198,7 +198,7 @@ class MainWindow(QtGui.QMainWindow):
         
         proDir_widget.setLayout(subgrid_proDir)
         
-        #------------------------------------------------------- MAIN GRID -----
+        #-------------------------------------------------------- MAIN GRID ----
         
         self.pbar = QtGui.QProgressBar()
         self.pbar.setValue(0)
@@ -218,11 +218,11 @@ class MainWindow(QtGui.QMainWindow):
         
         main_widget.setLayout(mainGrid)
         
-    #-------------------------------------------------------------- EVENTS -----
+    #--------------------------------------------------------------- EVENTS ----
         
         self.btn_project_dir.clicked.connect(self.select_project_dir)
        
-    #---------------------------------------------------------------- INIT -----
+    #----------------------------------------------------------------- INIT ----
         
         self.what_pref.load_pref_file()
         self.load_project_dir(self.what_pref.project_dir)
@@ -333,7 +333,7 @@ class TabHydrograph(QtGui.QWidget):
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
-    #------------------------------------------------------------- TOOLBAR -----
+    #-------------------------------------------------------------- TOOLBAR ----
         
         btn_loadConfig = QtGui.QToolButton()
         btn_loadConfig.setAutoRaise(True)
@@ -423,7 +423,7 @@ class TabHydrograph(QtGui.QWidget):
         
         toolbar_widget.setLayout(subgrid_toolbar)
     
-    #---------------------------------------------------------- GRID RIGHT -----
+    #----------------------------------------------------------- GRID RIGHT ----
         
         #----- SubGrid Data Files -----
        
@@ -559,7 +559,7 @@ class TabHydrograph(QtGui.QWidget):
         
         frame_layout =  QtGui.QGridLayout() 
         
-        frame_layout.addWidget(self.hydrograph_widget, 0, 0)
+        frame_layout.addWidget(self.hydrograph_widget, 1, 1)
         
         hydrograph_frame.setLayout(frame_layout)
         
