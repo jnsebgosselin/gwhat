@@ -1,5 +1,8 @@
 ![Logo](https://raw.githubusercontent.com/jnsebgosselin/WHAT/master/WHAT/Icons/WHAT_banner_lowres(150).png)
 ====
+
+Avertissement: Governement of Canada issued an update on 15/01/2015 of their site which affects the compatibility of WHAT with their site. A new version of the software is currently being prepared to fix the issue. Thanks for your patience.
+
 What is WHAT
 ============
 WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main objective is to facilitate the interpretation and valorization of groundwater level time series measured in observation wells. It is developped at [INRS-ETE](http://ete.inrs.ca/) by [Jean-Sébastien Gosselin](http://www.liamg.ca/en/about-us/jean-sebastien-gosselin/) under the direction and co-direction of [Richard Martel](http://www.inrs.ca/richard-martel) and [Christine Rivard](http://science.gc.ca/default.asp?lang=En&n=E3024D2D-1&xsl=sdmtprofile&xml=E3024D2D-1AB4-4F74-AF13-755D0DCF3E13&formid=B03536B8-8F8E-4BC1-A5BF-D62B13F57A8B&showfromadmin=1&readonly=true).
