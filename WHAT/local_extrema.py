@@ -109,40 +109,46 @@ class MRCalc(QtGui.QWidget):
         self.toolbar = NavigationToolbar2QTAgg(self.fig_MRC_widget, self)
         self.toolbar.hide()
         
-        self.btn_undoPeak = QtGui.QToolButton()
-        self.btn_undoPeak.setAutoRaise(True)
-        self.btn_undoPeak.setIcon(iconDB.undo)
-        self.btn_undoPeak.setToolTip(ttipDB.undo)
+#        self.btn_undoPeak = QtGui.QToolButton()
+#        self.btn_undoPeak.setAutoRaise(True)
+#        self.btn_undoPeak.setIcon(iconDB.undo)
+#        self.btn_undoPeak.setToolTip(ttipDB.undo)
         
         self.btn_clearPeak = QtGui.QToolButton()
         self.btn_clearPeak.setAutoRaise(True)
         self.btn_clearPeak.setIcon(iconDB.clear_search)
         self.btn_clearPeak.setToolTip(ttipDB.clearall)
+        self.btn_clearPeak.setFocusPolicy(QtCore.Qt.NoFocus)
         
         self.btn_home = QtGui.QToolButton()
         self.btn_home.setAutoRaise(True)
         self.btn_home.setIcon(iconDB.home)
         self.btn_home.setToolTip(ttipDB.home)
+        self.btn_home.setFocusPolicy(QtCore.Qt.NoFocus)
         
         self.btn_editPeak = QtGui.QToolButton()
         self.btn_editPeak.setAutoRaise(True)
         self.btn_editPeak.setIcon(iconDB.add_point)
         self.btn_editPeak.setToolTip(ttipDB.editPeak)
+        self.btn_editPeak.setFocusPolicy(QtCore.Qt.NoFocus)
         
         self.btn_delPeak = QtGui.QToolButton()
         self.btn_delPeak.setAutoRaise(True)
         self.btn_delPeak.setIcon(iconDB.erase)
         self.btn_delPeak.setToolTip(ttipDB.delPeak)
+        self.btn_delPeak.setFocusPolicy(QtCore.Qt.NoFocus)
         
         self.btn_pan = QtGui.QToolButton()
         self.btn_pan.setAutoRaise(True)
         self.btn_pan.setIcon(iconDB.pan)
         self.btn_pan.setToolTip(ttipDB.pan)
+        self.btn_pan.setFocusPolicy(QtCore.Qt.NoFocus)
         
         self.btn_MRCalc = QtGui.QToolButton()
         self.btn_MRCalc.setAutoRaise(True)
         self.btn_MRCalc.setIcon(iconDB.MRCalc)
         self.btn_MRCalc.setToolTip(ttipDB.MRCalc)
+        self.btn_MRCalc.setFocusPolicy(QtCore.Qt.NoFocus)
                         
         separator1 = QtGui.QFrame()
         separator1.setFrameStyle(StyleDB.HLine)
@@ -153,8 +159,8 @@ class MRCalc(QtGui.QWidget):
         toolbar_widget = QtGui.QWidget()
         
         row = 0
-        subgrid_toolbar.addWidget(self.btn_undoPeak, row, 0)
-        row += 1
+#        subgrid_toolbar.addWidget(self.btn_undoPeak, row, 0)
+#        row += 1
         subgrid_toolbar.addWidget(self.btn_clearPeak, row, 0)
         row += 1        
         subgrid_toolbar.addWidget(self.btn_home, row, 0)
@@ -175,7 +181,7 @@ class MRCalc(QtGui.QWidget):
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         subgrid_toolbar.setRowStretch(row+1, 500)
 
-        self.btn_undoPeak.setIconSize(QtCore.QSize(36, 36))
+#        self.btn_undoPeak.setIconSize(QtCore.QSize(36, 36))
         self.btn_clearPeak.setIconSize(QtCore.QSize(36, 36))
         self.btn_home.setIconSize(QtCore.QSize(36, 36))
         self.btn_editPeak.setIconSize(QtCore.QSize(36, 36))
@@ -219,10 +225,11 @@ class MRCalc(QtGui.QWidget):
         
         #----- Toolbox -----
         
-        self.btn_undoPeak.clicked.connect(self.undo_last_peak)
+#        self.btn_undoPeak.clicked.connect(self.undo_last_peak)
         self.btn_clearPeak.clicked.connect(self.clear_all_peaks)        
         self.btn_home.clicked.connect(self.home)
         self.btn_editPeak.clicked.connect(self.edit_peak)
+        self.btn_delPeak.clicked.connect(self.delete_peak)
         self.btn_pan.clicked.connect(self.pan_graph)
         
     def edit_peak(self):
@@ -237,6 +244,9 @@ class MRCalc(QtGui.QWidget):
             self.btn_pan.setAutoRaise(True)
             if self.toolbar._active == "PAN":
                 self.toolbar.pan()
+                
+            # Deactivate <delete_peak>
+            self.btn_delPeak.setAutoRaise(True)
             
         else:
 
@@ -244,6 +254,29 @@ class MRCalc(QtGui.QWidget):
             self.btn_editPeak.setAutoRaise(True)
             self.ly.set_xdata(-1)
             self.fig_MRC_widget.draw()
+            
+    def delete_peak(self):
+        
+        if self.btn_delPeak.autoRaise():
+            
+            # Activate <delete_peak>
+            self.btn_delPeak.setAutoRaise(False)
+            
+            # Deactivate <pan_graph>
+            # http://stackoverflow.com/questions/17711099
+            self.btn_pan.setAutoRaise(True)
+            if self.toolbar._active == "PAN":
+                self.toolbar.pan()
+                
+            # Deactivate <edit_peak> and hide guide line
+            self.btn_editPeak.setAutoRaise(True)
+            self.ly.set_xdata(-1)
+            self.fig_MRC_widget.draw()
+            
+        else:
+
+            # Deactivate <delete_peak>
+            self.btn_delPeak.setAutoRaise(True)
         
     def pan_graph(self):
                 
@@ -253,6 +286,9 @@ class MRCalc(QtGui.QWidget):
             self.btn_editPeak.setAutoRaise(True)
             self.ly.set_xdata(-1)
             self.fig_MRC_widget.draw()
+            
+            # Deactivate <delete_peak>
+            self.btn_delPeak.setAutoRaise(True)
             
             # Activate <pan_graph>
             self.btn_pan.setAutoRaise(False)
@@ -265,16 +301,16 @@ class MRCalc(QtGui.QWidget):
     def home(self):
         self.toolbar.home()
 
-    def undo_last_peak(self):
-        
-        if len(self.peak_indx) > 0:
-            
-            self.peak_indx = self.peak_indx[:-1]
-        
-            self.h2_ax0.set_ydata(self.water_lvl[self.peak_indx])
-            self.h2_ax0.set_xdata(self.time[self.peak_indx])
-                               
-            self.fig_MRC_widget.draw()
+#    def undo_last_peak(self):
+#        
+#        if len(self.peak_indx) > 0:
+#            
+#            self.peak_indx = self.peak_indx[:-1]
+#        
+#            self.h2_ax0.set_ydata(self.water_lvl[self.peak_indx])
+#            self.h2_ax0.set_xdata(self.time[self.peak_indx])
+#                               
+#            self.fig_MRC_widget.draw()
             
     def clear_all_peaks(self):
                             
@@ -362,18 +398,24 @@ class MRCalc(QtGui.QWidget):
     
         #---- Water Levels ----
     
-        h1_ax0, = self.ax0.plot(t, x, color='blue', clip_on=True, zorder=100,
+        h1_ax0, = self.ax0.plot(t, x, color='blue', clip_on=True, zorder=10,
                                 marker='None', linestyle='-')
         
         #---- Peaks ----
                  
         self.h2_ax0, = self.ax0.plot([], [], color='red', clip_on=True, 
-                                     zorder=100, marker='o', linestyle='None')
+                                     zorder=30, marker='o', linestyle='None')
                                      
         #---- Vertical guide line under cursor ----
                                      
-        self.ly = self.ax0.axvline(x=.5, ymin=0, ymax=1, color='red')  
-
+        self.ly = self.ax0.axvline(x=.5, ymin=0, ymax=1, color='red', zorder=40)
+        
+        #---- Cross Remove Peaks ----
+        
+        self.xcross, = self.ax0.plot(-1, 0, color='red', clip_on=True, 
+                                     zorder=20, marker='x', linestyle='None',
+                                     markersize = 15, markeredgewidth = 3)
+        
     #-------------------------------------------------------- UPDATE WIDGET ----
                         
         self.fig_MRC_widget.draw()
@@ -381,6 +423,7 @@ class MRCalc(QtGui.QWidget):
     def mouse_vguide(self, event):
         # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
         if not self.btn_editPeak.autoRaise():
+           
             x = event.xdata
             
             # update the line positions
@@ -388,12 +431,62 @@ class MRCalc(QtGui.QWidget):
             
             self.fig_MRC_widget.draw()
             
-        elif not self.btn_delPeak.autoRaise():
+        elif not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
+            
+            x = event.x
+            y = event.y
+            
+            xt = np.empty(len(self.peak_indx))
+            yt = np.empty(len(self.peak_indx))
+            xpeak = self.time[self.peak_indx]
+            ypeak = self.water_lvl[self.peak_indx]
+            
+            for i in range(len(self.peak_indx)):                
+                xt[i], yt[i] = self.ax0.transData.transform((xpeak[i],ypeak[i]))
+           
+            r = ((xt - x)**2 + (yt - y)**2)**0.5
+            
+            if np.min(r) < 15 :
+
+                indx = np.where(r == np.min(r))[0][0]
+                                
+                self.xcross.set_xdata(xpeak[indx])
+                self.xcross.set_ydata(ypeak[indx])
+                
+                self.fig_MRC_widget.draw()
+            else:
+                self.xcross.set_xdata(-1)
+                
+                self.fig_MRC_widget.draw()            
+        else:
             pass
             
     def onclick(self, event):
         # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
-        if event.xdata != None and event.ydata != None and not self.btn_editPeak.autoRaise():
+        if event.xdata != None and event.ydata != None and not self.btn_delPeak.autoRaise():
+
+            if len(self.peak_indx) == 0: return
+                
+            x = event.xdata
+            y = event.ydata
+            
+            xpeak = self.time[self.peak_indx]
+            ypeak = self.water_lvl[self.peak_indx]
+            
+            r = ((xpeak - x)**2 + (ypeak - y)**2)**0.5
+            indx = np.where(r == np.min(r))[0][0]
+            
+            self.peak_indx = np.delete(self.peak_indx, indx)
+            xpeak = np.delete(xpeak, indx)
+            ypeak = np.delete(ypeak, indx)            
+            
+            self.h2_ax0.set_ydata(ypeak)
+            self.h2_ax0.set_xdata(xpeak)
+            self.xcross.set_xdata(-1)
+                                   
+            self.fig_MRC_widget.draw()            
+            
+        elif event.xdata != None and event.ydata != None and not self.btn_editPeak.autoRaise():
 #            print(event.xdata, event.ydata)
             
             xclic = event.xdata
@@ -406,9 +499,13 @@ class MRCalc(QtGui.QWidget):
             indxmin = np.where(x < xclic)[0]
             indxmax = np.where(x > xclic)[0]
             if len(indxmax) == 0:
+                
                 self.peak_indx = np.append(self.peak_indx, len(x)-1)
+                
             elif len(indxmin) == 0:
+                
                 self.peak_indx = np.append(self.peak_indx, 0)
+                
             else:
                 indxmin = indxmin[-1]
                 indxmax = indxmax[0]
@@ -417,9 +514,12 @@ class MRCalc(QtGui.QWidget):
                 dright = x[indxmax] - xclic
                 
                 if dleft < dright:
+                    
                     self.peak_indx = np.append(self.peak_indx, indxmin)
+                                        
                 else:
-                    self.peak_indx = np.append(self.peak_indx, indxmax)               
+                    
+                    self.peak_indx = np.append(self.peak_indx, indxmax)
            
             self.h2_ax0.set_ydata(y[self.peak_indx])
             self.h2_ax0.set_xdata(x[self.peak_indx])
