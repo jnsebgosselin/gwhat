@@ -85,7 +85,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     
     date_labels_display_pattern = 2
     NZGrid = GraphParamObj.ygrid_divnumber            
-    RAINscale = 20
+    RAINscale = GraphParamObj.RAINscale
     
     LEGEND = False
     
@@ -189,7 +189,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     #----- Water Levels -----
     
     if GraphParamObj.trend_line == 1:
-        tfilt, wlfilt = filt_data(time, water_lvl, 24*2)
+        tfilt, wlfilt = filt_data(time, water_lvl, 7)
     
         ax2.plot(tfilt, wlfilt, '-', zorder = 10, linewidth=1,
                  label='WL Trend Line')
@@ -212,17 +212,17 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
                  
     #----- Recession -----
         
-        # Plot a Recession line for Dundurn Report
-#            trecess = np.arange(41548, 41760)
-#            hrecess = 0.69 * (trecess - 41548) / 1000. + 6.625 - 0.0207
+#    # Plot a Recession line for Dundurn Report
+#    trecess = np.arange(41548, 41760)
+#    hrecess = 0.69 * (trecess - 41548) / 1000. + 6.225
 #
-#            ax2.plot(trecess, hrecess, '--r', zorder = 10, linewidth=1.5,
-#                         label='Water Level Recession')
+#    ax2.plot(trecess, hrecess, '--r', zorder = 10, linewidth=1.5,
+#             label='Water Level Recession')
                      
     #-------------------------------------------------------------- LEGEND -----
     
-    if LEGEND == True:
-        ax2.legend(loc=4, numpoints=1, fontsize=10)    
+    if GraphParamObj.isLegend == True:
+        ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)    
                      
     #================================================== PLOT PRECIPITATION =====
         
@@ -348,7 +348,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
         plt.setp(h1_ax4, markerfacecolor=(1, 0.25, 0.25),
                  markeredgecolor='none', markersize=5)
                  
-    if LEGEND == True:
+    if GraphParamObj.isLegend == True:
 
         rec1 = plt.Rectangle((0, 0), 1, 1, fc=[0.65,0.65,0.65])
         rec2 = plt.Rectangle((0, 0), 1, 1, fc=[0, 0, 1])
@@ -468,14 +468,16 @@ class GraphParameters():
         self.WLscale = 0
         self.TIMEmin = 36526
         self.TIMEmax = 36526
-        self.ygrid_divnumber = 20#17 #26
+        self.ygrid_divnumber = 20 #Dundurn: 17 #26
         
         self.title_state = 0
         self.title_text = 'Add A Title To The Figure Here'
         self.language = 'English'
         
-        self.WLref = 0 # 0 -> mbgs 1 -> masl
+        self.WLref = 0 # 0: mbgs 1: masl
         self.trend_line = 1
+        self.RAINscale = 20 # Dundurn: 10
+        self.isLegend = False
         
     def checkConfig(self, name_well): # old var. names: check, isConfigExist
         
@@ -764,6 +766,9 @@ def load_weather_log(fname, variable_name, time_week, value_week):
     
 #===============================================================================    
 def filt_data(time, waterlvl, period):
+    """
+    period is in days
+    """
 #===============================================================================
     
     #------------- RESAMPLING 6H BASIS AND NAN ESTIMATION BY INTERPOLATION -----
@@ -788,7 +793,7 @@ def filt_data(time, waterlvl, period):
 #    (b, a) = signal.butter(N, Wn, btype='low')
 #    wlfilt = signal.lfilter(b, a, waterlvl)
     
-    win = 4 * 14
+    win = 4 * period
     
     wlfilt = np.zeros(len(waterlvl) - win)
     tfilt = time6h[win/2:-win/2]
