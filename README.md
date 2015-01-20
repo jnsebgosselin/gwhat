@@ -1,7 +1,7 @@
 ![Logo](https://raw.githubusercontent.com/jnsebgosselin/WHAT/master/WHAT/Icons/WHAT_banner_lowres(150).png)
 ====
 
-Avertissement: Governement of Canada issued an update on 15/01/2015 of their site which affects the compatibility of WHAT with their site. A new version of the software is currently being prepared to fix the issue. Thanks for your patience.
+WARNING: Governement of Canada issued an update on 15/01/2015 of their site which affects the compatibility of WHAT with their site. A new version of the software is currently being prepared to fix the issue. Thanks for your patience.
 
 What is WHAT
 ============
