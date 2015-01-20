@@ -474,10 +474,16 @@ class GraphParameters():
         self.title_text = 'Add A Title To The Figure Here'
         self.language = 'English'
         
-        self.WLref = 0 # 0: mbgs 1: masl
-        self.trend_line = 1
         self.RAINscale = 20 # Dundurn: 10
+        self.WLref = 0 # 0: mbgs 1: masl
+        self.trend_line = 0
+        
         self.isLegend = False
+        
+        self.header = [['Name Well', 'Station Meteo', 'Min. Waterlvl',
+                        'Waterlvl Scale', 'Date Start', 'Date End',
+                        'Fig. Title State', 'Fig. Title Text', 'Precip. Scale',
+                        'Waterlvl Ref.', 'Trend Line']]
         
     def checkConfig(self, name_well): # old var. names: check, isConfigExist
         
@@ -495,23 +501,33 @@ class GraphParameters():
         # and if yes, convert it to the new version.
         nCONFG, nPARA = np.shape(reader)
 
-        if nPARA == 6:
-            col2add = np.zeros((nCONFG, 2)).astype(int)
+        if nPARA < len(self.header[0]):
+            print 'patate'
+            
+            nMissing = len(self.header[0]) - nPARA
+            
+            col2add = np.zeros((nCONFG, nMissing)).astype(int)
             col2add = col2add.astype(str)
             
             reader = np.hstack((reader, col2add))
-            reader[0, 6] = 'Title Exists'
-            reader[0, 7] = 'Title Text'
-            reader[1:, 7] = 'Add A Title To The Figure Here'
+            reader[0] = self.header[0]
+            
+            if nPARA < 8:
+                reader[1:, 7] = 'Add A Title To The Figure Here'
+            if nPARA < 9:
+                reader[1:, 8] = 20
+            if nPARA < 10:
+                reader[1:, 9] = 0
+            if nPARA < 11:
+                reader[1:, 10] = 0
             
             with open('graph_layout.lst', 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerows(reader)
              
-            msg = '''
-                  The "graph_layout.lst" file is from an older version of WHAT.
-                  The old file has been converted to the newer version.
-                  ''' 
+            msg = ('The "graph_layout.lst" file is from an older version ' +
+                   'of WHAT. The old file has been converted to the newer ' +
+                   'version.') 
             print msg
         
         # Check if there is a layout stored for the current 
@@ -529,13 +545,9 @@ class GraphParameters():
 
         print 'No "graph_layout.lst" file found. A new one has been created.'
 
-        header = [['Name Well', 'Station Meteo', 'Min. Waterlvl',
-                   'Waterlvl Scale', 'Date Start', 'Date End',
-                   'Fig. Title State', 'Fig. Title Text']]
-
         with open('graph_layout.lst', 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
-                writer.writerows(header)
+                writer.writerows(self.header)
         
     def load(self, name_well):
         # A <checkConfig> is supposed to have been carried before this method
@@ -565,6 +577,9 @@ class GraphParameters():
             self.title_state = 1
         
         self.title_text = reader[7].astype(str)
+        self.RAINscale = reader[8].astype(float)
+        self.WLref = reader[9].astype(int)
+        self.trend_line = reader[10].astype(int)
         
     def save(self, name_well):
             
@@ -576,13 +591,15 @@ class GraphParameters():
         rowx = np.where(reader[:,0] == name_well)[0]
         
         new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
-               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text]
+               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text,
+               self.RAINscale, self.WLref, self.trend_line]
                
         if len(rowx) == 0:
             reader = np.vstack((reader, new))
         else:
             reader = np.delete(reader, rowx, 0)
             reader = np.vstack((reader, new))
+        reader[0] = self.header[0]
             
         with open('graph_layout.lst', 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
@@ -716,8 +733,6 @@ class WaterlvlData():
             reader = csv.reader(reader, delimiter='\t')
             reader = list(reader)[1:]
             reader = np.array(reader)
-            
-            print reader
             
             if len(reader) > 1:
                 puits_names_list = reader[:, 0] 
