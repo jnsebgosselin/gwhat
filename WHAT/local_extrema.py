@@ -36,6 +36,10 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
 import matplotlib.pyplot as plt
 
+#---- PERSONAL IMPORTS ----
+
+import database as db
+
 #class MainWindow(QtGui.QMainWindow):
 #        
 #    def __init__(self, parent=None):
@@ -48,6 +52,24 @@ import matplotlib.pyplot as plt
 ##        self.setGeometry(350, 75, 800, 750)
 #        self.setWindowTitle('Master Recession Curve Estimation')
 #        self.setWindowIcon(iconDB.WHAT)
+
+class Tooltips():
+    
+    def __init__(self, language): #------------------------------- ENGLISH -----
+        
+        self.undo = 'Remove last extremum added.'
+        self.clearall = 'Clear all extremum from the graph.'
+        self.home = 'Reset original view.'
+        self.editPeak = ('Toggle edit mode to manually add extremums ' +
+                         'to the graph.')
+        self.delPeak = ('Toggle edit mode to manually remove extremums ' +
+                        'from the graph.')
+        self.pan = 'Pan axes with left mouse, zoom with right.'
+        self.MRCalc = 'Calculate MRC (not yet available).'
+        
+        if language == 'French': #--------------------------------- FRENCH -----
+            
+            pass
         
 class MRCalc(QtGui.QWidget):
     
@@ -59,7 +81,21 @@ class MRCalc(QtGui.QWidget):
         self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
         self.fig_MRC_widget.mpl_connect('motion_notify_event', self.mouse_vguide)
         
+        
+#        language = 'English'
+#        global labelDB
+#        labelDB = LabelDataBase(language)
+
+#        global ttipDB
+#        ttipDB = db.tooltips(language)
+        
     def initUI(self):
+        
+        iconDB = db.icons()
+        StyleDB = db.styleUI()
+        ttipDB = Tooltips('English')
+        
+    #--------------------------------------------------------- FigureCanvas ----
         
         self.setWindowTitle('Master Recession Curve Estimation')
         
@@ -67,25 +103,87 @@ class MRCalc(QtGui.QWidget):
         self.fig_MRC.set_size_inches(8.5, 5)        
         self.fig_MRC.patch.set_facecolor('white')
         self.fig_MRC_widget = FigureCanvasQTAgg(self.fig_MRC)
-#    
-#        self.toolbar = NavigationToolbar2QTAgg(self.fig_MRC_widget, self)
-#        # https://sukhbinder.wordpress.com/2013/12/16/
-#        #         simple-pyqt-and-matplotlib-example-with-zoompan/
-#    
-#        grid_normals = QtGui.QGridLayout()
-#        self.normals_window = QtGui.QWidget()
-#    
-#        row = 0
-#        grid_normals.addWidget(self.normals_fig_widget, row, 0)
-#        row += 1
-#        grid_normals.addWidget(self.toolbar, row, 0)
-#        
-#        self.normals_window.setLayout(grid_normals)
-##   grid_normals.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
-##        grid_normals.setSpacing(15)
-##        grid_normals.setColumnStretch(1, 500)
-##        
-##        self.normals_window.resize(250, 150)
+        
+    #-------------------------------------------------------------- TOOLBAR ----
+        
+        self.toolbar = NavigationToolbar2QTAgg(self.fig_MRC_widget, self)
+        self.toolbar.hide()
+        
+        self.btn_undoPeak = QtGui.QToolButton()
+        self.btn_undoPeak.setAutoRaise(True)
+        self.btn_undoPeak.setIcon(iconDB.undo)
+        self.btn_undoPeak.setToolTip(ttipDB.undo)
+        
+        self.btn_clearPeak = QtGui.QToolButton()
+        self.btn_clearPeak.setAutoRaise(True)
+        self.btn_clearPeak.setIcon(iconDB.clear_search)
+        self.btn_clearPeak.setToolTip(ttipDB.clearall)
+        
+        self.btn_home = QtGui.QToolButton()
+        self.btn_home.setAutoRaise(True)
+        self.btn_home.setIcon(iconDB.home)
+        self.btn_home.setToolTip(ttipDB.home)
+        
+        self.btn_editPeak = QtGui.QToolButton()
+        self.btn_editPeak.setAutoRaise(True)
+        self.btn_editPeak.setIcon(iconDB.add_point)
+        self.btn_editPeak.setToolTip(ttipDB.editPeak)
+        
+        self.btn_delPeak = QtGui.QToolButton()
+        self.btn_delPeak.setAutoRaise(True)
+        self.btn_delPeak.setIcon(iconDB.erase)
+        self.btn_delPeak.setToolTip(ttipDB.delPeak)
+        
+        self.btn_pan = QtGui.QToolButton()
+        self.btn_pan.setAutoRaise(True)
+        self.btn_pan.setIcon(iconDB.pan)
+        self.btn_pan.setToolTip(ttipDB.pan)
+        
+        self.btn_MRCalc = QtGui.QToolButton()
+        self.btn_MRCalc.setAutoRaise(True)
+        self.btn_MRCalc.setIcon(iconDB.MRCalc)
+        self.btn_MRCalc.setToolTip(ttipDB.MRCalc)
+                        
+        separator1 = QtGui.QFrame()
+        separator1.setFrameStyle(StyleDB.HLine)
+        separator2 = QtGui.QFrame()
+        separator2.setFrameStyle(StyleDB.HLine)
+        
+        subgrid_toolbar = QtGui.QGridLayout()
+        toolbar_widget = QtGui.QWidget()
+        
+        row = 0
+        subgrid_toolbar.addWidget(self.btn_undoPeak, row, 0)
+        row += 1
+        subgrid_toolbar.addWidget(self.btn_clearPeak, row, 0)
+        row += 1        
+        subgrid_toolbar.addWidget(self.btn_home, row, 0)
+        row += 1        
+        subgrid_toolbar.addWidget(separator1, row, 0)        
+        row += 1        
+        subgrid_toolbar.addWidget(self.btn_editPeak, row, 0)
+        row += 1        
+        subgrid_toolbar.addWidget(self.btn_delPeak, row, 0)
+        row += 1        
+        subgrid_toolbar.addWidget(self.btn_pan, row, 0)
+        row += 1        
+        subgrid_toolbar.addWidget(separator2, row, 0)
+        row += 1
+        subgrid_toolbar.addWidget(self.btn_MRCalc, row, 0)
+        
+        subgrid_toolbar.setSpacing(5)
+        subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
+        subgrid_toolbar.setRowStretch(row+1, 500)
+
+        self.btn_undoPeak.setIconSize(QtCore.QSize(36, 36))
+        self.btn_clearPeak.setIconSize(QtCore.QSize(36, 36))
+        self.btn_home.setIconSize(QtCore.QSize(36, 36))
+        self.btn_editPeak.setIconSize(QtCore.QSize(36, 36))
+        self.btn_delPeak.setIconSize(QtCore.QSize(36, 36))
+        self.btn_pan.setIconSize(QtCore.QSize(36, 36))
+        self.btn_MRCalc.setIconSize(QtCore.QSize(36, 36))
+        
+        toolbar_widget.setLayout(subgrid_toolbar)
                 
     #------------------------------------------------------------ MAIN GRID ----
         
@@ -93,9 +191,10 @@ class MRCalc(QtGui.QWidget):
         
         row = 0 
         mainGrid.addWidget(self.fig_MRC_widget, row, 0)
+        mainGrid.addWidget(toolbar_widget, row, 1)
               
         self.setLayout(mainGrid)
-        mainGrid.setContentsMargins(10, 10, 10, 10) # Left, Top, Right, Bottom 
+        mainGrid.setContentsMargins(25, 25, 25, 25) # Left, Top, Right, Bottom 
         mainGrid.setSpacing(15)
         mainGrid.setColumnStretch(0, 500)
         
@@ -116,6 +215,76 @@ class MRCalc(QtGui.QWidget):
         
         self.plot_water_levels(self.time, self.water_lvl, self.fig_MRC)
         
+    #------------------------------------------------------------ EVENTS ----
+        
+        #----- Toolbox -----
+        
+        self.btn_undoPeak.clicked.connect(self.undo_last_peak)
+        self.btn_clearPeak.clicked.connect(self.clear_all_peaks)        
+        self.btn_home.clicked.connect(self.home)
+        self.btn_editPeak.clicked.connect(self.edit_peak)
+        self.btn_pan.clicked.connect(self.pan_graph)
+        
+    def edit_peak(self):
+        
+        if self.btn_editPeak.autoRaise(): 
+            
+            # Activate <edit_peak>
+            self.btn_editPeak.setAutoRaise(False)            
+            
+            # Deactivate <pan_graph>
+            # http://stackoverflow.com/questions/17711099
+            self.btn_pan.setAutoRaise(True)
+            if self.toolbar._active == "PAN":
+                self.toolbar.pan()
+            
+        else:
+
+            # Deactivate <edit_peak> and hide guide line
+            self.btn_editPeak.setAutoRaise(True)
+            self.ly.set_xdata(-1)
+            self.fig_MRC_widget.draw()
+        
+    def pan_graph(self):
+                
+        if self.btn_pan.autoRaise():
+
+            # Deactivate <edit_peak> and hide guide line
+            self.btn_editPeak.setAutoRaise(True)
+            self.ly.set_xdata(-1)
+            self.fig_MRC_widget.draw()
+            
+            # Activate <pan_graph>
+            self.btn_pan.setAutoRaise(False)
+            self.toolbar.pan()
+            
+        else:
+            self.btn_pan.setAutoRaise(True)
+            self.toolbar.pan()
+            
+    def home(self):
+        self.toolbar.home()
+
+    def undo_last_peak(self):
+        
+        if len(self.peak_indx) > 0:
+            
+            self.peak_indx = self.peak_indx[:-1]
+        
+            self.h2_ax0.set_ydata(self.water_lvl[self.peak_indx])
+            self.h2_ax0.set_xdata(self.time[self.peak_indx])
+                               
+            self.fig_MRC_widget.draw()
+            
+    def clear_all_peaks(self):
+                            
+        self.peak_indx = np.array([]).astype(int)
+    
+        self.h2_ax0.set_ydata([])
+        self.h2_ax0.set_xdata([])
+                           
+        self.fig_MRC_widget.draw()
+                
     def plot_water_levels(self, t, x, fig):
         
         fheight = fig.get_figheight()
@@ -137,8 +306,8 @@ class MRCalc(QtGui.QWidget):
         
         #---- Water Level (Host) ----
         
-        ax0  = fig.add_axes([x0, y0, w, h], zorder=0)
-        ax0.patch.set_visible(False)
+        self.ax0  = fig.add_axes([x0, y0, w, h], zorder=0)
+        self.ax0.patch.set_visible(False)
         
 #        #---Peaks---
 #        ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=1)
@@ -149,8 +318,8 @@ class MRCalc(QtGui.QWidget):
 #        Xmin0 = 0
 #        Xmax0 = 12.001
         
-        ax0.xaxis.set_ticks_position('bottom')
-        ax0.tick_params(axis='x',direction='out', gridOn=True)
+        self.ax0.xaxis.set_ticks_position('bottom')
+        self.ax0.tick_params(axis='x',direction='out', gridOn=True)
 #        ax0.xaxis.set_ticklabels([])
 #        ax0.set_xticks(np.arange(Xmin0, Xmax0))
         
@@ -163,8 +332,8 @@ class MRCalc(QtGui.QWidget):
 #                        labelbottom='off'
     #----------------------------------------------------- YTICKS FORMATING ----
         
-        ax0.yaxis.set_ticks_position('left')
-        ax0.tick_params(axis='y',direction='out', gridOn=True)
+        self.ax0.yaxis.set_ticks_position('left')
+        self.ax0.tick_params(axis='y',direction='out', gridOn=True)
                 
     #------------------------------------------------------- SET AXIS RANGE ---- 
        
@@ -175,8 +344,8 @@ class MRCalc(QtGui.QWidget):
         Ymin0 = np.min(x) - (np.max(x) - np.min(x)) * delta
         Ymax0 = np.max(x) + (np.max(x) - np.min(x)) * delta
     
-        ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
-        ax0.invert_yaxis()
+        self.ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
+        self.ax0.invert_yaxis()
         
     #--------------------------------------------------------------- LABELS ----
     
@@ -193,15 +362,17 @@ class MRCalc(QtGui.QWidget):
     
         #---- Water Levels ----
     
-        h1_ax0, = ax0.plot(t, x, color='blue', clip_on=False, zorder=100,
-                           marker='None', linestyle='-')
+        h1_ax0, = self.ax0.plot(t, x, color='blue', clip_on=True, zorder=100,
+                                marker='None', linestyle='-')
         
         #---- Peaks ----
                  
-        self.h2_ax0, = ax0.plot([], [], color='red', clip_on=False, zorder=100,
-                           marker='o', linestyle='None')
-                           
-        self.ly = ax0.axvline(x=.5, ymin=0, ymax=1, color='red')  # Vertical guide line under cursor
+        self.h2_ax0, = self.ax0.plot([], [], color='red', clip_on=True, 
+                                     zorder=100, marker='o', linestyle='None')
+                                     
+        #---- Vertical guide line under cursor ----
+                                     
+        self.ly = self.ax0.axvline(x=.5, ymin=0, ymax=1, color='red')  
 
     #-------------------------------------------------------- UPDATE WIDGET ----
                         
@@ -209,7 +380,7 @@ class MRCalc(QtGui.QWidget):
             
     def mouse_vguide(self, event):
         # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
-        if event.xdata != None and event.ydata != None:
+        if not self.btn_editPeak.autoRaise():
             x = event.xdata
             
             # update the line positions
@@ -217,76 +388,43 @@ class MRCalc(QtGui.QWidget):
             
             self.fig_MRC_widget.draw()
             
+        elif not self.btn_delPeak.autoRaise():
+            pass
+            
     def onclick(self, event):
         # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
-        if event.xdata != None and event.ydata != None:
+        if event.xdata != None and event.ydata != None and not self.btn_editPeak.autoRaise():
 #            print(event.xdata, event.ydata)
             
-            x_clic = event.xdata
-            
-            self.add_peak(x_clic)
-                        
-    def add_peak(self, xclic):
+            xclic = event.xdata
         
-        # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
-        
-        x = self.time
-        y = self.water_lvl
-        
-        indxmin = np.where(x < xclic)[0]
-        indxmax = np.where(x > xclic)[0]
-        if len(indxmax) == 0:
-            xclic = x[-1]
-            yclic = y[-1]
-            self.peak_indx = np.append(self.peak_indx, len(x)-1)
-        elif len(indxmin) == 0:
-            xclic = x[0]
-            yclic = y[0]
-            self.peak_indx = np.append(self.peak_indx, 0)
-        else:
-            indxmin = indxmin[-1]
-            indxmax = indxmax[0]
+            # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
             
-            dleft = xclic - x[indxmin]
-            dright = x[indxmax] - xclic
+            x = self.time
+            y = self.water_lvl
             
-            if dleft < dright:
-                xclic = x[indxmin]
-                yclic = y[indxmin]
-                self.peak_indx = np.append(self.peak_indx, indxmin)
+            indxmin = np.where(x < xclic)[0]
+            indxmax = np.where(x > xclic)[0]
+            if len(indxmax) == 0:
+                self.peak_indx = np.append(self.peak_indx, len(x)-1)
+            elif len(indxmin) == 0:
+                self.peak_indx = np.append(self.peak_indx, 0)
             else:
-                xclic = x[indxmax]
-                yclic = y[indxmax]
-                self.peak_indx = np.append(self.peak_indx, indxmax)               
-        
-#        yclic = np.interp(xclic, x, y)
-        
-#        indxmin = np.where(time < (x - Deltan/2.))[0]
-#        indxmax = np.where(time > (x + Deltan/2.))[0]
-#        if len(indxmin) == 0:
-#            indxmin = 0
-#            indxmax = np.where(time > time[0] + Deltan)[0][0]
-#        elif len(indxmax) == 0:
-#            indxmax = len(time) - 1
-#            indxmin = np.where(time < (time[-1] - Deltan))[0][-1]
-#        else:
-#            indxmin = indxmin[-1]
-#            indxmax = indxmax[0]
-#        
-#        print indxmin, indxmax
-        
-#        self.water_lvl = self.water_lvl[:500]
-#        self.time = self.time[:500]
-#        
-#        self.peak_indx = []
-       
-#        self.h2_ax0.set_ydata(yclic)
-#        self.h2_ax0.set_xdata(xclic)
-        
-        self.h2_ax0.set_ydata(y[self.peak_indx])
-        self.h2_ax0.set_xdata(x[self.peak_indx])
-                               
-        self.fig_MRC_widget.draw()
+                indxmin = indxmin[-1]
+                indxmax = indxmax[0]
+                
+                dleft = xclic - x[indxmin]
+                dright = x[indxmax] - xclic
+                
+                if dleft < dright:
+                    self.peak_indx = np.append(self.peak_indx, indxmin)
+                else:
+                    self.peak_indx = np.append(self.peak_indx, indxmax)               
+           
+            self.h2_ax0.set_ydata(y[self.peak_indx])
+            self.h2_ax0.set_xdata(x[self.peak_indx])
+                                   
+            self.fig_MRC_widget.draw()
             
     def del_peak(self, x, y, Deltan, fig):
         pass
@@ -562,6 +700,7 @@ if __name__ == '__main__':
     import xlrd
     from meteo import MeteoObj
     from hydroprint import WaterlvlData, filt_data
+    import database as db
     
     plt.close('all')
     
@@ -577,8 +716,7 @@ if __name__ == '__main__':
     t = waterLvlObj.time
     t = t[:500]
     
-    
-    app = QtGui.QApplication(argv)
+    app = QtGui.QApplication(argv)   
     instance_1 = MRCalc()
     instance_1.show()
     app.exec_() 

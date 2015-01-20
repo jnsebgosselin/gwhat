@@ -52,7 +52,17 @@ class icons():
         self.save = QIcon('Icons/save.png')
         self.meteo = QIcon('Icons/meteo.png')
         
-
+        #----- MRC TOOLBAR -----
+        
+        self.undo = QIcon('Icons/undo.png')
+        self.clear_search = QIcon('Icons/clear-search.png')
+        self.MRCalc = QIcon('Icons/MRCalc.png')
+        self.edit = QIcon('Icons/edit.png')
+        self.pan = QIcon('Icons/pan.png')
+        self.home = QIcon('Icons/home.png')
+        self.add_point = QIcon('Icons/add_point.png')
+        self.erase = QIcon('Icons/erase.png')
+        
 class tooltips():
     
     def __init__(self, language): #------------------------------- ENGLISH -----
