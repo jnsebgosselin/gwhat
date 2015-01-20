@@ -113,7 +113,7 @@ def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
         
         #---- Number of Stations Found ----
     
-        txt2find = ' locations match your customized search.'
+        txt2find = ' stations found'
         indx_e = stnresults.find(txt2find, 0)
         if indx_e == -1:
             print 'No weather stations found.'            
@@ -179,9 +179,10 @@ def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
                                 '-bottom-none station wordWrap stnWidth">')
                     n = len(txt2find)
                     indx_0 = stnresults.find(txt2find, indx_e)
-                    indx_e = stnresults.find('\t', indx_0)
+                    indx_e = stnresults.find('</div>', indx_0)
                     
-                    station_name = stnresults[indx_0+n:indx_e]            
+                    station_name = stnresults[indx_0+n:indx_e]
+                    station_name = station_name.strip()
                     
                     if start_year.isdigit(): # Daily data exist
                         print 'adding', station_name

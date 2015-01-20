@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
-software_version = 'WHAT Beta 4.0.7'
-last_modification = '04/01/2015'
+software_version = 'WHAT Beta 4.0.8'
+last_modification = '20/01/2015'
 
 #---- STANDARD LIBRARY IMPORTS ----
 
@@ -2759,9 +2759,10 @@ def concatenate(fname):
 #===============================================================================
 
     fname = np.sort(fname)     # list of the raw data file paths
-    COLN = (1, 2, 3, 5, 7, 9, 19) # columns of the raw data files
-                                          # to extract
+   
+    COLN = (1, 2, 3, 5, 7, 9, 19) # columns of the raw data files to extract
     #year, month, day, Tmax, Tmin, Tmean, Ptot
+    
     ALLDATA = np.zeros((0,len(COLN))) # matrix containing all the data
     StaName = np.zeros(len(fname)).astype('str')  # station names
     StaMatch = np.zeros(len(fname)).astype('str') # station match 
@@ -2771,9 +2772,24 @@ def concatenate(fname):
         reader = list(reader)
                   
         StaName[i] =  reader[0][1]         
-        StaMatch[i] = StaName[0]==StaName[i]          
+        StaMatch[i] = StaName[0]==StaName[i]
         
-        DATA = np.array(reader[25:])
+        row_data_start = 0
+        fieldSearch = 'None'
+        while fieldSearch != 'Date/Time':
+            try:
+                fieldSearch = reader[row_data_start][0]
+            except:
+                pass
+            
+            row_data_start += 1
+            
+            if row_data_start > 50:
+                print 'There is a compatibility problem with the data.'
+                print 'Please, write at jnsebgosselin@gmail.com'
+                break
+            
+        DATA = np.array(reader[row_data_start:])
         DATA = DATA[:, COLN]
         DATA[DATA == ''] = 'nan'
         DATA = DATA.astype('float')
