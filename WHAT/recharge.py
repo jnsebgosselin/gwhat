@@ -612,11 +612,20 @@ def calc_hydrograph_old(RECHG, RECESS, WLobs):
 #===============================================================================
 def calc_hydrograph(RECHG, RECESS, WL0, Sy):
 #===============================================================================
-     
+#    WL0 += 200
+#    WLsim = np.zeros(len(RECHG))
+#    WLsim[0] = WL0
+#    for i in range(len(RECHG)-1):            
+#        WLsim[i+1] = WLsim[i] - (RECHG[i] / Sy) + RECESS[i]
+    Sy = 0.18
     WLsim = np.zeros(len(RECHG))
-    WLsim[0] = WL0
-    for i in range(len(RECHG)-1):            
-        WLsim[i+1] = WLsim[i] - (RECHG[i] / Sy) + RECESS[i]
+    WLsim[-1] = WL0
+    for i in range(len(RECHG)-1, 0, -1):            
+        WLsim[i-1] = WLsim[i] + (RECHG[i] / Sy) - RECESS[i]
+        if WLsim[i-1] >= 6800:
+            Sy = 0.29
+        else:
+            Sy = 0.18
 
     return WLsim
 
@@ -652,19 +661,22 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
 #    WLobs = np.interp(TIMEmeteo[indx0:indxE], TIMEwater, WLobs)
 #    plt.plot(-WLobs)
 
-    CRU = np.arange(0, 0.41, 0.05)
+    CRU = np.arange(0, 0.31, 0.05)
     RASmax = np.zeros(len(CRU))
     RMSE = np.zeros(len(CRU))
     RECHyr = np.zeros(len(CRU))
     
     RECESS = np.ones(len(TIMEmeteo)) * 0.69 # Water level recession (mm/d)
-    WL0 = np.mean(WLogger) #Initial water level (mm)
+    WL0 = 6150 #np.mean(WLogger) #Initial water level (mm)
     Sy = 0.35 - 0.06
     
     #---- MANUAL OBS. WL ----
     
-    TIMEobs = np.array([35034, 35400, 35674, 40878, 41214, 41609, 41791])
-    WLobs = (507 - np.array([504.95, 505.08, 505.02, 505.69, 505.99, 506.14, 506.278])) * 1000
+    TIMEobs = np.array([35034, 35400, 35674, 40878, 41214, 41609, 41876])
+    
+    WLobs = np.array([6.8+0.73, 6.8+0.59, 6.8+0.64, 6.8, 6.47, 6.29, 6.15]) * 1000
+    
+    plt.plot(TIMEobs, -WLobs, 'or')
     
     indx = np.zeros(len(TIMEobs))
     for i in range(len(TIMEobs)):
@@ -676,68 +688,67 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
         RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
         WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
         
-        SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
-        
-        delta_RAS = 10
-        while abs(delta_RAS) >= 0.001:
-            while 1:
-                SLOPEold = np.copy(SLOPEnew)
-                
-                RASmax[it] += delta_RAS
-                
-                RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
-                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
-                
-                dWL = WLobs[0] - WL[indx[0]]
-                WLobs -= dWL
-                
-                print (np.mean(WLsim[indx] - WLobs)**2)**0.5
-                
-                SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
-                
-#                print SLOPEnew                
-                
-                if np.sign(SLOPEold) != np.sign(SLOPEnew):
-                    delta_RAS /= -10.
-                    break
-                
-                if abs(SLOPEold) < abs(SLOPEnew):
-                    delta_RAS *= -1
-                    break
-                
-                
-#        RMSEnew = 10**6
+#        SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]        
 #        delta_RAS = 10
-#        while abs(delta_RAS) >= 0.1:
+#        while abs(delta_RAS) >= 0.001:
 #            while 1:
-#                RMSEold = np.copy(RMSEnew)
+#                SLOPEold = np.copy(SLOPEnew)
 #                
 #                RASmax[it] += delta_RAS
-#                RMSE[it] = RMSEold
 #                
 #                RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
 #                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
 #                
-#                dWL = WLobs[0] - WLsim[indx[0]]
-#                WLobs -= dWL
+##                dWL = WLobs[0] - WL[indx[0]]
+##                WLobs -= dWL
 #                
-#                RMSEnew = (np.mean((WLsim[indx] - WLobs)**2))**0.5
+#                print (np.mean(WLsim[indx] - WLobs)**2)**0.5
 #                
-#                print RMSEnew                
+#                SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
 #                
-#                if RMSEnew > RMSEold:
+##                print SLOPEnew                
+#                
+#                if np.sign(SLOPEold) != np.sign(SLOPEnew):
 #                    delta_RAS /= -10.
 #                    break
 #                
-##                if abs(SLOPEold) < abs(SLOPEnew):
-##                    delta_RAS *= -1
-##                    break
+#                if abs(SLOPEold) < abs(SLOPEnew):
+#                    delta_RAS *= -1
+#                    break
+                
+                
+        RMSEnew = 10**6
+        delta_RAS = 10
+        while abs(delta_RAS) >= 0.1:
+            while 1:
+                RMSEold = np.copy(RMSEnew)
+                
+                RASmax[it] += delta_RAS
+                RMSE[it] = RMSEold
+                
+                RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
+                
+#                dWL = WLobs[-1] - WLsim[indx[-1]]
+#                WLobs -= dWL
+                
+                RMSEnew = (np.mean((WLsim[indx] - WLobs)**2))**0.5
+                
+                print RMSEnew                
+                
+                if RMSEnew > RMSEold:
+                    delta_RAS /= -10.
+                    break
+                
+#                if abs(SLOPEold) < abs(SLOPEnew):
+#                    delta_RAS *= -1
+#                    break
                 
         RECHyr[it] = np.mean(RECHG) * 365
         print 'NEW solution'
 #        print RECHyr[it]
         plt.plot(TIMEmeteo, -WLsim, color='gray')
-        plt.plot(TIMEobs, -WLobs, 'or')
+        
         plt.pause(0.1)
     
     print CRU
@@ -749,15 +760,22 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     dWL = np.mean(WLintrp) - np.mean(WLogger)
     WLogger += dWL
     print dWL
+    
+    
             
 #    plt.plot(TIMEwater, -WLogger, color='r')
     
 #    RECHG = calc_recharge_old(0, 35.81, ETP, PTOT, TAVG)
 #    WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
     
-    plt.figure()
-    plt.plot(TIMEmeteo, -WLsim, color='blue')
-    plt.plot(TIMEwater, -WLogger, 'r')
+#    plt.figure()
+#    plt.plot(TIMEmeteo, -WLsim, color='blue')
+#    plt.plot(TIMEwater, -WLogger, 'r')
+
+    indx = np.where(RMSE == np.min(RMSE))[0][0]
+    
+    RECHG = calc_recharge_old(CRU[indx], RASmax[indx], ETP, PTOT, TAVG)
+    WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
     
     return RECHG, WLsim
     
@@ -774,7 +792,7 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
 #    index = np.where(Z > 1)[0][0]    
         
 #    QWSOIL = SIMOUT.QWSOIL[:, index] # Water Flux just below 1.0 m depth
-    YEAR = np.arange(1980, 2014).astype('int')    
+    YEAR = np.arange(1970, 2015).astype('int')    
     NYear = len(YEAR)
     
 #    DATE_YEAR = SIMOUT.DATE[1:, 2].astype('int')
@@ -801,7 +819,7 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
 #    print 'Mean Yearly ET = ', np.mean(YEARLY_ET), 'mm'
 #    print 'Mean Yearly Recharge @ 1m = ', np.mean(YEARLY_QWSOIL), 'mm'
                     
-    fig = plt.figure(figsize=(11*0.75, 7*0.75))
+    fig = plt.figure(figsize=(15, 7))
     fig.patch.set_facecolor('white')
     
     fheight = fig.get_figheight()
@@ -825,12 +843,10 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
     #------------------------------------------------------------AXIS RANGE-----       
     
     Ymin0 = 0
-    Ymax0 = 700#1800
+    Ymax0 = 650#1800
     
     Xmin0 = YEAR[0] - 1
     Xmax0 = YEAR[-1]
-    
-    ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
     
     #------------------------------------------------------XTICKS FORMATING----- 
    
@@ -839,9 +855,9 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
     ax0.set_xticks(YEAR)
     ax0.xaxis.set_ticklabels([])
     
-    ax0.set_xticks(YEAR[::3]-0.35, minor=True)
-    ax0.tick_params(axis='x', which='minor', length=0, gridOn=False)
-    ax0.xaxis.set_ticklabels(YEAR[::3], minor=True, rotation=90,
+    ax0.set_xticks(YEAR[::2]-0.4, minor=True)
+    ax0.tick_params(axis='x', which='minor', length=0, gridOn=False, pad=5)
+    ax0.xaxis.set_ticklabels(YEAR[::2], minor=True, rotation=90,
                              horizontalalignment='center')
     
     #------------------------------------------------------YTICKS FORMATING-----
@@ -851,12 +867,17 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
     
     ax0.set_yticks(np.arange(0, 700, 50), minor=True)
     ax0.tick_params(axis='y',direction='out', which='minor', gridOn=True)
+    
+    #------------------------------------------------------------AXIS RANGE-----
+    
+    ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
 
     #----------------------------------------------------------------LABELS-----
     
-    ax0.set_ylabel('Equivalent Water (mm)', fontsize=12,
+    ax0.set_ylabel('Equivalent Water (mm)', fontsize=14,
                    verticalalignment='bottom')
-    ax0.yaxis.set_label_coords(-0.085, 0.5)
+    ax0.yaxis.set_label_coords(-0.04, 0.5)
+
 #    
 #    ax0.set_xlabel(LabelDB.years, fontsize=label_font_size,
 #                   verticalalignment='top')
@@ -880,6 +901,15 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
     ax0.plot(YEAR-0.5, TREND1, color='blue', linestyle=lstrend,
              marker='None', label='Trend Line Precipitation', clip_on=False,
              zorder=100)
+    
+
+    ax0.text(YEAR[0] + 0.25, 515,
+             'Mean Yearly Precipitation = %d mm' % np.mean(YEARLY_PRECIP),
+             color='b', fontsize=14)
+             
+    ax0.text(YEAR[0] + 0.25, 165,
+             'Mean Yearly Recharge = %d mm' % np.mean(YEARLY_RECHG),
+             color='orange', fontsize=14)
     
     #----- RECHG -----
     
@@ -925,7 +955,7 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
 
     #----------------------------------------------------------------LEGEND-----   
     
-    ax0.legend(loc=2, ncol=2, numpoints=1, fontsize=12)
+    ax0.legend(loc=2, ncol=2, numpoints=1, fontsize=14)
     
     
 #===============================================================================
@@ -1060,9 +1090,9 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
 #===============================================================================
     
     WL = np.abs(WL) / 1000.
-    YEAR = np.arange(1980, 2015).astype('int')    
+    YEAR = np.arange(1970, 2015).astype('int')    
                     
-    fig = plt.figure(figsize=(11*0.75, 7*0.75))
+    fig = plt.figure(figsize=(15, 7))
     fig.patch.set_facecolor('white')
     
     fheight = fig.get_figheight()
@@ -1081,11 +1111,12 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
     WLogger = waterlvlObj.lvl        # Observed groundwater level (mbgs)
     TIMELogger = waterlvlObj.time    # Time (days)
     
-    WLintrp = np.interp(TIMELogger, TIME, WL)
-    dWL = np.mean(WLintrp) - np.mean(WLogger)
-    WLogger += dWL
-   
-    #---------------------------------------------------------AXES CREATION-----
+#    WLintrp = np.interp(TIMELogger, TIME, WL)
+#    dWL = np.mean(WLintrp) - np.mean(WLogger)
+    
+#    WL -= dWL 
+    
+    #-------------------------------------------------------- AXES CREATION ----
 
     ax0  = fig.add_axes([x0, y0, w0, h0])
     ax0.patch.set_visible(True)
@@ -1093,40 +1124,40 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
     ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=1)
     ax1.patch.set_visible(False)
         
-    #------------------------------------------------------------AXIS RANGE-----       
+    #----------------------------------------------------------- AXIS RANGE ----       
     
     Ymin0 = 0
     Ymax0 = 1
     
-    Xmin0 = YEAR[0] - 1
+    Xmin0 = YEAR[0]-1
     Xmax0 = YEAR[-1]
     
     ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
     
-    Ymin1 = 5.
-    Ymax1 = 7.4
+    Ymin1 = 6
+    Ymax1 = 8.2
     
-    Xmin1 = xldate_from_date_tuple((1980, 01, 01), 0)
-    Xmax1 = xldate_from_date_tuple((2015, 01, 01), 0)
+    Xmin1 = xldate_from_date_tuple((YEAR[0], 01, 01), 0)
+    Xmax1 = xldate_from_date_tuple((YEAR[-1]+1, 01, 01), 0)
     
     ax1.axis([Xmin1, Xmax1, Ymin1, Ymax1])
     
-    #------------------------------------------------------XTICKS FORMATING----- 
+    #----------------------------------------------------- XTICKS FORMATING ---- 
    
     ax0.xaxis.set_ticks_position('bottom')
     ax0.tick_params(axis='x',direction='out', gridOn=True)
     ax0.set_xticks(YEAR)
     ax0.xaxis.set_ticklabels([])
     
-    ax0.set_xticks(YEAR[::3]-0.35, minor=True)
-    ax0.tick_params(axis='x', which='minor', length=0, gridOn=False)
-    ax0.xaxis.set_ticklabels(YEAR[::3], minor=True, rotation=90,
-                             horizontalalignment='center')
+    ax0.set_xticks(YEAR[::2]-0.4, minor=True)
+    ax0.tick_params(axis='x', which='minor', length=0, gridOn=False, pad=5)
+    ax0.xaxis.set_ticklabels(YEAR[::2], minor=True, rotation=90,
+                             horizontalalignment='center', fontsize=12)
                              
     ax1.tick_params(axis='x', length=0, gridOn=False)
     ax1.xaxis.set_ticklabels([])
     
-    #------------------------------------------------------YTICKS FORMATING-----
+    #----------------------------------------------------- YTICKS FORMATING ----
 
     ax0.tick_params(axis='y', length=0, gridOn=False)
     ax0.yaxis.set_ticklabels([])
@@ -1139,27 +1170,35 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
 #    ax1.set_yticks(np.arange(0, 700, 50), minor=True)
 #    ax0.tick_params(axis='y',direction='out', which='minor', gridOn=True)
 
-    #----------------------------------------------------------------LABELS-----
+    #--------------------------------------------------------------- LABELS ----
     
-    ax0.set_ylabel('Water Level (mbgs)', fontsize=12,
+    ax1.set_ylabel('Water Level (mbgs)', fontsize=14,
                    verticalalignment='bottom')
-    ax0.yaxis.set_label_coords(-0.085, 0.5)
+    ax1.yaxis.set_label_coords(-0.04, 0.5)
 #    
 #    ax0.set_xlabel(LabelDB.years, fontsize=label_font_size,
 #                   verticalalignment='top')
 #    ax0.xaxis.set_label_coords(0.5, -0.075)
     
-    #--------------------------------------------------------------PLOTTING-----
+    #------------------------------------------------------------- PLOTTING ----
     
-    ax1.plot(TIME, WL, color='blue', linestyle='-')
+    ax1.plot(TIME, WL, color='blue', linestyle='-', label='Simulated water levels')
     
-    ax1.plot(TIMELogger, WLogger, color='red', linestyle='-')
+    ax1.plot(TIMELogger, WLogger, color='red', linestyle='-',
+             label="Automatic water level measurements (Solinst Levelogger)")
+    ax1.plot([TIME[0], TIME[-1]], [6.8, 6.8], color='black', linestyle='--') 
+    
+    Xtext = xldate_from_date_tuple((1994, 01, 01), 0)-250
+    ax1.text(Xtext, 6.75, 'Sandy Loam (Sy = 0.18)', fontsize=14) 
+    ax1.text(Xtext, 6.95, 'Loamy Sand (Sy = 0.29)', fontsize=14)       
+             
+             
 #    print WL
 #             marker='None', label='Trend Line ETP', clip_on=False,
 #             zorder=100) 
     
 
-    TIMEobs = np.array([35034, 35400, 35674, 40878, 41214, 41609, 41791])
+    TIMEobs = np.array([35034, 35400, 35674, 40878, 41214, 41609, 41876])
     
     indx = np.where(TIMEobs[0] == TIME)[0][0]
     WL_P1A = 505 - np.array([504.95, np.nan, np.nan, 505.51, 505.82, 505.96, 506.107])
@@ -1186,18 +1225,26 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
     dWL = WL_P4B[0] - WL[indx]
     WL_P4B -= dWL
     
-    WL_P19 = 507 - np.array([np.nan, np.nan,	np.nan, 505.77, 506.1, 506.28, 506.4191])
-    indx = np.where(TIMEobs[3] == TIME)[0][0]
-    dWL = WL_P19[3] - WL[indx]
-    WL_P19 -= dWL
+#    WL_P19 = np.array([np.nan, np.nan,	np.nan, 6.8, 6.47, 6.29, 6.15])    
+    WL_P19 = np.array([6.8+0.73, 6.8+0.59, 6.8+0.64, 6.8, 6.47, 6.29, 6.15])
+    
+#    indx = np.where(TIMEobs[3] == TIME)[0][0]
+#    dWL = WL_P19[3] - WL[indx]
+#    WL_P19 -= dWL
     
     WLobs = np.array([[504.95, 505.98, np.nan, 505.51, 505.82, 505.96, 506.107],
                       [504.95, 505.08, 505.02, 505.69, 505.99, 506.14, 506.278],
                       [504.93, 505.06, np.nan, 505.66, 505.98, 506.14, 506.265],
-                      [504.93, 505.06, 505, 505.65, 505.97, 506.13, 506.272],
+                      [504.93, 505.06, 505.00, 505.65, 505.97, 506.13, 506.272],
                       [504.91, 505.05, np.nan, 505.65, np.nan, 506.11, 506.255],
-                      [504.93, 505.04, 504.99, 505.6, 505.94, 506.12, 506.277],
-                      [np.nan, np.nan,	np.nan, 505.77, 506.1, 506.28, 506.42]])
+                      [504.93, 505.04, 504.99, 505.60, 505.94, 506.12, 506.277],
+                      [np.nan, np.nan, np.nan, 505.77, 506.10, 506.28, 506.42]])
+                      
+                      
+                      
+                      
+                      
+                      
                        
 #    WLobs_mean = np.zeros(7)
 #    for i in range(7):
@@ -1209,7 +1256,7 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
 #    dWL = WLobs_mean[0] - WL[indx]
 #    WLobs_mean -= dWL
 #    
-    marker_size = 10
+    marker_size = 8
     marker_style = 'o'
     alpha_val = 1
 #    
@@ -1217,38 +1264,43 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
 #             markerfacecolor='red', markeredgecolor='red', marker=marker_style,
 #             markersize=marker_size, linestyle='None', label='ETP',
 #             clip_on=False, zorder=100, alpha = alpha_val)
-    ax1.plot(TIMEobs, WL_P1A,
-             markerfacecolor='red', markeredgecolor='red', marker=marker_style,
-             markersize=marker_size, linestyle='None', label='ETP',
-             clip_on=False, zorder=100, alpha = alpha_val)
+#    ax1.plot(TIMEobs, WL_P1A,
+#             markerfacecolor='red', markeredgecolor='red', marker=marker_style,
+#             markersize=marker_size, linestyle='None', label='ETP',
+#             clip_on=False, zorder=100, alpha = alpha_val)
+#             
+#    ax1.plot(TIMEobs, WL_P1B,
+#             markerfacecolor='green', markeredgecolor='green', marker=marker_style,
+#             markersize=marker_size, linestyle='None', label='ETP',
+#             clip_on=False, zorder=100, alpha = alpha_val)
+#             
+#    ax1.plot(TIMEobs, WL_P2A,
+#             markerfacecolor='blue', markeredgecolor='blue', marker=marker_style,
+#             markersize=marker_size, linestyle='None', label='ETP',
+#             clip_on=False, zorder=100, alpha = alpha_val)
+#             
+#    ax1.plot(TIMEobs, WL_P2B,
+#             markerfacecolor='orange', markeredgecolor='orange', marker=marker_style,
+#             markersize=marker_size, linestyle='None', label='ETP',
+#             clip_on=False, zorder=100, alpha = alpha_val)
+#             
+#    ax1.plot(TIMEobs, WL_P3A,
+#             markerfacecolor='magenta', markeredgecolor='magenta', marker=marker_style,
+#             markersize=marker_size, linestyle='None', label='ETP',
+#             clip_on=False, zorder=100, alpha = alpha_val)
+#    ax1.plot(TIMEobs, WL_P3A,
+#             markerfacecolor='cyan', markeredgecolor='cyan', marker=marker_style,
+#             markersize=marker_size, linestyle='None', label='ETP',
+#             clip_on=False, zorder=100, alpha = alpha_val)
              
-    ax1.plot(TIMEobs, WL_P1B,
-             markerfacecolor='green', markeredgecolor='green', marker=marker_style,
-             markersize=marker_size, linestyle='None', label='ETP',
-             clip_on=False, zorder=100, alpha = alpha_val)
-             
-    ax1.plot(TIMEobs, WL_P2A,
-             markerfacecolor='blue', markeredgecolor='blue', marker=marker_style,
-             markersize=marker_size, linestyle='None', label='ETP',
-             clip_on=False, zorder=100, alpha = alpha_val)
-             
-    ax1.plot(TIMEobs, WL_P2B,
-             markerfacecolor='orange', markeredgecolor='orange', marker=marker_style,
-             markersize=marker_size, linestyle='None', label='ETP',
-             clip_on=False, zorder=100, alpha = alpha_val)
-             
-    ax1.plot(TIMEobs, WL_P3A,
-             markerfacecolor='magenta', markeredgecolor='magenta', marker=marker_style,
-             markersize=marker_size, linestyle='None', label='ETP',
-             clip_on=False, zorder=100, alpha = alpha_val)
-    ax1.plot(TIMEobs, WL_P3A,
-             markerfacecolor='cyan', markeredgecolor='cyan', marker=marker_style,
-             markersize=marker_size, linestyle='None', label='ETP',
-             clip_on=False, zorder=100, alpha = alpha_val)
-             
-    ax1.plot(TIMEobs, WL_P19,
+    ax1.plot(TIMEobs[3:], WL_P19[3:],
              markerfacecolor='black', markeredgecolor='black', marker=marker_style,
-             markersize=marker_size, linestyle='None', label='ETP',
+             markersize=marker_size, linestyle='None', label='Manual water level measurements in well P19',
+             clip_on=False, zorder=90, alpha = alpha_val)
+             
+    ax1.plot(TIMEobs[:3], WL_P19[:3],
+             markerfacecolor='black', markeredgecolor='black', marker='D',
+             markersize=6, linestyle='None', label='Extrapolated water levels at P19 from manual measurements in neighboring wells',
              clip_on=False, zorder=90, alpha = alpha_val)
     
 #    #----- RUNOF -----    
@@ -1281,14 +1333,14 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
 
     #----------------------------------------------------------------LEGEND-----   
     
-#    ax0.legend(loc=2, ncol=2, numpoints=1, fontsize=12)
+    ax1.legend(loc=2, ncol=1, numpoints=1, fontsize=12)
 
     
 if __name__ == '__main__':
     
     plt.close('all')
     # fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-    fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
+    fmeteo = "Files4testing/SASKATOON INT'L A and RCS_1950-2014.out"
 #    fmeteo = 'Files4testing/OUTLOOK PFRA_1980-2014.out'
     meteoObj = MeteoObj()
     meteoObj.load(fmeteo)
@@ -1314,13 +1366,13 @@ if __name__ == '__main__':
     # zero. There is no unique solution, but each solution gives mean recharge
     # rates that are equivalent and equal to the recession.
     
-    RECHG, WL = bestfit_hydrograph(meteoObj, waterlvlObj)    
-#    YEAR = np.arange(1986, 2006).astype('int')       
+#    RECHG, WL = bestfit_hydrograph(meteoObj, waterlvlObj)    
+##    YEAR = np.arange(1986, 2006).astype('int')       
 #    plot_water_budget_yearly(meteoObj.PTOT, RECHG, meteoObj.YEAR)
-    
-    WLogger = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
-    TIMELogger = waterlvlObj.time  # Time (days)
-    plot_synth_hydrograph(WL, meteoObj.TIME, WLogger, TIMELogger)
+#    
+#    WLogger = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
+#    TIMELogger = waterlvlObj.time  # Time (days)
+#    plot_synth_hydrograph(WL, meteoObj.TIME, WLogger, TIMELogger)
     
     # Estimation of the wilting point for plants
     
@@ -1328,3 +1380,6 @@ if __name__ == '__main__':
 #    VWC, _ = calc_VWC([-164573], SoilObj)
 #    print VWC
     
+#    SoilObj = SoilTypes(8)
+#    Pc, K = calc_Pc([0.3], SoilObj)
+#    print K
