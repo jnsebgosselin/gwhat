@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg2394"
+   height="48px"
+   width="48px"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="MRCalc.svg">
+  <defs
+     id="defs17" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1535"
+     inkscape:window-height="876"
+     id="namedview15"
+     showgrid="false"
+     inkscape:zoom="9.8333333"
+     inkscape:cx="21.036004"
+     inkscape:cy="20.614529"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg2394" />
+  <metadata
+     id="metadata2399">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title>Accessories Calculator</dc:title>
+        <dc:date>May 2009</dc:date>
+        <dc:creator>
+          <cc:Agent>
+            <dc:title>Luca Ferretti</dc:title>
+          </cc:Agent>
+        </dc:creator>
+        <dc:subject>
+          <rdf:Bag>
+            <rdf:li>calculator</rdf:li>
+            <rdf:li>math</rdf:li>
+          </rdf:Bag>
+        </dc:subject>
+        <dc:description>A simplified calculator</dc:description>
+        <cc:license
+           rdf:resource="" />
+        <dc:contributor>
+          <cc:Agent>
+            <dc:title>Design based on existing icon in HighContast GNOME icon theme.</dc:title>
+          </cc:Agent>
+        </dc:contributor>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <rect
+     x="0"
+     y="0"
+     width="48"
+     height="48"
+     ry="0"
+     style="fill:none"
+     id="rect2406" />
+  <path
+     style="fill:#4d4d4d;fill-opacity:1"
+     d="M 8.3125 1.0625 C 5.9031123 1.0625 3.96875 2.9968623 3.96875 5.40625 L 3.96875 42.5 C 3.96875 44.909388 5.9031123 46.84375 8.3125 46.84375 L 39.6875 46.84375 C 42.096888 46.84375 44.0625 44.909388 44.0625 42.5 L 44.0625 5.40625 C 44.0625 2.9968623 42.096888 1.0625 39.6875 1.0625 L 8.3125 1.0625 z M 10.09375 5.625 L 37.9375 5.625 C 38.782365 5.625 39.46875 6.3725761 39.46875 7.28125 L 39.46875 14.28125 C 39.46875 15.189924 38.782365 15.9375 37.9375 15.9375 L 10.09375 15.9375 C 9.248885 15.9375 8.5625 15.189924 8.5625 14.28125 L 8.5625 7.28125 C 8.5625 6.3725761 9.248885 5.625 10.09375 5.625 z M 10.125 22.8125 L 15 22.8125 C 15.876135 22.8125 16.5625 23.512565 16.5625 24.375 L 16.5625 29.25 C 16.5625 30.112435 15.876135 30.8125 15 30.8125 L 10.125 30.8125 C 9.2488649 30.8125 8.5625 30.112435 8.5625 29.25 L 8.5625 24.375 C 8.5625 23.512565 9.2488649 22.8125 10.125 22.8125 z M 21.59375 22.8125 L 26.4375 22.8125 C 27.313635 22.8125 28.03125 23.512565 28.03125 24.375 L 28.03125 29.25 C 28.03125 30.112435 27.313635 30.8125 26.4375 30.8125 L 21.59375 30.8125 C 20.717615 30.8125 20 30.112435 20 29.25 L 20 24.375 C 20 23.512565 20.717615 22.8125 21.59375 22.8125 z M 33.03125 22.8125 L 37.875 22.8125 C 38.751135 22.8125 39.46875 23.512565 39.46875 24.375 L 39.46875 29.25 C 39.46875 30.112435 38.751135 30.8125 37.875 30.8125 L 33.03125 30.8125 C 32.155115 30.8125 31.46875 30.112435 31.46875 29.25 L 31.46875 24.375 C 31.46875 23.512565 32.155115 22.8125 33.03125 22.8125 z M 10.125 34.25 L 15 34.25 C 15.876135 34.25 16.5625 34.950065 16.5625 35.8125 L 16.5625 40.71875 C 16.5625 41.581185 15.876135 42.28125 15 42.28125 L 10.125 42.28125 C 9.2488649 42.28125 8.5625 41.581185 8.5625 40.71875 L 8.5625 35.8125 C 8.5625 34.950065 9.2488649 34.25 10.125 34.25 z M 21.59375 34.25 L 26.4375 34.25 C 27.313635 34.25 28.03125 34.950065 28.03125 35.8125 L 28.03125 40.71875 C 28.03125 41.581185 27.313635 42.28125 26.4375 42.28125 L 21.59375 42.28125 C 20.717615 42.28125 20 41.581185 20 40.71875 L 20 35.8125 C 20 34.950065 20.717615 34.25 21.59375 34.25 z M 33.03125 34.25 L 37.875 34.25 C 38.751135 34.25 39.46875 34.950065 39.46875 35.8125 L 39.46875 40.71875 C 39.46875 41.581185 38.751135 42.28125 37.875 42.28125 L 33.03125 42.28125 C 32.155115 42.28125 31.46875 41.581185 31.46875 40.71875 L 31.46875 35.8125 C 31.46875 34.950065 32.155115 34.25 33.03125 34.25 z "
+     id="rect3178" />
+  <text
+     xml:space="preserve"
+     style="font-size:16.79087639px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#4d4d4d;fill-opacity:1;stroke:none;font-family:KacstOffice;-inkscape-font-specification:KacstOffice Bold"
+     x="9.6951056"
+     y="15.057086"
+     id="text3765"
+     sodipodi:linespacing="125%"
+     transform="scale(1.0812849,0.92482565)"><tspan
+       sodipodi:role="line"
+       id="tspan3767"
+       x="9.6951056"
+       y="15.057086"
+       style="font-size:9.79467869px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;fill:#4d4d4d;fill-opacity:1;font-family:KacstOffice;-inkscape-font-specification:KacstOffice Bold">MRC</tspan></text>
+</svg>
