@@ -289,7 +289,7 @@ if __name__ == '__main__':
 
     LAT = 45.4
     LON = -73.13
-    RADIUS = 5
+    RADIUS = 15
     
     staList, cmt = search4meteo(LAT, LON, RADIUS, 1840, 2015)
     
