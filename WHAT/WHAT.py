@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
 software_version = 'WHAT Beta 4.1.0'
-last_modification = '20/01/2015'
+last_modification = '21/01/2015'
 
 #---- STANDARD LIBRARY IMPORTS ----
 
@@ -4015,8 +4015,12 @@ class FillWorker(QtCore.QThread):
                 nbr_fill_total += nbr_fill
                 
                 nan_percent = round(nbr_nan / total_nbr_data * 100, 1)
-                nofill_percent = round(nbr_nofill / nbr_nan * 100, 1)
-                fill_percent = round(nbr_fill / nbr_nan * 100, 1)
+                if nbr_nan != 0:
+                    nofill_percent = round(nbr_nofill / nbr_nan * 100, 1)
+                    fill_percent = round(nbr_fill / nbr_nan * 100, 1)
+                else:
+                    nofill_percent = 0
+                    fill_percent = 100
                 
                 nbr_nan = '%d (%0.1f %% of total)' % (nbr_nan, nan_percent)
  
