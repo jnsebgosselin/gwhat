@@ -1280,15 +1280,16 @@ class TabDwnldData(QtGui.QWidget):
         grid_MAIN.addWidget(BOTTOM_widget, row, col)
         col += 1
 #        grid_MAIN.addWidget(self.staList_table, 0, col, row+1, 1)
+        grid_MAIN.setColumnStretch(0, 500)
         
         grid_MAIN.setRowStretch(row+1, 500)
+        grid_MAIN.setColumnStretch(col, 500)
         
-        self.setLayout(grid_MAIN)
         grid_MAIN.setContentsMargins(15, 15, 15, 15) #Left, Top, Right, Bottom
         grid_MAIN.setHorizontalSpacing(50)
         grid_MAIN.setVerticalSpacing(10)
-        grid_MAIN.setColumnStretch(0, 500)
-        grid_MAIN.setColumnStretch(col, 500)
+        
+        self.setLayout(grid_MAIN)
         
         #------------------------------------------------------ MESSAGE BOX ----
                                           
