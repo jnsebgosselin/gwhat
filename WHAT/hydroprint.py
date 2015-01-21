@@ -232,13 +232,21 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     Rain = MeteoObj.RAINwk
     name_meteo = MeteoObj.station_name
                     
-    istart = np.where(time > TIMEmin)[0][0]
-    if istart > 0:
-        istart -= 1
+    istart = np.where(time > TIMEmin)[0]
+    if len(istart) == 0:
+        istart = 0
+    else:
+        istart = istart[0]
+        if istart > 0:
+            istart -= 1
     
-    iend = np.where(time < TIMEmax)[0][-1]
-    if iend < len(time):
-        iend += 1
+    iend = np.where(time < TIMEmax)[0]
+    if len(iend) == 0:
+        iend = 0
+    else:
+        iend = iend[-1]
+        if iend < len(time):
+            iend += 1
     
     time = time[istart:iend]
     Tmax = Tmax[istart:iend]
