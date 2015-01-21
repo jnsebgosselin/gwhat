@@ -72,7 +72,9 @@ def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
     Prov = np.array(['Province'])
     StartYear = np.array(['StartYear'])
     EndYear = np.array(['EndYear'])
-    staName = np.array(['staName'])    
+    staName = np.array(['staName'])
+    ClimateID = np.array(['ClimateID'])
+    staProxim = np.array(['Proximity (km)'])
     
     #------------------------------------------------------------------ url ----
     
@@ -184,13 +186,30 @@ def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
                     station_name = stnresults[indx_0+n:indx_e]
                     station_name = station_name.strip()
                     
+                    #---- Proximity ----
+                    
+                    txt2find = ('<div class="span-1 row-end row-start margin' +
+                                '-bottom-none day_mth_yr wordWrap">')
+                    n = len(txt2find)
+                    indx_0 = stnresults.find(txt2find, indx_e)
+                    indx_e = stnresults.find('</div>', indx_0)
+                    
+                    station_proxim = stnresults[indx_0+n:indx_e]
+                    station_proxim = station_proxim.strip()
+                    
                     if start_year.isdigit(): # Daily data exist
+                        
+                        climate_id = get_climate_ID(province, station_id)
+                        
                         print 'adding', station_name
+
                         StartYear = np.append(StartYear, start_year)
                         EndYear = np.append(EndYear, end_year)
                         StationID = np.append(StationID, station_id)
                         Prov = np.append(Prov, province)
                         staName = np.append(staName, station_name)
+                        ClimateID = np.append(ClimateID, climate_id)
+                        staProxim = np.append(staProxim, station_proxim)
                     else: # No Daily data  
                         pass
                     
@@ -209,6 +228,8 @@ def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
             StationID[1:] = StationID[sort_indx]
             Prov[1:] = Prov[sort_indx]
             staName[1:] = staName[sort_indx]
+            ClimateID[1:] = ClimateID[sort_indx]
+            staProxim[1:] = staProxim[sort_indx]
             
     except URLError as e:
         
@@ -230,16 +251,45 @@ def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
 
     #------------------------------------------------------ Arrange Results ----
     
-    staList = [staName, StationID, StartYear, EndYear, Prov]
+    staList = [staName, StationID, StartYear, EndYear, Prov,
+               ClimateID, staProxim]
     staList = np.transpose(staList)
     
     return staList, cmt
+
+def get_climate_ID(Prov, StationID):
+
+    url = ("http://climate.weather.gc.ca/climateData/dailydata_e.html?" + 
+          "timeframe=2&Prov=%s&StationID=%s") % (Prov, StationID)
+          
+    f = urlopen(url)                    
+    urlread = f.read()
+
+    indx_e = 0
+    
+    # Need to navigate the result in 2 steps to be sure
+   
+    txt2find = ('<a href="http://climate.weather.gc.ca/' + 
+                'glossary_e.html#climate_ID">Climate ID</a>:')
+    n = len(txt2find)
+    indx_0 = urlread.find(txt2find, indx_e) + n
+    
+    txt2find = ('<td>')
+    n = len(txt2find)
+    indx_0 = urlread.find(txt2find, indx_0)
+
+    indx_e = urlread.find('</td>', indx_0)
+    
+    climate_id = urlread[indx_0+n:indx_e]
+    climate_id = climate_id.strip()
+          
+    return climate_id
 
 if __name__ == '__main__':
 
     LAT = 45.4
     LON = -73.13
-    RADIUS = 50
+    RADIUS = 5
     
     staList, cmt = search4meteo(LAT, LON, RADIUS, 1840, 2015)
     

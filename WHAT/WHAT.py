@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
-software_version = 'WHAT Beta 4.0.8'
+software_version = 'WHAT Beta 4.1.0'
 last_modification = '20/01/2015'
 
 #---- STANDARD LIBRARY IMPORTS ----
@@ -43,6 +43,7 @@ import numpy as np
 from numpy.linalg import lstsq as linalg_lstsq
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
+import xlwt
 import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
@@ -386,6 +387,10 @@ class TabHydrograph(QtGui.QWidget):
         toolbar_widget = QtGui.QWidget()
         
         row = 0
+        subgrid_toolbar.addWidget(btn_draw, row, 0)
+        row += 1
+        subgrid_toolbar.addWidget(btn_save, row, 0)
+        row += 1
         subgrid_toolbar.addWidget(btn_loadConfig, row, 0)
         row += 1
         subgrid_toolbar.addWidget(btn_saveConfig, row, 0)
@@ -403,11 +408,7 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.addWidget(btn_weather_normals, row, 0)
         row += 1
         subgrid_toolbar.addWidget(separator3, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_draw, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_save, row, 0)        
-        
+       
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         subgrid_toolbar.setRowStretch(row+1, 500)
@@ -740,7 +741,7 @@ class TabHydrograph(QtGui.QWidget):
             #----- Load Manual Measures -----
             
             filename = self.parent.what_pref.project_dir
-            filename += '/waterlvl_manual_measurements.csv'
+            filename += '/waterlvl_manual_measurements.xls'
             
             if not path.exists(filename):
                 # Force the creation of a new 'waterlvl_manual_measurements.csv'
@@ -1534,24 +1535,24 @@ class TabDwnldData(QtGui.QWidget):
             
             if fname == default_list_name:
                  
-                 #----- Load List in UI-----
+                 #---- Load List in UI ----
             
                 self.load_stationList()   
                 
             else:
             
-                #----- Load List -----
+                #---- Load List ----
             
                 reader = open(fname,'rb')
                 reader = csv.reader(reader, delimiter='\t')
           
-                #----- Save List -----
+                #---- Save List in Default Name ----
             
                 with open(default_list_name, 'wb') as f:
                     writer = csv.writer(f, delimiter='\t')
                     writer.writerows(reader)
             
-                #----- Load List in UI-----
+                #---- Load List in UI ----
                 
                 self.load_stationList()
             
@@ -1563,6 +1564,8 @@ class TabDwnldData(QtGui.QWidget):
             <MainWindow.load_project_dir>
         (2) after a search has been completed for weather stations with 
             <search4stations>
+        (3) When a station list is loaded manually by the user from method
+            <select_stationList>.
         
         It loads the informations in the "weather_stations.lst" file that is
         located in the project folder and save it as a table in <self.staList>
@@ -1601,6 +1604,44 @@ class TabDwnldData(QtGui.QWidget):
         reader = csv.reader(reader, delimiter='\t')
         reader = list(reader)
         
+    #--------------------------------------------------- CHECK LIST VERSION ----
+        
+        # Check if the list is from an older version, and update it if yes
+        header = ['staName', 'stationId', 'StartYear', 'EndYear', 'Province',
+                  'ClimateID', 'Proximity (km)']
+        
+        nCONFG, nPARA = np.shape(reader)         
+        if nPARA < len(header):
+            print 'This list is from an older version of WHAT.'
+            print 'converting to new format'
+            
+            self.parent.write2console('''<font color=black>
+                                           Converting weather station list to
+                                           a more recent format. Please wait...
+                                         </font>''')
+            
+            nMissing = len(header) - nPARA
+            
+            col2add = np.zeros((nCONFG, nMissing)).astype(int)
+            col2add = col2add.astype(str)
+            
+            reader = np.hstack((reader, col2add))
+            reader[0] = header
+            
+            if nPARA < 6:
+                for i in range(nCONFG-1):
+                    Prov = reader[i+1, 4]
+                    stationId = reader[i+1, 1]
+                    reader[i+1, 5] = envirocan.get_climate_ID(Prov, stationId)
+            
+            #---- Save List ----
+            
+            with open(station_list_path, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(reader)
+    
+    #----------------------------------------------------------- LOAD TO UI ----
+    
         if len(reader) > 1:
             
             self.parent.write2console('''<font color=black>
@@ -1681,9 +1722,11 @@ class TabDwnldData(QtGui.QWidget):
     #===========================================================================
         
         self.MergeOutput, LOG, COMNT = concatenate(fname)
-        StaName = self.MergeOutput[0,1]
-        YearStart = self.MergeOutput[8,0][:4]
-        YearEnd = self.MergeOutput[-1,0][:4]
+        
+        StaName = self.MergeOutput[0, 1]
+        YearStart = self.MergeOutput[8, 0][:4]
+        YearEnd = self.MergeOutput[-1, 0][:4]
+        climateID = self.MergeOutput[5, 1]
         
         self.merge_stats_display.setText(LOG)      
         self.parent.write2console('<font color=black>Raw data files ' +
@@ -1696,6 +1739,7 @@ class TabDwnldData(QtGui.QWidget):
             self.parent.write2console(COMNT)
         
         if self.saveAuto_checkbox.isChecked():
+            
             # Check if the characters "/" or "\" are present in the station 
             # name and replace these characters by "-" if applicable.
             intab = "/\\"
@@ -1708,7 +1752,8 @@ class TabDwnldData(QtGui.QWidget):
             if not path.exists(save_dir):
                 makedirs(save_dir)
                 
-            filename = StaName + '_' + YearStart + '-' + YearEnd + '.csv'
+            filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
+                                              YearStart, YearEnd)
             fname = save_dir + filename
             
             self.save_concatened_data(fname)            
@@ -1721,11 +1766,13 @@ class TabDwnldData(QtGui.QWidget):
         concatened data are going to be saved.
         '''
     #===========================================================================
-        
+
         if np.size(self.MergeOutput) != 0:
-            StaName = self.MergeOutput[0,1]
-            YearStart = self.MergeOutput[8,0][:4]
-            YearEnd = self.MergeOutput[-1,0][:4]
+            StaName = self.MergeOutput[0, 1]
+            YearStart = self.MergeOutput[8, 0][:4]
+            YearEnd = self.MergeOutput[-1, 0][:4]
+            climateID = self.MergeOutput[5, 1]
+            
             # Check if the characters "/" or "\" are present in the station 
             # name and replace these characters by "-" if applicable.            
             intab = "/\\"
@@ -1734,7 +1781,8 @@ class TabDwnldData(QtGui.QWidget):
             StaName = StaName.translate(trantab)
             
             project_dir = self.parent.what_pref.project_dir
-            filename = StaName + '_' + YearStart + '-' + YearEnd + '.csv'            
+            filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
+                                              YearStart, YearEnd)
             dialog_dir = project_dir + '/Meteo/Input/' + filename
                           
             fname, ftype = QtGui.QFileDialog.getSaveFileName(
@@ -1744,11 +1792,13 @@ class TabDwnldData(QtGui.QWidget):
                 self.save_concatened_data(fname)    
     
     #===========================================================================         
-    def save_concatened_data(self, fname):        
-    # <save_concatened_data> saves the concatened data into a single csv file.
-    #
-    # It is started from the method <select_concatened_save_path> or the 
-    # method <concatenate_and_display> if <self.saveAuto_checkbox.isChecked>. 
+    def save_concatened_data(self, fname):  
+        """
+        <save_concatened_data> saves the concatened data into a single csv file.
+    
+        It is started from the method <select_concatened_save_path> or the 
+        method <concatenate_and_display> if <self.saveAuto_checkbox.isChecked>.
+        """
     #===========================================================================                
 
 #        if not path.exists(dirname):
@@ -1763,19 +1813,23 @@ class TabDwnldData(QtGui.QWidget):
     
     #===========================================================================
     def fetch_start_and_stop(self):
-    # The following method is started from the event "self.btn_get.clicked".
-    # It starts the downloading process of the raw data files if it is not 
-    # already running and if a station is selected in "staName_display" widget.
-    #
-    # Also, this method manages the stopping of the downloading process through
-    # the state of the "btn_get". Right before the downloading process is
-    # started with "self.dwnl_rawfiles.start()", the text and icon of
-    # "btn_get" is changed to look like a stop button. As long as the button 
-    # is in 'stop' state, the downloading process continue. If "btn_get" is
-    # clicked again by the user during the downloading process, its state 
-    # reverts back to its original 'Get Data' display. When the working function 
-    # "fetch" sees this, the downloading loop is broken, and so is also the
-    # downloading process of raw data files.
+        """
+        This method is started from the event "self.btn_get.clicked".
+        It starts the downloading process of the raw data files if it is not 
+        already running and if a station is selected in weather station
+        drop-box widget.
+        
+        Also, this method manages the stopping of the downloading process
+        and the state of the "btn_get". Right before the downloading
+        process is started with "self.dwnl_rawfiles.start()", the text and
+        icon of "btn_get" is changed to look like a stop button. If "btn_get" 
+        is clicked again by the user during the downloading process, its state 
+        reverts back to its original 'Get Data' display. In addition the value
+        of the "STOP" flag is forced to True in the download Thread.
+ 
+        When the working function "fetch" sees this, the downloading loop is
+        broken, and so is also the downloading process of raw data files.
+        """
     #===========================================================================
         
         if self.dwnl_rawfiles.isRunning():
@@ -1792,7 +1846,7 @@ class TabDwnldData(QtGui.QWidget):
             
         else:
             
-        #--------------------------------------------------Check for Errors-----
+        #------------------------------------------------- Check for Errors ----
             
             ERRFLAG = False # Flag to check if there is errors before starting
                             # the downloading process.
@@ -1803,7 +1857,7 @@ class TabDwnldData(QtGui.QWidget):
                 self.msgBox.setText('Station list is empty.')
                 self.msgBox.exec_()
         
-        #------------------------------------------------ Start the Thread -----
+        #------------------------------------------------- Start the Thread ----
         
             if ERRFLAG == False:
                 
@@ -1819,8 +1873,11 @@ class TabDwnldData(QtGui.QWidget):
                 
                 sta_index = self.staName_display.currentIndex()
                 
-                stationID = int(self.staList[sta_index, 1])
+                stationID = self.staList[sta_index, 1]
                 self.dwnl_rawfiles.stationID = stationID
+                
+                climateID = self.staList[sta_index, 5]
+                self.dwnl_rawfiles.climateID = climateID
                 
                 dirname = self.parent.what_pref.project_dir + '/Meteo/Raw'           
                 self.dwnl_rawfiles.dirname = dirname                
@@ -2596,11 +2653,12 @@ class DownloadRawDataFiles(QtCore.QThread):
 
     New in 4.0.6: Raw data files that already exists in the Raw directory
                   won't be downloaded again from the server.
-    ----- Input -----
+    
+    ---- Input ----
 
     self.STOP = Flag that is used to stop the thread from the UI side.
     
-    ----- Output ----
+    ---- Output ----
     
     self.ERRFLAG = Flag for the download of files - np.arrays
                    0 -> File downloaded successfully
@@ -2621,6 +2679,7 @@ class DownloadRawDataFiles(QtCore.QThread):
         self.dirname = [] # Directory where the downloaded files are saved
         self.ERRFLAG = []
         self.stationID = []
+        self.climateID = [] # Unique identifier for the station
           
     def run(self): 
         
@@ -2630,6 +2689,7 @@ class DownloadRawDataFiles(QtCore.QThread):
         yr_start = self.parent.yStart_edit.value()
         yr_end = self.parent.yEnd_edit.value()
         StaName = self.parent.staName_display.currentText()
+        climateID = self.climateID
         
         self.ERRFLAG = np.ones(yr_end - yr_start + 1)
              
@@ -2639,7 +2699,7 @@ class DownloadRawDataFiles(QtCore.QThread):
            <font color=black> for station %s</font>''' % StaName)
         self.ProgBarSignal.emit(0)         
         
-        self.dirname += '/' + StaName
+        self.dirname += '/%s (%s)' % (StaName, climateID)
         if not path.exists(self.dirname):
             makedirs(self.dirname)
             
@@ -3192,9 +3252,11 @@ class GapFill_Parameters():
         
 #===============================================================================
 class FillWorker(QtCore.QThread):
-# This functions is called when the <Fill and Save> button of the Tab named 
-# Fill is clicked on. It is the main routine that fill the missing data
-# in the weather record.
+    """
+    This functions is called when the <Fill and Save> button of the Tab named 
+    Fill is clicked on. It is the main routine that fill the missing data
+    in the weather record.
+    """
 #===============================================================================
     
     ProgBarSignal = QtCore.Signal(int)
@@ -3795,7 +3857,7 @@ class FillWorker(QtCore.QThread):
                 
                 INFO_total.append(info_row_builder)
                     
-        #---------------------------------------------------------SAVE INFO-----
+        #-------------------------------------------------------- SAVE INFO ----
                                       
             YearStart = str(int(YEAR[index_start])) 
             YearEnd = str(int(YEAR[index_end]))
@@ -3808,8 +3870,8 @@ class FillWorker(QtCore.QThread):
             target_station_name = target_station_name.translate(trantab)
             
             output_path = (self.project_dir + '/Meteo/Output/' + 
-                           target_station_name + '_' + YearStart + '-' + 
-                           YearEnd + '.log')
+                           target_station_name + ' (' + target_station_clim +
+                           ')'+ '_' + YearStart + '-' +  YearEnd + '.log')
             
             with open(output_path, 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
@@ -3819,7 +3881,7 @@ class FillWorker(QtCore.QThread):
                 '<font color=black>Info file saved in ' + output_path +
                 '</font>')
                 
-        #---------------------------------------------------------SAVE DATA-----
+        #-------------------------------------------------------- SAVE DATA ----
             
             DATA2SAVE = copy(HEADER)
             DATA2SAVE.append(['Year', 'Month', 'Day'])
@@ -3834,8 +3896,9 @@ class FillWorker(QtCore.QThread):
             for i in range(len(ALLDATA)):
                 DATA2SAVE.append(ALLDATA[i])
             
-            output_path = (self.project_dir + '/Meteo/Output/' + target_station_name +            
-                           '_' + YearStart + '-' + YearEnd + '.out')
+            output_path = (self.project_dir + '/Meteo/Output/' + 
+                           target_station_name + ' (' + target_station_clim +
+                           ')'+ '_' + YearStart + '-' +  YearEnd + '.out')
             
             with open(output_path, 'wb') as f:
                 writer = csv.writer(f,delimiter='\t')
@@ -3850,7 +3913,7 @@ class FillWorker(QtCore.QThread):
             self.EndProcess.emit(1)
             self.STOP = False
             
-        #----------------------------------------SAVE ERROR ANALYSIS REPORT-----
+        #--------------------------------------- SAVE ERROR ANALYSIS REPORT ----
             
             if self.full_error_analysis == True:
                 
@@ -3865,8 +3928,8 @@ class FillWorker(QtCore.QThread):
                     error_analysis_report.append(ALLDATA[i])
                 
                 output_path = (self.project_dir + '/Meteo/Output/' + 
-                               target_station_name + '_' + YearStart + '-' + 
-                               YearEnd + '.err')
+                           target_station_name + ' (' + target_station_clim +
+                           ')'+ '_' + YearStart + '-' +  YearEnd + '.err')
                                
                 with open(output_path, 'wb') as f:
                     writer = csv.writer(f,delimiter='\t')
@@ -4104,7 +4167,7 @@ class WHATPref():
             
             self.project_dir = reader[0][1]
         
-        #----- System files generation -----
+        #----- System folder hierarchy -----
         
         if not path.exists( self.project_dir + '/Meteo/Raw'):
             makedirs(self.project_dir + '/Meteo/Raw')
@@ -4114,19 +4177,30 @@ class WHATPref():
             makedirs(self.project_dir + '/Meteo/Output')
         if not path.exists( self.project_dir + '/Water Levels'):
             makedirs(self.project_dir + '/Water Levels')
+            
+        #---- waterlvl_manual_measurements.xls ----
         
-        fname = self.project_dir + '/waterlvl_manual_measurements.csv'
+        fname = self.project_dir + '/waterlvl_manual_measurements.xls'
         if not path.exists(fname):
             
-            msg = ('No "waterlvl_manual_measurements.csv" file found. ' +
+            msg = ('No "waterlvl_manual_measurements.xls" file found. ' +
                    'A new one has been created.')
             print msg
             
-            fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
+            # http://stackoverflow.com/questions/13437727
+            book = xlwt.Workbook(encoding="utf-8")
+            sheet1 = book.add_sheet("Sheet 1")
+            sheet1.write(0, 0, 'Well_ID')
+            sheet1.write(0, 1, 'Time (days)')
+            sheet1.write(0, 2, 'Obs. (mbgs)')
+            book.save(fname)
             
-            with open(fname, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(fcontent)
+#            fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
+#            with open(fname, 'wb') as f:
+#                writer = csv.writer(f, delimiter='\t')
+#                writer.writerows(fcontent)
+            
+        #---- weather_stations.lst ----
                 
         fname = self.project_dir + '/weather_stations.lst'
         if not path.exists(fname):
@@ -4136,7 +4210,7 @@ class WHATPref():
             print msg
             
             fcontent = [['staName', 'stationId', 'StartYear', 'EndYear',
-                         'Province']]
+                         'Province', 'ClimateID', 'Proximity (km)']]
             
             with open(fname, 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')

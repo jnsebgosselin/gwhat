@@ -184,9 +184,9 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     if GraphParamObj.WLref == 0:
         ax2.invert_yaxis()
     
-    #------------------------------------------------------------ PLOTTING -----
+    #------------------------------------------------------------- PLOTTING ----
     
-    #----- Water Levels -----
+    #---- Water Levels ----
     
     if GraphParamObj.trend_line == 1:
         tfilt, wlfilt = filt_data(time, water_lvl, 7)
@@ -199,7 +199,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
         ax2.plot(time, water_lvl, '-', zorder = 10, linewidth=1, 
                  label='Water Level')                
     
-    #----- Manual Measures -----
+    #---- Manual Measures ----
        
     TIMEmes = WaterLvlObj.TIMEmes
     WLmes = WaterLvlObj.WLmes
@@ -210,7 +210,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     plt.setp(h_WLmes, markerfacecolor='none', markersize=5,
              markeredgecolor=(1, 0.25, 0.25), markeredgewidth=1.5)
                  
-    #----- Recession -----
+    #---- Recession ----
         
 #    # Plot a Recession line for Dundurn Report
 #    trecess = np.arange(41548, 41760)
@@ -502,7 +502,6 @@ class GraphParameters():
         nCONFG, nPARA = np.shape(reader)
 
         if nPARA < len(self.header[0]):
-            print 'patate'
             
             nMissing = len(self.header[0]) - nPARA
             
@@ -692,7 +691,7 @@ class WaterlvlData():
         self.LAT = header[1]
         self.LON = header[2]
         self.ALT = header[3]
-    
+
     #----------------------------------------------------------- WELL INFO ----- 
         
         FIELDS = ['Well Name', 'Latitude', 'Longitude', 'Altitude',
@@ -723,28 +722,41 @@ class WaterlvlData():
         self.well_info = well_info
         
     def load_waterlvl_measures(self, fname, name_well):
+        print name_well
         
         WLmes = []
         TIMEmes = []
             
         if path.exists(fname):
             
-            reader = open(fname, 'rb')
-            reader = csv.reader(reader, delimiter='\t')
-            reader = list(reader)[1:]
-            reader = np.array(reader)
+            #---- Import Data ----
             
-            if len(reader) > 1:
-                puits_names_list = reader[:, 0] 
-                rowx = np.where(puits_names_list == name_well)[0]
+            reader = open_workbook(fname)
             
-                if len(rowx) > 0:                         
-                    WLmes = reader[rowx, 2].astype(float)
-                    TIMEmes = reader[rowx, 1].astype(float)
+            NAME = reader.sheet_by_index(0).col_values(0, start_rowx=1,
+                                                       end_rowx=None)
+                                                                   
+            TIME = reader.sheet_by_index(0).col_values(1, start_rowx=1,
+                                                       end_rowx=None)
+            
+            OBS = reader.sheet_by_index(0).col_values(2, start_rowx=1,
+                                                      end_rowx=None)
+            #---- Convert to Numpy ----
+                                                      
+            NAME = np.array(NAME).astype('str')
+            TIME = np.array(TIME).astype('float')
+            OBS = np.array(OBS).astype('float')
+                       
+            if len(NAME) > 1:
+                rowx = np.where(NAME == name_well)[0]
+            
+                if len(rowx) > 0:
+                    WLmes = OBS[rowx]
+                    TIMEmes = TIME[rowx]
             
         self.TIMEmes = TIMEmes
         self.WLmes = WLmes
-        
+                
         return TIMEmes, WLmes
         
 #===============================================================================      
@@ -881,19 +893,22 @@ if __name__ == '__main__':
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
     
-    meteoObj = MeteoObj()
-    meteoObj.load(fmeteo)
+    fname = 'Files4testing/waterlvl_manual_measurements.xls'
+    waterLvlObj.load_waterlvl_measures(fname, 'PO16A')
     
-    graphParamObj = GraphParameters()
-    if graphParamObj.WLref == 0:
-        WL = waterLvlObj.lvl
-    elif graphParamObj.WLref == 1:
-        WL = waterLvlObj.ALT - waterLvlObj.lvl
-    
-    _, _ = graphParamObj.best_fit_waterlvl(WL)
-    _, _ = graphParamObj.best_fit_time(waterLvlObj.time)
-    graphParamObj.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
-    
-    fig = plt.figure(figsize=(11, 8.5))
-    fig.set_size_inches(11, 8.5)
-    generate_hydrograph(fig, waterLvlObj, meteoObj, graphParamObj)
+#    meteoObj = MeteoObj()
+#    meteoObj.load(fmeteo)
+#    
+#    graphParamObj = GraphParameters()
+#    if graphParamObj.WLref == 0:
+#        WL = waterLvlObj.lvl
+#    elif graphParamObj.WLref == 1:
+#        WL = waterLvlObj.ALT - waterLvlObj.lvl
+#    
+#    _, _ = graphParamObj.best_fit_waterlvl(WL)
+#    _, _ = graphParamObj.best_fit_time(waterLvlObj.time)
+#    graphParamObj.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+#    
+#    fig = plt.figure(figsize=(11, 8.5))
+#    fig.set_size_inches(11, 8.5)
+#    generate_hydrograph(fig, waterLvlObj, meteoObj, graphParamObj)
