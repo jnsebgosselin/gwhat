@@ -406,8 +406,8 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.addWidget(separator2, row, 0)
         row += 1
         subgrid_toolbar.addWidget(btn_weather_normals, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(separator3, row, 0)
+#        row += 1
+#        subgrid_toolbar.addWidget(separator3, row, 0)
        
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
@@ -1196,9 +1196,9 @@ class TabDwnldData(QtGui.QWidget):
         grid_TOP.setSpacing(15)
         grid_TOP.setColumnStretch(1, 500)
         
-    #-----------------------------------------------------------GRID BOTTOM-----                     
+    #---------------------------------------------------------- GRID BOTTOM ----                     
         
-        #----SubGrid display-------------------#
+        #---- SubGrid display ----
         
         self.merge_stats_display = QtGui.QTextEdit()
         self.merge_stats_display.setReadOnly(True)        
@@ -1214,7 +1214,7 @@ class TabDwnldData(QtGui.QWidget):
         display_grid_widget.setLayout(grid_display)
         grid_display.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom 
                 
-        #---ASSEMBLING SubGrids-------------------#
+        #---- ASSEMBLING SubGrids ----
     
         self.merge_stats_display.setMaximumHeight(200)
         btn_select = QtGui.QPushButton(' Select')
@@ -1238,9 +1238,15 @@ class TabDwnldData(QtGui.QWidget):
         BOTTOM_widget.setLayout(grid_BOTTOM)
         grid_BOTTOM.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
         grid_BOTTOM.setSpacing(10)
-        
-    #-------------------------------------------------------------GRID MAIN-----
-        
+                
+    #------------------------------------------------------------ GRID MAIN ----
+
+        self.staList_table = QtGui.QTableWidget()
+#        self.staList_table = QtGui.QTableView()
+#        self.resume_table_display.setReadOnly(True)
+#        self.staList_table.setFrameStyle(0)
+        self.staList_table.setFrameStyle(StyleDB.frame)
+                
         TITLE_TOP = QtGui.QLabel(labelDB.title_download)    
         TITLE_BOTTOM  = QtGui.QLabel(labelDB.title_concatenate)
         
@@ -1255,45 +1261,48 @@ class TabDwnldData(QtGui.QWidget):
                 
         grid_MAIN = QtGui.QGridLayout()
         
+        col = 1
         row = 0
-        grid_MAIN.addWidget(line1, row, 1)
+        grid_MAIN.addWidget(line1, row, col)        
         row += 1
-        grid_MAIN.addWidget(TITLE_TOP, row, 1)
+        grid_MAIN.addWidget(TITLE_TOP, row, col)
         row += 1
-        grid_MAIN.addWidget(line2, row, 1)
+        grid_MAIN.addWidget(line2, row, col)
         row += 1
-        grid_MAIN.addWidget(TOP_widget, row, 1)
+        grid_MAIN.addWidget(TOP_widget, row, col)
         row += 1
-        grid_MAIN.addWidget(line3, row, 1)
+        grid_MAIN.addWidget(line3, row, col)
         row += 1
-        grid_MAIN.addWidget(TITLE_BOTTOM, row, 1)
+        grid_MAIN.addWidget(TITLE_BOTTOM, row, col)
         row += 1
-        grid_MAIN.addWidget(line4, row, 1)
+        grid_MAIN.addWidget(line4, row, col)
         row += 1
-        grid_MAIN.addWidget(BOTTOM_widget, row, 1)
-        row += 1
-        grid_MAIN.setRowStretch(row, 500)
+        grid_MAIN.addWidget(BOTTOM_widget, row, col)
+        col += 1
+#        grid_MAIN.addWidget(self.staList_table, 0, col, row+1, 1)
+        
+        grid_MAIN.setRowStretch(row+1, 500)
         
         self.setLayout(grid_MAIN)
         grid_MAIN.setContentsMargins(15, 15, 15, 15) #Left, Top, Right, Bottom
-        grid_MAIN.setHorizontalSpacing(10)
+        grid_MAIN.setHorizontalSpacing(50)
         grid_MAIN.setVerticalSpacing(10)
         grid_MAIN.setColumnStretch(0, 500)
-        grid_MAIN.setColumnStretch(2, 500)
+        grid_MAIN.setColumnStretch(col, 500)
         
-        #-------------------------------------------------------MESSAGE BOX-----
+        #------------------------------------------------------ MESSAGE BOX ----
                                           
         self.msgBox = QtGui.QMessageBox()
         self.msgBox.setIcon(QtGui.QMessageBox.Warning)
         self.msgBox.setWindowTitle('Error Message')
         
-        #----------------------------------------------------VARIABLES INIT-----
+        #--------------------------------------------------- VARIABLES INIT ----
         
         self.MergeOutput = np.array([])
         self.dwnl_rawfiles = DownloadRawDataFiles(self)
         self.initUI_search4stations()
         
-        #------------------------------------------------------------EVENTS-----       
+        #----------------------------------------------------------- EVENTS ----       
                 
         self.dwnl_rawfiles.ProgBarSignal.connect(self.setProgBarSignal)
         self.dwnl_rawfiles.ConsoleSignal.connect(self.parent.write2console)
@@ -1566,10 +1575,11 @@ class TabDwnldData(QtGui.QWidget):
     #===========================================================================
     def load_stationList(self): # refresh_stationList(self):
         '''
-        This method is started either by :
+        This method is started either either :
+        
         (1) when a new project folder is loaded in 
             <MainWindow.load_project_dir>
-        (2) after a search has been completed for weather stations with 
+        (2) after a search has been completed for weather stations in 
             <search4stations>
         (3) When a station list is loaded manually by the user from method
             <select_stationList>.
@@ -1653,7 +1663,7 @@ class TabDwnldData(QtGui.QWidget):
     
     #----------------------------------------------------------- LOAD TO UI ----
     
-        if len(reader) > 1:
+        if len(reader) > 1: # LOAD station list into the UI
             
             self.parent.write2console('''<font color=black>
                                            Weather station list loaded 
@@ -1668,8 +1678,10 @@ class TabDwnldData(QtGui.QWidget):
             
             self.staList = np.array(reader[1:])
             self.staName_display.addItems(self.staList[:, 0])
+            
+            self.build_staList_table()
                                          
-        else: 
+        else: # Station list EMPTY
             
             self.parent.write2console('''<font color=red>
                                            Weather Station list is empty.
@@ -1686,6 +1698,189 @@ class TabDwnldData(QtGui.QWidget):
             self.yEnd_edit.setValue(0)
             
         QtGui.QApplication.restoreOverrideCursor()
+    
+    def build_staList_table(self):
+        
+        #http://codeprogress.com/python/libraries/pyqt/showPyQTExample.php?index=406&key=QTableWdigetHeaderAlignment
+        self.staList_table.resizeColumnsToContents()
+        self.staList_table.setSortingEnabled(True)
+                
+        header = ('Weather Stations', '', '', 'From \n Year', 'To \n Year', '')
+        staList = self.staList
+        indx = [0, 4, 6]  
+  
+        ncol = len(header)
+        nrow = len(staList[:, 0])
+        
+        self.staList_table.setColumnCount(ncol)
+        self.staList_table.setRowCount(nrow)
+        self.staList_table.setHorizontalHeaderLabels(header)
+#        self.staList_table.setShowGrid(False)
+        
+        
+#        self.staList_table.horizontalHeader().setResizeMode(QtGui.QHeaderView.ResizeMode(0))
+        self.staList_table.horizontalHeader().setStretchLastSection(True)
+        self.staList_table.resizeColumnsToContents()
+        
+        self.staList_table.setMinimumWidth(650)
+        self.staList_table.horizontalHeader().hide()
+        self.staList_table.verticalHeader().hide()
+#        self.staList_table.horizontalHeaderItem(1).hide()
+
+#        table.horizontalHeaderItem(0)
+#        self.staList_table.horizontalHeader().setStyleSheet("QHeaderView::section { background-color:none }")
+#        self.staList_table.horizontalHeaderItem(1).setBackgroundColor(QtGui.QColor(100,100,150))
+        
+#       http://stackoverflow.com/questions/24148968/how-to-add-multiple-qpushbuttons-to-a-qtableview
+#       http://www.riverbankcomputing.com/pipermail/pyqt/2009-March/022160.html
+        #http://stackoverflow.com/questions/20797383/qt-fit-width-of-tableview-to-width-of-content
+        for row in range(nrow):
+            
+            col = 0 # Station
+            
+            item1 = QtGui.QTableWidgetItem(staList[row, 0])
+            item1.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+            item1.setTextAlignment(QtCore.Qt.AlignLeft)
+            self.staList_table.setItem(row, col, item1)
+           
+            col += 1 # Province
+            
+            item = QtGui.QTableWidgetItem(staList[row, 4])
+            item.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.staList_table.setItem(row, col, item)
+           
+            col += 1 # Proximity
+            
+            item = QtGui.QTableWidgetItem(staList[row, 6])
+            item.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.staList_table.setItem(row, col, item)
+            
+            col += 1 # From Year
+            
+            min_year = int(staList[row, 2])
+            max_year = int(staList[row, 3])
+            yearspan = np.arange(min_year, max_year+1).astype(str)
+            
+            item = QtGui.QTableWidgetItem(staList[row, 2])
+            item.setFlags(~QtCore.Qt.ItemIsEnabled)
+            self.staList_table.setItem(row, col, item)
+            
+            self.fromYear = QtGui.QComboBox()
+            self.fromYear.setEditable(False)
+            self.fromYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
+            self.fromYear.addItems(yearspan)
+            self.staList_table.setCellWidget(row, col, self.fromYear)
+            
+            col += 1 # To Year
+
+            item = QtGui.QTableWidgetItem(staList[row, 3])
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            self.staList_table.setItem(row, col, item)
+
+            self.toYear = QtGui.QComboBox()
+            self.toYear.setEditable(False)
+            self.toYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
+            self.toYear.addItems(yearspan)
+            self.toYear.setCurrentIndex(len(yearspan)-1)
+            self.staList_table.setCellWidget(row, col, self.toYear)
+            
+            col += 1 # Del weather station from list
+            
+            item = QtGui.QTableWidgetItem("")
+            item.setFlags(QtCore.Qt.ItemIsEnabled)            
+            self.staList_table.setItem(row, col, item)
+            
+            self.btn_delRow = QtGui.QPushButton()
+#            self.btn_delRow.setAutoRaise(True)
+            self.btn_delRow.setIcon(iconDB.clear_search)
+            self.btn_delRow.setToolTip('Remove station %s from list.' % (staList[row, 0]))
+            self.btn_delRow.setFlat(True)
+            self.btn_delRow.setFixedHeight(32)
+            self.btn_delRow.setFixedWidth(32)
+
+#            self.btn_delRow.setToolTip(ttipDB.clearall)
+#            self.btn_delRow.setFocusPolicy(QtCore.Qt.NoFocus)
+
+            self.btn_delRow.clicked.connect(self.handleButtonClicked)
+            self.staList_table.setCellWidget(row, col, self.btn_delRow)
+    
+    def handleButtonClicked(self):
+        button = QtGui.qApp.focusWidget()
+
+        # or button = self.sender()
+        index = self.staList_table.indexAt(button.pos())
+
+        if index.isValid():
+            print index.row()
+            self.staList_table.removeRow(index.row())
+#            print(index.row(), index.column())
+        
+#            self.btn_sell = QtGui.QPushButton('Edit')
+#            self.btn_sell.clicked.connect(self.handleButtonClicked)
+            
+#        
+#        table = '''          
+#                <table border="1" cellpadding="3"
+#                                  cellspacing="0"
+#                                  align="center">
+#                  <tr>
+#                    <td width=50 align="center" valign="middle">#</td>
+#                    <td width=180 align="center" valign="middle">%s</td>
+#                    <td width=75 align="center" valign="middle">%s</td>
+#                    <td width=75 align="center" valign="middle">%s</td>
+#                  </tr>                  
+#                ''' % header
+#        for i in range(nstation):
+#            table += '''
+#                     <tr>
+#                       <td align="center" valign="middle">%d</td>
+#                       <td align="center" valign="middle">%s</td>
+#                       <td align="center" valign="middle">%s</td>
+#                       <td align="center" valign="middle">%0.2f</td>
+#                     </tr> 
+#                     ''' % (i+1, staList[i, 0], staList[i, 4], float(staList[i, 6]))
+#                
+##        for i in range(nheader):        
+##            table += '<td width=180 align="center" valign="middle">%s</td>' % header[i]
+#                                     
+#        table += '</table>'
+#        
+#        self.resume_table_display.setText(table)
+                
+                
+#        table = '''<font>
+#                 Number of missing data from <b>%s</b> to <b>%s</b> for
+#                 station <b>%s</b>:
+#               </font>
+#               <br>
+#               <table border="1" cellpadding="3" cellspacing="0" 
+#               align="center">
+#                 <tr>''' % (fill_date_start, fill_date_end, TARGET.name)
+#                 
+#    for field in FIELDS[:-1]:
+#        table +=  '<td width=147.5 align="center">%s</td>' % field
+#        
+#    table +=  '''</tr>
+#                 <tr>'''
+#                 
+#    total_nbr_data = index_end - index_start + 1
+#    for var in range(nVAR):                
+#        nbr_nan = np.isnan(
+#                       DATA[index_start:index_end+1, target_station_index, var])
+#        nbr_nan = float(np.sum(nbr_nan))
+#    
+#        nan_percent = round(nbr_nan / total_nbr_data * 100, 1)
+#
+#        table += '''<td align="center">
+#                      %d&nbsp;&nbsp;(%0.1f %%)
+#                    </td>''' % (nbr_nan, nan_percent)
+#                    
+#    table +=  '''</tr>
+#               </table>
+                
+        
         
     #=========================================================================== 
     def staName_isChanged(self):
@@ -1725,13 +1920,16 @@ class TabDwnldData(QtGui.QWidget):
            self.concatenate_and_display(fname)           
         
     #===========================================================================      
-    def concatenate_and_display(self, fname):              
-    # <concatenate_and_display> handles the concatenation process of raw data 
-    # files and display the results in the <merge_stats_display> widget. 
-    # 
-    # It is started either from the method <select_raw_files> or by the event
-    # <dwnl_rawfiles.MergeSignal> that is emitted after the
-    # downloading of a serie of raw data files is completed. 
+    def concatenate_and_display(self, fname):        
+        """
+        Handles the concatenation process of individual yearly raw data files 
+        and display the results in the <merge_stats_display> widget.
+        
+        ---- CALLED BY----
+        
+        (1) Method: select_raw_files
+        (2) Event:  self.dwnl_rawfiles.MergeSignal.connect
+        """
     #===========================================================================
         
         self.MergeOutput, LOG, COMNT = concatenate(fname)
@@ -1747,14 +1945,17 @@ class TabDwnldData(QtGui.QWidget):
                                   StaName +'</font>')  
                                   
         if COMNT:
-        # A comment is issued only when all raw data files do not belong to
-        # the same weather station. 
+            
+            # A comment is issued only when all raw data files 
+            # do not belong to the same weather station. 
+            
             self.parent.write2console(COMNT)
         
         if self.saveAuto_checkbox.isChecked():
             
             # Check if the characters "/" or "\" are present in the station 
             # name and replace these characters by "-" if applicable.
+            
             intab = "/\\"
             outtab = "--"
             trantab = maketrans(intab, outtab)
@@ -1774,9 +1975,12 @@ class TabDwnldData(QtGui.QWidget):
     #===========================================================================        
     def select_concatened_save_path(self):
         '''        
-        <select_concatened_save_path> is called by the event <btn_save.clicked>.
-        It allows the user to select a path for the file in which the 
+        This method allows the user to select a path for the file in which the 
         concatened data are going to be saved.
+        
+        ---- CALLED BY----
+        
+        (1) Event: btn_save.clicked.connect
         '''
     #===========================================================================
 
@@ -1807,10 +2011,12 @@ class TabDwnldData(QtGui.QWidget):
     #===========================================================================         
     def save_concatened_data(self, fname):  
         """
-        <save_concatened_data> saves the concatened data into a single csv file.
-    
-        It is started from the method <select_concatened_save_path> or the 
-        method <concatenate_and_display> if <self.saveAuto_checkbox.isChecked>.
+        This method saves the concatened data into a single csv file.
+        
+        ---- CALLED BY----
+        
+        (1) Method: select_concatened_save_path
+        (2) Method: concatenate_and_display if self.saveAuto_checkbox.isChecked
         """
     #===========================================================================                
 
@@ -2134,7 +2340,7 @@ class TabFill(QtGui.QWidget):
        
         self.FillTextBox = QtGui.QTextEdit()
         self.FillTextBox.setReadOnly(True)
-        self.FillTextBox.setFrameStyle(0)
+#        self.FillTextBox.setFrameStyle(0)
         self.FillTextBox.setFrameStyle(StyleDB.frame)
         
         self.btn_fill = QtGui.QPushButton(labelDB.btn_fill_text)
