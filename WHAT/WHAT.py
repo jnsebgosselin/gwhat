@@ -1483,12 +1483,16 @@ class TabDwnldData(QtGui.QWidget):
         self.widget_search4stations.close()
                
         #---- Generate New List ----
-               
+        
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        
         self.parent.write2console('''<font color=black>
-                                       Searching for weather stations...
+                                       Searching for weather stations. Please
+                                       wait...
                                      </font>''')
                                      
-        QtCore.QCoreApplication.processEvents() 
+        QtCore.QCoreApplication.processEvents()
+        QtCore.QCoreApplication.processEvents()
         
         LAT = self.latitude_SpinBox.value()
         LON = self.longitude_SpinBox.value()
@@ -1512,6 +1516,8 @@ class TabDwnldData(QtGui.QWidget):
         #---- Load List ----
         
         self.load_stationList()
+        
+        QtGui.QApplication.restoreOverrideCursor()
         
     #===========================================================================
     def select_stationList(self):
@@ -1554,6 +1560,7 @@ class TabDwnldData(QtGui.QWidget):
             
                 #---- Load List in UI ----
                 
+                QtGui.QApplication.processEvents()
                 self.load_stationList()
             
     #===========================================================================
@@ -1575,15 +1582,15 @@ class TabDwnldData(QtGui.QWidget):
         
         The weather_station.lst is a tabulation separated csv file that contains
         the following information:  station names, station ID , date at which
-        the data records begin and date at which the data records end, and the
-        provinces to which each station belongs.
+        the data records begin and date at which the data records end, the
+        provinces to which each station belongs, the climate ID and the
+        Proximity value in km for the original search location.
         
-        The only field that is used to download the data from the Environment
-        Canada (EC) website is the StationID. This ID can be found on the EC
+        All these information can be found on the Government of Canada
         website in the address bar of the web browser when a station is
-        selected. Note that this ID is not the same as the Climate ID of the
-        station. For example, the ID for the station Abercorn is 5308, as it
-        can be found in the following address:
+        selected. Note that the station ID is not the same as the Climate ID 
+        of the station. For example, the ID for the station Abercorn is 5308,
+        as it can be found in the following address:
         
         "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
          2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
@@ -1613,12 +1620,16 @@ class TabDwnldData(QtGui.QWidget):
         nCONFG, nPARA = np.shape(reader)         
         if nPARA < len(header):
             print 'This list is from an older version of WHAT.'
-            print 'converting to new format'
+            print 'Converting to new format.'
             
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+                                                        
             self.parent.write2console('''<font color=black>
                                            Converting weather station list to
                                            a more recent format. Please wait...
                                          </font>''')
+            QtGui.QApplication.processEvents()
+            QtGui.QApplication.processEvents()
             
             nMissing = len(header) - nPARA
             
@@ -1673,6 +1684,8 @@ class TabDwnldData(QtGui.QWidget):
             self.yEnd_edit.setEnabled(False)
             self.yEnd_edit.setRange(0, 1)
             self.yEnd_edit.setValue(0)
+            
+        QtGui.QApplication.restoreOverrideCursor()
         
     #=========================================================================== 
     def staName_isChanged(self):
@@ -1815,9 +1828,7 @@ class TabDwnldData(QtGui.QWidget):
     def fetch_start_and_stop(self):
         """
         This method is started from the event "self.btn_get.clicked".
-        It starts the downloading process of the raw data files if it is not 
-        already running and if a station is selected in weather station
-        drop-box widget.
+        It starts the downloading process of the raw data files.
         
         Also, this method manages the stopping of the downloading process
         and the state of the "btn_get". Right before the downloading
@@ -3935,7 +3946,7 @@ class FillWorker(QtCore.QThread):
                     writer = csv.writer(f,delimiter='\t')
                     writer.writerows(error_analysis_report)
             
-                #-----------------------------------------SOME CALCULATIONS-----
+            #-------------------------------------------- SOME CALCULATIONS ----
                 
                 RMSE = np.zeros(nVAR)
                 ERRMAX  = np.zeros(nVAR)
