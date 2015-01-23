@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
-software_version = 'WHAT Beta 4.1.2'
+software_version = 'WHAT Beta 4.1.3'
 last_modification = '21/01/2015'
 
 #---- STANDARD LIBRARY IMPORTS ----
@@ -413,14 +413,14 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         subgrid_toolbar.setRowStretch(row+1, 500)
 
-        btn_loadConfig.setIconSize(QtCore.QSize(36, 36))
-        btn_saveConfig.setIconSize(QtCore.QSize(36, 36))
-        btn_bestfit_waterlvl.setIconSize(QtCore.QSize(36, 36))
-        btn_bestfit_time.setIconSize(QtCore.QSize(36, 36))
-        btn_closest_meteo.setIconSize(QtCore.QSize(36, 36))
-        btn_weather_normals.setIconSize(QtCore.QSize(36, 36))
-        btn_draw.setIconSize(QtCore.QSize(36, 36))
-        btn_save.setIconSize(QtCore.QSize(36, 36))
+        btn_loadConfig.setIconSize(StyleDB.iconSize)
+        btn_saveConfig.setIconSize(StyleDB.iconSize)
+        btn_bestfit_waterlvl.setIconSize(StyleDB.iconSize)
+        btn_bestfit_time.setIconSize(StyleDB.iconSize)
+        btn_closest_meteo.setIconSize(StyleDB.iconSize)
+        btn_weather_normals.setIconSize(StyleDB.iconSize)
+        btn_draw.setIconSize(StyleDB.iconSize)
+        btn_save.setIconSize(StyleDB.iconSize)
         
         toolbar_widget.setLayout(subgrid_toolbar)
     
@@ -552,22 +552,29 @@ class TabHydrograph(QtGui.QWidget):
 
         self.hydrograph_widget = FigureCanvasQTAgg(self.hydrograph2display)
         
+        # References if one day I have the time to implement a Pan and Zoom 
+        # area for plottingthe graph.
+        # http://stackoverflow.com/questions/7608066/in-matplotlib-is-there-a-way-to-know-the-list-of-available-output-format
+        # print self.hydrograph_widget.get_supported_filetypes()
+        # pixmap = QtGui.QImage(self.hydrograph_widget.print_png)
+        # http://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
+        # http://stackoverflow.com/questions/21939658/matplotlib-render-into-buffer-access-pixel-data
+
         hydrograph_frame = QtGui.QFrame()
-        hydrograph_frame.setStyleSheet("QWidget{background-color: white}")
-        hydrograph_frame.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Plain)
-        hydrograph_frame.setLineWidth(1)
-        hydrograph_frame.setMidLineWidth(0)
+#        hydrograph_frame.setStyleSheet("QWidget{background-color: 'white'}")
+        hydrograph_frame.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Raised)
+        hydrograph_frame.setLineWidth(3)
+        hydrograph_frame.setMidLineWidth(3)
         
         frame_layout =  QtGui.QGridLayout() 
         
-        frame_layout.addWidget(self.hydrograph_widget, 1, 1)
+        frame_layout.addWidget(self.hydrograph_widget, 0, 0)
         
         hydrograph_frame.setLayout(frame_layout)
         
         frame_layout.setRowStretch(0, 500)
-        frame_layout.setRowStretch(2, 500)
         frame_layout.setColumnStretch(0, 500)
-        frame_layout.setColumnStretch(2, 500)
+        frame_layout.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
         
         self.hydrograph_widget.setFixedWidth(1100/1.5)
         self.hydrograph_widget.setFixedHeight(800/1.5)
@@ -578,29 +585,46 @@ class TabHydrograph(QtGui.QWidget):
 #        policy.setHeightForWidth(True)
 #        self.hydrograph_widget.setSizePolicy(policy)
         
-        #----- ASSEMBLING SubGrids -----
-                
+        #---- SubGrid Figure Title ----
+
         graph_title_label = QtGui.QLabel('Figure Title :')
         self.graph_title = QtGui.QLineEdit()
         self.graph_title.setMaxLength(65)
         self.graph_title.setEnabled(False)
         self.graph_title.setText('Add A Title To The Figure Here')
-        self.graph_status = QtGui.QCheckBox()        
+        self.graph_status = QtGui.QCheckBox() 
         
+        subgrid_figtitle_widget = QtGui.QFrame()
+        subgrid_figtitle = QtGui.QGridLayout()
+        
+        row = 0
+        subgrid_figtitle.addWidget(graph_title_label, row, 0)
+        subgrid_figtitle.addWidget(self.graph_title, row, 1)
+        subgrid_figtitle.addWidget(self.graph_status, row, 2)
+        
+        subgrid_figtitle.setSpacing(10)
+        subgrid_figtitle.setColumnStretch(1, 500)
+        subgrid_figtitle.setContentsMargins(0, 0, 0, 0) # (L,T, R, B)
+        
+        subgrid_figtitle_widget.setLayout(subgrid_figtitle)
+        
+        #----- ASSEMBLING SubGrids -----
+                
         grid_LEFT = QtGui.QGridLayout()
         grid_LEFT_widget = QtGui.QFrame()
         
         row = 0
-        grid_LEFT.addWidget(graph_title_label, row, 0)
-        grid_LEFT.addWidget(self.graph_title, row, 1)
-        grid_LEFT.addWidget(self.graph_status, row, 2)
-        row += 1
-        grid_LEFT.addWidget(hydrograph_frame, row, 0, 1, 3)
+        grid_LEFT.addWidget(subgrid_figtitle_widget, row, 0, 1, 3)
+        row += 2
+        grid_LEFT.addWidget(hydrograph_frame, row, 1)
         
         grid_LEFT_widget.setLayout(grid_LEFT)
         grid_LEFT.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
         grid_LEFT.setSpacing(15)
-        grid_LEFT.setColumnStretch(1, 500)
+        grid_LEFT.setColumnStretch(0, 500)
+        grid_LEFT.setColumnStretch(2, 500)
+        grid_LEFT.setRowStretch(1, 500)
+        grid_LEFT.setRowStretch(row+1, 500)
         
     #----------------------------------------------------------- MAIN GRID -----
         
@@ -1068,7 +1092,7 @@ class TabHydrograph(QtGui.QWidget):
                                            self.meteo_data,
                                            self.graph_params)
                                        
-            self.hydrograph_widget.draw()    
+            self.hydrograph_widget.draw()                       
           
 ################################################################## @TAB DOWNLOAD
         
