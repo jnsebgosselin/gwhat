@@ -67,9 +67,9 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     
     fig.patch.set_facecolor('white')
     
-    fheight = fig.get_figheight()
-    fwidth = fig.get_figwidth()
-    
+    fheight = fig.get_figheight() # Height of the figure in inches
+    fwidth = fig.get_figwidth()   # Width of the figure in inches
+   
     name_well = WaterLvlObj.name_well          
             
     fname_info = GraphParamObj.finfo
@@ -77,7 +77,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     TIMEmin = GraphParamObj.TIMEmin
     TIMEmax = GraphParamObj.TIMEmax
     
-    graph_status = GraphParamObj.title_state # 1 -> title ; 0 -> no title
+    isTitle = GraphParamObj.title_state # 1 -> title ; 0 -> no title
     graph_title = GraphParamObj.title_text
    
     language = GraphParamObj.language
@@ -87,8 +87,6 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     NZGrid = GraphParamObj.ygrid_divnumber            
     RAINscale = GraphParamObj.RAINscale
     
-    LEGEND = False
-    
     # Font size is multiplied by a ratio in order to keep the preview
     # and the final saved figure to the same scale. The preview
     # figure's size is modified when the UI is generated and depends
@@ -96,22 +94,26 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     
     label_font_size = 14 * fheight / 8.5
         
-    #----------------------------------------------------- FIGURE CREATION -----
-        
-    left_margin  = 0.85
-    right_margin = 0.8
+    #------------------------------------------------------ FIGURE CREATION ----
+    
+    #---- MARGINS (Inches) ----
+    
+    left_margin  = 0.85 
+    right_margin = 0.85
     bottom_margin = 0.75  
-    if graph_status == 1:
+    if isTitle == 1:
         top_margin = 0.75
     else:
         top_margin = 0.25
+    
+    #---- MARGINS (% of figure) ----
     
     x0 = left_margin / fwidth
     y0 = bottom_margin / fheight
     w = 1 - (left_margin + right_margin) / fwidth
     h = 1 - (bottom_margin + top_margin) / fheight
         
-    #------------------------------------------------------- AXES CREATION -----        
+    #-------------------------------------------------------- AXES CREATION ----        
     
     # http://stackoverflow.com/questions/15303284/
     # multiple-y-scales-but-only-one-enabled-for-pan-and-zoom
@@ -139,7 +141,7 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     ax4.set_zorder(ax3.get_zorder()+1)
     ax4.set_navigate(False)
         
-    #---------------------------------------------------------------- TIME -----            
+    #----------------------------------------------------------------- TIME ----            
     
     xticks_position, xticks_labels_position, xticks_labels = \
                 generate_xticks_informations(
@@ -156,32 +158,33 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     ax1.tick_params(axis='y', length=0)
     ax1.patch.set_facecolor('none')
                      
-    #========================================================= WATER LEVEL =====
+    #========================================================== WATER LEVEL ====
         
     time = WaterLvlObj.time   
     
-    if GraphParamObj.WLref == 1:        
-        water_lvl = WaterLvlObj.ALT - WaterLvlObj.lvl
-    else:
-        water_lvl = WaterLvlObj.lvl
-        
-    if GraphParamObj.WLref == 0: # Y axis is inverted
+    if GraphParamObj.WLref == 1:   # masl
     
-        WLmax = GraphParamObj.WLmin
-        WLscale = GraphParamObj.WLscale    
-        WLmin = WLmax - NZGrid * WLscale
-        
-        yticks_position = np.arange(
-                            WLmax, WLmax - (NZGrid - 8) * WLscale, -WLscale * 2)
-                            
-    if GraphParamObj.WLref == 1:
+        water_lvl = WaterLvlObj.ALT - WaterLvlObj.lvl
         
         WLmin = GraphParamObj.WLmin
         WLscale = GraphParamObj.WLscale
         WLmax = WLmin + NZGrid * WLscale
         
-        yticks_position = np.arange(
-                            WLmin, WLmin + (NZGrid - 8) * WLscale, WLscale * 2)
+        yticks_position = np.arange(WLmin,
+                                    WLmin + (NZGrid - 8) * WLscale,
+                                    WLscale * 2)
+                                    
+    else: # mbgs: Y axis is inverted
+    
+        water_lvl = WaterLvlObj.lvl
+    
+        WLmax = GraphParamObj.WLmin
+        WLscale = GraphParamObj.WLscale    
+        WLmin = WLmax - NZGrid * WLscale
+        
+        yticks_position = np.arange(WLmax, 
+                                    WLmax - (NZGrid - 8) * WLscale,
+                                    WLscale * -2)
     
     ax2.axis([TIMEmin, TIMEmax, WLmin, WLmax])
     
@@ -189,12 +192,10 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     ax2.xaxis.set_ticklabels([])
     ax2.tick_params(axis='x', length=0, direction='out')
     
-    
-
     ax2.set_yticks(yticks_position)
     ax2.yaxis.set_ticks_position('left')
     ax2.tick_params(axis='y', direction='out', labelsize=10)            
-    if GraphParamObj.WLref == 0:
+    if GraphParamObj.WLref != 1:
         ax2.invert_yaxis()
     
     #------------------------------------------------------------- PLOTTING ----
@@ -232,12 +233,12 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
 #    ax2.plot(trecess, hrecess, '--r', zorder = 10, linewidth=1.5,
 #             label='Water Level Recession')
                      
-    #-------------------------------------------------------------- LEGEND -----
+    #--------------------------------------------------------------- LEGEND ----
     
     if GraphParamObj.isLegend == True:
         ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)    
                      
-    #================================================== PLOT PRECIPITATION =====
+    #=================================================== PLOT PRECIPITATION ====
         
     time = MeteoObj.TIMEwk
     Tmax = MeteoObj.TMAXwk
@@ -381,14 +382,19 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
                      
     #-------------------------------------------------------- FIGURE TITLE -----
         
-    if graph_status == 1:
+    if isTitle == 1:
+        
         xTitle = (TIMEmin + TIMEmax) / 2.
-        ytitle = NZGrid + 2
+
+        dZGrid_inch = (fheight - bottom_margin - top_margin) / NZGrid
+        
+        print dZGrid_inch
+        ytitle = NZGrid + (top_margin / 1.7 / dZGrid_inch)
         
         ax1.text(xTitle, ytitle, graph_title,
                  fontsize=18 * fheight / 8.5,
                  horizontalalignment='center', 
-                 verticalalignment='center')  
+                 verticalalignment='center')
                      
     #------------------------------------------------------- xlabel (Time) -----
         
@@ -925,6 +931,9 @@ if __name__ == '__main__':
         WL = waterLvlObj.lvl
     elif graphParamObj.WLref == 1:
         WL = waterLvlObj.ALT - waterLvlObj.lvl
+    
+    graphParamObj.title_state = 1 # 1 -> title ; 0 -> no title
+    graphParamObj.title_text = "Title of the Graph"
     
     _, _ = graphParamObj.best_fit_waterlvl(WL)
     _, _ = graphParamObj.best_fit_time(waterLvlObj.time)

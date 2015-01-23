@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 """
 Copyright 2015 Jean-Sebastien Gosselin
 
@@ -57,8 +57,8 @@ import matplotlib.pyplot as plt
 #-------------------------------------------------------------------------------
 class ImageViewer(QtGui.QWidget):
     """
-    This is a PySide widget class to display a bitmap image in a 
-    QScrollArea with zooming capability with CTRL + Mouse_wheel.  
+    This is a PySide widget class to display a bitmap image in a QScrollArea 
+    with zooming capability with CTRL + Mouse_wheel event.  
     """
 #-------------------------------------------------------------------------------
 
@@ -74,6 +74,10 @@ class ImageViewer(QtGui.QWidget):
                                       QtGui.QSizePolicy.Ignored)
         self.imageLabel.setScaledContents(True)
         self.imageLabel.installEventFilter(self)
+        
+        self.imageLabel.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Raised)
+        self.imageLabel.setLineWidth(2)
+        self.imageLabel.setMidLineWidth(1)
         
         #---- Scroll Area Set Up ----
         
@@ -94,29 +98,67 @@ class ImageViewer(QtGui.QWidget):
         self.setLayout(grid)
         self.setWindowTitle("Image Viewer")
         
-        #---- Create Initial Image ----
-        
-        self.figure = plt.figure()
-        plt.plot([1, 2, 3, 4], [1, 2, 3, 4], '-b')
-
-        self.figure_widget = FigureCanvasQTAgg(self.figure)
-        self.figure_widget.draw()
+        #---- Create Initial Image with Matplotlib ----
         
         # http://stackoverflow.com/questions/17676373/
         # python-matplotlib-pyqt-copy-image-to-clipboard
+        
+        # http://stackoverflow.com/questions/21939658/
+        # matplotlib-render-into-buffer-access-pixel-data
+        
+        self.figure = plt.figure()
+        self.figure.patch.set_facecolor('white')
+#        plt.plot([1, 2, 3, 4], [1, 2, 3, 4], '-b')
+#        
+#        self.figure.canvas.draw()
+#        
+#        size = self.figure.canvas.size()
+#        width, height = size.width(), size.height()
+#        
+#        imgbuffer = self.figure.canvas.buffer_rgba()
+#        image = QtGui.QImage(imgbuffer, width, height,
+#                             QtGui.QImage.Format_ARGB32)
+#                             
+#        image = image.swapRGB()
+#            
+#        self.load_image(image)
+        
+
+        self.figure_widget = FigureCanvasQTAgg(self.figure)
+        self.figure_widget.draw()
+                
         size = self.figure_widget.size()
         width, height = size.width(), size.height()
         
         imgbuffer = self.figure_widget.buffer_rgba()
-        image = QtGui.QImage(imgbuffer, width, height, QtGui.QImage.Format_ARGB32)
-            
+        image = QtGui.QImage(imgbuffer, width, height,
+                             QtGui.QImage.Format_ARGB32)
+                             
+        # Reference for the RGB to BGR swap:
+        # http://sourceforge.net/p/matplotlib/mailman/message/5194542/
+          
+        image = QtGui.QImage.rgbSwapped(image)
+        
         self.load_image(image)
         
     def eventFilter(self, widget, event):
-        if (event.type() == QtCore.QEvent.Type.Wheel and widget is self.imageLabel):
+        
+        # http://stackoverflow.com/questions/17525608/
+        # event-filter-cannot-intercept-wheel-event-from-qscrollarea
+        
+        # http://stackoverflow.com/questions/20420072/
+        # pyside-keypressevent-catching-enter-or-return
+        
+        # http://stackoverflow.com/questions/19113532/
+        # qgraphicsview-zooming-in-and-out-under-mouse-position
+        # -using-mouse-wheel
+        
+        if (event.type() == QtCore.QEvent.Type.Wheel and 
+            widget is self.imageLabel):
                                
             # http://stackoverflow.com/questions/8772595/
             # how-to-check-if-a-key-modifier-is-pressed-shift-ctrl-alt
+                               
             modifiers = QtGui.QApplication.keyboardModifiers()
 
             if modifiers == QtCore.Qt.ControlModifier:                
@@ -133,22 +175,24 @@ class ImageViewer(QtGui.QWidget):
     def load_image(self, image):        
                
         self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
+        
         self.scaleFactor = 1.0
         
         self.imageLabel.adjustSize()
 
     def zoomIn(self):
-        if self.scaleFactor < 3.0:        
+        if self.scaleFactor < 2.5:        
             self.scaleImage(1.25)
 
     def zoomOut(self):
-        if self.scaleFactor > 0.333:        
-            self.scaleImage(0.8)
+        if self.scaleFactor > 0.5:        
+            self.scaleImage(0.75)
                 
     def scaleImage(self, factor):
         
         self.scaleFactor *= factor
-        self.imageLabel.resize(self.scaleFactor * self.imageLabel.pixmap().size())
+        self.imageLabel.resize(
+                             self.scaleFactor * self.imageLabel.pixmap().size())
 
         self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
         self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)

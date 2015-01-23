@@ -61,6 +61,7 @@ from hydroprint import LatLong2Dist
 import meteo
 import envirocan
 from fill_weather_data import Weather_File_Info
+import imageviewer
 
 # The code is segmented in two main sections: the GUI section and the
 # WORKER sections.
@@ -536,48 +537,43 @@ class TabHydrograph(QtGui.QWidget):
         
     #------------------------------------------------------------ GRID LEFT ----
         
-        #---- SubGrid Figure Frame ----
+        #---- SubGrid Hydrograph Frame ----
         
         # Two figures are generated. (1) One as a preview to display in the
         # UI and (2) the other to be saved as the final figure. This is to
         # circumvent any possible issue with computer screen resolution or any
         # distortion of the image by the backend or the UI widget.
         
-        self.hydrograph2display = plt.figure() 
+        self.hydrograph2display = plt.figure()
+        self.hydrograph2display.set_size_inches(11, 8.5)
         self.hydrograph2display.patch.set_facecolor('white')
         
         self.hydrograph2save = plt.figure()
         self.hydrograph2save.set_size_inches(11, 8.5)
         self.hydrograph2save.patch.set_facecolor('white')
 
-        self.hydrograph_widget = FigureCanvasQTAgg(self.hydrograph2display)
-        
-        # References if one day I have the time to implement a Pan and Zoom 
-        # area for plottingthe graph.
-        # http://stackoverflow.com/questions/7608066/in-matplotlib-is-there-a-way-to-know-the-list-of-available-output-format
-        # print self.hydrograph_widget.get_supported_filetypes()
-        # pixmap = QtGui.QImage(self.hydrograph_widget.print_png)
-        # http://stackoverflow.com/questions/19113532/qgraphicsview-zooming-in-and-out-under-mouse-position-using-mouse-wheel
-        # http://stackoverflow.com/questions/21939658/matplotlib-render-into-buffer-access-pixel-data
+        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display)
 
-        hydrograph_frame = QtGui.QFrame()
-#        hydrograph_frame.setStyleSheet("QWidget{background-color: 'white'}")
-        hydrograph_frame.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Raised)
-        hydrograph_frame.setLineWidth(3)
-        hydrograph_frame.setMidLineWidth(3)
+        self.hydrograph_scrollarea = imageviewer.ImageViewer()
+
+#        hydrograph_frame = QtGui.QFrame()
+##        hydrograph_frame.setStyleSheet("QWidget{background-color: 'white'}")
+#        hydrograph_frame.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Raised)
+#        hydrograph_frame.setLineWidth(3)
+#        hydrograph_frame.setMidLineWidth(3)
+        grid_hydrograph_widget = QtGui.QFrame()
+        grid_hydrograph =  QtGui.QGridLayout() 
         
-        frame_layout =  QtGui.QGridLayout() 
+        grid_hydrograph.addWidget(self.hydrograph_scrollarea, 0, 0)
         
-        frame_layout.addWidget(self.hydrograph_widget, 0, 0)
+        grid_hydrograph.setRowStretch(0, 500)
+        grid_hydrograph.setColumnStretch(0, 500)
+        grid_hydrograph.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
         
-        hydrograph_frame.setLayout(frame_layout)
+        grid_hydrograph_widget.setLayout(grid_hydrograph)
         
-        frame_layout.setRowStretch(0, 500)
-        frame_layout.setColumnStretch(0, 500)
-        frame_layout.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
-        
-        self.hydrograph_widget.setFixedWidth(1100/1.5)
-        self.hydrograph_widget.setFixedHeight(800/1.5)
+#        self.hydrograph_canvas.setFixedWidth(1100/1.5)
+#        self.hydrograph_canvas.setFixedHeight(800/1.5)
         
 #        self.hydrograph_widget.setFixedWidth(1100/2.)
 #        self.hydrograph_widget.setFixedHeight(800/2.)
@@ -614,17 +610,17 @@ class TabHydrograph(QtGui.QWidget):
         grid_LEFT_widget = QtGui.QFrame()
         
         row = 0
-        grid_LEFT.addWidget(subgrid_figtitle_widget, row, 0, 1, 3)
-        row += 2
-        grid_LEFT.addWidget(hydrograph_frame, row, 1)
+        grid_LEFT.addWidget(subgrid_figtitle_widget, row, 0)
+        row += 1
+        grid_LEFT.addWidget(grid_hydrograph_widget, row, 0)
         
         grid_LEFT_widget.setLayout(grid_LEFT)
         grid_LEFT.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
         grid_LEFT.setSpacing(15)
         grid_LEFT.setColumnStretch(0, 500)
-        grid_LEFT.setColumnStretch(2, 500)
+#        grid_LEFT.setColumnStretch(2, 500)
         grid_LEFT.setRowStretch(1, 500)
-        grid_LEFT.setRowStretch(row+1, 500)
+#        grid_LEFT.setRowStretch(row+1, 500)
         
     #----------------------------------------------------------- MAIN GRID -----
         
@@ -1087,12 +1083,27 @@ class TabHydrograph(QtGui.QWidget):
             
             self.update_graph_layout_parameter()
             
+            #----- Generate Graph -----
+            
             hydroprint.generate_hydrograph(self.hydrograph2display,
                                            self.waterlvl_data,
                                            self.meteo_data,
                                            self.graph_params)
-                                       
-            self.hydrograph_widget.draw()                       
+            
+            #----- Produce Figure from Graph -----
+                            
+            self.hydrograph_canvas.draw()
+                        
+            size = self.hydrograph_canvas.size()
+            width, height = size.width(), size.height()        
+            imgbuffer = self.hydrograph_canvas.buffer_rgba()
+            image = QtGui.QImage(imgbuffer, width, height,
+                                 QtGui.QImage.Format_RGB32)
+                         
+            image = QtGui.QImage.rgbSwapped(image)
+            
+            self.hydrograph_scrollarea.load_image(image)
+                                   
           
 ################################################################## @TAB DOWNLOAD
         
