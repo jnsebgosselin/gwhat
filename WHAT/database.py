@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #----- THIRD PARTY IMPORTS -----
 
 from PySide.QtGui import QIcon
+from PySide.QtCore import QSize
 
 class icons():
     
@@ -40,6 +41,7 @@ class icons():
         self.download = QIcon('Icons/download.png')
         self.stop = QIcon('Icons/process-stop.png')
         self.search = QIcon('Icons/search.png')
+        self.settings = QIcon('Icons/settings.png')
         
         #----- HYDROGRAPH TOOLBAR -----
         
@@ -120,6 +122,8 @@ class styleUI():
         self.frame = 22
         self.HLine = 52
         self.VLine = 53
+        
+        self.iconSize = QSize(36, 36)
         
         # 17 = QtGui.QFrame.Box | QtGui.QFrame.Plain
         # 22 = QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain

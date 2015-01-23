@@ -66,6 +66,7 @@ class Tooltips():
                         'from the graph')
         self.pan = 'Pan axes with left mouse, zoom with right'
         self.MRCalc = 'Calculate MRC (not yet available)'
+        self.find_peak = 'Automated search for local extremum'
         
         if language == 'French': #--------------------------------- FRENCH -----
             
@@ -131,7 +132,7 @@ class MRCalc(QtGui.QWidget):
         self.btn_findPeak = QtGui.QToolButton()
         self.btn_findPeak.setAutoRaise(True)
         self.btn_findPeak.setIcon(iconDB.findPeak2)
-#        self.btn_findPeak.setToolTip(ttipDB.findPeak)
+        self.btn_findPeak.setToolTip(ttipDB.find_peak)
         self.btn_findPeak.setFocusPolicy(QtCore.Qt.NoFocus)
         
         self.btn_editPeak = QtGui.QToolButton()
@@ -159,46 +160,47 @@ class MRCalc(QtGui.QWidget):
         self.btn_MRCalc.setFocusPolicy(QtCore.Qt.NoFocus)
                         
         separator1 = QtGui.QFrame()
-        separator1.setFrameStyle(StyleDB.HLine)
+        separator1.setFrameStyle(StyleDB.VLine)
         separator2 = QtGui.QFrame()
-        separator2.setFrameStyle(StyleDB.HLine)
+        separator2.setFrameStyle(StyleDB.VLine)
         
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
         
         row = 0
-        subgrid_toolbar.addWidget(self.btn_undo, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(self.btn_clearPeak, row, 0)
-        row += 1        
-        subgrid_toolbar.addWidget(self.btn_home, row, 0)
-        row += 1        
-        subgrid_toolbar.addWidget(separator1, row, 0)        
-        row += 1        
-        subgrid_toolbar.addWidget(self.btn_findPeak, row, 0)
-        row += 1 
-        subgrid_toolbar.addWidget(self.btn_editPeak, row, 0)
-        row += 1        
-        subgrid_toolbar.addWidget(self.btn_delPeak, row, 0)
-        row += 1        
-        subgrid_toolbar.addWidget(self.btn_pan, row, 0)
-        row += 1        
-        subgrid_toolbar.addWidget(separator2, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(self.btn_MRCalc, row, 0)
+        col = 0
+        subgrid_toolbar.addWidget(self.btn_undo, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(self.btn_clearPeak, row, col)                
+        col += 1        
+        subgrid_toolbar.addWidget(self.btn_findPeak, row, col)
+        col += 1 
+        subgrid_toolbar.addWidget(self.btn_editPeak, row, col)
+        col += 1        
+        subgrid_toolbar.addWidget(self.btn_delPeak, row, col)
+        col += 1        
+        subgrid_toolbar.addWidget(separator1, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(self.btn_home, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(self.btn_pan, row, col)
+        col += 1        
+        subgrid_toolbar.addWidget(separator2, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(self.btn_MRCalc, row, col)
         
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-        subgrid_toolbar.setRowStretch(row+1, 500)
-
-        self.btn_undo.setIconSize(QtCore.QSize(36, 36))
-        self.btn_clearPeak.setIconSize(QtCore.QSize(36, 36))
-        self.btn_home.setIconSize(QtCore.QSize(36, 36))
-        self.btn_findPeak.setIconSize(QtCore.QSize(36, 36))
-        self.btn_editPeak.setIconSize(QtCore.QSize(36, 36))
-        self.btn_delPeak.setIconSize(QtCore.QSize(36, 36))
-        self.btn_pan.setIconSize(QtCore.QSize(36, 36))
-        self.btn_MRCalc.setIconSize(QtCore.QSize(36, 36))
+        subgrid_toolbar.setColumnStretch(col+1, 500)
+                
+        self.btn_undo.setIconSize(StyleDB.iconSize)
+        self.btn_clearPeak.setIconSize(StyleDB.iconSize)
+        self.btn_home.setIconSize(StyleDB.iconSize)
+        self.btn_findPeak.setIconSize(StyleDB.iconSize)
+        self.btn_editPeak.setIconSize(StyleDB.iconSize)
+        self.btn_delPeak.setIconSize(StyleDB.iconSize)
+        self.btn_pan.setIconSize(StyleDB.iconSize)
+        self.btn_MRCalc.setIconSize(StyleDB.iconSize)
         
         toolbar_widget.setLayout(subgrid_toolbar)
                 
@@ -207,26 +209,28 @@ class MRCalc(QtGui.QWidget):
         mainGrid = QtGui.QGridLayout()
         
         row = 0 
+        mainGrid.addWidget(toolbar_widget, row, 0)
+        row += 1
         mainGrid.addWidget(self.fig_MRC_widget, row, 0)
-        mainGrid.addWidget(toolbar_widget, row, 1)
+        
               
         self.setLayout(mainGrid)
-        mainGrid.setContentsMargins(25, 25, 25, 25) # Left, Top, Right, Bottom 
+        mainGrid.setContentsMargins(15, 15, 15, 15) # Left, Top, Right, Bottom 
         mainGrid.setSpacing(15)
-        mainGrid.setColumnStretch(0, 500)
+        mainGrid.setRowStretch(1, 500)
         
         ########################### 4 TESTING ######################
         
-        fwaterlvl = 'Files4testing/PO16A.xls'
+        fwaterlvl = 'Files4testing/PO01.xls'
     
         waterLvlObj = WaterlvlData()
         waterLvlObj.load(fwaterlvl)
     
         self.water_lvl = waterLvlObj.lvl
-        self.water_lvl = self.water_lvl[:500]
+        self.water_lvl = self.water_lvl[350:]
     
         self.time = waterLvlObj.time
-        self.time = self.time[:500]
+        self.time = self.time[350:]
         
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
@@ -244,7 +248,21 @@ class MRCalc(QtGui.QWidget):
         self.btn_editPeak.clicked.connect(self.edit_peak)
         self.btn_delPeak.clicked.connect(self.delete_peak)
         self.btn_pan.clicked.connect(self.pan_graph)
+        self.btn_MRCalc.clicked.connect(self.plot_MRC)
     
+    def plot_MRC(self):
+        
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        
+        b, c, hp = mrc_calc(self.time, self.water_lvl, self.peak_indx)
+        
+        self.h3_ax0.set_xdata(self.time)
+        self.h3_ax0.set_ydata(hp)
+        
+        self.fig_MRC_widget.draw()
+        
+        QtGui.QApplication.restoreOverrideCursor()
+            
     def plot_peak(self):
         
         self.h2_ax0.set_xdata(self.time[self.peak_indx])
@@ -259,22 +277,24 @@ class MRCalc(QtGui.QWidget):
     
     def find_peak(self):
         
-        print 'Yo man'
         n_j, n_add = local_extrema(self.water_lvl, 4 * 5)
+        
+        # Removing first and last point if necessary to always start with a
+        # maximum and end with a minimum.
+        
+        # WARNING: y axis is inverted. Consequently, the logic needs to be 
+        #          inverted also
+        
+        if n_j[0] > 0:
+            n_j = np.delete(n_j, 0)
+            
+        if n_j[-1] < 0:
+            n_j = np.delete(n_j, -1)
         
         self.peak_indx = np.abs(n_j).astype(int)
         self.peak_memory.append(self.peak_indx)
         
         self.plot_peak()
-        
-#        print n_j
-#        
-#        self.fig_MRC_widget.draw()
-#    
-#    n_j = np.abs(n_j).astype(int)  
-#    n_add = np.abs(n_add).astype(int) 
-#    
-#    plt.plot(n_j, x[n_j], 'or' )
         
     def edit_peak(self):
         
@@ -371,9 +391,9 @@ class MRCalc(QtGui.QWidget):
     
     #------------------------------------------------------ FIGURE CREATION ----
         
-        left_margin  = 0.65
+        left_margin  = 0.75
         right_margin = 0.25
-        bottom_margin = 0.65
+        bottom_margin = 0.75
         top_margin = 0.25
            
         x0 = left_margin / fwidth
@@ -385,6 +405,7 @@ class MRCalc(QtGui.QWidget):
         
         #---- Water Level (Host) ----
         
+#        self.ax0  = fig.add_axes([x0, y0, w, h], zorder=0)
         self.ax0  = fig.add_axes([x0, y0, w, h], zorder=0)
         self.ax0.patch.set_visible(False)
         
@@ -428,8 +449,10 @@ class MRCalc(QtGui.QWidget):
         
     #--------------------------------------------------------------- LABELS ----
     
-#    ax0.set_ylabel('Monthly Total Precipication (mm)', fontsize=label_font_size,
-#                   verticalalignment='bottom', color='blue')
+        self.ax0.set_ylabel('Water level (mbgs)', fontsize=14, labelpad=25,
+                            verticalalignment='top', color='black')
+        self.ax0.set_xlabel('Time (days)', fontsize=14, labelpad=25,
+                            verticalalignment='bottom', color='black')
 #    ax0.yaxis.set_label_coords(-0.09, 0.5)
 #    
 #    ax1.set_ylabel(u'Monthly Mean Air Temperature (°C)', color='red',
@@ -458,9 +481,14 @@ class MRCalc(QtGui.QWidget):
         self.xcross, = self.ax0.plot(-1, 0, color='red', clip_on=True, 
                                      zorder=20, marker='x', linestyle='None',
                                      markersize = 15, markeredgewidth = 3)
+                                     
+        #---- Recession ----
+                                     
+        self.h3_ax0, = self.ax0.plot([], [], color='red', clip_on=True,
+                                     zorder=15, marker='None', linestyle='--')                          
         
     #-------------------------------------------------------- UPDATE WIDGET ----
-                        
+
         self.fig_MRC_widget.draw()
             
     def mouse_vguide(self, event):
@@ -850,6 +878,121 @@ def local_extrema(x, Deltan):
 #            n_j[Jest] = np.sign(n_j[Jest]) * nf
    
     return n_j, kadd
+
+def mrc_calc(t, h, ipeak):
+  
+#  [NUM ID]=xlsread(['INTERPRETATION_PUITS/','MINMAX.xls'],'ACTIVE');
+#iPUITS=find(strcmp(ID(:,1),NAME))-1;
+    
+    ipeak = np.sort(ipeak)
+    
+    maxpeak = ipeak[:-1:2]
+    minpeak = ipeak[1::2]
+    
+    #-------------------------------------------------------- Quality Check ----
+    
+    dpeak = (h[maxpeak] - h[minpeak]) * -1 # WARNING: Don't forget it is mbgs
+    if np.any(dpeak < 0):
+        print 'There is a problem with the pair-ditribution of min-max'
+        return
+    if len(ipeak) == 0:
+        print 'No extremum selected'
+        return
+    
+    nsegmnt = len(minpeak)
+    
+    b = 0.1
+    c = 0
+    
+    RMSE_b = 10**6
+    OPSTP_b = -0.01
+    
+    MODE = 0 # 0: exponential, 1: linear
+   
+    while abs(OPSTP_b) > 1e-5:
+    
+        OPSTP_c = 0.1   # Optimisation step
+        RMSE_c = 10**6  # Force divergence for first iteration
+        while abs(OPSTP_c) > 1e-4:
+
+            # RECESSION CALCULATIONS
+            
+            dt = np.diff(t)
+            dhp = -b * (h[:-1] + h[1:] - 2*c) * dt / 2.
+            
+            hp = np.empty(len(h)) * np.nan
+            for i in range(nsegmnt):
+                hp[maxpeak[i]] = h[maxpeak[i]]
+                
+                for j in range(minpeak[i] - maxpeak[i]):
+                    hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp[maxpeak[i]+j]
+                    
+            indx = np.where(~np.isnan(hp))
+    
+            RMSE = (np.mean((h[indx] - hp[indx])**2))**0.5
+            
+            if RMSE_c < RMSE:
+                OPSTP_c = -OPSTP_c / 10.
+ 
+            RMSE_c = np.copy(RMSE)
+            c = c + OPSTP_c
+            
+        if RMSE_b < RMSE_c:
+            OPSTP_b = -OPSTP_b / 10.
+        
+        if b + OPSTP_b < 10**-12:
+            OPSTP_b = OPSTP_b / 10.
+    
+        RMSE_b = RMSE_c
+        b = b + OPSTP_b
+    
+    print; print 'FIN'; print
+    
+    print 'b =', b
+    print 'c =', c
+    
+#    print dhp
+    
+    return b, c, hp
+    
+   
+    
+      
+  
+      #b=0.1;
+      #C=-2;
+      #RMSE_b=10^6;
+      #OPSTP_b=-0.01;
+      #MODE='exponential';
+#while abs(OPSTP_b)>1e-5
+#    OPSTP_C=0.1;%Optimisation step
+#    RMSE_C=10^6; %Force divergence for first iteration
+#    while abs(OPSTP_C)>1e-4
+#        %RECESSION CALCULATIONS
+#        dhp=-b*(DTWL(1:end-1)+DTWL(2:end)-2*C).*(TIME(2:end)-TIME(1:end-1))/2;
+#        STOCK=[]; %initialization or reinitialization
+#        for i=1:length(MINMAX)
+#            hp(1)=DTWL(MINMAX(i,1));
+#            for j=1:MINMAX(i,2)-MINMAX(i,1)
+#                hp(j+1)=hp(j)+dhp(j+MINMAX(i,1)-1);
+#            end
+#            STOCK=[STOCK ; hp' DTWL(MINMAX(i,1):MINMAX(i,2),1) (MINMAX(i,1):MINMAX(i,2))'];
+#            clear hp
+#        end
+#        RMSE=(mean(abs(STOCK(:,1)-STOCK(:,2))));
+#        if RMSE_C<RMSE
+#            OPSTP_C=-OPSTP_C/10;
+#        end
+#        RMSE_C=RMSE;
+#        C=C+OPSTP_C;
+#    end
+#    if RMSE_b<RMSE_C
+#        OPSTP_b=-OPSTP_b/10;
+#    elseif b+OPSTP_b<10^-12
+#        OPSTP_b=OPSTP_b/10;
+#    end
+#    RMSE_b=RMSE_C;
+#    b=b+OPSTP_b;  
    
 
 

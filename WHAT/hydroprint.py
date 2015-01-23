@@ -112,7 +112,14 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     h = 1 - (bottom_margin + top_margin) / fheight
         
     #------------------------------------------------------- AXES CREATION -----        
-        
+    
+    # http://stackoverflow.com/questions/15303284/
+    # multiple-y-scales-but-only-one-enabled-for-pan-and-zoom
+    
+    # http://matplotlib.1069221.n5.nabble.com/Control-twinx-series-zorder-
+    #        ax2-series-behind-ax1-series-or-place-ax2-on-left-ax1-on-right-
+    #        td12994.html
+    
     #---Time (host)---
     ax1  = fig.add_axes([x0, y0, w, h], zorder=0)
     ax1.axis([TIMEmin, TIMEmax, 0, NZGrid])
@@ -121,10 +128,16 @@ def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
     ax2 = fig.add_axes(ax1.get_position(), frameon=False, zorder=1)
     
     #---Precipitation---
-    ax3 = fig.add_axes(ax1.get_position(), frameon=False, zorder=2)
+#    ax3 = fig.add_axes(ax1.get_position(), frameon=False, zorder=2)
+    ax3 = ax2.twinx()
+    ax3.set_zorder(ax2.get_zorder()+1)
+    ax3.set_navigate(False)
     
     #---Air Temperature---
-    ax4 = fig.add_axes(ax1.get_position(), frameon=False, zorder=3)
+#    ax4 = fig.add_axes(ax1.get_position(), frameon=False, zorder=3)
+    ax4 = ax2.twinx()
+    ax4.set_zorder(ax3.get_zorder()+1)
+    ax4.set_navigate(False)
         
     #---------------------------------------------------------------- TIME -----            
     
@@ -904,19 +917,19 @@ if __name__ == '__main__':
     fname = 'Files4testing/waterlvl_manual_measurements.xls'
     waterLvlObj.load_waterlvl_measures(fname, 'PO16A')
     
-#    meteoObj = MeteoObj()
-#    meteoObj.load(fmeteo)
-#    
-#    graphParamObj = GraphParameters()
-#    if graphParamObj.WLref == 0:
-#        WL = waterLvlObj.lvl
-#    elif graphParamObj.WLref == 1:
-#        WL = waterLvlObj.ALT - waterLvlObj.lvl
-#    
-#    _, _ = graphParamObj.best_fit_waterlvl(WL)
-#    _, _ = graphParamObj.best_fit_time(waterLvlObj.time)
-#    graphParamObj.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
-#    
-#    fig = plt.figure(figsize=(11, 8.5))
-#    fig.set_size_inches(11, 8.5)
-#    generate_hydrograph(fig, waterLvlObj, meteoObj, graphParamObj)
+    meteoObj = MeteoObj()
+    meteoObj.load(fmeteo)
+    
+    graphParamObj = GraphParameters()
+    if graphParamObj.WLref == 0:
+        WL = waterLvlObj.lvl
+    elif graphParamObj.WLref == 1:
+        WL = waterLvlObj.ALT - waterLvlObj.lvl
+    
+    _, _ = graphParamObj.best_fit_waterlvl(WL)
+    _, _ = graphParamObj.best_fit_time(waterLvlObj.time)
+    graphParamObj.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+    
+    fig = plt.figure(figsize=(11, 8.5))
+    fig.set_size_inches(11, 8.5)
+    generate_hydrograph(fig, waterLvlObj, meteoObj, graphParamObj)
