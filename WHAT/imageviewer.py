@@ -45,7 +45,7 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 """
 
 #---- THIRD PARTY IMPORTS ----
-
+import copy
 from PySide import QtGui, QtCore
 
 import matplotlib
@@ -77,12 +77,11 @@ class ImageViewer(QtGui.QWidget):
         
         self.imageLabel.setFrameStyle(QtGui.QFrame.Panel | QtGui.QFrame.Raised)
         self.imageLabel.setLineWidth(2)
-        self.imageLabel.setMidLineWidth(1)
+        self.imageLabel.setMidLineWidth(1)        
         
         #---- Scroll Area Set Up ----
         
         self.scrollArea = QtGui.QScrollArea(self)
-#        self.scrollArea.setBackgroundRole(QtGui.QPalette.Dark)
         self.scrollArea.setWidget(self.imageLabel)
         self.scrollArea.setAlignment(QtCore.Qt.AlignCenter)
                 
@@ -97,7 +96,7 @@ class ImageViewer(QtGui.QWidget):
         
         self.setLayout(grid)
         self.setWindowTitle("Image Viewer")
-        
+              
         #---- Create Initial Image with Matplotlib ----
         
         # http://stackoverflow.com/questions/17676373/
@@ -109,20 +108,6 @@ class ImageViewer(QtGui.QWidget):
         self.figure = plt.figure()
         self.figure.patch.set_facecolor('white')
 #        plt.plot([1, 2, 3, 4], [1, 2, 3, 4], '-b')
-#        
-#        self.figure.canvas.draw()
-#        
-#        size = self.figure.canvas.size()
-#        width, height = size.width(), size.height()
-#        
-#        imgbuffer = self.figure.canvas.buffer_rgba()
-#        image = QtGui.QImage(imgbuffer, width, height,
-#                             QtGui.QImage.Format_ARGB32)
-#                             
-#        image = image.swapRGB()
-#            
-#        self.load_image(image)
-        
 
         self.figure_widget = FigureCanvasQTAgg(self.figure)
         self.figure_widget.draw()
@@ -140,6 +125,18 @@ class ImageViewer(QtGui.QWidget):
         image = QtGui.QImage.rgbSwapped(image)
         
         self.load_image(image)
+    
+    def load_image(self, image):
+        
+        self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
+        
+        self.scaleFactor = 0
+        
+        self.imageLabel.adjustSize()
+     
+        size = self.imageLabel.size()
+        self.width = size.width()
+        self.height = size.height()
         
     def eventFilter(self, widget, event):
         
@@ -152,6 +149,8 @@ class ImageViewer(QtGui.QWidget):
         # http://stackoverflow.com/questions/19113532/
         # qgraphicsview-zooming-in-and-out-under-mouse-position
         # -using-mouse-wheel
+       
+        #---- ZOOM ----
         
         if (event.type() == QtCore.QEvent.Type.Wheel and 
             widget is self.imageLabel):
@@ -169,33 +168,62 @@ class ImageViewer(QtGui.QWidget):
                 return True
             else:
                 return False
+        
+        #---- PAN ----
+        
+        elif (event.type() == QtCore.QEvent.Type.MouseButtonPress and 
+              widget is self.imageLabel):
+                
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.ClosedHandCursor)
+            
+            self.xclick = event.globalX()
+            self.yclick = event.globalY()
+
+        elif (event.type() == QtCore.QEvent.Type.MouseButtonRelease):
+
+            QtGui.QApplication.restoreOverrideCursor()
+            
+        elif (event.type() == QtCore.QEvent.Type.MouseMove):
+            dx = self.xclick - event.globalX()
+            self.xclick = event.globalX()
+            
+            dy = self.yclick - event.globalY()
+            self.yclick = event.globalY()
+            
+            scrollBarH = self.scrollArea.horizontalScrollBar()
+            scrollBarH.setValue(scrollBarH.value() + dx)
+
+            scrollBarV = self.scrollArea.verticalScrollBar()
+            scrollBarV.setValue(scrollBarV.value() + dy)
 
         return QtGui.QWidget.eventFilter(self, widget, event)
 
-    def load_image(self, image):        
-               
-        self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
-        
-        self.scaleFactor = 1.0
-        
-        self.imageLabel.adjustSize()
-
     def zoomIn(self):
-        if self.scaleFactor < 2.5:        
+        if self.scaleFactor < 3:
+            self.scaleFactor += 1
             self.scaleImage(1.25)
 
     def zoomOut(self):
-        if self.scaleFactor > 0.5:        
-            self.scaleImage(0.75)
+        if self.scaleFactor > -3:
+            self.scaleFactor -= 1
+            self.scaleImage(0.8)
                 
     def scaleImage(self, factor):
         
-        self.scaleFactor *= factor
-        self.imageLabel.resize(
-                             self.scaleFactor * self.imageLabel.pixmap().size())
-
+        new_width = int(self.width * 1.25 ** self.scaleFactor)
+        new_height = int(self.height * 1.25 ** self.scaleFactor)
+        
+        self.imageLabel.resize(new_width, new_height)
+        
+#        pixmap = QtGui.QPixmap.fromImage(self.image)
+#        
+#        self.imageLabel.setPixmap(pixmap.scaled(new_width, new_height,
+#                                  spectMode=QtCore.Qt.IgnoreAspectRatio,
+#                                  mode=QtCore.Qt.FastTransformation))
+        
         self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
         self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
+        
 
     def adjustScrollBar(self, scrollBar, factor):
         scrollBar.setValue(int(factor * scrollBar.value()
