@@ -391,9 +391,9 @@ class MRCalc(QtGui.QWidget):
     
     #------------------------------------------------------ FIGURE CREATION ----
         
-        left_margin  = 0.75
+        left_margin  = 0.85
         right_margin = 0.25
-        bottom_margin = 0.75
+        bottom_margin = 0.85
         top_margin = 0.25
            
         x0 = left_margin / fwidth
@@ -643,7 +643,7 @@ def local_extrema(x, Deltan):
     ni = 0
     nf = N - 1
     
-#------------------------------------------------------------------ PLATEAU ----
+    #-------------------------------------------------------------- PLATEAU ----
     
     # Recognize the plateaus of the time series x defined in [ATE] p. 85
     # [n1[n], n2[n]] is the interval with the constant value equal with x[n]
@@ -880,9 +880,6 @@ def local_extrema(x, Deltan):
     return n_j, kadd
 
 def mrc_calc(t, h, ipeak):
-  
-#  [NUM ID]=xlsread(['INTERPRETATION_PUITS/','MINMAX.xls'],'ACTIVE');
-#iPUITS=find(strcmp(ID(:,1),NAME))-1;
     
     ipeak = np.sort(ipeak)
     
@@ -904,15 +901,16 @@ def mrc_calc(t, h, ipeak):
     b = 0.1
     c = 0
     
-    RMSE_b = 10**6
+    ObjFn_b = 10**6
     OPSTP_b = -0.01
     
-    MODE = 0 # 0: exponential, 1: linear
+    MODE = 0 # 0: exponential; 1: linear
+    REGMOD = 1 # 0: RMSE; 1: MAE; 2: abs(ME)
    
     while abs(OPSTP_b) > 1e-5:
     
         OPSTP_c = 0.1   # Optimisation step
-        RMSE_c = 10**6  # Force divergence for first iteration
+        ObjFn_c = 10**6  # Force divergence for first iteration
         while abs(OPSTP_c) > 1e-4:
 
             # RECESSION CALCULATIONS
@@ -928,22 +926,29 @@ def mrc_calc(t, h, ipeak):
                     hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp[maxpeak[i]+j]
                     
             indx = np.where(~np.isnan(hp))
-    
-            RMSE = (np.mean((h[indx] - hp[indx])**2))**0.5
             
-            if RMSE_c < RMSE:
+            #---- COMPUTE OBJ. FUNC. ----
+            
+            if REGMOD == 0:  # RMSE
+                ObjFn = (np.mean((h[indx] - hp[indx])**2))**0.5
+            elif REGMOD == 2: # abs(ME)
+                ObjFn = np.abs(np.mean((h[indx] - hp[indx])))
+            else:  # MAE
+                ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
+            
+            if ObjFn_c < ObjFn:
                 OPSTP_c = -OPSTP_c / 10.
  
-            RMSE_c = np.copy(RMSE)
+            ObjFn_c = np.copy(ObjFn)
             c = c + OPSTP_c
             
-        if RMSE_b < RMSE_c:
+        if ObjFn_b < ObjFn_c:
             OPSTP_b = -OPSTP_b / 10.
         
         if b + OPSTP_b < 10**-12:
             OPSTP_b = OPSTP_b / 10.
     
-        RMSE_b = RMSE_c
+        ObjFn_b = ObjFn_c
         b = b + OPSTP_b
     
     print; print 'FIN'; print
