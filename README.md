@@ -9,7 +9,7 @@ WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platfo
 
 A user guide is currently being prepared and should be available shortly. WHAT is currently under heavy development and is unfortunately not yet complete or free of bugs. If you have any questions or comments, please contact Jean-Sébastien Gosselin at jnsebgosselin@gmail.com. To download a Windows package version of the software click on the button "release" on top of this page or follow this [Link](https://github.com/jnsebgosselin/WHAT/releases). 
 
-Presently are available in WHAT v4.0.5:
+Presently are available in WHAT v4.1.2:
 ----------------------------------------
 
 - Automatic downloading and formatting of weather data available on the Governement of Canada website (http://climate.weather.gc.ca/). Weather data from any other sources can still be used, but the data must be formated to a prescribed format in order to be compatible with the program.
