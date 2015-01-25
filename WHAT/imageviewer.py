@@ -45,7 +45,7 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 """
 
 #---- THIRD PARTY IMPORTS ----
-import copy
+
 from PySide import QtGui, QtCore
 
 import matplotlib
@@ -58,15 +58,13 @@ import matplotlib.pyplot as plt
 class ImageViewer(QtGui.QWidget):
     """
     This is a PySide widget class to display a bitmap image in a QScrollArea 
-    with zooming capability with CTRL + Mouse_wheel event.  
+    with zooming and panning capability with CTRL + Mouse_wheel and 
+    Left-click event.
     """
 #-------------------------------------------------------------------------------
 
     def __init__(self, parent=None):
         super(ImageViewer, self).__init__(parent)
-                       
-        self.printer = QtGui.QPrinter()
-        self.scaleFactor = 0.0
 
         self.imageLabel = QtGui.QLabel()
         self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
@@ -105,17 +103,16 @@ class ImageViewer(QtGui.QWidget):
         # http://stackoverflow.com/questions/21939658/
         # matplotlib-render-into-buffer-access-pixel-data
         
-        self.figure = plt.figure()
-        self.figure.patch.set_facecolor('white')
-#        plt.plot([1, 2, 3, 4], [1, 2, 3, 4], '-b')
+        figure = plt.figure()
+        figure.patch.set_facecolor('white')
 
-        self.figure_widget = FigureCanvasQTAgg(self.figure)
-        self.figure_widget.draw()
+        figure_canvas = FigureCanvasQTAgg(figure)
+        figure_canvas.draw()
                 
-        size = self.figure_widget.size()
+        size = figure_canvas.size()
         width, height = size.width(), size.height()
         
-        imgbuffer = self.figure_widget.buffer_rgba()
+        imgbuffer = figure_canvas.buffer_rgba()
         image = QtGui.QImage(imgbuffer, width, height,
                              QtGui.QImage.Format_ARGB32)
                              
@@ -138,7 +135,13 @@ class ImageViewer(QtGui.QWidget):
         self.width = size.width()
         self.height = size.height()
         
+    def refresh_image(self, image):
+        
+        self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
+        
     def eventFilter(self, widget, event):
+        
+#        print event.type()
         
         # http://stackoverflow.com/questions/17525608/
         # event-filter-cannot-intercept-wheel-event-from-qscrollarea
@@ -150,16 +153,16 @@ class ImageViewer(QtGui.QWidget):
         # qgraphicsview-zooming-in-and-out-under-mouse-position
         # -using-mouse-wheel
        
-        #---- ZOOM ----
+        #------------------------------------------------------------- ZOOM ----
         
         if (event.type() == QtCore.QEvent.Type.Wheel and 
             widget is self.imageLabel):
                                
             # http://stackoverflow.com/questions/8772595/
             # how-to-check-if-a-key-modifier-is-pressed-shift-ctrl-alt
-                               
+            
             modifiers = QtGui.QApplication.keyboardModifiers()
-
+            #            
             if modifiers == QtCore.Qt.ControlModifier:                
                 if event.delta() > 0:
                     self.zoomIn()
@@ -169,49 +172,61 @@ class ImageViewer(QtGui.QWidget):
             else:
                 return False
         
-        #---- PAN ----
+        #-------------------------------------------------------------- PAN ----
+        
+        #---- Set ClosedHandCursor ----
         
         elif (event.type() == QtCore.QEvent.Type.MouseButtonPress and 
               widget is self.imageLabel):
+                  
+            if event.button() == QtCore.Qt.MouseButton.LeftButton:
                 
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.ClosedHandCursor)
-            
-            self.xclick = event.globalX()
-            self.yclick = event.globalY()
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.ClosedHandCursor)
+                self.pan = True
+                self.xclick = event.globalX()
+                self.yclick = event.globalY()
+        
+        #---- Reset Cursor ----
 
         elif (event.type() == QtCore.QEvent.Type.MouseButtonRelease):
-
+            
             QtGui.QApplication.restoreOverrideCursor()
-            
+            self.pan = False
+        
+        #---- Move  ScrollBar----
+        
         elif (event.type() == QtCore.QEvent.Type.MouseMove):
-            dx = self.xclick - event.globalX()
-            self.xclick = event.globalX()
             
-            dy = self.yclick - event.globalY()
-            self.yclick = event.globalY()
-            
-            scrollBarH = self.scrollArea.horizontalScrollBar()
-            scrollBarH.setValue(scrollBarH.value() + dx)
-
-            scrollBarV = self.scrollArea.verticalScrollBar()
-            scrollBarV.setValue(scrollBarV.value() + dy)
+            if self.pan == True:
+                
+                dx = self.xclick - event.globalX()
+                self.xclick = event.globalX()
+                
+                dy = self.yclick - event.globalY()
+                self.yclick = event.globalY()
+                
+                scrollBarH = self.scrollArea.horizontalScrollBar()
+                scrollBarH.setValue(scrollBarH.value() + dx)
+    
+                scrollBarV = self.scrollArea.verticalScrollBar()
+                scrollBarV.setValue(scrollBarV.value() + dy)
 
         return QtGui.QWidget.eventFilter(self, widget, event)
 
     def zoomIn(self):
-        if self.scaleFactor < 3:
+        if self.scaleFactor < 5:
             self.scaleFactor += 1
-            self.scaleImage(1.25)
+            self.scaleImage(1.2)
 
     def zoomOut(self):
         if self.scaleFactor > -3:
             self.scaleFactor -= 1
-            self.scaleImage(0.8)
+            self.scaleImage(1/1.2)
                 
     def scaleImage(self, factor):
         
-        new_width = int(self.width * 1.25 ** self.scaleFactor)
-        new_height = int(self.height * 1.25 ** self.scaleFactor)
+        new_width = int(self.width * 1.2 ** self.scaleFactor)
+        new_height = int(self.height * 1.2 ** self.scaleFactor)
         
         self.imageLabel.resize(new_width, new_height)
         
@@ -221,11 +236,15 @@ class ImageViewer(QtGui.QWidget):
 #                                  spectMode=QtCore.Qt.IgnoreAspectRatio,
 #                                  mode=QtCore.Qt.FastTransformation))
         
-        self.adjustScrollBar(self.scrollArea.horizontalScrollBar(), factor)
-        self.adjustScrollBar(self.scrollArea.verticalScrollBar(), factor)
+        #---- Adjust HScrollBar ----
         
-
-    def adjustScrollBar(self, scrollBar, factor):
+        scrollBar = self.scrollArea.horizontalScrollBar()
+        scrollBar.setValue(int(factor * scrollBar.value()
+                                + ((factor - 1) * scrollBar.pageStep()/2)))
+                                
+        #---- Adjust VScrollBar ----
+                                
+        scrollBar = self.scrollArea.verticalScrollBar()                        
         scrollBar.setValue(int(factor * scrollBar.value()
                                 + ((factor - 1) * scrollBar.pageStep()/2)))
                                 
@@ -248,4 +267,28 @@ if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
     imageViewer = ImageViewer()
     imageViewer.show()
+    
+    figure = plt.figure()
+    figure.set_size_inches(11, 8.5)
+    figure.patch.set_facecolor('white')
+    plt.plot([1, 2, 3, 4], [1, 2, 3, 4], '-b')
+
+    figure_canvas = FigureCanvasQTAgg(figure)
+    figure_canvas.draw()
+            
+    size = figure_canvas.size()
+    width, height = size.width(), size.height()
+    
+    imgbuffer = figure_canvas.buffer_rgba()
+    image = QtGui.QImage(imgbuffer, width, height,
+                         QtGui.QImage.Format_ARGB32)
+                         
+    # Reference for the RGB to BGR swap:
+    # http://sourceforge.net/p/matplotlib/mailman/message/5194542/
+      
+    image = QtGui.QImage.rgbSwapped(image)
+    
+    imageViewer.load_image(image)
+    
+    
     sys.exit(app.exec_())
