@@ -663,6 +663,8 @@ class TabHydrograph(QtGui.QWidget):
         #----- Hydrograph Parameters -----
         
         self.language_box.currentIndexChanged.connect(self.language_changed)
+        self.waterlvl_max.valueChanged.connect(self.waterlvl_scale_changed)
+        self.waterlvl_scale.valueChanged.connect(self.waterlvl_scale_changed)
         
         #------------------------------------------------------- Init Image ----
         
@@ -760,6 +762,7 @@ class TabHydrograph(QtGui.QWidget):
             
         #----- Update UI Memory Var -----
         
+        self.UpdateUI = False
         self.waterlvl_dir = path.dirname(filename)
         self.fwaterlvl = filename
         
@@ -794,10 +797,11 @@ class TabHydrograph(QtGui.QWidget):
         #----- Check if Layout -----
         
         self.check_if_layout_exist(name_well)
+        self.UpdateUI = True
     
     def check_if_layout_exist(self, name_well):
-        
-        layoutExist  = self.graph_params.checkConfig(name_well)
+                
+        layoutExist  = self.hydrograph2display.checkLayout(name_well)
                         
         if layoutExist == True:
             self.parent.write2console(
@@ -957,7 +961,7 @@ class TabHydrograph(QtGui.QWidget):
         #------------------------------------------- Check if Layout Exists ----
         
         name_well = self.waterlvl_data.name_well
-        layoutExist  = self.graph_params.checkConfig(name_well)
+        layoutExist  = self.hydrograph2display.checkLayout(name_well)
                     
         if layoutExist == False:
             
@@ -1036,7 +1040,7 @@ class TabHydrograph(QtGui.QWidget):
         else:
             name_well = self.waterlvl_data.name_well
             
-            layoutExist = self.graph_params.checkConfig(name_well)
+            layoutExist = self.hydrograph2display.checkLayout(name_well)
 
             if layoutExist == True:
                 self.msgBox.setText(
@@ -1147,10 +1151,27 @@ class TabHydrograph(QtGui.QWidget):
     
     def language_changed(self):
         
-        language = self.language_box.currentText ()
+        if self.UpdateUI == True:
+            
+            self.hydrograph2display.language = self.language_box.currentText()
         
-        self.hydrograph2display.draw_ylabels(language)
-        self.hydrograph2display.draw_xlabels(language)
+            self.hydrograph2display.draw_ylabels()
+            self.hydrograph2display.draw_xlabels()
+        
+            self.refresh_hydrograph()
+        
+    def waterlvl_scale_changed(self):
+        
+        if self.UpdateUI == True:
+        
+            self.hydrograph2display.WLmin = self.waterlvl_max.value()
+            self.hydrograph2display.WLscale = self.waterlvl_scale.value()
+       
+            self.hydrograph2display.update_waterlvl_scale()
+            
+            self.refresh_hydrograph()       
+    
+    def refresh_hydrograph(self):
         
         self.hydrograph_canvas.draw()
 

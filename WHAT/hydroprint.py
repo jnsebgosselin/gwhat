@@ -67,6 +67,88 @@ class Hydrograph():
         self.fig.patch.set_facecolor('white')
         self.fig.set_size_inches(11, 8.5)
         
+        self.fmeteo = []
+        self.finfo = []      
+        self.WLmin = 0
+        self.WLscale = 0
+        self.TIMEmin = 36526
+        self.TIMEmax = 36526
+        self.ygrid_divnumber = 20 #Dundurn: 17 #26
+        self.NZGrid = self.ygrid_divnumber
+        
+        self.fheight = 8.5 # Figure height in inches
+        self.fwidth = 11.0 # Figure width in inches
+        
+        self.title_state = 0
+        self.title_text = 'Add A Title To The Figure Here'
+        self.language = 'English'
+        
+        self.RAINscale = 20 # Dundurn: 10
+        self.WLref = 0 # 0: mbgs 1: masl
+        self.trend_line = 0
+        
+        self.isLegend = False
+        
+        self.header = [['Name Well', 'Station Meteo', 'Min. Waterlvl',
+                        'Waterlvl Scale', 'Date Start', 'Date End',
+                        'Fig. Title State', 'Fig. Title Text', 'Precip. Scale',
+                        'Waterlvl Ref.', 'Trend Line']]
+                        
+    def checkLayout(self, name_well): # old var. names: check, isConfigExist
+        
+        # Check first if a layout file is present in the folder.
+        # If not, initiate the creation of a new one.
+        if not path.exists('graph_layout.lst'):
+            self.create_new_config_file()
+                
+        reader = open('graph_layout.lst', 'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+        reader = np.array(reader)
+       
+        # Check if config file is from an old version of Hydroprint
+        # and if yes, convert it to the new version.
+        nCONFG, nPARA = np.shape(reader)
+
+        if nPARA < len(self.header[0]):
+            
+            nMissing = len(self.header[0]) - nPARA
+            
+            col2add = np.zeros((nCONFG, nMissing)).astype(int)
+            col2add = col2add.astype(str)
+            
+            reader = np.hstack((reader, col2add))
+            reader[0] = self.header[0]
+            
+            if nPARA < 8:
+                reader[1:, 7] = 'Add A Title To The Figure Here'
+            if nPARA < 9:
+                reader[1:, 8] = 20
+            if nPARA < 10:
+                reader[1:, 9] = 0
+            if nPARA < 11:
+                reader[1:, 10] = 0
+            
+            with open('graph_layout.lst', 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(reader)
+             
+            msg = ('The "graph_layout.lst" file is from an older version ' +
+                   'of WHAT. The old file has been converted to the newer ' +
+                   'version.') 
+            print msg
+        
+        # Check if there is a layout stored for the current 
+        # selected observation well.
+        row = np.where(reader[:,0] == name_well)[0]
+           
+        if len(row) > 0:
+            layoutExist = True
+        else:
+            layoutExist = False
+           
+        return layoutExist
+        
     def generare_hydrograph(self, WaterLvlObj, MeteoObj, GraphParamObj):
         
         self.fig.clf()
@@ -416,12 +498,12 @@ class Hydrograph():
                 
         #------------------------------------------------------ DRAW LABELS ----
                                                  
-        self.draw_ylabels(language)
-        self.draw_xlabels(language)
+        self.draw_ylabels()
+        self.draw_xlabels()
         
-    def draw_xlabels(self, language):
+    def draw_xlabels(self):
        
-        labelDB = LabelDatabase(language)
+        labelDB = LabelDatabase(self.language)
         
         _, _, xticks_labels = generate_xticks_informations(
                                             self.TIMEmin, self.TIMEmax,
@@ -431,9 +513,9 @@ class Hydrograph():
         for i in range(len(self.xlab)):
             self.xlab[i].set_text(xticks_labels[i])
     
-    def draw_ylabels(self, language):
+    def draw_ylabels(self):
 
-        labelDB = LabelDatabase(language)
+        labelDB = LabelDatabase(self.language)
         
         #---------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
         
@@ -508,6 +590,34 @@ class Hydrograph():
         text_top_margin = labelDB.station_meteo % (self.name_meteo, self.dist)
         
         self.text1.set_text(text_top_margin)
+        
+    def update_waterlvl_scale(self):
+        
+        if self.WLref == 1:   # masl
+            
+            WLmin = self.WLmin
+            WLscale = self.WLscale
+            WLmax = WLmin + self.NZGrid * WLscale
+            
+            yticks_position = np.arange(WLmin,
+                                        WLmin + (self.NZGrid - 8) * WLscale,
+                                        WLscale * 2)
+                                        
+        else: # mbgs: Y axis is inverted
+        
+            WLmax = self.WLmin
+            WLscale = self.WLscale    
+            WLmin = WLmax - self.NZGrid * WLscale
+            
+            yticks_position = np.arange(WLmax, 
+                                        WLmax - (self.NZGrid - 8) * WLscale,
+                                        WLscale * -2)
+        
+        self.ax2.axis([self.TIMEmin, self.TIMEmax, WLmin, WLmax])
+        self.ax2.set_yticks(yticks_position)
+        
+        if self.WLref != 1:
+            self.ax2.invert_yaxis()
             
 #===============================================================================        
 def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
