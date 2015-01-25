@@ -544,13 +544,18 @@ class TabHydrograph(QtGui.QWidget):
         # circumvent any possible issue with computer screen resolution or any
         # distortion of the image by the backend or the UI widget.
         
-        self.hydrograph2display = plt.figure()
-        self.hydrograph2display.set_size_inches(11, 8.5)
-        self.hydrograph2display.patch.set_facecolor('white')
+        self.hydrograph2display = hydroprint.Hydrograph()
+        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display.fig)
+        self.hydrograph_canvas.draw()        
         
-        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display)
-        self.hydrograph_canvas.draw()
         
+#        self.hydrograph2display = plt.figure()
+#        self.hydrograph2display.set_size_inches(11, 8.5)
+#        self.hydrograph2display.patch.set_facecolor('white')
+#        
+#        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display)
+#        self.hydrograph_canvas.draw()
+#        
         self.hydrograph2save = plt.figure()
         self.hydrograph2save.set_size_inches(11, 8.5)
         self.hydrograph2save.patch.set_facecolor('white')
@@ -846,6 +851,8 @@ class TabHydrograph(QtGui.QWidget):
                 index = np.where(DIST == np.min(DIST))[0][0]
                           
                 self.load_meteo_file(fmeteo_paths[index])
+                QtCore.QCoreApplication.processEvents()
+                self.draw_hydrograph()
     
     #===========================================================================       
     def select_meteo_file(self):
@@ -854,30 +861,39 @@ class TabHydrograph(QtGui.QWidget):
         the user to select a valid Weather Data file.        
         '''
     #===========================================================================
-    
+         
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                       self, 'Select a valid weather data file', 
                                       self.meteo_dir, '*.out')       
-
+        QtCore.QCoreApplication.processEvents()
+        QtCore.QCoreApplication.processEvents()
+        QtCore.QCoreApplication.processEvents()
         self.load_meteo_file(filename)
     
     #===========================================================================       
     def load_meteo_file(self, filename):
     #===========================================================================
     
-        if filename:
+        if not filename:
+            print 'Path is empty. Cannot load weather data file.'
+            return
             
-            self.meteo_dir = path.dirname(filename)
-            self.graph_params.fmeteo = filename
-            self.graph_params.finfo = filename[:-3] + 'log'
+        self.meteo_dir = path.dirname(filename)
+        self.graph_params.fmeteo = filename
+        self.graph_params.finfo = filename[:-3] + 'log'
+        
+        self.meteo_data.load(filename)
+        
+        self.parent.write2console(
+        '''<font color=black>Weather data set loaded successfully for
+             station %s.</font>''' % self.meteo_data.station_name)
+          
+        self.meteo_info_widget.setText(self.meteo_data.info )
+        
+        if self.fwaterlvl:
             
-            self.meteo_data.load(filename)
-            
-            self.parent.write2console(
-            '''<font color=black>Weather data set loaded successfully for
-                 station %s.</font>''' % self.meteo_data.station_name)
-              
-            self.meteo_info_widget.setText(self.meteo_data.info )        
+            QtCore.QCoreApplication.processEvents()
+            self.draw_hydrograph()
     
     #===========================================================================
     def update_graph_layout_parameter(self):
@@ -890,33 +906,38 @@ class TabHydrograph(QtGui.QWidget):
         '''
     #===========================================================================
         
-        if self.UpdateUI == True:
+        if self.UpdateUI == False:
+            return
             
-            year = self.date_start_widget.date().year()
-            month = self.date_start_widget.date().month()
-            day = 1
-            date = xldate_from_date_tuple((year, month, day),0)
-            self.graph_params.TIMEmin = date
+        year = self.date_start_widget.date().year()
+        month = self.date_start_widget.date().month()
+        day = 1
+        date = xldate_from_date_tuple((year, month, day),0)
+        self.graph_params.TIMEmin = date
+        
+        year = self.date_end_widget.date().year()
+        month = self.date_end_widget.date().month()
+        day = 1
+        date = xldate_from_date_tuple((year, month, day),0)
+        self.graph_params.TIMEmax = date
+        
+        self.graph_params.WLscale = self.waterlvl_scale.value()
+        self.graph_params.WLmin = self.waterlvl_max.value()
+        
+        if self.graph_status.isChecked():
+            self.graph_params.title_state = 1
+        else:
+            self.graph_params.title_state = 0
             
-            year = self.date_end_widget.date().year()
-            month = self.date_end_widget.date().month()
-            day = 1
-            date = xldate_from_date_tuple((year, month, day),0)
-            self.graph_params.TIMEmax = date
-            
-            self.graph_params.WLscale = self.waterlvl_scale.value()
-            self.graph_params.WLmin = self.waterlvl_max.value()
-            
-            if self.graph_status.isChecked():
-                self.graph_params.title_state = 1
-            else:
-                self.graph_params.title_state = 0
-                
-            self.graph_params.title_text = self.graph_title.text()
-            
-            self.graph_params.language = self.language_box.currentText()
-                        
+        self.graph_params.title_text = self.graph_title.text()
+        
+        self.graph_params.language = self.language_box.currentText()
+             
+    #===========================================================================        
     def load_graph_layout(self):
+    #===========================================================================
+    
+        #------------------------------------- Check if Waterlvl Data Exist ----
         
         if not self.fwaterlvl:
             
@@ -927,66 +948,73 @@ class TabHydrograph(QtGui.QWidget):
             self.emit_error_message(
             '''<b>Please select a valid water level data file.</b>''')
             
-        else:
-            name_well = self.waterlvl_data.name_well
-            layoutExist  = self.graph_params.checkConfig(name_well)
-                        
-            if layoutExist == False:
-                
-                self.parent.write2console(
-                '''<font color=red>No graph layout exists for well %s.
-                   </font>''' % name_well)
-                
-                self.emit_error_message('''<b>No graph layout exists 
-                                             for well %s.</b>''' % name_well)
+            return
+        
+        #------------------------------------------- Check if Layout Exists ----
+        
+        name_well = self.waterlvl_data.name_well
+        layoutExist  = self.graph_params.checkConfig(name_well)
+                    
+        if layoutExist == False:
             
-            else: # Load graph layout for this well
-                
-                self.graph_params.load(name_well)
-                
-            #--------------------------------------------------- Update UI -----
-                
-                self.UpdateUI = False
-                
-                #----- Check if Weather Data File exists -----
-                
-                if path.exists(self.graph_params.fmeteo):
-                    self.meteo_data.load(self.graph_params.fmeteo)
-                    self.meteo_info_widget.setText(self.meteo_data.info )
-                    self.parent.write2console(
-                    '''<font color=black>Graph layout loaded successfully for 
-                       well %s.</font>''' % name_well)
-                else:
-                    self.meteo_info_widget.setText('')
-                    self.parent.write2console(
-                    '''<font color=red>Unable to read the weather data file. %s
-                       does not exist.</font>''' % self.graph_params.fmeteo)
-                    self.emit_error_message(
-                    '''<b>Unable to read the weather data file.<br><br>
-                       %s does not exist.<br><br> Please select another weather
-                       data file.<b>''' % self.graph_params.fmeteo)
-                    self.graph_params.fmeteo = []
-                    self.graph_params.finfo = []
-                         
-                date = self.graph_params.TIMEmin
-                date = xldate_as_tuple(date, 0)
-                self.date_start_widget.setDate(QDate(date[0], date[1], date[2]))
-                
-                date = self.graph_params.TIMEmax
-                date = xldate_as_tuple(date, 0)
-                self.date_end_widget.setDate(QDate(date[0], date[1], date[2]))
-                                            
-                self.waterlvl_scale.setValue(self.graph_params.WLscale)
-                self.waterlvl_max.setValue(self.graph_params.WLmin)
-                 
-                if self.graph_params.title_state == 1:
-                    self.graph_status.setCheckState(QtCore.Qt.Checked)
-                else:                    
-                    self.graph_status.setCheckState(QtCore.Qt.Unchecked)
+            self.parent.write2console(
+            '''<font color=red>No graph layout exists for well %s.
+               </font>''' % name_well)
+            
+            self.emit_error_message('''<b>No graph layout exists 
+                                         for well %s.</b>''' % name_well)
+                                             
+            return
+        
+        #------------------------------------------------------ Load Layout ----
                     
-                self.graph_title.setText(self.graph_params.title_text)
-                    
-                self.UpdateUI = True
+        self.graph_params.load(name_well)
+        
+        #------------------------------------------------------- Update UI -----
+        
+        self.UpdateUI = False
+                                         
+        date = self.graph_params.TIMEmin
+        date = xldate_as_tuple(date, 0)
+        self.date_start_widget.setDate(QDate(date[0], date[1], date[2]))
+        
+        date = self.graph_params.TIMEmax
+        date = xldate_as_tuple(date, 0)
+        self.date_end_widget.setDate(QDate(date[0], date[1], date[2]))
+                                    
+        self.waterlvl_scale.setValue(self.graph_params.WLscale)
+        self.waterlvl_max.setValue(self.graph_params.WLmin)
+         
+        if self.graph_params.title_state == 1:
+            self.graph_status.setCheckState(QtCore.Qt.Checked)
+        else:                    
+            self.graph_status.setCheckState(QtCore.Qt.Unchecked)
+            
+        self.graph_title.setText(self.graph_params.title_text)
+        
+        #----- Check if Weather Data File exists -----
+        
+        if path.exists(self.graph_params.fmeteo):
+            self.meteo_data.load(self.graph_params.fmeteo)
+            self.meteo_info_widget.setText(self.meteo_data.info )
+            self.parent.write2console(
+            '''<font color=black>Graph layout loaded successfully for 
+               well %s.</font>''' % name_well)
+            QtCore.QCoreApplication.processEvents()
+            self.draw_hydrograph()
+        else:
+            self.meteo_info_widget.setText('')
+            self.parent.write2console(
+            '''<font color=red>Unable to read the weather data file. %s
+               does not exist.</font>''' % self.graph_params.fmeteo)
+            self.emit_error_message(
+            '''<b>Unable to read the weather data file.<br><br>
+               %s does not exist.<br><br> Please select another weather
+               data file.<b>''' % self.graph_params.fmeteo)
+            self.graph_params.fmeteo = []
+            self.graph_params.finfo = []
+            
+        self.UpdateUI = True
     
     def save_config_isClicked(self):
         
@@ -1090,10 +1118,17 @@ class TabHydrograph(QtGui.QWidget):
             
             #----- Generate Graph -----
             
-            hydroprint.generate_hydrograph(self.hydrograph2display,
-                                           self.waterlvl_data,
-                                           self.meteo_data,
-                                           self.graph_params)
+            self.hydrograph2display.generare_hydrograph(self.waterlvl_data,
+                                                        self.meteo_data,
+                                                        self.graph_params)
+            
+            
+#            self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display.fig)
+#            
+#            hydroprint.generate_hydrograph(self.hydrograph2display,
+#                                           self.waterlvl_data,
+#                                           self.meteo_data,
+#                                           self.graph_params)
             
             #----- Produce Figure from Graph -----
                             
