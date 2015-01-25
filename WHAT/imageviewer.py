@@ -65,7 +65,10 @@ class ImageViewer(QtGui.QWidget):
 
     def __init__(self, parent=None):
         super(ImageViewer, self).__init__(parent)
-
+        
+        self.scaleFactor = 0
+        self.scaleStep = 1.2
+        
         self.imageLabel = QtGui.QLabel()
         self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
         self.imageLabel.setSizePolicy(QtGui.QSizePolicy.Ignored,
@@ -121,19 +124,20 @@ class ImageViewer(QtGui.QWidget):
           
         image = QtGui.QImage.rgbSwapped(image)
         
-        self.load_image(image)
+        self.load_image(image, 0)
     
-    def load_image(self, image):
-        
+    def load_image(self, image, scaleFactor=0):
+
+        self.scaleFactor = scaleFactor
+                
         self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
-        
-        self.scaleFactor = 0
-        
         self.imageLabel.adjustSize()
-     
+        
         size = self.imageLabel.size()
         self.width = size.width()
         self.height = size.height()
+        
+        self.scaleImage()
         
     def refresh_image(self, image):
         
@@ -216,17 +220,19 @@ class ImageViewer(QtGui.QWidget):
     def zoomIn(self):
         if self.scaleFactor < 5:
             self.scaleFactor += 1
-            self.scaleImage(1.2)
+            self.scaleImage()
+            self.adjust_scrollbar(self.scaleStep)
 
     def zoomOut(self):
         if self.scaleFactor > -3:
             self.scaleFactor -= 1
-            self.scaleImage(1/1.2)
+            self.scaleImage()
+            self.adjust_scrollbar(1/self.scaleStep)
                 
-    def scaleImage(self, factor):
+    def scaleImage(self):
         
-        new_width = int(self.width * 1.2 ** self.scaleFactor)
-        new_height = int(self.height * 1.2 ** self.scaleFactor)
+        new_width = int(self.width * self.scaleStep ** self.scaleFactor)
+        new_height = int(self.height * self.scaleStep ** self.scaleFactor)
         
         self.imageLabel.resize(new_width, new_height)
         
@@ -235,6 +241,8 @@ class ImageViewer(QtGui.QWidget):
 #        self.imageLabel.setPixmap(pixmap.scaled(new_width, new_height,
 #                                  spectMode=QtCore.Qt.IgnoreAspectRatio,
 #                                  mode=QtCore.Qt.FastTransformation))
+
+    def adjust_scrollbar(self, factor):
         
         #---- Adjust HScrollBar ----
         
@@ -288,7 +296,7 @@ if __name__ == '__main__':
       
     image = QtGui.QImage.rgbSwapped(image)
     
-    imageViewer.load_image(image)
+    imageViewer.load_image(image, -2)
     
     
     sys.exit(app.exec_())

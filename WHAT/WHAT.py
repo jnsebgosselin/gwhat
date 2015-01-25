@@ -381,8 +381,8 @@ class TabHydrograph(QtGui.QWidget):
         separator1.setFrameStyle(StyleDB.HLine)
         separator2 = QtGui.QFrame()
         separator2.setFrameStyle(StyleDB.HLine)
-        separator3 = QtGui.QFrame()
-        separator3.setFrameStyle(StyleDB.HLine)                    
+#        separator3 = QtGui.QFrame()
+#        separator3.setFrameStyle(StyleDB.HLine)                    
                                      
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -548,19 +548,15 @@ class TabHydrograph(QtGui.QWidget):
         self.hydrograph2display.set_size_inches(11, 8.5)
         self.hydrograph2display.patch.set_facecolor('white')
         
+        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display)
+        self.hydrograph_canvas.draw()
+        
         self.hydrograph2save = plt.figure()
         self.hydrograph2save.set_size_inches(11, 8.5)
         self.hydrograph2save.patch.set_facecolor('white')
-
-        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display)
-
+        
         self.hydrograph_scrollarea = imageviewer.ImageViewer()
-
-#        hydrograph_frame = QtGui.QFrame()
-##        hydrograph_frame.setStyleSheet("QWidget{background-color: 'white'}")
-#        hydrograph_frame.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Raised)
-#        hydrograph_frame.setLineWidth(3)
-#        hydrograph_frame.setMidLineWidth(3)
+        
         grid_hydrograph_widget = QtGui.QFrame()
         grid_hydrograph =  QtGui.QGridLayout() 
         
@@ -571,16 +567,7 @@ class TabHydrograph(QtGui.QWidget):
         grid_hydrograph.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
         
         grid_hydrograph_widget.setLayout(grid_hydrograph)
-        
-#        self.hydrograph_canvas.setFixedWidth(1100/1.5)
-#        self.hydrograph_canvas.setFixedHeight(800/1.5)
-        
-#        self.hydrograph_widget.setFixedWidth(1100/2.)
-#        self.hydrograph_widget.setFixedHeight(800/2.)
-#        policy = QtGui.QSizePolicy(QtGui.QSizePolicy.Preferred, QtGui.QSizePolicy.Preferred)
-#        policy.setHeightForWidth(True)
-#        self.hydrograph_widget.setSizePolicy(policy)
-        
+                
         #---- SubGrid Figure Title ----
 
         graph_title_label = QtGui.QLabel('Figure Title :')
@@ -667,7 +654,23 @@ class TabHydrograph(QtGui.QWidget):
         btn_waterlvl_dir.clicked.connect(self.select_waterlvl_file)
         btn_weather_dir.clicked.connect(self.select_meteo_file)
         self.graph_status.stateChanged.connect(self.enable_graph_title)
-    
+        
+        #------------------------------------------------------- Init Image ----
+        
+        #---- Generate blank image ----
+        
+        size = self.hydrograph_canvas.size()
+        height = size.height()
+        width = size.width()
+        imgbuffer = self.hydrograph_canvas.buffer_rgba()
+        blank_image = QtGui.QImage(imgbuffer, width, height,
+                                   QtGui.QImage.Format_RGB32)                         
+        blank_image = QtGui.QImage.rgbSwapped(blank_image)
+        
+        #---- Display blank image ----
+                
+        self.hydrograph_scrollarea.load_image(blank_image)
+        
     def initUI_weather_normals(self):
         
         self.normals_fig = plt.figure()        
@@ -730,7 +733,7 @@ class TabHydrograph(QtGui.QWidget):
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                    self, 'Select a valid water level data file', 
                                    self.waterlvl_dir, '*.xls')
-                                   
+        
         self.load_waterlvl(filename)
         
     #===========================================================================                          
@@ -742,44 +745,46 @@ class TabHydrograph(QtGui.QWidget):
         '''
     #===========================================================================   
         
-        if filename:
+        if not filename:
+            print 'Path is empty. Cannot load water level file.'
+            return
             
-            #----- Update UI Memory Var -----
-            
-            self.waterlvl_dir = path.dirname(filename)
-            self.fwaterlvl = filename
-            
-            #----- Load Data -----
-            
-            self.waterlvl_data.load(filename)
-            
-            name_well = self.waterlvl_data.name_well
-            
-            self.best_fit_waterlvl()
-            self.best_fit_time()
-            
-            #----- Load Manual Measures -----
-            
-            filename = self.parent.what_pref.project_dir
-            filename += '/waterlvl_manual_measurements.xls'
-            
-            if not path.exists(filename):
-                # Force the creation of a new 'waterlvl_manual_measurements.csv'
-                self.parent.what_pref.load_pref_file()
-            
-            self.waterlvl_data.load_waterlvl_measures(filename, name_well)
-            
-            #----- Load and Display Well Info in UI -----
-            
-            self.well_info_widget.setText(self.waterlvl_data.well_info)
-            
-            self.parent.write2console(
-            '''<font color=black>Water level data set loaded successfully for
-                 well %s.</font>''' % name_well)
-            
-            #----- Check if Layout -----
-            
-            self.check_if_layout_exist(name_well)
+        #----- Update UI Memory Var -----
+        
+        self.waterlvl_dir = path.dirname(filename)
+        self.fwaterlvl = filename
+        
+        #----- Load Data -----
+        
+        self.waterlvl_data.load(filename)
+        
+        name_well = self.waterlvl_data.name_well
+        
+        self.best_fit_waterlvl()
+        self.best_fit_time()
+        
+        #----- Load Manual Measures -----
+        
+        filename = self.parent.what_pref.project_dir
+        filename += '/waterlvl_manual_measurements.xls'
+        
+        if not path.exists(filename):
+            # Force the creation of a new 'waterlvl_manual_measurements.csv'
+            self.parent.what_pref.load_pref_file()
+        
+        self.waterlvl_data.load_waterlvl_measures(filename, name_well)
+        
+        #----- Load and Display Well Info in UI -----
+        
+        self.well_info_widget.setText(self.waterlvl_data.well_info)
+        
+        self.parent.write2console(
+        '''<font color=black>Water level data set loaded successfully for
+             well %s.</font>''' % name_well)
+        
+        #----- Check if Layout -----
+        
+        self.check_if_layout_exist(name_well)
     
     def check_if_layout_exist(self, name_well):
         
@@ -1093,17 +1098,16 @@ class TabHydrograph(QtGui.QWidget):
             #----- Produce Figure from Graph -----
                             
             self.hydrograph_canvas.draw()
-                        
+
             size = self.hydrograph_canvas.size()
-            width, height = size.width(), size.height()        
+            width = size.width()
+            height = size.height()        
             imgbuffer = self.hydrograph_canvas.buffer_rgba()
             image = QtGui.QImage(imgbuffer, width, height,
-                                 QtGui.QImage.Format_RGB32)
-                         
+                                 QtGui.QImage.Format_RGB32)                         
             image = QtGui.QImage.rgbSwapped(image)
             
-            self.hydrograph_scrollarea.load_image(image)
-                                   
+            self.hydrograph_scrollarea.refresh_image(image)
           
 ################################################################## @TAB DOWNLOAD
         
@@ -1528,7 +1532,7 @@ class TabDwnldData(QtGui.QWidget):
         self.widget_search4stations.close()
                
         #---- Generate New List ----
-        
+        # http://doc.qt.io/qt-5/qt.html#CursorShape-enum
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
         self.parent.write2console('''<font color=black>
