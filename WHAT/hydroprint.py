@@ -43,7 +43,7 @@ class LabelDatabase():
         self.mbgs = 'Water Level at Well %s (mbgs)'
         self.masl = 'Water Level at Well %s (masl)'
         self.precip = 'Ptot weekly (mm)'
-        self.station_meteo = 'Climatological Station = %s (located %s km from the well)'
+        self.station_meteo = 'Climatological Station = %s (located %0.1f km from the well)'
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
                             
@@ -53,7 +53,7 @@ class LabelDatabase():
             self.masl = "Niveau d'eau au puits %s (masl)"
             self.precip = 'Ptot hebdo (mm)'
             self.temperature = u'Tmax hebdo (°C)'
-            self.station_meteo = u'Station climatologique = %s (située à %s km du puits)'
+            self.station_meteo = u'Station climatologique = %s (située à %0.1f km du puits)'
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 
@@ -78,12 +78,12 @@ class Hydrograph():
 
         self.fig.set_size_inches(fwidth, fheight, forward=True)
        
-        name_well = WaterLvlObj.name_well          
+        self.name_well = WaterLvlObj.name_well          
                 
         fname_info = GraphParamObj.finfo
         
-        TIMEmin = GraphParamObj.TIMEmin
-        TIMEmax = GraphParamObj.TIMEmax
+        self.TIMEmin = GraphParamObj.TIMEmin
+        self.TIMEmax = GraphParamObj.TIMEmax
         
         isTitle = GraphParamObj.title_state # 1 -> title ; 0 -> no title
         graph_title = GraphParamObj.title_text
@@ -91,16 +91,18 @@ class Hydrograph():
         language = GraphParamObj.language
         labelDB = LabelDatabase(language)
         
-        date_labels_display_pattern = 2
-        NZGrid = GraphParamObj.ygrid_divnumber            
+        self.date_labels_display_pattern = 2
+        self.NZGrid = GraphParamObj.ygrid_divnumber            
         RAINscale = GraphParamObj.RAINscale
+        
+        self.WLref = GraphParamObj.WLref
         
         # Font size is multiplied by a ratio in order to keep the preview
         # and the final saved figure to the same scale. The preview
         # figure's size is modified when the UI is generated and depends
         # on the screen resolution.
         
-        label_font_size = 14 * fheight / 8.5
+        self.label_font_size = 14 * fheight / 8.5
             
         #-------------------------------------------------- FIGURE CREATION ----
         
@@ -131,42 +133,43 @@ class Hydrograph():
         #        td12994.html
         
         #---Time (host)---
-        ax1  = self.fig.add_axes([x0, y0, w, h], zorder=0)
-        ax1.axis([TIMEmin, TIMEmax, 0, NZGrid])
+        self.ax1  = self.fig.add_axes([x0, y0, w, h], zorder=0)
+        self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
         
         #---Water Levels---
-        ax2 = self.fig.add_axes(ax1.get_position(), frameon=False, zorder=1)
+        self.ax2 = self.fig.add_axes(self.ax1.get_position(), frameon=False, zorder=1)
         
         #---Precipitation---
     #    ax3 = fig.add_axes(ax1.get_position(), frameon=False, zorder=2)
-        ax3 = ax2.twinx()
-        ax3.set_zorder(ax2.get_zorder()+1)
-        ax3.set_navigate(False)
+        self.ax3 = self.ax2.twinx()
+        self.ax3.set_zorder(self.ax2.get_zorder()+1)
+        self.ax3.set_navigate(False)
         
         #---Air Temperature---
     #    ax4 = fig.add_axes(ax1.get_position(), frameon=False, zorder=3)
-        ax4 = ax2.twinx()
-        ax4.set_zorder(ax3.get_zorder()+1)
-        ax4.set_navigate(False)
+        self.ax4 = self.ax2.twinx()
+        self.ax4.set_zorder(self.ax3.get_zorder()+1)
+        self.ax4.set_navigate(False)
             
-        #----------------------------------------------------------------- TIME ----            
+        #------------------------------------------------------------- TIME ----            
         
         xticks_position, xticks_labels_position, xticks_labels = \
                     generate_xticks_informations(
-                            TIMEmin, TIMEmax,date_labels_display_pattern, 0,
+                            self.TIMEmin, self.TIMEmax,
+                            self.date_labels_display_pattern, 0,
                             labelDB.month_names)
                             
-        ax1.set_xticks(xticks_position)
-        ax1.xaxis.set_ticklabels([])
-        ax1.xaxis.set_ticks_position('bottom')
-        ax1.tick_params(axis='both',direction='out', gridOn=True)
+        self.ax1.set_xticks(xticks_position)
+        self.ax1.xaxis.set_ticklabels([])
+        self.ax1.xaxis.set_ticks_position('bottom')
+        self.ax1.tick_params(axis='both',direction='out', gridOn=True)
         
-        ax1.set_yticks(np.arange(0, NZGrid, 1))
-        ax1.yaxis.set_ticklabels([])
-        ax1.tick_params(axis='y', length=0)
-        ax1.patch.set_facecolor('none')
+        self.ax1.set_yticks(np.arange(0, self.NZGrid, 1))
+        self.ax1.yaxis.set_ticklabels([])
+        self.ax1.tick_params(axis='y', length=0)
+        self.ax1.patch.set_facecolor('none')
                          
-        #========================================================== WATER LEVEL ====
+        #====================================================== WATER LEVEL ====
             
         time = WaterLvlObj.time   
         
@@ -176,10 +179,10 @@ class Hydrograph():
             
             WLmin = GraphParamObj.WLmin
             WLscale = GraphParamObj.WLscale
-            WLmax = WLmin + NZGrid * WLscale
+            WLmax = WLmin + self.NZGrid * WLscale
             
             yticks_position = np.arange(WLmin,
-                                        WLmin + (NZGrid - 8) * WLscale,
+                                        WLmin + (self.NZGrid - 8) * WLscale,
                                         WLscale * 2)
                                         
         else: # mbgs: Y axis is inverted
@@ -188,46 +191,46 @@ class Hydrograph():
         
             WLmax = GraphParamObj.WLmin
             WLscale = GraphParamObj.WLscale    
-            WLmin = WLmax - NZGrid * WLscale
+            WLmin = WLmax - self.NZGrid * WLscale
             
             yticks_position = np.arange(WLmax, 
-                                        WLmax - (NZGrid - 8) * WLscale,
+                                        WLmax - (self.NZGrid - 8) * WLscale,
                                         WLscale * -2)
         
-        ax2.axis([TIMEmin, TIMEmax, WLmin, WLmax])
+        self.ax2.axis([self.TIMEmin, self.TIMEmax, WLmin, WLmax])
         
-        ax2.set_xticks(xticks_position)
-        ax2.xaxis.set_ticklabels([])
-        ax2.tick_params(axis='x', length=0, direction='out')
+        self.ax2.set_xticks(xticks_position)
+        self.ax2.xaxis.set_ticklabels([])
+        self.ax2.tick_params(axis='x', length=0, direction='out')
         
-        ax2.set_yticks(yticks_position)
-        ax2.yaxis.set_ticks_position('left')
-        ax2.tick_params(axis='y', direction='out', labelsize=10)            
+        self.ax2.set_yticks(yticks_position)
+        self.ax2.yaxis.set_ticks_position('left')
+        self.ax2.tick_params(axis='y', direction='out', labelsize=10)            
         if GraphParamObj.WLref != 1:
-            ax2.invert_yaxis()
+            self.ax2.invert_yaxis()
         
-        #------------------------------------------------------------- PLOTTING ----
+        #--------------------------------------------------------- PLOTTING ----
         
         #---- Water Levels ----
         
         if GraphParamObj.trend_line == 1:
             tfilt, wlfilt = filt_data(time, water_lvl, 7)
         
-            ax2.plot(tfilt, wlfilt, '-', zorder = 10, linewidth=1,
-                     label='WL Trend Line')
-            ax2.plot(time, water_lvl, '.', color=[0.65, 0.65, 1.],
-                            markersize=5, label='WL Data Point')
+            self.ax2.plot(tfilt, wlfilt, '-', zorder = 10, linewidth=1,
+                          label='WL Trend Line')
+            self.ax2.plot(time, water_lvl, '.', color=[0.65, 0.65, 1.],
+                          markersize=5, label='WL Data Point')
         else:
-            ax2.plot(time, water_lvl, '-', zorder = 10, linewidth=1, 
-                     label='Water Level')                
+            self.ax2.plot(time, water_lvl, '-', zorder = 10, linewidth=1, 
+                          label='Water Level')                
         
         #---- Manual Measures ----
            
         TIMEmes = WaterLvlObj.TIMEmes
         WLmes = WaterLvlObj.WLmes
         
-        h_WLmes = ax2.plot(TIMEmes, WLmes, 'o', zorder = 15,
-                           label='Manual measures')
+        h_WLmes = self.ax2.plot(TIMEmes, WLmes, 'o', zorder = 15,
+                                label='Manual measures')
                                             
         plt.setp(h_WLmes, markerfacecolor='none', markersize=5,
                  markeredgecolor=(1, 0.25, 0.25), markeredgewidth=1.5)
@@ -244,17 +247,17 @@ class Hydrograph():
         #--------------------------------------------------------------- LEGEND ----
         
         if GraphParamObj.isLegend == True:
-            ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)    
+            self.ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)    
                          
-        #=================================================== PLOT PRECIPITATION ====
+        #=============================================== PLOT PRECIPITATION ====
             
         time = MeteoObj.TIMEwk
         Tmax = MeteoObj.TMAXwk
         Ptot = MeteoObj.PTOTwk
         Rain = MeteoObj.RAINwk
-        name_meteo = MeteoObj.station_name
+        self.name_meteo = MeteoObj.station_name
                         
-        istart = np.where(time > TIMEmin)[0]
+        istart = np.where(time > self.TIMEmin)[0]
         if len(istart) == 0:
             istart = 0
         else:
@@ -262,7 +265,7 @@ class Hydrograph():
             if istart > 0:
                 istart -= 1
         
-        iend = np.where(time < TIMEmax)[0]
+        iend = np.where(time < self.TIMEmax)[0]
         if len(iend) == 0:
             iend = 0
         else:
@@ -278,79 +281,60 @@ class Hydrograph():
         RAINmin = 0
         RAINmax = RAINmin + RAINscale * 6
         
-        ax3.axis([TIMEmin, TIMEmax, 
-                  RAINmin - (RAINscale*4), 
-                  RAINmin - (RAINscale*4) + NZGrid*RAINscale])    
+        self.ax3.axis([self.TIMEmin, self.TIMEmax, 
+                       RAINmin - (RAINscale*4), 
+                       RAINmin - (RAINscale*4) + self.NZGrid*RAINscale])    
         yticks_position = np.arange(0, RAINmax + RAINscale, RAINscale)
         
-        ax3.set_xticks(xticks_position)
-        ax3.xaxis.set_ticklabels([])
-        ax3.tick_params(axis='x', length=0, direction='out')    
+        self.ax3.set_xticks(xticks_position)
+        self.ax3.xaxis.set_ticklabels([])
+        self.ax3.tick_params(axis='x', length=0, direction='out')    
         
-        ax3.set_yticks(yticks_position)
-        ax3.yaxis.set_ticks_position('right')
-        ax3.tick_params(axis='y', direction='out', labelsize=10)
-        ax3.invert_yaxis()
-        ax3.yaxis.set_label_position('right')
-        ax3.set_ylabel(labelDB.precip, rotation=270,
-                       fontsize=label_font_size, verticalalignment='bottom')
-        ax3.yaxis.set_label_coords(1.06, 1.-7./NZGrid) 
+        self.ax3.set_yticks(yticks_position)
+        self.ax3.yaxis.set_ticks_position('right')
+        self.ax3.tick_params(axis='y', direction='out', labelsize=10)
+        self.ax3.invert_yaxis()
+        self.ax3.yaxis.set_label_position('right')
+        
             
-        #----------------------------------------------------------- PLOT DATA -----
+        #------------------------------------------------------- PLOT DATA -----
             
-        bar1 = ax3.bar(time, Ptot, align='center', width=7-1)
+        bar1 = self.ax3.bar(time, Ptot, align='center', width=7-1)
         plt.setp(bar1, color=(0.65,0.65,0.65), edgecolor='none')
         
-        bar2 = ax3.bar(time, Rain, align='center', width=7-1)
+        bar2 = self.ax3.bar(time, Rain, align='center', width=7-1)
         plt.setp(bar2, color=(0,0,1), edgecolor='none')
         
-        ax3.plot([TIMEmin, TIMEmax],[0, 0],'k')
+        self.ax3.plot([self.TIMEmin, self.TIMEmax],[0, 0],'k')
         
         if fname_info:
             Ptot_missing_time, _ = load_weather_log(fname_info,
                                                     'Total Precip (mm)', 
                                                     time, Ptot)
         
-            line_missing_Ptot = ax3.plot(
+            line_missing_Ptot = self.ax3.plot(
                 Ptot_missing_time, 
                 np.ones(len(Ptot_missing_time)) * -5 * RAINscale / 20., '.')
             plt.setp(line_missing_Ptot, markerfacecolor=(1, 0.25, 0.25),
                      markeredgecolor='none', markersize=5)
-        
-        # Calculate horizontal distance between weather station and
-        # observation well.
-        LAT1 = float(WaterLvlObj.LAT)
-        LON1 = float(WaterLvlObj.LON)
-        LAT2 = float(MeteoObj.LAT)
-        LON2 = float(MeteoObj.LON)
-            
-        dist = round(LatLong2Dist(LAT1, LON1, LAT2, LON2), 1)
-         
-        text_top_margin_yposition = RAINmin - (RAINscale*4) - 1.5 * RAINscale / 20.  
-        text_top_margin = labelDB.station_meteo % (name_meteo,
-                                                           str(dist))
-            
-        ax3.text(TIMEmax, text_top_margin_yposition , text_top_margin,
-                 rotation=0, verticalalignment='bottom',
-                 horizontalalignment='right', fontsize=10)
     
-        #================================================ PLOT AIR TEMPERATURE =====
+        #============================================ PLOT AIR TEMPERATURE =====
             
         TEMPmin = -40
         TEMPscale = 20
         TEMPmax = 40
         
-        ax4.axis([TIMEmin, TIMEmax, TEMPmax-TEMPscale*NZGrid, TEMPmax])    
+        self.ax4.axis([self.TIMEmin, self.TIMEmax, TEMPmax-TEMPscale*self.NZGrid, TEMPmax])    
         yticks_position = np.arange(TEMPmin, TEMPmax + TEMPscale, TEMPscale)
         
-        ax4.set_xticks(xticks_position)
-        ax4.xaxis.set_ticklabels([])
-        ax4.tick_params(axis='x', length=0, direction='out')
+        self.ax4.set_xticks(xticks_position)
+        self.ax4.xaxis.set_ticklabels([])
+        self.ax4.tick_params(axis='x', length=0, direction='out')
         
-        ax4.set_yticks(yticks_position)
-        ax4.yaxis.set_ticks_position('left')
-        ax4.tick_params(axis='y', direction='out', labelsize=10)
-        ax4.yaxis.set_label_position('left')
+        self.ax4.set_yticks(yticks_position)
+        self.ax4.yaxis.set_ticks_position('left')
+        self.ax4.tick_params(axis='y', direction='out', labelsize=10)
+        self.ax4.yaxis.set_label_position('left')
         
         TIME2X = np.zeros(len(time)*2)
         Tmax2X = np.zeros(len(time)*2)
@@ -361,19 +345,18 @@ class Hydrograph():
         Tmax2X[0:2*len(time)-1:2] = Tmax
         Tmax2X[1:2*len(time):2] = Tmax
             
-        #----------------------------------------------------------- PLOT DATA -----
+        #------------------------------------------------------- PLOT DATA -----
             
-        ax4.fill_between(TIME2X, 0.1, Tmax2X, color='red', alpha=0.25,
+        self.ax4.fill_between(TIME2X, 0.1, Tmax2X, color='red', alpha=0.25,
                          edgecolor='none')
-        ax4.plot(TIME2X, Tmax2X, 'k')
-        
+        self.ax4.plot(TIME2X, Tmax2X, 'k')
         
         if fname_info:
             Temp_missing_time, Temp_missing_value = load_weather_log(
                                    fname_info, 'Max Temp (deg C)',
                                    time, Tmax)
             
-            h1_ax4, = ax4.plot(Temp_missing_time, 
+            h1_ax4, = self.ax4.plot(Temp_missing_time, 
                               np.ones(len(Temp_missing_time)) * 35, '.')
             plt.setp(h1_ax4, markerfacecolor=(1, 0.25, 0.25),
                      markeredgecolor='none', markersize=5)
@@ -385,58 +368,99 @@ class Hydrograph():
             rec3 = plt.Rectangle((0, 0), 1, 1, fc=[1, 0.65, 0.65])
            
             labels = ['Snow', 'Rain', 'Air Temperature', 'Missing Data']
-            ax4.legend([rec1, rec2, rec3, h1_ax4], labels, loc=[0.01, 0.45],
+            self.ax4.legend([rec1, rec2, rec3, h1_ax4], labels, loc=[0.01, 0.45],
                        numpoints=1, fontsize=10)
                          
-        #-------------------------------------------------------- FIGURE TITLE -----
-            
+        #----------------------------------------------------- FIGURE TITLE ----
+           
+        self.dZGrid_inch = (fheight - bottom_margin - top_margin) / self.NZGrid
         if isTitle == 1:
             
-            xTitle = (TIMEmin + TIMEmax) / 2.
-    
-            dZGrid_inch = (fheight - bottom_margin - top_margin) / NZGrid
+            xTitle = (self.TIMEmin + self.TIMEmax) / 2.
             
-            print dZGrid_inch
-            ytitle = NZGrid + (top_margin / 1.7 / dZGrid_inch)
+            ytitle = self.NZGrid + (top_margin / 1.7 / self.dZGrid_inch)
             
-            ax1.text(xTitle, ytitle, graph_title,
+            self.ax1.text(xTitle, ytitle, graph_title,
                      fontsize=18 * fheight / 8.5,
                      horizontalalignment='center', 
                      verticalalignment='center')
-                         
-        #------------------------------------------------------- xlabel (Time) -----
-            
-        i = 0
-        for xlabel in xticks_labels : 
-            ax1.text(xticks_labels_position[i], -0.15, xlabel, rotation=45, 
-                     verticalalignment='top', horizontalalignment='right',
-                     fontsize=10)
-            i += 1
-                
-        #------------------------------------------------------------- ylabels -----
+                     
+        #--------------------------------------------- WEATHER STATION TEXT ----
         
-        if GraphParamObj.WLref == 0:       
-            lab_ax2 = labelDB.mbgs % name_well
-        elif GraphParamObj.WLref == 1:
-            lab_ax2 = labelDB.masl % name_well
+        # Calculate horizontal distance between weather station and
+        # observation well.
+
+        LAT1 = float(WaterLvlObj.LAT)
+        LON1 = float(WaterLvlObj.LON)
+        LAT2 = float(MeteoObj.LAT)
+        LON2 = float(MeteoObj.LON)
             
-        ax2.set_ylabel(lab_ax2,rotation=90,
-                       fontsize=label_font_size, verticalalignment='top',
-                       horizontalalignment='center')
+        self.dist = LatLong2Dist(LAT1, LON1, LAT2, LON2)
+         
+        text1_ypos = self.NZGrid + 0.025 / self.dZGrid_inch
+       
+        self.text1 = self.ax1.text(self.TIMEmax, text1_ypos, '',
+                                   rotation=0, verticalalignment='bottom',
+                                   horizontalalignment='right', fontsize=10)                 
+        
+        #---------------------------------------------------- xlabel (Time) ----
+        
+        self.xlab = []
+        for i in range(len(xticks_labels)) : 
+            xlab = self.ax1.text(xticks_labels_position[i], -0.15,
+                           xticks_labels[i], rotation=45, 
+                           verticalalignment='top', horizontalalignment='right',
+                           fontsize=10)
+                           
+            self.xlab.append(xlab)
+                
+        #------------------------------------------------------ DRAW LABELS ----
+                                                 
+        self.draw_ylabels(language)
+        self.draw_xlabels(language)
+        
+    def draw_xlabels(self, language):
+       
+        labelDB = LabelDatabase(language)
+        
+        _, _, xticks_labels = generate_xticks_informations(
+                                            self.TIMEmin, self.TIMEmax,
+                                            self.date_labels_display_pattern, 0,
+                                            labelDB.month_names)
+                                            
+        for i in range(len(self.xlab)):
+            self.xlab[i].set_text(xticks_labels[i])
+    
+    def draw_ylabels(self, language):
+
+        labelDB = LabelDatabase(language)
+        
+        #---------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
+        
+        if self.WLref == 0:       
+            lab_ax2 = labelDB.mbgs % self.name_well
+        elif self.WLref == 1:
+            lab_ax2 = labelDB.masl % self.name_well
+            
+        self.ax2.set_ylabel(lab_ax2,rotation=90,
+                            fontsize=self.label_font_size,
+                            verticalalignment='top',
+                            horizontalalignment='center')
                        
-        ax4.set_ylabel(labelDB.temperature, rotation=90,
-                       fontsize=label_font_size, verticalalignment='top',
-                       horizontalalignment='center')
+        self.ax4.set_ylabel(labelDB.temperature, rotation=90,
+                            fontsize=self.label_font_size,
+                            verticalalignment='top',
+                            horizontalalignment='center')
                        
         # Get bounding box dimensions of yaxis ticklabels for ax2 and ax4
         renderer = self.fig.canvas.get_renderer()            
-        bbox2_left, bbox2_right = ax2.yaxis.get_ticklabel_extents(renderer)
-        bbox4_left, bbox4_right = ax4.yaxis.get_ticklabel_extents(renderer)
+        bbox2_left, bbox2_right = self.ax2.yaxis.get_ticklabel_extents(renderer)
+        bbox4_left, bbox4_right = self.ax4.yaxis.get_ticklabel_extents(renderer)
         
         # Transform coordinates in ax2 and ax4 coordinate system and
         # calculate the labels positions in x and y.
-        bbox2_left = ax2.transAxes.inverted().transform(bbox2_left)
-        bbox4_left = ax4.transAxes.inverted().transform(bbox4_left)
+        bbox2_left = self.ax2.transAxes.inverted().transform(bbox2_left)
+        bbox4_left = self.ax4.transAxes.inverted().transform(bbox4_left)
         
         ylabel2_xpos = - (bbox2_left[1, 0] - bbox2_left[0, 0])
         ylabel2_ypos = (bbox2_left[1, 1] + bbox2_left[0, 1]) / 2.
@@ -447,16 +471,44 @@ class Hydrograph():
         # Take the position which is farthest from the left y axis in order
         # to have both labels on the left aligned.
         ylabel_xpos = min(ylabel2_xpos, ylabel4_xpos)
+
+        self.ax2.yaxis.set_label_coords(ylabel_xpos - 0.04, ylabel2_ypos)
+        self.ax4.yaxis.set_label_coords(ylabel_xpos - 0.04, ylabel4_ypos)
         
-        ax2.yaxis.set_label_coords(ylabel_xpos - 0.04, ylabel2_ypos)
-        ax4.yaxis.set_label_coords(ylabel_xpos - 0.04, ylabel4_ypos)
-    
-    #            Old way I was doing it before. Position of the labels were
-    #            fixed, indepently of the ticks labels format.
+        #  Old way I was doing it before. Position of the labels were
+        #  fixed, indepently of the ticks labels format.
             
-    #            ax4.yaxis.set_label_coords(-.07, (NZGrid - 2.) / NZGrid)
+        #  ax4.yaxis.set_label_coords(-.07, (NZGrid - 2.) / NZGrid)
+            
+        
+        #------------------------------------ YLABELS RIGHT (Precipitation) ----
+            
+        self.ax3.set_ylabel(labelDB.precip, rotation=270,
+                            fontsize=self.label_font_size,
+                            verticalalignment='top',
+                            horizontalalignment='center')
+                            
+        # Get bounding box dimensions of yaxis ticklabels for ax3
+        bbox3_left, bbox3_right = self.ax3.yaxis.get_ticklabel_extents(renderer)
+        
+        # Transform coordinates in ax3 coordinate system and
+        # calculate the labels positions in x and y.
+        bbox3_right = self.ax3.transAxes.inverted().transform(bbox3_right)
+        
+        ylabel3_xpos = (bbox3_right[1, 0] - bbox3_right[0, 0])
+        ylabel3_ypos = (bbox3_right[1, 1] + bbox3_right[0, 1]) / 2.
+        
+        # Take the position which is farthest from the left y axis in order
+        # to have both labels on the left aligned.
 
-
+        self.ax3.yaxis.set_label_coords(1 + ylabel3_xpos + 0.04, ylabel3_ypos)
+        
+        #-------------------------------------------- WEATHER STATION LABEL ----
+        
+        text_top_margin = labelDB.station_meteo % (self.name_meteo, self.dist)
+        
+        self.text1.set_text(text_top_margin)
+            
 #===============================================================================        
 def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
 # This method generate the figure with the parameters that are entered in

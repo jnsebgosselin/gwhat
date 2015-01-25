@@ -660,6 +660,10 @@ class TabHydrograph(QtGui.QWidget):
         btn_weather_dir.clicked.connect(self.select_meteo_file)
         self.graph_status.stateChanged.connect(self.enable_graph_title)
         
+        #----- Hydrograph Parameters -----
+        
+        self.language_box.currentIndexChanged.connect(self.language_changed)
+        
         #------------------------------------------------------- Init Image ----
         
         #---- Generate blank image ----
@@ -1121,9 +1125,6 @@ class TabHydrograph(QtGui.QWidget):
             self.hydrograph2display.generare_hydrograph(self.waterlvl_data,
                                                         self.meteo_data,
                                                         self.graph_params)
-            
-            
-#            self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display.fig)
 #            
 #            hydroprint.generate_hydrograph(self.hydrograph2display,
 #                                           self.waterlvl_data,
@@ -1143,6 +1144,28 @@ class TabHydrograph(QtGui.QWidget):
             image = QtGui.QImage.rgbSwapped(image)
             
             self.hydrograph_scrollarea.refresh_image(image)
+    
+    def language_changed(self):
+        
+        language = self.language_box.currentText ()
+        
+        self.hydrograph2display.draw_ylabels(language)
+        self.hydrograph2display.draw_xlabels(language)
+        
+        self.hydrograph_canvas.draw()
+
+        size = self.hydrograph_canvas.size()
+        width = size.width()
+        height = size.height()        
+        imgbuffer = self.hydrograph_canvas.buffer_rgba()
+        image = QtGui.QImage(imgbuffer, width, height,
+                             QtGui.QImage.Format_RGB32)                         
+        image = QtGui.QImage.rgbSwapped(image)
+        
+        self.hydrograph_scrollarea.refresh_image(image)
+            
+        
+#    self.language_box.currentIndexChanged.connect(self.language_changed)
           
 ################################################################## @TAB DOWNLOAD
         
