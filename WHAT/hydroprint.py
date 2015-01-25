@@ -73,8 +73,7 @@ class Hydrograph():
         self.WLscale = 0
         self.TIMEmin = 36526
         self.TIMEmax = 36526
-        self.ygrid_divnumber = 20 #Dundurn: 17 #26
-        self.NZGrid = self.ygrid_divnumber
+        self.NZGrid = 20 #Dundurn: 17 #26
         
         self.fheight = 8.5 # Figure height in inches
         self.fwidth = 11.0 # Figure width in inches
@@ -99,7 +98,7 @@ class Hydrograph():
         # Check first if a layout file is present in the folder.
         # If not, initiate the creation of a new one.
         if not path.exists('graph_layout.lst'):
-            self.create_new_config_file()
+            self.create_new_graph_layout_file()
                 
         reader = open('graph_layout.lst', 'rb')
         reader = csv.reader(reader, delimiter='\t')
@@ -148,36 +147,149 @@ class Hydrograph():
             layoutExist = False
            
         return layoutExist
+    
+    def create_new_graph_layout_file(self): #old name: create_new_config_file
+        print 'No "graph_layout.lst" file found. A new one has been created.'
+
+        with open('graph_layout.lst', 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(self.header)
+                
+    def load(self, name_well):
+        # A <checkConfig> is supposed to have been carried before this method
+        # is called. So it can be supposed at this point that everything is
+        # fine with the graph layout for this well.
+            
+        reader = open('graph_layout.lst', 'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+        reader = np.array(reader)
+     
+        row = np.where(reader[:,0] == name_well)[0]
         
-    def generare_hydrograph(self, WaterLvlObj, MeteoObj, GraphParamObj):
+        reader = reader[row][0]
+        
+        self.fmeteo = reader[1]
+        self.finfo = self.fmeteo[:-3] + 'log'
+                          
+        self.WLmin = reader[2].astype(float)
+        self.WLscale = reader[3].astype(float)
+            
+        self.TIMEmin = reader[4].astype(float)
+        self.TIMEmax = reader[5].astype(float)
+        
+        self.title_state = reader[6].astype(float)
+        if self.title_state != 0:
+            self.title_state = 1
+        
+        self.title_text = reader[7].astype(str)
+        self.RAINscale = reader[8].astype(float)
+        self.WLref = reader[9].astype(int)
+        self.trend_line = reader[10].astype(int)
+        
+    def save(self, name_well):
+            
+        reader = open('graph_layout.lst', 'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+        reader = np.array(reader)
+         
+        rowx = np.where(reader[:,0] == name_well)[0]
+        
+        new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
+               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text,
+               self.RAINscale, self.WLref, self.trend_line]
+               
+        if len(rowx) == 0:
+            reader = np.vstack((reader, new))
+        else:
+            reader = np.delete(reader, rowx, 0)
+            reader = np.vstack((reader, new))
+        reader[0] = self.header[0]
+            
+        with open('graph_layout.lst', 'wb') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(reader)
+            
+    def best_fit_waterlvl(self, WL):
+
+        WL = WL[~np.isnan(WL)]
+        dWL = np.max(WL) - np.min(WL)
+        ygrid = self.NZGrid - 10
+        
+        #----- WL Scale -----
+        
+        SCALE = np.hstack((np.arange(0.05, 0.30, 0.05), 
+                           np.arange(0.3, 5.1, 0.1)))
+        dSCALE = np.abs(SCALE - dWL / ygrid)
+        indx = np.where(dSCALE == np.min(dSCALE))[0][0]
+        
+        self.WLscale = SCALE[indx]
+        
+        #-----WL Min Value-----
+        
+        if self.WLref == 0:
+            N = np.ceil(np.max(WL) / self.WLscale)
+        elif self.WLref == 1:
+            N = np.floor(np.min(WL) / self.WLscale)
+        
+        self.WLmin = self.WLscale * N
+        
+        return self.WLscale, self.WLmin
+    
+    def best_fit_time(self, TIME):
+        
+        # ----- Data Start -----
+        
+        date0 = xldate_as_tuple(TIME[0], 0)
+        date0 = (date0[0], date0[1], 1)
+        
+        self.TIMEmin = xldate_from_date_tuple(date0, 0)
+        
+        # ----- Date End -----
+        
+        date1 = xldate_as_tuple(TIME[-1], 0)
+        
+        year =  date1[0]
+        month = date1[1] + 1
+        if month > 12:
+            month = 1
+            year += 1
+        
+        date1 = (year, month, 1)
+        
+        self.TIMEmax = xldate_from_date_tuple(date1, 0)
+        
+        return date0, date1
+                
+    def generate_hydrograph(self, WaterLvlObj, MeteoObj):
         
         self.fig.clf()
     
         self.fig.patch.set_facecolor('white')
         
-        fheight = GraphParamObj.fheight # Figure height in inches
-        fwidth = GraphParamObj.fwidth   # Figure width in inches
+        fheight = self.fheight # Figure height in inches
+        fwidth = self.fwidth   # Figure width in inches
 
         self.fig.set_size_inches(fwidth, fheight, forward=True)
        
         self.name_well = WaterLvlObj.name_well          
                 
-        fname_info = GraphParamObj.finfo
+        fname_info = self.finfo
         
-        self.TIMEmin = GraphParamObj.TIMEmin
-        self.TIMEmax = GraphParamObj.TIMEmax
+        self.TIMEmin = self.TIMEmin
+        self.TIMEmax = self.TIMEmax
         
-        isTitle = GraphParamObj.title_state # 1 -> title ; 0 -> no title
-        graph_title = GraphParamObj.title_text
+        isTitle = self.title_state # 1 -> title ; 0 -> no title
+        graph_title = self.title_text
        
-        language = GraphParamObj.language
+        language = self.language
         labelDB = LabelDatabase(language)
         
         self.date_labels_display_pattern = 2
-        self.NZGrid = GraphParamObj.ygrid_divnumber            
-        RAINscale = GraphParamObj.RAINscale
+        RAINscale = self.RAINscale
         
-        self.WLref = GraphParamObj.WLref
+        self.WLref = self.WLref
         
         # Font size is multiplied by a ratio in order to keep the preview
         # and the final saved figure to the same scale. The preview
@@ -255,12 +367,12 @@ class Hydrograph():
             
         time = WaterLvlObj.time   
         
-        if GraphParamObj.WLref == 1:   # masl
+        if self.WLref == 1:   # masl
         
             water_lvl = WaterLvlObj.ALT - WaterLvlObj.lvl
             
-            WLmin = GraphParamObj.WLmin
-            WLscale = GraphParamObj.WLscale
+            WLmin = self.WLmin
+            WLscale = self.WLscale
             WLmax = WLmin + self.NZGrid * WLscale
             
             yticks_position = np.arange(WLmin,
@@ -271,8 +383,8 @@ class Hydrograph():
         
             water_lvl = WaterLvlObj.lvl
         
-            WLmax = GraphParamObj.WLmin
-            WLscale = GraphParamObj.WLscale    
+            WLmax = self.WLmin
+            WLscale = self.WLscale    
             WLmin = WLmax - self.NZGrid * WLscale
             
             yticks_position = np.arange(WLmax, 
@@ -288,14 +400,14 @@ class Hydrograph():
         self.ax2.set_yticks(yticks_position)
         self.ax2.yaxis.set_ticks_position('left')
         self.ax2.tick_params(axis='y', direction='out', labelsize=10)            
-        if GraphParamObj.WLref != 1:
+        if self.WLref != 1:
             self.ax2.invert_yaxis()
         
         #--------------------------------------------------------- PLOTTING ----
         
         #---- Water Levels ----
         
-        if GraphParamObj.trend_line == 1:
+        if self.trend_line == 1:
             tfilt, wlfilt = filt_data(time, water_lvl, 7)
         
             self.ax2.plot(tfilt, wlfilt, '-', zorder = 10, linewidth=1,
@@ -328,7 +440,7 @@ class Hydrograph():
                          
         #--------------------------------------------------------------- LEGEND ----
         
-        if GraphParamObj.isLegend == True:
+        if self.isLegend == True:
             self.ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)    
                          
         #=============================================== PLOT PRECIPITATION ====
@@ -443,7 +555,7 @@ class Hydrograph():
             plt.setp(h1_ax4, markerfacecolor=(1, 0.25, 0.25),
                      markeredgecolor='none', markersize=5)
                      
-        if GraphParamObj.isLegend == True:
+        if self.isLegend == True:
     
             rec1 = plt.Rectangle((0, 0), 1, 1, fc=[0.65,0.65,0.65])
             rec2 = plt.Rectangle((0, 0), 1, 1, fc=[0, 0, 1])
@@ -619,396 +731,6 @@ class Hydrograph():
         if self.WLref != 1:
             self.ax2.invert_yaxis()
             
-#===============================================================================        
-def generate_hydrograph(fig, WaterLvlObj, MeteoObj, GraphParamObj):
-# This method generate the figure with the parameters that are entered in
-# the UI.
-#===============================================================================
-                    
-    fig.clf()
-    
-    fig.patch.set_facecolor('white')
-    
-    fheight = fig.get_figheight() # Height of the figure in inches
-    fwidth = fig.get_figwidth()   # Width of the figure in inches
-   
-    name_well = WaterLvlObj.name_well          
-            
-    fname_info = GraphParamObj.finfo
-    
-    TIMEmin = GraphParamObj.TIMEmin
-    TIMEmax = GraphParamObj.TIMEmax
-    
-    isTitle = GraphParamObj.title_state # 1 -> title ; 0 -> no title
-    graph_title = GraphParamObj.title_text
-   
-    language = GraphParamObj.language
-    labelDB = LabelDatabase(language)
-    
-    date_labels_display_pattern = 2
-    NZGrid = GraphParamObj.ygrid_divnumber            
-    RAINscale = GraphParamObj.RAINscale
-    
-    # Font size is multiplied by a ratio in order to keep the preview
-    # and the final saved figure to the same scale. The preview
-    # figure's size is modified when the UI is generated and depends
-    # on the screen resolution.
-    
-    label_font_size = 14 * fheight / 8.5
-        
-    #------------------------------------------------------ FIGURE CREATION ----
-    
-    #---- MARGINS (Inches) ----
-    
-    left_margin  = 0.85 
-    right_margin = 0.85
-    bottom_margin = 0.75  
-    if isTitle == 1:
-        top_margin = 0.75
-    else:
-        top_margin = 0.25
-    
-    #---- MARGINS (% of figure) ----
-    
-    x0 = left_margin / fwidth
-    y0 = bottom_margin / fheight
-    w = 1 - (left_margin + right_margin) / fwidth
-    h = 1 - (bottom_margin + top_margin) / fheight
-        
-    #-------------------------------------------------------- AXES CREATION ----        
-    
-    # http://stackoverflow.com/questions/15303284/
-    # multiple-y-scales-but-only-one-enabled-for-pan-and-zoom
-    
-    # http://matplotlib.1069221.n5.nabble.com/Control-twinx-series-zorder-
-    #        ax2-series-behind-ax1-series-or-place-ax2-on-left-ax1-on-right-
-    #        td12994.html
-    
-    #---Time (host)---
-    ax1  = fig.add_axes([x0, y0, w, h], zorder=0)
-    ax1.axis([TIMEmin, TIMEmax, 0, NZGrid])
-    
-    #---Water Levels---
-    ax2 = fig.add_axes(ax1.get_position(), frameon=False, zorder=1)
-    
-    #---Precipitation---
-#    ax3 = fig.add_axes(ax1.get_position(), frameon=False, zorder=2)
-    ax3 = ax2.twinx()
-    ax3.set_zorder(ax2.get_zorder()+1)
-    ax3.set_navigate(False)
-    
-    #---Air Temperature---
-#    ax4 = fig.add_axes(ax1.get_position(), frameon=False, zorder=3)
-    ax4 = ax2.twinx()
-    ax4.set_zorder(ax3.get_zorder()+1)
-    ax4.set_navigate(False)
-        
-    #----------------------------------------------------------------- TIME ----            
-    
-    xticks_position, xticks_labels_position, xticks_labels = \
-                generate_xticks_informations(
-                        TIMEmin, TIMEmax,date_labels_display_pattern, 0,
-                        labelDB.month_names)
-                        
-    ax1.set_xticks(xticks_position)
-    ax1.xaxis.set_ticklabels([])
-    ax1.xaxis.set_ticks_position('bottom')
-    ax1.tick_params(axis='both',direction='out', gridOn=True)
-    
-    ax1.set_yticks(np.arange(0, NZGrid, 1))
-    ax1.yaxis.set_ticklabels([])
-    ax1.tick_params(axis='y', length=0)
-    ax1.patch.set_facecolor('none')
-                     
-    #========================================================== WATER LEVEL ====
-        
-    time = WaterLvlObj.time   
-    
-    if GraphParamObj.WLref == 1:   # masl
-    
-        water_lvl = WaterLvlObj.ALT - WaterLvlObj.lvl
-        
-        WLmin = GraphParamObj.WLmin
-        WLscale = GraphParamObj.WLscale
-        WLmax = WLmin + NZGrid * WLscale
-        
-        yticks_position = np.arange(WLmin,
-                                    WLmin + (NZGrid - 8) * WLscale,
-                                    WLscale * 2)
-                                    
-    else: # mbgs: Y axis is inverted
-    
-        water_lvl = WaterLvlObj.lvl
-    
-        WLmax = GraphParamObj.WLmin
-        WLscale = GraphParamObj.WLscale    
-        WLmin = WLmax - NZGrid * WLscale
-        
-        yticks_position = np.arange(WLmax, 
-                                    WLmax - (NZGrid - 8) * WLscale,
-                                    WLscale * -2)
-    
-    ax2.axis([TIMEmin, TIMEmax, WLmin, WLmax])
-    
-    ax2.set_xticks(xticks_position)
-    ax2.xaxis.set_ticklabels([])
-    ax2.tick_params(axis='x', length=0, direction='out')
-    
-    ax2.set_yticks(yticks_position)
-    ax2.yaxis.set_ticks_position('left')
-    ax2.tick_params(axis='y', direction='out', labelsize=10)            
-    if GraphParamObj.WLref != 1:
-        ax2.invert_yaxis()
-    
-    #------------------------------------------------------------- PLOTTING ----
-    
-    #---- Water Levels ----
-    
-    if GraphParamObj.trend_line == 1:
-        tfilt, wlfilt = filt_data(time, water_lvl, 7)
-    
-        ax2.plot(tfilt, wlfilt, '-', zorder = 10, linewidth=1,
-                 label='WL Trend Line')
-        ax2.plot(time, water_lvl, '.', color=[0.65, 0.65, 1.],
-                        markersize=5, label='WL Data Point')
-    else:
-        ax2.plot(time, water_lvl, '-', zorder = 10, linewidth=1, 
-                 label='Water Level')                
-    
-    #---- Manual Measures ----
-       
-    TIMEmes = WaterLvlObj.TIMEmes
-    WLmes = WaterLvlObj.WLmes
-    
-    h_WLmes = ax2.plot(TIMEmes, WLmes, 'o', zorder = 15,
-                       label='Manual measures')
-                                        
-    plt.setp(h_WLmes, markerfacecolor='none', markersize=5,
-             markeredgecolor=(1, 0.25, 0.25), markeredgewidth=1.5)
-                 
-    #---- Recession ----
-        
-#    # Plot a Recession line for Dundurn Report
-#    trecess = np.arange(41548, 41760)
-#    hrecess = 0.69 * (trecess - 41548) / 1000. + 6.225
-#
-#    ax2.plot(trecess, hrecess, '--r', zorder = 10, linewidth=1.5,
-#             label='Water Level Recession')
-                     
-    #--------------------------------------------------------------- LEGEND ----
-    
-    if GraphParamObj.isLegend == True:
-        ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)    
-                     
-    #=================================================== PLOT PRECIPITATION ====
-        
-    time = MeteoObj.TIMEwk
-    Tmax = MeteoObj.TMAXwk
-    Ptot = MeteoObj.PTOTwk
-    Rain = MeteoObj.RAINwk
-    name_meteo = MeteoObj.station_name
-                    
-    istart = np.where(time > TIMEmin)[0]
-    if len(istart) == 0:
-        istart = 0
-    else:
-        istart = istart[0]
-        if istart > 0:
-            istart -= 1
-    
-    iend = np.where(time < TIMEmax)[0]
-    if len(iend) == 0:
-        iend = 0
-    else:
-        iend = iend[-1]
-        if iend < len(time):
-            iend += 1
-    
-    time = time[istart:iend]
-    Tmax = Tmax[istart:iend]
-    Ptot = Ptot[istart:iend]
-    Rain = Rain[istart:iend]
-    
-    RAINmin = 0
-    RAINmax = RAINmin + RAINscale * 6
-    
-    ax3.axis([TIMEmin, TIMEmax, 
-              RAINmin - (RAINscale*4), 
-              RAINmin - (RAINscale*4) + NZGrid*RAINscale])    
-    yticks_position = np.arange(0, RAINmax + RAINscale, RAINscale)
-    
-    ax3.set_xticks(xticks_position)
-    ax3.xaxis.set_ticklabels([])
-    ax3.tick_params(axis='x', length=0, direction='out')    
-    
-    ax3.set_yticks(yticks_position)
-    ax3.yaxis.set_ticks_position('right')
-    ax3.tick_params(axis='y', direction='out', labelsize=10)
-    ax3.invert_yaxis()
-    ax3.yaxis.set_label_position('right')
-    ax3.set_ylabel(labelDB.precip, rotation=270,
-                   fontsize=label_font_size, verticalalignment='bottom')
-    ax3.yaxis.set_label_coords(1.06, 1.-7./NZGrid) 
-        
-    #----------------------------------------------------------- PLOT DATA -----
-        
-    bar1 = ax3.bar(time, Ptot, align='center', width=7-1)
-    plt.setp(bar1, color=(0.65,0.65,0.65), edgecolor='none')
-    
-    bar2 = ax3.bar(time, Rain, align='center', width=7-1)
-    plt.setp(bar2, color=(0,0,1), edgecolor='none')
-    
-    ax3.plot([TIMEmin, TIMEmax],[0, 0],'k')
-    
-    if fname_info:
-        Ptot_missing_time, _ = load_weather_log(fname_info,
-                                                'Total Precip (mm)', 
-                                                time, Ptot)
-    
-        line_missing_Ptot = ax3.plot(
-            Ptot_missing_time, 
-            np.ones(len(Ptot_missing_time)) * -5 * RAINscale / 20., '.')
-        plt.setp(line_missing_Ptot, markerfacecolor=(1, 0.25, 0.25),
-                 markeredgecolor='none', markersize=5)
-    
-    # Calculate horizontal distance between weather station and
-    # observation well.
-    LAT1 = float(WaterLvlObj.LAT)
-    LON1 = float(WaterLvlObj.LON)
-    LAT2 = float(MeteoObj.LAT)
-    LON2 = float(MeteoObj.LON)
-        
-    dist = round(LatLong2Dist(LAT1, LON1, LAT2, LON2), 1)
-     
-    text_top_margin_yposition = RAINmin - (RAINscale*4) - 1.5 * RAINscale / 20.  
-    text_top_margin = labelDB.station_meteo % (name_meteo,
-                                                       str(dist))
-        
-    ax3.text(TIMEmax, text_top_margin_yposition , text_top_margin,
-             rotation=0, verticalalignment='bottom',
-             horizontalalignment='right', fontsize=10)
-
-    #================================================ PLOT AIR TEMPERATURE =====
-        
-    TEMPmin = -40
-    TEMPscale = 20
-    TEMPmax = 40
-    
-    ax4.axis([TIMEmin, TIMEmax, TEMPmax-TEMPscale*NZGrid, TEMPmax])    
-    yticks_position = np.arange(TEMPmin, TEMPmax + TEMPscale, TEMPscale)
-    
-    ax4.set_xticks(xticks_position)
-    ax4.xaxis.set_ticklabels([])
-    ax4.tick_params(axis='x', length=0, direction='out')
-    
-    ax4.set_yticks(yticks_position)
-    ax4.yaxis.set_ticks_position('left')
-    ax4.tick_params(axis='y', direction='out', labelsize=10)
-    ax4.yaxis.set_label_position('left')
-    
-    TIME2X = np.zeros(len(time)*2)
-    Tmax2X = np.zeros(len(time)*2)
-    
-    n = 3.5
-    TIME2X[0:2*len(time)-1:2] = time - n
-    TIME2X[1:2*len(time):2] = time + n
-    Tmax2X[0:2*len(time)-1:2] = Tmax
-    Tmax2X[1:2*len(time):2] = Tmax
-        
-    #----------------------------------------------------------- PLOT DATA -----
-        
-    ax4.fill_between(TIME2X, 0.1, Tmax2X, color='red', alpha=0.25,
-                     edgecolor='none')
-    ax4.plot(TIME2X, Tmax2X, 'k')
-    
-    
-    if fname_info:
-        Temp_missing_time, Temp_missing_value = load_weather_log(
-                               fname_info, 'Max Temp (deg C)',
-                               time, Tmax)
-        
-        h1_ax4, = ax4.plot(Temp_missing_time, 
-                          np.ones(len(Temp_missing_time)) * 35, '.')
-        plt.setp(h1_ax4, markerfacecolor=(1, 0.25, 0.25),
-                 markeredgecolor='none', markersize=5)
-                 
-    if GraphParamObj.isLegend == True:
-
-        rec1 = plt.Rectangle((0, 0), 1, 1, fc=[0.65,0.65,0.65])
-        rec2 = plt.Rectangle((0, 0), 1, 1, fc=[0, 0, 1])
-        rec3 = plt.Rectangle((0, 0), 1, 1, fc=[1, 0.65, 0.65])
-       
-        labels = ['Snow', 'Rain', 'Air Temperature', 'Missing Data']
-        ax4.legend([rec1, rec2, rec3, h1_ax4], labels, loc=[0.01, 0.45],
-                   numpoints=1, fontsize=10)
-                     
-    #-------------------------------------------------------- FIGURE TITLE -----
-        
-    if isTitle == 1:
-        
-        xTitle = (TIMEmin + TIMEmax) / 2.
-
-        dZGrid_inch = (fheight - bottom_margin - top_margin) / NZGrid
-        
-        print dZGrid_inch
-        ytitle = NZGrid + (top_margin / 1.7 / dZGrid_inch)
-        
-        ax1.text(xTitle, ytitle, graph_title,
-                 fontsize=18 * fheight / 8.5,
-                 horizontalalignment='center', 
-                 verticalalignment='center')
-                     
-    #------------------------------------------------------- xlabel (Time) -----
-        
-    i = 0
-    for xlabel in xticks_labels : 
-        ax1.text(xticks_labels_position[i], -0.15, xlabel, rotation=45, 
-                 verticalalignment='top', horizontalalignment='right',
-                 fontsize=10)
-        i += 1
-            
-    #------------------------------------------------------------- ylabels -----
-    
-    if GraphParamObj.WLref == 0:       
-        lab_ax2 = labelDB.mbgs % name_well
-    elif GraphParamObj.WLref == 1:
-        lab_ax2 = labelDB.masl % name_well
-        
-    ax2.set_ylabel(lab_ax2,rotation=90,
-                   fontsize=label_font_size, verticalalignment='top',
-                   horizontalalignment='center')
-                   
-    ax4.set_ylabel(labelDB.temperature, rotation=90,
-                   fontsize=label_font_size, verticalalignment='top',
-                   horizontalalignment='center')
-                   
-    # Get bounding box dimensions of yaxis ticklabels for ax2 and ax4
-    renderer = fig.canvas.get_renderer()            
-    bbox2_left, bbox2_right = ax2.yaxis.get_ticklabel_extents(renderer)
-    bbox4_left, bbox4_right = ax4.yaxis.get_ticklabel_extents(renderer)
-    
-    # Transform coordinates in ax2 and ax4 coordinate system and
-    # calculate the labels positions in x and y.
-    bbox2_left = ax2.transAxes.inverted().transform(bbox2_left)
-    bbox4_left = ax4.transAxes.inverted().transform(bbox4_left)
-    
-    ylabel2_xpos = - (bbox2_left[1, 0] - bbox2_left[0, 0])
-    ylabel2_ypos = (bbox2_left[1, 1] + bbox2_left[0, 1]) / 2.
-    
-    ylabel4_xpos = - (bbox4_left[1, 0] - bbox4_left[0, 0])
-    ylabel4_ypos = (bbox4_left[1, 1] + bbox4_left[0, 1]) / 2.
-    
-    # Take the position which is farthest from the left y axis in order
-    # to have both labels on the left aligned.
-    ylabel_xpos = min(ylabel2_xpos, ylabel4_xpos)
-    
-    ax2.yaxis.set_label_coords(ylabel_xpos - 0.04, ylabel2_ypos)
-    ax4.yaxis.set_label_coords(ylabel_xpos - 0.04, ylabel4_ypos)
-
-#            Old way I was doing it before. Position of the labels were
-#            fixed, indepently of the ticks labels format.
-        
-#            ax4.yaxis.set_label_coords(-.07, (NZGrid - 2.) / NZGrid)
 
 #===============================================================================
 def generate_xticks_informations(TIMEmin, TIMEmax, n, datemode, month_names):
@@ -1042,211 +764,7 @@ def generate_xticks_informations(TIMEmin, TIMEmax, n, datemode, month_names):
         
     return xticks_position, xticks_labels_position, xticks_labels
 
-#===============================================================================
-class GraphParameters():
-# This class contains the saved graph layout for a well. It also
-# contains methods to load and save a new graph layout from the
-# config file <graph_layout.lst>.
-#===============================================================================
-      
-    def __init__(self, parent=None):
 
-        self.fmeteo = []
-        self.finfo = []      
-        self.WLmin = 0
-        self.WLscale = 0
-        self.TIMEmin = 36526
-        self.TIMEmax = 36526
-        self.ygrid_divnumber = 20 #Dundurn: 17 #26
-        
-        self.fheight = 8.5 # Figure height in inches
-        self.fwidth = 11.0 # Figure width in inches
-        
-        self.title_state = 0
-        self.title_text = 'Add A Title To The Figure Here'
-        self.language = 'English'
-        
-        self.RAINscale = 20 # Dundurn: 10
-        self.WLref = 0 # 0: mbgs 1: masl
-        self.trend_line = 0
-        
-        self.isLegend = False
-        
-        self.header = [['Name Well', 'Station Meteo', 'Min. Waterlvl',
-                        'Waterlvl Scale', 'Date Start', 'Date End',
-                        'Fig. Title State', 'Fig. Title Text', 'Precip. Scale',
-                        'Waterlvl Ref.', 'Trend Line']]
-        
-    def checkConfig(self, name_well): # old var. names: check, isConfigExist
-        
-        # Check first if a layout file is present in the folder.
-        # If not, initiate the creation of a new one.
-        if not path.exists('graph_layout.lst'):
-            self.create_new_config_file()
-                
-        reader = open('graph_layout.lst', 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
-       
-        # Check if config file is from an old version of Hydroprint
-        # and if yes, convert it to the new version.
-        nCONFG, nPARA = np.shape(reader)
-
-        if nPARA < len(self.header[0]):
-            
-            nMissing = len(self.header[0]) - nPARA
-            
-            col2add = np.zeros((nCONFG, nMissing)).astype(int)
-            col2add = col2add.astype(str)
-            
-            reader = np.hstack((reader, col2add))
-            reader[0] = self.header[0]
-            
-            if nPARA < 8:
-                reader[1:, 7] = 'Add A Title To The Figure Here'
-            if nPARA < 9:
-                reader[1:, 8] = 20
-            if nPARA < 10:
-                reader[1:, 9] = 0
-            if nPARA < 11:
-                reader[1:, 10] = 0
-            
-            with open('graph_layout.lst', 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
-             
-            msg = ('The "graph_layout.lst" file is from an older version ' +
-                   'of WHAT. The old file has been converted to the newer ' +
-                   'version.') 
-            print msg
-        
-        # Check if there is a layout stored for the current 
-        # selected observation well.
-        row = np.where(reader[:,0] == name_well)[0]
-           
-        if len(row) > 0:
-            layoutExist = True
-        else:
-            layoutExist = False
-           
-        return layoutExist
-        
-    def create_new_config_file(self):
-
-        print 'No "graph_layout.lst" file found. A new one has been created.'
-
-        with open('graph_layout.lst', 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(self.header)
-        
-    def load(self, name_well):
-        # A <checkConfig> is supposed to have been carried before this method
-        # is called. So it can be supposed at this point that everything is
-        # fine with the graph layout for this well.
-            
-        reader = open('graph_layout.lst', 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
-     
-        row = np.where(reader[:,0] == name_well)[0]
-        
-        reader = reader[row][0]
-        
-        self.fmeteo = reader[1]
-        self.finfo = self.fmeteo[:-3] + 'log'
-                          
-        self.WLmin = reader[2].astype(float)
-        self.WLscale = reader[3].astype(float)
-            
-        self.TIMEmin = reader[4].astype(float)
-        self.TIMEmax = reader[5].astype(float)
-        
-        self.title_state = reader[6].astype(float)
-        if self.title_state != 0:
-            self.title_state = 1
-        
-        self.title_text = reader[7].astype(str)
-        self.RAINscale = reader[8].astype(float)
-        self.WLref = reader[9].astype(int)
-        self.trend_line = reader[10].astype(int)
-        
-    def save(self, name_well):
-            
-        reader = open('graph_layout.lst', 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
-         
-        rowx = np.where(reader[:,0] == name_well)[0]
-        
-        new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
-               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text,
-               self.RAINscale, self.WLref, self.trend_line]
-               
-        if len(rowx) == 0:
-            reader = np.vstack((reader, new))
-        else:
-            reader = np.delete(reader, rowx, 0)
-            reader = np.vstack((reader, new))
-        reader[0] = self.header[0]
-            
-        with open('graph_layout.lst', 'wb') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(reader)
-            
-    def best_fit_waterlvl(self, WL):
-
-        WL = WL[~np.isnan(WL)]
-        dWL = np.max(WL) - np.min(WL)
-        ygrid = self.ygrid_divnumber - 10
-        
-        #----- WL Scale -----
-        
-        SCALE = np.hstack((np.arange(0.05, 0.30, 0.05), 
-                           np.arange(0.3, 5.1, 0.1)))
-        dSCALE = np.abs(SCALE - dWL / ygrid)
-        indx = np.where(dSCALE == np.min(dSCALE))[0][0]
-        
-        self.WLscale = SCALE[indx]
-        
-        #-----WL Min Value-----
-        
-        if self.WLref == 0:
-            N = np.ceil(np.max(WL) / self.WLscale)
-        elif self.WLref == 1:
-            N = np.floor(np.min(WL) / self.WLscale)
-        
-        self.WLmin = self.WLscale * N
-        
-        return self.WLscale, self.WLmin
-    
-    def best_fit_time(self, TIME):
-        
-        # ----- Data Start -----
-        
-        date0 = xldate_as_tuple(TIME[0], 0)
-        date0 = (date0[0], date0[1], 1)
-        
-        self.TIMEmin = xldate_from_date_tuple(date0, 0)
-        
-        # ----- Date End -----
-        
-        date1 = xldate_as_tuple(TIME[-1], 0)
-        
-        year =  date1[0]
-        month = date1[1] + 1
-        if month > 12:
-            month = 1
-            year += 1
-        
-        date1 = (year, month, 1)
-        
-        self.TIMEmax = xldate_from_date_tuple(date1, 0)
-        
-        return date0, date1
-        
 #===============================================================================             
 class WaterlvlData():
 #===============================================================================
@@ -1474,7 +992,7 @@ if __name__ == '__main__':
     fwaterlvl = 'Files4testing/PO16A.xls'
     
     import os
-    import datetime
+#    import datetime
     import time
     
     t = os.path.getmtime(fmeteo)
@@ -1490,24 +1008,24 @@ if __name__ == '__main__':
     
     meteoObj = MeteoObj()
     meteoObj.load(fmeteo)
-    
-    graphParamObj = GraphParameters()
-    if graphParamObj.WLref == 0:
-        WL = waterLvlObj.lvl
-    elif graphParamObj.WLref == 1:
-        WL = waterLvlObj.ALT - waterLvlObj.lvl
-    
-    graphParamObj.title_state = 1 # 1 -> title ; 0 -> no title
-    graphParamObj.title_text = "Title of the Graph"
-    
-    _, _ = graphParamObj.best_fit_waterlvl(WL)
-    _, _ = graphParamObj.best_fit_time(waterLvlObj.time)
-    graphParamObj.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
-    
+            
 #    fig = plt.figure(figsize=(11, 8.5))
 #    fig.set_size_inches(11, 8.5)
 #    generate_hydrograph(fig, waterLvlObj, meteoObj, graphParamObj)
     
     hydrograph2display = Hydrograph()
-    hydrograph2display.generare_hydrograph(waterLvlObj, meteoObj, graphParamObj)
+    
+    if hydrograph2display.WLref == 0:
+        WL = waterLvlObj.lvl
+    elif hydrograph2display.WLref == 1:
+        WL = waterLvlObj.ALT - waterLvlObj.lvl
+    
+    hydrograph2display.title_state = 1 # 1 -> title ; 0 -> no title
+    hydrograph2display.title_text = "Title of the Graph"
+    
+    _, _ = hydrograph2display.best_fit_waterlvl(WL)
+    _, _ = hydrograph2display.best_fit_time(waterLvlObj.time)
+    hydrograph2display.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+    
+    hydrograph2display.generate_hydrograph(waterLvlObj, meteoObj)
     

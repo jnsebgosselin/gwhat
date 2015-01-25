@@ -331,7 +331,6 @@ class TabHydrograph(QtGui.QWidget):
         
         self.UpdateUI = True
         self.fwaterlvl = []
-        self.graph_params = hydroprint.GraphParameters(self)
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
@@ -711,7 +710,7 @@ class TabHydrograph(QtGui.QWidget):
     
     def show_weather_normals(self):
         
-        fmeteo = self.graph_params.fmeteo
+        fmeteo = self.hydrograph2display.fmeteo
         if fmeteo:
             self.normals_window.setWindowTitle(
                         'Weather Normals for %s' % self.meteo_data.station_name) 
@@ -887,8 +886,8 @@ class TabHydrograph(QtGui.QWidget):
             return
             
         self.meteo_dir = path.dirname(filename)
-        self.graph_params.fmeteo = filename
-        self.graph_params.finfo = filename[:-3] + 'log'
+        self.hydrograph2display.fmeteo = filename
+        self.hydrograph2display.finfo = filename[:-3] + 'log'
         
         self.meteo_data.load(filename)
         
@@ -908,9 +907,8 @@ class TabHydrograph(QtGui.QWidget):
         '''
         This method is called either by the methods <save_graph_layout>
         or by <draw_hydrograph>. It fetches the values that are currently 
-        displayed in the UI and save them in the class instance <graph_params>
-        of the class <GraphParameters>.  <graph_params> is an input 
-        of the function <hydroprint.generate_hydrograph>.
+        displayed in the UI and save them in the class instance 
+        <hydrograph2display> of the class <Hydrograph>.
         '''
     #===========================================================================
         
@@ -921,25 +919,25 @@ class TabHydrograph(QtGui.QWidget):
         month = self.date_start_widget.date().month()
         day = 1
         date = xldate_from_date_tuple((year, month, day),0)
-        self.graph_params.TIMEmin = date
+        self.hydrograph2display.TIMEmin = date
         
         year = self.date_end_widget.date().year()
         month = self.date_end_widget.date().month()
         day = 1
         date = xldate_from_date_tuple((year, month, day),0)
-        self.graph_params.TIMEmax = date
+        self.hydrograph2display.TIMEmax = date
         
-        self.graph_params.WLscale = self.waterlvl_scale.value()
-        self.graph_params.WLmin = self.waterlvl_max.value()
+        self.hydrograph2display.WLscale = self.waterlvl_scale.value()
+        self.hydrograph2display.WLmin = self.waterlvl_max.value()
         
         if self.graph_status.isChecked():
-            self.graph_params.title_state = 1
+            self.hydrograph2display.title_state = 1
         else:
-            self.graph_params.title_state = 0
+            self.hydrograph2display.title_state = 0
             
-        self.graph_params.title_text = self.graph_title.text()
+        self.hydrograph2display.title_text = self.graph_title.text()
         
-        self.graph_params.language = self.language_box.currentText()
+        self.hydrograph2display.language = self.language_box.currentText()
              
     #===========================================================================        
     def load_graph_layout(self):
@@ -976,34 +974,34 @@ class TabHydrograph(QtGui.QWidget):
         
         #------------------------------------------------------ Load Layout ----
                     
-        self.graph_params.load(name_well)
+        self.hydrograph2display.load(name_well)
         
         #------------------------------------------------------- Update UI -----
         
         self.UpdateUI = False
                                          
-        date = self.graph_params.TIMEmin
+        date = self.hydrograph2display.TIMEmin
         date = xldate_as_tuple(date, 0)
         self.date_start_widget.setDate(QDate(date[0], date[1], date[2]))
         
-        date = self.graph_params.TIMEmax
+        date = self.hydrograph2display.TIMEmax
         date = xldate_as_tuple(date, 0)
         self.date_end_widget.setDate(QDate(date[0], date[1], date[2]))
                                     
-        self.waterlvl_scale.setValue(self.graph_params.WLscale)
-        self.waterlvl_max.setValue(self.graph_params.WLmin)
+        self.waterlvl_scale.setValue(self.hydrograph2display.WLscale)
+        self.waterlvl_max.setValue(self.hydrograph2display.WLmin)
          
-        if self.graph_params.title_state == 1:
+        if self.hydrograph2display.title_state == 1:
             self.graph_status.setCheckState(QtCore.Qt.Checked)
         else:                    
             self.graph_status.setCheckState(QtCore.Qt.Unchecked)
             
-        self.graph_title.setText(self.graph_params.title_text)
+        self.graph_title.setText(self.hydrograph2display.title_text)
         
         #----- Check if Weather Data File exists -----
         
-        if path.exists(self.graph_params.fmeteo):
-            self.meteo_data.load(self.graph_params.fmeteo)
+        if path.exists(self.hydrograph2display.fmeteo):
+            self.meteo_data.load(self.hydrograph2display.fmeteo)
             self.meteo_info_widget.setText(self.meteo_data.info )
             self.parent.write2console(
             '''<font color=black>Graph layout loaded successfully for 
@@ -1014,19 +1012,19 @@ class TabHydrograph(QtGui.QWidget):
             self.meteo_info_widget.setText('')
             self.parent.write2console(
             '''<font color=red>Unable to read the weather data file. %s
-               does not exist.</font>''' % self.graph_params.fmeteo)
+               does not exist.</font>''' % self.hydrograph2display.fmeteo)
             self.emit_error_message(
             '''<b>Unable to read the weather data file.<br><br>
                %s does not exist.<br><br> Please select another weather
-               data file.<b>''' % self.graph_params.fmeteo)
-            self.graph_params.fmeteo = []
-            self.graph_params.finfo = []
+               data file.<b>''' % self.hydrograph2display.fmeteo)
+            self.hydrograph2display.fmeteo = []
+            self.hydrograph2display.finfo = []
             
         self.UpdateUI = True
     
     def save_config_isClicked(self):
         
-        if not self.fwaterlvl or not self.graph_params.fmeteo:
+        if not self.fwaterlvl or not self.hydrograph2display.fmeteo:
             
             self.parent.write2console(
             '''<font color=red>No valid water level or/and valid weather data 
@@ -1061,7 +1059,7 @@ class TabHydrograph(QtGui.QWidget):
     def save_graph_layout(self, name_well):
         
         self.update_graph_layout_parameter()
-        self.graph_params.save(name_well)
+        self.hydrograph2display.save(name_well)
         self.parent.write2console(
         '''<font color=black>Graph layout saved successfully
              for well %s.</font>''' % name_well)
@@ -1071,7 +1069,7 @@ class TabHydrograph(QtGui.QWidget):
         if len(self.waterlvl_data.lvl)!=0:
             
             WL = self.waterlvl_data.lvl
-            WLscale, WLmin = self.graph_params.best_fit_waterlvl(WL)
+            WLscale, WLmin = self.hydrograph2display.best_fit_waterlvl(WL)
             
             self.waterlvl_scale.setValue(WLscale)
             self.waterlvl_max.setValue(WLmin)
@@ -1081,7 +1079,7 @@ class TabHydrograph(QtGui.QWidget):
         if len(self.waterlvl_data.time)!=0:
             
             TIME = self.waterlvl_data.time 
-            date0, date1 = self.graph_params.best_fit_time(TIME)
+            date0, date1 = self.hydrograph2display.best_fit_time(TIME)
             
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))                                                        
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
@@ -1106,48 +1104,48 @@ class TabHydrograph(QtGui.QWidget):
             
     def save_figure(self, fname):
         
-        hydroprint.generate_hydrograph(self.hydrograph2save,
-                                       self.waterlvl_data,
-                                       self.meteo_data,
-                                       self.graph_params)
+        self.hydrograph2display.generate_hydrograph(self.waterlvl_data,
+                                                    self.meteo_data)
                                        
-        self.hydrograph2save.savefig(fname)
+        self.hydrograph2display.fig.savefig(fname)
     
     def draw_hydrograph(self):
         
-        if not self.fwaterlvl or not self.graph_params.fmeteo:
+        if not self.fwaterlvl:
             console_text = ('<font color=red>Please select a valid water ' +
-                            'level and a valid weather data file</font>')
+                            'level data file</font>')
             self.parent.write2console(console_text)
             
-        elif self.fwaterlvl and self.graph_params.fmeteo:
+            return
             
-            self.update_graph_layout_parameter()
+        if not self.hydrograph2display.fmeteo:
+            console_text = ('<font color=red>Please select a valid ' +
+                            'weather data file</font>')
+            self.parent.write2console(console_text)
             
-            #----- Generate Graph -----
+            return
             
-            self.hydrograph2display.generare_hydrograph(self.waterlvl_data,
-                                                        self.meteo_data,
-                                                        self.graph_params)
-#            
-#            hydroprint.generate_hydrograph(self.hydrograph2display,
-#                                           self.waterlvl_data,
-#                                           self.meteo_data,
-#                                           self.graph_params)
-            
-            #----- Produce Figure from Graph -----
-                            
-            self.hydrograph_canvas.draw()
+                    
+        self.update_graph_layout_parameter()
+        
+        #----- Generate Graph -----
+        
+        self.hydrograph2display.generate_hydrograph(self.waterlvl_data,
+                                                    self.meteo_data)
+        
+        #----- Produce Figure from Graph -----
+                        
+        self.hydrograph_canvas.draw()
 
-            size = self.hydrograph_canvas.size()
-            width = size.width()
-            height = size.height()        
-            imgbuffer = self.hydrograph_canvas.buffer_rgba()
-            image = QtGui.QImage(imgbuffer, width, height,
-                                 QtGui.QImage.Format_RGB32)                         
-            image = QtGui.QImage.rgbSwapped(image)
-            
-            self.hydrograph_scrollarea.refresh_image(image)
+        size = self.hydrograph_canvas.size()
+        width = size.width()
+        height = size.height()        
+        imgbuffer = self.hydrograph_canvas.buffer_rgba()
+        image = QtGui.QImage(imgbuffer, width, height,
+                             QtGui.QImage.Format_RGB32)                         
+        image = QtGui.QImage.rgbSwapped(image)
+        
+        self.hydrograph_scrollarea.refresh_image(image)
     
     def language_changed(self):
         
