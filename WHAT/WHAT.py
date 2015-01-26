@@ -462,9 +462,9 @@ class TabHydrograph(QtGui.QWidget):
         label_date_start = QtGui.QLabel('Date Start :')
         label_date_end = QtGui.QLabel('Date End :')
         self.date_start_widget = QtGui.QDateEdit()
-        self.date_start_widget.setDisplayFormat('dd / MM / yyyy')
+        self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
         self.date_end_widget = QtGui.QDateEdit()
-        self.date_end_widget.setDisplayFormat('dd / MM / yyyy')
+        self.date_end_widget.setDisplayFormat('01 / MM / yyyy')
         subgrid2 = QtGui.QGridLayout()
         subgrid2.setSpacing(5)
         row = 0
@@ -652,7 +652,7 @@ class TabHydrograph(QtGui.QWidget):
         btn_draw.clicked.connect(self.draw_hydrograph)
         btn_save.clicked.connect(self.select_save_path)
         btn_weather_normals.clicked.connect(self.show_weather_normals)
-                
+        
         #----- Others -----
         
         btn_waterlvl_dir.clicked.connect(self.select_waterlvl_file)
@@ -664,6 +664,11 @@ class TabHydrograph(QtGui.QWidget):
         self.language_box.currentIndexChanged.connect(self.language_changed)
         self.waterlvl_max.valueChanged.connect(self.waterlvl_scale_changed)
         self.waterlvl_scale.valueChanged.connect(self.waterlvl_scale_changed)
+        self.graph_status.stateChanged.connect(self.fig_title_state_changed)
+        self.graph_title.editingFinished.connect(self.fig_title_changed)
+        
+        self.date_start_widget.dateChanged.connect(self.time_scale_changed)
+        self.date_end_widget.dateChanged.connect(self.time_scale_changed)
         
         #------------------------------------------------------- Init Image ----
         
@@ -1022,39 +1027,57 @@ class TabHydrograph(QtGui.QWidget):
             
         self.UpdateUI = True
     
+    #===========================================================================
     def save_config_isClicked(self):
-        
-        if not self.fwaterlvl or not self.hydrograph2display.fmeteo:
+    #===========================================================================
+    
+        if not self.fwaterlvl:
             
             self.parent.write2console(
-            '''<font color=red>No valid water level or/and valid weather data 
-                 file currently selected. Cannot save graph layout.
+            '''<font color=red>No valid water level file currently selected.
+                 Cannot save graph layout.
                </font>''')
             
-            self.msgError.setText('''<b>Please select valid water level or/and 
-                                       a valid weather data file.</b>''')
-            self.msgError.exec_() 
+            self.msgError.setText(
+            '''<b>Please select valid water level data file.</b>''')
             
-        else:
-            name_well = self.waterlvl_data.name_well
+            self.msgError.exec_()
             
-            layoutExist = self.hydrograph2display.checkLayout(name_well)
+            return
+            
+        if not self.hydrograph2display.fmeteo:
+            
+            self.parent.write2console(
+            '''<font color=red>No valid weather data file currently selected. 
+                 Cannot save graph layout.
+               </font>''')
+            
+            self.msgError.setText(
+                            '''<b>Please select valid weather data file.</b>''')
+                            
+            self.msgError.exec_()
+            
+            return
+            
+        name_well = self.waterlvl_data.name_well
+        
+        layoutExist = self.hydrograph2display.checkLayout(name_well)
 
-            if layoutExist == True:
-                self.msgBox.setText(
-                '''<b>A graph layout already exists for well %s.<br><br> Do 
-                     you want to replace it?</b>''' % name_well)
-                override = self.msgBox.exec_()
+        if layoutExist == True:
+            self.msgBox.setText(
+            '''<b>A graph layout already exists for well %s.<br><br> Do 
+                 you want to replace it?</b>''' % name_well)
+            override = self.msgBox.exec_()
 
-                if override == self.msgBox.Yes:
-                    self.save_graph_layout(name_well)
-                                
-                elif override == self.msgBox.No:
-                    self.parent.write2console('''<font color=black>Graph layout 
-                                   not saved for well %s.</font>''' % name_well)
-                    
-            else:            
+            if override == self.msgBox.Yes:
                 self.save_graph_layout(name_well)
+                            
+            elif override == self.msgBox.No:
+                self.parent.write2console('''<font color=black>Graph layout 
+                               not saved for well %s.</font>''' % name_well)
+                
+        else:            
+            self.save_graph_layout(name_well)
               
     def save_graph_layout(self, name_well):
         
@@ -1066,7 +1089,7 @@ class TabHydrograph(QtGui.QWidget):
             
     def best_fit_waterlvl(self):
         
-        if len(self.waterlvl_data.lvl)!=0:
+        if len(self.waterlvl_data.lvl) != 0:
             
             WL = self.waterlvl_data.lvl
             WLscale, WLmin = self.hydrograph2display.best_fit_waterlvl(WL)
@@ -1076,7 +1099,7 @@ class TabHydrograph(QtGui.QWidget):
             
     def best_fit_time(self):
             
-        if len(self.waterlvl_data.time)!=0:
+        if len(self.waterlvl_data.time) != 0:
             
             TIME = self.waterlvl_data.time 
             date0, date1 = self.hydrograph2display.best_fit_time(TIME)
@@ -1095,7 +1118,7 @@ class TabHydrograph(QtGui.QWidget):
                                     caption="Save Figure", dir=dialog_dir,
                                     filter=('*.pdf;;*.svg'))
                                   
-        if fname:            
+        if fname:         
             if fname[-4:] != ftype[1:]:
                 fname = fname + ftype[1:]
                 
@@ -1166,8 +1189,56 @@ class TabHydrograph(QtGui.QWidget):
             self.hydrograph2display.WLscale = self.waterlvl_scale.value()
        
             self.hydrograph2display.update_waterlvl_scale()
+            self.hydrograph2display.draw_ylabels()
             
-            self.refresh_hydrograph()       
+            self.refresh_hydrograph()
+    
+    def time_scale_changed(self):
+        
+        if self.UpdateUI == True:
+            
+            year = self.date_start_widget.date().year()
+            month = self.date_start_widget.date().month()
+            day = 1
+            date = xldate_from_date_tuple((year, month, day),0)
+            self.hydrograph2display.TIMEmin = date
+            
+            year = self.date_end_widget.date().year()
+            month = self.date_end_widget.date().month()
+            day = 1
+            date = xldate_from_date_tuple((year, month, day),0)
+            self.hydrograph2display.TIMEmax = date
+            
+            self.hydrograph2display.set_time_scale()
+            self.hydrograph2display.draw_weather()
+            self.hydrograph2display.draw_figure_title()
+#            self.hydrograph2display.draw_xlabels()
+            
+            self.refresh_hydrograph()
+    
+#        self.date_start_widget.editingFinished(self.update_time_scale)
+    
+    def fig_title_state_changed(self):
+        
+         if self.UpdateUI == True:
+        
+            if self.graph_status.isChecked():
+                self.hydrograph2display.title_state = 1
+                self.hydrograph2display.title_text = self.graph_title.text()
+            else:
+                self.hydrograph2display.title_state = 0
+                
+            self.hydrograph2display.set_margins()
+            
+            self.refresh_hydrograph()
+                
+    def fig_title_changed(self):
+            
+            self.hydrograph2display.title_text = self.graph_title.text()
+            
+            self.hydrograph2display.draw_figure_title()
+            
+            self.refresh_hydrograph() 
     
     def refresh_hydrograph(self):
         
@@ -1183,8 +1254,6 @@ class TabHydrograph(QtGui.QWidget):
         
         self.hydrograph_scrollarea.refresh_image(image)
             
-        
-#    self.language_box.currentIndexChanged.connect(self.language_changed)
           
 ################################################################## @TAB DOWNLOAD
         

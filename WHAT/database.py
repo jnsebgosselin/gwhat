@@ -84,24 +84,24 @@ class tooltips():
         #----- HYDROGRAPH TOOLBAR -----
         
         self.loadConfig = ('Load graph layout for the current \n' +
-                           'Water Level Data File if it exists.')
+                           'Water Level Data File if it exists')
                              
-        self.saveConfig = 'Save current graph layout.'
+        self.saveConfig = 'Save current graph layout'
         
-        self.fit_y = 'Best fit the water level scale.'
+        self.fit_y = 'Best fit the water level scale'
         
-        self.fit_x = 'Best fit the time scale.'
+        self.fit_x = 'Best fit the time scale'
         
         self.closest_meteo = '''<p>Search and Load the Weather Data File
-        of the station located the closest from the well.</p>'''
+        of the station located the closest from the well</p>'''
                                 
-        self.draw_hydrograph = 'Draw the well hydrograph.'
+        self.draw_hydrograph = 'Refresh the well hydrograph'
         
-        self.save_hydrograph = 'Save the well hydrograph.'
+        self.save_hydrograph = 'Save the well hydrograph'
         
         self.weather_normals = '''<p>Plot the mean air temperature and 
         precipitation monthly and yearly normals calculated from the Weather
-        Data File currently selected.</p>'''
+        Data File currently selected</p>'''
         
         if language == 'French': #--------------------------------- FRENCH -----
             
@@ -124,6 +124,7 @@ class styleUI():
         self.VLine = 53
         
         self.iconSize = QSize(36, 36)
+        self.iconSize2 = QSize(28, 28)
         
         # 17 = QtGui.QFrame.Box | QtGui.QFrame.Plain
         # 22 = QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain
