@@ -19,18 +19,31 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
-       
+      
 #----- STANDARD LIBRARY IMPORTS -----
        
 import csv
 from calendar import monthrange
+from sys import argv
+from os import path, getcwd
 
 #----- THIRD PARTY IMPORTS -----
 
-import matplotlib.pyplot as plt
-import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
+
+import numpy as np
+from PySide import QtGui, QtCore
+
+import matplotlib
+matplotlib.use('Qt4Agg')
+matplotlib.rcParams['backend.qt4']='PySide'
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+import matplotlib.pyplot as plt
+
+#---- PERSONAL IMPORTS ----
+
+import database as db
 
 class LabelDataBase():  
     
@@ -45,6 +58,148 @@ class LabelDataBase():
         
         if language == 'French':
             'Option not available at the moment'
+            
+class Tooltips():
+    
+    def __init__(self, language): #------------------------------- ENGLISH -----
+        
+        self.save = 'Save graph'
+        self.open = "Open a valid '.out' weather data file"
+        
+        if language == 'French': #--------------------------------- FRENCH -----
+            
+            pass
+            
+class WeatherAvgGraph(QtGui.QWidget):
+    
+    def __init__(self, parent=None):
+        super(WeatherAvgGraph, self).__init__(parent)
+
+        self.initUI()
+        
+    def initUI(self):
+        
+        self.setWindowTitle('Weather Averages')
+        
+        iconDB = db.icons()
+        StyleDB = db.styleUI()
+        ttipDB = Tooltips('English')
+        self.station_name = []
+        self.save_fig_dir = getcwd()
+        self.meteo_dir = getcwd()
+        
+        #----------------------------------------------------- FigureCanvas ----
+        
+        self.fig = plt.figure()        
+        self.fig.set_size_inches(8.5, 5)        
+        self.fig.patch.set_facecolor('white')
+        self.fig_widget = FigureCanvasQTAgg(self.fig)
+        
+        #---------------------------------------------------------- TOOLBAR ----
+        
+        self.btn_save = QtGui.QToolButton()
+        self.btn_save.setAutoRaise(True)
+        self.btn_save.setIcon(iconDB.save)
+        self.btn_save.setToolTip(ttipDB.save)
+        self.btn_save.setFocusPolicy(QtCore.Qt.NoFocus)
+        
+        self.btn_open = QtGui.QToolButton()
+        self.btn_open.setAutoRaise(True)
+        self.btn_open.setIcon(iconDB.openFile)
+        self.btn_open.setToolTip(ttipDB.open)
+        self.btn_open.setFocusPolicy(QtCore.Qt.NoFocus)
+        
+        subgrid_toolbar = QtGui.QGridLayout()
+        toolbar_widget = QtGui.QWidget()
+        
+        row = 0
+        col = 0
+        subgrid_toolbar.addWidget(self.btn_open, row, col)        
+        col += 1
+        subgrid_toolbar.addWidget(self.btn_save, row, col)
+        
+        
+        subgrid_toolbar.setSpacing(5)
+        subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
+        subgrid_toolbar.setColumnStretch(col+1, 500)
+                
+        self.btn_save.setIconSize(StyleDB.iconSize)
+        self.btn_open.setIconSize(StyleDB.iconSize)
+        
+        toolbar_widget.setLayout(subgrid_toolbar)
+        
+        #-------------------------------------------------------- MAIN GRID ----
+        
+        mainGrid = QtGui.QGridLayout()
+        
+        row = 0 
+        mainGrid.addWidget(toolbar_widget, row, 0)
+        row += 1
+        mainGrid.addWidget(self.fig_widget, row, 0)
+                
+        mainGrid.setContentsMargins(15, 15, 15, 15) # Left, Top, Right, Bottom 
+        mainGrid.setSpacing(15)
+        mainGrid.setRowStretch(1, 500)
+        mainGrid.setColumnStretch(0, 500)
+        
+        self.setLayout(mainGrid)
+        
+        #------------------------------------------------------------ EVENT ----
+        
+        self.btn_save.clicked.connect(self.save_graph)
+        self.btn_open.clicked.connect(self.select_meteo_file)
+        
+    def generate_graph(self, filename):
+        
+        METEO = MeteoObj()
+        METEO.load(filename)
+        
+        self.station_name = METEO.station_name
+        self.setWindowTitle('Weather Averages for %s' % self.station_name)
+        
+        YEAR = METEO.YEAR
+        MONTH = METEO.MONTH
+        TAVG = METEO.TAVG
+        PTOT = METEO.PTOT
+        RAIN = METEO.RAIN
+        
+        TNORM, PNORM, RNORM, TSTD = calculate_normals(YEAR, MONTH,
+                                                      TAVG, PTOT, RAIN)
+                                                  
+        plot_monthly_normals(self.fig, TNORM, PNORM, RNORM, TSTD)
+                
+        self.fig_widget.draw()
+
+    def save_graph(self):
+        
+        dialog_dir = self.save_fig_dir
+        dialog_dir += '/WeatherAverages_%s' % self.station_name
+        
+        dialog = QtGui.QFileDialog()
+        dialog.setConfirmOverwrite(True)
+        filename, ftype = dialog.getSaveFileName(
+                                          caption="Save Figure", dir=dialog_dir,
+                                          filter=('*.pdf;;*.svg'))
+                                  
+        if filename:         
+            if filename[-4:] != ftype[1:]:
+                # Add an extension if there is none, depending if on Windows
+                # or Linux
+                filename = filename + ftype[1:]
+                
+                self.fig.savefig(filename)
+                
+                self.save_fig_dir = path.dirname(filename)
+
+    def select_meteo_file(self):
+        dialog_dir = self.meteo_dir
+        filename, _ = QtGui.QFileDialog.getOpenFileName(
+                                   self, 'Select a valid weather data file', 
+                                   dialog_dir, '*.out') 
+                                   
+        if filename:
+            self.generate_graph(filename)
+            self.meteo_dir = path.dirname(filename)
             
 #===============================================================================        
 class MeteoObj():
@@ -430,17 +585,8 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD):
                numpoints=1, fontsize=10)
     
 #===============================================================================    
-def calculate_normals(fmeteo):
+def calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN):
 #===============================================================================
-    
-    METEO = MeteoObj()
-    METEO.load(fmeteo)
-    
-    YEAR = METEO.YEAR
-    MONTH = METEO.MONTH
-    TAVG = METEO.TAVG
-    PTOT = METEO.PTOT
-    RAIN = METEO.RAIN
     
 #---------------------------------------------------------- MONTHLY VALUES -----
     
@@ -492,23 +638,28 @@ def calculate_normals(fmeteo):
 
 if __name__ == '__main__':
     
-    global label_font_size
-    label_font_size = 14
+#    global label_font_size
+#    label_font_size = 14
+#    
+#    global labelDB
+#    labelDB = LabelDataBase('English')
+#                
+#    plt.close("all")
+#    
+#    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
+#    TNORM, PNORM, RNORM, TSTD = calculate_normals(fmeteo)
+#    
+#    fig = plt.figure(figsize=(8.5, 5))        
+##    fig.set_size_inches(8.5, 5)
+#    plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD)
+#    
     
-    global labelDB
-    labelDB = LabelDataBase('English')
-                
-    plt.close("all")
-    
-    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-    TNORM, PNORM, RNORM, TSTD = calculate_normals(fmeteo)
-    
-    fig = plt.figure(figsize=(8.5, 5))        
-#    fig.set_size_inches(8.5, 5)
-    plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD)
-    
+    app = QtGui.QApplication(argv)   
+    instance_1 = WeatherAvgGraph()
+            
     fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
-    TNORM, PNORM, RNORM, TSTD = calculate_normals(fmeteo)
+    instance_1.generate_graph(fmeteo)
     
-    fig = plt.figure(figsize=(8.5, 5))        
-    plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD)
+    instance_1.show()
+    instance_1.setFixedSize(instance_1.size());
+    app.exec_()

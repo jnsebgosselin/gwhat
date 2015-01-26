@@ -297,6 +297,10 @@ class MainWindow(QtGui.QMainWindow):
             self.tab_hydrograph.meteo_dir = project_dir + '/Meteo/Output'
             self.tab_hydrograph.waterlvl_dir = project_dir + '/Water Levels'
             self.tab_hydrograph.save_fig_dir = project_dir
+            
+            self.tab_hydrograph.weather_avg_graph.save_fig_dir = project_dir
+            self.tab_hydrograph.weather_avg_graph.meteo_dir = (project_dir + 
+                                                               '/Meteo/Output')
                     
 ################################################################ @TAB HYDROGRAPH
         
@@ -308,8 +312,6 @@ class TabHydrograph(QtGui.QWidget):
         super(TabHydrograph, self).__init__(parent)
         self.parent = parent        
         self.initUI()
-        self.initUI_weather_normals()
-    
     
     #===========================================================================    
     def initUI(self):
@@ -334,7 +336,26 @@ class TabHydrograph(QtGui.QWidget):
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
+    #--------------------------------------------------- WEATHER AVG WINDOW ----
+        
+        self.weather_avg_graph = meteo.WeatherAvgGraph()
+        
+        project_dir = self.parent.what_pref.project_dir
+        self.weather_avg_graph.save_fig_dir = project_dir
+        self.weather_avg_graph.meteo_dir = project_dir + '/Meteo/Output'
+        
     #-------------------------------------------------------------- TOOLBAR ----
+        
+        #---- SubGrid Figure Title ----
+
+        graph_title_label = QtGui.QLabel('         ')
+        self.graph_title = QtGui.QLineEdit()
+        self.graph_title.setMaxLength(65)
+        self.graph_title.setEnabled(False)
+        self.graph_title.setText('Add A Title To The Figure Here')
+        self.graph_title.setToolTip(ttipDB.addTitle)
+        self.graph_status = QtGui.QCheckBox() 
+        
         
         btn_loadConfig = QtGui.QToolButton()
         btn_loadConfig.setAutoRaise(True)
@@ -377,41 +398,50 @@ class TabHydrograph(QtGui.QWidget):
         btn_save.setToolTip(ttipDB.save_hydrograph)
 
         separator1 = QtGui.QFrame()
-        separator1.setFrameStyle(StyleDB.HLine)
+        separator1.setFrameStyle(StyleDB.VLine)
         separator2 = QtGui.QFrame()
-        separator2.setFrameStyle(StyleDB.HLine)
+        separator2.setFrameStyle(StyleDB.VLine)
 #        separator3 = QtGui.QFrame()
-#        separator3.setFrameStyle(StyleDB.HLine)                    
+#        separator3.setFrameStyle(StyleDB.VLine)                    
                                      
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
         
         row = 0
-        subgrid_toolbar.addWidget(btn_draw, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_save, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_loadConfig, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_saveConfig, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(separator1, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_bestfit_waterlvl, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_bestfit_time, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_closest_meteo, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(separator2, row, 0)
-        row += 1
-        subgrid_toolbar.addWidget(btn_weather_normals, row, 0)
-#        row += 1
-#        subgrid_toolbar.addWidget(separator3, row, 0)
-       
+        col = 0
+#        subgrid_toolbar.addWidget(btn_draw, row, col)
+#        col += 1
+        subgrid_toolbar.addWidget(btn_save, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(btn_loadConfig, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(btn_saveConfig, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(separator1, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(btn_bestfit_waterlvl, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(btn_bestfit_time, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(btn_closest_meteo, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(separator2, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(btn_weather_normals, row, col)
+#        col += 1
+#        subgrid_toolbar.addWidget(separator3, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(graph_title_label, row, col)
+        subgrid_toolbar.setColumnStretch(col, 1)
+        col += 1
+        subgrid_toolbar.addWidget(self.graph_title, row, col)
+        subgrid_toolbar.setColumnStretch(col, 4)
+        col += 1
+        subgrid_toolbar.addWidget(self.graph_status, row, col)
+               
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-        subgrid_toolbar.setRowStretch(row+1, 500)
+        
 
         btn_loadConfig.setIconSize(StyleDB.iconSize)
         btn_saveConfig.setIconSize(StyleDB.iconSize)
@@ -546,8 +576,7 @@ class TabHydrograph(QtGui.QWidget):
         self.hydrograph2display = hydroprint.Hydrograph()
         self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display.fig)
         self.hydrograph_canvas.draw()        
-        
-        
+                
 #        self.hydrograph2display = plt.figure()
 #        self.hydrograph2display.set_size_inches(11, 8.5)
 #        self.hydrograph2display.patch.set_facecolor('white')
@@ -555,9 +584,9 @@ class TabHydrograph(QtGui.QWidget):
 #        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display)
 #        self.hydrograph_canvas.draw()
 #        
-        self.hydrograph2save = plt.figure()
-        self.hydrograph2save.set_size_inches(11, 8.5)
-        self.hydrograph2save.patch.set_facecolor('white')
+#        self.hydrograph2save = plt.figure()
+#        self.hydrograph2save.set_size_inches(11, 8.5)
+#        self.hydrograph2save.patch.set_facecolor('white')
         
         self.hydrograph_scrollarea = imageviewer.ImageViewer()
         
@@ -572,28 +601,28 @@ class TabHydrograph(QtGui.QWidget):
         
         grid_hydrograph_widget.setLayout(grid_hydrograph)
                 
-        #---- SubGrid Figure Title ----
-
-        graph_title_label = QtGui.QLabel('Figure Title :')
-        self.graph_title = QtGui.QLineEdit()
-        self.graph_title.setMaxLength(65)
-        self.graph_title.setEnabled(False)
-        self.graph_title.setText('Add A Title To The Figure Here')
-        self.graph_status = QtGui.QCheckBox() 
-        
-        subgrid_figtitle_widget = QtGui.QFrame()
-        subgrid_figtitle = QtGui.QGridLayout()
-        
-        row = 0
-        subgrid_figtitle.addWidget(graph_title_label, row, 0)
-        subgrid_figtitle.addWidget(self.graph_title, row, 1)
-        subgrid_figtitle.addWidget(self.graph_status, row, 2)
-        
-        subgrid_figtitle.setSpacing(10)
-        subgrid_figtitle.setColumnStretch(1, 500)
-        subgrid_figtitle.setContentsMargins(0, 0, 0, 0) # (L,T, R, B)
-        
-        subgrid_figtitle_widget.setLayout(subgrid_figtitle)
+#        #---- SubGrid Figure Title ----
+#
+#        graph_title_label = QtGui.QLabel('Figure Title :')
+#        self.graph_title = QtGui.QLineEdit()
+#        self.graph_title.setMaxLength(65)
+#        self.graph_title.setEnabled(False)
+#        self.graph_title.setText('Add A Title To The Figure Here')
+#        self.graph_status = QtGui.QCheckBox() 
+#        
+#        subgrid_figtitle_widget = QtGui.QFrame()
+#        subgrid_figtitle = QtGui.QGridLayout()
+#        
+#        row = 0
+#        subgrid_figtitle.addWidget(graph_title_label, row, 0)
+#        subgrid_figtitle.addWidget(self.graph_title, row, 1)
+#        subgrid_figtitle.addWidget(self.graph_status, row, 2)
+#        
+#        subgrid_figtitle.setSpacing(10)
+#        subgrid_figtitle.setColumnStretch(1, 500)
+#        subgrid_figtitle.setContentsMargins(0, 0, 0, 0) # (L,T, R, B)
+#        
+#        subgrid_figtitle_widget.setLayout(subgrid_figtitle)
         
         #----- ASSEMBLING SubGrids -----
                 
@@ -601,7 +630,7 @@ class TabHydrograph(QtGui.QWidget):
         grid_LEFT_widget = QtGui.QFrame()
         
         row = 0
-        grid_LEFT.addWidget(subgrid_figtitle_widget, row, 0)
+        grid_LEFT.addWidget(toolbar_widget, row, 0)
         row += 1
         grid_LEFT.addWidget(grid_hydrograph_widget, row, 0)
         
@@ -620,7 +649,7 @@ class TabHydrograph(QtGui.QWidget):
         row = 0 
         mainGrid.addWidget(grid_LEFT_widget, row, 0)
         mainGrid.addWidget(grid_RIGHT_widget, row, 1)
-        mainGrid.addWidget(toolbar_widget, row, 2)        
+#        mainGrid.addWidget(toolbar_widget, row, 2)        
         
         self.setLayout(mainGrid)
         mainGrid.setContentsMargins(10, 10, 10, 10) # Left, Top, Right, Bottom 
@@ -651,7 +680,7 @@ class TabHydrograph(QtGui.QWidget):
         btn_closest_meteo.clicked.connect(self.select_closest_meteo_file)
         btn_draw.clicked.connect(self.draw_hydrograph)
         btn_save.clicked.connect(self.select_save_path)
-        btn_weather_normals.clicked.connect(self.show_weather_normals)
+        btn_weather_normals.clicked.connect(self.show_weather_averages)
         
         #----- Others -----
         
@@ -686,44 +715,14 @@ class TabHydrograph(QtGui.QWidget):
                 
         self.hydrograph_scrollarea.load_image(blank_image)
         
-    def initUI_weather_normals(self):
-        
-        self.normals_fig = plt.figure()        
-        self.normals_fig.set_size_inches(8.5, 5)        
-        self.normals_fig.patch.set_facecolor('white')
-        self.normals_fig_widget = FigureCanvasQTAgg(self.normals_fig)
-        
-        self.toolbar = NavigationToolbar2QTAgg(self.normals_fig_widget, self)
-        # https://sukhbinder.wordpress.com/2013/12/16/
-        #         simple-pyqt-and-matplotlib-example-with-zoompan/
-             
-        grid_normals = QtGui.QGridLayout()
-        self.normals_window = QtGui.QWidget()
-        
-        row = 0
-        grid_normals.addWidget(self.normals_fig_widget, row, 0)
-        row += 1
-        grid_normals.addWidget(self.toolbar, row, 0)
-                
-        self.normals_window.setLayout(grid_normals)
-#        grid_normals.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
-#        grid_normals.setSpacing(15)
-#        grid_normals.setColumnStretch(1, 500)
-#        
-#        self.normals_window.resize(250, 150)
-        self.normals_window.setWindowTitle('Weather Normals')
-    
-    def show_weather_normals(self):
+    def show_weather_averages(self):
         
         fmeteo = self.hydrograph2display.fmeteo
-        if fmeteo:
-            self.normals_window.setWindowTitle(
-                        'Weather Normals for %s' % self.meteo_data.station_name) 
-            TNORM, PNORM, RNORM, TSTD = meteo.calculate_normals(fmeteo)
-            meteo.plot_monthly_normals(
-                                    self.normals_fig, TNORM, PNORM, RNORM, TSTD)                      
-            self.normals_fig_widget.draw()            
-            self.normals_window.show()            
+        if fmeteo:        
+            self.weather_avg_graph.generate_graph(self.hydrograph2display.fmeteo)
+        
+        self.weather_avg_graph.show()
+        self.weather_avg_graph.setFixedSize(self.weather_avg_graph.size());           
    
     def enable_graph_title(self):
         
@@ -1120,6 +1119,8 @@ class TabHydrograph(QtGui.QWidget):
                                   
         if fname:         
             if fname[-4:] != ftype[1:]:
+                # Add an extension if there is none, depending if on Windows
+                # or Linux
                 fname = fname + ftype[1:]
                 
             self.save_fig_dir = path.dirname(fname)

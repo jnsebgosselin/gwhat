@@ -278,10 +278,7 @@ class Hydrograph():
         self.name_well = WaterLvlObj.name_well          
                 
         fname_info = self.finfo
-      
-        language = self.language
-        labelDB = LabelDatabase(language)
-        
+              
         self.date_labels_display_pattern = 2
         RAINscale = self.RAINscale
         
@@ -605,11 +602,12 @@ class Hydrograph():
         self.PTOT_bar.remove()
         self.RAIN_bar.remove()
         
-        self.PTOT_bar = self.ax3.fill_between(TIME2X, 0., Ptot2X, color=(0.65,0.65,0.65),
-                                          alpha=1., edgecolor='none')
+        self.PTOT_bar = self.ax3.fill_between(TIME2X, 0., Ptot2X, 
+                                              color=(0.65,0.65,0.65),
+                                              alpha=1., edgecolor='none')
                                             
         self.RAIN_bar = self.ax3.fill_between(TIME2X, 0., Rain2X, color='blue',
-                                            alpha=1., edgecolor='none')
+                                              alpha=1., edgecolor='none')
                                             
         self.baseline.set_data([self.TIMEmin, self.TIMEmax], [0, 0])
                                                     

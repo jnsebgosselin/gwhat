@@ -95,13 +95,15 @@ class tooltips():
         self.closest_meteo = '''<p>Search and Load the Weather Data File
         of the station located the closest from the well</p>'''
                                 
-        self.draw_hydrograph = 'Refresh the well hydrograph'
+        self.draw_hydrograph = 'Force a refresh of the well hydrograph'
         
         self.save_hydrograph = 'Save the well hydrograph'
         
         self.weather_normals = '''<p>Plot the mean air temperature and 
         precipitation monthly and yearly normals calculated from the Weather
         Data File currently selected</p>'''
+        
+        self.addTitle = 'Add A Title To The Figure Here'
         
         if language == 'French': #--------------------------------- FRENCH -----
             
@@ -123,7 +125,7 @@ class styleUI():
         self.HLine = 52
         self.VLine = 53
         
-        self.iconSize = QSize(36, 36)
+        self.iconSize = QSize(32, 32)
         self.iconSize2 = QSize(28, 28)
         
         # 17 = QtGui.QFrame.Box | QtGui.QFrame.Plain
