@@ -36,6 +36,7 @@ class icons():
         self.play = QIcon('Icons/start.png')
         self.forward = QIcon('Icons/start_all.png')
         self.refresh = QIcon('Icons/refresh.png')
+        self.refresh2 = QIcon('Icons/refresh2.png')
         self.openFile = QIcon('Icons/open_file.png')
         self.openFolder = QIcon('Icons/folder')
         self.download = QIcon('Icons/download.png')
@@ -53,6 +54,7 @@ class icons():
         self.draw_hydrograph = QIcon('Icons/stock_image.png')
         self.save = QIcon('Icons/save.png')
         self.meteo = QIcon('Icons/meteo.png')
+        self.work = QIcon('Icons/work.png')
         
         #----- MRC TOOLBAR -----
         
@@ -104,6 +106,8 @@ class tooltips():
         Data File currently selected</p>'''
         
         self.addTitle = 'Add A Title To The Figure Here'
+        
+        self.work_waterlvl = 'Make computations on the data (EXPERIMENTAL FEATURE)'
         
         if language == 'French': #--------------------------------- FRENCH -----
             

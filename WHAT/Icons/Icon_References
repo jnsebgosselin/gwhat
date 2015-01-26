@@ -52,6 +52,12 @@ This is a recolored and modified version of "reload.svg" in the Suru icon set of
 
 /usr/share/icons/suru/actions/scalable
 
+(9b) refresh2.png
+
+This is a recolored and modified version of "reload.svg" in the Suru icon set of Ubuntu.
+
+/usr/share/icons/suru/apps/scalable
+
 (10) load_config.png & save_config.png [Hydroprint]
 
 These are recolored and modified versions of "external-link.svg" in the Suru icon set of Ubuntu.
@@ -60,30 +66,36 @@ These are recolored and modified versions of "external-link.svg" in the Suru ico
 
 (11) fit_x.png & fit_y.png [Hydroprint]
 
-These are recolored and modified versions of "select.svg" and "up-success-down-none.svg" in the Suru icon set of Ubuntu.
+     These are recolored and modified versions of "select.svg" and "up-success-down-none.svg" in the Suru icon set of Ubuntu.
 
-/usr/share/icons/suru/actions/scalable
+     /usr/share/icons/suru/actions/scalable
 
 (12) search.png
 
-Recolored version of "search.svg" in the Suru icon set of Ubuntu.
+     Recolored version of "search.svg" in the Suru icon set of Ubuntu.
 
-/usr/share/icons/suru/actions/scalable
+     /usr/share/icons/suru/actions/scalable/search.svg
 
 (13) erase.png
 
-vectorized and modified from:
+     vectorized and modified from:
 
-http://www.iconarchive.com/show/ios7-icons-by-icons8/Editing-Eraser-icon.html
+     http://www.iconarchive.com/show/ios7-icons-by-icons8/Editing-Eraser-icon.html
 
-NOTE: Contact them soon.
+     NOTE: Need to contact the author soon.
 
 (14) fin_peak.png
 
-Icon inspired from : Inkscape icons snap nodes.svg
+     Icon inspired from : Inkscape icons snap nodes.svg
 
-http://commons.wikimedia.org/wiki/File:Inkscape_icons_snap_nodes.svg
+     http://commons.wikimedia.org/wiki/File:Inkscape_icons_snap_nodes.svg
 
+(15) work.pgn
+
+     This icon is a mix from 2 icons from the Suru icon set of Ubuntu.
+
+     /usr/share/icons/suru/apps/scalable/ubuntu-sdk-symbolic.svg
+     /usr/share/icons/suru/apps/actions/settings.svg
 
 
 

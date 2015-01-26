@@ -355,8 +355,7 @@ class TabHydrograph(QtGui.QWidget):
         self.graph_title.setText('Add A Title To The Figure Here')
         self.graph_title.setToolTip(ttipDB.addTitle)
         self.graph_status = QtGui.QCheckBox() 
-        
-        
+                
         btn_loadConfig = QtGui.QToolButton()
         btn_loadConfig.setAutoRaise(True)
         btn_loadConfig.setIcon(iconDB.load_graph_config)
@@ -391,6 +390,11 @@ class TabHydrograph(QtGui.QWidget):
         btn_weather_normals.setAutoRaise(True)
         btn_weather_normals.setIcon(iconDB.meteo)        
         btn_weather_normals.setToolTip(ttipDB.weather_normals)
+        
+        btn_work_waterlvl = QtGui.QToolButton()
+        btn_work_waterlvl.setAutoRaise(True)
+        btn_work_waterlvl.setIcon(iconDB.work)        
+        btn_work_waterlvl.setToolTip(ttipDB.work_waterlvl)
 
         btn_save = QtGui.QToolButton()
         btn_save.setAutoRaise(True)
@@ -428,6 +432,8 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.addWidget(separator2, row, col)
         col += 1
         subgrid_toolbar.addWidget(btn_weather_normals, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(btn_work_waterlvl, row, col)
 #        col += 1
 #        subgrid_toolbar.addWidget(separator3, row, col)
         col += 1
@@ -442,7 +448,6 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         
-
         btn_loadConfig.setIconSize(StyleDB.iconSize)
         btn_saveConfig.setIconSize(StyleDB.iconSize)
         btn_bestfit_waterlvl.setIconSize(StyleDB.iconSize)
@@ -451,6 +456,7 @@ class TabHydrograph(QtGui.QWidget):
         btn_weather_normals.setIconSize(StyleDB.iconSize)
         btn_draw.setIconSize(StyleDB.iconSize)
         btn_save.setIconSize(StyleDB.iconSize)
+        btn_work_waterlvl.setIconSize(StyleDB.iconSize)
         
         toolbar_widget.setLayout(subgrid_toolbar)
     
