@@ -686,7 +686,6 @@ class TabHydrograph(QtGui.QWidget):
         
         btn_waterlvl_dir.clicked.connect(self.select_waterlvl_file)
         btn_weather_dir.clicked.connect(self.select_meteo_file)
-        self.graph_status.stateChanged.connect(self.enable_graph_title)
         
         #----- Hydrograph Parameters -----
         
@@ -723,13 +722,6 @@ class TabHydrograph(QtGui.QWidget):
         
         self.weather_avg_graph.show()
         self.weather_avg_graph.setFixedSize(self.weather_avg_graph.size());           
-   
-    def enable_graph_title(self):
-        
-        if self.graph_status.isChecked() == True:
-            self.graph_title.setEnabled(True)
-        else:
-            self.graph_title.setEnabled(False)
             
     def emit_error_message(self, error_text):
         
@@ -1175,28 +1167,42 @@ class TabHydrograph(QtGui.QWidget):
         
         if self.UpdateUI == True:
             
+            #---- Update Instance Variables ----
+            
             self.hydrograph2display.language = self.language_box.currentText()
+            
+            #---- Update Graph if Exists ----
+           
+            if self.hydrograph2display.isHydrographExists == True:
+                
+                self.hydrograph2display.draw_ylabels()
+                self.hydrograph2display.draw_xlabels()
         
-            self.hydrograph2display.draw_ylabels()
-            self.hydrograph2display.draw_xlabels()
-        
-            self.refresh_hydrograph()
+                self.refresh_hydrograph()
         
     def waterlvl_scale_changed(self):
         
         if self.UpdateUI == True:
+            
+            #---- Update Instance Variables ----
         
             self.hydrograph2display.WLmin = self.waterlvl_max.value()
             self.hydrograph2display.WLscale = self.waterlvl_scale.value()
-       
-            self.hydrograph2display.update_waterlvl_scale()
-            self.hydrograph2display.draw_ylabels()
             
-            self.refresh_hydrograph()
+            #---- Update Graph if Exists ----
+           
+            if self.hydrograph2display.isHydrographExists == True:
+                
+                self.hydrograph2display.update_waterlvl_scale()
+                self.hydrograph2display.draw_ylabels()
+            
+                self.refresh_hydrograph()
     
     def time_scale_changed(self):
         
         if self.UpdateUI == True:
+            
+            #---- Update Instance Variables ----
             
             year = self.date_start_widget.date().year()
             month = self.date_start_widget.date().month()
@@ -1210,36 +1216,61 @@ class TabHydrograph(QtGui.QWidget):
             date = xldate_from_date_tuple((year, month, day),0)
             self.hydrograph2display.TIMEmax = date
             
-            self.hydrograph2display.set_time_scale()
-            self.hydrograph2display.draw_weather()
-            self.hydrograph2display.draw_figure_title()
-#            self.hydrograph2display.draw_xlabels()
+            #---- Update Graph if Exists ----
+           
+            if self.hydrograph2display.isHydrographExists == True:
+               
+                self.hydrograph2display.set_time_scale()
+                self.hydrograph2display.draw_weather()
+                self.hydrograph2display.draw_figure_title()
             
-            self.refresh_hydrograph()
-    
-#        self.date_start_widget.editingFinished(self.update_time_scale)
+                self.refresh_hydrograph()
     
     def fig_title_state_changed(self):
         
-         if self.UpdateUI == True:
+        if self.graph_status.isChecked() == True:
+            self.graph_title.setEnabled(True)
+        else:
+            self.graph_title.setEnabled(False)
         
-            if self.graph_status.isChecked():
-                self.hydrograph2display.title_state = 1
-                self.hydrograph2display.title_text = self.graph_title.text()
-            else:
-                self.hydrograph2display.title_state = 0
-                
-            self.hydrograph2display.set_margins()
-            
-            self.refresh_hydrograph()
+        if self.UpdateUI == True:
+           
+           #---- Update Instance Variables ----
+           
+           if self.graph_status.isChecked():
+               self.hydrograph2display.title_state = 1
+               self.hydrograph2display.title_text = self.graph_title.text()
+           else:
+               self.hydrograph2display.title_state = 0
+           
+           #---- Update Graph if Exists ----
+           
+           if self.hydrograph2display.isHydrographExists == True:
+
+               self.hydrograph2display.set_margins()
+               self.hydrograph2display.draw_figure_title
+               self.refresh_hydrograph()
+               
+           else: # No hydrograph plotted yet
+               pass
                 
     def fig_title_changed(self):
+        
+        if self.UpdateUI == True :
             
+            #---- Update Instance Variables ----
+        
             self.hydrograph2display.title_text = self.graph_title.text()
             
-            self.hydrograph2display.draw_figure_title()
+            #---- Update Graph if Exists ----
             
-            self.refresh_hydrograph() 
+            if self.hydrograph2display.isHydrographExists == True:
+                        
+                self.hydrograph2display.draw_figure_title()
+                self.refresh_hydrograph()
+
+            else: # No hydrograph plotted yet
+               pass
     
     def refresh_hydrograph(self):
         

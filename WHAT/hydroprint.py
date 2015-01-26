@@ -310,11 +310,7 @@ class Hydrograph():
         
         #---- MARGINS (Inches) ----
         
-        bottom_margin = 0.75  
-        if self.title_state == 1:
-            top_margin = 0.75
-        else:
-            top_margin = 0.25
+        self.bottom_margin = 0.75  
         
         #---Time (host)---
         self.ax1 = self.fig.add_axes([0, 0, 1, 1])        
@@ -334,17 +330,17 @@ class Hydrograph():
         
         #----------------------------------------------------- FIGURE TITLE ----
            
-        self.dZGrid_inch = (fheight - bottom_margin - top_margin) / self.NZGrid
+        self.dZGrid_inch = (fheight - 2 * self.bottom_margin) / self.NZGrid
+            
+        xTitle = (self.TIMEmin + self.TIMEmax) / 2.
+        ytitle = self.NZGrid + (0.4 / self.dZGrid_inch)
         
-        if self.title_state == 1:
-            
-            xTitle = (self.TIMEmin + self.TIMEmax) / 2.
-            ytitle = self.NZGrid + (top_margin / 1.7 / self.dZGrid_inch)
-            
-            self.figTitle = self.ax1.text(xTitle, ytitle, self.title_text,
-                                          fontsize=18 * fheight / 8.5,
-                                          horizontalalignment='center', 
-                                          verticalalignment='center')
+        self.figTitle = self.ax1.text(xTitle, ytitle, self.title_text,
+                                      fontsize=18 * fheight / 8.5,
+                                      horizontalalignment='center', 
+                                      verticalalignment='center')
+                                      
+        self.draw_figure_title()
                 
         #--------------------------------------------- WEATHER STATION TEXT ----
         
@@ -762,6 +758,10 @@ class Hydrograph():
             
             self.figTitle.set_text(self.title_text)
             
+        else:
+            
+            self.figTitle.set_text('')
+            
     def set_margins(self):
         
         #---- MARGINS (Inches) ----
@@ -1105,7 +1105,7 @@ if __name__ == '__main__':
     elif hydrograph2display.WLref == 1:
         WL = waterLvlObj.ALT - waterLvlObj.lvl
     
-    hydrograph2display.title_state = 1 # 1 -> title ; 0 -> no title
+    hydrograph2display.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph2display.title_text = "Title of the Graph"
     
     _, _ = hydrograph2display.best_fit_waterlvl(WL)
