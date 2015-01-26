@@ -755,11 +755,11 @@ class Hydrograph():
     def draw_figure_title(self):
         
         if self.title_state == 1:
-            
+
             self.figTitle.set_text(self.title_text)
             
         else:
-            
+
             self.figTitle.set_text('')
             
     def set_margins(self):

@@ -1248,7 +1248,7 @@ class TabHydrograph(QtGui.QWidget):
            if self.hydrograph2display.isHydrographExists == True:
 
                self.hydrograph2display.set_margins()
-               self.hydrograph2display.draw_figure_title
+               self.hydrograph2display.draw_figure_title()
                self.refresh_hydrograph()
                
            else: # No hydrograph plotted yet
