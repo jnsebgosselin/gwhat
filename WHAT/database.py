@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #----- THIRD PARTY IMPORTS -----
 
-from PySide.QtGui import QIcon
+from PySide.QtGui import QIcon, QFont
 from PySide.QtCore import QSize
 
 class icons():
@@ -61,6 +61,7 @@ class icons():
         self.undo = QIcon('Icons/undo.png')
         self.clear_search = QIcon('Icons/clear-search.png')
         self.MRCalc = QIcon('Icons/MRCalc.png')
+        self.MRCalc2 = QIcon('Icons/MRCalc2.png')
         self.edit = QIcon('Icons/edit.png')
         self.pan = QIcon('Icons/pan.png')
         self.home = QIcon('Icons/home.png')
@@ -101,9 +102,8 @@ class tooltips():
         
         self.save_hydrograph = 'Save the well hydrograph'
         
-        self.weather_normals = '''<p>Plot the mean air temperature and 
-        precipitation monthly and yearly normals calculated from the Weather
-        Data File currently selected</p>'''
+        self.weather_normals = ('Plot the yearly and monthly averages for ' +
+                                'the \n Weather Data File currently selected')
         
         self.addTitle = 'Add A Title To The Figure Here'
         
@@ -131,6 +131,9 @@ class styleUI():
         
         self.iconSize = QSize(32, 32)
         self.iconSize2 = QSize(28, 28)
+        
+        self.fontSize1 = QFont() 
+        self.fontSize1.setPointSize(11)
         
         # 17 = QtGui.QFrame.Box | QtGui.QFrame.Plain
         # 22 = QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain

@@ -114,8 +114,8 @@ class WeatherAvgGraph(QtGui.QWidget):
         
         row = 0
         col = 0
-        subgrid_toolbar.addWidget(self.btn_open, row, col)        
-        col += 1
+#        subgrid_toolbar.addWidget(self.btn_open, row, col)        
+#        col += 1
         subgrid_toolbar.addWidget(self.btn_save, row, col)
         
         

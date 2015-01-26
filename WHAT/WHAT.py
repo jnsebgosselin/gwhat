@@ -62,6 +62,7 @@ import meteo
 import envirocan
 from fill_weather_data import Weather_File_Info
 import imageviewer
+import waterlvl_calc
 
 # The code is segmented in two main sections: the GUI section and the
 # WORKER sections.
@@ -299,8 +300,6 @@ class MainWindow(QtGui.QMainWindow):
             self.tab_hydrograph.save_fig_dir = project_dir
             
             self.tab_hydrograph.weather_avg_graph.save_fig_dir = project_dir
-            self.tab_hydrograph.weather_avg_graph.meteo_dir = (project_dir + 
-                                                               '/Meteo/Output')
                     
 ################################################################ @TAB HYDROGRAPH
         
@@ -342,7 +341,10 @@ class TabHydrograph(QtGui.QWidget):
         
         project_dir = self.parent.what_pref.project_dir
         self.weather_avg_graph.save_fig_dir = project_dir
-        self.weather_avg_graph.meteo_dir = project_dir + '/Meteo/Output'
+        
+    #------------------------------------------------- WATERLVL CALC WINDOW ----
+        
+        self.waterlvl_calc = waterlvl_calc.WLCalc()
         
     #-------------------------------------------------------------- TOOLBAR ----
         
@@ -466,12 +468,14 @@ class TabHydrograph(QtGui.QWidget):
        
         btn_waterlvl_dir = QtGui.QPushButton('    Water Level Data File')
         btn_waterlvl_dir.setIcon(iconDB.openFile)
+        btn_waterlvl_dir.setFont(StyleDB.fontSize1)
         self.well_info_widget = QtGui.QTextEdit()
         self.well_info_widget.setReadOnly(True)
         self.well_info_widget.setFixedHeight(150)
         
         btn_weather_dir = QtGui.QPushButton('    Weather Data File')
         btn_weather_dir.setIcon(iconDB.openFile)
+        btn_weather_dir.setFont(StyleDB.fontSize1)
         self.meteo_info_widget = QtGui.QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
         self.meteo_info_widget.setFixedHeight(150)
@@ -642,7 +646,7 @@ class TabHydrograph(QtGui.QWidget):
         
         grid_LEFT_widget.setLayout(grid_LEFT)
         grid_LEFT.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
-        grid_LEFT.setSpacing(15)
+        grid_LEFT.setSpacing(5)
         grid_LEFT.setColumnStretch(0, 500)
 #        grid_LEFT.setColumnStretch(2, 500)
         grid_LEFT.setRowStretch(1, 500)
@@ -688,6 +692,8 @@ class TabHydrograph(QtGui.QWidget):
         btn_save.clicked.connect(self.select_save_path)
         btn_weather_normals.clicked.connect(self.show_weather_averages)
         
+        btn_work_waterlvl.clicked.connect(self.show_waterlvl_calc)
+        
         #----- Others -----
         
         btn_waterlvl_dir.clicked.connect(self.select_waterlvl_file)
@@ -720,11 +726,40 @@ class TabHydrograph(QtGui.QWidget):
                 
         self.hydrograph_scrollarea.load_image(blank_image)
         
+    def show_waterlvl_calc(self):
+        
+        if not self.fwaterlvl:
+            
+            self.parent.write2console(
+            '''<font color=red>No valid water level data file currently 
+                 selected.</font>''')
+                               
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            
+            return
+            
+        self.waterlvl_calc.water_lvl = self.waterlvl_data.lvl
+        self.waterlvl_calc.time = self.waterlvl_data.time
+        self.waterlvl_calc.plot_water_levels()
+        
+        self.waterlvl_calc.show()
+        
     def show_weather_averages(self):
         
-        fmeteo = self.hydrograph2display.fmeteo
-        if fmeteo:        
-            self.weather_avg_graph.generate_graph(self.hydrograph2display.fmeteo)
+        filemeteo = self.hydrograph2display.fmeteo
+        if not filemeteo:
+            
+            self.parent.write2console(
+            '''<font color=red>No valid Weather Data File currently 
+                 selected.</font>''')
+                               
+            self.emit_error_message(
+            '''<b>Please select a valid Weather Data File first.</b>''')
+            
+            return
+        
+        self.weather_avg_graph.generate_graph(filemeteo)
         
         self.weather_avg_graph.show()
         self.weather_avg_graph.setFixedSize(self.weather_avg_graph.size());           

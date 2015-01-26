@@ -19,7 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
-
+        
 #---- STANDARD LIBRARY IMPORTS ----
 
 from sys import argv
@@ -28,6 +28,7 @@ from sys import argv
 
 import numpy as np
 from PySide import QtGui, QtCore
+import xlrd
 
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -39,6 +40,8 @@ import matplotlib.pyplot as plt
 #---- PERSONAL IMPORTS ----
 
 import database as db
+from hydroprint import WaterlvlData, filt_data
+from meteo import MeteoObj
 
 #class MainWindow(QtGui.QMainWindow):
 #        
@@ -65,17 +68,17 @@ class Tooltips():
         self.delPeak = ('Toggle edit mode to manually remove extremums ' +
                         'from the graph')
         self.pan = 'Pan axes with left mouse, zoom with right'
-        self.MRCalc = 'Calculate MRC (not yet available)'
+        self.MRCalc = 'Calculate the Master Recession Curve (MRC)'
         self.find_peak = 'Automated search for local extremum'
         
         if language == 'French': #--------------------------------- FRENCH -----
             
             pass
         
-class MRCalc(QtGui.QWidget):
+class WLCalc(QtGui.QWidget):
     
     def __init__(self, parent=None):
-        super(MRCalc, self).__init__(parent)
+        super(WLCalc, self).__init__(parent)
 
         self.initUI()
 #        self.initUI_weather_normals()
@@ -89,14 +92,30 @@ class MRCalc(QtGui.QWidget):
 
 #        global ttipDB
 #        ttipDB = db.tooltips(language)
-        
+
+        ########################### 4 TESTING ######################
+                
     def initUI(self):
+        
+        fwaterlvl = 'Files4testing/PO01.xls'
+    
+        waterLvlObj = WaterlvlData()
+        waterLvlObj.load(fwaterlvl)
+    
+        self.water_lvl = waterLvlObj.lvl
+        self.water_lvl = self.water_lvl[350:]
+    
+        self.time = waterLvlObj.time
+        self.time = self.time[350:]
+        
+        self.peak_indx = np.array([]).astype(int)
+        self.peak_memory = [np.array([]).astype(int)]
         
         iconDB = db.icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
         
-    #--------------------------------------------------------- FigureCanvas ----
+        #----------------------------------------------------- FigureCanvas ----
         
         self.setWindowTitle('Master Recession Curve Estimation')
         
@@ -105,7 +124,7 @@ class MRCalc(QtGui.QWidget):
         self.fig_MRC.patch.set_facecolor('white')
         self.fig_MRC_widget = FigureCanvasQTAgg(self.fig_MRC)
         
-    #-------------------------------------------------------------- TOOLBAR ----
+        #---------------------------------------------------------- TOOLBAR ----
         
         self.toolbar = NavigationToolbar2QTAgg(self.fig_MRC_widget, self)
         self.toolbar.hide()
@@ -155,7 +174,7 @@ class MRCalc(QtGui.QWidget):
         
         self.btn_MRCalc = QtGui.QToolButton()
         self.btn_MRCalc.setAutoRaise(True)
-        self.btn_MRCalc.setIcon(iconDB.MRCalc)
+        self.btn_MRCalc.setIcon(iconDB.MRCalc2)
         self.btn_MRCalc.setToolTip(ttipDB.MRCalc)
         self.btn_MRCalc.setFocusPolicy(QtCore.Qt.NoFocus)
                         
@@ -204,7 +223,7 @@ class MRCalc(QtGui.QWidget):
         
         toolbar_widget.setLayout(subgrid_toolbar)
                 
-    #------------------------------------------------------------ MAIN GRID ----
+        #-------------------------------------------------------- MAIN GRID ----
         
         mainGrid = QtGui.QGridLayout()
         
@@ -218,26 +237,8 @@ class MRCalc(QtGui.QWidget):
         mainGrid.setContentsMargins(15, 15, 15, 15) # Left, Top, Right, Bottom 
         mainGrid.setSpacing(15)
         mainGrid.setRowStretch(1, 500)
-        
-        ########################### 4 TESTING ######################
-        
-        fwaterlvl = 'Files4testing/PO01.xls'
-    
-        waterLvlObj = WaterlvlData()
-        waterLvlObj.load(fwaterlvl)
-    
-        self.water_lvl = waterLvlObj.lvl
-        self.water_lvl = self.water_lvl[350:]
-    
-        self.time = waterLvlObj.time
-        self.time = self.time[350:]
-        
-        self.peak_indx = np.array([]).astype(int)
-        self.peak_memory = [np.array([]).astype(int)]
-        
-        self.plot_water_levels(self.time, self.water_lvl, self.fig_MRC)
-        
-    #------------------------------------------------------------ EVENTS ----
+                
+        #----------------------------------------------------------- EVENTS ----
         
         #----- Toolbox -----
         
@@ -249,6 +250,10 @@ class MRCalc(QtGui.QWidget):
         self.btn_delPeak.clicked.connect(self.delete_peak)
         self.btn_pan.clicked.connect(self.pan_graph)
         self.btn_MRCalc.clicked.connect(self.plot_MRC)
+        
+        #------------------------------------------------------------- PLOT ----
+        
+        self.plot_water_levels()
     
     def plot_MRC(self):
         
@@ -384,7 +389,12 @@ class MRCalc(QtGui.QWidget):
     
         self.plot_peak()
                 
-    def plot_water_levels(self, t, x, fig):
+    def plot_water_levels(self):
+        
+        t = self.time
+        x = self.water_lvl
+        fig = self.fig_MRC
+        fig.clf()
         
         fheight = fig.get_figheight()
         fwidth = fig.get_figwidth()
@@ -1003,28 +1013,22 @@ def mrc_calc(t, h, ipeak):
 
 if __name__ == '__main__':
     
-    from matplotlib import pyplot as plt
-    import xlrd
-    from meteo import MeteoObj
-    from hydroprint import WaterlvlData, filt_data
-    import database as db
-    
-    plt.close('all')
-    
-    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-    fwaterlvl = 'Files4testing/PO16A.xls'
-    
-    waterLvlObj = WaterlvlData()
-    waterLvlObj.load(fwaterlvl)
-    
-    x = waterLvlObj.lvl
-    x = 100-x[:500]
-    
-    t = waterLvlObj.time
-    t = t[:500]
+#    plt.close('all')
+#    
+#    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
+#    fwaterlvl = 'Files4testing/PO16A.xls'
+#    
+#    waterLvlObj = WaterlvlData()
+#    waterLvlObj.load(fwaterlvl)
+#    
+#    x = waterLvlObj.lvl
+#    x = 100-x[:500]
+#    
+#    t = waterLvlObj.time
+#    t = t[:500]
     
     app = QtGui.QApplication(argv)   
-    instance_1 = MRCalc()
+    instance_1 = WLCalc()
     instance_1.show()
     app.exec_() 
     
