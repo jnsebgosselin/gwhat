@@ -466,16 +466,14 @@ class TabHydrograph(QtGui.QWidget):
         
         #----- SubGrid Data Files -----
        
-        btn_waterlvl_dir = QtGui.QPushButton('    Water Level Data File')
+        btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
         btn_waterlvl_dir.setIcon(iconDB.openFile)
-        btn_waterlvl_dir.setFont(StyleDB.fontSize1)
         self.well_info_widget = QtGui.QTextEdit()
         self.well_info_widget.setReadOnly(True)
         self.well_info_widget.setFixedHeight(150)
         
-        btn_weather_dir = QtGui.QPushButton('    Weather Data File')
+        btn_weather_dir = QtGui.QPushButton(' Weather Data File')
         btn_weather_dir.setIcon(iconDB.openFile)
-        btn_weather_dir.setFont(StyleDB.fontSize1)
         self.meteo_info_widget = QtGui.QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
         self.meteo_info_widget.setFixedHeight(150)
@@ -2431,7 +2429,7 @@ class TabFill(QtGui.QWidget):
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
         self.btn3 = QtGui.QToolButton()
-        self.btn3.setIcon(iconDB.refresh)
+        self.btn3.setIcon(iconDB.refresh2)
         self.btn3.setAutoRaise(True)
         
         subgrid_widget6 = (QtGui.QWidget())
@@ -3062,7 +3060,11 @@ class TabAbout(QtGui.QWidget):
         grid = QtGui.QGridLayout()
         grid.setSpacing(10)
         
-        grid.addWidget(AboutTextBox, 0, 0)
+        grid.addWidget(AboutTextBox, 0, 1)
+        
+        grid.setColumnStretch(0, 500)
+        grid.setColumnStretch(2, 500)
+        grid.setColumnMinimumWidth(1, 750)
         
         self.setLayout(grid)
         
@@ -3084,7 +3086,7 @@ class TabAbout(QtGui.QWidget):
                         <br>
                         490 rue de la Couronne, Quebec, QC
                         <br>
-                        jean-sebastien.gosselin@ete.inrs.ca
+                        jnsebgosselin@gmail.com
                         </p>
                         <p align="center" style="margin-right:150px; 
                         margin-left:150px">

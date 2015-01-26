@@ -129,6 +129,8 @@ class styleUI():
         self.HLine = 52
         self.VLine = 53
         
+        self.size1 = 32
+        
         self.iconSize = QSize(32, 32)
         self.iconSize2 = QSize(28, 28)
         

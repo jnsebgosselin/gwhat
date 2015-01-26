@@ -65,6 +65,7 @@ class Tooltips():
         
         self.save = 'Save graph'
         self.open = "Open a valid '.out' weather data file"
+        self.addTitle = 'Add A Title To The Figure Here (Option not yet available)'
         
         if language == 'French': #--------------------------------- FRENCH -----
             
@@ -109,6 +110,19 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.btn_open.setToolTip(ttipDB.open)
         self.btn_open.setFocusPolicy(QtCore.Qt.NoFocus)
         
+        graph_title_label = QtGui.QLabel('')
+        self.graph_title = QtGui.QLineEdit()
+        self.graph_title.setMaxLength(65)
+        self.graph_title.setEnabled(False)
+        self.graph_title.setText('Add A Title To The Figure Here')
+        self.graph_title.setToolTip(ttipDB.addTitle)
+        
+        self.graph_status = QtGui.QCheckBox()
+        self.graph_status.setEnabled(False)
+        
+        separator1 = QtGui.QFrame()
+        separator1.setFrameStyle(StyleDB.VLine)
+        
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
         
@@ -117,14 +131,23 @@ class WeatherAvgGraph(QtGui.QWidget):
 #        subgrid_toolbar.addWidget(self.btn_open, row, col)        
 #        col += 1
         subgrid_toolbar.addWidget(self.btn_save, row, col)
-        
-        
-        subgrid_toolbar.setSpacing(5)
+        col += 1
+        subgrid_toolbar.addWidget(separator1, row, col) 
+#        col += 1
+#        subgrid_toolbar.addWidget(graph_title_label, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(self.graph_title, row, col)
+        subgrid_toolbar.setColumnStretch(col, 4)
+        col += 1
+        subgrid_toolbar.addWidget(self.graph_status, row, col)
+                
+        subgrid_toolbar.setHorizontalSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-        subgrid_toolbar.setColumnStretch(col+1, 500)
+#        subgrid_toolbar.setColumnMinimumWidth(col+1, 500)
                 
         self.btn_save.setIconSize(StyleDB.iconSize)
         self.btn_open.setIconSize(StyleDB.iconSize)
+        self.graph_title.setFixedHeight(StyleDB.size1)
         
         toolbar_widget.setLayout(subgrid_toolbar)
         
