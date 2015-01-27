@@ -389,7 +389,7 @@ class TabHydrograph(QtGui.QWidget):
         
         btn_draw = QtGui.QToolButton()
         btn_draw.setAutoRaise(True)
-        btn_draw.setIcon(iconDB.draw_hydrograph)        
+        btn_draw.setIcon(iconDB.refresh2)        
         btn_draw.setToolTip(ttipDB.draw_hydrograph)
         
         btn_weather_normals = QtGui.QToolButton()
@@ -422,9 +422,10 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.addWidget(self.btn_work_waterlvl, row, col)
         col += 1
         subgrid_toolbar.addWidget(separator3, row, col)
-#        subgrid_toolbar.addWidget(btn_draw, row, col)
         col += 1
         subgrid_toolbar.addWidget(btn_save, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(btn_draw, row, col)
         col += 1
         subgrid_toolbar.addWidget(btn_loadConfig, row, col)
         col += 1
@@ -469,7 +470,7 @@ class TabHydrograph(QtGui.QWidget):
         
         toolbar_widget.setLayout(subgrid_toolbar)
     
-    #------------------------------------------------------ GRID PARAMETERS ----
+        #-------------------------------------------------- GRID PARAMETERS ----
         
         #----- SubGrid Data Files -----
        
@@ -634,7 +635,7 @@ class TabHydrograph(QtGui.QWidget):
         grid_layout.setRowStretch(1, 500)
 #        grid_LEFT.setRowStretch(row+1, 500)
         
-    #----------------------------------------------------------- MAIN GRID -----
+        #-------------------------------------------------------- MAIN GRID ----
 
         self.waterlvl_calc = waterlvl_calc.WLCalc()
         self.waterlvl_calc.hide()
@@ -653,7 +654,7 @@ class TabHydrograph(QtGui.QWidget):
         mainGrid.setSpacing(15)
         mainGrid.setColumnStretch(0, 500)
                 
-    #------------------------------------------------------- MESSAGE BOXES -----
+        #---------------------------------------------------- MESSAGE BOXES ----
                                           
         self.msgBox = QtGui.QMessageBox()
         self.msgBox.setIcon(QtGui.QMessageBox.Question)
@@ -666,7 +667,7 @@ class TabHydrograph(QtGui.QWidget):
         self.msgError.setIcon(QtGui.QMessageBox.Warning)
         self.msgError.setWindowTitle('Error Message')
         
-    #-------------------------------------------------------------- EVENTS -----
+        #----------------------------------------------------------- EVENTS ----
         
         #----- Toolbox Layout -----
         
@@ -724,24 +725,7 @@ class TabHydrograph(QtGui.QWidget):
         
     def toggle_computeMode(self):
         
-#        self.btn_work_waterlvl.setAutoRaise(False)
-        
-#        if not self.fwaterlvl:
-#            
-#            self.parent.write2console(
-#            '''<font color=red>No valid water level data file currently 
-#                 selected.</font>''')
-#                               
-#            self.emit_error_message(
-#            '''<b>Please select a valid Water Level Data File first.</b>''')
-#            
-#            return
-        
         self.grid_layout_widget.hide()
-#        self.waterlvl_calc.water_lvl = self.waterlvl_data.lvl
-#        self.waterlvl_calc.time = self.waterlvl_data.time
-#        self.waterlvl_calc.plot_water_levels()
-        
         self.waterlvl_calc.show()
         
     def show_weather_averages(self):
@@ -804,7 +788,7 @@ class TabHydrograph(QtGui.QWidget):
         #----- Load Data -----
         
         self.waterlvl_data.load(filename)
-        
+                        
         name_well = self.waterlvl_data.name_well
         
         self.best_fit_waterlvl()
@@ -828,6 +812,10 @@ class TabHydrograph(QtGui.QWidget):
         self.parent.write2console(
         '''<font color=black>Water level data set loaded successfully for
              well %s.</font>''' % name_well)
+             
+        #---- Update Compute Mode Window ----
+        
+        self.draw_computeMode_waterlvl()
         
         #----- Check if Layout -----
         
@@ -1164,6 +1152,12 @@ class TabHydrograph(QtGui.QWidget):
                                                     self.meteo_data)
                                        
         self.hydrograph2display.fig.savefig(fname)
+        
+    def draw_computeMode_waterlvl(self):
+        
+        self.waterlvl_calc.time = self.waterlvl_data.time
+        self.waterlvl_calc.water_lvl = self.waterlvl_data.lvl
+        self.waterlvl_calc.plot_water_levels() 
     
     def draw_hydrograph(self):
         
@@ -1171,6 +1165,8 @@ class TabHydrograph(QtGui.QWidget):
             console_text = ('<font color=red>Please select a valid water ' +
                             'level data file</font>')
             self.parent.write2console(console_text)
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
             
             return
             
@@ -1178,9 +1174,10 @@ class TabHydrograph(QtGui.QWidget):
             console_text = ('<font color=red>Please select a valid ' +
                             'weather data file</font>')
             self.parent.write2console(console_text)
+            self.emit_error_message(
+            '''<b>Please select a valid Weather Data File first.</b>''')
             
             return
-            
                     
         self.update_graph_layout_parameter()
         

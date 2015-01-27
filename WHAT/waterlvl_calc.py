@@ -28,7 +28,6 @@ from sys import argv
 
 import numpy as np
 from PySide import QtGui, QtCore
-import xlrd
 
 import matplotlib
 matplotlib.use('Qt4Agg')
@@ -40,21 +39,7 @@ import matplotlib.pyplot as plt
 #---- PERSONAL IMPORTS ----
 
 import database as db
-from hydroprint import WaterlvlData, filt_data
-from meteo import MeteoObj
 
-#class MainWindow(QtGui.QMainWindow):
-#        
-#    def __init__(self, parent=None):
-#        super(MainWindow, self).__init__(parent)
-#        
-#        self.initUI()
-#        
-#        def initUI(self):
-#                            
-##        self.setGeometry(350, 75, 800, 750)
-#        self.setWindowTitle('Master Recession Curve Estimation')
-#        self.setWindowIcon(iconDB.WHAT)
 
 class Tooltips():
     
@@ -87,36 +72,18 @@ class WLCalc(QtGui.QWidget):
 #        self.initUI_weather_normals()
         self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
         self.fig_MRC_widget.mpl_connect('motion_notify_event', self.mouse_vguide)
-        
-        
-#        language = 'English'
-#        global labelDB
-#        labelDB = LabelDataBase(language)
-
-#        global ttipDB
-#        ttipDB = db.tooltips(language)
-
-        ########################### 4 TESTING ######################
-                
+              
     def initUI(self):
-        
-        fwaterlvl = 'Files4testing/PO01.xls'
-    
-        waterLvlObj = WaterlvlData()
-        waterLvlObj.load(fwaterlvl)
-    
-        self.water_lvl = waterLvlObj.lvl
-        self.water_lvl = self.water_lvl[350:]
-    
-        self.time = waterLvlObj.time
-        self.time = self.time[350:]
-        
-        self.peak_indx = np.array([]).astype(int)
-        self.peak_memory = [np.array([]).astype(int)]
         
         iconDB = db.icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
+        
+        self.isGraphExists = False
+        self.peak_indx = np.array([]).astype(int)
+        self.peak_memory = [np.array([]).astype(int)]
+        self.time = []
+        self.water_lvl = []
         
         #---------------------------------------------------- FIGURE CANVAS ----
         
@@ -266,6 +233,12 @@ class WLCalc(QtGui.QWidget):
         mainGrid.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
 #        mainGrid.setSpacing(15)
         mainGrid.setRowStretch(1, 500)
+        
+        #---------------------------------------------------- MESSAGE BOXES ----
+                                          
+        self.msgError = QtGui.QMessageBox()
+        self.msgError.setIcon(QtGui.QMessageBox.Warning)
+        self.msgError.setWindowTitle('Error Message')
                 
         #----------------------------------------------------------- EVENTS ----
         
@@ -280,11 +253,18 @@ class WLCalc(QtGui.QWidget):
         self.btn_pan.clicked.connect(self.pan_graph)
         self.btn_MRCalc.clicked.connect(self.plot_MRC)
         
-        #------------------------------------------------------------- PLOT ----
+    def emit_error_message(self, error_text):
         
-        self.plot_water_levels()
+        self.msgError.setText(error_text)
+        self.msgError.exec_()
     
     def plot_MRC(self):
+        
+        if self.isGraphExists == False:
+            print 'Graph is empty'
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            return
         
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
@@ -298,18 +278,26 @@ class WLCalc(QtGui.QWidget):
         QtGui.QApplication.restoreOverrideCursor()
             
     def plot_peak(self):
-        
-        self.h2_ax0.set_xdata(self.time[self.peak_indx])
-        self.h2_ax0.set_ydata(self.water_lvl[self.peak_indx])
-        
+                
         if len(self.peak_memory) == 1:
             self.btn_undo.setEnabled(False)
         else:
             self.btn_undo.setEnabled(True)
+            
+        if self.isGraphExists == True:
+            
+            self.h2_ax0.set_xdata(self.time[self.peak_indx])
+            self.h2_ax0.set_ydata(self.water_lvl[self.peak_indx])
                                    
-        self.fig_MRC_widget.draw()
+            self.fig_MRC_widget.draw()
     
     def find_peak(self):
+        
+        if self.isGraphExists == False:
+            print 'Graph is empty'
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            return
         
         n_j, n_add = local_extrema(self.water_lvl, 4 * 5)
         
@@ -331,7 +319,13 @@ class WLCalc(QtGui.QWidget):
         self.plot_peak()
         
     def edit_peak(self):
-        
+
+        if self.isGraphExists == False:
+            print 'Graph is empty'
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            return
+            
         if self.btn_editPeak.autoRaise(): 
             
             # Activate <edit_peak>
@@ -355,6 +349,12 @@ class WLCalc(QtGui.QWidget):
             
     def delete_peak(self):
         
+        if self.isGraphExists == False:
+            print 'Graph is empty'
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            return
+        
         if self.btn_delPeak.autoRaise():
             
             # Activate <delete_peak>
@@ -377,6 +377,12 @@ class WLCalc(QtGui.QWidget):
             self.btn_delPeak.setAutoRaise(True)
         
     def pan_graph(self):
+        
+        if self.isGraphExists == False:
+            print 'Graph is empty'
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            return
                 
         if self.btn_pan.autoRaise():
 
@@ -397,9 +403,22 @@ class WLCalc(QtGui.QWidget):
             self.toolbar.pan()
             
     def home(self):
+        
+        if self.isGraphExists == False:
+            print 'Graph is empty'
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            return
+            
         self.toolbar.home()
 
     def undo(self):
+        
+        if self.isGraphExists == False:
+            print 'Graph is empty'
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            return
         
         if len(self.peak_memory) > 1:
             self.peak_indx = self.peak_memory[-2]
@@ -412,6 +431,12 @@ class WLCalc(QtGui.QWidget):
             pass
             
     def clear_all_peaks(self):
+        
+        if self.isGraphExists == False:
+            print 'Graph is empty'
+            self.emit_error_message(
+            '''<b>Please select a valid Water Level Data File first.</b>''')
+            return
                             
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory.append(self.peak_indx)
@@ -529,8 +554,11 @@ class WLCalc(QtGui.QWidget):
     #-------------------------------------------------------- UPDATE WIDGET ----
 
         self.fig_MRC_widget.draw()
+        
+        self.isGraphExists = True
             
     def mouse_vguide(self, event):
+
         # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
         if not self.btn_editPeak.autoRaise():
            
@@ -1044,6 +1072,9 @@ def mrc_calc(t, h, ipeak):
 
 if __name__ == '__main__':
     
+    import xlrd
+    from hydroprint import WaterlvlData, filt_data
+    from meteo import MeteoObj
 #    plt.close('all')
 #    
 #    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
@@ -1061,6 +1092,19 @@ if __name__ == '__main__':
     app = QtGui.QApplication(argv)   
     instance_1 = WLCalc()
     instance_1.show()
+    
+#    fwaterlvl = 'Files4testing/PO01.xls'
+#    
+#    waterLvlObj = WaterlvlData()
+#    waterLvlObj.load(fwaterlvl)
+#
+#    self.water_lvl = waterLvlObj.lvl
+#    self.water_lvl = self.water_lvl[350:]
+#
+#    self.time = waterLvlObj.time
+#    self.time = self.time[350:]
+#    
+        
     app.exec_() 
     
 #    # http://stackoverflow.com/questions/15721094
