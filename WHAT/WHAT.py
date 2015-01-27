@@ -147,6 +147,36 @@ class MainWindow(QtGui.QMainWindow):
         '''<font color=black>Please report any bug or wishful feature to 
              Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
            </font>''')
+           
+        #---------------------------------------------- PROJECT DIR SUBGRID ----
+                        
+        project_label = QtGui.QLabel('Project :')
+        project_label.setAlignment(QtCore.Qt.AlignCenter)
+        
+        self.project_dir_display = QtGui.QLineEdit()
+        self.project_dir_display.setReadOnly(True)      
+        
+        self.btn_project_dir = QtGui.QToolButton()
+        self.btn_project_dir.setAutoRaise(True)
+        self.btn_project_dir.setIcon(iconDB.openFolder)
+        self.btn_project_dir.setToolTip(ttipDB.browse)
+        self.btn_project_dir.setFocusPolicy(QtCore.Qt.NoFocus)
+                
+        proDir_widget = QtGui.QWidget()
+        subgrid_proDir = QtGui.QGridLayout()
+        
+        row = 0
+        subgrid_proDir.addWidget(project_label, row, 0)
+        subgrid_proDir.addWidget(self.project_dir_display, row, 1)
+        subgrid_proDir.addWidget(self.btn_project_dir, row, 2)
+        
+        subgrid_proDir.setSpacing(5)
+        subgrid_proDir.setContentsMargins(0, 0, 0, 5) #Left, Top, Right, Bottom 
+        subgrid_proDir.setColumnStretch(1, 500)
+        subgrid_proDir.setColumnMinimumWidth(1, 400)
+        subgrid_proDir.setRowMinimumHeight(0, 28)
+        
+        proDir_widget.setLayout(subgrid_proDir)
         
         #------------------------------------------------------- TAB WIDGET ----
         
@@ -162,6 +192,8 @@ class MainWindow(QtGui.QMainWindow):
         Tab_widget.addTab(self.tab_hydrograph, labelDB.text.TAB3) 
         Tab_widget.addTab(tab_about, labelDB.text.TAB4)
         
+        Tab_widget.setCornerWidget(proDir_widget)
+        
         #-------------------------------------------------- SPLITTER WIDGET ----
                 
         splitter = QtGui.QSplitter(self)
@@ -175,31 +207,6 @@ class MainWindow(QtGui.QMainWindow):
         
         # Forces initially the main_console to its minimal height.
         splitter.setSizes([100, 1])          
-
-        #---------------------------------------------- PROJECT DIR SUBGRID ----
-                        
-        project_label = QtGui.QLabel('Project Directory :')
-        project_label.setAlignment(QtCore.Qt.AlignCenter)
-        
-        self.project_dir_display = QtGui.QLineEdit()
-        self.project_dir_display.setReadOnly(True)      
-        
-        self.btn_project_dir = QtGui.QPushButton('Browse')
-        self.btn_project_dir.setIcon(iconDB.openFolder)
-        
-        proDir_widget = QtGui.QWidget()
-        subgrid_proDir = QtGui.QGridLayout()
-        
-        row = 0
-        subgrid_proDir.addWidget(project_label, row, 0)
-        subgrid_proDir.addWidget(self.project_dir_display, row, 1)
-        subgrid_proDir.addWidget(self.btn_project_dir, row, 2)
-        
-        subgrid_proDir.setSpacing(5)
-        subgrid_proDir.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom 
-        subgrid_proDir.setColumnStretch(1, 500)
-        
-        proDir_widget.setLayout(subgrid_proDir)
         
         #-------------------------------------------------------- MAIN GRID ----
         
@@ -213,13 +220,14 @@ class MainWindow(QtGui.QMainWindow):
         mainGrid.setSpacing(10)
         
         row = 0
-        mainGrid.addWidget(proDir_widget, row, 0)
-        row += 1
+#        mainGrid.addWidget(proDir_widget, row, 0)
+#        row += 1
         mainGrid.addWidget(splitter, row, 0)
         row += 1
         mainGrid.addWidget(self.pbar, row, 0)
         
         main_widget.setLayout(mainGrid)
+        self.pbar.hide()
         
     #--------------------------------------------------------------- EVENTS ----
         
@@ -342,10 +350,6 @@ class TabHydrograph(QtGui.QWidget):
         project_dir = self.parent.what_pref.project_dir
         self.weather_avg_graph.save_fig_dir = project_dir
         
-    #------------------------------------------------- WATERLVL CALC WINDOW ----
-        
-        self.waterlvl_calc = waterlvl_calc.WLCalc()
-        
     #-------------------------------------------------------------- TOOLBAR ----
         
         #---- SubGrid Figure Title ----
@@ -393,10 +397,10 @@ class TabHydrograph(QtGui.QWidget):
         btn_weather_normals.setIcon(iconDB.meteo)        
         btn_weather_normals.setToolTip(ttipDB.weather_normals)
         
-        btn_work_waterlvl = QtGui.QToolButton()
-        btn_work_waterlvl.setAutoRaise(True)
-        btn_work_waterlvl.setIcon(iconDB.work)        
-        btn_work_waterlvl.setToolTip(ttipDB.work_waterlvl)
+        self.btn_work_waterlvl = QtGui.QToolButton()
+        self.btn_work_waterlvl.setAutoRaise(True)
+        self.btn_work_waterlvl.setIcon(iconDB.toggleMode)        
+        self.btn_work_waterlvl.setToolTip(ttipDB.work_waterlvl)
 
         btn_save = QtGui.QToolButton()
         btn_save.setAutoRaise(True)
@@ -407,16 +411,19 @@ class TabHydrograph(QtGui.QWidget):
         separator1.setFrameStyle(StyleDB.VLine)
         separator2 = QtGui.QFrame()
         separator2.setFrameStyle(StyleDB.VLine)
-#        separator3 = QtGui.QFrame()
-#        separator3.setFrameStyle(StyleDB.VLine)                    
+        separator3 = QtGui.QFrame()
+        separator3.setFrameStyle(StyleDB.VLine)                    
                                      
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
         
         row = 0
         col = 0
+        subgrid_toolbar.addWidget(self.btn_work_waterlvl, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(separator3, row, col)
 #        subgrid_toolbar.addWidget(btn_draw, row, col)
-#        col += 1
+        col += 1
         subgrid_toolbar.addWidget(btn_save, row, col)
         col += 1
         subgrid_toolbar.addWidget(btn_loadConfig, row, col)
@@ -434,8 +441,8 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.addWidget(separator2, row, col)
         col += 1
         subgrid_toolbar.addWidget(btn_weather_normals, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(btn_work_waterlvl, row, col)
+        
+        
 #        col += 1
 #        subgrid_toolbar.addWidget(separator3, row, col)
         col += 1
@@ -458,11 +465,11 @@ class TabHydrograph(QtGui.QWidget):
         btn_weather_normals.setIconSize(StyleDB.iconSize)
         btn_draw.setIconSize(StyleDB.iconSize)
         btn_save.setIconSize(StyleDB.iconSize)
-        btn_work_waterlvl.setIconSize(StyleDB.iconSize)
+        self.btn_work_waterlvl.setIconSize(StyleDB.iconSize)
         
         toolbar_widget.setLayout(subgrid_toolbar)
     
-    #----------------------------------------------------------- GRID RIGHT ----
+    #------------------------------------------------------ GRID PARAMETERS ----
         
         #----- SubGrid Data Files -----
        
@@ -572,7 +579,7 @@ class TabHydrograph(QtGui.QWidget):
         grid_RIGHT.setSpacing(15)
         grid_RIGHT.setRowStretch(row+1, 500)
         
-    #------------------------------------------------------------ GRID LEFT ----
+    #---------------------------------------------------------- GRID LAYOUT ----
         
         #---- SubGrid Hydrograph Frame ----
         
@@ -608,54 +615,36 @@ class TabHydrograph(QtGui.QWidget):
         grid_hydrograph.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
         
         grid_hydrograph_widget.setLayout(grid_hydrograph)
-                
-#        #---- SubGrid Figure Title ----
-#
-#        graph_title_label = QtGui.QLabel('Figure Title :')
-#        self.graph_title = QtGui.QLineEdit()
-#        self.graph_title.setMaxLength(65)
-#        self.graph_title.setEnabled(False)
-#        self.graph_title.setText('Add A Title To The Figure Here')
-#        self.graph_status = QtGui.QCheckBox() 
-#        
-#        subgrid_figtitle_widget = QtGui.QFrame()
-#        subgrid_figtitle = QtGui.QGridLayout()
-#        
-#        row = 0
-#        subgrid_figtitle.addWidget(graph_title_label, row, 0)
-#        subgrid_figtitle.addWidget(self.graph_title, row, 1)
-#        subgrid_figtitle.addWidget(self.graph_status, row, 2)
-#        
-#        subgrid_figtitle.setSpacing(10)
-#        subgrid_figtitle.setColumnStretch(1, 500)
-#        subgrid_figtitle.setContentsMargins(0, 0, 0, 0) # (L,T, R, B)
-#        
-#        subgrid_figtitle_widget.setLayout(subgrid_figtitle)
         
         #----- ASSEMBLING SubGrids -----
                 
-        grid_LEFT = QtGui.QGridLayout()
-        grid_LEFT_widget = QtGui.QFrame()
+        grid_layout = QtGui.QGridLayout()
+        self.grid_layout_widget = QtGui.QFrame()
         
         row = 0
-        grid_LEFT.addWidget(toolbar_widget, row, 0)
+        grid_layout.addWidget(toolbar_widget, row, 0)
         row += 1
-        grid_LEFT.addWidget(grid_hydrograph_widget, row, 0)
+        grid_layout.addWidget(grid_hydrograph_widget, row, 0)
         
-        grid_LEFT_widget.setLayout(grid_LEFT)
-        grid_LEFT.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
-        grid_LEFT.setSpacing(5)
-        grid_LEFT.setColumnStretch(0, 500)
+        self.grid_layout_widget.setLayout(grid_layout)
+        grid_layout.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
+        grid_layout.setSpacing(5)
+        grid_layout.setColumnStretch(0, 500)
 #        grid_LEFT.setColumnStretch(2, 500)
-        grid_LEFT.setRowStretch(1, 500)
+        grid_layout.setRowStretch(1, 500)
 #        grid_LEFT.setRowStretch(row+1, 500)
         
     #----------------------------------------------------------- MAIN GRID -----
+
+        self.waterlvl_calc = waterlvl_calc.WLCalc()
+        self.waterlvl_calc.hide()
         
         mainGrid = QtGui.QGridLayout()
         
         row = 0 
-        mainGrid.addWidget(grid_LEFT_widget, row, 0)
+        mainGrid.addWidget(self.grid_layout_widget, row, 0)
+        mainGrid.addWidget(self.waterlvl_calc, row, 0)
+        
         mainGrid.addWidget(grid_RIGHT_widget, row, 1)
 #        mainGrid.addWidget(toolbar_widget, row, 2)        
         
@@ -663,7 +652,7 @@ class TabHydrograph(QtGui.QWidget):
         mainGrid.setContentsMargins(10, 10, 10, 10) # Left, Top, Right, Bottom 
         mainGrid.setSpacing(15)
         mainGrid.setColumnStretch(0, 500)
-        
+                
     #------------------------------------------------------- MESSAGE BOXES -----
                                           
         self.msgBox = QtGui.QMessageBox()
@@ -679,7 +668,7 @@ class TabHydrograph(QtGui.QWidget):
         
     #-------------------------------------------------------------- EVENTS -----
         
-        #----- Toolbox -----
+        #----- Toolbox Layout -----
         
         btn_loadConfig.clicked.connect(self.load_graph_layout)
         btn_saveConfig.clicked.connect(self.save_config_isClicked)
@@ -690,7 +679,11 @@ class TabHydrograph(QtGui.QWidget):
         btn_save.clicked.connect(self.select_save_path)
         btn_weather_normals.clicked.connect(self.show_weather_averages)
         
-        btn_work_waterlvl.clicked.connect(self.show_waterlvl_calc)
+        self.btn_work_waterlvl.clicked.connect(self.toggle_computeMode)
+        
+        #----- Toolbox Computation -----
+        self.waterlvl_calc.btn_layout_mode.clicked.connect(
+                                                         self.toggle_layoutMode)
         
         #----- Others -----
         
@@ -724,22 +717,30 @@ class TabHydrograph(QtGui.QWidget):
                 
         self.hydrograph_scrollarea.load_image(blank_image)
         
-    def show_waterlvl_calc(self):
+    def toggle_layoutMode(self):
         
-        if not self.fwaterlvl:
-            
-            self.parent.write2console(
-            '''<font color=red>No valid water level data file currently 
-                 selected.</font>''')
-                               
-            self.emit_error_message(
-            '''<b>Please select a valid Water Level Data File first.</b>''')
-            
-            return
-            
-        self.waterlvl_calc.water_lvl = self.waterlvl_data.lvl
-        self.waterlvl_calc.time = self.waterlvl_data.time
-        self.waterlvl_calc.plot_water_levels()
+        self.waterlvl_calc.hide()
+        self.grid_layout_widget.show()        
+        
+    def toggle_computeMode(self):
+        
+#        self.btn_work_waterlvl.setAutoRaise(False)
+        
+#        if not self.fwaterlvl:
+#            
+#            self.parent.write2console(
+#            '''<font color=red>No valid water level data file currently 
+#                 selected.</font>''')
+#                               
+#            self.emit_error_message(
+#            '''<b>Please select a valid Water Level Data File first.</b>''')
+#            
+#            return
+        
+        self.grid_layout_widget.hide()
+#        self.waterlvl_calc.water_lvl = self.waterlvl_data.lvl
+#        self.waterlvl_calc.time = self.waterlvl_data.time
+#        self.waterlvl_calc.plot_water_levels()
         
         self.waterlvl_calc.show()
         
@@ -1980,7 +1981,7 @@ class TabDwnldData(QtGui.QWidget):
         self.staList_table.resizeColumnsToContents()
         
         self.staList_table.setMinimumWidth(650)
-        self.staList_table.horizontalHeader().hide()
+#        self.staList_table.horizontalHeader().hide()
         self.staList_table.verticalHeader().hide()
 #        self.staList_table.horizontalHeaderItem(1).hide()
 
@@ -2316,49 +2317,47 @@ class TabDwnldData(QtGui.QWidget):
         
             self.staName_display.setEnabled(True)
             self.yStart_edit.setEnabled(True)
-            self.yEnd_edit.setEnabled(True)
+            self.yEnd_edit.setEnabled(True)            
+            self.parent.pbar.hide()
             
         else:
             
         #------------------------------------------------- Check for Errors ----
             
-            ERRFLAG = False # Flag to check if there is errors before starting
-                            # the downloading process.
-            
             if self.staName_display.currentIndex() == -1:
                 
-                ERRFLAG = True
                 self.msgBox.setText('Station list is empty.')
                 self.msgBox.exec_()
+                
+                return
         
         #------------------------------------------------- Start the Thread ----
         
-            if ERRFLAG == False:
-                
-                #----- Update UI -----
-                
-                self.staName_display.setEnabled(False)
-                self.yStart_edit.setEnabled(False)
-                self.yEnd_edit.setEnabled(False)
-                
-                self.btn_get.setIcon(iconDB.stop)
-                
-                #----- Push input values to the class instance -----
-                
-                sta_index = self.staName_display.currentIndex()
-                
-                stationID = self.staList[sta_index, 1]
-                self.dwnl_rawfiles.stationID = stationID
-                
-                climateID = self.staList[sta_index, 5]
-                self.dwnl_rawfiles.climateID = climateID
-                
-                dirname = self.parent.what_pref.project_dir + '/Meteo/Raw'           
-                self.dwnl_rawfiles.dirname = dirname                
-                 
-                #----- Start Download -----
-                 
-                self.dwnl_rawfiles.start()
+            #----- Update UI -----
+            
+            self.parent.pbar.show()
+            self.staName_display.setEnabled(False)
+            self.yStart_edit.setEnabled(False)
+            self.yEnd_edit.setEnabled(False)
+            
+            self.btn_get.setIcon(iconDB.stop)
+            
+            #----- Push input values to the class instance -----
+            
+            sta_index = self.staName_display.currentIndex()
+            
+            stationID = self.staList[sta_index, 1]
+            self.dwnl_rawfiles.stationID = stationID
+            
+            climateID = self.staList[sta_index, 5]
+            self.dwnl_rawfiles.climateID = climateID
+            
+            dirname = self.parent.what_pref.project_dir + '/Meteo/Raw'           
+            self.dwnl_rawfiles.dirname = dirname                
+             
+            #----- Start Download -----
+             
+            self.dwnl_rawfiles.start()
     
     #===========================================================================
     def download_is_finished(self, fname):
@@ -2374,6 +2373,7 @@ class TabDwnldData(QtGui.QWidget):
         self.staName_display.setEnabled(True)
         self.yStart_edit.setEnabled(True)
         self.yEnd_edit.setEnabled(True)
+        self.parent.pbar.hide()
         self.btn_get.setText(labelDB.btn_get_text)
         self.btn_get.setIcon(iconDB.download)
         
@@ -2697,7 +2697,7 @@ class TabFill(QtGui.QWidget):
     #===========================================================================
     def load_data_dir_content(self) : # def set_comboBox_item(self):
         '''
-        Initiale the loading of Weater Data Files contained in the 
+        Initiate the loading of Weater Data Files contained in the 
         </Meteo/Input> folder and display the resulting station list in the
         Target station combo box widget.
         '''
@@ -2742,7 +2742,9 @@ class TabFill(QtGui.QWidget):
     # Set first and last dates of the data serie in the boxes of the
     # <Fill and Save> area.  
     #===========================================================================                                                          
+        
         if len(self.WEATHER.DATE) > 0: 
+
             self.date_start_widget.setEnabled(True)
             self.date_end_widget.setEnabled(True)
             
@@ -2830,165 +2832,182 @@ class TabFill(QtGui.QWidget):
     def fill_all_is_clicked(self):
     #===========================================================================        
         
-        if self.fill_all_inProgress == True:
+        if self.fill_all_inProgress == True: # Stop the process
             
             self.fill_all_inProgress = False     
 
-            # Reset UI state
+            #---- Reset UI state ----
+
             self.btn_fill_all.setIcon(iconDB.forward)        
             self.target_station.setEnabled(True)
             self.btn_fill.setEnabled(True)
             self.parent.btn_project_dir.setEnabled(True)
             self.btn3.setEnabled(True)
             self.parent.project_dir_display.setEnabled(True)
+            self.parent.pbar.hide()
             
             QtGui.QApplication.processEvents()
             
             if self.fillworker.isRunning():
-            # Pass a flag to the worker in order to force him to stop.
+                # Pass a flag to the worker in order to force him to stop.
                 self.fillworker.STOP = True
             else:
                 'Do nothing. Worker is not running.'
                 
-        elif self.fill_all_inProgress == False:
-            
-            FLAG = False # Flag used to check if there is errors in the settings
-            
-            y = self.date_start_widget.date().year()
-            m = self.date_start_widget.date().month()
-            d = self.date_start_widget.date().month()
-            time_start = xldate_from_date_tuple((y, m, d), 0)
-     
-            y = self.date_end_widget.date().year()
-            m = self.date_end_widget.date().month()
-            d = self.date_end_widget.date().day()
-            time_end = xldate_from_date_tuple((y, m, d), 0)
+            return
+                
+        #------------------------------------------------ CHECKS FOR ERRORS ----
+       
+        y = self.date_start_widget.date().year()
+        m = self.date_start_widget.date().month()
+        d = self.date_start_widget.date().month()
+        time_start = xldate_from_date_tuple((y, m, d), 0)
+ 
+        y = self.date_end_widget.date().year()
+        m = self.date_end_widget.date().month()
+        d = self.date_end_widget.date().day()
+        time_end = xldate_from_date_tuple((y, m, d), 0)
         
-        #-------------------------------------------------CHECKS FOR ERRORS-----
+        if len(self.WEATHER.STANAME) == 0:
+
+            self.msgBox.setText('<b>Data directory</b> is empty.')
+            self.msgBox.exec_()
             
-            if len(self.WEATHER.STANAME) == 0:
-                FLAG = True
-                self.msgBox.setText('<b>Data directory</b> is empty.')
-                self.msgBox.exec_()
-                print 'No target station selected.'
-            elif time_start > time_end:
-                FLAG = True
-                self.msgBox.setText('<b>Fill and Save Data</b> start date is ' +
-                                    'set to a later time than the end date.')
-                self.msgBox.exec_()
-                print 'The time period is invalid.'
+            print 'No target station selected.'
             
-        #------------------------------------------------START THREAD IF OK-----
-           
-            if FLAG == True:
-                'Do nothing, something is wrong.'
-            else:
-                self.fill_all_inProgress = True
-                
-                # Update UI
-                self.btn_fill_all.setIcon(iconDB.stop)
-                self.target_station.setEnabled(False)
-                self.btn_fill.setEnabled(False)
-                self.parent.btn_project_dir.setEnabled(False)
-                self.btn3.setEnabled(False)
-                self.parent.project_dir_display.setEnabled(False)
-                
-                self.CORRFLAG = 'off' 
-                self.target_station.setCurrentIndex(0)
-                self.TARGET.index = self.target_station.currentIndex()
-                self.TARGET.name = \
-                        self.WEATHER.STANAME[self.target_station.currentIndex()]
-                self.CORRFLAG = 'on'
-                
-                QtGui.QApplication.processEvents()                
-                
-                self.correlation_UI()
-                
-                # Pass information to the worker.
-                self.fillworker.project_dir = self.parent.what_pref.project_dir
-                
-                self.fillworker.time_start = time_start
-                self.fillworker.time_end = time_end                       
-                
-                self.fillworker.WEATHER = self.WEATHER
-                self.fillworker.TARGET = self.TARGET
-                                            
-                self.fillworker.regression_mode = \
-                                                self.RMSE_regression.isChecked()
+            return
+
+        if time_start > time_end:
             
-                # Start the gapfilling procedure.
-                self.fillworker.start()
+            self.msgBox.setText('<b>Fill and Save Data</b> start date is ' +
+                                'set to a later time than the end date.')
+            self.msgBox.exec_()
+            
+            print 'The time period is invalid.'
+            
+            return
+        
+        #------------------------------------------------------START THREAD ----
+       
+        self.fill_all_inProgress = True
+        
+        #---- Update UI ----
+        
+        self.btn_fill_all.setIcon(iconDB.stop)
+        self.target_station.setEnabled(False)
+        self.btn_fill.setEnabled(False)
+        self.parent.btn_project_dir.setEnabled(False)
+        self.btn3.setEnabled(False)
+        self.parent.project_dir_display.setEnabled(False)
+        self.parent.pbar.show()
+        
+        self.CORRFLAG = 'off' 
+        self.target_station.setCurrentIndex(0)
+        self.TARGET.index = self.target_station.currentIndex()
+        self.TARGET.name = self.WEATHER.STANAME[self.TARGET.index]
+                        
+        self.CORRFLAG = 'on'
+        
+        QtGui.QApplication.processEvents()                
+        
+        self.correlation_UI()
+        
+        #---- Pass information to the worker ----
+        
+        self.fillworker.project_dir = self.parent.what_pref.project_dir
+        
+        self.fillworker.time_start = time_start
+        self.fillworker.time_end = time_end                       
+        
+        self.fillworker.WEATHER = self.WEATHER
+        self.fillworker.TARGET = self.TARGET
+                                    
+        self.fillworker.regression_mode = self.RMSE_regression.isChecked()
+    
+        #---- Start the gapfilling procedure ----
+    
+        self.fillworker.start()
         
     #===========================================================================                                          
     def fill_is_clicked(self):
-    # Method that handles the gapfilling process on the UI side.
-    #
-    # check if there is anything wrong with the parameters defined by the user
-    # before starting the fill process and issue warning if anything is wrong.
+        """
+        Method that handles the gapfilling process on the UI side for a single
+        weather station.
+    
+        Check if there is anything wrong with the parameters defined by the user
+        before starting the fill process and issue warning if anything is wrong.
+        """
     #===========================================================================
-        if self.fillworker.isRunning():
+        
+        if self.fillworker.isRunning(): # Stop the process
             
-            # Reset UI.
+            #---- Reset UI ----
+            
             self.btn_fill.setIcon(iconDB.play)
             self.target_station.setEnabled(True)
             self.btn_fill_all.setEnabled(True)
             QtGui.QApplication.processEvents()
+            self.parent.pbar.hide()
             
             # Pass a flag to the worker in order to force him to stop.
             self.fillworker.STOP = True
             
-        else:
-            FLAG = False
+            return
             
-            y = self.date_start_widget.date().year()
-            m = self.date_start_widget.date().month()
-            d = self.date_start_widget.date().month()
-            time_start = xldate_from_date_tuple((y, m, d), 0)
-     
-            y = self.date_end_widget.date().year()
-            m = self.date_end_widget.date().month()
-            d = self.date_end_widget.date().day()
-            time_end = xldate_from_date_tuple((y, m, d), 0)
+        #------------------------------------------------- CHECK FOR ERRORS ----
             
-        #------------------------------------------------------------CHECKS-----
+        y = self.date_start_widget.date().year()
+        m = self.date_start_widget.date().month()
+        d = self.date_start_widget.date().month()
+        time_start = xldate_from_date_tuple((y, m, d), 0)
+ 
+        y = self.date_end_widget.date().year()
+        m = self.date_end_widget.date().month()
+        d = self.date_end_widget.date().day()
+        time_end = xldate_from_date_tuple((y, m, d), 0)
+        
+        if self.target_station.currentIndex() == -1:
+
+            self.msgBox.setText('No <b>Target station</b> is currently ' +
+                                'selected.')
+            self.msgBox.exec_()
+            print 'No target station selected.'
             
-            if self.target_station.currentIndex() == -1:
-                FLAG = True
-                self.msgBox.setText('No <b>Target station</b> is currently ' +
-                                    'selected.')
-                self.msgBox.exec_()
-                print 'No target station selected.'
-            elif time_start > time_end:
-                FLAG = True
-                self.msgBox.setText('<b>Gap Fill Data Record</b> start date is ' +
-                                    'set to a later time than the end date.')
-                self.msgBox.exec_()
-                print 'The time period is invalid.'
+            return
             
-        #------------------------------------------------START THREAD IF OK-----
-                                       
-            if FLAG == True:
-                'Do nothing, something is wrong.'
-            else:
-                # Update UI.
-                self.btn_fill.setIcon(iconDB.stop)
-                self.target_station.setEnabled(False)
-                self.btn_fill_all.setEnabled(False)
-                
-                # Pass information to the worker.
-                self.fillworker.project_dir = self.parent.what_pref.project_dir
-                
-                self.fillworker.time_start = time_start
-                self.fillworker.time_end = time_end                       
-                
-                self.fillworker.WEATHER = self.WEATHER
-                self.fillworker.TARGET = self.TARGET
-                                            
-                self.fillworker.regression_mode = \
-                                                self.RMSE_regression.isChecked()
+        if time_start > time_end:
             
-                # Start the gapfilling procedure.
-                self.fillworker.start()
+            self.msgBox.setText('<b>Gap Fill Data Record</b> start date is ' +
+                                'set to a later time than the end date.')
+            self.msgBox.exec_()
+            print 'The time period is invalid.'
+            
+            return
+        
+        #----------------------------------------------------- START THREAD ----
+             
+        #---- Update UI ----
+        
+        self.btn_fill.setIcon(iconDB.stop)
+        self.target_station.setEnabled(False)
+        self.btn_fill_all.setEnabled(False)
+        self.parent.pbar.show()
+        
+        #---- Pass information to the worker ----
+        
+        self.fillworker.project_dir = self.parent.what_pref.project_dir
+        
+        self.fillworker.time_start = time_start
+        self.fillworker.time_end = time_end                       
+        
+        self.fillworker.WEATHER = self.WEATHER
+        self.fillworker.TARGET = self.TARGET
+                                    
+        self.fillworker.regression_mode = self.RMSE_regression.isChecked()
+    
+        #---- Start the gapfilling procedure ----
+    
+        self.fillworker.start()
     
     #===========================================================================       
     def fill_process_finished(self, progress):
@@ -3004,9 +3023,10 @@ class TabFill(QtGui.QWidget):
             self.btn_fill.setIcon(iconDB.play)
             self.target_station.setEnabled(True)
             self.btn_fill_all.setEnabled(True)
+            self.parent.pbar.hide()
             
         elif self.fill_all_inProgress == True and next_station_index < nSTA:
-        # Fill All process in progress, continue with next weather station.
+            # Fill All process in progress, continue with next weather station.
         
             self.CORRFLAG = 'off' 
             self.target_station.setCurrentIndex(next_station_index)
@@ -3022,7 +3042,7 @@ class TabFill(QtGui.QWidget):
             self.fillworker.start()    
             
         elif self.fill_all_inProgress == True and next_station_index == nSTA:
-        # Fill All process was completed sucessfully.
+            # Fill All process was completed sucessfully.
             
             self.fill_all_inProgress = False
             
@@ -3033,6 +3053,7 @@ class TabFill(QtGui.QWidget):
             self.parent.btn_project_dir.setEnabled(True)
             self.btn3.setEnabled(True)
             self.parent.project_dir_display.setEnabled(True)
+            self.parent.pbar.hide()
 
 
 ##################################################################### @TAB ABOUT

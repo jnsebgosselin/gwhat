@@ -71,6 +71,9 @@ class Tooltips():
         self.MRCalc = 'Calculate the Master Recession Curve (MRC)'
         self.find_peak = 'Automated search for local extremum'
         
+        self.toggle_layout_mode = ('Toggle between layout and computation ' +
+                                   'mode (EXPERIMENTAL FEATURE)')
+        
         if language == 'French': #--------------------------------- FRENCH -----
             
             pass
@@ -115,7 +118,7 @@ class WLCalc(QtGui.QWidget):
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
         
-        #----------------------------------------------------- FigureCanvas ----
+        #---------------------------------------------------- FIGURE CANVAS ----
         
         self.setWindowTitle('Master Recession Curve Estimation')
         
@@ -124,10 +127,30 @@ class WLCalc(QtGui.QWidget):
         self.fig_MRC.patch.set_facecolor('white')
         self.fig_MRC_widget = FigureCanvasQTAgg(self.fig_MRC)
         
+        # Put figure canvas in a QFrame widget.
+        
+        fig_frame_grid = QtGui.QGridLayout()
+        self.fig_frame_widget = QtGui.QFrame()
+        
+        fig_frame_grid.addWidget(self.fig_MRC_widget, 0, 0)
+        
+        self.fig_frame_widget.setLayout(fig_frame_grid)
+        fig_frame_grid.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom
+        
+        self.fig_frame_widget.setFrameStyle(StyleDB.frame)
+        self.fig_frame_widget.setLineWidth(2)
+        self.fig_frame_widget.setMidLineWidth(1)
+        
         #---------------------------------------------------------- TOOLBAR ----
         
         self.toolbar = NavigationToolbar2QTAgg(self.fig_MRC_widget, self)
         self.toolbar.hide()
+        
+        self.btn_layout_mode = QtGui.QToolButton()
+        self.btn_layout_mode.setAutoRaise(False)
+        self.btn_layout_mode.setIcon(iconDB.toggleMode)
+        self.btn_layout_mode.setToolTip(ttipDB.toggle_layout_mode)
+        self.btn_layout_mode.setFocusPolicy(QtCore.Qt.NoFocus)
         
         self.btn_undo = QtGui.QToolButton()
         self.btn_undo.setAutoRaise(True)
@@ -182,12 +205,18 @@ class WLCalc(QtGui.QWidget):
         separator1.setFrameStyle(StyleDB.VLine)
         separator2 = QtGui.QFrame()
         separator2.setFrameStyle(StyleDB.VLine)
+        separator3 = QtGui.QFrame()
+        separator3.setFrameStyle(StyleDB.VLine)
         
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
         
         row = 0
         col = 0
+        subgrid_toolbar.addWidget(self.btn_layout_mode, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(separator3, row, col)
+        col += 1
         subgrid_toolbar.addWidget(self.btn_undo, row, col)
         col += 1
         subgrid_toolbar.addWidget(self.btn_clearPeak, row, col)                
@@ -211,7 +240,8 @@ class WLCalc(QtGui.QWidget):
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         subgrid_toolbar.setColumnStretch(col+1, 500)
-                
+        
+        self.btn_layout_mode.setIconSize(StyleDB.iconSize)
         self.btn_undo.setIconSize(StyleDB.iconSize)
         self.btn_clearPeak.setIconSize(StyleDB.iconSize)
         self.btn_home.setIconSize(StyleDB.iconSize)
@@ -230,12 +260,11 @@ class WLCalc(QtGui.QWidget):
         row = 0 
         mainGrid.addWidget(toolbar_widget, row, 0)
         row += 1
-        mainGrid.addWidget(self.fig_MRC_widget, row, 0)
-        
+        mainGrid.addWidget(self.fig_frame_widget, row, 0)        
               
         self.setLayout(mainGrid)
-        mainGrid.setContentsMargins(15, 15, 15, 15) # Left, Top, Right, Bottom 
-        mainGrid.setSpacing(15)
+        mainGrid.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
+#        mainGrid.setSpacing(15)
         mainGrid.setRowStretch(1, 500)
                 
         #----------------------------------------------------------- EVENTS ----
@@ -259,7 +288,7 @@ class WLCalc(QtGui.QWidget):
         
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
-        b, c, hp = mrc_calc(self.time, self.water_lvl, self.peak_indx)
+        a, b, hp = mrc_calc(self.time, self.water_lvl, self.peak_indx)
         
         self.h3_ax0.set_xdata(self.time)
         self.h3_ax0.set_ydata(hp)
@@ -908,25 +937,27 @@ def mrc_calc(t, h, ipeak):
     
     nsegmnt = len(minpeak)
     
-    b = 0.1
-    c = 0
+    a = 0.1
+    b = 0
     
-    ObjFn_b = 10**6
-    OPSTP_b = -0.01
+    ObjFn_a = 10**6
+    OPSTP_a = -0.01
     
     MODE = 0 # 0: exponential; 1: linear
     REGMOD = 1 # 0: RMSE; 1: MAE; 2: abs(ME)
-   
-    while abs(OPSTP_b) > 1e-5:
     
-        OPSTP_c = 0.1   # Optimisation step
-        ObjFn_c = 10**6  # Force divergence for first iteration
-        while abs(OPSTP_c) > 1e-4:
+    #---- EXPONENTIAL: dZwt/dt = a*Zwt + b ----
+    
+    while abs(OPSTP_a) > 1e-5:
+    
+        OPSTP_b = 0.1   # Optimisation step
+        ObjFn_b = 10**6  # Force divergence for first iteration
+        while abs(OPSTP_b) > 1e-4:
 
             # RECESSION CALCULATIONS
             
             dt = np.diff(t)
-            dhp = -b * (h[:-1] + h[1:] - 2*c) * dt / 2.
+            dhp = -a * (h[:-1] + h[1:] - 2*b) * dt / 2.
             
             hp = np.empty(len(h)) * np.nan
             for i in range(nsegmnt):
@@ -946,29 +977,29 @@ def mrc_calc(t, h, ipeak):
             else:  # MAE
                 ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
             
-            if ObjFn_c < ObjFn:
-                OPSTP_c = -OPSTP_c / 10.
+            if ObjFn_b < ObjFn:
+                OPSTP_b = -OPSTP_b / 10.
  
-            ObjFn_c = np.copy(ObjFn)
-            c = c + OPSTP_c
+            ObjFn_b = np.copy(ObjFn)
+            b = b + OPSTP_b
             
-        if ObjFn_b < ObjFn_c:
-            OPSTP_b = -OPSTP_b / 10.
+        if ObjFn_a < ObjFn_b:
+            OPSTP_a = -OPSTP_a / 10.
         
-        if b + OPSTP_b < 10**-12:
-            OPSTP_b = OPSTP_b / 10.
+        if a + OPSTP_a < 10**-12:
+            OPSTP_a = OPSTP_a / 10.
     
-        ObjFn_b = ObjFn_c
-        b = b + OPSTP_b
+        ObjFn_a = np.copy(ObjFn_b)
+        a = a + OPSTP_a
     
     print; print 'FIN'; print
     
+    print 'a =', a
     print 'b =', b
-    print 'c =', c
     
 #    print dhp
     
-    return b, c, hp
+    return a, b, hp
     
    
     

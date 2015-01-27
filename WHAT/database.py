@@ -55,6 +55,7 @@ class icons():
         self.save = QIcon('Icons/save.png')
         self.meteo = QIcon('Icons/meteo.png')
         self.work = QIcon('Icons/work.png')
+        self.toggleMode = QIcon('Icons/toggleMode2.png')
         
         #----- MRC TOOLBAR -----
         
@@ -74,6 +75,8 @@ class icons():
 class tooltips():
     
     def __init__(self, language): #------------------------------- ENGLISH -----
+        
+        self.browse = 'Browse'
         
         #----- DOWNLOAD TAB -----        
         
@@ -107,7 +110,10 @@ class tooltips():
         
         self.addTitle = 'Add A Title To The Figure Here'
         
-        self.work_waterlvl = 'Make computations on the data (EXPERIMENTAL FEATURE)'
+        self.work_waterlvl = ('Toggle between layout and computation ' +
+                              'mode (EXPERIMENTAL FEATURE)')
+        
+        # Layout mode; Computation mode/task mode/working
         
         if language == 'French': #--------------------------------- FRENCH -----
             
