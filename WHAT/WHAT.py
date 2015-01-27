@@ -343,16 +343,14 @@ class TabHydrograph(QtGui.QWidget):
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
-    #--------------------------------------------------- WEATHER AVG WINDOW ----
+        #----------------------------------------------- WEATHER AVG WINDOW ----
         
         self.weather_avg_graph = meteo.WeatherAvgGraph()
         
         project_dir = self.parent.what_pref.project_dir
         self.weather_avg_graph.save_fig_dir = project_dir
         
-    #-------------------------------------------------------------- TOOLBAR ----
-        
-        #---- SubGrid Figure Title ----
+        #---------------------------------------------------------- TOOLBAR ----
 
         graph_title_label = QtGui.QLabel('         ')
         self.graph_title = QtGui.QLineEdit()
@@ -442,10 +440,6 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.addWidget(separator2, row, col)
         col += 1
         subgrid_toolbar.addWidget(btn_weather_normals, row, col)
-        
-        
-#        col += 1
-#        subgrid_toolbar.addWidget(separator3, row, col)
         col += 1
         subgrid_toolbar.addWidget(graph_title_label, row, col)
         subgrid_toolbar.setColumnStretch(col, 1)
@@ -470,7 +464,7 @@ class TabHydrograph(QtGui.QWidget):
         
         toolbar_widget.setLayout(subgrid_toolbar)
     
-        #-------------------------------------------------- GRID PARAMETERS ----
+        #------------------------------------ GRID PARAMETERS (right panel) ----
         
         #----- SubGrid Data Files -----
        
@@ -502,59 +496,62 @@ class TabHydrograph(QtGui.QWidget):
         
         #----- SubGrid Dates -----
         
-        subgrid2_widget=(QtGui.QFrame())
-        subgrid2_widget.setFrameStyle(
-                                  QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
         label_date_start = QtGui.QLabel('Date Start :')
         label_date_end = QtGui.QLabel('Date End :')
         self.date_start_widget = QtGui.QDateEdit()
         self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
         self.date_end_widget = QtGui.QDateEdit()
         self.date_end_widget.setDisplayFormat('01 / MM / yyyy')
-        subgrid2 = QtGui.QGridLayout()
-        subgrid2.setSpacing(5)
+        
+        self.subgrid_dates_widget = QtGui.QFrame()
+        self.subgrid_dates_widget.setFrameStyle(StyleDB.frame)        
+        subgrid_dates = QtGui.QGridLayout()
+        
         row = 0
-        subgrid2.addWidget(label_date_start, row, 0)
-        subgrid2.addWidget(self.date_start_widget, row, 1)
+        subgrid_dates.addWidget(label_date_start, row, 0)
+        subgrid_dates.addWidget(self.date_start_widget, row, 1)
         row +=1
-        subgrid2.addWidget(label_date_end, row, 0)  
-        subgrid2.addWidget(self.date_end_widget, row, 1)
+        subgrid_dates.addWidget(label_date_end, row, 0)  
+        subgrid_dates.addWidget(self.date_end_widget, row, 1)
         
-        subgrid2_widget.setLayout(subgrid2)
-        subgrid2.setContentsMargins(5, 5, 5, 5)
+        subgrid_dates.setSpacing(5)
+        subgrid_dates.setContentsMargins(5, 5, 5, 5)
         
-        #----- SubGrid Water Level Scale -----
+        self.subgrid_dates_widget.setLayout(subgrid_dates)
         
-        subgrid3_widget=(QtGui.QFrame())
-        subgrid3_widget.setFrameStyle(
-                                  QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
-        subgrid3 = QtGui.QGridLayout()
-        subgrid3.setSpacing(5)
+        #---- SubGrid Water Level Scale ----
         
-        row = 0
         label_waterlvl_scale = QtGui.QLabel('Water Level Scale :') 
         self.waterlvl_scale = QtGui.QDoubleSpinBox()
         self.waterlvl_scale.setSingleStep(0.05)
         self.waterlvl_scale.setSuffix('  m')
         self.waterlvl_scale.setAlignment(QtCore.Qt.AlignLeft)
-        subgrid3.addWidget(label_waterlvl_scale, row, 0)        
-        subgrid3.addWidget(self.waterlvl_scale, row, 1)
-        row += 1
+        
         label_waterlvl_max = QtGui.QLabel('Water Level Max :') 
         self.waterlvl_max = QtGui.QDoubleSpinBox()
         self.waterlvl_max.setSingleStep(0.1)
         self.waterlvl_max.setSuffix('  m')
         self.waterlvl_max.setAlignment(QtCore.Qt.AlignLeft)
         self.waterlvl_max.setMinimum(-1000)
-
-        subgrid3.addWidget(label_waterlvl_max, row, 0)        
-        subgrid3.addWidget(self.waterlvl_max, row, 1)
         
-        subgrid3_widget.setLayout(subgrid3)
-        subgrid3.setContentsMargins(5, 5, 5, 5) # (left, top, right, bottom)
-                
-        #----- ASSEMBLING SubGrids -----
-
+        self.subgrid_WLScale_widget = QtGui.QFrame()
+        self.subgrid_WLScale_widget.setFrameStyle(StyleDB.frame)
+        subgrid_WLScale = QtGui.QGridLayout()
+        
+        row = 0
+        subgrid_WLScale.addWidget(label_waterlvl_scale, row, 0)        
+        subgrid_WLScale.addWidget(self.waterlvl_scale, row, 1)
+        row += 1
+        subgrid_WLScale.addWidget(label_waterlvl_max, row, 0)        
+        subgrid_WLScale.addWidget(self.waterlvl_max, row, 1)
+        
+        subgrid_WLScale.setSpacing(5)
+        subgrid_WLScale.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)
+        
+        self.subgrid_WLScale_widget.setLayout(subgrid_WLScale)
+        
+        #---- SubGrid Labels Language ----
+        
         language_label = QtGui.QLabel('Label Language:')
         self.language_box = QtGui.QComboBox()
         self.language_box.setEditable(False)
@@ -562,47 +559,45 @@ class TabHydrograph(QtGui.QWidget):
         self.language_box.addItems(['French', 'English'])
         self.language_box.setCurrentIndex(1)
         
+        self.subgrid_labLang_widget = QtGui.QFrame()
+        subgrid_labLang = QtGui.QGridLayout()
+        
+        row = 0
+        subgrid_labLang.addWidget(language_label, row, 0)        
+        subgrid_labLang.addWidget(self.language_box, row, 1)
+        
+        subgrid_labLang.setSpacing(5)
+        subgrid_labLang.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)
+        
+        self.subgrid_labLang_widget.setLayout(subgrid_labLang)
+                        
+        #----- ASSEMBLING SubGrids -----
+        
         grid_RIGHT = QtGui.QGridLayout()
         grid_RIGHT_widget = QtGui.QFrame()
         
         row = 0
-        grid_RIGHT.addWidget(subgrid_widget, row, 0, 1, 2)
+        col = 0
+        grid_RIGHT.addWidget(subgrid_widget, row, col)
         row += 1
-        grid_RIGHT.addWidget(subgrid2_widget, row, 0, 1, 2)        
+        grid_RIGHT.addWidget(self.subgrid_dates_widget, row, col)        
         row += 1
-        grid_RIGHT.addWidget(subgrid3_widget, row, 0, 1, 2)        
+        grid_RIGHT.addWidget(self.subgrid_WLScale_widget, row, col)        
         row += 1
-        grid_RIGHT.addWidget(language_label, row, 0)
-        grid_RIGHT.addWidget(self.language_box, row, 1)
+        grid_RIGHT.addWidget(self.subgrid_labLang_widget, row, col)
         
         grid_RIGHT_widget.setLayout(grid_RIGHT)
-        grid_RIGHT.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
+        grid_RIGHT.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         grid_RIGHT.setSpacing(15)
         grid_RIGHT.setRowStretch(row+1, 500)
         
-    #---------------------------------------------------------- GRID LAYOUT ----
+        #------------------------------------------------- GRID LAYOUT MODE ----
         
         #---- SubGrid Hydrograph Frame ----
-        
-        # Two figures are generated. (1) One as a preview to display in the
-        # UI and (2) the other to be saved as the final figure. This is to
-        # circumvent any possible issue with computer screen resolution or any
-        # distortion of the image by the backend or the UI widget.
         
         self.hydrograph2display = hydroprint.Hydrograph()
         self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display.fig)
         self.hydrograph_canvas.draw()        
-                
-#        self.hydrograph2display = plt.figure()
-#        self.hydrograph2display.set_size_inches(11, 8.5)
-#        self.hydrograph2display.patch.set_facecolor('white')
-#        
-#        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display)
-#        self.hydrograph_canvas.draw()
-#        
-#        self.hydrograph2save = plt.figure()
-#        self.hydrograph2save.set_size_inches(11, 8.5)
-#        self.hydrograph2save.patch.set_facecolor('white')
         
         self.hydrograph_scrollarea = imageviewer.ImageViewer()
         
@@ -613,7 +608,7 @@ class TabHydrograph(QtGui.QWidget):
         
         grid_hydrograph.setRowStretch(0, 500)
         grid_hydrograph.setColumnStretch(0, 500)
-        grid_hydrograph.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
+        grid_hydrograph.setContentsMargins(0, 0, 0, 0) # (L, T, R, B) 
         
         grid_hydrograph_widget.setLayout(grid_hydrograph)
         
@@ -645,7 +640,6 @@ class TabHydrograph(QtGui.QWidget):
         row = 0 
         mainGrid.addWidget(self.grid_layout_widget, row, 0)
         mainGrid.addWidget(self.waterlvl_calc, row, 0)
-        
         mainGrid.addWidget(grid_RIGHT_widget, row, 1)
 #        mainGrid.addWidget(toolbar_widget, row, 2)        
         
@@ -683,6 +677,7 @@ class TabHydrograph(QtGui.QWidget):
         self.btn_work_waterlvl.clicked.connect(self.toggle_computeMode)
         
         #----- Toolbox Computation -----
+        
         self.waterlvl_calc.btn_layout_mode.clicked.connect(
                                                          self.toggle_layoutMode)
         
@@ -720,13 +715,25 @@ class TabHydrograph(QtGui.QWidget):
         
     def toggle_layoutMode(self):
         
-        self.waterlvl_calc.hide()
-        self.grid_layout_widget.show()        
+        self.waterlvl_calc.hide()        
+        self.grid_layout_widget.show()
+        
+        #---- Right Panel Update ----
+        
+        self.subgrid_dates_widget.show() 
+        self.subgrid_WLScale_widget.show()
+        self.subgrid_labLang_widget.show()
         
     def toggle_computeMode(self):
         
         self.grid_layout_widget.hide()
         self.waterlvl_calc.show()
+        
+        #---- Right Panel Update ----
+        
+        self.subgrid_dates_widget.hide()
+        self.subgrid_WLScale_widget.hide()
+        self.subgrid_labLang_widget.hide()
         
     def show_weather_averages(self):
         
