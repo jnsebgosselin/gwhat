@@ -54,7 +54,7 @@ class Tooltips():
                         'from the graph')
         self.pan = 'Pan axes with left mouse, zoom with right'
         self.MRCalc = 'Calculate the Master Recession Curve (MRC)'
-        self.find_peak = 'Automated search for local extremum'
+        self.find_peak = 'Automated search for local extremum (EXPERIMENTAL FEATURE)'
         
         self.toggle_layout_mode = ('Toggle between layout and computation ' +
                                    'mode (EXPERIMENTAL FEATURE)')
@@ -221,6 +221,36 @@ class WLCalc(QtGui.QWidget):
         toolbar_widget.setLayout(subgrid_toolbar)
         
         #--------------------------------------------------- MRC PARAMETERS ----
+        
+        self.MRC_type = QtGui.QComboBox()
+        self.MRC_type.addItems(['Linear', 'Exponential'])
+        self.MRC_type.setCurrentIndex(1)
+        
+        self.MRC_ObjFnType = QtGui.QComboBox()
+        self.MRC_ObjFnType.addItems(['RMSE', 'MAE'])
+        self.MRC_ObjFnType.setCurrentIndex(1)
+        
+        self.MRC_results = QtGui.QTextEdit()
+        self.MRC_results.setReadOnly(True)
+        self.MRC_results.setFixedHeight(100)
+        
+        grid_MRCparam = QtGui.QGridLayout()
+        self.widget_MRCparam = QtGui.QFrame()
+        self.widget_MRCparam.setFrameStyle(StyleDB.frame)
+        
+        row = 0
+        col = 0
+        grid_MRCparam.addWidget(self.MRC_type, row, col)
+        row += 1
+        grid_MRCparam.addWidget(self.MRC_ObjFnType, row, col)
+        row += 1
+        grid_MRCparam.addWidget(self.MRC_results, row, col)
+        
+        grid_MRCparam.setSpacing(5)
+        grid_MRCparam.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)
+        grid_MRCparam.setColumnStretch(col, 500)        
+        
+        self.widget_MRCparam.setLayout(grid_MRCparam)
                 
         #-------------------------------------------------------- MAIN GRID ----
         
@@ -270,8 +300,14 @@ class WLCalc(QtGui.QWidget):
         
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
-        _, _, hp = mrc_calc(self.time, self.water_lvl, self.peak_indx)
-                                            
+        a, b, hp, obj = mrc_calc(self.time, self.water_lvl, self.peak_indx, 
+                                 self.MRC_type.currentIndex(),
+                                 self.MRC_ObjFnType.currentIndex())
+        
+        txt = 'dh/dt (mm/d) = -%0.2f * h + %0.2f' % (a*1000, b*1000)
+        self.MRC_results.setText(txt)        
+        txt = '\n%s = %f' % (self.MRC_ObjFnType.currentText(), obj)                          
+        self.MRC_results.append(txt)
         
         self.h3_ax0.set_xdata(self.time)
         self.h3_ax0.set_ydata(hp)
@@ -513,9 +549,10 @@ class WLCalc(QtGui.QWidget):
         delta = 0.05
         Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
         Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
-    
-        Ymin0 = np.min(x) - (np.max(x) - np.min(x)) * delta
-        Ymax0 = np.max(x) + (np.max(x) - np.min(x)) * delta
+        
+        indx = np.where(~np.isnan(x))
+        Ymin0 = np.min(x[indx]) - (np.max(x[indx]) - np.min(x[indx])) * delta
+        Ymax0 = np.max(x[indx]) + (np.max(x[indx]) - np.min(x[indx])) * delta
     
         self.ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
         self.ax0.invert_yaxis()
@@ -955,16 +992,30 @@ def local_extrema(x, Deltan):
    
     return n_j, kadd
 
-def mrc_calc(t, h, ipeak):
+#===============================================================================
+def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
+    """
     
+    ---- INPUT ----
+    
+    MRC_type: MRC equation type:    
+    
+      MODE = 0 -> linear (dh/dt = b)
+      MODE = 1 -> exponential (dh/dt = -a*h + b)
+    
+    MRC_ObjFnType: Objective function used for the regression
+    
+      REGMOD = 0 -> RMSE
+      REGMOD = 1 -> MAE
+    """
+#===============================================================================
+   
+    #-------------------------------------------------------- Quality Check ----
+
     ipeak = np.sort(ipeak)
     
     maxpeak = ipeak[:-1:2]
     minpeak = ipeak[1::2]
-    
-    nItmax = 100
-    
-    #-------------------------------------------------------- Quality Check ----
     
     dpeak = (h[maxpeak] - h[minpeak]) * -1 # WARNING: Don't forget it is mbgs
     if np.any(dpeak < 0):
@@ -973,20 +1024,22 @@ def mrc_calc(t, h, ipeak):
     if len(ipeak) == 0:
         print 'No extremum selected'
         return
-        
+    
+    print; print '---- MRC calculation started ----'; print
+    print 'MRC_type =', ['linear', 'exponential'][MRC_type]
+    print 'ObjFnType =', ['RMSE', 'MAE'][MRC_ObjFnType]
+            
     b = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
     a = 0.
 
     dt = np.diff(t)
     
     nsegmnt = len(minpeak)
-        
-    MODE = 1 # 0: linear ; 1: exponential
-    REGMOD = 1 # 0: RMSE; 1: MAE; 2: abs(ME)
+    nItmax = 100
     
     #---- LINEAR: dh/dt = b ----
     
-    if MODE == 0:
+    if MRC_type == 0:
         
         OPSTP_b = 0.1   # Optimisation step
         ObjFn_b = 10**6  # Force divergence for first iteration
@@ -1008,9 +1061,9 @@ def mrc_calc(t, h, ipeak):
             
             #---- COMPUTE OBJ. FUNC. ----
             
-            if REGMOD == 0:  # RMSE
+            if MRC_ObjFnType == 0:  # RMSE
                 ObjFn = (np.mean((h[indx] - hp[indx])**2))**0.5
-            elif REGMOD == 2: # abs(ME)
+            elif MRC_ObjFnType == 2: # abs(ME)
                 ObjFn = np.abs(np.mean((h[indx] - hp[indx])))
             else:  # MAE
                 ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
@@ -1023,7 +1076,7 @@ def mrc_calc(t, h, ipeak):
                         
     #---- EXPONENTIAL: dh/dt = -a * h + b ----  
         
-    elif MODE == 1:
+    elif MRC_type == 1:
         
         ObjFn_a = 10**6 # Force divergence for first iteration
         OPSTP_a = 0.1
@@ -1050,11 +1103,9 @@ def mrc_calc(t, h, ipeak):
                 
                 #---- Compute Obj. Func. ----
                 
-                if REGMOD == 0:  # RMSE
+                if MRC_ObjFnType == 0:  # RMSE
                     ObjFn = (np.mean((h[indx] - hp[indx])**2))**0.5
-                elif REGMOD == 2: # abs(ME)
-                    ObjFn = np.abs(np.mean((h[indx] - hp[indx])))
-                else:  # MAE
+                elif MRC_ObjFnType == 1: # MAE
                     ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
                 
                 if ObjFn_b < ObjFn:
@@ -1078,14 +1129,15 @@ def mrc_calc(t, h, ipeak):
             ObjFn_a = np.copy(ObjFn_b)
             a = a + OPSTP_a
         
-    print; print 'FIN'; print
-    
+    print
+    print ['RMSE', 'MAE'][MRC_ObjFnType], ' =', ObjFn
     print 'a =', a
     print 'b =', b
+    print; print '---- FIN ----'; print
     
 #    print dhp
     
-    return a, b, hp
+    return a, b, hp, ObjFn
     
    
     
@@ -1150,6 +1202,7 @@ if __name__ == '__main__':
     app = QtGui.QApplication(argv)   
     instance_1 = WLCalc()
     instance_1.show()
+    instance_1.widget_MRCparam.show()
     
     fwaterlvl = 'Files4testing/PO01.xls'
 #    

@@ -350,6 +350,11 @@ class TabHydrograph(QtGui.QWidget):
         project_dir = self.parent.what_pref.project_dir
         self.weather_avg_graph.save_fig_dir = project_dir
         
+        #---------------------------------------------------- waterlvl_calc ----
+        
+        self.waterlvl_calc = waterlvl_calc.WLCalc()
+        self.waterlvl_calc.hide()
+        
         #--------------------------------------------------- LAYOUT TOOLBAR ----
 
         graph_title_label = QtGui.QLabel('         ')
@@ -580,6 +585,8 @@ class TabHydrograph(QtGui.QWidget):
         col = 0
         grid_RIGHT.addWidget(subgrid_widget, row, col)
         row += 1
+        grid_RIGHT.addWidget(self.waterlvl_calc.widget_MRCparam, row, col)
+        self.waterlvl_calc.widget_MRCparam.hide()
         grid_RIGHT.addWidget(self.subgrid_dates_widget, row, col)        
         row += 1
         grid_RIGHT.addWidget(self.subgrid_WLScale_widget, row, col)        
@@ -631,10 +638,7 @@ class TabHydrograph(QtGui.QWidget):
 #        grid_LEFT.setRowStretch(row+1, 500)
         
         #-------------------------------------------------------- MAIN GRID ----
-
-        self.waterlvl_calc = waterlvl_calc.WLCalc()
-        self.waterlvl_calc.hide()
-        
+                
         mainGrid_VLine1 = QtGui.QFrame()
         mainGrid_VLine1.setFrameStyle(StyleDB.VLine)
         
@@ -727,6 +731,7 @@ class TabHydrograph(QtGui.QWidget):
         
         #---- Right Panel Update ----
         
+        self.waterlvl_calc.widget_MRCparam.hide()
         self.subgrid_dates_widget.show() 
         self.subgrid_WLScale_widget.show()
         self.subgrid_labLang_widget.show()
@@ -738,6 +743,7 @@ class TabHydrograph(QtGui.QWidget):
         
         #---- Right Panel Update ----
         
+        self.waterlvl_calc.widget_MRCparam.show()
         self.subgrid_dates_widget.hide()
         self.subgrid_WLScale_widget.hide()
         self.subgrid_labLang_widget.hide()
