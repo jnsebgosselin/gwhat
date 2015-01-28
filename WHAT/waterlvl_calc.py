@@ -219,6 +219,8 @@ class WLCalc(QtGui.QWidget):
         self.btn_MRCalc.setIconSize(StyleDB.iconSize)
         
         toolbar_widget.setLayout(subgrid_toolbar)
+        
+        #--------------------------------------------------- MRC PARAMETERS ----
                 
         #-------------------------------------------------------- MAIN GRID ----
         
@@ -268,7 +270,8 @@ class WLCalc(QtGui.QWidget):
         
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
-        a, b, hp = mrc_calc(self.time, self.water_lvl, self.peak_indx)
+        _, _, hp = mrc_calc(self.time, self.water_lvl, self.peak_indx)
+                                            
         
         self.h3_ax0.set_xdata(self.time)
         self.h3_ax0.set_ydata(hp)
@@ -452,8 +455,14 @@ class WLCalc(QtGui.QWidget):
         
         fheight = fig.get_figheight()
         fwidth = fig.get_figwidth()
+        
+        #---- Reset Values ----
+        
+        self.peak_indx = np.array([]).astype(int)
+        self.peak_memory = [np.array([]).astype(int)]
+        self.btn_undo.setEnabled(False)
     
-    #------------------------------------------------------ FIGURE CREATION ----
+        #---------------------------------------------------------- MARGINS ----
         
         left_margin  = 0.85
         right_margin = 0.25
@@ -465,7 +474,7 @@ class WLCalc(QtGui.QWidget):
         w = 1 - (left_margin + right_margin) / fwidth
         h = 1 - (bottom_margin + top_margin) / fheight
                         
-    #-------------------------------------------------------- AXES CREATION ----        
+        #---------------------------------------------------- AXES CREATION ----        
         
         #---- Water Level (Host) ----
         
@@ -477,7 +486,7 @@ class WLCalc(QtGui.QWidget):
 #        ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=1)
 #        ax1.patch.set_visible(False)
         
-    #----------------------------------------------------- XTICKS FORMATING ---- 
+        #----------------------------------------------------------- XTICKS ---- 
     
 #        Xmin0 = 0
 #        Xmax0 = 12.001
@@ -494,12 +503,12 @@ class WLCalc(QtGui.QWidget):
         
 #        ax1.tick_params(axis='x', which='both', bottom='off', top='off',
 #                        labelbottom='off'
-    #----------------------------------------------------- YTICKS FORMATING ----
+        #----------------------------------------------------------- YTICKS ----
         
         self.ax0.yaxis.set_ticks_position('left')
         self.ax0.tick_params(axis='y',direction='out', gridOn=True)
                 
-    #------------------------------------------------------- SET AXIS RANGE ---- 
+        #--------------------------------------------------- SET AXIS RANGE ---- 
        
         delta = 0.05
         Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
@@ -953,6 +962,8 @@ def mrc_calc(t, h, ipeak):
     maxpeak = ipeak[:-1:2]
     minpeak = ipeak[1::2]
     
+    nItmax = 100
+    
     #-------------------------------------------------------- Quality Check ----
     
     dpeak = (h[maxpeak] - h[minpeak]) * -1 # WARNING: Don't forget it is mbgs
@@ -962,30 +973,29 @@ def mrc_calc(t, h, ipeak):
     if len(ipeak) == 0:
         print 'No extremum selected'
         return
+        
+    b = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
+    a = 0.
+
+    dt = np.diff(t)
     
     nsegmnt = len(minpeak)
-    
-    a = 0.1
-    b = 0
-    
-    ObjFn_a = 10**6
-    OPSTP_a = -0.01
-    
-    MODE = 0 # 0: exponential; 1: linear
+        
+    MODE = 1 # 0: linear ; 1: exponential
     REGMOD = 1 # 0: RMSE; 1: MAE; 2: abs(ME)
     
-    #---- EXPONENTIAL: dZwt/dt = a*Zwt + b ----
+    #---- LINEAR: dh/dt = b ----
     
-    while abs(OPSTP_a) > 1e-5:
-    
+    if MODE == 0:
+        
         OPSTP_b = 0.1   # Optimisation step
         ObjFn_b = 10**6  # Force divergence for first iteration
-        while abs(OPSTP_b) > 1e-4:
-
-            # RECESSION CALCULATIONS
-            
-            dt = np.diff(t)
-            dhp = -a * (h[:-1] + h[1:] - 2*b) * dt / 2.
+        nIt = 0
+        while abs(OPSTP_b) > 1e-5:
+                
+            #---- Syntheric Hydrograph ----
+                        
+            dhp = b * dt
             
             hp = np.empty(len(h)) * np.nan
             for i in range(nsegmnt):
@@ -1010,16 +1020,64 @@ def mrc_calc(t, h, ipeak):
  
             ObjFn_b = np.copy(ObjFn)
             b = b + OPSTP_b
-            
-        if ObjFn_a < ObjFn_b:
-            OPSTP_a = -OPSTP_a / 10.
+                        
+    #---- EXPONENTIAL: dh/dt = -a * h + b ----  
         
-        if a + OPSTP_a < 10**-12:
-            OPSTP_a = OPSTP_a / 10.
-    
-        ObjFn_a = np.copy(ObjFn_b)
-        a = a + OPSTP_a
-    
+    elif MODE == 1:
+        
+        ObjFn_a = 10**6 # Force divergence for first iteration
+        OPSTP_a = 0.1
+        FIRST_a = 1
+        while abs(OPSTP_a) > 1e-5:
+        
+            OPSTP_b = 0.1   # Optimisation step
+            ObjFn_b = 10**6  # Force divergence for first iteration
+            nIt = 0
+            while abs(OPSTP_b) > 1e-5:
+                
+                #---- Compute Syntheric Hydrograph ----
+                            
+                dhp = (-a * (h[:-1] + h[1:]) + 2*b) * dt / 2.
+                
+                hp = np.empty(len(h)) * np.nan
+                for i in range(nsegmnt):
+                    hp[maxpeak[i]] = h[maxpeak[i]]
+                    
+                    for j in range(minpeak[i] - maxpeak[i]):
+                        hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp[maxpeak[i]+j]
+                        
+                indx = np.where(~np.isnan(hp))
+                
+                #---- Compute Obj. Func. ----
+                
+                if REGMOD == 0:  # RMSE
+                    ObjFn = (np.mean((h[indx] - hp[indx])**2))**0.5
+                elif REGMOD == 2: # abs(ME)
+                    ObjFn = np.abs(np.mean((h[indx] - hp[indx])))
+                else:  # MAE
+                    ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
+                
+                if ObjFn_b < ObjFn:
+                    OPSTP_b = -OPSTP_b / 10.
+     
+                ObjFn_b = np.copy(ObjFn)
+                b = b + OPSTP_b
+                
+                nIt += 1
+                if nIt > nItmax:
+                    print 'No solution found'
+                    return a, b, hp
+                
+            if ObjFn_a < ObjFn_b:
+                if FIRST_a == 0:
+                    OPSTP_a = -OPSTP_a / 10.
+                else:
+                    FIRST_a = 0
+                    OPSTP_a = -OPSTP_a
+        
+            ObjFn_a = np.copy(ObjFn_b)
+            a = a + OPSTP_a
+        
     print; print 'FIN'; print
     
     print 'a =', a
@@ -1093,16 +1151,21 @@ if __name__ == '__main__':
     instance_1 = WLCalc()
     instance_1.show()
     
-#    fwaterlvl = 'Files4testing/PO01.xls'
+    fwaterlvl = 'Files4testing/PO01.xls'
 #    
-#    waterLvlObj = WaterlvlData()
-#    waterLvlObj.load(fwaterlvl)
+    waterLvlObj = WaterlvlData()
+    waterLvlObj.load(fwaterlvl)
 #
-#    self.water_lvl = waterLvlObj.lvl
-#    self.water_lvl = self.water_lvl[350:]
+    water_lvl = waterLvlObj.lvl
+    water_lvl = water_lvl[400:1000]
 #
-#    self.time = waterLvlObj.time
-#    self.time = self.time[350:]
+    time = waterLvlObj.time
+    time = time[400:1000]
+    
+    instance_1.water_lvl = water_lvl
+    instance_1.time = time
+    
+    instance_1.plot_water_levels()
 #    
         
     app.exec_() 

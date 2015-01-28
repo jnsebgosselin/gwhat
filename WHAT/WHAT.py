@@ -350,7 +350,7 @@ class TabHydrograph(QtGui.QWidget):
         project_dir = self.parent.what_pref.project_dir
         self.weather_avg_graph.save_fig_dir = project_dir
         
-        #---------------------------------------------------------- TOOLBAR ----
+        #--------------------------------------------------- LAYOUT TOOLBAR ----
 
         graph_title_label = QtGui.QLabel('         ')
         self.graph_title = QtGui.QLineEdit()
@@ -464,7 +464,7 @@ class TabHydrograph(QtGui.QWidget):
         
         toolbar_widget.setLayout(subgrid_toolbar)
     
-        #------------------------------------ GRID PARAMETERS (right panel) ----
+        #------------------------------------------------------ RIGHT PANEL ----
         
         #----- SubGrid Data Files -----
        
@@ -591,7 +591,7 @@ class TabHydrograph(QtGui.QWidget):
         grid_RIGHT.setSpacing(15)
         grid_RIGHT.setRowStretch(row+1, 500)
         
-        #------------------------------------------------- GRID LAYOUT MODE ----
+        #------------------------------------------------ LAYOUT LEFT PANEL ----
         
         #---- SubGrid Hydrograph Frame ----
         
@@ -635,18 +635,25 @@ class TabHydrograph(QtGui.QWidget):
         self.waterlvl_calc = waterlvl_calc.WLCalc()
         self.waterlvl_calc.hide()
         
+        mainGrid_VLine1 = QtGui.QFrame()
+        mainGrid_VLine1.setFrameStyle(StyleDB.VLine)
+        
         mainGrid = QtGui.QGridLayout()
         
-        row = 0 
-        mainGrid.addWidget(self.grid_layout_widget, row, 0)
-        mainGrid.addWidget(self.waterlvl_calc, row, 0)
-        mainGrid.addWidget(grid_RIGHT_widget, row, 1)
-#        mainGrid.addWidget(toolbar_widget, row, 2)        
+        row = 0
+        col = 0
+        mainGrid.addWidget(self.grid_layout_widget, row, col)
+        mainGrid.addWidget(self.waterlvl_calc, row, col)
+        col += 1
+        mainGrid.addWidget(mainGrid_VLine1, row, col)
+        col += 1
+        mainGrid.addWidget(grid_RIGHT_widget, row, col)
         
-        self.setLayout(mainGrid)
         mainGrid.setContentsMargins(10, 10, 10, 10) # Left, Top, Right, Bottom 
         mainGrid.setSpacing(15)
         mainGrid.setColumnStretch(0, 500)
+        
+        self.setLayout(mainGrid)
                 
         #---------------------------------------------------- MESSAGE BOXES ----
                                           
