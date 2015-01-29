@@ -223,8 +223,8 @@ class WLCalc(QtGui.QWidget):
         #--------------------------------------------------- MRC PARAMETERS ----
         
         self.MRC_type = QtGui.QComboBox()
-        self.MRC_type.addItems(['Linear', 'Exponential'])
-        self.MRC_type.setCurrentIndex(1)
+        self.MRC_type.addItems(['Linear', 'Exponential', 'Gauss-Newton'])
+        self.MRC_type.setCurrentIndex(2)
         
         self.MRC_ObjFnType = QtGui.QComboBox()
         self.MRC_ObjFnType.addItems(['RMSE', 'MAE'])
@@ -1026,7 +1026,7 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
         return
     
     print; print '---- MRC calculation started ----'; print
-    print 'MRC_type =', ['linear', 'exponential'][MRC_type]
+    print 'MRC_type =', ['linear', 'exponential', 'Gauss-Newton'][MRC_type]
     print 'ObjFnType =', ['RMSE', 'MAE'][MRC_ObjFnType]
             
     b = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
@@ -1097,6 +1097,10 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
                     hp[maxpeak[i]] = h[maxpeak[i]]
                     
                     for j in range(minpeak[i] - maxpeak[i]):
+                        
+#                        dhp = (-a * (hp[maxpeak[i]+j]) + b) * dt[maxpeak[i]+j]
+#                        hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp
+#                        
                         hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp[maxpeak[i]+j]
                         
                 indx = np.where(~np.isnan(hp))
@@ -1128,58 +1132,129 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
         
             ObjFn_a = np.copy(ObjFn_b)
             a = a + OPSTP_a
+
+#    elif MRC_type == 2: 
+#        
+#        # Modified Gauss-Newton Gradient Method (Hill and Tiedman,2007, p.68)
+#        
+#        ipeak = np.sort(ipeak)
+#    
+#        maxpeak = ipeak[:-1:2]
+#        minpeak = ipeak[1::2]
+#        
+#        nsegmnt = len(minpeak)
+#        nItmax = 100
+#                
+#        c = 2.25
+#        b = 0.08
+#        
+##        DHDC = np.array([]).astype(float)
+##        DHDB = np.array([]).astype(float)
+#        hp = np.empty(len(h)) * np.nan
+#        for i in range(nsegmnt):
+#            
+#            for it in range(100):
+#           
+#                print b, c
+#                        
+#                imax = maxpeak[i]
+#                imin = minpeak[i]
+#                
+#                h0 = h[imax]
+#                t0 = t[imax]
+#                
+#                #----------                
+#                
+#                a = c - h0
+#                
+#                tp = t[imax:imin+1] - t0
+#                
+#                hp[imax:imin+1] = -a * np.exp(-b * tp) + c
+#                
+#                dhdb = a * tp * np.exp(-b * tp)
+#                dhdc = np.ones(len(tp))
+#                
+#                #----------
+#                
+##                a  = -1 / b * np.log(1 - h0 / c)
+##                tp = t[imax:imin+1] - t0
+##                       
+##                hp[imax:imin+1] = c * (1 - np.exp(-b * (tp + a)))
+##                
+##                dhdb = c * (tp + a) * np.exp(-b * (tp + a))
+##                dhdc = -np.exp(-b * (tp + a))
+#                
+#                #----------
+#                
+#                X =  np.vstack((dhdb, dhdc)).transpose()
+#                Xt = X.transpose()
+#                
+#                dh = h[imax:imin+1] - hp[imax:imin+1]
+#                A = np.dot(Xt, X)                
+#                B = np.dot(Xt, dh)
+#                
+#                dr = np.linalg.tensorsolve(A, B, axes=None)
+#               
+#                b += dr[0]
+#                c += dr[1]
+##                print dr
+#            
+##            * (h[imax:imin+1]- hp)
+#            
+#            
+##            DHDB = np.append(DHDB, c * (tp + a) * np.exp(-b * (tp + a)))
+##            DHDC = np.append(DHDC, -np.exp(-b * (tp + a)) )
+#            
+##        JACOBIAN =  np.vstack((DHDB, DHDC)).transpose()
+##            
+#        
+#        
+#        print 'FIN'
+    
         
-    print
-    print ['RMSE', 'MAE'][MRC_ObjFnType], ' =', ObjFn
-    print 'a =', a
-    print 'b =', b
-    print; print '---- FIN ----'; print
+    
+            
+#        ############################################################### TEST
+#            
+#        from scipy.optimize.minpack import curve_fit
+#    
+#        #---- Compute Syntheric Hydrograph ----
+#        
+#        def func(h, a, b):
+#                            
+#            dhdt = -a * (h - b)
+#            
+#            return dhdt
+#            
+#        dh = np.diff(h)                
+#        popt, pcov = curve_fit(func, h[indx], dh[indx])  
+#        
+#        a = popt[0]
+#        b = popt[1]
+#        dhp = (-a * (h[:-1] + h[1:]) + 2*b) * dt / 2.
+#        hp = np.empty(len(h)) * np.nan
+#        for i in range(nsegmnt):
+#            hp[maxpeak[i]] = h[maxpeak[i]]
+#            
+#            for j in range(minpeak[i] - maxpeak[i]):
+#                hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp[maxpeak[i]+j]
+                
+        
+        
+#        print popt * 0.25
+#        print pcov
+    
+        
+#    print
+#    print ['RMSE', 'MAE'][MRC_ObjFnType], ' =', ObjFn
+#    print 'a =', a
+#    print 'b =', b
+#    print; print '---- FIN ----'; print
     
 #    print dhp
-    
+    ObjFn = 0
     return a, b, hp, ObjFn
-    
    
-    
-      
-  
-      #b=0.1;
-      #C=-2;
-      #RMSE_b=10^6;
-      #OPSTP_b=-0.01;
-      #MODE='exponential';
-#while abs(OPSTP_b)>1e-5
-#    OPSTP_C=0.1;%Optimisation step
-#    RMSE_C=10^6; %Force divergence for first iteration
-#    while abs(OPSTP_C)>1e-4
-#        %RECESSION CALCULATIONS
-#        dhp=-b*(DTWL(1:end-1)+DTWL(2:end)-2*C).*(TIME(2:end)-TIME(1:end-1))/2;
-#        STOCK=[]; %initialization or reinitialization
-#        for i=1:length(MINMAX)
-#            hp(1)=DTWL(MINMAX(i,1));
-#            for j=1:MINMAX(i,2)-MINMAX(i,1)
-#                hp(j+1)=hp(j)+dhp(j+MINMAX(i,1)-1);
-#            end
-#            STOCK=[STOCK ; hp' DTWL(MINMAX(i,1):MINMAX(i,2),1) (MINMAX(i,1):MINMAX(i,2))'];
-#            clear hp
-#        end
-#        RMSE=(mean(abs(STOCK(:,1)-STOCK(:,2))));
-#        if RMSE_C<RMSE
-#            OPSTP_C=-OPSTP_C/10;
-#        end
-#        RMSE_C=RMSE;
-#        C=C+OPSTP_C;
-#    end
-#    if RMSE_b<RMSE_C
-#        OPSTP_b=-OPSTP_b/10;
-#    elseif b+OPSTP_b<10^-12
-#        OPSTP_b=OPSTP_b/10;
-#    end
-#    RMSE_b=RMSE_C;
-#    b=b+OPSTP_b;  
-   
-
-
 if __name__ == '__main__':
     
     import xlrd
