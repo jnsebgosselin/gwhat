@@ -533,6 +533,7 @@ class TabHydrograph(QtGui.QWidget):
         label_waterlvl_scale = QtGui.QLabel('WL Scale :') 
         self.waterlvl_scale = QtGui.QDoubleSpinBox()
         self.waterlvl_scale.setSingleStep(0.05)
+        self.waterlvl_scale.setMinimum(0.05)
         self.waterlvl_scale.setSuffix('  m')
         self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter)        
         
@@ -563,42 +564,42 @@ class TabHydrograph(QtGui.QWidget):
         
         self.subgrid_WLScale_widget.setLayout(subgrid_WLScale)
         
-        #------------------------------------------------ Widget Ptot Scale ----
+        #--------------------------------------------- Widget Weather Scale ----
         
         label_Ptot_scale = QtGui.QLabel('Precip. Scale :') 
         self.Ptot_scale = QtGui.QSpinBox()
         self.Ptot_scale.setSingleStep(5)
-        self.Ptot_scale.setMinimum(0)
+        self.Ptot_scale.setMinimum(5)
         self.Ptot_scale.setMaximum(50)
         self.Ptot_scale.setValue(20)        
         self.Ptot_scale.setSuffix('  mm')
         self.Ptot_scale.setAlignment(QtCore.Qt.AlignCenter)
 #        self.Ptot_scale.setMinimumWidth(150)
         
-        widget_Ptot_scale = QtGui.QFrame()
-        widget_Ptot_scale.setFrameStyle(0)
-        grid_Ptot_scale = QtGui.QGridLayout()
+        widget_weather_scale = QtGui.QFrame()
+        widget_weather_scale.setFrameStyle(0)
+        grid_weather_scale = QtGui.QGridLayout()
         
         row = 1
-        grid_Ptot_scale.addWidget(label_Ptot_scale, row, 1)        
-        grid_Ptot_scale.addWidget(self.Ptot_scale, row, 2)
+        grid_weather_scale.addWidget(label_Ptot_scale, row, 1)        
+        grid_weather_scale.addWidget(self.Ptot_scale, row, 2)
                 
-        grid_Ptot_scale.setVerticalSpacing(5)
-        grid_Ptot_scale.setHorizontalSpacing(10)
-        grid_Ptot_scale.setContentsMargins(25, 10, 25, 10) # (L, T, R, B)
-        grid_Ptot_scale.setColumnStretch(2, 100)
+        grid_weather_scale.setVerticalSpacing(5)
+        grid_weather_scale.setHorizontalSpacing(10)
+        grid_weather_scale.setContentsMargins(25, 10, 25, 10) # (L, T, R, B)
+        grid_weather_scale.setColumnStretch(2, 100)
 #        grid_Ptot_scale.setColumnStretch(0, 100)
-        grid_Ptot_scale.setRowStretch(row+1, 100)
-        grid_Ptot_scale.setRowStretch(0, 100)
+        grid_weather_scale.setRowStretch(row+1, 100)
+        grid_weather_scale.setRowStretch(0, 100)
         
-        widget_Ptot_scale.setLayout(grid_Ptot_scale)
+        widget_weather_scale.setLayout(grid_weather_scale)
                 
         #------------------------------------------------ Scales Tab Widget ----
         
         self.tabscales = QtGui.QTabWidget()
         self.tabscales.addTab(widget_time_scale, 'Time')
         self.tabscales.addTab(self.subgrid_WLScale_widget, 'Water Level')
-        self.tabscales.addTab(widget_Ptot_scale, 'Precipitation')
+        self.tabscales.addTab(widget_weather_scale, 'Weather')
         
         #---- SubGrid Labels Language ----
         
@@ -750,6 +751,7 @@ class TabHydrograph(QtGui.QWidget):
         self.waterlvl_scale.valueChanged.connect(self.waterlvl_scale_changed)
         self.graph_status.stateChanged.connect(self.fig_title_state_changed)
         self.graph_title.editingFinished.connect(self.fig_title_changed)
+        self.Ptot_scale.valueChanged.connect(self.Ptot_scale_changed)
         
         self.date_start_widget.dateChanged.connect(self.time_scale_changed)
         self.date_end_widget.dateChanged.connect(self.time_scale_changed)
@@ -1022,6 +1024,8 @@ class TabHydrograph(QtGui.QWidget):
         self.hydrograph2display.WLscale = self.waterlvl_scale.value()
         self.hydrograph2display.WLmin = self.waterlvl_max.value()
         
+        self.hydrograph2display.RAINscale = self.Ptot_scale.value() 
+        
         if self.graph_status.isChecked():
             self.hydrograph2display.title_state = 1
         else:
@@ -1082,6 +1086,8 @@ class TabHydrograph(QtGui.QWidget):
                                     
         self.waterlvl_scale.setValue(self.hydrograph2display.WLscale)
         self.waterlvl_max.setValue(self.hydrograph2display.WLmin)
+        
+        self.Ptot_scale.setValue(self.hydrograph2display.RAINscale)
          
         if self.hydrograph2display.title_state == 1:
             self.graph_status.setCheckState(QtCore.Qt.Checked)
@@ -1284,6 +1290,24 @@ class TabHydrograph(QtGui.QWidget):
                 self.hydrograph2display.draw_xlabels()
         
                 self.refresh_hydrograph()
+                
+    def Ptot_scale_changed(self):
+        
+        if self.UpdateUI == True:
+            
+            #---- Update Instance Variables ----
+            
+            self.hydrograph2display.RAINscale = self.Ptot_scale.value()
+            
+            #---- Update Graph if Exists ----
+           
+            if self.hydrograph2display.isHydrographExists == True:
+                
+                self.hydrograph2display.update_precip_scale()
+                self.hydrograph2display.draw_ylabels()
+            
+                self.refresh_hydrograph()
+                
         
     def waterlvl_scale_changed(self):
         

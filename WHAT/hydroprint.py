@@ -479,16 +479,24 @@ class Hydrograph():
 #        
 #        self.bar2 = self.ax3.bar(time, Rain, align='center', width=7-1)
 #        plt.setp(self.bar2, color=(0,0,1), edgecolor='none')
-       
+                    
+        #----------------------------------------------- MISSING VALUE PTOT ----
+
         if fname_info:
+            
+#            self.dZGrid_inch
+            
             Ptot_missing_time, _ = load_weather_log(fname_info,
                                                     'Total Precip (mm)', 
                                                     self.TIMEwk, self.PTOTwk)
+                                                    
+            self.NMissPtot = len(Ptot_missing_time)
             
-            y = np.ones(len(Ptot_missing_time)) * -5 * RAINscale / 20.
-            line_missing_Ptot = self.ax3.plot(Ptot_missing_time, y, '.')
+            y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
+            
+            self.line_missing_Ptot, = self.ax3.plot(Ptot_missing_time, y, '.')
                 
-            plt.setp(line_missing_Ptot, markerfacecolor=(1, 0.25, 0.25),
+            plt.setp(self.line_missing_Ptot, markerfacecolor=(1, 0.25, 0.25),
                      markeredgecolor='none', markersize=5)
     
         #-------------------------------------------------- AIR TEMPERATURE ----
@@ -511,7 +519,7 @@ class Hydrograph():
         self.l1_ax4, = self.ax4.plot([], [])        
         self.l2_ax4, = self.ax4.plot([], [], color='black')
         
-        #-------------------------------------------- MISSING VALUE MARKERS ----
+        #----------------------------------------------- MISSING VALUE TEMP ----
         
         #---- Air Temperature ----
         
@@ -744,7 +752,7 @@ class Hydrograph():
         # Take the position which is farthest from the left y axis in order
         # to have both labels on the left aligned.
 
-        self.ax3.yaxis.set_label_coords(1 + ylabel3_xpos + 0.04, ylabel3_ypos)
+        self.ax3.yaxis.set_label_coords(1 + ylabel3_xpos + 0.045, ylabel3_ypos)
         
         #-------------------------------------------- WEATHER STATION LABEL ----
         
@@ -813,8 +821,25 @@ class Hydrograph():
         
         if self.WLref != 1:
             self.ax2.invert_yaxis()
-    
-    
+            
+    def update_precip_scale(self):
+        
+        RAINscale = self.RAINscale
+        
+        RAINmin = 0
+        RAINmax = RAINmin + RAINscale * 6
+        
+        self.ax3.axis(ymin=RAINmin - (RAINscale*4), 
+                      ymax=RAINmin - (RAINscale*4) + self.NZGrid*RAINscale)
+        
+        yticks_position = np.arange(0, RAINmax + RAINscale, RAINscale)
+        self.ax3.set_yticks(yticks_position)
+        self.ax3.invert_yaxis()
+        
+        #---- Update position of missing markers ----
+        
+        y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
+        self.line_missing_Ptot.set_ydata(y)
             
 
 #===============================================================================
