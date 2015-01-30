@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
 software_version = 'WHAT Beta 4.1.3'
-last_modification = '21/01/2015'
+last_modification = '30/01/2015'
 
 #---- STANDARD LIBRARY IMPORTS ----
 
