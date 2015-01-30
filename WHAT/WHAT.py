@@ -1553,7 +1553,7 @@ class TabDwnldData(QtGui.QWidget):
         row += 1
         grid_MAIN.addWidget(BOTTOM_widget, row, col)
         col += 1
-#        grid_MAIN.addWidget(self.staList_table, 0, col, row+1, 1)
+        grid_MAIN.addWidget(self.staList_table, 0, col, row+1, 1)
         grid_MAIN.setColumnStretch(0, 500)
         
         grid_MAIN.setRowStretch(row+1, 500)

@@ -222,13 +222,15 @@ class WLCalc(QtGui.QWidget):
         
         #--------------------------------------------------- MRC PARAMETERS ----
         
+        MRCtype_label = QtGui.QLabel('MRC Type :')
+        
         self.MRC_type = QtGui.QComboBox()
-        self.MRC_type.addItems(['Linear', 'Exponential', 'Gauss-Newton'])
-        self.MRC_type.setCurrentIndex(2)
+        self.MRC_type.addItems(['Linear', 'Exponential'])
+        self.MRC_type.setCurrentIndex(1)
         
         self.MRC_ObjFnType = QtGui.QComboBox()
         self.MRC_ObjFnType.addItems(['RMSE', 'MAE'])
-        self.MRC_ObjFnType.setCurrentIndex(1)
+        self.MRC_ObjFnType.setCurrentIndex(0)
         
         self.MRC_results = QtGui.QTextEdit()
         self.MRC_results.setReadOnly(True)
@@ -240,15 +242,18 @@ class WLCalc(QtGui.QWidget):
         
         row = 0
         col = 0
+        grid_MRCparam.addWidget(MRCtype_label, row, col)
+        col += 1
         grid_MRCparam.addWidget(self.MRC_type, row, col)
         row += 1
-        grid_MRCparam.addWidget(self.MRC_ObjFnType, row, col)
+#        grid_MRCparam.addWidget(self.MRC_ObjFnType, row, col)
         row += 1
-        grid_MRCparam.addWidget(self.MRC_results, row, col)
+        col = 0
+        grid_MRCparam.addWidget(self.MRC_results, row, col, 1, 2)
         
         grid_MRCparam.setSpacing(5)
         grid_MRCparam.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)
-        grid_MRCparam.setColumnStretch(col, 500)        
+        grid_MRCparam.setColumnStretch(1, 500)        
         
         self.widget_MRCparam.setLayout(grid_MRCparam)
                 
@@ -300,10 +305,15 @@ class WLCalc(QtGui.QWidget):
         
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
-        a, b, hp, obj = mrc_calc(self.time, self.water_lvl, self.peak_indx, 
+        A, B, hp, obj = mrc_calc(self.time, self.water_lvl, self.peak_indx, 
                                  self.MRC_type.currentIndex(),
                                  self.MRC_ObjFnType.currentIndex())
+                                 
+#        self.results_AB = NewFig(A, B)
+#        self.results_AB.show()
         
+        a = np.mean(A)
+        b = np.mean(B)
         txt = 'dh/dt (mm/d) = -%0.2f * h + %0.2f' % (a*1000, b*1000)
         self.MRC_results.setText(txt)        
         txt = '\n%s = %f' % (self.MRC_ObjFnType.currentText(), obj)                          
@@ -1026,29 +1036,28 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
         return
     
     print; print '---- MRC calculation started ----'; print
-    print 'MRC_type =', ['linear', 'exponential', 'Gauss-Newton'][MRC_type]
+    print 'MRC_type =', ['Linear', 'Exponential', 'EXPONENTIAL (alternate)'][MRC_type]
     print 'ObjFnType =', ['RMSE', 'MAE'][MRC_ObjFnType]
-            
-    b = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
-    a = 0.
-
-    dt = np.diff(t)
     
     nsegmnt = len(minpeak)
     nItmax = 100
     
-    #---- LINEAR: dh/dt = b ----
-    
+    #---------------------------------------------------- LINEAR: dh/dt = B ----
+        
     if MRC_type == 0:
         
-        OPSTP_b = 0.1   # Optimisation step
-        ObjFn_b = 10**6  # Force divergence for first iteration
+        dt = np.diff(t)
+        B = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
+        A = 0.
+        
+        OPSTP_B = 0.1   # Optimisation step
+        ObjFn_B = 10**6  # Force divergence for first iteration
         nIt = 0
-        while abs(OPSTP_b) > 1e-5:
+        while abs(OPSTP_B) > 1e-5:
                 
             #---- Syntheric Hydrograph ----
                         
-            dhp = b * dt
+            dhp = B * dt
             
             hp = np.empty(len(h)) * np.nan
             for i in range(nsegmnt):
@@ -1068,41 +1077,52 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
             else:  # MAE
                 ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
             
-            if ObjFn_b < ObjFn:
-                OPSTP_b = -OPSTP_b / 10.
+            if ObjFn_B < ObjFn:
+                OPSTP_B = -OPSTP_B / 10.
  
-            ObjFn_b = np.copy(ObjFn)
-            b = b + OPSTP_b
+            ObjFn_B = np.copy(ObjFn)
+            B = B + OPSTP_B
                         
-    #---- EXPONENTIAL: dh/dt = -a * h + b ----  
+    #-------------------------------------- EXPONENTIAL: dh/dt = -A * h + B ----  
         
     elif MRC_type == 1:
         
-        ObjFn_a = 10**6 # Force divergence for first iteration
-        OPSTP_a = 0.1
-        FIRST_a = 1
-        while abs(OPSTP_a) > 1e-5:
+        dt = np.diff(t)
         
-            OPSTP_b = 0.1   # Optimisation step
-            ObjFn_b = 10**6  # Force divergence for first iteration
+        B = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
+        A = 0.
+        
+        ObjFn_A = 10**6 # Force divergence for first iteration
+        OPSTP_A = 0.1
+        FIRST_A = 1
+        while abs(OPSTP_A) > 1e-5:
+        
+            OPSTP_B = 0.1   # Optimisation step
+            ObjFn_B = 10**6  # Force divergence for first iteration
             nIt = 0
-            while abs(OPSTP_b) > 1e-5:
+            while abs(OPSTP_B) > 1e-5:
                 
                 #---- Compute Syntheric Hydrograph ----
-                            
-                dhp = (-a * (h[:-1] + h[1:]) + 2*b) * dt / 2.
                 
                 hp = np.empty(len(h)) * np.nan
+                
                 for i in range(nsegmnt):
                     hp[maxpeak[i]] = h[maxpeak[i]]
                     
                     for j in range(minpeak[i] - maxpeak[i]):
                         
-#                        dhp = (-a * (hp[maxpeak[i]+j]) + b) * dt[maxpeak[i]+j]
-#                        hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp
-#                        
-                        hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp[maxpeak[i]+j]
+                        imax = maxpeak[i]
+                        imin = minpeak[i]
                         
+#                        dhp = (-A * (h[imax+j] + h[imax+j+1]) + 2 * B) * dt / 2.
+#                        hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp
+                        
+                        LUMP1 = (1 - A * dt[imax+j] / 2)
+                        LUMP2 = B * dt[imax+j]
+                        LUMP3 = (1 + A * dt[imax+j] / 2) ** -1                    
+                            
+                        hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
+                                                
                 indx = np.where(~np.isnan(hp))
                 
                 #---- Compute Obj. Func. ----
@@ -1112,27 +1132,122 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
                 elif MRC_ObjFnType == 1: # MAE
                     ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
                 
-                if ObjFn_b < ObjFn:
-                    OPSTP_b = -OPSTP_b / 10.
+                if ObjFn_B < ObjFn:
+                    OPSTP_B = -OPSTP_B / 10.
      
-                ObjFn_b = np.copy(ObjFn)
-                b = b + OPSTP_b
+                ObjFn_B = np.copy(ObjFn)
+                B = B + OPSTP_B
                 
                 nIt += 1
                 if nIt > nItmax:
                     print 'No solution found'
-                    return a, b, hp
+                    return A, B, hp
                 
-            if ObjFn_a < ObjFn_b:
-                if FIRST_a == 0:
-                    OPSTP_a = -OPSTP_a / 10.
+            if ObjFn_A < ObjFn_B:
+                if FIRST_A == 0:
+                    OPSTP_A = -OPSTP_A / 10.
                 else:
-                    FIRST_a = 0
-                    OPSTP_a = -OPSTP_a
+                    FIRST_A = 0
+                    OPSTP_A = -OPSTP_A
         
-            ObjFn_a = np.copy(ObjFn_b)
-            a = a + OPSTP_a
+            ObjFn_A = np.copy(ObjFn_B)
+            A = A + OPSTP_A
+            
+        #---- Calculate the fit for each segment ----
+        
+        RMSE = np.empty(nsegmnt)
+        ME = np.empty(nsegmnt)
+        TimeMid = np.empty(nsegmnt)
+        for i in range(nsegmnt):
+            for j in range(minpeak[i] - maxpeak[i]):
+                
+                imax = maxpeak[i]
+                imin = minpeak[i]
+                                
+                RMSE[i] = (np.mean((h[imax:imin+1] - hp[imax:imin+1])**2))**0.5
+                ME[i] = np.mean(h[imax:imin+1] - hp[imax:imin+1])
+            
+        print RMSE
+        print
+        print ME
+            
+            
 
+    #---- EXPONENTIAL (alternate): dh/dt = -a * h + b ----  
+
+    elif MRC_type == 2:
+        
+        # Each segment is optimized individually        
+        
+        hp = np.empty(len(h)) * np.nan
+        A = np.zeros(nsegmnt) + a
+        B = np.zeros(nsegmnt) + b
+        for i in range(nsegmnt):
+        
+            ObjFn_A = 10**6 # Force divergence for first iteration
+            OPSTP_A = 0.1
+            FIRST_A = 1
+            while abs(OPSTP_A) > 1e-5:
+            
+                OPSTP_B = 0.1   # Optimisation step
+                ObjFn_B = 10**6  # Force divergence for first iteration
+                nIt = 0
+                while abs(OPSTP_B) > 1e-5:
+                    
+                    #---- Compute Syntheric Hydrograph ----
+                    
+                    imax = maxpeak[i]
+                    imin = minpeak[i]
+                        
+                    hp[imax] = h[imax]
+                        
+                    for j in range(minpeak[i] - maxpeak[i]):
+                        
+                        LUMP1 = (1 - A[i] * dt[imax+j] / 2)
+                        LUMP2 = B[i]*dt[imax+j]
+                        LUMP3 = (1 + A[i] * dt[imax+j] / 2) ** -1
+                    
+                            
+                        hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
+                    
+                    #---- Compute Obj. Func. ----
+                    
+                    dh = h[imax:imin+1] - hp[imax:imin+1]
+                    if MRC_ObjFnType == 0:  # RMSE
+                        ObjFn = (np.mean(dh**2))**0.5
+                    elif MRC_ObjFnType == 1: # MAE
+                        ObjFn = np.mean(np.abs(dh))
+
+                    if ObjFn_B < ObjFn:
+                        OPSTP_B = -OPSTP_B / 10.
+         
+                    ObjFn_B = np.copy(ObjFn)
+                    B[i] = B[i] + OPSTP_B
+                    
+                    nIt += 1
+                    if nIt > nItmax:
+                        print 'No solution found'
+                        return a, b, hp
+                 
+                if ObjFn_A < ObjFn_B:
+                    if FIRST_A == 0:
+                        OPSTP_A = -OPSTP_A / 10.
+                    elif FIRST_A == 1:
+                        OPSTP_A = -OPSTP_A                
+                FIRST_A = 0
+            
+                ObjFn_A = np.copy(ObjFn_B)
+                A[i] = A[i] + OPSTP_A
+                
+        print A
+        print B
+#        a = np.mean(A)
+#        b = np.mean(B)
+            
+#        subgrid_toolbar.setSpacing(5)
+#        subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
+#        subgrid_toolbar.setColumnStretch(col+1, 500)
+                    
 #    elif MRC_type == 2: 
 #        
 #        # Modified Gauss-Newton Gradient Method (Hill and Tiedman,2007, p.68)
@@ -1210,9 +1325,6 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
 #        
 #        
 #        print 'FIN'
-    
-        
-    
             
 #        ############################################################### TEST
 #            
@@ -1245,16 +1357,46 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
 #        print pcov
     
         
-#    print
-#    print ['RMSE', 'MAE'][MRC_ObjFnType], ' =', ObjFn
-#    print 'a =', a
-#    print 'b =', b
-#    print; print '---- FIN ----'; print
+    print
+    print ['RMSE', 'MAE'][MRC_ObjFnType], ' =', ObjFn
+    print 'A =', A
+    print 'B =', B
+    print; print '---- FIN ----'; print
     
 #    print dhp
-    ObjFn = 0
-    return a, b, hp, ObjFn
-   
+        
+    return A, B, hp, ObjFn
+    
+class NewFig(QtGui.QWidget):
+            
+    def __init__(self, A, B, parent=None):
+        super(NewFig, self).__init__(parent)
+            
+        self.fig = plt.figure()        
+#        fig.set_size_inches(8.5, 5)        
+#        self.fig_MRC.patch.set_facecolor('white')
+        self.fig_MRC_widget = FigureCanvasQTAgg(self.fig)
+        self.toolbar = NavigationToolbar2QTAgg(self.fig_MRC_widget, self)
+        
+        plt.plot(A, A, '.')
+        
+#        h = np.arange(0, 2.5)
+#        for i in range(len(A)):
+#            dxdt = -A[i] * h + B[i]
+#            plt.plot(dxdt, h, '-')
+        
+        grid = QtGui.QGridLayout()
+       
+        row = 0
+        col = 0
+        grid.addWidget(self.fig_MRC_widget, row, col)
+        row += 1
+        grid.addWidget(self.toolbar, row, col)
+        
+        self.setLayout(grid)
+        
+        self.fig_MRC_widget.draw() 
+                
 if __name__ == '__main__':
     
     import xlrd
