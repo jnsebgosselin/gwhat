@@ -765,7 +765,7 @@ class TabHydrograph(QtGui.QWidget):
         self.weather_avg_graph.generate_graph(filemeteo)
         
         self.weather_avg_graph.show()
-        self.weather_avg_graph.setFixedSize(self.weather_avg_graph.size());           
+        self.weather_avg_graph.setFixedSize(self.weather_avg_graph.size())           
             
     def emit_error_message(self, error_text):
         
@@ -1646,6 +1646,10 @@ class TabDwnldData(QtGui.QWidget):
         Gov. of Can. website.
         '''
     #===========================================================================
+
+        now = datetime.now()
+        
+        #------------------------------------------------------- Left Panel ----
         
         #---- Widgets ----
         
@@ -1678,9 +1682,33 @@ class TabDwnldData(QtGui.QWidget):
         self.radius_SpinBox.setMaximum(500)
         self.radius_SpinBox.setSuffix(' km')
         
-        now = datetime.now()
-
-        label_startYear = QtGui.QLabel('Start Year :')
+        #---- Grid ----
+        
+        widget_leftPanel = QtGui.QWidget()
+        grid_leftPanel = QtGui.QGridLayout()
+        
+        row = 0
+        grid_leftPanel.addWidget(label_Lat, row, 0)
+        grid_leftPanel.addWidget(self.latitude_SpinBox, row, 1)
+        grid_leftPanel.addWidget(label_Lat2, row, 2)
+        row += 1
+        grid_leftPanel.addWidget(label_Lon, row, 0)
+        grid_leftPanel.addWidget(self.longitude_SpinBox, row, 1)
+        grid_leftPanel.addWidget(label_Lon2, row, 2)
+        row += 1
+        grid_leftPanel.addWidget(label_radius, row, 0)
+        grid_leftPanel.addWidget(self.radius_SpinBox, row, 1)
+        
+        grid_leftPanel.setSpacing(5)
+        grid_leftPanel.setColumnStretch(1, 100)
+        grid_leftPanel.setRowStretch(row + 1, 100)
+        grid_leftPanel.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        
+        widget_leftPanel.setLayout(grid_leftPanel)
+        
+        #------------------------------------------------------ Right Panel ----
+        
+        label_date = QtGui.QLabel('Stations with data between :')
         
         self.search4station_minYear = QtGui.QSpinBox()
         self.search4station_minYear.setAlignment(QtCore.Qt.AlignCenter)
@@ -1689,7 +1717,8 @@ class TabDwnldData(QtGui.QWidget):
         self.search4station_minYear.setMaximum(now.year)
         self.search4station_minYear.setValue(1840)
         
-        label_endYear = QtGui.QLabel('End Year :')
+        label_and = QtGui.QLabel('and')
+        label_and.setAlignment(QtCore.Qt.AlignCenter)
         
         self.search4station_maxYear = QtGui.QSpinBox()
         self.search4station_maxYear.setAlignment(QtCore.Qt.AlignCenter)
@@ -1698,11 +1727,33 @@ class TabDwnldData(QtGui.QWidget):
         self.search4station_maxYear.setMaximum(now.year)
         self.search4station_maxYear.setValue(now.year)
         
-        self.btn_go_search4station = QtGui.QPushButton('Search')
-        self.btn_go_search4station.setIcon(iconDB.search)
+        widget_rightPanel = QtGui.QWidget()
+        grid_rightPanel = QtGui.QGridLayout()
+        
+        row = 0
+        grid_rightPanel.addWidget(label_date, row, 0, 1, 3)
+        row += 1
+        grid_rightPanel.addWidget(self.search4station_minYear, row, 0)
+        grid_rightPanel.addWidget(label_and, row, 1)
+        grid_rightPanel.addWidget(self.search4station_maxYear, row, 2)
+        
+        grid_rightPanel.setSpacing(10)
+        grid_rightPanel.setColumnStretch(0, 100)
+        grid_rightPanel.setColumnStretch(2, 100)
+        grid_rightPanel.setRowStretch(row + 1, 100)
+        grid_rightPanel.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        
+        widget_rightPanel.setLayout(grid_rightPanel)
+        
+        #-------------------------------------------------------- MAIN GRID ----
+        
+        #---- Widgets ----
         
         line1 = QtGui.QFrame()
         line1.setFrameStyle(StyleDB.VLine)
+        
+        self.btn_go_search4station = QtGui.QPushButton('Search')
+        self.btn_go_search4station.setIcon(iconDB.search)
         
         #---- GRID ----
                         
@@ -1710,37 +1761,29 @@ class TabDwnldData(QtGui.QWidget):
         grid_search4stations = QtGui.QGridLayout()
         
         row = 1
-        grid_search4stations.addWidget(label_Lat, row, 1, 1, 2)
-        grid_search4stations.addWidget(self.latitude_SpinBox, row, 3)
-        grid_search4stations.addWidget(label_Lat2, row, 4)
-        grid_search4stations.addWidget(line1, row, 5, 3, 1)
-        grid_search4stations.addWidget(label_startYear, row, 6)
-        grid_search4stations.addWidget(self.search4station_minYear, row, 7) 
+        col = 1        
+        grid_search4stations.addWidget(widget_leftPanel, row, col)
+        col += 1
+        grid_search4stations.addWidget(line1, row, col)
+        col += 1
+        grid_search4stations.addWidget(widget_rightPanel, row, col)
         row += 1
-        grid_search4stations.addWidget(label_Lon, row, 1, 1, 2)
-        grid_search4stations.addWidget(self.longitude_SpinBox, row, 3)
-        grid_search4stations.addWidget(label_Lon2, row, 4)
-        grid_search4stations.addWidget(label_endYear, row, 6)
-        grid_search4stations.addWidget(self.search4station_maxYear, row, 7)
-        row += 1
-        grid_search4stations.addWidget(label_radius, row, 1, 1, 2)
-        grid_search4stations.addWidget(self.radius_SpinBox, row, 3)
-        row += 1
-        grid_search4stations.addWidget(self.btn_go_search4station, row, 1, 1, 7)
-                
-        self.widget_search4stations.setLayout(grid_search4stations)
-        grid_search4stations.setContentsMargins(25, 25, 25, 25) # Left, Top,
-                                                                # Right, Bottom 
+        grid_search4stations.addWidget(self.btn_go_search4station, row, 1, 1, 3)
+                        
+        grid_search4stations.setContentsMargins(15, 15, 15, 15) # (L, T, R, B) 
         grid_search4stations.setSpacing(10)
-        grid_search4stations.setColumnStretch(0, 500)
-        grid_search4stations.setColumnStretch(8, 500)
-        grid_search4stations.setRowStretch(0, 500)
-        grid_search4stations.setRowStretch(row + 1, 500)
+        grid_search4stations.setColumnStretch(0, 100)
+        grid_search4stations.setColumnStretch(col+1, 100)
+        grid_search4stations.setRowStretch(0, 100)
+        grid_search4stations.setRowStretch(row + 1, 100)
+        
+        self.widget_search4stations.setLayout(grid_search4stations)
+        
+        #------------------------------------------------------ MAIN WINDOW ----
         
         self.widget_search4stations.setWindowTitle(
-                                                  'Search For Weather Stations')
-#        self.widget_search4stations.setGeometry(250, 800, 250, 150)
-        self.widget_search4stations.setFixedSize(450, 200)
+                                                  'Search for Weather Stations')
+#        self.widget_search4stations.setFixedSize(500, 200)
         self.widget_search4stations.setWindowIcon(iconDB.WHAT)
     
     #===========================================================================
@@ -1752,6 +1795,8 @@ class TabDwnldData(QtGui.QWidget):
     #===========================================================================
 
         self.widget_search4stations.show()
+        self.widget_search4stations.setFixedSize(
+                                             self.widget_search4stations.size()) 
     
     #===========================================================================
     def search4stations(self):
