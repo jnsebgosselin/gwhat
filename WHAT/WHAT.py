@@ -468,10 +468,8 @@ class TabHydrograph(QtGui.QWidget):
         self.btn_work_waterlvl.setIconSize(StyleDB.iconSize)
         
         toolbar_widget.setLayout(subgrid_toolbar)
-    
-        #------------------------------------------------------ RIGHT PANEL ----
-        
-        #----- SubGrid Data Files -----
+     
+        #------------------------------------------------ Widget Data Files ----
        
         btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
         btn_waterlvl_dir.setIcon(iconDB.openFile)
@@ -498,62 +496,109 @@ class TabHydrograph(QtGui.QWidget):
         subgrid.setContentsMargins(0, 0, 0, 0)
         
         subgrid_widget.setLayout(subgrid)
+                
+        #------------------------------------------------ Widget Time Scale ----
         
-        #----- SubGrid Dates -----
-        
-        label_date_start = QtGui.QLabel('Date Start :')
-        label_date_end = QtGui.QLabel('Date End :')
+        label_date_start = QtGui.QLabel('Date Min :')        
         self.date_start_widget = QtGui.QDateEdit()
         self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
+        self.date_start_widget.setAlignment(QtCore.Qt.AlignCenter)
+        
+        label_date_end = QtGui.QLabel('Date Max :')
         self.date_end_widget = QtGui.QDateEdit()
         self.date_end_widget.setDisplayFormat('01 / MM / yyyy')
+        self.date_end_widget.setAlignment(QtCore.Qt.AlignCenter)
         
-        self.subgrid_dates_widget = QtGui.QFrame()
-        self.subgrid_dates_widget.setFrameStyle(StyleDB.frame)        
-        subgrid_dates = QtGui.QGridLayout()
+        widget_time_scale = QtGui.QFrame()
+        widget_time_scale.setFrameStyle(0)  # StyleDB.frame 
+        grid_time_scale = QtGui.QGridLayout()
         
         row = 0
-        subgrid_dates.addWidget(label_date_start, row, 0)
-        subgrid_dates.addWidget(self.date_start_widget, row, 1)
+        grid_time_scale.addWidget(label_date_start, row, 1)
+        grid_time_scale.addWidget(self.date_start_widget, row, 2)
         row +=1
-        subgrid_dates.addWidget(label_date_end, row, 0)  
-        subgrid_dates.addWidget(self.date_end_widget, row, 1)
+        grid_time_scale.addWidget(label_date_end, row, 1)  
+        grid_time_scale.addWidget(self.date_end_widget, row, 2)
         
-        subgrid_dates.setSpacing(5)
-        subgrid_dates.setContentsMargins(5, 5, 5, 5)
+        grid_time_scale.setVerticalSpacing(5)
+        grid_time_scale.setHorizontalSpacing(10)
+        grid_time_scale.setContentsMargins(25, 10, 25, 10)
+        grid_time_scale.setColumnStretch(2, 100)
+#        subgrid_dates.setColumnStretch(0, 100)
         
-        self.subgrid_dates_widget.setLayout(subgrid_dates)
+        widget_time_scale.setLayout(grid_time_scale)
         
-        #---- SubGrid Water Level Scale ----
+        #----------------------------------------- Widget Water Level Scale ----
         
-        label_waterlvl_scale = QtGui.QLabel('Water Level Scale :') 
+        label_waterlvl_scale = QtGui.QLabel('WL Scale :') 
         self.waterlvl_scale = QtGui.QDoubleSpinBox()
         self.waterlvl_scale.setSingleStep(0.05)
         self.waterlvl_scale.setSuffix('  m')
-        self.waterlvl_scale.setAlignment(QtCore.Qt.AlignLeft)
+        self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter)        
         
-        label_waterlvl_max = QtGui.QLabel('Water Level Max :') 
+        label_waterlvl_max = QtGui.QLabel('WL Min :') 
         self.waterlvl_max = QtGui.QDoubleSpinBox()
         self.waterlvl_max.setSingleStep(0.1)
         self.waterlvl_max.setSuffix('  m')
-        self.waterlvl_max.setAlignment(QtCore.Qt.AlignLeft)
+        self.waterlvl_max.setAlignment(QtCore.Qt.AlignCenter)
         self.waterlvl_max.setMinimum(-1000)
+        self.waterlvl_max.setMaximum(1000)
         
         self.subgrid_WLScale_widget = QtGui.QFrame()
-        self.subgrid_WLScale_widget.setFrameStyle(StyleDB.frame)
+        self.subgrid_WLScale_widget.setFrameStyle(0) # StyleDB.frame
         subgrid_WLScale = QtGui.QGridLayout()
         
         row = 0
-        subgrid_WLScale.addWidget(label_waterlvl_scale, row, 0)        
-        subgrid_WLScale.addWidget(self.waterlvl_scale, row, 1)
+        subgrid_WLScale.addWidget(label_waterlvl_scale, row, 1)        
+        subgrid_WLScale.addWidget(self.waterlvl_scale, row, 2)
         row += 1
-        subgrid_WLScale.addWidget(label_waterlvl_max, row, 0)        
-        subgrid_WLScale.addWidget(self.waterlvl_max, row, 1)
+        subgrid_WLScale.addWidget(label_waterlvl_max, row, 1)        
+        subgrid_WLScale.addWidget(self.waterlvl_max, row, 2)
         
-        subgrid_WLScale.setSpacing(5)
-        subgrid_WLScale.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)
+        subgrid_WLScale.setVerticalSpacing(5)
+        subgrid_WLScale.setHorizontalSpacing(10)
+        subgrid_WLScale.setContentsMargins(25, 10, 25, 10) # (L, T, R, B)
+        subgrid_WLScale.setColumnStretch(2, 100)
+#        subgrid_WLScale.setColumnStretch(0, 100)
         
         self.subgrid_WLScale_widget.setLayout(subgrid_WLScale)
+        
+        #------------------------------------------------ Widget Ptot Scale ----
+        
+        label_Ptot_scale = QtGui.QLabel('Precip. Scale :') 
+        self.Ptot_scale = QtGui.QSpinBox()
+        self.Ptot_scale.setSingleStep(5)
+        self.Ptot_scale.setMinimum(0)
+        self.Ptot_scale.setMaximum(50)
+        self.Ptot_scale.setValue(20)        
+        self.Ptot_scale.setSuffix('  mm')
+        self.Ptot_scale.setAlignment(QtCore.Qt.AlignCenter)
+#        self.Ptot_scale.setMinimumWidth(150)
+        
+        widget_Ptot_scale = QtGui.QFrame()
+        widget_Ptot_scale.setFrameStyle(0)
+        grid_Ptot_scale = QtGui.QGridLayout()
+        
+        row = 1
+        grid_Ptot_scale.addWidget(label_Ptot_scale, row, 1)        
+        grid_Ptot_scale.addWidget(self.Ptot_scale, row, 2)
+                
+        grid_Ptot_scale.setVerticalSpacing(5)
+        grid_Ptot_scale.setHorizontalSpacing(10)
+        grid_Ptot_scale.setContentsMargins(25, 10, 25, 10) # (L, T, R, B)
+        grid_Ptot_scale.setColumnStretch(2, 100)
+#        grid_Ptot_scale.setColumnStretch(0, 100)
+        grid_Ptot_scale.setRowStretch(row+1, 100)
+        grid_Ptot_scale.setRowStretch(0, 100)
+        
+        widget_Ptot_scale.setLayout(grid_Ptot_scale)
+                
+        #------------------------------------------------ Scales Tab Widget ----
+        
+        self.tabscales = QtGui.QTabWidget()
+        self.tabscales.addTab(widget_time_scale, 'Time')
+        self.tabscales.addTab(self.subgrid_WLScale_widget, 'Water Level')
+        self.tabscales.addTab(widget_Ptot_scale, 'Precipitation')
         
         #---- SubGrid Labels Language ----
         
@@ -575,8 +620,8 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_labLang.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)
         
         self.subgrid_labLang_widget.setLayout(subgrid_labLang)
-                        
-        #----- ASSEMBLING SubGrids -----
+                                
+        #------------------------------------------------------ RIGHT PANEL ----
         
         grid_RIGHT = QtGui.QGridLayout()
         grid_RIGHT_widget = QtGui.QFrame()
@@ -587,9 +632,10 @@ class TabHydrograph(QtGui.QWidget):
         row += 1
         grid_RIGHT.addWidget(self.waterlvl_calc.widget_MRCparam, row, col)
         self.waterlvl_calc.widget_MRCparam.hide()
-        grid_RIGHT.addWidget(self.subgrid_dates_widget, row, col)        
-        row += 1
-        grid_RIGHT.addWidget(self.subgrid_WLScale_widget, row, col)        
+        grid_RIGHT.addWidget(self.tabscales, row, col)
+#        grid_RIGHT.addWidget(self.subgrid_dates_widget, row, col)        
+#        row += 1
+#        grid_RIGHT.addWidget(self.subgrid_WLScale_widget, row, col)        
         row += 1
         grid_RIGHT.addWidget(self.subgrid_labLang_widget, row, col)
         
@@ -732,8 +778,9 @@ class TabHydrograph(QtGui.QWidget):
         #---- Right Panel Update ----
         
         self.waterlvl_calc.widget_MRCparam.hide()
-        self.subgrid_dates_widget.show() 
-        self.subgrid_WLScale_widget.show()
+        self.tabscales.show()
+#        self.subgrid_dates_widget.show() 
+#        self.subgrid_WLScale_widget.show()
         self.subgrid_labLang_widget.show()
         
     def toggle_computeMode(self):
@@ -744,8 +791,9 @@ class TabHydrograph(QtGui.QWidget):
         #---- Right Panel Update ----
         
         self.waterlvl_calc.widget_MRCparam.show()
-        self.subgrid_dates_widget.hide()
-        self.subgrid_WLScale_widget.hide()
+        self.tabscales.hide()
+#        self.subgrid_dates_widget.hide()
+#        self.subgrid_WLScale_widget.hide()
         self.subgrid_labLang_widget.hide()
         
     def show_weather_averages(self):
@@ -1513,12 +1561,9 @@ class TabDwnldData(QtGui.QWidget):
         grid_BOTTOM.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
         grid_BOTTOM.setSpacing(10)
                 
-    #------------------------------------------------------------ GRID MAIN ----
+        #-------------------------------------------------------- MAIN GRID ----
 
         self.staList_table = QtGui.QTableWidget()
-#        self.staList_table = QtGui.QTableView()
-#        self.resume_table_display.setReadOnly(True)
-#        self.staList_table.setFrameStyle(0)
         self.staList_table.setFrameStyle(StyleDB.frame)
                 
         TITLE_TOP = QtGui.QLabel(labelDB.title_download)    
@@ -1531,12 +1576,14 @@ class TabDwnldData(QtGui.QWidget):
         line3 = QtGui.QFrame()
         line3.setFrameStyle(StyleDB.HLine)
         line4 = QtGui.QFrame()
-        line4.setFrameStyle(StyleDB.HLine)        
-                
+        line4.setFrameStyle(StyleDB.HLine)
+#        VLine1 = QtGui.QFrame()      
+#        VLine1.setFrameStyle(StyleDB.VLine)  
+        
         grid_MAIN = QtGui.QGridLayout()
         
         col = 1
-        row = 0
+        row = 1
         grid_MAIN.addWidget(line1, row, col)        
         row += 1
         grid_MAIN.addWidget(TITLE_TOP, row, col)
@@ -1552,15 +1599,16 @@ class TabDwnldData(QtGui.QWidget):
         grid_MAIN.addWidget(line4, row, col)
         row += 1
         grid_MAIN.addWidget(BOTTOM_widget, row, col)
-        col += 1
-        grid_MAIN.addWidget(self.staList_table, 0, col, row+1, 1)
-        grid_MAIN.setColumnStretch(0, 500)
+#        col += 1
+#        grid_MAIN.addWidget(self.staList_table, 1, col, row, 1)
         
+        grid_MAIN.setRowStretch(0, 500)
         grid_MAIN.setRowStretch(row+1, 500)
-        grid_MAIN.setColumnStretch(col, 500)
+        grid_MAIN.setColumnStretch(0, 500)
+        grid_MAIN.setColumnStretch(col+1, 500)
         
         grid_MAIN.setContentsMargins(15, 15, 15, 15) #Left, Top, Right, Bottom
-        grid_MAIN.setHorizontalSpacing(50)
+        grid_MAIN.setHorizontalSpacing(25)
         grid_MAIN.setVerticalSpacing(10)
         
         self.setLayout(grid_MAIN)
@@ -1783,8 +1831,8 @@ class TabDwnldData(QtGui.QWidget):
         
         self.widget_search4stations.setWindowTitle(
                                                   'Search for Weather Stations')
-#        self.widget_search4stations.setFixedSize(500, 200)
         self.widget_search4stations.setWindowIcon(iconDB.WHAT)
+#        self.widget_search4stations.setFixedSize(500, 200)
     
     #===========================================================================
     def show_search4stations(self):
@@ -2025,7 +2073,7 @@ class TabDwnldData(QtGui.QWidget):
         self.staList_table.resizeColumnsToContents()
         self.staList_table.setSortingEnabled(True)
                 
-        header = ('Weather Stations', '', '', 'From \n Year', 'To \n Year', '')
+        header = ('Weather Stations', 'Prov.', 'Proximity \n (km)', 'From \n Year', 'To \n Year', '')
         staList = self.staList
         indx = [0, 4, 6]  
   
@@ -2054,6 +2102,22 @@ class TabDwnldData(QtGui.QWidget):
 #       http://stackoverflow.com/questions/24148968/how-to-add-multiple-qpushbuttons-to-a-qtableview
 #       http://www.riverbankcomputing.com/pipermail/pyqt/2009-March/022160.html
         #http://stackoverflow.com/questions/20797383/qt-fit-width-of-tableview-to-width-of-content
+        
+        class NumTableWidgetItem(QtGui.QTableWidgetItem):
+
+        # http://stackoverflow.com/questions/12673598/
+        # python-numerical-sorting-in-qtablewidget
+        
+            def __init__(self, text, sortKey):
+                QtGui.QTableWidgetItem.__init__(self, text, 
+                                                QtGui.QTableWidgetItem.UserType)
+                self.sortKey = sortKey
+
+            # Qt uses a simple < check for sorting items, override this to use
+            # the sortKey
+            def __lt__(self, other):
+                return self.sortKey < other.sortKey 
+        
         for row in range(nrow):
             
             col = 0 # Station
@@ -2072,7 +2136,8 @@ class TabDwnldData(QtGui.QWidget):
            
             col += 1 # Proximity
             
-            item = QtGui.QTableWidgetItem(staList[row, 6])
+            item = NumTableWidgetItem('%0.2f' % float(staList[row, 6]),
+                                      float(staList[row, 6]))
             item.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.staList_table.setItem(row, col, item)
@@ -2123,10 +2188,11 @@ class TabDwnldData(QtGui.QWidget):
 #            self.btn_delRow.setToolTip(ttipDB.clearall)
 #            self.btn_delRow.setFocusPolicy(QtCore.Qt.NoFocus)
 
-            self.btn_delRow.clicked.connect(self.handleButtonClicked)
+#            self.btn_delRow.clicked.connect(self.handleButtonClicked)
             self.staList_table.setCellWidget(row, col, self.btn_delRow)
     
     def handleButtonClicked(self):
+        
         button = QtGui.qApp.focusWidget()
 
         # or button = self.sender()
@@ -2135,72 +2201,6 @@ class TabDwnldData(QtGui.QWidget):
         if index.isValid():
             print index.row()
             self.staList_table.removeRow(index.row())
-#            print(index.row(), index.column())
-        
-#            self.btn_sell = QtGui.QPushButton('Edit')
-#            self.btn_sell.clicked.connect(self.handleButtonClicked)
-            
-#        
-#        table = '''          
-#                <table border="1" cellpadding="3"
-#                                  cellspacing="0"
-#                                  align="center">
-#                  <tr>
-#                    <td width=50 align="center" valign="middle">#</td>
-#                    <td width=180 align="center" valign="middle">%s</td>
-#                    <td width=75 align="center" valign="middle">%s</td>
-#                    <td width=75 align="center" valign="middle">%s</td>
-#                  </tr>                  
-#                ''' % header
-#        for i in range(nstation):
-#            table += '''
-#                     <tr>
-#                       <td align="center" valign="middle">%d</td>
-#                       <td align="center" valign="middle">%s</td>
-#                       <td align="center" valign="middle">%s</td>
-#                       <td align="center" valign="middle">%0.2f</td>
-#                     </tr> 
-#                     ''' % (i+1, staList[i, 0], staList[i, 4], float(staList[i, 6]))
-#                
-##        for i in range(nheader):        
-##            table += '<td width=180 align="center" valign="middle">%s</td>' % header[i]
-#                                     
-#        table += '</table>'
-#        
-#        self.resume_table_display.setText(table)
-                
-                
-#        table = '''<font>
-#                 Number of missing data from <b>%s</b> to <b>%s</b> for
-#                 station <b>%s</b>:
-#               </font>
-#               <br>
-#               <table border="1" cellpadding="3" cellspacing="0" 
-#               align="center">
-#                 <tr>''' % (fill_date_start, fill_date_end, TARGET.name)
-#                 
-#    for field in FIELDS[:-1]:
-#        table +=  '<td width=147.5 align="center">%s</td>' % field
-#        
-#    table +=  '''</tr>
-#                 <tr>'''
-#                 
-#    total_nbr_data = index_end - index_start + 1
-#    for var in range(nVAR):                
-#        nbr_nan = np.isnan(
-#                       DATA[index_start:index_end+1, target_station_index, var])
-#        nbr_nan = float(np.sum(nbr_nan))
-#    
-#        nan_percent = round(nbr_nan / total_nbr_data * 100, 1)
-#
-#        table += '''<td align="center">
-#                      %d&nbsp;&nbsp;(%0.1f %%)
-#                    </td>''' % (nbr_nan, nan_percent)
-#                    
-#    table +=  '''</tr>
-#               </table>
-                
-        
         
     #=========================================================================== 
     def staName_isChanged(self):
