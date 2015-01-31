@@ -37,7 +37,7 @@ class icons():
         self.forward = QIcon('Icons/start_all.png')
         self.refresh = QIcon('Icons/refresh.png')
         self.refresh2 = QIcon('Icons/refresh2.png')
-        self.openFile = QIcon('Icons/open_file.png')
+        self.openFile = QIcon('Icons/openFile_22.png')
         self.openFolder = QIcon('Icons/folder')
         self.download = QIcon('Icons/download.png')
         self.stop = QIcon('Icons/process-stop.png')
@@ -55,7 +55,7 @@ class icons():
         self.save = QIcon('Icons/save.png')
         self.meteo = QIcon('Icons/meteo.png')
         self.work = QIcon('Icons/work.png')
-        self.toggleMode = QIcon('Icons/toggleMode2.png')
+        self.toggleMode = QIcon('Icons/toggleMode2_32.png')
         
         #----- MRC TOOLBAR -----
         
@@ -74,11 +74,11 @@ class icons():
         
 class tooltips():
     
-    def __init__(self, language): #------------------------------- ENGLISH -----
+    def __init__(self, language): #================================ ENGLISH ====
         
         self.browse = 'Browse'
         
-        #----- DOWNLOAD TAB -----        
+        #----------------------------------------------------- DOWNLOAD TAB ----
         
         self.refresh_staList = 'Refresh the current weather station list.'
         
@@ -87,7 +87,9 @@ class tooltips():
         self.btn_GetData = 'Download data for the selected weather station.'
         self.btn_browse_staList = 'Load a custom weather station list.'
         
-        #----- HYDROGRAPH TOOLBAR -----
+        #--------------------------------------------------- HYDROGRAPH TAB ----
+        
+        #---- TOOLBAR ----
         
         self.loadConfig = ('Load graph layout for the current \n' +
                            'Water Level Data File if it exists')
@@ -113,18 +115,26 @@ class tooltips():
         self.work_waterlvl = ('Toggle between layout and computation ' +
                               'mode (EXPERIMENTAL FEATURE)')
         
-        # Layout mode; Computation mode/task mode/working
-        
-        if language == 'French': #--------------------------------- FRENCH -----
+        if language == 'French': #================================== FRENCH ====
             
             pass
         
     
 class labels():
     
-    def __init__(self, language):
+    def __init__(self, language): #================================ ENGLISH ====
         
-        pass
+        #----------------------------------------------------- DOWNLOAD TAB ----
+        
+        self.saveMeteoAuto = 'Automatically save concatened data'
+        
+        #--------------------------------------------------------- FILL TAB ----
+
+        self.btn_fill_weather = 'Fill'
+        self.btn_fill_all_weather = 'Fill All'
+        
+        if language == 'French': #================================== FRENCH ====
+            pass
     
 class styleUI():
     
@@ -138,19 +148,18 @@ class styleUI():
         self.size1 = 32
         
         self.iconSize = QSize(32, 32)
-        self.iconSize2 = QSize(28, 28)
+        self.iconSize2 = QSize(22, 22)
         
-        self.fontSize1 = QFont() 
-        self.fontSize1.setPointSize(11)
+        self.font1 = QFont('Segoe UI', 11) # Calibri, Cambria, Segoe UI
+        self.font_console = QFont('Segoe UI', 9) # Calibri, Cambria, Segoe UI
+#        self.fontSize1.setPointSize(11)
         
         # 17 = QtGui.QFrame.Box | QtGui.QFrame.Plain
         # 22 = QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain
         # 20 = QtGui.QFrame.HLine | QtGui.QFrame.Plain
         # 52 = QtGui.QFrame.HLine | QtGui.QFrame.Sunken
         # 53 = QtGui.QFrame.VLine | QtGui.QFrame.Sunken
-
         
-#        print Station_widget.frameStyle()
 if __name__ == '__main__':
     pass
     

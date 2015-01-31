@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
-software_version = 'WHAT Beta 4.1.3'
+software_version = 'WHAT Beta 4.1.4'
 last_modification = '30/01/2015'
 
 #---- STANDARD LIBRARY IMPORTS ----
@@ -48,7 +48,7 @@ import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 #from scipy import signal
 #from statsmodels.regression.quantile_regression import QuantReg
@@ -129,9 +129,10 @@ class MainWindow(QtGui.QMainWindow):
     
     def initUI(self):
                             
-#        self.setGeometry(350, 75, 800, 750)
+        self.setMinimumWidth(1250)
         self.setWindowTitle(software_version)
         self.setWindowIcon(iconDB.WHAT)
+        self.setFont(StyleDB.font1)
         
         self.what_pref = WHATPref(self)
                         
@@ -140,7 +141,8 @@ class MainWindow(QtGui.QMainWindow):
         self.main_console = QtGui.QTextEdit()        
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
-
+        self.main_console.setFont(StyleDB.font_console)
+        
         self.write2console(
         '''<font color=black>Thanks for using %s.</font>''' % software_version)
         self.write2console(
@@ -473,12 +475,14 @@ class TabHydrograph(QtGui.QWidget):
        
         btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
         btn_waterlvl_dir.setIcon(iconDB.openFile)
+        btn_waterlvl_dir.setIconSize(StyleDB.iconSize2)
         self.well_info_widget = QtGui.QTextEdit()
         self.well_info_widget.setReadOnly(True)
         self.well_info_widget.setFixedHeight(150)
         
         btn_weather_dir = QtGui.QPushButton(' Weather Data File')
         btn_weather_dir.setIcon(iconDB.openFile)
+        btn_weather_dir.setIconSize(StyleDB.iconSize2)
         self.meteo_info_widget = QtGui.QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
         self.meteo_info_widget.setFixedHeight(150)
@@ -522,7 +526,7 @@ class TabHydrograph(QtGui.QWidget):
         
         grid_time_scale.setVerticalSpacing(5)
         grid_time_scale.setHorizontalSpacing(10)
-        grid_time_scale.setContentsMargins(25, 10, 25, 10)
+        grid_time_scale.setContentsMargins(10, 10, 10, 10)
         grid_time_scale.setColumnStretch(2, 100)
 #        subgrid_dates.setColumnStretch(0, 100)
         
@@ -558,7 +562,7 @@ class TabHydrograph(QtGui.QWidget):
         
         subgrid_WLScale.setVerticalSpacing(5)
         subgrid_WLScale.setHorizontalSpacing(10)
-        subgrid_WLScale.setContentsMargins(25, 10, 25, 10) # (L, T, R, B)
+        subgrid_WLScale.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
         subgrid_WLScale.setColumnStretch(2, 100)
 #        subgrid_WLScale.setColumnStretch(0, 100)
         
@@ -586,7 +590,7 @@ class TabHydrograph(QtGui.QWidget):
                 
         grid_weather_scale.setVerticalSpacing(5)
         grid_weather_scale.setHorizontalSpacing(10)
-        grid_weather_scale.setContentsMargins(25, 10, 25, 10) # (L, T, R, B)
+        grid_weather_scale.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
         grid_weather_scale.setColumnStretch(2, 100)
 #        grid_Ptot_scale.setColumnStretch(0, 100)
         grid_weather_scale.setRowStretch(row+1, 100)
@@ -1441,11 +1445,13 @@ class TabDwnldData(QtGui.QWidget):
         btn_search4station.setAutoRaise(True)
         btn_search4station.setIcon(iconDB.search)
         btn_search4station.setToolTip(ttipDB.search4stations)
+        btn_search4station.setIconSize(StyleDB.iconSize2)
         
         btn_browse_staList = QtGui.QToolButton()
         btn_browse_staList.setIcon(iconDB.openFolder)
         btn_browse_staList.setAutoRaise(True)
         btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
+        btn_browse_staList.setIconSize(StyleDB.iconSize2)
         
         #btn_refresh_staList = QtGui.QToolButton()
         #btn_refresh_staList.setAutoRaise(True)
@@ -1521,12 +1527,13 @@ class TabDwnldData(QtGui.QWidget):
         # subgrid_Station.setColumnStretch(0, 100)
         subgrid_Station.setColumnStretch(6, 100)
                 
-    #-------------------------------------------------- GRID DOWNLOAD DATA -----
+        #----------------------------------------------- GRID DOWNLOAD DATA ----
                 
         self.btn_get = QtGui.QPushButton(labelDB.btn_get_text)
         self.btn_get.setIcon(iconDB.download)
         self.btn_get.setToolTip(ttipDB.btn_GetData)
-                         
+        self.btn_get.setIconSize(StyleDB.iconSize2)        
+                                 
         grid_TOP = QtGui.QGridLayout()
         TOP_widget = QtGui.QFrame()
         
@@ -1565,10 +1572,14 @@ class TabDwnldData(QtGui.QWidget):
         self.merge_stats_display.setMaximumHeight(200)
         btn_select = QtGui.QPushButton(' Select')
         btn_select.setIcon(iconDB.openFile)
+        btn_select.setIconSize(StyleDB.iconSize2)
+        
         btn_save = QtGui.QPushButton('Save')
         btn_save.setIcon(iconDB.save)
-        self.saveAuto_checkbox = QtGui.QCheckBox(
-                                           'Automatically save concatened data')
+        btn_save.setIconSize(StyleDB.iconSize2)
+        
+        self.saveAuto_checkbox = QtGui.QCheckBox(LabelDB.saveMeteoAuto)
+        self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
               
         grid_BOTTOM = QtGui.QGridLayout()
         BOTTOM_widget = QtGui.QFrame()
@@ -1719,6 +1730,8 @@ class TabDwnldData(QtGui.QWidget):
         '''
     #===========================================================================
 
+        self.setFont(StyleDB.font1)
+        
         now = datetime.now()
         
         #------------------------------------------------------- Left Panel ----
@@ -1826,6 +1839,7 @@ class TabDwnldData(QtGui.QWidget):
         
         self.btn_go_search4station = QtGui.QPushButton('Search')
         self.btn_go_search4station.setIcon(iconDB.search)
+        self.btn_go_search4station.setIconSize(StyleDB.iconSize2)
         
         #---- GRID ----
                         
@@ -2504,19 +2518,23 @@ class TabFill(QtGui.QWidget):
     #                 ----------------------------------
     #
     #===========================================================================
+                        
+        #--------------------------------------------------- Target Station ----
         
-    #----------------------------------------------------------- GRID LEFT -----
-        
-        #----- Subgrid Target Station -----
+        #---- Widgets ----
         
         target_station_label = QtGui.QLabel('<b>Target Station :</b>')
         self.target_station = QtGui.QComboBox()
         self.target_station_info = QtGui.QTextEdit()
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
+        
         self.btn3 = QtGui.QToolButton()
         self.btn3.setIcon(iconDB.refresh2)
         self.btn3.setAutoRaise(True)
+        self.btn3.setIconSize(StyleDB.iconSize2)
+        
+        #---- Grid ----
         
         subgrid_widget6 = (QtGui.QWidget())
                      
@@ -2529,15 +2547,15 @@ class TabFill(QtGui.QWidget):
         subgrid6.addWidget(self.btn3, row, 1)
         row = 2
         subgrid6.addWidget(self.target_station_info, row, 0, 1, 2)
-
-        # Total number of columns = 2
         
         subgrid6.setSpacing(5)
         subgrid6.setColumnStretch(0, 500)
         subgrid_widget6.setLayout(subgrid6)
         subgrid6.setContentsMargins(0, 0, 0, 10) #Left, Top, Right, Bottom
         
-       #----- SubGrid Cutoff Values -----
+       #----------------------------------------------------- Cutoff Values ----
+        
+        #---- Widgets ----
         
         Cutoff_title = QtGui.QLabel('<b>Stations Selection Criteria :</b>')
         
@@ -2560,7 +2578,9 @@ class TabFill(QtGui.QWidget):
         self.altlimit.setSingleStep(1)
         self.altlimit.setValue(350)
         self.altlimit.setToolTip(labelDB.altlimit_help)
-            
+        
+        #---- Grid ----
+        
         subgrid_widget2=(QtGui.QWidget())
                      
         subgrid2 = QtGui.QGridLayout()
@@ -2582,7 +2602,9 @@ class TabFill(QtGui.QWidget):
         subgrid2.setContentsMargins(0, 10, 0, 10) #Left, Top, Right, Bottom
         subgrid2.setColumnStretch(1, 500)
          
-        #----- SubGrid Regression Model Selection -----
+        #------------------------------------------------- Regression Model ----
+        
+        #---- Widgets ----
         
         regression_model = QtGui.QFrame()
         
@@ -2598,20 +2620,23 @@ class TabFill(QtGui.QWidget):
         model_box.addWidget(self.ABS_regression)
         regression_model.setLayout(model_box)
         
+        #---- Grid ----
+        
         subgrid_widget3=(QtGui.QWidget())
         subgrid3 = QtGui.QGridLayout()
+        
         subgrid3.setSpacing(10)
         row = 0
         subgrid3.addWidget(regression_model_label, row, 0)
         row = 1
         subgrid3.addWidget(regression_model, row, 0)
         
-        # Total number of columns = 1
-        
         subgrid3.setContentsMargins(0, 10, 0, 10) #Left, Top, Right, Bottom
         subgrid_widget3.setLayout(subgrid3)
         
-        #----- SubGrid Gapfill Dates -----
+        #---------------------------------------------------- Gapfill Dates ----
+        
+        #---- Widgets ----
         
         label_Dates_Title = QtGui.QLabel('<b>Gap Fill Data Record :</b>')
         label_From = QtGui.QLabel('From :  ')
@@ -2623,11 +2648,11 @@ class TabFill(QtGui.QWidget):
         self.date_end_widget.setEnabled(False)
         self.date_end_widget.setDisplayFormat('dd / MM / yyyy')
         
-        subgrid_widget5=(QtGui.QWidget())
-                     
-        subgrid5 = QtGui.QGridLayout()
-        subgrid5.setSpacing(10)
+        #---- Grid ----
         
+        subgrid_widget5 = QtGui.QWidget()                     
+        subgrid5 = QtGui.QGridLayout()
+                
         row = 0
         subgrid5.addWidget(label_Dates_Title, row, 0, 1, 3)
         row = 1
@@ -2636,19 +2661,19 @@ class TabFill(QtGui.QWidget):
         row = 2
         subgrid5.addWidget(label_To, row, 1)  
         subgrid5.addWidget(self.date_end_widget, row, 2)        
-        
-        # Total number of columns = 3
-        
+                
         subgrid5.setColumnStretch(4, 500)
         subgrid5.setColumnStretch(0, 500)
-        subgrid_widget5.setLayout(subgrid5)
         subgrid5.setContentsMargins(0, 10, 0, 0) #Left, Top, Right, Bottom
+        subgrid5.setSpacing(10)
         
-        #----- ASSEMBLING SUBGRIDS FOR GRID LEFT -----        
+        subgrid_widget5.setLayout(subgrid5)
+        
+        #======================================================= LEFT PANEL ====
          
-        grid_LEFT = QtGui.QGridLayout()
+        grid_leftPanel = QtGui.QGridLayout()
         LEFT_widget = QtGui.QFrame()
-        LEFT_widget.setFrameStyle(StyleDB.frame)                                  
+        LEFT_widget.setFrameStyle(StyleDB.frame) 
 
         seprator1 = QtGui.QFrame()
         seprator1.setFrameStyle(StyleDB.HLine)
@@ -2658,40 +2683,31 @@ class TabFill(QtGui.QWidget):
         seprator3.setFrameStyle(StyleDB.HLine)
         
         row = 0 
-        grid_LEFT.addWidget(subgrid_widget6, row, 0) # SubGrid 6: Target Sta.
+        grid_leftPanel.addWidget(subgrid_widget6, row, 0, 1, 3) # SubGrid 6: Target Sta.
         row += 1
-        grid_LEFT.addWidget(seprator1, row, 0)       # Separator
+        grid_leftPanel.addWidget(seprator1, row, 0, 1, 3)       # Separator
         row += 1
-        grid_LEFT.addWidget(subgrid_widget2, row, 0) # SubGrid 2: Cutoff Values
+        grid_leftPanel.addWidget(subgrid_widget2, row, 0, 1, 3) # SubGrid 2: Cutoff Values
         row += 1  
-        grid_LEFT.addWidget(seprator2, row, 0)       # Separator
+        grid_leftPanel.addWidget(seprator2, row, 0, 1, 3)       # Separator
         row += 1 
-        grid_LEFT.addWidget(subgrid_widget3, row, 0) # SubGrid 3: MLRM Selection
+        grid_leftPanel.addWidget(subgrid_widget3, row, 0, 1, 3) # SubGrid 3: MLRM Selection
         row += 1
-        grid_LEFT.addWidget(seprator3, row, 0)       # Separator
+        grid_leftPanel.addWidget(seprator3, row, 0, 1, 3)       # Separator
         row += 1
-        grid_LEFT.addWidget(subgrid_widget5, row, 0) # SubGrid 5: GapFill Dates
-        row += 1
-        grid_LEFT.setRowStretch(row, 500)
+        grid_leftPanel.addWidget(subgrid_widget5, row, 0, 1, 3) # SubGrid 5: GapFill Dates
         
-        # Total number of columns = 1
+        grid_leftPanel.setRowStretch(row+1, 500)
+        grid_leftPanel.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
         
-        LEFT_widget.setLayout(grid_LEFT)
-        grid_LEFT.setContentsMargins(10, 10, 10, 10) #Left, Top, Right, Bottom
+        LEFT_widget.setLayout(grid_leftPanel)
         
-   #-------------------------------------------------------------GRID RIGHT-----
+        #------------------------------------------------------ RIGHT PANEL ----
        
         self.FillTextBox = QtGui.QTextEdit()
         self.FillTextBox.setReadOnly(True)
 #        self.FillTextBox.setFrameStyle(0)
         self.FillTextBox.setFrameStyle(StyleDB.frame)
-        
-        self.btn_fill = QtGui.QPushButton(labelDB.btn_fill_text)
-        self.btn_fill.setIcon(iconDB.play)
-        self.btn_fill.setToolTip(labelDB.btn_fill_help)        
-        self.btn_fill_all = QtGui.QPushButton(labelDB.btn_fill_all_text)
-        self.btn_fill_all.setToolTip(labelDB.btn_fill_all_help)
-        self.btn_fill_all.setIcon(iconDB.forward)
         
         grid_RIGHT = QtGui.QGridLayout()
         RIGHT_widget = QtGui.QFrame()
@@ -2699,10 +2715,7 @@ class TabFill(QtGui.QWidget):
         RIGHT_widget.setFrameStyle(0)
         
         row = 0
-        grid_RIGHT.addWidget(self.FillTextBox, row, 0, 1, 3)
-        row += 1
-        grid_RIGHT.addWidget(self.btn_fill, row, 1)
-        grid_RIGHT.addWidget(self.btn_fill_all, row, 2)
+        grid_RIGHT.addWidget(self.FillTextBox, row, 0)
         
         # Total number of columns = 3        
         
@@ -2711,20 +2724,46 @@ class TabFill(QtGui.QWidget):
         grid_RIGHT.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
                         
         RIGHT_widget.setLayout(grid_RIGHT)
-                 
-    #-------------------------------------------------------------GRID MAIN-----
-       
+        
+        #---------------------------------------------------------- TOOLBAR ----
+        
+        self.btn_fill = QtGui.QPushButton(LabelDB.btn_fill_weather)
+        self.btn_fill.setIcon(iconDB.play)
+        self.btn_fill.setToolTip(labelDB.btn_fill_help)
+        self.btn_fill.setIconSize(StyleDB.iconSize2)
+        
+        self.btn_fill_all = QtGui.QPushButton(LabelDB.btn_fill_all_weather)
+        self.btn_fill_all.setToolTip(labelDB.btn_fill_all_help)
+        self.btn_fill_all.setIcon(iconDB.forward)
+        self.btn_fill_all.setIconSize(StyleDB.iconSize2)
+        
+        grid_toolbar = QtGui.QGridLayout()
+        widget_toolbar = QtGui.QFrame()
+        
+        row = 0
+        grid_toolbar.addWidget(self.btn_fill, row, 0)
+        grid_toolbar.addWidget(self.btn_fill_all, row, 1)
+        
+        grid_toolbar.setSpacing(5)
+        grid_toolbar.setContentsMargins(0, 0, 0, 0)
+        grid_toolbar.setColumnStretch(2, 100)
+        
+        widget_toolbar.setLayout(grid_toolbar)
+        
+        #-------------------------------------------------------- MAIN GRID ----
+        
         grid_MAIN = QtGui.QGridLayout()
         grid_MAIN.setSpacing(15)
         
         row = 0
-        grid_MAIN.addWidget(RIGHT_widget, row, 1)
         grid_MAIN.addWidget(LEFT_widget, row, 0)
-        
-        # Total number of columns = 3
-        
+        grid_MAIN.addWidget(RIGHT_widget, row, 1)
+        row += 1
+        grid_MAIN.addWidget(widget_toolbar, row, 0, 1, 2)
+                
         grid_MAIN.setColumnStretch(1, 500)
-        grid_MAIN.setColumnMinimumWidth(1, 700)
+        grid_MAIN.setRowStretch(0, 500)
+#        grid_MAIN.setColumnMinimumWidth(1, 700)
         grid_MAIN.setContentsMargins(15, 15, 15, 15) #Left, Top, Right, Bottom
         self.setLayout(grid_MAIN)        
         
@@ -3171,7 +3210,7 @@ class TabAbout(QtGui.QWidget):
         
         grid.setColumnStretch(0, 500)
         grid.setColumnStretch(2, 500)
-        grid.setColumnMinimumWidth(1, 750)
+        grid.setColumnMinimumWidth(1, 850)
         
         self.setLayout(grid)
         
@@ -3197,7 +3236,7 @@ class TabAbout(QtGui.QWidget):
                         </p>
                         <p align="center" style="margin-right:150px; 
                         margin-left:150px">
-                        <br><br><br>%s is free software: 
+                        <br><br>%s is free software: 
                         you can redistribute it and/or modify it under the terms
                         of the GNU General Public License as published by the 
                         Free Software Foundation, either version 3 of the 
@@ -3212,7 +3251,7 @@ class TabAbout(QtGui.QWidget):
                         You should have received a copy of the GNU General  
                         Public License along with this program.  If not, see                    
                         http://www.gnu.org/licenses.
-                        <br><br><br>
+                        <br><br>
                         </p>
                         <p align="right" style="margin-right:150px">
                         Last modification: %s </p>''' % (software_version,
@@ -4665,12 +4704,10 @@ class LabelDataBase(): # Default language is English.
               
         #----- TAB FILL DATA -----
         
-        self.btn_fill_text = 'Fill'
         self.btn_fill_help = (        
             '''<p>Fill the gaps in the weather data record of the selected
                  target station.</p>''')
            
-        self.btn_fill_all_text = 'Fill All'
         self.btn_fill_all_help = (
             '''<p>Fill the gaps in all the weather data records found in the
                  <i>Data Directory</i>.</p>''')
@@ -4820,6 +4857,8 @@ if __name__ == '__main__':
     language = 'English'
     global labelDB
     labelDB = LabelDataBase(language)
+    global LabelDB
+    LabelDB = db.labels(language)
     global iconDB
     iconDB = db.icons()
     global StyleDB

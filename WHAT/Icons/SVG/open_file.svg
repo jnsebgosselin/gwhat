@@ -14,7 +14,10 @@
    width="16"
    version="1.1"
    inkscape:version="0.48.4 r9939"
-   sodipodi:docname="open_file.svg">
+   sodipodi:docname="open_file.svg"
+   inkscape:export-filename="/home/jsgosselin/Documents/Research/Hydrogeology/WHAT/WHAT/Icons/SVG/open_file.png"
+   inkscape:export-xdpi="123.75"
+   inkscape:export-ydpi="123.75">
   <defs
      id="defs10" />
   <sodipodi:namedview
@@ -26,16 +29,16 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="640"
-     inkscape:window-height="480"
+     inkscape:window-width="1535"
+     inkscape:window-height="876"
      id="namedview8"
      showgrid="false"
      inkscape:zoom="14.75"
-     inkscape:cx="8"
-     inkscape:cy="8"
-     inkscape:window-x="460"
-     inkscape:window-y="165"
-     inkscape:window-maximized="0"
+     inkscape:cx="8.3783621"
+     inkscape:cy="7.833025"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
      inkscape:current-layer="svg7384" />
   <metadata
      id="metadata90">
@@ -53,15 +56,17 @@
      id="title9167">Gnome Symbolic Icon Theme</title>
   <g
      id="layer12"
-     transform="translate(-160 -646)"
+     transform="translate(-160,-646.40678)"
      style="fill:#4d4d4d">
     <path
        id="rect3845-5-8"
        style="fill:#4d4d4d"
-       d="m160.53 651c-0.28913 0-0.53125 0.2421-0.53125 0.5313v9.9375c0 0.2985 0.23264 0.5312 0.53125 0.5312h13.812c0.2986 0 0.53125-0.2326 0.53125-0.5312l1.125-4.9159c0-0.2891-0.24212-0.5312-0.53125-0.5312h-11.594l-0.875 3.4783c0 0.277-0.223 0.5-0.5 0.5s-0.5-0.223-0.5-0.5v-4.9966c0-0.277 0.223-0.5 0.5-0.5h0.46615v-3.0034z" />
+       d="m 160.53,651 c -0.28913,0 -0.53125,0.2421 -0.53125,0.5313 v 9.9375 c 0,0.2985 0.23264,0.5312 0.53125,0.5312 h 13.812 c 0.2986,0 0.53125,-0.2326 0.53125,-0.5312 l 1.125,-4.9159 c 0,-0.2891 -0.24212,-0.5312 -0.53125,-0.5312 h -11.594 l -0.875,3.4783 c 0,0.277 -0.223,0.5 -0.5,0.5 -0.277,0 -0.5,-0.223 -0.5,-0.5 v -4.9966 c 0,-0.277 0.223,-0.5 0.5,-0.5 h 0.46615 V 651 z"
+       inkscape:connector-curvature="0" />
     <path
        id="path1234-3"
-       style="block-progression:tb;text-indent:0;color:#000000;text-transform:none;fill:#4d4d4d"
-       d="m164.81 647c-0.4584 0.0875-0.82072 0.5334-0.8125 1v7h2v-6h4v3h3v3h2v-3.4375c0.006-0.2641-0.0976-0.529-0.28125-0.7188l-3.5625-3.5624c-0.18978-0.1837-0.45469-0.28737-0.71875-0.28125h-5.4375c-0.0312-0.001-0.0625-0.001-0.0937 0-0.0312-0.001-0.0625-0.001-0.0937 0z" />
+       style="text-indent:0;text-transform:none;block-progression:tb;color:#000000;fill:#4d4d4d"
+       d="m 164.81,647 c -0.4584,0.0875 -0.82072,0.5334 -0.8125,1 v 7 h 2 v -6 h 4 v 3 h 3 v 3 h 2 v -3.4375 c 0.006,-0.2641 -0.0976,-0.529 -0.28125,-0.7188 l -3.5625,-3.5624 c -0.18978,-0.1837 -0.45469,-0.28737 -0.71875,-0.28125 h -5.4375 c -0.0312,-10e-4 -0.0625,-10e-4 -0.0937,0 -0.0312,-10e-4 -0.0625,-10e-4 -0.0937,0 z"
+       inkscape:connector-curvature="0" />
   </g>
 </svg>

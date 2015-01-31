@@ -80,14 +80,16 @@ class WeatherAvgGraph(QtGui.QWidget):
         
     def initUI(self):
         
-        self.setWindowTitle('Weather Averages')
-        
         iconDB = db.icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
         self.station_name = []
         self.save_fig_dir = getcwd()
         self.meteo_dir = getcwd()
+        
+        self.setWindowTitle('Weather Averages')
+        self.setFont(StyleDB.font1)
+        self.setWindowIcon(iconDB.WHAT)
         
         #----------------------------------------------------- FigureCanvas ----
         

@@ -30,7 +30,13 @@ from math import sin, cos, sqrt, atan2, radians
 #----- THIRD PARTY IMPORTS -----
 
 import numpy as np
+#import matplotlib
+#matplotlib.use('Qt4Agg')
+#matplotlib.rcParams['backend.qt4']='PySide'
+#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 from xlrd import open_workbook
@@ -494,10 +500,12 @@ class Hydrograph():
             
             y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
             
-            self.line_missing_Ptot, = self.ax3.plot(Ptot_missing_time, y, '.')
-                
-            plt.setp(self.line_missing_Ptot, markerfacecolor=(1, 0.25, 0.25),
-                     markeredgecolor='none', markersize=5)
+            self.line_missing_Ptot, = self.ax3.plot(Ptot_missing_time, y, '.r')
+               
+            plt.setp(self.line_missing_Ptot, markersize=3)  
+               
+#            plt.setp(self.line_missing_Ptot, markerfacecolor=(1, 0.25, 0.25),
+#                     markeredgecolor='none', markersize=5)
     
         #-------------------------------------------------- AIR TEMPERATURE ----
           
@@ -529,9 +537,11 @@ class Hydrograph():
                                    self.TIMEwk, self.TMAXwk)
             
             h1_ax4, = self.ax4.plot(Temp_missing_time, 
-                              np.ones(len(Temp_missing_time)) * 35, '.')
-            plt.setp(h1_ax4, markerfacecolor=(1, 0.25, 0.25),
-                     markeredgecolor='none', markersize=5)
+                              np.ones(len(Temp_missing_time)) * 35, '.r')
+            plt.setp(h1_ax4, markersize=3)                
+                              
+#            plt.setp(h1_ax4, markerfacecolor=(1, 0.25, 0.25),
+#                     markeredgecolor='none', markersize=5)
         
         #----------------------------------------------------------- LEGEND ----
              
@@ -1137,5 +1147,5 @@ if __name__ == '__main__':
     _, _ = hydrograph2display.best_fit_time(waterLvlObj.time)
     hydrograph2display.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
     
-    hydrograph2display.generate_hydrograph(waterLvlObj, meteoObj)
+    hydrograph2display.generate_hydrograph(waterLvlObj, meteoObj)  
     

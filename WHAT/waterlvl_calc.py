@@ -33,7 +33,7 @@ import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QTAgg
+from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 
 #---- PERSONAL IMPORTS ----
@@ -110,7 +110,7 @@ class WLCalc(QtGui.QWidget):
         
         #---------------------------------------------------------- TOOLBAR ----
         
-        self.toolbar = NavigationToolbar2QTAgg(self.fig_MRC_widget, self)
+        self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
         self.toolbar.hide()
         
         self.btn_layout_mode = QtGui.QToolButton()
@@ -1376,7 +1376,7 @@ class NewFig(QtGui.QWidget):
 #        fig.set_size_inches(8.5, 5)        
 #        self.fig_MRC.patch.set_facecolor('white')
         self.fig_MRC_widget = FigureCanvasQTAgg(self.fig)
-        self.toolbar = NavigationToolbar2QTAgg(self.fig_MRC_widget, self)
+        self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
         
         plt.plot(A, A, '.')
         
