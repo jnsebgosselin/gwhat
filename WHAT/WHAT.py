@@ -1730,8 +1730,6 @@ class TabDwnldData(QtGui.QWidget):
         '''
     #===========================================================================
 
-        self.setFont(StyleDB.font1)
-        
         now = datetime.now()
         
         #------------------------------------------------------- Left Panel ----
@@ -1864,6 +1862,7 @@ class TabDwnldData(QtGui.QWidget):
         grid_search4stations.setRowStretch(row + 1, 100)
         
         self.widget_search4stations.setLayout(grid_search4stations)
+        self.widget_search4stations.setFont(StyleDB.font1)
         
         #------------------------------------------------------ MAIN WINDOW ----
         
