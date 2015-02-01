@@ -1,4 +1,4 @@
-![Logo](https://raw.githubusercontent.com/jnsebgosselin/WHAT/master/WHAT/Icons/WHAT_banner_lowres(150).png)
+![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_banner_lowres(150).png)
 ====
 
 WARNING: Governement of Canada issued an update on 15/01/2015 of their website which caused compatibility issues with some features of WHAT. A new version of the software ([WHAT v4.1.2](https://github.com/jnsebgosselin/WHAT/releases)) has been released to this effect. Thanks for using WHAT.
@@ -27,8 +27,8 @@ Future developments include:
 Output Samples:
 ---------------
 
-![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Projects/Example/Normals_Marieville.png)
+![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/Normals_Marieville.png)
 
-![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Projects/Example/hydrograph_PO07.png)
+![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
 
 Last edited: 18/01/2015
