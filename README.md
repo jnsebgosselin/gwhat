@@ -16,7 +16,7 @@ WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platfo
 
 * the estimation of groundwater recharge at the local scale in unconfined conditions with a method combining the daily meteorological data and the water level time series (will be available in a future release).
 
-* the calculation of the barometric response of the well that can be used to assess the level of confinement of the aquifer at the well (will be available in a future release).
+* the calculation of the barometric response function of the well that can be used to assess the level of confinement of the aquifer at the well (will be available in a future release).
 
 WHAT is written in the Python 2.7 programming language and is currently maintained and developed by [Jean-Sébastien Gosselin](http://www.liamg.ca/en/about-us/jean-sebastien-gosselin/) at [INRS-ETE](http://ete.inrs.ca/) under the direction and co-direction of [Richard Martel](http://www.inrs.ca/richard-martel) and [Christine Rivard](http://science.gc.ca/default.asp?lang=En&n=E3024D2D-1&xsl=sdmtprofile&xml=E3024D2D-1AB4-4F74-AF13-755D0DCF3E13&formid=B03536B8-8F8E-4BC1-A5BF-D62B13F57A8B&showfromadmin=1&readonly=true).
 
