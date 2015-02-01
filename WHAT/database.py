@@ -37,7 +37,7 @@ class icons():
         self.forward = QIcon('Icons/start_all.png')
         self.refresh = QIcon('Icons/refresh.png')
         self.refresh2 = QIcon('Icons/refresh2.png')
-        self.openFile = QIcon('Icons/openFile_22.png')
+        self.openFile = QIcon('Icons/open_file.png')
         self.openFolder = QIcon('Icons/folder')
         self.download = QIcon('Icons/download.png')
         self.stop = QIcon('Icons/process-stop.png')
@@ -55,7 +55,7 @@ class icons():
         self.save = QIcon('Icons/save.png')
         self.meteo = QIcon('Icons/meteo.png')
         self.work = QIcon('Icons/work.png')
-        self.toggleMode = QIcon('Icons/toggleMode2_32.png')
+        self.toggleMode = QIcon('Icons/toggleMode2.png')
         
         #----- MRC TOOLBAR -----
         
