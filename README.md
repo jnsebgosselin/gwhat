@@ -37,7 +37,7 @@ Output Samples
 ---------------
 ![Weather yearly and monthly averages](https://github.com/jnsebgosselin/WHAT/blob/master/Images/Normals_Marieville.png)
 
-![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png) |
+![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
 
 
 Last edited: 31/01/2015
