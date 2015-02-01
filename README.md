@@ -5,30 +5,34 @@ WARNING: Governement of Canada issued an update on 15/01/2015 of their website w
 
 What is WHAT
 ============
-WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main objective is to facilitate the interpretation and valorization of groundwater level time series measured in observation wells. It is developped at [INRS-ETE](http://ete.inrs.ca/) by [Jean-Sébastien Gosselin](http://www.liamg.ca/en/about-us/jean-sebastien-gosselin/) under the direction and co-direction of [Richard Martel](http://www.inrs.ca/richard-martel) and [Christine Rivard](http://science.gc.ca/default.asp?lang=En&n=E3024D2D-1&xsl=sdmtprofile&xml=E3024D2D-1AB4-4F74-AF13-755D0DCF3E13&formid=B03536B8-8F8E-4BC1-A5BF-D62B13F57A8B&showfromadmin=1&readonly=true).
+WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
+*the preparation of gapless daily weather time-series (precipitation and air temperature). For this purpose, data from the [Government of Canada website](http://climate.weather.gc.ca/) can be downloaded and automatically formatted. Furthermore, missing data can be filled with data from selected neighboring weather stations using a multiple linear regression model;
+* the generation of various publication-quality figures from the weather and water level data;
+* the exploration, manipulation, and validation of the data within a user-friendly dynamic graphical environment;
+* the calculation of the master recession curve (MRC) of the well hydrograph (experimental);
+* the estimation of groundwater recharge at the local scale in unconfined conditions with a method combining the daily meteorological data and the water level time series (will be available in a future release).
+*the calculation of the barometric response of the well that can be used to assess the level of confinement of the aquifer at the well (will be available in a future release).
 
-A user guide is currently being prepared and should be available shortly. WHAT is currently under heavy development and is unfortunately not yet complete or free of bugs. If you have any questions or comments, please contact Jean-Sébastien Gosselin at jnsebgosselin@gmail.com. To download a Windows package version of the software click on the button "release" on top of this page or follow this [Link](https://github.com/jnsebgosselin/WHAT/releases). 
+WHAT is written in the Python 2.7 programming language and is currently maintained and developed by [Jean-Sébastien Gosselin](http://www.liamg.ca/en/about-us/jean-sebastien-gosselin/) at [INRS-ETE](http://ete.inrs.ca/)  under the direction and co-direction of [Richard Martel](http://www.inrs.ca/richard-martel) and [Christine Rivard](http://science.gc.ca/default.asp?lang=En&n=E3024D2D-1&xsl=sdmtprofile&xml=E3024D2D-1AB4-4F74-AF13-755D0DCF3E13&formid=B03536B8-8F8E-4BC1-A5BF-D62B13F57A8B&showfromadmin=1&readonly=true). The source code and a stand-alone executable for Windows 7 are available free of charge for download on GitHub (www.github.com/jnsebgosselin/WHAT). If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-Sébastien Gosselin at this email address: jnsebgosselin@gmail.com.
 
-Presently are available in WHAT v4.1.4-Beta:
+A user manual and technical documentation is currently being prepared and should be available shortly. WHAT is currently under heavy development and is unfortunately not yet complete or free of bugs. If you have any questions or comments, please contact Jean-Sébastien Gosselin at jnsebgosselin@gmail.com. To download a stand-alone executable of WHAT for Windows click on the button "release" on top of this page or follow this [Link](https://github.com/jnsebgosselin/WHAT/releases). 
+
+Screenshots
 ----------------------------------------
 
-- Automatic downloading and formatting of weather data available on the Governement of Canada website (http://climate.weather.gc.ca/). Weather data from any other sources can still be used, but the data must be formated to a prescribed format in order to be compatible with the program.
-- Automatic completion of daily climatological series. Missing daily meteorological data for a given weather station are estimated using a multiple linear regression model, generated using data from neighboring stations.
-- Automatic plotting of the well hydrograph along with meteorological data on a same graph.
-- Automatic plotting of monthly and yearly averages for a given daily weather data record.
-- Master Recession Curve (MRC) estimation (experimental).
+| Conveniently download and format daily weather data of canadian stations | Quickly estimate and fill missing weather data for all the stations in your study area |
+| :-----------: | :-----------: |
+| ![Test](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot000.png)  |![Test](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot001.png)  |
 
-Future developments include:
-----------------------------
+| Easily prepare publication-quality figures with your data  | Explore and analyse your data within a user-friendly dynamic graphical environment |
+| :-----------: | :-----------: |
+| ![Test](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot002.png)  |![Test](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot003.png)  |
 
-- Groundwater recharge estimation.
-- Barometric Response Function (BRF) analysis.
-
-Output Samples:
+Output Samples
 ---------------
+![Weather yearly and monthly averages](https://github.com/jnsebgosselin/WHAT/blob/master/Images/Normals_Marieville.png)
 
-![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/Normals_Marieville.png)
+![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png) |
 
-![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
 
 Last edited: 31/01/2015
