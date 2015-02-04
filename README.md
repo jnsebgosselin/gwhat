@@ -8,7 +8,7 @@ WARNING: The Governement of Canada issued an update on 15/01/2015 of their websi
 - [Screenshots](#screenshots)
 - [Output Samples](#Output Samples)
 - [License](#license)
-- 
+
 # What is WHAT
 
 WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
