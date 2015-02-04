@@ -189,10 +189,10 @@ class MainWindow(QtGui.QMainWindow):
         tab_about = TabAbout(self)
         self.tab_hydrograph = TabHydrograph(self)
         
-        Tab_widget.addTab(self.tab_dwnld_data, labelDB.text.TAB1)        
-        Tab_widget.addTab(self.tab_fill, labelDB.text.TAB2) 
-        Tab_widget.addTab(self.tab_hydrograph, labelDB.text.TAB3) 
-        Tab_widget.addTab(tab_about, labelDB.text.TAB4)
+        Tab_widget.addTab(self.tab_dwnld_data, LabelDB.TAB1)        
+        Tab_widget.addTab(self.tab_fill, LabelDB.TAB2) 
+        Tab_widget.addTab(self.tab_hydrograph, LabelDB.TAB3) 
+        Tab_widget.addTab(tab_about, LabelDB.TAB4)
         
         Tab_widget.setCornerWidget(proDir_widget)
         
@@ -1550,7 +1550,7 @@ class TabDwnldData(QtGui.QWidget):
                 
         #----------------------------------------------- GRID DOWNLOAD DATA ----
                 
-        self.btn_get = QtGui.QPushButton(labelDB.btn_get_text)
+        self.btn_get = QtGui.QPushButton(LabelDB.btn_GetData)
         self.btn_get.setIcon(iconDB.download)
         self.btn_get.setToolTip(ttipDB.btn_GetData)
         self.btn_get.setIconSize(StyleDB.iconSize2)        
@@ -1591,11 +1591,13 @@ class TabDwnldData(QtGui.QWidget):
         #---- ASSEMBLING SubGrids ----
     
         self.merge_stats_display.setMaximumHeight(200)
-        btn_select = QtGui.QPushButton(' Select')
+        btn_select = QtGui.QPushButton(LabelDB.btn_select_rawData)
+        btn_select.setToolTip(ttipDB.btn_select_rawData)
         btn_select.setIcon(iconDB.openFile)
         btn_select.setIconSize(StyleDB.iconSize2)
         
-        btn_save = QtGui.QPushButton('Save')
+        btn_save = QtGui.QPushButton(LabelDB.btn_save_concatenate)
+        btn_save.setToolTip(ttipDB.btn_save_concatenate)
         btn_save.setIcon(iconDB.save)
         btn_save.setIconSize(StyleDB.iconSize2)
         
@@ -1622,8 +1624,8 @@ class TabDwnldData(QtGui.QWidget):
         self.staList_table = QtGui.QTableWidget()
         self.staList_table.setFrameStyle(StyleDB.frame)
                 
-        TITLE_TOP = QtGui.QLabel(labelDB.title_download)    
-        TITLE_BOTTOM  = QtGui.QLabel(labelDB.title_concatenate)
+        TITLE_TOP = QtGui.QLabel(LabelDB.title_download)    
+        TITLE_BOTTOM  = QtGui.QLabel(LabelDB.title_concatenate)
         
         line1 = QtGui.QFrame()
         line1.setFrameStyle(StyleDB.HLine)
@@ -2583,20 +2585,20 @@ class TabFill(QtGui.QWidget):
         self.Nmax.setRange(0, 99)
         self.Nmax.setSingleStep(1)
         self.Nmax.setValue(4)
-        distlimit_label = QtGui.QLabel(labelDB.distlimit_text)
-        distlimit_label.setToolTip(labelDB.distlimit_help)
+        distlimit_label = QtGui.QLabel(LabelDB.distlimit)
+        distlimit_label.setToolTip(ttipDB.distlimit)
         self.distlimit = QtGui.QSpinBox()
         self.distlimit.setRange(-1, 9999)
         self.distlimit.setSingleStep(1)
         self.distlimit.setValue(100)
-        self.distlimit.setToolTip(labelDB.distlimit_help)
-        altlimit_label = QtGui.QLabel(labelDB.altlimit_text)
-        altlimit_label.setToolTip(labelDB.altlimit_help)
+        self.distlimit.setToolTip(ttipDB.distlimit)
+        altlimit_label = QtGui.QLabel(LabelDB.altlimit)
+        altlimit_label.setToolTip(ttipDB.altlimit)
         self.altlimit = QtGui.QSpinBox()
         self.altlimit.setRange(-1, 9999)
         self.altlimit.setSingleStep(1)
         self.altlimit.setValue(350)
-        self.altlimit.setToolTip(labelDB.altlimit_help)
+        self.altlimit.setToolTip(ttipDB.altlimit)
         
         #---- Grid ----
         
@@ -2748,11 +2750,11 @@ class TabFill(QtGui.QWidget):
         
         self.btn_fill = QtGui.QPushButton(LabelDB.btn_fill_weather)
         self.btn_fill.setIcon(iconDB.play)
-        self.btn_fill.setToolTip(labelDB.btn_fill_help)
+        self.btn_fill.setToolTip(ttipDB.btn_fill)
         self.btn_fill.setIconSize(StyleDB.iconSize2)
         
         self.btn_fill_all = QtGui.QPushButton(LabelDB.btn_fill_all_weather)
-        self.btn_fill_all.setToolTip(labelDB.btn_fill_all_help)
+        self.btn_fill_all.setToolTip(ttipDB.btn_fill_all)
         self.btn_fill_all.setIcon(iconDB.forward)
         self.btn_fill_all.setIconSize(StyleDB.iconSize2)
         
@@ -4691,89 +4693,7 @@ def L1LinearRegression(X, Y):
         B = linalg_lstsq(Xb, Yb)[0]
         
     return B
-    
-    
-################################################################################
-#                                                                           
-#                   @SECTION LANGUAGE, ICONS AND PREFERENCES
-#                                                                          
-################################################################################    
 
-# http://stackoverflow.com/questions/78799
-
-class LabelDataBase(): # Default language is English.
-    
-    
-    def __init__(self, language): #------------------------------- ENGLISH -----
-        
-        self.text = self.Text(language)
-              
-        #----- TAB DOWNLOAD DATA-----
-        
-        self.title_download = ('<font size="4"><b>Download Data : </b></font>')
-        self.title_concatenate = (
-            '''<font size="4">
-                 <b>Concatenate and Format Raw Data Files :</b>
-               </font>''')
-                
-        self.btn_load_text = 'Load'        
-        self.btn_get_text = 'Get Data'                              
-        self.btn_get_all_text = 'Get All'
-        self.btn_get_all_help = (
-            '''<p>Download weather data for all the weather station in the 
-                 current list for the specified time period.</p>''')
-              
-        #----- TAB FILL DATA -----
-        
-        self.btn_fill_help = (        
-            '''<p>Fill the gaps in the weather data record of the selected
-                 target station.</p>''')
-           
-        self.btn_fill_all_help = (
-            '''<p>Fill the gaps in all the weather data records found in the
-                 <i>Data Directory</i>.</p>''')
-        
-        self.distlimit_text = 'Cutoff distance (km)'
-        self.distlimit_help = (                
-            '''<p>Distance limit beyond which neighboring stations are excluded
-                 from the gapfilling procedure.</p>
-               <p>This condition is ignored if set to a value of -1.</p>''')
-        
-        self.altlimit_text = 'Cutoff altitude difference (m)'
-        self.altlimit_help = (
-            '''<p>Altitude difference limit over which neighboring stations are
-                 excluded from the gapfilling procedure.</p>
-               <p>This condition is ignored if set to a value of -1.</p>''')
-         
-        if language == 'French': #--------------------------------- FRENCH -----
-                       
-            #----- TAB DOWNLOAD DATA -----    
-            
-            self.title_download = (
-                u'''<font size="4">
-                      <b>Téléchargement des données : </b>
-                    </font>''')
-                                      
-            self.title_concatenate = (
-                u'''<font size="4">
-                      <b>Mise en commun et mise en forme des données :</b>
-                    </font>''')
-                
-    class Text():
-        
-        def __init__(self, language): #--------------------------- ENGLISH -----
-        
-            self.TAB1 = 'Download Data'
-            self.TAB2 = 'Fill Data'
-            self.TAB3 = 'Hydrograph'
-            self.TAB4 = 'About'
-            
-            if language == 'French': #----------------------------- FRENCH -----
-
-                self.TAB1 = u'Télécharger'
-                self.TAB2 = u'Combler les données'
-                self.TAB3 = u'Hydrogramme'
-                self.TAB4 = u'À propos'
 
 #===============================================================================    
 class WHATPref():
@@ -4890,8 +4810,6 @@ if __name__ == '__main__':
     app = QtGui.QApplication(argv)
     
     language = 'English'
-    global labelDB
-    labelDB = LabelDataBase(language)
     
     global LabelDB    
     LabelDB = db.labels(language)

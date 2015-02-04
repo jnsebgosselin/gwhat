@@ -80,12 +80,34 @@ class tooltips():
         
         #----------------------------------------------------- DOWNLOAD TAB ----
         
-        self.refresh_staList = 'Refresh the current weather station list.'
+        self.refresh_staList = 'Refresh the current weather station list'
         
-        self.search4stations = ('Search for weather stations on \n' +
-                                'www.climate.weather.gc.ca.')
-        self.btn_GetData = 'Download data for the selected weather station.'
-        self.btn_browse_staList = 'Load a custom weather station list.'
+        self.search4stations = ('Search for weather stations in the \n' +
+                                'Canadian Daily Climate Database (CDCD)')
+        self.btn_GetData = 'Download data for the selected weather station'
+        self.btn_browse_staList = 'Load a custom weather station list'
+        self.btn_select_rawData = 'Select and format raw weather data files' 
+        self.btn_save_concatenate = 'Save formated weather data in a csv file'
+        
+        #--------------------------------------------------------- FILL TAB ----
+        
+        self.altlimit = (
+            '''<p>Altitude difference limit over which neighboring stations are
+                 excluded from the gapfilling procedure.</p>
+               <p>This condition is ignored if set to a value of -1.</p>''')
+               
+        self.distlimit = (                
+            '''<p>Distance limit beyond which neighboring stations are excluded
+                 from the gapfilling procedure.</p>
+               <p>This condition is ignored if set to a value of -1.</p>''')
+               
+        self.btn_fill_all = (
+            '''<p>Fill the gaps in all the weather data records found in the
+                 <i>Data Directory</i>.</p>''')
+                 
+        self.btn_fill = (        
+            '''<p>Fill the gaps in the weather data record of the selected
+                 target station.</p>''')
         
         #--------------------------------------------------- HYDROGRAPH TAB ----
         
@@ -117,14 +139,37 @@ class tooltips():
         
         if language == 'French': #================================== FRENCH ====
             
-            pass
+            self.btn_GetData = ('Télécharger les données pour la station \n' +
+                                'climatique sélectionnée')
         
     
 class labels():
     
     def __init__(self, language): #================================ ENGLISH ====
         
+        #-------------------------------------------------------- TAB NAMES ----
+        
+        self.TAB1 = 'Download Data'
+        self.TAB2 = 'Fill Data'
+        self.TAB3 = 'Hydrograph'
+        self.TAB4 = 'About'
+        
         #----------------------------------------------------- DOWNLOAD TAB ----
+
+        self.btn_GetData = 'Get Data'
+        self.title_download = ('<font size="4"><b>Download Data : </b></font>')
+        self.title_concatenate = (
+            '''<font size="4">
+                 <b>Concatenate and Format Raw Data Files :</b>
+               </font>''')
+                
+        self.btn_select_rawData = 'Load' 
+        self.btn_save_concatenate = 'Save'
+                                   
+#        self.btn_get_all_text = 'Get All'
+#        self.btn_get_all_help = (
+#            '''<p>Download weather data for all the weather station in the 
+#                 current list for the specified time period.</p>''')
         
         self.saveMeteoAuto = 'Automatically save concatened data'
         
@@ -132,9 +177,17 @@ class labels():
 
         self.btn_fill_weather = 'Fill'
         self.btn_fill_all_weather = 'Fill All'
+        self.altlimit = 'Cutoff altitude difference (m)'
+        self.distlimit = 'Cutoff distance (km)'
         
         if language == 'French': #================================== FRENCH ====
-            pass
+            
+        #-------------------------------------------------------- TAB NAMES ----
+        
+            self.TAB1 = u'Télécharger'
+            self.TAB2 = u'Combler les données'
+            self.TAB3 = u'Hydrogramme'
+            self.TAB4 = u'À propos'
     
 class styleUI():
     
