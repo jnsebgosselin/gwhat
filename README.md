@@ -4,6 +4,7 @@
 WARNING: The Governement of Canada issued an update on 15/01/2015 of their website which caused compatibility issues with some features of WHAT. A new version of the software ([WHAT v4.1.2](https://github.com/jnsebgosselin/WHAT/releases)) has been released to fix this problem.
 
 # Table of Contents
+- [What is WHAT](#What is WHAT)
 - [Installation](#installation)
 - [Screenshots](#screenshots)
 - [Output Samples](#Output Samples)
