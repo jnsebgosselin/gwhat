@@ -3,6 +3,12 @@
 
 WARNING: The Governement of Canada issued an update on 15/01/2015 of their website which caused compatibility issues with some features of WHAT. A new version of the software ([WHAT v4.1.2](https://github.com/jnsebgosselin/WHAT/releases)) has been released to fix this problem.
 
+## Table of Contents
+- [Installation](#installation)
+- [Screenshots](#screenshots)
+- [Output Samples](#Output Samples)
+- [License](#license)
+- 
 # What is WHAT
 
 WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
@@ -20,12 +26,6 @@ WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platfo
 WHAT is written in the Python 2.7 programming language and is currently maintained and developed by [Jean-Sébastien Gosselin](http://www.liamg.ca/en/about-us/jean-sebastien-gosselin/) at [INRS-ETE](http://ete.inrs.ca/) under the direction and co-direction of [Richard Martel](http://www.inrs.ca/richard-martel) and [Christine Rivard](http://science.gc.ca/default.asp?lang=En&n=E3024D2D-1&xsl=sdmtprofile&xml=E3024D2D-1AB4-4F74-AF13-755D0DCF3E13&formid=B03536B8-8F8E-4BC1-A5BF-D62B13F57A8B&showfromadmin=1&readonly=true).
 
 A user manual and the technical documentation of the software are currently being prepared and should be available shortly. To download a stand-alone executable of WHAT for Windows click on the button "releases" on top of this page or follow this [Link](https://github.com/jnsebgosselin/WHAT/releases). WHAT is currently under heavy development and is unfortunately not yet complete or free of bugs. If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-Sébastien Gosselin at this email address: jnsebgosselin@gmail.com.
-
-## Table of Contents
-- [Installation](#installation)
-- [Screenshots](#screenshots)
-- [Output Samples](#Output Samples)
-- [License](#license)
 
 ## Installation
 
