@@ -160,8 +160,28 @@ class styleUI():
         # 52 = QtGui.QFrame.HLine | QtGui.QFrame.Sunken
         # 53 = QtGui.QFrame.VLine | QtGui.QFrame.Sunken
         
+        
+class headers():
+    
+    
+    def __init__(self):
+        
+        #---- graph_layout.lst ----
+        
+        self.graph_layout = [['Name Well', 'Station Meteo', 'Min. Waterlvl',
+                              'Waterlvl Scale', 'Date Start', 'Date End',
+                              'Fig. Title State', 'Fig. Title Text',
+                              'Precip. Scale', 'Waterlvl Ref.', 'Trend Line']]
+        
+        #---- weather_stations.lst ----
+                 
+        self.weather_stations = [['staName', 'stationId', 'StartYear',
+                                  'EndYear', 'Province', 'ClimateID',
+                                  'Proximity (km)']]
+        
 if __name__ == '__main__':
-    pass
+    HeaderDB = headers()
+    StyleDB = styleUI()
     
 #    style = QtGui.QFrame()
 #    style.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)

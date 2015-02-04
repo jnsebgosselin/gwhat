@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
-software_version = 'WHAT Beta 4.1.4'
+software_version = 'WHAT Beta 4.1.5'
 last_modification = '30/01/2015'
 
 #---- STANDARD LIBRARY IMPORTS ----
@@ -48,8 +48,8 @@ import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
-import matplotlib.pyplot as plt
+#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+#import matplotlib.pyplot as plt
 #from scipy import signal
 #from statsmodels.regression.quantile_regression import QuantReg
 
@@ -897,17 +897,23 @@ class TabHydrograph(QtGui.QWidget):
         self.UpdateUI = True
     
     def check_if_layout_exist(self, name_well):
-                
-        layoutExist  = self.hydrograph2display.checkLayout(name_well)
+        
+        filename = self.parent.what_pref.project_dir + '/graph_layout.lst'
+        if not path.exists(filename):
+            # Force the creation of a new "graph_layout.lst" file
+            self.parent.what_pref.load_pref_file()
+            
+        isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
                         
-        if layoutExist == True:
+        if isLayoutExist == True:
+            
             self.parent.write2console(
             '''<font color=black>A graph layout exists for well %s.
                </font>''' % name_well)
             
             self.msgBox.setText('<b>A graph layout already exists ' +
                                     'for well ' + name_well + '.<br><br> Do ' +
-                                     'you want to load it?</b>')
+                                    'you want to load it?</b>')
             override = self.msgBox.exec_()
 
             if override == self.msgBox.Yes:
@@ -916,7 +922,8 @@ class TabHydrograph(QtGui.QWidget):
             elif override == self.msgBox.No:
                 self.select_closest_meteo_file()
                 
-        elif layoutExist == False:            
+        elif isLayoutExist == False:   
+            
             self.select_closest_meteo_file()
         
             
@@ -1057,11 +1064,16 @@ class TabHydrograph(QtGui.QWidget):
             return
         
         #------------------------------------------- Check if Layout Exists ----
-        
+                
+        filename = self.parent.what_pref.project_dir + '/graph_layout.lst'
+        if not path.exists(filename):
+            # Force the creation of a new "graph_layout.lst" file
+            self.parent.what_pref.load_pref_file()
+            
         name_well = self.waterlvl_data.name_well
-        layoutExist  = self.hydrograph2display.checkLayout(name_well)
+        isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
                     
-        if layoutExist == False:
+        if isLayoutExist == False:
             
             self.parent.write2console(
             '''<font color=red>No graph layout exists for well %s.
@@ -1074,7 +1086,7 @@ class TabHydrograph(QtGui.QWidget):
         
         #------------------------------------------------------ Load Layout ----
                     
-        self.hydrograph2display.load(name_well)
+        self.hydrograph2display.load_layout(name_well, filename)
         
         #------------------------------------------------------- Update UI -----
         
@@ -1156,11 +1168,19 @@ class TabHydrograph(QtGui.QWidget):
             
             return
             
+        #------------------------------------------- Check if Layout Exists ----
+            
+        filename = self.parent.what_pref.project_dir + '/graph_layout.lst'
+        if not path.exists(filename):
+            # Force the creation of a new "graph_layout.lst" file
+            self.parent.what_pref.load_pref_file()
+            
         name_well = self.waterlvl_data.name_well
+        isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
         
-        layoutExist = self.hydrograph2display.checkLayout(name_well)
-
-        if layoutExist == True:
+        #------------------------------------------------------ Save Layout ----
+        
+        if isLayoutExist == True:
             self.msgBox.setText(
             '''<b>A graph layout already exists for well %s.<br><br> Do 
                  you want to replace it?</b>''' % name_well)
@@ -1179,7 +1199,8 @@ class TabHydrograph(QtGui.QWidget):
     def save_graph_layout(self, name_well):
         
         self.update_graph_layout_parameter()
-        self.hydrograph2display.save(name_well)
+        filename = self.parent.what_pref.project_dir + '/graph_layout.lst'
+        self.hydrograph2display.save_layout(name_well, filename)
         self.parent.write2console(
         '''<font color=black>Graph layout saved successfully
              for well %s.</font>''' % name_well)
@@ -2029,8 +2050,7 @@ class TabDwnldData(QtGui.QWidget):
     #--------------------------------------------------- CHECK LIST VERSION ----
         
         # Check if the list is from an older version, and update it if yes
-        header = ['staName', 'stationId', 'StartYear', 'EndYear', 'Province',
-                  'ClimateID', 'Proximity (km)']
+        header = HeaderDB.weather_stations
         
         nCONFG, nPARA = np.shape(reader)         
         if nPARA < len(header):
@@ -4621,23 +4641,25 @@ def sort_stations_correlation_order(CORCOEF):
 
 #===============================================================================    
 def L1LinearRegression(X, Y): 
-# L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
-# (Iterative reweighted least squares)
-# 
-# B = L1LinearRegression(Y,X)
-#
-# B = discovered linear coefficients 
-# X = independent variables 
-# Y = dependent variable 
-# 
-# Note 1: An intercept term is NOT assumed (need to append a unit column if
-#         needed). 
-# Note 2: a.k.a. LAD, LAE, LAR, LAV, least absolute, etc. regression 
-#
-# SOURCE:
-# This function is originally from a Matlab code written by Will Dwinnell
-# www.matlabdatamining.blogspot.ca/2007/10/l-1-linear-regression.html
-# Last accessed on 21/07/2014
+    """
+    L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
+    (Iterative reweighted least squares)
+
+    B = L1LinearRegression(Y,X)
+
+    B = discovered linear coefficients 
+    X = independent variables 
+    Y = dependent variable 
+
+    Note 1: An intercept term is NOT assumed (need to append a unit column if
+            needed). 
+    Note 2: a.k.a. LAD, LAE, LAR, LAV, least absolute, etc. regression 
+
+    SOURCE:
+    This function is originally from a Matlab code written by Will Dwinnell
+    www.matlabdatamining.blogspot.ca/2007/10/l-1-linear-regression.html
+    Last accessed on 21/07/2014
+    """
 #===============================================================================
  
     # Determine size of predictor data.
@@ -4834,10 +4856,24 @@ class WHATPref():
                    'A new one has been created.')
             print msg
             
-            fcontent = [['staName', 'stationId', 'StartYear', 'EndYear',
-                         'Province', 'ClimateID', 'Proximity (km)']]
+            fcontent = HeaderDB.weather_stations
             
             with open(fname, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(fcontent)
+        
+        #---- graph_layout.lst ----
+        
+        filename = self.project_dir + '/graph_layout.lst'
+        if not path.exists(filename):
+            
+            fcontent = HeaderDB.graph_layout
+                        
+            msg = ('No "graph_layout.lst" file found. ' +
+                   'A new one has been created.')
+            print msg
+
+            with open(filename, 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerows(fcontent)
                                
@@ -4856,14 +4892,17 @@ if __name__ == '__main__':
     language = 'English'
     global labelDB
     labelDB = LabelDataBase(language)
-    global LabelDB
+    
+    global LabelDB    
     LabelDB = db.labels(language)
     global iconDB
     iconDB = db.icons()
     global StyleDB
     StyleDB = db.styleUI()
     global ttipDB
-    ttipDB = db.tooltips(language)    
+    ttipDB = db.tooltips(language)
+    global HeaderDB
+    HeaderDB = db.headers()
         
     instance_1 = MainWindow()
     instance_1.show()

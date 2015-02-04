@@ -41,6 +41,10 @@ from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 from xlrd import open_workbook
 
+#---- PERSONAL IMPORTS ----
+
+import database as db
+
 class LabelDatabase():
     
     def __init__(self, language): #------------------------------- English -----
@@ -79,7 +83,7 @@ class Hydrograph():
         self.WLscale = 0
         self.TIMEmin = 36526
         self.TIMEmax = 36526
-        self.NZGrid = 20 #Dundurn: 17 #26
+        self.NZGrid = 20 # Dundurn: 17 # Old version: 26
         
         self.fheight = 8.5 # Figure height in inches
         self.fwidth = 11.0 # Figure width in inches
@@ -94,27 +98,23 @@ class Hydrograph():
         
         self.isLegend = False
         
-        self.header = [['Name Well', 'Station Meteo', 'Min. Waterlvl',
-                        'Waterlvl Scale', 'Date Start', 'Date End',
-                        'Fig. Title State', 'Fig. Title Text', 'Precip. Scale',
-                        'Waterlvl Ref.', 'Trend Line']]
+        HeaderDB = db.headers()
+        self.header = HeaderDB.graph_layout
                         
         self.isHydrographExists = False
-                        
-    def checkLayout(self, name_well): # old var. names: check, isConfigExist
         
-        # Check first if a layout file is present in the folder.
-        # If not, initiate the creation of a new one.
-        if not path.exists('graph_layout.lst'):
-            self.create_new_graph_layout_file()
+    #----------------------------------------------------- graph_layout.lst ----
+                        
+    def checkLayout(self, name_well, filename): # old var. names: isConfigExist
                 
-        reader = open('graph_layout.lst', 'rb')
+        reader = open(filename, 'rb')
         reader = csv.reader(reader, delimiter='\t')
         reader = list(reader)
         reader = np.array(reader)
        
         # Check if config file is from an old version of Hydroprint
         # and if yes, convert it to the new version.
+       
         nCONFG, nPARA = np.shape(reader)
 
         if nPARA < len(self.header[0]):
@@ -136,7 +136,7 @@ class Hydrograph():
             if nPARA < 11:
                 reader[1:, 10] = 0
             
-            with open('graph_layout.lst', 'wb') as f:
+            with open(filename, 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerows(reader)
              
@@ -155,20 +155,14 @@ class Hydrograph():
             layoutExist = False
            
         return layoutExist
-    
-    def create_new_graph_layout_file(self): #old name: create_new_config_file
-        print 'No "graph_layout.lst" file found. A new one has been created.'
-
-        with open('graph_layout.lst', 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(self.header)
                 
-    def load(self, name_well):
+    def load_layout(self, name_well, filename):
+        
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
         # fine with the graph layout for this well.
             
-        reader = open('graph_layout.lst', 'rb')
+        reader = open(filename, 'rb')
         reader = csv.reader(reader, delimiter='\t')
         reader = list(reader)
         reader = np.array(reader)
@@ -195,27 +189,33 @@ class Hydrograph():
         self.WLref = reader[9].astype(int)
         self.trend_line = reader[10].astype(int)
         
-    def save(self, name_well):
-            
-        reader = open('graph_layout.lst', 'rb')
+    def save_layout(self, name_well, filename):
+        
+        #---- load file ----
+        
+        reader = open(filename, 'rb')
         reader = csv.reader(reader, delimiter='\t')
         reader = list(reader)
         reader = np.array(reader)
+        
+        #---- update content ----
          
         rowx = np.where(reader[:,0] == name_well)[0]
         
         new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
                self.TIMEmin, self.TIMEmax,self.title_state, self.title_text,
                self.RAINscale, self.WLref, self.trend_line]
-               
+        
         if len(rowx) == 0:
             reader = np.vstack((reader, new))
         else:
             reader = np.delete(reader, rowx, 0)
             reader = np.vstack((reader, new))
         reader[0] = self.header[0]
+        
+        #---- save file ----
             
-        with open('graph_layout.lst', 'wb') as f:
+        with open(filename, 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(reader)
             
@@ -477,8 +477,8 @@ class Hydrograph():
             
         self.PTOT_bar, = self.ax3.plot([], [])
         self.RAIN_bar, = self.ax3.plot([], [])
-        self.baseline, = self.ax3.plot(
-                                      [self.TIMEmin, self.TIMEmax], [0, 0], 'k')
+        self.baseline, = self.ax3.plot([self.TIMEmin, self.TIMEmax],
+                                       [0, 0], 'k')
                     
 #        self.bar1 = self.ax3.bar(time, Ptot, align='center', width=7-1)
 #        plt.setp(self.bar1, color=(0.65,0.65,0.65), edgecolor='none')
