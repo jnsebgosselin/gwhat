@@ -127,14 +127,34 @@ class MainWindow(QtGui.QMainWindow):
     # MainWindow class. The layout of each tab is handled with a
     # QGridLayout.
     
-    def initUI(self):
-                            
+    def initUI(self):        
+        
+        #-------------------------------------------- LOAD WHAT PREFERENCES ----
+                
+        self.what_pref = WHATPref(self)
+        self.what_pref.load_pref_file()
+
+        #----------------------------------------------- GENERATE DATABASES ----
+    
+        language = self.what_pref.language
+        
+        global LabelDB    
+        LabelDB = db.labels(language)
+        global iconDB
+        iconDB = db.icons()
+        global StyleDB
+        StyleDB = db.styleUI()
+        global ttipDB
+        ttipDB = db.tooltips(language)
+        global HeaderDB
+        HeaderDB = db.headers()
+        
+        #------------------------------------------------ MAIN WINDOW SETUP ----
+
         self.setMinimumWidth(1250)
         self.setWindowTitle(software_version)
         self.setWindowIcon(iconDB.WHAT)
-        self.setFont(StyleDB.font1)
-        
-        self.what_pref = WHATPref(self)
+        self.setFont(StyleDB.font1)                
                         
         #----------------------------------------------------- MAIN CONSOLE ----
         
@@ -236,8 +256,7 @@ class MainWindow(QtGui.QMainWindow):
         self.btn_project_dir.clicked.connect(self.select_project_dir)
        
     #----------------------------------------------------------------- INIT ----
-        
-        self.what_pref.load_pref_file()
+                
         self.load_project_dir(self.what_pref.project_dir)
         
     #===========================================================================  
@@ -4706,11 +4725,15 @@ class WHATPref():
         # now = (now.year, now.month, now.day)
         # self.project_dir = getcwd() + '/Projects/New_%d%d%d' % now
         self.project_dir = getcwd() + '/../Projects/Example'
+        self.language = 'English'
         self.first_startup = 0
+        
+        self.HeaderDB = db.headers()
     
     def save_pref_file(self):
             
-        fcontent = [['Project Dir:', self.project_dir]]
+        fcontent = [['Project Dir:', self.project_dir],
+                    ['Language:', self.language]]
        
         with open('WHAT.pref', 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
@@ -4733,6 +4756,7 @@ class WHATPref():
             reader = list(reader)
             
             self.project_dir = reader[0][1]
+            self.language = reader[1][1]
         
         #----- System folder hierarchy -----
         
@@ -4776,7 +4800,7 @@ class WHATPref():
                    'A new one has been created.')
             print msg
             
-            fcontent = HeaderDB.weather_stations
+            fcontent = self.HeaderDB.weather_stations
             
             with open(fname, 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
@@ -4787,7 +4811,7 @@ class WHATPref():
         filename = self.project_dir + '/graph_layout.lst'
         if not path.exists(filename):
             
-            fcontent = HeaderDB.graph_layout
+            fcontent = self.HeaderDB.graph_layout
                         
             msg = ('No "graph_layout.lst" file found. ' +
                    'A new one has been created.')
@@ -4809,18 +4833,20 @@ if __name__ == '__main__':
     
     app = QtGui.QApplication(argv)
     
-    language = 'English'
+#    ---- DATABASE IMPORTS ----
     
-    global LabelDB    
-    LabelDB = db.labels(language)
-    global iconDB
-    iconDB = db.icons()
-    global StyleDB
-    StyleDB = db.styleUI()
-    global ttipDB
-    ttipDB = db.tooltips(language)
-    global HeaderDB
-    HeaderDB = db.headers()
+#    language = 'English'
+    
+#    global LabelDB    
+#    LabelDB = db.labels(language)
+#    global iconDB
+#    iconDB = db.icons()
+#    global StyleDB
+#    StyleDB = db.styleUI()
+#    global ttipDB
+#    ttipDB = db.tooltips(language)
+#    global HeaderDB
+#    HeaderDB = db.headers()
         
     instance_1 = MainWindow()
     instance_1.show()
