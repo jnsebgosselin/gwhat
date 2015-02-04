@@ -3,7 +3,7 @@
 
 WARNING: The Governement of Canada issued an update on 15/01/2015 of their website which caused compatibility issues with some features of WHAT. A new version of the software ([WHAT v4.1.2](https://github.com/jnsebgosselin/WHAT/releases)) has been released to fix this problem.
 
-## Table of Contents
+# Table of Contents
 - [Installation](#installation)
 - [Screenshots](#screenshots)
 - [Output Samples](#Output Samples)
@@ -27,7 +27,7 @@ WHAT is written in the Python 2.7 programming language and is currently maintain
 
 A user manual and the technical documentation of the software are currently being prepared and should be available shortly. To download a stand-alone executable of WHAT for Windows click on the button "releases" on top of this page or follow this [Link](https://github.com/jnsebgosselin/WHAT/releases). WHAT is currently under heavy development and is unfortunately not yet complete or free of bugs. If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-Sébastien Gosselin at this email address: jnsebgosselin@gmail.com.
 
-## Installation
+# Installation
 
 The stand-alone executable for Windows 7 is distributed in a Zip archive that can be downloaded freely on GitHub [here](https://github.com/jnsebgosselin/WHAT/releases). This archive contains:
 
@@ -39,7 +39,7 @@ The stand-alone executable for Windows 7 is distributed in a Zip archive that ca
 
 Once the content of the Zip archive has been extracted, the program can be started directly from the WHAT.exe executable file that is contained withing the folder named WHAT. The software can conveniently run from any location on the computer or from any storage device without the need to install the program beforehand.
 
-## Screenshots
+# Screenshots
 
 | Conveniently download and format daily weather data of canadian stations | Quickly estimate and fill missing weather data for all the stations in your study area |
 | :-----------: | :-----------: |
@@ -49,13 +49,13 @@ Once the content of the Zip archive has been extracted, the program can be start
 | :-----------: | :-----------: |
 | ![Test](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot002.png)  |![Test](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot003.png)  |
 
-## Output Samples
+# Output Samples
 
 ![Weather yearly and monthly averages](https://github.com/jnsebgosselin/WHAT/blob/master/Images/Normals_Marieville.png)
 
 ![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
 
-## LICENSE
+# LICENSE
 
 Copyright 2015 Jean-Sébastien Gosselin. All Rights Reserved.
 
