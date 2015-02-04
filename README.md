@@ -55,9 +55,6 @@ Once the content of the Zip archive has been extracted, the program can be start
 
 ![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
 
-
-Last edited: 31/01/2015
-
 ## LICENSE
 
 Copyright 2015 Jean-Sébastien Gosselin. All Rights Reserved.
@@ -73,3 +70,6 @@ This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 [GNU General Public License](http://www.gnu.org/licenses/) for more details.
+
+
+Last edited: 04/02/2015
