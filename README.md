@@ -6,7 +6,7 @@ WARNING: The Governement of Canada issued an update on 15/01/2015 of their websi
 What is WHAT
 ============
 WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
-* the preparation of a gapless daily weather time-series (precipitation and air temperature) representative of the well location. For this purpose, an interface to the online [Canadian Daily Climate Database](http://climate.weather.gc.ca/) (CDCD) is provided that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged them in a format compatible with WHAT. Furthermore, missing data for a given station can be quickly filled with data from selected neighboring weather stations using a multiple linear regression model
+* the preparation of a gapless daily weather time-series (precipitation and air temperature) representative of the well location. For this purpose, an interface to the online [Canadian Daily Climate Database](http://climate.weather.gc.ca/) (CDCD) is provided that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Furthermore, missing data for a given station can be quickly filled with data from selected neighboring weather stations using a multiple linear regression model
 * the generation of various publication-quality figures from the weather and water level data;
 
 * the exploration, manipulation, and validation of the data within a user-friendly dynamic graphical environment;
