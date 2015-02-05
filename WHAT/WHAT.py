@@ -302,6 +302,8 @@ class MainWindow(QtGui.QMainWindow):
             self.what_pref.project_dir = project_dir
             
             self.what_pref.save_pref_file()            
+            # load_pref_file() is called for preparing the folders and files
+            # hierarchy.
             self.what_pref.load_pref_file()
             
             self.project_dir_display.setText(project_dir)
@@ -2070,10 +2072,10 @@ class TabDwnldData(QtGui.QWidget):
         reader = csv.reader(reader, delimiter='\t')
         reader = list(reader)
         
-    #--------------------------------------------------- CHECK LIST VERSION ----
+        #--------------------------------------- CHECK STATION LIST VERSION ----
         
         # Check if the list is from an older version, and update it if yes
-        header = HeaderDB.weather_stations
+        header = HeaderDB.weather_stations[0]
         
         nCONFG, nPARA = np.shape(reader)         
         if nPARA < len(header):
@@ -2197,7 +2199,7 @@ class TabDwnldData(QtGui.QWidget):
             # the sortKey
             def __lt__(self, other):
                 return self.sortKey < other.sortKey 
-        
+       
         for row in range(nrow):
             
             col = 0 # Station
