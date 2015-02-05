@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #----- STANDARD LIBRARY IMPORTS -----
 
+import platform
+
 #----- THIRD PARTY IMPORTS -----
 
 from PySide.QtGui import QIcon, QFont
@@ -203,8 +205,13 @@ class styleUI():
         self.iconSize = QSize(32, 32)
         self.iconSize2 = QSize(22, 22)
         
-        self.font1 = QFont('Segoe UI', 11) # Calibri, Cambria, Segoe UI
-        self.font_console = QFont('Segoe UI', 9) # Calibri, Cambria, Segoe UI
+        if platform.system() == 'Windows':
+            self.font1 = QFont('Segoe UI', 11) # Calibri, Cambria, Segoe UI
+            self.font_console = QFont('Segoe UI', 9) # Calibri, Cambria, Segoe UI
+        elif platform.system() == 'Linux':
+            self.font1 = QFont('Ubuntu', 11)
+            self.font_console = QFont('Ubuntu', 9)        
+        
 #        self.fontSize1.setPointSize(11)
         
         # 17 = QtGui.QFrame.Box | QtGui.QFrame.Plain
