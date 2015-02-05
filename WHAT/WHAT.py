@@ -33,6 +33,7 @@ from time import ctime, strftime, sleep, gmtime
 from os import getcwd, listdir, makedirs, path
 from string import maketrans
 from datetime import datetime
+import platform
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -283,9 +284,10 @@ class MainWindow(QtGui.QMainWindow):
         dialog.setReadOnly(False)         
         project_dir = dialog.getExistingDirectory(self, 
                                    'Select a new or existing project directory',
-                                   getcwd() + '/../Projects')
-        
-        self.load_project_dir(project_dir)                                   
+                                   '../Projects')
+        if project_dir:
+            project_dir = path.relpath(project_dir)
+            self.load_project_dir(project_dir)                                   
                                    
     #===========================================================================
     def load_project_dir(self, project_dir):
@@ -4724,7 +4726,13 @@ class WHATPref():
         # now = datetime.now()
         # now = (now.year, now.month, now.day)
         # self.project_dir = getcwd() + '/Projects/New_%d%d%d' % now
-        self.project_dir = getcwd() + '/../Projects/Example'
+#        self.project_dir = getcwd() + '/../Projects/Example'
+
+        if platform.system() == 'Windows':
+            self.project_dir = '..\Projects\Example'
+        elif platform.system() == 'Linux':
+            self.project_dir = '../Projects/Example'
+            
         self.language = 'English'
         self.first_startup = 0
         
@@ -4758,15 +4766,29 @@ class WHATPref():
             self.project_dir = reader[0][1]
             self.language = reader[1][1]
         
-        #----- System folder hierarchy -----
+        #---- System project folder ----
         
-        if not path.exists( self.project_dir + '/Meteo/Raw'):
+        # If the project folder does not exist anymore or its relative path has
+        # changed, the project folder revert back to the original state of the
+        # software, shich is the Example folder. If the project Example has been
+        # deleted by the user, a new, empty one will be created.
+        
+        # This procedure is to limit the creation of useless files and folder 
+        # all around the place in the user's computer.
+        
+        if not path.exists(self.project_dir):
+            if platform.system() == 'Windows':
+                self.project_dir = '..\Projects\Example'
+            elif platform.system() == 'Linux':
+                self.project_dir = '../Projects/Example'
+        
+        if not path.exists(self.project_dir + '/Meteo/Raw'):
             makedirs(self.project_dir + '/Meteo/Raw')
-        if not path.exists( self.project_dir + '/Meteo/Input'):
+        if not path.exists(self.project_dir + '/Meteo/Input'):
             makedirs(self.project_dir + '/Meteo/Input')
-        if not path.exists( self.project_dir + '/Meteo/Output'):
+        if not path.exists(self.project_dir + '/Meteo/Output'):
             makedirs(self.project_dir + '/Meteo/Output')
-        if not path.exists( self.project_dir + '/Water Levels'):
+        if not path.exists(self.project_dir + '/Water Levels'):
             makedirs(self.project_dir + '/Water Levels')
             
         #---- waterlvl_manual_measurements.xls ----
