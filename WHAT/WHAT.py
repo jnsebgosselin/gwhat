@@ -280,9 +280,9 @@ class MainWindow(QtGui.QMainWindow):
         '''
     #===========================================================================
         
-        dialog = QtGui.QFileDialog(self)
-        dialog.setReadOnly(False)         
-        project_dir = dialog.getExistingDirectory(self, 
+#        dialog = QtGui.QFileDialog(self)
+#        dialog.setReadOnly(False)         
+        project_dir = QtGui.QFileDialog.getExistingDirectory(self, 
                                    'Select a new or existing project directory',
                                    '../Projects')
         if project_dir:

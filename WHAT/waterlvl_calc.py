@@ -58,6 +58,9 @@ class Tooltips():
         
         self.toggle_layout_mode = ('Toggle between layout and computation ' +
                                    'mode (EXPERIMENTAL FEATURE)')
+                                   
+        self.btn_Waterlvl_lineStyle = ('Show water lvl data as dots instead ' +
+                                       'of a continuous line')
         
         if language == 'French': #--------------------------------- FRENCH -----
             
@@ -118,6 +121,7 @@ class WLCalc(QtGui.QWidget):
         self.btn_layout_mode.setIcon(iconDB.toggleMode)
         self.btn_layout_mode.setToolTip(ttipDB.toggle_layout_mode)
         self.btn_layout_mode.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_layout_mode.setIconSize(StyleDB.iconSize)
         
         self.btn_undo = QtGui.QToolButton()
         self.btn_undo.setAutoRaise(True)
@@ -125,48 +129,63 @@ class WLCalc(QtGui.QWidget):
         self.btn_undo.setToolTip(ttipDB.undo)
         self.btn_undo.setFocusPolicy(QtCore.Qt.NoFocus)
         self.btn_undo.setEnabled(False)
+        self.btn_undo.setIconSize(StyleDB.iconSize)
         
         self.btn_clearPeak = QtGui.QToolButton()
         self.btn_clearPeak.setAutoRaise(True)
         self.btn_clearPeak.setIcon(iconDB.clear_search)
         self.btn_clearPeak.setToolTip(ttipDB.clearall)
         self.btn_clearPeak.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_clearPeak.setIconSize(StyleDB.iconSize)
         
         self.btn_home = QtGui.QToolButton()
         self.btn_home.setAutoRaise(True)
         self.btn_home.setIcon(iconDB.home)
         self.btn_home.setToolTip(ttipDB.home)
         self.btn_home.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_home.setIconSize(StyleDB.iconSize)
         
         self.btn_findPeak = QtGui.QToolButton()
         self.btn_findPeak.setAutoRaise(True)
         self.btn_findPeak.setIcon(iconDB.findPeak2)
         self.btn_findPeak.setToolTip(ttipDB.find_peak)
         self.btn_findPeak.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_findPeak.setIconSize(StyleDB.iconSize)
         
         self.btn_editPeak = QtGui.QToolButton()
         self.btn_editPeak.setAutoRaise(True)
         self.btn_editPeak.setIcon(iconDB.add_point)
         self.btn_editPeak.setToolTip(ttipDB.editPeak)
         self.btn_editPeak.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_editPeak.setIconSize(StyleDB.iconSize)
         
         self.btn_delPeak = QtGui.QToolButton()
         self.btn_delPeak.setAutoRaise(True)
         self.btn_delPeak.setIcon(iconDB.erase)
         self.btn_delPeak.setToolTip(ttipDB.delPeak)
         self.btn_delPeak.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_delPeak.setIconSize(StyleDB.iconSize)
         
         self.btn_pan = QtGui.QToolButton()
         self.btn_pan.setAutoRaise(True)
         self.btn_pan.setIcon(iconDB.pan)
         self.btn_pan.setToolTip(ttipDB.pan)
         self.btn_pan.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_pan.setIconSize(StyleDB.iconSize)
         
         self.btn_MRCalc = QtGui.QToolButton()
         self.btn_MRCalc.setAutoRaise(True)
         self.btn_MRCalc.setIcon(iconDB.MRCalc2)
         self.btn_MRCalc.setToolTip(ttipDB.MRCalc)
         self.btn_MRCalc.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_MRCalc.setIconSize(StyleDB.iconSize)
+        
+        self.btn_Waterlvl_lineStyle = QtGui.QToolButton()
+        self.btn_Waterlvl_lineStyle.setAutoRaise(True)
+        self.btn_Waterlvl_lineStyle.setIcon(iconDB.showDataDots)
+        self.btn_Waterlvl_lineStyle.setToolTip(ttipDB.btn_Waterlvl_lineStyle)
+        self.btn_Waterlvl_lineStyle.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_Waterlvl_lineStyle.setIconSize(StyleDB.iconSize)
                         
         separator1 = QtGui.QFrame()
         separator1.setFrameStyle(StyleDB.VLine)
@@ -174,6 +193,8 @@ class WLCalc(QtGui.QWidget):
         separator2.setFrameStyle(StyleDB.VLine)
         separator3 = QtGui.QFrame()
         separator3.setFrameStyle(StyleDB.VLine)
+        separator4 = QtGui.QFrame()
+        separator4.setFrameStyle(StyleDB.VLine)
         
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -203,21 +224,17 @@ class WLCalc(QtGui.QWidget):
         subgrid_toolbar.addWidget(separator2, row, col)
         col += 1
         subgrid_toolbar.addWidget(self.btn_MRCalc, row, col)
+        col += 1        
+        subgrid_toolbar.addWidget(separator4, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(self.btn_Waterlvl_lineStyle, row, col)
         
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         subgrid_toolbar.setColumnStretch(col+1, 500)
         
-        self.btn_layout_mode.setIconSize(StyleDB.iconSize)
-        self.btn_undo.setIconSize(StyleDB.iconSize)
-        self.btn_clearPeak.setIconSize(StyleDB.iconSize)
-        self.btn_home.setIconSize(StyleDB.iconSize)
-        self.btn_findPeak.setIconSize(StyleDB.iconSize)
-        self.btn_editPeak.setIconSize(StyleDB.iconSize)
-        self.btn_delPeak.setIconSize(StyleDB.iconSize)
-        self.btn_pan.setIconSize(StyleDB.iconSize)
-        self.btn_MRCalc.setIconSize(StyleDB.iconSize)
         
+                        
         toolbar_widget.setLayout(subgrid_toolbar)
         
         #--------------------------------------------------- MRC PARAMETERS ----
@@ -289,6 +306,8 @@ class WLCalc(QtGui.QWidget):
         self.btn_delPeak.clicked.connect(self.delete_peak)
         self.btn_pan.clicked.connect(self.pan_graph)
         self.btn_MRCalc.clicked.connect(self.plot_MRC)
+        self.btn_Waterlvl_lineStyle.clicked.connect(
+                                                 self.change_waterlvl_lineStyle)
         
     def emit_error_message(self, error_text):
         
@@ -567,7 +586,7 @@ class WLCalc(QtGui.QWidget):
         self.ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
         self.ax0.invert_yaxis()
         
-    #--------------------------------------------------------------- LABELS ----
+        #----------------------------------------------------------- LABELS ----
     
         self.ax0.set_ylabel('Water level (mbgs)', fontsize=14, labelpad=25,
                             verticalalignment='top', color='black')
@@ -584,8 +603,8 @@ class WLCalc(QtGui.QWidget):
     
         #---- Water Levels ----
     
-        h1_ax0, = self.ax0.plot(t, x, color='blue', clip_on=True, zorder=10,
-                                marker='None', linestyle='-')
+        self.h1_ax0, = self.ax0.plot(t, x, color='blue', clip_on=True, zorder=10,
+                                     marker='None', linestyle='-')
         
         #---- Peaks ----
                  
@@ -612,6 +631,30 @@ class WLCalc(QtGui.QWidget):
         self.fig_MRC_widget.draw()
         
         self.isGraphExists = True
+        
+    def change_waterlvl_lineStyle(self):
+        
+        if self.isGraphExists == False:
+            print 'Graph is empty'            
+            return
+            
+        print 'coucou'
+        
+        if self.btn_Waterlvl_lineStyle.autoRaise():
+            
+            self.btn_Waterlvl_lineStyle.setAutoRaise(False)
+            
+            plt.setp(self.h1_ax0, markerfacecolor='blue', markersize = 5,
+                     markeredgecolor='blue', markeredgewidth=1.5,
+                     linestyle='none', marker='.')
+            
+        else:
+            
+            self.btn_Waterlvl_lineStyle.setAutoRaise(True)
+            
+            plt.setp(self.h1_ax0, marker='None', linestyle='-')
+            
+        self.fig_MRC_widget.draw()
             
     def mouse_vguide(self, event):
 

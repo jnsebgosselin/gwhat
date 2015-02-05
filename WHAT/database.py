@@ -73,6 +73,7 @@ class icons():
         self.erase2 = QIcon('Icons/erase2.png')
         self.findPeak = QIcon('Icons/find_peak.png')
         self.findPeak2 = QIcon('Icons/find_peak2.png')
+        self.showDataDots = QIcon('Icons/show_datadots.png')
         
 class tooltips():
     
