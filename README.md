@@ -36,7 +36,7 @@ The stand-alone executable for Windows 7 is distributed in a Zip archive that ca
 
 * a folder named WHAT that contains all the necessary system files for the program to run, including the file WHAT.exe from which the software can be started;
 
-* a folder named Project where all input and output files used or created by WHAT are stored by default. In this folder are included samples of input and output files that provide a quick and convenient way to test and learn the various features of the program.
+* a folder named Projects where all input and output files used or created by WHAT are stored by default. In this folder are included samples of input and output files that provide a quick and convenient way to test and learn the various features of the program.
 
 Once the content of the Zip archive has been extracted, the program can be started directly from the WHAT.exe executable file that is contained withing the folder named WHAT. The software can conveniently run from any location on the computer or from any storage device without the need to install the program beforehand.
 
