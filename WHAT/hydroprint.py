@@ -567,7 +567,7 @@ class Hydrograph():
     def draw_weather(self):
         
         #----------------------------------- SUBSAMPLE WEATHER DATA TO PLOT ----
-         
+
         istart = np.where(self.TIMEwk > self.TIMEmin)[0]
         if len(istart) == 0:
             istart = 0
@@ -591,12 +591,13 @@ class Hydrograph():
         
         #------------------------------------------------------ PLOT PRECIP ----
         
-        TIME2X = np.zeros(len(time)*4)
-        Ptot2X = np.zeros(len(time)*4)
-        Rain2X = np.zeros(len(time)*4)
+        TIME2X = np.zeros(len(time) * 4)
+        Ptot2X = np.zeros(len(time) * 4)
+        Rain2X = np.zeros(len(time) * 4)
         
         n = 3.5
         f = 0.85 # Space between individual bar.
+        
         TIME2X[0::4] = time - n * f
         TIME2X[1::4] = time - n * f
         TIME2X[2::4] = time + n * f
@@ -625,7 +626,7 @@ class Hydrograph():
                                             
         self.baseline.set_data([self.TIMEmin, self.TIMEmax], [0, 0])
                                                     
-        #-------------------------------------------------------- PLOT TEMP ----
+        #---------------------------------------------------- PLOT AIR TEMP ----
         
         TIME2X = np.zeros(len(time)*2)
         Tmax2X = np.zeros(len(time)*2)

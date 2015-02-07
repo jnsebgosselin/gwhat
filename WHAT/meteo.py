@@ -26,6 +26,7 @@ import csv
 from calendar import monthrange
 from sys import argv
 from os import path, getcwd
+import time
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -112,7 +113,6 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.btn_open.setToolTip(ttipDB.open)
         self.btn_open.setFocusPolicy(QtCore.Qt.NoFocus)
         
-        graph_title_label = QtGui.QLabel('')
         self.graph_title = QtGui.QLineEdit()
         self.graph_title.setMaxLength(65)
         self.graph_title.setEnabled(False)
@@ -263,7 +263,7 @@ class MeteoObj():
         
         DATA = np.array(reader[11:]).astype('float')
         
-    #---------------------------------------------------------- REMOVE NAN -----
+        #------------------------------------------------------- REMOVE NAN ----
         
         # Remove nan rows at the beginning of the record if any
         for i in range(len(DATA[:, 0])):
@@ -272,14 +272,14 @@ class MeteoObj():
             else:
                 break
             
-         # Remove nan rows at the end of the record if any
+        # Remove nan rows at the end of the record if any
         for i in range(len(DATA[:, 0])):
             if np.all(np.isnan(DATA[-i, 3:])):
                 DATA = np.delete(DATA, -i, axis=0)
             else:
                 break   
             
-    #----------------------------------------------- CHECK TIME CONTINUITY -----
+        #-------------------------------------------- CHECK TIME CONTINUITY ----
         
         #Check if data are continuous over time.
         time_start = xldate_from_date_tuple((DATA[0, 0].astype('int'),
@@ -299,13 +299,13 @@ class MeteoObj():
         #Generate a 1D array with date in numeric format
         TIME = np.arange(time_start, time_end + 1)
         
-    #-------------------------------------------------- REASSIGN VARIABLES -----
+        #----------------------------------------------- REASSIGN VARIABLES ----
                                             
         TMAX = DATA[:, 3]
         TAVG = DATA[:, 5]
         PTOT = DATA[:, 6]        
 
-    #-------------------------------------------------------- ESTIMATE NAN -----
+        #----------------------------------------------------- ESTIMATE NAN ----
 
         PTOT[np.isnan(PTOT)] = 0
         
@@ -313,12 +313,12 @@ class MeteoObj():
         if len(nonanindx) < len(TMAX):
             TMAX = np.interp(TIME, TIME[nonanindx], TMAX[nonanindx])
     
-    #------------------------------------------------------- ESTIMATE RAIN -----
+        #---------------------------------------------------- ESTIMATE RAIN ----
         
         RAIN = np.copy(PTOT)
         RAIN[np.where(TAVG < 0)[0]] = 0
         
-    #---------------------------------------------------- UPDATE CLASS VAR -----
+        #------------------------------------------------- UPDATE CLASS VAR ----
     
         self.TIME = TIME
         self.TMAX = TMAX
@@ -329,27 +329,48 @@ class MeteoObj():
         self.YEAR = DATA[:, 0].astype(int)
         self.MONTH = DATA[:, 1].astype(int)
                 
-    #------------------------------------------ DAILY TO WEEKLY CONVERSION -----        
-              
-        Nbr_week = np.floor(len(TIME) / 7.)
-        TIMEwk = TIME[0] + np.arange(7/2. - 1, 7 * Nbr_week - 7/2., 7)
+        #--------------------------------------- DAILY TO WEEKLY CONVERSION ----        
         
-        TMAXwk = np.zeros(Nbr_week)
-        PTOTwk = np.zeros(Nbr_week)
-        RAINwk = np.zeros(Nbr_week)
-        for i in range(7):   
-            TMAXwk = TMAXwk + TMAX[i:7*Nbr_week + i:7] / 7.
-            PTOTwk = PTOTwk + PTOT[i:7*Nbr_week + i:7]
-            RAINwk = RAINwk + RAIN[i:7*Nbr_week + i:7]
-    
-    #---------------------------------------------------- UPDATE CLASS VAR -----
+        bwidth = 7.
+        nbin = np.floor(len(TIME) / bwidth)
+        
+        TIMEwk = TIME[0] + np.arange(bwidth/2. - 1,
+                                     bwidth * nbin - bwidth/2.,
+                                     bwidth)
+#        TMAXwk = np.zeros(nbin)
+#        PTOTwk = np.zeros(nbin)
+#        RAINwk = np.zeros(nbin)
+#        for i in range(7):   
+#            TMAXwk = TMAXwk + TMAX[i:bwidth*nbin + i:bwidth] / bwidth
+#            PTOTwk = PTOTwk + PTOT[i:bwidth*nbin + i:bwidth]
+#            RAINwk = RAINwk + RAIN[i:bwidth*nbin + i:bwidth]
+            
+        #---- Alternate Method ----
+      
+        TMAXbin = TMAX[:nbin*bwidth].reshape(nbin, bwidth)
+        TMAXbin = np.mean(TMAXbin, axis=1)
+        
+        PTOTbin = PTOT[:nbin*bwidth].reshape(nbin, bwidth)
+        PTOTbin = np.sum(PTOTbin, axis=1)
+        
+        RAINbin = RAIN[:nbin*bwidth].reshape(nbin, bwidth)
+        RAINbin = np.sum(RAINbin, axis=1)
+        
+        nres = len(TIME) - (nbin * bwidth)
+        print nres
+                
+        #------------------------------------------------- UPDATE CLASS VAR ----
 
         self.TIMEwk = TIMEwk
-        self.TMAXwk = TMAXwk
-        self.PTOTwk = PTOTwk
-        self.RAINwk = RAINwk
+#        self.TMAXwk = TMAXwk
+#        self.PTOTwk = PTOTwk
+#        self.RAINwk = RAINwk
         
-    #-------------------------------------------------------- STATION INFO -----        
+        self.TMAXwk = TMAXbin
+        self.PTOTwk = PTOTbin
+        self.RAINwk = RAINbin
+        
+        #----------------------------------------------------- STATION INFO ----
         
         FIELDS = ['Station', 'Province', 'Latitude', 'Longitude', 
                   'Altitude']
