@@ -44,6 +44,7 @@ from xlrd import open_workbook
 #---- PERSONAL IMPORTS ----
 
 import database as db
+import meteo
 
 class LabelDatabase():
     
@@ -70,9 +71,7 @@ class LabelDatabase():
 class Hydrograph():
     
     def __init__(self, parent=None):
-        
-        'Do Nothing'
-        
+      
         self.fig = plt.figure()
         self.fig.patch.set_facecolor('white')
         self.fig.set_size_inches(11, 8.5)
@@ -93,6 +92,11 @@ class Hydrograph():
         self.language = 'English'
         
         self.RAINscale = 20 # Dundurn: 10
+        
+        self.bwidth_indx = 1 # weather bin indx from the interface widget
+        # Options for bin calculations are:
+        # 1 day; 7 days; 15 days; 30 days; monthly; yearly        
+
         self.WLref = 0 # 0: mbgs 1: masl
         self.trend_line = 0
         
@@ -102,6 +106,20 @@ class Hydrograph():
         self.header = HeaderDB.graph_layout
                         
         self.isHydrographExists = False
+        
+        #---- Daily Weather ----
+        
+        self.TIMEmeteo = np.array([])
+        self.TMAX = np.array([])
+        self.PTOT = np.array([])        
+        self.RAIN = np.array([])
+        
+        #---- Bin Redistributed Weather ----
+        
+        self.bTIME = np.array([])
+        self.bTMAX = np.array([])
+        self.bPTOT = np.array([])
+        self.bRAIN = np.array([])
         
     #----------------------------------------------------- graph_layout.lst ----
                         
@@ -283,25 +301,28 @@ class Hydrograph():
        
         self.name_well = WaterLvlObj.name_well          
                 
-        fname_info = self.finfo
+#        fname_info = self.finfo
               
         self.date_labels_display_pattern = 2
         RAINscale = self.RAINscale
-        
-        # Font size is multiplied by a ratio in order to keep the preview
-        # and the final saved figure to the same scale. The preview
-        # figure's size is modified when the UI is generated and depends
-        # on the screen resolution. (Old method, will eventually completely
-        # disapeared from the code)
-        
-        self.label_font_size = 14 * fheight / 8.5
+       
+        self.label_font_size = 14
         
         #---- Assign Weather Data ----
         
-        self.TIMEwk = MeteoObj.TIMEwk
-        self.TMAXwk = MeteoObj.TMAXwk
-        self.PTOTwk = MeteoObj.PTOTwk
-        self.RAINwk = MeteoObj.RAINwk
+        self.TIMEmeteo = MeteoObj.TIME # Time in numeric format (days)
+        self.TMAX = MeteoObj.TMAX # Daily maximum temperature (deg C)
+        self.PTOT = MeteoObj.PTOT # Daily total precipitation (mm)        
+        self.RAIN = MeteoObj.RAIN
+        
+        #---- Resample Data in Bins ----
+        
+        self.resample_bin()
+        
+#        self.TIMEwk = MeteoObj.TIMEwk
+#        self.TMAXwk = MeteoObj.TMAXwk
+#        self.PTOTwk = MeteoObj.PTOTwk
+#        self.RAINwk = MeteoObj.RAINwk
         
         self.name_meteo = MeteoObj.station_name
         
@@ -318,16 +339,23 @@ class Hydrograph():
         
         self.bottom_margin = 0.75  
         
-        #---Time (host)---
-        self.ax1 = self.fig.add_axes([0, 0, 1, 1])        
-        #---Water Levels---
+        #--- Time (host) ---
+        
+        self.ax1 = self.fig.add_axes([0, 0, 1, 1])
+        
+        #--- Water Levels ---
+        
         self.ax2 = self.ax1.twinx()
         self.ax2.set_zorder(self.ax1.get_zorder()+10)
-        #---Precipitation---
+        
+        #--- Precipitation ---
+        
         self.ax3 = self.ax2.twinx()
         self.ax3.set_zorder(self.ax2.get_zorder()+10)
         self.ax3.set_navigate(False)
-        #---Air Temperature---
+        
+        #--- Air Temperature ---
+        
         self.ax4 = self.ax2.twinx()
         self.ax4.set_zorder(self.ax3.get_zorder()+10)
         self.ax4.set_navigate(False)
@@ -488,24 +516,19 @@ class Hydrograph():
                     
         #----------------------------------------------- MISSING VALUE PTOT ----
 
-        if fname_info:
-            
-#            self.dZGrid_inch
-            
-            Ptot_missing_time, _ = load_weather_log(fname_info,
-                                                    'Total Precip (mm)', 
-                                                    self.TIMEwk, self.PTOTwk)
-                                                    
-            self.NMissPtot = len(Ptot_missing_time)
-            
-            y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
-            
-            self.line_missing_Ptot, = self.ax3.plot(Ptot_missing_time, y, '.r')
-               
-            plt.setp(self.line_missing_Ptot, markersize=3)  
-               
-#            plt.setp(self.line_missing_Ptot, markerfacecolor=(1, 0.25, 0.25),
-#                     markeredgecolor='none', markersize=5)
+#        if fname_info:
+#            
+#            Ptot_missing_time, _ = load_weather_log(fname_info,
+#                                                    'Total Precip (mm)', 
+#                                                    self.TIMEwk, self.PTOTwk)
+#                                                    
+#            self.NMissPtot = len(Ptot_missing_time)
+#            
+#            y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
+#            
+#            self.line_missing_Ptot, = self.ax3.plot(Ptot_missing_time, y, '.r')
+#               
+#            plt.setp(self.line_missing_Ptot, markersize=3)  
     
         #-------------------------------------------------- AIR TEMPERATURE ----
           
@@ -531,18 +554,15 @@ class Hydrograph():
         
         #---- Air Temperature ----
         
-        if fname_info:
-            Temp_missing_time, _ = load_weather_log(
-                                   fname_info, 'Max Temp (deg C)',
-                                   self.TIMEwk, self.TMAXwk)
-            
-            h1_ax4, = self.ax4.plot(Temp_missing_time, 
-                              np.ones(len(Temp_missing_time)) * 35, '.r')
-            plt.setp(h1_ax4, markersize=3)                
-                              
-#            plt.setp(h1_ax4, markerfacecolor=(1, 0.25, 0.25),
-#                     markeredgecolor='none', markersize=5)
-        
+#        if fname_info:
+#            Temp_missing_time, _ = load_weather_log(
+#                                   fname_info, 'Max Temp (deg C)',
+#                                   self.TIMEwk, self.TMAXwk)
+#            
+#            h1_ax4, = self.ax4.plot(Temp_missing_time, 
+#                              np.ones(len(Temp_missing_time)) * 35, '.r')
+#            plt.setp(h1_ax4, markersize=3)                
+                                      
         #----------------------------------------------------------- LEGEND ----
              
         if self.isLegend == True:
@@ -555,7 +575,8 @@ class Hydrograph():
             
             self.ax4.legend([rec1, rec2, rec3, h1_ax4], labels,
                             loc=[0.01, 0.45], numpoints=1, fontsize=10)
-
+        
+        
         self.draw_weather()
                 
         #----------------------------------------------------- DRAW YLABELS ----
@@ -564,11 +585,37 @@ class Hydrograph():
         
         self.isHydrographExists = True
         
+    def resample_bin(self):
+        
+        # 1 day; 7 days; 15 days; 30 days; monthly; yearly  
+        self.bwidth = [1., 7., 15., 30., 30., 365.][self.bwidth_indx]
+        bwidth = self.bwidth
+        
+        if self.bwidth_indx == 0:
+            
+            self.bTIME = np.copy(self.TIMEmeteo)
+            self.bTMAX = np.copy(self.TMAX)
+            self.bPTOT = np.copy(self.PTOT)
+            self.bRAIN = np.copy(self.RAIN)
+
+        elif self.bwidth_indx in [1, 2, 3]: #7 days; 15 days; 30 days
+
+            self.bTIME = meteo.bin_sum(self.TIMEmeteo, bwidth) / bwidth
+            self.bTMAX = meteo.bin_sum(self.TMAX, bwidth) / bwidth
+            self.bPTOT = meteo.bin_sum(self.PTOT, bwidth)
+            self.bRAIN = meteo.bin_sum(self.RAIN, bwidth)            
+
+        elif self.bwidth_indx == 4 : # monthly
+            print 'option not yet available, kept default of 1 day'
+
+        elif self.bwidth_indx == 5 : # yearly
+            print 'option not yet available, kept default of 1 day'
+        
     def draw_weather(self):
         
         #----------------------------------- SUBSAMPLE WEATHER DATA TO PLOT ----
-
-        istart = np.where(self.TIMEwk > self.TIMEmin)[0]
+        
+        istart = np.where(self.bTIME > self.TIMEmin)[0]
         if len(istart) == 0:
             istart = 0
         else:
@@ -576,18 +623,18 @@ class Hydrograph():
             if istart > 0:
                 istart -= 1
         
-        iend = np.where(self.TIMEwk < self.TIMEmax)[0]
+        iend = np.where(self.bTIME < self.TIMEmax)[0]
         if len(iend) == 0:
             iend = 0
         else:
             iend = iend[-1]
-            if iend < len(self.TIMEwk):
+            if iend < len(self.bTIME):
                 iend += 1
 
-        time = self.TIMEwk[istart:iend]
-        Tmax = self.TMAXwk[istart:iend]
-        Ptot = self.PTOTwk[istart:iend]
-        Rain = self.RAINwk[istart:iend]
+        time = self.bTIME[istart:iend]
+        Tmax = self.bTMAX[istart:iend]
+        Ptot = self.bPTOT[istart:iend]
+        Rain = self.bRAIN[istart:iend]
         
         #------------------------------------------------------ PLOT PRECIP ----
         
@@ -595,7 +642,7 @@ class Hydrograph():
         Ptot2X = np.zeros(len(time) * 4)
         Rain2X = np.zeros(len(time) * 4)
         
-        n = 3.5
+        n = self.bwidth / 2.
         f = 0.85 # Space between individual bar.
         
         TIME2X[0::4] = time - n * f
@@ -631,7 +678,7 @@ class Hydrograph():
         TIME2X = np.zeros(len(time)*2)
         Tmax2X = np.zeros(len(time)*2)
         
-        n = 3.5
+        n = self.bwidth / 2.
         TIME2X[0:2*len(time)-1:2] = time - n
         TIME2X[1:2*len(time):2] = time + n
         Tmax2X[0:2*len(time)-1:2] = Tmax

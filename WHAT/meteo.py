@@ -346,6 +346,9 @@ class MeteoObj():
 #            RAINwk = RAINwk + RAIN[i:bwidth*nbin + i:bwidth]
             
         #---- Alternate Method ----
+        
+        TIMEbin = TIME[:nbin*bwidth].reshape(nbin, bwidth)
+        TIMEbin = np.mean(TIMEbin, axis=1)
       
         TMAXbin = TMAX[:nbin*bwidth].reshape(nbin, bwidth)
         TMAXbin = np.mean(TMAXbin, axis=1)
@@ -365,18 +368,16 @@ class MeteoObj():
 #        self.TMAXwk = TMAXwk
 #        self.PTOTwk = PTOTwk
 #        self.RAINwk = RAINwk
-        
+        self.TIMEwk = TIMEbin
         self.TMAXwk = TMAXbin
         self.PTOTwk = PTOTbin
         self.RAINwk = RAINbin
         
         #----------------------------------------------------- STATION INFO ----
         
-        FIELDS = ['Station', 'Province', 'Latitude', 'Longitude', 
-                  'Altitude']
+        FIELDS = ['Station', 'Province', 'Latitude', 'Longitude', 'Altitude']
                   
-        info = '''<table border="0" cellpadding="2" cellspacing="0" 
-                   align="left">'''
+        info = '<table border="0" cellpadding="2" cellspacing="0" align="left">'
         for i in range(len(FIELDS)):
             
             try:                 
@@ -393,7 +394,25 @@ class MeteoObj():
         info += '</table>'
         
         self.info = info
-        
+    
+#===============================================================================
+def bin_sum(x, bwidth):
+    """
+    Sum data x over bins of width "bwidth" starting at indice 0 of x.
+    If there is residual data at the end because of the last bin being not
+    complete, data are rejected and removed from the reshaped series.
+    """
+#===============================================================================
+
+    nbin = np.floor(len(x) / bwidth)
+    
+    bheight = x[:nbin*bwidth].reshape(nbin, bwidth)
+    bheight = np.sum(bheight, axis=1)
+    
+    nres = len(x) - (nbin * bwidth)
+    print nres
+    
+    return bheight
 
 #===============================================================================
 def make_timeserie_continuous(DATA):
