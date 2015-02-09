@@ -64,7 +64,7 @@ import envirocan
 from fill_weather_data import Weather_File_Info
 import imageviewer
 import waterlvl_calc
-import manage_project
+import new_project
 
 # The code is segmented in two main sections: the GUI section and the
 # WORKER sections.
@@ -106,41 +106,51 @@ import manage_project
 # Tab area and are only used to give information to the user about the 
 # state and activities of the main program.
 
+#===============================================================================
 class MainWindow(QtGui.QMainWindow):
-    
-    
+        
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-        
-        self.project_name = 'Default'
+#===============================================================================
         
         self.initUI()
-    
-    # A generic widget is first set as the central widget of the
-    # MainWindow. Then, a QGridLayout is applied to this central
-    # widget. Two widgets are then added to the central widget's grid:
-    # (1) a Qsplitter widget on top and (2) a QProgressBar on the
-    # bottom.
-    #    
-    # Two additional widgets are then added to the Qsplitter widget:
-    # (1) a QTabWidget and (2) a QTextEdit widget that is the console 
-    # terminal that was discussed above.
-    #
-    # The QTabWidget is composed of four tabs. Each
-    # tab is defined within its own class that are child classes of the
-    # MainWindow class. The layout of each tab is handled with a
-    # QGridLayout.
-    
-    def initUI(self):        
         
-        #-------------------------------------------- LOAD WHAT PREFERENCES ----
-                
-        self.what_pref = WHATPref(self)
-        self.what_pref.load_pref_file()
-
-        #----------------------------------------------- GENERATE DATABASES ----
+    #---------------------------------------------------------------------------
+    def initUI(self):
+        """
+        A generic widget is first set as the central widget of the
+        MainWindow. Then, a QGridLayout is applied to this central
+        widget. Two widgets are then added to the central widget's grid:
+        (1) a Qsplitter widget on top and (2) a QProgressBar on the
+        bottom.
+        
+        Two additional widgets are then added to the Qsplitter widget:
+        (1) a QTabWidget and (2) a QTextEdit widget that is the console 
+        terminal that was discussed above.
     
-        language = self.what_pref.language
+        The QTabWidget is composed of four tabs. Each
+        tab is defined within its own class that are child classes of the
+        MainWindow class. The layout of each tab is handled with a
+        QGridLayout.
+        """
+    #---------------------------------------------------------------------------
+        
+        #-------------------------------------------------- CLASS INSTANCES ----
+        
+        self.projectInfo = MyProject(self)
+        self.whatPref = WHATPref(self)
+        self.new_project_window = new_project.NewProject(software_version)
+        
+        #------------------------------------------------------ PREFERENCES ----
+                
+        self.whatPref.load_pref_file()
+        
+        language = self.whatPref.language
+        
+        self.projectfile = self.whatPref.projectfile
+        self.projectdir = path.dirname(self.projectfile)
+        
+        #-------------------------------------------------------- DATABASES ----
         
         global LabelDB    
         LabelDB = db.labels(language)
@@ -187,12 +197,6 @@ class MainWindow(QtGui.QMainWindow):
         self.btn_new_project.setIcon(iconDB.new_project)
         self.btn_new_project.setToolTip(ttipDB.new_project)
         self.btn_new_project.setFocusPolicy(QtCore.Qt.NoFocus)
-        
-#        self.btn_open_project = QtGui.QToolButton()
-#        self.btn_open_project.setAutoRaise(True)
-#        self.btn_open_project.setIcon(iconDB.open_project)
-#        self.btn_open_project.setToolTip(ttipDB.open_project)
-#        self.btn_open_project.setFocusPolicy(QtCore.Qt.NoFocus)
                 
         self.menubar_widget = QtGui.QWidget()
         subgrid_menubar = QtGui.QGridLayout()
@@ -204,13 +208,11 @@ class MainWindow(QtGui.QMainWindow):
         subgrid_menubar.addWidget(self.project_display, row, col)
         col += 1
         subgrid_menubar.addWidget(self.btn_new_project, row, col)
-#        col += 1
-#        subgrid_menubar.addWidget(self.btn_open_project, row, col)
         
         subgrid_menubar.setSpacing(3)
         subgrid_menubar.setContentsMargins(0, 0, 0, 5) #Left, Top, Right, Bottom 
         subgrid_menubar.setColumnStretch(1, 500)
-#        subgrid_menubar.setColumnMinimumWidth(1, 200)
+        subgrid_menubar.setColumnMinimumWidth(1, 100)
         subgrid_menubar.setRowMinimumHeight(0, 28)
         
         self.menubar_widget.setLayout(subgrid_menubar)
@@ -266,32 +268,66 @@ class MainWindow(QtGui.QMainWindow):
         main_widget.setLayout(mainGrid)
         self.pbar.hide()
         
-    #--------------------------------------------------------------- EVENTS ----
+        #----------------------------------------------------------- EVENTS ----
         
-#        self.btn_open_project.clicked.connect(self.select_project_dir)
         self.btn_new_project.clicked.connect(self.show_new_project)
-        self.project_display.clicked.connect(self.select_project_dir)
-       
-    #----------------------------------------------------------------- INIT ----
-                
-        self.load_project_dir(self.what_pref.project_dir)
-        self.new_project_window = manage_project.NewProject(software_version)
+        self.project_display.clicked.connect(self.select_project)
         
-    #===========================================================================  
+        #---------------------------------------------------- MESSAGE BOXES ----
+        
+        self.msgError = QtGui.QMessageBox()
+        self.msgError.setIcon(QtGui.QMessageBox.Warning)
+        self.msgError.setWindowTitle('Error Message')
+                   
+        #------------------------------------------------------------- SHOW ----
+            
+        self.show()
+        
+        qr = self.frameGeometry()
+        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+        
+        #------------------------------------------------- CHECK IF PROJECT ----
+        
+        isProjectExists = self.check_project()
+        
+        if isProjectExists:
+
+            self.projectInfo.load_project_info(self.projectfile)
+            self.projectdir = path.dirname(self.projectfile)
+            self.load_project()
+            
+        else:
+            
+            self.tab_dwnld_data.setEnabled(False)    
+            self.tab_fill.setEnabled(False)     
+            self.tab_hydrograph.setEnabled(False)
+            
+            msgtxt = '''
+                     <b>Unable to read the project file.<br><br>
+                     %s does not exist.<br><br> Please open an existing
+                     project or create a new one.<b>
+                     ''' % self.projectfile
+            
+            self.msgError.setText(msgtxt)
+            self.msgError.exec_()
+                
+    #---------------------------------------------------------------------------  
     def write2console(self, console_text):
         '''
         This function is the bottle neck through which all messages writen in
         the console window must go through.
         '''
-    #===========================================================================
+    #---------------------------------------------------------------------------
         
         textime = '<font color=black>[' + ctime()[4:-8] + '] </font>'
                         
         self.main_console.append(textime + console_text)
     
-    #===========================================================================    
+    #---------------------------------------------------------------------------    
     def show_new_project(self):
-    #===========================================================================
+    #---------------------------------------------------------------------------
 
         #---- Center Widget to Main Window ----
         
@@ -307,54 +343,52 @@ class MainWindow(QtGui.QMainWindow):
         self.new_project_window.show()
         self.new_project_window.setFixedSize(self.new_project_window.size())
             
-    #===========================================================================
-    def select_project_dir(self):
+    #---------------------------------------------------------------------------
+    def select_project(self):
         '''
-        <select_project_dir> is called by the event <btn_open_project.clicked>.
+        <select_project> is called by the event <btn_open_project.clicked>.
         It allows the user to select a new active project directory.
         '''
-    #===========================================================================
+    #---------------------------------------------------------------------------
         
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                 self, 'Open Project', '../Projects', '*.what')
                                    
         if filename:
-            self.load_project_info(filename)
-            dirname = path.dirname(filename)
-            self.load_project_dir(dirname)
 
-    #===========================================================================
-    def load_project_info(self, filename):
-    #===========================================================================
-        
-        print 'Loading project info'
-        
-        reader = open(filename, 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-            
-        self.project_name = reader[0][1]                                   
+            self.projectfile = filename                        
+            self.load_project()
                                    
-    #===========================================================================
-    def load_project_dir(self, project_dir):
+    #---------------------------------------------------------------------------
+    def load_project(self):
         '''
         This method is called either on startup during <initUI> or when a new
-        project folder is chosen with <select_project_dir>.        
+        project folder is chosen with <select_project>.        
         '''
-    #===========================================================================
+    #---------------------------------------------------------------------------
+
+        self.projectdir = path.dirname(self.projectfile)
         
-        self.what_pref.project_dir = project_dir
+        #----Update WHAT.pref file ----
+            
+        self.whatPref.projectfile = self.projectfile
+        self.whatPref.save_pref_file()
         
-        #---- WHAT.pref file ----
+        #---- Check Project ----
         
-        self.what_pref.save_pref_file()
-        self.what_pref.load_pref_file()  
-        # self.what_pref.load_pref_file() is called to make sure the folders
-        # and files hierarchy are ok.        
+        self.check_project()
+        
+        #---- Load Project Info ----
+        
+        self.projectInfo.load_project_info(self.projectfile)
         
         #---- Update UI ----
         
-        self.project_display.setText(self.project_name)
+        self.tab_dwnld_data.setEnabled(True)    
+        self.tab_fill.setEnabled(True)     
+        self.tab_hydrograph.setEnabled(True)
+        
+        self.project_display.setText(self.projectInfo.name)
         self.project_display.adjustSize()
         
         #---- Load Weather Station List ----
@@ -367,11 +401,89 @@ class MainWindow(QtGui.QMainWindow):
         
         # ----- RESET UI Memory Variables -----
         
-        self.tab_hydrograph.meteo_dir = project_dir + '/Meteo/Output'
-        self.tab_hydrograph.waterlvl_dir = project_dir + '/Water Levels'
-        self.tab_hydrograph.save_fig_dir = project_dir
+        self.tab_hydrograph.meteo_dir = self.projectdir + '/Meteo/Output'
+        self.tab_hydrograph.waterlvl_dir = self.projectdir + '/Water Levels'
+        self.tab_hydrograph.save_fig_dir = self.projectdir
         
-        self.tab_hydrograph.weather_avg_graph.save_fig_dir = project_dir
+        self.tab_hydrograph.weather_avg_graph.save_fig_dir = self.projectdir
+        
+    #---------------------------------------------------------------------------
+    def check_project(self):
+        """
+        Check if all files and folders associated with the .what file are
+        presents in the project folder. If some files or folders are missing,
+        the program will automatically generate new ones.
+        
+        If the project.what file does not exist anymore, it returns a False
+        answer, which should tell the code on the UI side to deactivate the  UI.
+        """
+    #---------------------------------------------------------------------------
+        
+        HeaderDB = db.headers()
+        
+        if not path.exists(self.projectfile):
+            print 'Project file does not exist.'
+            return False
+            
+        #---- System project folder organization ----
+       
+        if not path.exists(self.projectdir + '/Meteo/Raw'):
+            makedirs(self.projectdir + '/Meteo/Raw')
+        if not path.exists(self.projectdir + '/Meteo/Input'):
+            makedirs(self.projectdir + '/Meteo/Input')
+        if not path.exists(self.projectdir + '/Meteo/Output'):
+            makedirs(self.projectdir + '/Meteo/Output')
+        if not path.exists(self.projectdir + '/Water Levels'):
+            makedirs(self.projectdir + '/Water Levels')
+            
+        #---- waterlvl_manual_measurements.xls ----
+        
+        fname = self.projectdir + '/waterlvl_manual_measurements.xls'
+        if not path.exists(fname):
+            
+            msg = ('No "waterlvl_manual_measurements.xls" file found. ' +
+                   'A new one has been created.')
+            print msg
+            
+            # http://stackoverflow.com/questions/13437727
+            book = xlwt.Workbook(encoding="utf-8")
+            sheet1 = book.add_sheet("Sheet 1")
+            sheet1.write(0, 0, 'Well_ID')
+            sheet1.write(0, 1, 'Time (days)')
+            sheet1.write(0, 2, 'Obs. (mbgs)')
+            book.save(fname)
+            
+        #---- weather_stations.lst ----
+                
+        fname = self.projectdir + '/weather_stations.lst'
+        if not path.exists(fname):
+            
+            msg = ('No "weather_stations.lst" file found. ' +
+                   'A new one has been created.')
+            print msg
+            
+            fcontent = HeaderDB.weather_stations
+            
+            with open(fname, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(fcontent)
+        
+        #---- graph_layout.lst ----
+        
+        filename = self.projectdir + '/graph_layout.lst'
+        if not path.exists(filename):
+            
+            fcontent = HeaderDB.graph_layout
+                        
+            msg = ('No "graph_layout.lst" file found. ' +
+                   'A new one has been created.')
+            print msg
+
+            with open(filename, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(fcontent)
+                
+        return True
                     
 ################################################################ @TAB HYDROGRAPH
         
@@ -407,12 +519,20 @@ class TabHydrograph(QtGui.QWidget):
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
+        #-------------------------------------------------------- DATABASES ----
+        
+        language = self.parent.whatPref.language
+        
+        LabelDB = db.labels(language)
+        iconDB = db.icons()
+        styleDB = db.styleUI()
+        ttipDB = db.tooltips(language)
+        
         #----------------------------------------------- WEATHER AVG WINDOW ----
         
         self.weather_avg_graph = meteo.WeatherAvgGraph()
-        
-        project_dir = self.parent.what_pref.project_dir
-        self.weather_avg_graph.save_fig_dir = project_dir
+        projectdir = self.parent.projectdir
+        self.weather_avg_graph.save_fig_dir = projectdir
         
         #---------------------------------------------------- waterlvl_calc ----
         
@@ -475,11 +595,11 @@ class TabHydrograph(QtGui.QWidget):
         btn_save.setToolTip(ttipDB.save_hydrograph)
 
         separator1 = QtGui.QFrame()
-        separator1.setFrameStyle(StyleDB.VLine)
+        separator1.setFrameStyle(styleDB.VLine)
         separator2 = QtGui.QFrame()
-        separator2.setFrameStyle(StyleDB.VLine)
+        separator2.setFrameStyle(styleDB.VLine)
         separator3 = QtGui.QFrame()
-        separator3.setFrameStyle(StyleDB.VLine)                    
+        separator3.setFrameStyle(styleDB.VLine)                    
                                      
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -521,15 +641,15 @@ class TabHydrograph(QtGui.QWidget):
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         
-        btn_loadConfig.setIconSize(StyleDB.iconSize)
-        btn_saveConfig.setIconSize(StyleDB.iconSize)
-        btn_bestfit_waterlvl.setIconSize(StyleDB.iconSize)
-        btn_bestfit_time.setIconSize(StyleDB.iconSize)
-        btn_closest_meteo.setIconSize(StyleDB.iconSize)
-        btn_weather_normals.setIconSize(StyleDB.iconSize)
-        btn_draw.setIconSize(StyleDB.iconSize)
-        btn_save.setIconSize(StyleDB.iconSize)
-        self.btn_work_waterlvl.setIconSize(StyleDB.iconSize)
+        btn_loadConfig.setIconSize(styleDB.iconSize)
+        btn_saveConfig.setIconSize(styleDB.iconSize)
+        btn_bestfit_waterlvl.setIconSize(styleDB.iconSize)
+        btn_bestfit_time.setIconSize(styleDB.iconSize)
+        btn_closest_meteo.setIconSize(styleDB.iconSize)
+        btn_weather_normals.setIconSize(styleDB.iconSize)
+        btn_draw.setIconSize(styleDB.iconSize)
+        btn_save.setIconSize(styleDB.iconSize)
+        self.btn_work_waterlvl.setIconSize(styleDB.iconSize)
         
         toolbar_widget.setLayout(subgrid_toolbar)
      
@@ -537,14 +657,14 @@ class TabHydrograph(QtGui.QWidget):
        
         btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
         btn_waterlvl_dir.setIcon(iconDB.openFile)
-        btn_waterlvl_dir.setIconSize(StyleDB.iconSize2)
+        btn_waterlvl_dir.setIconSize(styleDB.iconSize2)
         self.well_info_widget = QtGui.QTextEdit()
         self.well_info_widget.setReadOnly(True)
         self.well_info_widget.setFixedHeight(150)
         
         btn_weather_dir = QtGui.QPushButton(' Weather Data File')
         btn_weather_dir.setIcon(iconDB.openFile)
-        btn_weather_dir.setIconSize(StyleDB.iconSize2)
+        btn_weather_dir.setIconSize(styleDB.iconSize2)
         self.meteo_info_widget = QtGui.QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
         self.meteo_info_widget.setFixedHeight(150)
@@ -576,7 +696,7 @@ class TabHydrograph(QtGui.QWidget):
         self.date_end_widget.setAlignment(QtCore.Qt.AlignCenter)
         
         widget_time_scale = QtGui.QFrame()
-        widget_time_scale.setFrameStyle(0)  # StyleDB.frame 
+        widget_time_scale.setFrameStyle(0)  # styleDB.frame 
         grid_time_scale = QtGui.QGridLayout()
         
         row = 0
@@ -612,7 +732,7 @@ class TabHydrograph(QtGui.QWidget):
         self.waterlvl_max.setMaximum(1000)
         
         self.subgrid_WLScale_widget = QtGui.QFrame()
-        self.subgrid_WLScale_widget.setFrameStyle(0) # StyleDB.frame
+        self.subgrid_WLScale_widget.setFrameStyle(0) # styleDB.frame
         subgrid_WLScale = QtGui.QGridLayout()
         
         row = 0
@@ -753,7 +873,7 @@ class TabHydrograph(QtGui.QWidget):
         #-------------------------------------------------------- MAIN GRID ----
                 
         mainGrid_VLine1 = QtGui.QFrame()
-        mainGrid_VLine1.setFrameStyle(StyleDB.VLine)
+        mainGrid_VLine1.setFrameStyle(styleDB.VLine)
         
         mainGrid = QtGui.QGridLayout()
         
@@ -932,12 +1052,12 @@ class TabHydrograph(QtGui.QWidget):
         
         #----- Load Manual Measures -----
         
-        filename = self.parent.what_pref.project_dir
+        filename = self.parent.projectdir
         filename += '/waterlvl_manual_measurements.xls'
         
         if not path.exists(filename):
             # Force the creation of a new 'waterlvl_manual_measurements.csv'
-            self.parent.what_pref.load_pref_file()
+            self.parent.check_project()
         
         self.waterlvl_data.load_waterlvl_measures(filename, name_well)
         
@@ -960,7 +1080,7 @@ class TabHydrograph(QtGui.QWidget):
     
     def check_if_layout_exist(self, name_well):
         
-        filename = self.parent.what_pref.project_dir + '/graph_layout.lst'
+        filename = self.parent.projectdir + '/graph_layout.lst'
         if not path.exists(filename):
             # Force the creation of a new "graph_layout.lst" file
             self.parent.what_pref.load_pref_file()
@@ -991,7 +1111,7 @@ class TabHydrograph(QtGui.QWidget):
             
     def select_closest_meteo_file(self):
                 
-        meteo_folder = self.parent.what_pref.project_dir + '/Meteo/Output'
+        meteo_folder = self.parent.projectdir + '/Meteo/Output'
         
         if path.exists(meteo_folder) and self.fwaterlvl:
             
@@ -1127,7 +1247,7 @@ class TabHydrograph(QtGui.QWidget):
         
         #------------------------------------------- Check if Layout Exists ----
                 
-        filename = self.parent.what_pref.project_dir + '/graph_layout.lst'
+        filename = self.parent.projectdir + '/graph_layout.lst'
         if not path.exists(filename):
             # Force the creation of a new "graph_layout.lst" file
             self.parent.what_pref.load_pref_file()
@@ -1232,7 +1352,7 @@ class TabHydrograph(QtGui.QWidget):
             
         #------------------------------------------- Check if Layout Exists ----
             
-        filename = self.parent.what_pref.project_dir + '/graph_layout.lst'
+        filename = self.parent.projectdir + '/graph_layout.lst'
         if not path.exists(filename):
             # Force the creation of a new "graph_layout.lst" file
             self.parent.what_pref.load_pref_file()
@@ -1261,7 +1381,7 @@ class TabHydrograph(QtGui.QWidget):
     def save_graph_layout(self, name_well):
         
         self.update_graph_layout_parameter()
-        filename = self.parent.what_pref.project_dir + '/graph_layout.lst'
+        filename = self.parent.projectdir + '/graph_layout.lst'
         self.hydrograph2display.save_layout(name_well, filename)
         self.parent.write2console(
         '''<font color=black>Graph layout saved successfully
@@ -2011,7 +2131,7 @@ class TabDwnldData(QtGui.QWidget):
         
         #---- Save List ----
         
-        projectdir = self.parent.what_pref.project_dir        
+        projectdir = self.parent.projectdir        
         fname = projectdir + '/weather_stations.lst'    
         with open(fname, 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
@@ -2033,7 +2153,7 @@ class TabDwnldData(QtGui.QWidget):
         '''
     #===========================================================================
         
-        dirname = self.parent.what_pref.project_dir
+        dirname = self.parent.projectdir
         
         
         fname, _ = QtGui.QFileDialog.getOpenFileName(
@@ -2073,7 +2193,7 @@ class TabDwnldData(QtGui.QWidget):
         This method is started either either :
         
         (1) when a new project folder is loaded in 
-            <MainWindow.load_project_dir>
+            <MainWindow.load_project>
         (2) after a search has been completed for weather stations in 
             <search4stations>
         (3) When a station list is loaded manually by the user from method
@@ -2105,8 +2225,7 @@ class TabDwnldData(QtGui.QWidget):
         
         self.staName_display.clear()
         self.staList = []        
-        station_list_path = (self.parent.what_pref.project_dir + 
-                             '/weather_stations.lst')
+        station_list_path = (self.parent.projectdir + '/weather_stations.lst')
                                       
         # Force the creation of a new "weather_station.lst" file
         if not path.exists(station_list_path):
@@ -2358,7 +2477,7 @@ class TabDwnldData(QtGui.QWidget):
         '''
     #===========================================================================
         
-        dialog_fir = self.parent.what_pref.project_dir + '/Meteo/Raw'
+        dialog_fir = self.parent.projectdir + '/Meteo/Raw'
         
         fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files', 
                                                       dialog_fir, '*.csv')
@@ -2407,7 +2526,7 @@ class TabDwnldData(QtGui.QWidget):
             trantab = maketrans(intab, outtab)
             StaName = StaName.translate(trantab)
             
-            project_dir = self.parent.what_pref.project_dir
+            project_dir = self.parent.projectdir
             save_dir = project_dir + '/Meteo/Input/'
             if not path.exists(save_dir):
                 makedirs(save_dir)
@@ -2443,7 +2562,7 @@ class TabDwnldData(QtGui.QWidget):
             trantab = maketrans(intab, outtab)
             StaName = StaName.translate(trantab)
             
-            project_dir = self.parent.what_pref.project_dir
+            project_dir = self.parent.projectdir
             filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
                                               YearStart, YearEnd)
             dialog_dir = project_dir + '/Meteo/Input/' + filename
@@ -2540,7 +2659,7 @@ class TabDwnldData(QtGui.QWidget):
             climateID = self.staList[sta_index, 5]
             self.dwnl_rawfiles.climateID = climateID
             
-            dirname = self.parent.what_pref.project_dir + '/Meteo/Raw'           
+            dirname = self.parent.projectdir + '/Meteo/Raw'           
             self.dwnl_rawfiles.dirname = dirname                
              
             #----- Start Download -----
@@ -2924,7 +3043,7 @@ class TabFill(QtGui.QWidget):
         self.CORRFLAG = 'off' # Correlation calculation won't be triggered when
                               # this is s'off'
         
-        input_folder = self.parent.what_pref.project_dir + '/Meteo/Input'
+        input_folder = self.parent.projectdir + '/Meteo/Input'
         
         if path.exists(input_folder):            
             
@@ -2936,7 +3055,7 @@ class TabFill(QtGui.QWidget):
             
             if len(Sta_path) > 0:
                 self.WEATHER.load_and_format_data(Sta_path)
-                self.WEATHER.generate_summary(self.parent.what_pref.project_dir)
+                self.WEATHER.generate_summary(self.parent.projectdir)
                 self.set_fill_and_save_dates()
                 
                 self.target_station.addItems(self.WEATHER.STANAME)
@@ -3127,7 +3246,7 @@ class TabFill(QtGui.QWidget):
         
         #---- Pass information to the worker ----
         
-        self.fillworker.project_dir = self.parent.what_pref.project_dir
+        self.fillworker.project_dir = self.parent.projectdir
         
         self.fillworker.time_start = time_start
         self.fillworker.time_end = time_end                       
@@ -3208,7 +3327,7 @@ class TabFill(QtGui.QWidget):
         
         #---- Pass information to the worker ----
         
-        self.fillworker.project_dir = self.parent.what_pref.project_dir
+        self.fillworker.project_dir = self.parent.projectdir
         
         self.fillworker.time_start = time_start
         self.fillworker.time_end = time_end                       
@@ -4764,34 +4883,43 @@ def L1LinearRegression(X, Y):
 
 #===============================================================================    
 class WHATPref():
+    """
+    This class contains all the preferences relative to the WHAT interface,
+    including:
+    
+    projectfile: It is a memory variable. It indicates upon launch to the 
+                 program what was the project that was opened when last time the
+                 program was closed.
+                
+    language: Language in which the GUI is displayed (not the labels of graphs).
+    """
 #===============================================================================
 
     
     def __init__(self, parent=None):
      
         if platform.system() == 'Windows':
-            self.projectfile = '..\Projects\Example\example.what'
+            self.projectfile = '..\Projects\Example\Example.what'
         elif platform.system() == 'Linux':
-            self.projectfile = '../Projects/Example/example.what'
-            
-        self.project_dir = path.dirname(self.projectfile)
+            self.projectfile = '../Projects/Example/Example.what'
             
         self.language = 'English'
-        self.first_startup = 0
-        
-        self.HeaderDB = db.headers()
     
+    #---------------------------------------------------------------------------
     def save_pref_file(self):
+    #---------------------------------------------------------------------------
             
-        fcontent = [['Project Dir:', self.project_dir],
+        fcontent = [['Project File:', self.projectfile],
                     ['Language:', self.language]]
        
         with open('WHAT.pref', 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(fcontent)
-            
+    
+    #---------------------------------------------------------------------------       
     def load_pref_file(self):
-            
+    #---------------------------------------------------------------------------
+        
         if not path.exists('WHAT.pref'):            
             # Default values will be kept and a new .pref file will be
             # generated
@@ -4806,86 +4934,38 @@ class WHATPref():
             reader = csv.reader(reader, delimiter='\t')
             reader = list(reader)
             
-            self.project_dir = reader[0][1]
+            self.projectfile = reader[0][1]
             self.language = reader[1][1]
-        
-        #---- System project folder ----
-        
-        # If the project folder does not exist anymore or its relative path has
-        # changed, the project folder revert back to the original state of the
-        # software, shich is the Example folder. If the project Example has been
-        # deleted by the user, a new, empty one will be created.
-        
-        # This procedure is to limit the creation of useless files and folder 
-        # all around the place in the user's computer.
-        
-        if not path.exists(self.project_dir):
-            if platform.system() == 'Windows':
-                self.project_dir = '..\Projects\Example'
-            elif platform.system() == 'Linux':
-                self.project_dir = '../Projects/Example'
-        
-        if not path.exists(self.project_dir + '/Meteo/Raw'):
-            makedirs(self.project_dir + '/Meteo/Raw')
-        if not path.exists(self.project_dir + '/Meteo/Input'):
-            makedirs(self.project_dir + '/Meteo/Input')
-        if not path.exists(self.project_dir + '/Meteo/Output'):
-            makedirs(self.project_dir + '/Meteo/Output')
-        if not path.exists(self.project_dir + '/Water Levels'):
-            makedirs(self.project_dir + '/Water Levels')
-            
-        #---- waterlvl_manual_measurements.xls ----
-        
-        fname = self.project_dir + '/waterlvl_manual_measurements.xls'
-        if not path.exists(fname):
-            
-            msg = ('No "waterlvl_manual_measurements.xls" file found. ' +
-                   'A new one has been created.')
-            print msg
-            
-            # http://stackoverflow.com/questions/13437727
-            book = xlwt.Workbook(encoding="utf-8")
-            sheet1 = book.add_sheet("Sheet 1")
-            sheet1.write(0, 0, 'Well_ID')
-            sheet1.write(0, 1, 'Time (days)')
-            sheet1.write(0, 2, 'Obs. (mbgs)')
-            book.save(fname)
-            
-#            fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
-#            with open(fname, 'wb') as f:
-#                writer = csv.writer(f, delimiter='\t')
-#                writer.writerows(fcontent)
-            
-        #---- weather_stations.lst ----
-                
-        fname = self.project_dir + '/weather_stations.lst'
-        if not path.exists(fname):
-            
-            msg = ('No "weather_stations.lst" file found. ' +
-                   'A new one has been created.')
-            print msg
-            
-            fcontent = self.HeaderDB.weather_stations
-            
-            with open(fname, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(fcontent)
-        
-        #---- graph_layout.lst ----
-        
-        filename = self.project_dir + '/graph_layout.lst'
-        if not path.exists(filename):
-            
-            fcontent = self.HeaderDB.graph_layout
-                        
-            msg = ('No "graph_layout.lst" file found. ' +
-                   'A new one has been created.')
-            print msg
 
-            with open(filename, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(fcontent)
-                               
+#===============================================================================                
+class MyProject():
+    """
+    This class contains all the info and utilities to manage the current active
+    project.
+    """
+#===============================================================================
+
+    
+    def __init__(self, parent=None):
+        
+        self.name = ''
+        self.lat = 0
+        self.lon = 0
+        
+    #---------------------------------------------------------------------------
+    def load_project_info(self, projectfile):
+    #---------------------------------------------------------------------------
+        
+        print 'Loading project info'
+        
+        reader = open(projectfile, 'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+            
+        self.name = reader[0][1]
+        self.lat = reader[6][1]
+        self.lat = reader[7][1]
+        
        
 ################################################################################
 #                                                                           
@@ -4897,29 +4977,15 @@ class WHATPref():
 if __name__ == '__main__':
     
     app = QtGui.QApplication(argv)
-    
-#    ---- DATABASE IMPORTS ----
-    
-#    language = 'English'
-    
-#    global LabelDB    
-#    LabelDB = db.labels(language)
-#    global iconDB
-#    iconDB = db.icons()
-#    global StyleDB
-#    StyleDB = db.styleUI()
-#    global ttipDB
-#    ttipDB = db.tooltips(language)
-#    global HeaderDB
-#    HeaderDB = db.headers()
-        
     instance_1 = MainWindow()
-    instance_1.show()
+#    instance_1.show()
+    app.exec_()
+        
     
-    qr = instance_1.frameGeometry()
-    cp = QtGui.QDesktopWidget().availableGeometry().center()
-    qr.moveCenter(cp)
-    instance_1.move(qr.topLeft())
+
+
     
-    app.exec_()   
+    
+    
+    
     

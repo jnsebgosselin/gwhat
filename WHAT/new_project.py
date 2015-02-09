@@ -339,68 +339,6 @@ class NewProject(QtGui.QWidget):
         self.Lat_SpinBox.setValue(0)
         self.Lon_SpinBox.setValue(0)
         
-class MyProject():
-    
-    def __init__(self):
-        
-        self.name = []
-        self.lat = 0
-        self.lon = 0
-        
-    def load_what_file(self, filename):
-        pass
-        
-    def check_if_files_and_folders(self, project_dir):
-        
-        HeaderDB = db.headers()
-        
-        #---- waterlvl_manual_measurements.xls ----
-        
-        fname = project_dir + '/waterlvl_manual_measurements.xls'
-        if not os.path.exists(fname):
-            
-            msg = ('No "waterlvl_manual_measurements.xls" file found. ' +
-                   'A new one has been created.')
-            print msg
-            
-            # http://stackoverflow.com/questions/13437727
-            book = xlwt.Workbook(encoding="utf-8")
-            sheet1 = book.add_sheet("Sheet 1")
-            sheet1.write(0, 0, 'Well_ID')
-            sheet1.write(0, 1, 'Time (days)')
-            sheet1.write(0, 2, 'Obs. (mbgs)')
-            book.save(fname)
-    
-        #---- weather_stations.lst ----
-                
-        fname = project_dir + '/weather_stations.lst'
-        if not os.path.exists(fname):
-            
-            msg = ('No "weather_stations.lst" file found. ' +
-                   'A new one has been created.')
-            print msg
-            
-            fcontent = HeaderDB.weather_stations
-            
-            with open(fname, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(fcontent)
-        
-        #---- graph_layout.lst ----
-        
-        filename = project_dir + '/graph_layout.lst'
-        if not os.path.exists(filename):
-            
-            fcontent = HeaderDB.graph_layout
-                        
-            msg = ('No "graph_layout.lst" file found. ' +
-                   'A new one has been created.')
-            print msg
-
-            with open(filename, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(fcontent)
-        
     
 if __name__ == '__main__':
     
