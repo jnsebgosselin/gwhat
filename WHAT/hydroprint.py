@@ -94,8 +94,14 @@ class Hydrograph():
         self.RAINscale = 20 # Dundurn: 10
         
         self.bwidth_indx = 1 # weather bin indx from the interface widget
+        
         # Options for bin calculations are:
-        # 1 day; 7 days; 15 days; 30 days; monthly; yearly        
+        #   0: 1 day;
+        #   1: 7 days;
+        #   2: 15 days;
+        #   3: 30 days;
+        #   4: monthly;
+        #   5: yearly        
 
         self.WLref = 0 # 0: mbgs 1: masl
         self.trend_line = 0
@@ -300,8 +306,6 @@ class Hydrograph():
         self.fig.set_size_inches(fwidth, fheight, forward=True)
        
         self.name_well = WaterLvlObj.name_well          
-                
-#        fname_info = self.finfo
               
         self.date_labels_display_pattern = 2
         RAINscale = self.RAINscale
@@ -472,7 +476,7 @@ class Hydrograph():
         plt.setp(h_WLmes, markerfacecolor='none', markersize=5,
                  markeredgecolor=(1, 0.25, 0.25), markeredgewidth=1.5)
                      
-        #---- Recession ----
+        #---- Recession (SPECIAL DUNDURN CASE) ----
             
     #    # Plot a Recession line for Dundurn Report
     #    trecess = np.arange(41548, 41760)
@@ -514,22 +518,7 @@ class Hydrograph():
 #        self.bar2 = self.ax3.bar(time, Rain, align='center', width=7-1)
 #        plt.setp(self.bar2, color=(0,0,1), edgecolor='none')
                     
-        #----------------------------------------------- MISSING VALUE PTOT ----
-
-#        if fname_info:
-#            
-#            Ptot_missing_time, _ = load_weather_log(fname_info,
-#                                                    'Total Precip (mm)', 
-#                                                    self.TIMEwk, self.PTOTwk)
-#                                                    
-#            self.NMissPtot = len(Ptot_missing_time)
-#            
-#            y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
-#            
-#            self.line_missing_Ptot, = self.ax3.plot(Ptot_missing_time, y, '.r')
-#               
-#            plt.setp(self.line_missing_Ptot, markersize=3)  
-    
+   
         #-------------------------------------------------- AIR TEMPERATURE ----
           
         TEMPmin = -40
@@ -550,18 +539,34 @@ class Hydrograph():
         self.l1_ax4, = self.ax4.plot([], [])        
         self.l2_ax4, = self.ax4.plot([], [], color='black')
         
-        #----------------------------------------------- MISSING VALUE TEMP ----
+        #------------------------------------------- MISSING VALUES MARKERS ----
+    
+        if self.finfo:
+            
+            #---- PRECIPITATION ----
+            
+            PTOTmiss_time, _ = load_weather_log(self.finfo,
+                                                'Total Precip (mm)', 
+                                                self.bTIME, self.bPTOT)
+                                                    
+            self.NMissPtot = len(PTOTmiss_time)
+            
+            y = np.ones(self.NMissPtot) * -5 * self.RAINscale / 20.
+            
+            self.PTOTmiss_dots, = self.ax3.plot(PTOTmiss_time, y, '.r')
+            plt.setp(self.PTOTmiss_dots, markersize=3)
+            
+            #---- Air Temperature ----
         
-        #---- Air Temperature ----
-        
-#        if fname_info:
-#            Temp_missing_time, _ = load_weather_log(
-#                                   fname_info, 'Max Temp (deg C)',
-#                                   self.TIMEwk, self.TMAXwk)
-#            
-#            h1_ax4, = self.ax4.plot(Temp_missing_time, 
-#                              np.ones(len(Temp_missing_time)) * 35, '.r')
-#            plt.setp(h1_ax4, markersize=3)                
+            Temp_missing_time, _ = load_weather_log(self.finfo,
+                                                    'Max Temp (deg C)',                                   
+                                                    self.bTIME, self.bTMAX)
+                                                    
+            NMissTMAX = len(Temp_missing_time) 
+            y = np.ones(NMissTMAX) * 35
+            
+            TMAXmiss_dots, = self.ax4.plot(Temp_missing_time, y, '.r')
+            plt.setp(TMAXmiss_dots, markersize=3)                
                                       
         #----------------------------------------------------------- LEGEND ----
              
@@ -573,7 +578,7 @@ class Hydrograph():
            
             labels = ['Snow', 'Rain', 'Air Temperature', 'Missing Data']
             
-            self.ax4.legend([rec1, rec2, rec3, h1_ax4], labels,
+            self.ax4.legend([rec1, rec2, rec3, TMAXmiss_dots], labels,
                             loc=[0.01, 0.45], numpoints=1, fontsize=10)
         
         
@@ -610,8 +615,14 @@ class Hydrograph():
 
         elif self.bwidth_indx == 5 : # yearly
             print 'option not yet available, kept default of 1 day'
-        
+            
+    #---------------------------------------------------------------------------
     def draw_weather(self):
+        """
+        This method is called the first time the graph is plotted and each
+        time the time scale is changed by the user.
+        """
+    #---------------------------------------------------------------------------
         
         #----------------------------------- SUBSAMPLE WEATHER DATA TO PLOT ----
         
@@ -897,7 +908,7 @@ class Hydrograph():
         #---- Update position of missing markers ----
         
         y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
-        self.line_missing_Ptot.set_ydata(y)
+        self.PTOTmiss_dots.set_ydata(y)
             
 
 #===============================================================================
@@ -1038,9 +1049,15 @@ class WaterlvlData():
         return TIMEmes, WLmes
         
 #===============================================================================      
-def load_weather_log(fname, variable_name, time_week, value_week):
+def load_weather_log(fname, varname, bintime, binvalue):
 #===============================================================================
 
+    print 'Resampling missing data markers'
+    
+    bwidth = bintime[1] - bintime[0]
+    
+    #---- Load Data ----
+    
     reader = open(fname, 'rb')
     reader = csv.reader(reader, delimiter='\t')
     reader = list(reader)[36:]
@@ -1054,16 +1071,25 @@ def load_weather_log(fname, variable_name, time_week, value_week):
         day = int(float(reader[i][3]))
         time[i] = xldate_from_date_tuple((year, month, day), 0)
     
-    time = time[np.where(variable == variable_name)[0]]
+    time = time[np.where(variable == varname)[0]]
+    
+    #---- Resample for Bins ----
+    
+    # Each missing value is assigned to a bin. At the end, if a bin has received
+    # multiple hit, only one is kept by calling np.unique.
     
     time2 = np.array([])
     missing_value = np.array([])
-    for i in time:
-        if i >= time_week[0] and i <= time_week[-1]+7:
-            search = np.abs(time_week - i)
+    
+    for t in time:
+        if t >= bintime[0] and t <= bintime[-1]+bwidth:
+            
+            search = np.abs(bintime - t)
             hit = np.where(search == min(search))[0]
-            time2 = np.append(time2, time_week[hit])
-            missing_value = np.append(missing_value, value_week[hit])
+
+            time2 = np.append(time2, bintime[hit])
+            missing_value = np.append(missing_value, binvalue[hit])
+    
     time2, indices = np.unique(time2, return_index=True)
     missing_value = missing_value[indices]
     
