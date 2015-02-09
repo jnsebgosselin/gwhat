@@ -374,8 +374,8 @@ class MainWindow(QtGui.QMainWindow):
         '''
     #---------------------------------------------------------------------------
         
-        print '----------------------------------------'
-        print 'LOADING PROJECT...'; print
+        print '---- LOADING PROJECT... ----'
+        print
         print 'Loading "%s"' % path.relpath(self.projectfile)
         
         self.projectdir = path.dirname(self.projectfile)
@@ -421,8 +421,8 @@ class MainWindow(QtGui.QMainWindow):
         
         self.tab_hydrograph.weather_avg_graph.save_fig_dir = self.projectdir
         
-        print; print 'PROJECT LOADED.'
-        print '----------------------------------------' 
+        print
+        print '---- PROJECT LOADED ----' 
       
     #---------------------------------------------------------------------------
     def check_project(self):

@@ -360,7 +360,7 @@ class MeteoObj():
         RAINbin = np.sum(RAINbin, axis=1)
         
         nres = len(TIME) - (nbin * bwidth)
-        print nres
+        print 'Nbin residual =', nres
                 
         #------------------------------------------------- UPDATE CLASS VAR ----
 
@@ -409,8 +409,7 @@ def bin_sum(x, bwidth):
     bheight = x[:nbin*bwidth].reshape(nbin, bwidth)
     bheight = np.sum(bheight, axis=1)
     
-    nres = len(x) - (nbin * bwidth)
-    print nres
+#    nres = len(x) - (nbin * bwidth)
     
     return bheight
 

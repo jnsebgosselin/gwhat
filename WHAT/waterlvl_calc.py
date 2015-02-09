@@ -1102,7 +1102,7 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
                         
             dhp = B * dt
             
-            hp = np.empty(len(h)) * np.nan
+            hp = np.ones(len(h)) * np.nan
             for i in range(nsegmnt):
                 hp[maxpeak[i]] = h[maxpeak[i]]
                 
@@ -1147,7 +1147,7 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
                 
                 #---- Compute Syntheric Hydrograph ----
                 
-                hp = np.empty(len(h)) * np.nan
+                hp = np.ones(len(h)) * np.nan
                 
                 for i in range(nsegmnt):
                     hp[maxpeak[i]] = h[maxpeak[i]]
@@ -1222,7 +1222,7 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
         
         # Each segment is optimized individually        
         
-        hp = np.empty(len(h)) * np.nan
+        hp = np.ones(len(h)) * np.nan
         A = np.zeros(nsegmnt) + a
         B = np.zeros(nsegmnt) + b
         for i in range(nsegmnt):
@@ -1308,7 +1308,7 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
 #        
 ##        DHDC = np.array([]).astype(float)
 ##        DHDB = np.array([]).astype(float)
-#        hp = np.empty(len(h)) * np.nan
+#        hp = np.ones(len(h)) * np.nan
 #        for i in range(nsegmnt):
 #            
 #            for it in range(100):
@@ -1387,7 +1387,7 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
 #        a = popt[0]
 #        b = popt[1]
 #        dhp = (-a * (h[:-1] + h[1:]) + 2*b) * dt / 2.
-#        hp = np.empty(len(h)) * np.nan
+#        hp = np.ones(len(h)) * np.nan
 #        for i in range(nsegmnt):
 #            hp[maxpeak[i]] = h[maxpeak[i]]
 #            

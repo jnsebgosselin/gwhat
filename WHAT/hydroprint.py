@@ -26,6 +26,7 @@ from os import path
 from calendar import monthrange
 import csv
 from math import sin, cos, sqrt, atan2, radians
+from time import clock
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -963,25 +964,27 @@ class WaterlvlData():
         self.ALT = []
         
     def load(self, fname):
+                
+        book = open_workbook(fname, on_demand=True)
+        sheet = book.sheet_by_index(0)
         
-        reader = open_workbook(fname)
-            
-        self.time = reader.sheet_by_index(0).col_values(0, start_rowx=11,
-                                                           end_rowx=None) 
+        self.time = sheet.col_values(0, start_rowx=11, end_rowx=None)
         self.time = np.array(self.time)
-        
-        self.lvl = reader.sheet_by_index(0).col_values(1, start_rowx=11, 
-                                                          end_rowx=None) 
+        self.lvl = sheet.col_values(1, start_rowx=11, end_rowx=None)
         self.lvl = np.array(self.lvl).astype('float')
         
-        header = reader.sheet_by_index(0).col_values(1, start_rowx=0, 
-                                                        end_rowx=5)
+        header = sheet.col_values(1, start_rowx=0, end_rowx=5)
+        
+        book.release_resources()
+        
         self.name_well = header[0]
         self.LAT = header[1]
         self.LON = header[2]
         self.ALT = header[3]
+        
+        print 'Loading waterlvl time-series for well %s' % self.name_well
 
-    #----------------------------------------------------------- WELL INFO ----- 
+        #-------------------------------------------------------- WELL INFO ----
         
         FIELDS = ['Well Name', 'Latitude', 'Longitude', 'Altitude',
                   'Municipality']
@@ -1011,7 +1014,8 @@ class WaterlvlData():
         self.well_info = well_info
         
     def load_waterlvl_measures(self, fname, name_well):
-        print name_well
+        
+        print 'Loading waterlvl manual measures for well %s' % name_well
         
         WLmes = []
         TIMEmes = []
@@ -1191,8 +1195,6 @@ if __name__ == '__main__':
     
     t = os.path.getmtime(fmeteo)
     t = time.gmtime(t)
-    
-    print t[:3]
     
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
