@@ -31,7 +31,6 @@ from datetime import datetime
 #---- THIRD PARTY IMPORTS ----
 
 from PySide import QtGui, QtCore
-import xlwt
 
 #---- PERSONAL IMPORTS ----
 
@@ -42,10 +41,11 @@ import database as db
 class NewProject(QtGui.QWidget):
 #===============================================================================
 
+    NewProjectSignal = QtCore.Signal(str)
+    
     def __init__(self, software_version, parent=None):
         super(NewProject, self).__init__(parent)
         
-#        self.parent = parent        
         self.initUI(software_version)
         
     def initUI(self, software_version):
@@ -306,6 +306,8 @@ class NewProject(QtGui.QWidget):
         print '---------------'
         
         self.close()
+        
+        self.NewProjectSignal.emit(fname)
         
     def cancel_save_project(self):
         

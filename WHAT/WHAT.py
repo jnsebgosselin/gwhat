@@ -272,6 +272,8 @@ class MainWindow(QtGui.QMainWindow):
         
         self.btn_new_project.clicked.connect(self.show_new_project)
         self.project_display.clicked.connect(self.select_project)
+        self.new_project_window.NewProjectSignal.connect(
+                                                       self.new_project_created)
         
         #---------------------------------------------------- MESSAGE BOXES ----
         
@@ -294,8 +296,6 @@ class MainWindow(QtGui.QMainWindow):
         
         if isProjectExists:
 
-            self.projectInfo.load_project_info(self.projectfile)
-            self.projectdir = path.dirname(self.projectfile)
             self.load_project()
             
         else:
@@ -358,7 +358,14 @@ class MainWindow(QtGui.QMainWindow):
 
             self.projectfile = filename                        
             self.load_project()
-                                   
+    
+    #---------------------------------------------------------------------------    
+    def new_project_created(self, filename):
+    #---------------------------------------------------------------------------
+
+        self.projectfile = filename                        
+        self.load_project()
+            
     #---------------------------------------------------------------------------
     def load_project(self):
         '''
@@ -366,7 +373,11 @@ class MainWindow(QtGui.QMainWindow):
         project folder is chosen with <select_project>.        
         '''
     #---------------------------------------------------------------------------
-
+        
+        print '----------------------------------------'
+        print 'LOADING PROJECT...'; print
+        print 'Loading "%s"' % path.relpath(self.projectfile)
+        
         self.projectdir = path.dirname(self.projectfile)
         
         #----Update WHAT.pref file ----
@@ -391,6 +402,9 @@ class MainWindow(QtGui.QMainWindow):
         self.project_display.setText(self.projectInfo.name)
         self.project_display.adjustSize()
         
+        self.tab_dwnld_data.lat_spinBox.setValue(self.projectInfo.lat)
+        self.tab_dwnld_data.lon_spinBox.setValue(self.projectInfo.lon)
+        
         #---- Load Weather Station List ----
 
         self.tab_dwnld_data.load_stationList()
@@ -407,6 +421,9 @@ class MainWindow(QtGui.QMainWindow):
         
         self.tab_hydrograph.weather_avg_graph.save_fig_dir = self.projectdir
         
+        print; print 'PROJECT LOADED.'
+        print '----------------------------------------' 
+      
     #---------------------------------------------------------------------------
     def check_project(self):
         """
@@ -418,6 +435,8 @@ class MainWindow(QtGui.QMainWindow):
         answer, which should tell the code on the UI side to deactivate the  UI.
         """
     #---------------------------------------------------------------------------
+        
+        print 'Checking project files and folders integrity'
         
         HeaderDB = db.headers()
         
@@ -1947,21 +1966,21 @@ class TabDwnldData(QtGui.QWidget):
         label_Lon2 = QtGui.QLabel('W')
         label_radius = QtGui.QLabel('Radius :')
         
-        self.latitude_SpinBox = QtGui.QDoubleSpinBox()
-        self.latitude_SpinBox.setAlignment(QtCore.Qt.AlignCenter)        
-        self.latitude_SpinBox.setSingleStep(0.1)
-        self.latitude_SpinBox.setValue(0)
-        self.latitude_SpinBox.setMinimum(0)
-        self.latitude_SpinBox.setMaximum(180)
-        self.latitude_SpinBox.setSuffix(u' °')
+        self.lat_spinBox = QtGui.QDoubleSpinBox()
+        self.lat_spinBox.setAlignment(QtCore.Qt.AlignCenter)        
+        self.lat_spinBox.setSingleStep(0.1)
+        self.lat_spinBox.setValue(0)
+        self.lat_spinBox.setMinimum(0)
+        self.lat_spinBox.setMaximum(180)
+        self.lat_spinBox.setSuffix(u' °')
         
-        self.longitude_SpinBox = QtGui.QDoubleSpinBox()
-        self.longitude_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
-        self.longitude_SpinBox.setSingleStep(0.1)
-        self.longitude_SpinBox.setValue(0)
-        self.longitude_SpinBox.setMinimum(0)
-        self.longitude_SpinBox.setMaximum(180)
-        self.longitude_SpinBox.setSuffix(u' °')
+        self.lon_spinBox = QtGui.QDoubleSpinBox()
+        self.lon_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+        self.lon_spinBox.setSingleStep(0.1)
+        self.lon_spinBox.setValue(0)
+        self.lon_spinBox.setMinimum(0)
+        self.lon_spinBox.setMaximum(180)
+        self.lon_spinBox.setSuffix(u' °')
         
         self.radius_SpinBox = QtGui.QSpinBox()
         self.radius_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
@@ -1977,11 +1996,11 @@ class TabDwnldData(QtGui.QWidget):
         
         row = 0
         grid_leftPanel.addWidget(label_Lat, row, 0)
-        grid_leftPanel.addWidget(self.latitude_SpinBox, row, 1)
+        grid_leftPanel.addWidget(self.lat_spinBox, row, 1)
         grid_leftPanel.addWidget(label_Lat2, row, 2)
         row += 1
         grid_leftPanel.addWidget(label_Lon, row, 0)
-        grid_leftPanel.addWidget(self.longitude_SpinBox, row, 1)
+        grid_leftPanel.addWidget(self.lon_spinBox, row, 1)
         grid_leftPanel.addWidget(label_Lon2, row, 2)
         row += 1
         grid_leftPanel.addWidget(label_radius, row, 0)
@@ -2118,8 +2137,8 @@ class TabDwnldData(QtGui.QWidget):
         QtCore.QCoreApplication.processEvents()
         QtCore.QCoreApplication.processEvents()
         
-        LAT = self.latitude_SpinBox.value()
-        LON = self.longitude_SpinBox.value()
+        LAT = self.lat_spinBox.value()
+        LON = self.lon_spinBox.value()
         RADIUS = self.radius_SpinBox.value()
         startYear = self.search4station_minYear.value()
         endYear = self.search4station_maxYear.value()
@@ -4963,8 +4982,8 @@ class MyProject():
         reader = list(reader)
             
         self.name = reader[0][1]
-        self.lat = reader[6][1]
-        self.lat = reader[7][1]
+        self.lat = float(reader[6][1])
+        self.lon = float(reader[7][1])
         
        
 ################################################################################
