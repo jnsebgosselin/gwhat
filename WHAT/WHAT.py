@@ -64,6 +64,7 @@ import envirocan
 from fill_weather_data import Weather_File_Info
 import imageviewer
 import waterlvl_calc
+import manage_project
 
 # The code is segmented in two main sections: the GUI section and the
 # WORKER sections.
@@ -110,6 +111,8 @@ class MainWindow(QtGui.QMainWindow):
     
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
+        
+        self.project_name = 'Default'
         
         self.initUI()
     
@@ -171,35 +174,46 @@ class MainWindow(QtGui.QMainWindow):
              Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
            </font>''')
            
-        #---------------------------------------------- PROJECT DIR SUBGRID ----
+        #------------------------------------------------- PROJECT MENU BAR ----
                         
         project_label = QtGui.QLabel('Project :')
         project_label.setAlignment(QtCore.Qt.AlignCenter)
         
-        self.project_dir_display = QtGui.QLineEdit()
-        self.project_dir_display.setReadOnly(True)      
+        self.project_display = QtGui.QPushButton()
+        self.project_display.setFocusPolicy(QtCore.Qt.NoFocus)
         
-        self.btn_project_dir = QtGui.QToolButton()
-        self.btn_project_dir.setAutoRaise(True)
-        self.btn_project_dir.setIcon(iconDB.openFolder)
-        self.btn_project_dir.setToolTip(ttipDB.browse)
-        self.btn_project_dir.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_new_project = QtGui.QToolButton()
+        self.btn_new_project.setAutoRaise(True)
+        self.btn_new_project.setIcon(iconDB.new_project)
+        self.btn_new_project.setToolTip(ttipDB.new_project)
+        self.btn_new_project.setFocusPolicy(QtCore.Qt.NoFocus)
+        
+#        self.btn_open_project = QtGui.QToolButton()
+#        self.btn_open_project.setAutoRaise(True)
+#        self.btn_open_project.setIcon(iconDB.open_project)
+#        self.btn_open_project.setToolTip(ttipDB.open_project)
+#        self.btn_open_project.setFocusPolicy(QtCore.Qt.NoFocus)
                 
-        proDir_widget = QtGui.QWidget()
-        subgrid_proDir = QtGui.QGridLayout()
+        self.menubar_widget = QtGui.QWidget()
+        subgrid_menubar = QtGui.QGridLayout()
         
         row = 0
-        subgrid_proDir.addWidget(project_label, row, 0)
-        subgrid_proDir.addWidget(self.project_dir_display, row, 1)
-        subgrid_proDir.addWidget(self.btn_project_dir, row, 2)
+        col = 0
+        subgrid_menubar.addWidget(project_label, row, col)
+        col += 1
+        subgrid_menubar.addWidget(self.project_display, row, col)
+        col += 1
+        subgrid_menubar.addWidget(self.btn_new_project, row, col)
+#        col += 1
+#        subgrid_menubar.addWidget(self.btn_open_project, row, col)
         
-        subgrid_proDir.setSpacing(5)
-        subgrid_proDir.setContentsMargins(0, 0, 0, 5) #Left, Top, Right, Bottom 
-        subgrid_proDir.setColumnStretch(1, 500)
-        subgrid_proDir.setColumnMinimumWidth(1, 400)
-        subgrid_proDir.setRowMinimumHeight(0, 28)
+        subgrid_menubar.setSpacing(3)
+        subgrid_menubar.setContentsMargins(0, 0, 0, 5) #Left, Top, Right, Bottom 
+        subgrid_menubar.setColumnStretch(1, 500)
+#        subgrid_menubar.setColumnMinimumWidth(1, 200)
+        subgrid_menubar.setRowMinimumHeight(0, 28)
         
-        proDir_widget.setLayout(subgrid_proDir)
+        self.menubar_widget.setLayout(subgrid_menubar)
         
         #------------------------------------------------------- TAB WIDGET ----
         
@@ -215,7 +229,7 @@ class MainWindow(QtGui.QMainWindow):
         Tab_widget.addTab(self.tab_hydrograph, LabelDB.TAB3) 
         Tab_widget.addTab(tab_about, LabelDB.TAB4)
         
-        Tab_widget.setCornerWidget(proDir_widget)
+        Tab_widget.setCornerWidget(self.menubar_widget)
         
         #-------------------------------------------------- SPLITTER WIDGET ----
                 
@@ -254,11 +268,14 @@ class MainWindow(QtGui.QMainWindow):
         
     #--------------------------------------------------------------- EVENTS ----
         
-        self.btn_project_dir.clicked.connect(self.select_project_dir)
+#        self.btn_open_project.clicked.connect(self.select_project_dir)
+        self.btn_new_project.clicked.connect(self.show_new_project)
+        self.project_display.clicked.connect(self.select_project_dir)
        
     #----------------------------------------------------------------- INIT ----
                 
         self.load_project_dir(self.what_pref.project_dir)
+        self.new_project_window = manage_project.NewProject(software_version)
         
     #===========================================================================  
     def write2console(self, console_text):
@@ -271,23 +288,52 @@ class MainWindow(QtGui.QMainWindow):
         textime = '<font color=black>[' + ctime()[4:-8] + '] </font>'
                         
         self.main_console.append(textime + console_text)
+    
+    #===========================================================================    
+    def show_new_project(self):
+    #===========================================================================
+
+        #---- Center Widget to Main Window ----
         
+        # Adapted from:
+        # http://zetcode.com/gui/pysidetutorial/firstprograms
+        
+        qr = self.new_project_window.frameGeometry()
+        cp = self.frameGeometry().center()
+        qr.moveCenter(cp)
+        self.new_project_window.move(qr.topLeft())
+        
+        self.new_project_window.clear_UI()
+        self.new_project_window.show()
+        self.new_project_window.setFixedSize(self.new_project_window.size())
+            
     #===========================================================================
     def select_project_dir(self):
         '''
-        <select_project_dir> is called by the event <btn_project_dir.clicked>.
+        <select_project_dir> is called by the event <btn_open_project.clicked>.
         It allows the user to select a new active project directory.
         '''
     #===========================================================================
         
-#        dialog = QtGui.QFileDialog(self)
-#        dialog.setReadOnly(False)         
-        project_dir = QtGui.QFileDialog.getExistingDirectory(self, 
-                                   'Select a new or existing project directory',
-                                   '../Projects')
-        if project_dir:
-            project_dir = path.relpath(project_dir)
-            self.load_project_dir(project_dir)                                   
+        filename, _ = QtGui.QFileDialog.getOpenFileName(
+                                self, 'Open Project', '../Projects', '*.what')
+                                   
+        if filename:
+            self.load_project_info(filename)
+            dirname = path.dirname(filename)
+            self.load_project_dir(dirname)
+
+    #===========================================================================
+    def load_project_info(self, filename):
+    #===========================================================================
+        
+        print 'Loading project info'
+        
+        reader = open(filename, 'rb')
+        reader = csv.reader(reader, delimiter='\t')
+        reader = list(reader)
+            
+        self.project_name = reader[0][1]                                   
                                    
     #===========================================================================
     def load_project_dir(self, project_dir):
@@ -297,42 +343,35 @@ class MainWindow(QtGui.QMainWindow):
         '''
     #===========================================================================
         
-        if project_dir:
-            
-            self.what_pref.project_dir = project_dir
-            
-            self.what_pref.save_pref_file()            
-            # load_pref_file() is called for preparing the folders and files
-            # hierarchy.
-            self.what_pref.load_pref_file()
-            
-            self.project_dir_display.setText(project_dir)
-            
-            #---- Load Station List ----
-                    
-#            station_list = []
-#            for files in listdir(project_dir):
-#                if files.endswith('.lst'):
-#                    station_list.append(project_dir + '/' + files)
-#            
-#            if len(station_list) > 0:
-#                self.tab_dwnld_data.station_list_path = station_list[0]            
-#            else:
-#                self.tab_dwnld_data.station_list_path = []
+        self.what_pref.project_dir = project_dir
+        
+        #---- WHAT.pref file ----
+        
+        self.what_pref.save_pref_file()
+        self.what_pref.load_pref_file()  
+        # self.what_pref.load_pref_file() is called to make sure the folders
+        # and files hierarchy are ok.        
+        
+        #---- Update UI ----
+        
+        self.project_display.setText(self.project_name)
+        self.project_display.adjustSize()
+        
+        #---- Load Weather Station List ----
 
-            self.tab_dwnld_data.load_stationList()
-                
-            #---- Load Weather Input Files ----
+        self.tab_dwnld_data.load_stationList()
             
-            self.tab_fill.load_data_dir_content()
-            
-            # ----- RESET UI Memory Variables -----
-            
-            self.tab_hydrograph.meteo_dir = project_dir + '/Meteo/Output'
-            self.tab_hydrograph.waterlvl_dir = project_dir + '/Water Levels'
-            self.tab_hydrograph.save_fig_dir = project_dir
-            
-            self.tab_hydrograph.weather_avg_graph.save_fig_dir = project_dir
+        #---- Load Weather Input Files ----
+        
+        self.tab_fill.load_data_dir_content()
+        
+        # ----- RESET UI Memory Variables -----
+        
+        self.tab_hydrograph.meteo_dir = project_dir + '/Meteo/Output'
+        self.tab_hydrograph.waterlvl_dir = project_dir + '/Water Levels'
+        self.tab_hydrograph.save_fig_dir = project_dir
+        
+        self.tab_hydrograph.weather_avg_graph.save_fig_dir = project_dir
                     
 ################################################################ @TAB HYDROGRAPH
         
@@ -1927,7 +1966,12 @@ class TabDwnldData(QtGui.QWidget):
 
         self.widget_search4stations.show()
         self.widget_search4stations.setFixedSize(
-                                             self.widget_search4stations.size()) 
+                                             self.widget_search4stations.size())
+                                             
+        qr = self.widget_search4stations.frameGeometry()
+        cp = self.parent.frameGeometry().center()
+        qr.moveCenter(cp)
+        self.widget_search4stations.move(qr.topLeft())
     
     #===========================================================================
     def search4stations(self):
@@ -3010,9 +3054,9 @@ class TabFill(QtGui.QWidget):
             self.btn_fill_all.setIcon(iconDB.forward)        
             self.target_station.setEnabled(True)
             self.btn_fill.setEnabled(True)
-            self.parent.btn_project_dir.setEnabled(True)
+            self.parent.menubar_widget.setEnabled(True)
             self.btn3.setEnabled(True)
-            self.parent.project_dir_display.setEnabled(True)
+            self.parent.project_display.setEnabled(True)
             self.parent.pbar.hide()
             
             QtGui.QApplication.processEvents()
@@ -3065,9 +3109,9 @@ class TabFill(QtGui.QWidget):
         self.btn_fill_all.setIcon(iconDB.stop)
         self.target_station.setEnabled(False)
         self.btn_fill.setEnabled(False)
-        self.parent.btn_project_dir.setEnabled(False)
+        self.parent.menubar_widget.setEnabled(False)
         self.btn3.setEnabled(False)
-        self.parent.project_dir_display.setEnabled(False)
+        self.parent.project_display.setEnabled(False)
         self.parent.pbar.show()
         
         self.CORRFLAG = 'off' 
@@ -3219,9 +3263,9 @@ class TabFill(QtGui.QWidget):
             self.btn_fill_all.setIcon(iconDB.forward)        
             self.target_station.setEnabled(True)
             self.btn_fill.setEnabled(True)
-            self.parent.btn_project_dir.setEnabled(True)
+            self.parent.menubar_widget.setEnabled(True)
             self.btn3.setEnabled(True)
-            self.parent.project_dir_display.setEnabled(True)
+            self.parent.project_display.setEnabled(True)
             self.parent.pbar.hide()
 
 
@@ -4724,16 +4768,13 @@ class WHATPref():
 
     
     def __init__(self, parent=None):
-        
-        # now = datetime.now()
-        # now = (now.year, now.month, now.day)
-        # self.project_dir = getcwd() + '/Projects/New_%d%d%d' % now
-#        self.project_dir = getcwd() + '/../Projects/Example'
-
+     
         if platform.system() == 'Windows':
-            self.project_dir = '..\Projects\Example'
+            self.projectfile = '..\Projects\Example\example.what'
         elif platform.system() == 'Linux':
-            self.project_dir = '../Projects/Example'
+            self.projectfile = '../Projects/Example/example.what'
+            
+        self.project_dir = path.dirname(self.projectfile)
             
         self.language = 'English'
         self.first_startup = 0
@@ -4874,5 +4915,11 @@ if __name__ == '__main__':
         
     instance_1 = MainWindow()
     instance_1.show()
+    
+    qr = instance_1.frameGeometry()
+    cp = QtGui.QDesktopWidget().availableGeometry().center()
+    qr.moveCenter(cp)
+    instance_1.move(qr.topLeft())
+    
     app.exec_()   
     

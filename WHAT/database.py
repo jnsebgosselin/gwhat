@@ -46,6 +46,11 @@ class icons():
         self.search = QIcon('Icons/search.png')
         self.settings = QIcon('Icons/settings.png')
         
+        #---- Menu TOOLBAR ----
+        
+        self.new_project = QIcon('Icons/new_project2.png')
+        self.open_project = QIcon('Icons/open_project2.png')
+        
         #----- HYDROGRAPH TOOLBAR -----
         
         self.fit_y = QIcon('Icons/fit_y.png')
@@ -79,7 +84,10 @@ class tooltips():
     
     def __init__(self, language): #================================ ENGLISH ====
         
-        self.browse = 'Browse'
+        #--------------------------------------------------------- MENU BAR ----
+        
+        self.open_project = 'Open Project...'
+        self.new_project = 'New Project...'
         
         #----------------------------------------------------- DOWNLOAD TAB ----
         
