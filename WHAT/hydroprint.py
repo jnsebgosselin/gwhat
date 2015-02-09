@@ -964,23 +964,57 @@ class WaterlvlData():
         self.ALT = []
         
     def load(self, fname):
-                
+        
+        #---- Open First Sheet ----
+        
         book = open_workbook(fname, on_demand=True)
         sheet = book.sheet_by_index(0)
         
-        self.time = sheet.col_values(0, start_rowx=11, end_rowx=None)
-        self.time = np.array(self.time)
-        self.lvl = sheet.col_values(1, start_rowx=11, end_rowx=None)
-        self.lvl = np.array(self.lvl).astype('float')
+        #---- Search for First Line With Data ----
         
-        header = sheet.col_values(1, start_rowx=0, end_rowx=5)
+        self.time = sheet.col_values(0, start_rowx=0, end_rowx=None)
+        self.time = np.array(self.time)
+       
+        row = 0
+        hit = False
+        while hit == False:
+            
+            if self.time[row] == 'Date':
+                hit = True
+            else: 
+                row += 1
+            
+            if row > len(self.time):
+                print 'WARNING: Waterlvl data file is not formatted correctly'
+                book.release_resources()
+                return False
+                
+        start_rowx = row + 1
+           
+        #---- Load Data ----
+        
+        try:
+
+            self.time = self.time[start_rowx:]
+            self.time = np.array(self.time).astype(float)
+        
+        
+            header = sheet.col_values(1, start_rowx=0, end_rowx=5)
+            self.name_well = header[0]
+            self.LAT = header[1]
+            self.LON = header[2]
+            self.ALT = header[3]
+            
+            self.lvl = sheet.col_values(1, start_rowx=start_rowx, end_rowx=None)
+            self.lvl = np.array(self.lvl).astype(float)
+            
+        except:
+
+            print 'WARNING: Waterlvl data file is not formatted correctly'
+            book.release_resources()
+            return False
         
         book.release_resources()
-        
-        self.name_well = header[0]
-        self.LAT = header[1]
-        self.LON = header[2]
-        self.ALT = header[3]
         
         print 'Loading waterlvl time-series for well %s' % self.name_well
 
