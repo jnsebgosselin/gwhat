@@ -27,6 +27,7 @@ import platform
 import os
 import csv
 from datetime import datetime
+import re
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -71,6 +72,12 @@ class NewProject(QtGui.QDialog):
         
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
+        
+        #----------------------------------------------------- WINDOW SETUP ----
+        
+        self.setWindowTitle('New Project')
+        self.setWindowIcon(iconDB.WHAT)
+        self.setFont(StyleDB.font1)
         
         #----------------------------------------------------- PROJECT INFO ----
         
@@ -233,9 +240,7 @@ class NewProject(QtGui.QDialog):
         
         self.setLayout(newProject_grid)
         
-        self.setWindowTitle('New Project')
-        self.setWindowIcon(iconDB.WHAT)
-        self.setFont(StyleDB.font1) 
+         
         
         #----------------------------------------------------------- EVENTS ----
 
@@ -355,13 +360,187 @@ class NewProject(QtGui.QDialog):
         self.Lat_SpinBox.setValue(0)
         self.Lon_SpinBox.setValue(0)
         
+#===============================================================================
+class OpenProject(QtGui.QDialog):
+#===============================================================================
     
+    OpenProjectSignal = QtCore.Signal(str)
+
+    def __init__(self, parent=None):
+        super(OpenProject, self).__init__(parent)
+        
+        self.projectfile = []
+        
+        self.initUI()
+    
+    def initUI(self):
+        
+        iconDB = db.icons()
+        styleDB = db.styleUI()
+    
+        directory = os.path.abspath('../Projects')
+        
+        #---------------------------------------------------- WINDOW SETUP ----
+    
+        self.setWindowTitle('Open Project')
+        self.setWindowIcon(iconDB.WHAT)
+        self.setFont(styleDB.font1)
+        
+        #------------------------------------------------ File System Model ----
+    
+        self.model = SeFileSystemModel(directory)
+        
+        #--------------------------------------------------- Tree File View ----
+        
+        self.tree =  QtGui.QTreeView()
+        self.tree.setModel(self.model)
+        self.tree.setRootIndex(self.model.index(directory))
+        self.tree.setColumnHidden(1, True)
+        self.tree.setColumnHidden(2, True)
+        self.tree.setColumnHidden(3, True)
+        self.tree.setHeaderHidden(True)
+#            self.tree.setFont(styleDB.font1)
+        
+        # http://stackoverflow.com/questions/23993895/
+        # python-pyqt-qtreeview-example-selection
+        
+        signal = 'selectionChanged(QItemSelection, QItemSelection)'
+        QtCore.QObject.connect(self.tree.selectionModel(), 
+                               QtCore.SIGNAL(signal),
+                               self.showMeTheMoney)
+                                   
+        #---------------------------------------------------------- Toolbar ----
+        
+        btn_open_project = QtGui.QPushButton(' Open')
+        btn_open_project.setIcon(iconDB.open_project)
+        btn_open_project.setIconSize(styleDB.iconSize2)
+        btn_open_project.setMinimumWidth(100)
+
+        btn_cancel = QtGui.QPushButton(' Cancel')
+        btn_cancel.setIcon(iconDB.clear_search)
+        btn_cancel.setIconSize(styleDB.iconSize2)
+        btn_cancel.setMinimumWidth(100)
+        
+        toolbar_widget = QtGui.QFrame()
+        toolbar_grid = QtGui.QGridLayout()
+        
+        row = 0
+        col = 1
+        toolbar_grid.addWidget(btn_cancel, row, col)
+        col += 1
+        toolbar_grid.addWidget(btn_open_project, row, col)
+        
+        toolbar_grid.setSpacing(10)
+        toolbar_grid.setColumnStretch(col+1, 100)
+        toolbar_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        
+        toolbar_widget.setLayout(toolbar_grid)
+                                   
+        #------------------------------------------------------ MAIN LAYOUT ----
+        
+        projectname_label = QtGui.QLabel('Project Name:')
+        self.projectname_display = QtGui.QLineEdit()
+        self.projectname_display.setReadOnly(True)
+        
+        main_grid = QtGui.QGridLayout()
+        
+        row = 0
+        main_grid.addWidget(self.tree, row, 0, 1, 2)
+        row += 1
+        main_grid.addWidget(projectname_label, row, 0)
+        main_grid.addWidget(self.projectname_display, row, 1)
+        row += 1
+        main_grid.addWidget(toolbar_widget, row, 0, 1, 2)
+        
+        main_grid.setVerticalSpacing(25)
+        main_grid.setColumnMinimumWidth(1, 350)
+        main_grid.setContentsMargins(15, 15, 15, 15) # (L, T, R, B)
+        
+        self.setLayout(main_grid)
+        
+        #----------------------------------------------------------- EVENTS ----
+
+        btn_open_project.clicked.connect(self.open_project)
+        btn_cancel.clicked.connect(self.cancel_open_project)
+    
+    def open_project(self):
+        
+        if self.projectfile:
+            print 'Project Select. Sending signal to load the project.'
+            self.OpenProjectSignal.emit(self.projectfile)            
+            self.close()
+        
+    def cancel_open_project(self):
+        
+        self.close()
+                               
+    def showMeTheMoney(self, selected, deselected):
+
+        filepath = self.model.filePath(selected.indexes()[0])
+
+        if os.path.splitext(filepath)[-1] == '.what':
+            
+            self.projectfile = filepath
+            
+            print 'Loading project info'
+    
+            reader = open(filepath, 'rb')
+            reader = csv.reader(reader, delimiter='\t')
+            reader = list(reader)
+        
+            projectname = reader[0][1].decode('utf-8')
+            
+            print(projectname)
+            self.projectname_display.setText(projectname)
+        
+        else:
+            
+            self.projectfile = []
+                
+        
+class SeFileSystemModel(QtGui.QFileSystemModel):
+    
+    # http://stackoverflow.com/questions/18106074/
+    # python-pyside-own-qfileiconprovider-implementation-fails-
+    # with-no-exceptions-thr
+
+    def __init__(self, directory):
+        
+        QtGui.QFileSystemModel.__init__(self)
+        self.fileEndPattern = re.compile("^.*\.(\w{2,4})$")
+        
+        self.setRootPath(directory)
+        self.setNameFilters(['*.what'])
+        self.setNameFilterDisables(False)
+        self.setReadOnly(True)
+
+    def data(self, index, role):
+        
+        iconDB = db.icons()
+        
+        if index.column() == 0 and role == QtCore.Qt.DecorationRole:
+            if self.fileEndPattern.match(index.data()) is not None:
+                if index.data().endswith('what'):
+                    return iconDB.WHAT
+                else:
+                    return iconDB.WHAT
+            else:
+                return iconDB.openFolder
+        else:
+            return super(SeFileSystemModel, self).data(index, role)
+        
+        
+  
 if __name__ == '__main__':
     
     app = QtGui.QApplication(argv)   
     instance_1 = NewProject('WHAT')
-    instance_1.exec_()
+    instance_1.show()
     instance_1.setFixedSize(instance_1.size())
+    
+    instance_2 = OpenProject()
+    instance_2.show()
+    instance_2.setFixedSize(instance_2.size())
     
     app.exec_() 
 

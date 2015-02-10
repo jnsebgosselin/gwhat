@@ -34,6 +34,8 @@ from os import getcwd, listdir, makedirs, path
 from string import maketrans
 from datetime import datetime
 import platform
+import re
+import os
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -140,6 +142,7 @@ class MainWindow(QtGui.QMainWindow):
         self.projectInfo = MyProject(self)
         self.whatPref = WHATPref(self)
         self.new_project_window = new_project.NewProject(software_version)
+        self.open_project_window = new_project.OpenProject()
         
         #------------------------------------------------------ PREFERENCES ----
                 
@@ -292,8 +295,8 @@ class MainWindow(QtGui.QMainWindow):
         
         self.btn_new_project.clicked.connect(self.show_new_project)
         self.project_display.clicked.connect(self.select_project)
-        self.new_project_window.NewProjectSignal.connect(
-                                                       self.new_project_created)
+        self.new_project_window.NewProjectSignal.connect(self.load_project)
+        self.open_project_window.OpenProjectSignal.connect(self.load_project)                                                       
         
         #---------------------------------------------------- MESSAGE BOXES ----
         
@@ -316,7 +319,7 @@ class MainWindow(QtGui.QMainWindow):
         
         if isProjectExists:
 
-            self.load_project()
+            self.load_project(self.projectfile)
             
         else:
             
@@ -371,10 +374,8 @@ class MainWindow(QtGui.QMainWindow):
         '''
     #---------------------------------------------------------------------------
         
-#        directory = path.abspath('../Projects')
-#        print directory
+        #------------------------------------------- Custom File Dialog (1) ----
         
-#        iconDB = db.icons()
 #        styleDB = db.styleUI()
 #        
 #        self.dialog = QtGui.QFileDialog()
@@ -390,36 +391,43 @@ class MainWindow(QtGui.QMainWindow):
 #        self.dialog.fileSelected.connect(self.new_project_created)
 #        
 #        self.dialog.exec_()
-      
+        
+        #------------------------------------------- Custom File Dialog (2) ----
+        
+        qr = self.open_project_window.frameGeometry()
+        cp = self.frameGeometry().center()
+        qr.moveCenter(cp)
+        self.open_project_window.move(qr.topLeft())
+        
+        self.open_project_window.exec_()
+        self.open_project_window.setFixedSize(self.open_project_window.size())
        
-        directory = path.abspath('../Projects')
-
-        filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                      self, 'Open Project', directory, '*.what')
-                                   
-        if filename:
-
-            self.projectfile = filename                        
-            self.load_project()
-    
-    #---------------------------------------------------------------------------    
-    def new_project_created(self, filename):
-    #---------------------------------------------------------------------------
-
-        self.projectfile = filename                        
-        self.load_project()
+        #----------------------------------------------------- Stock Dialog ----
+       
+#        directory = path.abspath('../Projects')
+#
+#        filename, _ = QtGui.QFileDialog.getOpenFileName(
+#                                      self, 'Open Project', directory, '*.what')
+#                                   
+#        if filename:
+#
+#            self.projectfile = filename                        
+#            self.load_project()
             
     #---------------------------------------------------------------------------
-    def load_project(self):
+    def load_project(self, filename):
         '''
         This method is called either on startup during <initUI> or when a new
         project folder is chosen with <select_project>.        
         '''
     #---------------------------------------------------------------------------
         
-        print '---- LOADING PROJECT... ----'
-        print
-        print 'Loading "%s"' % path.relpath(self.projectfile)
+        self.projectfile = filename 
+        
+        print('')
+        print('---- LOADING PROJECT... ----')
+        print('')
+        print('Loading "%s"' % path.relpath(self.projectfile))
         
         self.projectdir = path.dirname(self.projectfile)
         
@@ -464,8 +472,9 @@ class MainWindow(QtGui.QMainWindow):
         
         self.tab_hydrograph.weather_avg_graph.save_fig_dir = self.projectdir
         
-        print
-        print '---- PROJECT LOADED ----' 
+        print('')
+        print('---- PROJECT LOADED ----')
+        print('')
       
     #---------------------------------------------------------------------------
     def check_project(self):
