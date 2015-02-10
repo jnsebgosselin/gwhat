@@ -215,11 +215,14 @@ class styleUI():
         self.iconSize2 = QSize(22, 22)
         
         if platform.system() == 'Windows':
-            self.font1 = QFont('Segoe UI', 11) # Calibri, Cambria, Segoe UI
-            self.font_console = QFont('Segoe UI', 9) # Calibri, Cambria, Segoe UI
+            # Calibri, Cambria, Segoe UI
+            self.font1 = QFont('Segoe UI', 11) 
+            self.font_console = QFont('Segoe UI', 9)
+            self.font_menubar = QFont('Segoe UI', 10) 
         elif platform.system() == 'Linux':
             self.font1 = QFont('Ubuntu', 11)
-            self.font_console = QFont('Ubuntu', 9)        
+            self.font_console = QFont('Ubuntu', 9) 
+            self.font_menubar = QFont('Ubuntu', 10)
         
 #        self.fontSize1.setPointSize(11)
         

@@ -38,7 +38,7 @@ import database as db
 
 
 #===============================================================================
-class NewProject(QtGui.QWidget):
+class NewProject(QtGui.QDialog):
 #===============================================================================
 
     NewProjectSignal = QtCore.Signal(str)
@@ -250,7 +250,7 @@ class NewProject(QtGui.QWidget):
             print 'Please enter a valid Project name'
             return
         
-        #---- project directory ----
+        #---- Project Directory Name ----
         
         # If directory already exist, a number is added at the end within ().
         
@@ -260,54 +260,68 @@ class NewProject(QtGui.QWidget):
         count = 1
         while pathExists == True:
             project_dir = self.directory.text() + '/%s (%d)' % (project_name,
-                                                                     count)
+                                                                count)
             pathExists = os.path.exists(project_dir)
             count += 1
-            
+        
+        print
         print '---------------'
         print 'Creating files and folder achitecture for the new project in:'
         print project_dir
         print
-            
-        os.makedirs(project_dir)
         
-        #---- folder architecture ----
+        #---- Create Files and Folders ----        
         
-        if not os.path.exists(project_dir + '/Meteo/Raw'):
-            os.makedirs(project_dir + '/Meteo/Raw')
-        if not os.path.exists(project_dir + '/Meteo/Input'):
-            os.makedirs(project_dir + '/Meteo/Input')
-        if not os.path.exists(project_dir + '/Meteo/Output'):
-            os.makedirs(project_dir + '/Meteo/Output')
-        if not os.path.exists(project_dir + '/Water Levels'):
-            os.makedirs(project_dir + '/Water Levels')
+        try:
             
-        #---- project.what ----
+            os.makedirs(project_dir)
             
-        fname = project_dir + '/%s.what' % project_name
-        if not os.path.exists(fname):
+            #---- folder architecture ----
             
-            filecontent = [['Project name:', project_name],
-                           ['Author:', self.author.text()],
-                           ['Created:', self.date.text()],
-                           ['Modified:', self.date.text()],
-                           ['Software:', self.createdby.text()],
-                           ['', ''],
-                           ['Latitude (DD N):', self.Lat_SpinBox.value()],
-                           ['Longitude (DD W):', self.Lon_SpinBox.value()]
-                           ]
-            
-            print 'Creating file %s.what' % project_name 
-            
-            with open(fname, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(filecontent)
+            if not os.path.exists(project_dir + '/Meteo/Raw'):
+                os.makedirs(project_dir + '/Meteo/Raw')
+            if not os.path.exists(project_dir + '/Meteo/Input'):
+                os.makedirs(project_dir + '/Meteo/Input')
+            if not os.path.exists(project_dir + '/Meteo/Output'):
+                os.makedirs(project_dir + '/Meteo/Output')
+            if not os.path.exists(project_dir + '/Water Levels'):
+                os.makedirs(project_dir + '/Water Levels')
                 
-        print '---------------'
+            #---- project.what ----
+                
+            fname = project_dir + '/%s.what' % project_name
+            if not os.path.exists(fname):
+                
+                project_name = project_name.encode('utf-8')
+                author = self.author.text().encode('utf-8')
+                
+                filecontent = [['Project name:', project_name],
+                               ['Author:', author],
+                               ['Created:', self.date.text()],
+                               ['Modified:', self.date.text()],
+                               ['Software:', self.createdby.text()],
+                               ['', ''],
+                               ['Latitude (DD N):', self.Lat_SpinBox.value()],
+                               ['Longitude (DD W):', self.Lon_SpinBox.value()]
+                               ]
+                
+                print 'Creating file %s.what' % project_name.decode('utf8')
+                
+                with open(fname, 'wb') as f:
+                    writer = csv.writer(f, delimiter='\t')
+                    writer.writerows(filecontent)
+                                    
+            self.close()
+            
+            print '---------------'
+            
+            self.NewProjectSignal.emit(fname)
+
+        except:
+
+            print 'There was a problem creating the project. Project not saved.'
+            print '---------------'
         
-        self.close()
-        
-        self.NewProjectSignal.emit(fname)
         
     def cancel_save_project(self):
         
@@ -346,7 +360,7 @@ if __name__ == '__main__':
     
     app = QtGui.QApplication(argv)   
     instance_1 = NewProject('WHAT')
-    instance_1.show()
+    instance_1.exec_()
     instance_1.setFixedSize(instance_1.size())
     
     app.exec_() 

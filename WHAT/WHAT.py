@@ -191,13 +191,16 @@ class MainWindow(QtGui.QMainWindow):
         
         self.project_display = QtGui.QPushButton()
         self.project_display.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.project_display.setFont(StyleDB.font_menubar)
+        self.project_display.setMinimumWidth(100)
         
         self.btn_new_project = QtGui.QToolButton()
         self.btn_new_project.setAutoRaise(True)
         self.btn_new_project.setIcon(iconDB.new_project)
         self.btn_new_project.setToolTip(ttipDB.new_project)
         self.btn_new_project.setFocusPolicy(QtCore.Qt.NoFocus)
-                
+        self.btn_new_project.setIconSize(StyleDB.iconSize2)
+                          
         self.menubar_widget = QtGui.QWidget()
         subgrid_menubar = QtGui.QGridLayout()
         
@@ -212,19 +215,36 @@ class MainWindow(QtGui.QMainWindow):
         subgrid_menubar.setSpacing(3)
         subgrid_menubar.setContentsMargins(0, 0, 0, 5) #Left, Top, Right, Bottom 
         subgrid_menubar.setColumnStretch(1, 500)
-        subgrid_menubar.setColumnMinimumWidth(1, 100)
+#        subgrid_menubar.setColumnMinimumWidth(1, 100)
         subgrid_menubar.setRowMinimumHeight(0, 28)
         
         self.menubar_widget.setLayout(subgrid_menubar)
         
         #------------------------------------------------------- TAB WIDGET ----
-        
+           
         Tab_widget = QtGui.QTabWidget()
         
+        #---- Custom TabBar Height ----
+        
+        # http://stackoverflow.com/questions/12428917/
+        # pyqt4-set-size-of-the-tab-bar-in-qtabwidget
+        
+        class TabBar(QtGui.QTabBar):
+
+           def tabSizeHint(self, index):
+               width = QtGui.QTabBar.tabSizeHint(self, index).width()
+               return QtCore.QSize(width, 32)
+        tab_bar = TabBar()       
+        Tab_widget.setTabBar(tab_bar)
+        
+        #---- WIDGETS ----
+                
         self.tab_dwnld_data = TabDwnldData(self)
         self.tab_fill = TabFill(self)
         tab_about = TabAbout(self)
         self.tab_hydrograph = TabHydrograph(self)
+        
+        #---- LAYOUT ----
         
         Tab_widget.addTab(self.tab_dwnld_data, LabelDB.TAB1)        
         Tab_widget.addTab(self.tab_fill, LabelDB.TAB2) 
@@ -306,7 +326,7 @@ class MainWindow(QtGui.QMainWindow):
             
             msgtxt = '''
                      <b>Unable to read the project file.<br><br>
-                     %s does not exist.<br><br> Please open an existing
+                     "%s" does not exist.<br><br> Please open an existing
                      project or create a new one.<b>
                      ''' % self.projectfile
             
@@ -340,19 +360,42 @@ class MainWindow(QtGui.QMainWindow):
         self.new_project_window.move(qr.topLeft())
         
         self.new_project_window.clear_UI()
-        self.new_project_window.show()
+        self.new_project_window.exec_()
         self.new_project_window.setFixedSize(self.new_project_window.size())
             
     #---------------------------------------------------------------------------
     def select_project(self):
         '''
-        <select_project> is called by the event <btn_open_project.clicked>.
+        "select_project" is called by the event "self.project_display.clicked".
         It allows the user to select a new active project directory.
         '''
     #---------------------------------------------------------------------------
         
+#        directory = path.abspath('../Projects')
+#        print directory
+        
+#        iconDB = db.icons()
+#        styleDB = db.styleUI()
+#        
+#        self.dialog = QtGui.QFileDialog()
+#        self.dialog.setDirectory(directory)
+#        self.dialog.setNameFilters(['*.what'])
+#        self.dialog.setLabelText(QtGui.QFileDialog.FileName,'Open Project')
+#        self.dialog.setOptions(QtGui.QFileDialog.ReadOnly)
+#        self.dialog.setWindowTitle('Open Project')
+#        self.dialog.setWindowIcon(iconDB.WHAT)
+#        self.dialog.setFont(styleDB.font1)
+#        self.dialog.setViewMode(QtGui.QFileDialog.List)
+#        
+#        self.dialog.fileSelected.connect(self.new_project_created)
+#        
+#        self.dialog.exec_()
+      
+       
+        directory = path.abspath('../Projects')
+
         filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                self, 'Open Project', '../Projects', '*.what')
+                                      self, 'Open Project', directory, '*.what')
                                    
         if filename:
 
@@ -439,7 +482,7 @@ class MainWindow(QtGui.QMainWindow):
         print 'Checking project files and folders integrity'
         
         HeaderDB = db.headers()
-        
+        print self.projectfile
         if not path.exists(self.projectfile):
             print 'Project file does not exist.'
             return False
@@ -2102,15 +2145,15 @@ class TabDwnldData(QtGui.QWidget):
         is clicked.
         '''
     #===========================================================================
-
-        self.widget_search4stations.show()
-        self.widget_search4stations.setFixedSize(
-                                             self.widget_search4stations.size())
                                              
         qr = self.widget_search4stations.frameGeometry()
         cp = self.parent.frameGeometry().center()
         qr.moveCenter(cp)
         self.widget_search4stations.move(qr.topLeft())
+        
+        self.widget_search4stations.show()
+        self.widget_search4stations.setFixedSize(
+                                             self.widget_search4stations.size())
     
     #===========================================================================
     def search4stations(self):
@@ -4927,8 +4970,10 @@ class WHATPref():
     #---------------------------------------------------------------------------
     def save_pref_file(self):
     #---------------------------------------------------------------------------
-            
-        fcontent = [['Project File:', self.projectfile],
+        
+        projectfile = path.relpath(self.projectfile).encode('utf-8')
+        
+        fcontent = [['Project File:', projectfile],
                     ['Language:', self.language]]
        
         with open('WHAT.pref', 'wb') as f:
@@ -4953,7 +4998,7 @@ class WHATPref():
             reader = csv.reader(reader, delimiter='\t')
             reader = list(reader)
             
-            self.projectfile = reader[0][1]
+            self.projectfile = reader[0][1].decode('utf-8')
             self.language = reader[1][1]
 
 #===============================================================================                
@@ -4981,7 +5026,7 @@ class MyProject():
         reader = csv.reader(reader, delimiter='\t')
         reader = list(reader)
             
-        self.name = reader[0][1]
+        self.name = reader[0][1].decode('utf-8')
         self.lat = float(reader[6][1])
         self.lon = float(reader[7][1])
         
