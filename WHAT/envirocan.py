@@ -82,12 +82,12 @@ def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
     url += 'searchHistoricDataStations_e.html?'
     url += 'searchType=stnProx&timeframe=1&txtRadius=%d' % RADIUS
     url += '&selCity=&selPark=&optProxType=custom'
-       
+
     deg, mnt, sec = decdeg2dms(np.abs(LAT))
     url += '&txtCentralLatDeg=%d' % deg
     url += '&txtCentralLatMin=%d' % mnt
     url += '&txtCentralLatSec=%d' % sec
-                                                                     
+
     deg, mnt, sec = decdeg2dms(np.abs(LON))
     url += '&txtCentralLongDeg=%d' % deg
     url += '&txtCentralLongMin=%d' % mnt
@@ -103,11 +103,11 @@ def search4meteo(LAT, LON, RADIUS, YearMin, YearMax):
     try:
         f = urlopen(url)
     
-        # write downlwaded content to local file
-#        with open("url.txt", "wb") as local_file:
-#            local_file.write(f.read())
-#    
-#        f = urlopen(url)
+#         write downlwaded content to local file
+        with open("url.txt", "wb") as local_file:
+            local_file.write(f.read())
+    
+        f = urlopen(url)
     
         #----------------------------------------------- Results Extraction ----
         

@@ -34,8 +34,6 @@ from os import getcwd, listdir, makedirs, path
 from string import maketrans
 from datetime import datetime
 import platform
-import re
-import os
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -66,7 +64,15 @@ import envirocan
 from fill_weather_data import Weather_File_Info
 import imageviewer
 import waterlvl_calc
-import new_project
+import what_project
+
+#---- DATABASES ----
+
+labelDB = []
+iconDB = []
+styleDB = []
+ttipDB = []
+headerDB = []
 
 # The code is segmented in two main sections: the GUI section and the
 # WORKER sections.
@@ -141,8 +147,8 @@ class MainWindow(QtGui.QMainWindow):
         
         self.projectInfo = MyProject(self)
         self.whatPref = WHATPref(self)
-        self.new_project_window = new_project.NewProject(software_version)
-        self.open_project_window = new_project.OpenProject()
+        self.new_project_window = what_project.NewProject(software_version)
+        self.open_project_window = what_project.OpenProject()
         
         #------------------------------------------------------ PREFERENCES ----
                 
@@ -155,30 +161,30 @@ class MainWindow(QtGui.QMainWindow):
         
         #-------------------------------------------------------- DATABASES ----
         
-        global LabelDB    
-        LabelDB = db.labels(language)
+        global labelDB
+        labelDB = db.labels(language)
         global iconDB
         iconDB = db.icons()
-        global StyleDB
-        StyleDB = db.styleUI()
+        global styleDB
+        styleDB = db.styleUI()
         global ttipDB
         ttipDB = db.tooltips(language)
-        global HeaderDB
-        HeaderDB = db.headers()
+        global headerDB
+        headerDB = db.headers()
         
         #------------------------------------------------ MAIN WINDOW SETUP ----
 
         self.setMinimumWidth(1250)
         self.setWindowTitle(software_version)
         self.setWindowIcon(iconDB.WHAT)
-        self.setFont(StyleDB.font1)                
+        self.setFont(styleDB.font1)                
                         
         #----------------------------------------------------- MAIN CONSOLE ----
         
         self.main_console = QtGui.QTextEdit()        
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
-        self.main_console.setFont(StyleDB.font_console)
+        self.main_console.setFont(styleDB.font_console)
         
         self.write2console(
         '''<font color=black>Thanks for using %s.</font>''' % software_version)
@@ -194,7 +200,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.project_display = QtGui.QPushButton()
         self.project_display.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.project_display.setFont(StyleDB.font_menubar)
+        self.project_display.setFont(styleDB.font_menubar)
         self.project_display.setMinimumWidth(100)
         
         self.btn_new_project = QtGui.QToolButton()
@@ -202,7 +208,7 @@ class MainWindow(QtGui.QMainWindow):
         self.btn_new_project.setIcon(iconDB.new_project)
         self.btn_new_project.setToolTip(ttipDB.new_project)
         self.btn_new_project.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_new_project.setIconSize(StyleDB.iconSize2)
+        self.btn_new_project.setIconSize(styleDB.iconSize2)
                           
         self.menubar_widget = QtGui.QWidget()
         subgrid_menubar = QtGui.QGridLayout()
@@ -249,10 +255,10 @@ class MainWindow(QtGui.QMainWindow):
         
         #---- LAYOUT ----
         
-        Tab_widget.addTab(self.tab_dwnld_data, LabelDB.TAB1)        
-        Tab_widget.addTab(self.tab_fill, LabelDB.TAB2) 
-        Tab_widget.addTab(self.tab_hydrograph, LabelDB.TAB3) 
-        Tab_widget.addTab(tab_about, LabelDB.TAB4)
+        Tab_widget.addTab(self.tab_dwnld_data, labelDB.TAB1)        
+        Tab_widget.addTab(self.tab_fill, labelDB.TAB2) 
+        Tab_widget.addTab(self.tab_hydrograph, labelDB.TAB3) 
+        Tab_widget.addTab(tab_about, labelDB.TAB4)
         
         Tab_widget.setCornerWidget(self.menubar_widget)
         
@@ -374,10 +380,16 @@ class MainWindow(QtGui.QMainWindow):
         '''
     #---------------------------------------------------------------------------
         
+        qr = self.open_project_window.frameGeometry()
+        cp = self.frameGeometry().center()
+        qr.moveCenter(cp)
+        self.open_project_window.move(qr.topLeft())
+        
+        self.open_project_window.exec_()
+        self.open_project_window.setFixedSize(self.open_project_window.size())
+        
         #------------------------------------------- Custom File Dialog (1) ----
         
-#        styleDB = db.styleUI()
-#        
 #        self.dialog = QtGui.QFileDialog()
 #        self.dialog.setDirectory(directory)
 #        self.dialog.setNameFilters(['*.what'])
@@ -391,16 +403,6 @@ class MainWindow(QtGui.QMainWindow):
 #        self.dialog.fileSelected.connect(self.new_project_created)
 #        
 #        self.dialog.exec_()
-        
-        #------------------------------------------- Custom File Dialog (2) ----
-        
-        qr = self.open_project_window.frameGeometry()
-        cp = self.frameGeometry().center()
-        qr.moveCenter(cp)
-        self.open_project_window.move(qr.topLeft())
-        
-        self.open_project_window.exec_()
-        self.open_project_window.setFixedSize(self.open_project_window.size())
        
         #----------------------------------------------------- Stock Dialog ----
        
@@ -490,7 +492,6 @@ class MainWindow(QtGui.QMainWindow):
         
         print 'Checking project files and folders integrity'
         
-        HeaderDB = db.headers()
         print self.projectfile
         if not path.exists(self.projectfile):
             print 'Project file does not exist.'
@@ -533,7 +534,7 @@ class MainWindow(QtGui.QMainWindow):
                    'A new one has been created.')
             print msg
             
-            fcontent = HeaderDB.weather_stations
+            fcontent = headerDB.weather_stations
             
             with open(fname, 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
@@ -544,7 +545,7 @@ class MainWindow(QtGui.QMainWindow):
         filename = self.projectdir + '/graph_layout.lst'
         if not path.exists(filename):
             
-            fcontent = HeaderDB.graph_layout
+            fcontent = headerDB.graph_layout
                         
             msg = ('No "graph_layout.lst" file found. ' +
                    'A new one has been created.')
@@ -589,15 +590,6 @@ class TabHydrograph(QtGui.QWidget):
         self.fwaterlvl = []
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
-        
-        #-------------------------------------------------------- DATABASES ----
-        
-        language = self.parent.whatPref.language
-        
-        LabelDB = db.labels(language)
-        iconDB = db.icons()
-        styleDB = db.styleUI()
-        ttipDB = db.tooltips(language)
         
         #----------------------------------------------- WEATHER AVG WINDOW ----
         
@@ -1706,8 +1698,8 @@ class TabDwnldData(QtGui.QWidget):
         self.initUI()        
         
     def initUI(self):
-        
-    #-------------------------------------------------------SubGrid Station-----
+       
+        #-------------------------------------------------- SubGrid Station ----
 
         #----- SubGrid Weather Station -----#
         
@@ -1719,13 +1711,13 @@ class TabDwnldData(QtGui.QWidget):
         btn_search4station.setAutoRaise(True)
         btn_search4station.setIcon(iconDB.search)
         btn_search4station.setToolTip(ttipDB.search4stations)
-        btn_search4station.setIconSize(StyleDB.iconSize2)
+        btn_search4station.setIconSize(styleDB.iconSize2)
         
         btn_browse_staList = QtGui.QToolButton()
         btn_browse_staList.setIcon(iconDB.openFolder)
         btn_browse_staList.setAutoRaise(True)
         btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
-        btn_browse_staList.setIconSize(StyleDB.iconSize2)
+        btn_browse_staList.setIconSize(styleDB.iconSize2)
         
         #btn_refresh_staList = QtGui.QToolButton()
         #btn_refresh_staList.setAutoRaise(True)
@@ -1784,7 +1776,7 @@ class TabDwnldData(QtGui.QWidget):
          
         subgrid_Station = QtGui.QGridLayout()
         Station_widget = QtGui.QFrame()
-        Station_widget.setFrameStyle(StyleDB.frame)                      
+        Station_widget.setFrameStyle(styleDB.frame)                      
         
         row = 0
         subgrid_Station.addWidget(staName_label, row, 1)
@@ -1803,10 +1795,10 @@ class TabDwnldData(QtGui.QWidget):
                 
         #----------------------------------------------- GRID DOWNLOAD DATA ----
                 
-        self.btn_get = QtGui.QPushButton(LabelDB.btn_GetData)
+        self.btn_get = QtGui.QPushButton(labelDB.btn_GetData)
         self.btn_get.setIcon(iconDB.download)
         self.btn_get.setToolTip(ttipDB.btn_GetData)
-        self.btn_get.setIconSize(StyleDB.iconSize2)        
+        self.btn_get.setIconSize(styleDB.iconSize2)        
                                  
         grid_TOP = QtGui.QGridLayout()
         TOP_widget = QtGui.QFrame()
@@ -1833,7 +1825,7 @@ class TabDwnldData(QtGui.QWidget):
         
         grid_display = QtGui.QGridLayout()
         display_grid_widget = QtGui.QFrame()
-        display_grid_widget.setFrameStyle(StyleDB.frame)
+        display_grid_widget.setFrameStyle(styleDB.frame)
         
         row = 0
         grid_display.addWidget(self.merge_stats_display, row, 0)
@@ -1844,17 +1836,17 @@ class TabDwnldData(QtGui.QWidget):
         #---- ASSEMBLING SubGrids ----
     
         self.merge_stats_display.setMaximumHeight(200)
-        btn_select = QtGui.QPushButton(LabelDB.btn_select_rawData)
+        btn_select = QtGui.QPushButton(labelDB.btn_select_rawData)
         btn_select.setToolTip(ttipDB.btn_select_rawData)
         btn_select.setIcon(iconDB.openFile)
-        btn_select.setIconSize(StyleDB.iconSize2)
+        btn_select.setIconSize(styleDB.iconSize2)
         
-        btn_save = QtGui.QPushButton(LabelDB.btn_save_concatenate)
+        btn_save = QtGui.QPushButton(labelDB.btn_save_concatenate)
         btn_save.setToolTip(ttipDB.btn_save_concatenate)
         btn_save.setIcon(iconDB.save)
-        btn_save.setIconSize(StyleDB.iconSize2)
+        btn_save.setIconSize(styleDB.iconSize2)
         
-        self.saveAuto_checkbox = QtGui.QCheckBox(LabelDB.saveMeteoAuto)
+        self.saveAuto_checkbox = QtGui.QCheckBox(labelDB.saveMeteoAuto)
         self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
               
         grid_BOTTOM = QtGui.QGridLayout()
@@ -1875,21 +1867,21 @@ class TabDwnldData(QtGui.QWidget):
         #-------------------------------------------------------- MAIN GRID ----
 
         self.staList_table = QtGui.QTableWidget()
-        self.staList_table.setFrameStyle(StyleDB.frame)
+        self.staList_table.setFrameStyle(styleDB.frame)
                 
-        TITLE_TOP = QtGui.QLabel(LabelDB.title_download)    
-        TITLE_BOTTOM  = QtGui.QLabel(LabelDB.title_concatenate)
+        TITLE_TOP = QtGui.QLabel(labelDB.title_download)    
+        TITLE_BOTTOM  = QtGui.QLabel(labelDB.title_concatenate)
         
         line1 = QtGui.QFrame()
-        line1.setFrameStyle(StyleDB.HLine)
+        line1.setFrameStyle(styleDB.HLine)
         line2 = QtGui.QFrame()
-        line2.setFrameStyle(StyleDB.HLine)
+        line2.setFrameStyle(styleDB.HLine)
         line3 = QtGui.QFrame()
-        line3.setFrameStyle(StyleDB.HLine)
+        line3.setFrameStyle(styleDB.HLine)
         line4 = QtGui.QFrame()
-        line4.setFrameStyle(StyleDB.HLine)
+        line4.setFrameStyle(styleDB.HLine)
 #        VLine1 = QtGui.QFrame()      
-#        VLine1.setFrameStyle(StyleDB.VLine)  
+#        VLine1.setFrameStyle(styleDB.VLine)  
         
         grid_MAIN = QtGui.QGridLayout()
         
@@ -2005,7 +1997,7 @@ class TabDwnldData(QtGui.QWidget):
         Gov. of Can. website.
         '''
     #===========================================================================
-
+         
         now = datetime.now()
         
         #------------------------------------------------------- Left Panel ----
@@ -2109,11 +2101,11 @@ class TabDwnldData(QtGui.QWidget):
         #---- Widgets ----
         
         line1 = QtGui.QFrame()
-        line1.setFrameStyle(StyleDB.VLine)
+        line1.setFrameStyle(styleDB.VLine)
         
         self.btn_go_search4station = QtGui.QPushButton('Search')
         self.btn_go_search4station.setIcon(iconDB.search)
-        self.btn_go_search4station.setIconSize(StyleDB.iconSize2)
+        self.btn_go_search4station.setIconSize(styleDB.iconSize2)
         
         #---- GRID ----
                         
@@ -2138,7 +2130,7 @@ class TabDwnldData(QtGui.QWidget):
         grid_search4stations.setRowStretch(row + 1, 100)
         
         self.widget_search4stations.setLayout(grid_search4stations)
-        self.widget_search4stations.setFont(StyleDB.font1)
+        self.widget_search4stations.setFont(styleDB.font1)
         
         #------------------------------------------------------ MAIN WINDOW ----
         
@@ -2294,6 +2286,8 @@ class TabDwnldData(QtGui.QWidget):
         '''
     #===========================================================================
         
+        #-----------------------------------------------------------------------
+        
         self.staName_display.clear()
         self.staList = []        
         station_list_path = (self.parent.projectdir + '/weather_stations.lst')
@@ -2309,7 +2303,7 @@ class TabDwnldData(QtGui.QWidget):
         #--------------------------------------- CHECK STATION LIST VERSION ----
         
         # Check if the list is from an older version, and update it if yes
-        header = HeaderDB.weather_stations[0]
+        header = headerDB.weather_stations[0]
         
         nCONFG, nPARA = np.shape(reader)         
         if nPARA < len(header):
@@ -2384,14 +2378,13 @@ class TabDwnldData(QtGui.QWidget):
         QtGui.QApplication.restoreOverrideCursor()
     
     def build_staList_table(self):
-        
+       
         #http://codeprogress.com/python/libraries/pyqt/showPyQTExample.php?index=406&key=QTableWdigetHeaderAlignment
         self.staList_table.resizeColumnsToContents()
         self.staList_table.setSortingEnabled(True)
                 
         header = ('Weather Stations', 'Prov.', 'Proximity \n (km)', 'From \n Year', 'To \n Year', '')
         staList = self.staList
-        indx = [0, 4, 6]  
   
         ncol = len(header)
         nrow = len(staList[:, 0])
@@ -2745,14 +2738,14 @@ class TabDwnldData(QtGui.QWidget):
         data files that has been downloaded.
         '''
     #===========================================================================    
-        
+       
         # Reset UI and start the concatenation of the data.         
         
         self.staName_display.setEnabled(True)
         self.yStart_edit.setEnabled(True)
         self.yEnd_edit.setEnabled(True)
         self.parent.pbar.hide()
-        self.btn_get.setText(labelDB.btn_get_text)
+        self.btn_get.setText(labelDB.btn_GetData)
         self.btn_get.setIcon(iconDB.download)
         
         if len(fname) > 0:
@@ -2796,7 +2789,7 @@ class TabFill(QtGui.QWidget):
     #                 ----------------------------------
     #
     #===========================================================================
-                        
+        
         #--------------------------------------------------- Target Station ----
         
         #---- Widgets ----
@@ -2810,7 +2803,7 @@ class TabFill(QtGui.QWidget):
         self.btn3 = QtGui.QToolButton()
         self.btn3.setIcon(iconDB.refresh2)
         self.btn3.setAutoRaise(True)
-        self.btn3.setIconSize(StyleDB.iconSize2)
+        self.btn3.setIconSize(styleDB.iconSize2)
         
         #---- Grid ----
         
@@ -2842,14 +2835,14 @@ class TabFill(QtGui.QWidget):
         self.Nmax.setRange(0, 99)
         self.Nmax.setSingleStep(1)
         self.Nmax.setValue(4)
-        distlimit_label = QtGui.QLabel(LabelDB.distlimit)
+        distlimit_label = QtGui.QLabel(labelDB.distlimit)
         distlimit_label.setToolTip(ttipDB.distlimit)
         self.distlimit = QtGui.QSpinBox()
         self.distlimit.setRange(-1, 9999)
         self.distlimit.setSingleStep(1)
         self.distlimit.setValue(100)
         self.distlimit.setToolTip(ttipDB.distlimit)
-        altlimit_label = QtGui.QLabel(LabelDB.altlimit)
+        altlimit_label = QtGui.QLabel(labelDB.altlimit)
         altlimit_label.setToolTip(ttipDB.altlimit)
         self.altlimit = QtGui.QSpinBox()
         self.altlimit.setRange(-1, 9999)
@@ -2951,14 +2944,14 @@ class TabFill(QtGui.QWidget):
          
         grid_leftPanel = QtGui.QGridLayout()
         LEFT_widget = QtGui.QFrame()
-        LEFT_widget.setFrameStyle(StyleDB.frame) 
+        LEFT_widget.setFrameStyle(styleDB.frame) 
 
         seprator1 = QtGui.QFrame()
-        seprator1.setFrameStyle(StyleDB.HLine)
+        seprator1.setFrameStyle(styleDB.HLine)
         seprator2 = QtGui.QFrame()
-        seprator2.setFrameStyle(StyleDB.HLine)        
+        seprator2.setFrameStyle(styleDB.HLine)        
         seprator3 = QtGui.QFrame()
-        seprator3.setFrameStyle(StyleDB.HLine)
+        seprator3.setFrameStyle(styleDB.HLine)
         
         row = 0 
         grid_leftPanel.addWidget(subgrid_widget6, row, 0, 1, 3) # SubGrid 6: Target Sta.
@@ -2985,11 +2978,11 @@ class TabFill(QtGui.QWidget):
         self.FillTextBox = QtGui.QTextEdit()
         self.FillTextBox.setReadOnly(True)
 #        self.FillTextBox.setFrameStyle(0)
-        self.FillTextBox.setFrameStyle(StyleDB.frame)
+        self.FillTextBox.setFrameStyle(styleDB.frame)
         
         grid_RIGHT = QtGui.QGridLayout()
         RIGHT_widget = QtGui.QFrame()
-#        RIGHT_widget.setFrameStyle(StyleDB.frame)
+#        RIGHT_widget.setFrameStyle(styleDB.frame)
         RIGHT_widget.setFrameStyle(0)
         
         row = 0
@@ -3005,15 +2998,15 @@ class TabFill(QtGui.QWidget):
         
         #---------------------------------------------------------- TOOLBAR ----
         
-        self.btn_fill = QtGui.QPushButton(LabelDB.btn_fill_weather)
+        self.btn_fill = QtGui.QPushButton(labelDB.btn_fill_weather)
         self.btn_fill.setIcon(iconDB.play)
         self.btn_fill.setToolTip(ttipDB.btn_fill)
-        self.btn_fill.setIconSize(StyleDB.iconSize2)
+        self.btn_fill.setIconSize(styleDB.iconSize2)
         
-        self.btn_fill_all = QtGui.QPushButton(LabelDB.btn_fill_all_weather)
+        self.btn_fill_all = QtGui.QPushButton(labelDB.btn_fill_all_weather)
         self.btn_fill_all.setToolTip(ttipDB.btn_fill_all)
         self.btn_fill_all.setIcon(iconDB.forward)
-        self.btn_fill_all.setIconSize(StyleDB.iconSize2)
+        self.btn_fill_all.setIconSize(styleDB.iconSize2)
         
         grid_toolbar = QtGui.QGridLayout()
         widget_toolbar = QtGui.QFrame()

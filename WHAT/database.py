@@ -252,9 +252,9 @@ class headers():
                                   'Proximity (km)']]
         
 if __name__ == '__main__':
-    
-    HeaderDB = headers()
-    StyleDB = styleUI()
+    pass
+#    HeaderDB = headers()
+#    StyleDB = styleUI()
     
 #    style = QtGui.QFrame()
 #    style.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
