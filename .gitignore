@@ -59,4 +59,7 @@ Releases/
 WHAT.pref
 Doc/
 Backup_Projects/
+WHATMANUAL/*.log
+WHATMANUAL/*.aux
+WHATMANUAL/*.gz
 
