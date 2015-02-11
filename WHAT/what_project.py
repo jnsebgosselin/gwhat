@@ -183,13 +183,13 @@ class NewProject(QtGui.QDialog):
         #--------------------------------------------------------- Toolbar ----
         
         btn_save_project = QtGui.QPushButton(' Save')
-#        btn_save_project.setIcon(iconDB.new_project)
-#        btn_save_project.setIconSize(StyleDB.iconSize2)
+        btn_save_project.setIcon(iconDB.new_project)
+        btn_save_project.setIconSize(StyleDB.iconSize2)
         btn_save_project.setMinimumWidth(100)
 
         btn_cancel = QtGui.QPushButton(' Cancel')
-#        btn_cancel.setIcon(iconDB.clear_search)
-#        btn_cancel.setIconSize(StyleDB.iconSize2)
+        btn_cancel.setIcon(iconDB.clear_search)
+        btn_cancel.setIconSize(StyleDB.iconSize2)
         btn_cancel.setMinimumWidth(100)
         
         toolbar_widget = QtGui.QFrame()
@@ -393,32 +393,51 @@ class OpenProject(QtGui.QDialog):
         
         #--------------------------------------------------- Tree File View ----
 
-#        self.tree =  QtGui.QListView()
-        self.tree =  QtGui.QTreeView()
-        self.tree.setModel(self.model)
-        self.tree.setColumnHidden(1, True)
-        self.tree.setColumnHidden(2, True)
-        self.tree.setColumnHidden(3, True)
-        self.tree.setHeaderHidden(True)
+        self.centralPanel =  QtGui.QListView()
+        self.centralPanel.setModel(self.model)
+        self.centralPanel.setRootIndex(self.model.index(self.home))
         
-        self.tree.setRootIndex(self.model.index(self.home))
+        self.leftPanel =  QtGui.QTreeView()
+        self.leftPanel.setModel(self.model)
+        self.leftPanel.setColumnHidden(1, True)
+        self.leftPanel.setColumnHidden(2, True)
+        self.leftPanel.setColumnHidden(3, True)
+        self.leftPanel.setHeaderHidden(True)
+        self.leftPanel.setRootIndex(self.model.index(''))
         
-        #---- if QListView ----
+        self.centralPanel.setMinimumWidth(350)
+                
+        #---- Events ----        
         
         # http://stackoverflow.com/questions/4511908/
         # connect-double-click-event-of-qlistview-with-method-in-pyqt4
-        self.tree.doubleClicked.connect(self.item_ddclick)
-        
-        #---- if QTreeView ----
-        
+        self.centralPanel.doubleClicked.connect(self.item_ddclick)
+       
         # http://stackoverflow.com/questions/23993895/
         # python-pyqt-qtreeview-example-selection
         
         signal = 'selectionChanged(QItemSelection, QItemSelection)'
-        QtCore.QObject.connect(self.tree.selectionModel(), 
+        QtCore.QObject.connect(self.centralPanel.selectionModel(), 
                                QtCore.SIGNAL(signal),
                                self.new_item_selected)
                                
+        #------------------------------------------------ Central QSplitter ----
+        
+        self.project_details = QtGui.QTextEdit()
+        self.project_details.setReadOnly(True)
+        linewrapmode = QtGui.QTextEdit.LineWrapMode.NoWrap
+        self.project_details.setLineWrapMode(linewrapmode)
+        self.project_details.setMaximumWidth(250)
+        
+        splitter = QtGui.QSplitter()
+        
+        splitter.addWidget(self.leftPanel)
+        splitter.addWidget(self.centralPanel)
+        splitter.addWidget(self.project_details)
+        
+#        splitter.setStretchFactor(0, 100)
+        splitter.setCollapsible(1, False)
+                 
         #------------------------------------------------------ TOP TOOLBAR ----
         
         #---- WIDGETS ----
@@ -517,16 +536,18 @@ class OpenProject(QtGui.QDialog):
         row = 0
         main_grid.addWidget(topTbar_widget, row, 0, 1, 2)
         row += 1
-        main_grid.addWidget(self.tree, row, 0, 1, 2)
+        main_grid.addWidget(splitter, row, 0, 1, 2)        
         row += 1
         main_grid.addWidget(projectname_label, row, 0)
         main_grid.addWidget(self.projectname_display, row, 1)
         row += 1
         main_grid.addWidget(toolbar_widget, row, 0, 1, 2)
         
-        main_grid.setVerticalSpacing(25)
-        main_grid.setColumnMinimumWidth(1, 350)
+        main_grid.setVerticalSpacing(10)
+#        main_grid.setColumnMinimumWidth(1, 350)
         main_grid.setRowMinimumHeight(1, 350)
+        main_grid.setRowStretch(1, 100)
+        main_grid.setColumnStretch(1, 100)
         main_grid.setContentsMargins(15, 15, 15, 15) # (L, T, R, B)
         
         self.setLayout(main_grid)
@@ -559,7 +580,10 @@ class OpenProject(QtGui.QDialog):
         
         Qdir = QtCore.QDir(self.home)
         print(Qdir.path())
-        print(Qdir.drives()[0].path())
+        import win32api
+        for i in range(len(Qdir.drives())):
+            print(Qdir.drives()[i].path())
+            print(win32api.GetVolumeInformation(Qdir.drives()[i].path()))
         print Qdir.homePath()
         
         if filepath == filepath2:
@@ -577,7 +601,7 @@ class OpenProject(QtGui.QDialog):
         dirname = self.pathMemory[self.memoryIndx]
             
         self.populate_dir_menu(dirname)
-        self.tree.setRootIndex(self.model.index(dirname))
+        self.centralPanel.setRootIndex(self.model.index(dirname))
         
         self.btn_goNext.setEnabled(True)
         if self.memoryIndx == 0:
@@ -592,7 +616,7 @@ class OpenProject(QtGui.QDialog):
         dirname = self.pathMemory[self.memoryIndx]
         
         self.populate_dir_menu(dirname)
-        self.tree.setRootIndex(self.model.index(dirname))
+        self.centralPanel.setRootIndex(self.model.index(dirname))
         
         self.btn_goPrevious.setEnabled(True)
         if self.memoryIndx == len(self.pathMemory) - 1:
@@ -609,7 +633,7 @@ class OpenProject(QtGui.QDialog):
         
     def item_ddclick(self, signal):
         
-        print('ddclick well received for:')
+        print('ddclick well received')
         
         filepath = self.model.filePath(signal)
         
@@ -631,23 +655,95 @@ class OpenProject(QtGui.QDialog):
     def new_item_selected(self, selected, deselected):
         
         print('selection changed')
+        
+        itemIndx = selected.indexes()
 
-        filepath = self.model.filePath(selected.indexes()[0])
+        if len(itemIndx) == 0:
+            self.projectfile = []
+            self.projectname_display.clear()
+            self.project_details.clear()
+            return
+
+        filepath = self.model.filePath(itemIndx[0])
 
         if os.path.splitext(filepath)[-1] == '.what':
             
             self.projectfile = filepath
             self.projectname_display.setText(os.path.basename(filepath))
-        
+            
+            #---- Reading Project File ----
+            
+            reader = open(filepath, 'rb')
+            reader = csv.reader(reader, delimiter='\t')
+            reader = list(reader)
+            
+#            name = reader[0][1].decode('utf-8')
+#            author = reader[1][1].decode('utf-8')
+#            lat = float(reader[6][1])
+#            lon = float(reader[7][1])
+            
+#            table = '''<table border="0" cellpadding="1" cellspacing="0" 
+#                       align="left">'''
+#            
+#            for i in range(len(reader)):
+#                self.project_details.append
+#                
+#                table += '<tr>' # + <td width=10></td>'
+#                table +=   '<td align="left">%s</td>' % reader[i][0].decode('utf-8')
+##                table +=   '<td align="left">&nbsp;:&nbsp;</td>'
+#                table +=   '<td align="left">%s</td>' % reader[i][1].decode('utf-8')
+#                table += '</tr>'
+#        
+#            table +=  '</table>'
+#            
+#            self.project_details.clear()
+#            self.project_details.setText(table)
+            
+            self.project_details.clear()
+            
+            header = ['Project: ', 'Author: ', 'Created: ', 'Modified: ',
+                       'Software: ', '----------', 'Latitude: ', 'Longitude: ']
+                       
+            table1 = '''<table border="0" cellpadding="1" cellspacing="0" 
+                        align="left">'''
+            for i in range(len(header)):
+    
+                table1 += '<tr>' # + <td width=10></td>'
+                table1 +=   '<td align="left">%s</td>' % header[i]
+                table1 +=   '<td align="left">%s</td>' % reader[i][1].decode('utf-8')
+                table1 += '</tr>'
+            
+            table1 += '</table>'
+            
+#            table2 = '''<table border="0" cellpadding="1" cellspacing="0" 
+#                        align="left">'''
+#            for i in range(6, 8):
+#    
+#                table2 += '<tr>' # + <td width=10></td>'
+#                table2 +=   '<td align="left">%s</td>' % header[i]
+#                table2 +=   '<td align="left">%s</td>' % reader[i][1].decode('utf-8')
+#                table2 += '</tr>'
+#            
+#            table2 += '</table>'
+                        
+            self.project_details.append(table1)
+#            self.project_details.append(table2)
+            
+            
+#            for i in range(len(reader)):
+#                info = reader[i][1].decode('utf-8')
+#                self.project_details.append('%s%s' % (header[i], info))
+                       
         else:
             
             self.projectfile = []
             self.projectname_display.clear()
+            self.project_details.clear()
             
     def update_directory(self, filepath):
         
         self.populate_dir_menu(filepath)
-        self.tree.setRootIndex(self.model.index(filepath))
+        self.centralPanel.setRootIndex(self.model.index(filepath))
         
         self.memoryIndx += 1
         self.pathMemory = self.pathMemory[:self.memoryIndx]
@@ -687,7 +783,7 @@ class SeFileSystemModel(QtGui.QFileSystemModel):
     def __init__(self, directory):
         
         QtGui.QFileSystemModel.__init__(self)
-        self.fileEndPattern = re.compile("^.*\.(\w{2,4})$")
+#        self.fileEndPattern = re.compile("^.*\.(\w{2,4})$")
         
         self.setRootPath(directory)
         self.setNameFilters(['*.what'])
@@ -699,15 +795,25 @@ class SeFileSystemModel(QtGui.QFileSystemModel):
         iconDB = db.icons()
         
         if index.column() == 0 and role == QtCore.Qt.DecorationRole:
-            if self.fileEndPattern.match(index.data()) is not None:
-                if index.data().endswith('what'):
-                    return iconDB.WHAT
-                else:
-                    return iconDB.WHAT
-            else:
-                return iconDB.openFolder
-        else:
-            return super(SeFileSystemModel, self).data(index, role)
+            if os.path.splitext(index.data())[-1] == '.what':
+                return iconDB.WHAT
+                   
+        return super(SeFileSystemModel, self).data(index, role)
+        
+        
+#        if index.column() == 0 and role == QtCore.Qt.DecorationRole:
+#            if self.fileEndPattern.match(index.data()) is not None:
+#            
+#                if index.data().endswith('what'):
+#                    return iconDB.WHAT
+#                else:
+#                    return super(SeFileSystemModel, self).data(index, role)
+##                    return iconDB.WHAT
+#            else:
+#                return super(SeFileSystemModel, self).data(index, role)
+##                return iconDB.openFolder
+#        else:
+#            return super(SeFileSystemModel, self).data(index, role)
         
         
   
@@ -716,11 +822,11 @@ if __name__ == '__main__':
     app = QtGui.QApplication(argv)   
     instance_1 = NewProject('WHAT')
     instance_1.show()
-    instance_1.setFixedSize(instance_1.size())
+#    instance_1.setFixedSize(instance_1.size())
     
     instance_2 = OpenProject()
     instance_2.show()
-    instance_2.setFixedSize(instance_2.size())
+#    instance_2.setFixedSize(instance_2.size())
     
     app.exec_() 
 

@@ -22,6 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 software_version = 'WHAT Beta 4.1.5'
 last_modification = '04/02/2015'
 
+# It is often said when developing interfaces that you need to fail fast,
+# and iterate often. When creating a UI, you will make mistakes. Just keep
+# moving forward, and remember to keep your UI out of the way.
+
+# http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
+
 #---- STANDARD LIBRARY IMPORTS ----
 
 import csv
@@ -148,7 +154,7 @@ class MainWindow(QtGui.QMainWindow):
         self.projectInfo = MyProject(self)
         self.whatPref = WHATPref(self)
         self.new_project_window = what_project.NewProject(software_version)
-#        self.open_project_window = what_project.OpenProject()
+        self.open_project_window = what_project.OpenProject()
         
         #------------------------------------------------------ PREFERENCES ----
                 
@@ -306,7 +312,7 @@ class MainWindow(QtGui.QMainWindow):
         self.btn_new_project.clicked.connect(self.show_new_project)
         self.project_display.clicked.connect(self.open_project)
         self.new_project_window.NewProjectSignal.connect(self.load_project)
-#        self.open_project_window.OpenProjectSignal.connect(self.load_project)                                                       
+        self.open_project_window.OpenProjectSignal.connect(self.load_project)                                                       
         
         #---------------------------------------------------- MESSAGE BOXES ----
         
