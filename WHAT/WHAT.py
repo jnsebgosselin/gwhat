@@ -148,7 +148,7 @@ class MainWindow(QtGui.QMainWindow):
         self.projectInfo = MyProject(self)
         self.whatPref = WHATPref(self)
         self.new_project_window = what_project.NewProject(software_version)
-        self.open_project_window = what_project.OpenProject()
+#        self.open_project_window = what_project.OpenProject()
         
         #------------------------------------------------------ PREFERENCES ----
                 
@@ -160,6 +160,10 @@ class MainWindow(QtGui.QMainWindow):
         self.projectdir = path.dirname(self.projectfile)
         
         #-------------------------------------------------------- DATABASES ----
+        
+        # http://stackoverflow.com/questions/423379/
+        # using-global-variables-in-a-function-other-
+        # than-the-one-that-created-them
         
         global labelDB
         labelDB = db.labels(language)
@@ -300,9 +304,9 @@ class MainWindow(QtGui.QMainWindow):
         #----------------------------------------------------------- EVENTS ----
         
         self.btn_new_project.clicked.connect(self.show_new_project)
-        self.project_display.clicked.connect(self.select_project)
+        self.project_display.clicked.connect(self.open_project)
         self.new_project_window.NewProjectSignal.connect(self.load_project)
-        self.open_project_window.OpenProjectSignal.connect(self.load_project)                                                       
+#        self.open_project_window.OpenProjectSignal.connect(self.load_project)                                                       
         
         #---------------------------------------------------- MESSAGE BOXES ----
         
@@ -362,35 +366,41 @@ class MainWindow(QtGui.QMainWindow):
         
         # Adapted from:
         # http://zetcode.com/gui/pysidetutorial/firstprograms
+                        
+        self.new_project_window.clear_UI()
         
         qr = self.new_project_window.frameGeometry()
         cp = self.frameGeometry().center()
         qr.moveCenter(cp)
         self.new_project_window.move(qr.topLeft())
         
-        self.new_project_window.clear_UI()
-        self.new_project_window.exec_()
+        self.new_project_window.setModal(True)
+        self.new_project_window.show()
         self.new_project_window.setFixedSize(self.new_project_window.size())
             
     #---------------------------------------------------------------------------
-    def select_project(self):
+    def open_project(self):
         '''
-        "select_project" is called by the event "self.project_display.clicked".
+        "open_project" is called by the event "self.project_display.clicked".
         It allows the user to select a new active project directory.
         '''
     #---------------------------------------------------------------------------
         
-        qr = self.open_project_window.frameGeometry()
-        cp = self.frameGeometry().center()
-        qr.moveCenter(cp)
-        self.open_project_window.move(qr.topLeft())
-        
-        self.open_project_window.exec_()
-        self.open_project_window.setFixedSize(self.open_project_window.size())
+#        qr = self.open_project_window.frameGeometry()
+#        cp = self.frameGeometry().center()
+#        qr.moveCenter(cp)
+#        self.open_project_window.move(qr.topLeft())
+#        
+#        self.open_project_window.setModal(True)
+#        self.open_project_window.show()
+#        self.open_project_window.setFixedSize(self.open_project_window.size())
         
         #------------------------------------------- Custom File Dialog (1) ----
         
 #        self.dialog = QtGui.QFileDialog()
+#        print(self.dialog.sidebarUrls())
+#        self.dialog.show()
+        
 #        self.dialog.setDirectory(directory)
 #        self.dialog.setNameFilters(['*.what'])
 #        self.dialog.setLabelText(QtGui.QFileDialog.FileName,'Open Project')
@@ -406,21 +416,21 @@ class MainWindow(QtGui.QMainWindow):
        
         #----------------------------------------------------- Stock Dialog ----
        
-#        directory = path.abspath('../Projects')
-#
-#        filename, _ = QtGui.QFileDialog.getOpenFileName(
-#                                      self, 'Open Project', directory, '*.what')
-#                                   
-#        if filename:
-#
-#            self.projectfile = filename                        
-#            self.load_project()
+        directory = path.abspath('../Projects')
+
+        filename, _ = QtGui.QFileDialog.getOpenFileName(
+                                      self, 'Open Project', directory, '*.what')
+                                   
+        if filename:
+
+            self.projectfile = filename                        
+            self.load_project(filename)
             
     #---------------------------------------------------------------------------
     def load_project(self, filename):
         '''
         This method is called either on startup during <initUI> or when a new
-        project folder is chosen with <select_project>.        
+        project folder is chosen with <open_project>.        
         '''
     #---------------------------------------------------------------------------
         

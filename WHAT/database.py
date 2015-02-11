@@ -45,6 +45,9 @@ class icons():
         self.stop = QIcon('Icons/process-stop.png')
         self.search = QIcon('Icons/search.png')
         self.settings = QIcon('Icons/settings.png')
+        self.go_previous = QIcon('Icons/go-previous.png')
+        self.go_next = QIcon('Icons/go-next.png')
+        self.go_up = QIcon('Icons/go-up.png')
         
         #---- Menu TOOLBAR ----
         

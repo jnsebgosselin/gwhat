@@ -183,13 +183,13 @@ class NewProject(QtGui.QDialog):
         #--------------------------------------------------------- Toolbar ----
         
         btn_save_project = QtGui.QPushButton(' Save')
-        btn_save_project.setIcon(iconDB.new_project)
-        btn_save_project.setIconSize(StyleDB.iconSize2)
+#        btn_save_project.setIcon(iconDB.new_project)
+#        btn_save_project.setIconSize(StyleDB.iconSize2)
         btn_save_project.setMinimumWidth(100)
 
         btn_cancel = QtGui.QPushButton(' Cancel')
-        btn_cancel.setIcon(iconDB.clear_search)
-        btn_cancel.setIconSize(StyleDB.iconSize2)
+#        btn_cancel.setIcon(iconDB.clear_search)
+#        btn_cancel.setIconSize(StyleDB.iconSize2)
         btn_cancel.setMinimumWidth(100)
         
         toolbar_widget = QtGui.QFrame()
@@ -369,7 +369,10 @@ class OpenProject(QtGui.QDialog):
     def __init__(self, parent=None):
         super(OpenProject, self).__init__(parent)
         
+        self.home = os.path.abspath('../Projects')
         self.projectfile = []
+        self.pathMemory = [self.home]
+        self.memoryIndx = 0
         
         self.initUI()
     
@@ -377,9 +380,7 @@ class OpenProject(QtGui.QDialog):
         
         iconDB = db.icons()
         styleDB = db.styleUI()
-    
-        directory = os.path.abspath('../Projects')
-        
+            
         #---------------------------------------------------- WINDOW SETUP ----
     
         self.setWindowTitle('Open Project')
@@ -388,18 +389,27 @@ class OpenProject(QtGui.QDialog):
         
         #------------------------------------------------ File System Model ----
     
-        self.model = SeFileSystemModel(directory)
+        self.model = SeFileSystemModel(self.home)
         
         #--------------------------------------------------- Tree File View ----
-        
+
+#        self.tree =  QtGui.QListView()
         self.tree =  QtGui.QTreeView()
         self.tree.setModel(self.model)
-        self.tree.setRootIndex(self.model.index(directory))
         self.tree.setColumnHidden(1, True)
         self.tree.setColumnHidden(2, True)
         self.tree.setColumnHidden(3, True)
         self.tree.setHeaderHidden(True)
-#            self.tree.setFont(styleDB.font1)
+        
+        self.tree.setRootIndex(self.model.index(self.home))
+        
+        #---- if QListView ----
+        
+        # http://stackoverflow.com/questions/4511908/
+        # connect-double-click-event-of-qlistview-with-method-in-pyqt4
+        self.tree.doubleClicked.connect(self.item_ddclick)
+        
+        #---- if QTreeView ----
         
         # http://stackoverflow.com/questions/23993895/
         # python-pyqt-qtreeview-example-selection
@@ -407,9 +417,69 @@ class OpenProject(QtGui.QDialog):
         signal = 'selectionChanged(QItemSelection, QItemSelection)'
         QtCore.QObject.connect(self.tree.selectionModel(), 
                                QtCore.SIGNAL(signal),
-                               self.showMeTheMoney)
-                                   
-        #---------------------------------------------------------- Toolbar ----
+                               self.new_item_selected)
+                               
+        #------------------------------------------------------ TOP TOOLBAR ----
+        
+        #---- WIDGETS ----
+        
+        self.btn_goPrevious = QtGui.QToolButton()
+        self.btn_goPrevious.setAutoRaise(True)
+        self.btn_goPrevious.setIcon(iconDB.go_previous)
+        self.btn_goPrevious.setToolTip('Go to the previous visited location')
+        self.btn_goPrevious.setIconSize(styleDB.iconSize2)
+        self.btn_goPrevious.setEnabled(False)
+        
+        self.btn_goNext = QtGui.QToolButton()
+        self.btn_goNext.setAutoRaise(True)
+        self.btn_goNext.setIcon(iconDB.go_next)
+        self.btn_goNext.setToolTip('Go to the next visited location')
+        self.btn_goNext.setIconSize(styleDB.iconSize2)
+        self.btn_goNext.setEnabled(False)
+        
+        self.btn_goUp = QtGui.QToolButton()
+        self.btn_goUp.setAutoRaise(True)
+        self.btn_goUp.setIcon(iconDB.go_up)
+        self.btn_goUp.setToolTip('Go up one directory')
+        self.btn_goUp.setIconSize(styleDB.iconSize2)
+        
+        btn_goHome = QtGui.QToolButton()
+        btn_goHome.setAutoRaise(True)
+        btn_goHome.setIcon(iconDB.home)
+        btn_goHome.setToolTip('Go to <i>Projects</i> folder')
+        btn_goHome.setIconSize(styleDB.iconSize2)
+        
+#        directory_label = QtGui.QLabel('Look in:')
+        
+        self.dir_menu = QtGui.QComboBox()
+        self.populate_dir_menu(self.home)
+        
+        #---- LAYOUT ----
+        
+        topTbar_widget = QtGui.QFrame()
+        topTbar_grid = QtGui.QGridLayout()
+        
+        row = 0
+        col = 0
+        topTbar_grid.addWidget(self.btn_goPrevious, row, col)
+        col += 1
+        topTbar_grid.addWidget(self.btn_goNext, row, col)
+        col += 1
+        topTbar_grid.addWidget(self.btn_goUp, row, col)
+        col += 1
+        topTbar_grid.addWidget(btn_goHome, row, col)
+        col += 1
+        topTbar_grid.setColumnMinimumWidth(col, 15)
+        col += 1
+        topTbar_grid.addWidget(self.dir_menu, row, col)
+                
+        topTbar_grid.setSpacing(0)
+        topTbar_grid.setColumnStretch(col, 100)
+        topTbar_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        
+        topTbar_widget.setLayout(topTbar_grid)
+                     
+        #--------------------------------------------------- BOTTOM TOOLBAR ----
         
         btn_open_project = QtGui.QPushButton(' Open')
         btn_open_project.setIcon(iconDB.open_project)
@@ -430,7 +500,7 @@ class OpenProject(QtGui.QDialog):
         col += 1
         toolbar_grid.addWidget(btn_open_project, row, col)
         
-        toolbar_grid.setSpacing(10)
+        toolbar_grid.setSpacing(5)
         toolbar_grid.setColumnStretch(col+1, 100)
         toolbar_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         
@@ -445,6 +515,8 @@ class OpenProject(QtGui.QDialog):
         main_grid = QtGui.QGridLayout()
         
         row = 0
+        main_grid.addWidget(topTbar_widget, row, 0, 1, 2)
+        row += 1
         main_grid.addWidget(self.tree, row, 0, 1, 2)
         row += 1
         main_grid.addWidget(projectname_label, row, 0)
@@ -454,12 +526,18 @@ class OpenProject(QtGui.QDialog):
         
         main_grid.setVerticalSpacing(25)
         main_grid.setColumnMinimumWidth(1, 350)
+        main_grid.setRowMinimumHeight(1, 350)
         main_grid.setContentsMargins(15, 15, 15, 15) # (L, T, R, B)
         
         self.setLayout(main_grid)
         
         #----------------------------------------------------------- EVENTS ----
-
+        
+        self.btn_goPrevious.clicked.connect(self.goPrevious)
+        self.btn_goNext.clicked.connect(self.goNext)
+        self.btn_goUp.clicked.connect(self.goUP)
+        btn_goHome.clicked.connect(self.goHOME)
+        self.dir_menu.currentIndexChanged.connect(self.dir_menu_changed)
         btn_open_project.clicked.connect(self.open_project)
         btn_cancel.clicked.connect(self.cancel_open_project)
     
@@ -473,30 +551,132 @@ class OpenProject(QtGui.QDialog):
     def cancel_open_project(self):
         
         self.close()
+        
+    def goUP(self):
+        
+        filepath = self.dir_menu.currentText()
+        filepath2 = os.path.dirname(filepath)
+        
+        Qdir = QtCore.QDir(self.home)
+        print(Qdir.path())
+        print(Qdir.drives()[0].path())
+        print Qdir.homePath()
+        
+        if filepath == filepath2:
+            print('Already to the top buddy...')
+            return
+        
+        self.update_directory(filepath2)
+        
+    def goPrevious(self):
+        
+        self.memoryIndx = max(self.memoryIndx - 1, 0)
+        
+        print self.memoryIndx
+        
+        dirname = self.pathMemory[self.memoryIndx]
+            
+        self.populate_dir_menu(dirname)
+        self.tree.setRootIndex(self.model.index(dirname))
+        
+        self.btn_goNext.setEnabled(True)
+        if self.memoryIndx == 0:
+            self.btn_goPrevious.setEnabled(False)
+        
+    def goNext(self):
+        
+        self.memoryIndx = min(self.memoryIndx + 1, len(self.pathMemory) - 1)
+        
+        print self.memoryIndx
+        
+        dirname = self.pathMemory[self.memoryIndx]
+        
+        self.populate_dir_menu(dirname)
+        self.tree.setRootIndex(self.model.index(dirname))
+        
+        self.btn_goPrevious.setEnabled(True)
+        if self.memoryIndx == len(self.pathMemory) - 1:
+            self.btn_goNext.setEnabled(False)
+        
+    def goHOME(self):
+        
+        if self.dir_menu.currentText() == self.home:
+            print 'Already at home men...'
+            return
+        
+        filepath = self.home
+        self.update_directory(filepath)
+        
+    def item_ddclick(self, signal):
+        
+        print('ddclick well received for:')
+        
+        filepath = self.model.filePath(signal)
+        
+        if not os.path.isfile(filepath):
+            
+            self.update_directory(filepath)
+            
+        else:            
+            
+            self.open_project()
+            
+    def dir_menu_changed(self):
+        
+        if self.NOMENU == True:
+            
+            filepath = self.dir_menu.currentText()
+            self.update_directory(filepath)
                                
-    def showMeTheMoney(self, selected, deselected):
+    def new_item_selected(self, selected, deselected):
+        
+        print('selection changed')
 
         filepath = self.model.filePath(selected.indexes()[0])
 
         if os.path.splitext(filepath)[-1] == '.what':
             
             self.projectfile = filepath
-            
-            print 'Loading project info'
-    
-            reader = open(filepath, 'rb')
-            reader = csv.reader(reader, delimiter='\t')
-            reader = list(reader)
-        
-            projectname = reader[0][1].decode('utf-8')
-            
-            print(projectname)
-            self.projectname_display.setText(projectname)
+            self.projectname_display.setText(os.path.basename(filepath))
         
         else:
             
             self.projectfile = []
-                
+            self.projectname_display.clear()
+            
+    def update_directory(self, filepath):
+        
+        self.populate_dir_menu(filepath)
+        self.tree.setRootIndex(self.model.index(filepath))
+        
+        self.memoryIndx += 1
+        self.pathMemory = self.pathMemory[:self.memoryIndx]
+        self.pathMemory.append(filepath)
+        self.btn_goPrevious.setEnabled(True)
+        self.btn_goNext.setEnabled(False)
+                    
+    def populate_dir_menu(self, path):
+        
+        self.NOMENU = False
+        
+        if os.path.isfile(path):
+            dirlist = [os.path.dirname(path)]
+        else:
+            dirlist = [path]
+        
+        i = 0
+        while 1:
+            path = os.path.dirname(dirlist[i])
+            if path == dirlist[i] or i>10:
+                 break
+            else:
+                i += 1
+                dirlist.append(path)
+        
+        self.dir_menu.clear()
+        self.dir_menu.addItems(dirlist)
+        
+        self.NOMENU = True
         
 class SeFileSystemModel(QtGui.QFileSystemModel):
     

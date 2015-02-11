@@ -1,0 +1,164 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="90"
+   height="90"
+   id="svg4874"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   viewBox="0 0 90 90.000001"
+   sodipodi:docname="go-previous.svg"
+   inkscape:export-filename="/home/jsgosselin/Documents/Research/Hydrogeology/WHAT/WHAT/Icons/SVG/go-previous.png"
+   inkscape:export-xdpi="256"
+   inkscape:export-ydpi="256">
+  <defs
+     id="defs4876">
+    <clipPath
+       clipPathUnits="userSpaceOnUse"
+       id="clipPath16">
+      <path
+         d="m 0,595.28 841.89,0 L 841.89,0 0,0 0,595.28 Z"
+         id="path18"
+         inkscape:connector-curvature="0" />
+    </clipPath>
+  </defs>
+  <sodipodi:namedview
+     id="base"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageopacity="0.0"
+     inkscape:pageshadow="2"
+     inkscape:zoom="3.6893488"
+     inkscape:cx="-26.713028"
+     inkscape:cy="64.513632"
+     inkscape:document-units="px"
+     inkscape:current-layer="g1910"
+     showgrid="true"
+     showborder="true"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0"
+     inkscape:snap-bbox="true"
+     inkscape:bbox-paths="true"
+     inkscape:bbox-nodes="true"
+     inkscape:snap-bbox-edge-midpoints="true"
+     inkscape:snap-bbox-midpoints="true"
+     inkscape:object-paths="true"
+     inkscape:snap-intersection-paths="true"
+     inkscape:object-nodes="true"
+     inkscape:snap-smooth-nodes="true"
+     inkscape:snap-midpoints="true"
+     inkscape:snap-object-midpoints="true"
+     inkscape:snap-center="true"
+     showguides="true"
+     inkscape:guide-bbox="true"
+     inkscape:window-width="1535"
+     inkscape:window-height="876"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1">
+    <inkscape:grid
+       type="xygrid"
+       id="grid5451"
+       empspacing="6" />
+    <sodipodi:guide
+       orientation="1,0"
+       position="6,77"
+       id="guide4063" />
+    <sodipodi:guide
+       orientation="1,0"
+       position="3,78"
+       id="guide4065" />
+    <sodipodi:guide
+       orientation="0,1"
+       position="55,84"
+       id="guide4067" />
+    <sodipodi:guide
+       orientation="0,1"
+       position="53,87"
+       id="guide4069" />
+    <sodipodi:guide
+       orientation="0,1"
+       position="20,3"
+       id="guide4071" />
+    <sodipodi:guide
+       orientation="0,1"
+       position="20,6"
+       id="guide4073" />
+    <sodipodi:guide
+       orientation="1,0"
+       position="87,7"
+       id="guide4075" />
+    <sodipodi:guide
+       orientation="1,0"
+       position="84,7"
+       id="guide4077" />
+    <sodipodi:guide
+       orientation="0,1"
+       position="58,81"
+       id="guide4074" />
+    <sodipodi:guide
+       orientation="1,0"
+       position="9,74"
+       id="guide4076" />
+    <sodipodi:guide
+       orientation="0,1"
+       position="21,9"
+       id="guide4078" />
+    <sodipodi:guide
+       orientation="1,0"
+       position="81,4"
+       id="guide4080" />
+  </sodipodi:namedview>
+  <metadata
+     id="metadata4879">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <g
+     inkscape:label="Layer 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(67.857146,-84.50504)">
+    <g
+       transform="matrix(0,-1,-1,0,373.50506,516.50504)"
+       id="g4845"
+       style="display:inline">
+      <g
+         inkscape:label="Layer 1"
+         id="g1908"
+         transform="matrix(0,-1,-1,0,1394.3622,585.3622)"
+         inkscape:export-filename="next01.png"
+         inkscape:export-xdpi="90"
+         inkscape:export-ydpi="90">
+        <g
+           style="display:inline"
+           id="g1910"
+           transform="translate(-198.00001,611)">
+          <path
+             d="m 378.25732,384.10384 c 2.64665,-4.66375 5.63476,-9.46651 8.96501,-14.41033 3.32819,-4.94246 6.89842,-9.80723 10.70933,-14.59091 1.02163,-1.28178 2.04395,-2.52677 3.06832,-3.74041 l 0,13.87064 c -2.08989,2.7421 -4.13727,5.58028 -6.13665,8.52613 -2.32782,3.42967 -4.51234,6.93702 -6.55835,10.52478 -2.04532,3.58708 -4.55621,8.65083 -6.16065,12.07845 1.60444,3.42695 4.11533,8.4907 6.16065,12.07846 2.04601,3.58776 4.23053,7.09511 6.55835,10.5241 1.99938,2.94653 4.04676,5.78471 6.13665,8.52681 l 0,13.87064 c -1.02437,-1.21364 -2.04669,-2.45931 -3.06832,-3.74041 -3.81091,-4.78436 -7.38114,-9.64845 -10.70933,-14.59091 -3.33025,-4.9445 -6.31836,-9.74658 -8.96501,-14.41033 -2.64665,-4.66443 -4.73448,-8.751 -6.25734,-12.25836 1.52286,-3.50735 3.61069,-7.59392 6.25734,-12.25835"
+             style="fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none"
+             id="path22"
+             inkscape:connector-curvature="0" />
+        </g>
+      </g>
+    </g>
+  </g>
+</svg>
