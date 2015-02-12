@@ -62,4 +62,5 @@ Backup_Projects/
 WHATMANUAL/*.log
 WHATMANUAL/*.aux
 WHATMANUAL/*.gz
+WHATMANUAL/*.out
 
