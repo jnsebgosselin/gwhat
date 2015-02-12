@@ -83,7 +83,7 @@ class NewProject(QtGui.QDialog):
         
         #---- WIDGETS ----
         
-        name_label = QtGui.QLabel('Project Name:')
+        name_label = QtGui.QLabel('Project Title:')
         self.name = QtGui.QLineEdit()
         
         author_label = QtGui.QLabel('Author:')
