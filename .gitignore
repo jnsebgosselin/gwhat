@@ -59,9 +59,14 @@ Releases/
 WHAT.pref
 Doc/
 Backup_Projects/
+
+# LaTeX
 WHATMANUAL/*.log
 WHATMANUAL/*.aux
 WHATMANUAL/*.gz
 WHATMANUAL/*.out
-WHATMANUAL/*.pdf
+WHATMANUAL/*.bbl
+WHATMANUAL/*.blg
+WHATMANUAL/*.lof
+WHATMANUAL/*.toc
 
