@@ -2,7 +2,11 @@
 \usepackage[hidelinks]{hyperref}
 \usepackage{geometry}
 \usepackage{graphicx}
+\usepackage{caption}
+\usepackage{subcaption}
 \usepackage{fix-cm}
+\usepackage[authoryear, round, sort&compress]{natbib}
+\bibliographystyle{plainnat}
 
 \geometry{letterpaper, total={210mm,297mm}, left=20mm, right=20mm, top=20mm, bottom=20mm}
 
@@ -26,7 +30,7 @@
 \includegraphics[width=1\textwidth]{WHAT_banner}~\\[2cm]
 
 {\Large \today}\\[0.5cm]
-{\Large Document up to data  for software version 4.1.5-beta}\\[2cm]
+{\Large Document up to date for software version 4.1.5-beta}\\[2cm]
 
 {\large Jean-S\'ebastien Gosselin\textsuperscript{1}, Christine Rivard\textsuperscript{2}, and Richard Martel\textsuperscript{1}}\\[0.25cm]
 
@@ -94,7 +98,7 @@ WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platfo
 
 \end{itemize}
 
-WHAT is written in the Python 2.7 programming language and is currently maintained and developed by Jean-Sébastien Gosselin at INRS-ETE (\url{www.ete.inrs.ca}). The source code and a stand-alone executable for Windows 7 are available free of charge for download on GitHub (\url{https://github.com/jnsebgosselin/WHAT}). If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-Sébastien Gosselin at this email address \href{mailto:jnsebgosselin@gmail.com}{jnsebgosselin@gmail.com}.
+WHAT is written in the Python 2.7 programming language and is currently maintained and developed by Jean-S\'ebastien Gosselin at INRS-ETE (\url{www.ete.inrs.ca}). The source code and a stand-alone executable for Windows 7 are available free of charge for download on GitHub (\url{https://github.com/jnsebgosselin/WHAT}). If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-S\'ebastien Gosselin at this email address \href{mailto:jnsebgosselin@gmail.com}{jnsebgosselin@gmail.com}.
 
 \listoffigures
 
@@ -122,17 +126,54 @@ Once the content of the Zip archive has been extracted, the program can be start
 
 \section{Overview of the Graphical User Interface}
 
-WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console area, and a central view panel (see Figure 1). The menu bar is located in the top right corner of WHAT main window. This is where you can view and edit the current project directory. The project directory is a folder location where all the input, output and parameter files associated with a given project are gathered. For more information about the project directory content and files organization, please refer to section 2.3.2. When opening WHAT for the first time, the current project is setup by default to an example that is provided with the software with the necessary files to test all the functionalities of the program. The console is located at the bottom of the main window and is used to report technical information about the various tasks accomplished by the program as well as warning and error messages. The console can be completely collapsed to save space, or can be fully expanded to the entire area of the window. The central view panel is equipped of a tab bar at the top where you can navigate through the various functionalities of the program. There is a total of four tabs available: Download Data, Fill Data, Hydrograph, and About. The tabs are described in a little bit more details in the text below and are also presented in Figures 2 to 5.
+%There is no traditional menus in WHAT and everything is instead displayed within a menu bar that is located at the top of the interface.
 
-The Download Data tab (Figure 2) provides an interface to the online Canadian Daily Climate Database (CDCD) that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Alternately, it is possible to provide a custom list of Canadian weather stations for which data can be downloaded and formatted. At the moment, it is not possible to access data of weather stations located in the U.S. This feature may be added in a future release of the software.
+WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console area, and a central view panel (see Figure~\ref{fig:WHAT_GUI}). The \emph{menu bar} is located in the top right corner of WHAT main window. This is where you can view what is the current project, open an already existing project or create a new one. The \emph{console} is located at the bottom of the WHAT interface and is used to report technical information about the various tasks accomplished by the program as well as warning and error messages. The console can be collapsed to save space, or can be extended to the entire window area. The \emph{central view panel} is the main component of the WHAT interface and is where are displayed the various features of the software. The content is divided into four tabs: \emph{Download Data}, \emph{Fill Data}, \emph{Hydrograph}, and \emph{About}. The tabs are described in a little bit more details in the text below and are shown in Figure~\ref{fig:WHAT_GUI_ScnShot}.
 
-The Fill tab (see Figure 3) is where you can automatically estimate the missing daily weather values in your data to create gapless time-series of daily precipitation and air temperature. Missing data for a given station are estimated from selected neighboring weather stations using a multiple linear regression model;
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.75\textwidth]{WHAT_GUI}
+\caption[WHAT GUI main features.]{WHAT GUI main features.}
+\label{fig:WHAT_GUI}
+\end{figure}
 
-The Hydrograph tab is used for viewing and plotting data. For this purpose, two modes are available: the layout and the computation mode. Both modes share the same weather and water level dataset. It is possible to switch from one mode to the other at anytime. The layout mode (see Figure 4) provides an interface to interactively produce publication-quality graphs from the data. The computation mode (see Figure 5) consists in a dynamic graphical environment where data can be explored, manipulated and analyzed. Various computation tools are available in this mode, including the estimation of the hydrograph Master Recession Curve (MRC) and the estimation of groundwater recharge.
+\paragraph{Download Data} This tab (see Figure~\ref{subfig:ScnShot_000}) provides an interface to the online Canadian Daily Climate Database (CDCD) that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Alternately, it is possible to provide a custom list of Canadian weather stations for which data can be downloaded and formatted. At the moment, it is not possible to access data of weather stations located in the U.S. This feature may be added in a future release of the software.
 
-The About tab displays copyright, licensing and general information about WHAT.
+\paragraph{Fill} This tab (see Figure~\ref{subfig:ScnShot_001}) is where you can automatically estimate the missing daily weather values in your data to create gapless time-series of daily precipitation and air temperature. Missing data for a given station are estimated from selected neighboring weather stations using a multiple linear regression model.
 
-\section{Interpretation of water-level time-series with WHAT}
+\paragraph{Hydrograph} This tab is used for viewing and plotting data. For this purpose, two modes are available: the \emph{layout} and the \emph{computation} mode. Both modes share the same weather and water level dataset and it is possible to switch from one mode to the other at anytime. The \textbf{layout} mode (see Figure~\ref{subfig:ScnShot_002}) provides an interface to interactively produce publication-quality graphs from the data. The \textbf{computation} mode (see Figure~\ref{subfig:ScnShot_003}) consists in a dynamic graphical environment where data can be explored, manipulated and analyzed. Various computational tools are available in this mode, including the estimation of the hydrograph Master Recession Curve (MRC) and the estimation of groundwater recharge.
+
+\paragraph{About} This tab (see Figure~\ref{fig:WHAT_GUI}) displays copyright, licensing and general information about WHAT.
+
+\begin{figure}[h!]
+        \centering
+        \begin{subfigure}[t]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{WHAT_Screenshot000}
+                \caption{``Download Data'' tab.}
+                \label{subfig:ScnShot_000}                
+        \end{subfigure}%
+        ~
+        \begin{subfigure}[t]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{WHAT_Screenshot001}
+                \caption{``Fill'' Data tab.}
+                \label{subfig:ScnShot_001}
+        \end{subfigure}
+        \\[0.5cm]
+        \begin{subfigure}[t]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{WHAT_Screenshot002}
+                \caption{``Hydrograph'' tab in mode ``Layout''.}
+                \label{subfig:ScnShot_002}
+        \end{subfigure}
+        ~
+        \begin{subfigure}[t]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{WHAT_Screenshot003}
+                \caption{``Hydrograph'' tab in mode ``Computation''.}
+                \label{subfig:ScnShot_003}
+        \end{subfigure}
+        \caption[Screenshots of WHAT GUI tabs captured in Ubuntu Linux 14.04.]{Screenshot of WHAT GUI tabs captured in Ubuntu Linux 14.04. (a) ``Download Data'' tab. (b) ``Fill'' Data tab (c) ``Hydrograph'' tab in mode ``Layout''. (d) ``Hydrograph'' tab in mode ``Computation''.}\label{fig:WHAT_GUI_ScnShot}
+\end{figure}
+
+\section{Interpretation of water-level time-series}
 
 \subsection{Introduction}
 
@@ -150,9 +191,11 @@ If high time resolution measurement of the water level and barometric pressure a
 Weather yearly average and montlhy averages can be plotted at this stage.
 If the visual inspection of the well, and the barometric response function, determined that the well in unconfined, it means groundwater recharge can be estimated from the data. First, determining the segment where groundwater recharge can be supposed to be negligible and where the water level recede. After that, compute the MRC, and compute a first estimation of groundwater recharge using the Water-Table Fluctuation principle. Estimate finaly recharge with a method combining the meteorological data and the well hydrograph. Enjoy.
 
-\subsection{New and Open Project}
+\subsection{Create a New Project}
 
-Data is managed in WHAT by project. That is all input and output files relative to a given project are saved within a common folder called the ``project folder''. This file management system allows you to easily backup and move your projects from one location to the other since all the files relating to a same project are saved at the same location.
+Data is managed in WHAT by project. That is all input and output files relative to a given project are saved within a common folder called the ``project folder''. This file management system allows you to easily backup and move your projects from one location to the other since all the files relating to a given project are saved at the same place.
+
+The project that is currently opened in WHAT is shown in the menu bar at the top of the interface. Additional information about the project can also be displayed by clicking on the small ``i'' icon located next to the project name. There can be only one opened project at a time per instance of WHAT.
 
 \begin{figure}[h!]
 \centering
@@ -161,15 +204,9 @@ Data is managed in WHAT by project. That is all input and output files relative 
 \label{fig:new_proj_win}
 \end{figure}
 
-By default, the current active project is setup to an example that is distributed with the software. To start a new project, click on the \textsl{New Project\dots} button located at the right end of the WHAT menu bar (see Figure~X). This will open a new dialog window (see Figure~\ref{fig:new_proj_win}) where you can enter various information about your project such as its title, author and location coordinates. Clicking on the \textsl{Save} button will save your project in a folder named after your project title in the location defined by the \textsl{Save in Folder} directory path. For example, the \textsl{My New Project} of Figure~\ref{fig:new_proj_win} would be saved by default in a folder named ``My New Project'' in the directory ``\textsl{C:\textbackslash{}Users\textbackslash{}johndoe\textbackslash{}WHAT\_4.0.5-beta\textbackslash{}Projects}''. You can change the directory where your project is saved by default by clicking the small folder icon located next to the \textsl{Save in Folder} directory path.
+On first launch, WHAT will automatically open an example that is distributed with software with all the necessary files to easily and quickly test the functionality of the program. To start a new project, click on the \textsl{New Project\dots} button with the small folder icon located at the right end of the WHAT menu bar (see Figure~\ref{fig:WHAT_GUI}). This will open a new dialog window (see Figure~\ref{fig:new_proj_win}) where you can enter various information about your project such as its title, author and location coordinates. Clicking on the \textsl{Save} button will save your project in a folder named after your project title in the location defined by the \textsl{Save in Folder} directory path. For example, the \textsl{My New Project} of Figure~\ref{fig:new_proj_win} would be saved by default in a folder named ``My New Project'' in the directory ``\textsl{C:\textbackslash{}Users\textbackslash{}johndoe\textbackslash{}WHAT\_4.0.5-beta\textbackslash{}Projects}''. You can change the directory where your project is saved by default by clicking the small folder icon located next to the \textsl{Save in Folder} directory path.
 
-% Add a comment about relative link here
-
-%%Path to your project folder is stored in WHAT in a relative format. This means that if you change the location of your project folder relative the ``WHAT.exe'', your will have to redirect WHAT to the new location of your project folder.
-
-When a new project is saved, WHAT automatically creates within the project folder the predefined file organization that is presented in Figure~\ref{fig:proFolder_organization}.
-
-In this example, we have the project My New Project, that is located within the folder Projects within the folder that contain the program.
+When a new project is saved, WHAT automatically creates a project folder and all the files and sub-folders required for the program to work. This files organization is shown for an example in Figure~\ref{fig:proFolder_organization} and is briefly described here.
 
 \begin{figure}[h!]
 \centering
@@ -178,15 +215,27 @@ In this example, we have the project My New Project, that is located within the 
 \label{fig:proFolder_organization}
 \end{figure}
 
+The project folder, named ``My New Project'' in this example, contains two sub-folder named Meteo and Waterlvl. The folder Meteo contains three sub-folders named respectively Raw, Input and Output. The Raw folder is used to save raw weather data files from the CDCD. This files are saved in coma-separated values (CSV) files on a per year basis. Raw data files for a given weather stations are saved within a common folded named after the name of the station and its unique identification number (ID). The folder ``Input'' contains the formatted weather data files produced from the raw data files. They are saved in a tab-separated values (TSV) format and are named after the station's name and ID. The folder.The folder ``Output'' is where are saved the .out TSV files that contains the gapless weather time-series produced from the content of the Input folder. The ``.log'' TSV files contains information about each missing daily weather value that was estimated by the program to produce the gapless time-series saved in the .out files. The folder ``Waterlvl'' is used to hold the water level time-series. The files can be  saved either in a Microsoft Excel spreadsheet file format (xls) of text based tab-separated values format (TSV).
+
+Directly within the ``My New Project'' folder, the file ``my\_new\_project.what'' contains general information about the project, such as its title, author, and location coordinates. This file is required to open an already existing project in WHAT. The files ``weather\_stations.lst'' and ``graph\_layout.lst'' are resources files used by WHAT to store information. The file STATION\_SUMMARY.log is an tab-separated values (TSV) file that contains a summary of all the weather data files contained in the ``Input'' folder. The file ``waterlvl\_manual\_measurements.xls'' is used to input manual water level measurements associated with the water level time-series files stored in the ``Waterlvl'' folder. These measurements can be plotted alongside water level time-series on the hydrigraph and can be used to 
+
+\subsection{Open a Project}
+
+To open a new project in WHAT, click on the name of the currently opened project in the menu bar of the interface. This will open a new dialog window where you can browse your folders for an already existing ``.what"" file. Select the ``.what'' file of the project you want to open, and then click Open. WHAT will then automatically load the project and the name of the currently opened project should change to the name of the project you just selected.
+
+The path to your project folder is stored in WHAT in a relative format. This means that if you change the location of your project folder relative the ``WHAT.exe'', your will have to redirect WHAT to the new location of your project folder.
+
 \section{Creation of gapless weather data serie}
+
+
+
+\subsection{Downloading and formatting data from the CDCD database}
 
 The view can be panned by dragging the mouse with the left mouse button depressed. Zoom in by pressing the Ctrl key while dragging the mouse upwards, or by moving the mouse wheel up. Zoom out mouse wheel down.
 
 The Canadian Daily Climate Database (CDCD) contains daily temperature, precipitation and snow on the ground data for almost 8000 locations in Canada. Green Kenue provides a graphical interface to the CDCD database with which you can query, display, and analyze the data associated with each station
 
 by clicking on the Toggle button located at the left end of the toolbar
-
-\subsection{Downloading and formatting data from the CDCD database}
 
 Daily meteorological records are made available free of charge by the Government of Canada from 1840 to the present for about 8450 stations distributed across Canada (www.climate.weather.gc.ca). Record length and availability of data vary widely among these stations. Meteorological data for a given station can be downloaded manually on the Government of Canada website for each year separately as a CSV file, or it is possible to acquire the entire dataset by ordering a DVD. However, this involves a lot of repetitive manipulations and can become quickly a time consuming task when meteorological data are required for several stations over many years. Moreover, the pooling of individual data files downloaded for each year separately is also a tedious task when done manually.
 
@@ -251,17 +300,24 @@ Les données aberrantes dans les séries de données ont également été corrig
 
 \section{Barometric correction: an overview}
 
-Even though there exists software that can correct the data automatically, it is always a good practice to understand what is done behie. This is particularly usefull to correct situations when something goes wrong. For example, the barologger may had a deficiency and atmospheric pressure needed to be taken from the CDCD for example and data needed to be corrected manually. There arise often situation when correction needs to be done manually. This happens when there is a problem with the data. This is then good practice to understand the process in order to dodge mistake.
+\cite{freeman_use_2004}
 
-It is a good idea to monitor water level at a 15 min frequency for a period of a year, or more if it is possible. The data can be used subsequently to estimate the barometric response function of the well that can be quite usefull to understand the hydrogeological context, and the level of confinement of the well. Having data with this frequency is also usefull for running FFT and understand the cause of possible unatural fluctuation in the well. 
+Even though there exists software that can correct data automatically for barometric pressure, it is always a good practice to understand what is done behie. This is particularly usefull to correct situations when something goes wrong. For example, the barologger may had a deficiency and atmospheric pressure needed to be taken from the CDCD for example and data needed to be corrected manually. There arise often situation when correction needs to be done manually. This happens when there is a problem with the data. This is then good practice to understand the process in order to dodge mistake.
 
-Figure 2: Schématisation de la configuration des instruments pour le monitoring des puits
+It is a good idea to monitor water level at a 15 min frequency for a period of a year, or more if it is possible. The data can be used subsequently to estimate the barometric response function of the well that can be quite usefull to understand the hydrogeological context, and the level of confinement of the well. Having data with this frequency is also usefull for running FFT and understand the cause of possible unatural fluctuation in the well.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\textwidth]{ObsWell}
+\caption[Typical instrument configuration for water level monitoring in an observation well]{Typical instrument configuration for water level monitoring in an observation well}
+\label{fig:obswell_config}
+\end{figure}
 
 \subsection{Format des données brutes}
 
 Le monitoring des niveaux d’eau dans les puits d’observation pour le projet Montérégie Est a été fait avec des sondes à niveaux d’eau non ventilées. Cela implique que pour pouvoir calculer la hauteur de la colonne d'eau, heau, située au-dessus des sondes (voir figure 1), la pression atmosphérique doit également être connue à chacun des puits. À cet effet, des sondes barométriques ont également été installées dans la majorité des puits d'observation du projet Montérégie Est. Une attention particulière a été portée afin d'assurer que les puits qui n'étaient pas munis d'une sonde barométrique étaient situés à proximité et à une altitude raisonnablement similaire d'un puits où la pression atmosphérique était mesurée.
 
-De façon générale, la profondeur de la nappe par rapport à la surface, Znappe, est calculée via l'équation suivante : 
+La profondeur de la nappe par rapport à la surface, Znappe, est calculée via l'équation suivante : 
 
 où Znappe (m) et Zsonde (m) correspondent respectivement à la position de la nappe et la profondeur d'installation de la sonde à niveaux d'eau par rapport à la surface du sol, htot (m) est la charge totale mesurée par la sonde à niveaux d'eau et hatm (m) est la charge mesurée par la sonde barométrique. L'axe des z est défini positif vers le haut avec, pour niveau de référence, la surface du sol. Ainsi Zsonde et Znappe ont des valeurs qui sont généralement inférieures à zéro, à moins que le niveau de l'eau dans le puits ne soit situé au-dessus de la surface.
 
@@ -270,5 +326,6 @@ Pour les sondes levelogger et barologger Gold, les données brutes enregistrées
 
 où Ptot (kPa) est la pression absolue ressentie par la sonde à niveaux d'eau, Patm (kPa) est la pression atmosphérique, ρ (kg/m3) est la masse volumique de l'eau, g (m/s2) est l'accélération gravitationnelle terrestre et Zalt (m) est l'altitude du puits fourni à la sonde par l'utilisateur lors de sa programmation.
 
+\bibliography{WHATMANUAL}
 
 \end{document}
