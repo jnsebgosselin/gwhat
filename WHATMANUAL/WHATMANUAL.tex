@@ -6,6 +6,7 @@
 \usepackage{subcaption}
 \usepackage{fix-cm}
 \usepackage[authoryear, round, sort&compress]{natbib}
+\usepackage{placeins}
 \bibliographystyle{plainnat}
 
 \geometry{letterpaper, total={210mm,297mm}, left=20mm, right=20mm, top=20mm, bottom=20mm}
@@ -78,6 +79,8 @@ We would like to thank all people who have used WHAT since its earliest stages a
 
 \newpage
 
+% \chapter*{Foreword}
+
 \chapter*{Introduction}
 
 WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
@@ -128,7 +131,7 @@ Once the content of the Zip archive has been extracted, the program can be start
 
 %There is no traditional menus in WHAT and everything is instead displayed within a menu bar that is located at the top of the interface.
 
-WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console area, and a central view panel (see Figure~\ref{fig:WHAT_GUI}). The \emph{menu bar} is located in the top right corner of WHAT main window. This is where you can view what is the current project, open an already existing project or create a new one. The \emph{console} is located at the bottom of the WHAT interface and is used to report technical information about the various tasks accomplished by the program as well as warning and error messages. The console can be collapsed to save space, or can be extended to the entire window area. The \emph{central view panel} is the main component of the WHAT interface and is where are displayed the various features of the software. The content is divided into four tabs: \emph{Download Data}, \emph{Fill Data}, \emph{Hydrograph}, and \emph{About}. The tabs are described in a little bit more details in the text below and are shown in Figure~\ref{fig:WHAT_GUI_ScnShot}.
+WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console area, and a central view panel (see Figure~\ref{fig:WHAT_GUI}). The \emph{menu bar} is located in the top right corner of WHAT main window. This is where you can view what is the current project, open an already existing project or create a new one. The \emph{console} is located at the bottom of the WHAT interface and is used to report technical information about the various tasks accomplished by the program as well as warning and error messages. The console can be collapsed to save space, or can be extended to the entire window area. The \emph{central view panel} is the main component of the WHAT interface and is where are displayed the various features of the software. The content of this panel is divided into four tabs: \emph{Download Data}, \emph{Fill Data}, \emph{Hydrograph}, and \emph{About}. The tabs are described in a little bit more details in the text below and are shown in Figure~\ref{fig:WHAT_GUI_ScnShot}.
 
 \begin{figure}[h!]
 \centering
@@ -173,9 +176,7 @@ WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console are
         \caption[Screenshots of WHAT GUI tabs captured in Ubuntu Linux 14.04.]{Screenshot of WHAT GUI tabs captured in Ubuntu Linux 14.04. (a) ``Download Data'' tab. (b) ``Fill'' Data tab (c) ``Hydrograph'' tab in mode ``Layout''. (d) ``Hydrograph'' tab in mode ``Computation''.}\label{fig:WHAT_GUI_ScnShot}
 \end{figure}
 
-\section{Interpretation of water-level time-series}
-
-\subsection{Introduction}
+\section{WHAT Workflow Overview}
 
 WHAT essentially consists of set of tools to assist the interpretation of water level time series measured in observation wells, from the preparation of raw data to the assessment of groundwater recharge when in unconfined conditions. In this perspective, WHAT was developed with the general workflow shown in Figure 6  in mind.
 
@@ -191,11 +192,19 @@ If high time resolution measurement of the water level and barometric pressure a
 Weather yearly average and montlhy averages can be plotted at this stage.
 If the visual inspection of the well, and the barometric response function, determined that the well in unconfined, it means groundwater recharge can be estimated from the data. First, determining the segment where groundwater recharge can be supposed to be negligible and where the water level recede. After that, compute the MRC, and compute a first estimation of groundwater recharge using the Water-Table Fluctuation principle. Estimate finaly recharge with a method combining the meteorological data and the well hydrograph. Enjoy.
 
+\section{Projects Management in WHAT}
+
+\subsection{Introduction}
+
+Data is managed in WHAT by project. That is all input and output files relative to a given project are saved within a common folder called the ``project folder''. This file management system allows you to easily backup and move your projects from one location to the other since all the files relating to a given project are saved at the same place. 
+
+On first launch, WHAT will automatically open an example that is distributed with the software with all the necessary files to easily and quickly test the functionality of the program. The title of the currently opened project is shown in the menu bar at the top of the interface. Additional information about the project can be displayed by clicking on the small ``i'' icon located next to the project name. There can be only one opened project at a time per instance of WHAT. 
+
 \subsection{Create a New Project}
 
-Data is managed in WHAT by project. That is all input and output files relative to a given project are saved within a common folder called the ``project folder''. This file management system allows you to easily backup and move your projects from one location to the other since all the files relating to a given project are saved at the same place.
+To start a new project, click on the button \textsl{New Project\dots} with the small folder icon located at the right end of the WHAT menu bar (see Figure~\ref{fig:WHAT_GUI}). This will open a new dialog window (see Figure~\ref{fig:new_proj_win}) where you can enter various information about your project such as its title, author and location coordinates. 
 
-The project that is currently opened in WHAT is shown in the menu bar at the top of the interface. Additional information about the project can also be displayed by clicking on the small ``i'' icon located next to the project name. There can be only one opened project at a time per instance of WHAT.
+Clicking on the button \textsl{Save} creates a new project folder named after your project title in which your project information are saved in a file with a ``.what'' extension. The new folder is created in the location defined by the \textsl{Save in Folder} directory path. For example, saving the \textsl{My New Project} of Figure~\ref{fig:new_proj_win} would create a folder named ``My New Project'' in the directory ``\textsl{C:\textbackslash{}Users\textbackslash{}johndoe\textbackslash{}WHAT\_4.0.5-beta\textbackslash{}Projects}'' and would saved the project information in the file named ``my\_new\_project.what''. It is possible to change the directory where the project folder is created by clicking the small folder icon located next to the \textsl{Save in Folder} directory path.
 
 \begin{figure}[h!]
 \centering
@@ -204,30 +213,38 @@ The project that is currently opened in WHAT is shown in the menu bar at the top
 \label{fig:new_proj_win}
 \end{figure}
 
-On first launch, WHAT will automatically open an example that is distributed with software with all the necessary files to easily and quickly test the functionality of the program. To start a new project, click on the \textsl{New Project\dots} button with the small folder icon located at the right end of the WHAT menu bar (see Figure~\ref{fig:WHAT_GUI}). This will open a new dialog window (see Figure~\ref{fig:new_proj_win}) where you can enter various information about your project such as its title, author and location coordinates. Clicking on the \textsl{Save} button will save your project in a folder named after your project title in the location defined by the \textsl{Save in Folder} directory path. For example, the \textsl{My New Project} of Figure~\ref{fig:new_proj_win} would be saved by default in a folder named ``My New Project'' in the directory ``\textsl{C:\textbackslash{}Users\textbackslash{}johndoe\textbackslash{}WHAT\_4.0.5-beta\textbackslash{}Projects}''. You can change the directory where your project is saved by default by clicking the small folder icon located next to the \textsl{Save in Folder} directory path.
+\FloatBarrier
 
-When a new project is saved, WHAT automatically creates a project folder and all the files and sub-folders required for the program to work. This files organization is shown for an example in Figure~\ref{fig:proFolder_organization} and is briefly described here.
+\subsection{Open a Project}
 
-\begin{figure}[h!]
+To open a new project, click on the name of the currently opened project in the menu bar at the top of WHAT window. This will open a new dialog window where you can browse your folders to select an already existing project file (*.what), and then click Open. WHAT will then open the project and the currently opened project displayed in the menu bar should change to the name of the project you just selected.
+
+The path to your project folder is stored in WHAT in a relative format. This means that if you change the location of your project folder relative the ``WHAT.exe'', your will have to redirect WHAT to the new location of your project by repeating the procedure described in the paragraph above.
+
+\subsection{Project Folder Structure Overview}
+
+In addition to the project file (.what file extension) that is created when saving a new project, WHAT automatically generates various files and sub-folders that are required for it to run. This file organization is briefly described here and an example is presented in Figure~\ref{fig:proFolder_organization}. The project folder contains two sub-folders named ``Meteo'' and ``Waterlvl'' in addition to a few other files.
+
+\begin{figure}
 \centering
 \includegraphics[width=0.5\textwidth]{file_and_folder_architecture}
 \caption[Project folder file organization.]{Project folder file organization.}
 \label{fig:proFolder_organization}
 \end{figure}
 
-The project folder, named ``My New Project'' in this example, contains two sub-folder named Meteo and Waterlvl. The folder Meteo contains three sub-folders named respectively Raw, Input and Output. The Raw folder is used to save raw weather data files from the CDCD. This files are saved in coma-separated values (CSV) files on a per year basis. Raw data files for a given weather stations are saved within a common folded named after the name of the station and its unique identification number (ID). The folder ``Input'' contains the formatted weather data files produced from the raw data files. They are saved in a tab-separated values (TSV) format and are named after the station's name and ID. The folder.The folder ``Output'' is where are saved the .out TSV files that contains the gapless weather time-series produced from the content of the Input folder. The ``.log'' TSV files contains information about each missing daily weather value that was estimated by the program to produce the gapless time-series saved in the .out files. The folder ``Waterlvl'' is used to hold the water level time-series. The files can be  saved either in a Microsoft Excel spreadsheet file format (xls) of text based tab-separated values format (TSV).
+\paragraph{Meteo} The folder \emph{Meteo} contains three sub-folders named respectively Raw, Input and Output. The folder \textbf{Raw} is where are saved the weather data files downloaded from the CDCD. These are coma-separated values (CSV) files that contain weather data on a yearly basis. All the data files for a given weather station are saved within a common folder named after the station name and its unique identification number (IDN). For example, in Figure~\ref{fig:proFolder_organization}, the raw data file ``eng-daily-01011980-12311980.csv'' that contains weather data of the station ``Marieville'' for the year 1980 is saved within a folder named ``MARIEVILLE (7024627)'' where the number in parentheses is the unique IDN of the station.
 
-Directly within the ``My New Project'' folder, the file ``my\_new\_project.what'' contains general information about the project, such as its title, author, and location coordinates. This file is required to open an already existing project in WHAT. The files ``weather\_stations.lst'' and ``graph\_layout.lst'' are resources files used by WHAT to store information. The file STATION\_SUMMARY.log is an tab-separated values (TSV) file that contains a summary of all the weather data files contained in the ``Input'' folder. The file ``waterlvl\_manual\_measurements.xls'' is used to input manual water level measurements associated with the water level time-series files stored in the ``Waterlvl'' folder. These measurements can be plotted alongside water level time-series on the hydrigraph and can be used to 
+The folder \textbf{Input} contains the formatted weather data files produced from the raw data files. These are tab-separated values (TSV) files that are named after the station's name and IDN.
 
-\subsection{Open a Project}
+The folder \textbf{Output} is where are saved the gapless weather time-series produced from the content of the Input folder. These are saved in TSV text files with the extension ``.out''. The files with the extension ``.log'' are TSV text files that contain detailed information about every missing daily weather value that were estimated by the program to produce the gapless time-series (.out files).
 
-To open a new project in WHAT, click on the name of the currently opened project in the menu bar of the interface. This will open a new dialog window where you can browse your folders for an already existing ``.what"" file. Select the ``.what'' file of the project you want to open, and then click Open. WHAT will then automatically load the project and the name of the currently opened project should change to the name of the project you just selected.
+\paragraph{Waterlvl} The folder ``Waterlvl'' is the preferred location were your water level time-series should be stored. These files can be  either in a Microsoft Excel spreadsheet file format (xls) or in a tab-separated values text format (TSV).
 
-The path to your project folder is stored in WHAT in a relative format. This means that if you change the location of your project folder relative the ``WHAT.exe'', your will have to redirect WHAT to the new location of your project folder.
+\paragraph{Other Files}The file ``weather\_stations.lst'' is a resource file that is used to store the results of a weather station search in the Canadian Daily Climate Database (CDCD). The file ``graph\_layout.lst'' is also a resource file in which are stored the layout parameters of the well hydrographs that are produced in the hyhdrograph tab of WHAT. The file ``STATION\_SUMMARY.log'' is an tab-separated values (TSV) file that contains a summary of all the weather data files contained in the ``Input'' folder. The file ``waterlvl\_manual\_measurements.xls'' is used to input manual water level measurements associated with the water level time-series files stored in the ``Waterlvl'' folder. These measurements are plotted on the hydrograph and can also be used to adjust the position of the water-level time-series in the vertical axis when the installation depth of the pressure probe is unknown.
+
+\FloatBarrier
 
 \section{Creation of gapless weather data serie}
-
-
 
 \subsection{Downloading and formatting data from the CDCD database}
 
@@ -325,6 +342,8 @@ Au cours du projet, trois modèles de sondes ont été utilisés pour la mesure 
 Pour les sondes levelogger et barologger Gold, les données brutes enregistrées par les instruments correspondent aux pressions mesurées, converties en hauteur d'eau équivalente, moins une constante dont la valeur est établie en fonction de la pression atmosphérique minimale anticipée au niveau de la mer et de l'altitude fournie à la sonde par l'utilisateur lors de sa programmation (9.5 m - 0.0012 m par mètre d'altitude). Pour les sondes Micro-Diver et Levelogger Edge, les données brutes enregistrées par les instruments correspondent aux pressions mesurées converties en hauteur d'eau équivalente. Enfin, pour les sondes barologger Edge, la pression atmosphérique est directement mise en mémoire sans aucune transformation préalable. Le Tableau 1 résume les différentes opérations mathématiques qui sont appliquées aux mesures avant de les mettre en mémoire pour les différents types de sondes qui furent utilisées au cours du projet Montérégie.
 
 où Ptot (kPa) est la pression absolue ressentie par la sonde à niveaux d'eau, Patm (kPa) est la pression atmosphérique, ρ (kg/m3) est la masse volumique de l'eau, g (m/s2) est l'accélération gravitationnelle terrestre et Zalt (m) est l'altitude du puits fourni à la sonde par l'utilisateur lors de sa programmation.
+
+% \chapter{Code Architecture}
 
 \bibliography{WHATMANUAL}
 
