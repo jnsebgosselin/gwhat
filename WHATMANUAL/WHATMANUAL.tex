@@ -53,6 +53,8 @@ This program is distributed in the hope that it will be useful, but WITHOUT ANY 
 
 You should have received a copy of the GNU General Public License along with this program. If not, see \url{www.gnu.org/licenses}.
 
+% \chapter*{Copyright}
+
 \newpage
 
 \chapter*{Acknowledgements}
@@ -81,7 +83,11 @@ We would like to thank all people who have used WHAT since its earliest stages a
 
 % \chapter*{Foreword}
 
-\chapter*{Introduction}
+\listoffigures
+
+\tableofcontents
+
+\chapter{Introduction}
 
 WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
 
@@ -102,10 +108,6 @@ WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platfo
 \end{itemize}
 
 WHAT is written in the Python 2.7 programming language and is currently maintained and developed by Jean-S\'ebastien Gosselin at INRS-ETE (\url{www.ete.inrs.ca}). The source code and a stand-alone executable for Windows 7 are available free of charge for download on GitHub (\url{https://github.com/jnsebgosselin/WHAT}). If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-S\'ebastien Gosselin at this email address \href{mailto:jnsebgosselin@gmail.com}{jnsebgosselin@gmail.com}.
-
-\listoffigures
-
-\tableofcontents
 
 \chapter{User Manual}
 
@@ -128,6 +130,7 @@ The stand-alone executable for Windows 7 is distributed in a Zip archive that ca
 Once the content of the Zip archive has been extracted, the program can be started directly from the WHAT.exe executable file that is contained withing the folder named WHAT. The software can conveniently run from any location on the computer or from any storage device without the need to install the program beforehand.
 
 \section{Overview of the Graphical User Interface}
+\label{sec:GUI_overview}
 
 %There is no traditional menus in WHAT and everything is instead displayed within a menu bar that is located at the top of the interface.
 
@@ -176,7 +179,7 @@ WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console are
         \caption[Screenshots of WHAT GUI tabs captured in Ubuntu Linux 14.04.]{Screenshot of WHAT GUI tabs captured in Ubuntu Linux 14.04. (a) ``Download Data'' tab. (b) ``Fill'' Data tab (c) ``Hydrograph'' tab in mode ``Layout''. (d) ``Hydrograph'' tab in mode ``Computation''.}\label{fig:WHAT_GUI_ScnShot}
 \end{figure}
 
-\section{WHAT Workflow Overview}
+\section{Overview of the Preferred Workflow}
 
 WHAT essentially consists of set of tools to assist the interpretation of water level time series measured in observation wells, from the preparation of raw data to the assessment of groundwater recharge when in unconfined conditions. In this perspective, WHAT was developed with the general workflow shown in Figure 6  in mind.
 
@@ -222,6 +225,7 @@ To open a new project, click on the name of the currently opened project in the 
 The path to your project folder is stored in WHAT in a relative format. This means that if you change the location of your project folder relative the ``WHAT.exe'', your will have to redirect WHAT to the new location of your project by repeating the procedure described in the paragraph above.
 
 \subsection{Project Folder Structure Overview}
+\label{subsec:folder_structure}
 
 In addition to the project file (.what file extension) that is created when saving a new project, WHAT automatically generates various files and sub-folders that are required for it to run. This file organization is briefly described here and an example is presented in Figure~\ref{fig:proFolder_organization}. The project folder contains two sub-folders named ``Meteo'' and ``Waterlvl'' in addition to a few other files.
 
@@ -244,48 +248,62 @@ The folder \textbf{Output} is where are saved the gapless weather time-series pr
 
 \FloatBarrier
 
-\section{Creation of gapless weather data serie}
+\section{Creation of gapless weather data series}
 
 \subsection{Downloading and formatting data from the CDCD database}
 
-The view can be panned by dragging the mouse with the left mouse button depressed. Zoom in by pressing the Ctrl key while dragging the mouse upwards, or by moving the mouse wheel up. Zoom out mouse wheel down.
+The Canadian Daily Climate Database (CDCD) contains daily air temperature and precipitation from 1840 to the present for about 8450 stations distributed across Canada. Data can be downloaded manually on the Government of Canada website as CSV files on a yearly basis, or it is possible to acquire the entire database by ordering a DVD. The former option involves a lot of repetitive manipulations and can become quickly a time consuming task while the latter does not offer a convenient way to update your data. Moreover, the organization of the original CDCD data files in a more convenient format can also represent a tedious task when done manually. WHAT alleviates this process by providing a graphical interface to the online CDCD database that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. All of these features are available from the tab \emph{Download Data} shown in Figure~\ref{fig:tab_dwnldData}.
 
-The Canadian Daily Climate Database (CDCD) contains daily temperature, precipitation and snow on the ground data for almost 8000 locations in Canada. Green Kenue provides a graphical interface to the CDCD database with which you can query, display, and analyze the data associated with each station
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.75\textwidth]{WHAT_Screenshot000b}
+\caption[Tab ``Download Data''.]{Tab ``Download Data''.}
+\label{fig:tab_dwnldData}
+\end{figure}
 
-by clicking on the Toggle button located at the left end of the toolbar
+\subsubsection{Searching for Stations}
 
-Daily meteorological records are made available free of charge by the Government of Canada from 1840 to the present for about 8450 stations distributed across Canada (www.climate.weather.gc.ca). Record length and availability of data vary widely among these stations. Meteorological data for a given station can be downloaded manually on the Government of Canada website for each year separately as a CSV file, or it is possible to acquire the entire dataset by ordering a DVD. However, this involves a lot of repetitive manipulations and can become quickly a time consuming task when meteorological data are required for several stations over many years. Moreover, the pooling of individual data files downloaded for each year separately is also a tedious task when done manually.
+To start searching for stations in the online CDCD, go in the tab \emph{Download Data} and click on the small magnifying glass icon located next to the \emph{Weather Station} drop down list, that should be empty if you have just created a new project. This will open a new dialog window (see Figure~\ref{fig:screenshot_search4stations}) where you can search for stations located within a given radius around a location defined in latitude and longitute decimal degrees. It is possible to further narrow down the search by including only stations that have data within a given period. 
 
-Rainbird alleviate this process by allowing automatic downloading and formatting of daily meteorological records from the Government of Canada website. This feature is explained in more detail in the following sections.
+Clicking on the button \emph{Search} initiates the search for weather stations with the specified parameters. The results are saved in the file ```weather\_stations.lst'' and the \emph{Weather Station} drop down list is updated to list all the stations found during the search.
 
-The first step consists in producing a file containing a list of weather station names along with their corresponding unique Station ID, the first and last year for which data are available and the province where they are located. All this information can be retrieved for a given station directly from its unique URL on www.climate.weather.gc.ca. An example for the weather station Marieville, located in southern Quebec, is presented in Appendix A.
+\begin{figure}[h]
+\centering
+\includegraphics[width=0.5\textwidth]{WHAT_Screenshot_search4stations}
+\caption[Graphical interface to the online CDCD database.]{Graphical interface to the online CDCD database.}
+\label{fig:Screenshot_search4stations}
+\end{figure}
 
-The stations' information need to be saved in a tabular-separated values text file with an “lst” extension. A template of a station list (station\_list\_template.lst) is provided with the program in the Zip archive and an example is presented in Error: Reference source not found. The fields Station Name, Year, Start, Year End and Province do not need to match strictly with the station's URL. These fields can be assigned any name/value by the user and are not directly used in the downloading process of weather data. The only field that is directly used in the download process is Station ID that is a unique number attributed to each weather station.
+Alternately, it is possible to use a custom list of Canadian stations generated manually without using the graphical interface. This is done by retrieving station information from their unique url directly on the government of Canada website (\url{www.climate.weather.gc.ca}). The information must be saved in a TSV text file with the ``.lst'' extension. The list can be loaded in WHAT by clicking on the small folder icon located next to the \emph{Weather Station} drop down list. A detailed example is presented for the weather station Marieville, located in southern Quebec, in Appendix~\ref{app:custom_station_list}.
 
-Once a file containing a list of weather stations' information has been created, it is possible to load it in Rainbird by clicking on the  Load button located in the Fetch and Merge tab (Error: Reference source not found). The station list can be refreshed at any time by clicking on the  Refresh button. 
-After a list has been loaded in Rainbird, a weather station can be selected from the drop-down menu Station name. The fields Station ID and Years will automatically display the information that are related to the selected weather station. The Station ID is a number that is unique for each station and cannot be changed. Conversely, the lower and upper limits for the Years can be set to any value, including years where there is no data available for the selected station. 
+\subsubsection{Downloading Data}
 
-The downloading of raw data is started by clicking on the  Fetch button. It is possible to stop the downloading process at any time by clicking again on the same button. Meteorological data are downloaded for every available year between the values specified in the Years limits and saved in CSV (comma-separated values) files for each year separately (note that this is a limitation imposed by the Government of Canada website). These CSV data files, hereafter referred to as Error: Reference source not found, are saved automatically in the current Target Directory that corresponds by default to the Raw folder located in the Error: Reference source not found. For years with no data, Rainbird will generate a raw data file with empty values everywhere.
+Once a list of weather station has been generated in WHAT, either by an automatic search with the interface or by opening a custom weather station list, data can be downloaded from the online CDCD by selecting the desired station in the drop-down menu list and clicking on the button \emph{Get Data}. For each year between the values specified in the \emph{Download Data} year range, WHAT will automatically download the weather data from the CDCD and save the results as a CSV file in the \emph{Raw} folder (see section~\ref{subsec:folder_structure} for each year individually).
 
-When a downloading process is completed successfully, statistics regarding the amount of missing data for the entire dataset downloaded are displayed. The statistics provide information on the number of missing data for each meteorological variable over the entire selected record. The amount of missing values is also given in percentages, in parentheses.
+The downloading process can be stopped at any time by clicking on the button \emph{Get Data} which will then be displaying a red stop icon. Before downloading data for a given year, WHAT will first check if data already exist for that whole year in the folder \emph{Raw}. If it is the case, data for this year won't be downloaded and the process will pass to the following year, otherwise data will be downloaded and saved normally from the CDCD. Detailed information about the program transactions during the downloading process are printed in the console area located at the bottom of the interface (see section~\ref{sec:GUI_overview}).
 
-As soon as a downloading process is completed successfully for a given weather station, Rainbird automatically format and concatenate the entire dataset that was downloaded for each year separately. That is data for each year are put together end to end in chronological order. In addition, the program will automatically detect and put a NaN value wherever a data is missing. The resulting data series can be subsequently saved in a single CSV file, hereafter called a Error: Reference source not found, by clicking on the   Save button. Concatenated data files thus generated can be used directly as input for the estimation of missing data and the completion of meteorological series (gap filling procedure) in Rainbird. An example of a concatenated data file is presented in Figure 1.
+\subsubsection{Formatting Data}
 
-It is possible to reload previously downloaded Error: Reference source not found in Rainbird at any time by clicking on the  Select button. Rainbird will then automatically format and concatenate the data and a new concatenated data files can be saved by clicking on the  Save button. This feature is useful to update meteorological records without having to download previously downloaded data a second time.
+As soon as a downloading task ends successfully for a given weather stations, WHAT automatically format and concatenate the data. That is data for each year are put together end to end in chronological order and only data related to air temperature (mean, max and min) and total precipitation are kept. In addition, NaN values will be put everywhere data are missing. Finally, statistics about the missing values in the dataset for each meteorological variable will be displayed in the \emph{Concatenate and Format Raw Data Files} section.
 
-The process of saving concatenated data files can also be made automatic, after a downloading process is completed successfully or after previously downloaded raw data files have been loaded manually in Rainbird, by checking Automatically save concatenated data in “Merge” folder.
+By default, WHAT will automatically save the formatted data series in a single TSV file within the folder \emph{Input} (see section~\ref{subsec:folder_structure}. You can save any other copy of the formatted data set anywhere on your computer by clicking on the button \emph{Save}. The automatic saving of formatted data series can be disabled by unchecking the \emph{Automatically save concatenated data} option. 
 
-\subsection{Use of weather data from other sources}
-
-Automatic downloading and formatting of weather data from other sources than the Government of Canada is currently not supported in Rainbird. However, it is possible to use weather data from any sources for the gap filling procedure of meteorological records, as long as data are formatted as follows. A template of a typical Error: Reference source not found is provided with the program within the Zip archive in the Merge folder and an example is presented in Figure 1.
-
-Data must be tab-separated and saved in a file with a csv extension. This can be easily achieved in any standard spreadsheet application such as Microsoft Excel or LibreOffice Calc (www.libreoffice.org). The format of the header must be observed faithfully (see example in Figure 1). NaN values must be inputted where data are missing. Data must also be in chronological order, but do not need to be continuous over time. That is missing blocks of data (e.g., several months or years) can be completely omitted in the concatenated data file. These missing blocks of data will be estimated and filled during the gap filling procedure.
+It is also possible to open previously downloaded weather data files in WHAT by clicking on the button \emph{Load} and selecting the desired files in the dialog window. WHAT will then automatically format and concatenate the data and a new concatenated data files and save the results automatically if the \emph{Automatically save concatenated data} option is checked. Alternatively, the formatted data series can be saved by clicking on the button \emph{Save}.
 
 \subsection{Gap filling daily weather records}
 
-Rainbird main feature consists in an automatic gap filling procedure of weather data records. This feature is accessible from the tab Fill (Error: Reference source not found). In order to fill gaps in a meteorological dataset for a given station, herein called the Error: Reference source not found, Rainbird needs data from at least one Error: Reference source not found with synchronous data.
+One of WHAT main utility is the automatic gap filling of daily weather data records. This feature is accessible in the tab \emph{Fill Data} shown in Figure~\ref{fig:tab_fillData}.
 
-This is achieved by first selecting the Data directory where are stored the Error: Reference source not found for the weather stations located in a given study area. The default folder used by the program is the Merge folder located in the Error: Reference source not found. This folder is the default location where are saved the concatenated data files produced by Rainbird from data downloaded on the Government of Canada website.
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.75\textwidth]{WHAT_Screenshot001}
+\caption[Tab ``Fill Data''.]{Tab ``Fill Data''.}
+\label{fig:tab_fillData}
+\end{figure}
+
+To fill gaps in a weather dataset for a given station, data from at least one neighboring station with synchronous data are required.
+
+On start-up and when opening a new project, WHAT scans automatically
 
 Rainbird scans automatically the default Data directory for valid concatenated data files at startup and displays the result in the drop-down menu Target station. If a new Data directory is selected by the user with the  Browse button, Rainbird scans its content automatically. The  Refresh button can also be used at any time to scan the Data directory again for new concatenated data files.
 
@@ -299,6 +317,14 @@ More specifically, missing data in the target station's dataset are estimated us
 
 Once the parameters are set as desired, the gap filling procedure can be started by clicking on the        Fill and Save button. The process can be stopped at any time by clicking on the same button a second time. When all the gaps in the target station's dataset have been filled, the gapless meteorological time series are saved automatically in a new Error: Reference source not found named <target station name>.csv in the folder Output located in the Error: Reference source not found, along with an Error: Reference source not found named <target station name>.log. The info file provides a list of all the missing meteorological values that were estimated during the gap filling procedure, along with their associated date, and neighboring stations data values that were used for the estimation. An estimation of the uncertainty for each value estimated is also given.
 
+\subsection{Use of weather data from other sources}
+
+Presently, it is not possible to access data of weather stations located in the U.S. This feature may be added in a future release of the software. Nevertheless, it is possible to use weather data from any sources in WHAT for the gap filling procedure or the interpretation of water-level time-series, as long as the data are saved in a format compatible with WHAT.
+
+Samples of input and output files are provided in the example project folder that is distributed with the software. Data must be saved in a tab-separated values text file with the extension.csv if 
+
+be tab-separated and saved in a file with a csv extension. This can be easily achieved in any standard spreadsheet application such as Microsoft Excel or LibreOffice Calc (www.libreoffice.org). The format of the header must be observed faithfully (see example in Figure 1). NaN values must be inputted where data are missing. Data must also be in chronological order, but do not need to be continuous over time. That is missing blocks of data (e.g., several months or years) can be completely omitted in the concatenated data file. These missing blocks of data will be estimated and filled during the gap filling procedure.
+
 \section{Preparation of the water level time series}
 
 \subsection{Data validation and correction}
@@ -309,6 +335,9 @@ Pour un même puits, lorsqu'un écart systématique de plus de 5 cm était obse
 Les données aberrantes dans les séries de données ont également été corrigées par interpolation linéaire. C’est données aberrantes sont principalement des mesures qui ont été prises alors que la sonde avait été retirée du puits pour le téléchargement des données, ou encore par du pompage dans les puits lors d’une campagne d’échantillonnage de l’eau.
 
 \subsection{Generation of the well hydrograph with weather data}
+
+The view can be panned by dragging the mouse with the left mouse button depressed. Zoom in by pressing the Ctrl key while dragging the mouse upwards, or by moving the mouse wheel up. Zoom out mouse wheel down.
+
 \subsection{Barometric response function}
 \subsection{Estimation of the MRC and first recharge estimation}
 \subsection{Recharge estimation with synthetic well hydrograph method}
@@ -344,6 +373,72 @@ Pour les sondes levelogger et barologger Gold, les données brutes enregistrées
 où Ptot (kPa) est la pression absolue ressentie par la sonde à niveaux d'eau, Patm (kPa) est la pression atmosphérique, ρ (kg/m3) est la masse volumique de l'eau, g (m/s2) est l'accélération gravitationnelle terrestre et Zalt (m) est l'altitude du puits fourni à la sonde par l'utilisateur lors de sa programmation.
 
 % \chapter{Code Architecture}
+
+\appendix
+\chapter{Creating a Custom CDCD Weather Station List}
+\label{app:custom_station_list}
+
+WARNING: this section needs to be updated and revised.
+
+The stations information need to be saved in a tabular-separated values text file with an “lst” extension. A template of a station list (station\_list\_template.lst) is provided with the program in the Zip archive and an example is presented in Error: Reference source not found. The fields Station Name, Year, Start, Year End and Province do not need to match strictly with the station's URL. These fields can be assigned any name/value by the user and are not directly used in the downloading process of weather data. The only field that is directly used in the download process is Station ID that is a unique number attributed to each weather station.
+
+Once a file containing a list of weather stations' information has been created, it is possible to load it in Rainbird by clicking on the  Load button located in the Fetch and Merge tab (Error: Reference source not found). The station list can be refreshed at any time by clicking on the  Refresh button.
+
+\begin{figure}[h!]
+\centering
+\includegraphics[width=0.5\textwidth]{example_staList}
+\caption[Weather Station List (*.lst) Sample]{Weather Station List (*.lst) Sample}
+\label{fig:example_staList}
+\end{figure}
+
+\paragraph{Step 1} First go to \url{www.climate.weather.gc.ca}.
+
+\paragraph{Step 2} At the bottom of the page, click on Advanced Search (see the red arrow in Figure~\ref{subfig:customWeaterStaList_step1}).
+
+\paragraph{Step 3} Search for a station either by Province, Name or Proximity. For this example, the search was made using the Name of the station (see Figure A2).
+
+\paragraph{Step 4} The research yielded one result (Figure A3). For Data Interval, select Daily and click Go.
+	WARNING: The downloading and formatting of Hourly data is not currently supported in Rainbird.
+
+\paragraph{Step 5} The URL associated with Marieville weather station is:\\[0.1cm]
+
+\begin{sloppypar}
+\noindent
+\url{http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=2&Prov=QUE&StationID=5406&dlyRange=1960-06-01|2013-12-31&Year=2013&Month=12&Day=01}.\\[0.1cm]
+\end{sloppypar}
+
+From this URL, we find that its Station ID is 5406 (see red circle in Figure A4), that is located in the province of Quebec (QUE) and that data are available from 1960 to 2013.
+
+\begin{figure}[h!]
+        \centering
+        \begin{subfigure}[t]{0.45\textwidth}
+                \centering
+                \includegraphics[width=\textwidth]{customWeaterStaList_step1}
+                \caption{Step 1}
+                \label{subfig:customWeaterStaList_step1}                
+        \end{subfigure}%
+        \hspace{0.5cm}
+        \begin{subfigure}[t]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{customWeaterStaList_step2}
+                \caption{Step 2}
+                \label{subfig:customWeaterStaList_step2}
+        \end{subfigure}
+        \\[0.5cm]
+        \begin{subfigure}[t]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{customWeaterStaList_step3}
+                \caption{Step 3}
+                \label{subfig:customWeaterStaList_step3}
+        \end{subfigure}
+        \hspace{0.5cm}
+        \begin{subfigure}[t]{0.45\textwidth}
+                \includegraphics[width=\textwidth]{customWeaterStaList_step4}
+                \caption{Step 4}
+                \label{subfig:customWeaterStaList_step4}
+        \end{subfigure}
+        \caption[Creation of a custom weather station list how-to]{Creation of a custom weather station list how-to}\label{fig:customStaList_Howto}
+\end{figure}
+
+
 
 \bibliography{WHATMANUAL}
 
