@@ -1498,9 +1498,9 @@ class TabHydrograph(QtGui.QWidget):
                                     filter=('*.pdf;;*.svg'))
                                   
         if fname:         
+            
             if fname[-4:] != ftype[1:]:
-                # Add an extension if there is none, depending if on Windows
-                # or Linux
+                # Add a file extension if there is none
                 fname = fname + ftype[1:]
                 
             self.save_fig_dir = path.dirname(fname)

@@ -185,7 +185,7 @@ class labels():
 #            '''<p>Download weather data for all the weather station in the 
 #                 current list for the specified time period.</p>''')
         
-        self.saveMeteoAuto = 'Automatically save concatened data'
+        self.saveMeteoAuto = 'Automatically save concatenated data'
         
         #--------------------------------------------------------- FILL TAB ----
 

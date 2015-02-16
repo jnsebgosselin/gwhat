@@ -207,14 +207,13 @@ class WeatherAvgGraph(QtGui.QWidget):
                                           filter=('*.pdf;;*.svg'))
                                   
         if filename:         
+            
             if filename[-4:] != ftype[1:]:
-                # Add an extension if there is none, depending if on Windows
-                # or Linux
+                # Add a file extension if there is none.
                 filename = filename + ftype[1:]
                 
-                self.fig.savefig(filename)
-                
-                self.save_fig_dir = path.dirname(filename)
+            self.save_fig_dir = path.dirname(filename)    
+            self.fig.savefig(filename)   
 
     def select_meteo_file(self):
         dialog_dir = self.meteo_dir
