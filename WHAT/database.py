@@ -188,7 +188,8 @@ class labels():
         self.saveMeteoAuto = 'Automatically save concatenated data'
         
         #--------------------------------------------------------- FILL TAB ----
-
+        
+        self.fill_station = 'Fill Data for Weather Station :'
         self.btn_fill_weather = 'Fill'
         self.btn_fill_all_weather = 'Fill All'
         self.altlimit = 'Cutoff altitude difference (m)'

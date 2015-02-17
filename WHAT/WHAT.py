@@ -2810,7 +2810,7 @@ class TabFill(QtGui.QWidget):
         
         #---- Widgets ----
         
-        target_station_label = QtGui.QLabel('<b>Target Station :</b>')
+        target_station_label = QtGui.QLabel('<b>%s</b>' % labelDB.fill_station)
         self.target_station = QtGui.QComboBox()
         self.target_station_info = QtGui.QTextEdit()
         self.target_station_info.setReadOnly(True)
