@@ -503,6 +503,9 @@ class MainWindow(QtGui.QMainWindow):
         
         If the project.what file does not exist anymore, it returns a False
         answer, which should tell the code on the UI side to deactivate the  UI.
+        
+        This method should be run at the start of every method that needs to
+        interact with resource file of the current project.
         """
     #---------------------------------------------------------------------------
         
@@ -810,6 +813,10 @@ class TabHydrograph(QtGui.QWidget):
         self.waterlvl_max.setMinimum(-1000)
         self.waterlvl_max.setMaximum(1000)
         
+        label_datum = QtGui.QLabel('WL Datum :')
+        self.datum_widget = QtGui.QComboBox()
+        self.datum_widget.addItems(['Ground Surface', 'See Level'])
+        
         self.subgrid_WLScale_widget = QtGui.QFrame()
         self.subgrid_WLScale_widget.setFrameStyle(0) # styleDB.frame
         subgrid_WLScale = QtGui.QGridLayout()
@@ -820,6 +827,9 @@ class TabHydrograph(QtGui.QWidget):
         row += 1
         subgrid_WLScale.addWidget(label_waterlvl_max, row, 1)        
         subgrid_WLScale.addWidget(self.waterlvl_max, row, 2)
+        row += 1
+        subgrid_WLScale.addWidget(label_datum, row, 1)
+        subgrid_WLScale.addWidget(self.datum_widget, row, 2)
         
         subgrid_WLScale.setVerticalSpacing(5)
         subgrid_WLScale.setHorizontalSpacing(10)
@@ -1011,6 +1021,7 @@ class TabHydrograph(QtGui.QWidget):
         
         #----- Hydrograph Parameters -----
         
+        self.datum_widget.currentIndexChanged.connect(self.datum_changed)
         self.language_box.currentIndexChanged.connect(self.language_changed)
         self.waterlvl_max.valueChanged.connect(self.waterlvl_scale_changed)
         self.waterlvl_scale.valueChanged.connect(self.waterlvl_scale_changed)
@@ -1104,9 +1115,17 @@ class TabHydrograph(QtGui.QWidget):
     #===========================================================================                          
     def load_waterlvl(self, filename):
         '''
-        If <filename> exists, the (1) water level time series, (2) observation 
-        well info and (3) the manual measures are loaded and saved in the class 
-        instance <waterlvl_data>.
+        If "filename" exists:
+        
+        The (1) water level time series, (2) observation well info and the
+        (3) manual measures are loaded and saved in the class instance 
+        "waterlvl_data".
+        
+        Then the code check if there is a layout already saved for this well and
+        if yes, will prompt the user if he wants to load it.
+        
+        Depending if there is a lyout or not, a Weather Data File will be 
+        loaded and the hydrograph will be automatically plotted.
         '''
     #===========================================================================   
         
@@ -1114,33 +1133,30 @@ class TabHydrograph(QtGui.QWidget):
             print 'Path is empty. Cannot load water level file.'
             return
             
-        #----- Update UI Memory Var -----
-        
+        self.parent.check_project()
+            
         self.UpdateUI = False
+            
+        #----- Update UI Memory Variables -----
+        
         self.waterlvl_dir = path.dirname(filename)
         self.fwaterlvl = filename
         
         #----- Load Data -----
         
-        self.waterlvl_data.load(filename)
-                        
+        self.waterlvl_data.load(filename)                        
         name_well = self.waterlvl_data.name_well
-        
-        self.best_fit_waterlvl()
-        self.best_fit_time()
-        
+                
         #----- Load Manual Measures -----
         
-        filename = self.parent.projectdir
-        filename += '/waterlvl_manual_measurements.xls'
-        
-        if not path.exists(filename):
-            # Force the creation of a new 'waterlvl_manual_measurements.csv'
-            self.parent.check_project()
-        
+        filename = self.parent.projectdir + '/waterlvl_manual_measurements.xls'        
         self.waterlvl_data.load_waterlvl_measures(filename, name_well)
         
-        #----- Load and Display Well Info in UI -----
+        #----- Update Waterlvl Obj -----
+        
+        self.hydrograph2display.set_waterLvlObj(self.waterlvl_data)
+        
+        #----- Display Well Info in UI -----
         
         self.well_info_widget.setText(self.waterlvl_data.well_info)
         
@@ -1148,22 +1164,13 @@ class TabHydrograph(QtGui.QWidget):
         '''<font color=black>Water level data set loaded successfully for
              well %s.</font>''' % name_well)
              
-        #---- Update Compute Mode Window ----
+        #---- Update "Compute" Mode Graph ----
         
         self.draw_computeMode_waterlvl()
         
-        #----- Check if Layout -----
-        
-        self.check_if_layout_exist(name_well)
-        self.UpdateUI = True
-    
-    def check_if_layout_exist(self, name_well):
-        
+        #---- Well Layout -----
+
         filename = self.parent.projectdir + '/graph_layout.lst'
-        if not path.exists(filename):
-            # Force the creation of a new "graph_layout.lst" file
-            self.parent.what_pref.load_pref_file()
-            
         isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
                         
         if isLayoutExist == True:
@@ -1179,14 +1186,15 @@ class TabHydrograph(QtGui.QWidget):
 
             if override == self.msgBox.Yes:
                 self.load_graph_layout()
-                            
-            elif override == self.msgBox.No:
-                self.select_closest_meteo_file()
-                
-        elif isLayoutExist == False:   
-            
-            self.select_closest_meteo_file()
+                return
         
+        self.best_fit_waterlvl()
+        self.best_fit_time()
+        self.select_closest_meteo_file()
+            
+        #------------------------------------------------------- Enable UI -----
+        
+        self.UpdateUI = True
             
     def select_closest_meteo_file(self):
                 
@@ -1225,6 +1233,7 @@ class TabHydrograph(QtGui.QWidget):
                           
                 self.load_meteo_file(fmeteo_paths[index])
                 QtCore.QCoreApplication.processEvents()
+                
                 self.draw_hydrograph()
     
     #===========================================================================       
@@ -1310,7 +1319,9 @@ class TabHydrograph(QtGui.QWidget):
     #===========================================================================        
     def load_graph_layout(self):
     #===========================================================================
-    
+
+        self.parent.check_project()
+        
         #------------------------------------- Check if Waterlvl Data Exist ----
         
         if not self.fwaterlvl:
@@ -1327,10 +1338,6 @@ class TabHydrograph(QtGui.QWidget):
         #------------------------------------------- Check if Layout Exists ----
                 
         filename = self.parent.projectdir + '/graph_layout.lst'
-        if not path.exists(filename):
-            # Force the creation of a new "graph_layout.lst" file
-            self.parent.what_pref.load_pref_file()
-            
         name_well = self.waterlvl_data.name_well
         isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
                     
@@ -1363,6 +1370,7 @@ class TabHydrograph(QtGui.QWidget):
                                     
         self.waterlvl_scale.setValue(self.hydrograph2display.WLscale)
         self.waterlvl_max.setValue(self.hydrograph2display.WLmin)
+        self.datum_widget.setCurrentIndex (self.hydrograph2display.WLdatum)
         
         self.Ptot_scale.setValue(self.hydrograph2display.RAINscale)
          
@@ -1434,7 +1442,7 @@ class TabHydrograph(QtGui.QWidget):
         filename = self.parent.projectdir + '/graph_layout.lst'
         if not path.exists(filename):
             # Force the creation of a new "graph_layout.lst" file
-            self.parent.what_pref.load_pref_file()
+            self.parent.check_project()
             
         name_well = self.waterlvl_data.name_well
         isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
@@ -1470,8 +1478,7 @@ class TabHydrograph(QtGui.QWidget):
         
         if len(self.waterlvl_data.lvl) != 0:
             
-            WL = self.waterlvl_data.lvl
-            WLscale, WLmin = self.hydrograph2display.best_fit_waterlvl(WL)
+            WLscale, WLmin = self.hydrograph2display.best_fit_waterlvl()
             
             self.waterlvl_scale.setValue(WLscale)
             self.waterlvl_max.setValue(WLmin)
@@ -1543,8 +1550,7 @@ class TabHydrograph(QtGui.QWidget):
         
         #----- Generate Graph -----
         
-        self.hydrograph2display.generate_hydrograph(self.waterlvl_data,
-                                                    self.meteo_data)
+        self.hydrograph2display.generate_hydrograph(self.meteo_data)
         
         #----- Produce Figure from Graph -----
                         
@@ -1612,6 +1618,22 @@ class TabHydrograph(QtGui.QWidget):
                 self.hydrograph2display.draw_ylabels()
             
                 self.refresh_hydrograph()
+                
+    def datum_changed(self, index):
+        
+        if self.UpdateUI == True:
+            
+            #---- Update Instance Variables ----
+            
+            self.hydrograph2display.WLdatum = index
+            self.hydrograph2display.WLmin = (self.waterlvl_data.ALT - 
+                                             self.hydrograph2display.WLmin)
+          
+            self.hydrograph2display.update_waterlvl_scale()            
+            self.hydrograph2display.draw_waterlvl()
+            self.hydrograph2display.draw_ylabels()
+            
+            self.refresh_hydrograph()
     
     def time_scale_changed(self):
         
@@ -2307,10 +2329,10 @@ class TabDwnldData(QtGui.QWidget):
         self.staName_display.clear()
         self.staList = []        
         station_list_path = (self.parent.projectdir + '/weather_stations.lst')
-                                      
-        # Force the creation of a new "weather_station.lst" file
+        
         if not path.exists(station_list_path):
-            self.parent.what_pref.load_pref_file()
+            # Force the creation of a new "weather_station.lst" file
+            self.parent.check_project()
             
         reader = open(station_list_path,'rb')
         reader = csv.reader(reader, delimiter='\t')

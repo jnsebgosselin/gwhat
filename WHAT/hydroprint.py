@@ -72,49 +72,56 @@ class LabelDatabase():
 class Hydrograph():
     
     def __init__(self, parent=None):
-      
+        
+        self.isHydrographExists = False
+        
+        #---- Database ----
+        
+        HeaderDB = db.headers()
+        self.header = HeaderDB.graph_layout
+        
+        #---- Fig Init ----        
+        
         self.fig = plt.figure()
         self.fig.patch.set_facecolor('white')
-        self.fig.set_size_inches(11, 8.5)
-        
-        self.fmeteo = []
-        self.finfo = []      
-        self.WLmin = 0
-        self.WLscale = 0
-        self.TIMEmin = 36526
-        self.TIMEmax = 36526
-        self.NZGrid = 20 # Dundurn: 17 # Old version: 26
         
         self.fheight = 8.5 # Figure height in inches
-        self.fwidth = 11.0 # Figure width in inches
+        self.fwidth = 11.0 # Figure width in inches   
+        
+        self.fig.set_size_inches(self.fwidth, self.fheight)
+        
+        #---- Scales ----
+        
+        self.WLmin = 0
+        self.WLscale = 0
+        
+        self.RAINscale = 20
+                
+        self.TIMEmin = 36526
+        self.TIMEmax = 36526
+        
+        self.NZGrid = 20 # Dundurn: 17 # Old version: 26
+        
+        #---- Labels ----  
         
         self.title_state = 0 # 0: No title; 1: With Title
         self.title_text = 'Add A Title To The Figure Here'
         self.language = 'English'
+                   
+        #---- Layout Options
         
-        self.RAINscale = 20 # Dundurn: 10
-        
-        self.bwidth_indx = 1 # weather bin indx from the interface widget
-        
-        # Options for bin calculations are:
-        #   0: 1 day;
-        #   1: 7 days;
-        #   2: 15 days;
-        #   3: 30 days;
-        #   4: monthly;
-        #   5: yearly        
-
-        self.WLref = 0 # 0: mbgs 1: masl
+        self.WLdatum = 0 # 0: mbgs;  1: masl
         self.trend_line = 0
-        
         self.isLegend = False
         
-        HeaderDB = db.headers()
-        self.header = HeaderDB.graph_layout
-                        
-        self.isHydrographExists = False
+        #---- Waterlvl Obj ----
+        
+        self.WaterLvlObj = []
         
         #---- Daily Weather ----
+        
+        self.fmeteo = [] # path to the weather data file (.out)
+        self.finfo = []  # path the the .log file associated with the .out file
         
         self.TIMEmeteo = np.array([])
         self.TMAX = np.array([])
@@ -128,9 +135,21 @@ class Hydrograph():
         self.bPTOT = np.array([])
         self.bRAIN = np.array([])
         
-    #----------------------------------------------------- graph_layout.lst ----
-                        
+        self.bwidth_indx = 1
+        #   0: 1 day;
+        #   1: 7 days;
+        #   2: 15 days;
+        #   3: 30 days;
+        #   4: monthly;
+        #   5: yearly
+        
+            
+    def set_waterLvlObj(self, WaterLvlObj):
+        self.WaterLvlObj = WaterLvlObj
+   
+    #---------------------------------------------------------------------------
     def checkLayout(self, name_well, filename): # old var. names: isConfigExist
+    #---------------------------------------------------------------------------
                 
         reader = open(filename, 'rb')
         reader = csv.reader(reader, delimiter='\t')
@@ -180,8 +199,10 @@ class Hydrograph():
             layoutExist = False
            
         return layoutExist
-                
-    def load_layout(self, name_well, filename):
+        
+    #---------------------------------------------------------------------------                
+    def load_layout(self, name_well, filename):        
+    #---------------------------------------------------------------------------
         
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
@@ -211,10 +232,12 @@ class Hydrograph():
         
         self.title_text = reader[7].astype(str)
         self.RAINscale = reader[8].astype(float)
-        self.WLref = reader[9].astype(int)
+        self.WLdatum = reader[9].astype(int)
         self.trend_line = reader[10].astype(int)
         
+    #---------------------------------------------------------------------------       
     def save_layout(self, name_well, filename):
+    #---------------------------------------------------------------------------
         
         #---- load file ----
         
@@ -229,7 +252,7 @@ class Hydrograph():
         
         new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
                self.TIMEmin, self.TIMEmax,self.title_state, self.title_text,
-               self.RAINscale, self.WLref, self.trend_line]
+               self.RAINscale, self.WLdatum, self.trend_line]
         
         if len(rowx) == 0:
             reader = np.vstack((reader, new))
@@ -243,9 +266,15 @@ class Hydrograph():
         with open(filename, 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(reader)
-            
-    def best_fit_waterlvl(self, WL):
-
+    
+    #---------------------------------------------------------------------------       
+    def best_fit_waterlvl(self):
+    #---------------------------------------------------------------------------
+        
+        WL = self.WaterLvlObj.lvl   
+        if self.WLdatum == 1: # masl
+            WL = self.WaterLvlObj.ALT - WL
+        
         WL = WL[~np.isnan(WL)]
         dWL = np.max(WL) - np.min(WL)
         ygrid = self.NZGrid - 10
@@ -261,16 +290,19 @@ class Hydrograph():
         
         #-----WL Min Value-----
         
-        if self.WLref == 0:
+        if self.WLdatum == 0: # mbgs
             N = np.ceil(np.max(WL) / self.WLscale)
-        elif self.WLref == 1:
+        elif self.WLdatum == 1: # masl        
+            #WL = self.WaterLvlObj.ALT - WL
             N = np.floor(np.min(WL) / self.WLscale)
         
         self.WLmin = self.WLscale * N
         
         return self.WLscale, self.WLmin
     
+    #---------------------------------------------------------------------------
     def best_fit_time(self, TIME):
+    #---------------------------------------------------------------------------
         
         # ----- Data Start -----
         
@@ -294,26 +326,35 @@ class Hydrograph():
         self.TIMEmax = xldate_from_date_tuple(date1, 0)
         
         return date0, date1
-                
-    def generate_hydrograph(self, WaterLvlObj, MeteoObj):
+    
+    #---------------------------------------------------------------------------           
+    def generate_hydrograph(self, MeteoObj):
+    #---------------------------------------------------------------------------
+    
+        #---- Reinit Fig ----
         
         self.fig.clf()
-    
         self.fig.patch.set_facecolor('white')
         
         fheight = self.fheight # Figure height in inches
         fwidth = self.fwidth   # Figure width in inches
 
-        self.fig.set_size_inches(fwidth, fheight, forward=True)
-       
-        self.name_well = WaterLvlObj.name_well          
-              
-        self.date_labels_display_pattern = 2
-        RAINscale = self.RAINscale
-       
+        self.fig.set_size_inches(fwidth, fheight, forward=True) 
+        
+        #---- Update Variables ----
+        
+        WaterLvlObj = self.WaterLvlObj 
+        
+        #---- Assigne class values ----
+        
         self.label_font_size = 14
+        self.date_labels_display_pattern = 2
+        
+        RAINscale = self.RAINscale
         
         #---- Assign Weather Data ----
+        
+        self.name_meteo = MeteoObj.station_name
         
         self.TIMEmeteo = MeteoObj.TIME # Time in numeric format (days)
         self.TMAX = MeteoObj.TMAX # Daily maximum temperature (deg C)
@@ -323,13 +364,6 @@ class Hydrograph():
         #---- Resample Data in Bins ----
         
         self.resample_bin()
-        
-#        self.TIMEwk = MeteoObj.TIMEwk
-#        self.TMAXwk = MeteoObj.TMAXwk
-#        self.PTOTwk = MeteoObj.PTOTwk
-#        self.RAINwk = MeteoObj.RAINwk
-        
-        self.name_meteo = MeteoObj.station_name
         
         #---------------------------------------------------- AXES CREATION ----        
         
@@ -352,6 +386,10 @@ class Hydrograph():
         
         self.ax2 = self.ax1.twinx()
         self.ax2.set_zorder(self.ax1.get_zorder()+10)
+        
+        self.ax2.yaxis.set_ticks_position('left')
+        self.ax2.tick_params(axis='y', direction='out', labelsize=10)            
+        self.update_waterlvl_scale()
         
         #--- Precipitation ---
         
@@ -414,77 +452,25 @@ class Hydrograph():
         self.ax1.patch.set_facecolor('none')
                          
         #------------------------------------------------------ WATER LEVEL ----
-         
-        time = WaterLvlObj.time  
         
-        if self.WLref == 1:   # masl
+        #---- Continuous Line Datalogger ----
         
-            water_lvl = WaterLvlObj.ALT - WaterLvlObj.lvl
-            
-            WLmin = self.WLmin
-            WLscale = self.WLscale
-            WLmax = WLmin + self.NZGrid * WLscale
-            
-            yticks_position = np.arange(WLmin,
-                                        WLmin + (self.NZGrid - 8) * WLscale,
-                                        WLscale * 2)
-                                        
-        else: # mbgs -> yaxis is inverted
+        self.l1_ax2, = self.ax2.plot([], [], '-', zorder = 10, linewidth=1)
         
-            water_lvl = WaterLvlObj.lvl
+        #---- Data Point Datalogger ----
         
-            WLmax = self.WLmin
-            WLscale = self.WLscale    
-            WLmin = WLmax - self.NZGrid * WLscale
-            
-            yticks_position = np.arange(WLmax, 
-                                        WLmax - (self.NZGrid - 8) * WLscale,
-                                        WLscale * -2)
-        
-        self.ax2.axis(ymin=WLmin, ymax=WLmax)
-        
-        self.ax2.set_yticks(yticks_position)
-        self.ax2.yaxis.set_ticks_position('left')
-        self.ax2.tick_params(axis='y', direction='out', labelsize=10)            
-        if self.WLref != 1:
-            self.ax2.invert_yaxis()
-        
-        #---- Logger Measures ----
-                
-        if self.trend_line == 1:
-            
-            tfilt, wlfilt = filt_data(time, water_lvl, 7)
-        
-            self.ax2.plot(tfilt, wlfilt, '-', zorder = 10, linewidth=1,
-                          label='WL Trend Line')
-                          
-            self.ax2.plot(time, water_lvl, '.', color=[0.65, 0.65, 1.],
-                          markersize=5, label='WL Data Point')
-                          
-        else:
-            
-            self.ax2.plot(time, water_lvl, '-', zorder = 10, linewidth=1, 
-                          label='Water Level')                
-        
-        #---- Manual Measures ----
-           
-        TIMEmes = WaterLvlObj.TIMEmes
-        WLmes = WaterLvlObj.WLmes
-        
-        h_WLmes = self.ax2.plot(TIMEmes, WLmes, 'o', zorder = 15,
-                                label='Manual measures')
+        self.l2_ax2, = self.ax2.plot([], [], '.', color=[0.65, 0.65, 1.],
+                                     markersize=5)
+                                     
+        #---- Manual Mesures ----
+                                     
+        self.h_WLmes, = self.ax2.plot([], [], 'o', zorder = 15,
+                                     label='Manual measures')
                                             
-        plt.setp(h_WLmes, markerfacecolor='none', markersize=5,
+        plt.setp(self.h_WLmes, markerfacecolor='none', markersize=5,
                  markeredgecolor=(1, 0.25, 0.25), markeredgewidth=1.5)
-                     
-        #---- Recession (SPECIAL DUNDURN CASE) ----
-            
-    #    # Plot a Recession line for Dundurn Report
-    #    trecess = np.arange(41548, 41760)
-    #    hrecess = 0.69 * (trecess - 41548) / 1000. + 6.225
-    #
-    #    ax2.plot(trecess, hrecess, '--r', zorder = 10, linewidth=1.5,
-    #             label='Water Level Recession')
+        
+        self.draw_waterlvl()
                          
         #----------------------------------------------------------- LEGEND ----
         
@@ -537,8 +523,8 @@ class Hydrograph():
 
         #---- INIT ARTISTS ----
             
-        self.l1_ax4, = self.ax4.plot([], [])        
-        self.l2_ax4, = self.ax4.plot([], [], color='black')
+        self.l1_ax4, = self.ax4.plot([], [])                # fill shape
+        self.l2_ax4, = self.ax4.plot([], [], color='black') # contour line
         
         #------------------------------------------- MISSING VALUES MARKERS ----
     
@@ -572,6 +558,12 @@ class Hydrograph():
         #----------------------------------------------------------- LEGEND ----
              
         if self.isLegend == True:
+            
+            #---- Water Level ----
+            
+            self.ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)
+            
+            #---- Weather ----
     
             rec1 = plt.Rectangle((0, 0), 1, 1, fc=[0.65,0.65,0.65])
             rec2 = plt.Rectangle((0, 0), 1, 1, fc=[0, 0, 1])
@@ -590,9 +582,11 @@ class Hydrograph():
         self.draw_ylabels()
         
         self.isHydrographExists = True
-        
+    
+    #---------------------------------------------------------------------------    
     def resample_bin(self):
-        
+    #---------------------------------------------------------------------------
+    
         # 1 day; 7 days; 15 days; 30 days; monthly; yearly  
         self.bwidth = [1., 7., 15., 30., 30., 365.][self.bwidth_indx]
         bwidth = self.bwidth
@@ -617,6 +611,55 @@ class Hydrograph():
         elif self.bwidth_indx == 5 : # yearly
             print 'option not yet available, kept default of 1 day'
             
+    #---------------------------------------------------------------------------
+    def draw_waterlvl(self):
+        """
+        This method is called the first time the graph is plotted and each
+        time water level datum is changed.
+        """
+    #---------------------------------------------------------------------------
+        
+        #-------------------------------------------------- Logger Measures ----
+        
+        time = self.WaterLvlObj.time
+        
+        if self.WLdatum == 1: # masl
+        
+            water_lvl = self.WaterLvlObj.ALT - self.WaterLvlObj.lvl
+                                                                
+        else: # mbgs -> yaxis is inverted
+        
+            water_lvl = self.WaterLvlObj.lvl
+
+        if self.trend_line == 1:
+            
+            tfilt, wlfilt = filt_data(time, water_lvl, 7)
+            
+            self.l1_ax2.set_data(tfilt, wlfilt)
+            self.l1_ax2.set_label('WL Trend Line')
+                          
+            self.ax2.set_data(time, water_lvl)
+                          
+        else:
+            
+            self.l1_ax2.set_data(time, water_lvl)
+            self.l1_ax2.set_label('Water Level')
+            
+            self.l2_ax2.set_data([], [])
+                        
+        #-------------------------------------------------- Manual Measures ----
+        
+        TIMEmes = self.WaterLvlObj.TIMEmes
+        WLmes = self.WaterLvlObj.WLmes
+        
+        if len(WLmes) > 1:
+            if self.WLdatum == 1:   # masl
+            
+                WLmes = self.WaterLvlObj.ALT - WLmes
+               
+            self.h_WLmes.set_data(TIMEmes, WLmes)
+        
+                                                           
     #---------------------------------------------------------------------------
     def draw_weather(self):
         """
@@ -758,10 +801,10 @@ class Hydrograph():
         
         #---------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
         
-        if self.WLref == 0:       
-            lab_ax2 = labelDB.mbgs % self.name_well
-        elif self.WLref == 1:
-            lab_ax2 = labelDB.masl % self.name_well
+        if self.WLdatum == 0:       
+            lab_ax2 = labelDB.mbgs % self.WaterLvlObj.name_well
+        elif self.WLdatum == 1:
+            lab_ax2 = labelDB.masl % self.WaterLvlObj.name_well
             
         self.ax2.set_ylabel(lab_ax2,rotation=90,
                             fontsize=self.label_font_size,
@@ -793,8 +836,8 @@ class Hydrograph():
         # to have both labels on the left aligned.
         ylabel_xpos = min(ylabel2_xpos, ylabel4_xpos)
 
-        self.ax2.yaxis.set_label_coords(ylabel_xpos - 0.04, ylabel2_ypos)
-        self.ax4.yaxis.set_label_coords(ylabel_xpos - 0.04, ylabel4_ypos)
+        self.ax2.yaxis.set_label_coords(ylabel_xpos - 0.045, ylabel2_ypos)
+        self.ax4.yaxis.set_label_coords(ylabel_xpos - 0.045, ylabel4_ypos)
         
         #  Old way I was doing it before. Position of the labels were
         #  fixed, indepently of the ticks labels format.
@@ -827,7 +870,6 @@ class Hydrograph():
         #-------------------------------------------- WEATHER STATION LABEL ----
         
         text_top_margin = labelDB.station_meteo % (self.name_meteo, self.dist)
-        
         self.text1.set_text(text_top_margin)
         
     def draw_figure_title(self):
@@ -866,7 +908,7 @@ class Hydrograph():
             
     def update_waterlvl_scale(self):
         
-        if self.WLref == 1:   # masl
+        if self.WLdatum == 1:   # masl
             
             WLmin = self.WLmin
             WLscale = self.WLscale
@@ -889,7 +931,7 @@ class Hydrograph():
         self.ax2.axis(ymin=WLmin, ymax=WLmax)
         self.ax2.set_yticks(yticks_position)
         
-        if self.WLref != 1:
+        if self.WLdatum != 1:
             self.ax2.invert_yaxis()
             
     def update_precip_scale(self):
@@ -1239,23 +1281,16 @@ if __name__ == '__main__':
     meteoObj = MeteoObj()
     meteoObj.load(fmeteo)
             
-#    fig = plt.figure(figsize=(11, 8.5))
-#    fig.set_size_inches(11, 8.5)
-#    generate_hydrograph(fig, waterLvlObj, meteoObj, graphParamObj)
-    
     hydrograph2display = Hydrograph()
-    
-    if hydrograph2display.WLref == 0:
-        WL = waterLvlObj.lvl
-    elif hydrograph2display.WLref == 1:
-        WL = waterLvlObj.ALT - waterLvlObj.lvl
+    hydrograph2display.WLdatum = 1
     
     hydrograph2display.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph2display.title_text = "Title of the Graph"
     
-    _, _ = hydrograph2display.best_fit_waterlvl(WL)
-    _, _ = hydrograph2display.best_fit_time(waterLvlObj.time)
+    hydrograph2display.set_waterLvlObj(waterLvlObj)
+    hydrograph2display.best_fit_waterlvl()
+    hydrograph2display.best_fit_time(waterLvlObj.time)
     hydrograph2display.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
     
-    hydrograph2display.generate_hydrograph(waterLvlObj, meteoObj)  
+    hydrograph2display.generate_hydrograph(meteoObj)  
     
