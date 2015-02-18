@@ -44,15 +44,15 @@ Once the content of the Zip archive has been extracted, the program can be start
 
 <table>
   <tr>
-    <td align="center" bgcolor=white><img width="375" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot000.png"></td>
-    <td align="center"><img width="375" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot001.png"></td>
+    <td align="center" bgcolor=white><img width="300" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot000.png"></td>
+    <td align="center"><img width="300" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot001.png"></td>
   </tr>
   <tr>
     <td align="center"><b>Conveniently download and format daily weather data of canadian stations</b></td>
     <td align="center"><b>Quickly estimate and fill missing weather data for all the stations in your study area</b></td>
   </tr>
-    <td align="center"><br><br><img width="375" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot002.png"></td>
-    <td align="center"><br><br><img width="375" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot003.png"></td>
+    <td align="center"><br><br><img width="300" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot002.png"></td>
+    <td align="center"><br><br><img width="300" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot003.png"></td>
   </tr>
   <tr>
     <td align="center"><b>Easily prepare publication-quality figures with your data</b></td>
