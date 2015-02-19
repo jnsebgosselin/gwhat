@@ -5,368 +5,116 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{fix-cm}
-\usepackage[authoryear, round, sort&compress]{natbib}
 \usepackage{placeins}
+\usepackage{subfiles}
+\usepackage{float}
+
+%http://tex.stackexchange.com/questions/30530/remove-chapter-from-the-chapter-title-but-keep-chapter-number-in-the-table-o
+\makeatletter
+\def\@makechapterhead#1{%
+  \vspace*{50\p@}%
+  {\parindent \z@ \raggedright \normalfont
+   \huge\bfseries \thechapter \space
+   \interlinepenalty\@M
+   \Huge \bfseries #1\par\nobreak
+   \vskip 40\p@
+  }}
+  \makeatother
+    
+%\usepackage{titlesec}
+%\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Large}
+
+\usepackage[authoryear, round, sort&compress]{natbib}
 \bibliographystyle{plainnat}
 
 \geometry{letterpaper, total={210mm,297mm}, left=20mm, right=20mm, top=20mm, bottom=20mm}
 
-% Font size convention for this document:
-
-% UI element : \textsl{name of the UI element}
-% Nomenclature: ``name of the term defined''
-
 \begin{document}
 
-\begin{titlepage}
-\begin{center}
-
-% http://www.tex.ac.uk/cgi-bin/texfaq2html?label=fontsize
-
-\textbf{\fontfamily{phv}\fontsize{30}{36}\selectfont USER MANUAL}\\[1.0cm]
-\textbf{\fontfamily{phv}\fontsize{30}{36}\selectfont AND}\\[1.0cm]
-\textbf{\fontfamily{phv}\fontsize{30}{36}\selectfont TECHNICAL DOCUMENTATION}\\[1.0cm]
-\textbf{\fontfamily{phv}\fontsize{30}{36}\selectfont FOR}\\
-
-\includegraphics[width=1\textwidth]{WHAT_banner}~\\[2cm]
-
-{\Large \today}\\[0.5cm]
-{\Large Document up to date for software version 4.1.5-beta}\\[2cm]
-
-{\large Jean-S\'ebastien Gosselin\textsuperscript{1}, Christine Rivard\textsuperscript{2}, and Richard Martel\textsuperscript{1}}\\[0.25cm]
-
-\textit{{\small\textsuperscript{1} Institut national de la recherche scientifique, Centre Eau Terre Environnement, 490 rue de la Couronne, Quebec City, Quebec, Canada}}\\[0.1cm]
-
-\textit{{\small\textsuperscript{2} Geological Survey of Canada, Quebec Division, 490 rue de la Couronne, Quebec City, Quebec, Canada}}\\[2cm]
-
-{Copyright 2015 Jean-S\'ebastien Gosselin}
-
-\end{center}
-\end{titlepage}
-
-
-\chapter*{License}
-
-WHAT is free software: you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version.
-
-This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License along with this program. If not, see \url{www.gnu.org/licenses}.
-
-% \chapter*{Copyright}
-
-\newpage
-
-\chapter*{Acknowledgements}
-
-WHAT has been funded in part by:
-
-\begin{description}
-\item{CRSNG through a PhD grant to Jean-Sébastien Gosselin}
-\item{Projet Montérégie Est PACES}
-\item{CRSNG fund}
-\item{CGC}
-\end{description}
-
-We would like to thank all people who have used WHAT since its earliest stages and provided essential technical feedback, constructive criticism, and helpful comments or have helped in the shaping of the science that lies under the hood of the software. In particular, special thanks to (in alphabetical order):
-
-\begin{description}
-\item{Erwan Gloaguen, Professor of Geophysics and Geostatistics, INRS-ETE, Quebec, QC, Canada.}
-\item{Harold Vigneault, Research Professional, INRS-ETE, Quebec, QC, Canada.}
-\item{Marc Laurencelle, PhD Student in Earth Sciences, INRS-ETE, Quebec, QC, Canada.}
-\item{Pierre Ladev\`eze, PhD Student in Earth Sciences, INRS-ETE, Quebec, QC, Canada.}
-\item{Ren\'e Lefebvre, Professor in Hydrogeology, INRS-ETE, Quebec, QC, Canada.}
-\item{Xavier Mallet, Research Technician, Geological Survey of Canada – Quebec Division, QC, Canada.}
-\end{description}
-
-\newpage
-
-% \chapter*{Foreword}
+\subfile{chapter0}
 
 \listoffigures
 
 \tableofcontents
 
-\chapter{Introduction}
+\part{User Manual}
 
-WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
+\subfile{chapter1.1} % Introduction
+\subfile{chapter1.2} % Project Management
+\subfile{chapter1.3} % Gapless Weather Data Series
+\subfile{chapter1.4} % Water Level Time Series
 
-\begin{itemize}
+%\subsection{Generation of the well hydrograph with weather data}
 
-\item{the preparation of a gapless daily weather time-series (precipitation and air temperature) representative of the well location. For this purpose, an interface to the online Canadian Daily Climate Database (CDCD) is provided that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Furthermore, missing data for a given station can be quickly filled with data from selected neighboring weather stations using a multiple linear regression model;}
+%The view can be panned by dragging the mouse with the left mouse button depressed. Zoom in by pressing the Ctrl key while dragging the mouse upwards, or by moving the mouse wheel up. Zoom out mouse wheel down.
 
-\item{the generation of various publication-quality figures from the weather and water level data;}
+%\subsection{Barometric response function}
+%\subsection{Estimation of the MRC and first recharge estimation}
+%\subsection{Recharge estimation with synthetic well hydrograph method}
 
-\item{the exploration, manipulation, and validation of the data within a user-friendly dynamic graphical environment;}
+\part{Technical Documentation}
 
-\item{the calculation of the master recession curve of the well hydrograph (experimental);}
+\chapter{Barometric correction: an overview}
 
-\item{the estimation of groundwater recharge at the local scale in unconfined conditions with a method combining the daily meteorological data and the water level time series (will be available in a future release).}
-
-\item{the calculation of the barometric response function of the well that can be used to assess the level of confinement of the aquifer at the well location (will be available in a future release).}
-
-\end{itemize}
-
-WHAT is written in the Python 2.7 programming language and is currently maintained and developed by Jean-S\'ebastien Gosselin at INRS-ETE (\url{www.ete.inrs.ca}). The source code and a stand-alone executable for Windows 7 are available free of charge for download on GitHub (\url{https://github.com/jnsebgosselin/WHAT}). If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-S\'ebastien Gosselin at this email address \href{mailto:jnsebgosselin@gmail.com}{jnsebgosselin@gmail.com}.
-
-\chapter{User Manual}
-
-\section{Installation}\label{sec:intallation}
-
-WHAT can run on Windows, Linux, or OS X computer operating systems. However, a stand-alone executable of the program is currently released and tested only for the Windows 7 platform. This executable should also be compatible with Windows XP. For the Linux and OS X platforms, the software can be run directly from the source code, provided that Python 2.7 and all the required third party packages are installed on the computer (PySide, NumPy, matplotlib, xlrd, xlwt).
-
-The stand-alone executable for Windows 7 is distributed in a Zip archive that can be downloaded freely on GitHub (\url{https://github.com/jnsebgosselin/WHAT/releases}). This archive contains:
-
-\begin{itemize}
-
-\item{the GNU General Public License;}
-
-\item{a folder named ``WHAT'' that contains all the necessary system files for the program to run, including the file ``WHAT.exe'' from which the software can be started;}
-
-\item{a folder named ``Projects'' where all input and output files used or created by WHAT are stored by default. In this folder are included samples of input and output files that provide a quick and convenient way to test and learn the various features of the program.}
-
-\end{itemize}
-
-Once the content of the Zip archive has been extracted, the program can be started directly from the WHAT.exe executable file that is contained withing the folder named WHAT. The software can conveniently run from any location on the computer or from any storage device without the need to install the program beforehand.
-
-\section{Overview of the Graphical User Interface}
-\label{sec:GUI_overview}
-
-%There is no traditional menus in WHAT and everything is instead displayed within a menu bar that is located at the top of the interface.
-
-WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console area, and a central view panel (see Figure~\ref{fig:WHAT_GUI}). The \emph{menu bar} is located in the top right corner of WHAT main window. This is where you can view what is the current project, open an already existing project or create a new one. The \emph{console} is located at the bottom of the WHAT interface and is used to report technical information about the various tasks accomplished by the program as well as warning and error messages. The console can be collapsed to save space, or can be extended to the entire window area. The \emph{central view panel} is the main component of the WHAT interface and is where are displayed the various features of the software. The content of this panel is divided into four tabs: \emph{Download Data}, \emph{Fill Data}, \emph{Hydrograph}, and \emph{About}. The tabs are described in a little bit more details in the text below and are shown in Figure~\ref{fig:WHAT_GUI_ScnShot}.
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.75\textwidth]{WHAT_GUI}
-\caption[WHAT GUI main features.]{WHAT GUI main features.}
-\label{fig:WHAT_GUI}
-\end{figure}
-
-\paragraph{Download Data} This tab (see Figure~\ref{subfig:ScnShot_000}) provides an interface to the online Canadian Daily Climate Database (CDCD) that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Alternately, it is possible to provide a custom list of Canadian weather stations for which data can be downloaded and formatted. At the moment, it is not possible to access data of weather stations located in the U.S. This feature may be added in a future release of the software.
-
-\paragraph{Fill} This tab (see Figure~\ref{subfig:ScnShot_001}) is where you can automatically estimate the missing daily weather values in your data to create gapless time-series of daily precipitation and air temperature. Missing data for a given station are estimated from selected neighboring weather stations using a multiple linear regression model.
-
-\paragraph{Hydrograph} This tab is used for viewing and plotting data. For this purpose, two modes are available: the \emph{layout} and the \emph{computation} mode. Both modes share the same weather and water level dataset and it is possible to switch from one mode to the other at anytime. The \textbf{layout} mode (see Figure~\ref{subfig:ScnShot_002}) provides an interface to interactively produce publication-quality graphs from the data. The \textbf{computation} mode (see Figure~\ref{subfig:ScnShot_003}) consists in a dynamic graphical environment where data can be explored, manipulated and analyzed. Various computational tools are available in this mode, including the estimation of the hydrograph Master Recession Curve (MRC) and the estimation of groundwater recharge.
-
-\paragraph{About} This tab (see Figure~\ref{fig:WHAT_GUI}) displays copyright, licensing and general information about WHAT.
+The commercial submersible pressure transducers which are self-equipped with an autonomous electronic data logger represent an interesting turnkey option for the long-term monitoring of water-level fluctuations in observation wells and piezometers. Some example of these water-level data loggers are the Levelogger Edge\textsuperscript{\textregistered} by Solinst and the Micro-Diver\textsuperscript{\textregistered} by Schlumberger Water Services. 
 
 \begin{figure}[h!]
         \centering
-        \begin{subfigure}[t]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{WHAT_Screenshot000}
-                \caption{``Download Data'' tab.}
-                \label{subfig:ScnShot_000}                
+        \begin{subfigure}[t]{0.5\textwidth}
+                \includegraphics[width=\textwidth]{img/Solinst_EdgeLeveLogger}
+                % http://aquaterra.pl/levelogger-edge
+                \caption{Solinst Levelogger Edge\textsuperscript{\textregistered}}
+                \label{subfig:levelogger_solinst}                
         \end{subfigure}%
-        \hspace{0.5cm}
-        \begin{subfigure}[t]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{WHAT_Screenshot001}
-                \caption{``Fill'' Data tab.}
-                \label{subfig:ScnShot_001}
-        \end{subfigure}
         \\[0.5cm]
-        \begin{subfigure}[t]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{WHAT_Screenshot002}
-                \caption{``Hydrograph'' tab in mode ``Layout''.}
-                \label{subfig:ScnShot_002}
+        \begin{subfigure}[t]{0.5\textwidth}
+                \includegraphics[width=\textwidth]{img/Schlumberger_MiniDiver}
+                % http://environnement.sdec-france.com
+                \caption{Schlumberger Micro-Diver\textsuperscript{\textregistered}}
+                \label{subfig:levelogger_schlumberger}
         \end{subfigure}
-        \hspace{0.5cm}
-        \begin{subfigure}[t]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{WHAT_Screenshot003}
-                \caption{``Hydrograph'' tab in mode ``Computation''.}
-                \label{subfig:ScnShot_003}
-        \end{subfigure}
-        \caption[Screenshots of WHAT GUI tabs captured in Ubuntu Linux 14.04.]{Screenshot of WHAT GUI tabs captured in Ubuntu Linux 14.04. (a) ``Download Data'' tab. (b) ``Fill'' Data tab (c) ``Hydrograph'' tab in mode ``Layout''. (d) ``Hydrograph'' tab in mode ``Computation''.}\label{fig:WHAT_GUI_ScnShot}
+       
 \end{figure}
 
-\section{Workflow for Interpreting Water-level Time-series}
+\cite{freeman_use_2004} provides a guide to the proper selection, installation, and operation of submersible pressure transducers and data loggers for the collection of hydrologic data, primarily for the collection of water-level data from wells.
 
-WHAT essentially consists of set of tools to assist the interpretation of water level time series measured in observation wells, from the preparation of raw data to the assessment of groundwater recharge when in unconfined conditions. In this perspective, WHAT was developed with the general workflow shown in Figure 6  in mind.
+These instrument are generally suspended at a fixed depth in a well or the piezometer from a stable fixed point called the hanging point, often secured directly to the well casing itself.
+
+These instruments record the absolute pressure (non-vented) and their output must be compensated for barometric pressure in order to obtain a measure of the water level elevation. This is done by subtracting the barometric record from the water-level record. This gives the height of the water column above the instrument.  
+
+
+Some instrument record the absolute gage pressure. Is measured in reference to atmospheric pressure at mean sea level. Pressures measured by a gage-pressure transducer are positive for pressures greater than sea-level pressure and negative for pressure less than sea-level pressure. Thus, atmospheric pressure measurements above sea-level datum are negative because atmospheric pressure decreases with altitude.
+
+The new
+
+Pressure changes occur in response to changes in the height, and thus in the weight of the water column in the well above the transducer.
+
+DEPTH OF INSTALLATION
+
+The principal objective of selecting a submergence depth at which to hang a transducer during installation is to ensure that water levels do not exceed the transducer’s operational range or fall below it during the monitoring period. Historical water-level measurements can be helpful when designing a long-term water-level monitoring program (Taylor and Alley, 2001). If enough measurements have been made, it is much easier to determine what daily or seasonal extremes can be expected for a given well. Thus, the appropriate range for a transducer can be selected, and its optimum position estimated. To minimize potential for errors and simplify subsequent data processing, reposition the transducer infrequently. Under ideal conditions, the transducer can be hung at a single depth for the entire monitoring period, although it may be necessary to re-position a transducer once
+
+When data have been collected for a sufficient amount of time, WHAT can provides useful insight about past water level comportment and can also be used as a tool for predictive scenario. This can help to better design the optimal depth of installation of the instrument.
+ 
+Even though there exists software that can correct data automatically for barometric pressure, it is still advise to have a basic understanding of the theory.
+
+
+This is particularly usefull to correct situations when something goes wrong. For example, the barologger may had a deficiency and atmospheric pressure needed to be taken from the CDCD for example and data needed to be corrected manually. There arise often situation when correction needs to be done manually. This happens when there is a problem with the data. This is then good practice to understand the process in order to dodge mistake.
+
+It is a good idea to monitor water level at a 15 min frequency for a period of a year, or more if it is possible. The data can be used subsequently to estimate the barometric response function of the well that can be quite useful to understand the hydrogeological context, and the level of confinement of the well. Having data with this frequency is also useful for running FFT and understand the cause of possible unatural fluctuation in the well.
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=0.95\textwidth]{WHAT_Workflow}
-\caption[WHAT conceptual workflow.]{WHAT conceptual workflow for the interpretation of water-level time-series measured in an observation well.}
-\label{fig:WHAT_workflow}
-\end{figure}
-
-The first step consists in the preparation of a gapless weather dataset.
-
-Validation/preparation of water level time series: 1) automatic measurements fitted to manual measurements. 2) Correct the places where there is a break in the water level curve. This is due generally to the logger that is placed at a different level following the removal of the later from the well. 3) Remove measurements that were acquired while the barologger was outside the water column.
-
-Preparation of a gapless weather dataset. This include. Downloading data from the CDCD database for stations located in a radius of 0 to 100 km from the well. Fill missing daily data for the station located closest to the well by using selected neighboring stations. Data are not interpolated to the exact location of the well. It has been decided to keep the original dataset of the station located closest to the well to analyse the data. This is due to the fact that conventional technique for interpoloating weather data tend to surestimate the number of wet day, but underestimate the intensity of stron precipitation event. More advanced and complicated technique are required to circumvent these issues. It has thus been decided that is was prefereable to keep the original data from a single station.
-
-Once the weather data, and water level are prepared, production of a well hydrograph. Visual interpretation between the water level  fluctuation and weather data can be done.
-
-If high time resolution measurement of the water level and barometric pressure are available, it is possible to carry an calculation of the barometric response function. It is also good to produce a FFT analysis of the hydrograph.
-Weather yearly average and montlhy averages can be plotted at this stage.
-If the visual inspection of the well, and the barometric response function, determined that the well in unconfined, it means groundwater recharge can be estimated from the data. First, determining the segment where groundwater recharge can be supposed to be negligible and where the water level recede. After that, compute the MRC, and compute a first estimation of groundwater recharge using the Water-Table Fluctuation principle. Estimate finaly recharge with a method combining the meteorological data and the well hydrograph. Enjoy.
-
-\section{Projects Management in WHAT}
-
-\subsection{Introduction}
-
-Data is managed in WHAT by project. That is all input and output files relative to a given project are saved within a common folder called the ``project folder''. This file management system allows you to easily backup and move your projects from one location to the other since all the files relating to a given project are saved at the same place. 
-
-On first launch, WHAT will automatically open an example that is distributed with the software with all the necessary files to easily and quickly test the functionality of the program. The title of the currently opened project is shown in the menu bar at the top of the interface. Additional information about the project can be displayed by clicking on the small ``i'' icon located next to the project name. There can be only one opened project at a time per instance of WHAT. 
-
-\subsection{Create a New Project}
-
-To start a new project, click on the button \textsl{New Project\dots} with the small folder icon located at the right end of the WHAT menu bar (see Figure~\ref{fig:WHAT_GUI}). This will open a new dialog window (see Figure~\ref{fig:new_proj_win}) where you can enter various information about your project such as its title, author and location coordinates. 
-
-Clicking on the button \textsl{Save} creates a new project folder named after your project title in which your project information are saved in a file with a ``.what'' extension. The new folder is created in the location defined by the \textsl{Save in Folder} directory path. For example, saving the \textsl{My New Project} of Figure~\ref{fig:new_proj_win} would create a folder named ``My New Project'' in the directory ``\textsl{C:\textbackslash{}Users\textbackslash{}johndoe\textbackslash{}WHAT\_4.0.5-beta\textbackslash{}Projects}'' and would saved the project information in the file named ``my\_new\_project.what''. It is possible to change the directory where the project folder is created by clicking the small folder icon located next to the \textsl{Save in Folder} directory path.
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.5\textwidth]{WHAT_Screenshot_newproject}
-\caption[New Project dialog window.]{New Project dialog window.}
-\label{fig:new_proj_win}
-\end{figure}
-
-\FloatBarrier
-
-\subsection{Open a Project}
-
-To open a new project, click on the name of the currently opened project in the menu bar at the top of WHAT window. This will open a new dialog window where you can browse your folders to select an already existing project file (*.what), and then click Open. WHAT will then open the project and the currently opened project displayed in the menu bar should change to the name of the project you just selected.
-
-The path to your project folder is stored in WHAT in a relative format. This means that if you change the location of your project folder relative the ``WHAT.exe'', your will have to redirect WHAT to the new location of your project by repeating the procedure described in the paragraph above.
-
-\subsection{Project Folder Structure Overview}\label{subsec:folder_structure}
-
-In addition to the project file (.what file extension) that is created when saving a new project, WHAT automatically generates various files and sub-folders that are required for it to run. This file organization is briefly described here and an example is presented in Figure~\ref{fig:proFolder_organization}. The project folder contains two sub-folders named ``Meteo'' and ``Waterlvl'' in addition to a few other files.
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.5\textwidth]{file_and_folder_architecture}
-\caption[Project folder file organization.]{Project folder file organization.}
-\label{fig:proFolder_organization}
-\end{figure}
-
-\paragraph{Meteo} The folder \emph{Meteo} contains three sub-folders named respectively Raw, Input and Output. The folder \textbf{Raw} is where are saved the weather data files downloaded from the CDCD. These are coma-separated values (CSV) files that contain weather data on a yearly basis. All the data files for a given weather station are saved within a common folder named after the station name and its unique identification number (IDN). For example, in Figure~\ref{fig:proFolder_organization}, the raw data file ``eng-daily-01011980-12311980.csv'' that contains weather data of the station ``Marieville'' for the year 1980 is saved within a folder named ``MARIEVILLE (7024627)'' where the number in parentheses is the unique IDN of the station.
-
-The folder \textbf{Input} contains the formatted weather data files produced from the raw data files. These are tab-separated values (TSV) files that are named after the station's name and IDN.
-
-The folder \textbf{Output} is where are saved the gapless weather time-series produced from the content of the Input folder. These are saved in TSV text files with the extension ``.out''. The files with the extension ``.log'' are TSV text files that contain detailed information about every missing daily weather value that were estimated by the program to produce the gapless time-series (.out files).
-
-\paragraph{Waterlvl} The folder ``Waterlvl'' is the preferred location were your water level time-series should be stored. These files can be  either in a Microsoft Excel spreadsheet file format (xls) or in a tab-separated values text format (TSV).
-
-\paragraph{Other Files}The file ``weather\_stations.lst'' is a resource file that is used to store the results of a weather station search in the Canadian Daily Climate Database (CDCD). The file ``graph\_layout.lst'' is also a resource file in which are stored the layout parameters of the well hydrographs that are produced in the hyhdrograph tab of WHAT. The file ``STATION\_SUMMARY.log'' is an tab-separated values (TSV) file that contains a summary of all the weather data files contained in the ``Input'' folder. The file ``waterlvl\_manual\_measurements.xls'' is used to input manual water level measurements associated with the water level time-series files stored in the ``Waterlvl'' folder. These measurements are plotted on the hydrograph and can also be used to adjust the position of the water-level time-series in the vertical axis when the installation depth of the pressure probe is unknown.
-
-\FloatBarrier
-
-\section{Creation of gapless weather data series}
-
-\subsection{Downloading and formatting data from the CDCD database}
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.75\textwidth]{WHAT_Screenshot000}
-\caption[Tab ``Download Data''.]{Tab ``Download Data''.}
-\label{fig:tab_dwnldData}
-\end{figure}
-
-The Canadian Daily Climate Database (CDCD) contains daily air temperature and precipitation from 1840 to the present for about 8450 stations distributed across Canada. Data can be downloaded manually on the Government of Canada website as CSV files on a yearly basis, or it is possible to acquire the entire database by ordering a DVD. The former option involves a lot of repetitive manipulations and can become quickly a time consuming task while the latter does not offer a convenient way to update your data. Moreover, the organization of the original CDCD data files in a more convenient format can also represent a tedious task when done manually. WHAT alleviates this process by providing a graphical interface to the online CDCD database that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. All of these features are available from the tab \emph{Download Data} shown in Figure~\ref{fig:tab_dwnldData}.
-
-\subsubsection{Searching for Stations}
-
-To start searching for stations in the online CDCD, go in the tab \emph{Download Data} and click on the small magnifying glass icon located next to the \emph{Weather Station} drop down list, that should be empty if you have just created a new project. This will open a new dialog window (see Figure~\ref{fig:Screenshot_search4stations}) where you can search for stations located within a given radius around a location defined in latitude and longitute decimal degrees. It is possible to further narrow down the search by including only stations that have data within a given period. 
-
-Clicking on the button \emph{Search} initiates the search for weather stations with the specified parameters. The results are saved in the file ```weather\_stations.lst'' and the \emph{Weather Station} drop down list is updated to list all the stations found during the search.
-
-\begin{figure}[h]
-\centering
-\includegraphics[width=0.5\textwidth]{WHAT_Screenshot_search4stations}
-\caption[Graphical interface to the online CDCD database.]{Graphical interface to the online CDCD database.}
-\label{fig:Screenshot_search4stations}
-\end{figure}
-
-Alternately, it is possible to use a custom list of Canadian stations generated manually without using the graphical interface. This is done by retrieving station information from their unique url directly on the government of Canada website (\url{www.climate.weather.gc.ca}). The information must be saved in a TSV text file with the ``.lst'' extension. The list can be loaded in WHAT by clicking on the small folder icon located next to the \emph{Weather Station} drop down list. A detailed example is presented for the weather station Marieville, located in southern Quebec, in Appendix~\ref{app:custom_station_list}.
-
-\subsubsection{Downloading Data}
-
-Once a list of weather station has been generated in WHAT, either by an automatic search with the interface or by opening a custom weather station list, data can be downloaded from the online CDCD by selecting the desired station in the drop-down menu list and clicking on the button \emph{Get Data}. For each year between the values specified in the \emph{Download Data} year range, WHAT will automatically download the weather data from the CDCD and save the results as a CSV file in the \emph{Raw} folder (see section~\ref{subsec:folder_structure} for each year individually).
-
-The downloading process can be stopped at any time by clicking on the button \emph{Get Data} which will then be displaying a red stop icon. Before downloading data for a given year, WHAT will first check if data already exist for that whole year in the folder \emph{Raw}. If it is the case, data for this year won't be downloaded and the process will pass to the following year, otherwise data will be downloaded and saved normally from the CDCD. Detailed information about the program transactions during the downloading process are printed in the console area located at the bottom of the interface (see section~\ref{sec:GUI_overview}).
-
-\subsubsection{Formatting Data}
-
-As soon as a downloading task ends successfully for a given weather stations, WHAT automatically format and concatenate the data. That is data for each year are put together end to end in chronological order and only data related to air temperature (mean, max and min) and total precipitation are kept. In addition, NaN values will be put everywhere data are missing. Finally, statistics about the missing values in the dataset for each meteorological variable will be displayed in the \emph{Concatenate and Format Raw Data Files} section.
-
-By default, WHAT will automatically save the formatted data series in a single TSV file within the folder \emph{Input} (see section~\ref{subsec:folder_structure}. You can save any other copy of the formatted data set anywhere on your computer by clicking on the button \emph{Save}. The automatic saving of formatted data series can be disabled by unchecking the \emph{Automatically save concatenated data} option. 
-
-It is also possible to open previously downloaded weather data files in WHAT by clicking on the button \emph{Load} and selecting the desired files in the dialog window. WHAT will then automatically format and concatenate the data and a new concatenated data files and save the results automatically if the \emph{Automatically save concatenated data} option is checked. Alternatively, the formatted data series can be saved by clicking on the button \emph{Save}.
-
-\subsection{Gap filling daily weather records}
-
-One of WHAT main utility is the automatic gap filling of daily weather data records. This feature is accessible from the tab \emph{Fill Data} shown in Figure~\ref{fig:tab_fillData}. On start-up or after opening a project, WHAT automatically scans the content of the \emph{Input} folder for valid weather data files and displays the result as a list of weather station names under the label \emph{Fill Data for Weather Station}. The list of stations won't be refreshed automatically if new data files are added to the Input folder after the project has been opened. The button \emph{Refresh} located next to the list of stations can be used for this purpose. In addition, each time WHAT search the Input folder for valid weather data files, it automatically computes statistics about the period over which data are available for each station and the number of missing data in the weather time-series and saves the results in the file named ``STATION\_SUMMARY.log'' (see section~\ref{subsec:folder_structure}).
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.75\textwidth]{WHAT_Screenshot001}
-\caption[Tab ``Fill Data''.]{Tab ``Fill Data''.}
-\label{fig:tab_fillData}
-\end{figure}
-
-If the Input folder is not empty, selecting a station from the drop-down list will automatically initiate the computation of correlation coefficients between the data of the selected station and all of the remaining stations (herein called the neighboring stations), as well as horizontal distances and elevation differences. In addition, information about the number of missing values in the data of the selected weather station are also computed. The results are displayed in the view panel located on the right side of the interface. Correlation coefficients that fall below a value of 0.7 are displayed in red in the table. This is only meant as guidance for the user and has no impact on the gap filling procedure.
-
-The process to fill the gaps in the data of the selected weather station can be launched by clicking the button \emph{Fill} located at the bottom of the left side panel of the interface. Each missing value is estimated with a multiple linear regression (MLR) model generated with the synchronous weather time series of the selected and neighboring stations. The routine uses the data from the neighboring stations that are best correlated with the data of the selected station, up to the maximum number of stations defined by the user. For example, in Figure~\ref{fig:tab_fillData}, the program would use the neighboring stations with the best correlation coefficient values up to a maximum of 4 stations. If for a given date all the neighboring stations have missing data synchronously with the selected station, a NaN value is kept in the dataset at this particular time.  
-
-It has been demonstrated that the MLR method outperforms most of the commonly used techniques for the estimation of missing data in daily meteorological records \citep{eischeid_quality_1995,eischeid_creating_2000,xia_forest_1999}. The user can also choose between an Ordinary Least Squares (OLS) or a Least Absolute Deviations (LAD) criterion for the generation of the MLR model. The LAD criteria is more robust to outliers than the OLS but is more demanding in computation time. 
-
-In addition, data correlation between two stations for a given meteorological variable will generally decreases as difference in altitude and distance increase. Therefore, it is possible to specify a cutoff distance and a cutoff altitude difference for which neighboring stations that fall above these cutoff values are excluded from the gap filling procedure. A value of 100~km for the cutoff distance and 350~m for the cutoff altitude difference are set as default values in the program, based on the literature 
-\citep{tronci_comparison_1986,xia_forest_1999,simolo_improving_2010}. 
-
-WHAT will fill the gaps in the data between the dates specified by the user and automatically save the gapless daily weather time series in a tab-separated values (TSV) text file with the extension ``.out'' within the sub-folder \emph{Output} of the folder \emph{Meteo} (see section~\ref{subsec:folder_structure}). The file is named after the weather station name and its unique IDN. For example, the resulting output file for the station named Marieville in Figure~\ref{fig:tab_fillData} would be ``MARIEVILLE (7024627)\_1980-2014.log''. In addition, detailed information about every missing value estimated by WHAT to fill the gap in the data are saved in a file with the same name as the ``.out"" file but with a ``.log'' extension.
-
-It is also possible to fill the gaps in the data for all the stations in batch by clicking on the button \emph{Fill All}. The parameters for the gap filling process will then be kept the same for all the stations.
-
-Finally, it is possible to assess the incertitude of the method used to estimate the missing values with a jackknife procedure. However, this is an experimental feature that is not presently available from the GUI and must be activated directly in the source code.
-
-\subsection{Using weather data from other sources}
-
-Presently, it is not possible to automatically download and format data of weather stations located in the U.S. or in any other country than Canada. This feature may be added for the U.S. in a future release of the software.
-
-However, it is still possible to use weather data from any sources in WHAT either for filling the gaps in the time-series or for the interpretation of water-level time-series, as long as the data are saved in a format compatible with WHAT.
-
-It is strongly recommended to use a copy of one of the sample files that are provided in the project example that is distributed with the software and fill the information and the data directly in them. The files must be kept in a tab-separated values text format either with the extension ``.csv'' or ``.out''. This can be achieved in any standard spreadsheet application such as Microsoft Excel or LibreOffice Calc. The format of the header must be observed faithfully in those files. In addition, NaN values must be entered where data are missing. Data must also be in chronological order, but do not need to be continuous over time. That is missing blocks of data (e.g., several months or years) can be completely omitted in the time-series. These missing blocks of data will be estimated and filled during the gap filling procedure or will be ignored for the plotting of the hydrograph.
-
-\section{Preparation of the water level time series}
-
-\subsection{Data validation and correction}
-
-Pour chacun des puits, les valeurs de niveaux d’eau obtenues avec les sondes ont été comparées avec des mesures manuelles prises lors des visites aux puits. Pour l’ensemble des puits, l’écart absolu entre les valeurs des sondes et les mesures manuelles est généralement inférieur à 5 cm.
-
-Pour un même puits, lorsqu'un écart systématique de plus de 5 cm était observé entre les mesures manuelles et les mesures automatiques, une correction des niveaux d’eau a été  appliquée de façon à caler les valeurs obtenues avec les sondes aux mesures manuelles.
-Les données aberrantes dans les séries de données ont également été corrigées par interpolation linéaire. C’est données aberrantes sont principalement des mesures qui ont été prises alors que la sonde avait été retirée du puits pour le téléchargement des données, ou encore par du pompage dans les puits lors d’une campagne d’échantillonnage de l’eau.
-
-\subsection{Generation of the well hydrograph with weather data}
-
-The view can be panned by dragging the mouse with the left mouse button depressed. Zoom in by pressing the Ctrl key while dragging the mouse upwards, or by moving the mouse wheel up. Zoom out mouse wheel down.
-
-\subsection{Barometric response function}
-\subsection{Estimation of the MRC and first recharge estimation}
-\subsection{Recharge estimation with synthetic well hydrograph method}
-
-\chapter{Technical Documentation}
-
-\section{Barometric correction: an overview}
-
-\cite{freeman_use_2004}
-
-Even though there exists software that can correct data automatically for barometric pressure, it is always a good practice to understand what is done behie. This is particularly usefull to correct situations when something goes wrong. For example, the barologger may had a deficiency and atmospheric pressure needed to be taken from the CDCD for example and data needed to be corrected manually. There arise often situation when correction needs to be done manually. This happens when there is a problem with the data. This is then good practice to understand the process in order to dodge mistake.
-
-It is a good idea to monitor water level at a 15 min frequency for a period of a year, or more if it is possible. The data can be used subsequently to estimate the barometric response function of the well that can be quite usefull to understand the hydrogeological context, and the level of confinement of the well. Having data with this frequency is also usefull for running FFT and understand the cause of possible unatural fluctuation in the well.
-
-\begin{figure}[h!]
-\centering
-\includegraphics[width=0.5\textwidth]{ObsWell}
+\includegraphics[width=0.5\textwidth]{img/ObsWell}
 \caption[Typical instrument configuration for water level monitoring in an observation well]{Typical instrument configuration for water level monitoring in an observation well}
 \label{fig:obswell_config}
 \end{figure}
 
+Observations of land use, or changes in the general area of the site can be important for data analysis, record compu-tation, and data interpretation. These observations could be notes on land-use changes, construction of new wells nearby, notes of flowmeter readings from production wells, mention of known floods or earthquakes that occurred since the last visit, or any other item that might have a bearing on data collection.
+
+
 \subsection{Format des données brutes}
 
-Le monitoring des niveaux d’eau dans les puits d’observation pour le projet Montérégie Est a été fait avec des sondes à niveaux d’eau non ventilées. Cela implique que pour pouvoir calculer la hauteur de la colonne d'eau, heau, située au-dessus des sondes (voir figure 1), la pression atmosphérique doit également être connue à chacun des puits. À cet effet, des sondes barométriques ont également été installées dans la majorité des puits d'observation du projet Montérégie Est. Une attention particulière a été portée afin d'assurer que les puits qui n'étaient pas munis d'une sonde barométrique étaient situés à proximité et à une altitude raisonnablement similaire d'un puits où la pression atmosphérique était mesurée.
+Cela implique que pour pouvoir calculer la hauteur de la colonne d'eau, heau, située au-dessus des sondes (voir figure 1), la pression atmosphérique doit également être connue à chacun des puits. À cet effet, des sondes barométriques ont également été installées dans la majorité des puits d'observation du projet Montérégie Est. Une attention particulière a été portée afin d'assurer que les puits qui n'étaient pas munis d'une sonde barométrique étaient situés à proximité et à une altitude raisonnablement similaire d'un puits où la pression atmosphérique était mesurée.
 
 La profondeur de la nappe par rapport à la surface, Znappe, est calculée via l'équation suivante : 
 
@@ -380,6 +128,7 @@ où Ptot (kPa) est la pression absolue ressentie par la sonde à niveaux d'eau,
 % \chapter{Code Architecture}
 
 \appendix
+
 \chapter{Creating a Custom CDCD Weather Station List}
 \label{app:custom_station_list}
 
@@ -391,7 +140,7 @@ Once a file containing a list of weather stations' information has been created,
 
 \begin{figure}[h!]
 \centering
-\includegraphics[width=0.5\textwidth]{example_staList}
+\includegraphics[width=0.5\textwidth]{img/example_staList}
 \caption[Weather Station List (*.lst) Sample]{Weather Station List (*.lst) Sample}
 \label{fig:example_staList}
 \end{figure}
@@ -418,32 +167,30 @@ From this URL, we find that its Station ID is 5406 (see red circle in Figure A4)
         \centering
         \begin{subfigure}[t]{0.45\textwidth}
                 \centering
-                \includegraphics[width=\textwidth]{customWeaterStaList_step1}
+                \includegraphics[width=\textwidth]{img/customWeaterStaList_step1}
                 \caption{Step 1}
                 \label{subfig:customWeaterStaList_step1}                
         \end{subfigure}%
         \hspace{0.5cm}
         \begin{subfigure}[t]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{customWeaterStaList_step2}
+                \includegraphics[width=\textwidth]{img/customWeaterStaList_step2}
                 \caption{Step 2}
                 \label{subfig:customWeaterStaList_step2}
         \end{subfigure}
         \\[0.5cm]
         \begin{subfigure}[t]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{customWeaterStaList_step3}
+                \includegraphics[width=\textwidth]{img/customWeaterStaList_step3}
                 \caption{Step 3}
                 \label{subfig:customWeaterStaList_step3}
         \end{subfigure}
         \hspace{0.5cm}
         \begin{subfigure}[t]{0.45\textwidth}
-                \includegraphics[width=\textwidth]{customWeaterStaList_step4}
+                \includegraphics[width=\textwidth]{img/customWeaterStaList_step4}
                 \caption{Step 4}
                 \label{subfig:customWeaterStaList_step4}
         \end{subfigure}
         \caption[Creation of a custom weather station list how-to]{Creation of a custom weather station list how-to}\label{fig:customStaList_Howto}
 \end{figure}
-
-
 
 \bibliography{WHATMANUAL}
 
