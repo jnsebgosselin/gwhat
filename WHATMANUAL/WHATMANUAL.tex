@@ -1,6 +1,9 @@
 \documentclass[12pt, letterpaper, fleqn]{report}
-\usepackage[hidelinks]{hyperref}
+
 \usepackage{geometry}
+\geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
+
+\usepackage[hidelinks]{hyperref}
 \usepackage{graphicx}
 \usepackage{caption}
 \usepackage{subcaption}
@@ -8,11 +11,16 @@
 \usepackage{placeins}
 \usepackage{subfiles}
 \usepackage{float}
+\usepackage{adjustbox} 
+
+% Very Good Table Example:
+
+%http://tex.stackexchange.com/questions/64761/add-just-a-little-more-padding-to-my-table
 
 %http://tex.stackexchange.com/questions/30530/remove-chapter-from-the-chapter-title-but-keep-chapter-number-in-the-table-o
 \makeatletter
 \def\@makechapterhead#1{%
-  \vspace*{50\p@}%
+  \vspace*{50\p@}
   {\parindent \z@ \raggedright \normalfont
    \huge\bfseries \thechapter \space
    \interlinepenalty\@M
@@ -20,14 +28,9 @@
    \vskip 40\p@
   }}
   \makeatother
-    
-%\usepackage{titlesec}
-%\titleformat{\chapter}[display]{\normalfont\bfseries}{}{0pt}{\Large}
 
 \usepackage[authoryear, round, sort&compress]{natbib}
 \bibliographystyle{plainnat}
-
-\geometry{letterpaper, total={210mm,297mm}, left=20mm, right=20mm, top=20mm, bottom=20mm}
 
 \begin{document}
 
@@ -39,26 +42,22 @@
 
 \part{User Manual}
 
-\subfile{chapter1.1} % Introduction
-\subfile{chapter1.2} % Project Management
-\subfile{chapter1.3} % Gapless Weather Data Series
-\subfile{chapter1.4} % Water Level Time Series
-
-%\subsection{Generation of the well hydrograph with weather data}
-
-%The view can be panned by dragging the mouse with the left mouse button depressed. Zoom in by pressing the Ctrl key while dragging the mouse upwards, or by moving the mouse wheel up. Zoom out mouse wheel down.
-
-%\subsection{Barometric response function}
-%\subsection{Estimation of the MRC and first recharge estimation}
-%\subsection{Recharge estimation with synthetic well hydrograph method}
+\subfile{chapter1} % Introduction
+\subfile{chapter2} % Project Management
+\subfile{chapter3} % Gapless Weather Data Series
+\subfile{chapter4} % Water Level Time Series Preparation
+\subfile{chapter5} % Plotting the data
+\subfile{chapter6} % Data interpretation
 
 \part{Technical Documentation}
 
-\chapter{Barometric correction: an overview}
+\chapter{Water-level measurements in Well and Piezometers}
+
+\section{Barometric correction: an overview}
 
 The commercial submersible pressure transducers which are self-equipped with an autonomous electronic data logger represent an interesting turnkey option for the long-term monitoring of water-level fluctuations in observation wells and piezometers. Some example of these water-level data loggers are the Levelogger Edge\textsuperscript{\textregistered} by Solinst and the Micro-Diver\textsuperscript{\textregistered} by Schlumberger Water Services. 
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
         \centering
         \begin{subfigure}[t]{0.5\textwidth}
                 \includegraphics[width=\textwidth]{img/Solinst_EdgeLeveLogger}
@@ -82,7 +81,6 @@ These instrument are generally suspended at a fixed depth in a well or the piezo
 
 These instruments record the absolute pressure (non-vented) and their output must be compensated for barometric pressure in order to obtain a measure of the water level elevation. This is done by subtracting the barometric record from the water-level record. This gives the height of the water column above the instrument.  
 
-
 Some instrument record the absolute gage pressure. Is measured in reference to atmospheric pressure at mean sea level. Pressures measured by a gage-pressure transducer are positive for pressures greater than sea-level pressure and negative for pressure less than sea-level pressure. Thus, atmospheric pressure measurements above sea-level datum are negative because atmospheric pressure decreases with altitude.
 
 The new
@@ -97,12 +95,11 @@ When data have been collected for a sufficient amount of time, WHAT can provides
  
 Even though there exists software that can correct data automatically for barometric pressure, it is still advise to have a basic understanding of the theory.
 
-
 This is particularly usefull to correct situations when something goes wrong. For example, the barologger may had a deficiency and atmospheric pressure needed to be taken from the CDCD for example and data needed to be corrected manually. There arise often situation when correction needs to be done manually. This happens when there is a problem with the data. This is then good practice to understand the process in order to dodge mistake.
 
 It is a good idea to monitor water level at a 15 min frequency for a period of a year, or more if it is possible. The data can be used subsequently to estimate the barometric response function of the well that can be quite useful to understand the hydrogeological context, and the level of confinement of the well. Having data with this frequency is also useful for running FFT and understand the cause of possible unatural fluctuation in the well.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.5\textwidth]{img/ObsWell}
 \caption[Typical instrument configuration for water level monitoring in an observation well]{Typical instrument configuration for water level monitoring in an observation well}
@@ -154,12 +151,12 @@ Once a file containing a list of weather stations' information has been created,
 \paragraph{Step 4} The research yielded one result (Figure A3). For Data Interval, select Daily and click Go.
 	WARNING: The downloading and formatting of Hourly data is not currently supported in Rainbird.
 
-\paragraph{Step 5} The URL associated with Marieville weather station is:\\[0.1cm]
+\paragraph{Step 5} The URL associated with Marieville weather station is:\vspace{0.5cm}
 
 \begin{sloppypar}
 \noindent
-\url{http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=2&Prov=QUE&StationID=5406&dlyRange=1960-06-01|2013-12-31&Year=2013&Month=12&Day=01}.\\[0.1cm]
-\end{sloppypar}
+\url{http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=2&Prov=QUE&StationID=5406&dlyRange=1960-06-01|2013-12-31&Year=2013&Month=12&Day=01}.
+\end{sloppypar}\vspace{0.5cm}
 
 From this URL, we find that its Station ID is 5406 (see red circle in Figure A4), that is located in the province of Quebec (QUE) and that data are available from 1960 to 2013.
 

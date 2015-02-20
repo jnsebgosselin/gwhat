@@ -1,4 +1,4 @@
-\documentclass[../WHATMANUAL.tex]{subfiles}
+\documentclass[WHATMANUAL.tex]{subfiles}
 
 \begin{document}
 
@@ -10,17 +10,17 @@ WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platfo
 
 \begin{itemize}
 
-\item{the preparation of a gapless daily weather time-series (precipitation and air temperature) representative of the well location. For this purpose, an interface to the online Canadian Daily Climate Database (CDCD) is provided that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Furthermore, missing data for a given station can be quickly filled with data from selected neighboring weather stations using a multiple linear regression model;}
+\item the preparation of a gapless daily weather time-series (precipitation and air temperature) representative of the well location. For this purpose, an interface to the online Canadian Daily Climate Database (CDCD) is provided that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Furthermore, missing data for a given station can be quickly filled with data from selected neighboring weather stations using a multiple linear regression model;
 
-\item{the generation of various publication-quality figures from the weather and water level data;}
+\item the generation of various publication-quality figures from the weather and water level data;
 
-\item{the exploration, manipulation, and validation of the data within a user-friendly dynamic graphical environment;}
+\item the exploration, manipulation, and validation of the data within a user-friendly dynamic graphical environment;
 
-\item{the calculation of the master recession curve of the well hydrograph (experimental);}
+\item the calculation of the master recession curve of the well hydrograph (experimental);
 
-\item{the estimation of groundwater recharge at the local scale in unconfined conditions with a method combining the daily meteorological data and the water level time series (will be available in a future release).}
+\item the estimation of groundwater recharge at the local scale in unconfined conditions with a method combining the daily meteorological data and the water level time series (will be available in a future release).
 
-\item{the calculation of the barometric response function of the well that can be used to assess the level of confinement of the aquifer at the well location (will be available in a future release).}
+\item the calculation of the barometric response function of the well that can be used to assess the level of confinement of the aquifer at the well location (will be available in a future release).
 
 \end{itemize}
 
@@ -36,11 +36,11 @@ The stand-alone executable for Windows 7 is distributed in a Zip archive that ca
 
 \begin{itemize}
 
-\item{the GNU General Public License;}
+\item the GNU General Public License;
 
-\item{a folder named ``WHAT'' that contains all the necessary system files for the program to run, including the file ``WHAT.exe'' from which the software can be started;}
+\item a folder named ``WHAT'' that contains all the necessary system files for the program to run, including the file ``WHAT.exe'' from which the software can be started;
 
-\item{a folder named ``Projects'' where all input and output files used or created by WHAT are stored by default. In this folder are included samples of input and output files that provide a quick and convenient way to test and learn the various features of the program.}
+\item a folder named ``Projects'' where all input and output files used or created by WHAT are stored by default. In this folder are included samples of input and output files that provide a quick and convenient way to test and learn the various features of the program.
 
 \end{itemize}
 
@@ -53,7 +53,7 @@ Once the content of the Zip archive has been extracted, the program can be start
 
 WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console area, and a central view panel (see Figure~\ref{fig:WHAT_GUI}). The \emph{menu bar} is located in the top right corner of WHAT main window. This is where you can view what is the current project, open an already existing project or create a new one. The \emph{console} is located at the bottom of the WHAT interface and is used to report technical information about the various tasks accomplished by the program as well as warning and error messages. The console can be collapsed to save space, or can be extended to the entire window area. The \emph{central view panel} is the main component of the WHAT interface and is where are displayed the various features of the software. The content of this panel is divided into four tabs: \emph{Download Data}, \emph{Fill Data}, \emph{Hydrograph}, and \emph{About}. The tabs are described in a little bit more details in the text below and are shown in Figure~\ref{fig:WHAT_GUI_ScnShot}.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.75\textwidth]{img/WHAT_GUI}
 \caption[WHAT GUI main features.]{WHAT GUI main features.}
@@ -64,7 +64,7 @@ WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console are
 
 \paragraph{Download Data} This tab (see Figure~\ref{subfig:ScnShot_000}) provides an interface to the online Canadian Daily Climate Database (CDCD) that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Alternately, it is possible to provide a custom list of Canadian weather stations for which data can be downloaded and formatted. At the moment, it is not possible to access data of weather stations located in the U.S. This feature may be added in a future release of the software.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
         \centering
         \begin{subfigure}[t]{0.45\textwidth}
                 \includegraphics[width=\textwidth]{img/WHAT_Screenshot000}
@@ -103,7 +103,7 @@ WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console are
 
 WHAT essentially consists of set of tools to assist the interpretation of water level time series measured in observation wells, from the preparation of raw data to the assessment of groundwater recharge when in unconfined conditions. In this perspective, WHAT was developed with the general workflow shown in Figure 6  in mind.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.95\textwidth]{img/WHAT_Workflow}
 \caption[WHAT conceptual workflow.]{WHAT conceptual workflow for the interpretation of water-level time-series measured in an observation well.}

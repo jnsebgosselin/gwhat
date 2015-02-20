@@ -8,7 +8,7 @@
 
 The Canadian Daily Climate Database (CDCD) contains daily air temperature and precipitation from 1840 to the present for about 8450 stations distributed across Canada. Data can be downloaded manually on the Government of Canada website as CSV files on a yearly basis, or it is possible to acquire the entire database by ordering a DVD. The former option involves a lot of repetitive manipulations and can become quickly a time consuming task while the latter does not offer a convenient way to update your data. Moreover, the organization of the original CDCD data files in a more convenient format can also represent a tedious task when done manually. WHAT alleviates this process by providing a graphical interface to the online CDCD database that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. All of these features are available from the tab \emph{Download Data} shown in Figure~\ref{fig:tab_dwnldData}.
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.75\textwidth]{img/WHAT_Screenshot000}
 \caption[Tab ``Download Data''.]{Tab ``Download Data''.}
@@ -21,7 +21,7 @@ To start searching for stations in the online CDCD, go in the tab \emph{Download
 
 Clicking on the button \emph{Search} initiates the search for weather stations with the specified parameters. The results are saved in the file ```weather\_stations.lst'' and the \emph{Weather Station} drop down list is updated to list all the stations found during the search.
 
-\begin{figure}[h]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.5\textwidth]{img/WHAT_Screenshot_search4stations}
 \caption[Graphical interface to the online CDCD database.]{Graphical interface to the online CDCD database.}
@@ -48,7 +48,7 @@ It is also possible to open previously downloaded weather data files in WHAT by 
 
 One of WHAT main utility is the automatic gap filling of daily weather data records. This feature is accessible from the tab \emph{Fill Data} shown in Figure~\ref{fig:tab_fillData}. On start-up or after opening a project, WHAT automatically scans the content of the \emph{Input} folder for valid weather data files and displays the result as a list of weather station names under the label \emph{Fill Data for Weather Station}. The list of stations won't be refreshed automatically if new data files are added to the Input folder after the project has been opened. The button \emph{Refresh} located next to the list of stations can be used for this purpose. In addition, each time WHAT search the Input folder for valid weather data files, it automatically computes statistics about the period over which data are available for each station and the number of missing data in the weather time-series and saves the results in the file named ``STATION\_SUMMARY.log'' (see section~\ref{subsec:folder_structure}).
 
-\begin{figure}[h!]
+\begin{figure}[!ht]
 \centering
 \includegraphics[width=0.75\textwidth]{img/WHAT_Screenshot001}
 \caption[Tab ``Fill Data''.]{Tab ``Fill Data''.}
