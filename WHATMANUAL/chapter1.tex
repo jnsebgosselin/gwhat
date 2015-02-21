@@ -24,7 +24,7 @@ WHAT (Well Hydrograph Analysis Toolbox) is a free, open source, and cross-platfo
 
 \end{itemize}
 
-WHAT is written in the Python 2.7 programming language and is currently maintained and developed by Jean-S\'ebastien Gosselin at INRS-ETE (\url{www.ete.inrs.ca}). The source code and a stand-alone executable for Windows 7 are available free of charge for download on GitHub (\url{https://github.com/jnsebgosselin/WHAT}). If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-S\'ebastien Gosselin at this email address \href{mailto:jnsebgosselin@gmail.com}{jnsebgosselin@gmail.com}.
+WHAT is written in the Python 2.7 programming language and is currently maintained and developed by Jean-Sébastien Gosselin at INRS-ETE (\url{www.ete.inrs.ca}). The source code and a stand-alone executable for Windows 7 are available free of charge for download on GitHub (\url{https://github.com/jnsebgosselin/WHAT}). If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve WHAT, please contact Jean-Sébastien Gosselin at this email address \href{mailto:jnsebgosselin@gmail.com}{jnsebgosselin@gmail.com}.
 
 \newpage
 
@@ -98,25 +98,24 @@ WHAT Graphical User Interface (GUI) mainly consists of a menu bar, a console are
 
 \paragraph{About} This tab (see Figure~\ref{fig:WHAT_GUI}) displays copyright, licensing and general information about WHAT.
 
-\section{Workflow for Interpreting Water-level Time-series}
-\label{sec:workflow}
+\section{Workflow for Interpreting Water-level Time-series}\label{sec:workflow}
 
-WHAT essentially consists of set of tools to assist the interpretation of water level time series measured in observation wells, from the preparation of raw data to the assessment of groundwater recharge when in unconfined conditions. In this perspective, WHAT was developed with the general workflow shown in Figure 6  in mind.
+WHAT is a computer software that brings together a set of tools to assist the interpretation of water level time series, from the preparation of raw data to the assessment of groundwater recharge. Some are well known and documented techniques such as the estimation of missing daily weather values with the use of a multiple regression model. Others are genuine improvements of not well known or used method. This is the case of the method used for the estimation of groundwater recharge in WHAT that is an improved version of a rarely used approach. In addition, WHAT has been design from the start to be modular, meaning that it will be very easy to add more tools in the future to expand the possibilities of this software.
+
+That being said, the strength of WHAT lies in the integration of its various tools into a complete functional workflow for the interpretation of water level time series. This workflow is presented in Figure~\ref{fig:WHAT_workflow}. By providing a unique centralized environment where data can be processed, explored and analyzed, a lot of data manipulation and time can be saved. Moreover, the interpretation of the data is facilitated greatly, thanks to the dynamical graphical environment that is provided in the software. This is a significant improvement over the use of fragmented tools and methods, some of which are no more than a generic spreadsheet that are not well suited for the dynamical exploration of time series.
 
 \begin{figure}
 \centering
 \includegraphics[height=0.95\textheight]{img/WHAT_Workflow}
-\caption[WHAT conceptual workflow.]{WHAT conceptual workflow for the interpretation of water-level time-series measured in an observation well.}
+\caption[WHAT workflow.]{WHAT workflow for the interpretation of groundwater-level time-series measured in an observation well or a piezometer.}
 \label{fig:WHAT_workflow}
 \end{figure}
 
-The first step consists in the preparation of a gapless weather dataset.
+The workflow shown in Figure~\ref{fig:WHAT_workflow} represents the interpretation of data for only a well at one particular location. But, WHAT is also well suited for regional characterization projects that requires data management from multiple locations within a large area of study. More specifically, the software makes it is very easy to navigate through the various water level and weather data related to a given study site and makes the comparison of the data and the mass production of graphs and analyses for an entire study area much more efficient and easy. The software facilitates the browsing of the different water level  weather data and makes the comparison of the data and the mass production of graphs and analyses for an entire study area efficient and easy. This can represent a substantial gain in time and data manipulation when the number of well for a given study area is important and when there is a need to update the data multiple times over the course of the project. The management of projects in WHAT is presented in details in Section~\ref{WHAT_projects}.
 
-Validation/preparation of water level time series: 1) automatic measurements fitted to manual measurements. 2) Correct the places where there is a break in the water level curve. This is due generally to the logger that is placed at a different level following the removal of the later from the well. 3) Remove measurements that were acquired while the barologger was outside the water column.
+The first step in the proposed workflow of Figure~\ref{fig:WHAT_workflow} for the interpretation of water level time series is the preparation of a gapless weather dataset. This include downloading and formatting weather data from the CDCD database and estimating the missing daily data for the station located closest to the well by using data from selected neighboring stations. This step is covered in details in Section~\ref{chap:gapfilling}. The second step is the preparation of the water level time series, including the validation and correction of the data. This is covered in details in Section~\ref{chap:wlvl_formatting}.
 
-Preparation of a gapless weather dataset. This include. Downloading data from the CDCD database for stations located in a radius of 0 to 100 km from the well. Fill missing daily data for the station located closest to the well by using selected neighboring stations. Data are not interpolated to the exact location of the well. It has been decided to keep the original dataset of the station located closest to the well to analyse the data. This is due to the fact that conventional technique for interpoloating weather data tend to surestimate the number of wet day, but underestimate the intensity of stron precipitation event. More advanced and complicated technique are required to circumvent these issues. It has thus been decided that is was prefereable to keep the original data from a single station.
-
-Once the weather data, and water level are prepared, production of a well hydrograph. Visual interpretation between the water level  fluctuation and weather data can be done.
+Once the weather and water level time series are prepared, the next step consist in the production of a well hydrograph. Visual interpretation between the water level  fluctuation and weather data can be done directly from such a graphic. For example, simply by looking at the allure of the hydrograph visually, it has been possible to classify the hydrograph for the Monteregie-Est region located in southern Quebec, Canada. The comparison of the results with an independent approach showed very good agreement (See Annex B.). The plotting of water level and weather data time-series is an important step that should not be looked down since it can provide meaninglful and complimentary information to other pieces of the project. For example, WHAT has been used to produced the well hydrograph for 44 wells during the PACES project in Monteregie Est [ref]. Annexe B presents an application of WHAT to a regional characterization project for the production of the hydrograph.
 
 If high time resolution measurement of the water level and barometric pressure are available, it is possible to carry an calculation of the barometric response function. It is also good to produce a FFT analysis of the hydrograph.
 Weather yearly average and montlhy averages can be plotted at this stage.

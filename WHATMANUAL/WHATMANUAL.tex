@@ -11,7 +11,12 @@
 \usepackage{placeins}
 \usepackage{subfiles}
 \usepackage{float}
-\usepackage{adjustbox} 
+\usepackage{adjustbox}
+
+
+%http://tex.stackexchange.com/questions/83440/inputenc-error-unicode-char-u8-not-set-up-for-use-with-latex
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{00A0}{~}
 
 % Very Good Table Example:
 
@@ -49,17 +54,18 @@
 \subfile{chapter5} % Plotting the data
 \subfile{chapter6} % Data interpretation
 
-\part{Technical Documentation}
+\part{Theoretical Basis}
 
 \subfile{chapter7} % Data interpretation
 \subfile{chapter8} % Data interpretation
 \subfile{chapter9} % Data interpretation
 
-% \chapter{Code Architecture}
+\part{Technical Documentation}
 
 \appendix
 
 \subfile{annexeA} % Water-level measurements
+\subfile{annexeB} % Exemple Monteregie Est - Level of Confinment of the Roc Aquifer
 
 \bibliography{WHATMANUAL}
 
