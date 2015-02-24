@@ -277,10 +277,12 @@ class Weather_File_Info():
 
     #===========================================================================
     def generate_summary(self, project_folder):
-    # This method will generate a summary of the weather records including all
-    # the data files contained in the <Data directory>, including dates when the
-    # records begin and end, total number of data, and total number of
-    # data missing for each meteorological variable, and more.
+        """
+        This method will generate a summary of the weather records including all
+        the data files contained in "/<project_folder>/Meteo/Input", including
+        dates when the records begin and end, total number of data, and total 
+        number of data missing for each meteorological variable, and more.
+        """
     #===========================================================================
     
         nVAR = len(self.VARNAME)
@@ -325,7 +327,7 @@ class Weather_File_Info():
             txt2 = txt1 / (number_data * nVAR) * 100
             CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
         
-        output_path = project_folder + '/STATION_SUMMARY.log'
+        output_path = project_folder + '/weather_datasets_summary.log'
                 
         with open(output_path, 'wb') as f:
             writer = csv.writer(f,delimiter='\t')
