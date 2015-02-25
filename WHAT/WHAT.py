@@ -4322,7 +4322,7 @@ class FillWorker(QtCore.QThread):
         var2fill = np.sum(~np.isnan(CORCOEF[:, :]), axis=1)
         var2fill = np.where(var2fill > 1)[0]
         
-        print; print var2fill
+        print; print 'Variatble index with enough data = ', var2fill
         
         for var in range(nVAR):
             if var not in var2fill:
@@ -4340,9 +4340,9 @@ class FillWorker(QtCore.QThread):
         
         nbr_nan_total = np.isnan(Y2fill[index_start:index_end+1, var2fill])
         nbr_nan_total = np.sum(nbr_nan_total)
-                
+
         if self.full_error_analysis == True:
-            progress_total = len(Y2fill[:, 0]) * len(var2fill)
+            progress_total = np.size(Y2fill[:, var2fill])
         else:
             progress_total = nbr_nan_total
             
@@ -4418,10 +4418,11 @@ class FillWorker(QtCore.QThread):
                 
                 if self.STOP == True:
                     
+                    print 'BREAK!!!!'
                     self.ConsoleSignal.emit(                           
                     '''<font color=red>Completion process for station %s 
                          stopped.</font>''' % target_station_name)
-                    print 'BREAK!!!!'
+                    
                     self.STOP = False
                     
                     return
@@ -4486,6 +4487,7 @@ class FillWorker(QtCore.QThread):
                     # would end up as '020711'. This allow to assign a
                     # unique number ID to a column combination. Each
                     # column correspond to a unique weather station.
+                    
                     colm_seq = ''
                     for i in range(len(colm)):
                         colm_seq += '%02d' % colm[i]
@@ -4503,7 +4505,12 @@ class FillWorker(QtCore.QThread):
                     # is encountered in the routine, regression
                     # coefficients are then calculated.
                     
-                        colm_memory = np.append(colm_memory, colm_seq)
+                        # The memory is activated only if the option
+                        # 'full_error_analysis' is not active. Otherwise, the
+                        # memory remains empty and a new MLR model is built
+                        # for each value of the data series.
+                        if self.full_error_analysis != True: 
+                            colm_memory = np.append(colm_memory, colm_seq)
                     
                         # Columns of DATA for the variable VAR are sorted
                         # in descending correlation coefficient and the 
@@ -4512,11 +4519,20 @@ class FillWorker(QtCore.QThread):
                         YXcolm = np.copy(YX)       
                         YXcolm = YXcolm[:, colm]
                         
+                        # Force the value of the target station to a NAN value
+                        # for this row. This should only have an impact when the
+                        # option "full_error_analysis" is activated. This is to
+                        # actually remove the data being estimated from the
+                        # dataset like in should properly be done in the 
+                        # jackknife procedure.
+                        YXcolm[row, 0] = np.nan
+                        
                         # All rows containing NAN entries are removed.
                         YXcolm = YXcolm[~np.isnan(YXcolm).any(axis=1)]
                     
                         # Rows for which precipitation of the target station
-                        # and all neighboring station is 0 are removed.
+                        # and all neighboring station is 0 are removed. Only
+                        # applicable for precipitation, not air temperature.
                         if var == 3:                        
                             YXcolm = YXcolm[~(YXcolm == 0).all(axis=1)]  
                                             
@@ -4637,7 +4653,7 @@ class FillWorker(QtCore.QThread):
                              ) % (var+1, nVAR)
             print print_message             
 
-    #--------------------------------------------------- WRITE DATA TO FILE ----
+    #=================================================== WRITE DATA TO FILE ====
                     
         self.ConsoleSignal.emit('<font color=black>Data completion ' + 
                                 'for station ' + target_station_name +
@@ -4649,7 +4665,7 @@ class FillWorker(QtCore.QThread):
                 'completed because all neighboring station were empty ' +
                 'for that period</font>')
     
-        #------------------------------------- INFO DATA POSTPROCESSING ----
+        #----------------------------------------- INFO DATA POSTPROCESSING ----
         
         # Put target station name and information to the begining of the
         # STANANE array and INFO matrix.
