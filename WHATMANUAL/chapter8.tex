@@ -2,10 +2,104 @@
 
 \begin{document}
 
-\chapter{Estimation of missing daily climatological data}
+\chapter{Estimation of missing daily climatological data}\label{chap:Missing_weather_theory}
+
+\section{Introduction}
+
+
+
+Climate data are useful in several fields of Earth Sciences, including hydrology, hydrogeology and agronomy. However, climate datasets are often incomplete. The estimation of missing data can be a complex and tedious task. This is particularly true for daily precipitation because of their high spatial and temporal variability. 
 
 Estimation of missing climatological data is an important task. It is particularly important in mountain and forest regions where meteorological stations are scarce, and the observed climatological data are strongly influenced by topography and the forest microclimate.
 
-Climate data are useful in several areas, including hydrology, hydrogeology and agronomy. However, climate data sets are often incomplete. The estimation of missing data can be a complex and tedious task. This is particularly the case for daily precipitation because of their high spatial and temporal variability. A user friendly, menu-driven, and interactive computer program for rapid and automatic completion of daily climatological series has been developed. Missing data for a given weather station are estimated using a multiple linear regression model, generated using data from nearby stations. For daily precipitation, it is possible to activate an option that forces the algorithm to preserve the probability distribution of data. This is an advantage over conventional approaches that tend to overestimate the number of wet days and underestimate the high intensity precipitation events. The software also allows downloading and automatic formatting of raw data available on the Environment Canada website. The software is demonstrated for two weather station located in Monteregie Est region, southern Quebec. Cross-validation was used to check the method and to define the optimal parameters to minimize the error in estimating missing daily precipitation.
+Methods for handling missing data with daily resolution, on the other hand, are scarce and show marked errors, even though such methods perform well at lower resotion time scales. The situation becomes particularly complicated when dealing with precipitation, because of its large space and time variability. Moreover, the problem in this case is twofold, since both time location and rainfall amount of each single-day event must be reconstructed. Thus, performing accurate estimates of missing data in daily precipitation records remains a difficult task, even more so if long time series and coarse rain-gauge networks are considered.
+
+The techniques of estimating missing climatological data can be grouped under empirical methods, statistical methods and function fitting.
+
+Within-station methods are ill-adapted for the estimation of daily precipitation because that are suitable only for variables with high autocorrelation and for calculating long-term averages.
+
+Traditionally, filling-in gaps in precipitation series are mianly based on spatial interpolation, that is, imputed values at a target station are calculated by using synchronous observations from surrounding stations. 
+
+Eischeid et al. (2000) demonstrated that multi-linear regression (MLR) outperforms most of the commonly used techniques concerning missing data handling in daily resolution precipitation series.
+
+Regression based methods and weighing methods suffer from the overestimation of the number of rainy days. Furthermore, the rainfall probability distribution is not preserved, in that heavy precipitation events are systematically underestimated \citep{simolo_improving_2010}.
+
+Missing climatological data are serious hindrance to the use of climate-dependent models and forest ecosystem studies. For example, the method used for the estimation of groundwater Recharge in WHAT is strongly dependent upon the quality of the weather data series used to make the analysis.
+
+There are numerous spatial interpolation methods available for point estimation with irregularly spaced data. Using regression-based methods, Kemp et al. (1983) found that the mean absolute error associated with minimum temperatures was reduced by 50\% when compared with within-station methods. 
+
+The creation of a serially complete dataset includes the replacement of missing daily values through the use of simultaneous values at nearby stations to calculate an estimated value for that particular day (all days in which an estimate is derived for a missing value are flagged as such).
+
+\section{Pre-selection of the stations}
+In climatology, the two most important factors are the inter-correlations in the station network, and the seasonal variations in the relations between the stations. {XIA}
+
+In any spatial interpolation scheme the selection and quantity of surrounding stations are critically important to the results of the interpolation \citep{eischeid_quality_1995}. Problem arise when using climatological data because of missing values and the varying availability of station through time. In order to determine which stations are to be used, surrounding stations are preselected based on their relationship with the target station.
+
+In order to determine which stations are to be used, surrounding stations are preselected based on their relationship with the target stations. The 15 closest stations are identified for each target station and are ranked by the value of the correlation coefficient between the candidate station  and its neighbors.
+
+Tests have shown that inclusion of more than four stations does not significantly improve the interpolation and may in fact degrade the estimate. The number (never greater than four) of neighboring stations meeting the criteria is not fixed in time. It varies depending on available station data for the year, month, day in question. As such, the interpolation models may also change in time.
+
+The selection and quantity of surrounding stations are critically important to the results of the interpolations.
+
+The quality of the estimates is strongly affected by seasonality. Stations at higher elevations are difficult to estimate accurately, in large part bacause of the topographical diversity of the surrounding stations leading to degradation of spatial coherence among stations.
+
+According to an extensive literature review and the experience of Tronci et al (1986), the influence radius was chosen as 100 km in our study. XIA
+
+\section{Estimating Missing Daily Value}
+
+This project \citep{eischeid_creating_2000} has the objective to create serially complete daily datasets in a systematic, well-documented fashion that can be utilized for many hydrologic and other natural resource conservation models. The objective of this project is to create a serially complete (no missing data values) daily temperature and precipitation dataset
+
+6 different methods of spatial interpolation are used to create the serially complete dataset.
+
+Quality control performed by NCDC on this dataset included a procedure (Reek et al. 1992).
+
+The method validation was performed with reference to the rain-gauge network presented in Section 1, by using a jacknife-like procedure, that involves the removal of subsets of data from the target series before reconstruction is carried out. This avoids ``self-influence'' of the observations that are being estimated. Specifically, one year of the target series ar a time was fully discarded, together with a n-year long window centered on that year, for fixed n, and subsequently reconstructed. Imputed data were finally compared with the original (removed) ones to assess the accuracy of the results.
+
+The weather network used to test the method implemented in WHAT is located in the Monteregie Est regions located in the province of Quebec, Canada. This region feature strongly variable topography and land use. The netwrok is presented in figure X.
+
+Also, stations from bordering states were extracted to improve the spatial distribution of sites surrounding target stations located near state borders.
+
+The 22 states reflect a wide variety of terrain and a diversity of climatic regimes, which allows a means for testing the efficacy of daily estimates for regional and seasonal differences. In addition, with few exceptions, the geographic distribution across the western states is relatively uniform, which provides a stable estimation environment and a substantial number of serially complete stations for natural resource modeling.
+
+This is basically a two step method. The first step consist in selecting the data series with the best corellation coefficient. The second steo consiste in building a MLR model and estimate the missing values.
+
+The tendency for all of the methods to have a negative bias is indicateive of the nature of precipitation distributions to be positively skewed (interpolated values will tend to cluster about the median error rather than the mean) \citep{eischeid_quality_1995}.
+
+In order to determine which stations are to be used, surrounding stations are preselected based on their relationship with the target station. The 15 closest stations are identified for each target station and are ranked by the value of the correlation coefficient between the candidate station and its neighbors. A minimum of one station is needed to compute the estimate at the target station, with a maximum of four. Tests have shown that inclusion of more than four stations does not significantly improve the interpolation and may in fact degrade the estimate.
+
+The number (never greater than four) of neighboring stations meeting the criteria is not fixed in time. It varies depending on available station data for the year/month/day in question. As such, the interpolation models may also change in time.
+
+\subsection{Ordinary Least Square Criteria}
+
+\subsection{Least Absolute Deviations Criteria}
+
+The method of multiple regression using the least absolute deviations criteria (MLAD) is a robust version
+of the general linear least squares estimation. The method of least squares is an effective method when the errors are normally distributed and independent. However, for precipitation data especially, the assumption of normality over the wide range of situations can lead to poor estimations. The principal advantage of least absolute deviations is its resistance to outliers and to overemphasis of large-tailed distributions (Barrodale and Roberts 1973). MLAD estimates the unknown parameters in a stochastic model so as to minimize the sum of absolute deviations of the neighboring station observations from the values predicted by the model. Regression coefficients b are calculated so as to minimize a set of n measurements on m surrounding stations (independent variables), anote the associated measurement on the dependent (target station) value. The linear programming techniques of Barrodale and Roberts (1973) are used to accomplish this task.
+
+WHAT have laid the basis and foundation of a method that allows easy comparison of the method and allows to immediately determine if a change in the methodology has resulted in an improvment in the estimation errors.
+
+The goal of any quality control procedure is to provide the end user with as much information as possible, such as he/she can make an informed choice whether to accept or reject a particulat monthly value. The results of our analysis provide the end user with a set of flags, noted above, an with summary statistics of the efficacy of several estimation procedures.
+
+\section{Quality Control of the Data}
+
+Prior to the analysis of climatic time series, it is important to remove data outliers in a methodical manner.
+
+\cite{eischeid_quality_1995} presented an objective quality control analysis scheme that examined global climate data for outliers temporally and spatially.
+
+A temporal check and a spatial check for outliers are described in the next section. When combined, these two measures of quatlity control provide a comprehensive set of uncertainty flags to determine the validity of a particular monthly value.
+
+After estimating daily maximum and minimum temperatures, a series of internal consistency checks were
+performed to ensure that estimates did not violate obvious constraints associated with recording maximum
+and minimum temperatures. Typical tests include identifying estimated maximum temperatures lower than a
+previous day’s minimum and an estimated maximum lower than a minimum for the same day. These inconsistencies were corrected by assigning corrected maximums or minimums where appropriate
+or averaging the maximum and minimum temperatures for the previous and subsequent days.
+
+\section{Validation}
+
+In order to test the efficacity of the estimation techniques, each of the six interpolation methods is compared with respective nonmissing observations.
+
+The accuracy of the daily precipitation estimate is dependent on the quality and quantity of the surrounding stations utilized to estimate a value at a particular site. The determination of daily precipitation totals is much more sensitive to these factors than air temperature, particularly with regard to the elevation of the site to be estimated.
+
+\section{Future Work}
 
 \end{document}

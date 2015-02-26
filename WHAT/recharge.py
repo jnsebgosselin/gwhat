@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #----- STANDARD LIBRARY IMPORTS -----
       
 from datetime import date
+import csv
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -31,7 +32,7 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
 
-#----- RAINBIRD LIBRARY IMPORTS -----
+#----- PERSONAL LIBRARY IMPORTS -----
 
 from meteo import MeteoObj
 from meteo import calculate_normals
@@ -277,7 +278,7 @@ def calc_recharge_old(CRU, RASmax, ETP, PTOT, TAVG):
     TMELT = 0 # Temperature treshold for snowmelt
     CM = 4 # Daily melt coefficient
     
-    MP = CM * (TAVG - TMELT)  # Potential Melt
+    MP = CM * (TAVG - TMELT)  # Snow Melt Potential
     MP[MP < 0] = 0
     
     PACC[0] = 0
@@ -505,7 +506,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     return RECHG
 
 #===============================================================================
-def calculate_ETP(TIME, TAVG, LAT):
+def calculate_ETP(TIME, TAVG, LAT, Ta):
     """
     Daily potential evapotranspiration (mm) is calculated with a method adapted
     from Thornwaite (1948).
@@ -516,7 +517,8 @@ def calculate_ETP(TIME, TAVG, LAT):
     
     TIME = Numeric time in days
     TAVG = Daily temperature average (deg C)
-    LAT = Latitude in degrees    
+    LAT = Latitude in degrees
+    Ta = Monthly air temperature normals
     
     #----- OUTPUT -----
 
@@ -530,7 +532,6 @@ def calculate_ETP(TIME, TAVG, LAT):
     """
 #===============================================================================
         
-    Ta, _, _, _ = calculate_normals(fmeteo) # Monthly normals
     Ta[Ta < 0] = 0    
     
     I = np.sum((0.2 * Ta) ** 1.514) # Heat index
@@ -642,8 +643,15 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     TIMEmeteo = meteoObj.TIME # Time (days)
     LAT = float(meteoObj.LAT) # Latitude (deg)
     
-    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
-                                              # evapotranspiration (mm)
+    YEAR = meteoObj.YEAR
+    MONTH = meteoObj.MONTH
+    
+    RAIN = meteoObj.RAIN
+    
+    Ta, _, _, _ = calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN) # Monthly normals
+    
+    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
+                                                  # evapotranspiration (mm)
     
     print np.mean(ETP)
     
@@ -760,9 +768,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     dWL = np.mean(WLintrp) - np.mean(WLogger)
     WLogger += dWL
     print dWL
-    
-    
-            
+                
 #    plt.plot(TIMEwater, -WLogger, color='r')
     
 #    RECHG = calc_recharge_old(0, 35.81, ETP, PTOT, TAVG)
@@ -1338,7 +1344,38 @@ def plot_synth_hydrograph(WL, TIME, WLogger, TIMELogger):
     
 if __name__ == '__main__':
     
+#    plt.close('all')
+#    # fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
+#    fmeteo = "Files4testing/SASKATOON INT'L A and RCS_1950-2014.out"
+##    fmeteo = 'Files4testing/OUTLOOK PFRA_1980-2014.out'
+#    meteoObj = MeteoObj()
+#    meteoObj.load(fmeteo)
+#    
+#    fwaterlvl = 'Files4testing/P19 2013-2014.xls'
+#    waterlvlObj = WaterlvlData()
+#    waterlvlObj.load(fwaterlvl)
+#    
+#    
+#    PTOT = meteoObj.PTOT # Daily total precipitation (mm)
+#    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
+#    TIMEmeteo = meteoObj.TIME # Time (days)
+#    LAT = float(meteoObj.LAT) # Latitude (deg)
+#    
+#    YEAR = meteoObj.YEAR
+#    MONTH = meteoObj.MONTH
+#    
+#    RAIN = meteoObj.RAIN
+#    
+#    Ta, _, _, _ = calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN) # Monthly normals
+#    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
+                                                  # evapotranspiration (mm)
+    
+#    RECHG = calc_recharge(0.1, 25, ETP, PTOT, TAVG)
+    
+    #---- OLD VERSION WITH NO UNSATURATED TRANSPORT (used for Dundurn) ----
+        
     plt.close('all')
+    
     # fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fmeteo = "Files4testing/SASKATOON INT'L A and RCS_1950-2014.out"
 #    fmeteo = 'Files4testing/OUTLOOK PFRA_1980-2014.out'
@@ -1348,31 +1385,55 @@ if __name__ == '__main__':
     fwaterlvl = 'Files4testing/P19 2013-2014.xls'
     waterlvlObj = WaterlvlData()
     waterlvlObj.load(fwaterlvl)
-    
-    
-    PTOT = meteoObj.PTOT # Daily total precipitation (mm)
-    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
-    TIMEmeteo = meteoObj.TIME # Time (days)
-    LAT = float(meteoObj.LAT) # Latitude (deg)
         
-    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT) # Daily potential reference 
-                                              # evapotranspiration (mm)
-#    
-#    RECHG = calc_recharge(0.1, 25, ETP, PTOT, TAVG)
+    PTOT = meteoObj.PTOT # Daily total precipitation (mm)    
+    YEAR = meteoObj.YEAR
+
+#    RAIN = meteoObj.RAIN
+#    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
+#    TIMEmeteo = meteoObj.TIME # Time (days)
+#    LAT = float(meteoObj.LAT) # Latitude (deg)
+#    MONTH = meteoObj.MONTH
     
-    #---- OLD VERSION WITH NO UNSATURATED TRANSPORT ----
+#    Ta, _, _, _ = calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN) # Monthly normals
+#    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
+#                                                  # evapotranspiration (mm)
     
     # The program search for solutions with a long time trend that is close to
     # zero. There is no unique solution, but each solution gives mean recharge
     # rates that are equivalent and equal to the recession.
     
-#    RECHG, WL = bestfit_hydrograph(meteoObj, waterlvlObj)    
-##    YEAR = np.arange(1986, 2006).astype('int')       
-#    plot_water_budget_yearly(meteoObj.PTOT, RECHG, meteoObj.YEAR)
-#    
-#    WLogger = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
-#    TIMELogger = waterlvlObj.time  # Time (days)
-#    plot_synth_hydrograph(WL, meteoObj.TIME, WLogger, TIMELogger)
+    RECHG, WL = bestfit_hydrograph(meteoObj, waterlvlObj)    
+#    YEAR = np.arange(1986, 2006).astype('int')       
+    plot_water_budget_yearly(PTOT, RECHG, YEAR)
+    
+    WLogger = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
+    TIMELogger = waterlvlObj.time  # Time (days)
+    plot_synth_hydrograph(WL, meteoObj.TIME, WLogger, TIMELogger)
+    
+    #---- Save the data in file
+    
+    filename = 'recharge_Dundurn_daily.tsv'
+    
+    # We will keep results only from 1970 to the present.
+    tindx = np.where( YEAR == 1970)[0][0]
+    
+    fileout = np.array([['Time (day)', 'Recharge (mm/day)']])
+    
+    data = np.vstack((meteoObj.TIME[tindx:], RECHG[tindx:])).transpose()
+       
+    fileout = np.vstack((fileout, data))
+    
+    
+    with open(filename, 'wb') as f:
+        writer = csv.writer(f,delimiter='\t')
+        writer.writerows(fileout)
+    
+    
+    
+    #---- Other Calculus ----
+
+
     
     # Estimation of the wilting point for plants
     
