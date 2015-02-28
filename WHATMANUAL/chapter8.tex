@@ -6,7 +6,7 @@
 
 \section{Introduction}
 
-Climate data are useful in several fields of Earth Sciences, including hydrology, hydrogeology and agronomy. However, climate datasets are often incomplete. This represents a serious issue to the use of models that depend on these data. For example, the method used for the estimation of groundwater recharge in WHAT requires serially complete (no missing data values) air temperature and precipitation daily time series. The quality of the groundwater recharge assessments made with this technique are highly dependent upon the quality of the weather date set used. Hence, the adequate and accurate handling of missing data is an integral part of groundwater recharge assessment in WHAT.
+Climate data are useful in several fields of Earth Sciences, including hydrology, hydrogeology and agronomy. However, climate datasets are often incomplete. This represents a serious issue to the use of models that depend on these data. For example, the method used for the estimation of groundwater recharge in WHAT requires serially complete (no missing data values) air temperature and precipitation daily time series. The quality of the groundwater recharge assessments made with this technique are highly dependent upon the quality of the weather date set used. Hence, the adequate and accurate handling of missing data has been made an integral part of groundwater recharge assessment in WHAT.
 
 A guide for the preparation of gapless weather data series has already been presented in Section~\ref{chap:gapfilling}. This section presents a brief literature review on the subject, followed by a detailed description of the method implemented in WHAT for the estimation of missing daily weather data, and finally an application is presented for the Monteregie Est region, located in southern Quebec, Canada. 
 
@@ -14,44 +14,42 @@ A guide for the preparation of gapless weather data series has already been pres
 
 Filling the gaps in weather data time series is a tedious task that can become rather complex when efficiency of the method, accuracy in the estimation of the missing values, and preservation of the statistical properties of the weather time series (probability distribution and normals) are required. This is particularly true for the estimation of missing daily precipitation data because of their high spatial and temporal variability \citep{simolo_improving_2010}. 
 
-The creation of a serially complete weather dataset generally consists in the replacement of missing daily data with estimated values calculated from simultaneous observations at nearby stations. Within-station method, i.e. methods that only use data from the series being filled, have been proven to perform badly compared to methods based on the use of data from neighboring stations and are ill-adapted for the reconstruction of daily precipitation time series \citep{eischeid_quality_1995,simolo_improving_2010,kemp_estimating_1983}.
+The creation of a serially complete weather dataset generally consists in the replacement of missing daily data with estimated values calculated from simultaneous observations at nearby stations. Within-station method, i.e. methods that only use data from the series being filled, have been proven to perform badly compared to methods based on the use of data from neighboring stations and are moreover ill-adapted for the reconstruction of daily precipitation time series \citep{eischeid_quality_1995,simolo_improving_2010,kemp_estimating_1983}.
 
-Numerous spatial interpolation techniques exist for handling the missing data in the weather time series of a given station by using data from irregularly spaced neighboring station (e.g. simple arithmetic averaging, inverse distance method, single best estimator and multiple regression analysis). \cite{eischeid_creating_2000} demonstrated that the multi-linear regression (MLR) method \citep{degaetano_method_1995} outperformed most of the commonly used techniques among six classical methods tested for the creation of a serially complete daily temperature and precipitation dataset for the United States. Similarly, \cite{xia_forest_1999} also found that the MLR method was consistently the most accurate out of the six classical methods tested to estimate missing daily weather data in Bavaria, Germany.
+Numerous spatial interpolation techniques exist for handling the missing data in the weather time series of a given station by using data from irregularly spaced neighboring station (e.g. simple arithmetic averaging, inverse distance method, single best estimator and multiple regression analysis). \cite{eischeid_creating_2000} demonstrated that the multi-linear regression (MLR) method \citep{degaetano_method_1995} outperformed most of the commonly used techniques among the six classical methods tested for the creation of a serially complete daily temperature and precipitation dataset for the United States. Similarly, \cite{xia_forest_1999} also found that the MLR method was consistently the most accurate out of the six classical methods tested to estimate missing daily weather data in Bavaria, Germany.
 
 However, weighing and regression-based techniques, including the MLR method mentioned above, all tend to overestimate the number of rainy days. Also, the rainfall probability distribution is usually not preserved with these techniques, that is heavy precipitation events are systematically underestimated. \cite{simolo_improving_2010} have proposed a two-step procedure to modifies the MLR method to address these issues.
 
-In recent years, the estimation of missing daily weather data using artificial intelligence techniques have been the subject of many research studies \cite{kashani_evaluation_2011,kim_spatial_2008,srikanthan_comparison_2005,coulibaly_comparison_2007,abebe_application_2000,teegavarapu_improved_2005}.
-
-\cite{kashani_evaluation_2011} found that these new data-driven methods, more specifically the artificial neural network and the genetic programming techniques, outperformed the a classical application of the MLR approach for three different climates in Iran. Artificial intelligence techniques are interesting because, unlike the classical weighing and regression-based methods, they are able to reflect the inherently stochastic nature of natural processes. Nevertheless, the results of \cite{kashani_evaluation_2011} also indicated that the MLR method was an appropriate technique, among the eight traditional methods tested, for all the weather variables (air temperature, wind speed, relative humidity, and precipitation) and the different climate conditions (dry to extra humid conditions) tested \citep{kashani_evaluation_2011}.
+In recent years, the estimation of missing daily weather data using artificial intelligence techniques have been the subject of many research studies \cite{kashani_evaluation_2011,kim_spatial_2008,srikanthan_comparison_2005,coulibaly_comparison_2007,abebe_application_2000,teegavarapu_improved_2005}. \cite{kashani_evaluation_2011} found that these new data-driven methods, more specifically the artificial neural network and the genetic programming techniques, outperformed the classical application of the MLR approach for three different climates in Iran. Artificial intelligence techniques are interesting because, unlike the classical weighing and regression-based methods, they are able to reflect the inherently stochastic nature of natural processes. Nevertheless, the results of \cite{kashani_evaluation_2011} also indicated that the MLR method was an appropriate technique, among the eight traditional methods tested, for all the weather variables (air temperature, wind speed, relative humidity, and precipitation) and the different climate conditions (dry to extra humid conditions) tested \citep{kashani_evaluation_2011}.
 
 \section{Description of the method}
 
-Though there exist various methods to estimate missing daily weather data that are well covered in textbooks and technical papers, tools to perform this task quickly, efficiently and easily are scarce. The implementation of some of the more complex (and often most accurate) methods discussed in the section above can be a daunting task for a research study that is not directly related to the fields of meteorology or to the geostatistics. Because of time or resources constraints, it can be tempting in these studies to handle the problem of missing daily weather data with a simple method that is not always appropriate to the situation. This is the case for example of using a within-station approach to quickly and easily estimate missing values for daily air temperature and precipitation which are not appropriate method for this task. For this reason, the creation of gapless weather data series (air temperature and precipitation) has been made an integral part of the software WHAT.
+Though there exist various methods to estimate missing daily weather data that are well covered in textbooks and technical papers, tools to perform this task quickly, efficiently and easily are scarce. The implementation of some of the more complex (and often most accurate) methods discussed in the section above can be a daunting task for a research study that is not directly related to the fields of meteorology or to the geostatistics. Because of time or resources constraints, it can be tempting in these studies to handle the problem of missing daily weather data with a simple method that is not always appropriate to the objective of the study. This is the case for example of using a simple and practical within-station approach to quickly and easily estimate missing values for daily air temperature and precipitation which is not an appropriate method for these kind of data \citep{eischeid_quality_1995,simolo_improving_2010,kemp_estimating_1983}. For this reason, the creation of gapless weather data series (air temperature and precipitation) has been made an integral part of the software WHAT.
 
-The method for filling the gaps in the weather time series of air temperature and precipitation is based on the implementation of the classical MLR method presented in \cite{eischeid_creating_2000}.  The rationales behind this choice was to provide in WHAT a robust, efficient and accurate method that was adequate in most conditions (e.g. climate, land cover, topography). In other words, based on the literature review presented in the section above, this represents a very good and solid default option for the first iteration of the software. Since the code for loading and manipulating the weather dataset of a given study area is object oriented, it should be relatively easy to add modifications of the already implemented method in WHAT such as the additional steps for the MLR method proposed in \cite{simolo_improving_2010}.
+The method for filling the gaps in the weather time series of air temperature and precipitation is based on the implementation of the classical MLR method presented in \cite{eischeid_creating_2000}. The rationales behind this choice was to provide in WHAT a robust, efficient, accurate, and well known method that was adequate to most conditions (e.g. climate, land cover, topography). Based on the literature review presented in the section above, this choice appears to be a very good default option for the first a version of the software. Since the code for loading and manipulating the entire weather dataset of a given study area is object oriented, it should be relatively easy to add modifications to the currently available approach such as the additional steps for the MLR method proposed in \cite{simolo_improving_2010} or to completely implement one of the new artificial intelligence techniques that were developed in recent years \citep{kashani_evaluation_2011}.
 
-Moreover, in addition to the handling of missing data, WHAT includes the framework to easily validate and assess the uncertainty of the estimated missing values with a jackknife resampling technique. This feature is an invaluable tool for quickly validating the method for a given study area and to test the performance of new methods that could be added to future version of the software.
+In addition to the handling of missing data, WHAT includes the framework to easily validate and assess the uncertainty of the estimated missing values with a jackknife resampling technique. This feature is an invaluable tool for quickly validating the method for a given study area and to test the performance of new methods that could be added to future version of the software. The entire gapfilling process used in WHAT is illustrated in the flowchart of Figure~X.
 
-\subsection{Pre-selection of the stations}
-In climatology, the two most important factors are the inter-correlations in the station network, and the seasonal variations in the relations between the stations. {XIA}
+\subsection{Step 1: pre-selection of the stations}
 
-In any spatial interpolation scheme the selection and quantity of surrounding stations are critically important to the results of the interpolation \citep{eischeid_quality_1995}. Problem arise when using climatological data because of missing values and the varying availability of station through time. In order to determine which stations are to be used, surrounding stations are preselected based on their relationship with the target station.
+The quantity and the selection of surrounding stations are critically important for accurate estimation of missing weather data \citep{eischeid_quality_1995}.
 
-In order to determine which stations are to be used, surrounding stations are preselected based on their relationship with the target stations. The 15 closest stations are identified for each target station and are ranked by the value of the correlation coefficient between the candidate station  and its neighbors.
 
-Tests have shown that inclusion of more than four stations does not significantly improve the interpolation and may in fact degrade the estimate. The number (never greater than four) of neighboring stations meeting the criteria is not fixed in time. It varies depending on available station data for the year, month, day in question. As such, the interpolation models may also change in time.
+Problems arise though because of synchronize missing values in the target and neighboring weather station data series that varies trough time. The process to determine which stations are to be used for the estimation of missing data must then be done for each day for which data are missing.
 
-The selection and quantity of surrounding stations are critically important to the results of the interpolations.
+In order to determine which stations are to be used, surrounding stations are preselected based on their relationship with the target station.
+
+The 15 closest stations are identified for each target station and are ranked by the value of the correlation coefficient between the candidate station and its neighbors.
+
+The number (never greater than four) of neighboring stations meeting the criteria is not fixed in time. It varies depending on available station data for the year, month, day in question. As such, the interpolation models may also change in time.
 
 The quality of the estimates is strongly affected by seasonality. Stations at higher elevations are difficult to estimate accurately, in large part bacause of the topographical diversity of the surrounding stations leading to degradation of spatial coherence among stations.
 
 According to an extensive literature review and the experience of Tronci et al (1986), the influence radius was chosen as 100 km in our study. XIA
 
-\section{Estimating Missing Daily Value}
+\subsection{Step 2: Estimating Missing Daily Value}
 
 This project \citep{eischeid_creating_2000} has the objective to create serially complete daily datasets in a systematic, well-documented fashion that can be utilized for many hydrologic and other natural resource conservation models. The objective of this project is to create a serially complete (no missing data values) daily temperature and precipitation dataset
-
-6 different methods of spatial interpolation are used to create the serially complete dataset.
 
 Quality control performed by NCDC on this dataset included a procedure (Reek et al. 1992).
 
@@ -71,9 +69,9 @@ In order to determine which stations are to be used, surrounding stations are pr
 
 The number (never greater than four) of neighboring stations meeting the criteria is not fixed in time. It varies depending on available station data for the year/month/day in question. As such, the interpolation models may also change in time.
 
-\subsection{Ordinary Least Square Criteria}
+\subsubsection{Ordinary Least Square Criteria}
 
-\subsection{Least Absolute Deviations Criteria}
+\subsubsection{Least Absolute Deviations Criteria}
 REG can account for the local effect (i.e. topography, forest) particularly for forest climate stations.
 
 
@@ -84,7 +82,7 @@ WHAT have laid the basis and foundation of a method that allows easy comparison 
 
 The goal of any quality control procedure is to provide the end user with as much information as possible, such as he/she can make an informed choice whether to accept or reject a particulat monthly value. The results of our analysis provide the end user with a set of flags, noted above, an with summary statistics of the efficacy of several estimation procedures.
 
-\section{Quality Control of the Data}
+\subsection{Step 3: Quality Control of the Data}
 
 Prior to the analysis of climatic time series, it is important to remove data outliers in a methodical manner.
 
@@ -98,11 +96,21 @@ and minimum temperatures. Typical tests include identifying estimated maximum te
 previous day’s minimum and an estimated maximum lower than a minimum for the same day. These inconsistencies were corrected by assigning corrected maximums or minimums where appropriate
 or averaging the maximum and minimum temperatures for the previous and subsequent days.
 
-\section{Validation}
+\subsection{Step 4: Validation}
 
+According to \cite{xia_forest_1999}
+In climatology, the two most important factors are the inter-correlations in the station network, and the seasonal variations in the relations between the stations. {XIA}
 In order to test the efficacity of the estimation techniques, each of the six interpolation methods is compared with respective nonmissing observations.
 
 The accuracy of the daily precipitation estimate is dependent on the quality and quantity of the surrounding stations utilized to estimate a value at a particular site. The determination of daily precipitation totals is much more sensitive to these factors than air temperature, particularly with regard to the elevation of the site to be estimated.
+
+\section{Monteregie Est study case}
+
+\subsection{Materials and Method}
+
+Tests have shown that inclusion of more than four stations does not significantly improve the interpolation and may in fact degrade the estimate. 
+
+\subsection{Results and Discussion}
 
 \section{Future Work}
 

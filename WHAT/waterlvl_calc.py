@@ -1044,6 +1044,7 @@ def local_extrema(x, Deltan):
 #            n_j[Jest] = np.sign(n_j[Jest]) * nf
    
     return n_j, kadd
+    
 
 #===============================================================================
 def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
@@ -1212,9 +1213,7 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
             
         print RMSE
         print
-        print ME
-            
-            
+        print ME            
 
     #---- EXPONENTIAL (alternate): dh/dt = -a * h + b ----  
 
