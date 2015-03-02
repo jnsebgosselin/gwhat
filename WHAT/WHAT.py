@@ -3915,8 +3915,8 @@ def correlation_worker(WEATHER, target_station_index):
 # target station and the neighboring stations for each meteorological variable.
 # 
 # Results are stored in a 2D matrix <CORCOEF> where:#  
-#   row :  meteorological variables
-#   colm : weather stations
+#   rows :    meteorological variables
+#   columns : weather stations
 #===============================================================================
     DATA = WEATHER.DATA
     
@@ -3953,7 +3953,7 @@ def correlation_worker(WEATHER, target_station_index):
             if Nnonan >= Ndata_limit:
                 CORCOEF[i, j] = np.corrcoef(DATA_nonan, rowvar=0)[0,1:]
             else:
-                'Do nothing. Value will be nan by default'
+                pass #Do nothing. Value will be nan by default.
         
     print 'correlation coefficients computation completed' ; print        
 

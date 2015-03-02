@@ -288,9 +288,10 @@ class Weather_File_Info():
         nVAR = len(self.VARNAME)
         nSTA = len(self.STANAME)
         
-        CONTENT = [['#', 'STATION NAMES', 'DATE START', 'DATE END',
-                    'Nbr YEARS' , 'TOTAL DATA', 'MISSING Tmax',
-                    'MISSING Tmin', 'MISSING Tmean',
+        CONTENT = [['#', 'STATION NAMES', 'ClimateID',
+                    'Lat. (dd)', 'Lon. (dd)', 'Alt. (m)',
+                    'DATE START', 'DATE END', 'Nbr YEARS' , 'TOTAL DATA',
+                    'MISSING Tmax', 'MISSING Tmin', 'MISSING Tmean',
                     'Missing Precip', 'Missing TOTAL']]
                                 
         for i in range(nSTA):
@@ -312,9 +313,11 @@ class Weather_File_Info():
                                                
             number_data = float(time_end - time_start + 1)
             
-            CONTENT.append([i+1 , self.STANAME[i], record_date_start,
-                            record_date_end, '%0.1f' % (number_data / 365.25),
-                            number_data])
+            CONTENT.append([i+1 , self.STANAME[i], self.ClimateID[i],
+                            '%0.2f' % self.LAT[i], '%0.2f' % self.LON[i],
+                            '%0.2f' % self.ALT[i],
+                            record_date_start, record_date_end,
+                            '%0.1f' % (number_data / 365.25), number_data])
                             
             # Missing data information for each meteorological variables   
             for var in range(len(self.VARNAME)):
