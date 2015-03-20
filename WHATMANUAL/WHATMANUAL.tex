@@ -4,6 +4,7 @@
 \geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
 
 \usepackage[hidelinks]{hyperref}
+\usepackage{fixltx2e} % For subscript
 \usepackage{graphicx}
 \usepackage{caption}
 \usepackage{subcaption}
@@ -12,6 +13,15 @@
 \usepackage{subfiles}
 \usepackage{float}
 \usepackage{adjustbox}
+
+\usepackage[list-units = single,range-units = single]{siunitx}
+
+\usepackage{booktabs,dcolumn}
+\usepackage[table]{xcolor} % Internally load "colortbl"
+\usepackage{tabularx,ragged2e}
+
+%\usepackage{microtype}
+%\DisableLigatures{encoding = *, family = * }
 
 %http://tex.stackexchange.com/questions/83440/inputenc-error-unicode-char-u8-not-set-up-for-use-with-latex
 \usepackage[utf8]{inputenc}
@@ -52,14 +62,12 @@
 \subfile{chapter5} % Plotting the data
 \subfile{chapter6} % Data interpretation
 
-\part{Theoretical Basis}
+\part{Technical Documentation}
 
 \subfile{chapter7} % Data interpretation
 \subfile{chapter8} % Data interpretation
 \subfile{chapter9} % Data interpretation
 \subfile{chapter10} % BRF
-
-\part{Technical Documentation}
 
 \part{Appendices}
 

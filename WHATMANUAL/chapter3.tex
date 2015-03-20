@@ -46,7 +46,7 @@ By default, WHAT will automatically save the formatted data series in a single T
 
 It is also possible to open previously downloaded weather data files in WHAT by clicking on the button \emph{Load} and selecting the desired files in the dialog window. WHAT will then automatically format and concatenate the data and a new concatenated data files and save the results automatically if the \emph{Automatically save concatenated data} option is checked. Alternatively, the formatted data series can be saved by clicking on the button \emph{Save}.
 
-\section{Gap filling daily weather records}
+\section{Gap filling daily weather records}\label{guide-gapfilling}
 
 One of WHAT main utility is the automatic gap filling of daily weather data records. This feature is accessible from the tab \emph{Fill Data} shown in Figure~\ref{fig:tab_fillData}. On start-up or after opening a project, WHAT automatically scans the content of the \emph{Input} folder for valid weather data files and displays the result as a list of weather station names under the label \emph{Fill Data for Weather Station}. The list of stations won't be refreshed automatically if new data files are added to the Input folder after the project has been opened. The button \emph{Refresh} located next to the list of stations can be used for this purpose. In addition, each time WHAT search the Input folder for valid weather data files, it automatically computes statistics about the period over which data are available for each station and the number of missing data in the weather time-series and saves the results in the file named ``weather\_datasets\_summary.log'' (see section~\ref{subsec:folder_structure}).
 
