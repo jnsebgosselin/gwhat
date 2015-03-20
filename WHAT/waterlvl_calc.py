@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 #---- STANDARD LIBRARY IMPORTS ----
 
 from sys import argv
+from time import clock
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -1047,7 +1048,7 @@ def local_extrema(x, Deltan):
     
 
 #===============================================================================
-def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
+def mrc_calc(t, h, ipeak, MRC_type=2, MRC_ObjFnType=1):
     """
     
     ---- INPUT ----
@@ -1056,6 +1057,7 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
     
       MODE = 0 -> linear (dh/dt = b)
       MODE = 1 -> exponential (dh/dt = -a*h + b)
+      MODE = 2 -> exponential (dh/dt = -a*h + b) | Solved with Gauss-Newton
     
     MRC_ObjFnType: Objective function used for the regression
     
@@ -1128,286 +1130,174 @@ def mrc_calc(t, h, ipeak, MRC_type=1, MRC_ObjFnType=1):
             B = B + OPSTP_B
                         
     #-------------------------------------- EXPONENTIAL: dh/dt = -A * h + B ----  
-        
+    
+    # Solved with a modified Gauss-Newton method (Hill and Tiedeman, 2007)
+    
     elif MRC_type == 1:
+                
+        tstart = clock()
+        
+        #---- Initiating optimization ----
         
         dt = np.diff(t)
         
-        B = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
-        A = 0.
+        Aold = 0.
+        Bold = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
         
-        ObjFn_A = 10**6 # Force divergence for first iteration
-        OPSTP_A = 0.1
-        FIRST_A = 1
-        while abs(OPSTP_A) > 1e-5:
+        hp_old = calc_synth_hydrograph(Aold, Bold, h, dt, ipeak)
+        tindx = np.where(~np.isnan(hp_old))
+
+        RMSEold = (np.mean((h[tindx] - hp_old[tindx])**2))**0.5
+        print('A = %0.3f ; B= %0.3f; RMSE = %f' % (Aold, Bold, RMSEold))
+    
+        Anew = 0.001
+        Bnew = Bold * 1.1
         
-            OPSTP_B = 0.1   # Optimisation step
-            ObjFn_B = 10**6  # Force divergence for first iteration
-            nIt = 0
-            while abs(OPSTP_B) > 1e-5:
-                
-                #---- Compute Syntheric Hydrograph ----
-                
-                hp = np.ones(len(h)) * np.nan
-                
-                for i in range(nsegmnt):
-                    hp[maxpeak[i]] = h[maxpeak[i]]
-                    
-                    for j in range(minpeak[i] - maxpeak[i]):
+        hp_new = calc_synth_hydrograph(Anew, Bnew, h, dt, ipeak)
+        
+        RMSEnew = (np.mean((h[tindx] - hp_new[tindx])**2))**0.5
+        print('A = %0.3f ; B= %0.3f; RMSE = %f' % (Anew, Bnew, RMSEnew))
+        
+        NP = 2 # number of parameters
+        
+        while 1:
                         
-                        imax = maxpeak[i]
-                        imin = minpeak[i]
-                        
-#                        dhp = (-A * (h[imax+j] + h[imax+j+1]) + 2 * B) * dt / 2.
-#                        hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp
-                        
-                        LUMP1 = (1 - A * dt[imax+j] / 2)
-                        LUMP2 = B * dt[imax+j]
-                        LUMP3 = (1 + A * dt[imax+j] / 2) ** -1                    
+            #---- Calculating Jacobian ---- 
+        
+            hdA = calc_synth_hydrograph(Anew, Bold, h, dt, ipeak)
+                                     
+            hdB = calc_synth_hydrograph(Aold, Bnew, h, dt, ipeak)
+                                           
+            XA = (hdA[tindx] - hp_old[tindx]) / (Anew - Aold)
+            XB = (hdB[tindx] - hp_old[tindx]) / (Bnew - Bold)
+            Xt  = np.vstack((XA, XB))
+            
+            X = Xt.transpose()
+                              
+            #---- Solving Linear System ----
+                
+            dh = h[tindx] - hp_new[tindx]
+            XtX = np.dot(Xt, X)                
+            Xtdh = np.dot(Xt, dh)
+            
+            #---- Scaling matrix----
+            
+            C = np.dot(Xt, X) * np.identity(NP)
+            for j in range(NP):
+                C[j, j] = C[j, j] ** -0.5
+            
+            Ct = C.transpose()
+            Cinv = np.linalg.inv(C)
+            
+            #---- Constructing right hand side ----
+
+            CtXtdh = np.dot(Ct, Xtdh)
+            
+            #---- Constructing left hand side ----
+            
+            CtXtX = np.dot(Ct, XtX)
+            CtXtXC = np.dot(CtXtX, C)
+            
+            m = 0
+            while 1: # loop for the Marquardt parameter (m)
+                
+                #---- Constructing left hand side (continued) ----
+                
+                CtXtXCImr = CtXtXC + np.identity(NP) * m
+                CtXtXCImrCinv = np.dot(CtXtXCImr, Cinv)
                             
-                        hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
-                                                
-                indx = np.where(~np.isnan(hp))
+                #---- Calculating parameter change vector ----
+        
+                dr = np.linalg.tensorsolve(CtXtXCImrCinv, CtXtdh, axes=None)
+        
+                #---- Checking Marquardt condition ----
                 
-                #---- Compute Obj. Func. ----
+                NUM = np.dot(dr.transpose(), CtXtdh)
+                DEN1 = np.dot(dr.transpose(), dr)
+                DEN2 = np.dot(CtXtdh.transpose(), CtXtdh)
                 
-                if MRC_ObjFnType == 0:  # RMSE
-                    ObjFn = (np.mean((h[indx] - hp[indx])**2))**0.5
-                elif MRC_ObjFnType == 1: # MAE
-                    ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
-                
-                if ObjFn_B < ObjFn:
-                    OPSTP_B = -OPSTP_B / 10.
-     
-                ObjFn_B = np.copy(ObjFn)
-                B = B + OPSTP_B
-                
-                nIt += 1
-                if nIt > nItmax:
-                    print 'No solution found'
-                    return A, B, hp
-                
-            if ObjFn_A < ObjFn_B:
-                if FIRST_A == 0:
-                    OPSTP_A = -OPSTP_A / 10.
+                cos = NUM / (DEN1 * DEN2)**0.5
+                if np.abs(cos) < 0.08:
+                    print(u'Cosθ = %0.3f' % cos)
+                    m = 1.5 * m + 0.001                
                 else:
-                    FIRST_A = 0
-                    OPSTP_A = -OPSTP_A
+                    print(u'Cosθ = %0.3f' % cos)
+                    break
+                      
+            #---- Updating old parameter values ----
         
-            ObjFn_A = np.copy(ObjFn_B)
-            A = A + OPSTP_A
+            Aold = np.copy(Anew)
+            Bold = np.copy(Bnew)
+            hp_old = np.copy(hp_new)
+            RMSEold = np.copy(RMSEnew)
             
-        #---- Calculate the fit for each segment ----
-        
-        RMSE = np.empty(nsegmnt)
-        ME = np.empty(nsegmnt)
-        TimeMid = np.empty(nsegmnt)
-        for i in range(nsegmnt):
-            for j in range(minpeak[i] - maxpeak[i]):
+            while 1: # Loop for Damping (to prevent overshoot)
                 
-                imax = maxpeak[i]
-                imin = minpeak[i]
-                                
-                RMSE[i] = (np.mean((h[imax:imin+1] - hp[imax:imin+1])**2))**0.5
-                ME[i] = np.mean(h[imax:imin+1] - hp[imax:imin+1])
+                #---- Calculating new paramter values ----
+                
+                Anew = Aold + dr[0]
+                Bnew = Bold + dr[1]
             
-        print RMSE
+                #---- Applying parameter bound-constraints ----
+            
+                Anew = np.max((Anew, 0)) # lower bound
+            
+                #---- Solving for new parameter values ----
+            
+                hp_new = calc_synth_hydrograph(Anew, Bnew, h, dt, ipeak)
+                RMSEnew = (np.mean((h[tindx] - hp_new[tindx])**2))**0.5
+                
+                if RMSEnew > RMSEold:
+                    dr = dr * 0.5
+                else:
+                    break
+            
+            print('A = %0.3f ; B= %0.3f; RMSE = %f' % (Anew, Bnew, RMSEnew))
+        
+            #---- Checking tolerance ----
+        
+            tolA = np.abs(Anew - Aold)
+            tolB = np.abs(Bnew - Bold)
+            
+            tol = np.max((tolA, tolB))
+            
+            if tol < 0.001:
+                break
+        
+        tend = clock()
         print
-        print ME            
+        print('TIME = %0.3f sec'%(tend-tstart))
 
-    #---- EXPONENTIAL (alternate): dh/dt = -a * h + b ----  
-
-    elif MRC_type == 2:
-        
-        # Each segment is optimized individually        
-        
-        hp = np.ones(len(h)) * np.nan
-        A = np.zeros(nsegmnt) + a
-        B = np.zeros(nsegmnt) + b
-        for i in range(nsegmnt):
-        
-            ObjFn_A = 10**6 # Force divergence for first iteration
-            OPSTP_A = 0.1
-            FIRST_A = 1
-            while abs(OPSTP_A) > 1e-5:
-            
-                OPSTP_B = 0.1   # Optimisation step
-                ObjFn_B = 10**6  # Force divergence for first iteration
-                nIt = 0
-                while abs(OPSTP_B) > 1e-5:
-                    
-                    #---- Compute Syntheric Hydrograph ----
-                    
-                    imax = maxpeak[i]
-                    imin = minpeak[i]
-                        
-                    hp[imax] = h[imax]
-                        
-                    for j in range(minpeak[i] - maxpeak[i]):
-                        
-                        LUMP1 = (1 - A[i] * dt[imax+j] / 2)
-                        LUMP2 = B[i]*dt[imax+j]
-                        LUMP3 = (1 + A[i] * dt[imax+j] / 2) ** -1
-                    
-                            
-                        hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
-                    
-                    #---- Compute Obj. Func. ----
-                    
-                    dh = h[imax:imin+1] - hp[imax:imin+1]
-                    if MRC_ObjFnType == 0:  # RMSE
-                        ObjFn = (np.mean(dh**2))**0.5
-                    elif MRC_ObjFnType == 1: # MAE
-                        ObjFn = np.mean(np.abs(dh))
-
-                    if ObjFn_B < ObjFn:
-                        OPSTP_B = -OPSTP_B / 10.
-         
-                    ObjFn_B = np.copy(ObjFn)
-                    B[i] = B[i] + OPSTP_B
-                    
-                    nIt += 1
-                    if nIt > nItmax:
-                        print 'No solution found'
-                        return a, b, hp
-                 
-                if ObjFn_A < ObjFn_B:
-                    if FIRST_A == 0:
-                        OPSTP_A = -OPSTP_A / 10.
-                    elif FIRST_A == 1:
-                        OPSTP_A = -OPSTP_A                
-                FIRST_A = 0
-            
-                ObjFn_A = np.copy(ObjFn_B)
-                A[i] = A[i] + OPSTP_A
-                
-        print A
-        print B
-#        a = np.mean(A)
-#        b = np.mean(B)
-            
-#        subgrid_toolbar.setSpacing(5)
-#        subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-#        subgrid_toolbar.setColumnStretch(col+1, 500)
-                    
-#    elif MRC_type == 2: 
-#        
-#        # Modified Gauss-Newton Gradient Method (Hill and Tiedman,2007, p.68)
-#        
-#        ipeak = np.sort(ipeak)
-#    
-#        maxpeak = ipeak[:-1:2]
-#        minpeak = ipeak[1::2]
-#        
-#        nsegmnt = len(minpeak)
-#        nItmax = 100
-#                
-#        c = 2.25
-#        b = 0.08
-#        
-##        DHDC = np.array([]).astype(float)
-##        DHDB = np.array([]).astype(float)
-#        hp = np.ones(len(h)) * np.nan
-#        for i in range(nsegmnt):
-#            
-#            for it in range(100):
-#           
-#                print b, c
-#                        
-#                imax = maxpeak[i]
-#                imin = minpeak[i]
-#                
-#                h0 = h[imax]
-#                t0 = t[imax]
-#                
-#                #----------                
-#                
-#                a = c - h0
-#                
-#                tp = t[imax:imin+1] - t0
-#                
-#                hp[imax:imin+1] = -a * np.exp(-b * tp) + c
-#                
-#                dhdb = a * tp * np.exp(-b * tp)
-#                dhdc = np.ones(len(tp))
-#                
-#                #----------
-#                
-##                a  = -1 / b * np.log(1 - h0 / c)
-##                tp = t[imax:imin+1] - t0
-##                       
-##                hp[imax:imin+1] = c * (1 - np.exp(-b * (tp + a)))
-##                
-##                dhdb = c * (tp + a) * np.exp(-b * (tp + a))
-##                dhdc = -np.exp(-b * (tp + a))
-#                
-#                #----------
-#                
-#                X =  np.vstack((dhdb, dhdc)).transpose()
-#                Xt = X.transpose()
-#                
-#                dh = h[imax:imin+1] - hp[imax:imin+1]
-#                A = np.dot(Xt, X)                
-#                B = np.dot(Xt, dh)
-#                
-#                dr = np.linalg.tensorsolve(A, B, axes=None)
-#               
-#                b += dr[0]
-#                c += dr[1]
-##                print dr
-#            
-##            * (h[imax:imin+1]- hp)
-#            
-#            
-##            DHDB = np.append(DHDB, c * (tp + a) * np.exp(-b * (tp + a)))
-##            DHDC = np.append(DHDC, -np.exp(-b * (tp + a)) )
-#            
-##        JACOBIAN =  np.vstack((DHDB, DHDC)).transpose()
-##            
-#        
-#        
-#        print 'FIN'
-            
-#        ############################################################### TEST
-#            
-#        from scipy.optimize.minpack import curve_fit
-#    
-#        #---- Compute Syntheric Hydrograph ----
-#        
-#        def func(h, a, b):
-#                            
-#            dhdt = -a * (h - b)
-#            
-#            return dhdt
-#            
-#        dh = np.diff(h)                
-#        popt, pcov = curve_fit(func, h[indx], dh[indx])  
-#        
-#        a = popt[0]
-#        b = popt[1]
-#        dhp = (-a * (h[:-1] + h[1:]) + 2*b) * dt / 2.
-#        hp = np.ones(len(h)) * np.nan
-#        for i in range(nsegmnt):
-#            hp[maxpeak[i]] = h[maxpeak[i]]
-#            
-#            for j in range(minpeak[i] - maxpeak[i]):
-#                hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp[maxpeak[i]+j]
-                
-        
-        
-#        print popt * 0.25
-#        print pcov
-    
-        
     print
-    print ['RMSE', 'MAE'][MRC_ObjFnType], ' =', ObjFn
-    print 'A =', A
-    print 'B =', B
-    print; print '---- FIN ----'; print
-    
-#    print dhp
+    print '---- FIN ----'
+    print
         
-    return A, B, hp, ObjFn
+    return Anew, Bnew, hp_new, RMSEnew
+    
+def calc_synth_hydrograph(A, B, h, dt, ipeak):
+    
+    maxpeak = ipeak[:-1:2]
+    minpeak = ipeak[1::2]
+    
+    nsegmnt = len(minpeak)
+    
+    hp = np.ones(len(h)) * np.nan
+    
+    for i in range(nsegmnt):
+        
+        hp[maxpeak[i]] = h[maxpeak[i]]
+        
+        for j in range(minpeak[i] - maxpeak[i]):
+            
+            imax = maxpeak[i]
+            
+            LUMP1 = (1 - A * dt[imax+j] / 2)
+            LUMP2 = B * dt[imax+j]
+            LUMP3 = (1 + A * dt[imax+j] / 2) ** -1                    
+                
+            hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
+    
+    return hp
     
 class NewFig(QtGui.QWidget):
             
