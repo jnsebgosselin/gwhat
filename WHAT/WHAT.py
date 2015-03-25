@@ -1515,8 +1515,7 @@ class TabHydrograph(QtGui.QWidget):
             
     def save_figure(self, fname):
         
-        self.hydrograph2display.generate_hydrograph(self.waterlvl_data,
-                                                    self.meteo_data)
+        self.hydrograph2display.generate_hydrograph(self.meteo_data)
                                        
         self.hydrograph2display.fig.savefig(fname)
         
