@@ -459,7 +459,8 @@ def make_timeserie_continuous(DATA):
     
             
 #===============================================================================
-def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD):
+def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
+                         COLOR=['black', 'black']):
 # Plot monthly normals
 #===============================================================================
     
@@ -555,6 +556,9 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD):
     
     #----- Adjust Space For Text -----
     
+#    Ymax0 = 180 # In case there is a need to force the value
+#    Ymax1 = 25 ; Ymin1 = -20
+    
     reqheight = 0.12
     Ymax0 += (Ymax0 - Ymin0) * reqheight 
     Ymax1 += (Ymax1 - Ymin1) * reqheight
@@ -575,22 +579,27 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD):
     
     yticks = np.arange(Ymin0, Ymax0 - (Ymax0 - Ymin0) * 0.1, Yscale0)
     ax0.set_yticks(yticks)
-    ax0.tick_params(axis='y', direction='out', labelcolor='blue', gridOn=True)
+    ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1], gridOn=True)
+    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-', linewidth=0.5)
     
     yticks_minor = np.arange(yticks[0], yticks[-1], 5)
     ax0.set_yticks(yticks_minor, minor=True)
-    ax0.tick_params(axis='y', which='minor', direction='out', gridOn=True)
+    ax0.tick_params(axis='y', which='minor', direction='out', gridOn=False)
     ax0.yaxis.set_ticklabels([], minor=True)
     
     ax0.set_axisbelow(True)
     
     #----- Air Temp -----
     
-    yticks1_position = np.arange(Ymin1, Ymax1 - (Ymax1 - Ymin1) * 0.1 ,
-                                 Yscale1)    
+    yticks1 = np.arange(Ymin1, Ymax1 - (Ymax1 - Ymin1) * 0.1 , Yscale1)    
     ax1.yaxis.set_ticks_position('right')
-    ax1.set_yticks(yticks1_position)
-    ax1.tick_params(axis='y', direction='out', labelcolor='red', gridOn=False)
+    ax1.set_yticks(yticks1)
+    ax1.tick_params(axis='y', direction='out', labelcolor=COLOR[0], gridOn=False)
+    
+    yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1/5.)
+    ax1.set_yticks(yticks1_minor, minor=True)
+    ax1.tick_params(axis='y', which='minor', direction='out', gridOn=False)
+    ax1.yaxis.set_ticklabels([], minor=True)
     
     #------------------------------------------------------ SET AXIS RANGE ----- 
 
@@ -600,15 +609,15 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD):
     #----------------------------------------------------------------LABELS-----
     
     ax0.set_ylabel('Monthly Total Precipication (mm)', fontsize=label_font_size,
-                   verticalalignment='bottom', color='blue')
+                   verticalalignment='bottom', color=COLOR[1])
     ax0.yaxis.set_label_coords(-0.09, 0.5)
     
-    ax1.set_ylabel(u'Monthly Mean Air Temperature (°C)', color='red',
+    ax1.set_ylabel(u'Monthly Mean Air Temperature (°C)', color=COLOR[0],
                    fontsize=label_font_size, verticalalignment='bottom',
                    rotation=270)
     ax1.yaxis.set_label_coords(1.09, 0.5)
 
-#---------------------------------------------------------------- PLOTTING -----
+    #------------------------------------------------------------ PLOTTING -----
     
     SNOWcolor = [0.85, 0.85, 0.85]
     RAINcolor = [0, 0, 1]
@@ -720,7 +729,10 @@ if __name__ == '__main__':
     app = QtGui.QApplication(argv)   
     instance_1 = WeatherAvgGraph()
             
-    fmeteo = 'Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out'
+#    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
+    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
+#    fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
+    
     instance_1.generate_graph(fmeteo)
     
     instance_1.show()
