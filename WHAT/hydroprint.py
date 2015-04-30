@@ -37,6 +37,7 @@ import numpy as np
 #from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 #from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
+#plt.rcParams['axes.unicode_minus']=True # Need to be investigated
 #import matplotlib.pyplot as plt
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -330,7 +331,7 @@ class Hydrograph():
     #---------------------------------------------------------------------------           
     def generate_hydrograph(self, MeteoObj):
     #---------------------------------------------------------------------------
-    
+
         #---- Reinit Fig ----
         
         self.fig.clf()
@@ -340,7 +341,7 @@ class Hydrograph():
         fwidth = self.fwidth   # Figure width in inches
 
         self.fig.set_size_inches(fwidth, fheight, forward=True) 
-        
+                        
         #---- Update Variables ----
         
         WaterLvlObj = self.WaterLvlObj 
@@ -381,25 +382,28 @@ class Hydrograph():
         #--- Time (host) ---
         
         self.ax1 = self.fig.add_axes([0, 0, 1, 1])
+        self.ax1.grid(axis='both', color=[0.75, 0.75, 0.75], linestyle='-',
+                      linewidth=0.5)
         
         #--- Water Levels ---
         
         self.ax2 = self.ax1.twinx()
         self.ax2.set_zorder(self.ax1.get_zorder()+10)
         
-        self.ax2.yaxis.set_ticks_position('left')
-        self.ax2.tick_params(axis='y', direction='out', labelsize=10)            
         self.update_waterlvl_scale()
+        self.ax2.yaxis.set_ticks_position('left')
+        self.ax2.yaxis.set_label_position('left') 
+        self.ax2.tick_params(axis='y', direction='out', labelsize=10) 
         
         #--- Precipitation ---
         
-        self.ax3 = self.ax2.twinx()
+        self.ax3 = self.ax1.twinx()
         self.ax3.set_zorder(self.ax2.get_zorder()+10)
         self.ax3.set_navigate(False)
         
         #--- Air Temperature ---
         
-        self.ax4 = self.ax2.twinx()
+        self.ax4 = self.ax1.twinx()
         self.ax4.set_zorder(self.ax3.get_zorder()+10)
         self.ax4.set_navigate(False)
         
@@ -478,7 +482,7 @@ class Hydrograph():
             self.ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)    
          
         #---------------------------------------------------- PRECIPITATION ----
-        
+ 
         RAINmin = 0
         RAINmax = RAINmin + RAINscale * 6
         
@@ -892,7 +896,7 @@ class Hydrograph():
         if self.title_state == 1:
             top_margin = 0.75
         else:
-            top_margin = 0.25
+            top_margin = 0.35
         
         #---- MARGINS (% of figure) ----
         
@@ -909,7 +913,7 @@ class Hydrograph():
     def update_waterlvl_scale(self):
         
         if self.WLdatum == 1:   # masl
-            
+            pass
             WLmin = self.WLmin
             WLscale = self.WLscale
             WLmax = WLmin + self.NZGrid * WLscale
