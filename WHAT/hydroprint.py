@@ -115,6 +115,7 @@ class Hydrograph():
         self.trend_line = 0
         self.isLegend = False
         self.meteoOn = True # controls wether meteo data are plotted or not
+        self.gridLines = 2 # 0 -> None, 1 -> "-" 2 -> ":"
         
         #---- Waterlvl Obj ----
         
@@ -460,16 +461,15 @@ class Hydrograph():
         
         self.ax1.xaxis.set_ticklabels([])
         self.ax1.xaxis.set_ticks_position('bottom')
-        self.ax1.tick_params(axis='both',direction='out', gridOn=True)
+        self.ax1.tick_params(axis='both',direction='out')
         
         self.ax1.set_yticks(np.arange(0, self.NZGrid, 1))
         self.ax1.yaxis.set_ticklabels([])
         self.ax1.tick_params(axis='y', length=0)
         self.ax1.patch.set_facecolor('none')
         
-        self.ax1.grid(axis='both', color=[0.35, 0.35, 0.35], linestyle=':',
-                      linewidth=0.5, dashes=[0.5, 5])
-                      
+        self.set_gridLines()         
+            
         #------------------------------------------------------ WATER LEVEL ----
         
         #---- Continuous Line Datalogger ----
@@ -996,6 +996,25 @@ class Hydrograph():
             y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
             self.PTOTmiss_dots.set_ydata(y)
             
+    def set_gridLines(self):    # 0 -> None, 1 -> "-" 2 -> ":"
+        
+        if self.gridLines == 0:
+
+            self.ax1.tick_params(gridOn=False)
+
+        elif self.gridLines == 1:
+
+            self.ax1.tick_params(gridOn=True)
+            self.ax1.grid(axis='both', color=[0.35, 0.35, 0.35], linestyle='-',
+                      linewidth=0.5)
+                      
+        else:
+
+            self.ax1.tick_params(gridOn=True)
+            self.ax1.grid(axis='both', color=[0.35, 0.35, 0.35], linestyle=':',
+                      linewidth=0.5, dashes=[0.5, 5])
+            
+        
 
 #===============================================================================
 def generate_xticks_informations(TIMEmin, TIMEmax, n, datemode, month_names):
@@ -1326,7 +1345,8 @@ if __name__ == '__main__':
             
     hydrograph2display = Hydrograph()
     hydrograph2display.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
-    hydrograph2display.meteoOn = 0 # 0 -> no meteo ; 1 -> meteo
+    hydrograph2display.meteoOn = 1 # 0 -> no meteo ; 1 -> meteo
+    hydrograph2display.gridLines = 2
     
     hydrograph2display.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph2display.title_text = "Title of the Graph"
