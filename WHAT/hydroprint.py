@@ -806,6 +806,19 @@ class Hydrograph():
             self.xlab[i].set_text(xticks_labels[i])
     
     def draw_ylabels(self):
+        
+        #------------------------------------------- Calculate LabelPadding ----
+        
+        left_margin  = 0.85
+        right_margin = 0.85
+        if self.meteoOn == False:
+            right_margin = 0.35
+            
+        axwidth = (self.fwidth - left_margin - right_margin)
+        labPad = 0.3 / 2.54 # in Inches       
+        labPad /= axwidth   # relative coord.
+        
+        #------------------------------------------- Calculate LabelPadding ----
 
         labelDB = LabelDatabase(self.language)
         
@@ -820,29 +833,32 @@ class Hydrograph():
          
         self.ax2.set_ylabel(lab_ax2,rotation=90,
                             fontsize=self.label_font_size,
-                            verticalalignment='top',
+                            verticalalignment='bottom',
                             horizontalalignment='center')
                        
         # Get bounding box dimensions of yaxis ticklabels for ax2
         renderer = self.fig.canvas.get_renderer()            
         bbox2_left, bbox2_right = self.ax2.yaxis.get_ticklabel_extents(renderer)
         
+        # bbox are structured in the the following way:     [[ Left , Bottom ],
+        #                                                    [ Right, Top    ]]
+        
         # Transform coordinates in ax2 coordinate system.       
         bbox2_left = self.ax2.transAxes.inverted().transform(bbox2_left)
         
         # Calculate the labels positions in x and y.
-        ylabel2_xpos = - (bbox2_left[1, 0] - bbox2_left[0, 0])
+        ylabel2_xpos = bbox2_left[0, 0] - labPad
         ylabel2_ypos = (bbox2_left[1, 1] + bbox2_left[0, 1]) / 2.
         
         if self.meteoOn == False:            
-            self.ax2.yaxis.set_label_coords(ylabel2_xpos - 0.045, ylabel2_ypos)
+            self.ax2.yaxis.set_label_coords(ylabel2_xpos, ylabel2_ypos)
             return
             
-         #---- Temperature ----
+        #---- Temperature ----
     
         self.ax4.set_ylabel(labelDB.temperature, rotation=90,
                             fontsize=self.label_font_size,
-                            verticalalignment='top',
+                            verticalalignment='bottom',
                             horizontalalignment='center')
                             
         # Get bounding box dimensions of yaxis ticklabels for ax4                    
@@ -852,15 +868,15 @@ class Hydrograph():
         bbox4_left = self.ax4.transAxes.inverted().transform(bbox4_left)        
         
         # Calculate the labels positions in x and y.
-        ylabel4_xpos = - (bbox4_left[1, 0] - bbox4_left[0, 0])
+        ylabel4_xpos = bbox4_left[0, 0] - labPad
         ylabel4_ypos = (bbox4_left[1, 1] + bbox4_left[0, 1]) / 2.
         
         # Take the position which is farthest from the left y axis in order
         # to have both labels on the left aligned.
         ylabel_xpos = min(ylabel2_xpos, ylabel4_xpos)
 
-        self.ax2.yaxis.set_label_coords(ylabel_xpos - 0.045, ylabel2_ypos)
-        self.ax4.yaxis.set_label_coords(ylabel_xpos - 0.045, ylabel4_ypos)
+        self.ax2.yaxis.set_label_coords(ylabel_xpos, ylabel2_ypos)
+        self.ax4.yaxis.set_label_coords(ylabel_xpos, ylabel4_ypos)
     
         #  Old way I was doing it before. Position of the labels were
         #  fixed, indepently of the ticks labels format.
@@ -871,7 +887,7 @@ class Hydrograph():
         
         self.ax3.set_ylabel(labelDB.precip, rotation=270,
                             fontsize=self.label_font_size,
-                            verticalalignment='top',
+                            verticalalignment='bottom',
                             horizontalalignment='center')
                         
         # Get bounding box dimensions of yaxis ticklabels for ax3
@@ -881,14 +897,13 @@ class Hydrograph():
         # calculate the labels positions in x and y.
         bbox3_right = self.ax3.transAxes.inverted().transform(bbox3_right)
         
-        ylabel3_xpos = (bbox3_right[1, 0] - bbox3_right[0, 0])
+        ylabel3_xpos = bbox3_right[1, 0] + labPad
         ylabel3_ypos = (bbox3_right[1, 1] + bbox3_right[0, 1]) / 2.
         
         # Take the position which is farthest from the left y axis in order
         # to have both labels on the left aligned.
 
-        self.ax3.yaxis.set_label_coords(1 + ylabel3_xpos + 0.045,
-                                        ylabel3_ypos)
+        self.ax3.yaxis.set_label_coords(ylabel3_xpos, ylabel3_ypos)
         
         #-------------------------------------------- WEATHER STATION LABEL ----
         
@@ -1350,6 +1365,7 @@ if __name__ == '__main__':
     
     hydrograph2display.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph2display.title_text = "Title of the Graph"
+    hydrograph2display.meteoOn = False
     
     hydrograph2display.set_waterLvlObj(waterLvlObj)
     hydrograph2display.best_fit_waterlvl()
