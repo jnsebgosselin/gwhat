@@ -4,7 +4,7 @@
 
 \chapter{MRC Estimation}
 
-The mathematical expression describing the average behavior of the declining water-table at a particular site during period when groundwater recharge is negligible is called the Master Recession Curve (MRC). The strength of this correlation and thus the validity of the MRC depends on many factors including the local relief and topography, seasonality of the climate, hydraulic properties of the subsurface porous medium, and depth to the water-table (Heppner and Nimmo, 2005). 
+The Master Recession Curve (MRC) is a mathematical expression describing the average behavior of the declining water-table at a particular site during periods when groundwater recharge is negligible. The strength of this correlation and thus the validity of the MRC depends on many factors, including the local topography, seasonality of the climate, hydraulic properties of the subsurface porous medium, and depth to the water-table \citep{heppner_computer_2005}. 
 
 Estimation of the MRC from a well hydrograph is done in WHAT in two step. The first step consists in the determination of the local extremum in the hydrograph in order to identify the period of time when the water-table recedes and the groundwater recharge is supposed negligible. 
 
@@ -16,7 +16,7 @@ Water-table fluctuation principle states that recharge is the product of water-t
 
 \section{Local Extremum Search}
 
-The position of the local extremum in the water level time series can be estimated with the use of an automated algorithm that is based on a method presented in Chapter 6 of Vamoş and Crăciun (2012).
+The position of the local extremum in the water level time series can be estimated with the use of an automated algorithm that is based on a method presented in Chapter 6 of \cite{vamos_automatic_2012}.
 
 % [Décrire brièvement en une phrase ou deux l'essence de l'approche]
 
@@ -24,6 +24,14 @@ Among the resulting receding segments, only the segments with a time span of mor
 Dans un premier temps, l'hydrogramme de puits est filtré par une moyenne mobile centrée avec une période d'une journée afin de réduire le bruit haute-fréquence. En second lieu, tous les maximums et minimums locaux sont localisés par une approche automatisée dans Matlab. Une inspection visuelle est ensuite réalisée dans le but d'éliminer les faux extrémums ou encore pour identifier des extrémums qui auraient été omis par l'algorithme.
 
 \section{Parameter Optimization}
+
+\begin{equation}
+   \frac{\partial h}{\partial t} = ah + b
+\end{equation}
+
+\begin{equation}
+   h^{t+1} = \left[\left(1 + \frac{\delta a \Delta t}{2}\right)h^t + b \Delta t\right]\left[1 - \frac{\delta a \Delta t}{2}\right]^{-1}
+\end{equation}
 
 Cette approche a été utilisée pour l'estimation de la recharge notamment par Delin et al. (2007), Heppner et Nimmo ainsi que Crosbie et al. (2005). Plusieurs programmes sont disponibles pour la détermination automatique d'une CMR à partir d'un hydrogramme de puits, dont les algorithmes développées par Crosbie et al. (2005), Posavec (2006) et Heppner et Nimmo (2005). 
 La Error: Reference source not found montre un exemple d'une courbe maîtresse de récession obtenue pour le puits P0-19 (Mont Rougemont) avec le programme Visual Basic de Posavec (2006) utilisant une méthode automatisée d'appariement par bande.
@@ -34,5 +42,7 @@ Cette technique à l'avantage d'éliminer une bonne partie de la subjectivité d
 
 La réorganisation des termes et l’intégration de l’équation
  par rapport au temps entre deux points (tA,hA) et (tB,hB) d'un hydrogramme de puits, tel que défini à la Error: Reference source not found, résulte en l’équation suivante:
+ 
+\section{Groundwater Recharge Estimation}
 
 \end{document}
