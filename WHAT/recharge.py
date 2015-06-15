@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2015 Jean-Sebastien Gosselin
+Copyright 2014-2015 Jean-Sebastien Gosselin
 
 email: jnsebgosselin@gmail.com
 
@@ -18,6 +18,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+last_modification = 15/06/2015
 """
 
 #----- STANDARD LIBRARY IMPORTS -----

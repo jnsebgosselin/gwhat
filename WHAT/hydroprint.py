@@ -1365,7 +1365,7 @@ if __name__ == '__main__':
     
     hydrograph2display.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph2display.title_text = "Title of the Graph"
-    hydrograph2display.meteoOn = False
+    hydrograph2display.meteoOn = True
     
     hydrograph2display.set_waterLvlObj(waterLvlObj)
     hydrograph2display.best_fit_waterlvl()
