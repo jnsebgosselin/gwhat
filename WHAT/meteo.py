@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014 Jean-Sebastien Gosselin
+Copyright 2014-2015 Jean-Sebastien Gosselin
 
 email: jnsebgosselin@gmail.com
 
@@ -18,6 +18,8 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+last_modification = 15/06/2015
 """
       
 #----- STANDARD LIBRARY IMPORTS -----
@@ -481,7 +483,7 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     left_margin  = 1
     right_margin = 1
     bottom_margin = 0.5
-    top_margin = 0.25
+    top_margin = 0.1
     
     x0 = left_margin / fwidth
     y0 = bottom_margin / fheight
@@ -579,12 +581,11 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     
     yticks = np.arange(Ymin0, Ymax0 - (Ymax0 - Ymin0) * 0.1, Yscale0)
     ax0.set_yticks(yticks)
-    ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1], gridOn=True)
-    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-', linewidth=0.5)
+    ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1])
     
     yticks_minor = np.arange(yticks[0], yticks[-1], 5)
     ax0.set_yticks(yticks_minor, minor=True)
-    ax0.tick_params(axis='y', which='minor', direction='out', gridOn=False)
+    ax0.tick_params(axis='y', which='minor', direction='out')
     ax0.yaxis.set_ticklabels([], minor=True)
     
     ax0.set_axisbelow(True)
@@ -601,6 +602,12 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     ax1.tick_params(axis='y', which='minor', direction='out', gridOn=False)
     ax1.yaxis.set_ticklabels([], minor=True)
     
+    #----------------------------------------------------------------- GRID ----
+    
+#    ax0.grid(axis='y', color=[0.5, 0.5, 0.5], linestyle=':', linewidth=1,
+#             dashes=[1, 5])
+#    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-', linewidth=0.5)
+
     #------------------------------------------------------ SET AXIS RANGE ----- 
 
     ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
@@ -639,10 +646,10 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     ax1.errorbar(XPOS, TNORM, yerr=TSTD, color='red', fmt='o', ecolor='black',
                  capthick=1.2, elinewidth=1.2, clip_on=True, zorder=100)
                  
-    ax1.text(0.01, 0.95, 
+    ax1.text(0.02, 0.95, 
              u'Mean Annual Air Temperature = %0.1f °C' % np.mean(TNORM[1:-1]),
              fontsize=12, verticalalignment='bottom', transform=ax1.transAxes)
-    ax1.text(0.01, 0.9,
+    ax1.text(0.02, 0.89,
              u'Mean Annual Precipitation = %0.1f mm' % np.sum(PNORM),
              fontsize=12, verticalalignment='bottom', transform=ax1.transAxes)
              
@@ -653,8 +660,10 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
    
     labels = ['Air Temperature', 'Snow', 'Rain']
     
-    ax1.legend([h1_ax1, rec1, rec2], labels, loc=1,
-               numpoints=1, fontsize=10)
+    legend = ax1.legend([h1_ax1, rec1, rec2], labels, loc=[0.01, 0.7],
+                        numpoints=1, fontsize=12, borderaxespad=0.)
+               
+    legend.draw_frame(False)
     
 #===============================================================================    
 def calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN):
@@ -709,7 +718,7 @@ def calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN):
     return TNORM, PNORM, RNORM, TSTD
 
 if __name__ == '__main__':
-    
+#    plt.rc('font',family='Arial')
 #    global label_font_size
 #    label_font_size = 14
 #    
@@ -730,8 +739,8 @@ if __name__ == '__main__':
     instance_1 = WeatherAvgGraph()
             
 #    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
-    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
-#    fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
+#    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
+    fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
     
     instance_1.generate_graph(fmeteo)
     
