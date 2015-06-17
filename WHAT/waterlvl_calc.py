@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014 Jean-Sebastien Gosselin
+Copyright 2014-2015 Jean-Sebastien Gosselin
 
 email: jnsebgosselin@gmail.com
 
@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from sys import argv
 from time import clock
+import csv
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -73,11 +74,12 @@ class WLCalc(QtGui.QWidget):
         super(WLCalc, self).__init__(parent)
 
         self.initUI()
-#        self.initUI_weather_normals()
         self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
         self.fig_MRC_widget.mpl_connect('motion_notify_event', self.mouse_vguide)
               
     def initUI(self):
+        
+        #--------------------------------------------------- INIT VARIABLES ----
         
         iconDB = db.icons()
         StyleDB = db.styleUI()
@@ -88,6 +90,21 @@ class WLCalc(QtGui.QWidget):
         self.peak_memory = [np.array([]).astype(int)]
         self.time = []
         self.water_lvl = []
+        
+        #---- load soil column info ----
+        
+        self.zlayer = np.array([]).astype(float)
+        self.Sy = np.array([]).astype(float)
+        
+        filename = "Files4testing/PO07.soil"
+        reader = open(filename,'rb')
+        reader = csv.reader(reader, delimiter="\t")
+        reader = np.array(list(reader))        
+       
+        self.zlayer = np.array(reader[:, 0]).astype(float)
+        self.SoilType = np.array(reader[:, 1]).astype(str)
+        self.Sy = np.array(reader[:, 2]).astype(float)
+        self.color = np.array(reader[:, 3]).astype(str)
         
         #---------------------------------------------------- FIGURE CANVAS ----
         
@@ -187,6 +204,13 @@ class WLCalc(QtGui.QWidget):
         self.btn_Waterlvl_lineStyle.setToolTip(ttipDB.btn_Waterlvl_lineStyle)
         self.btn_Waterlvl_lineStyle.setFocusPolicy(QtCore.Qt.NoFocus)
         self.btn_Waterlvl_lineStyle.setIconSize(StyleDB.iconSize)
+        
+        self.btn_strati = QtGui.QToolButton()
+        self.btn_strati.setAutoRaise(True)
+        self.btn_strati.setIcon(iconDB.stratigraphy)
+#        self.btn_strati.setToolTip(ttipDB.btn_Waterlvl_lineStyle)
+        self.btn_strati.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_strati.setIconSize(StyleDB.iconSize)
                         
         separator1 = QtGui.QFrame()
         separator1.setFrameStyle(StyleDB.VLine)
@@ -229,12 +253,12 @@ class WLCalc(QtGui.QWidget):
         subgrid_toolbar.addWidget(separator4, row, col)
         col += 1
         subgrid_toolbar.addWidget(self.btn_Waterlvl_lineStyle, row, col)
-        
+        col += 1
+        subgrid_toolbar.addWidget(self.btn_strati, row, col)
+                
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         subgrid_toolbar.setColumnStretch(col+1, 500)
-        
-        
                         
         toolbar_widget.setLayout(subgrid_toolbar)
         
@@ -309,6 +333,7 @@ class WLCalc(QtGui.QWidget):
         self.btn_MRCalc.clicked.connect(self.plot_MRC)
         self.btn_Waterlvl_lineStyle.clicked.connect(
                                                  self.change_waterlvl_lineStyle)
+        self.btn_strati.clicked.connect(self.display_soil_layer)
         
     def emit_error_message(self, error_text):
         
@@ -322,16 +347,16 @@ class WLCalc(QtGui.QWidget):
             self.emit_error_message(
             '''<b>Please select a valid Water Level Data File first.</b>''')
             return
+            
+        if len(self.peak_indx) == 0:
+             print 'No extremum selected'
+             return
         
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
         A, B, hp, obj = mrc_calc(self.time, self.water_lvl, self.peak_indx, 
-                                 self.MRC_type.currentIndex(),
-                                 self.MRC_ObjFnType.currentIndex())
-                                 
-#        self.results_AB = NewFig(A, B)
-#        self.results_AB.show()
-        
+                                 self.MRC_type.currentIndex())
+
         a = np.mean(A)
         b = np.mean(B)
         txt = 'dh/dt (mm/d) = -%0.2f * h + %0.2f' % (a*1000, b*1000)
@@ -553,22 +578,10 @@ class WLCalc(QtGui.QWidget):
 #        ax1.patch.set_visible(False)
         
         #----------------------------------------------------------- XTICKS ---- 
-    
-#        Xmin0 = 0
-#        Xmax0 = 12.001
         
         self.ax0.xaxis.set_ticks_position('bottom')
         self.ax0.tick_params(axis='x',direction='out', gridOn=True)
-#        ax0.xaxis.set_ticklabels([])
-#        ax0.set_xticks(np.arange(Xmin0, Xmax0))
-        
-#        ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
-#        ax0.tick_params(axis='x', which='minor', direction='out', gridOn=False,
-#                        length=0,)
-#        ax0.xaxis.set_ticklabels(month_names, minor=True)
-        
-#        ax1.tick_params(axis='x', which='both', bottom='off', top='off',
-#                        labelbottom='off'
+
         #----------------------------------------------------------- YTICKS ----
         
         self.ax0.yaxis.set_ticks_position('left')
@@ -593,12 +606,6 @@ class WLCalc(QtGui.QWidget):
                             verticalalignment='top', color='black')
         self.ax0.set_xlabel('Time (days)', fontsize=14, labelpad=25,
                             verticalalignment='bottom', color='black')
-#    ax0.yaxis.set_label_coords(-0.09, 0.5)
-#    
-#    ax1.set_ylabel(u'Monthly Mean Air Temperature (°C)', color='red',
-#                   fontsize=label_font_size, verticalalignment='bottom',
-#                   rotation=270)
-#    ax1.yaxis.set_label_coords(1.09, 0.5)
 
     #------------------------------------------------------------- PLOTTING ----
     
@@ -633,14 +640,68 @@ class WLCalc(QtGui.QWidget):
         
         self.isGraphExists = True
         
+    def display_soil_layer(self):
+        
+        if self.isGraphExists == False:
+            print 'Graph is empty'            
+            return
+            
+        if not self.btn_strati.autoRaise():
+            
+            self.btn_strati.setAutoRaise(True)
+            for i in range(len(self.layers)):
+                self.layers[i].remove()
+                self.whitelines[i].remove()
+                
+            self.fig_MRC_widget.draw()
+            
+        else:
+            
+            self.btn_strati.setAutoRaise(False)
+            
+       
+            #---- define colors ----
+            
+#            dark = 255./255
+#            mid = 240./255
+#            light = 225./255
+            
+#            color = [[dark,  light, light],
+#                     [dark,  mid,   light],
+#                     [dark,  dark,  light],
+#                     [mid,   dark,  light],
+#                     [light, dark,  light]]
+
+            self.layers = [0] * len(self.zlayer)
+            self.whitelines = [0] * len(self.zlayer)
+            print self.whitelines
+            up = 0            
+            for i in range(len(self.zlayer)):
+                            
+                down = self.zlayer[i]
+                
+                self.layers[i] = self.ax0.fill_between([0, 99999], up, down,
+                                                       color="0.85",
+                                                       zorder=0)
+                                                       
+                self.whitelines[i], = self.ax0.plot([0, 99999], [down, down],
+                                                   color='white',
+                                                   linewidth=3)   
+                                                   
+#                self.layers[i] = self.ax0.fill_between([0, 99999], up, down,
+#                                                       color=color[i],
+#                                                       zorder=0)
+                up = down
+                
+            self.fig_MRC_widget.draw()
+                
+        
     def change_waterlvl_lineStyle(self):
         
         if self.isGraphExists == False:
             print 'Graph is empty'            
             return
             
-        print 'coucou'
-        
         if self.btn_Waterlvl_lineStyle.autoRaise():
             
             self.btn_Waterlvl_lineStyle.setAutoRaise(False)
@@ -1048,21 +1109,21 @@ def local_extrema(x, Deltan):
     
 
 #===============================================================================
-def mrc_calc(t, h, ipeak, MRC_type=2, MRC_ObjFnType=1):
+def mrc_calc(t, h, ipeak, MRCTYPE=1):
     """
+    Calculate the equation parameter of the Master Recession Curve (MRC) of the
+    aquifer from the water level time series.
     
     ---- INPUT ----
+    h : water level time series in mbgs
+    t : time in days
+    ipeak: indices where the maxima and minima are located in h
     
-    MRC_type: MRC equation type:    
+    MRCTYPE: MRC equation type    
     
-      MODE = 0 -> linear (dh/dt = b)
-      MODE = 1 -> exponential (dh/dt = -a*h + b)
-      MODE = 2 -> exponential (dh/dt = -a*h + b) | Solved with Gauss-Newton
+             MODE = 0 -> linear (dh/dt = b)
+             MODE = 1 -> exponential (dh/dt = -a*h + b)
     
-    MRC_ObjFnType: Objective function used for the regression
-    
-      REGMOD = 0 -> RMSE
-      REGMOD = 1 -> MAE
     """
 #===============================================================================
    
@@ -1082,199 +1143,168 @@ def mrc_calc(t, h, ipeak, MRC_type=2, MRC_ObjFnType=1):
         return
     
     print; print '---- MRC calculation started ----'; print
-    print 'MRC_type =', ['Linear', 'Exponential', 'EXPONENTIAL (alternate)'][MRC_type]
-    print 'ObjFnType =', ['RMSE', 'MAE'][MRC_ObjFnType]
+    print 'MRCTYPE =', ['Linear', 'Exponential'][MRCTYPE]
+    print
     
-    nsegmnt = len(minpeak)
-    nItmax = 100
+    # nsegmnt = len(minpeak)
+        
+    #--------------------------------------------------------- Optimization ----
+
+    tstart = clock()
     
-    #---------------------------------------------------- LINEAR: dh/dt = B ----
-        
-    if MRC_type == 0:
-        
-        dt = np.diff(t)
-        B = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
-        A = 0.
-        
-        OPSTP_B = 0.1   # Optimisation step
-        ObjFn_B = 10**6  # Force divergence for first iteration
-        nIt = 0
-        while abs(OPSTP_B) > 1e-5:
-                
-            #---- Syntheric Hydrograph ----
-                        
-            dhp = B * dt
-            
-            hp = np.ones(len(h)) * np.nan
-            for i in range(nsegmnt):
-                hp[maxpeak[i]] = h[maxpeak[i]]
-                
-                for j in range(minpeak[i] - maxpeak[i]):
-                    hp[maxpeak[i]+j+1] = hp[maxpeak[i]+j] + dhp[maxpeak[i]+j]
+    # If MRCTYPE is 0, then the parameter A is kept to a value of 0 throughout
+    # the entire optimization process and only paramter B is optimized.
+    
+    dt = np.diff(t)
+    tolmax = 0.001
+    
+    A = 0.
+    B = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
+    
+    hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
+    tindx = np.where(~np.isnan(hp))
+    
+    RMSE = (np.mean((h[tindx] - hp[tindx])**2))**0.5
+    print('A = %0.3f ; B= %0.3f; RMSE = %f' % (A, B, RMSE))
+    
+    # NP: number of parameters
+    if MRCTYPE == 0:
+        NP = 1 
+    elif MRCTYPE ==1:
+        NP = 2
+    
+    while 1:
                     
-            indx = np.where(~np.isnan(hp))
+        #---- Calculating Jacobian Numerically ---- 
+        
+        hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
+        XB = (hdB[tindx] - hp[tindx]) / tolmax
+        
+        if MRCTYPE == 1:
+            hdA = calc_synth_hydrograph(A + tolmax, B, h, dt, ipeak)
+            XA = (hdA[tindx] - hp[tindx]) / tolmax
             
-            #---- COMPUTE OBJ. FUNC. ----
-            
-            if MRC_ObjFnType == 0:  # RMSE
-                ObjFn = (np.mean((h[indx] - hp[indx])**2))**0.5
-            elif MRC_ObjFnType == 2: # abs(ME)
-                ObjFn = np.abs(np.mean((h[indx] - hp[indx])))
-            else:  # MAE
-                ObjFn = np.mean(np.abs(h[indx] - hp[indx]))
-            
-            if ObjFn_B < ObjFn:
-                OPSTP_B = -OPSTP_B / 10.
- 
-            ObjFn_B = np.copy(ObjFn)
-            B = B + OPSTP_B
-                        
-    #-------------------------------------- EXPONENTIAL: dh/dt = -A * h + B ----  
-    
-    # Solved with a modified Gauss-Newton method (Hill and Tiedeman, 2007)
-    
-    elif MRC_type == 1:
-                
-        tstart = clock()
-        
-        #---- Initiating optimization ----
-        
-        dt = np.diff(t)
-        
-        Aold = 0.
-        Bold = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
-        
-        hp_old = calc_synth_hydrograph(Aold, Bold, h, dt, ipeak)
-        tindx = np.where(~np.isnan(hp_old))
-
-        RMSEold = (np.mean((h[tindx] - hp_old[tindx])**2))**0.5
-        print('A = %0.3f ; B= %0.3f; RMSE = %f' % (Aold, Bold, RMSEold))
-    
-        Anew = 0.001
-        Bnew = Bold * 1.1
-        
-        hp_new = calc_synth_hydrograph(Anew, Bnew, h, dt, ipeak)
-        
-        RMSEnew = (np.mean((h[tindx] - hp_new[tindx])**2))**0.5
-        print('A = %0.3f ; B= %0.3f; RMSE = %f' % (Anew, Bnew, RMSEnew))
-        
-        NP = 2 # number of parameters
-        
-        while 1:
-                        
-            #---- Calculating Jacobian ---- 
-        
-            hdA = calc_synth_hydrograph(Anew, Bold, h, dt, ipeak)
-                                     
-            hdB = calc_synth_hydrograph(Aold, Bnew, h, dt, ipeak)
-                                           
-            XA = (hdA[tindx] - hp_old[tindx]) / (Anew - Aold)
-            XB = (hdB[tindx] - hp_old[tindx]) / (Bnew - Bold)
             Xt  = np.vstack((XA, XB))
+        elif MRCTYPE == 0:
+            Xt = XB        
+        
+        X = Xt.transpose()
+                          
+        #---- Solving Linear System ----
             
-            X = Xt.transpose()
-                              
-            #---- Solving Linear System ----
-                
-            dh = h[tindx] - hp_new[tindx]
-            XtX = np.dot(Xt, X)                
-            Xtdh = np.dot(Xt, dh)
-            
-            #---- Scaling matrix----
-            
-            C = np.dot(Xt, X) * np.identity(NP)
-            for j in range(NP):
-                C[j, j] = C[j, j] ** -0.5
-            
-            Ct = C.transpose()
-            Cinv = np.linalg.inv(C)
-            
-            #---- Constructing right hand side ----
+        dh = h[tindx] - hp[tindx]
+        XtX = np.dot(Xt, X)                
+        Xtdh = np.dot(Xt, dh)
 
-            CtXtdh = np.dot(Ct, Xtdh)
-            
-            #---- Constructing left hand side ----
-            
-            CtXtX = np.dot(Ct, XtX)
-            CtXtXC = np.dot(CtXtX, C)
-            
-            m = 0
-            while 1: # loop for the Marquardt parameter (m)
-                
-                #---- Constructing left hand side (continued) ----
-                
-                CtXtXCImr = CtXtXC + np.identity(NP) * m
-                CtXtXCImrCinv = np.dot(CtXtXCImr, Cinv)
-                            
-                #---- Calculating parameter change vector ----
+        #---- Scaling ----
         
-                dr = np.linalg.tensorsolve(CtXtXCImrCinv, CtXtdh, axes=None)
+        C = np.dot(Xt, X) * np.identity(NP)
+        for j in range(NP):
+            C[j, j] = C[j, j] ** -0.5
         
-                #---- Checking Marquardt condition ----
-                
-                NUM = np.dot(dr.transpose(), CtXtdh)
-                DEN1 = np.dot(dr.transpose(), dr)
-                DEN2 = np.dot(CtXtdh.transpose(), CtXtdh)
-                
-                cos = NUM / (DEN1 * DEN2)**0.5
-                if np.abs(cos) < 0.08:
-                    print(u'Cosθ = %0.3f' % cos)
-                    m = 1.5 * m + 0.001                
-                else:
-                    print(u'Cosθ = %0.3f' % cos)
-                    break
-                      
-            #---- Updating old parameter values ----
+        Ct = C.transpose()
+        Cinv = np.linalg.inv(C)
         
-            Aold = np.copy(Anew)
-            Bold = np.copy(Bnew)
-            hp_old = np.copy(hp_new)
-            RMSEold = np.copy(RMSEnew)
-            
-            while 1: # Loop for Damping (to prevent overshoot)
-                
-                #---- Calculating new paramter values ----
-                
-                Anew = Aold + dr[0]
-                Bnew = Bold + dr[1]
-            
-                #---- Applying parameter bound-constraints ----
-            
-                Anew = np.max((Anew, 0)) # lower bound
-            
-                #---- Solving for new parameter values ----
-            
-                hp_new = calc_synth_hydrograph(Anew, Bnew, h, dt, ipeak)
-                RMSEnew = (np.mean((h[tindx] - hp_new[tindx])**2))**0.5
-                
-                if RMSEnew > RMSEold:
-                    dr = dr * 0.5
-                else:
-                    break
-            
-            print('A = %0.3f ; B= %0.3f; RMSE = %f' % (Anew, Bnew, RMSEnew))
+        #---- Constructing right hand side ----
+
+        CtXtdh = np.dot(Ct, Xtdh)
         
-            #---- Checking tolerance ----
+        #---- Constructing left hand side ----
         
-            tolA = np.abs(Anew - Aold)
-            tolB = np.abs(Bnew - Bold)
+        CtXtX = np.dot(Ct, XtX)
+        CtXtXC = np.dot(CtXtX, C)
+        
+        m = 0
+        while 1: # loop for the Marquardt parameter (m)
             
-            tol = np.max((tolA, tolB))
+            #---- Constructing left hand side (continued) ----
             
-            if tol < 0.001:
+            CtXtXCImr = CtXtXC + np.identity(NP) * m
+            CtXtXCImrCinv = np.dot(CtXtXCImr, Cinv)
+                        
+            #---- Calculating parameter change vector ----
+    
+            dr = np.linalg.tensorsolve(CtXtXCImrCinv, CtXtdh, axes=None)
+    
+            #---- Checking Marquardt condition ----
+            
+            NUM = np.dot(dr.transpose(), CtXtdh)
+            DEN1 = np.dot(dr.transpose(), dr)
+            DEN2 = np.dot(CtXtdh.transpose(), CtXtdh)
+            
+            cos = NUM / (DEN1 * DEN2)**0.5
+            if np.abs(cos) < 0.08:
+                m = 1.5 * m + 0.001                
+            else:
                 break
         
-        tend = clock()
-        print
-        print('TIME = %0.3f sec'%(tend-tstart))
+#        print(dr)
+#        print(CtXtdh)
+#        print(CtXtXCImrCinv)
+        
+        #---- Storing old parameter values ----
+        
+        Aold = np.copy(A)
+        Bold = np.copy(B)
+        RMSEold = np.copy(RMSE)
+       
+        while 1: # Loop for Damping (to prevent overshoot)
+            
+            #---- Calculating new paramter values ----
+            
+            if MRCTYPE == 1:
+                A = Aold + dr[0]
+                B = Bold + dr[1]
+            if MRCTYPE == 0:
+                B = Bold + dr[0]
+        
+            #---- Applying parameter bound-constraints ----
+            
+            A = np.max((A, 0)) # lower bound
+        
+            #---- Solving for new parameter values ----
+        
+            hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
+            RMSE = (np.mean((h[tindx] - hp[tindx])**2))**0.5
+            
+            #---- Checking overshoot ----
+            
+            if (RMSE - RMSEold) > 0.001:
+                dr = dr * 0.5
+            else:
+                break
 
+        print(u'A = %0.3f ; B= %0.3f; RMSE = %f ; Cosθ = %0.3f' 
+              % (A, B, RMSE, cos))
+    
+        #---- Checking tolerance ----
+    
+        tolA = np.abs(A - Aold)
+        tolB = np.abs(B - Bold)
+        
+        tol = np.max((tolA, tolB))
+        
+        if tol < tolmax:
+            break
+    
+    tend = clock()
+    print
+    print('TIME = %0.3f sec'%(tend-tstart))
     print
     print '---- FIN ----'
     print
         
-    return Anew, Bnew, hp_new, RMSEnew
-    
+    return A, B, hp, RMSE
+
+#===============================================================================    
 def calc_synth_hydrograph(A, B, h, dt, ipeak):
+    """
+    Compute synthetic hydrograph with a time-forward implicit numerical scheme
+    during period where the water level recedes identified by the "ipeak"
+    pointers.
+    """    
+    
+#===============================================================================
     
     maxpeak = ipeak[:-1:2]
     minpeak = ipeak[1::2]
@@ -1298,36 +1328,39 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
             hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
     
     return hp
-    
-class NewFig(QtGui.QWidget):
-            
-    def __init__(self, A, B, parent=None):
-        super(NewFig, self).__init__(parent)
-            
-        self.fig = plt.figure()        
-#        fig.set_size_inches(8.5, 5)        
-#        self.fig_MRC.patch.set_facecolor('white')
-        self.fig_MRC_widget = FigureCanvasQTAgg(self.fig)
-        self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
+
+#===============================================================================    
+def mrc2rechg():
+    """Calculate groundwater recharge from the Master Recession Curve 
+       Equation, the water level time series and the soil column description."""
+#===============================================================================
+    pass
+
+##===============================================================================    
+#class NewFig(QtGui.QWidget):
+##===============================================================================
+#            
+#    def __init__(self, A, B, parent=None):
+#        super(NewFig, self).__init__(parent)
+#            
+#        self.fig = plt.figure()        
+#        self.fig_MRC_widget = FigureCanvasQTAgg(self.fig)
+#        self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
+#        
+#        plt.plot(A, A, '.')
+#        
+#        grid = QtGui.QGridLayout()
+#       
+#        row = 0
+#        col = 0
+#        grid.addWidget(self.fig_MRC_widget, row, col)
+#        row += 1
+#        grid.addWidget(self.toolbar, row, col)
+#        
+#        self.setLayout(grid)
+#        
+#        self.fig_MRC_widget.draw() 
         
-        plt.plot(A, A, '.')
-        
-#        h = np.arange(0, 2.5)
-#        for i in range(len(A)):
-#            dxdt = -A[i] * h + B[i]
-#            plt.plot(dxdt, h, '-')
-        
-        grid = QtGui.QGridLayout()
-       
-        row = 0
-        col = 0
-        grid.addWidget(self.fig_MRC_widget, row, col)
-        row += 1
-        grid.addWidget(self.toolbar, row, col)
-        
-        self.setLayout(grid)
-        
-        self.fig_MRC_widget.draw() 
                 
 if __name__ == '__main__':
     
@@ -1354,13 +1387,13 @@ if __name__ == '__main__':
     instance_1.widget_MRCparam.show()
     
     fwaterlvl = 'Files4testing/PO01.xls'
-#    
+    
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
-#
+
     water_lvl = waterLvlObj.lvl
     water_lvl = water_lvl[400:1000]
-#
+
     time = waterLvlObj.time
     time = time[400:1000]
     
@@ -1368,8 +1401,7 @@ if __name__ == '__main__':
     instance_1.time = time
     
     instance_1.plot_water_levels()
-#    
-        
+       
     app.exec_() 
     
 #    # http://stackoverflow.com/questions/15721094
@@ -1411,3 +1443,4 @@ if __name__ == '__main__':
 #    n_j = np.abs(n_j).astype(int)  
 #    
 #    plt.plot(tfilt[n_j], xfilt[n_j], 'or' )
+    
