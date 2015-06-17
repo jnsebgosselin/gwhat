@@ -83,6 +83,8 @@ class icons():
         self.findPeak2 = QIcon('Icons/find_peak2.png')
         self.showDataDots = QIcon('Icons/show_datadots.png')
         
+        self.stratigraphy = QIcon('Icons/stratigraphy.png')
+        
 class tooltips():
     
     def __init__(self, language): #================================ ENGLISH ====
