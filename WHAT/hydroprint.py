@@ -643,7 +643,7 @@ class Hydrograph():
             self.l1_ax2.set_data(tfilt, wlfilt)
             self.l1_ax2.set_label('WL Trend Line')
                           
-            self.ax2.set_data(time, water_lvl)
+            self.l2_ax2.set_data(time, water_lvl)
                           
         else:
             
@@ -1073,8 +1073,8 @@ class WaterlvlData():
         self.time = []
         self.lvl = []
         self.name_well = []
-        self.well_info = []
-        
+        self.well_info = [] # html table to display in the UI
+                
         self.WLmes = []
         self.TIMEmes = []
         
@@ -1082,7 +1082,16 @@ class WaterlvlData():
         self.LON = []
         self.ALT = []
         
+        self.wlvlFilename = []
+        self.soilFilename = []
+        
     def load(self, fname):
+        
+        self.wlvlFilename = fname
+        
+        fileName, fileExtension = path.splitext(fname)
+        
+        self.soilFilename = fileName + '.sol'
         
         #---- Open First Sheet ----
         
@@ -1115,8 +1124,7 @@ class WaterlvlData():
         try:
 
             self.time = self.time[start_rowx:]
-            self.time = np.array(self.time).astype(float)
-        
+            self.time = np.array(self.time).astype(float)        
         
             header = sheet.col_values(1, start_rowx=0, end_rowx=5)
             self.name_well = header[0]
@@ -1360,12 +1368,11 @@ if __name__ == '__main__':
             
     hydrograph2display = Hydrograph()
     hydrograph2display.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
-    hydrograph2display.meteoOn = 1 # 0 -> no meteo ; 1 -> meteo
     hydrograph2display.gridLines = 2
     
     hydrograph2display.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph2display.title_text = "Title of the Graph"
-    hydrograph2display.meteoOn = True
+    hydrograph2display.meteoOn = True # 0 -> no meteo ; 1 -> meteo
     
     hydrograph2display.set_waterLvlObj(waterLvlObj)
     hydrograph2display.best_fit_waterlvl()

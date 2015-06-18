@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 from sys import argv
 from time import clock
 import csv
+from os import path
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -55,7 +56,8 @@ class Tooltips():
         self.delPeak = ('Toggle edit mode to manually remove extremums ' +
                         'from the graph')
         self.pan = 'Pan axes with left mouse, zoom with right'
-        self.MRCalc = 'Calculate the Master Recession Curve (MRC)'
+        self.MRCalc = ('Calculate the Master Recession Curve (MRC) for the ' +
+                       'selected time pertiods')
         self.find_peak = 'Automated search for local extremum (EXPERIMENTAL FEATURE)'
         
         self.toggle_layout_mode = ('Toggle between layout and computation ' +
@@ -63,6 +65,9 @@ class Tooltips():
                                    
         self.btn_Waterlvl_lineStyle = ('Show water lvl data as dots instead ' +
                                        'of a continuous line')
+                                       
+        self.btn_strati = ('Toggle on and off the display of the soil' +
+                           ' stratigraphic layers')
         
         if language == 'French': #--------------------------------- FRENCH -----
             
@@ -75,7 +80,8 @@ class WLCalc(QtGui.QWidget):
 
         self.initUI()
         self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
-        self.fig_MRC_widget.mpl_connect('motion_notify_event', self.mouse_vguide)
+        self.fig_MRC_widget.mpl_connect('motion_notify_event',
+                                        self.mouse_vguide)
               
     def initUI(self):
         
@@ -90,22 +96,15 @@ class WLCalc(QtGui.QWidget):
         self.peak_memory = [np.array([]).astype(int)]
         self.time = []
         self.water_lvl = []
+        self.soilFilename = []
         
         #---- load soil column info ----
         
         self.zlayer = np.array([]).astype(float)
         self.Sy = np.array([]).astype(float)
-        
-        filename = "Files4testing/PO07.soil"
-        reader = open(filename,'rb')
-        reader = csv.reader(reader, delimiter="\t")
-        reader = np.array(list(reader))        
+        self.soilColor = np.array([]).astype(str)
+        self.soilName = np.array([]).astype(str)
        
-        self.zlayer = np.array(reader[:, 0]).astype(float)
-        self.SoilType = np.array(reader[:, 1]).astype(str)
-        self.Sy = np.array(reader[:, 2]).astype(float)
-        self.color = np.array(reader[:, 3]).astype(str)
-        
         #---------------------------------------------------- FIGURE CANVAS ----
         
         self.setWindowTitle('Master Recession Curve Estimation')
@@ -208,7 +207,7 @@ class WLCalc(QtGui.QWidget):
         self.btn_strati = QtGui.QToolButton()
         self.btn_strati.setAutoRaise(True)
         self.btn_strati.setIcon(iconDB.stratigraphy)
-#        self.btn_strati.setToolTip(ttipDB.btn_Waterlvl_lineStyle)
+        self.btn_strati.setToolTip(ttipDB.btn_strati)
         self.btn_strati.setFocusPolicy(QtCore.Qt.NoFocus)
         self.btn_strati.setIconSize(StyleDB.iconSize)
                         
@@ -333,7 +332,7 @@ class WLCalc(QtGui.QWidget):
         self.btn_MRCalc.clicked.connect(self.plot_MRC)
         self.btn_Waterlvl_lineStyle.clicked.connect(
                                                  self.change_waterlvl_lineStyle)
-        self.btn_strati.clicked.connect(self.display_soil_layer)
+        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
         
     def emit_error_message(self, error_text):
         
@@ -547,7 +546,7 @@ class WLCalc(QtGui.QWidget):
         fheight = fig.get_figheight()
         fwidth = fig.get_figwidth()
         
-        #---- Reset Values ----
+        #------------------------------------------------------------ RESET ----
         
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
@@ -569,14 +568,9 @@ class WLCalc(QtGui.QWidget):
         
         #---- Water Level (Host) ----
         
-#        self.ax0  = fig.add_axes([x0, y0, w, h], zorder=0)
         self.ax0  = fig.add_axes([x0, y0, w, h], zorder=0)
         self.ax0.patch.set_visible(False)
-        
-#        #---Peaks---
-#        ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=1)
-#        ax1.patch.set_visible(False)
-        
+       
         #----------------------------------------------------------- XTICKS ---- 
         
         self.ax0.xaxis.set_ticks_position('bottom')
@@ -607,7 +601,7 @@ class WLCalc(QtGui.QWidget):
         self.ax0.set_xlabel('Time (days)', fontsize=14, labelpad=25,
                             verticalalignment='bottom', color='black')
 
-    #------------------------------------------------------------- PLOTTING ----
+        #--------------------------------------------------------- PLOTTING ----
     
         #---- Water Levels ----
     
@@ -634,66 +628,104 @@ class WLCalc(QtGui.QWidget):
         self.h3_ax0, = self.ax0.plot([], [], color='red', clip_on=True,
                                      zorder=15, marker='None', linestyle='--')                          
         
-    #-------------------------------------------------------- UPDATE WIDGET ----
+        #---- Strati ----
+        
+        if not self.btn_strati.autoRaise():
+            self.display_soil_layer()
+            
+        #---------------------------------------------------- UPDATE WIDGET ----
 
         self.fig_MRC_widget.draw()
         
         self.isGraphExists = True
+    
+    def btn_strati_isClicked(self):
+        
+        #---- Checks ----
+        
+        if self.isGraphExists == False:
+            print('Graph is empty.')
+            self.btn_strati.setAutoRaise(True)
+            return
+        
+        #---- Attribute Action ----
+        
+        if self.btn_strati.autoRaise():
+            self.btn_strati.setAutoRaise(False)
+            self.display_soil_layer()
+        else:
+            self.btn_strati.setAutoRaise(True)
+            self.hide_soil_layer()        
+        
+    def hide_soil_layer(self):
+        
+        for i in range(len(self.zlayer)):
+            self.layers[i].remove()
+            self.stratLines[i].remove()
+        self.stratLines[i+1].remove()    
+        
+        self.fig_MRC_widget.draw()
         
     def display_soil_layer(self):
         
-        if self.isGraphExists == False:
-            print 'Graph is empty'            
+        #---- Check ----
+        
+        if not path.exists(self.soilFilename):
+            print('No ".sol" file found for this well.')
+            self.btn_strati.setAutoRaise(True)
             return
             
-        if not self.btn_strati.autoRaise():
-            
-            self.btn_strati.setAutoRaise(True)
-            for i in range(len(self.layers)):
-                self.layers[i].remove()
-                self.whitelines[i].remove()
+        #---- load soil column info ----
+    
+        reader = open(self.soilFilename,'rb')
+        reader = csv.reader(reader, delimiter="\t")
+        reader = list(reader)
+   
+        NLayer = len(reader)
+                           
+        self.zlayer = np.empty(NLayer).astype(float)
+        self.soilName = np.empty(NLayer).astype(str)
+        self.Sy = np.empty(NLayer).astype(float)
+        self.soilColor = np.empty(NLayer).astype(str)
+        
+        for i in range(NLayer):
+            self.zlayer[i] = reader[i][0]
+            self.soilName[i] = reader[i][1]
+            self.Sy[i] = reader[i][2]
+            try:
+                self.soilColor[i] = reader[i][3]
+                print reader[i][3]
+            except:
+                self.soilColor[i] = '#FFFFFF'                
                 
-            self.fig_MRC_widget.draw()
-            
-        else:
-            
-            self.btn_strati.setAutoRaise(False)
-            
-       
-            #---- define colors ----
-            
-#            dark = 255./255
-#            mid = 240./255
-#            light = 225./255
-            
-#            color = [[dark,  light, light],
-#                     [dark,  mid,   light],
-#                     [dark,  dark,  light],
-#                     [mid,   dark,  light],
-#                     [light, dark,  light]]
+        print self.soilColor
 
-            self.layers = [0] * len(self.zlayer)
-            self.whitelines = [0] * len(self.zlayer)
-            print self.whitelines
-            up = 0            
-            for i in range(len(self.zlayer)):
-                            
-                down = self.zlayer[i]
-                
-                self.layers[i] = self.ax0.fill_between([0, 99999], up, down,
-                                                       color="0.85",
-                                                       zorder=0)
-                                                       
-                self.whitelines[i], = self.ax0.plot([0, 99999], [down, down],
-                                                   color='white',
-                                                   linewidth=3)   
+        #---- plot layers and lines ----
+
+        self.layers = [0] * len(self.zlayer)
+        self.stratLines = [0] * (len(self.zlayer)+1)
+
+        up = 0
+        self.stratLines[0], = self.ax0.plot([0, 99999], [up, up],
+                                            color="black",
+                                            linewidth=1)
+        for i in range(len(self.zlayer)):
+                        
+            down = self.zlayer[i]
                                                    
-#                self.layers[i] = self.ax0.fill_between([0, 99999], up, down,
-#                                                       color=color[i],
-#                                                       zorder=0)
-                up = down
-                
-            self.fig_MRC_widget.draw()
+            self.stratLines[i+1], = self.ax0.plot([0, 99999], [down, down],
+                                                  color="black",
+                                                  linewidth=1)
+            try:                                                  
+                self.layers[i] = self.ax0.fill_between(
+                    [0, 99999], up, down, color=self.soilColor[i], zorder=0)
+            except:
+                self.layers[i] = self.ax0.fill_between(
+                    [0, 99999], up, down, color='#FFFFFF', zorder=0)
+
+            up = down
+            
+        self.fig_MRC_widget.draw()
                 
         
     def change_waterlvl_lineStyle(self):
@@ -805,7 +837,7 @@ class WLCalc(QtGui.QWidget):
         #------------------------------------------------------- ADD A PEAK ----        
 
         elif x != None and y != None and not self.btn_editPeak.autoRaise():
-#            print(event.xdata, event.ydata)
+        # print(event.xdata, event.ydata)
             
             xclic = event.xdata
         
@@ -860,6 +892,7 @@ def local_extrema(x, Deltan):
           Automatic Trend Estimation, Springer 2012.
           The positions of the maxima are positive and those of the minima
           are negative.
+          
     kadd = n_j(kadd) are the local extrema with time scale smaller than Deltan
            which are added to the partition such that an alternation of maxima
            and minima is obtained.    
@@ -1111,8 +1144,8 @@ def local_extrema(x, Deltan):
 #===============================================================================
 def mrc_calc(t, h, ipeak, MRCTYPE=1):
     """
-    Calculate the equation parameter of the Master Recession Curve (MRC) of the
-    aquifer from the water level time series.
+    Calculate the equation parameters of the Master Recession Curve (MRC) of
+    the aquifer from the water level time series.
     
     ---- INPUT ----
     h : water level time series in mbgs
@@ -1330,7 +1363,7 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
     return hp
 
 #===============================================================================    
-def mrc2rechg():
+def mrc2rechg(t, h, A, B):
     """Calculate groundwater recharge from the Master Recession Curve 
        Equation, the water level time series and the soil column description."""
 #===============================================================================
@@ -1364,22 +1397,8 @@ def mrc2rechg():
                 
 if __name__ == '__main__':
     
-    import xlrd
-    from hydroprint import WaterlvlData, filt_data
+    from hydroprint import WaterlvlData
     from meteo import MeteoObj
-#    plt.close('all')
-#    
-#    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-#    fwaterlvl = 'Files4testing/PO16A.xls'
-#    
-#    waterLvlObj = WaterlvlData()
-#    waterLvlObj.load(fwaterlvl)
-#    
-#    x = waterLvlObj.lvl
-#    x = 100-x[:500]
-#    
-#    t = waterLvlObj.time
-#    t = t[:500]
     
     app = QtGui.QApplication(argv)   
     instance_1 = WLCalc()
@@ -1397,50 +1416,12 @@ if __name__ == '__main__':
     time = waterLvlObj.time
     time = time[400:1000]
     
+    #---- Push info to WLcalc instance ----
+    
     instance_1.water_lvl = water_lvl
     instance_1.time = time
+    instance_1.soilFilename = waterLvlObj.soilFilename
     
     instance_1.plot_water_levels()
        
     app.exec_() 
-    
-#    # http://stackoverflow.com/questions/15721094
-#    fig = plt.figure()
-#    plt.plot(t, x)
-#    def onclick(event):
-#        if event.xdata != None and event.ydata != None:
-#            print(event.xdata, event.ydata)
-#            plt.plot(event.xdata, event.ydata, 'or')
-#    cid = fig.canvas.mpl_connect('button_press_event', onclick)
-
-#    plt.show()
-    
-    
-#    # ---- Without smoothing ----
-#    
-#    plt.figure()
-#    plt.plot(x)
-#    plt.plot(x, '.')
-#    
-#    n_j, n_add = local_extrema(x, 4 * 2)
-#    print n_j
-#    
-#    n_j = np.abs(n_j).astype(int)  
-#    n_add = np.abs(n_add).astype(int) 
-#    
-#    plt.plot(n_j, x[n_j], 'or' )
-#    
-#    # ---- With smoothing ----
-#    
-#    tfilt, xfilt = filt_data(t, x, 4)
-#    
-#    plt.figure()
-#    plt.plot(t, x)
-#    plt.plot(tfilt, xfilt, 'r')
-#    
-#    n_j, _ = local_extrema(xfilt, 4 * 3)
-#    
-#    n_j = np.abs(n_j).astype(int)  
-#    
-#    plt.plot(tfilt[n_j], xfilt[n_j], 'or' )
-    

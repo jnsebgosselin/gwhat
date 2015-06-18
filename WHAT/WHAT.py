@@ -1523,6 +1523,8 @@ class TabHydrograph(QtGui.QWidget):
         
         self.waterlvl_calc.time = self.waterlvl_data.time
         self.waterlvl_calc.water_lvl = self.waterlvl_data.lvl
+        self.waterlvl_calc.soilFilename = self.waterlvl_data.soilFilename
+        
         self.waterlvl_calc.plot_water_levels() 
     
     def draw_hydrograph(self):
