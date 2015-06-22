@@ -470,7 +470,8 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     
     fig.clf()
     
-    label_font_size = 14
+    label_font_size = 16
+    
     labelDB = LabelDataBase('English')
     
     month_names = labelDB.month_names
@@ -503,13 +504,13 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     Xmax0 = 12.001
     
     ax0.xaxis.set_ticks_position('bottom')
-    ax0.tick_params(axis='x',direction='out', gridOn=False)
+    ax0.tick_params(axis='x',direction='out')
     ax0.xaxis.set_ticklabels([])
     ax0.set_xticks(np.arange(Xmin0, Xmax0))
     
     ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
     ax0.tick_params(axis='x', which='minor', direction='out', gridOn=False,
-                    length=0,)
+                    length=0, labelsize=13)
     ax0.xaxis.set_ticklabels(month_names, minor=True)
     
     ax1.tick_params(axis='x', which='both', bottom='off', top='off',
@@ -561,7 +562,7 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
 #    Ymax0 = 180 # In case there is a need to force the value
 #    Ymax1 = 25 ; Ymin1 = -20
     
-    reqheight = 0.12
+    reqheight = 0.15 # Height for yearly averages text on top of the graph.
     Ymax0 += (Ymax0 - Ymin0) * reqheight 
     Ymax1 += (Ymax1 - Ymin1) * reqheight
     
@@ -581,7 +582,8 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     
     yticks = np.arange(Ymin0, Ymax0 - (Ymax0 - Ymin0) * 0.1, Yscale0)
     ax0.set_yticks(yticks)
-    ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1])
+    ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1],
+                    labelsize=13)
     
     yticks_minor = np.arange(yticks[0], yticks[-1], 5)
     ax0.set_yticks(yticks_minor, minor=True)
@@ -595,7 +597,8 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     yticks1 = np.arange(Ymin1, Ymax1 - (Ymax1 - Ymin1) * 0.1 , Yscale1)    
     ax1.yaxis.set_ticks_position('right')
     ax1.set_yticks(yticks1)
-    ax1.tick_params(axis='y', direction='out', labelcolor=COLOR[0], gridOn=False)
+    ax1.tick_params(axis='y', direction='out', labelcolor=COLOR[0],
+                    labelsize=13)
     
     yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1/5.)
     ax1.set_yticks(yticks1_minor, minor=True)
@@ -646,12 +649,12 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
     ax1.errorbar(XPOS, TNORM, yerr=TSTD, color='red', fmt='o', ecolor='black',
                  capthick=1.2, elinewidth=1.2, clip_on=True, zorder=100)
                  
-    ax1.text(0.02, 0.95, 
+    ax1.text(0.02, 0.94, 
              u'Mean Annual Air Temperature = %0.1f °C' % np.mean(TNORM[1:-1]),
-             fontsize=12, verticalalignment='bottom', transform=ax1.transAxes)
-    ax1.text(0.02, 0.89,
+             fontsize=13, verticalalignment='bottom', transform=ax1.transAxes)
+    ax1.text(0.02, 0.88,
              u'Mean Annual Precipitation = %0.1f mm' % np.sum(PNORM),
-             fontsize=12, verticalalignment='bottom', transform=ax1.transAxes)
+             fontsize=13, verticalalignment='bottom', transform=ax1.transAxes)
              
 #------------------------------------------------------------------ LEGEND -----        
 
@@ -660,8 +663,8 @@ def plot_monthly_normals(fig, TNORM, PNORM, RNORM, TSTD,
    
     labels = ['Air Temperature', 'Snow', 'Rain']
     
-    legend = ax1.legend([h1_ax1, rec1, rec2], labels, loc=[0.01, 0.7],
-                        numpoints=1, fontsize=12, borderaxespad=0.)
+    legend = ax1.legend([h1_ax1, rec1, rec2], labels, loc=[0.01, 0.65],
+                        numpoints=1, fontsize=13, borderaxespad=0.)
                
     legend.draw_frame(False)
     
@@ -738,9 +741,9 @@ if __name__ == '__main__':
     app = QtGui.QApplication(argv)   
     instance_1 = WeatherAvgGraph()
             
-#    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
+    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
 #    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
-    fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
+#    fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
     
     instance_1.generate_graph(fmeteo)
     

@@ -83,7 +83,10 @@ class icons():
         self.findPeak2 = QIcon('Icons/find_peak2.png')
         self.showDataDots = QIcon('Icons/show_datadots.png')
         
+        #---- Recharge ----
+        
         self.stratigraphy = QIcon('Icons/stratigraphy.png')
+        self.mrc2rechg = QIcon('Icons/recharge.png')
         
 class tooltips():
     

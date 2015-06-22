@@ -68,6 +68,10 @@ class Tooltips():
                                        
         self.btn_strati = ('Toggle on and off the display of the soil' +
                            ' stratigraphic layers')
+                           
+        self.mrc2rechg = ('Compute recharge from the water level time series' +
+                          ' using the MRC calculated and the water-table' +
+                          ' fluctuation principle')
         
         if language == 'French': #--------------------------------- FRENCH -----
             
@@ -96,15 +100,16 @@ class WLCalc(QtGui.QWidget):
         self.peak_memory = [np.array([]).astype(int)]
         self.time = []
         self.water_lvl = []
+        
         self.soilFilename = []
+        
+        self.A = []
+        self.B = []
         
         #---- load soil column info ----
         
-        self.zlayer = np.array([]).astype(float)
-        self.Sy = np.array([]).astype(float)
-        self.soilColor = np.array([]).astype(str)
-        self.soilName = np.array([]).astype(str)
-       
+        self.SOILPROFIL = SoilProfil()
+        
         #---------------------------------------------------- FIGURE CANVAS ----
         
         self.setWindowTitle('Master Recession Curve Estimation')
@@ -197,6 +202,13 @@ class WLCalc(QtGui.QWidget):
         self.btn_MRCalc.setFocusPolicy(QtCore.Qt.NoFocus)
         self.btn_MRCalc.setIconSize(StyleDB.iconSize)
         
+        self.btn_mrc2rechg = QtGui.QToolButton()
+        self.btn_mrc2rechg.setAutoRaise(True)
+        self.btn_mrc2rechg.setIcon(iconDB.mrc2rechg)
+        self.btn_mrc2rechg.setToolTip(ttipDB.mrc2rechg)
+        self.btn_mrc2rechg.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.btn_mrc2rechg.setIconSize(StyleDB.iconSize)
+        
         self.btn_Waterlvl_lineStyle = QtGui.QToolButton()
         self.btn_Waterlvl_lineStyle.setAutoRaise(True)
         self.btn_Waterlvl_lineStyle.setIcon(iconDB.showDataDots)
@@ -248,6 +260,8 @@ class WLCalc(QtGui.QWidget):
         subgrid_toolbar.addWidget(separator2, row, col)
         col += 1
         subgrid_toolbar.addWidget(self.btn_MRCalc, row, col)
+        col += 1
+        subgrid_toolbar.addWidget(self.btn_mrc2rechg, row, col)
         col += 1        
         subgrid_toolbar.addWidget(separator4, row, col)
         col += 1
@@ -329,17 +343,19 @@ class WLCalc(QtGui.QWidget):
         self.btn_editPeak.clicked.connect(self.edit_peak)
         self.btn_delPeak.clicked.connect(self.delete_peak)
         self.btn_pan.clicked.connect(self.pan_graph)
-        self.btn_MRCalc.clicked.connect(self.plot_MRC)
+        self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
         self.btn_Waterlvl_lineStyle.clicked.connect(
                                                  self.change_waterlvl_lineStyle)
         self.btn_strati.clicked.connect(self.btn_strati_isClicked)
+        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
+        
         
     def emit_error_message(self, error_text):
         
         self.msgError.setText(error_text)
         self.msgError.exec_()
     
-    def plot_MRC(self):
+    def btn_MRCalc_isClicked(self):
         
         if self.isGraphExists == False:
             print 'Graph is empty'
@@ -355,20 +371,58 @@ class WLCalc(QtGui.QWidget):
         
         A, B, hp, obj = mrc_calc(self.time, self.water_lvl, self.peak_indx, 
                                  self.MRC_type.currentIndex())
-
-        a = np.mean(A)
-        b = np.mean(B)
-        txt = 'dh/dt (mm/d) = -%0.2f * h + %0.2f' % (a*1000, b*1000)
+        
+        #---- display result ----
+        
+        txt = u'∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
         self.MRC_results.setText(txt)        
         txt = '\n%s = %f' % (self.MRC_ObjFnType.currentText(), obj)                          
         self.MRC_results.append(txt)
         
+        #---- plot result ----
+        
         self.h3_ax0.set_xdata(self.time)
-        self.h3_ax0.set_ydata(hp)
-        
+        self.h3_ax0.set_ydata(hp)        
         self.fig_MRC_widget.draw()
+                
+        #---- store result in class var ----
         
+        self.A = A
+        self.B = B
+        
+        #---- Compute Recharge ----
+        
+        if path.exists(self.soilFilename):
+
+            self.SOILPROFIL.load_info(self.soilFilename) 
+            
+            rechg = mrc2rechg(self.time, self.water_lvl, self.A, self.B,
+                              self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy,
+                              self.peak_indx)
+                              
+            rechg_tot = np.sum(rechg) * 1000
+                  
+            txt = '\nRecharge = %0.0f mm' % (rechg_tot) 
+            self.MRC_results.append(txt)
+            
         QtGui.QApplication.restoreOverrideCursor()
+        
+    def btn_mrc2rechg_isClicked(self):
+        
+        if not self.A and not self.B:
+            print('Need to calculate MRC equation first.')
+            return
+            
+        if not path.exists(self.soilFilename):
+            print('A ".sol" file is needed for the calculation of' +
+                  ' groundwater recharge from the MRC')
+            return
+            
+        self.SOILPROFIL.load_info(self.soilFilename)        
+        
+        mrc2rechg(self.time, self.water_lvl, self.A, self.B,
+                  self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy,
+                  self.peak_indx)
             
     def plot_peak(self):
                 
@@ -755,6 +809,8 @@ class WLCalc(QtGui.QWidget):
         # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
         if not self.btn_editPeak.autoRaise():
            
+           # Trace a red vertical guide (line) that folows the mouse marker.
+           
             x = event.xdata
             
             # update the line positions
@@ -763,6 +819,9 @@ class WLCalc(QtGui.QWidget):
             self.fig_MRC_widget.draw()
             
         elif not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
+            
+            # For deleting peak in the graph. Will put a cross on top of the
+            # peak to delete if some proximity conditions are met.
             
             x = event.x
             y = event.y
@@ -850,15 +909,25 @@ class WLCalc(QtGui.QWidget):
             indxmax = np.where(x > xclic)[0]
             if len(indxmax) == 0:
                 
+                # Marker is outside the water level time series, to the right.
+                # The last data point is added to "peak_indx". 
+                
                 self.peak_indx = np.append(self.peak_indx, len(x)-1)
                 self.peak_memory.append(self.peak_indx)
                 
             elif len(indxmin) == 0:
                 
+                # Marker is outside the water level time series, to the left.
+                # The first data point is added to "peak_indx".
+                
                 self.peak_indx = np.append(self.peak_indx, 0)
                 self.peak_memory.append(self.peak_indx)
                 
             else:
+                
+                # Marker is between two data point. The closest data point to
+                # the marker is then selected.
+                
                 indxmin = indxmin[-1]
                 indxmax = indxmax[0]
                 
@@ -1326,7 +1395,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
     print
     print '---- FIN ----'
     print
-        
+         
     return A, B, hp, RMSE
 
 #===============================================================================    
@@ -1339,14 +1408,17 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
     
 #===============================================================================
     
-    maxpeak = ipeak[:-1:2]
-    minpeak = ipeak[1::2]
+    maxpeak = ipeak[:-1:2] # Time indexes delimiting period where water level
+    minpeak = ipeak[1::2]  # recedes.
     
-    nsegmnt = len(minpeak)
+    nsegmnt = len(minpeak) # Number of segments of the time series that were
+                           # identified as period where the water level
+                           # recedes.
     
     hp = np.ones(len(h)) * np.nan
     
     for i in range(nsegmnt):
+        # numerical scheme development in logbook#10 p.79
         
         hp[maxpeak[i]] = h[maxpeak[i]]
         
@@ -1363,11 +1435,117 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
     return hp
 
 #===============================================================================    
-def mrc2rechg(t, h, A, B):
-    """Calculate groundwater recharge from the Master Recession Curve 
-       Equation, the water level time series and the soil column description."""
+class SoilProfil():
+    """
+    zlayer = Position of the layer boundaries in mbgs where 0 is the ground
+             surface. There is one more element in zlayer than the total number
+             of layer.
+    soilName = Soil texture description.
+    Sy = Soil specific yield.
+    """
 #===============================================================================
-    pass
+    
+    def __init__(self):
+        
+        self.zlayer = []
+        self.soilName = []
+        self.Sy = []
+        self.color = []
+        
+    def load_info(self, filename):    
+        
+        #---- load soil column info ----
+    
+        reader = open(filename,'rb')
+        reader = csv.reader(reader, delimiter="\t")
+        reader = list(reader)
+   
+        NLayer = len(reader)
+        
+        self.zlayer = np.empty(NLayer+1).astype(float)
+        self.soilName = np.empty(NLayer).astype(str)
+        self.Sy = np.empty(NLayer).astype(float)
+        self.color = np.empty(NLayer).astype(str)
+        
+        self.zlayer[0] = 0
+        for i in range(NLayer):
+            self.zlayer[i+1] = reader[i][0]
+            self.soilName[i] = reader[i][1]
+            self.Sy[i] = reader[i][2]
+            try:
+                self.color[i] = reader[i][3]
+            except:
+                self.color[i] = '#FFFFFF'                
+                
+        print self.color  
+        print self.zlayer
+
+
+#===============================================================================    
+def mrc2rechg(t, ho, A, B, z, Sy, indx):
+    """Calculate groundwater recharge from the Master Recession Curve 
+       Equation, the water level time series and the soil column description
+       in m, using the water-level fluctuation principle."""
+#===============================================================================
+    
+    #---- Check ----
+    
+    if np.min(ho) < 0:
+        print('Water level rise above ground surface. Please check your data.')
+        return
+
+#    indx = np.sort(indx)
+#    
+#    print indx
+#    
+#    lindx = indx[:-1:2]
+#    rindx = indx[1::2]
+#    Sy = 0.09
+    dz = np.diff(z)
+    print dz
+    
+    dt = np.diff(t)
+    rechg = np.zeros(len(dt))
+    
+#    # for validation only
+#    Sy2 = np.mean(Sy)
+#    rechg2 = np.zeros(len(dt))
+    
+    # !!! Do not forget it is mbgs !!!
+    
+    for i in range(len(dt)):
+        
+        #--- Calculate projected water level at i+1 ----
+        
+        LUMP1 = (1 - A * dt[i] / 2)
+        LUMP2 = B * dt[i]
+        LUMP3 = (1 + A * dt[i] / 2) ** -1
+        
+        hp = (LUMP1 * ho[i] + LUMP2) * LUMP3
+        
+        #---- Calculate resulting recharge over dt (See logbook #11, p.23) ----
+                
+        hup = min(hp, ho[i+1])
+        hlo = max(hp, ho[i+1])
+                
+        iup = np.where(hup >= z)[0][-1]
+        ilo = np.where(hlo >= z)[0][-1]
+        
+        rechg[i] = np.sum(dz[iup:ilo+1] * Sy[iup:ilo+1])        
+        rechg[i] -= (z[ilo+1] - hlo) * Sy[ilo]
+        rechg[i] -= (hup - z[iup]) * Sy[iup]
+        
+        rechg[i] *= np.sign(hp - ho[i+1]) # Will be positif in most cases. In
+        # theory, it should always be positive, but error in the MRC and noise
+        # in the data can cause hp to be above ho in some cases.
+                       
+#        rechg2[i] = -(ho[i+1] - hp) * Sy2 # Do not forget it is mbgs
+    
+    print("Recharge = %0.2f m" % np.sum(rechg))
+#    print("Recharge2 = %0.2f m" % np.sum(rechg2))
+           
+    return rechg
+    
 
 ##===============================================================================    
 #class NewFig(QtGui.QWidget):
