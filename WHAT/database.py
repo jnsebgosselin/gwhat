@@ -71,8 +71,7 @@ class icons():
         
         self.undo = QIcon('Icons/undo.png')
         self.clear_search = QIcon('Icons/clear-search.png')
-        self.MRCalc = QIcon('Icons/MRCalc.png')
-        self.MRCalc2 = QIcon('Icons/MRCalc2.png')
+        self.MRCalc = QIcon('Icons/MRCalc5.png')
         self.edit = QIcon('Icons/edit.png')
         self.pan = QIcon('Icons/pan.png')
         self.home = QIcon('Icons/home.png')

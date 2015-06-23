@@ -19,7 +19,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-last_modification = 15/06/2015
+last_modification = 23/06/2015
 """
 
 #----- STANDARD LIBRARY IMPORTS -----
@@ -324,6 +324,8 @@ def calc_recharge_old(CRU, RASmax, ETP, PTOT, TAVG):
 #===============================================================================
 def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     '''
+    In this version, I tried to incorporate the flow of water in the unsaturated
+    zone with a subrouting approach similar to HELP. It does not work yet.
     ----- Inputs -----
     
     VWCRES = Volumetric residual water content (mm**3 / mm**3)

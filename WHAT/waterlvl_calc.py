@@ -197,17 +197,17 @@ class WLCalc(QtGui.QWidget):
         
         self.btn_MRCalc = QtGui.QToolButton()
         self.btn_MRCalc.setAutoRaise(True)
-        self.btn_MRCalc.setIcon(iconDB.MRCalc2)
+        self.btn_MRCalc.setIcon(iconDB.MRCalc)
         self.btn_MRCalc.setToolTip(ttipDB.MRCalc)
         self.btn_MRCalc.setFocusPolicy(QtCore.Qt.NoFocus)
         self.btn_MRCalc.setIconSize(StyleDB.iconSize)
         
-        self.btn_mrc2rechg = QtGui.QToolButton()
-        self.btn_mrc2rechg.setAutoRaise(True)
-        self.btn_mrc2rechg.setIcon(iconDB.mrc2rechg)
-        self.btn_mrc2rechg.setToolTip(ttipDB.mrc2rechg)
-        self.btn_mrc2rechg.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_mrc2rechg.setIconSize(StyleDB.iconSize)
+#        self.btn_mrc2rechg = QtGui.QToolButton()
+#        self.btn_mrc2rechg.setAutoRaise(True)
+#        self.btn_mrc2rechg.setIcon(iconDB.mrc2rechg)
+#        self.btn_mrc2rechg.setToolTip(ttipDB.mrc2rechg)
+#        self.btn_mrc2rechg.setFocusPolicy(QtCore.Qt.NoFocus)
+#        self.btn_mrc2rechg.setIconSize(StyleDB.iconSize)
         
         self.btn_Waterlvl_lineStyle = QtGui.QToolButton()
         self.btn_Waterlvl_lineStyle.setAutoRaise(True)
@@ -261,8 +261,8 @@ class WLCalc(QtGui.QWidget):
         col += 1
         subgrid_toolbar.addWidget(self.btn_MRCalc, row, col)
         col += 1
-        subgrid_toolbar.addWidget(self.btn_mrc2rechg, row, col)
-        col += 1        
+#        subgrid_toolbar.addWidget(self.btn_mrc2rechg, row, col)
+#        col += 1        
         subgrid_toolbar.addWidget(separator4, row, col)
         col += 1
         subgrid_toolbar.addWidget(self.btn_Waterlvl_lineStyle, row, col)
@@ -347,7 +347,7 @@ class WLCalc(QtGui.QWidget):
         self.btn_Waterlvl_lineStyle.clicked.connect(
                                                  self.change_waterlvl_lineStyle)
         self.btn_strati.clicked.connect(self.btn_strati_isClicked)
-        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
+#        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
         
         
     def emit_error_message(self, error_text):
@@ -376,7 +376,7 @@ class WLCalc(QtGui.QWidget):
         
         txt = u'∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
         self.MRC_results.setText(txt)        
-        txt = '\n%s = %f' % (self.MRC_ObjFnType.currentText(), obj)                          
+        txt = '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), obj)                          
         self.MRC_results.append(txt)
         
         #---- plot result ----
@@ -401,8 +401,9 @@ class WLCalc(QtGui.QWidget):
                               self.peak_indx)
                               
             rechg_tot = np.sum(rechg) * 1000
+            dt = self.time[-1] - self.time[0]
                   
-            txt = '\nRecharge = %0.0f mm' % (rechg_tot) 
+            txt = '\nRecharge = %0.0f mm / %0.1f d' % (rechg_tot, dt) 
             self.MRC_results.append(txt)
             
         QtGui.QApplication.restoreOverrideCursor()
@@ -1214,7 +1215,8 @@ def local_extrema(x, Deltan):
 def mrc_calc(t, h, ipeak, MRCTYPE=1):
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
-    the aquifer from the water level time series.
+    the aquifer from the water level time series using a modified Gauss-Newton
+    optimization method.
     
     ---- INPUT ----
     h : water level time series in mbgs
@@ -1340,10 +1342,6 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             else:
                 break
         
-#        print(dr)
-#        print(CtXtdh)
-#        print(CtXtXCImrCinv)
-        
         #---- Storing old parameter values ----
         
         Aold = np.copy(A)
@@ -1402,7 +1400,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
 def calc_synth_hydrograph(A, B, h, dt, ipeak):
     """
     Compute synthetic hydrograph with a time-forward implicit numerical scheme
-    during period where the water level recedes identified by the "ipeak"
+    during periods where the water level recedes identified by the "ipeak"
     pointers.
     """    
     
@@ -1440,7 +1438,9 @@ class SoilProfil():
     zlayer = Position of the layer boundaries in mbgs where 0 is the ground
              surface. There is one more element in zlayer than the total number
              of layer.
+             
     soilName = Soil texture description.
+    
     Sy = Soil specific yield.
     """
 #===============================================================================
@@ -1477,15 +1477,32 @@ class SoilProfil():
             except:
                 self.color[i] = '#FFFFFF'                
                 
-        print self.color  
-        print self.zlayer
-
 
 #===============================================================================    
 def mrc2rechg(t, ho, A, B, z, Sy, indx):
-    """Calculate groundwater recharge from the Master Recession Curve 
-       Equation, the water level time series and the soil column description
-       in m, using the water-level fluctuation principle."""
+    """
+    Calculate groundwater recharge from the Master Recession Curve 
+    equation defined by the parameters A and B, the water level time series
+    in mbgs (t and ho) and the soil column description (z and Sy), using
+    the water-level fluctuation principle.
+       
+    ---- INPUTS ----
+
+    {1D array} t = Time in days 
+    {1D array} ho = Observed water level in mbgs
+    {float}    A = Model parameter of the MRC
+    {float}    B = Model parameter of the MRC
+    {1D array} z = Depth of the soil layer limits
+    {1D array} Sy = Specific yield for each soil layer
+    {1D array} indx = Time index defining the periods over which recharge
+                      is to be computed. Odd index numbers are for the
+                      beginning of periods while even index numbers are for
+                      the end of periods.
+                         
+    ---- OUTPUTS ----
+       
+    {1D array} RECHG = Groundwater recharge time series in m                        
+    """
 #===============================================================================
     
     #---- Check ----
@@ -1500,12 +1517,12 @@ def mrc2rechg(t, ho, A, B, z, Sy, indx):
 #    
 #    lindx = indx[:-1:2]
 #    rindx = indx[1::2]
-#    Sy = 0.09
+
     dz = np.diff(z)
     print dz
     
     dt = np.diff(t)
-    rechg = np.zeros(len(dt))
+    RECHG = np.zeros(len(dt))
     
 #    # for validation only
 #    Sy2 = np.mean(Sy)
@@ -1531,20 +1548,20 @@ def mrc2rechg(t, ho, A, B, z, Sy, indx):
         iup = np.where(hup >= z)[0][-1]
         ilo = np.where(hlo >= z)[0][-1]
         
-        rechg[i] = np.sum(dz[iup:ilo+1] * Sy[iup:ilo+1])        
-        rechg[i] -= (z[ilo+1] - hlo) * Sy[ilo]
-        rechg[i] -= (hup - z[iup]) * Sy[iup]
+        RECHG[i] = np.sum(dz[iup:ilo+1] * Sy[iup:ilo+1])        
+        RECHG[i] -= (z[ilo+1] - hlo) * Sy[ilo]
+        RECHG[i] -= (hup - z[iup]) * Sy[iup]
         
-        rechg[i] *= np.sign(hp - ho[i+1]) # Will be positif in most cases. In
+        RECHG[i] *= np.sign(hp - ho[i+1]) # Will be positif in most cases. In
         # theory, it should always be positive, but error in the MRC and noise
         # in the data can cause hp to be above ho in some cases.
                        
 #        rechg2[i] = -(ho[i+1] - hp) * Sy2 # Do not forget it is mbgs
     
-    print("Recharge = %0.2f m" % np.sum(rechg))
+    print("Recharge = %0.2f m" % np.sum(RECHG))
 #    print("Recharge2 = %0.2f m" % np.sum(rechg2))
            
-    return rechg
+    return RECHG
     
 
 ##===============================================================================    
