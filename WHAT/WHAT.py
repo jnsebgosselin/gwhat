@@ -38,7 +38,6 @@ from sys import argv
 from time import ctime, strftime, sleep, gmtime
 from os import getcwd, listdir, makedirs, path
 from string import maketrans
-from datetime import datetime
 import platform
 
 #---- THIRD PARTY IMPORTS ----
@@ -1728,11 +1727,11 @@ class TabHydrograph(QtGui.QWidget):
         self.hydrograph_scrollarea.refresh_image(image)
             
           
-################################################################## @TAB DOWNLOAD
+################################################################################
         
-class TabDwnldData(QtGui.QWidget):
+class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
 
-################################################################## @TAB DOWNLOAD  
+################################################################################
     
     def __init__(self, parent):
         super(TabDwnldData, self).__init__(parent)
@@ -1944,8 +1943,8 @@ class TabDwnldData(QtGui.QWidget):
         grid_MAIN.addWidget(line4, row, col)
         row += 1
         grid_MAIN.addWidget(BOTTOM_widget, row, col)
-#        col += 1
-#        grid_MAIN.addWidget(self.staList_table, 1, col, row, 1)
+        col += 1
+        grid_MAIN.addWidget(self.staList_table, 1, col, row, 1)
         
         grid_MAIN.setRowStretch(0, 500)
         grid_MAIN.setRowStretch(row+1, 500)
@@ -1971,27 +1970,32 @@ class TabDwnldData(QtGui.QWidget):
         self.widget_search4stations = envirocan.search4stations()
 
         #----------------------------------------------------------- EVENTS ----       
-                
+         
+        #---- download raw data files ----
+         
         self.dwnl_rawfiles.ProgBarSignal.connect(self.setProgBarSignal)
         self.dwnl_rawfiles.ConsoleSignal.connect(self.parent.write2console)
         self.dwnl_rawfiles.MergeSignal.connect(self.download_is_finished)
+        self.btn_get.clicked.connect(self.fetch_start_and_stop)
+        self.yStart_edit.valueChanged.connect(self.start_year_changed)
+        self.yEnd_edit.valueChanged.connect(self.end_year_changed)
+        btn_select.clicked.connect(self.select_raw_files)
+        btn_save.clicked.connect(self.select_concatened_save_path)
         
-        self.staName_display.currentIndexChanged.connect(self.staName_isChanged)
-        self.btn_get.clicked.connect(self.fetch_start_and_stop)      
+        #---- weather station list ----
+        
+        btn_browse_staList.clicked.connect(self.select_stationList)
+        self.staName_display.currentIndexChanged.connect(self.staName_isChanged)              
         #btn_refresh_staList.clicked.connect(self.load_stationList)
-
+         
+        #---- search4stations ----
+         
         btn_search4station.clicked.connect(self.show_search4stations)
         self.widget_search4stations.ConsoleSignal.connect(
                                                       self.parent.write2console)                                                   
         self.widget_search4stations.staListSignal.connect(self.load_stationList)
+                   
         
-        btn_browse_staList.clicked.connect(self.select_stationList)        
-        btn_select.clicked.connect(self.select_raw_files)
-        btn_save.clicked.connect(self.select_concatened_save_path)                        
-        
-        self.yStart_edit.valueChanged.connect(self.start_year_changed)
-        self.yEnd_edit.valueChanged.connect(self.end_year_changed)
-    
     def start_year_changed(self):
         
         if len(self.staList) > 0:
@@ -2049,29 +2053,21 @@ class TabDwnldData(QtGui.QWidget):
             
             default_list_name = dirname + '/weather_stations.lst'
             
-            if fname == default_list_name:
-                 
-                 #---- Load List in UI ----
+            #---- Load List ----
             
-                self.load_stationList()   
-                
-            else:
+            with open(fname, 'rb') as f:
+                reader = list(csv.reader(f, delimiter='\t'))
+
+            #---- Save List in Default Name ----
+        
+            with open(default_list_name, 'wb') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(reader)
             
-                #---- Load List ----
+            #---- Load List in UI ----
             
-                reader = open(fname,'rb')
-                reader = csv.reader(reader, delimiter='\t')
-          
-                #---- Save List in Default Name ----
-            
-                with open(default_list_name, 'wb') as f:
-                    writer = csv.writer(f, delimiter='\t')
-                    writer.writerows(reader)
-            
-                #---- Load List in UI ----
-                
-                QtGui.QApplication.processEvents()
-                self.load_stationList()
+            QtGui.QApplication.processEvents()
+            self.load_stationList()
             
     #===========================================================================
     def load_stationList(self): # refresh_stationList(self):
@@ -2206,7 +2202,8 @@ class TabDwnldData(QtGui.QWidget):
         self.staList_table.resizeColumnsToContents()
         self.staList_table.setSortingEnabled(True)
                 
-        header = ('Weather Stations', 'Prov.', 'Proximity \n (km)', 'From \n Year', 'To \n Year', '')
+        header = ('Weather Stations', 'Prov.', 'Proximity \n (km)',
+                  'From \n Year', 'To \n Year', '')
         staList = self.staList
   
         ncol = len(header)
@@ -2320,7 +2317,7 @@ class TabDwnldData(QtGui.QWidget):
 #            self.btn_delRow.setToolTip(ttipDB.clearall)
 #            self.btn_delRow.setFocusPolicy(QtCore.Qt.NoFocus)
 
-#            self.btn_delRow.clicked.connect(self.handleButtonClicked)
+            self.btn_delRow.clicked.connect(self.handleButtonClicked)
             self.staList_table.setCellWidget(row, col, self.btn_delRow)
     
     def handleButtonClicked(self):
