@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2015 Jean-Sebastien Gosselin
+Copyright 2014-2015 Jean-Sebastien Gosselin
 
 email: jnsebgosselin@gmail.com
 
@@ -40,8 +40,8 @@ import database as db
 #===============================================================================
 class search4stations(QtGui.QWidget):
     '''
-    Sub-window that allows the user to search for weather stations on the
-    Gov. of Can. website.
+    Widget that allows the user to search for weather stations on the
+    Government of Canada website.
     '''
 #===============================================================================
     
@@ -229,9 +229,8 @@ class search4stations(QtGui.QWidget):
     #===========================================================================
     def btn_search_isClicked(self):
         '''
-        Seach for weather stations with daily data. The results are saved in a
-        "weather_stations.lst" and are automatically loaded in the "weather
-        stations" dropbox list.
+        Initiate the seach for weather stations. It grabs the info from the
+        interface and send it to the method "search_envirocan".
         '''
     #===========================================================================
         
@@ -266,16 +265,17 @@ class search4stations(QtGui.QWidget):
     def search_envirocan(self, LAT, LON, RADIUS, YearMin, YearMax):
         """
         Search on the Government of Canada website for weather stations with
-        daily meteo data around a decimal degree Lat, Lon coordinate with a
+        daily meteo data around a decimal degree Lat & Lon coordinate with a
         radius given in km.
         
         The results are returned in a list formatted ready to be
-        read by WHAT UI.
+        read by WHAT UI. A signal is emitted with the list if the process is
+        completed successfully.
         
         If no results are found, only the header is return with an empty
         list of station.
         
-        If there an error is raised, an empty list is returned. 
+        If an error is raised, an empty list is returned. 
         """
     #===========================================================================
         

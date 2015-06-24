@@ -19,8 +19,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
-software_version = 'WHAT Beta 4.1.5'
-last_modification = '04/02/2015'
+software_version = 'WHAT Beta 4.1.6'
+last_modification = '24/06/2015'
 
 # It is often said when developing interfaces that you need to fail fast,
 # and iterate often. When creating a UI, you will make mistakes. Just keep
