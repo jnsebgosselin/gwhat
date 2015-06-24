@@ -471,8 +471,10 @@ class MainWindow(QtGui.QMainWindow):
         self.project_display.setText(self.projectInfo.name)
         self.project_display.adjustSize()
         
-        self.tab_dwnld_data.lat_spinBox.setValue(self.projectInfo.lat)
-        self.tab_dwnld_data.lon_spinBox.setValue(self.projectInfo.lon)
+        self.tab_dwnld_data.widget_search4stations.lat_spinBox.setValue(
+                                                           self.projectInfo.lat)
+        self.tab_dwnld_data.widget_search4stations.lon_spinBox.setValue(
+                                                           self.projectInfo.lon)
         
         #---- Load Weather Station List ----
 
@@ -487,6 +489,7 @@ class MainWindow(QtGui.QMainWindow):
         self.tab_hydrograph.meteo_dir = self.projectdir + '/Meteo/Output'
         self.tab_hydrograph.waterlvl_dir = self.projectdir + '/Water Levels'
         self.tab_hydrograph.save_fig_dir = self.projectdir
+        self.tab_dwnld_data.widget_search4stations.savedir = self.projectdir
         
         self.tab_hydrograph.weather_avg_graph.save_fig_dir = self.projectdir
         
@@ -1965,8 +1968,8 @@ class TabDwnldData(QtGui.QWidget):
         
         self.MergeOutput = np.array([])
         self.dwnl_rawfiles = DownloadRawDataFiles(self)
-        self.initUI_search4stations()
-        
+        self.widget_search4stations = envirocan.search4stations()
+
         #----------------------------------------------------------- EVENTS ----       
                 
         self.dwnl_rawfiles.ProgBarSignal.connect(self.setProgBarSignal)
@@ -1976,20 +1979,18 @@ class TabDwnldData(QtGui.QWidget):
         self.staName_display.currentIndexChanged.connect(self.staName_isChanged)
         self.btn_get.clicked.connect(self.fetch_start_and_stop)      
         #btn_refresh_staList.clicked.connect(self.load_stationList)
+
         btn_search4station.clicked.connect(self.show_search4stations)
-        self.btn_go_search4station.clicked.connect(self.search4stations)
-        btn_browse_staList.clicked.connect(self.select_stationList)
+        self.widget_search4stations.ConsoleSignal.connect(
+                                                      self.parent.write2console)                                                   
+        self.widget_search4stations.staListSignal.connect(self.load_stationList)
         
+        btn_browse_staList.clicked.connect(self.select_stationList)        
         btn_select.clicked.connect(self.select_raw_files)
-        btn_save.clicked.connect(self.select_concatened_save_path)
-                        
+        btn_save.clicked.connect(self.select_concatened_save_path)                        
+        
         self.yStart_edit.valueChanged.connect(self.start_year_changed)
         self.yEnd_edit.valueChanged.connect(self.end_year_changed)
-        
-        self.search4station_minYear.valueChanged.connect(
-                                            self.search4station_minYear_changed)
-        self.search4station_maxYear.valueChanged.connect(
-                                            self.search4station_maxYear_changed)
     
     def start_year_changed(self):
         
@@ -2010,173 +2011,6 @@ class TabDwnldData(QtGui.QWidget):
             max_yr = min(self.yEnd_edit.value(), int(self.staList[index, 3]))
                     
             self.yStart_edit.setRange(min_yr, max_yr)
-            
-    def search4station_minYear_changed(self):
-            
-            min_yr = min_yr = max(self.search4station_minYear.value(), 1840)
-            
-            now = datetime.now()
-            max_yr = now.year
-                    
-            self.search4station_maxYear.setRange(min_yr, max_yr)
-            
-    def search4station_maxYear_changed(self):
-        
-            min_yr = 1840
-            
-            now = datetime.now()
-            max_yr = min(self.search4station_maxYear.value(), now.year)
-                    
-            self.search4station_minYear.setRange(min_yr, max_yr)
-    
-    #===========================================================================
-    def initUI_search4stations(self):
-        '''
-        Sub-window that allows the user to search for weather stations on the
-        Gov. of Can. website.
-        '''
-    #===========================================================================
-         
-        now = datetime.now()
-        
-        #------------------------------------------------------- Left Panel ----
-        
-        #---- Widgets ----
-        
-        label_Lat = QtGui.QLabel('Latitude :')
-        label_Lat2 = QtGui.QLabel('N')
-        label_Lon = QtGui.QLabel('Longitude :')
-        label_Lon2 = QtGui.QLabel('W')
-        label_radius = QtGui.QLabel('Radius :')
-        
-        self.lat_spinBox = QtGui.QDoubleSpinBox()
-        self.lat_spinBox.setAlignment(QtCore.Qt.AlignCenter)        
-        self.lat_spinBox.setSingleStep(0.1)
-        self.lat_spinBox.setValue(0)
-        self.lat_spinBox.setMinimum(0)
-        self.lat_spinBox.setMaximum(180)
-        self.lat_spinBox.setSuffix(u' °')
-        
-        self.lon_spinBox = QtGui.QDoubleSpinBox()
-        self.lon_spinBox.setAlignment(QtCore.Qt.AlignCenter)
-        self.lon_spinBox.setSingleStep(0.1)
-        self.lon_spinBox.setValue(0)
-        self.lon_spinBox.setMinimum(0)
-        self.lon_spinBox.setMaximum(180)
-        self.lon_spinBox.setSuffix(u' °')
-        
-        self.radius_SpinBox = QtGui.QSpinBox()
-        self.radius_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
-        self.radius_SpinBox.setSingleStep(5)
-        self.radius_SpinBox.setMinimum(5)
-        self.radius_SpinBox.setMaximum(500)
-        self.radius_SpinBox.setSuffix(' km')
-        
-        #---- Grid ----
-        
-        widget_leftPanel = QtGui.QWidget()
-        grid_leftPanel = QtGui.QGridLayout()
-        
-        row = 0
-        grid_leftPanel.addWidget(label_Lat, row, 0)
-        grid_leftPanel.addWidget(self.lat_spinBox, row, 1)
-        grid_leftPanel.addWidget(label_Lat2, row, 2)
-        row += 1
-        grid_leftPanel.addWidget(label_Lon, row, 0)
-        grid_leftPanel.addWidget(self.lon_spinBox, row, 1)
-        grid_leftPanel.addWidget(label_Lon2, row, 2)
-        row += 1
-        grid_leftPanel.addWidget(label_radius, row, 0)
-        grid_leftPanel.addWidget(self.radius_SpinBox, row, 1)
-        
-        grid_leftPanel.setSpacing(5)
-        grid_leftPanel.setColumnStretch(1, 100)
-        grid_leftPanel.setRowStretch(row + 1, 100)
-        grid_leftPanel.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
-        
-        widget_leftPanel.setLayout(grid_leftPanel)
-        
-        #------------------------------------------------------ Right Panel ----
-        
-        label_date = QtGui.QLabel('Stations with data between :')
-        
-        self.search4station_minYear = QtGui.QSpinBox()
-        self.search4station_minYear.setAlignment(QtCore.Qt.AlignCenter)
-        self.search4station_minYear.setSingleStep(1)
-        self.search4station_minYear.setMinimum(1840)
-        self.search4station_minYear.setMaximum(now.year)
-        self.search4station_minYear.setValue(1840)
-        
-        label_and = QtGui.QLabel('and')
-        label_and.setAlignment(QtCore.Qt.AlignCenter)
-        
-        self.search4station_maxYear = QtGui.QSpinBox()
-        self.search4station_maxYear.setAlignment(QtCore.Qt.AlignCenter)
-        self.search4station_maxYear.setSingleStep(1)
-        self.search4station_maxYear.setMinimum(1840)
-        self.search4station_maxYear.setMaximum(now.year)
-        self.search4station_maxYear.setValue(now.year)
-        
-        widget_rightPanel = QtGui.QWidget()
-        grid_rightPanel = QtGui.QGridLayout()
-        
-        row = 0
-        grid_rightPanel.addWidget(label_date, row, 0, 1, 3)
-        row += 1
-        grid_rightPanel.addWidget(self.search4station_minYear, row, 0)
-        grid_rightPanel.addWidget(label_and, row, 1)
-        grid_rightPanel.addWidget(self.search4station_maxYear, row, 2)
-        
-        grid_rightPanel.setSpacing(10)
-        grid_rightPanel.setColumnStretch(0, 100)
-        grid_rightPanel.setColumnStretch(2, 100)
-        grid_rightPanel.setRowStretch(row + 1, 100)
-        grid_rightPanel.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
-        
-        widget_rightPanel.setLayout(grid_rightPanel)
-        
-        #-------------------------------------------------------- MAIN GRID ----
-        
-        #---- Widgets ----
-        
-        line1 = QtGui.QFrame()
-        line1.setFrameStyle(styleDB.VLine)
-        
-        self.btn_go_search4station = QtGui.QPushButton('Search')
-        self.btn_go_search4station.setIcon(iconDB.search)
-        self.btn_go_search4station.setIconSize(styleDB.iconSize2)
-        
-        #---- GRID ----
-                        
-        self.widget_search4stations = QtGui.QWidget()
-        grid_search4stations = QtGui.QGridLayout()
-        
-        row = 1
-        col = 1        
-        grid_search4stations.addWidget(widget_leftPanel, row, col)
-        col += 1
-        grid_search4stations.addWidget(line1, row, col)
-        col += 1
-        grid_search4stations.addWidget(widget_rightPanel, row, col)
-        row += 1
-        grid_search4stations.addWidget(self.btn_go_search4station, row, 1, 1, 3)
-                        
-        grid_search4stations.setContentsMargins(15, 15, 15, 15) # (L, T, R, B) 
-        grid_search4stations.setSpacing(10)
-        grid_search4stations.setColumnStretch(0, 100)
-        grid_search4stations.setColumnStretch(col+1, 100)
-        grid_search4stations.setRowStretch(0, 100)
-        grid_search4stations.setRowStretch(row + 1, 100)
-        
-        self.widget_search4stations.setLayout(grid_search4stations)
-        self.widget_search4stations.setFont(styleDB.font1)
-        
-        #------------------------------------------------------ MAIN WINDOW ----
-        
-        self.widget_search4stations.setWindowTitle(
-                                                  'Search for Weather Stations')
-        self.widget_search4stations.setWindowIcon(iconDB.WHAT)
-#        self.widget_search4stations.setFixedSize(500, 200)
     
     #===========================================================================
     def show_search4stations(self):
@@ -2194,56 +2028,6 @@ class TabDwnldData(QtGui.QWidget):
         self.widget_search4stations.show()
         self.widget_search4stations.setFixedSize(
                                              self.widget_search4stations.size())
-    
-    #===========================================================================
-    def search4stations(self):
-        '''
-        Seach for weather stations with daily data. The results are saved in a
-        "weather_stations.lst" and are automatically loaded in the "weather
-        stations" dropbox list.
-        '''
-    #===========================================================================
-        
-        #---- Close sub-window ----
-        
-        self.widget_search4stations.close()
-               
-        #---- Generate New List ----
-        # http://doc.qt.io/qt-5/qt.html#CursorShape-enum
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-        
-        self.parent.write2console('''<font color=black>
-                                       Searching for weather stations. Please
-                                       wait...
-                                     </font>''')
-                                     
-        QtCore.QCoreApplication.processEvents()
-        QtCore.QCoreApplication.processEvents()
-        
-        LAT = self.lat_spinBox.value()
-        LON = self.lon_spinBox.value()
-        RADIUS = self.radius_SpinBox.value()
-        startYear = self.search4station_minYear.value()
-        endYear = self.search4station_maxYear.value()
-      
-        staList, cmt = envirocan.search4meteo(LAT, LON, RADIUS, 
-                                              startYear, endYear)
-        
-        self.parent.write2console(cmt)
-        
-        #---- Save List ----
-        
-        projectdir = self.parent.projectdir        
-        fname = projectdir + '/weather_stations.lst'    
-        with open(fname, 'wb') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(staList)
-        
-        #---- Load List ----
-        
-        self.load_stationList()
-        
-        QtGui.QApplication.restoreOverrideCursor()
         
     #===========================================================================
     def select_stationList(self):
@@ -2297,7 +2081,7 @@ class TabDwnldData(QtGui.QWidget):
         (1) when a new project folder is loaded in 
             <MainWindow.load_project>
         (2) after a search has been completed for weather stations in 
-            <search4stations>
+            <envirocan.search4stations>
         (3) When a station list is loaded manually by the user from method
             <select_stationList>.
         
