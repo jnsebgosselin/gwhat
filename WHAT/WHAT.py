@@ -2114,10 +2114,9 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         if not path.exists(station_list_path):
             # Force the creation of a new "weather_station.lst" file
             self.parent.check_project()
-            
-        reader = open(station_list_path,'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
+        
+        with open(station_list_path, 'rb') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
         
         #--------------------------------------- CHECK STATION LIST VERSION ----
         
