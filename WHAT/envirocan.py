@@ -124,7 +124,7 @@ class search4stations(QtGui.QWidget):
         
         #------------------------------------------------------ Right Panel ----
         
-        label_date = QtGui.QLabel('Stations with data between :')
+        label_date = QtGui.QLabel('Stations with data between')
         
         self.minYear = QtGui.QSpinBox()
         self.minYear.setAlignment(QtCore.Qt.AlignCenter)
@@ -143,6 +143,35 @@ class search4stations(QtGui.QWidget):
         self.maxYear.setMaximum(now.year)
         self.maxYear.setValue(now.year)
         
+        #---- subgrid1 ----
+        
+        label_4atleast = QtGui.QLabel('for at least')
+        label_years = QtGui.QLabel('years')
+        
+        self.nbrYear = QtGui.QSpinBox()
+        self.nbrYear.setAlignment(QtCore.Qt.AlignCenter)
+        self.nbrYear.setSingleStep(1)
+        self.nbrYear.setMinimum(0)
+        self.nbrYear.setValue(3)
+        
+        subwidg1 = QtGui.QWidget()
+        subgrid1 = QtGui.QGridLayout()
+        
+        col = 0
+        subgrid1.addWidget(label_4atleast, 0, col)
+        col += 1
+        subgrid1.addWidget(self.nbrYear, 0, col)
+        col += 1
+        subgrid1.addWidget(label_years, 0, col)
+        
+        subgrid1.setSpacing(10)
+        subgrid1.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        subgrid1.setColumnStretch(col+1, 100)
+        
+        subwidg1.setLayout(subgrid1)
+        
+        #---- maingrid ----
+        
         widget_rightPanel = QtGui.QWidget()
         grid_rightPanel = QtGui.QGridLayout()
         
@@ -152,6 +181,8 @@ class search4stations(QtGui.QWidget):
         grid_rightPanel.addWidget(self.minYear, row, 0)
         grid_rightPanel.addWidget(label_and, row, 1)
         grid_rightPanel.addWidget(self.maxYear, row, 2)
+        row += 1
+        grid_rightPanel.addWidget(subwidg1, row, 0, 1, 3)
         
         grid_rightPanel.setSpacing(10)
         grid_rightPanel.setColumnStretch(0, 100)
@@ -256,13 +287,14 @@ class search4stations(QtGui.QWidget):
         RADIUS = self.radius_SpinBox.value()
         startYear = self.minYear.value()
         endYear = self.maxYear.value()
+        nbrYear = self.nbrYear.value()
       
-        self.search_envirocan(LAT, LON, RADIUS, startYear, endYear)
+        self.search_envirocan(LAT, LON, RADIUS, startYear, endYear, nbrYear)
             
         QtGui.QApplication.restoreOverrideCursor()
   
     #===========================================================================
-    def search_envirocan(self, LAT, LON, RADIUS, YearMin, YearMax):
+    def search_envirocan(self, LAT, LON, RADIUS, YearMin, YearMax, nbrYear):
         """
         Search on the Government of Canada website for weather stations with
         daily meteo data around a decimal degree Lat & Lon coordinate with a
@@ -412,23 +444,32 @@ class search4stations(QtGui.QWidget):
                         station_proxim = stnresults[indx_0+n:indx_e]
                         station_proxim = station_proxim.strip()
                         
-                        if start_year.isdigit(): # Daily data exist
+                        if start_year.isdigit(): # daily data exist
+                             
+                            if (int(end_year) - int(start_year)) >= nbrYear:
                            
-                            print 'adding', station_name
-    
-                            StartYear = np.append(StartYear, start_year)
-                            EndYear = np.append(EndYear, end_year)
-                            StationID = np.append(StationID, station_id)
-                            Prov = np.append(Prov, province)
-                            staName = np.append(staName, station_name)
-                            staProxim = np.append(staProxim, station_proxim)
-                        else: # No Daily data  
-                            pass
-                
-                print('%d weather stations with daily data.' % (len(staName)-1))                
-                cmt = '''<font color=green>%d weather stations found with daily 
-                           data.</font>''' % (len(staName) - 1)
-                self.ConsoleSignal.emit(cmt)         
+                                print("adding %s"  % station_name)
+        
+                                StartYear = np.append(StartYear, start_year)
+                                EndYear = np.append(EndYear, end_year)
+                                StationID = np.append(StationID, station_id)
+                                Prov = np.append(Prov, province)
+                                staName = np.append(staName, station_name)
+                                staProxim = np.append(staProxim, station_proxim)
+                            else:                                
+                                print("not adding %s (not enough data)" 
+                                      % station_name)
+                                
+                        else:
+                            print("not adding %s (no daily data)" 
+                                  % station_name)
+                                  
+                msg  = '%d weather stations with daily data' % (len(staName)-1)
+                msg += ' for at least %d years' % nbrYear
+                msg += ' between %d and %d' % (YearMin, YearMax)
+                print(msg) 
+                msg = '<font color=green>' + msg + '</font>'
+                self.ConsoleSignal.emit(msg)         
                 QtCore.QCoreApplication.processEvents()
                 QtCore.QCoreApplication.processEvents()
                    
