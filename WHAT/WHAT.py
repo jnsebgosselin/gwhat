@@ -1760,6 +1760,11 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
         btn_browse_staList.setIconSize(styleDB.iconSize2)
         
+        self.btn_delSta = QtGui.QToolButton()
+        self.btn_delSta.setIcon(iconDB.clear_search)
+        self.btn_delSta.setAutoRaise(True)
+        self.btn_delSta.setIconSize(styleDB.iconSize2)
+        
         #btn_refresh_staList = QtGui.QToolButton()
         #btn_refresh_staList.setAutoRaise(True)
         #btn_refresh_staList.setIcon(iconDB.refresh)
@@ -1772,6 +1777,7 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         subgrid_weather_station.addWidget(self.staName_display, row, 0)
         subgrid_weather_station.addWidget(btn_search4station, row, 1)
         subgrid_weather_station.addWidget(btn_browse_staList, row, 2)
+        subgrid_weather_station.addWidget(self.btn_delSta, row, 3)
         #subgrid_weather_station.addWidget(btn_refresh_staList, row, 3)
         
         widget_weather_station.setLayout(subgrid_weather_station)
@@ -1988,6 +1994,7 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         btn_browse_staList.clicked.connect(self.select_stationList)
         self.staName_display.currentIndexChanged.connect(self.staName_isChanged)              
         #btn_refresh_staList.clicked.connect(self.load_stationList)
+        self.btn_delSta.clicked.connect(self.whoIsChecked)
          
         #---- search4stations ----
          
@@ -2200,11 +2207,10 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
        
         # http://codeprogress.com/python/libraries/pyqt/
         # showPyQTExample.php?index=406&key=QTableWdigetHeaderAlignment
-        self.staList_table.resizeColumnsToContents()
-        self.staList_table.setSortingEnabled(True)
+        
         self.staList_table.setShowGrid(False)
                 
-        header = ('', 'Weather Stations', 'Proximity \n (km)',
+        header = ('', 'Weather Stations', 'Climate ID', 'Proximity \n (km)',
                   'From \n Year', 'To \n Year', 'Prov.')
         staList = self.staList
   
@@ -2216,8 +2222,7 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         self.staList_table.setHorizontalHeaderLabels(header)
         
 #        self.staList_table.horizontalHeader().setResizeMode(QtGui.QHeaderView.ResizeMode(0))
-        self.staList_table.horizontalHeader().setStretchLastSection(True)
-        self.staList_table.resizeColumnsToContents()
+#        self.staList_table.horizontalHeader().setStretchLastSection(True)        
         
         self.staList_table.setMinimumWidth(650)
 #        self.staList_table.horizontalHeader().hide()
@@ -2232,11 +2237,21 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
 #       http://www.riverbankcomputing.com/pipermail/pyqt/2009-March/022160.html
         #http://stackoverflow.com/questions/20797383/qt-fit-width-of-tableview-to-width-of-content
         
-        self.staList_table.setColumnWidth(0, 32)
-        self.staList_table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.staList_table.setColumnHidden(2, True)
         
-        #
+        self.staList_table.setColumnWidth(0, 32)
+        
+        self.staList_table.setColumnWidth(4, 65)
+        self.staList_table.setColumnWidth(5, 65)
+#        self.staList_table.setColumnWidth(6, 32)
+        self.staList_table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.staList_table.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+                
+#        self.staList_table.resizeColumnsToContents()
+        
         class NumTableWidgetItem(QtGui.QTableWidgetItem):
+            
+        # To be able to sort numerical item within a given column.
 
         # http://stackoverflow.com/questions/12673598/
         # python-numerical-sorting-in-qtablewidget
@@ -2250,16 +2265,36 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             # the sortKey
             def __lt__(self, other):
                 return self.sortKey < other.sortKey 
-       
+                
+        #------------------------------------------------- Populating Table ----
+
         for row in range(nrow):
             
-            col = 1 # Station
+            col = 0  # Checkbox
+            
+            dummy = QtGui.QTableWidgetItem('')
+            dummy.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+            self.staList_table.setItem(row, col, dummy)
+            
+            self.dwnldCheck =  QtGui.QCheckBox()
+            
+            self.staList_table.setCellWidget(row, col, self.dwnldCheck)
+            
+            col += 1 # Station
             
             item1 = QtGui.QTableWidgetItem(staList[row, 0])
             item1.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
             item1.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            item1.setToolTip(staList[row, 0])
             self.staList_table.setItem(row, col, item1)
-           
+            
+            col += 1 # Climate ID (hidden)
+            
+            item1 = QtGui.QTableWidgetItem(staList[row, 5])
+            item1.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+            item1.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            self.staList_table.setItem(row, col, item1)
+            
             col += 1 # Proximity
             
             item = NumTableWidgetItem('%0.2f' % float(staList[row, 6]),
@@ -2270,6 +2305,10 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             
             col += 1 # From Year
             
+            dummy = QtGui.QTableWidgetItem('')
+            dummy.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+            self.staList_table.setItem(row, col, dummy)
+            
             min_year = int(staList[row, 2])
             max_year = int(staList[row, 3])
             yearspan = np.arange(min_year, max_year+1).astype(str)
@@ -2278,23 +2317,33 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
 #            item.setFlags(~QtCore.Qt.ItemIsEnabled)
 #            self.staList_table.setItem(row, col, item)
             
-            self.fromYear = QtGui.QComboBox()
-            self.fromYear.setEditable(False)
+            self.fromYear = QtGui.QComboBox() 
+            self.fromYear.setFixedWidth(65)
             self.fromYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
             self.fromYear.addItems(yearspan)
+            self.fromYear.setMinimumContentsLength(4)
+            self.fromYear.setSizeAdjustPolicy(
+                                  QtGui.QComboBox.AdjustToMinimumContentsLength)            
+                                  
             self.staList_table.setCellWidget(row, col, self.fromYear)
             
+#            QComboBox.AdjustToMinimumContentsLength
+            
             col += 1 # To Year
-
-#            item = QtGui.QTableWidgetItem(staList[row, 3])
-#            item.setFlags(~QtCore.Qt.ItemIsEditable)
-#            self.staList_table.setItem(row, col, item)
-
+            
+            dummy = QtGui.QTableWidgetItem('')
+            dummy.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+            self.staList_table.setItem(row, col, dummy)
+            
             self.toYear = QtGui.QComboBox()
-            self.toYear.setEditable(False)
+            self.toYear.setFixedWidth(65)
             self.toYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
             self.toYear.addItems(yearspan)
             self.toYear.setCurrentIndex(len(yearspan)-1)
+            self.toYear.setMinimumContentsLength(4)
+            self.toYear.setSizeAdjustPolicy(
+                                  QtGui.QComboBox.AdjustToMinimumContentsLength)
+                                  
             self.staList_table.setCellWidget(row, col, self.toYear)
             
             col += 1 # Province
@@ -2304,37 +2353,48 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.staList_table.setItem(row, col, item)
             
-            col = 0 # Del weather station from list
+#            col += 1 # Del weather station from list
+#            
+#            dummy = QtGui.QTableWidgetItem('')
+#            dummy.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+#            self.staList_table.setItem(row, col, dummy)
+#            
+#            self.btn_delRow = QtGui.QPushButton()
+#            self.btn_delRow.setIcon(iconDB.clear_search)
+#            self.btn_delRow.setToolTip('Remove station %s from list.' % (staList[row, 0]))
+#            self.btn_delRow.setFlat(True)
+#            self.btn_delRow.setFixedHeight(32)
+#            self.btn_delRow.setFixedWidth(32)
+##            self.btn_delRow.setFocusPolicy(QtCore.Qt.NoFocus)
+#
+#            self.btn_delRow.clicked.connect(self.handleButtonClicked)
+#            self.staList_table.setCellWidget(row, col, self.btn_delRow)
             
-#            item = QtGui.QTableWidgetItem("")
-#            item.setFlags(QtCore.Qt.ItemIsEnabled)
-#            item.setTextAlignment(QtCore.Qt.AlignHCenter)
-#            self.staList_table.setItem(row, col, item)
-            
-            self.btn_delRow = QtGui.QPushButton()
-#            self.btn_delRow.setAutoRaise(True)
-            self.btn_delRow.setIcon(iconDB.clear_search)
-            self.btn_delRow.setToolTip('Remove station %s from list.' % (staList[row, 0]))
-            self.btn_delRow.setFlat(True)
-            self.btn_delRow.setFixedHeight(32)
-            self.btn_delRow.setFixedWidth(32)
-
-#            self.btn_delRow.setToolTip(ttipDB.clearall)
-#            self.btn_delRow.setFocusPolicy(QtCore.Qt.NoFocus)
-
-            self.btn_delRow.clicked.connect(self.handleButtonClicked)
-            self.staList_table.setCellWidget(row, col, self.btn_delRow)
-    
-    def handleButtonClicked(self):
+        self.staList_table.setSortingEnabled(True)
         
-        button = QtGui.qApp.focusWidget()
-
-        # or button = self.sender()
-        index = self.staList_table.indexAt(button.pos())
-
-        if index.isValid():
-            print index.row()
-            self.staList_table.removeRow(index.row())
+    def whoIsChecked(self):        
+        
+        # Going in reverse order to preserve indexes while scanning the rows if
+        # any are deleted.
+        for row in reversed(range(self.staList_table.rowCount())):
+            isChecked = self.staList_table.cellWidget(row, 0).isChecked()
+            if isChecked:                
+                print('%s (%s)' % (self.staList_table.item(row, 1).text(),
+                                   self.staList_table.item(row, 2).text())) 
+                self.staList_table.removeRow(row)
+            
+        
+     
+#    def handleButtonClicked(self):
+#        
+#        button = QtGui.qApp.focusWidget()
+#
+#        # or button = self.sender()
+#        index = self.staList_table.indexAt(button.pos())
+#
+#        if index.isValid():
+#            print index.row()
+#            self.staList_table.removeRow(index.row())
         
     #=========================================================================== 
     def staName_isChanged(self):
@@ -2511,7 +2571,6 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
 
             self.btn_get.setIcon(iconDB.download)
         
-            self.staName_display.setEnabled(True)
             self.yStart_edit.setEnabled(True)
             self.yEnd_edit.setEnabled(True)            
             self.parent.pbar.hide()
