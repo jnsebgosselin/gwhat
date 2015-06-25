@@ -1967,7 +1967,8 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         
         self.MergeOutput = np.array([])
         self.dwnl_rawfiles = DownloadRawDataFiles(self)
-        self.widget_search4stations = envirocan.search4stations()
+        self.widget_search4stations = envirocan.search4stations(self.parent)
+        self.widget_search4stations.setWindowFlags(QtCore.Qt.Window)
 
         #----------------------------------------------------------- EVENTS ----       
          
@@ -2023,7 +2024,7 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         is clicked.
         '''
     #===========================================================================
-                                             
+                
         qr = self.widget_search4stations.frameGeometry()
         cp = self.parent.frameGeometry().center()
         qr.moveCenter(cp)
@@ -2197,12 +2198,14 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
     
     def build_staList_table(self):
        
-        #http://codeprogress.com/python/libraries/pyqt/showPyQTExample.php?index=406&key=QTableWdigetHeaderAlignment
+        # http://codeprogress.com/python/libraries/pyqt/
+        # showPyQTExample.php?index=406&key=QTableWdigetHeaderAlignment
         self.staList_table.resizeColumnsToContents()
         self.staList_table.setSortingEnabled(True)
+        self.staList_table.setShowGrid(False)
                 
-        header = ('Weather Stations', 'Prov.', 'Proximity \n (km)',
-                  'From \n Year', 'To \n Year', '')
+        header = ('', 'Weather Stations', 'Proximity \n (km)',
+                  'From \n Year', 'To \n Year', 'Prov.')
         staList = self.staList
   
         ncol = len(header)
@@ -2211,8 +2214,6 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         self.staList_table.setColumnCount(ncol)
         self.staList_table.setRowCount(nrow)
         self.staList_table.setHorizontalHeaderLabels(header)
-#        self.staList_table.setShowGrid(False)
-        
         
 #        self.staList_table.horizontalHeader().setResizeMode(QtGui.QHeaderView.ResizeMode(0))
         self.staList_table.horizontalHeader().setStretchLastSection(True)
@@ -2231,6 +2232,10 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
 #       http://www.riverbankcomputing.com/pipermail/pyqt/2009-March/022160.html
         #http://stackoverflow.com/questions/20797383/qt-fit-width-of-tableview-to-width-of-content
         
+        self.staList_table.setColumnWidth(0, 32)
+        self.staList_table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        
+        #
         class NumTableWidgetItem(QtGui.QTableWidgetItem):
 
         # http://stackoverflow.com/questions/12673598/
@@ -2248,19 +2253,12 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
        
         for row in range(nrow):
             
-            col = 0 # Station
+            col = 1 # Station
             
             item1 = QtGui.QTableWidgetItem(staList[row, 0])
             item1.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            item1.setTextAlignment(QtCore.Qt.AlignLeft)
+            item1.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
             self.staList_table.setItem(row, col, item1)
-           
-            col += 1 # Province
-            
-            item = QtGui.QTableWidgetItem(staList[row, 4])
-            item.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.staList_table.setItem(row, col, item)
            
             col += 1 # Proximity
             
@@ -2276,9 +2274,9 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             max_year = int(staList[row, 3])
             yearspan = np.arange(min_year, max_year+1).astype(str)
             
-            item = QtGui.QTableWidgetItem(staList[row, 2])
-            item.setFlags(~QtCore.Qt.ItemIsEnabled)
-            self.staList_table.setItem(row, col, item)
+#            item = QtGui.QTableWidgetItem(staList[row, 2])
+#            item.setFlags(~QtCore.Qt.ItemIsEnabled)
+#            self.staList_table.setItem(row, col, item)
             
             self.fromYear = QtGui.QComboBox()
             self.fromYear.setEditable(False)
@@ -2288,9 +2286,9 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             
             col += 1 # To Year
 
-            item = QtGui.QTableWidgetItem(staList[row, 3])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            self.staList_table.setItem(row, col, item)
+#            item = QtGui.QTableWidgetItem(staList[row, 3])
+#            item.setFlags(~QtCore.Qt.ItemIsEditable)
+#            self.staList_table.setItem(row, col, item)
 
             self.toYear = QtGui.QComboBox()
             self.toYear.setEditable(False)
@@ -2299,11 +2297,19 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             self.toYear.setCurrentIndex(len(yearspan)-1)
             self.staList_table.setCellWidget(row, col, self.toYear)
             
-            col += 1 # Del weather station from list
+            col += 1 # Province
             
-            item = QtGui.QTableWidgetItem("")
-            item.setFlags(QtCore.Qt.ItemIsEnabled)            
+            item = QtGui.QTableWidgetItem(staList[row, 4])
+            item.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.staList_table.setItem(row, col, item)
+            
+            col = 0 # Del weather station from list
+            
+#            item = QtGui.QTableWidgetItem("")
+#            item.setFlags(QtCore.Qt.ItemIsEnabled)
+#            item.setTextAlignment(QtCore.Qt.AlignHCenter)
+#            self.staList_table.setItem(row, col, item)
             
             self.btn_delRow = QtGui.QPushButton()
 #            self.btn_delRow.setAutoRaise(True)
