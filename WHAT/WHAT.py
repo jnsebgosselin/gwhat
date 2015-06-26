@@ -153,7 +153,7 @@ class MainWindow(QtGui.QMainWindow):
         self.projectInfo = MyProject(self)
         self.whatPref = WHATPref(self)
         self.new_project_window = what_project.NewProject(software_version)
-        self.open_project_window = what_project.OpenProject()
+#        self.open_project_window = what_project.OpenProject()
         
         #------------------------------------------------------ PREFERENCES ----
                 
@@ -233,7 +233,6 @@ class MainWindow(QtGui.QMainWindow):
         subgrid_menubar.setSpacing(3)
         subgrid_menubar.setContentsMargins(0, 0, 0, 5) #Left, Top, Right, Bottom 
         subgrid_menubar.setColumnStretch(1, 500)
-#        subgrid_menubar.setColumnMinimumWidth(1, 100)
         subgrid_menubar.setRowMinimumHeight(0, 28)
         
         self.menubar_widget.setLayout(subgrid_menubar)
@@ -258,9 +257,9 @@ class MainWindow(QtGui.QMainWindow):
         #---- WIDGETS ----
                 
         self.tab_dwnld_data = TabDwnldData(self)
-        self.tab_fill = TabFill(self)
-        tab_about = TabAbout(self)
+        self.tab_fill = TabFill(self)        
         self.tab_hydrograph = TabHydrograph(self)
+        tab_about = TabAbout(self)
         
         #---- LAYOUT ----
         
@@ -280,15 +279,16 @@ class MainWindow(QtGui.QMainWindow):
         splitter.addWidget(self.main_console)
         
         splitter.setCollapsible(0, True)
-        splitter.setStretchFactor(0, 100)    
+        splitter.setStretchFactor(0, 100)                
+        splitter.setSizes([100, 1]) # Forces initially the main_console to its
+                                    # minimal height.       
         
-        # Forces initially the main_console to its minimal height.
-        splitter.setSizes([100, 1])          
-        
-        #-------------------------------------------------------- MAIN GRID ----
-        
+        #----------------------------------------------------- Progress Bar ----
+
         self.pbar = QtGui.QProgressBar()
         self.pbar.setValue(0)
+        
+        #-------------------------------------------------------- MAIN GRID ----
         
         main_widget = QtGui.QWidget()
         self.setCentralWidget(main_widget)        
@@ -297,8 +297,6 @@ class MainWindow(QtGui.QMainWindow):
         mainGrid.setSpacing(10)
         
         row = 0
-#        mainGrid.addWidget(proDir_widget, row, 0)
-#        row += 1
         mainGrid.addWidget(splitter, row, 0)
         row += 1
         mainGrid.addWidget(self.pbar, row, 0)
@@ -311,7 +309,15 @@ class MainWindow(QtGui.QMainWindow):
         self.btn_new_project.clicked.connect(self.show_new_project)
         self.project_display.clicked.connect(self.open_project)
         self.new_project_window.NewProjectSignal.connect(self.load_project)
-        self.open_project_window.OpenProjectSignal.connect(self.load_project)                                                       
+#        self.open_project_window.OpenProjectSignal.connect(self.load_project) 
+
+        #---- Console Signal Piping ----
+        
+        issuer = self.tab_dwnld_data.dwnld_weather
+        issuer.ConsoleSignal.connect(self.write2console)  
+
+        issuer = self.tab_dwnld_data.dwnld_weather.search4stations
+        issuer.ConsoleSignal.connect(self.write2console)                                                    
         
         #---------------------------------------------------- MESSAGE BOXES ----
         
@@ -387,7 +393,7 @@ class MainWindow(QtGui.QMainWindow):
     def open_project(self):
         '''
         "open_project" is called by the event "self.project_display.clicked".
-        It allows the user to select a new active project directory.
+        It allows the user to open an already existing project.
         '''
     #---------------------------------------------------------------------------
         
@@ -435,7 +441,7 @@ class MainWindow(QtGui.QMainWindow):
     def load_project(self, filename):
         '''
         This method is called either on startup during <initUI> or when a new
-        project folder is chosen with <open_project>.        
+        project is chosen with <open_project>.        
         '''
     #---------------------------------------------------------------------------
         
@@ -474,10 +480,17 @@ class MainWindow(QtGui.QMainWindow):
                                                            self.projectInfo.lat)
         self.tab_dwnld_data.widget_search4stations.lon_spinBox.setValue(
                                                            self.projectInfo.lon)
+                                                           
+        self.tab_dwnld_data.dwnld_weather.search4stations.lat_spinBox.setValue(
+                                                           self.projectInfo.lat)
+                                                           
+        self.tab_dwnld_data.dwnld_weather.search4stations.lon_spinBox.setValue(
+                                                           self.projectInfo.lon)
         
         #---- Load Weather Station List ----
 
-        self.tab_dwnld_data.load_stationList()
+#        self.tab_dwnld_data.load_stationList()
+        self.tab_dwnld_data.dwnld_weather.load_stationList()
             
         #---- Load Weather Input Files ----
         
@@ -488,8 +501,11 @@ class MainWindow(QtGui.QMainWindow):
         self.tab_hydrograph.meteo_dir = self.projectdir + '/Meteo/Output'
         self.tab_hydrograph.waterlvl_dir = self.projectdir + '/Water Levels'
         self.tab_hydrograph.save_fig_dir = self.projectdir
-        self.tab_dwnld_data.widget_search4stations.savedir = self.projectdir
         
+        #---- Update child widgets ----
+        
+        self.tab_dwnld_data.dwnld_weather.set_workdir(self.projectdir)
+        self.tab_dwnld_data.widget_search4stations.savedir = self.projectdir        
         self.tab_hydrograph.weather_avg_graph.save_fig_dir = self.projectdir
         
         print('')
@@ -578,11 +594,11 @@ class MainWindow(QtGui.QMainWindow):
                 
         return True
                     
-################################################################ @TAB HYDROGRAPH
+################################################################################
         
-class TabHydrograph(QtGui.QWidget):
+class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
     
-################################################################ @TAB HYDROGRAPH
+################################################################################
     
     def __init__(self, parent):
         super(TabHydrograph, self).__init__(parent)
@@ -1742,125 +1758,119 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
        
         #-------------------------------------------------- SubGrid Station ----
 
-        #----- SubGrid Weather Station -----#
-        
-        self.staName_display = QtGui.QComboBox()
-        self.staName_display.setEditable(False)
-        self.staName_display.setInsertPolicy(QtGui.QComboBox.NoInsert)
+#        #----- SubGrid Weather Station -----#
+#        
+#        self.staName_display = QtGui.QComboBox()
+#        self.staName_display.setEditable(False)
+#        self.staName_display.setInsertPolicy(QtGui.QComboBox.NoInsert)
+#                
+#        btn_search4station = QtGui.QToolButton()
+#        btn_search4station.setAutoRaise(True)
+#        btn_search4station.setIcon(iconDB.search)
+#        btn_search4station.setToolTip(ttipDB.search4stations)
+#        btn_search4station.setIconSize(styleDB.iconSize2)
+#        
+#        btn_browse_staList = QtGui.QToolButton()
+#        btn_browse_staList.setIcon(iconDB.openFolder)
+#        btn_browse_staList.setAutoRaise(True)
+#        btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
+#        btn_browse_staList.setIconSize(styleDB.iconSize2)
+#        
+#        #btn_refresh_staList = QtGui.QToolButton()
+#        #btn_refresh_staList.setAutoRaise(True)
+#        #btn_refresh_staList.setIcon(iconDB.refresh)
+#        #btn_refresh_staList.setToolTip(ttipDB.refresh_staList)
+#        
+#        widget_weather_station = QtGui.QFrame()
+#        subgrid_weather_station = QtGui.QGridLayout()
+#        
+#        row = 0
+#        subgrid_weather_station.addWidget(self.staName_display, row, 0)
+#        subgrid_weather_station.addWidget(btn_search4station, row, 1)
+#        subgrid_weather_station.addWidget(btn_browse_staList, row, 2)
+#        #subgrid_weather_station.addWidget(btn_refresh_staList, row, 3)
+#        
+#        widget_weather_station.setLayout(subgrid_weather_station)
+#        subgrid_weather_station.setContentsMargins(0, 0, 0, 0) # Left, Top, 
+#                                                               # Right, Bottom 
+#        subgrid_weather_station.setSpacing(10)
+#        subgrid_weather_station.setColumnStretch(3, 500)
+#        subgrid_weather_station.setColumnMinimumWidth(0, 200)
                 
-        btn_search4station = QtGui.QToolButton()
-        btn_search4station.setAutoRaise(True)
-        btn_search4station.setIcon(iconDB.search)
-        btn_search4station.setToolTip(ttipDB.search4stations)
-        btn_search4station.setIconSize(styleDB.iconSize2)
-        
-        btn_browse_staList = QtGui.QToolButton()
-        btn_browse_staList.setIcon(iconDB.openFolder)
-        btn_browse_staList.setAutoRaise(True)
-        btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
-        btn_browse_staList.setIconSize(styleDB.iconSize2)
-        
-        self.btn_delSta = QtGui.QToolButton()
-        self.btn_delSta.setIcon(iconDB.clear_search)
-        self.btn_delSta.setAutoRaise(True)
-        self.btn_delSta.setIconSize(styleDB.iconSize2)
-        
-        #btn_refresh_staList = QtGui.QToolButton()
-        #btn_refresh_staList.setAutoRaise(True)
-        #btn_refresh_staList.setIcon(iconDB.refresh)
-        #btn_refresh_staList.setToolTip(ttipDB.refresh_staList)
-        
-        widget_weather_station = QtGui.QFrame()
-        subgrid_weather_station = QtGui.QGridLayout()
-        
-        row = 0
-        subgrid_weather_station.addWidget(self.staName_display, row, 0)
-        subgrid_weather_station.addWidget(btn_search4station, row, 1)
-        subgrid_weather_station.addWidget(btn_browse_staList, row, 2)
-        subgrid_weather_station.addWidget(self.btn_delSta, row, 3)
-        #subgrid_weather_station.addWidget(btn_refresh_staList, row, 3)
-        
-        widget_weather_station.setLayout(subgrid_weather_station)
-        subgrid_weather_station.setContentsMargins(0, 0, 0, 0) # Left, Top, 
-                                                               # Right, Bottom 
-        subgrid_weather_station.setSpacing(10)
-        subgrid_weather_station.setColumnStretch(3, 500)
-        subgrid_weather_station.setColumnMinimumWidth(0, 200)
+#        #----- SubGrid StartYear and EndYear -----#
+#        
+#        year_label1 = QtGui.QLabel('from')
+#        year_label1.setAlignment(QtCore.Qt.AlignCenter)
+#        self.yStart_edit = QtGui.QSpinBox()
+#        self.yStart_edit.setAlignment(QtCore.Qt.AlignCenter)        
+#        self.yStart_edit.setSingleStep(1)
+#        self.yStart_edit.setValue(0)        
+#        year_label2 = QtGui.QLabel('to')
+#        year_label2.setAlignment(QtCore.Qt.AlignCenter)
+#        self.yEnd_edit = QtGui.QSpinBox()
+#        self.yEnd_edit.setAlignment(QtCore.Qt.AlignCenter)
+#        self.yEnd_edit.setSingleStep(1)
+#        self.yEnd_edit.setValue(0)
+#        
+#        subgrid_year_widget = QtGui.QFrame()
+#        subgrid_year = QtGui.QGridLayout()
+#        
+#        row = 0
+#        subgrid_year.addWidget(year_label1, row, 0)
+#        subgrid_year.addWidget(self.yStart_edit, row, 1)
+#        subgrid_year.addWidget(year_label2, row, 2)
+#        subgrid_year.addWidget(self.yEnd_edit, row, 3)
+#        
+#        subgrid_year_widget.setLayout(subgrid_year)
+#        subgrid_year.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom 
+#        subgrid_year.setSpacing(15)
+#        subgrid_year.setColumnStretch(4, 500)
+#        
+#        #---- ASSEMBLING SubGrids -----#
+#        
+#        staName_label = QtGui.QLabel('Weather Station :')
+#        year_title = QtGui.QLabel('Download Data :')
+#         
+#        subgrid_Station = QtGui.QGridLayout()
+#        Station_widget = QtGui.QFrame()
+#        Station_widget.setFrameStyle(styleDB.frame)                      
+#        
+#        row = 0
+#        subgrid_Station.addWidget(staName_label, row, 1)
+#        subgrid_Station.addWidget(widget_weather_station, row, 2)
+#        row += 1
+#        subgrid_Station.addWidget(year_title, row, 1)
+#        subgrid_Station.addWidget(subgrid_year_widget, row, 2)
+#        
+#        Station_widget.setLayout(subgrid_Station)
+#        subgrid_Station.setContentsMargins(15, 15, 15, 15) # Left, Top, 
+#                                                           # Right, Bottom 
+#        subgrid_Station.setVerticalSpacing(20)
+#        subgrid_Station.setHorizontalSpacing(10)
+#        # subgrid_Station.setColumnStretch(0, 100)
+#        subgrid_Station.setColumnStretch(6, 100)
                 
-        #----- SubGrid StartYear and EndYear -----#
-        
-        year_label1 = QtGui.QLabel('from')
-        year_label1.setAlignment(QtCore.Qt.AlignCenter)
-        self.yStart_edit = QtGui.QSpinBox()
-        self.yStart_edit.setAlignment(QtCore.Qt.AlignCenter)        
-        self.yStart_edit.setSingleStep(1)
-        self.yStart_edit.setValue(0)        
-        year_label2 = QtGui.QLabel('to')
-        year_label2.setAlignment(QtCore.Qt.AlignCenter)
-        self.yEnd_edit = QtGui.QSpinBox()
-        self.yEnd_edit.setAlignment(QtCore.Qt.AlignCenter)
-        self.yEnd_edit.setSingleStep(1)
-        self.yEnd_edit.setValue(0)
-        
-        subgrid_year_widget = QtGui.QFrame()
-        subgrid_year = QtGui.QGridLayout()
-        
-        row = 0
-        subgrid_year.addWidget(year_label1, row, 0)
-        subgrid_year.addWidget(self.yStart_edit, row, 1)
-        subgrid_year.addWidget(year_label2, row, 2)
-        subgrid_year.addWidget(self.yEnd_edit, row, 3)
-        
-        subgrid_year_widget.setLayout(subgrid_year)
-        subgrid_year.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom 
-        subgrid_year.setSpacing(15)
-        subgrid_year.setColumnStretch(4, 500)
-        
-        #---- ASSEMBLING SubGrids -----#
-        
-        staName_label = QtGui.QLabel('Weather Station :')
-        year_title = QtGui.QLabel('Download Data :')
-         
-        subgrid_Station = QtGui.QGridLayout()
-        Station_widget = QtGui.QFrame()
-        Station_widget.setFrameStyle(styleDB.frame)                      
-        
-        row = 0
-        subgrid_Station.addWidget(staName_label, row, 1)
-        subgrid_Station.addWidget(widget_weather_station, row, 2)
-        row += 1
-        subgrid_Station.addWidget(year_title, row, 1)
-        subgrid_Station.addWidget(subgrid_year_widget, row, 2)
-        
-        Station_widget.setLayout(subgrid_Station)
-        subgrid_Station.setContentsMargins(15, 15, 15, 15) # Left, Top, 
-                                                           # Right, Bottom 
-        subgrid_Station.setVerticalSpacing(20)
-        subgrid_Station.setHorizontalSpacing(10)
-        # subgrid_Station.setColumnStretch(0, 100)
-        subgrid_Station.setColumnStretch(6, 100)
-                
-        #----------------------------------------------- GRID DOWNLOAD DATA ----
-                
-        self.btn_get = QtGui.QPushButton(labelDB.btn_GetData)
-        self.btn_get.setIcon(iconDB.download)
-        self.btn_get.setToolTip(ttipDB.btn_GetData)
-        self.btn_get.setIconSize(styleDB.iconSize2)        
-                                 
-        grid_TOP = QtGui.QGridLayout()
-        TOP_widget = QtGui.QFrame()
-        
-        row = 0
-        grid_TOP.addWidget(Station_widget, row, 0, 1, 2)
-        row += 1
-        grid_TOP.addWidget(self.btn_get, row, 0)
-                
-        # Total number of columns = 3
-        
-        TOP_widget.setLayout(grid_TOP)
-        grid_TOP.setContentsMargins(0, 0, 0, 15) #Left, Top, Right, Bottom 
-        grid_TOP.setSpacing(15)
-        grid_TOP.setColumnStretch(1, 500)
+#        #----------------------------------------------- GRID DOWNLOAD DATA ----
+#                
+#        self.btn_get = QtGui.QPushButton(labelDB.btn_GetData)
+#        self.btn_get.setIcon(iconDB.download)
+#        self.btn_get.setToolTip(ttipDB.btn_GetData)
+#        self.btn_get.setIconSize(styleDB.iconSize2)        
+#                                 
+#        grid_TOP = QtGui.QGridLayout()
+#        TOP_widget = QtGui.QFrame()
+#        
+#        row = 0
+#        grid_TOP.addWidget(Station_widget, row, 0, 1, 2)
+#        row += 1
+#        grid_TOP.addWidget(self.btn_get, row, 0)
+#                
+#        # Total number of columns = 3
+#        
+#        TOP_widget.setLayout(grid_TOP)
+#        grid_TOP.setContentsMargins(0, 0, 0, 15) #Left, Top, Right, Bottom 
+#        grid_TOP.setSpacing(15)
+#        grid_TOP.setColumnStretch(1, 500)
         
     #---------------------------------------------------------- GRID BOTTOM ----                     
         
@@ -1912,9 +1922,9 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         grid_BOTTOM.setSpacing(10)
                 
         #-------------------------------------------------------- MAIN GRID ----
-
-        self.staList_table = QtGui.QTableWidget()
-        self.staList_table.setFrameStyle(styleDB.frame)
+        
+        self.dwnld_weather = envirocan.dwnldWeather()
+        self.dwnld_weather.set_workdir(self.parent.projectdir)
                 
         TITLE_TOP = QtGui.QLabel(labelDB.title_download)    
         TITLE_BOTTOM  = QtGui.QLabel(labelDB.title_concatenate)
@@ -1934,23 +1944,23 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         
         col = 1
         row = 1
-        grid_MAIN.addWidget(line1, row, col)        
-        row += 1
-        grid_MAIN.addWidget(TITLE_TOP, row, col)
-        row += 1
-        grid_MAIN.addWidget(line2, row, col)
-        row += 1
-        grid_MAIN.addWidget(TOP_widget, row, col)
-        row += 1
-        grid_MAIN.addWidget(line3, row, col)
-        row += 1
-        grid_MAIN.addWidget(TITLE_BOTTOM, row, col)
-        row += 1
-        grid_MAIN.addWidget(line4, row, col)
-        row += 1
-        grid_MAIN.addWidget(BOTTOM_widget, row, col)
-        col += 1
-        grid_MAIN.addWidget(self.staList_table, 1, col, row, 1)
+#        grid_MAIN.addWidget(line1, row, col)        
+#        row += 1
+#        grid_MAIN.addWidget(TITLE_TOP, row, col)
+#        row += 1
+#        grid_MAIN.addWidget(line2, row, col)
+#        row += 1
+#        grid_MAIN.addWidget(TOP_widget, row, col)
+#        row += 1
+#        grid_MAIN.addWidget(line3, row, col)
+#        row += 1
+#        grid_MAIN.addWidget(TITLE_BOTTOM, row, col)
+#        row += 1
+#        grid_MAIN.addWidget(line4, row, col)
+#        row += 1
+#        grid_MAIN.addWidget(BOTTOM_widget, row, col)
+#        col += 1
+        grid_MAIN.addWidget(self.dwnld_weather, 1, col, row, 1)
         
         grid_MAIN.setRowStretch(0, 500)
         grid_MAIN.setRowStretch(row+1, 500)
@@ -1980,28 +1990,28 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
          
         #---- download raw data files ----
          
-        self.dwnl_rawfiles.ProgBarSignal.connect(self.setProgBarSignal)
-        self.dwnl_rawfiles.ConsoleSignal.connect(self.parent.write2console)
-        self.dwnl_rawfiles.MergeSignal.connect(self.download_is_finished)
-        self.btn_get.clicked.connect(self.fetch_start_and_stop)
-        self.yStart_edit.valueChanged.connect(self.start_year_changed)
-        self.yEnd_edit.valueChanged.connect(self.end_year_changed)
-        btn_select.clicked.connect(self.select_raw_files)
-        btn_save.clicked.connect(self.select_concatened_save_path)
+#        self.dwnl_rawfiles.ProgBarSignal.connect(self.setProgBarSignal)
+#        self.dwnl_rawfiles.ConsoleSignal.connect(self.parent.write2console)
+#        self.dwnl_rawfiles.MergeSignal.connect(self.download_is_finished)
+        
+#        self.btn_get.clicked.connect(self.fetch_start_and_stop)
+#        self.yStart_edit.valueChanged.connect(self.start_year_changed)
+#        self.yEnd_edit.valueChanged.connect(self.end_year_changed)
+#        btn_select.clicked.connect(self.select_raw_files)
+#        btn_save.clicked.connect(self.select_concatened_save_path)
         
         #---- weather station list ----
         
-        btn_browse_staList.clicked.connect(self.select_stationList)
-        self.staName_display.currentIndexChanged.connect(self.staName_isChanged)              
+#        btn_browse_staList.clicked.connect(self.select_stationList)
+#        self.staName_display.currentIndexChanged.connect(self.staName_isChanged)              
         #btn_refresh_staList.clicked.connect(self.load_stationList)
-        self.btn_delSta.clicked.connect(self.whoIsChecked)
          
         #---- search4stations ----
          
-        btn_search4station.clicked.connect(self.show_search4stations)
-        self.widget_search4stations.ConsoleSignal.connect(
-                                                      self.parent.write2console)                                                   
-        self.widget_search4stations.staListSignal.connect(self.load_stationList)
+#        btn_search4station.clicked.connect(self.show_search4stations)
+#        self.widget_search4stations.ConsoleSignal.connect(
+#                                                      self.parent.write2console)                                                   
+#        self.widget_search4stations.staListSignal.connect(self.load_stationList)
                    
         
     def start_year_changed(self):
@@ -2077,313 +2087,129 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             QtGui.QApplication.processEvents()
             self.load_stationList()
             
-    #===========================================================================
-    def load_stationList(self): # refresh_stationList(self):
-        '''
-        This method is started either either :
-        
-        (1) when a new project folder is loaded in 
-            <MainWindow.load_project>
-        (2) after a search has been completed for weather stations in 
-            <envirocan.search4stations>
-        (3) When a station list is loaded manually by the user from method
-            <select_stationList>.
-        
-        It loads the informations in the "weather_stations.lst" file that is
-        located in the project folder and save it as a table in <self.staList>
-        and displays the station list in the QComboBox widget.
-        
-        ----- weather_stations.lst -----
-        
-        The weather_station.lst is a tabulation separated csv file that contains
-        the following information:  station names, station ID , date at which
-        the data records begin and date at which the data records end, the
-        provinces to which each station belongs, the climate ID and the
-        Proximity value in km for the original search location.
-        
-        All these information can be found on the Government of Canada
-        website in the address bar of the web browser when a station is
-        selected. Note that the station ID is not the same as the Climate ID 
-        of the station. For example, the ID for the station Abercorn is 5308,
-        as it can be found in the following address:
-        
-        "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
-         2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
-         1985&Month=1&Day=01"
-        '''
-    #===========================================================================
-        
-        #-----------------------------------------------------------------------
-        
-        self.staName_display.clear()
-        self.staList = []        
-        station_list_path = (self.parent.projectdir + '/weather_stations.lst')
-        
-        if not path.exists(station_list_path):
-            # Force the creation of a new "weather_station.lst" file
-            self.parent.check_project()
-        
-        with open(station_list_path, 'rb') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-        
-        #--------------------------------------- CHECK STATION LIST VERSION ----
-        
-        # Check if the list is from an older version, and update it if yes
-        header = headerDB.weather_stations[0]
-        
-        nCONFG, nPARA = np.shape(reader)         
-        if nPARA < len(header):
-            print 'This list is from an older version of WHAT.'
-            print 'Converting to new format.'
-            
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-                                                        
-            self.parent.write2console('''<font color=black>
-                                           Converting weather station list to
-                                           a more recent format. Please wait...
-                                         </font>''')
-            QtGui.QApplication.processEvents()
-            QtGui.QApplication.processEvents()
-            
-            nMissing = len(header) - nPARA
-            
-            col2add = np.zeros((nCONFG, nMissing)).astype(int)
-            col2add = col2add.astype(str)
-            
-            reader = np.hstack((reader, col2add))
-            reader[0] = header
-            
-            if nPARA < 6:
-                for i in range(nCONFG-1):
-                    Prov = reader[i+1, 4]
-                    stationId = reader[i+1, 1]
-                    reader[i+1, 5] = envirocan.get_climate_ID(Prov, stationId)
-            
-            #---- Save List ----
-            
-            with open(station_list_path, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
-    
-    #----------------------------------------------------------- LOAD TO UI ----
-    
-        if len(reader) > 1: # LOAD station list into the UI
-            
-            self.parent.write2console('''<font color=black>
-                                           Weather station list loaded 
-                                           successfully.
-                                         </font>''')
-                                         
-            #----- Enable and Refresh UI ----
-                                         
-            self.staName_display.setEnabled(True)
-            self.yStart_edit.setEnabled(True)
-            self.yEnd_edit.setEnabled(True)
-            
-            self.staList = np.array(reader[1:])
-            self.staName_display.addItems(self.staList[:, 0])
-            
-            self.build_staList_table()
-                                         
-        else: # Station list EMPTY
-            
-            self.parent.write2console('''<font color=red>
-                                           Weather Station list is empty.
-                                         </font>''')
-        
-            #----- Disable UI ----
-        
-            self.staName_display.setEnabled(False)
-            self.yStart_edit.setEnabled(False)
-            self.yStart_edit.setRange(0, 1)
-            self.yStart_edit.setValue(0)
-            self.yEnd_edit.setEnabled(False)
-            self.yEnd_edit.setRange(0, 1)
-            self.yEnd_edit.setValue(0)
-            
-        QtGui.QApplication.restoreOverrideCursor()
-    
-    def build_staList_table(self):
-       
-        # http://codeprogress.com/python/libraries/pyqt/
-        # showPyQTExample.php?index=406&key=QTableWdigetHeaderAlignment
-        
-        self.staList_table.setShowGrid(False)
-                
-        header = ('', 'Weather Stations', 'Climate ID', 'Proximity \n (km)',
-                  'From \n Year', 'To \n Year', 'Prov.')
-        staList = self.staList
-  
-        ncol = len(header)
-        nrow = len(staList[:, 0])
-        
-        self.staList_table.setColumnCount(ncol)
-        self.staList_table.setRowCount(nrow)
-        self.staList_table.setHorizontalHeaderLabels(header)
-        
-#        self.staList_table.horizontalHeader().setResizeMode(QtGui.QHeaderView.ResizeMode(0))
-#        self.staList_table.horizontalHeader().setStretchLastSection(True)        
-        
-        self.staList_table.setMinimumWidth(650)
-#        self.staList_table.horizontalHeader().hide()
-        self.staList_table.verticalHeader().hide()
-#        self.staList_table.horizontalHeaderItem(1).hide()
-
-#        table.horizontalHeaderItem(0)
-#        self.staList_table.horizontalHeader().setStyleSheet("QHeaderView::section { background-color:none }")
-#        self.staList_table.horizontalHeaderItem(1).setBackgroundColor(QtGui.QColor(100,100,150))
-        
-#       http://stackoverflow.com/questions/24148968/how-to-add-multiple-qpushbuttons-to-a-qtableview
-#       http://www.riverbankcomputing.com/pipermail/pyqt/2009-March/022160.html
-        #http://stackoverflow.com/questions/20797383/qt-fit-width-of-tableview-to-width-of-content
-        
-        self.staList_table.setColumnHidden(2, True)
-        
-        self.staList_table.setColumnWidth(0, 32)
-        
-        self.staList_table.setColumnWidth(4, 65)
-        self.staList_table.setColumnWidth(5, 65)
-#        self.staList_table.setColumnWidth(6, 32)
-        self.staList_table.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
-        self.staList_table.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
-                
-#        self.staList_table.resizeColumnsToContents()
-        
-        class NumTableWidgetItem(QtGui.QTableWidgetItem):
-            
-        # To be able to sort numerical item within a given column.
-
-        # http://stackoverflow.com/questions/12673598/
-        # python-numerical-sorting-in-qtablewidget
-        
-            def __init__(self, text, sortKey):
-                QtGui.QTableWidgetItem.__init__(self, text, 
-                                                QtGui.QTableWidgetItem.UserType)
-                self.sortKey = sortKey
-
-            # Qt uses a simple < check for sorting items, override this to use
-            # the sortKey
-            def __lt__(self, other):
-                return self.sortKey < other.sortKey 
-                
-        #------------------------------------------------- Populating Table ----
-
-        for row in range(nrow):
-            
-            col = 0  # Checkbox
-            
-            dummy = QtGui.QTableWidgetItem('')
-            dummy.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            self.staList_table.setItem(row, col, dummy)
-            
-            self.dwnldCheck =  QtGui.QCheckBox()
-            
-            self.staList_table.setCellWidget(row, col, self.dwnldCheck)
-            
-            col += 1 # Station
-            
-            item1 = QtGui.QTableWidgetItem(staList[row, 0])
-            item1.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            item1.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-            item1.setToolTip(staList[row, 0])
-            self.staList_table.setItem(row, col, item1)
-            
-            col += 1 # Climate ID (hidden)
-            
-            item1 = QtGui.QTableWidgetItem(staList[row, 5])
-            item1.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            item1.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-            self.staList_table.setItem(row, col, item1)
-            
-            col += 1 # Proximity
-            
-            item = NumTableWidgetItem('%0.2f' % float(staList[row, 6]),
-                                      float(staList[row, 6]))
-            item.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.staList_table.setItem(row, col, item)
-            
-            col += 1 # From Year
-            
-            dummy = QtGui.QTableWidgetItem('')
-            dummy.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            self.staList_table.setItem(row, col, dummy)
-            
-            min_year = int(staList[row, 2])
-            max_year = int(staList[row, 3])
-            yearspan = np.arange(min_year, max_year+1).astype(str)
-            
-#            item = QtGui.QTableWidgetItem(staList[row, 2])
-#            item.setFlags(~QtCore.Qt.ItemIsEnabled)
-#            self.staList_table.setItem(row, col, item)
-            
-            self.fromYear = QtGui.QComboBox() 
-            self.fromYear.setFixedWidth(65)
-            self.fromYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
-            self.fromYear.addItems(yearspan)
-            self.fromYear.setMinimumContentsLength(4)
-            self.fromYear.setSizeAdjustPolicy(
-                                  QtGui.QComboBox.AdjustToMinimumContentsLength)            
-                                  
-            self.staList_table.setCellWidget(row, col, self.fromYear)
-            
-#            QComboBox.AdjustToMinimumContentsLength
-            
-            col += 1 # To Year
-            
-            dummy = QtGui.QTableWidgetItem('')
-            dummy.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            self.staList_table.setItem(row, col, dummy)
-            
-            self.toYear = QtGui.QComboBox()
-            self.toYear.setFixedWidth(65)
-            self.toYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
-            self.toYear.addItems(yearspan)
-            self.toYear.setCurrentIndex(len(yearspan)-1)
-            self.toYear.setMinimumContentsLength(4)
-            self.toYear.setSizeAdjustPolicy(
-                                  QtGui.QComboBox.AdjustToMinimumContentsLength)
-                                  
-            self.staList_table.setCellWidget(row, col, self.toYear)
-            
-            col += 1 # Province
-            
-            item = QtGui.QTableWidgetItem(staList[row, 4])
-            item.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
-            self.staList_table.setItem(row, col, item)
-            
-#            col += 1 # Del weather station from list
+#    #===========================================================================
+#    def load_stationList(self): # refresh_stationList(self):
+#        '''
+#        This method is started either either :
+#        
+#        (1) when a new project folder is loaded in 
+#            <MainWindow.load_project>
+#        (2) after a search has been completed for weather stations in 
+#            <envirocan.search4stations>
+#        (3) When a station list is loaded manually by the user from method
+#            <select_stationList>.
+#        
+#        It loads the informations in the "weather_stations.lst" file that is
+#        located in the project folder and save it as a table in <self.staList>
+#        and displays the station list in the QComboBox widget.
+#        
+#        ----- weather_stations.lst -----
+#        
+#        The weather_station.lst is a tabulation separated csv file that contains
+#        the following information:  station names, station ID , date at which
+#        the data records begin and date at which the data records end, the
+#        provinces to which each station belongs, the climate ID and the
+#        Proximity value in km for the original search location.
+#        
+#        All these information can be found on the Government of Canada
+#        website in the address bar of the web browser when a station is
+#        selected. Note that the station ID is not the same as the Climate ID 
+#        of the station. For example, the ID for the station Abercorn is 5308,
+#        as it can be found in the following address:
+#        
+#        "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
+#         2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
+#         1985&Month=1&Day=01"
+#        '''
+#    #===========================================================================
+#        
+#        #-----------------------------------------------------------------------
+#        
+#        self.staName_display.clear()
+#        self.staList = []        
+#        station_list_path = (self.parent.projectdir + '/weather_stations.lst')
+#        
+#        if not path.exists(station_list_path):
+#            # Force the creation of a new "weather_station.lst" file
+#            self.parent.check_project()
+#        
+#        with open(station_list_path, 'rb') as f:
+#            reader = list(csv.reader(f, delimiter='\t'))
+#        
+#        #--------------------------------------- CHECK STATION LIST VERSION ----
+#        
+#        # Check if the list is from an older version, and update it if yes
+#        header = headerDB.weather_stations[0]
+#        
+#        nCONFG, nPARA = np.shape(reader)         
+#        if nPARA < len(header):
+#            print 'This list is from an older version of WHAT.'
+#            print 'Converting to new format.'
 #            
-#            dummy = QtGui.QTableWidgetItem('')
-#            dummy.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
-#            self.staList_table.setItem(row, col, dummy)
+#            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+#                                                        
+#            self.parent.write2console('''<font color=black>
+#                                           Converting weather station list to
+#                                           a more recent format. Please wait...
+#                                         </font>''')
+#            QtGui.QApplication.processEvents()
+#            QtGui.QApplication.processEvents()
 #            
-#            self.btn_delRow = QtGui.QPushButton()
-#            self.btn_delRow.setIcon(iconDB.clear_search)
-#            self.btn_delRow.setToolTip('Remove station %s from list.' % (staList[row, 0]))
-#            self.btn_delRow.setFlat(True)
-#            self.btn_delRow.setFixedHeight(32)
-#            self.btn_delRow.setFixedWidth(32)
-##            self.btn_delRow.setFocusPolicy(QtCore.Qt.NoFocus)
-#
-#            self.btn_delRow.clicked.connect(self.handleButtonClicked)
-#            self.staList_table.setCellWidget(row, col, self.btn_delRow)
-            
-        self.staList_table.setSortingEnabled(True)
-        
-    def whoIsChecked(self):        
-        
-        # Going in reverse order to preserve indexes while scanning the rows if
-        # any are deleted.
-        for row in reversed(range(self.staList_table.rowCount())):
-            isChecked = self.staList_table.cellWidget(row, 0).isChecked()
-            if isChecked:                
-                print('%s (%s)' % (self.staList_table.item(row, 1).text(),
-                                   self.staList_table.item(row, 2).text())) 
-                self.staList_table.removeRow(row)
-            
-        
+#            nMissing = len(header) - nPARA
+#            
+#            col2add = np.zeros((nCONFG, nMissing)).astype(int)
+#            col2add = col2add.astype(str)
+#            
+#            reader = np.hstack((reader, col2add))
+#            reader[0] = header
+#            
+#            if nPARA < 6:
+#                for i in range(nCONFG-1):
+#                    Prov = reader[i+1, 4]
+#                    stationId = reader[i+1, 1]
+#                    reader[i+1, 5] = envirocan.get_climate_ID(Prov, stationId)
+#            
+#            #---- Save List ----
+#            
+#            with open(station_list_path, 'wb') as f:
+#                writer = csv.writer(f, delimiter='\t')
+#                writer.writerows(reader)
+#    
+#    #----------------------------------------------------------- LOAD TO UI ----
+#    
+#        if len(reader) > 1: # LOAD station list into the UI
+#            
+#            self.parent.write2console('''<font color=black>
+#                                           Weather station list loaded 
+#                                           successfully.
+#                                         </font>''')
+#                                         
+#            #----- Enable and Refresh UI ----
+#                                         
+#            self.staName_display.setEnabled(True)
+#            self.yStart_edit.setEnabled(True)
+#            self.yEnd_edit.setEnabled(True)
+#            
+#            self.staList = np.array(reader[1:])
+#            self.staName_display.addItems(self.staList[:, 0])
+#                                         
+#        else: # Station list EMPTY
+#            
+#            self.parent.write2console('''<font color=red>
+#                                           Weather Station list is empty.
+#                                         </font>''')
+#        
+#            #----- Disable UI ----
+#        
+#            self.staName_display.setEnabled(False)
+#            self.yStart_edit.setEnabled(False)
+#            self.yStart_edit.setRange(0, 1)
+#            self.yStart_edit.setValue(0)
+#            self.yEnd_edit.setEnabled(False)
+#            self.yEnd_edit.setRange(0, 1)
+#            self.yEnd_edit.setValue(0)
+#            
+#        QtGui.QApplication.restoreOverrideCursor()
      
 #    def handleButtonClicked(self):
 #        
@@ -2613,7 +2439,7 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             #----- Start Download -----
              
             self.dwnl_rawfiles.start()
-    
+             
     #===========================================================================
     def download_is_finished(self, fname):
         '''   
