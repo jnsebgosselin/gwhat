@@ -33,9 +33,8 @@ last_modification = '24/06/2015'
 import csv
 from copy import copy
 #from urllib import urlretrieve
-from urllib2 import urlopen, URLError
 from sys import argv
-from time import ctime, strftime, sleep, gmtime
+from time import ctime, strftime, sleep
 from os import getcwd, listdir, makedirs, path
 from string import maketrans
 import platform
@@ -62,14 +61,17 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 #---- PERSONAL IMPORTS ----
 
 import database as db
+import what_project
+
 import hydroprint
 from hydroprint import LatLong2Dist
-import meteo
-import envirocan
-from fill_weather_data import Weather_File_Info
 import imageviewer
+
+import meteo
 import waterlvl_calc
-import what_project
+
+import dwnld_weather_data
+from fill_weather_data import Weather_File_Info
 
 #---- DATABASES ----
 
@@ -300,9 +302,12 @@ class MainWindow(QtGui.QMainWindow):
         mainGrid.addWidget(splitter, row, 0)
         row += 1
         mainGrid.addWidget(self.pbar, row, 0)
+        row += 1
+        mainGrid.addWidget(self.tab_dwnld_data.dwnld_weather.pbar, row, 0)
         
         main_widget.setLayout(mainGrid)
         self.pbar.hide()
+        self.tab_dwnld_data.dwnld_weather.pbar.hide()
         
         #----------------------------------------------------------- EVENTS ----
         
@@ -317,7 +322,10 @@ class MainWindow(QtGui.QMainWindow):
         issuer.ConsoleSignal.connect(self.write2console)  
 
         issuer = self.tab_dwnld_data.dwnld_weather.search4stations
-        issuer.ConsoleSignal.connect(self.write2console)                                                    
+        issuer.ConsoleSignal.connect(self.write2console)
+
+        issuer =  self.tab_dwnld_data.dwnld_weather.dwnl_raw_datafiles 
+        issuer.ConsoleSignal.connect(self.write2console)                                                  
         
         #---------------------------------------------------- MESSAGE BOXES ----
         
@@ -475,11 +483,6 @@ class MainWindow(QtGui.QMainWindow):
         
         self.project_display.setText(self.projectInfo.name)
         self.project_display.adjustSize()
-        
-        self.tab_dwnld_data.widget_search4stations.lat_spinBox.setValue(
-                                                           self.projectInfo.lat)
-        self.tab_dwnld_data.widget_search4stations.lon_spinBox.setValue(
-                                                           self.projectInfo.lon)
                                                            
         self.tab_dwnld_data.dwnld_weather.search4stations.lat_spinBox.setValue(
                                                            self.projectInfo.lat)
@@ -505,7 +508,6 @@ class MainWindow(QtGui.QMainWindow):
         #---- Update child widgets ----
         
         self.tab_dwnld_data.dwnld_weather.set_workdir(self.projectdir)
-        self.tab_dwnld_data.widget_search4stations.savedir = self.projectdir        
         self.tab_hydrograph.weather_avg_graph.save_fig_dir = self.projectdir
         
         print('')
@@ -1755,562 +1757,30 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         self.initUI()        
         
     def initUI(self):
-       
-        #-------------------------------------------------- SubGrid Station ----
-
-#        #----- SubGrid Weather Station -----#
-#        
-#        self.staName_display = QtGui.QComboBox()
-#        self.staName_display.setEditable(False)
-#        self.staName_display.setInsertPolicy(QtGui.QComboBox.NoInsert)
-#                
-#        btn_search4station = QtGui.QToolButton()
-#        btn_search4station.setAutoRaise(True)
-#        btn_search4station.setIcon(iconDB.search)
-#        btn_search4station.setToolTip(ttipDB.search4stations)
-#        btn_search4station.setIconSize(styleDB.iconSize2)
-#        
-#        btn_browse_staList = QtGui.QToolButton()
-#        btn_browse_staList.setIcon(iconDB.openFolder)
-#        btn_browse_staList.setAutoRaise(True)
-#        btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
-#        btn_browse_staList.setIconSize(styleDB.iconSize2)
-#        
-#        #btn_refresh_staList = QtGui.QToolButton()
-#        #btn_refresh_staList.setAutoRaise(True)
-#        #btn_refresh_staList.setIcon(iconDB.refresh)
-#        #btn_refresh_staList.setToolTip(ttipDB.refresh_staList)
-#        
-#        widget_weather_station = QtGui.QFrame()
-#        subgrid_weather_station = QtGui.QGridLayout()
-#        
-#        row = 0
-#        subgrid_weather_station.addWidget(self.staName_display, row, 0)
-#        subgrid_weather_station.addWidget(btn_search4station, row, 1)
-#        subgrid_weather_station.addWidget(btn_browse_staList, row, 2)
-#        #subgrid_weather_station.addWidget(btn_refresh_staList, row, 3)
-#        
-#        widget_weather_station.setLayout(subgrid_weather_station)
-#        subgrid_weather_station.setContentsMargins(0, 0, 0, 0) # Left, Top, 
-#                                                               # Right, Bottom 
-#        subgrid_weather_station.setSpacing(10)
-#        subgrid_weather_station.setColumnStretch(3, 500)
-#        subgrid_weather_station.setColumnMinimumWidth(0, 200)
-                
-#        #----- SubGrid StartYear and EndYear -----#
-#        
-#        year_label1 = QtGui.QLabel('from')
-#        year_label1.setAlignment(QtCore.Qt.AlignCenter)
-#        self.yStart_edit = QtGui.QSpinBox()
-#        self.yStart_edit.setAlignment(QtCore.Qt.AlignCenter)        
-#        self.yStart_edit.setSingleStep(1)
-#        self.yStart_edit.setValue(0)        
-#        year_label2 = QtGui.QLabel('to')
-#        year_label2.setAlignment(QtCore.Qt.AlignCenter)
-#        self.yEnd_edit = QtGui.QSpinBox()
-#        self.yEnd_edit.setAlignment(QtCore.Qt.AlignCenter)
-#        self.yEnd_edit.setSingleStep(1)
-#        self.yEnd_edit.setValue(0)
-#        
-#        subgrid_year_widget = QtGui.QFrame()
-#        subgrid_year = QtGui.QGridLayout()
-#        
-#        row = 0
-#        subgrid_year.addWidget(year_label1, row, 0)
-#        subgrid_year.addWidget(self.yStart_edit, row, 1)
-#        subgrid_year.addWidget(year_label2, row, 2)
-#        subgrid_year.addWidget(self.yEnd_edit, row, 3)
-#        
-#        subgrid_year_widget.setLayout(subgrid_year)
-#        subgrid_year.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom 
-#        subgrid_year.setSpacing(15)
-#        subgrid_year.setColumnStretch(4, 500)
-#        
-#        #---- ASSEMBLING SubGrids -----#
-#        
-#        staName_label = QtGui.QLabel('Weather Station :')
-#        year_title = QtGui.QLabel('Download Data :')
-#         
-#        subgrid_Station = QtGui.QGridLayout()
-#        Station_widget = QtGui.QFrame()
-#        Station_widget.setFrameStyle(styleDB.frame)                      
-#        
-#        row = 0
-#        subgrid_Station.addWidget(staName_label, row, 1)
-#        subgrid_Station.addWidget(widget_weather_station, row, 2)
-#        row += 1
-#        subgrid_Station.addWidget(year_title, row, 1)
-#        subgrid_Station.addWidget(subgrid_year_widget, row, 2)
-#        
-#        Station_widget.setLayout(subgrid_Station)
-#        subgrid_Station.setContentsMargins(15, 15, 15, 15) # Left, Top, 
-#                                                           # Right, Bottom 
-#        subgrid_Station.setVerticalSpacing(20)
-#        subgrid_Station.setHorizontalSpacing(10)
-#        # subgrid_Station.setColumnStretch(0, 100)
-#        subgrid_Station.setColumnStretch(6, 100)
-                
-#        #----------------------------------------------- GRID DOWNLOAD DATA ----
-#                
-#        self.btn_get = QtGui.QPushButton(labelDB.btn_GetData)
-#        self.btn_get.setIcon(iconDB.download)
-#        self.btn_get.setToolTip(ttipDB.btn_GetData)
-#        self.btn_get.setIconSize(styleDB.iconSize2)        
-#                                 
-#        grid_TOP = QtGui.QGridLayout()
-#        TOP_widget = QtGui.QFrame()
-#        
-#        row = 0
-#        grid_TOP.addWidget(Station_widget, row, 0, 1, 2)
-#        row += 1
-#        grid_TOP.addWidget(self.btn_get, row, 0)
-#                
-#        # Total number of columns = 3
-#        
-#        TOP_widget.setLayout(grid_TOP)
-#        grid_TOP.setContentsMargins(0, 0, 0, 15) #Left, Top, Right, Bottom 
-#        grid_TOP.setSpacing(15)
-#        grid_TOP.setColumnStretch(1, 500)
         
-    #---------------------------------------------------------- GRID BOTTOM ----                     
+        self.dwnld_weather = dwnld_weather_data.dwnldWeather()
+        self.dwnld_weather.set_workdir(self.parent.projectdir)
         
-        #---- SubGrid display ----
-        
-        self.merge_stats_display = QtGui.QTextEdit()
-        self.merge_stats_display.setReadOnly(True)        
-        self.merge_stats_display.setFrameStyle(0)
-        
-        grid_display = QtGui.QGridLayout()
-        display_grid_widget = QtGui.QFrame()
-        display_grid_widget.setFrameStyle(styleDB.frame)
-        
-        row = 0
-        grid_display.addWidget(self.merge_stats_display, row, 0)
-        
-        display_grid_widget.setLayout(grid_display)
-        grid_display.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom 
-                
-        #---- ASSEMBLING SubGrids ----
-    
-        self.merge_stats_display.setMaximumHeight(200)
-        btn_select = QtGui.QPushButton(labelDB.btn_select_rawData)
-        btn_select.setToolTip(ttipDB.btn_select_rawData)
-        btn_select.setIcon(iconDB.openFile)
-        btn_select.setIconSize(styleDB.iconSize2)
-        
-        btn_save = QtGui.QPushButton(labelDB.btn_save_concatenate)
-        btn_save.setToolTip(ttipDB.btn_save_concatenate)
-        btn_save.setIcon(iconDB.save)
-        btn_save.setIconSize(styleDB.iconSize2)
-        
-        self.saveAuto_checkbox = QtGui.QCheckBox(labelDB.saveMeteoAuto)
-        self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
-              
-        grid_BOTTOM = QtGui.QGridLayout()
-        BOTTOM_widget = QtGui.QFrame()
-        
-        row = 0
-        grid_BOTTOM.addWidget(display_grid_widget, row, 0, 1, 8)        
-        grid_BOTTOM.setRowStretch(row, 500)
-        row += 1
-        grid_BOTTOM.addWidget(btn_select, row, 0)
-        grid_BOTTOM.addWidget(btn_save, row, 1, 1, 2) 
-        grid_BOTTOM.addWidget(self.saveAuto_checkbox, row, 3, 1, 4)
-        
-        BOTTOM_widget.setLayout(grid_BOTTOM)
-        grid_BOTTOM.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
-        grid_BOTTOM.setSpacing(10)
-                
         #-------------------------------------------------------- MAIN GRID ----
         
-        self.dwnld_weather = envirocan.dwnldWeather()
-        self.dwnld_weather.set_workdir(self.parent.projectdir)
-                
-        TITLE_TOP = QtGui.QLabel(labelDB.title_download)    
-        TITLE_BOTTOM  = QtGui.QLabel(labelDB.title_concatenate)
-        
-        line1 = QtGui.QFrame()
-        line1.setFrameStyle(styleDB.HLine)
-        line2 = QtGui.QFrame()
-        line2.setFrameStyle(styleDB.HLine)
-        line3 = QtGui.QFrame()
-        line3.setFrameStyle(styleDB.HLine)
-        line4 = QtGui.QFrame()
-        line4.setFrameStyle(styleDB.HLine)
-#        VLine1 = QtGui.QFrame()      
-#        VLine1.setFrameStyle(styleDB.VLine)  
+        vLine1 = QtGui.QFrame()
+        vLine1.setFrameStyle(styleDB.VLine)
         
         grid_MAIN = QtGui.QGridLayout()
         
-        col = 1
-        row = 1
-#        grid_MAIN.addWidget(line1, row, col)        
-#        row += 1
-#        grid_MAIN.addWidget(TITLE_TOP, row, col)
-#        row += 1
-#        grid_MAIN.addWidget(line2, row, col)
-#        row += 1
-#        grid_MAIN.addWidget(TOP_widget, row, col)
-#        row += 1
-#        grid_MAIN.addWidget(line3, row, col)
-#        row += 1
-#        grid_MAIN.addWidget(TITLE_BOTTOM, row, col)
-#        row += 1
-#        grid_MAIN.addWidget(line4, row, col)
-#        row += 1
-#        grid_MAIN.addWidget(BOTTOM_widget, row, col)
-#        col += 1
-        grid_MAIN.addWidget(self.dwnld_weather, 1, col, row, 1)
+        col = 0
+        row = 0
+        grid_MAIN.addWidget(self.dwnld_weather, row, col)
         
         grid_MAIN.setRowStretch(0, 500)
-        grid_MAIN.setRowStretch(row+1, 500)
-        grid_MAIN.setColumnStretch(0, 500)
-        grid_MAIN.setColumnStretch(col+1, 500)
         
-        grid_MAIN.setContentsMargins(15, 15, 15, 15) #Left, Top, Right, Bottom
-        grid_MAIN.setHorizontalSpacing(25)
-        grid_MAIN.setVerticalSpacing(10)
+        grid_MAIN.setContentsMargins(10, 10, 10, 10) #Left, Top, Right, Bottom
+        grid_MAIN.setSpacing(15)
         
         self.setLayout(grid_MAIN)
-        
-        #------------------------------------------------------ MESSAGE BOX ----
-                                          
-        self.msgBox = QtGui.QMessageBox()
-        self.msgBox.setIcon(QtGui.QMessageBox.Warning)
-        self.msgBox.setWindowTitle('Error Message')
-        
-        #--------------------------------------------------- VARIABLES INIT ----
-        
-        self.MergeOutput = np.array([])
-        self.dwnl_rawfiles = DownloadRawDataFiles(self)
-        self.widget_search4stations = envirocan.search4stations(self.parent)
-        self.widget_search4stations.setWindowFlags(QtCore.Qt.Window)
-
-        #----------------------------------------------------------- EVENTS ----       
-         
-        #---- download raw data files ----
-         
-#        self.dwnl_rawfiles.ProgBarSignal.connect(self.setProgBarSignal)
-#        self.dwnl_rawfiles.ConsoleSignal.connect(self.parent.write2console)
-#        self.dwnl_rawfiles.MergeSignal.connect(self.download_is_finished)
-        
-#        self.btn_get.clicked.connect(self.fetch_start_and_stop)
-#        self.yStart_edit.valueChanged.connect(self.start_year_changed)
-#        self.yEnd_edit.valueChanged.connect(self.end_year_changed)
-#        btn_select.clicked.connect(self.select_raw_files)
-#        btn_save.clicked.connect(self.select_concatened_save_path)
-        
-        #---- weather station list ----
-        
-#        btn_browse_staList.clicked.connect(self.select_stationList)
-#        self.staName_display.currentIndexChanged.connect(self.staName_isChanged)              
-        #btn_refresh_staList.clicked.connect(self.load_stationList)
-         
-        #---- search4stations ----
-         
-#        btn_search4station.clicked.connect(self.show_search4stations)
-#        self.widget_search4stations.ConsoleSignal.connect(
-#                                                      self.parent.write2console)                                                   
-#        self.widget_search4stations.staListSignal.connect(self.load_stationList)
-                   
-        
-    def start_year_changed(self):
-        
-        if len(self.staList) > 0:
-        
-            index = self.staName_display.currentIndex()
-            min_yr = max(self.yStart_edit.value(), int(self.staList[index, 2]))
-            max_yr = int(self.staList[index, 3])
-                
-            self.yEnd_edit.setRange(min_yr, max_yr)
-   
-    def end_year_changed(self):
-        
-        if len(self.staList) > 0:
-            
-            index = self.staName_display.currentIndex()
-            min_yr = int(self.staList[index, 2])
-            max_yr = min(self.yEnd_edit.value(), int(self.staList[index, 3]))
-                    
-            self.yStart_edit.setRange(min_yr, max_yr)
     
-    #===========================================================================
-    def show_search4stations(self):
-        '''
-        Show sub-window search for weather stations when <btn_search4station>
-        is clicked.
-        '''
-    #===========================================================================
-                
-        qr = self.widget_search4stations.frameGeometry()
-        cp = self.parent.frameGeometry().center()
-        qr.moveCenter(cp)
-        self.widget_search4stations.move(qr.topLeft())
+             
         
-        self.widget_search4stations.show()
-        self.widget_search4stations.setFixedSize(
-                                             self.widget_search4stations.size())
-        
-    #===========================================================================
-    def select_stationList(self):
-        '''
-        This method is called when the <btn_browse_staList> is clicked.
-        It allows the user to select and load a custom weather station list.
-        Info are loaded into memory and saved in the file named
-        "weather_stations.lst".
-        '''
-    #===========================================================================
-        
-        dirname = self.parent.projectdir
-        
-        
-        fname, _ = QtGui.QFileDialog.getOpenFileName(
-                         self, 'Select a valid station list', dirname, '*.lst')        
-                        
-        if fname:
-            
-            default_list_name = dirname + '/weather_stations.lst'
-            
-            #---- Load List ----
-            
-            with open(fname, 'rb') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
-
-            #---- Save List in Default Name ----
-        
-            with open(default_list_name, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
-            
-            #---- Load List in UI ----
-            
-            QtGui.QApplication.processEvents()
-            self.load_stationList()
-            
-#    #===========================================================================
-#    def load_stationList(self): # refresh_stationList(self):
-#        '''
-#        This method is started either either :
-#        
-#        (1) when a new project folder is loaded in 
-#            <MainWindow.load_project>
-#        (2) after a search has been completed for weather stations in 
-#            <envirocan.search4stations>
-#        (3) When a station list is loaded manually by the user from method
-#            <select_stationList>.
-#        
-#        It loads the informations in the "weather_stations.lst" file that is
-#        located in the project folder and save it as a table in <self.staList>
-#        and displays the station list in the QComboBox widget.
-#        
-#        ----- weather_stations.lst -----
-#        
-#        The weather_station.lst is a tabulation separated csv file that contains
-#        the following information:  station names, station ID , date at which
-#        the data records begin and date at which the data records end, the
-#        provinces to which each station belongs, the climate ID and the
-#        Proximity value in km for the original search location.
-#        
-#        All these information can be found on the Government of Canada
-#        website in the address bar of the web browser when a station is
-#        selected. Note that the station ID is not the same as the Climate ID 
-#        of the station. For example, the ID for the station Abercorn is 5308,
-#        as it can be found in the following address:
-#        
-#        "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
-#         2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
-#         1985&Month=1&Day=01"
-#        '''
-#    #===========================================================================
-#        
-#        #-----------------------------------------------------------------------
-#        
-#        self.staName_display.clear()
-#        self.staList = []        
-#        station_list_path = (self.parent.projectdir + '/weather_stations.lst')
-#        
-#        if not path.exists(station_list_path):
-#            # Force the creation of a new "weather_station.lst" file
-#            self.parent.check_project()
-#        
-#        with open(station_list_path, 'rb') as f:
-#            reader = list(csv.reader(f, delimiter='\t'))
-#        
-#        #--------------------------------------- CHECK STATION LIST VERSION ----
-#        
-#        # Check if the list is from an older version, and update it if yes
-#        header = headerDB.weather_stations[0]
-#        
-#        nCONFG, nPARA = np.shape(reader)         
-#        if nPARA < len(header):
-#            print 'This list is from an older version of WHAT.'
-#            print 'Converting to new format.'
-#            
-#            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-#                                                        
-#            self.parent.write2console('''<font color=black>
-#                                           Converting weather station list to
-#                                           a more recent format. Please wait...
-#                                         </font>''')
-#            QtGui.QApplication.processEvents()
-#            QtGui.QApplication.processEvents()
-#            
-#            nMissing = len(header) - nPARA
-#            
-#            col2add = np.zeros((nCONFG, nMissing)).astype(int)
-#            col2add = col2add.astype(str)
-#            
-#            reader = np.hstack((reader, col2add))
-#            reader[0] = header
-#            
-#            if nPARA < 6:
-#                for i in range(nCONFG-1):
-#                    Prov = reader[i+1, 4]
-#                    stationId = reader[i+1, 1]
-#                    reader[i+1, 5] = envirocan.get_climate_ID(Prov, stationId)
-#            
-#            #---- Save List ----
-#            
-#            with open(station_list_path, 'wb') as f:
-#                writer = csv.writer(f, delimiter='\t')
-#                writer.writerows(reader)
-#    
-#    #----------------------------------------------------------- LOAD TO UI ----
-#    
-#        if len(reader) > 1: # LOAD station list into the UI
-#            
-#            self.parent.write2console('''<font color=black>
-#                                           Weather station list loaded 
-#                                           successfully.
-#                                         </font>''')
-#                                         
-#            #----- Enable and Refresh UI ----
-#                                         
-#            self.staName_display.setEnabled(True)
-#            self.yStart_edit.setEnabled(True)
-#            self.yEnd_edit.setEnabled(True)
-#            
-#            self.staList = np.array(reader[1:])
-#            self.staName_display.addItems(self.staList[:, 0])
-#                                         
-#        else: # Station list EMPTY
-#            
-#            self.parent.write2console('''<font color=red>
-#                                           Weather Station list is empty.
-#                                         </font>''')
-#        
-#            #----- Disable UI ----
-#        
-#            self.staName_display.setEnabled(False)
-#            self.yStart_edit.setEnabled(False)
-#            self.yStart_edit.setRange(0, 1)
-#            self.yStart_edit.setValue(0)
-#            self.yEnd_edit.setEnabled(False)
-#            self.yEnd_edit.setRange(0, 1)
-#            self.yEnd_edit.setValue(0)
-#            
-#        QtGui.QApplication.restoreOverrideCursor()
-     
-#    def handleButtonClicked(self):
-#        
-#        button = QtGui.qApp.focusWidget()
-#
-#        # or button = self.sender()
-#        index = self.staList_table.indexAt(button.pos())
-#
-#        if index.isValid():
-#            print index.row()
-#            self.staList_table.removeRow(index.row())
-        
-    #=========================================================================== 
-    def staName_isChanged(self):
-        '''
-        The following method updates the fields StationId and Years when the 
-        station name is changed by the user. It is called by the event
-        <self.staName_display.currentIndexChanged>.
-        '''
-    #===========================================================================
-        
-        sta_index = self.staName_display.currentIndex()
-        
-        year_start = int(self.staList[sta_index, 2])
-        year_end = int(self.staList[sta_index, 3])
-        
-        self.yStart_edit.setRange(year_start, year_end)
-        self.yEnd_edit.setRange(year_start, year_end)
-        
-        self.yStart_edit.setValue(year_start)
-        self.yEnd_edit.setValue(year_end)
-        
-    #===========================================================================
-    def select_raw_files(self):
-        '''
-        This method is called by the event <btn_select.clicked.connect>.
-        It allows the user to select a group of raw data files belonging to a
-        given meteorological station in order to concatenate them into a single
-        file with the method <concatenate_and_display>.
-        '''
-    #===========================================================================
-        
-        dialog_fir = self.parent.projectdir + '/Meteo/Raw'
-        
-        fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files', 
-                                                      dialog_fir, '*.csv')
-        if fname:
-           self.concatenate_and_display(fname)           
-        
-    #===========================================================================      
-    def concatenate_and_display(self, fname):        
-        """
-        Handles the concatenation process of individual yearly raw data files 
-        and display the results in the <merge_stats_display> widget.
-        
-        ---- CALLED BY----
-        
-        (1) Method: select_raw_files
-        (2) Event:  self.dwnl_rawfiles.MergeSignal.connect
-        """
-    #===========================================================================
-        
-        self.MergeOutput, LOG, COMNT = concatenate(fname)
-        
-        StaName = self.MergeOutput[0, 1]
-        YearStart = self.MergeOutput[8, 0][:4]
-        YearEnd = self.MergeOutput[-1, 0][:4]
-        climateID = self.MergeOutput[5, 1]
-        
-        self.merge_stats_display.setText(LOG)      
-        self.parent.write2console('<font color=black>Raw data files ' +
-                                  'concatened successfully for station ' + 
-                                  StaName +'</font>')  
-                                  
-        if COMNT:
-            
-            # A comment is issued only when all raw data files 
-            # do not belong to the same weather station. 
-            
-            self.parent.write2console(COMNT)
-        
-        if self.saveAuto_checkbox.isChecked():
-            
-            # Check if the characters "/" or "\" are present in the station 
-            # name and replace these characters by "-" if applicable.
-            
-            intab = "/\\"
-            outtab = "--"
-            trantab = maketrans(intab, outtab)
-            StaName = StaName.translate(trantab)
-            
-            project_dir = self.parent.projectdir
-            save_dir = project_dir + '/Meteo/Input/'
-            if not path.exists(save_dir):
-                makedirs(save_dir)
-                
-            filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
-                                              YearStart, YearEnd)
-            fname = save_dir + filename
-            
-            self.save_concatened_data(fname)            
         
     #===========================================================================        
     def select_concatened_save_path(self):
@@ -2348,130 +1818,6 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
             if fname:                
                 self.save_concatened_data(fname)    
     
-    #===========================================================================         
-    def save_concatened_data(self, fname):  
-        """
-        This method saves the concatened data into a single csv file.
-        
-        ---- CALLED BY----
-        
-        (1) Method: select_concatened_save_path
-        (2) Method: concatenate_and_display if self.saveAuto_checkbox.isChecked
-        """
-    #===========================================================================                
-
-#        if not path.exists(dirname):
-#        makedirs(dirname)
-        
-        with open(fname, 'wb') as f:
-            writer = csv.writer(f,delimiter='\t')
-            writer.writerows(self.MergeOutput)
-            
-        self.parent.write2console('<font color=black>Concatened data ' + 
-                                  'saved in: ' + fname + '</font>')   
-    
-    #===========================================================================
-    def fetch_start_and_stop(self):
-        """
-        This method is started from the event "self.btn_get.clicked".
-        It starts the downloading process of the raw data files.
-        
-        Also, this method manages the stopping of the downloading process
-        and the state of the "btn_get". Right before the downloading
-        process is started with "self.dwnl_rawfiles.start()", the text and
-        icon of "btn_get" is changed to look like a stop button. If "btn_get" 
-        is clicked again by the user during the downloading process, its state 
-        reverts back to its original 'Get Data' display. In addition the value
-        of the "STOP" flag is forced to True in the download Thread.
- 
-        When the working function "fetch" sees this, the downloading loop is
-        broken, and so is also the downloading process of raw data files.
-        """
-    #===========================================================================
-        
-        if self.dwnl_rawfiles.isRunning():
-            
-            # Stop the Download process and reset UI
-            
-            self.dwnl_rawfiles.STOP = True
-
-            self.btn_get.setIcon(iconDB.download)
-        
-            self.yStart_edit.setEnabled(True)
-            self.yEnd_edit.setEnabled(True)            
-            self.parent.pbar.hide()
-            
-        else:
-            
-        #------------------------------------------------- Check for Errors ----
-            
-            if self.staName_display.currentIndex() == -1:
-                
-                self.msgBox.setText('Station list is empty.')
-                self.msgBox.exec_()
-                
-                return
-        
-        #------------------------------------------------- Start the Thread ----
-        
-            #----- Update UI -----
-            
-            self.parent.pbar.show()
-            self.staName_display.setEnabled(False)
-            self.yStart_edit.setEnabled(False)
-            self.yEnd_edit.setEnabled(False)
-            
-            self.btn_get.setIcon(iconDB.stop)
-            
-            #----- Push input values to the class instance -----
-            
-            sta_index = self.staName_display.currentIndex()
-            
-            stationID = self.staList[sta_index, 1]
-            self.dwnl_rawfiles.stationID = stationID
-            
-            climateID = self.staList[sta_index, 5]
-            self.dwnl_rawfiles.climateID = climateID
-            
-            dirname = self.parent.projectdir + '/Meteo/Raw'           
-            self.dwnl_rawfiles.dirname = dirname                
-             
-            #----- Start Download -----
-             
-            self.dwnl_rawfiles.start()
-             
-    #===========================================================================
-    def download_is_finished(self, fname):
-        '''   
-        This method is started by the signal <MergeSignal> that is emitted after
-        a downloading task has ended. The signal contains the list of raw
-        data files that has been downloaded.
-        '''
-    #===========================================================================    
-       
-        # Reset UI and start the concatenation of the data.         
-        
-        self.staName_display.setEnabled(True)
-        self.yStart_edit.setEnabled(True)
-        self.yEnd_edit.setEnabled(True)
-        self.parent.pbar.hide()
-        self.btn_get.setText(labelDB.btn_GetData)
-        self.btn_get.setIcon(iconDB.download)
-        
-        if len(fname) > 0:
-            self.concatenate_and_display(fname)
-    
-    #===========================================================================       
-    def setProgBarSignal(self, progress):
-    # <setProgBarSignal> updates the value of the progression bar widget
-    # of the main window in order to display the raw data files downloading
-    # progress. The method is called by the event signal 
-    # <self.dwnl_rawfiles.ProgBarSignal> that is being emitted by the 
-    # instance <self.dwnl_rawfiles> of the <DownloadRawDataFiles>
-    # thread class.
-    #===========================================================================
-    
-        self.parent.pbar.setValue(progress)
 
 ###################################################################### @TAB FILL  
                                         
@@ -3249,276 +2595,10 @@ class TabAbout(QtGui.QWidget):
        
 ################################################################################
 #                                                                           
-#                             @SECTION WORKER METEO                             
+#                             @SECTION WORKER                             
 #                                                                          
 ################################################################################
         
-        
-#===============================================================================        
-class DownloadRawDataFiles(QtCore.QThread):        
-    '''
-    This thread is called when the "Get Data" button of the Tab 
-    "Download Data" is clicked on. It downloads the raw data files from
-    www.climate.weather.gc.ca and saves them automatically in
-    <Project_directory>/Meteo/Raw/<station_name>.
-
-    New in 4.0.6: Raw data files that already exists in the Raw directory
-                  won't be downloaded again from the server.
-    
-    ---- Input ----
-
-    self.STOP = Flag that is used to stop the thread from the UI side.
-    
-    ---- Output ----
-    
-    self.ERRFLAG = Flag for the download of files - np.arrays
-                   0 -> File downloaded successfully
-                   1 -> Problem downloading the file
-                   3 -> File NOT downloaded because it already exists
-    '''
-#===============================================================================   
-    
-    MergeSignal = QtCore.Signal(list)
-    ProgBarSignal = QtCore.Signal(int)
-    ConsoleSignal = QtCore.Signal(str)
-    
-    def __init__(self, parent):
-        super(DownloadRawDataFiles, self).__init__(parent)
-        self.parent = parent
-        
-        self.STOP = False  
-        self.dirname = [] # Directory where the downloaded files are saved
-        self.ERRFLAG = []
-        self.stationID = []
-        self.climateID = [] # Unique identifier for the station
-          
-    def run(self): 
-        
-    #---------------------------------------------------------------- INIT -----
-        
-        staID = self.stationID   
-        yr_start = self.parent.yStart_edit.value()
-        yr_end = self.parent.yEnd_edit.value()
-        StaName = self.parent.staName_display.currentText()
-        climateID = self.climateID
-        
-        self.ERRFLAG = np.ones(yr_end - yr_start + 1)
-             
-        self.ConsoleSignal.emit(
-        '''<font color=black>Downloading data from </font>
-           <font color=blue>www.climate.weather.gc.ca</font>
-           <font color=black> for station %s</font>''' % StaName)
-        self.ProgBarSignal.emit(0)         
-        
-        self.dirname += '/%s (%s)' % (StaName, climateID)
-        if not path.exists(self.dirname):
-            makedirs(self.dirname)
-            
-        #-------------------------------------------------------- DOWNLOAD -----
-            
-        # Data are downloaded on a yearly basis from yStart to yEnd
-         
-        fname4merge = [] # list of paths of the yearly raw data files that will
-                         # be pass to contatenate and merge function.
-        i = 0
-        for year in range(yr_start, yr_end+1):
-            
-            if self.STOP == True : # User stopped the downloading process.                
-                break
-            
-            #----- File and URL Paths -----
-            
-            fname = self.dirname + '/eng-daily-0101%s-1231%s.csv' % (year, year) 
-            
-            url = ('http://climate.weather.gc.ca/climateData/bulkdata_e.html?' +
-                   'format=csv&stationID=' + str(staID) + '&Year=' + str(year) +
-                   '&Month=1&Day=1&timeframe=2&submit=Download+Data')
-            
-            #----- Download Data For That Year -----
-            
-            if path.exists(fname):
-                
-                # If the file was downloaded in the same year that of the data
-                # record, data will be downloaded again in case the data series
-                # was not complete.
-                
-                myear = path.getmtime(fname) # Year of file last modification
-                myear = gmtime(myear)[0]
-                
-                if myear == year:
-                    self.ERRFLAG[i] = self.dwndfile(url, fname)
-                else:
-                    self.ERRFLAG[i] = 3
-                    print 'Not downloading: Raw Data File already exists.'
-                    
-            else:
-                self.ERRFLAG[i] = self.dwndfile(url, fname)
-
-            #----- Update UI -----
-            
-            progress = (year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
-            self.ProgBarSignal.emit(int(progress))
-            
-            if self.ERRFLAG[i] == 1:
-                
-                self.ConsoleSignal.emit(
-                '''<font color=red>There was a problem downloading the data 
-                     of station %s for year %d.
-                   </font>''' % (StaName, year))                
-
-            elif self.ERRFLAG[i] == 0:
-                
-                self.ConsoleSignal.emit(
-                '''<font color=black>Weather data for station %s downloaded
-                     successfully for year %d.</font>''' % (StaName, year))
-                fname4merge.append(fname)
-                
-            elif self.ERRFLAG[i] == 3:
-                
-                self.ConsoleSignal.emit(
-                '''<font color=green>A weather data file already existed for
-                     station %s for year %d. Downloading is skipped.
-                   </font>''' % (StaName, year))
-                fname4merge.append(fname)
-                            
-            i += 1
-            
-    #--------------------------------------------------------- End of Task -----
-        
-        if self.STOP == True:
-            
-            self.STOP = False
-            self.ConsoleSignal.emit('''<font color=red>Downloading process for
-                                         station %s stopped.
-                                       </font>''' % StaName)
-        else:
-                 
-            self.MergeSignal.emit(fname4merge)
-            self.ProgBarSignal.emit(0)
-                
-    def dwndfile(self, url, fname):
-        
-        # http://stackoverflow.com/questions/4028697
-        # https://docs.python.org/3/howto/urllib2.html
-        
-        ERRFLAG = 0
-        
-        try:
-            f = urlopen(url)
-            print "downloading " + fname
-
-            # write downlwaded content to local file
-            with open(fname, "wb") as local_file:
-                local_file.write(f.read())
-                
-        except URLError as e:
-            
-            ERRFLAG = 1
-            
-            if hasattr(e, 'reason'):
-                print('Failed to reach a server.')
-                print('Reason: ', e.reason)
-                
-            elif hasattr(e, 'code'):
-                print('The server couldn\'t fulfill the request.')
-                print('Error code: ', e.code)
-                
-        return ERRFLAG
-            
-#===============================================================================        
-def concatenate(fname):    
-#===============================================================================
-
-    fname = np.sort(fname)     # list of the raw data file paths
-   
-    COLN = (1, 2, 3, 5, 7, 9, 19) # columns of the raw data files to extract
-    #year, month, day, Tmax, Tmin, Tmean, Ptot
-    
-    ALLDATA = np.zeros((0,len(COLN))) # matrix containing all the data
-    StaName = np.zeros(len(fname)).astype('str')  # station names
-    StaMatch = np.zeros(len(fname)).astype('str') # station match 
-    for i in range(len(fname)):
-        reader = open(fname[i],'rb')
-        reader = csv.reader(reader, delimiter=',')
-        reader = list(reader)
-                  
-        StaName[i] =  reader[0][1]         
-        StaMatch[i] = StaName[0]==StaName[i]
-        
-        row_data_start = 0
-        fieldSearch = 'None'
-        while fieldSearch != 'Date/Time':
-            try:
-                fieldSearch = reader[row_data_start][0]
-            except:
-                pass
-            
-            row_data_start += 1
-            
-            if row_data_start > 50:
-                print 'There is a compatibility problem with the data.'
-                print 'Please, write at jnsebgosselin@gmail.com'
-                break
-            
-        DATA = np.array(reader[row_data_start:])
-        DATA = DATA[:, COLN]
-        DATA[DATA == ''] = 'nan'
-        DATA = DATA.astype('float')
-        
-        ALLDATA = np.vstack((ALLDATA, DATA)) 
-    
-    FIELDS = ['Temp. Max.', 'Temp. Min.', 'Temp. Avg.', 'Prec. Tot.', 'Total']
-    
-    ndata = float(len(ALLDATA[:, 0]))
-    Ndata = float(len(ALLDATA[:, 0]) * 4) 
-    
-    LOG = '''
-          <p>
-            Number of Missing Data for Years %d to %d for station %s :
-          </p>
-          <br>
-          <table border="0" cellpadding="2" cellspacing="0" align="left">
-          ''' % (np.min(ALLDATA[:,0]), np.max(ALLDATA[:,0]), StaName[0])
-    for i in range(0, len(FIELDS)-1):
-         nonan = sum(np.isnan(ALLDATA[:, i+3]))
-         LOG += '''
-                <tr>
-                  <td width=60></td>
-                  <td align="left">%s</td>
-                  <td align="left" width=20>:</td>          
-                  <td align="right">%d/%d</td>
-                  <td align="center">(%0.1f%%)</td>
-                </tr>
-                ''' % (FIELDS[i], nonan, ndata, nonan/ndata*100)
-               
-    nonan = np.sum(np.isnan(ALLDATA[:, 3:]))
-    LOG += '''
-             <tr></tr>
-             <tr>
-               <td></td>
-               <td align="left">%s</td>
-               <td align="left" width=20>:</td>
-               <td align="right">%d/%d</td>
-               <td align="center">(%0.1f%%)</td>
-             </tr>
-           </table>
-           ''' % (FIELDS[-1], nonan, Ndata, nonan/Ndata*100)
-    
-    HEADER = np.zeros((8, len(COLN))).astype('str')
-    HEADER[:] = ''
-    HEADER[0:6,0:2] = np.array(reader[0:6])
-    HEADER[7,:] = ['Year','Month', 'Day','Max Temp (deg C)', 'Min Temp (deg C)',
-                   'Mean Temp (deg C)', 'Total Precip (mm)']
-    
-    MergeOutput = np.vstack((HEADER, ALLDATA.astype('str'))) 
-    
-    if min(StaMatch) == 'True':
-        COMNT = []
-    else:
-        COMNT = ('font color=red> WARNING: All the data files do not ' + 
-                 'belong to station' + StaName[0] + '</font>')
-  
-    return MergeOutput, LOG, COMNT
     
 #===============================================================================
 class Target_Station_Info():

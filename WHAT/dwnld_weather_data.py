@@ -126,11 +126,23 @@ class dwnldWeather(QtGui.QWidget):
         self.btn_get.setToolTip(ttipDB.btn_GetData)
         self.btn_get.setIconSize(styleDB.iconSize)
         
+        btn_selectRaw = QtGui.QPushButton(labelDB.btn_select_rawData)
+        btn_selectRaw.setIcon(iconDB.openFile)
+        btn_selectRaw.setToolTip(ttipDB.btn_select_rawData)
+        btn_selectRaw.setIconSize(styleDB.iconSize2)
+        
+        btn_save = QtGui.QPushButton(labelDB.btn_save_concatenate)
+        btn_save.setToolTip(ttipDB.btn_save_concatenate)
+        btn_save.setIcon(iconDB.save)
+        btn_save.setIconSize(styleDB.iconSize2)
+        
         self.saveAuto_checkbox = QtGui.QCheckBox(labelDB.saveMeteoAuto)
         self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
         
         separator1 = QtGui.QFrame()
         separator1.setFrameStyle(styleDB.VLine)
+        separator2 = QtGui.QFrame()
+        separator2.setFrameStyle(styleDB.VLine)
         
         toolbar_grid = QtGui.QGridLayout()
         toolbar_widg = QtGui.QWidget()
@@ -146,10 +158,13 @@ class dwnldWeather(QtGui.QWidget):
         toolbar_grid.addWidget(btn_delSta, row, col)
         col += 1
         toolbar_grid.addWidget(self.btn_get, row, col)
+        col += 1
+        toolbar_grid.setColumnStretch(col, 100)
+        col += 1
+        toolbar_grid.addWidget(self.saveAuto_checkbox, row, col)
         
         toolbar_grid.setSpacing(5)
         toolbar_grid.setContentsMargins(0, 0, 0, 0)
-        toolbar_grid.setColumnStretch(col+1, 100)
         
         toolbar_widg.setLayout(toolbar_grid)
         
@@ -177,19 +192,22 @@ class dwnldWeather(QtGui.QWidget):
         
         #-------------------------------------------------------- Main Grid ----
         
+        vLine1 = QtGui.QFrame()
+        vLine1.setFrameStyle(styleDB.VLine)
+        
         main_grid = QtGui.QGridLayout()
         
-        row = 0
-        col = 0
-        main_grid.addWidget(toolbar_widg, row, col)
-        row += 1
-        main_grid.addWidget(self.station_table, row, col)
-        col += 1
-        main_grid.addWidget(displayArea_widg, row, col)
+
+        main_grid.addWidget(toolbar_widg, 0, 0)
+        main_grid.addWidget(self.station_table, 1, 0)
+        main_grid.addWidget(vLine1, 0, 1, 2, 1)
+        main_grid.addWidget(displayArea_widg, 1, 2)
                 
         main_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B] 
         main_grid.setColumnStretch(0, 500)
-        main_grid.setRowStretch(row, 500)
+        main_grid.setRowStretch(1, 500)
+        main_grid.setVerticalSpacing(10)
+        main_grid.setHorizontalSpacing(15)
         
         self.setLayout(main_grid)
         
@@ -518,7 +536,24 @@ class dwnldWeather(QtGui.QWidget):
              
         self.dwnl_raw_datafiles.start()
         
-          
+    
+    def select_raw_files(self):
+        
+        """
+        This method is called by the event <btn_select.clicked.connect>.
+        It allows the user to select a group of raw data files belonging to a
+        given meteorological station in order to concatenate them into a single
+        file with the method <concatenate_and_display>.
+        """
+        
+        dialog_fir = self.parent.projectdir + '/Meteo/Raw'
+        
+        fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files', 
+                                                      dialog_fir, '*.csv')
+        if fname:
+           self.concatenate_and_display(fname)       
+           
+           
     def concatenate_and_display(self, filenames):        
         
         """
@@ -541,10 +576,11 @@ class dwnldWeather(QtGui.QWidget):
         YearStart = self.MergeOutput[8, 0][:4]
         YearEnd = self.MergeOutput[-1, 0][:4]
         climateID = self.MergeOutput[5, 1]
-        
-        self.merge_stats_display.setText(LOG)      
+
+        self.merge_stats_display.append(LOG)
+                
         self.ConsoleSignal.emit("""<font color=black>Raw data files concatened 
-        successfully for station %s.</font>""")
+        successfully for station %s.</font>""" % StaName)
                                   
         if COMNT:
             
@@ -625,6 +661,7 @@ class stationTable(QtGui.QTableWidget):
         self.setMinimumWidth(650)
         self.setMinimumHeight(500)
         self.setShowGrid(False)
+        self.setAlternatingRowColors(True)
         
         #----------------------------------------------------------- Header ----
         
@@ -641,8 +678,8 @@ class stationTable(QtGui.QTableWidget):
         self.setColumnHidden(7, True)
         
         self.setColumnWidth(0, 32)
-        self.setColumnWidth(3, 65)
-        self.setColumnWidth(4, 65)
+        self.setColumnWidth(3, 75)
+        self.setColumnWidth(4, 75)
 
         self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
@@ -715,7 +752,7 @@ class stationTable(QtGui.QTableWidget):
             self.setItem(row, col, item)
             
             self.fromYear = QtGui.QComboBox() 
-            self.fromYear.setFixedWidth(65)
+            self.fromYear.setFixedWidth(75)
             self.fromYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
             self.fromYear.addItems(yearspan)
             self.fromYear.setMinimumContentsLength(4)
@@ -731,7 +768,7 @@ class stationTable(QtGui.QTableWidget):
             self.setItem(row, col, item)
             
             self.toYear = QtGui.QComboBox()
-            self.toYear.setFixedWidth(65)
+            self.toYear.setFixedWidth(75)
             self.toYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
             self.toYear.addItems(yearspan)
             self.toYear.setCurrentIndex(len(yearspan)-1)
@@ -758,8 +795,20 @@ class stationTable(QtGui.QTableWidget):
             item = QtGui.QTableWidgetItem(staList[row, 1])
             self.setItem(row, col, item)
             
-        self.setSortingEnabled(True)            
             
+            
+        self.setSortingEnabled(True)            
+    
+#        def handleButtonClicked(self):
+#        
+#        button = QtGui.qApp.focusWidget()
+#
+#        # or button = self.sender()
+#        index = self.staList_table.indexAt(button.pos())
+#
+#        if index.isValid():
+#            print index.row()
+#            self.staList_table.removeRow(index.row())          
         
 #===============================================================================
 class search4stations(QtGui.QWidget):
@@ -1572,14 +1621,14 @@ def concatenate(fname):
         
         ALLDATA = np.vstack((ALLDATA, DATA)) 
     
-    FIELDS = ['Temp. Max.', 'Temp. Min.', 'Temp. Avg.', 'Prec. Tot.', 'Total']
+    FIELDS = ['Tmax', 'Tmin', 'Tmean', 'Ptot', 'Total']
     
     ndata = float(len(ALLDATA[:, 0]))
-    Ndata = float(len(ALLDATA[:, 0]) * 4) 
+#    Ndata = float(len(ALLDATA[:, 0]) * 4) 
     
     LOG = '''
           <p>
-            Number of Missing Data for Years %d to %d for station %s :
+            Number of days with missing data from %d to %d for station %s :
           </p>
           <br>
           <table border="0" cellpadding="2" cellspacing="0" align="left">
@@ -1588,7 +1637,6 @@ def concatenate(fname):
          nonan = sum(np.isnan(ALLDATA[:, i+3]))
          LOG += '''
                 <tr>
-                  <td width=60></td>
                   <td align="left">%s</td>
                   <td align="left" width=20>:</td>          
                   <td align="right">%d/%d</td>
@@ -1596,18 +1644,17 @@ def concatenate(fname):
                 </tr>
                 ''' % (FIELDS[i], nonan, ndata, nonan/ndata*100)
                
-    nonan = np.sum(np.isnan(ALLDATA[:, 3:]))
-    LOG += '''
-             <tr></tr>
-             <tr>
-               <td></td>
-               <td align="left">%s</td>
-               <td align="left" width=20>:</td>
-               <td align="right">%d/%d</td>
-               <td align="center">(%0.1f%%)</td>
-             </tr>
-           </table>
-           ''' % (FIELDS[-1], nonan, Ndata, nonan/Ndata*100)
+#    nonan = np.sum(np.isnan(ALLDATA[:, 3:]))
+#    LOG += '''
+#             <tr></tr>
+#             <tr>
+#               <td align="left">%s</td>
+#               <td align="left" width=10>:</td>
+#               <td align="right">%d/%d</td>
+#               <td align="center">(%0.1f%%)</td>
+#             </tr>
+#           </table>
+#           ''' % (FIELDS[-1], nonan, Ndata, nonan/Ndata*100)
     
     HEADER = np.zeros((8, len(COLN))).astype('str')
     HEADER[:] = ''
