@@ -264,7 +264,22 @@ def plot_P_vs_VWC(Pc, VWC, VWCsat, VWCres):
     ax1.plot([VWCsat, VWCsat], [0.001, 1000], '--', color='blue')
     
 #===============================================================================
-def calc_recharge_old(CRU, RASmax, ETP, PTOT, TAVG):
+def surf_water_budget(CRU, RASmax, ETP, PTOT, TAVG):
+    """
+    
+    ---- Input ----
+    
+    {float} CRU = Runoff coefficient
+    {float} RASmax = Maximal Readily Available Storage in mm
+    {1D array} ETP = Dailty evapotranspiration in mm
+    {1D array} PTOT = Daily total precipitation in mm
+    {1D array} TAVG = Daily average ai temperature in deg. C.
+    
+    ---- Output ----
+    
+    {1D array} RECHG = Daily groundwater recharge in mm
+    
+    """
 #===============================================================================
     
     N = len(ETP)    
@@ -326,6 +341,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     '''
     In this version, I tried to incorporate the flow of water in the unsaturated
     zone with a subrouting approach similar to HELP. It does not work yet.
+    
     ----- Inputs -----
     
     VWCRES = Volumetric residual water content (mm**3 / mm**3)
@@ -438,7 +454,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
         VWCt = VWC[:, i]
         VWCdt = VWC[:, i]
         
-        for t in  range(24):
+        for t in range(24):
         
             #--------------------------------------------- POTENTIAL FLUXES ----
 #            print VWCt[0] 
@@ -697,7 +713,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     
     for it in range(len(CRU)):
         
-        RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+        RECHG = surf_water_budget(CRU[it], RASmax[it], ETP, PTOT, TAVG)
         WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
         
 #        SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]        
@@ -708,7 +724,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
 #                
 #                RASmax[it] += delta_RAS
 #                
-#                RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+#                RECHG = surf_water_budget(CRU[it], RASmax[it], ETP, PTOT, TAVG)
 #                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
 #                
 ##                dWL = WLobs[0] - WL[indx[0]]
@@ -738,7 +754,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
                 RASmax[it] += delta_RAS
                 RMSE[it] = RMSEold
                 
-                RECHG = calc_recharge_old(CRU[it], RASmax[it], ETP, PTOT, TAVG)
+                RECHG = surf_water_budget(CRU[it], RASmax[it], ETP, PTOT, TAVG)
                 WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
                 
 #                dWL = WLobs[-1] - WLsim[indx[-1]]
@@ -775,7 +791,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
                 
 #    plt.plot(TIMEwater, -WLogger, color='r')
     
-#    RECHG = calc_recharge_old(0, 35.81, ETP, PTOT, TAVG)
+#    RECHG = surf_water_budget(0, 35.81, ETP, PTOT, TAVG)
 #    WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
     
 #    plt.figure()
@@ -784,7 +800,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
 
     indx = np.where(RMSE == np.min(RMSE))[0][0]
     
-    RECHG = calc_recharge_old(CRU[indx], RASmax[indx], ETP, PTOT, TAVG)
+    RECHG = surf_water_budget(CRU[indx], RASmax[indx], ETP, PTOT, TAVG)
     WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
     
     return RECHG, WLsim

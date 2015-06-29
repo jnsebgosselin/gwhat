@@ -167,12 +167,12 @@ class WLCalc(QtGui.QWidget):
         self.btn_home.setFocusPolicy(QtCore.Qt.NoFocus)
         self.btn_home.setIconSize(StyleDB.iconSize)
         
-        self.btn_findPeak = QtGui.QToolButton()
-        self.btn_findPeak.setAutoRaise(True)
-        self.btn_findPeak.setIcon(iconDB.findPeak2)
-        self.btn_findPeak.setToolTip(ttipDB.find_peak)
-        self.btn_findPeak.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_findPeak.setIconSize(StyleDB.iconSize)
+#        self.btn_findPeak = QtGui.QToolButton()
+#        self.btn_findPeak.setAutoRaise(True)
+#        self.btn_findPeak.setIcon(iconDB.findPeak2)
+#        self.btn_findPeak.setToolTip(ttipDB.find_peak)
+#        self.btn_findPeak.setFocusPolicy(QtCore.Qt.NoFocus)
+#        self.btn_findPeak.setIconSize(StyleDB.iconSize)
         
         self.btn_editPeak = QtGui.QToolButton()
         self.btn_editPeak.setAutoRaise(True)
@@ -245,8 +245,8 @@ class WLCalc(QtGui.QWidget):
         col += 1
         subgrid_toolbar.addWidget(self.btn_clearPeak, row, col)                
         col += 1        
-        subgrid_toolbar.addWidget(self.btn_findPeak, row, col)
-        col += 1 
+#        subgrid_toolbar.addWidget(self.btn_findPeak, row, col)
+#        col += 1 
         subgrid_toolbar.addWidget(self.btn_editPeak, row, col)
         col += 1        
         subgrid_toolbar.addWidget(self.btn_delPeak, row, col)
@@ -339,7 +339,7 @@ class WLCalc(QtGui.QWidget):
         self.btn_undo.clicked.connect(self.undo)
         self.btn_clearPeak.clicked.connect(self.clear_all_peaks)        
         self.btn_home.clicked.connect(self.home)
-        self.btn_findPeak.clicked.connect(self.find_peak)
+#        self.btn_findPeak.clicked.connect(self.find_peak)
         self.btn_editPeak.clicked.connect(self.edit_peak)
         self.btn_delPeak.clicked.connect(self.delete_peak)
         self.btn_pan.clicked.connect(self.pan_graph)
@@ -397,13 +397,13 @@ class WLCalc(QtGui.QWidget):
             self.SOILPROFIL.load_info(self.soilFilename) 
             
             rechg = mrc2rechg(self.time, self.water_lvl, self.A, self.B,
-                              self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy,
-                              self.peak_indx)
+                              self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
                               
             rechg_tot = np.sum(rechg) * 1000
             dt = self.time[-1] - self.time[0]
+            rechg_yrly = rechg_tot / dt * 365
                   
-            txt = '\nRecharge = %0.0f mm / %0.1f d' % (rechg_tot, dt) 
+            txt = '\nRecharge = %0.0f mm / y' % (rechg_yrly) 
             self.MRC_results.append(txt)
             
         QtGui.QApplication.restoreOverrideCursor()
@@ -422,8 +422,7 @@ class WLCalc(QtGui.QWidget):
         self.SOILPROFIL.load_info(self.soilFilename)        
         
         mrc2rechg(self.time, self.water_lvl, self.A, self.B,
-                  self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy,
-                  self.peak_indx)
+                  self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
             
     def plot_peak(self):
                 
@@ -731,10 +730,9 @@ class WLCalc(QtGui.QWidget):
             return
             
         #---- load soil column info ----
-    
-        reader = open(self.soilFilename,'rb')
-        reader = csv.reader(reader, delimiter="\t")
-        reader = list(reader)
+        
+        with open(self.soilFilename,'rb') as f:
+            reader = list(csv.reader(f, delimiter="\t"))
    
         NLayer = len(reader)
                            
@@ -1455,10 +1453,9 @@ class SoilProfil():
     def load_info(self, filename):    
         
         #---- load soil column info ----
-    
-        reader = open(filename,'rb')
-        reader = csv.reader(reader, delimiter="\t")
-        reader = list(reader)
+        
+        with open(filename,'rb') as f:
+            reader = list(csv.reader(f, delimiter="\t"))
    
         NLayer = len(reader)
         
@@ -1479,7 +1476,7 @@ class SoilProfil():
                 
 
 #===============================================================================    
-def mrc2rechg(t, ho, A, B, z, Sy, indx):
+def mrc2rechg(t, ho, A, B, z, Sy):
     """
     Calculate groundwater recharge from the Master Recession Curve 
     equation defined by the parameters A and B, the water level time series
@@ -1510,13 +1507,6 @@ def mrc2rechg(t, ho, A, B, z, Sy, indx):
     if np.min(ho) < 0:
         print('Water level rise above ground surface. Please check your data.')
         return
-
-#    indx = np.sort(indx)
-#    
-#    print indx
-#    
-#    lindx = indx[:-1:2]
-#    rindx = indx[1::2]
 
     dz = np.diff(z)
     print dz

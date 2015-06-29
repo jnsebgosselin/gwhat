@@ -490,10 +490,11 @@ class MainWindow(QtGui.QMainWindow):
         self.tab_dwnld_data.dwnld_weather.search4stations.lon_spinBox.setValue(
                                                            self.projectInfo.lon)
         
-        #---- Load Weather Station List ----
+        #---- Clear Weather Station Table ----
 
-#        self.tab_dwnld_data.load_stationList()
-        self.tab_dwnld_data.dwnld_weather.load_stationList()
+#        self.tab_dwnld_data.dwnld_weather.load_stationList()
+#        self.tab_dwnld_data.dwnld_weather.station_table.populate_table(
+#                                                                  staList = [])
             
         #---- Load Weather Input Files ----
         
@@ -563,21 +564,6 @@ class MainWindow(QtGui.QMainWindow):
             sheet1.write(0, 1, 'Time (days)')
             sheet1.write(0, 2, 'Obs. (mbgs)')
             book.save(fname)
-            
-        #---- weather_stations.lst ----
-                
-        fname = self.projectdir + '/weather_stations.lst'
-        if not path.exists(fname):
-            
-            msg = ('No "weather_stations.lst" file found. ' +
-                   'A new one has been created.')
-            print msg
-            
-            fcontent = headerDB.weather_stations
-            
-            with open(fname, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(fcontent)
         
         #---- graph_layout.lst ----
         
@@ -595,6 +581,9 @@ class MainWindow(QtGui.QMainWindow):
                 writer.writerows(fcontent)
                 
         return True
+    
+    def closeEvent(self,event): 
+        event.accept()
                     
 ################################################################################
         
@@ -1238,10 +1227,9 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                 DIST = np.zeros(len(fmeteo_paths))
                 i = 0
                 for fmeteo in fmeteo_paths:
-            
-                    reader = open(fmeteo, 'rb')
-                    reader = csv.reader(reader, delimiter='\t')
-                    reader = list(reader)
+                    
+                    with open(fmeteo, 'rb') as f:
+                        reader = list(csv.reader(f, delimiter='\t'))
                
                     LAT2[i] = float(reader[2][1])
                     LON2[i] = float(reader[3][1])
@@ -1763,24 +1751,13 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         
         #-------------------------------------------------------- MAIN GRID ----
         
-        vLine1 = QtGui.QFrame()
-        vLine1.setFrameStyle(styleDB.VLine)
-        
         grid_MAIN = QtGui.QGridLayout()
+
+        grid_MAIN.addWidget(self.dwnld_weather, 0, 0)
         
-        col = 0
-        row = 0
-        grid_MAIN.addWidget(self.dwnld_weather, row, col)
-        
-        grid_MAIN.setRowStretch(0, 500)
-        
-        grid_MAIN.setContentsMargins(10, 10, 10, 10) #Left, Top, Right, Bottom
-        grid_MAIN.setSpacing(15)
-        
+        grid_MAIN.setContentsMargins(0, 0, 0, 0) # [L, T, R, B] 
         self.setLayout(grid_MAIN)
-    
-             
-        
+                         
         
     #===========================================================================        
     def select_concatened_save_path(self):
@@ -1819,11 +1796,11 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
                 self.save_concatened_data(fname)    
     
 
-###################################################################### @TAB FILL  
+################################################################################
                                         
-class TabFill(QtGui.QWidget): 
+class TabFill(QtGui.QWidget):                                      # @TAB FILL #
 
-###################################################################### @TAB FILL
+################################################################################
     
     def __init__(self, parent):
         super(TabFill, self).__init__(parent)
@@ -3835,9 +3812,8 @@ class WHATPref():
         
         else:
             
-            reader = open('WHAT.pref', 'rb')
-            reader = csv.reader(reader, delimiter='\t')
-            reader = list(reader)
+            with open('WHAT.pref', 'rb') as f:
+                reader = list(csv.reader(f, delimiter='\t'))
             
             self.projectfile = reader[0][1].decode('utf-8')
             self.language = reader[1][1]
@@ -3864,6 +3840,8 @@ class MyProject():
         self.name = ''
         self.lat = 0
         self.lon = 0
+        self.staList = [] # Path to the latest opened station list file (lst)
+                          # for this project.
         
     #---------------------------------------------------------------------------
     def load_project_info(self, projectfile):
@@ -3871,9 +3849,8 @@ class MyProject():
         
         print 'Loading project info'
         
-        reader = open(projectfile, 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
+        with open(projectfile, 'rb') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
             
         self.name = reader[0][1].decode('utf-8')
         self.lat = float(reader[6][1])

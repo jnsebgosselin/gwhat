@@ -254,9 +254,8 @@ class MeteoObj():
         
     def load(self, fname):
         
-        reader = open(fname, 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
+        with open(fname, 'rb') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
         
         self.station_name = reader[0][1]
         self.LAT = reader[2][1]

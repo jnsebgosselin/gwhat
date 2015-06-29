@@ -43,13 +43,17 @@ class Tooltips():
     
     def __init__(self, language): #------------------------------- ENGLISH -----
         
-        self.refresh_staList = 'Refresh the current weather station list'
-        
         self.search4stations = ('Search for weather stations in the ' +
                                 'Canadian Daily Climate Database (CDCD)')
-        self.btn_GetData = 'Download data for the selected weather stations'
+        self.refresh_staList = 'Refresh the current weather station list'
+        self.btn_browse_staList = 'Load an existing weather station list'
+        self.btn_save_staList = 'Save current station list.'
         self.btn_delSta = 'Remove selected weather stations from the list'
-        self.btn_browse_staList = 'Load a custom weather station list'
+        
+        
+        self.btn_GetData = 'Download data for the selected weather stations'
+        
+        
         self.btn_select_rawData = 'Select and format raw weather data files' 
         self.btn_save_concatenate = 'Save formated weather data in a csv file'
         
@@ -84,8 +88,13 @@ class dwnldWeather(QtGui.QWidget):
         #--------------------------------------------------- VARIABLES INIT ----
         
         self.workdir = getcwd()
-        self.staList = []
-        self.MergeOutput = np.array([])
+        
+        self.staList_fname = []
+        self.staList_isNotSaved = False
+        
+        self.mergeHistoryLog = []
+        self.mergeHistoryIndx = 0
+        self.mergeHistoryFnames = []
         
         self.staList2dwnld = []
         self.dwnld_indx = 0
@@ -101,7 +110,18 @@ class dwnldWeather(QtGui.QWidget):
         self.dwnl_raw_datafiles = DownloadRawDataFiles(self)
         
         #---------------------------------------------------------- TOOLBAR ----
-                        
+       
+        btn_save_menu = QtGui.QMenu()
+        btn_save_menu.addAction('Save As...', self.btn_saveAs_staList_isClicked)
+        
+        self.btn_save_staList = QtGui.QToolButton()
+        self.btn_save_staList.setIcon(iconDB.save)
+        self.btn_save_staList.setAutoRaise(True)
+        self.btn_save_staList.setToolTip(ttipDB.btn_save_staList)
+        self.btn_save_staList.setIconSize(styleDB.iconSize)
+        self.btn_save_staList.setMenu(btn_save_menu)
+        self.btn_save_staList.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
+                
         btn_search4station = QtGui.QToolButton()
         btn_search4station.setAutoRaise(True)
         btn_search4station.setIcon(iconDB.search)
@@ -109,7 +129,7 @@ class dwnldWeather(QtGui.QWidget):
         btn_search4station.setIconSize(styleDB.iconSize)
         
         btn_browse_staList = QtGui.QToolButton()
-        btn_browse_staList.setIcon(iconDB.openFolder)
+        btn_browse_staList.setIcon(iconDB.openFile)
         btn_browse_staList.setAutoRaise(True)
         btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
         btn_browse_staList.setIconSize(styleDB.iconSize)
@@ -126,16 +146,6 @@ class dwnldWeather(QtGui.QWidget):
         self.btn_get.setToolTip(ttipDB.btn_GetData)
         self.btn_get.setIconSize(styleDB.iconSize)
         
-        btn_selectRaw = QtGui.QPushButton(labelDB.btn_select_rawData)
-        btn_selectRaw.setIcon(iconDB.openFile)
-        btn_selectRaw.setToolTip(ttipDB.btn_select_rawData)
-        btn_selectRaw.setIconSize(styleDB.iconSize2)
-        
-        btn_save = QtGui.QPushButton(labelDB.btn_save_concatenate)
-        btn_save.setToolTip(ttipDB.btn_save_concatenate)
-        btn_save.setIcon(iconDB.save)
-        btn_save.setIconSize(styleDB.iconSize2)
-        
         self.saveAuto_checkbox = QtGui.QCheckBox(labelDB.saveMeteoAuto)
         self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
         
@@ -149,10 +159,12 @@ class dwnldWeather(QtGui.QWidget):
         
         row = 0
         col = 0
+        toolbar_grid.addWidget(self.btn_save_staList, row, col)
+        col += 1
         toolbar_grid.addWidget(btn_search4station, row, col)
         col += 1
         toolbar_grid.addWidget(btn_browse_staList, row, col)
-        col += 1
+        col += 1                
         toolbar_grid.addWidget(separator1, row, col)
         col += 1
         toolbar_grid.addWidget(btn_delSta, row, col)
@@ -173,22 +185,90 @@ class dwnldWeather(QtGui.QWidget):
         self.pbar = QtGui.QProgressBar()
         self.pbar.setValue(0)
         
-        #----------------------------------------------------- Display Area ----
+        #------------------------------------------------------ Right Panel ----
+                
+        display_label = QtGui.QLabel('<b>Downloaded Weather Data Info :</b>')
         
-        self.merge_stats_display = QtGui.QTextEdit()
-        self.merge_stats_display.setReadOnly(True)  
-#        self.merge_stats_display.setFrameStyle(0)
+        #---- Go Toolbar ----        
         
-        displayArea_grid = QtGui.QGridLayout()
-        displayArea_widg = QtGui.QFrame()
+        self.btn_goNext = QtGui.QToolButton()
+        self.btn_goNext.setIcon(iconDB.go_next)
+        self.btn_goNext.setAutoRaise(True)
+#        btn_goNext.setToolTip(ttipDB.btn_delSta)
+        self.btn_goNext.setIconSize(styleDB.iconSize)
+        self.btn_goNext.setEnabled(False)
         
-        row = 0
-        displayArea_grid.addWidget(self.merge_stats_display, row, 0)
+        self.btn_goPrevious = QtGui.QToolButton()
+        self.btn_goPrevious.setIcon(iconDB.go_previous)
+        self.btn_goPrevious.setAutoRaise(True)
+#        btn_goNext.setToolTip(ttipDB.btn_delSta)
+        self.btn_goPrevious.setIconSize(styleDB.iconSize)
+        self.btn_goPrevious.setEnabled(False)
         
-        displayArea_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
-        displayArea_grid.setRowStretch(row+1, 100)
+        self.btn_goLast = QtGui.QToolButton()
+        self.btn_goLast.setIcon(iconDB.go_last)
+        self.btn_goLast.setAutoRaise(True)
+#        btn_goLast.setToolTip(ttipDB.btn_delSta)
+        self.btn_goLast.setIconSize(styleDB.iconSize)
+        self.btn_goLast.setEnabled(False)
         
-        displayArea_widg.setLayout(displayArea_grid)
+        self.btn_goFirst = QtGui.QToolButton()
+        self.btn_goFirst.setIcon(iconDB.go_first)
+        self.btn_goFirst.setAutoRaise(True)
+#        btn_goNext.setToolTip(ttipDB.btn_delSta)
+        self.btn_goFirst.setIconSize(styleDB.iconSize)
+        self.btn_goFirst.setEnabled(False)
+        
+        goToolbar_grid = QtGui.QGridLayout()
+        goToolbar_widg = QtGui.QFrame()
+        
+        col = 0
+        goToolbar_grid.addWidget(self.btn_goFirst, 0, col)
+        col += 1
+        goToolbar_grid.addWidget(self.btn_goPrevious, 0, col)
+        col += 1
+        goToolbar_grid.addWidget(self.btn_goNext, 0, col)
+        col += 1
+        goToolbar_grid.addWidget(self.btn_goLast, 0, col)
+        
+        goToolbar_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
+        goToolbar_grid.setSpacing(5)
+        
+        goToolbar_widg.setLayout(goToolbar_grid)
+        
+        #---- Right Panel Assembly ----
+        
+        self.mergeDisplay = QtGui.QTextEdit()
+        self.mergeDisplay.setReadOnly(True) 
+        
+        btn_selectRaw = QtGui.QPushButton(labelDB.btn_select_rawData)
+        btn_selectRaw.setIcon(iconDB.openFile)
+        btn_selectRaw.setToolTip(ttipDB.btn_select_rawData)
+        btn_selectRaw.setIconSize(styleDB.iconSize2)   
+        
+        btn_saveMerge = QtGui.QPushButton(labelDB.btn_save_concatenate)
+        btn_saveMerge.setToolTip(ttipDB.btn_save_concatenate)
+        btn_saveMerge.setIcon(iconDB.save)
+        btn_saveMerge.setIconSize(styleDB.iconSize2)
+        
+        rightPanel_grid = QtGui.QGridLayout()
+        rightPanel_widg = QtGui.QFrame()
+        
+        row = 0  
+             
+        rightPanel_grid.addWidget(btn_selectRaw, row, 0)
+        rightPanel_grid.addWidget(btn_saveMerge, row, 1)
+        row += 1   
+        rightPanel_grid.addWidget(self.mergeDisplay, row, 0, 1, 3)
+        
+        row += 1
+        rightPanel_grid.addWidget(goToolbar_widg, row, 0, 1, 3)
+        
+        rightPanel_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
+        rightPanel_grid.setRowStretch(row+1, 100)
+        rightPanel_grid.setColumnStretch(2, 100)
+        
+        rightPanel_widg.setLayout(rightPanel_grid)
         
         #-------------------------------------------------------- Main Grid ----
         
@@ -197,16 +277,17 @@ class dwnldWeather(QtGui.QWidget):
         
         main_grid = QtGui.QGridLayout()
         
-
         main_grid.addWidget(toolbar_widg, 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
         main_grid.addWidget(vLine1, 0, 1, 2, 1)
-        main_grid.addWidget(displayArea_widg, 1, 2)
+        
+        main_grid.addWidget(display_label, 0, 2)
+        main_grid.addWidget(rightPanel_widg, 1, 2)
                 
-        main_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B] 
+        main_grid.setContentsMargins(10, 10, 10, 10) # [L, T, R, B] 
         main_grid.setColumnStretch(0, 500)
         main_grid.setRowStretch(1, 500)
-        main_grid.setVerticalSpacing(10)
+        main_grid.setVerticalSpacing(5)
         main_grid.setHorizontalSpacing(15)
         
         self.setLayout(main_grid)
@@ -226,15 +307,26 @@ class dwnldWeather(QtGui.QWidget):
         self.dwnl_raw_datafiles.MergeSignal.connect(self.concatenate_and_display)
         self.dwnl_raw_datafiles.ProgBarSignal.connect(self.set_progressBar)
         
+        #---- concatenate raw data ----
+        
+        btn_selectRaw.clicked.connect(self.btn_selectRaw_isClicked)
+        self.btn_goLast.clicked.connect(self.btn_goLast_isClicked)
+        self.btn_goFirst.clicked.connect(self.btn_goFirst_isClicked)
+        self.btn_goNext.clicked.connect(self.btn_goNext_isClicked)
+        self.btn_goPrevious.clicked.connect(self.btn_goPrevious_isClicked)
+        btn_saveMerge.clicked.connect(self.btn_saveMerge_isClicked)
+        
         #---- weather station list ----
         
         btn_delSta.clicked.connect(self.btn_delSta_isClicked)
         btn_browse_staList.clicked.connect(self.btn_browse_staList_isClicked)
+        self.btn_save_staList.clicked.connect(self.btn_save_staList_isClicked)
         
         #---- search4stations ----
         
         btn_search4station.clicked.connect(self.btn_search4station_isClicked) 
-        self.search4stations.staListSignal.connect(self.load_stationList)        
+        self.search4stations.staListSignal.connect(
+                                                 self.search4station_isFinished)        
         
             
     def set_workdir(self, directory):
@@ -256,6 +348,7 @@ class dwnldWeather(QtGui.QWidget):
                          self.station_table.item(row, 2).text())
                       ) 
                 self.station_table.removeRow(row)
+                self.staList_isNotSaved = True
                     
                     
     def btn_search4station_isClicked(self):
@@ -269,59 +362,36 @@ class dwnldWeather(QtGui.QWidget):
         self.search4stations.setFixedSize(self.search4stations.size())       
     
     
+    def search4station_isFinished(self, staList):
+        
+        self.station_table.populate_table(staList)
+        self.staList_isNotSaved = True
+        self.staList_fname = []
+        
+        
     def btn_browse_staList_isClicked(self):
         
         '''
-        This method allows the user to select and load a custom weather 
-        station list. Info are loaded into memory and saved in the file named
-        "weather_stations.lst".
+        Allows the user to select a weather station list with 
+        a 'lst' extension.
         '''
-            
-        dirname = self.workdir
-        
-        
-        fname, _ = QtGui.QFileDialog.getOpenFileName(
-                         self, 'Select a valid station list', dirname, '*.lst')        
-                        
-        if fname:
-            
-            default_list_name = dirname + '/weather_stations.lst'
-            
-            #---- Load List ----
-            
-            with open(fname, 'rb') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
+                
+        filename, _ = QtGui.QFileDialog.getOpenFileName(
+                                            self, 'Select a valid station list',
+                                            self.workdir, '*.lst')        
 
-            #---- Save List in Default Name ----
-        
-            with open(default_list_name, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
-            
-            #---- Load List in UI ----
+        if filename:
             
             QtGui.QApplication.processEvents()
-            self.load_stationList()
+            self.load_stationList(filename)
             
     
-    def load_stationList(self):
+    def load_stationList(self, filename):
         
         '''
-        The list of weather station (staList) is always loaded from the file
-        "weather_stations.lst"
-        
-        This method is started either :
-        
-        (1) when a new project folder is loaded in 
-            <MainWindow.load_project>
-        (2) after a search has been completed for weather stations in 
-            <envirocan.search4stations>
-        (3) When a station list is loaded manually by the user from method
-            <select_stationList>.
-        
-        It loads the informations in the "weather_stations.lst" file that is
-        located in the project folder and save it as a table in <self.staList>
-        and displays the station list in the QComboBox widget.
+        It loads the informations in the weather stations list file (.lst) that
+        is located in "filename". The content is then displayed in a
+        QTableWidget named "station_table".
         
         ----- weather_stations.lst -----
         
@@ -344,18 +414,22 @@ class dwnldWeather(QtGui.QWidget):
         
         #--------------------------------------------- Check if file exists ----
         
+        # In case this method is not called from the UI.
+        
         headerDB = db.headers()        
-        filename = (self.workdir + '/weather_stations.lst')
+        self.staList_isNotSaved = False
         
         if not path.exists(filename):
             
-            msg  = 'No "weather_stations.lst" file found. '
-            msg += 'A new one has been created.'
-            print(msg)           
+            msg  = '%s not found. Please select an existing weather station'
+            msg += ' list or search for new stations on the CDCD.'
+            print(msg)
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
             
-            with open(filename, 'wb') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(headerDB.weather_stations)
+            self.station_table.populate_table(staList=[])
+            self.staList_fname = []            
+            
+            return
         
         #-------------------------------------------------------- Open file ----
         
@@ -411,7 +485,7 @@ class dwnldWeather(QtGui.QWidget):
             self.ConsoleSignal.emit('''<font color=black>Weather station list 
             loaded successfully.</font>''')
            
-            self.staList = np.array(reader[1:])            
+            staList = np.array(reader[1:])            
                                          
         else:
             
@@ -419,10 +493,53 @@ class dwnldWeather(QtGui.QWidget):
             self.ConsoleSignal.emit('''<font color=red>Weather Station list is
             empty.</font>''')
             
-            self.staList = []
+            staList = []
             
-        self.station_table.populate_table(self.staList)  
+        self.station_table.populate_table(staList)
+        self.staList_fname = filename
+    
+    def btn_save_staList_isClicked(self):
         
+        filename = self.staList_fname
+        
+        if filename:
+            
+            print('Station list saved in %s' % filename)
+            self.ConsoleSignal.emit('''<font color=black>
+                                         Station list saved in %s 
+                                       </font>''' % filename)
+
+            self.station_table.save_staList(filename)
+            self.staList_isNotSaved = False
+                           
+        else:
+            self.btn_saveAs_staList_isClicked()
+    
+    def btn_saveAs_staList_isClicked(self):        
+        
+        dirname = self.workdir + '/weather_stations.lst'
+        
+        dialog = QtGui.QFileDialog()
+        dialog.setConfirmOverwrite(True)
+        fname, ftype = dialog.getSaveFileName(
+                                    caption="Save Weather Stations List",
+                                    dir=dirname, filter=('*.lst'))
+                                  
+        if fname:  
+            
+            if fname[-4:] != ftype[1:]:  # Add a file extension if there is none                
+                fname = fname + ftype[1:]
+        
+            self.station_table.save_staList(fname)
+            self.staList_fname = fname
+            self.staList_isNotSaved = False
+            
+            print('Station list saved in %s' % fname)
+            self.ConsoleSignal.emit('''<font color=black>
+                                         Station list saved in %s 
+                                       </font>''' % fname)
+
+    
     def manage_raw_data_dwnld(self):
         
         """
@@ -535,9 +652,57 @@ class dwnldWeather(QtGui.QWidget):
         self.dwnld_indx += 1
              
         self.dwnl_raw_datafiles.start()
+           
+    #------------------------------------------------- Display Merge Memory ----
+   
+    def btn_goLast_isClicked(self):
+
+        self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
+        self.display_mergeHistory()
         
+        
+    def btn_goFirst_isClicked(self):
+
+        self.mergeHistoryIndx = 0
+        self.display_mergeHistory()
+        
+        
+    def btn_goNext_isClicked(self):
+        
+        self.mergeHistoryIndx += 1
+        self.display_mergeHistory()
+        
+        
+    def btn_goPrevious_isClicked(self):
+        
+        self.mergeHistoryIndx += -1
+        self.display_mergeHistory()
+        
+        
+    def display_mergeHistory(self):
+        self.mergeDisplay.setText(self.mergeHistoryLog[self.mergeHistoryIndx])
+        
+        if len(self.mergeHistoryLog) > 1:
+        
+            if self.mergeHistoryIndx == (len(self.mergeHistoryLog) - 1):
+                self.btn_goLast.setEnabled(False)
+                self.btn_goNext.setEnabled(False)
+                self.btn_goFirst.setEnabled(True)
+                self.btn_goPrevious.setEnabled(True)
+            elif self.mergeHistoryIndx == 0:
+                self.btn_goLast.setEnabled(True)
+                self.btn_goNext.setEnabled(True)
+                self.btn_goFirst.setEnabled(False)
+                self.btn_goPrevious.setEnabled(False)
+            else:
+                self.btn_goLast.setEnabled(True)
+                self.btn_goNext.setEnabled(True)
+                self.btn_goFirst.setEnabled(True)
+                self.btn_goPrevious.setEnabled(True)
     
-    def select_raw_files(self):
+    #---------------------------------------------------------------------------
+    
+    def btn_selectRaw_isClicked(self):
         
         """
         This method is called by the event <btn_select.clicked.connect>.
@@ -546,19 +711,18 @@ class dwnldWeather(QtGui.QWidget):
         file with the method <concatenate_and_display>.
         """
         
-        dialog_fir = self.parent.projectdir + '/Meteo/Raw'
+        dialog_fir = self.workdir + '/Meteo/Raw'
         
         fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files', 
                                                       dialog_fir, '*.csv')
         if fname:
-           self.concatenate_and_display(fname)       
-           
+           self.concatenate_and_display(fname) 
            
     def concatenate_and_display(self, filenames):        
         
         """
         Handles the concatenation process of individual yearly raw data files 
-        and display the results in the <merge_stats_display> widget.
+        and display the results in the <mergeDisplay> widget.
         
         ---- CALLED BY----
         
@@ -570,17 +734,22 @@ class dwnldWeather(QtGui.QWidget):
             print"No raw data file selected."
             return
         
-        self.MergeOutput, LOG, COMNT = concatenate(filenames)
+        mergeOutput, LOG, COMNT = concatenate(filenames)
         
-        StaName = self.MergeOutput[0, 1]
-        YearStart = self.MergeOutput[8, 0][:4]
-        YearEnd = self.MergeOutput[-1, 0][:4]
-        climateID = self.MergeOutput[5, 1]
-
-        self.merge_stats_display.append(LOG)
-                
+        StaName = mergeOutput[0, 1]
+        YearStart = mergeOutput[8, 0][:4]
+        YearEnd = mergeOutput[-1, 0][:4]
+        climateID = mergeOutput[5, 1]
+               
         self.ConsoleSignal.emit("""<font color=black>Raw data files concatened 
         successfully for station %s.</font>""" % StaName)
+        
+        #---- Update history variables and UI ----
+        
+        self.mergeHistoryLog.append(LOG)
+        self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
+        self.display_mergeHistory()
+        self.mergeHistoryFnames.append(filenames)
                                   
         if COMNT:
             
@@ -607,22 +776,62 @@ class dwnldWeather(QtGui.QWidget):
                                               YearStart, YearEnd)
             fname = save_dir + filename
             
-            self.save_concatened_data(fname) 
+            self.save_concatened_data(fname, mergeOutput) 
             
-    def save_concatened_data(self, fname):  
+            
+    def btn_saveMerge_isClicked(self):
+        
+        '''        
+        This method allows the user to select a path for the file in which the 
+        concatened data are going to be saved.
+        
+        ---- CALLED BY----
+        
+        (1) Event: btn_saveMerge.clicked.connect
+        '''
+    
+        
+        filenames = self.mergeHistoryFnames[self.mergeHistoryIndx]
+        mergeOutput, _, _ = concatenate(filenames)
+        
+        if np.size(mergeOutput) != 0:
+            
+            StaName = mergeOutput[0, 1]
+            YearStart = mergeOutput[8, 0][:4]
+            YearEnd = mergeOutput[-1, 0][:4]
+            climateID = mergeOutput[5, 1]
+            
+            # Check if the characters "/" or "\" are present in the station 
+            # name and replace these characters by "-" if applicable.            
+            intab = "/\\"
+            outtab = "--"
+            trantab = maketrans(intab, outtab)
+            StaName = StaName.translate(trantab)
+            
+            filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
+                                              YearStart, YearEnd)
+            dialog_dir = self.workdir + '/Meteo/Input/' + filename
+                          
+            fname, _ = QtGui.QFileDialog.getSaveFileName(
+                                         self, 'Save file', dialog_dir, '*.csv')
+            
+            if fname:                
+                self.save_concatened_data(fname, mergeOutput)
+            
+    def save_concatened_data(self, fname, fcontent):  
         
         """
         This method saves the concatened data into a single csv file.
         
         ---- CALLED BY----
         
-        (1) Method: select_concatened_save_path
+        (1) Method: btn_saveMerge_isClicked
         (2) Method: concatenate_and_display if self.saveAuto_checkbox.isChecked
         """
         
         with open(fname, 'wb') as f:
             writer = csv.writer(f,delimiter='\t')
-            writer.writerows(self.MergeOutput)
+            writer.writerows(fcontent)
         
         print('Concatened data saved in: %s.' % fname)
         self.ConsoleSignal.emit("""<font color=black>Concatened data saved 
@@ -795,21 +1004,48 @@ class stationTable(QtGui.QTableWidget):
             item = QtGui.QTableWidgetItem(staList[row, 1])
             self.setItem(row, col, item)
             
-            
-            
-        self.setSortingEnabled(True)            
-    
-#        def handleButtonClicked(self):
-#        
-#        button = QtGui.qApp.focusWidget()
-#
-#        # or button = self.sender()
-#        index = self.staList_table.indexAt(button.pos())
-#
-#        if index.isValid():
-#            print index.row()
-#            self.staList_table.removeRow(index.row())          
+        self.setSortingEnabled(True)
+
+    def save_staList(self, filename):
         
+        headerDB = db.headers()
+                     
+       #------------------------------------------ grabbing info from table ----              
+              
+        staList = headerDB.weather_stations        
+        for row in range(self.rowCount()):
+                
+            # staList structure:
+            
+            # [staName, stationId, StartYear, EndYear,
+            #  Province, ClimateID,Proximity (km)]
+            
+            # staTable structure:
+
+            # ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year', 
+            #  'To \n Year', 'Prov.', 'Climate ID', 'Station ID') 
+
+            NItems = self.cellWidget(row, 4).count()
+                            
+            sta2add = [self.item(row, 1).text(),
+                       self.item(row, 7).text(),
+                       self.cellWidget(row, 3).itemText(0),
+                       self.cellWidget(row, 4).itemText(NItems-1),                       
+                       self.item(row, 5).text(),                       
+                       self.item(row, 6).text(),
+                       self.item(row, 2).text()]
+                       
+            staList.append(sta2add)  
+        
+        #--------------------------------------------------- saving results ----        
+        
+        with open(filename, 'wb') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(staList)
+            
+        
+        
+              
 #===============================================================================
 class search4stations(QtGui.QWidget):
     '''
@@ -1093,13 +1329,21 @@ class search4stations(QtGui.QWidget):
         
         Nmax = 100. # Number of results per page (maximum possible is 100)
             
-        StationID = np.array(['stationId']) # to download the data from server
-        Prov = np.array(['Province'])
-        StartYear = np.array(['StartYear'])
-        EndYear = np.array(['EndYear'])
-        staName = np.array(['staName'])
-        ClimateID = np.array(['ClimateID'])
-        staProxim = np.array(['Proximity (km)'])
+#        StationID = np.array(['stationId']) # to download the data from server
+#        Prov = np.array(['Province'])
+#        StartYear = np.array(['StartYear'])
+#        EndYear = np.array(['EndYear'])
+#        staName = np.array(['staName'])
+#        ClimateID = np.array(['ClimateID'])
+#        staProxim = np.array(['Proximity (km)'])
+        
+        StationID = np.array([]).astype(str) # to download the data from server
+        Prov = np.array([]).astype(str)
+        StartYear = np.array([]).astype(str)
+        EndYear = np.array([]).astype(str)
+        staName = np.array([]).astype(str)
+        ClimateID = np.array([]).astype(str)
+        staProxim = np.array([]).astype(str)
         
         #-------------------------------------------------------------- url ----
         
@@ -1238,6 +1482,8 @@ class search4stations(QtGui.QWidget):
                                 Prov = np.append(Prov, province)
                                 staName = np.append(staName, station_name)
                                 staProxim = np.append(staProxim, station_proxim)
+                                
+                                
                             else:                                
                                 print("not adding %s (not enough data)" 
                                       % station_name)
@@ -1245,8 +1491,8 @@ class search4stations(QtGui.QWidget):
                         else:
                             print("not adding %s (no daily data)" 
                                   % station_name)
-                                  
-                msg  = '%d weather stations with daily data' % (len(staName)-1)
+                                    
+                msg  = '%d weather stations with daily data' % (len(staName))
                 msg += ' for at least %d years' % nbrYear
                 msg += ' between %d and %d' % (YearMin, YearMax)
                 print(msg) 
@@ -1264,22 +1510,36 @@ class search4stations(QtGui.QWidget):
                 QtCore.QCoreApplication.processEvents()
                 QtCore.QCoreApplication.processEvents()
                          
-                for sta in range(1, len(staName)):
+                for sta in range(len(staName)):
                     climate_id = get_climate_ID(Prov[sta], StationID[sta])
                     ClimateID = np.append(ClimateID, climate_id)
+                    
+                print('Info fetched for each station successfully.')
+                self.ConsoleSignal.emit('''<font color=black>Info fetched for
+                each station successfully.</font>''') 
                 
                 #----------------------------- SORT STATIONS ALPHABETICALLY ----
     
-                sort_indx = np.argsort(staName[1:])
-                sort_indx += 1
+#                sort_indx = np.argsort(staName[1:])
+#                sort_indx += 1
+#                
+#                StartYear[1:] = StartYear[sort_indx]
+#                EndYear[1:] = EndYear[sort_indx]
+#                StationID[1:] = StationID[sort_indx]
+#                Prov[1:] = Prov[sort_indx]
+#                staName[1:] = staName[sort_indx]
+#                ClimateID[1:] = ClimateID[sort_indx]
+#                staProxim[1:] = staProxim[sort_indx]
                 
-                StartYear[1:] = StartYear[sort_indx]
-                EndYear[1:] = EndYear[sort_indx]
-                StationID[1:] = StationID[sort_indx]
-                Prov[1:] = Prov[sort_indx]
-                staName[1:] = staName[sort_indx]
-                ClimateID[1:] = ClimateID[sort_indx]
-                staProxim[1:] = staProxim[sort_indx]
+                sort_indx = np.argsort(staName)
+
+                StartYear = StartYear[sort_indx]
+                EndYear = EndYear[sort_indx]
+                StationID = StationID[sort_indx]
+                Prov = Prov[sort_indx]
+                staName = staName[sort_indx]
+                ClimateID = ClimateID[sort_indx]
+                staProxim = staProxim[sort_indx]
                 
                 #-------------------------------------------- Save Results ----
                 
@@ -1287,18 +1547,18 @@ class search4stations(QtGui.QWidget):
                    ClimateID, staProxim]
                 staList = np.transpose(staList)
             
-                fname = self.workdir + '/weather_stations.lst'    
-                with open(fname, 'wb') as f:
-                    writer = csv.writer(f, delimiter='\t')
-                    writer.writerows(staList)
-                    
-                print("Saving results in %s" % fname)
-                self.ConsoleSignal.emit('''<font color=black>
-                                             Saving results in %s 
-                                           </font>''' % fname)
+#                fname = self.workdir + '/weather_stations.lst'    
+#                with open(fname, 'wb') as f:
+#                    writer = csv.writer(f, delimiter='\t')
+#                    writer.writerows(staList)
+#                    
+#                print("Saving results in %s" % fname)
+#                self.ConsoleSignal.emit('''<font color=black>
+#                                             Saving results in %s 
+#                                           </font>''' % fname)
                                    
                 #------------------------- Send Signal to load list into UI ----
-                                   
+                
                 self.staListSignal.emit(staList)
             
         except URLError as e:
@@ -1363,7 +1623,7 @@ def get_climate_ID(Prov, StationID):
 #===============================================================================    
 
     url = ("http://climate.weather.gc.ca/climateData/dailydata_e.html?" + 
-          "timeframe=2&Prov=%s&StationID=%s") % (Prov, StationID)
+           "timeframe=2&Prov=%s&StationID=%s") % (Prov, StationID)
           
     f = urlopen(url)                    
     urlread = f.read()
@@ -1592,9 +1852,9 @@ def concatenate(fname):
     StaName = np.zeros(len(fname)).astype('str')  # station names
     StaMatch = np.zeros(len(fname)).astype('str') # station match 
     for i in range(len(fname)):
-        reader = open(fname[i],'rb')
-        reader = csv.reader(reader, delimiter=',')
-        reader = list(reader)
+        
+        with open(fname[i], 'rb') as f:
+            reader = list(csv.reader(f, delimiter=','))
                   
         StaName[i] =  reader[0][1]         
         StaMatch[i] = StaName[0]==StaName[i]
@@ -1684,6 +1944,6 @@ if __name__ == '__main__':
     
     instance1.show()
     
-    instance1.load_stationList()
+#    instance1.load_stationList("../Projects/Project4Testing/weather_stations.lst")
         
     app.exec_()

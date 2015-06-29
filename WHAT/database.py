@@ -45,9 +45,14 @@ class icons():
         self.stop = QIcon('Icons/process-stop.png')
         self.search = QIcon('Icons/search.png')
         self.settings = QIcon('Icons/settings.png')
+        
         self.go_previous = QIcon('Icons/go-previous.png')
         self.go_next = QIcon('Icons/go-next.png')
+        self.go_last = QIcon('Icons/go-last.png')
+        self.go_first = QIcon('Icons/go-first.png')
         self.go_up = QIcon('Icons/go-up.png')
+        
+        self.staList = QIcon('Icons/note.png')
         
         #---- Menu TOOLBAR ----
         
@@ -189,7 +194,7 @@ class labels():
 #            '''<p>Download weather data for all the weather station in the 
 #                 current list for the specified time period.</p>''')
         
-        self.saveMeteoAuto = 'Automatically save concatenated data'
+        self.saveMeteoAuto = "Automatically save concatenated data"
         
         #--------------------------------------------------------- FILL TAB ----
         

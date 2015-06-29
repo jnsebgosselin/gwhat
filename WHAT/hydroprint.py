@@ -154,11 +154,10 @@ class Hydrograph():
     #---------------------------------------------------------------------------
     def checkLayout(self, name_well, filename): # old var. names: isConfigExist
     #---------------------------------------------------------------------------
-                
-        reader = open(filename, 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
+        
+        with open(filename, 'rb') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+            reader = np.array(reader)
        
         # Check if config file is from an old version of Hydroprint
         # and if yes, convert it to the new version.
@@ -211,11 +210,10 @@ class Hydrograph():
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
         # fine with the graph layout for this well.
-            
-        reader = open(filename, 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
+        
+        with open(filename, 'rb') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+            reader = np.array(reader)
      
         row = np.where(reader[:,0] == name_well)[0]
         
@@ -245,10 +243,9 @@ class Hydrograph():
         
         #---- load file ----
         
-        reader = open(filename, 'rb')
-        reader = csv.reader(reader, delimiter='\t')
-        reader = list(reader)
-        reader = np.array(reader)
+        with open(filename, 'rb') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+            reader = np.array(reader)
         
         #---- update content ----
          
@@ -1223,9 +1220,9 @@ def load_weather_log(fname, varname, bintime, binvalue):
     
     #---- Load Data ----
     
-    reader = open(fname, 'rb')
-    reader = csv.reader(reader, delimiter='\t')
-    reader = list(reader)[36:]
+    with open(fname, 'rb') as f:
+        reader = csv.reader(f, delimiter='\t')
+        reader = list(reader)[36:]
     
     variable = np.zeros(len(reader)).astype('str') 
     time = np.zeros(len(reader))

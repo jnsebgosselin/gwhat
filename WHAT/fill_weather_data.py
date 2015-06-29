@@ -87,9 +87,8 @@ class Weather_File_Info():
         
         #---------------------------------------------- WEATHER DATA IMPORT ----
         
-            reader = open(fnames[i], 'rb')
-            reader = csv.reader(reader, delimiter='\t')
-            reader = list(reader)
+            with open(fnames[i], 'rb') as f:
+                reader = list(csv.reader(f, delimiter='\t'))
             
             STADAT = np.array(reader[8:]).astype('float')
             
