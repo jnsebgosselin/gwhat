@@ -49,6 +49,7 @@ class Tooltips():
         self.btn_browse_staList = 'Load an existing weather station list'
         self.btn_save_staList = 'Save current station list.'
         self.btn_delSta = 'Remove selected weather stations from the list'
+        self.btn_addSta = 'Add a new weather station to the list'
         
         
         self.btn_GetData = 'Download data for the selected weather stations'
@@ -134,8 +135,14 @@ class dwnldWeather(QtGui.QWidget):
         btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
         btn_browse_staList.setIconSize(styleDB.iconSize)
         
+        btn_addSta = QtGui.QToolButton()
+        btn_addSta.setIcon(iconDB.add_point)
+        btn_addSta.setAutoRaise(True)
+        btn_addSta.setToolTip(ttipDB.btn_addSta)
+        btn_addSta.setIconSize(styleDB.iconSize)
+        
         btn_delSta = QtGui.QToolButton()
-        btn_delSta.setIcon(iconDB.clear_search)
+        btn_delSta.setIcon(iconDB.erase)
         btn_delSta.setAutoRaise(True)
         btn_delSta.setToolTip(ttipDB.btn_delSta)
         btn_delSta.setIconSize(styleDB.iconSize)
@@ -158,16 +165,20 @@ class dwnldWeather(QtGui.QWidget):
         toolbar_widg = QtGui.QWidget()
         
         row = 0
-        col = 0
-        toolbar_grid.addWidget(self.btn_save_staList, row, col)
-        col += 1
+        col = 0        
         toolbar_grid.addWidget(btn_search4station, row, col)
         col += 1
         toolbar_grid.addWidget(btn_browse_staList, row, col)
+        col += 1
+        toolbar_grid.addWidget(self.btn_save_staList, row, col)
         col += 1                
         toolbar_grid.addWidget(separator1, row, col)
         col += 1
+        toolbar_grid.addWidget(btn_addSta, row, col)
+        col += 1
         toolbar_grid.addWidget(btn_delSta, row, col)
+        col += 1                
+        toolbar_grid.addWidget(separator2, row, col)
         col += 1
         toolbar_grid.addWidget(self.btn_get, row, col)
         col += 1
@@ -789,7 +800,10 @@ class dwnldWeather(QtGui.QWidget):
         
         (1) Event: btn_saveMerge.clicked.connect
         '''
-    
+        
+        if len(self.mergeHistoryLog) == 0:
+            print('There is no concatenated data file to save yet.')
+            return
         
         filenames = self.mergeHistoryFnames[self.mergeHistoryIndx]
         mergeOutput, _, _ = concatenate(filenames)
@@ -883,12 +897,13 @@ class stationTable(QtGui.QTableWidget):
         
         #----------------------------------------------- Column Size Policy ----
         
-        self.setColumnHidden(6, True)
+#        self.setColumnHidden(6, True)
         self.setColumnHidden(7, True)
         
         self.setColumnWidth(0, 32)
         self.setColumnWidth(3, 75)
         self.setColumnWidth(4, 75)
+        self.setColumnWidth(5, 75)
 
         self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
@@ -997,7 +1012,9 @@ class stationTable(QtGui.QTableWidget):
             col += 1 # Climate ID (hidden)
             
             item = QtGui.QTableWidgetItem(staList[row, 5])
-            self.setItem(row, col, item)
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.setItem(row, col, item)            
             
             col += 1 # Station ID
             

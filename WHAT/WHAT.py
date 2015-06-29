@@ -1749,51 +1749,12 @@ class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
         self.dwnld_weather = dwnld_weather_data.dwnldWeather()
         self.dwnld_weather.set_workdir(self.parent.projectdir)
         
-        #-------------------------------------------------------- MAIN GRID ----
-        
         grid_MAIN = QtGui.QGridLayout()
 
         grid_MAIN.addWidget(self.dwnld_weather, 0, 0)
         
         grid_MAIN.setContentsMargins(0, 0, 0, 0) # [L, T, R, B] 
         self.setLayout(grid_MAIN)
-                         
-        
-    #===========================================================================        
-    def select_concatened_save_path(self):
-        '''        
-        This method allows the user to select a path for the file in which the 
-        concatened data are going to be saved.
-        
-        ---- CALLED BY----
-        
-        (1) Event: btn_save.clicked.connect
-        '''
-    #===========================================================================
-
-        if np.size(self.MergeOutput) != 0:
-            StaName = self.MergeOutput[0, 1]
-            YearStart = self.MergeOutput[8, 0][:4]
-            YearEnd = self.MergeOutput[-1, 0][:4]
-            climateID = self.MergeOutput[5, 1]
-            
-            # Check if the characters "/" or "\" are present in the station 
-            # name and replace these characters by "-" if applicable.            
-            intab = "/\\"
-            outtab = "--"
-            trantab = maketrans(intab, outtab)
-            StaName = StaName.translate(trantab)
-            
-            project_dir = self.parent.projectdir
-            filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
-                                              YearStart, YearEnd)
-            dialog_dir = project_dir + '/Meteo/Input/' + filename
-                          
-            fname, ftype = QtGui.QFileDialog.getSaveFileName(
-                                         self, 'Save file', dialog_dir, '*.csv')
-            
-            if fname:                
-                self.save_concatened_data(fname)    
     
 
 ################################################################################
