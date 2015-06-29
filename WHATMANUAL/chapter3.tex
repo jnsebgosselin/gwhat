@@ -2,13 +2,12 @@
 
 \begin{document}
 
-\chapter{Gapless weather data series creation}\label{chap:gapfilling}
-
 \section{Downloading and formatting data from the CDCD}
 
-The Canadian Daily Climate Database (CDCD) contains daily air temperature and precipitation from 1840 to the present for about 8450 stations distributed across Canada. Data can be downloaded manually on the Government of Canada website as CSV files on a yearly basis, or it is possible to acquire the entire database by ordering a DVD. The former option involves a lot of repetitive manipulations and can become quickly a time consuming task while the latter does not offer a convenient way to update the data. Moreover, the organization of the downloaded CDCD data files in a more convenient format can also represent a tedious task when done manually.
+The Canadian Daily Climate Database (CDCD) contains daily air temperature and precipitation dating back to 1840 to the present for about 8450 stations distributed across Canada. Data can be downloaded manually on the Government of Canada website (http://climate.weather.gc.ca/) as CSV files on a yearly basis, or it is possible to acquire the entire database by ordering a DVD for a small fee. The former option involves a lot of repetitive manipulations and can become a time consuming task while the DVD option has the disadvantage of only providing an image in time as data cannot be updated. Moreover, when downloading data from the online CDCD, the re-organization of the individual yearly data files in a more convenient format can also represent a tedious task when done manually. 
 
-WHAT alleviates this process by providing a graphical interface to the online CDCD database that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. All of these features are available from the tab \emph{Download Data} shown in Figure~\ref{fig:tab_dwnldData}.
+WHAT alleviates this process by providing a graphical interface to the online CDCD that allows you to query stations interactively using geographical coordinates, download the available data for selected dates, and automatically organize the data in a format compatible with WHAT. All of these features are available from the \emph{Download Data} tab shown in
+\cref{fig:tab_dwnldData}.
 
 \begin{figure}[!ht]
 \centering
@@ -74,10 +73,8 @@ Finally, it is possible to assess the incertitude of the method used to estimate
 
 \section{Using weather data from other sources}
 
-Presently, it is not possible to automatically download and format data of weather stations located in the U.S. or in any other country than Canada. This feature may be added for the U.S. in a future release of the software.
+Presently, it is not possible to automatically download and format data of weather stations located outside Canada. This feature could be added for the U.S. in a future release of the software. However, it is possible to use weather data from any sources in WHAT, given the right format is used, either to fill the gaps in the weather time series and/or to interpret water level time series.
 
-However, it is still possible to use weather data from any sources in WHAT either for filling the gaps in the time-series or for the interpretation of water-level time-series, as long as the data are saved in a format compatible with WHAT.
-
-It is strongly recommended to use a copy of one of the sample files that are provided in the project example that is distributed with the software and fill the information and the data directly in them. The files must be kept in a tab-separated values text format either with the extension ``.csv'' or ``.out''. This can be achieved in any standard spreadsheet application such as Microsoft Excel or LibreOffice Calc. The format of the header must be observed faithfully in those files. In addition, NaN values must be entered where data are missing. Data must also be in chronological order, but do not need to be continuous over time. That is missing blocks of data (e.g., several months or years) can be completely omitted in the time-series. These missing blocks of data will be estimated and filled during the gap filling procedure or will be ignored for the plotting of the hydrograph.
+For this purpose, it is recommended to use a copy of one of the sample files that are provided in the project example (distributed with the software) and fill the information and the data directly in it. The file must be kept in a text format using tab-separated values either with the extension ‘‘.csv’’ or ‘‘.out’’, depending if you want to fill the gaps in the weather time series or  interpret water level time series. This can be achieved with any standard spreadsheet application such as Microsoft Excel or LibreOffice Calc. The format of the header must be faithfully observed for those files. In addition, ``NaN'' values must be entered where data are missing. Data must also be in chronological order, but do not need to be continuous over time. That is, missing blocks of data (e.g., several days, months or years) can be completely omitted in the time-series. These missing blocks of data will be filled during the gap filling procedure or will be ignored for the plotting of the hydrograph.
 
 \end{document}

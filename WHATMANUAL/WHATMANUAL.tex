@@ -44,20 +44,22 @@
 
 \usepackage[authoryear, round, sort&compress]{natbib}
 \bibliographystyle{plainnat}
+\usepackage{cleveref}
 
 \begin{document}
 
 \subfile{chapter0}
 
-\listoffigures
-
 \tableofcontents
+
+\listoffigures
 
 \part{User Manual}
 
 \subfile{chapter1} % Introduction
 \subfile{chapter2} % Project Management
-\subfile{chapter3} % Gapless Weather Data Series
+\chapter{Creation of Gapless Weather Data Series }\label{chap:gapfilling}
+    \subfile{chapter3} % Gapless Weather Data Series
 \subfile{chapter4} % Water Level Time Series Preparation
 \subfile{chapter5} % Plotting the data
 \subfile{chapter6} % Data interpretation
