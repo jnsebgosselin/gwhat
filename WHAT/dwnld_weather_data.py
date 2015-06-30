@@ -88,6 +88,11 @@ class dwnldWeather(QtGui.QWidget):
         
         #--------------------------------------------------- VARIABLES INIT ----
         
+        self.setWindowIcon(iconDB.WHAT)
+        self.setFont(styleDB.font1)
+        
+        #------------------------------------------------------ Main Window ----
+        
         self.workdir = getcwd()
         
         self.staList_fname = []
@@ -173,12 +178,12 @@ class dwnldWeather(QtGui.QWidget):
         toolbar_grid.addWidget(self.btn_save_staList, row, col)
         col += 1                
         toolbar_grid.addWidget(separator1, row, col)
-        col += 1
-        toolbar_grid.addWidget(btn_addSta, row, col)
+#        col += 1
+#        toolbar_grid.addWidget(btn_addSta, row, col)
         col += 1
         toolbar_grid.addWidget(btn_delSta, row, col)
-        col += 1                
-        toolbar_grid.addWidget(separator2, row, col)
+#        col += 1                
+#        toolbar_grid.addWidget(separator2, row, col)
         col += 1
         toolbar_grid.addWidget(self.btn_get, row, col)
         col += 1
@@ -356,7 +361,7 @@ class dwnldWeather(QtGui.QWidget):
             if isChecked:                
                 print('Removing %s (%s)' 
                       % (self.station_table.item(row, 1).text(),
-                         self.station_table.item(row, 2).text())
+                         self.station_table.item(row, 6).text())
                       ) 
                 self.station_table.removeRow(row)
                 self.staList_isNotSaved = True
@@ -466,19 +471,25 @@ class dwnldWeather(QtGui.QWidget):
             QtGui.QApplication.processEvents()
             QtGui.QApplication.processEvents()
             
-            nMissing = len(header) - nPARA
+            reader[0] = headerDB.weather_stations[0]
+            for i in range(nCONFG-1):
+                Prov = reader[i+1][4]
+                stationId = reader[i+1][1]
+                reader[i+1] = get_staInfo(Prov, stationId)
             
-            col2add = np.zeros((nCONFG, nMissing)).astype(int)
-            col2add = col2add.astype(str)
+#            nMissing = len(header) - nPARA
             
-            reader = np.hstack((reader, col2add))
-            reader[0] = header
-            
-            if nPARA < 6:
-                for i in range(nCONFG-1):
-                    Prov = reader[i+1, 4]
-                    stationId = reader[i+1, 1]
-                    reader[i+1, 5] = get_climate_ID(Prov, stationId)
+#            col2add = np.zeros((nCONFG, nMissing)).astype(int)
+#            col2add = col2add.astype(str)
+#            
+#            reader = np.hstack((reader, col2add))
+#            reader[0] = header
+#            
+#            if nPARA < 6:
+#                for i in range(nCONFG-1):
+#                    Prov = reader[i+1, 4]
+#                    stationId = reader[i+1, 1]
+#                    reader[i+1, 5] = get_staInfo(Prov, stationId)
             
             #---- Save List ----
             
@@ -865,8 +876,201 @@ class dwnldWeather(QtGui.QWidget):
         self.pbar.setValue(progress)
 
 
+#===============================================================================        
+class DownloadRawDataFiles(QtCore.QThread):        
+    '''
+    This thread is used to download the raw data files from
+    www.climate.weather.gc.ca and saves them automatically in
+    <Project_directory>/Meteo/Raw/<station_name (Climate ID)>.
+
+    New in 4.0.6: Raw data files that already exists in the Raw directory
+                  won't be downloaded again from the server.
+    
+    ---- Input ----
+
+    self.STOP = Flag that is used to stop the thread from the UI side.
+    
+    ---- Output ----
+    
+    self.ERRFLAG = Flag for the download of files - np.arrays
+                   0 -> File downloaded successfully
+                   1 -> Problem downloading the file
+                   3 -> File NOT downloaded because it already exists
+    '''
+#===============================================================================   
+    
+    EndSignal = QtCore.Signal(bool)
+    MergeSignal = QtCore.Signal(list)
+    ProgBarSignal = QtCore.Signal(int)
+    ConsoleSignal = QtCore.Signal(str)
+    
+    def __init__(self, parent=None):
+        super(DownloadRawDataFiles, self).__init__(parent)
+        
+        self.STOP = False  
+        
+        self.ERRFLAG = []
+        
+        # These values need to be pushed from the parent.
+        
+        self.dirname = []   # Directory where the downloaded files are saved
+        self.stationID = [] # Unique identifier for the station used for
+                            # downloading the data from the server
+        self.climateID = [] # Unique identifier for the station
+        self.yr_start = []
+        self.yr_end = []
+        self.StaName = [] # Common name given to the station (not unique)
+          
+    def run(self): 
+        
+    #---------------------------------------------------------------- INIT -----
+        
+        dirname = self.dirname
+        
+        staID = self.stationID   
+        yr_start = int(self.yr_start)
+        yr_end = int(self.yr_end)
+        StaName = self.StaName
+        climateID = self.climateID
+        
+        self.ERRFLAG = np.ones(yr_end - yr_start + 1)
+             
+        self.ConsoleSignal.emit(
+        '''<font color=black>Downloading data from </font>
+           <font color=blue>www.climate.weather.gc.ca</font>
+           <font color=black> for station %s</font>''' % StaName)
+        self.ProgBarSignal.emit(0)         
+        
+        dirname += '/%s (%s)' % (StaName, climateID)
+        if not path.exists(dirname):
+            makedirs(dirname)
+            
+        #-------------------------------------------------------- DOWNLOAD -----
+            
+        # Data are downloaded on a yearly basis from yStart to yEnd
+         
+        fname4merge = [] # list of paths of the yearly raw data files that will
+                         # be pass to contatenate and merge function.
+        i = 0
+        for year in range(yr_start, yr_end+1):
+            
+            if self.STOP == True : # User stopped the downloading process.                
+                break
+            
+            #----- File and URL Paths -----
+            
+            fname = dirname + '/eng-daily-0101%s-1231%s.csv' % (year, year) 
+            
+            url = ('http://climate.weather.gc.ca/climateData/bulkdata_e.html?' +
+                   'format=csv&stationID=' + str(staID) + '&Year=' + str(year) +
+                   '&Month=1&Day=1&timeframe=2&submit=Download+Data')
+            
+            #----- Download Data For That Year -----
+            
+            if path.exists(fname):
+                
+                # If the file was downloaded in the same year that of the data
+                # record, data will be downloaded again in case the data series
+                # was not complete.
+                
+                myear = path.getmtime(fname) # Year of file last modification
+                myear = gmtime(myear)[0]
+                
+                if myear == year:
+                    self.ERRFLAG[i] = self.dwnldfile(url, fname)
+                else:
+                    self.ERRFLAG[i] = 3
+                    print 'Not downloading: Raw Data File already exists.'
+                    
+            else:
+                self.ERRFLAG[i] = self.dwnldfile(url, fname)
+
+            #----- Update UI -----
+            
+            progress = (year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
+            self.ProgBarSignal.emit(int(progress))
+            
+            if self.ERRFLAG[i] == 1:
+                
+                self.ConsoleSignal.emit(
+                '''<font color=red>There was a problem downloading the data 
+                     of station %s for year %d.
+                   </font>''' % (StaName, year))                
+
+            elif self.ERRFLAG[i] == 0:
+                
+                self.ConsoleSignal.emit(
+                '''<font color=black>Weather data for station %s downloaded
+                     successfully for year %d.</font>''' % (StaName, year))
+                fname4merge.append(fname)
+                
+            elif self.ERRFLAG[i] == 3:
+                
+                sleep(0.1)
+                
+                self.ConsoleSignal.emit(
+                '''<font color=green>A weather data file already existed for
+                     station %s for year %d. Downloading is skipped.
+                   </font>''' % (StaName, year))
+                fname4merge.append(fname)
+                            
+            i += 1
+            
+        #----------------------------------------------------- End of Task -----
+        
+        if self.STOP == True:
+            
+            self.STOP = False
+            print("Downloading process for station %s stopped." % StaName)
+            self.ConsoleSignal.emit('''<font color=red>Downloading process for
+                                         station %s stopped.
+                                       </font>''' % StaName)
+        else:
+            
+            cmt  = "All raw  data files downloaded sucessfully for "
+            cmt += "station %s." % StaName
+            print(cmt)
+            self.ConsoleSignal.emit('<font color=black>%s</font>' % cmt)
+
+            self.EndSignal.emit(True)
+            self.MergeSignal.emit(fname4merge)
+            self.ProgBarSignal.emit(0)
+                
+    def dwnldfile(self, url, fname):
+        
+        # http://stackoverflow.com/questions/4028697
+        # https://docs.python.org/3/howto/urllib2.html
+        
+        try:
+            
+            ERRFLAG = 0
+            
+            f = urlopen(url)
+            print "downloading " + fname
+
+            # write downloaded content to local file
+            with open(fname, "wb") as local_file:
+                local_file.write(f.read())
+                
+        except URLError as e:
+            
+            ERRFLAG = 1
+            
+            if hasattr(e, 'reason'):
+                print('Failed to reach a server.')
+                print('Reason: ', e.reason)
+                
+            elif hasattr(e, 'code'):
+                print('The server couldn\'t fulfill the request.')
+                print('Error code: ', e.code)
+                
+        return ERRFLAG
+
 #===============================================================================
 class stationTable(QtGui.QTableWidget):
+    """
+    Widget for displaying the weather station list.
+    """
 #===============================================================================
     
     def __init__(self, parent=None):
@@ -1388,16 +1592,16 @@ class search4stations(QtGui.QWidget):
         
         try:
             
-            # write downloaded content to local file for debugging purpose
-            f = urlopen(url)
-            with open("url.txt", "wb") as local_file:
-                local_file.write(f.read())
-        
             #------------------------------------------- Results Extraction ----
-            
+                        
             f = urlopen(url)
             stnresults = f.read()
             
+            # write downloaded content to local file for debugging purpose
+            
+            with open("url.txt", "wb") as local_file:
+                local_file.write(stnresults)
+         
             #---- Number of Stations Found ----
         
             txt2find = ' stations found'
@@ -1448,8 +1652,8 @@ class search4stations(QtGui.QWidget):
                         
                         #---- StationID ----
                         
-                        txt2find  = '<input type="hidden" name='
-                        txt2find += '"StationID" value="'
+                        txt2find  = ('<input type="hidden" name=' +
+                                     '"StationID" value="')
                         n = len(txt2find)
                         indx_0 = stnresults.find(txt2find, indx_e)
                         indx_e = stnresults.find('" />', indx_0)
@@ -1528,7 +1732,8 @@ class search4stations(QtGui.QWidget):
                 QtCore.QCoreApplication.processEvents()
                          
                 for sta in range(len(staName)):
-                    climate_id = get_climate_ID(Prov[sta], StationID[sta])
+                    staInfo = get_staInfo(Prov[sta], StationID[sta])
+                    climate_id = staInfo[5]
                     ClimateID = np.append(ClimateID, climate_id)
                     
                 print('Info fetched for each station successfully.')
@@ -1629,7 +1834,7 @@ def dms2decdeg(deg, mnt, sec):
     
     
 #===============================================================================
-def get_climate_ID(Prov, StationID):
+def get_staInfo(Prov, StationID):
     """
     Fetch the Climate Id for a given station. This ID is used to identified
     the station in the CDCD, but not for downloading the data from the server.
@@ -1644,11 +1849,26 @@ def get_climate_ID(Prov, StationID):
           
     f = urlopen(url)                    
     urlread = f.read()
-
-    indx_e = 0
+    
+    with open("urlsingle.txt", "wb") as local_file:
+        local_file.write(urlread)
+    
+    #---- Station Name ----
+        
+    txt2find = '<th colspan="6" class="boxColor margin-bottom-none"><b>'
+    n = len(txt2find)
+    indx_0 = urlread.find(txt2find, 0) + n
+    indx_e = urlread.find('<br />', indx_0)
+    
+    staName = urlread[indx_0:indx_e]
+    staName = staName.strip()
+    
+    #---- Climate ID ----
     
     # Need to navigate the result in 2 steps to be sure
-   
+    
+    indx_e = 0
+
     txt2find = ('<a href="http://climate.weather.gc.ca/' + 
                 'glossary_e.html#climate_ID">Climate ID</a>:')
     n = len(txt2find)
@@ -1661,200 +1881,39 @@ def get_climate_ID(Prov, StationID):
     indx_e = urlread.find('</td>', indx_0)
     
     climate_id = urlread[indx_0+n:indx_e]
-    climate_id = climate_id.strip()
+    climate_id = climate_id.strip() # remove blank spaces at beginning and end
+    
+    #---- Start Year ----
+    
+    txt2find = '<option value="'
+    n = len(txt2find)
+    indx_0 = urlread.find(txt2find, indx_e) + n
+    
+    startYear = urlread[indx_0:indx_0+4]
+    
+    #---- End Year ----
+    
+    txt2find = '" selected="'
+    indx_e = urlread.find(txt2find, indx_0) - 4
+    
+    endYear = urlread[indx_e:indx_e+4]
+    
+    #---- Proximity ----
+    
+    proximity = np.nan
+    
+    print('%s (%s) : %s - %s' % (staName, climate_id, startYear, endYear))
+    
+    staInfo = [staName,
+               StationID,
+               startYear,
+               endYear,
+               Prov,
+               climate_id,
+               proximity]
           
-    return climate_id
+    return staInfo
 
-
-#===============================================================================        
-class DownloadRawDataFiles(QtCore.QThread):        
-    '''
-    This thread is used to download the raw data files from
-    www.climate.weather.gc.ca and saves them automatically in
-    <Project_directory>/Meteo/Raw/<station_name (Climate ID)>.
-
-    New in 4.0.6: Raw data files that already exists in the Raw directory
-                  won't be downloaded again from the server.
-    
-    ---- Input ----
-
-    self.STOP = Flag that is used to stop the thread from the UI side.
-    
-    ---- Output ----
-    
-    self.ERRFLAG = Flag for the download of files - np.arrays
-                   0 -> File downloaded successfully
-                   1 -> Problem downloading the file
-                   3 -> File NOT downloaded because it already exists
-    '''
-#===============================================================================   
-    
-    EndSignal = QtCore.Signal(bool)
-    MergeSignal = QtCore.Signal(list)
-    ProgBarSignal = QtCore.Signal(int)
-    ConsoleSignal = QtCore.Signal(str)
-    
-    def __init__(self, parent=None):
-        super(DownloadRawDataFiles, self).__init__(parent)
-        
-        self.STOP = False  
-        
-        self.ERRFLAG = []
-        
-        # These values need to be pushed from the parent.
-        
-        self.dirname = []   # Directory where the downloaded files are saved
-        self.stationID = [] # Unique identifier for the station used for
-                            # downloading the data from the server
-        self.climateID = [] # Unique identifier for the station
-        self.yr_start = []
-        self.yr_end = []
-        self.StaName = [] # Common name given to the station (not unique)
-          
-    def run(self): 
-        
-    #---------------------------------------------------------------- INIT -----
-        
-        dirname = self.dirname
-        
-        staID = self.stationID   
-        yr_start = int(self.yr_start)
-        yr_end = int(self.yr_end)
-        StaName = self.StaName
-        climateID = self.climateID
-        
-        self.ERRFLAG = np.ones(yr_end - yr_start + 1)
-             
-        self.ConsoleSignal.emit(
-        '''<font color=black>Downloading data from </font>
-           <font color=blue>www.climate.weather.gc.ca</font>
-           <font color=black> for station %s</font>''' % StaName)
-        self.ProgBarSignal.emit(0)         
-        
-        dirname += '/%s (%s)' % (StaName, climateID)
-        if not path.exists(dirname):
-            makedirs(dirname)
-            
-        #-------------------------------------------------------- DOWNLOAD -----
-            
-        # Data are downloaded on a yearly basis from yStart to yEnd
-         
-        fname4merge = [] # list of paths of the yearly raw data files that will
-                         # be pass to contatenate and merge function.
-        i = 0
-        for year in range(yr_start, yr_end+1):
-            
-            if self.STOP == True : # User stopped the downloading process.                
-                break
-            
-            #----- File and URL Paths -----
-            
-            fname = dirname + '/eng-daily-0101%s-1231%s.csv' % (year, year) 
-            
-            url = ('http://climate.weather.gc.ca/climateData/bulkdata_e.html?' +
-                   'format=csv&stationID=' + str(staID) + '&Year=' + str(year) +
-                   '&Month=1&Day=1&timeframe=2&submit=Download+Data')
-            
-            #----- Download Data For That Year -----
-            
-            if path.exists(fname):
-                
-                # If the file was downloaded in the same year that of the data
-                # record, data will be downloaded again in case the data series
-                # was not complete.
-                
-                myear = path.getmtime(fname) # Year of file last modification
-                myear = gmtime(myear)[0]
-                
-                if myear == year:
-                    self.ERRFLAG[i] = self.dwndfile(url, fname)
-                else:
-                    self.ERRFLAG[i] = 3
-                    print 'Not downloading: Raw Data File already exists.'
-                    
-            else:
-                self.ERRFLAG[i] = self.dwndfile(url, fname)
-
-            #----- Update UI -----
-            
-            progress = (year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
-            self.ProgBarSignal.emit(int(progress))
-            
-            if self.ERRFLAG[i] == 1:
-                
-                self.ConsoleSignal.emit(
-                '''<font color=red>There was a problem downloading the data 
-                     of station %s for year %d.
-                   </font>''' % (StaName, year))                
-
-            elif self.ERRFLAG[i] == 0:
-                
-                self.ConsoleSignal.emit(
-                '''<font color=black>Weather data for station %s downloaded
-                     successfully for year %d.</font>''' % (StaName, year))
-                fname4merge.append(fname)
-                
-            elif self.ERRFLAG[i] == 3:
-                
-                sleep(0.1)
-                
-                self.ConsoleSignal.emit(
-                '''<font color=green>A weather data file already existed for
-                     station %s for year %d. Downloading is skipped.
-                   </font>''' % (StaName, year))
-                fname4merge.append(fname)
-                            
-            i += 1
-            
-        #----------------------------------------------------- End of Task -----
-        
-        if self.STOP == True:
-            
-            self.STOP = False
-            print("Downloading process for station %s stopped." % StaName)
-            self.ConsoleSignal.emit('''<font color=red>Downloading process for
-                                         station %s stopped.
-                                       </font>''' % StaName)
-        else:
-            
-            cmt  = "All raw  data files downloaded sucessfully for "
-            cmt += "station %s." % StaName
-            print(cmt)
-            self.ConsoleSignal.emit('<font color=black>%s</font>' % cmt)
-
-            self.EndSignal.emit(True)
-            self.MergeSignal.emit(fname4merge)
-            self.ProgBarSignal.emit(0)
-                
-    def dwndfile(self, url, fname):
-        
-        # http://stackoverflow.com/questions/4028697
-        # https://docs.python.org/3/howto/urllib2.html
-        
-        try:
-            
-            ERRFLAG = 0
-            
-            f = urlopen(url)
-            print "downloading " + fname
-
-            # write downloaded content to local file
-            with open(fname, "wb") as local_file:
-                local_file.write(f.read())
-                
-        except URLError as e:
-            
-            ERRFLAG = 1
-            
-            if hasattr(e, 'reason'):
-                print('Failed to reach a server.')
-                print('Reason: ', e.reason)
-                
-            elif hasattr(e, 'code'):
-                print('The server couldn\'t fulfill the request.')
-                print('Error code: ', e.code)
-                
-        return ERRFLAG
         
 #===============================================================================        
 def concatenate(fname):    
@@ -1948,9 +2007,38 @@ def concatenate(fname):
                  'belong to station' + StaName[0] + '</font>')
   
     return MergeOutput, LOG, COMNT
+    
+class MyHeader(QtGui.QHeaderView):
+    
+    # http://stackoverflow.com/questions/9744975/
+    # pyside-pyqt4-adding-a-checkbox-to-qtablewidget-horizontal-column-header
+
+    isOn = False
+    
+    def __init__(self, orientation, parent=None):
+        super(MyHeader, self).__init__(parent)
+
+    def paintSection(self, painter, rect, logicalIndex):
+        painter.save()
+        QtGui.QHeaderView.paintSection(self, painter, rect, logicalIndex)
+        painter.restore()
+
+        if logicalIndex == 0:
+            option = QtGui.QStyleOptionButton()
+            option.rect = QtCore.QRect(10, 10, 10, 10)
+            if self.isOn:
+                option.state = QtGui.QStyle.State_On
+            else:
+                option.state = QtGui.QStyle.State_Off
+            self.style().drawControl(QtGui.QStyle.CE_CheckBox, option, painter)
+
+    def mousePressEvent(self, event):
+        self.isOn = not self.isOn
+        self.updateSection(0)
+        QtGui.QHeaderView.mousePressEvent(self, event)
         
 if __name__ == '__main__':
-    
+
     app = QtGui.QApplication(argv) 
     
     instance1 = dwnldWeather()   
@@ -1958,9 +2046,7 @@ if __name__ == '__main__':
     instance1.set_workdir("../Projects/Project4Testing")
     instance1.search4stations.lat_spinBox.setValue(45.4)
     instance1.search4stations.lon_spinBox.setValue(73.13)
-    
+ #    instance1.load_stationList("../Projects/Project4Testing/weather_stations.lst")
+  
     instance1.show()
-    
-#    instance1.load_stationList("../Projects/Project4Testing/weather_stations.lst")
-        
     app.exec_()
