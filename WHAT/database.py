@@ -62,6 +62,7 @@ class icons():
         #----- METEO -----
         
         self.plus_sign = QIcon('Icons/plus_sign.png')
+        self.add2list = QIcon('Icons/add2list.png')
        
         #----- HYDROGRAPH TOOLBAR -----
         

@@ -2452,11 +2452,11 @@ class TabFill(QtGui.QWidget):                                      # @TAB FILL #
             self.parent.pbar.hide()
 
 
-##################################################################### @TAB ABOUT
+################################################################################
      
-class TabAbout(QtGui.QWidget):                                             
+class TabAbout(QtGui.QWidget):                                    # @TAB ABOUT #                    
     
-##################################################################### @TAB ABOUT
+################################################################################
     
     
     def __init__(self, parent):
@@ -2487,7 +2487,8 @@ class TabAbout(QtGui.QWidget):
         
         #------------------------------------------Variables initialization-----
         
-        about_text = '''<p align="center">
+        about_text = '''<img src="/Icons/WHAT_banner.png">
+                        <p align="center">
                         <br><br>
                         <font size=16><b>%s</b></font>
                         <br>
@@ -2495,7 +2496,7 @@ class TabAbout(QtGui.QWidget):
                           <i>Well Hydrograph Analysis Toolbox</i>
                         </font>
                         <br><br>
-                        <b>Copyright 2014 Jean-Sebastien Gosselin</b>
+                        <b>Copyright 2014-2015 Jean-Sebastien Gosselin</b>
                         <br><br>                         
                         Institut national de la recherche scientifique
                         <br>
@@ -2527,8 +2528,8 @@ class TabAbout(QtGui.QWidget):
                         <p align="right" style="margin-right:150px">
                         Last modification: %s </p>''' % (software_version,
                         software_version, last_modification)
-        
-        AboutTextBox.setText(about_text)
+
+        AboutTextBox.insertHtml(about_text)
 
        
 ################################################################################
