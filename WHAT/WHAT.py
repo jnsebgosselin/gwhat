@@ -33,7 +33,7 @@ last_modification = '24/06/2015'
 import csv
 from copy import copy
 #from urllib import urlretrieve
-from sys import argv
+import sys
 from time import ctime, strftime, sleep
 from os import getcwd, listdir, makedirs, path
 from string import maketrans
@@ -3827,10 +3827,9 @@ class MyProject():
         
 if __name__ == '__main__':
     
-    app = QtGui.QApplication(argv)
+    app = QtGui.QApplication(sys.argv)
     instance_1 = MainWindow()
-#    instance_1.show()
-    app.exec_()
+    sys.exit(app.exec_())
         
     
 

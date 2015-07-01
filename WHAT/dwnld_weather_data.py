@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from urllib2 import urlopen, URLError
 from datetime import datetime
-from sys import argv
+import sys
 from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
@@ -341,8 +341,7 @@ class dwnldWeather(QtGui.QWidget):
         #---- search4stations ----
         
         btn_search4station.clicked.connect(self.btn_search4station_isClicked) 
-        self.search4stations.staListSignal.connect(
-                                                 self.search4station_isFinished)        
+        self.search4stations.staListSignal.connect(self.add_stations2list)        
         
             
     def set_workdir(self, directory):
@@ -353,10 +352,12 @@ class dwnldWeather(QtGui.QWidget):
         
     def btn_delSta_isClicked(self):        
         
+        nrow = self.station_table.rowCount()
+        
         # Going in reverse order to preserve indexes while scanning the rows if
         # any are deleted.
         
-        for row in reversed(range(self.station_table.rowCount())):
+        for row in reversed(range(nrow)):
             isChecked = self.station_table.cellWidget(row, 0).isChecked()
             if isChecked:                
                 print('Removing %s (%s)' 
@@ -365,24 +366,58 @@ class dwnldWeather(QtGui.QWidget):
                       ) 
                 self.station_table.removeRow(row)
                 self.staList_isNotSaved = True
-                    
+                
+        nrow = self.station_table.rowCount()
+        
+        if nrow == 0:
+            self.station_table.chkbox_header.setCheckState(
+                                                    QtCore.Qt.CheckState(False))          
                     
     def btn_search4station_isClicked(self):
-                
-        qr = self.search4stations.frameGeometry()
-        cp = self.frameGeometry().center()
-        qr.moveCenter(cp)
-        self.search4stations.move(qr.topLeft())
         
-        self.search4stations.show()
-        self.search4stations.setFixedSize(self.search4stations.size())       
+        if self.search4stations.isVisible():
+            
+            self.search4stations.close()
+            
+        else:       
+            
+            self.search4stations.show()
+                        
+            qr = self.search4stations.frameGeometry()
+            cp = self.frameGeometry().center()
+            qr.moveCenter(cp)
+            self.search4stations.move(qr.topLeft())
+            
+            self.search4stations.setFixedSize(self.search4stations.size())       
     
-    
-    def search4station_isFinished(self, staList):
+    def add_stations2list(self, staList2add):
         
-        self.station_table.populate_table(staList)
-        self.staList_isNotSaved = True
-        self.staList_fname = []
+        nrow = self.station_table.rowCount()
+        rows = range(nrow)
+        
+        staList2grow = self.station_table.get_content4rows(rows)
+        
+        if len(staList2grow) == 0:
+            staList2grow = staList2add
+        
+        else:
+            
+            StationID = np.array(staList2grow)[:, 1].astype(str)
+        
+            for row in range(len(staList2add)):
+                sta2add = staList2add[row]
+                indx = np.where(StationID == sta2add[1])[0]
+                if len(indx) > 0:
+                    print('Station %s already in list and was not added.'
+                          % sta2add[0])
+                else:
+                    print('Station %s added to list.' % sta2add[0])
+                    staList2grow.append(sta2add)  
+                    
+                    self.staList_isNotSaved = True
+                    self.staList_fname = []
+        
+        self.station_table.populate_table(staList2grow)
         
         
     def btn_browse_staList_isClicked(self):
@@ -475,7 +510,7 @@ class dwnldWeather(QtGui.QWidget):
             for i in range(nCONFG-1):
                 Prov = reader[i+1][4]
                 stationId = reader[i+1][1]
-                reader[i+1] = get_staInfo(Prov, stationId)
+                reader[i+1] = self.search4stations.get_staInfo(Prov, stationId)
             
 #            nMissing = len(header) - nPARA
             
@@ -507,7 +542,7 @@ class dwnldWeather(QtGui.QWidget):
             self.ConsoleSignal.emit('''<font color=black>Weather station list 
             loaded successfully.</font>''')
            
-            staList = np.array(reader[1:])            
+            staList = reader[1:]
                                          
         else:
             
@@ -1070,16 +1105,22 @@ class DownloadRawDataFiles(QtCore.QThread):
 class stationTable(QtGui.QTableWidget):
     """
     Widget for displaying the weather station list.
+    
+    year_display_mode : 0 -> Years are displaed in a standard QTableWidget cell
+                        1 -> Years are displayed in a QComboBox
     """
 #===============================================================================
     
     def __init__(self, parent=None):
         super(stationTable, self).__init__(parent)
+
+        self.year_display_mode = 1
+        self.installEventFilter(self)
         
         self.initUI()
     
     def initUI(self):
-
+        
         StyleDB = db.styleUI()
                 
         #------------------------------------------------------------ Style ----
@@ -1092,10 +1133,15 @@ class stationTable(QtGui.QTableWidget):
         
         #----------------------------------------------------------- Header ----
         
+        # http://stackoverflow.com/questions/9744975/
+        # pyside-pyqt4-adding-a-checkbox-to-qtablewidget-horizontal-column-header
+
+        self.chkbox_header = QtGui.QCheckBox(self.horizontalHeader())
+        
         HEADER = ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year', 
                   'To \n Year', 'Prov.', 'Climate ID', 'Station ID')     
-        self.setColumnCount(len(HEADER))
         
+        self.setColumnCount(len(HEADER))
         self.setHorizontalHeaderLabels(HEADER)        
         self.verticalHeader().hide()
         
@@ -1109,8 +1155,12 @@ class stationTable(QtGui.QTableWidget):
         self.setColumnWidth(4, 75)
         self.setColumnWidth(5, 75)
 
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+#        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+        
+        #----------------------------------------------------------- Events ----
+        
+        self.chkbox_header.stateChanged .connect(self.chkbox_header_isClicked)
     
     class NumTableWidgetItem(QtGui.QTableWidgetItem):
             
@@ -1129,7 +1179,35 @@ class stationTable(QtGui.QTableWidget):
             def __lt__(self, other):
                 return self.sortKey < other.sortKey
                 
+    def eventFilter(self, source, event):
+        
+        # http://stackoverflow.com/questions/13788452/
+        # pyqt-how-to-handle-event-without-inheritance
+        
+        if (event.type() == QtCore.QEvent.Type.Resize and source is self):
+            
+            size = self.horizontalHeader().sectionSizeFromContents(0)
+            y0 = size.height() / 2
+            
+            h = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorHeight)
+            w = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorWidth)
+    
+            self.chkbox_header.setGeometry(0, y0, w, h)   
+            
+        return QtGui.QWidget.eventFilter(self, source, event)
+        
+        
+    def chkbox_header_isClicked(self):
+
+        nrow = self.rowCount()
+        
+        for row in range(nrow):
+            self.cellWidget(row, 0).setCheckState(
+                                                self.chkbox_header.checkState())
+                
     def populate_table(self, staList):
+        
+        self.chkbox_header.setCheckState(QtCore.Qt.CheckState(False))
         
         nrow = len(staList)
         self.setRowCount(nrow)
@@ -1142,9 +1220,10 @@ class stationTable(QtGui.QTableWidget):
             
             # item.setFlags(QtCore.Qt.ItemIsEnabled & ~QtCore.Qt.ItemIsEditable)
             # item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-
             
-            col = 0  # Checkbox
+            #---- Checkbox ----
+            
+            col = 0  
             
             item = QtGui.QTableWidgetItem('')
             item.setFlags(~QtCore.Qt.ItemIsEditable & QtCore.Qt.ItemIsEnabled)
@@ -1153,89 +1232,126 @@ class stationTable(QtGui.QTableWidget):
             self.dwnldCheck =  QtGui.QCheckBox()            
             self.setCellWidget(row, col, self.dwnldCheck)
             
-            col += 1 # Weather Station
+            #---- Weather Station ----
             
-            item = QtGui.QTableWidgetItem(staList[row, 0])
+            col += 1 
+            
+            item = QtGui.QTableWidgetItem(staList[row][0])
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-            item.setToolTip(staList[row, 0])
+            item.setToolTip(staList[row][0])
             self.setItem(row, col, item)
             
-            col += 1 # Proximity
+            #---- Proximity ----
             
-            item = self.NumTableWidgetItem('%0.2f' % float(staList[row, 6]),
-                                           float(staList[row, 6]))
+            col += 1 
+            
+            item = self.NumTableWidgetItem('%0.2f' % float(staList[row][6]),
+                                           float(staList[row][6]))
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.setItem(row, col, item)
             
-            min_year = int(staList[row, 2])
-            max_year = int(staList[row, 3])
+            #---- From Year ----
+            
+            #----            
+            min_year = int(staList[row][2])
+            max_year = int(staList[row][3])
             yearspan = np.arange(min_year, max_year+1).astype(str)
+            #----
             
-            col += 1 # From Year
+            col += 1 
             
-            item = QtGui.QTableWidgetItem('')
-            item.setFlags(~QtCore.Qt.ItemIsEditable & QtCore.Qt.ItemIsEnabled)
+            item = QtGui.QTableWidgetItem(staList[row][2])
+            item.setFlags(QtCore.Qt.ItemIsEnabled)
             self.setItem(row, col, item)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
             
-            self.fromYear = QtGui.QComboBox() 
-            self.fromYear.setFixedWidth(75)
-            self.fromYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
-            self.fromYear.addItems(yearspan)
-            self.fromYear.setMinimumContentsLength(4)
-            self.fromYear.setSizeAdjustPolicy(
+            if self.year_display_mode == 1:
+                
+                item.setFlags(QtCore.Qt.ItemIsEnabled)
+                
+                self.fromYear = QtGui.QComboBox() 
+                self.fromYear.setFixedWidth(75)
+                self.fromYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
+                self.fromYear.addItems(yearspan)
+                self.fromYear.setMinimumContentsLength(4)
+                self.fromYear.setSizeAdjustPolicy(
                                   QtGui.QComboBox.AdjustToMinimumContentsLength)            
                                   
-            self.setCellWidget(row, col, self.fromYear)
+                self.setCellWidget(row, col, self.fromYear)
             
-            col += 1 # To Year
+            #---- To Year ----
             
-            item = QtGui.QTableWidgetItem('')
-            item.setFlags(~QtCore.Qt.ItemIsEditable & QtCore.Qt.ItemIsEnabled)
+            col += 1 
+            
+            item = QtGui.QTableWidgetItem(staList[row][3])
+            
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            
             self.setItem(row, col, item)
             
-            self.toYear = QtGui.QComboBox()
-            self.toYear.setFixedWidth(75)
-            self.toYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
-            self.toYear.addItems(yearspan)
-            self.toYear.setCurrentIndex(len(yearspan)-1)
-            self.toYear.setMinimumContentsLength(4)
-            self.toYear.setSizeAdjustPolicy(
+            if self.year_display_mode == 1:
+
+                item.setFlags(QtCore.Qt.ItemIsEnabled)
+                
+                self.toYear = QtGui.QComboBox()
+                self.toYear.setFixedWidth(75)
+                self.toYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
+                self.toYear.addItems(yearspan)
+                self.toYear.setCurrentIndex(len(yearspan)-1)
+                self.toYear.setMinimumContentsLength(4)
+                self.toYear.setSizeAdjustPolicy(
                                   QtGui.QComboBox.AdjustToMinimumContentsLength)
-                                  
-            self.setCellWidget(row, col, self.toYear)
             
-            col += 1 # Province
+                self.setCellWidget(row, col, self.toYear)
             
-            item = QtGui.QTableWidgetItem(staList[row, 4])
+            #---- Province ----
+            
+            col += 1 
+            
+            item = QtGui.QTableWidgetItem(staList[row][4])
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.setItem(row, col, item)
             
-            col += 1 # Climate ID (hidden)
+            #---- Climate ID (hidden) ----
             
-            item = QtGui.QTableWidgetItem(staList[row, 5])
+            col += 1 
+            
+            item = QtGui.QTableWidgetItem(staList[row][5])
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.setItem(row, col, item)            
             
-            col += 1 # Station ID
+            #---- Station ID ----
             
-            item = QtGui.QTableWidgetItem(staList[row, 1])
+            col += 1 
+            
+            item = QtGui.QTableWidgetItem(staList[row][1])
             self.setItem(row, col, item)
             
         self.setSortingEnabled(True)
-
-    def save_staList(self, filename):
+    
+    def get_checked_rows(self):
         
-        headerDB = db.headers()
-                     
-       #------------------------------------------ grabbing info from table ----              
-              
-        staList = headerDB.weather_stations        
-        for row in range(self.rowCount()):
+        nrow = self.rowCount()
+        rows = []
+        
+        for row in range(nrow):
+            if self.cellWidget(row, 0).isChecked():
+                rows.append(row)
                 
+        return rows
+        
+    def get_content4rows(self, rows):
+        
+        staList = []
+        
+        for row in rows:
+            
+            #--------
             # staList structure:
             
             # [staName, stationId, StartYear, EndYear,
@@ -1245,27 +1361,40 @@ class stationTable(QtGui.QTableWidget):
 
             # ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year', 
             #  'To \n Year', 'Prov.', 'Climate ID', 'Station ID') 
-
-            NItems = self.cellWidget(row, 4).count()
+            #--------
                             
             sta2add = [self.item(row, 1).text(),
                        self.item(row, 7).text(),
-                       self.cellWidget(row, 3).itemText(0),
-                       self.cellWidget(row, 4).itemText(NItems-1),                       
+                       self.item(row, 3).text(),
+                       self.item(row, 4).text(),
                        self.item(row, 5).text(),                       
                        self.item(row, 6).text(),
                        self.item(row, 2).text()]
                        
-            staList.append(sta2add)  
+            staList.append(sta2add)
+            
+        return staList
+    
+    
+    def save_staList(self, filename):
         
-        #--------------------------------------------------- saving results ----        
+        headerDB = db.headers()
+              
+        #---- Grab the content of the entire table ----
+              
+        rows =  range(self.rowCount())
+        staList = self.get_content4rows(rows)
+        
+        #---- Insert Header----
+        
+        staList.insert(0, headerDB.weather_stations[0])
+       
+        #---- saving results ----        
         
         with open(filename, 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(staList)
-            
-        
-        
+                
               
 #===============================================================================
 class search4stations(QtGui.QWidget):
@@ -1285,25 +1414,37 @@ class search4stations(QtGui.QWidget):
               
     def initUI(self):
 
-        #--------------------------------------------------- INIT VARIABLES ----
+        #--------------------------------------------------------- DATABASE ----
         
         iconDB = db.icons()
-        StyleDB = db.styleUI()
-#        ttipDB = Tooltips('English')
+        styleDB = db.styleUI()
+        #        ttipDB = Tooltips('English')
+
+        #------------------------------------------------------ MAIN WINDOW ----
+        
+        self.setWindowTitle('Search for Weather Stations')
+        self.setWindowIcon(iconDB.WHAT)
+#        self.setMinimumWidth(700)
+
+        #--------------------------------------------------- INIT VARIABLES ----
         
         now = datetime.now()
         
         self.workdir = getcwd()
         
-        #------------------------------------------------------- Left Panel ----
+        self.station_table = stationTable()
+        self.station_table.year_display_mode = 0
+        self.station_table.setMinimumWidth(650)
+        self.station_table.setMinimumHeight(450)
         
-        #---- Widgets ----
+        self.isOffline = False
         
+        #------------------------------------------------ Tab Widget Search ----
+        
+        #---- Search by Proximity ----
+                
         label_Lat = QtGui.QLabel('Latitude :')
-        label_Lat2 = QtGui.QLabel('N')
-        label_Lon = QtGui.QLabel('Longitude :')
-        label_Lon2 = QtGui.QLabel('W')
-        label_radius = QtGui.QLabel('Radius :')
+        label_Lat2 = QtGui.QLabel('North')        
         
         self.lat_spinBox = QtGui.QDoubleSpinBox()
         self.lat_spinBox.setAlignment(QtCore.Qt.AlignCenter)        
@@ -1313,6 +1454,9 @@ class search4stations(QtGui.QWidget):
         self.lat_spinBox.setMaximum(180)
         self.lat_spinBox.setSuffix(u' °')
         
+        label_Lon = QtGui.QLabel('Longitude :')
+        label_Lon2 = QtGui.QLabel('West')
+        
         self.lon_spinBox = QtGui.QDoubleSpinBox()
         self.lon_spinBox.setAlignment(QtCore.Qt.AlignCenter)
         self.lon_spinBox.setSingleStep(0.1)
@@ -1321,40 +1465,70 @@ class search4stations(QtGui.QWidget):
         self.lon_spinBox.setMaximum(180)
         self.lon_spinBox.setSuffix(u' °')
         
+        label_radius = QtGui.QLabel('Search Radius :')
+        
         self.radius_SpinBox = QtGui.QSpinBox()
         self.radius_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
         self.radius_SpinBox.setSingleStep(5)
         self.radius_SpinBox.setMinimum(5)
         self.radius_SpinBox.setMaximum(500)
         self.radius_SpinBox.setSuffix(' km')
-        
-        #---- Grid ----
-        
-        widget_leftPanel = QtGui.QWidget()
-        grid_leftPanel = QtGui.QGridLayout()
+       
+        prox_search_widg = QtGui.QWidget()
+        prox_search_grid = QtGui.QGridLayout()
         
         row = 0
-        grid_leftPanel.addWidget(label_Lat, row, 0)
-        grid_leftPanel.addWidget(self.lat_spinBox, row, 1)
-        grid_leftPanel.addWidget(label_Lat2, row, 2)
+        col = 1
+        prox_search_grid.addWidget(label_Lat, row, col)
+        prox_search_grid.addWidget(self.lat_spinBox, row, col+1)
+        prox_search_grid.addWidget(label_Lat2, row, col+2)
         row += 1
-        grid_leftPanel.addWidget(label_Lon, row, 0)
-        grid_leftPanel.addWidget(self.lon_spinBox, row, 1)
-        grid_leftPanel.addWidget(label_Lon2, row, 2)
+        prox_search_grid.addWidget(label_Lon, row, col)
+        prox_search_grid.addWidget(self.lon_spinBox, row, col+1)
+        prox_search_grid.addWidget(label_Lon2, row, col+2)
         row += 1
-        grid_leftPanel.addWidget(label_radius, row, 0)
-        grid_leftPanel.addWidget(self.radius_SpinBox, row, 1)
+        prox_search_grid.addWidget(label_radius, row, col)
+        prox_search_grid.addWidget(self.radius_SpinBox, row, col+1) 
+                        
+        prox_search_grid.setColumnStretch(0, 100)
+        prox_search_grid.setColumnStretch(col+3, 100)
+        prox_search_grid.setRowStretch(row + 1, 100)
+        prox_search_grid.setHorizontalSpacing(20)
+        prox_search_grid.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
         
-        grid_leftPanel.setSpacing(5)
-        grid_leftPanel.setColumnStretch(1, 100)
-        grid_leftPanel.setRowStretch(row + 1, 100)
-        grid_leftPanel.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        prox_search_widg.setLayout(prox_search_grid)
         
-        widget_leftPanel.setLayout(grid_leftPanel)
+        #---- Search by Name ----
         
-        #------------------------------------------------------ Right Panel ----
+        title = QtGui.QLabel('<b>Coming Soon to Theaters Near You</b>')
         
-        label_date = QtGui.QLabel('Stations with data between')
+        name_search_widg = QtGui.QFrame()
+        name_search_grid = QtGui.QGridLayout()
+        
+        name_search_grid.addWidget(title, 1, 1)
+        
+        name_search_grid.setColumnStretch(0, 100)
+        name_search_grid.setRowStretch(0, 100)
+        name_search_grid.setColumnStretch(2, 100)
+        name_search_grid.setRowStretch(2, 100)
+        
+        name_search_widg.setLayout(name_search_grid)
+        
+        #---- Assemble TabWidget ----
+        
+        tab_widg = QtGui.QTabWidget()
+        
+        tab_widg.addTab(prox_search_widg, 'Proximity')
+        tab_widg.addTab(name_search_widg, 'Station Name')
+        
+        #--------------------------------------------------- Search by Year ----
+        
+        label_date = QtGui.QLabel('Search for stations with data available')
+                     
+        #---- subgrid year boundary ----
+        
+        label_between = QtGui.QLabel('between')
+        label_between.setAlignment(QtCore.Qt.AlignCenter)
         
         self.minYear = QtGui.QSpinBox()
         self.minYear.setAlignment(QtCore.Qt.AlignCenter)
@@ -1373,7 +1547,26 @@ class search4stations(QtGui.QWidget):
         self.maxYear.setMaximum(now.year)
         self.maxYear.setValue(now.year)
         
-        #---- subgrid1 ----
+        yearbound_widget = QtGui.QFrame()
+        yearbound_grid = QtGui.QGridLayout()
+        
+        col = 0
+        yearbound_grid.addWidget(label_between, 0, col)
+        col =+ 1
+        yearbound_grid.addWidget(self.minYear, 0, col)
+        col += 1
+        yearbound_grid.addWidget(label_and, 0, col)
+        col += 1
+        yearbound_grid.addWidget(self.maxYear, 0, col)
+        
+        yearbound_grid.setSpacing(10)
+        yearbound_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        yearbound_grid.setColumnStretch(1, 100)
+        yearbound_grid.setColumnStretch(3, 100)
+        
+        yearbound_widget.setLayout(yearbound_grid)
+        
+        #---- subgrid min. nbr. of years ----
         
         label_4atleast = QtGui.QLabel('for at least')
         label_years = QtGui.QLabel('years')
@@ -1402,73 +1595,122 @@ class search4stations(QtGui.QWidget):
         
         #---- maingrid ----
         
-        widget_rightPanel = QtGui.QWidget()
-        grid_rightPanel = QtGui.QGridLayout()
+        year_widg = QtGui.QFrame()
+        year_widg.setFrameStyle(0) # styleDB.frame 
+        
+        year_grid = QtGui.QGridLayout()
+        
+        row = 1
+        year_grid.addWidget(label_date, row, 0)
+        row += 1
+        year_grid.addWidget(yearbound_widget, row, 0)
+        row += 1
+        year_grid.addWidget(subwidg1, row, 0)
+        
+        year_grid.setVerticalSpacing(20)
+        year_grid.setRowStretch(0, 100)
+        year_grid.setContentsMargins(15, 0, 15, 0) # (L, T, R, B)
+        
+        year_widg.setLayout(year_grid)
+        
+        #---------------------------------------------------------- TOOLBAR ----
+        
+#        self.btn_search = QtGui.QToolButton()
+#        self.btn_search.setAutoRaise(True)
+#        self.btn_search.setIcon(iconDB.search)
+#        self.btn_search.setToolTip(ttipDB.search4stations)
+#        self.btn_search.setIconSize(styleDB.iconSize)
+        
+        self.btn_search = QtGui.QPushButton('Search Stations')
+        self.btn_search.setIcon(iconDB.search)
+        self.btn_search.setIconSize(styleDB.iconSize2)
+#        self.btn_search.setFlat(True)
+        
+#        btn_addSta = QtGui.QToolButton()
+#        btn_addSta.setAutoRaise(True)
+#        btn_addSta.setIcon(iconDB.plus_sign)
+#        btn_addSta.setIconSize(styleDB.iconSize)
+         
+        btn_addSta = QtGui.QPushButton('Add Stations')
+        btn_addSta.setIcon(iconDB.plus_sign)
+        btn_addSta.setIconSize(styleDB.iconSize2)
+#        btn_addSta.setFlat(True)
+        
+        toolbar_grid = QtGui.QGridLayout()
+        toolbar_widg = QtGui.QWidget()
         
         row = 0
-        grid_rightPanel.addWidget(label_date, row, 0, 1, 3)
+        col = 1
+        toolbar_grid.addWidget(self.btn_search, row, col)
+        col += 1
+        toolbar_grid.addWidget(btn_addSta, row, col)
+        
+        toolbar_grid.setColumnStretch(col+1, 100)
+        toolbar_grid.setColumnStretch(0, 100)
+        toolbar_grid.setSpacing(5)
+        toolbar_grid.setContentsMargins(0, 25, 0, 0) # (L, T, R, B)
+        
+        toolbar_widg.setLayout(toolbar_grid)
+       
+        #------------------------------------------------------ Left Panel ----
+        
+        panel_title = QtGui.QLabel('<b>Weather Station Search Criteria :</b>')
+                        
+        left_panel = QtGui.QFrame()
+        left_panel_grid = QtGui.QGridLayout()
+        
+#        self.statusBar = QtGui.QStatusBar()
+#        self.statusBar.setSizeGripEnabled(False)
+        
+        row = 0
+        left_panel_grid.addWidget(panel_title, row, 0)
         row += 1
-        grid_rightPanel.addWidget(self.minYear, row, 0)
-        grid_rightPanel.addWidget(label_and, row, 1)
-        grid_rightPanel.addWidget(self.maxYear, row, 2)
+        left_panel_grid.addWidget(tab_widg, row, 0)
         row += 1
-        grid_rightPanel.addWidget(subwidg1, row, 0, 1, 3)
+        left_panel_grid.addWidget(year_widg, row, 0) 
+        row += 2
+        left_panel_grid.addWidget(toolbar_widg, row, 0)
+#        row += 1
+#        right_panel_grid.addWidget(self.statusBar, row, 0)
         
-        grid_rightPanel.setSpacing(10)
-        grid_rightPanel.setColumnStretch(0, 100)
-        grid_rightPanel.setColumnStretch(2, 100)
-        grid_rightPanel.setRowStretch(row + 1, 100)
-        grid_rightPanel.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
-        
-        widget_rightPanel.setLayout(grid_rightPanel)
-        
+        left_panel_grid.setVerticalSpacing(20)
+        left_panel_grid.setRowStretch(row, 100)
+        left_panel_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        left_panel.setLayout(left_panel_grid)
+                      
         #-------------------------------------------------------- MAIN GRID ----
         
         #---- Widgets ----
         
-        line1 = QtGui.QFrame()
-        line1.setFrameStyle(StyleDB.VLine)
-        
-        self.btn_search = QtGui.QPushButton('Search')
-        self.btn_search.setIcon(iconDB.search)
-        self.btn_search.setIconSize(StyleDB.iconSize2)
+        vLine1 = QtGui.QFrame()
+        vLine1.setFrameStyle(styleDB.VLine)
         
         #---- GRID ----
                         
         grid_search4stations = QtGui.QGridLayout()
         
-        row = 1
-        col = 1        
-        grid_search4stations.addWidget(widget_leftPanel, row, col)
+        row = 0
+        col = 0        
+        grid_search4stations.addWidget(left_panel, row, col)      
         col += 1
-        grid_search4stations.addWidget(line1, row, col)
+        grid_search4stations.addWidget(vLine1, row, col)
         col += 1
-        grid_search4stations.addWidget(widget_rightPanel, row, col)
-        row += 1
-        grid_search4stations.addWidget(self.btn_search, row, 1, 1, 3)
-                        
-        grid_search4stations.setContentsMargins(15, 15, 15, 15) # (L, T, R, B) 
-        grid_search4stations.setSpacing(10)
-        grid_search4stations.setColumnStretch(0, 100)
-        grid_search4stations.setColumnStretch(col+1, 100)
-        grid_search4stations.setRowStretch(0, 100)
-        grid_search4stations.setRowStretch(row + 1, 100)
-        
+        grid_search4stations.addWidget(self.station_table, row, col)
+                       
+        grid_search4stations.setContentsMargins(10, 10, 10, 10) # (L, T, R, B) 
+        grid_search4stations.setSpacing(15)
+        grid_search4stations.setColumnStretch(col, 100)
+                
         self.setLayout(grid_search4stations)
-        self.setFont(StyleDB.font1)
-        
-        #------------------------------------------------------ MAIN WINDOW ----
-        
-        self.setWindowTitle('Search for Weather Stations')
-        self.setWindowIcon(iconDB.WHAT)
-#        self.widget_search4stations.setFixedSize(500, 200)
-        
+        self.setFont(styleDB.font1)
+                
         #----------------------------------------------------------- EVENTS ----
         
         self.minYear.valueChanged.connect(self.minYear_changed)
         self.maxYear.valueChanged.connect(self.maxYear_changed)
         self.btn_search.clicked.connect(self.btn_search_isClicked)
-                                            
+        btn_addSta.clicked.connect(self.btn_addSta_isClicked)
+        
     def minYear_changed(self):
         
         min_yr = min_yr = max(self.minYear.value(), 1840)
@@ -1487,6 +1729,17 @@ class search4stations(QtGui.QWidget):
                 
         self.minYear.setRange(min_yr, max_yr)
         
+    
+    def btn_addSta_isClicked(self):
+        
+        rows = self.station_table.get_checked_rows()
+        if len(rows) > 0:
+            staList = self.station_table.get_content4rows(rows)
+            self.staListSignal.emit(staList)
+            print('Selected stations sent to list')
+        else:
+            msg = 'No station currently selected'
+            print(msg)        
 
     def btn_search_isClicked(self):
 
@@ -1497,7 +1750,7 @@ class search4stations(QtGui.QWidget):
         
         #---- Close window ----
         
-        self.close()
+#        self.close()
 
         #---- Generate New List ----
         # http://doc.qt.io/qt-5/qt.html#CursorShape-enum
@@ -1530,8 +1783,9 @@ class search4stations(QtGui.QWidget):
         print("-------------- FIN -------------")
         print("")
   
-    #===========================================================================
+    
     def search_envirocan(self, LAT, LON, RADIUS, YearMin, YearMax, nbrYear):
+        
         """
         Search on the Government of Canada website for weather stations with
         daily meteo data around a decimal degree Lat & Lon coordinate with a
@@ -1546,8 +1800,7 @@ class search4stations(QtGui.QWidget):
         
         If an error is raised, an empty list is returned. 
         """
-    #===========================================================================
-        
+            
         Nmax = 100. # Number of results per page (maximum possible is 100)
             
 #        StationID = np.array(['stationId']) # to download the data from server
@@ -1593,14 +1846,18 @@ class search4stations(QtGui.QWidget):
         try:
             
             #------------------------------------------- Results Extraction ----
-                        
-            f = urlopen(url)
-            stnresults = f.read()
             
-            # write downloaded content to local file for debugging purpose
+            if self.isOffline:
+                with open('url.txt') as f:
+                    stnresults = f.read() 
+            else:
+                f = urlopen(url)
+                stnresults = f.read()
             
-            with open("url.txt", "wb") as local_file:
-                local_file.write(stnresults)
+                # write downloaded content to local file for debugging purpose
+                
+                with open("url.txt", "wb") as local_file:
+                    local_file.write(stnresults)
          
             #---- Number of Stations Found ----
         
@@ -1626,9 +1883,12 @@ class search4stations(QtGui.QWidget):
                     
                     startRow = (Nmax * page) + 1
                     url4page = url + '&startRow=%d' % startRow
-                    f = urlopen(url4page)
-                        
-                    stnresults = f.read()
+                    if self.isOffline:
+                        with open('url.txt') as f:
+                            stnresults = f.read()
+                    else:
+                        f = urlopen(url4page)
+                        stnresults = f.read()
                     
                     indx_e = 0
                    
@@ -1732,7 +1992,7 @@ class search4stations(QtGui.QWidget):
                 QtCore.QCoreApplication.processEvents()
                          
                 for sta in range(len(staName)):
-                    staInfo = get_staInfo(Prov[sta], StationID[sta])
+                    staInfo = self.get_staInfo(Prov[sta], StationID[sta])
                     climate_id = staInfo[5]
                     ClimateID = np.append(ClimateID, climate_id)
                     
@@ -1781,7 +2041,9 @@ class search4stations(QtGui.QWidget):
                                    
                 #------------------------- Send Signal to load list into UI ----
                 
-                self.staListSignal.emit(staList)
+                
+                
+                self.station_table.populate_table(staList)
             
         except URLError as e:
             
@@ -1807,6 +2069,93 @@ class search4stations(QtGui.QWidget):
                    </font>''')
         
         return staList
+        
+    
+    def get_staInfo(self, Prov, StationID):
+        
+        """
+        Fetch the Climate Id for a given station. This ID is used to identified
+        the station in the CDCD, but not for downloading the data from 
+        the server.
+        
+        This information is not available when doing a search for stations 
+        and need to be fetch for each station individually.
+        """        
+    
+        url = ("http://climate.weather.gc.ca/climateData/dailydata_e.html?" + 
+               "timeframe=2&Prov=%s&StationID=%s") % (Prov, StationID)
+        
+        if self.isOffline:
+            with open("urlsingle.txt") as f:
+                urlread = f.read()
+        else:
+            f = urlopen(url)                    
+            urlread = f.read()
+            
+            with open("urlsingle.txt", "wb") as local_file:
+                local_file.write(urlread)
+        
+        #---- Station Name ----
+            
+        txt2find = '<th colspan="6" class="boxColor margin-bottom-none"><b>'
+        n = len(txt2find)
+        indx_0 = urlread.find(txt2find, 0) + n
+        indx_e = urlread.find('<br />', indx_0)
+        
+        staName = urlread[indx_0:indx_e]
+        staName = staName.strip()
+        
+        #---- Climate ID ----
+        
+        # Need to navigate the result in 2 steps to be sure
+        
+        indx_e = 0
+    
+        txt2find = ('<a href="http://climate.weather.gc.ca/' + 
+                    'glossary_e.html#climate_ID">Climate ID</a>:')
+        n = len(txt2find)
+        indx_0 = urlread.find(txt2find, indx_e) + n
+        
+        txt2find = ('<td>')
+        n = len(txt2find)
+        indx_0 = urlread.find(txt2find, indx_0)
+    
+        indx_e = urlread.find('</td>', indx_0)
+        
+        climate_id = urlread[indx_0+n:indx_e]
+        climate_id = climate_id.strip() # remove blank spaces at beginning and end
+        
+        #---- Start Year ----
+        
+        txt2find = '<option value="'
+        n = len(txt2find)
+        indx_0 = urlread.find(txt2find, indx_e) + n
+        
+        startYear = urlread[indx_0:indx_0+4]
+        
+        #---- End Year ----
+        
+        txt2find = '" selected="'
+        indx_e = urlread.find(txt2find, indx_0) - 4
+        
+        endYear = urlread[indx_e:indx_e+4]
+        
+        #---- Proximity ----
+        
+        proximity = np.nan
+        
+        print('%s (%s) : %s - %s' % (staName, climate_id, startYear, endYear))
+        
+        staInfo = [staName,
+                   StationID,
+                   startYear,
+                   endYear,
+                   Prov,
+                   climate_id,
+                   proximity]
+              
+        return staInfo
+    
             
 #===============================================================================
 def decdeg2dms(dd):
@@ -1832,89 +2181,7 @@ def dms2decdeg(deg, mnt, sec):
     
     return dd
     
-    
-#===============================================================================
-def get_staInfo(Prov, StationID):
-    """
-    Fetch the Climate Id for a given station. This ID is used to identified
-    the station in the CDCD, but not for downloading the data from the server.
-    
-    This information is not available when doing a search for stations and need
-    to be fetch for each station individually.
-    """
-#===============================================================================    
-
-    url = ("http://climate.weather.gc.ca/climateData/dailydata_e.html?" + 
-           "timeframe=2&Prov=%s&StationID=%s") % (Prov, StationID)
-          
-    f = urlopen(url)                    
-    urlread = f.read()
-    
-    with open("urlsingle.txt", "wb") as local_file:
-        local_file.write(urlread)
-    
-    #---- Station Name ----
-        
-    txt2find = '<th colspan="6" class="boxColor margin-bottom-none"><b>'
-    n = len(txt2find)
-    indx_0 = urlread.find(txt2find, 0) + n
-    indx_e = urlread.find('<br />', indx_0)
-    
-    staName = urlread[indx_0:indx_e]
-    staName = staName.strip()
-    
-    #---- Climate ID ----
-    
-    # Need to navigate the result in 2 steps to be sure
-    
-    indx_e = 0
-
-    txt2find = ('<a href="http://climate.weather.gc.ca/' + 
-                'glossary_e.html#climate_ID">Climate ID</a>:')
-    n = len(txt2find)
-    indx_0 = urlread.find(txt2find, indx_e) + n
-    
-    txt2find = ('<td>')
-    n = len(txt2find)
-    indx_0 = urlread.find(txt2find, indx_0)
-
-    indx_e = urlread.find('</td>', indx_0)
-    
-    climate_id = urlread[indx_0+n:indx_e]
-    climate_id = climate_id.strip() # remove blank spaces at beginning and end
-    
-    #---- Start Year ----
-    
-    txt2find = '<option value="'
-    n = len(txt2find)
-    indx_0 = urlread.find(txt2find, indx_e) + n
-    
-    startYear = urlread[indx_0:indx_0+4]
-    
-    #---- End Year ----
-    
-    txt2find = '" selected="'
-    indx_e = urlread.find(txt2find, indx_0) - 4
-    
-    endYear = urlread[indx_e:indx_e+4]
-    
-    #---- Proximity ----
-    
-    proximity = np.nan
-    
-    print('%s (%s) : %s - %s' % (staName, climate_id, startYear, endYear))
-    
-    staInfo = [staName,
-               StationID,
-               startYear,
-               endYear,
-               Prov,
-               climate_id,
-               proximity]
-          
-    return staInfo
-
-        
+            
 #===============================================================================        
 def concatenate(fname):    
 #===============================================================================
@@ -2008,45 +2275,68 @@ def concatenate(fname):
   
     return MergeOutput, LOG, COMNT
     
-class MyHeader(QtGui.QHeaderView):
-    
-    # http://stackoverflow.com/questions/9744975/
-    # pyside-pyqt4-adding-a-checkbox-to-qtablewidget-horizontal-column-header
-
-    isOn = False
-    
-    def __init__(self, orientation, parent=None):
-        super(MyHeader, self).__init__(parent)
-
-    def paintSection(self, painter, rect, logicalIndex):
-        painter.save()
-        QtGui.QHeaderView.paintSection(self, painter, rect, logicalIndex)
-        painter.restore()
-
-        if logicalIndex == 0:
-            option = QtGui.QStyleOptionButton()
-            option.rect = QtCore.QRect(10, 10, 10, 10)
-            if self.isOn:
-                option.state = QtGui.QStyle.State_On
-            else:
-                option.state = QtGui.QStyle.State_Off
-            self.style().drawControl(QtGui.QStyle.CE_CheckBox, option, painter)
-
-    def mousePressEvent(self, event):
-        self.isOn = not self.isOn
-        self.updateSection(0)
-        QtGui.QHeaderView.mousePressEvent(self, event)
+#class HeaderWithCheckBox(QtGui.QHeaderView):
+#    
+#    # http://stackoverflow.com/questions/9744975/
+#    # pyside-pyqt4-adding-a-checkbox-to-qtablewidget-horizontal-column-header
+#
+#    isOn = False
+#    
+#    def __init__(self, orientation, parent=None):
+#        super(HeaderWithCheckBox, self).__init__(orientation, parent)
+#
+#
+#    def paintSection(self, painter, rect, logicalIndex):
+#        
+#        painter.save()
+#        QtGui.QHeaderView.paintSection(self, painter, rect, logicalIndex)
+#        painter.restore()
+#
+#        if logicalIndex == 0:
+#            
+#            option = QtGui.QStyleOptionButton()
+#            option.rect = QtCore.QRect(10, 10, 10, 10)
+#            
+#            if self.isOn:
+#                option.state = QtGui.QStyle.State_On
+#            else:
+#                option.state = QtGui.QStyle.State_Off
+#                
+#            self.style().drawControl(QtGui.QStyle.CE_CheckBox, option, painter)
+#
+#
+#    def mousePressEvent(self, event):
+#        
+#        self.isOn = not self.isOn
+#        self.updateSection(0)
+#        QtGui.QHeaderView.mousePressEvent(self, event)
+#        
+#class MyTable(QtGui.QTableWidget):
+#    def __init__(self):
+#        QtGui.QTableWidget.__init__(self, 3, 3)
+#     
+#        myHeader = HeaderWithCheckBox(QtCore.Qt.Horizontal)
+#        self.setHorizontalHeader(myHeader)
         
 if __name__ == '__main__':
-
-    app = QtGui.QApplication(argv) 
+    
+    app = QtGui.QApplication(sys.argv) 
     
     instance1 = dwnldWeather()   
 
     instance1.set_workdir("../Projects/Project4Testing")
     instance1.search4stations.lat_spinBox.setValue(45.4)
     instance1.search4stations.lon_spinBox.setValue(73.13)
- #    instance1.load_stationList("../Projects/Project4Testing/weather_stations.lst")
-  
+    instance1.search4stations.isOffline = True
+    #     instance1.load_stationList("../Projects/Project4Testing/weather_stations.lst")
+
+    #------------------------------------------------------------- SHOW ----
+              
     instance1.show()
-    app.exec_()
+    
+    qr = instance1.frameGeometry()
+    cp = QtGui.QDesktopWidget().availableGeometry().center()
+    qr.moveCenter(cp)
+    instance1.move(qr.topLeft())
+        
+    sys.exit(app.exec_())

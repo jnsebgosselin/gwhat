@@ -59,6 +59,10 @@ class icons():
         self.new_project = QIcon('Icons/new_project2.png')
         self.open_project = QIcon('Icons/open_project2.png')
         
+        #----- METEO -----
+        
+        self.plus_sign = QIcon('Icons/plus_sign.png')
+       
         #----- HYDROGRAPH TOOLBAR -----
         
         self.fit_y = QIcon('Icons/fit_y.png')
