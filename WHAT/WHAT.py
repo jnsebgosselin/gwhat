@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
 software_version = 'WHAT Beta 4.1.6'
-last_modification = '24/06/2015'
+last_modification = '02/07/2015'
 
 # It is often said when developing interfaces that you need to fail fast,
 # and iterate often. When creating a UI, you will make mistakes. Just keep
@@ -199,8 +199,8 @@ class MainWindow(QtGui.QMainWindow):
         self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
         self.main_console.setFont(styleDB.font_console)
         
-        self.write2console(
-        '''<font color=black>Thanks for using %s.</font>''' % software_version)
+        self.write2console('''<font color=black>Thanks for using %s.
+        </font>''' % software_version)
         self.write2console(
         '''<font color=black>Please report any bug or wishful feature to 
              Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
@@ -2873,6 +2873,9 @@ class FillWorker(QtCore.QThread):
         STANAME = np.copy(self.WEATHER.STANAME)
         CORCOEF = np.copy(self.TARGET.CORCOEF)
         
+        print STANAME
+        print target_station_index, target_station_name
+        
         HORDIST = np.copy(self.TARGET.HORDIST)
         ALTDIFF = np.copy(np.abs(self.TARGET.ALTDIFF))
         
@@ -2887,12 +2890,10 @@ class FillWorker(QtCore.QThread):
         if self.full_error_analysis == True:
             YpFULL = np.copy(Y2fill) * np.nan
             print; print 'A full error analysis will be performed'; print
-                
-        self.ConsoleSignal.emit('<font color=black>Data completion for ' +
-                                'station ' + target_station_name +
-                                ' started</font>')
         
-        print 'Data completion for station', target_station_name, 'started'
+        msg = 'Data completion for station %s started' % target_station_name
+        print(msg)
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         
         #-------------------------------------------- CHECK CUTOFF CRITERIA ----        
         
@@ -2923,7 +2924,7 @@ class FillWorker(QtCore.QThread):
         #              be determined.
         
         target_station_index = np.where(STANAME == self.TARGET.name)[0][0]
-    
+
         #---------------------------- Identifies Variables With Enough Data ----
         
         # NOTE: When a station does not have enough data for a given variable,
@@ -2957,7 +2958,7 @@ class FillWorker(QtCore.QThread):
         if self.full_error_analysis == True:
             progress_total = np.size(Y2fill[:, var2fill])
         else:
-            progress_total = nbr_nan_total
+            progress_total = np.copy(nbr_nan_total)
             
         fill_progress = 0
         
@@ -3223,7 +3224,7 @@ class FillWorker(QtCore.QThread):
                         
                     if row in row_nan:
                         Y2fill[row, var] = Y_row
-                        
+
                         INFO_VAR[it_info] = VARNAME[var]
                         INFO_NSTA[it_info] = NSTA
                         INFO_RMSE[it_info] = RMSE

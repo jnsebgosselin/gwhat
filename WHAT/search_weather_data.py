@@ -40,10 +40,17 @@ class Tooltips():
     
     def __init__(self, language): #------------------------------- ENGLISH -----
         
+        #---- Search4Stations ----
+        
         self.btn_addSta = ('Add selected found weather stations to the '
                            'current list of weather stations.') 
         self.btn_search = ('Search for weather stations in the online CDCD ' +
                            'with the criteria given above.')
+                           
+        #---- WeatherStationDisplayTable ----
+        
+        self.chkbox_header = ('Check of uncheck all the weather stations ' +
+                              'in the table.')
     
         if language == 'French': #--------------------------------- FRENCH -----
             
@@ -803,19 +810,20 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         super(WeatherStationDisplayTable, self).__init__(parent)
         
         self.year_display_mode = year_display_mode
-        self.installEventFilter(self)
         
+
         self.initUI()
-    
+            
     def initUI(self): #=========================================================
         
         StyleDB = db.styleUI()
-                
-        #------------------------------------------------------------ Style ----
+        ttipDB  = Tooltips('English')     
         
+        #------------------------------------------------------------ Style ----
+        self.setFont(StyleDB.font1) 
         self.setFrameStyle(StyleDB.frame)
         self.setMinimumWidth(650)
-        self.setMinimumHeight(500)
+        self.setMinimumHeight(400)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
         
@@ -824,8 +832,11 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         # http://stackoverflow.com/questions/9744975/
         # pyside-pyqt4-adding-a-checkbox-to-qtablewidget-
         # horizontal-column-header
-
+        
         self.chkbox_header = QtGui.QCheckBox(self.horizontalHeader())
+        self.chkbox_header.setToolTip(ttipDB.chkbox_header)
+        self.horizontalHeader().installEventFilter(self)
+        
         
         HEADER = ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year', 
                   'To \n Year', 'Prov.', 'Climate ID', 'Station ID')     
@@ -844,7 +855,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         self.setColumnWidth(4, 75)
         self.setColumnWidth(5, 75)
 
-#        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
         
         #----------------------------------------------------------- Events ----
@@ -869,32 +880,46 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
                 return self.sortKey < other.sortKey
                 
     def eventFilter(self, source, event): #=====================================
-        
+
         # http://stackoverflow.com/questions/13788452/
         # pyqt-how-to-handle-event-without-inheritance
-        
-        if (event.type() == QtCore.QEvent.Type.Resize and source is self):
-            
-            size = self.horizontalHeader().sectionSizeFromContents(0)
-            y0 = size.height() / 2
-            
-            h = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorHeight)
-            w = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorWidth)
-    
-            self.chkbox_header.setGeometry(0, y0, w, h)   
+
+        if (event.type() == QtCore.QEvent.Type.Resize):
+            self.resize_chkbox_header()
             
         return QtGui.QWidget.eventFilter(self, source, event)
+    
+    def resize_chkbox_header(self): #===========================================
         
+        h = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorHeight)
+        w = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorWidth)
         
-    def chkbox_header_isClicked(self):
+        print h, w            
+        
+#        size = self.horizontalHeader().sectionSizeFromContents(3)
+#            H = size.height()
+        W = self.horizontalHeader().sectionSize(0)
+        H = self.horizontalHeader().height()
+        
+        print H, W
+        
+        y0 = int((H - h) / 2)
+        x0 = int((W - w) / 2)
+        
+        print y0, x0
+        
+        self.chkbox_header.setGeometry(x0, y0, w, h)
+    
+    def chkbox_header_isClicked(self): #========================================
 
         nrow = self.rowCount()
         
         for row in range(nrow):
-            self.cellWidget(row, 0).setCheckState(
-                                                self.chkbox_header.checkState())
+            item = self.cellWidget(row, 0).layout().itemAtPosition(1,1)
+            widget = item.widget()
+            widget.setCheckState(self.chkbox_header.checkState())
                 
-    def populate_table(self, staList):
+    def populate_table(self, staList): #========================================
         
         self.chkbox_header.setCheckState(QtCore.Qt.CheckState(False))
         
@@ -918,8 +943,18 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             item.setFlags(~QtCore.Qt.ItemIsEditable & QtCore.Qt.ItemIsEnabled)
             self.setItem(row, col, item)
             
-            self.dwnldCheck =  QtGui.QCheckBox()            
-            self.setCellWidget(row, col, self.dwnldCheck)
+            chckbox_center = QtGui.QWidget()
+            chckbox_grid = QtGui.QGridLayout()         
+            chckbox_grid.addWidget(QtGui.QCheckBox(), 1, 1)
+            chckbox_grid.setColumnStretch(0, 100)
+            chckbox_grid.setColumnStretch(2, 100)
+            chckbox_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
+            chckbox_center.setLayout(chckbox_grid)
+            
+#            print center_widg.layout().itemAtPosition(1,1)
+            
+            self.setCellWidget(row, col, chckbox_center)
+#            self.setCellWidget(row, col, center_widg)
             
             #---- Weather Station ----
             
@@ -1029,12 +1064,20 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         rows = []
         
         for row in range(nrow):
-            if self.cellWidget(row, 0).isChecked():
+            item = self.cellWidget(row, 0).layout().itemAtPosition(1,1)
+            widget = item.widget()
+            if widget.isChecked():
                 rows.append(row)
                 
         return rows
         
-    def get_content4rows(self, rows):
+    def get_content4rows(self, rows): #=========================================
+        
+        '''
+        grabs weather station info that are selected and saving them 
+        in a list. The structure of "weather_stations.lst" is preserved
+        in the process.
+        '''
         
         staList = []
         
@@ -1064,8 +1107,19 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             
         return staList
     
+    def delete_rows(self, rows): #==============================================
+        
+        # Going in reverse order to preserve indexes while 
+        # scanning the rows if any are deleted.
+        
+        for row in reversed(rows):
+            
+            print('Removing %s (%s)' % (self.item(row, 1).text(),
+                                        self.item(row, 6).text())) 
+                  
+            self.removeRow(row)
     
-    def save_staList(self, filename):
+    def save_staList(self, filename): #=========================================
         
         headerDB = db.headers()
               

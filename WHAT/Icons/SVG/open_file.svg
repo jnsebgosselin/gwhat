@@ -10,8 +10,8 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg7384"
-   height="16"
-   width="16"
+   height="248"
+   width="248"
    version="1.1"
    inkscape:version="0.48.4 r9939"
    sodipodi:docname="open_file.svg"
@@ -33,9 +33,9 @@
      inkscape:window-height="876"
      id="namedview8"
      showgrid="false"
-     inkscape:zoom="14.75"
-     inkscape:cx="8.3783621"
-     inkscape:cy="7.833025"
+     inkscape:zoom="1.3037281"
+     inkscape:cx="90.989886"
+     inkscape:cy="84.163754"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
@@ -56,7 +56,7 @@
      id="title9167">Gnome Symbolic Icon Theme</title>
   <g
      id="layer12"
-     transform="translate(-160,-646.40678)"
+     transform="matrix(15.242664,0,0,16.257575,-2436.7447,-10516.577)"
      style="fill:#4d4d4d">
     <path
        id="rect3845-5-8"

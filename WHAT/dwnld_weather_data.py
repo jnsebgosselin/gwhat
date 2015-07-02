@@ -192,7 +192,7 @@ class dwnldWeather(QtGui.QWidget):
         toolbar_grid.addWidget(self.saveAuto_checkbox, row, col)
         
         toolbar_grid.setSpacing(5)
-        toolbar_grid.setContentsMargins(0, 0, 0, 0)
+        toolbar_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
         
         toolbar_widg.setLayout(toolbar_grid)
         
@@ -256,7 +256,7 @@ class dwnldWeather(QtGui.QWidget):
         
         self.mergeDisplay = QtGui.QTextEdit()
         self.mergeDisplay.setReadOnly(True)
-        self.mergeDisplay.setMinimumHeight(200)
+        self.mergeDisplay.setMinimumHeight(225)
         
         btn_selectRaw = QtGui.QPushButton(labelDB.btn_select_rawData)
         btn_selectRaw.setIcon(iconDB.openFile)
@@ -354,26 +354,21 @@ class dwnldWeather(QtGui.QWidget):
         
     def btn_delSta_isClicked(self): #===========================================    
         
-        nrow = self.station_table.rowCount()
+        rows = self.station_table.get_checked_rows()
         
-        # Going in reverse order to preserve indexes while 
-        # scanning the rows if any are deleted.
+        if len(rows) > 0:        
+            self.station_table.delete_rows(rows)
+            self.staList_isNotSaved = True
+        else:
+            print('No weather station selected')
         
-        for row in reversed(range(nrow)):
-            isChecked = self.station_table.cellWidget(row, 0).isChecked()
-            if isChecked:                
-                print('Removing %s (%s)' 
-                      % (self.station_table.item(row, 1).text(),
-                         self.station_table.item(row, 6).text())
-                      ) 
-                self.station_table.removeRow(row)
-                self.staList_isNotSaved = True
-                
-        nrow = self.station_table.rowCount()
+        #---- Unckeck header ckbox if list is cleared ----
         
+        nrow = self.station_table.rowCount()        
         if nrow == 0:
             self.station_table.chkbox_header.setCheckState(
                                                     QtCore.Qt.CheckState(False))          
+                    
                     
     def btn_search4station_isClicked(self): #===================================
         
@@ -391,6 +386,7 @@ class dwnldWeather(QtGui.QWidget):
             self.search4stations.move(qr.topLeft())
             
             self.search4stations.setFixedSize(self.search4stations.size())       
+    
     
     def add_stations2list(self, staList2add): #=================================
         
@@ -542,9 +538,6 @@ class dwnldWeather(QtGui.QWidget):
             
         self.station_table.populate_table(staList)
         self.staList_fname = filename
-        
-    def update_staList(self): #=================================================
-        pass
     
     def btn_save_staList_isClicked(self): #=====================================
         
@@ -624,8 +617,9 @@ class dwnldWeather(QtGui.QWidget):
             # in a list. The structure of "weather_stations.lst" is preserved
             # in the process.
             
-            self.staList2dwnld = [] 
-            for row in range(self.station_table.rowCount()):
+            self.staList2dwnld = []
+            rows = self.station_table.get_checked_rows()
+            for row in rows:
                 
                 # staList structure:
                 # [staName, stationId, StartYear, EndYear,
@@ -634,21 +628,19 @@ class dwnldWeather(QtGui.QWidget):
                 # staTable structure:
                 # ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year', 
                 #  'To \n Year', 'Prov.', 'Climate ID', 'Station ID') 
-            
-                if self.station_table.cellWidget(row, 0).isChecked():                
                     
-                    #   0      1          2          3         4          5
-                    # [row, StaName, Station ID, startYear, endYear, Climate ID]
-                    
-                    sta2add = (
-                    [row,
-                     self.station_table.item(row, 1).text(),
-                     self.station_table.item(row, 7).text(),
-                     self.station_table.cellWidget(row, 3).currentText(),
-                     self.station_table.cellWidget(row, 4).currentText(),
-                     self.station_table.item(row, 6).text()])
-                    
-                    self.staList2dwnld.append(sta2add)
+                #   0      1          2          3         4          5
+                # [row, StaName, Station ID, startYear, endYear, Climate ID]
+                
+                sta2add = (
+                [row,
+                 self.station_table.item(row, 1).text(),
+                 self.station_table.item(row, 7).text(),
+                 self.station_table.cellWidget(row, 3).currentText(),
+                 self.station_table.cellWidget(row, 4).currentText(),
+                 self.station_table.item(row, 6).text()])
+                
+                self.staList2dwnld.append(sta2add)
                     
             if len(self.staList2dwnld) == 0:
                 
