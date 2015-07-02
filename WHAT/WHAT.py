@@ -73,6 +73,8 @@ import waterlvl_calc
 import dwnld_weather_data
 from fill_weather_data import Weather_File_Info
 
+from about_WHAT import AboutWhat
+
 #---- DATABASES ----
 
 labelDB = []
@@ -261,7 +263,7 @@ class MainWindow(QtGui.QMainWindow):
         self.tab_dwnld_data = TabDwnldData(self)
         self.tab_fill = TabFill(self)        
         self.tab_hydrograph = TabHydrograph(self)
-        tab_about = TabAbout(self)
+        tab_about = AboutWhat(software_version, last_modification, self)
         
         #---- LAYOUT ----
         
@@ -2450,86 +2452,6 @@ class TabFill(QtGui.QWidget):                                      # @TAB FILL #
             self.btn3.setEnabled(True)
             self.parent.project_display.setEnabled(True)
             self.parent.pbar.hide()
-
-
-################################################################################
-     
-class TabAbout(QtGui.QWidget):                                    # @TAB ABOUT #                    
-    
-################################################################################
-    
-    
-    def __init__(self, parent):
-        super(TabAbout, self).__init__(parent)
-        self.parent = parent
-        self.initUI_About()        
-        
-    def initUI_About(self):
-                
-        #--------------------------------------------------Widgets creation-----
-        
-        AboutTextBox = QtGui.QTextEdit()
-        AboutTextBox.setReadOnly(True)
-        #AboutTextBox.setAlignment(QtCore.Qt.AlignCenter)
-        
-        #-------------------------------------------------Grid organization----- 
-        
-        grid = QtGui.QGridLayout()
-        grid.setSpacing(10)
-        
-        grid.addWidget(AboutTextBox, 0, 1)
-        
-        grid.setColumnStretch(0, 500)
-        grid.setColumnStretch(2, 500)
-        grid.setColumnMinimumWidth(1, 850)
-        
-        self.setLayout(grid)
-        
-        #------------------------------------------Variables initialization-----
-        
-        about_text = '''<img src="/Icons/WHAT_banner.png">
-                        <p align="center">
-                        <br><br>
-                        <font size=16><b>%s</b></font>
-                        <br>
-                        <font size=4>
-                          <i>Well Hydrograph Analysis Toolbox</i>
-                        </font>
-                        <br><br>
-                        <b>Copyright 2014-2015 Jean-Sebastien Gosselin</b>
-                        <br><br>                         
-                        Institut national de la recherche scientifique
-                        <br>
-                        Centre Eau Terre Environnement (INRS-ETE)
-                        <br>
-                        490 rue de la Couronne, Quebec, QC
-                        <br>
-                        jnsebgosselin@gmail.com
-                        </p>
-                        <p align="center" style="margin-right:150px; 
-                        margin-left:150px">
-                        <br><br>%s is free software: 
-                        you can redistribute it and/or modify it under the terms
-                        of the GNU General Public License as published by the 
-                        Free Software Foundation, either version 3 of the 
-                        License, or (at your option) any later version.                       
-                        <br><br>
-                        This program is distributed in the hope that it will be
-                        useful, but WITHOUT ANY WARRANTY; without even the
-                        implied warranty of MERCHANTABILITY or FITNESS FOR A
-                        PARTICULAR PURPOSE. See the GNU General Public 
-                        License for more details.
-                        <br><br>
-                        You should have received a copy of the GNU General  
-                        Public License along with this program.  If not, see                    
-                        http://www.gnu.org/licenses.
-                        <br><br>
-                        </p>
-                        <p align="right" style="margin-right:150px">
-                        Last modification: %s </p>''' % (software_version,
-                        software_version, last_modification)
-
-        AboutTextBox.insertHtml(about_text)
 
        
 ################################################################################

@@ -63,11 +63,12 @@ class ImageViewer(QtGui.QWidget):
     """
 #-------------------------------------------------------------------------------
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None): #==========================================
         super(ImageViewer, self).__init__(parent)
         
         self.scaleFactor = 0
         self.scaleStep = 1.2
+        self.pan = False
         
         self.imageLabel = QtGui.QLabel()
         self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
@@ -126,7 +127,7 @@ class ImageViewer(QtGui.QWidget):
         
         self.load_image(image, 0)
     
-    def load_image(self, image, scaleFactor=0):
+    def load_image(self, image, scaleFactor=0): #===============================
 
         self.scaleFactor = scaleFactor
                 
@@ -145,8 +146,6 @@ class ImageViewer(QtGui.QWidget):
         
     def eventFilter(self, widget, event):
         
-#        print event.type()
-        
         # http://stackoverflow.com/questions/17525608/
         # event-filter-cannot-intercept-wheel-event-from-qscrollarea
         
@@ -156,17 +155,16 @@ class ImageViewer(QtGui.QWidget):
         # http://stackoverflow.com/questions/19113532/
         # qgraphicsview-zooming-in-and-out-under-mouse-position
         # -using-mouse-wheel
-       
+
         #------------------------------------------------------------- ZOOM ----
         
-        if (event.type() == QtCore.QEvent.Type.Wheel and 
-            widget is self.imageLabel):
+        if event.type() == QtCore.QEvent.Type.Wheel:
                                
             # http://stackoverflow.com/questions/8772595/
             # how-to-check-if-a-key-modifier-is-pressed-shift-ctrl-alt
             
             modifiers = QtGui.QApplication.keyboardModifiers()
-            #            
+                      
             if modifiers == QtCore.Qt.ControlModifier:                
                 if event.delta() > 0:
                     self.zoomIn()
@@ -180,8 +178,7 @@ class ImageViewer(QtGui.QWidget):
         
         #---- Set ClosedHandCursor ----
         
-        elif (event.type() == QtCore.QEvent.Type.MouseButtonPress and 
-              widget is self.imageLabel):
+        elif event.type() == QtCore.QEvent.Type.MouseButtonPress:
                   
             if event.button() == QtCore.Qt.MouseButton.LeftButton:
                 
@@ -192,14 +189,14 @@ class ImageViewer(QtGui.QWidget):
         
         #---- Reset Cursor ----
 
-        elif (event.type() == QtCore.QEvent.Type.MouseButtonRelease):
+        elif event.type() == QtCore.QEvent.Type.MouseButtonRelease:
             
             QtGui.QApplication.restoreOverrideCursor()
             self.pan = False
         
         #---- Move  ScrollBar----
         
-        elif (event.type() == QtCore.QEvent.Type.MouseMove):
+        elif event.type() == QtCore.QEvent.Type.MouseMove:
             
             if self.pan == True:
                 

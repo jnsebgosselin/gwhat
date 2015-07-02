@@ -13,7 +13,7 @@
    id="svg3336"
    style="enable-background:new"
    height="540.20343"
-   width="1499.6217"
+   width="1513.91"
    version="1.1"
    inkscape:version="0.48.4 r9939"
    sodipodi:docname="WHAT_banner.svg"
@@ -35,8 +35,8 @@
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:zoom="0.65186406"
-     inkscape:cx="683.24709"
-     inkscape:cy="282.61299"
+     inkscape:cx="791.88057"
+     inkscape:cy="228.17322"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
@@ -49,7 +49,7 @@
      inkscape:guide-bbox="true">
     <sodipodi:guide
        orientation="0,1"
-       position="1676.2305,627.37888"
+       position="1690.5185,627.37888"
        id="guide4167" />
   </sodipodi:namedview>
   <defs
@@ -721,7 +721,7 @@
   <rect
      style="fill:#ffffff;fill-opacity:1;stroke:none"
      id="rect4020"
-     width="1498.3962"
+     width="1513.91"
      height="540.20343"
      x="0"
      y="0"
@@ -729,14 +729,14 @@
   <rect
      style="fill:#055e75;fill-opacity:1;stroke:none"
      id="rect3891"
-     width="1498.4601"
-     height="290.38348"
-     x="1.1616402"
-     y="122.34016"
+     width="1513.9097"
+     height="291.26892"
+     x="0"
+     y="121.89744"
      rx="0" />
   <rect
      width="527.87891"
-     x="812.48981"
+     x="826.77783"
      y="9.7584143"
      rx="263.91718"
      height="527.8797"
@@ -751,16 +751,16 @@
      style="color:#000000;fill:#ffffff;enable-background:accumulate"
      id="rect4158"
      clip-path="url(#clipPath3973)"
-     transform="translate(849.65432,44.808795)" />
+     transform="translate(863.94232,44.808795)" />
   <g
      id="layer6"
      style="opacity:0.3;filter:url(#filter4254)"
-     transform="translate(1396.2467,-27.893863)"
+     transform="translate(1410.5347,-27.893863)"
      clip-path="url(#clipPath3962)" />
   <g
      id="layer1"
      style="display:none"
-     transform="translate(825.60907,-529.95327)">
+     transform="translate(839.89707,-529.95327)">
     <path
        id="path3774"
        d="m 166.05,576.36 h 179.89 c 145.3,0 166.05,20.737 166.05,165.9 v 144.2 c 0,145.16 -20.757,165.9 -166.05,165.9 H 166.05 C 20.76,1052.36 0,1031.56 0,886.42 V 742.22 C 0,597.06 20.757,576.32 166.05,576.32 z"
@@ -802,7 +802,7 @@
   </g>
   <g
      id="g4162"
-     transform="translate(38.264435,-1.7470517)">
+     transform="translate(52.552439,-1.7470517)">
     <path
        inkscape:connector-curvature="0"
        id="path2995-6"
@@ -824,30 +824,30 @@
   </g>
   <path
      inkscape:connector-curvature="0"
-     d="m 1232.4911,297.1659 -72.3294,0 c 0,0 14.8266,34.27657 36.1872,64.25301 0.035,0 0.035,-0.0235 0.035,-0.0235 l 0.035,-0.035 0.035,-0.035 c 0.035,-0.0235 0.035,-0.0235 0.035,-0.0235 22.0423,-31.61803 36.0517,-64.20964 36.0517,-64.20964 z"
+     d="m 1246.7791,297.1659 -72.3294,0 c 0,0 14.8266,34.27657 36.1872,64.25301 0.035,0 0.035,-0.0235 0.035,-0.0235 l 0.035,-0.035 0.035,-0.035 c 0.035,-0.0235 0.035,-0.0235 0.035,-0.0235 22.0423,-31.61803 36.0517,-64.20964 36.0517,-64.20964 z"
      style="color:#000000;fill:#c83737;fill-opacity:1;display:inline;enable-background:new"
      id="path4622" />
   <path
      style="fill:url(#linearGradient4150);fill-opacity:1;stroke:#004455;stroke-width:19.71030807;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;display:inline;enable-background:new"
-     d="m 875.02086,330.15759 c -0.557,78.10993 95.61557,132.77746 128.90964,145.81734 112.5473,40.65701 235.1918,-31.10261 265.2308,-107.70049 -199.1819,41.77399 -257.1226,-143.2359 -394.14044,-38.11685 z"
+     d="m 889.30886,330.15759 c -0.557,78.10993 95.61557,132.77746 128.90964,145.81734 112.5473,40.65701 235.1918,-31.10261 265.2308,-107.70049 -199.1819,41.77399 -257.1226,-143.2359 -394.14044,-38.11685 z"
      id="path3852"
      inkscape:connector-curvature="0"
      sodipodi:nodetypes="cccc" />
   <path
      style="opacity:0.75;fill:url(#linearGradient4147);fill-opacity:1;stroke:none;display:inline;enable-background:new"
-     d="m 893.53736,380.60827 c 22.3723,39.39027 95.44397,97.43543 126.82894,106.2254 106.0939,27.40618 189.6921,-16.53523 218.0087,-68.16852 -187.7609,28.15913 -227.5638,-120.80755 -344.83764,-38.05688 z"
+     d="m 907.82536,380.60827 c 22.3723,39.39027 95.44394,97.43543 126.82894,106.2254 106.0939,27.40618 189.6921,-16.53523 218.0087,-68.16852 -187.7609,28.15913 -227.5638,-120.80755 -344.83764,-38.05688 z"
      id="path3852-7-7"
      inkscape:connector-curvature="0"
      sodipodi:nodetypes="cccc" />
   <path
      style="opacity:0.75;fill:url(#linearGradient4144);fill-opacity:1;stroke:none;display:inline;enable-background:new"
-     d="m 910.08076,416.68458 c 19.0777,30.26202 88.05527,66.88242 114.81844,73.63541 90.4703,21.05509 157.7939,3.5373 181.9405,-36.13055 -160.1109,21.63356 -186.108,-94.10728 -296.75894,-37.50486 z"
+     d="m 924.36876,416.68458 c 19.0777,30.26202 88.05524,66.88242 114.81844,73.63541 90.4703,21.05509 153.5752,-2.79071 177.7218,-42.45856 -160.1109,21.63356 -181.8893,-87.77927 -292.54024,-31.17685 z"
      id="path3852-7"
      inkscape:connector-curvature="0"
      sodipodi:nodetypes="cccc" />
   <rect
      width="395.88928"
-     x="879.88812"
+     x="894.17615"
      y="75.042168"
      rx="197.92793"
      height="395.8898"
@@ -855,7 +855,7 @@
      id="rect16-9" />
   <rect
      width="431.33667"
-     x="862.16443"
+     x="876.45245"
      y="57.318405"
      rx="215.65013"
      height="431.33731"
@@ -865,31 +865,31 @@
   <text
      xml:space="preserve"
      style="font-size:337.92733765px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Liberation Sans;-inkscape-font-specification:Liberation Sans Bold"
-     x="16.803627"
+     x="31.091631"
      y="384.45212"
      id="text3084"
      sodipodi:linespacing="125%"><tspan
        sodipodi:role="line"
-       x="16.803627"
+       x="31.091631"
        y="384.45212"
        id="tspan3086"><tspan
-         x="16.803627"
+         x="31.091631"
          y="384.45212"
          style="fill:#ffffff;font-family:Liberation Sans;-inkscape-font-specification:Liberation Sans Bold"
          id="tspan3088">WHA</tspan></tspan></text>
   <text
      xml:space="preserve"
      style="font-size:60px;font-style:normal;font-weight:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#333333;fill-opacity:1;stroke:none;font-family:Sans"
-     x="-1.3285942"
+     x="9.7051725"
      y="472.81418"
      id="text3090"
      sodipodi:linespacing="125%"><tspan
        sodipodi:role="line"
-       x="-1.3285942"
+       x="9.7051725"
        y="472.81418"
        id="tspan3092"
        style="font-size:52px;font-style:italic;-inkscape-font-specification:Sans Italic"><tspan
-         x="-1.3285942"
+         x="9.7051725"
          y="472.81418"
          style="font-size:52px;font-style:italic;fill:#333333;fill-opacity:1;-inkscape-font-specification:Sans Italic"
          id="tspan3094">Well Hydrograph Analysis Toolbox</tspan></tspan></text>
