@@ -293,7 +293,7 @@ class WLCalc(QtGui.QWidget):
         
         grid_MRCparam = QtGui.QGridLayout()
         self.widget_MRCparam = QtGui.QFrame()
-        self.widget_MRCparam.setFrameStyle(StyleDB.frame)
+#        self.widget_MRCparam.setFrameStyle(StyleDB.frame)
         
         row = 0
         col = 0
@@ -307,7 +307,7 @@ class WLCalc(QtGui.QWidget):
         grid_MRCparam.addWidget(self.MRC_results, row, col, 1, 2)
         
         grid_MRCparam.setSpacing(5)
-        grid_MRCparam.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)
+        grid_MRCparam.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         grid_MRCparam.setColumnStretch(1, 500)        
         
         self.widget_MRCparam.setLayout(grid_MRCparam)
@@ -1372,7 +1372,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             else:
                 break
 
-        print(u'A = %0.3f ; B= %0.3f; RMSE = %f ; Cosθ = %0.3f' 
+        print(u'A = %0.3f ; B= %0.3f; RMSE = %f ; Cos_theta = %0.3f' 
               % (A, B, RMSE, cos))
     
         #---- Checking tolerance ----

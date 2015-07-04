@@ -29,6 +29,9 @@ import platform
 from PySide.QtGui import QIcon, QFont
 from PySide.QtCore import QSize
 
+software_version = 'WHAT Beta 4.1.6'
+last_modification = '02/07/2015'
+
 class icons():
     
     def __init__(self):
@@ -206,8 +209,9 @@ class labels():
         self.fill_station = 'Fill Data for Weather Station :'
         self.btn_fill_weather = 'Fill'
         self.btn_fill_all_weather = 'Fill All'
-        self.altlimit = 'Cutoff altitude difference (m)'
-        self.distlimit = 'Cutoff distance (km)'
+        self.altlimit = 'Elevation'
+        self.distlimit = 'Distance'
+        self.NbrSta = 'Nbr. of stations'
         
         if language == 'French': #================================== FRENCH ====
             
@@ -231,6 +235,8 @@ class styleUI():
         
         self.iconSize = QSize(32, 32)
         self.iconSize2 = QSize(22, 22)
+        
+        self.sideBarWidth = 250
         
         if platform.system() == 'Windows':
             # Calibri, Cambria, Segoe UI

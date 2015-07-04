@@ -50,8 +50,6 @@ class Tooltips():
         self.btn_browse_staList = 'Load an existing weather station list'
         self.btn_save_staList = 'Save current station list.'
         self.btn_delSta = 'Remove selected weather stations from the list'
-        self.btn_addSta = 'Add a new weather station to the list'
-        
         
         self.btn_GetData = 'Download data for the selected weather stations'
         
@@ -75,6 +73,18 @@ class dwnldWeather(QtGui.QWidget):
     
     def __init__(self, parent=None): #==========================================
         super(dwnldWeather, self).__init__(parent)
+                
+        self.workdir = getcwd()
+        
+        self.staList_fname = []
+        self.staList_isNotSaved = False
+        
+        self.mergeHistoryLog = []
+        self.mergeHistoryIndx = 0
+        self.mergeHistoryFnames = []
+        
+        self.staList2dwnld = []
+        self.dwnld_indx = 0
         
         self.initUI()
         
@@ -87,24 +97,10 @@ class dwnldWeather(QtGui.QWidget):
         ttipDB = Tooltips('English')
         labelDB = db.labels('English')
         
-        #--------------------------------------------------- VARIABLES INIT ----
-        
-        self.setWindowIcon(iconDB.WHAT)
-        self.setFont(styleDB.font1)
-        
         #------------------------------------------------------ Main Window ----
         
-        self.workdir = getcwd()
-        
-        self.staList_fname = []
-        self.staList_isNotSaved = False
-        
-        self.mergeHistoryLog = []
-        self.mergeHistoryIndx = 0
-        self.mergeHistoryFnames = []
-        
-        self.staList2dwnld = []
-        self.dwnld_indx = 0
+        self.setWindowIcon(iconDB.WHAT)
+        self.setFont(styleDB.font1)        
         
         #--------------------------------------------------- Instances init ----
         
@@ -139,13 +135,7 @@ class dwnldWeather(QtGui.QWidget):
         btn_browse_staList.setAutoRaise(True)
         btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
         btn_browse_staList.setIconSize(styleDB.iconSize)
-        
-        btn_addSta = QtGui.QToolButton()
-        btn_addSta.setIcon(iconDB.add_point)
-        btn_addSta.setAutoRaise(True)
-        btn_addSta.setToolTip(ttipDB.btn_addSta)
-        btn_addSta.setIconSize(styleDB.iconSize)
-        
+                
         btn_delSta = QtGui.QToolButton()
         btn_delSta.setIcon(iconDB.erase)
         btn_delSta.setAutoRaise(True)
@@ -177,13 +167,7 @@ class dwnldWeather(QtGui.QWidget):
         col += 1
         toolbar_grid.addWidget(self.btn_save_staList, row, col)
         col += 1                
-        toolbar_grid.addWidget(separator1, row, col)
-#        col += 1
-#        toolbar_grid.addWidget(btn_addSta, row, col)
-        col += 1
         toolbar_grid.addWidget(btn_delSta, row, col)
-#        col += 1                
-#        toolbar_grid.addWidget(separator2, row, col)
         col += 1
         toolbar_grid.addWidget(self.btn_get, row, col)
         col += 1
@@ -200,6 +184,7 @@ class dwnldWeather(QtGui.QWidget):
 
         self.pbar = QtGui.QProgressBar()
         self.pbar.setValue(0)
+        self.pbar.hide()
         
         #------------------------------------------------------ Right Panel ----
                 
@@ -577,7 +562,7 @@ class dwnldWeather(QtGui.QWidget):
             msg = 'Station list saved in %s' % fname
             print(msg)
             self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-
+    
     
     def manage_raw_data_dwnld(self): #==========================================
         

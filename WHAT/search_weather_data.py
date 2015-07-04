@@ -91,8 +91,8 @@ class Search4Stations(QtGui.QWidget):
         now = datetime.now()
         
         self.station_table = WeatherStationDisplayTable(0, self)
-        self.station_table.setMinimumWidth(650)
-        self.station_table.setMinimumHeight(450)
+        
+#        self.station_table.setMinimumHeight(450)
         
         self.isOffline = False
         
@@ -178,7 +178,7 @@ class Search4Stations(QtGui.QWidget):
         tab_widg.addTab(prox_search_widg, 'Proximity')
         tab_widg.addTab(name_search_widg, 'Station Name')
         
-        #--------------------------------------------------- Search by Year ----
+        #---------------------------------------------------- Year Criteria ----
         
         label_date = QtGui.QLabel('Search for stations with data available')
                      
@@ -294,7 +294,7 @@ class Search4Stations(QtGui.QWidget):
         toolbar_grid.setColumnStretch(col+1, 100)
         toolbar_grid.setColumnStretch(0, 100)
         toolbar_grid.setSpacing(5)
-        toolbar_grid.setContentsMargins(0, 25, 0, 0) # (L, T, R, B)
+        toolbar_grid.setContentsMargins(0, 30, 0, 0) # (L, T, R, B)
         
         toolbar_widg.setLayout(toolbar_grid)
        
@@ -314,15 +314,16 @@ class Search4Stations(QtGui.QWidget):
         left_panel_grid.addWidget(tab_widg, row, 0)
         row += 1
         left_panel_grid.addWidget(year_widg, row, 0) 
-        row += 2
+        row += 1
         left_panel_grid.addWidget(toolbar_widg, row, 0)
 #        row += 1
 #        right_panel_grid.addWidget(self.statusBar, row, 0)
         
         left_panel_grid.setVerticalSpacing(20)
-        left_panel_grid.setRowStretch(row, 100)
+        left_panel_grid.setRowStretch(row+1, 100)
         left_panel_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         left_panel.setLayout(left_panel_grid)
+        
                       
         #-------------------------------------------------------- MAIN GRID ----
         
@@ -822,10 +823,9 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         #------------------------------------------------------------ Style ----
         self.setFont(StyleDB.font1) 
         self.setFrameStyle(StyleDB.frame)
-        self.setMinimumWidth(650)
-        self.setMinimumHeight(400)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
+        self.setMinimumWidth(650)
         
         #----------------------------------------------------------- Header ----
         
@@ -1062,6 +1062,8 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         
         nrow = self.rowCount()
         rows = []
+        
+        # http://www.qtfr.org/viewtopic.php?id=16337
         
         for row in range(nrow):
             item = self.cellWidget(row, 0).layout().itemAtPosition(1,1)

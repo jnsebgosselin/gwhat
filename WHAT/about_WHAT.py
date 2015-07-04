@@ -58,7 +58,8 @@ class AboutWhat(QtGui.QWidget):
         
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(iconDB.WHAT)
-        self.setMinimumHeight(700)
+#        self.setMinimumHeight(700)
+        self.setFont(styleDB.font1)
         
         #----------------------------------------------------- AboutTextBox ----
         
@@ -66,6 +67,7 @@ class AboutWhat(QtGui.QWidget):
         self.AboutTextBox.installEventFilter(self)    
         self.AboutTextBox.setReadOnly(True)
         self.AboutTextBox.setFixedWidth(850)
+        self.AboutTextBox.setFrameStyle(0)
         self.AboutTextBox.setHorizontalScrollBarPolicy(
                                                    QtCore.Qt.ScrollBarAlwaysOff)
         self.AboutTextBox.setOpenExternalLinks(True)
@@ -90,8 +92,9 @@ class AboutWhat(QtGui.QWidget):
         
         grid.addWidget(self.AboutTextBox, 0, 1)
         
-        grid.setColumnStretch(0, 500)
-        grid.setColumnStretch(2, 500)
+#        grid.setColumnStretch(1, 500)
+#        grid.setColumnStretch(2, 500)
+        grid.setContentsMargins(10, 10, 10, 10)
 #        grid.setColumnMinimumWidth(1, 850)
         
         self.setLayout(grid)
@@ -100,41 +103,39 @@ class AboutWhat(QtGui.QWidget):
         
         #---- Image Logo ----
         
-        width = self.AboutTextBox.size().width()
+        width = 750 #self.AboutTextBox.size().width()
         version = self.software_version
         date = self.last_modification
         
-        filename = 'Icons/WHAT_banner_850px.png'
+        filename = 'Icons/WHAT_banner_750px.png'
         
-        about_text =  '''
-                      <img src="%s" 
-                      align="center" width="%d">
+        about_text =  '''                      
+                      <p align="center"> <br>
+                      <img src="%s" align="middle" width="%d">
+                      </p>
                       ''' % (filename, width)
         
         #---- Header ----
         
         about_text += '''  
-                      <br>
                       <p align="center">                      
-                      <font size=16><b>%s</b></font>
-                      <br>
-                      <font size=4>
-                        <i>Well Hydrograph Analysis Toolbox</i>
+                      <font size=5>
+                        <b>Version %s</b> 
                       </font>
-                      <br><br>
+                      <font size="3">
+                      <br>
                       <b>Copyright 2014-2015 Jean-S&eacute;bastien Gosselin</b>
                       <br>
                       jnsebgosselin@gmail.com
                       <br><br>                         
                       Institut National de la Recherche Scientifique<br>
-                      Centre Eau Terre Environnement<br>
-                      490 rue de la Couronne, Quebec City, QC, Canada<br>
+                      Research Center Eau Terre Environnement, Quebec City,
+                      QC, Canada<br>
                       <a href="http://www.ete.inrs.ca/">
-                        http://www.ete.inrs.ca                      
-                      </a>
+                        (http://www.ete.inrs.ca)
+                      </a><br>                      
                       </p>
-                      <br><br>
-                      ''' % version
+                      ''' % (version[5:])
                         
         #---- License ----                
                         
@@ -163,9 +164,7 @@ class AboutWhat(QtGui.QWidget):
                           http://www.gnu.org/licenses
                         </a>.                                           
                       </p>
-                      <p align="right" style="margin-right:50px">
-                        Last modification: %s
-                      </p>
+                      <p align="right" style="margin-right:50px">%s</p>
                       ''' % (version, date)
         
         self.AboutTextBox.setHtml(about_text)
@@ -178,12 +177,12 @@ class AboutWhat(QtGui.QWidget):
         # https://srinikom.github.io/pyside-docs/PySide/QtCore/QObject.
         # html#PySide.QtCore.PySide.QtCore.QObject.installEventFilter
 
-        if event.type() == QtCore.QEvent.Type.Resize:
+#        if event.type() == QtCore.QEvent.Type.Resize:
+#            
+#            self.set_html_in_AboutTextBox() # To Keep the image logo to the
+#                                            # same width as the QTextEdit box
             
-            self.set_html_in_AboutTextBox() # To Keep the image logo to the
-                                            # same width as the QTextEdit box
-            
-        elif event.type() == QtCore.QEvent.Type.FontChange:            
+        if event.type() == QtCore.QEvent.Type.FontChange:            
             return True # Eat the event to disable zooming
                         
         return QtGui.QWidget.eventFilter(self, obj, event)
