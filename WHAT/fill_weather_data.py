@@ -25,7 +25,6 @@ import sys
 from time import ctime, strftime, sleep
 from os import getcwd, listdir, makedirs, path
 from copy import copy
-from string import maketrans
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -111,12 +110,15 @@ class GapFillWeather(QtGui.QWidget):
         widget_toolbar = QtGui.QFrame()
         
         row = 0
-        grid_toolbar.addWidget(self.btn_fill, row, 0)
-        grid_toolbar.addWidget(self.btn_fill_all, row, 1)
+        col = 1
+        grid_toolbar.addWidget(self.btn_fill, row, col)
+        col += 1
+        grid_toolbar.addWidget(self.btn_fill_all, row, col)
         
         grid_toolbar.setSpacing(5)
         grid_toolbar.setContentsMargins(0, 0, 0, 0)
-        grid_toolbar.setColumnStretch(2, 100)
+        grid_toolbar.setColumnStretch(0, 100)
+        grid_toolbar.setColumnStretch(col+1, 100)
         
         widget_toolbar.setLayout(grid_toolbar)
         
@@ -190,17 +192,17 @@ class GapFillWeather(QtGui.QWidget):
         row = 0
 #        cutoff_grid.addWidget(Cutoff_title, row, 0, 1, 2)
 #        row += 1
-        cutoff_grid.addWidget(Nmax_label, row, 1)
-        cutoff_grid.addWidget(self.Nmax, row, 0)
+        cutoff_grid.addWidget(self.Nmax, row, 1)
+        cutoff_grid.addWidget(Nmax_label, row, 0)        
         row += 1
-        cutoff_grid.addWidget(distlimit_label, row, 1)
-        cutoff_grid.addWidget(self.distlimit, row, 0)
+        cutoff_grid.addWidget(distlimit_label, row, 0)
+        cutoff_grid.addWidget(self.distlimit, row, 1)
         row += 1
-        cutoff_grid.addWidget(altlimit_label, row, 1)
-        cutoff_grid.addWidget(self.altlimit, row, 0)
+        cutoff_grid.addWidget(altlimit_label, row, 0)
+        cutoff_grid.addWidget(self.altlimit, row, 1)
                 
-        cutoff_grid.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
-        cutoff_grid.setColumnStretch(1, 500)
+        cutoff_grid.setContentsMargins(10, 10, 10, 10) #Left, Top, Right, Bottom
+        cutoff_grid.setColumnStretch(2, 500)
         cutoff_widg.setLayout(cutoff_grid)
         
         #---- Regression Model ----
@@ -247,16 +249,21 @@ class GapFillWeather(QtGui.QWidget):
         fillDates_grid = QtGui.QGridLayout()
                 
         row = 0
+        col = 0
 #        fillDates_grid.addWidget(label_Dates_Title, row, 0, 1, 3)
+        
+        fillDates_grid.addWidget(label_From, row, col)
+        col += 1
+        fillDates_grid.addWidget(self.date_start_widget, row, col)
 #        row += 1
-        fillDates_grid.addWidget(label_From, row, 1)
-        fillDates_grid.addWidget(self.date_start_widget, row, 2)
         row += 1
-        fillDates_grid.addWidget(label_To, row, 1)  
-        fillDates_grid.addWidget(self.date_end_widget, row, 2)        
-                
-        fillDates_grid.setColumnStretch(4, 500)
-        fillDates_grid.setColumnStretch(0, 500)
+        col = 0
+        fillDates_grid.addWidget(label_To, row, col)
+        col += 1
+        fillDates_grid.addWidget(self.date_end_widget, row, col)        
+#                
+        fillDates_grid.setColumnStretch(row+1, 500)
+#        fillDates_grid.setColumnStretch(0, 500)
         fillDates_grid.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
         fillDates_grid.setSpacing(10)
         
@@ -265,9 +272,9 @@ class GapFillWeather(QtGui.QWidget):
         #---- Stacked Widget ----
         
         stack_widget = QtGui.QToolBox()
-        stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria')
-        stack_widget.addItem(MLRM_widg, 'Regression Model')
-        stack_widget.addItem(fillDates_widg, 'Gap Fill Data Record')
+        stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
+        stack_widget.addItem(MLRM_widg, 'Regression Model :')
+#        stack_widget.addItem(fillDates_widg, 'Gap Fill Data Record')
 #        stack_widget.setAttribute(QtCore.Qt.WA_TranslucentBackground);
         
         cutoff_widg.setObjectName("obj1")
@@ -277,31 +284,31 @@ class GapFillWeather(QtGui.QWidget):
 #        self.LEFT_widget.setStyleSheet("#myViewport {background-color:transparent;}") 
 #        stack_widget.setStyleSheet("#obj1,#obj2 {background-color:transparent;font-size:11;}")
         
-        family = 'Segoe UI'
-        style = 'Regular'
-        size = '14px'
-        
-        fontSS = ("QWidget {font-style: %s;" % style +
-                           "font-size: %s;"  % size  +
-                           "font-family: %s;}" % family)
+#        family = 'Segoe UI'
+#        style = 'Regular'
+#        size = '14px'
+#        
+#        fontSS = ("QWidget {font-style: %s;" % style +
+#                           "font-size: %s;"  % size  +
+#                           "font-family: %s;}" % family)
                             
-        self.setStyleSheet(fontSS)
+#        self.setStyleSheet(fontSS)
         
         stack_widget.setStyleSheet(
-                           "#obj1,#obj2,#obj3 {background-color:transparent}" +
+                           "#obj1,#obj2 {background-color:transparent}" +
                            "QScrollArea {background-color:transparent;}" +
                            "::tab {font-weight: normal;}")
                            
         
-        database = QtGui.QFontDatabase()
+#        database = QtGui.QFontDatabase()
 #        families = database.families(QtGui.QFontDatabase.Latin)
         
 #        family = familiesfamilies.index('Ubuntu')
         
-        family = 'Ubuntu'
-        family = 'Segoe UI'
-        style = 'Regular'
-        print database.smoothSizes(family, style)
+#        family = 'Ubuntu'
+#        family = 'Segoe UI'
+#        style = 'Regular'
+#        print database.smoothSizes(family, style)
        
         
         
@@ -348,7 +355,12 @@ class GapFillWeather(QtGui.QWidget):
         row = 0 
         grid_leftPanel.addWidget(tarSta_widg, row, 0)
         row += 1
+        grid_leftPanel.addWidget(fillDates_widg, row, 0)
+        row += 1
+        grid_leftPanel.addWidget(seprator1, row, 0)
+        row += 1
         grid_leftPanel.addWidget(stack_widget, row, 0)
+        row += 2
 #        grid_leftPanel.addWidget(seprator1, row, 0)
 #        row += 1
 #        grid_leftPanel.addWidget(cutoff_widg, row, 0)
@@ -360,8 +372,14 @@ class GapFillWeather(QtGui.QWidget):
 #        grid_leftPanel.addWidget(seprator3, row, 0)
 #        row += 1
 #        grid_leftPanel.addWidget(fillDates_widg, row, 0)
+         
+        grid_leftPanel.addWidget(seprator2, row, 0)
+        row += 1 
+        grid_leftPanel.addWidget(widget_toolbar, row, 0)
         
-        grid_leftPanel.setRowStretch(row+1, 500)
+        
+        grid_leftPanel.setVerticalSpacing(15)
+        grid_leftPanel.setRowStretch(row-2, 500)
         grid_leftPanel.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         grid_leftPanel.setColumnMinimumWidth(0, styleDB.sideBarWidth)
         
@@ -402,8 +420,8 @@ class GapFillWeather(QtGui.QWidget):
 #        grid_MAIN.addWidget(scrollArea, row, 0)
         grid_MAIN.addWidget(self.LEFT_widget, row, 0)
         grid_MAIN.addWidget(RIGHT_widget, row, 1)
-        row += 1
-        grid_MAIN.addWidget(widget_toolbar, row, 0, 1, 2)
+#        row += 1
+#        grid_MAIN.addWidget(widget_toolbar, row, 0, 1, 2)
                 
         grid_MAIN.setColumnStretch(1, 500)
         grid_MAIN.setRowStretch(0, 500)
@@ -606,18 +624,7 @@ class GapFillWeather(QtGui.QWidget):
         self.pbar.hide()
             
     def manage_gapfill(self): #=================================================
-        
-        family = 'Segoe UI'
-        style = 'Regular'
-        size = '20px'
-        
-        fontSS = ("QWidget {font-style: %s;" % style +
-                           "font-size: %s;"  % size  +
-                           "font-family: %s;}" % family)
-                            
-        self.setStyleSheet(fontSS)
-        return
-        
+          
         iconDB = db.icons()
         
         #-------------------------------------- Stop Thread (if applicable) ----
@@ -2031,14 +2038,13 @@ class FillWorker(QtCore.QThread):
                                   
         YearStart = str(int(YEAR[index_start])) 
         YearEnd = str(int(YEAR[index_end]))
-        
+
         # Check if the characters "/" or "\" are present in the station 
         # name and replace these characters by "-" if applicable.
-        intab = "/\\"
-        outtab = "--"
-        trantab = maketrans(intab, outtab)
-        target_station_name = target_station_name.translate(trantab)
         
+        target_station_name = target_station_name.replace('\\', '_')
+        target_station_name = target_station_name.replace('/', '_')
+
         output_path = (self.project_dir + '/Meteo/Output/' + 
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.log')

@@ -30,14 +30,12 @@ last_modification = '02/07/2015'
 
 #---- STANDARD LIBRARY IMPORTS ----
 
+import platform
 import csv
-from copy import copy
 #from urllib import urlretrieve
 import sys
-from time import ctime, strftime, sleep
-from os import getcwd, listdir, makedirs, path
-from string import maketrans
-import platform
+from time import ctime
+from os import listdir, makedirs, path
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -45,7 +43,6 @@ from PySide import QtGui, QtCore
 from PySide.QtCore import QDate
 
 import numpy as np
-from numpy.linalg import lstsq as linalg_lstsq
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 import xlwt
@@ -168,6 +165,19 @@ class MainWindow(QtGui.QMainWindow):
         self.projectfile = self.whatPref.projectfile
         self.projectdir = path.dirname(self.projectfile)
         
+        style = 'Regular'
+        size = self.whatPref.fontsize_general
+        if platform.system() == 'Windows':
+            family = 'Segoe UI' # Calibri, Cambria
+        elif platform.system() == 'Linux':
+            family = 'Ubuntu'
+        
+        fontSS = ( "font-style: %s;" % style +
+                    "font-size: %s;"  % size  +
+                    "font-family: %s;" % family)
+                    
+        self.setStyleSheet("QWidget{%s}" % fontSS)
+                                    
         #-------------------------------------------------------- DATABASES ----
         
         # http://stackoverflow.com/questions/423379/
@@ -190,14 +200,20 @@ class MainWindow(QtGui.QMainWindow):
 #        self.setMinimumWidth(1250)
         self.setWindowTitle(software_version)
         self.setWindowIcon(iconDB.WHAT)
-        self.setFont(styleDB.font1)                
+#        self.setFont(styleDB.font1)                
                         
         #----------------------------------------------------- MAIN CONSOLE ----
         
         self.main_console = QtGui.QTextEdit()        
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
-        self.main_console.setFont(styleDB.font_console)
+#        self.main_console.setFont(styleDB.font_console)
+        
+        size = self.whatPref.fontsize_console
+        fontSS = ( "font-style: %s;" % style +
+                    "font-size: %s;"  % size  +
+                    "font-family: %s;" % family)
+        self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
         
         self.write2console('''<font color=black>Thanks for using %s.
         </font>''' % software_version)
@@ -240,6 +256,12 @@ class MainWindow(QtGui.QMainWindow):
         subgrid_menubar.setRowMinimumHeight(0, 28)
         
         self.menubar_widget.setLayout(subgrid_menubar)
+        
+        size = self.whatPref.fontsize_menubar
+        fontSS = ( "font-style: %s;" % style +
+                    "font-size: %s;"  % size  +
+                    "font-family: %s;" % family)
+        self.menubar_widget.setStyleSheet("QWidget{%s}" % fontSS)
         
         #------------------------------------------------------- TAB WIDGET ----
            
@@ -1820,8 +1842,9 @@ class WHATPref():
         self.language = 'English'
         
         self.full_error_analysis = 0
-        self.fontsize = '14px'
-    
+        self.fontsize_general = '14px'
+        self.fontsize_console = '10px'
+        self.fontsize_menubar = '12px'
     
     def save_pref_file(self): #=================================================
             
@@ -1830,7 +1853,9 @@ class WHATPref():
         fcontent = [['Project File:', projectfile],
                     ['Language:', self.language],
                     ['Full Error Analysis:', self.full_error_analysis],
-                    ['Font-Size:', self.fontsize]]
+                    ['Font-Size-General:', self.fontsize_general],
+                    ['Font-Size-Console:', self.fontsize_console],
+                    ['Font-Size-Menubar:', self.fontsize_menubar]]
        
         with open('WHAT.pref', 'wb') as f:
             writer = csv.writer(f, delimiter='\t')
@@ -1854,6 +1879,9 @@ class WHATPref():
                 reader = list(csv.reader(f, delimiter='\t'))
             
             self.projectfile = reader[0][1].decode('utf-8')
+            if platform.system() == 'Linux':
+                self.projectfile = self.projectfile.replace('\\', '/')
+                        
             self.language = reader[1][1]
             
             try:
@@ -1861,12 +1889,21 @@ class WHATPref():
             except:
                 self.full_error_analysis = 0
             try:
-                self.fontsize = reader[3][1]
+                self.fontsize_general = reader[3][1]
+            except:
+                pass # keep default value
+            try:
+                self.fontsize_console = reader[4][1]
+            except:
+                pass # keep default value
+            try:
+                self.fontsize_menubar = reader[5][1]
             except:
                 pass # keep default value
                         
             print('self.full_error_analysis = %d' % self.full_error_analysis)
             print
+        
 
 #===============================================================================                
 class MyProject():

@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #---- STANDARD LIBRARY IMPORTS ----
 
 import sys
+import platform
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -59,7 +60,7 @@ class AboutWhat(QtGui.QWidget):
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(iconDB.WHAT)
 #        self.setMinimumHeight(700)
-        self.setFont(styleDB.font1)
+#        self.setFont(styleDB.font1)
         
         #----------------------------------------------------- AboutTextBox ----
         
@@ -109,64 +110,78 @@ class AboutWhat(QtGui.QWidget):
         
         filename = 'Icons/WHAT_banner_750px.png'
         
-        about_text =  '''                      
+        # http://doc.qt.io/qt-4.8/richtext-html-subset.html
+        
+        about_text = '''
+                     <style>
+                     p{font-size: 14px;
+                       font-family: Ubuntu, "Segoe UI";
+                       margin-right:50px;
+                       margin-left:50px}
+                     p1{font-size: 16px;
+                        font-family: Ubuntu, "Segoe UI";
+                        }
+                     p2{font-size: 16px;
+                        font-family: Ubuntu, "Segoe UI";}
+                     </style>
+                     '''
+        
+        about_text += '''                      
                       <p align="center"> <br>
-                      <img src="%s" align="middle" width="%d">
+                        <img src="%s" width="%d">
                       </p>
                       ''' % (filename, width)
         
-        #---- Header ----
-        
-        about_text += '''  
-                      <p align="center">                      
-                      <font size=5>
-                        <b>Version %s</b> 
-                      </font>
-                      <font size="3">
+#        #---- Header ----
+#        
+        about_text += '''                        
+                      <p1 align=center>
+                        <br><br>
+                        Version %s<br>                        
+                      </p1>
+                      <p2 align=center> 
+                        Copyright 2014-2015 Jean-S&eacute;bastien Gosselin<br>
+                        jnsebgosselin@gmail.com                      
                       <br>
-                      <b>Copyright 2014-2015 Jean-S&eacute;bastien Gosselin</b>
-                      <br>
-                      jnsebgosselin@gmail.com
-                      <br><br>                         
-                      Institut National de la Recherche Scientifique<br>
-                      Research Center Eau Terre Environnement, Quebec City,
-                      QC, Canada<br>
-                      <a href="http://www.ete.inrs.ca/">
-                        (http://www.ete.inrs.ca)
-                      </a><br>                      
-                      </p>
+                      <br>                                             
+                        Institut National de la Recherche Scientifique<br>
+                        Research Center Eau Terre Environnement, Quebec City,
+                        QC, Canada<br>
+                        <a href="http://www.ete.inrs.ca/">
+                          (http://www.ete.inrs.ca)
+                        </a>
+                        <br>
+                      </p2>
                       ''' % (version[5:])
                         
         #---- License ----                
                         
         about_text += '''
-                      <p align="justify" style="margin-right:50px; 
-                      margin-left:50px">
+                      <p align = "justify">
                         %s is free software: you can redistribute it and/or 
                         modify it under the terms
                         of the GNU General Public License as published by the 
                         Free Software Foundation, either version 3 of the 
                         License, or (at your option) any later version. 
                       </p>
-                      <p align="justify" style="margin-right:50px; 
-                      margin-left:50px">
+                      <p align="justify">
                         This program is distributed in the hope that it will be
                         useful, but WITHOUT ANY WARRANTY; without even the
                         implied warranty of MERCHANTABILITY or FITNESS FOR A
                         PARTICULAR PURPOSE. See the GNU General Public 
                         License for more details.
                       </p>
-                      <p align="justify" style="margin-right:50px; 
-                      margin-left:50px">
+                      <p align="justify">
                         You should have received a copy of the GNU General  
                         Public License along with this program.  If not, see  
                         <a href="http://www.gnu.org/licenses">
                           http://www.gnu.org/licenses
                         </a>.                                           
                       </p>
-                      <p align="right" style="margin-right:50px">%s</p>
+                      <p align="right">%s</p>
                       ''' % (version, date)
-        
+                      
+         
         self.AboutTextBox.setHtml(about_text)
         
     def eventFilter(self, obj, event): #========================================

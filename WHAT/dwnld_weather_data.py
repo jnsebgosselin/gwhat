@@ -28,7 +28,6 @@ import sys
 from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
-from string import maketrans
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -196,28 +195,28 @@ class dwnldWeather(QtGui.QWidget):
         self.btn_goNext.setIcon(iconDB.go_next)
         self.btn_goNext.setAutoRaise(True)
 #        btn_goNext.setToolTip(ttipDB.btn_delSta)
-        self.btn_goNext.setIconSize(styleDB.iconSize)
+        self.btn_goNext.setIconSize(styleDB.iconSize2)
         self.btn_goNext.setEnabled(False)
         
         self.btn_goPrevious = QtGui.QToolButton()
         self.btn_goPrevious.setIcon(iconDB.go_previous)
         self.btn_goPrevious.setAutoRaise(True)
 #        btn_goNext.setToolTip(ttipDB.btn_delSta)
-        self.btn_goPrevious.setIconSize(styleDB.iconSize)
+        self.btn_goPrevious.setIconSize(styleDB.iconSize2)
         self.btn_goPrevious.setEnabled(False)
         
         self.btn_goLast = QtGui.QToolButton()
         self.btn_goLast.setIcon(iconDB.go_last)
         self.btn_goLast.setAutoRaise(True)
 #        btn_goLast.setToolTip(ttipDB.btn_delSta)
-        self.btn_goLast.setIconSize(styleDB.iconSize)
+        self.btn_goLast.setIconSize(styleDB.iconSize2)
         self.btn_goLast.setEnabled(False)
         
         self.btn_goFirst = QtGui.QToolButton()
         self.btn_goFirst.setIcon(iconDB.go_first)
         self.btn_goFirst.setAutoRaise(True)
 #        btn_goNext.setToolTip(ttipDB.btn_delSta)
-        self.btn_goFirst.setIconSize(styleDB.iconSize)
+        self.btn_goFirst.setIconSize(styleDB.iconSize2)
         self.btn_goFirst.setEnabled(False)
         
         goToolbar_grid = QtGui.QGridLayout()
@@ -775,12 +774,10 @@ class dwnldWeather(QtGui.QWidget):
         if self.saveAuto_checkbox.isChecked():
             
             # Check if the characters "/" or "\" are present in the station 
-            # name and replace these characters by "-" if applicable.
+            # name and replace these characters by "_" if applicable.
             
-            intab = "/\\"
-            outtab = "--"
-            trantab = maketrans(intab, outtab)
-            StaName = StaName.translate(trantab)
+            StaName = StaName.replace('\\', '_')
+            StaName = StaName.replace('/', '_')
             
             save_dir = self.workdir + '/Meteo/Input/'
             if not path.exists(save_dir):
@@ -819,11 +816,10 @@ class dwnldWeather(QtGui.QWidget):
             climateID = mergeOutput[5, 1]
             
             # Check if the characters "/" or "\" are present in the station 
-            # name and replace these characters by "-" if applicable.            
-            intab = "/\\"
-            outtab = "--"
-            trantab = maketrans(intab, outtab)
-            StaName = StaName.translate(trantab)
+            # name and replace these characters by "_" if applicable.            
+            
+            StaName = StaName.replace('\\', '_')
+            StaName = StaName.replace('/', '_')
             
             filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
                                               YearStart, YearEnd)
@@ -1141,7 +1137,6 @@ class DownloadRawDataFiles(QtCore.QThread):
                 print('Error code: ', e.code)
                 
         return ERRFLAG
-
     
         
 if __name__ == '__main__':

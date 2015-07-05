@@ -100,6 +100,7 @@ class icons():
         self.stratigraphy = QIcon('Icons/stratigraphy.png')
         self.mrc2rechg = QIcon('Icons/recharge.png')
         
+        
 class tooltips():
     
     def __init__(self, language): #================================ ENGLISH ====
@@ -209,9 +210,9 @@ class labels():
         self.fill_station = 'Fill Data for Weather Station :'
         self.btn_fill_weather = 'Fill'
         self.btn_fill_all_weather = 'Fill All'
-        self.altlimit = 'Elevation'
-        self.distlimit = 'Distance'
-        self.NbrSta = 'Nbr. of stations'
+        self.altlimit = 'Max. Elevation Diff. :'
+        self.distlimit = 'Max. Distance :'
+        self.NbrSta = 'Nbr. of stations :'
         
         if language == 'French': #================================== FRENCH ====
             
@@ -234,19 +235,19 @@ class styleUI():
         self.size1 = 32
         
         self.iconSize = QSize(32, 32)
-        self.iconSize2 = QSize(22, 22)
+        self.iconSize2 = QSize(20, 20)
         
         self.sideBarWidth = 250
         
         if platform.system() == 'Windows':
-            # Calibri, Cambria, Segoe UI
-            self.font1 = QFont('Segoe UI', 11) 
+            self.font1 = QFont('Segoe UI', 11) # Calibri, Cambria
             self.font_console = QFont('Segoe UI', 9)
             self.font_menubar = QFont('Segoe UI', 10) 
         elif platform.system() == 'Linux':
             self.font1 = QFont('Ubuntu', 11)
             self.font_console = QFont('Ubuntu', 9) 
             self.font_menubar = QFont('Ubuntu', 10)
+    
         
 #        self.fontSize1.setPointSize(11)
         
