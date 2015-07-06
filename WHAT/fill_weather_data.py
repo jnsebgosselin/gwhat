@@ -36,6 +36,7 @@ from numpy.linalg import lstsq as linalg_lstsq
 
 #---- PERSONAL IMPORTS ----
 
+from MyQWidget import MyQToolBox
 import database as db
 from meteo import make_timeserie_continuous
 from hydroprint import LatLong2Dist
@@ -97,13 +98,13 @@ class GapFillWeather(QtGui.QWidget):
         #---------------------------------------------------------- TOOLBAR ----
         
         self.btn_fill = QtGui.QPushButton(labelDB.btn_fill_weather)
-        self.btn_fill.setIcon(iconDB.play)
+        self.btn_fill.setIcon(iconDB.fill_data)
         self.btn_fill.setToolTip(ttipDB.btn_fill)
         self.btn_fill.setIconSize(styleDB.iconSize2)
         
         self.btn_fill_all = QtGui.QPushButton(labelDB.btn_fill_all_weather)
         self.btn_fill_all.setToolTip(ttipDB.btn_fill_all)
-        self.btn_fill_all.setIcon(iconDB.forward)
+        self.btn_fill_all.setIcon(iconDB.fill_all_data)
         self.btn_fill_all.setIconSize(styleDB.iconSize2)
         
         grid_toolbar = QtGui.QGridLayout()
@@ -123,7 +124,25 @@ class GapFillWeather(QtGui.QWidget):
         widget_toolbar.setLayout(grid_toolbar)
         
         #------------------------------------------------------- LEFT PANEL ----
-
+       
+        #---- Regression Model ----
+        
+        self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
+        self.RMSE_regression.setChecked(True)
+        self.ABS_regression = QtGui.QRadioButton('Least Absolute Deviations')
+        
+        MLRM_widg= QtGui.QFrame()
+        MLRM_grid = QtGui.QGridLayout()
+        
+        row = 0
+        MLRM_grid.addWidget(self.RMSE_regression, row, 0)
+        row += 1
+        MLRM_grid.addWidget(self.ABS_regression, row, 0)
+        
+        MLRM_grid.setSpacing(5)
+        MLRM_grid.setContentsMargins(10, 10, 10, 10) #Left, Top, Right, Bottom
+        MLRM_widg.setLayout(MLRM_grid)
+        
         #---- Target Station ----
         
         target_station_label = QtGui.QLabel('<b>%s</b>' % labelDB.fill_station)
@@ -133,11 +152,11 @@ class GapFillWeather(QtGui.QWidget):
         self.target_station_info.setMaximumHeight(110)
         
         self.btn_refresh_staList = QtGui.QToolButton()
-        self.btn_refresh_staList.setIcon(iconDB.refresh2)
+        self.btn_refresh_staList.setIcon(iconDB.refresh)
         self.btn_refresh_staList.setAutoRaise(True)
         self.btn_refresh_staList.setIconSize(styleDB.iconSize2)
         
-        tarSta_widg = QtGui.QWidget()                     
+        self.tarSta_widg = QtGui.QWidget()                     
         tarSta_grid = QtGui.QGridLayout()
                 
         row = 0
@@ -151,11 +170,9 @@ class GapFillWeather(QtGui.QWidget):
         tarSta_grid.setSpacing(5)
         tarSta_grid.setColumnStretch(0, 500)
         tarSta_grid.setContentsMargins(0, 0, 0, 10) #Left, Top, Right, Bottom
-        tarSta_widg.setLayout(tarSta_grid)
+        self.tarSta_widg.setLayout(tarSta_grid)
         
         #---- Cutoff Values ----
-        
-        Cutoff_title = QtGui.QLabel('<b>Stations Selection Criteria :</b>')
         
         Nmax_label = QtGui.QLabel(labelDB.NbrSta)
         self.Nmax = QtGui.QSpinBox ()
@@ -184,14 +201,10 @@ class GapFillWeather(QtGui.QWidget):
         self.altlimit.setSuffix(' m')
         self.altlimit.setAlignment(QtCore.Qt.AlignCenter)
         
-        cutoff_widg = QtGui.QFrame()
-                     
-        cutoff_grid = QtGui.QGridLayout()
-        cutoff_grid.setSpacing(10)
+        cutoff_widg = QtGui.QFrame()                     
+        cutoff_grid = QtGui.QGridLayout()        
         
         row = 0
-#        cutoff_grid.addWidget(Cutoff_title, row, 0, 1, 2)
-#        row += 1
         cutoff_grid.addWidget(self.Nmax, row, 1)
         cutoff_grid.addWidget(Nmax_label, row, 0)        
         row += 1
@@ -201,41 +214,13 @@ class GapFillWeather(QtGui.QWidget):
         cutoff_grid.addWidget(altlimit_label, row, 0)
         cutoff_grid.addWidget(self.altlimit, row, 1)
                 
-        cutoff_grid.setContentsMargins(10, 10, 10, 10) #Left, Top, Right, Bottom
+        cutoff_grid.setContentsMargins(10, 10, 10, 10) # [L, T, R, B]
         cutoff_grid.setColumnStretch(2, 500)
+        cutoff_grid.setSpacing(10)
         cutoff_widg.setLayout(cutoff_grid)
-        
-        #---- Regression Model ----
-        
-        regression_model = QtGui.QFrame()
-        
-        regression_model_label = QtGui.QLabel(
-                                    '<b>Multiple Linear Regression Model :</b>')
-        regression_model_label.setAlignment(QtCore.Qt.AlignBottom)
-        self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
-        self.RMSE_regression.setChecked(True)
-        self.ABS_regression = QtGui.QRadioButton('Least Absolute Deviations')
-        
-        model_box =  QtGui.QVBoxLayout()
-        model_box.addWidget(self.RMSE_regression)
-        model_box.addWidget(self.ABS_regression)
-        regression_model.setLayout(model_box)
-        
-        MLRM_widg= QtGui.QFrame()
-        MLRM_grid = QtGui.QGridLayout()
-        
-        row = 0
-#        MLRM_grid.addWidget(regression_model_label, row, 0)
-#        row = 1
-        MLRM_grid.addWidget(regression_model, row, 0)
-        
-        MLRM_grid.setSpacing(5)
-        MLRM_grid.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
-        MLRM_widg.setLayout(MLRM_grid)
-        
+                
         #---- Gapfill Dates ----
         
-#        label_Dates_Title = QtGui.QLabel('<b>Gap Fill Data Record :</b>')
         label_From = QtGui.QLabel('From :  ')
         self.date_start_widget = QtGui.QDateEdit()
         self.date_start_widget.setDisplayFormat('dd / MM / yyyy')
@@ -245,99 +230,31 @@ class GapFillWeather(QtGui.QWidget):
         self.date_end_widget.setEnabled(False)
         self.date_end_widget.setDisplayFormat('dd / MM / yyyy')
         
-        fillDates_widg = QtGui.QWidget()                     
+        self.fillDates_widg = QtGui.QWidget()                     
         fillDates_grid = QtGui.QGridLayout()
                 
         row = 0
         col = 0
-#        fillDates_grid.addWidget(label_Dates_Title, row, 0, 1, 3)
-        
         fillDates_grid.addWidget(label_From, row, col)
         col += 1
         fillDates_grid.addWidget(self.date_start_widget, row, col)
-#        row += 1
         row += 1
         col = 0
         fillDates_grid.addWidget(label_To, row, col)
         col += 1
         fillDates_grid.addWidget(self.date_end_widget, row, col)        
-#                
+                
         fillDates_grid.setColumnStretch(row+1, 500)
-#        fillDates_grid.setColumnStretch(0, 500)
-        fillDates_grid.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
+        fillDates_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
         fillDates_grid.setSpacing(10)
         
-        fillDates_widg.setLayout(fillDates_grid)
+        self.fillDates_widg.setLayout(fillDates_grid)
         
         #---- Stacked Widget ----
-        
-        stack_widget = QtGui.QToolBox()
-        stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
-        stack_widget.addItem(MLRM_widg, 'Regression Model :')
-#        stack_widget.addItem(fillDates_widg, 'Gap Fill Data Record')
-#        stack_widget.setAttribute(QtCore.Qt.WA_TranslucentBackground);
-        
-        cutoff_widg.setObjectName("obj1")
-        MLRM_widg.setObjectName("obj2")
-        fillDates_widg.setObjectName("obj3")
-#        self.LEFT_widget.setObjectName("myViewport")
-#        self.LEFT_widget.setStyleSheet("#myViewport {background-color:transparent;}") 
-#        stack_widget.setStyleSheet("#obj1,#obj2 {background-color:transparent;font-size:11;}")
-        
-#        family = 'Segoe UI'
-#        style = 'Regular'
-#        size = '14px'
-#        
-#        fontSS = ("QWidget {font-style: %s;" % style +
-#                           "font-size: %s;"  % size  +
-#                           "font-family: %s;}" % family)
-                            
-#        self.setStyleSheet(fontSS)
-        
-        stack_widget.setStyleSheet(
-                           "#obj1,#obj2 {background-color:transparent}" +
-                           "QScrollArea {background-color:transparent;}" +
-                           "::tab {font-weight: normal;}")
-                           
-        
-#        database = QtGui.QFontDatabase()
-#        families = database.families(QtGui.QFontDatabase.Latin)
-        
-#        family = familiesfamilies.index('Ubuntu')
-        
-#        family = 'Ubuntu'
-#        family = 'Segoe UI'
-#        style = 'Regular'
-#        print database.smoothSizes(family, style)
-       
-        
-        
-#        for family in families:
-#            print family
-    
-    
-#        stack_widget.setFont(styleDB.font1)
-#        label_From.setFont(styleDB.font1)
-#        self.date_start_widget.setFont(styleDB.font1)
-#        label_To.setFont(styleDB.font1)
-#        self.date_end_widget.setFont(styleDB.font1)
-#        
-#        self.RMSE_regression.setFont(styleDB.font1)
-#        self.ABS_regression.setFont(styleDB.font1)
-#        
-#        Nmax_label.setFont(styleDB.font1)
-#        self.Nmax.setFont(styleDB.font1)
-#        distlimit_label.setFont(styleDB.font1)
-#        self.distlimit.setFont(styleDB.font1)
-#        altlimit_label.setFont(styleDB.font1)
-#        self.altlimit.setFont(styleDB.font1)
-        
-#        MLRM_widg.setFont(styleDB.font1)
-#        fillDates_widg.setFont(styleDB.font1)
-        
-#        print QtGui.QToolBox().intemtab()
-        
-#        stack_widget.setToolBoxButtonColor(0, Qt::red);
+                
+        self.stack_widget = MyQToolBox()
+        self.stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
+        self.stack_widget.addItem(MLRM_widg, 'Regression Model :')
         
         #--- SUBGRIDS ASSEMBLY ----
         
@@ -353,26 +270,14 @@ class GapFillWeather(QtGui.QWidget):
         seprator3.setFrameStyle(styleDB.HLine)
         
         row = 0 
-        grid_leftPanel.addWidget(tarSta_widg, row, 0)
+        grid_leftPanel.addWidget(self.tarSta_widg, row, 0)
         row += 1
-        grid_leftPanel.addWidget(fillDates_widg, row, 0)
+        grid_leftPanel.addWidget(self.fillDates_widg, row, 0)
         row += 1
         grid_leftPanel.addWidget(seprator1, row, 0)
         row += 1
-        grid_leftPanel.addWidget(stack_widget, row, 0)
-        row += 2
-#        grid_leftPanel.addWidget(seprator1, row, 0)
-#        row += 1
-#        grid_leftPanel.addWidget(cutoff_widg, row, 0)
-#        row += 1  
-#        grid_leftPanel.addWidget(seprator2, row, 0)
-#        row += 1 
-#        grid_leftPanel.addWidget(MLRM_widg, row, 0)
-#        row += 1
-#        grid_leftPanel.addWidget(seprator3, row, 0)
-#        row += 1
-#        grid_leftPanel.addWidget(fillDates_widg, row, 0)
-         
+        grid_leftPanel.addWidget(self.stack_widget, row, 0)
+        row += 2         
         grid_leftPanel.addWidget(seprator2, row, 0)
         row += 1 
         grid_leftPanel.addWidget(widget_toolbar, row, 0)
@@ -407,21 +312,11 @@ class GapFillWeather(QtGui.QWidget):
                         
         #-------------------------------------------------------- MAIN GRID ----
         
-#        scrollArea = QtGui.QScrollArea()
-#        scrollArea.setStyleSheet("QScrollArea {background-color:transparent;}");
-#        self.LEFT_widget.setObjectName("myViewport")
-#        self.LEFT_widget.setStyleSheet("#myViewport {background-color:transparent;}")        
-#        scrollArea.setWidget(self.LEFT_widget)
-#        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        
         grid_MAIN = QtGui.QGridLayout()
         
         row = 0
-#        grid_MAIN.addWidget(scrollArea, row, 0)
         grid_MAIN.addWidget(self.LEFT_widget, row, 0)
         grid_MAIN.addWidget(RIGHT_widget, row, 1)
-#        row += 1
-#        grid_MAIN.addWidget(widget_toolbar, row, 0, 1, 2)
                 
         grid_MAIN.setColumnStretch(1, 500)
         grid_MAIN.setRowStretch(0, 500)
@@ -607,50 +502,30 @@ class GapFillWeather(QtGui.QWidget):
         elif self.CORRFLAG == 'off':
             'Do nothing'
     
-    def restoreUI(self):
+    def restoreUI(self): #======================================================
         
         iconDB = db.icons()
         
-        self.btn_fill.setIcon(iconDB.play)
+        self.btn_fill.setIcon(iconDB.fill_data)
         self.btn_fill.setEnabled(True)
         
-        self.btn_fill_all.setIcon(iconDB.forward)
+        self.btn_fill_all.setIcon(iconDB.fill_all_data)
         self.btn_fill_all.setEnabled(True)
         
-        self.LEFT_widget.setEnabled(True)            
+        self.tarSta_widg.setEnabled(True)
+        self.fillDates_widg.setEnabled(True)
+        self.stack_widget.setEnabled(True)
         
         QtGui.QApplication.processEvents()
 
         self.pbar.hide()
             
     def manage_gapfill(self): #=================================================
-          
+        
         iconDB = db.icons()
-        
-        #-------------------------------------- Stop Thread (if applicable) ----
-        
-        if self.fillworker.isRunning(): # Stop the process
-            
-            self.restoreUI()
-            
-            #---- Pass a flag to the worker to tell him to stop ----
-            
-            self.fillworker.STOP = True
-            self.isFillAll_inProgress = False
-            
-            return
-            
-        #------------------------------------------------- CHECK FOR ERRORS ----
-        
-        if self.target_station.currentIndex() == -1:
-
-            self.msgBox.setText('No <b>Target station</b> is currently ' +
-                                'selected.')
-            self.msgBox.exec_()
-            print 'No target station selected.'
-            
-            return
-            
+                    
+        #-------------------------------------------- CHECK FOR DATA ERRORS ----
+                            
         y = self.date_start_widget.date().year()
         m = self.date_start_widget.date().month()
         d = self.date_start_widget.date().month()
@@ -663,13 +538,14 @@ class GapFillWeather(QtGui.QWidget):
             
         if time_start > time_end:
             
+            print 'The time period is invalid.'
             self.msgBox.setText('<b>Gap Fill Data Record</b> start date is ' +
                                 'set to a later time than the end date.')
             self.msgBox.exec_()
-            print 'The time period is invalid.'
+            
             
             return
-        
+
         #----------------------------------------------------- Check Sender ----
         
         nSTA = len(self.WEATHER.STANAME)
@@ -677,9 +553,37 @@ class GapFillWeather(QtGui.QWidget):
         
         if button == self.btn_fill:
             
+            #--------------------------------- Check if Station is Selected ----
+
+            if self.target_station.currentIndex() == -1:
+
+                self.msgBox.setText('No <b>Target station</b> is currently ' +
+                                    'selected.')
+                self.msgBox.exec_()
+                print 'No target station selected.'
+                
+                return
+                
+            #------------------------------------- Stop Thread (if running) ----
+                
+            if self.fillworker.isRunning(): # Stop the process
+                print'Coucou fill worker is running'
+                self.restoreUI()
+                
+                #---- Pass a flag to the worker to tell him to stop ----
+                
+                self.fillworker.STOP = True
+                self.isFillAll_inProgress = False
+                
+                return
+            
             self.btn_fill.setIcon(iconDB.stop)
+                        
+            self.tarSta_widg.setEnabled(False)
+            self.fillDates_widg.setEnabled(False)
+            self.stack_widget.setEnabled(False)
             self.btn_fill_all.setEnabled(False)
-            self.LEFT_widget.setEnabled(False)
+            
             self.pbar.show()
         
             self.isFillAll_inProgress = False
@@ -687,9 +591,36 @@ class GapFillWeather(QtGui.QWidget):
 
         elif button == self.btn_fill_all:
             
+            #--------------------------- Check if Station List is not Empty ----
+
+            if nSTA == 0:
+
+                self.msgBox.setText('There is no data to fill.')
+                self.msgBox.exec_()
+                print'There is no data to fill.'
+                
+                return
+            
+            #------------------------------------- Stop Thread (if running) ----
+            
+            if self.fillworker.isRunning(): # Stop the process
+                print'Coucou fill worker is running'
+                self.restoreUI()
+                
+                #---- Pass a flag to the worker to tell him to stop ----
+                
+                self.fillworker.STOP = True
+                self.isFillAll_inProgress = False
+                
+                return
+            
+            #---- Disable UI ----
+            
             self.btn_fill_all.setIcon(iconDB.stop)
             self.btn_fill.setEnabled(False)
-            self.LEFT_widget.setEnabled(False)
+            self.tarSta_widg.setEnabled(False)
+            self.fillDates_widg.setEnabled(False)
+            self.stack_widget.setEnabled(False)
             self.pbar.show()
             
             self.isFillAll_inProgress = True
@@ -700,7 +631,7 @@ class GapFillWeather(QtGui.QWidget):
             self.correlation_UI()
         
         else: #-------------------------------- Check if process isFinished ----
-            
+
             sta_indx2fill = self.target_station.currentIndex() + 1
             
             
@@ -756,7 +687,7 @@ class GapFillWeather(QtGui.QWidget):
         self.fillworker.start()
             
         return
-
+    
 #===============================================================================
 class Target_Station_Info():
 # Class that contains all the information relative the target station, including
@@ -2084,11 +2015,6 @@ class FillWorker(QtCore.QThread):
                                 output_path + '</font>')
         self.ProgBarSignal.emit(0)
         
-        print; print '!Data completion completed successfully!'; print 
-        
-        self.EndProcess.emit(1)
-        self.STOP = False # Just in case. This is a precaution override.
-        
         #----------------------------------- SAVE ERROR ANALYSIS REPORT ----
         
         if self.full_error_analysis == True:
@@ -2140,7 +2066,12 @@ class FillWorker(QtCore.QThread):
             DIFF = np.abs(YpFULL- Y2fill)
             index = np.where(DIFF[:, -1] == ERRMAX[-1])
             print YEAR[index], MONTH[index], DAY[index]
-            
+        
+        print; print '!Data completion completed successfully!'; print                 
+        self.STOP = False # Just in case. This is a precaution override.  
+        self.EndProcess.emit(1) 
+        
+        return 
         
             # MAE = np.abs(Y - Yp)
             # MAE = MAE[MAE!=0]

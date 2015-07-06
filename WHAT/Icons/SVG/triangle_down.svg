@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   id="svg4479"
+   height="90"
+   viewBox="0 0 90 90.000001"
+   width="90"
+   version="1.1"
+   inkscape:version="0.48.4 r9939"
+   sodipodi:docname="triangle_right.svg"
+   inkscape:export-filename="/home/jsgosselin/Documents/Research/Hydrogeology/WHAT/WHAT/Icons/triangle_right.png"
+   inkscape:export-xdpi="248"
+   inkscape:export-ydpi="248">
+  <defs
+     id="defs10" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="1535"
+     inkscape:window-height="876"
+     id="namedview8"
+     showgrid="false"
+     inkscape:zoom="3.7083822"
+     inkscape:cx="81.325832"
+     inkscape:cy="36.229942"
+     inkscape:window-x="65"
+     inkscape:window-y="24"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg4479" />
+  <metadata
+     id="metadata4484">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <rect
+     x="-7.3242186e-06"
+     y="-7.3242186e-06"
+     width="90"
+     height="90"
+     style="fill:none"
+     id="rect4616" />
+  <path
+     inkscape:connector-curvature="0"
+     d="m 70.9133,26.5003 -41.68,0 c 0,0 8.5439,19.752 20.853,37.026 0.0171,0 0.0171,-0.016 0.0171,-0.016 l 0.0171,-0.018 0.0171,-0.018 c 0.0171,-0.016 0.0171,-0.016 0.0171,-0.016 12.702,-18.22 20.775,-37.001 20.775,-37.001 z"
+     style="color:#000000;fill:#4d4d4d;fill-opacity:1"
+     id="path4622" />
+</svg>

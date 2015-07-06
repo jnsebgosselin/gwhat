@@ -706,7 +706,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         btn_draw = QtGui.QToolButton()
         btn_draw.setAutoRaise(True)
-        btn_draw.setIcon(iconDB.refresh2)        
+        btn_draw.setIcon(iconDB.refresh)        
         btn_draw.setToolTip(ttipDB.draw_hydrograph)
         btn_draw.setIconSize(styleDB.iconSize)
         

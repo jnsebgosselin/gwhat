@@ -41,7 +41,6 @@ class icons():
         self.play = QIcon('Icons/start.png')
         self.forward = QIcon('Icons/start_all.png')
         self.refresh = QIcon('Icons/refresh.png')
-        self.refresh2 = QIcon('Icons/refresh2.png')
         self.openFile = QIcon('Icons/open_file.png')
         self.openFolder = QIcon('Icons/folder')
         self.download = QIcon('Icons/download.png')
@@ -59,13 +58,21 @@ class icons():
         
         #---- Menu TOOLBAR ----
         
-        self.new_project = QIcon('Icons/new_project2.png')
-        self.open_project = QIcon('Icons/open_project2.png')
+        self.new_project = QIcon('Icons/new_project.png')
+        self.open_project = QIcon('Icons/open_project.png')
         
         #----- METEO -----
         
         self.plus_sign = QIcon('Icons/plus_sign.png')
         self.add2list = QIcon('Icons/add2list.png')
+        
+        #---- Fill Data ----
+        
+        self.fill_data = QIcon('Icons/fill_data.png')
+        self.fill_all_data = QIcon('Icons/fill_all_data.png')
+        
+        self.triangle_right = QIcon('Icons/triangle_right.png')
+        self.triangle_down = QIcon('Icons/triangle_down.png')
        
         #----- HYDROGRAPH TOOLBAR -----
         
@@ -134,12 +141,12 @@ class tooltips():
                <p>This condition is ignored if set to a value of -1.</p>''')
                
         self.btn_fill_all = (
-            '''<p>Fill the gaps in all the weather data records found in the
-                 <i>Data Directory</i>.</p>''')
+        'Fill the gaps in the daily weather data for all the weather stations' +
+        ' displayed in the list.')
                  
         self.btn_fill = (        
-            '''<p>Fill the gaps in the weather data record of the selected
-                 target station.</p>''')
+        'Fill the gaps in the daily  weather data for the selected weather ' +
+        'station.')
         
         #--------------------------------------------------- HYDROGRAPH TAB ----
         
@@ -208,8 +215,8 @@ class labels():
         #--------------------------------------------------------- FILL TAB ----
         
         self.fill_station = 'Fill Data for Weather Station :'
-        self.btn_fill_weather = 'Fill'
-        self.btn_fill_all_weather = 'Fill All'
+        self.btn_fill_weather = 'Fill Station'
+        self.btn_fill_all_weather = 'Fill All Stations'
         self.altlimit = 'Max. Elevation Diff. :'
         self.distlimit = 'Max. Distance :'
         self.NbrSta = 'Nbr. of stations :'
@@ -237,7 +244,7 @@ class styleUI():
         self.iconSize = QSize(32, 32)
         self.iconSize2 = QSize(20, 20)
         
-        self.sideBarWidth = 250
+        self.sideBarWidth = 275
         
         if platform.system() == 'Windows':
             self.font1 = QFont('Segoe UI', 11) # Calibri, Cambria
