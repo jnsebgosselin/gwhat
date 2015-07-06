@@ -39,13 +39,10 @@ class AboutWhat(QtGui.QWidget):
     
 #===============================================================================
     
-    def __init__(self, software_version, last_modification, parent=None): #=====
+    def __init__(self, parent=None): #=====
         super(AboutWhat, self).__init__(parent)
         
-        self.parent = parent
-        self.software_version = software_version
-        self.last_modification = last_modification
-        
+        self.parent = parent        
         self.initUI_About()   
         
     def initUI_About(self): #===================================================
@@ -105,8 +102,8 @@ class AboutWhat(QtGui.QWidget):
         #---- Image Logo ----
         
         width = 750 #self.AboutTextBox.size().width()
-        version = self.software_version
-        date = self.last_modification
+        version = db.software_version
+        date = db.last_modification
         
         filename = 'Icons/WHAT_banner_750px.png'
         
@@ -205,11 +202,8 @@ class AboutWhat(QtGui.QWidget):
 if __name__ == '__main__':
     
     app = QtGui.QApplication(sys.argv)
-
-    software_version = 'WHAT Beta 4.1.6'
-    last_modification = '24/06/2015' 
     
-    instance1 = AboutWhat(software_version, last_modification)
+    instance1 = AboutWhat()
     
     #---- SHOW ----
               

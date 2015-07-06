@@ -893,20 +893,12 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         
         h = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorHeight)
         w = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorWidth)
-        
-        print h, w            
-        
-#        size = self.horizontalHeader().sectionSizeFromContents(3)
-#            H = size.height()
+
         W = self.horizontalHeader().sectionSize(0)
         H = self.horizontalHeader().height()
         
-        print H, W
-        
         y0 = int((H - h) / 2)
         x0 = int((W - w) / 2)
-        
-        print y0, x0
         
         self.chkbox_header.setGeometry(x0, y0, w, h)
     

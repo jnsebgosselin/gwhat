@@ -19,9 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
-software_version = 'WHAT Beta 4.1.6'
-last_modification = '02/07/2015'
-
 # It is often said when developing interfaces that you need to fail fast,
 # and iterate often. When creating a UI, you will make mistakes. Just keep
 # moving forward, and remember to keep your UI out of the way.
@@ -58,6 +55,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 #---- PERSONAL IMPORTS ----
 
 import database as db
+import MyQWidget
 import what_project
 
 import hydroprint
@@ -153,7 +151,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.projectInfo = MyProject(self)
         self.whatPref = WHATPref(self)
-        self.new_project_window = what_project.NewProject(software_version)
+        self.new_project_window = what_project.NewProject(db.software_version)
 #        self.open_project_window = what_project.OpenProject()
         
         #------------------------------------------------------ PREFERENCES ----
@@ -198,7 +196,7 @@ class MainWindow(QtGui.QMainWindow):
         #------------------------------------------------ MAIN WINDOW SETUP ----
 
 #        self.setMinimumWidth(1250)
-        self.setWindowTitle(software_version)
+        self.setWindowTitle(db.software_version)
         self.setWindowIcon(iconDB.WHAT)
 #        self.setFont(styleDB.font1)                
                         
@@ -216,7 +214,7 @@ class MainWindow(QtGui.QMainWindow):
         self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
         
         self.write2console('''<font color=black>Thanks for using %s.
-        </font>''' % software_version)
+        </font>''' % db.software_version)
         self.write2console(
         '''<font color=black>Please report any bug or wishful feature to 
              Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
@@ -285,7 +283,7 @@ class MainWindow(QtGui.QMainWindow):
         self.tab_dwnld_data = TabDwnldData(self)
         self.tab_fill = TabFill(self)        
         self.tab_hydrograph = TabHydrograph(self)
-        tab_about = AboutWhat(software_version, last_modification, self)
+        tab_about = AboutWhat(self)
         
         #---- LAYOUT ----
         
@@ -356,10 +354,8 @@ class MainWindow(QtGui.QMainWindow):
         issuer.ConsoleSignal.connect(self.write2console)                                                
         
         #---------------------------------------------------- MESSAGE BOXES ----
-        
-        self.msgError = QtGui.QMessageBox()
-        self.msgError.setIcon(QtGui.QMessageBox.Warning)
-        self.msgError.setWindowTitle('Error Message')
+       
+        self.msgError = MyQWidget.MyQErrorMessageBox()
                    
         #------------------------------------------------------------- SHOW ----
             
@@ -802,7 +798,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         subgrid.addWidget(self.meteo_info_widget, 3, 0)
         
         subgrid.setSpacing(5)
-        subgrid.setColumnMinimumWidth(0, styleDB.sideBarWidth)
+#        subgrid.setColumnMinimumWidth(0, 200)
         subgrid.setContentsMargins(0, 0, 0, 0)
         
         subgrid_widget.setLayout(subgrid)
@@ -1029,10 +1025,10 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                                        QtGui.QMessageBox.No)
         self.msgBox.setDefaultButton(QtGui.QMessageBox.Cancel)
         self.msgBox.setWindowTitle('Save Graph Layout')
+        self.msgBox.setWindowIcon(iconDB.WHAT)
         
-        self.msgError = QtGui.QMessageBox()
-        self.msgError.setIcon(QtGui.QMessageBox.Warning)
-        self.msgError.setWindowTitle('Error Message')
+                
+        self.msgError = MyQWidget.MyQErrorMessageBox()
         
         #----------------------------------------------------------- EVENTS ----
         

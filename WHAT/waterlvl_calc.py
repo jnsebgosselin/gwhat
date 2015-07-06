@@ -331,6 +331,7 @@ class WLCalc(QtGui.QWidget):
         self.msgError = QtGui.QMessageBox()
         self.msgError.setIcon(QtGui.QMessageBox.Warning)
         self.msgError.setWindowTitle('Error Message')
+        self.msgError.setWindowIcon(iconDB.WHAT)
                 
         #----------------------------------------------------------- EVENTS ----
         

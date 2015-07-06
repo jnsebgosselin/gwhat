@@ -38,6 +38,7 @@ from PySide import QtGui, QtCore
 
 import database as db
 from search_weather_data import WeatherStationDisplayTable, Search4Stations
+import MyQWidget
 
 class Tooltips():
     
@@ -294,11 +295,9 @@ class dwnldWeather(QtGui.QWidget):
         self.setLayout(main_grid)
         
         #------------------------------------------------------ MESSAGE BOX ----
-                                          
-        self.msgBox = QtGui.QMessageBox()
-        self.msgBox.setIcon(QtGui.QMessageBox.Warning)
-        self.msgBox.setWindowTitle('Error Message')
         
+        self.msgBox = MyQWidget.MyQErrorMessageBox()
+                
         #----------------------------------------------------------- EVENTS ----
         
         #---- download raw data ----
@@ -581,21 +580,23 @@ class dwnldWeather(QtGui.QWidget):
         """
         
         iconDB = db.icons()
+        sender = self.sender()
         
-        if self.dwnl_raw_datafiles.isRunning():
-            
-            # Stop the Download process and reset UI
-            
-            self.dwnl_raw_datafiles.STOP = True
-            self.btn_get.setIcon(iconDB.download)
-            self.dwnld_indx = 0
-            
-            self.station_table.setEnabled(True)
-            self.pbar.hide()
-            
-            return
+        if sender == self.btn_get:
+            if self.dwnl_raw_datafiles.isRunning():
+                
+                # Stop the Download process and reset UI
+                print 'coucou'
+                self.dwnl_raw_datafiles.STOP = True
+                self.btn_get.setIcon(iconDB.download)
+                self.dwnld_indx = 0
+                
+                self.station_table.setEnabled(True)
+                self.pbar.hide()
+                
+                return
       
-        if self.dwnld_indx == 0: #--------- Grab stations that are selected ----
+            #------------------------------ Grab stations that are selected ----
             
             # Grabbing weather stations that are selected and saving them 
             # in a list. The structure of "weather_stations.lst" is preserved
@@ -669,11 +670,30 @@ class dwnldWeather(QtGui.QWidget):
         self.btn_get.setIcon(iconDB.stop)
         self.station_table.selectRow(sta2dwnl[0])
              
+        #----- Wait for the QThread to finish -----
+        
+        # Protection in case the QTread did not had time to close completely
+        # before starting the downloading process for the next station.
+        
+        waittime = 0
+        while self.dwnl_raw_datafiles.isRunning():
+            print('Waiting for the downloading thread to close')
+            sleep(1)
+            waittime += 1
+            if waittime > 15:
+                msg = ('This function is not working as intended.' +
+                       ' Please report a bug.')
+                print(msg)
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                return
+        
         #----- Start Download -----
         
         self.dwnld_indx += 1
-             
+        
         self.dwnl_raw_datafiles.start()
+        
+        return
            
     
     def display_mergeHistory(self): #===========================================
@@ -1103,10 +1123,10 @@ class DownloadRawDataFiles(QtCore.QThread):
             cmt += "station %s." % StaName
             print(cmt)
             self.ConsoleSignal.emit('<font color=black>%s</font>' % cmt)
-
-            self.EndSignal.emit(True)
+            
             self.MergeSignal.emit(fname4merge)
             self.ProgBarSignal.emit(0)
+            self.EndSignal.emit(True)           
                 
     def dwnldfile(self, url, fname):
         

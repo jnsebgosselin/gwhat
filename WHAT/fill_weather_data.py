@@ -40,6 +40,7 @@ from MyQWidget import MyQToolBox
 import database as db
 from meteo import make_timeserie_continuous
 from hydroprint import LatLong2Dist
+import MyQWidget
 
 
 #===============================================================================
@@ -57,7 +58,6 @@ class GapFillWeather(QtGui.QWidget):
         
         self.fillworker = FillWorker(self)        
         self.FILLPARAM = GapFill_Parameters()
-        self.full_error_analysis = False
         
         self.CORRFLAG = 'on'  # Correlation calculation won't be triggered by
                               # events when this is 'off'
@@ -124,24 +124,6 @@ class GapFillWeather(QtGui.QWidget):
         widget_toolbar.setLayout(grid_toolbar)
         
         #------------------------------------------------------- LEFT PANEL ----
-       
-        #---- Regression Model ----
-        
-        self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
-        self.RMSE_regression.setChecked(True)
-        self.ABS_regression = QtGui.QRadioButton('Least Absolute Deviations')
-        
-        MLRM_widg= QtGui.QFrame()
-        MLRM_grid = QtGui.QGridLayout()
-        
-        row = 0
-        MLRM_grid.addWidget(self.RMSE_regression, row, 0)
-        row += 1
-        MLRM_grid.addWidget(self.ABS_regression, row, 0)
-        
-        MLRM_grid.setSpacing(5)
-        MLRM_grid.setContentsMargins(10, 10, 10, 10) #Left, Top, Right, Bottom
-        MLRM_widg.setLayout(MLRM_grid)
         
         #---- Target Station ----
         
@@ -171,6 +153,37 @@ class GapFillWeather(QtGui.QWidget):
         tarSta_grid.setColumnStretch(0, 500)
         tarSta_grid.setContentsMargins(0, 0, 0, 10) #Left, Top, Right, Bottom
         self.tarSta_widg.setLayout(tarSta_grid)
+        
+        #---- Gapfill Dates ----
+        
+        label_From = QtGui.QLabel('From :  ')
+        self.date_start_widget = QtGui.QDateEdit()
+        self.date_start_widget.setDisplayFormat('dd / MM / yyyy')
+        self.date_start_widget.setEnabled(False)
+        label_To = QtGui.QLabel('To :  ')
+        self.date_end_widget = QtGui.QDateEdit()
+        self.date_end_widget.setEnabled(False)
+        self.date_end_widget.setDisplayFormat('dd / MM / yyyy')
+        
+        self.fillDates_widg = QtGui.QWidget()                     
+        fillDates_grid = QtGui.QGridLayout()
+                
+        row = 0
+        col = 0
+        fillDates_grid.addWidget(label_From, row, col)
+        col += 1
+        fillDates_grid.addWidget(self.date_start_widget, row, col)
+        row += 1
+        col = 0
+        fillDates_grid.addWidget(label_To, row, col)
+        col += 1
+        fillDates_grid.addWidget(self.date_end_widget, row, col)        
+                
+        fillDates_grid.setColumnStretch(row+1, 500)
+        fillDates_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
+        fillDates_grid.setSpacing(10)
+        
+        self.fillDates_widg.setLayout(fillDates_grid)
         
         #---- Cutoff Values ----
         
@@ -214,47 +227,50 @@ class GapFillWeather(QtGui.QWidget):
         cutoff_grid.addWidget(altlimit_label, row, 0)
         cutoff_grid.addWidget(self.altlimit, row, 1)
                 
-        cutoff_grid.setContentsMargins(10, 10, 10, 10) # [L, T, R, B]
+        cutoff_grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
         cutoff_grid.setColumnStretch(2, 500)
         cutoff_grid.setSpacing(10)
         cutoff_widg.setLayout(cutoff_grid)
                 
-        #---- Gapfill Dates ----
+        #---- Regression Model ----
         
-        label_From = QtGui.QLabel('From :  ')
-        self.date_start_widget = QtGui.QDateEdit()
-        self.date_start_widget.setDisplayFormat('dd / MM / yyyy')
-        self.date_start_widget.setEnabled(False)
-        label_To = QtGui.QLabel('To :  ')
-        self.date_end_widget = QtGui.QDateEdit()
-        self.date_end_widget.setEnabled(False)
-        self.date_end_widget.setDisplayFormat('dd / MM / yyyy')
+        self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
+        self.RMSE_regression.setChecked(True)
+        self.ABS_regression = QtGui.QRadioButton('Least Absolute Deviations')
         
-        self.fillDates_widg = QtGui.QWidget()                     
-        fillDates_grid = QtGui.QGridLayout()
-                
+        MLRM_widg= QtGui.QFrame()
+        MLRM_grid = QtGui.QGridLayout()
+        
         row = 0
-        col = 0
-        fillDates_grid.addWidget(label_From, row, col)
-        col += 1
-        fillDates_grid.addWidget(self.date_start_widget, row, col)
+        MLRM_grid.addWidget(self.RMSE_regression, row, 0)
         row += 1
-        col = 0
-        fillDates_grid.addWidget(label_To, row, col)
-        col += 1
-        fillDates_grid.addWidget(self.date_end_widget, row, col)        
-                
-        fillDates_grid.setColumnStretch(row+1, 500)
-        fillDates_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
-        fillDates_grid.setSpacing(10)
+        MLRM_grid.addWidget(self.ABS_regression, row, 0)
         
-        self.fillDates_widg.setLayout(fillDates_grid)
+        MLRM_grid.setSpacing(5)
+        MLRM_grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
+        MLRM_widg.setLayout(MLRM_grid)
+        
+        #---- Advanced Settings ----
+
+        self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis')
+        self.full_error_analysis.setCheckState(QtCore.Qt.CheckState.Unchecked)
+        
+        advanced_widg = QtGui.QFrame()
+        advanced_grid = QtGui.QGridLayout()
+        
+        advanced_grid.addWidget(self.full_error_analysis, 0, 0)
+        
+        advanced_grid.setSpacing(5)
+        advanced_grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
+        advanced_grid.setRowStretch(1, 100)
+        advanced_widg.setLayout(advanced_grid)
         
         #---- Stacked Widget ----
                 
         self.stack_widget = MyQToolBox()
         self.stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
         self.stack_widget.addItem(MLRM_widg, 'Regression Model :')
+        self.stack_widget.addItem(advanced_widg, 'Advanced Settings :')
         
         #--- SUBGRIDS ASSEMBLY ----
         
@@ -281,12 +297,11 @@ class GapFillWeather(QtGui.QWidget):
         grid_leftPanel.addWidget(seprator2, row, 0)
         row += 1 
         grid_leftPanel.addWidget(widget_toolbar, row, 0)
-        
-        
+                
         grid_leftPanel.setVerticalSpacing(15)
         grid_leftPanel.setRowStretch(row-2, 500)
         grid_leftPanel.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
-        grid_leftPanel.setColumnMinimumWidth(0, styleDB.sideBarWidth)
+#        grid_leftPanel.setColumnMinimumWidth(0, styleDB.sideBarWidth)
         
         self.LEFT_widget.setLayout(grid_leftPanel)
         
@@ -353,9 +368,7 @@ class GapFillWeather(QtGui.QWidget):
         
         #------------------------------------------------------ MESSAGE BOX ----
                                           
-        self.msgBox = QtGui.QMessageBox()
-        self.msgBox.setIcon(QtGui.QMessageBox.Warning)
-        self.msgBox.setWindowTitle('Error Message')
+        self.msgBox = MyQWidget.MyQErrorMessageBox()
         
         
     def set_workdir(self, directory): #=========================================
@@ -557,17 +570,17 @@ class GapFillWeather(QtGui.QWidget):
 
             if self.target_station.currentIndex() == -1:
 
-                self.msgBox.setText('No <b>Target station</b> is currently ' +
+                self.msgBox.setText('No <b>weather station</b> is currently ' +
                                     'selected.')
                 self.msgBox.exec_()
-                print 'No target station selected.'
+                print 'No weather station selected.'
                 
                 return
                 
             #------------------------------------- Stop Thread (if running) ----
                 
             if self.fillworker.isRunning(): # Stop the process
-                print'Coucou fill worker is running'
+
                 self.restoreUI()
                 
                 #---- Pass a flag to the worker to tell him to stop ----
@@ -664,6 +677,23 @@ class GapFillWeather(QtGui.QWidget):
         
         #----------------------------------------------------- START THREAD ----
         
+        #----- Wait for the QThread to finish -----
+        
+        # Protection in case the QTread did not had time to close completely
+        # before starting the downloading process for the next station.
+        
+        waittime = 0
+        while self.fillworker.isRunning():
+            print('Waiting for the fill weather data thread to close')
+            sleep(1)
+            waittime += 1
+            if waittime > 15:
+                msg = ('This function is not working as intended.' +
+                       ' Please report a bug.')
+                print(msg)
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                return
+                
         #---- Pass information to the worker ----
         
         self.fillworker.project_dir = self.workdir
@@ -680,8 +710,8 @@ class GapFillWeather(QtGui.QWidget):
                                     
         self.fillworker.regression_mode = self.RMSE_regression.isChecked()
         
-        self.fillworker.full_error_analysis = self.full_error_analysis
-                               
+        self.fillworker.full_error_analysis = self.full_error_analysis.isChecked()
+                                        
         #---- Start the Thread ----
                                         
         self.fillworker.start()
