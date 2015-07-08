@@ -83,7 +83,7 @@ class WeatherAvgGraph(QtGui.QWidget):
         
     def initUI(self):
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
         self.station_name = []

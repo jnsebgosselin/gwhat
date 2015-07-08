@@ -76,7 +76,7 @@ class Search4Stations(QtGui.QWidget):
 
         #--------------------------------------------------------- DATABASE ----
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         styleDB = db.styleUI()
         ttipDB = Tooltips('English')
 

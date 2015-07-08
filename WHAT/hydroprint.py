@@ -78,7 +78,7 @@ class Hydrograph():
         
         #---- Database ----
         
-        HeaderDB = db.headers()
+        HeaderDB = db.FileHeaders()
         self.header = HeaderDB.graph_layout
         
         #---- Fig Init ----        

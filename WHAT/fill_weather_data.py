@@ -86,8 +86,8 @@ class GapFillWeather(QtGui.QWidget):
         #--------------------------------------------------------- Database ----
         
         styleDB = db.styleUI()
-        iconDB = db.icons()
-        ttipDB = db.tooltips('English')
+        iconDB = db.Icons()
+        ttipDB = db.Tooltips('English')
         labelDB = db.labels('English')
         
         #------------------------------------------------------ Main Window ----
@@ -1337,7 +1337,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     table += '''  </tr>
                 </table>
                 <p>
-                  Correlation coeffificients are set to <b>nan</b> for a given 
+                  Correlation coefficients are set to <b>nan</b> for a given 
                   variable if there is less than <b>%d</b> pairs of data 
                   between the target and the neighboring station.
                 </p>''' % (Ndata_limit)

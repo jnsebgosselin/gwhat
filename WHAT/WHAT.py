@@ -127,8 +127,7 @@ class MainWindow(QtGui.QMainWindow):
         
         self.initUI()
         
-    #---------------------------------------------------------------------------
-    def initUI(self):
+    def initUI(self): #=========================================================
         """
         A generic widget is first set as the central widget of the
         MainWindow. Then, a QGridLayout is applied to this central
@@ -145,7 +144,6 @@ class MainWindow(QtGui.QMainWindow):
         MainWindow class. The layout of each tab is handled with a
         QGridLayout.
         """
-    #---------------------------------------------------------------------------
         
         #-------------------------------------------------- CLASS INSTANCES ----
         
@@ -185,13 +183,13 @@ class MainWindow(QtGui.QMainWindow):
         global labelDB
         labelDB = db.labels(language)
         global iconDB
-        iconDB = db.icons()
+        iconDB = db.Icons()
         global styleDB
         styleDB = db.styleUI()
         global ttipDB
-        ttipDB = db.tooltips(language)
+        ttipDB = db.Tooltips(language)
         global headerDB
-        headerDB = db.headers()
+        headerDB = db.FileHeaders()
         
         #------------------------------------------------ MAIN WINDOW SETUP ----
 
@@ -249,7 +247,7 @@ class MainWindow(QtGui.QMainWindow):
         subgrid_menubar.addWidget(self.btn_new_project, row, col)
         
         subgrid_menubar.setSpacing(3)
-        subgrid_menubar.setContentsMargins(0, 0, 0, 5) #Left, Top, Right, Bottom 
+        subgrid_menubar.setContentsMargins(0, 0, 0, 5) # [L, T, R, B] 
         subgrid_menubar.setColumnStretch(1, 500)
         subgrid_menubar.setRowMinimumHeight(0, 28)
         
@@ -278,24 +276,30 @@ class MainWindow(QtGui.QMainWindow):
         tab_bar = TabBar()       
         Tab_widget.setTabBar(tab_bar)
         
-        #---- WIDGETS ----
+        #---- download weather data ----
+        
+        self.tab_dwnld_data = dwnld_weather_data.dwnldWeather(self)
+        self.tab_dwnld_data.set_workdir(self.projectdir)
+        
+        #---- gapfill weather data ----
+        
+        self.tab_fill_weather_data = fill_weather_data.GapFillWeather(self)
+        self.tab_fill_weather_data.set_workdir(self.projectdir)
+        
+        #---- hydrograph ----
                 
-        self.tab_dwnld_data = TabDwnldData(self)
-        self.tab_fill = TabFill(self)        
         self.tab_hydrograph = TabHydrograph(self)
+        
+        #---- about ----
+        
         tab_about = AboutWhat(self)
         
-        #---- LAYOUT ----
+        #---- TABS ASSEMBLY ----
         
         Tab_widget.addTab(self.tab_dwnld_data, labelDB.TAB1)        
-        Tab_widget.addTab(self.tab_fill, labelDB.TAB2) 
+        Tab_widget.addTab(self.tab_fill_weather_data, labelDB.TAB2) 
         Tab_widget.addTab(self.tab_hydrograph, labelDB.TAB3) 
         Tab_widget.addTab(tab_about, labelDB.TAB4)
-        
-#        self.tab_dwnld_data.hide()
-#        self.tab_fill.hide()
-#        self.tab_hydrograph.hide()
-#        tab_about.hide()
         
         Tab_widget.setCornerWidget(self.menubar_widget)
         
@@ -322,9 +326,9 @@ class MainWindow(QtGui.QMainWindow):
         row = 0
         mainGrid.addWidget(splitter, row, 0)
         row += 1
-        mainGrid.addWidget(self.tab_fill.fill_weather.pbar, row, 0)
+        mainGrid.addWidget(self.tab_fill_weather_data.pbar, row, 0)
         row += 1
-        mainGrid.addWidget(self.tab_dwnld_data.dwnld_weather.pbar, row, 0)
+        mainGrid.addWidget(self.tab_dwnld_data.pbar, row, 0)
         
         mainGrid.setSpacing(10)
         main_widget.setLayout(mainGrid)
@@ -338,19 +342,19 @@ class MainWindow(QtGui.QMainWindow):
 
         #---- Console Signal Piping ----
         
-        issuer = self.tab_dwnld_data.dwnld_weather
+        issuer = self.tab_dwnld_data
         issuer.ConsoleSignal.connect(self.write2console)  
 
-        issuer = self.tab_dwnld_data.dwnld_weather.search4stations
+        issuer = self.tab_dwnld_data.search4stations
         issuer.ConsoleSignal.connect(self.write2console)
 
-        issuer =  self.tab_dwnld_data.dwnld_weather.dwnl_raw_datafiles 
+        issuer =  self.tab_dwnld_data.dwnl_raw_datafiles 
         issuer.ConsoleSignal.connect(self.write2console)  
 
-        issuer = self.tab_fill.fill_weather
+        issuer = self.tab_fill_weather_data
         issuer.ConsoleSignal.connect(self.write2console)
 
-        issuer = self.tab_fill.fill_weather.fillworker
+        issuer = self.tab_fill_weather_data.fillworker
         issuer.ConsoleSignal.connect(self.write2console)                                                
         
         #---------------------------------------------------- MESSAGE BOXES ----
@@ -377,7 +381,7 @@ class MainWindow(QtGui.QMainWindow):
         else:
             
             self.tab_dwnld_data.setEnabled(False)    
-            self.tab_fill.setEnabled(False)     
+            self.tab_fill_weather_data.setEnabled(False)     
             self.tab_hydrograph.setEnabled(False)
             
             msgtxt = '''
@@ -389,22 +393,21 @@ class MainWindow(QtGui.QMainWindow):
             self.msgError.setText(msgtxt)
             self.msgError.exec_()
                 
-    #---------------------------------------------------------------------------  
-    def write2console(self, console_text):
-        '''
-        This function is the bottle neck through which all messages writen in
-        the console window must go through.
-        '''
-    #---------------------------------------------------------------------------
+      
+    def write2console(self, console_text): #====================================
         
+        '''
+        This function is the bottle neck through which all messages writen
+        in tthe console must go through.
+        '''
+            
         textime = '<font color=black>[' + ctime()[4:-8] + '] </font>'
                         
         self.main_console.append(textime + console_text)
     
-    #---------------------------------------------------------------------------    
-    def show_new_project(self):
-    #---------------------------------------------------------------------------
-
+        
+    def show_new_project(self): #===============================================
+    
         #---- Center Widget to Main Window ----
         
         # Adapted from:
@@ -421,13 +424,12 @@ class MainWindow(QtGui.QMainWindow):
         self.new_project_window.show()
         self.new_project_window.setFixedSize(self.new_project_window.size())
             
-    #---------------------------------------------------------------------------
-    def open_project(self):
+    
+    def open_project(self): #===================================================
         '''
         "open_project" is called by the event "self.project_display.clicked".
         It allows the user to open an already existing project.
         '''
-    #---------------------------------------------------------------------------
         
 #        qr = self.open_project_window.frameGeometry()
 #        cp = self.frameGeometry().center()
@@ -502,7 +504,7 @@ class MainWindow(QtGui.QMainWindow):
         #---- Update UI ----
         
         self.tab_dwnld_data.setEnabled(True)    
-        self.tab_fill.setEnabled(True)     
+        self.tab_fill_weather_data.setEnabled(True)     
         self.tab_hydrograph.setEnabled(True)
         
         self.project_display.setText(self.projectInfo.name)
@@ -510,7 +512,7 @@ class MainWindow(QtGui.QMainWindow):
             
         #---- Load Weather Input Files ----
         
-        self.tab_fill.fill_weather.load_data_dir_content()
+        self.tab_fill_weather_data.load_data_dir_content()
         
         # ----- RESET UI Memory Variables -----
         
@@ -522,16 +524,16 @@ class MainWindow(QtGui.QMainWindow):
         
         #---- dwnld_weather_data ----
         
-        self.tab_dwnld_data.dwnld_weather.set_workdir(self.projectdir)
-        self.tab_dwnld_data.dwnld_weather.search4stations.lat_spinBox.setValue(
+        self.tab_dwnld_data.set_workdir(self.projectdir)
+        self.tab_dwnld_data.search4stations.lat_spinBox.setValue(
                                                            self.projectInfo.lat)
                                                            
-        self.tab_dwnld_data.dwnld_weather.search4stations.lon_spinBox.setValue(
+        self.tab_dwnld_data.search4stations.lon_spinBox.setValue(
                                                            self.projectInfo.lon)
                                                            
         #---- fill_weather_data ----
                                                            
-        self.tab_fill.fill_weather.set_workdir(self.projectdir)
+        self.tab_fill_weather_data.set_workdir(self.projectdir)
         
         #---- hydrograph ----
         
@@ -1758,55 +1760,8 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         image = QtGui.QImage.rgbSwapped(image)
         
         self.hydrograph_scrollarea.refresh_image(image)
-            
-          
-################################################################################
-        
-class TabDwnldData(QtGui.QWidget):                             # @TAB DOWNLOAD #
-
-################################################################################
-    
-    def __init__(self, parent):
-        super(TabDwnldData, self).__init__(parent)
-        self.parent = parent
-        self.initUI()        
-        
-    def initUI(self):
-        
-        self.dwnld_weather = dwnld_weather_data.dwnldWeather()
-        self.dwnld_weather.set_workdir(self.parent.projectdir)
-        
-        grid_MAIN = QtGui.QGridLayout()
-
-        grid_MAIN.addWidget(self.dwnld_weather, 0, 0)
-        
-        grid_MAIN.setContentsMargins(0, 0, 0, 0) # [L, T, R, B] 
-        self.setLayout(grid_MAIN)
-    
-
-################################################################################
-                                        
-class TabFill(QtGui.QWidget):                                      # @TAB FILL #
-
-################################################################################
-    
-    def __init__(self, parent=None): #==========================================
-        super(TabFill, self).__init__(parent)
-        self.parent = parent
-        self.initUI() 
-    
-               
-    def initUI(self): #=========================================================
- 
-        self.fill_weather = fill_weather_data.GapFillWeather()
-        self.fill_weather.set_workdir(self.parent.projectdir)
-        
-        grid_MAIN = QtGui.QGridLayout()
-
-        grid_MAIN.addWidget(self.fill_weather, 0, 0)
-        
-        grid_MAIN.setContentsMargins(0, 0, 0, 0) # [L, T, R, B] 
-        self.setLayout(grid_MAIN)
+           
+         
 
 #===============================================================================    
 class WHATPref():

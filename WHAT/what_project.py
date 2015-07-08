@@ -40,6 +40,9 @@ import database as db
 
 #===============================================================================
 class NewProject(QtGui.QDialog):
+    """
+    Dialog window to create a new WHAT project.
+    """
 #===============================================================================
 
     NewProjectSignal = QtCore.Signal(str)
@@ -56,7 +59,7 @@ class NewProject(QtGui.QDialog):
         
         #---- Databases ----
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         StyleDB = db.styleUI()
         
         #---- Save In Folder ----
@@ -362,6 +365,9 @@ class NewProject(QtGui.QDialog):
         
 #===============================================================================
 class OpenProject(QtGui.QDialog):
+    """
+    Dialog window to browse and select already existing WHAT project.
+    """
 #===============================================================================
     
     OpenProjectSignal = QtCore.Signal(str)
@@ -578,13 +584,13 @@ class OpenProject(QtGui.QDialog):
         filepath = self.dir_menu.currentText()
         filepath2 = os.path.dirname(filepath)
         
-        Qdir = QtCore.QDir(self.home)
-        print(Qdir.path())
-        import win32api
-        for i in range(len(Qdir.drives())):
-            print(Qdir.drives()[i].path())
-            print(win32api.GetVolumeInformation(Qdir.drives()[i].path()))
-        print Qdir.homePath()
+#        Qdir = QtCore.QDir(self.home)
+#        print(Qdir.path())
+#        import win32api
+#        for i in range(len(Qdir.drives())):
+#            print(Qdir.drives()[i].path())
+#            print(win32api.GetVolumeInformation(Qdir.drives()[i].path()))
+#        print Qdir.homePath()
         
         if filepath == filepath2:
             print('Already to the top buddy...')
@@ -796,25 +802,12 @@ class SeFileSystemModel(QtGui.QFileSystemModel):
         
         if index.column() == 0 and role == QtCore.Qt.DecorationRole:
             if os.path.splitext(index.data())[-1] == '.what':
-                return iconDB.WHAT
-                   
+                return iconDB.WHAT 
+            elif os.path.splitext(index.data())[-1] == '':
+                pass
+#                return iconDB.openFolder
+                  
         return super(SeFileSystemModel, self).data(index, role)
-        
-        
-#        if index.column() == 0 and role == QtCore.Qt.DecorationRole:
-#            if self.fileEndPattern.match(index.data()) is not None:
-#            
-#                if index.data().endswith('what'):
-#                    return iconDB.WHAT
-#                else:
-#                    return super(SeFileSystemModel, self).data(index, role)
-##                    return iconDB.WHAT
-#            else:
-#                return super(SeFileSystemModel, self).data(index, role)
-##                return iconDB.openFolder
-#        else:
-#            return super(SeFileSystemModel, self).data(index, role)
-        
         
   
 if __name__ == '__main__':

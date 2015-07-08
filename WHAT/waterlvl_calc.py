@@ -91,7 +91,7 @@ class WLCalc(QtGui.QWidget):
         
         #--------------------------------------------------- INIT VARIABLES ----
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
         

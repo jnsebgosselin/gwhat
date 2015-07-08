@@ -29,10 +29,10 @@ import platform
 from PySide.QtGui import QIcon, QFont
 from PySide.QtCore import QSize
 
-software_version = 'WHAT Beta 4.1.6'
-last_modification = '06/07/2015'
+software_version = 'WHAT Beta 4.1.7'
+last_modification = '07/07/2015'
 
-class icons():
+class Icons():
     
     def __init__(self):
         
@@ -61,12 +61,12 @@ class icons():
         self.new_project = QIcon('Icons/new_project.png')
         self.open_project = QIcon('Icons/open_project.png')
         
-        #----- METEO -----
+        #----- Download Weather Data -----
         
         self.plus_sign = QIcon('Icons/plus_sign.png')
         self.add2list = QIcon('Icons/add2list.png')
         
-        #---- Fill Data ----
+        #---- Fill Weather Data ----
         
         self.fill_data = QIcon('Icons/fill_data.png')
         self.fill_all_data = QIcon('Icons/fill_all_data.png')
@@ -108,7 +108,7 @@ class icons():
         self.mrc2rechg = QIcon('Icons/recharge.png')
         
         
-class tooltips():
+class Tooltips():
     
     def __init__(self, language): #================================ ENGLISH ====
         
@@ -117,17 +117,21 @@ class tooltips():
         self.open_project = 'Open Project...'
         self.new_project = 'New Project...'
         
-        #----------------------------------------------------- DOWNLOAD TAB ----
+        #-------------------------------------------- Download Weather Data ----
         
-        self.refresh_staList = 'Refresh the current weather station list'
-        
-        self.search4stations = ('Search for weather stations in the \n' +
+        self.search4stations = ('Search for weather stations in the ' +
                                 'Canadian Daily Climate Database (CDCD)')
-        self.btn_GetData = 'Download data for the selected weather station'
-        self.btn_browse_staList = 'Load a custom weather station list'
+        self.refresh_staList = 'Refresh the current weather station list'
+        self.btn_browse_staList = 'Load an existing weather station list'
+        self.btn_save_staList = 'Save current station list.'
+        self.btn_delSta = 'Remove selected weather stations from the list'
+        
+        self.btn_GetData = 'Download data for the selected weather stations'
+        
+        
         self.btn_select_rawData = 'Select and format raw weather data files' 
         self.btn_save_concatenate = 'Save formated weather data in a csv file'
-        
+
         #--------------------------------------------------------- FILL TAB ----
         
         self.altlimit = (
@@ -204,11 +208,6 @@ class labels():
                 
         self.btn_select_rawData = 'Load' 
         self.btn_save_concatenate = 'Save'
-                                   
-#        self.btn_get_all_text = 'Get All'
-#        self.btn_get_all_help = (
-#            '''<p>Download weather data for all the weather station in the 
-#                 current list for the specified time period.</p>''')
         
         self.saveMeteoAuto = "Automatically save concatenated data"
         
@@ -265,7 +264,7 @@ class styleUI():
         # 53 = QtGui.QFrame.VLine | QtGui.QFrame.Sunken
         
         
-class headers():
+class FileHeaders():
     
     
     def __init__(self):

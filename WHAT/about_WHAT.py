@@ -49,7 +49,7 @@ class AboutWhat(QtGui.QWidget):
         
         #--------------------------------------------------------- DATABASE ----
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         styleDB = db.styleUI()
 
         #------------------------------------------------------ MAIN WINDOW ----

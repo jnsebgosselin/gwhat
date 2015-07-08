@@ -25,7 +25,7 @@ class MyQErrorMessageBox(QtGui.QMessageBox):
         
         self.setIcon(QtGui.QMessageBox.Warning)
         self.setWindowTitle('Error Message')
-        self.setWindowIcon(db.icons().WHAT)
+        self.setWindowIcon(db.Icons().WHAT)
 
 #===============================================================================
 class MyQNavigationToolbar(QtGui.QWidget):
@@ -202,7 +202,7 @@ class MyQToolBox(QtGui.QWidget):
         self.maingrid = QtGui.QGridLayout()
         self.maingrid.setContentsMargins(0, 0, 0, 0)
         
-        self.iconDB = db.icons()
+        self.iconDB = db.Icons()
         self.currentIndex = -1
         
         self.initUI()

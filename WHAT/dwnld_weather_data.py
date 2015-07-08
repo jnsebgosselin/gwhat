@@ -52,8 +52,7 @@ class Tooltips():
         self.btn_delSta = 'Remove selected weather stations from the list'
         
         self.btn_GetData = 'Download data for the selected weather stations'
-        
-        
+                
         self.btn_select_rawData = 'Select and format raw weather data files' 
         self.btn_save_concatenate = 'Save formated weather data in a csv file'
         
@@ -93,7 +92,7 @@ class dwnldWeather(QtGui.QWidget):
         #--------------------------------------------------------- Database ----
         
         styleDB = db.styleUI()
-        iconDB = db.icons()
+        iconDB = db.Icons()
         ttipDB = Tooltips('English')
         labelDB = db.labels('English')
         
@@ -364,7 +363,11 @@ class dwnldWeather(QtGui.QWidget):
             self.search4stations.show()
                         
             qr = self.search4stations.frameGeometry()
-            cp = self.frameGeometry().center()
+            
+            wp = self.frameGeometry().width()
+            hp = self.frameGeometry().height()
+            cp = self.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+            
             qr.moveCenter(cp)
             self.search4stations.move(qr.topLeft())
             
@@ -448,7 +451,7 @@ class dwnldWeather(QtGui.QWidget):
         
         # In case this method is not called from the UI.
         
-        headerDB = db.headers()        
+        headerDB = db.FileHeaders()        
         self.staList_isNotSaved = False
         
         if not path.exists(filename):
