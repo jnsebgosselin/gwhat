@@ -624,8 +624,8 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         self.parent = parent        
         self.initUI()
     
-    #===========================================================================    
-    def initUI(self):
+        
+    def initUI(self): #=========================================================
     # Layout is organized with an ensemble of grids that are assembled
     # together on 3 different levels. First level is the main grid.
     # Second level is where are the LEFT, RIGHT and TOOLBAR grids. 
@@ -1086,7 +1086,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                 
         self.hydrograph_scrollarea.load_image(blank_image)
         
-    def toggle_layoutMode(self):
+    def toggle_layoutMode(self): #==============================================
         
         self.waterlvl_calc.hide()        
         self.grid_layout_widget.show()
@@ -1099,7 +1099,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
 #        self.subgrid_WLScale_widget.show()
         self.subgrid_labLang_widget.show()
         
-    def toggle_computeMode(self):
+    def toggle_computeMode(self): #=============================================
         
         self.grid_layout_widget.hide()
         self.waterlvl_calc.show()
@@ -1112,7 +1112,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
 #        self.subgrid_WLScale_widget.hide()
         self.subgrid_labLang_widget.hide()
         
-    def show_weather_averages(self):
+    def show_weather_averages(self): #==========================================
         
         filemeteo = self.hydrograph2display.fmeteo
         if not filemeteo:
@@ -1128,21 +1128,36 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.weather_avg_graph.generate_graph(filemeteo)
         
+        #---- SHOW ----
+        
+        # Force the window to show in the center of the WHAT window.
+        
         self.weather_avg_graph.show()
+                                
+        qr = self.weather_avg_graph.frameGeometry()
+           
+        wp = self.frameGeometry().width()
+        hp = self.frameGeometry().height()
+        cp = self.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+            
+        qr.moveCenter(cp)
+        self.weather_avg_graph.move(qr.topLeft())
+        
         self.weather_avg_graph.setFixedSize(self.weather_avg_graph.size())           
             
-    def emit_error_message(self, error_text):
+    def emit_error_message(self, error_text): #=================================
         
         self.msgError.setText(error_text)
         self.msgError.exec_()
     
-    #===========================================================================
-    def select_waterlvl_file(self):
+    
+    def select_waterlvl_file(self): #===========================================
+        
         '''
-        This method is called by <btn_waterlvl_dir.clicked.connect>. It prompts
+        This method is called by <btn_waterlvl_dir> is clicked. It prompts
         the user to select a valid Water Level Data file.        
         '''
-    #===========================================================================
+    
         
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                    self, 'Select a valid water level data file', 
@@ -1150,8 +1165,9 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.load_waterlvl(filename)
         
-    #===========================================================================                          
-    def load_waterlvl(self, filename):
+                              
+    def load_waterlvl(self, filename): #========================================
+        
         '''
         If "filename" exists:
         
@@ -1165,7 +1181,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         Depending if there is a lyout or not, a Weather Data File will be 
         loaded and the hydrograph will be automatically plotted.
         '''
-    #===========================================================================   
+        
         
         if not filename:
             print 'Path is empty. Cannot load water level file.'
@@ -1234,7 +1250,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.UpdateUI = True
             
-    def select_closest_meteo_file(self):
+    def select_closest_meteo_file(self): #======================================
                 
         meteo_folder = self.parent.projectdir + '/Meteo/Output'
         
@@ -1273,13 +1289,14 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                 
                 self.draw_hydrograph()
     
-    #===========================================================================       
-    def select_meteo_file(self):
+           
+    def select_meteo_file(self): #==============================================
+       
         '''
         This method is called by <btn_weather_dir.clicked.connect>. It prompts
         the user to select a valid Weather Data file.        
         '''
-    #===========================================================================
+    
          
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                       self, 'Select a valid weather data file', 
@@ -1289,9 +1306,9 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         QtCore.QCoreApplication.processEvents()
         self.load_meteo_file(filename)
     
-    #===========================================================================       
-    def load_meteo_file(self, filename):
-    #===========================================================================
+           
+    def load_meteo_file(self, filename): #======================================
+    
     
         if not filename:
             print 'Path is empty. Cannot load weather data file.'
@@ -1314,15 +1331,16 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             QtCore.QCoreApplication.processEvents()
             self.draw_hydrograph()
     
-    #===========================================================================
-    def update_graph_layout_parameter(self):
+    
+    def update_graph_layout_parameter(self): #==================================
+    
         '''
         This method is called either by the methods <save_graph_layout>
         or by <draw_hydrograph>. It fetches the values that are currently 
         displayed in the UI and save them in the class instance 
         <hydrograph2display> of the class <Hydrograph>.
         '''
-    #===========================================================================
+    
         
         if self.UpdateUI == False:
             return
@@ -1353,9 +1371,9 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.hydrograph2display.language = self.language_box.currentText()
              
-    #===========================================================================        
-    def load_graph_layout(self):
-    #===========================================================================
+            
+    def load_graph_layout(self): #==============================================
+    
 
         self.parent.check_project()
         
@@ -1442,9 +1460,9 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
         self.UpdateUI = True
     
-    #===========================================================================
-    def save_config_isClicked(self):
-    #===========================================================================
+    
+    def save_config_isClicked(self): #==========================================
+    
     
         if not self.fwaterlvl:
             
@@ -1502,7 +1520,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         else:            
             self.save_graph_layout(name_well)
               
-    def save_graph_layout(self, name_well):
+    def save_graph_layout(self, name_well): #===================================
         
         self.update_graph_layout_parameter()
         filename = self.parent.projectdir + '/graph_layout.lst'
@@ -1511,7 +1529,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         '''<font color=black>Graph layout saved successfully
              for well %s.</font>''' % name_well)
             
-    def best_fit_waterlvl(self):
+    def best_fit_waterlvl(self): #==============================================
         
         if len(self.waterlvl_data.lvl) != 0:
             
@@ -1520,7 +1538,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             self.waterlvl_scale.setValue(WLscale)
             self.waterlvl_max.setValue(WLmin)
             
-    def best_fit_time(self):
+    def best_fit_time(self): #==================================================
             
         if len(self.waterlvl_data.time) != 0:
             
@@ -1530,7 +1548,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))                                                        
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
             
-    def select_save_path(self):
+    def select_save_path(self): #===============================================
        
         name_well = self.waterlvl_data.name_well
         dialog_dir = self.save_fig_dir + '/hydrograph_' + name_well
@@ -1550,13 +1568,13 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             self.save_fig_dir = path.dirname(fname)
             self.save_figure(fname)
             
-    def save_figure(self, fname):
+    def save_figure(self, fname): #=============================================
         
         self.hydrograph2display.generate_hydrograph(self.meteo_data)
                                        
         self.hydrograph2display.fig.savefig(fname)
         
-    def draw_computeMode_waterlvl(self):
+    def draw_computeMode_waterlvl(self): #======================================
         
         self.waterlvl_calc.time = self.waterlvl_data.time
         self.waterlvl_calc.water_lvl = self.waterlvl_data.lvl
@@ -1564,7 +1582,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.waterlvl_calc.plot_water_levels() 
     
-    def draw_hydrograph(self):
+    def draw_hydrograph(self): #================================================
         
         if not self.fwaterlvl:
             console_text = ('<font color=red>Please select a valid water ' +
@@ -1604,7 +1622,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.hydrograph_scrollarea.refresh_image(image)
     
-    def language_changed(self):
+    def language_changed(self): #===============================================
         
         if self.UpdateUI == True:
             
@@ -1621,7 +1639,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
                 self.refresh_hydrograph()
                 
-    def Ptot_scale_changed(self):
+    def Ptot_scale_changed(self): #=============================================
         
         if self.UpdateUI == True:
             
@@ -1639,7 +1657,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                 self.refresh_hydrograph()
                 
         
-    def waterlvl_scale_changed(self):
+    def waterlvl_scale_changed(self): #=========================================
         
         if self.UpdateUI == True:
             
@@ -1657,7 +1675,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
                 self.refresh_hydrograph()
                 
-    def datum_changed(self, index):
+    def datum_changed(self, index): #===========================================
         
         if self.UpdateUI == True:
             
@@ -1673,7 +1691,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
             self.refresh_hydrograph()
     
-    def time_scale_changed(self):
+    def time_scale_changed(self): #=============================================
         
         if self.UpdateUI == True:
             
@@ -1701,7 +1719,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
                 self.refresh_hydrograph()
     
-    def fig_title_state_changed(self):
+    def fig_title_state_changed(self): #========================================
         
         if self.graph_status.isChecked() == True:
             self.graph_title.setEnabled(True)
@@ -1729,7 +1747,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
            else: # No hydrograph plotted yet
                pass
                 
-    def fig_title_changed(self):
+    def fig_title_changed(self): #==============================================
         
         if self.UpdateUI == True :
             
@@ -1747,7 +1765,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             else: # No hydrograph plotted yet
                pass
     
-    def refresh_hydrograph(self):
+    def refresh_hydrograph(self): #=============================================
         
         self.hydrograph_canvas.draw()
 

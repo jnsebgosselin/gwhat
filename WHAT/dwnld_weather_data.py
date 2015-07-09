@@ -240,7 +240,7 @@ class dwnldWeather(QtGui.QWidget):
         
         self.mergeDisplay = QtGui.QTextEdit()
         self.mergeDisplay.setReadOnly(True)
-        self.mergeDisplay.setMinimumHeight(225)
+        self.mergeDisplay.setMinimumHeight(250)
         
         btn_selectRaw = QtGui.QPushButton(labelDB.btn_select_rawData)
         btn_selectRaw.setIcon(iconDB.openFile)
@@ -900,33 +900,45 @@ class dwnldWeather(QtGui.QWidget):
         
         #------------------------------------------ Produce a Summary Table ----
         
-        FIELDS = ['Tmax', 'Tmin', 'Tmean', 'Ptot', 'Total']        
+        FIELDS = ['T<sub>max<\sub>', 'T<sub>min<\sub>', 'T<sub>mean<\sub>',
+                  'P<sub>tot<\sub>']        
         
         ndata = float(len(ALLDATA[:, 0]))
         province = reader[1][1]
         
+        
+#        style="border-bottom:1px solid black"
+#        <td align="left" width=15>:</td>  
         LOG = '''
               <p align='center'>
-                <b><font color=#C83737>%s</font></b><br>%s
+                <b><font color=#C83737>%s</font></b><br>%s<br>(%d - %d)
               </p>
-              <p>
-                Number of days with missing data from %d to %d :
-              </p>
-              <br>
-              <table border="0" cellpadding="2" cellspacing="0" align="center">
+              <table border="0" cellpadding="1" cellspacing="0" align="center">
+              <tr><td colspan="4"><hr><\td><\tr>
+              <tr>
+                <td align="left">Weather<\td>
+                <td align="left" width=15></td>  
+                <td colspan="2" align="right">Days with<\td>
+              <\tr>
+              <tr>
+                <td align="left">Variables<\td>
+                <td align="left" width=15></td>  
+                <td colspan="2" align="right">Missing Data<\td>
+              <\tr>              
+              <tr><td colspan="4"><hr><\td><\tr>
               ''' % (StaName[0], province,
                      np.min(ALLDATA[:,0]), np.max(ALLDATA[:,0]))
-        for i in range(0, len(FIELDS)-1):
+        for i in range(0, len(FIELDS)):
              nonan = sum(np.isnan(ALLDATA[:, i+3]))
              LOG += '''
                     <tr>
                       <td align="left">%s</td>
-                      <td align="left" width=15>:</td>          
+                      <td align="left" width=15></td>                              
                       <td align="right">%d</td>
-                      <td align="center">(%0.1f%%)</td>
+                      <td align="right">&nbsp;(%d%%)</td>
                     </tr>
                     ''' % (FIELDS[i], nonan, nonan/ndata*100)
-       
+        LOG += '<tr><td colspan="4"><hr><\td><\tr>'
         #------------------------------------------------- Restructure Data ----
         
         HEADER = np.zeros((8, len(COLN))).astype('str')
