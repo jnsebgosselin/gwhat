@@ -151,9 +151,8 @@ class Hydrograph():
     def set_waterLvlObj(self, WaterLvlObj):
         self.WaterLvlObj = WaterLvlObj
    
-    #---------------------------------------------------------------------------
-    def checkLayout(self, name_well, filename): # old var. names: isConfigExist
-    #---------------------------------------------------------------------------
+    
+    def checkLayout(self, name_well, filename): #===============================
         
         with open(filename, 'rb') as f:
             reader = list(csv.reader(f, delimiter='\t'))
@@ -203,10 +202,9 @@ class Hydrograph():
            
         return layoutExist
         
-    #---------------------------------------------------------------------------                
-    def load_layout(self, name_well, filename):        
-    #---------------------------------------------------------------------------
-        
+                    
+    def load_layout(self, name_well, filename): #===============================      
+            
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
         # fine with the graph layout for this well.

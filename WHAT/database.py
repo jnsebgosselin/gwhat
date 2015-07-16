@@ -209,7 +209,7 @@ class labels():
         self.btn_select_rawData = 'Load' 
         self.btn_save_concatenate = 'Save'
         
-        self.saveMeteoAuto = "Automatically save concatenated data"
+        self.saveMeteoAuto = "Automatically save formatted\nweather data"
         
         #--------------------------------------------------------- FILL TAB ----
         

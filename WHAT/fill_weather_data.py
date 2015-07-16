@@ -517,7 +517,7 @@ class GapFillWeather(QtGui.QWidget):
     
     def restoreUI(self): #======================================================
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         
         self.btn_fill.setIcon(iconDB.fill_data)
         self.btn_fill.setEnabled(True)
@@ -535,7 +535,7 @@ class GapFillWeather(QtGui.QWidget):
             
     def manage_gapfill(self): #=================================================
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
                     
         #-------------------------------------------- CHECK FOR DATA ERRORS ----
                             

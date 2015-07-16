@@ -146,10 +146,7 @@ class dwnldWeather(QtGui.QWidget):
         self.btn_get.setAutoRaise(True)
         self.btn_get.setToolTip(ttipDB.btn_GetData)
         self.btn_get.setIconSize(styleDB.iconSize)
-        
-        self.saveAuto_checkbox = QtGui.QCheckBox(labelDB.saveMeteoAuto)
-        self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
-        
+                        
         separator1 = QtGui.QFrame()
         separator1.setFrameStyle(styleDB.VLine)
         separator2 = QtGui.QFrame()
@@ -171,8 +168,6 @@ class dwnldWeather(QtGui.QWidget):
         toolbar_grid.addWidget(self.btn_get, row, col)
         col += 1
         toolbar_grid.setColumnStretch(col, 100)
-        col += 1
-        toolbar_grid.addWidget(self.saveAuto_checkbox, row, col)
         
         toolbar_grid.setSpacing(5)
         toolbar_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
@@ -187,7 +182,13 @@ class dwnldWeather(QtGui.QWidget):
         
         #------------------------------------------------------ Right Panel ----
                 
-        display_label = QtGui.QLabel('<b>Downloaded Weather Data Info :</b>')
+        display_label = QtGui.QLabel('<b>Formatted Weather Data Info :</b>')
+        
+        self.saveAuto_checkbox = QtGui.QCheckBox(labelDB.saveMeteoAuto)
+        self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
+       
+        self.saveAuto_checkbox.setStyleSheet(
+                           'QCheckBox::indicator{subcontrol-position:top left}')
         
         #---- Go Toolbar ----        
         
@@ -260,10 +261,13 @@ class dwnldWeather(QtGui.QWidget):
         rightPanel_grid.addWidget(btn_selectRaw, row, 0)
         rightPanel_grid.addWidget(btn_saveMerge, row, 1)
         row += 1   
-        rightPanel_grid.addWidget(self.mergeDisplay, row, 0, 1, 3)
-        
+        rightPanel_grid.addWidget(self.mergeDisplay, row, 0, 1, 3)        
         row += 1
         rightPanel_grid.addWidget(goToolbar_widg, row, 0, 1, 3)
+        row += 1
+        rightPanel_grid.addWidget(QtGui.QLabel(''), row, 0, 1, 3)
+        row += 1
+        rightPanel_grid.addWidget(self.saveAuto_checkbox, row, 0, 1, 3)
         
         rightPanel_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
         rightPanel_grid.setRowStretch(row+1, 100)
@@ -582,14 +586,14 @@ class dwnldWeather(QtGui.QWidget):
         download Thread to stop the downloading process.
         """
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         sender = self.sender()
         
         if sender == self.btn_get:
             if self.dwnl_raw_datafiles.isRunning():
                 
                 # Stop the Download process and reset UI
-                print 'coucou'
+
                 self.dwnl_raw_datafiles.STOP = True
                 self.btn_get.setIcon(iconDB.download)
                 self.dwnld_indx = 0
@@ -917,12 +921,12 @@ class dwnldWeather(QtGui.QWidget):
               <tr><td colspan="4"><hr><\td><\tr>
               <tr>
                 <td align="left">Weather<\td>
-                <td align="left" width=15></td>  
+                <td align="left" width=25></td>  
                 <td colspan="2" align="right">Days with<\td>
               <\tr>
               <tr>
                 <td align="left">Variables<\td>
-                <td align="left" width=15></td>  
+                <td align="left" width=25></td>  
                 <td colspan="2" align="right">Missing Data<\td>
               <\tr>              
               <tr><td colspan="4"><hr><\td><\tr>
@@ -933,7 +937,7 @@ class dwnldWeather(QtGui.QWidget):
              LOG += '''
                     <tr>
                       <td align="left">%s</td>
-                      <td align="left" width=15></td>                              
+                      <td align="left" width=25></td>                              
                       <td align="right">%d</td>
                       <td align="right">&nbsp;(%d%%)</td>
                     </tr>
