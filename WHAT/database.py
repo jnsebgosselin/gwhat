@@ -213,7 +213,7 @@ class labels():
         
         #--------------------------------------------------------- FILL TAB ----
         
-        self.fill_station = 'Fill Data for Weather Station :'
+        self.fill_station = 'Fill data for weather station :'
         self.btn_fill_weather = 'Fill Station'
         self.btn_fill_all_weather = 'Fill All Stations'
         self.altlimit = 'Max. Elevation Diff. :'
@@ -244,6 +244,11 @@ class styleUI():
         self.iconSize2 = QSize(20, 20)
         
         self.sideBarWidth = 275
+        
+        #---- colors ----
+        
+        self.red = '#C83737'
+        self.lightgray = '#E6E6E6'
         
         if platform.system() == 'Windows':
             self.font1 = QFont('Segoe UI', 11) # Calibri, Cambria

@@ -79,8 +79,7 @@ class GapFillWeather(QtGui.QWidget):
                      |   LEFT GRID   |   RIGHT GRID   |     
                      |               |                |     
                      ----------------------------------
-                     |           TOOLBAR              |
-                     ----------------------------------
+                    
         """    
         
         #--------------------------------------------------------- Database ----
@@ -309,21 +308,43 @@ class GapFillWeather(QtGui.QWidget):
        
         self.FillTextBox = QtGui.QTextEdit()
         self.FillTextBox.setReadOnly(True)
-        self.FillTextBox.setFrameStyle(styleDB.frame)
-        self.FillTextBox.setMinimumWidth(700)
+#        self.FillTextBox.setFrameStyle(styleDB.frame)
+        self.FillTextBox.setMinimumWidth(700)        
+        self.FillTextBox.setStyleSheet(
+                                    "QTextEdit {background-color:transparent;}")
+        self.FillTextBox.setFrameStyle(0)
+        self.FillTextBox.document().setDocumentMargin(10)
         
-        grid_RIGHT = QtGui.QGridLayout()
-        RIGHT_widget = QtGui.QFrame()
-        RIGHT_widget.setFrameStyle(0)
+        self.sta_display_summary = QtGui.QTextEdit()
+        self.sta_display_summary.setReadOnly(True)
+        self.sta_display_summary.setStyleSheet(
+                                    "QTextEdit {background-color:transparent;}")
+        self.sta_display_summary.setFrameStyle(0)
+        self.sta_display_summary.document().setDocumentMargin(10)
         
-        row = 0
-        grid_RIGHT.addWidget(self.FillTextBox, row, 0)
+        self.gafill_display_table = GapFillDisplayTable(self)
+#        self.gafill_display_table2 = GapFillDisplayTable2(self)
         
-        grid_RIGHT.setRowStretch(0, 500)
-        grid_RIGHT.setColumnStretch(0, 500)
-        grid_RIGHT.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
-                        
-        RIGHT_widget.setLayout(grid_RIGHT)
+#        grid_rightPanel = QtGui.QGridLayout()
+#        new_table = QtGui.QFrame()
+#        new_table.setFrameStyle(0)
+        
+#        row = 0
+#        grid_rightPanel.addWidget(self.gafill_display_table2 , row, 0)
+#        row += 1
+#        grid_rightPanel.addWidget(self.gafill_display_table , row, 0)
+#        
+#        grid_rightPanel.setRowStretch(row, 500)
+##        grid_rightPanel.setColumnStretch(0, 500)
+#        grid_rightPanel.setSpacing(0)
+#        grid_rightPanel.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
+#                        
+#        new_table.setLayout(grid_rightPanel)
+        
+        RIGHT_widget = QtGui.QTabWidget()
+        RIGHT_widget.addTab(self.FillTextBox, 'Correlation Coefficients')
+        RIGHT_widget.addTab(self.sta_display_summary, 'Missing Data Overview')
+        RIGHT_widget.addTab(self.gafill_display_table, 'Gapfill Display Table')        
                         
         #-------------------------------------------------------- MAIN GRID ----
         
@@ -384,7 +405,7 @@ class GapFillWeather(QtGui.QWidget):
         Target station combo box widget.
         '''
                 
-        self.FillTextBox.setText('')
+        self.FillTextBox.setText('')        
         self.target_station_info.setText('')
         self.target_station.clear()
         QtGui.QApplication.processEvents()
@@ -402,15 +423,21 @@ class GapFillWeather(QtGui.QWidget):
                 if files.endswith(".csv"):
                     Sta_path.append(input_folder + '/' + files)
             
+            # Load and format the data and display the results.
             if len(Sta_path) > 0:
+                
                 self.WEATHER.load_and_format_data(Sta_path)
                 self.WEATHER.generate_summary(self.workdir)
+                summary_table = self.WEATHER.read_summary(self.workdir)
+                self.sta_display_summary.setHtml(summary_table)
+                
                 self.set_fill_and_save_dates()
                 
                 self.target_station.addItems(self.WEATHER.STANAME)
                 
                 self.target_station.setCurrentIndex(-1)
                 self.TARGET.index = -1
+                
             else:
                 'Data Directory is empty. Do nothing'
         else:
@@ -469,6 +496,10 @@ class GapFillWeather(QtGui.QWidget):
             m = self.date_end_widget.date().month()
             d = self.date_end_widget.date().day()
             self.FILLPARAM.time_end = xldate_from_date_tuple((y, m, d), 0)
+            
+            self.gafill_display_table.populate_table(self.TARGET,
+                                                     self.WEATHER,
+                                                     self.FILLPARAM)
            
             table, target_info = correlation_table_generation(self.TARGET,
                                                               self.WEATHER,
@@ -756,8 +787,7 @@ class Weather_File_Info():
     """
     <Weather_File_Info> class contains all the weather data and station info
     that are needed for the gapfilling algorithm.
-    
-    
+        
     Data = Weather data organised in a 3D matrix [i, j, k], where:
 
                layer k=1 is Maximum Daily Temperature
@@ -1005,17 +1035,14 @@ class Weather_File_Info():
         dates when the records begin and end, total number of data, and total 
         number of data missing for each meteorological variable, and more.
         """
-    
-        nVAR = len(self.VARNAME)
-        nSTA = len(self.STANAME)
         
         CONTENT = [['#', 'STATION NAMES', 'ClimateID',
                     'Lat. (dd)', 'Lon. (dd)', 'Alt. (m)',
                     'DATE START', 'DATE END', 'Nbr YEARS' , 'TOTAL DATA',
                     'MISSING Tmax', 'MISSING Tmin', 'MISSING Tmean',
-                    'Missing Precip', 'Missing TOTAL']]
+                    'Missing Precip']]
                                 
-        for i in range(nSTA):
+        for i in range(len(self.STANAME)):
             record_date_start = '%04d/%02d/%02d' % (self.DATE_START[i, 0],
                                                     self.DATE_START[i, 1],
                                                     self.DATE_START[i, 2]) 
@@ -1034,28 +1061,154 @@ class Weather_File_Info():
                                                
             number_data = float(time_end - time_start + 1)
             
-            CONTENT.append([i+1 , self.STANAME[i], self.ClimateID[i],
-                            '%0.2f' % self.LAT[i], '%0.2f' % self.LON[i],
+            CONTENT.append([i+1 , self.STANAME[i],
+                            self.ClimateID[i],
+                            '%0.2f' % self.LAT[i],
+                            '%0.2f' % self.LON[i],
                             '%0.2f' % self.ALT[i],
-                            record_date_start, record_date_end,
-                            '%0.1f' % (number_data / 365.25), number_data])
+                            record_date_start,
+                            record_date_end,
+                            '%0.1f' % (number_data / 365.25),
+                            number_data])
                             
             # Missing data information for each meteorological variables   
             for var in range(len(self.VARNAME)):
-                txt1 = self.NUMMISS[i, var]
-                txt2 = self.NUMMISS[i, var] / number_data * 100
-                CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
+                CONTENT[-1].extend(['%d' % (self.NUMMISS[i, var])])
+                
+#                txt1 = self.NUMMISS[i, var]
+#                txt2 = self.NUMMISS[i, var] / number_data * 100
+#                CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
             
-            # Total missing data information.
-            txt1 = np.sum(self.NUMMISS[i, :])
-            txt2 = txt1 / (number_data * nVAR) * 100
-            CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
+#            # Total missing data information.
+#            txt1 = np.sum(self.NUMMISS[i, :])
+#            txt2 = txt1 / (number_data * nVAR) * 100
+#            CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
         
         output_path = project_folder + '/weather_datasets_summary.log'
                 
         with open(output_path, 'wb') as f:
             writer = csv.writer(f,delimiter='\t')
             writer.writerows(CONTENT)
+            
+    def read_summary(self, project_folder): #===============================
+
+        """
+        This method read the content of the file generated by the method
+        <generate_summary> and will return the content of the file in a HTML
+        formatted table
+        """
+        
+        #-------------------------------------------------------- read data ----
+        
+        filename = project_folder + '/weather_datasets_summary.log'
+        with open(filename, 'rb') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+            reader = reader[1:]
+        
+#        FIELDS = ['&#916;Alt.<br>(m)', 'Dist.<br>(km)', 'Tmax', 
+#                  'Tmin', 'Tmean', 'Ptot']
+        
+        #------------------------------------------- generate table summary ----
+        
+        table = '''
+                <table border="0" cellpadding="3" cellspacing="0" 
+                 align="center">  
+                  <tr>
+                    <td colspan="10"><hr></td>
+                  </tr>                             
+                  <tr> 
+                    <td align="center" valign="bottom"  width=30 rowspan="3">
+                      #
+                    </td>
+                    <td align="left" valign="bottom" rowspan="3">
+                      Station
+                    </td>
+                    <td align="center" valign="bottom" rowspan="3">
+                      Climate<br>ID
+                    </td>
+                    <td align="center" valign="bottom" rowspan="3">
+                      From<br>year
+                    </td>
+                    <td align="center" valign="bottom" rowspan="3">
+                      To<br>year
+                    </td>
+                    <td align="center" valign="bottom" rowspan="3">
+                      Nbr.<br>of<br>years
+                    <td align="center" valign="middle" colspan="4">
+                      % of missing data for
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="4"><hr></td>
+                  </tr>
+                  <tr>                    
+                    <td align="center" valign="middle">
+                      T<sub>max</sub>
+                    </td>
+                    <td align="center" valign="middle">
+                      T<sub>min</sub>
+                    </td>
+                    <td align="center" valign="middle">
+                      T<sub>mean</sub>
+                    </td>
+                    <td align="center" valign="middle">
+                      P<sub>tot</sub>
+                    </td>
+                  </tr>
+                  <tr>
+                    <td colspan="10"><hr></td>
+                  </tr> 
+                '''
+        for i in range(len(reader)):
+            
+            color = ['transparent', '#E6E6E6']
+            
+            Ntotal = float(reader[i][9])
+            TMAX = float(reader[i][10]) / Ntotal * 100
+            TMIN = float(reader[i][11]) / Ntotal * 100
+            TMEAN = float(reader[i][12]) / Ntotal * 100
+            PTOT = float(reader[i][13]) / Ntotal * 100
+            firstyear = reader[i][6][:4]
+            lastyear = reader[i][7][:4]
+            nyears = float(lastyear) - float(firstyear)
+            
+            table += '''
+                     <tr bgcolor="%s">
+                       <td align="center" valign="middle">
+                         %02d
+                       </td>
+                       <td align="left" valign="middle">
+                         <font size="3">%s</font>
+                       </td>
+                       <td align="center" valign="middle">
+                         <font size="3">%s</font>
+                       </td>
+                       <td align="center" valign="middle">
+                         <font size="3">%s</font>
+                       </td>
+                       <td align="center" valign="middle">
+                         <font size="3">%s</font>
+                       </td>
+                       <td align="center" valign="middle">
+                         <font size="3">%0.0f</font>
+                       </td>
+                       <td align="center" valign="middle">%0.0f</td>
+                       <td align="center" valign="middle">%0.0f</td>
+                       <td align="center" valign="middle">%0.0f</td>
+                       <td align="center" valign="middle">%0.0f</td>
+                     </tr>
+                     ''' % (color[i%2], i+1, reader[i][1], reader[i][2],
+                            firstyear, lastyear, nyears, 
+                            TMAX, TMIN, TMEAN, PTOT)
+        
+        table += """
+                   <tr>
+                     <td colspan="10"><hr></td>
+                   </tr>
+                 </table>
+                 """
+        
+        return table
             
 #===============================================================================
 def alt_and_dist_calc(WEATHER, target_station_index):
@@ -1139,15 +1292,19 @@ def correlation_worker(WEATHER, target_station_index):
 
 #===============================================================================
 def correlation_table_generation(TARGET, WEATHER, FILLPARAM): 
-# This fucntion generate the output to be displayed in the <Fill Tab> display
-# area after a target station has been selected by the user.
-#===============================================================================                                  
-
-    STANAME = WEATHER.STANAME
     
-    FIELD2 = ['&#916;Alt.<br>(m)', 'Dist.<br>(km)', 'Tmax', 
-              'Tmin', 'Tmean', 'Ptot']
-        
+    """
+    This fucntion generate an HTML output to be displayed in the 
+    <Fill Data> tab display area after a target station has been 
+    selected by the user.
+    """
+    
+#===============================================================================                                  
+    
+    styleDB = db.styleUI()
+    
+    STANAME = WEATHER.STANAME
+            
     nSTA = len(STANAME)
     nVAR = len(WEATHER.VARNAME)
     Ndata_limit = int(365 / 2.)
@@ -1214,7 +1371,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     index_start = np.where(TIME == FILLPARAM.time_start)[0][0]
     index_end = np.where(TIME == FILLPARAM.time_end)[0][0]
               
-    #-----------------------------------------------------CORRELATION TABLE-----
+    #---------------------------------------------- Determine filling dates ----
     
     fill_date_start = xldate_as_tuple(FILLPARAM.time_start, 0)
     fill_date_start = '%02d/%02d/%04d' % (fill_date_start[2],
@@ -1226,24 +1383,40 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                                         fill_date_end[1],
                                         fill_date_end[0])
                                         
-    #----------------------------------------------------missing data table-----
-                                        
-    FIELDS = ['Tmax', 'Tmin', 'Tmean', 'Ptot', 'TOTAL']
-    
-    table = '''<font>
-                 Number of missing data from <b>%s</b> to <b>%s</b> for
-                 station <b>%s</b>:
-               </font>
-               <br>
-               <table border="1" cellpadding="3" cellspacing="0" 
-               align="center">
-                 <tr>''' % (fill_date_start, fill_date_end, TARGET.name)
+    #--------------------------------------------------- missing data table ----
+   
+    table1 = '''
+             <p align=justify>               
+               Table 1 : Number of days with missing data from 
+               <b>%s</b> to <b>%s</b> for station <b>%s</b>:             
+             </p>
+             ''' % (fill_date_start, fill_date_end, TARGET.name)
+    table1 += '''
+              <table border="0" cellpadding="3" cellspacing="0" 
+                     align="center">
+                <tr>
+                  <td colspan="5"><hr></td>
+                </tr>
+                <tr>
+              '''
                  
-    for field in FIELDS[:-1]:
-        table +=  '<td width=147.5 align="center">%s</td>' % field
+    table1 +=  '''
+               <td width=135 align="left">Weather Variable</td>
+               <td align="center">T<sub>max</sub></td>
+               <td align="center">T<sub>min</sub></sub></td>
+               <td align="center">T<sub>mean</sub></td>
+               <td align="center">P<sub>tot</sub></td>
+               '''
         
-    table +=  '''</tr>
-                 <tr>'''
+                   
+    table1 +=  '''
+               </tr>
+               <tr>
+                 <td colspan="5"><hr></td>
+               </tr>
+               <tr>
+                 <td width=135 align="left">Days with<br>missing data</td>
+               '''
                  
     total_nbr_data = index_end - index_start + 1
     for var in range(nVAR):                
@@ -1253,96 +1426,154 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     
         nan_percent = round(nbr_nan / total_nbr_data * 100, 1)
 
-        table += '''<td align="center">
-                      %d&nbsp;&nbsp;(%0.1f %%)
-                    </td>''' % (nbr_nan, nan_percent)
+        table1 += '''<td align="center">
+                      %d<br>(%0.1f %%)
+                     </td>''' % (nbr_nan, nan_percent)
                     
-    table +=  '''</tr>
+    table1 +=  '''
+                 </tr>
+                 <tr>
+                   <td colspan="5"><hr></td>
+                 </tr>
                </table>
-               <br>'''
+               <br><br>'''
     
-    #-----------------------------------------------------correlation table-----
+    #--------------------------------------------------- corr. coeff. table ----
+    table2 = table1          
+    table2 += '''
+              <p align="justify">
+                <font size="3">
+                  Table 2 : Altitude difference, horizontal distance and
+                  correlation coefficients for each meteorological variables,
+                  calculated between station <b>%s</b> and its neighboring
+                  stations :
+                <\font>
+              </p>
+              ''' % TARGET.name
     
-    table += '''<p>
-                  Altitude difference, horizontal distance and correlation
-                  coefficients for each meteorological variables, calculated
-                  between station <b>%s</b> and its neighboring stations :
-                </p>
-                <br>
-                <table border="1" cellpadding="3" cellspacing="0" 
-                 align="center">                               
-                  <tr> 
-                    <td align="center" valign="middle" width=30 rowspan="2">
-                      #
-                    </td>
-                    <td align="center" valign="middle" width=200 rowspan="2">
-                      Neighboring Stations
-                    </td>''' % TARGET.name
+    #---- HEADER ----
+      
+    table2 += '''
+              <table border="0" cellpadding="3" cellspacing="0" 
+                     align="center" width="100%%">
+                <tr>
+                  <td colspan="9"><hr></td>
+                </tr>                             
+                <tr> 
+                  <td align="center" valign="bottom" width=30 rowspan="3">
+                    #
+                  </td>
+                  <td align="left" valign="bottom" width=200 rowspan="3">
+                    Neighboring Stations
+                  </td>
+                  <td width=60 align="center" valign="bottom" rowspan="3">
+                    &#916;Alt.<br>(m)
+                  </td> 
+                  <td width=60 align="center" valign="bottom" rowspan="3">
+                    Dist.<br>(km)
+                  </td>
+                  <td align="center" valign="middle" colspan="4">
+                    Correlation Coefficients
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="4"><hr></td>
+                </tr> 
+                <tr>
+                  <td width=60 align="center" valign="middle">
+                    T<sub>max</sub>
+                  </td>
+                  <td width=60 align="center" valign="middle">
+                    T<sub>min</sub>
+                  </td>
+                  <td width=60 align="center" valign="middle">
+                    T<sub>mean</sub>
+                  </td>
+                  <td width=60 align="center" valign="middle">
+                    P<sub>tot</sub>
+                  </td>
+                </tr>
+                <tr>
+                  <td colspan="9"><hr></td>
+                </tr> 
+              ''' 
     
-    for field in FIELD2[:2]:
-        table += '''<td width=60 align="center" valign="middle" rowspan="2">
-                      %s
-                    </td>''' % field
-                    
-    table +=     '''<td 240 align="center" colspan="4">
-                      Correlation Coefficients
-                    </td>                    
-                  <tr>'''
-
-    for field in FIELD2[2:]:
-        table += '<td width=60 align="center" rowspan="1">%s</td>' % (field)
-    
+    color = ['transparent', styleDB.lightgray]
     index = range(nSTA)
     index.remove(target_station_index)
-    counter = 1
+    counter = 0
     for i in index:
         
-        table += '''</tr>
-                    <tr>
-                      <td align="center" valign="middle">%02d</td>
-                      <td >
-                        <font size="3">%s</font>
-                      </td>
-                      <td align="right" valign="middle">''' % (counter,
-                                                               STANAME[i])
+        #---- Counter and Neighboring station names ----
+        
+        table2 += '''
+                   <tr bgcolor="%s">
+                     <td align="center" valign="top">%02d</td>
+                     <td valign="top">
+                       %s
+                     </td>
+                  ''' % (color[counter%2], counter+1, STANAME[i])
+        
+        #---- Altitude diff. ----
         
         if abs(ALTDIFF[i]) >= limitAlt and limitAlt >= 0:
-            table +=   '<font color="red">'
+            fontcolor = styleDB.red
         else:
-            table +=   '<font>'
-            
-        table +=       '''%0.1f&nbsp;&nbsp;
-                        </font>
-                      </td>
-                      <td align="right" valign="middle">''' % ALTDIFF[i]
+            fontcolor = ''
+        
+        table2 += '''
+                     <td align="center" valign="top">
+                       <font color="%s">%0.1f</font>
+                     </td>
+                  ''' % (fontcolor, ALTDIFF[i])
+        
+        #---- Horiz. distance ----
         
         if HORDIST[i] >= limitDist and limitDist >= 0:
-            table +=   '<font color="red">'
+            fontcolor = styleDB.red
         else :
-            table +=   '<font>'
-            
-        table +=       '''%0.1f&nbsp;&nbsp;
-                        </font>
-                      </td>''' % HORDIST[i]
-                      
-        for value in np.round(CORCOEF[:, i], 3):
-            table += '<td align="center" valign="middle">'
+            fontcolor = ''
+        
+        table2 += '''
+                     <td align="center" valign="top">
+                       <font color="%s">%0.1f</font>
+                     </td>
+                  ''' % (fontcolor, HORDIST[i])
+        
+        #---- correlation coefficients ----
+           
+        for value in CORCOEF[:, i]:
             if value > 0.7:
-                table += '<font>%0.3f</font></td>' % (round(value, 3))                          
+                fontcolor = ''
             else:
-                table += ('<font color="red">%0.3f</font></td>') % (value)
+                fontcolor = styleDB.red
                 
+            table2 += '''
+                      <td align="center" valign="top">
+                        <font color="%s">%0.3f</font>
+                      </td>
+                      ''' % (fontcolor, value)
+        table2 += '</tr>'
         counter += 1
         
-    table += '''  </tr>
-                </table>
-                <p>
-                  Correlation coefficients are set to <b>nan</b> for a given 
-                  variable if there is less than <b>%d</b> pairs of data 
-                  between the target and the neighboring station.
-                </p>''' % (Ndata_limit)
+    table2 += '''  <tr>
+                     <td colspan="8"><hr></td>
+                   </tr> 
+                   <tr>
+                     <td align="justify" colspan="8">
+                     <font size="2">
+                       * Correlation coefficients are set to
+                       <font color="#C83737">NaN</font> for a given 
+                       variable if there is less than
+                       <font color="#C83737">%d</font> pairs of data 
+                       between the target and the neighboring station.
+                       </font>
+                     </td>
+                   </tr>
+                 </table>                   
+                 ''' % (Ndata_limit)
              
-    return table, target_info
+    return table2, target_info
 
 #===============================================================================
 class FillWorker(QtCore.QThread):
@@ -2208,7 +2439,343 @@ def L1LinearRegression(X, Y):
         B = linalg_lstsq(Xb, Yb)[0]
         
     return B
+
+#===============================================================================
+class GapFillDisplayTable2(QtGui.QTableWidget):
     
+    """
+    Widget for displaying usefull information for the gapfilling of daily
+    datasets.
+    """
+    
+#===============================================================================
+    
+    def __init__(self, parent=None): #=====================
+        super(GapFillDisplayTable2, self).__init__(parent)
+
+        self.initUI()
+            
+    def initUI(self): #=========================================================
+        
+        styleDB = db.styleUI()
+#        ttipDB  = Tooltips('English') 
+        
+        #------------------------------------------------------------ Style ----
+        
+        self.setFrameStyle(styleDB.frame)
+        self.setShowGrid(False)
+        self.setAlternatingRowColors(True)
+        self.setMinimumWidth(650)
+        
+        #----------------------------------------------------------- Header ----
+        
+#        HEADER = ['Weather Stations', '&#916;Alt.<br>(m)', 'Dist.\n(km)']
+        HEADER = ['', 'Correlation Coefficients' ]
+        
+        myHeader = MyHorizHeader(self)
+        self.setHorizontalHeader(myHeader)
+        
+        self.setColumnCount(len(HEADER))
+        self.setHorizontalHeaderLabels(HEADER)        
+        self.verticalHeader().hide()
+        
+        #----------------------------------------------- Column Size Policy ----
+        
+        w1 = 65
+        w2 = 50
+        self.setColumnWidth(1, 4*w2)
+        
+        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Stretch)
+        
+        self.setMinimumHeight(10);
+        
+#===============================================================================
+class GapFillDisplayTable(QtGui.QTableWidget):
+    
+    """
+    Widget for displaying usefull information for the gapfilling of daily
+    datasets.
+    """
+    
+#===============================================================================
+    
+    def __init__(self, parent=None): #=====================
+        super(GapFillDisplayTable, self).__init__(parent)
+
+        self.initUI()
+            
+    def initUI(self): #=========================================================
+        
+        styleDB = db.styleUI()
+#        ttipDB  = Tooltips('English') 
+        
+        #------------------------------------------------------------ Style ----
+        
+        self.setFrameStyle(styleDB.frame)
+        self.setShowGrid(False)
+        self.setAlternatingRowColors(True)
+        self.setMinimumWidth(650)
+        
+        #----------------------------------------------------------- Header ----
+        
+#        HEADER = ['Weather Stations', '&#916;Alt.<br>(m)', 'Dist.\n(km)']
+        HEADER = ['Weather Stations', '&#916;Alt.<br>(m)', 'Dist.<br>(km)',
+                  'T<sub>max</sub>', 'T<sub>min</sub>', 'T<sub>mean</sub>',
+                  'P<sub>tot</sub>' ]
+        
+        myHeader = MyHorizHeader(self)
+        self.setHorizontalHeader(myHeader)
+        
+        self.setColumnCount(len(HEADER))
+        self.setHorizontalHeaderLabels(HEADER)        
+        self.verticalHeader().hide()
+        
+        #----------------------------------------------- Column Size Policy ----
+        
+        w1 = 65
+        w2 = 50
+        self.setColumnWidth(1, w1)
+        self.setColumnWidth(2, w1)
+        self.setColumnWidth(3, w2)
+        self.setColumnWidth(4, w2)
+        self.setColumnWidth(5, w2)
+        self.setColumnWidth(6, w2)
+        
+        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
+        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Stretch)
+        
+        #----------------------------------------------------------- Events ----
+        
+    class NumTableWidgetItem(QtGui.QTableWidgetItem): #=========================
+        
+    # To be able to sort numerical float item within a given column.
+
+    # http://stackoverflow.com/questions/12673598/
+    # python-numerical-sorting-in-qtablewidget
+    
+        def __init__(self, text, sortKey):
+            QtGui.QTableWidgetItem.__init__(self, text, 
+                                            QtGui.QTableWidgetItem.UserType)
+            self.sortKey = sortKey
+            
+        # Qt uses a simple < check for sorting items, override this to use
+        # the sortKey
+        def __lt__(self, other):
+#            print ('%0.2f < %0.2f = %d') % (self.sortKey, other.sortKey, self.sortKey < other.sortKey )
+#            print self.sortKey < other.sortKey
+            if np.isnan(self.sortKey):
+                return True
+            else:
+                return abs(self.sortKey) < abs(other.sortKey)
+    
+            
+    def populate_table(self, TARGET, WEATHER, FILLPARAM): #=====================
+        
+        #---------------------------------------------------- Organize Info ----
+
+        styleDB = db.styleUI()
+                
+        #---------------------------------------------------- Organize Info ----
+        
+        STANAME = WEATHER.STANAME
+        CLIMATEID = WEATHER.ClimateID
+        
+        HORDIST = TARGET.HORDIST
+        ALTDIFF = TARGET.ALTDIFF
+        
+        CORCOEF = TARGET.CORCOEF
+        
+        limitDist = FILLPARAM.limitDist
+        limitAlt = FILLPARAM.limitAlt
+        
+        nVAR = len(WEATHER.VARNAME)
+        
+        #------------------------------------------------------- Fill Table ----
+        
+        nrow = len(STANAME)
+        self.setRowCount(nrow)
+                
+#        color = ['transparent', styleDB.lightgray]
+#        index = range(nSTA)
+#        index.remove(target_station_index)
+#        counter = 0
+        self.setSortingEnabled(False)
+        for row in range(nrow):
+            
+            #---- Weather Station ----
+            
+            col = 0
+            
+            item = QtGui.QTableWidgetItem(STANAME[row])
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            item.setToolTip('%s (%s)' % (STANAME[row], CLIMATEID[row]))
+            self.setItem(row, col, item)
+            
+            #---- Alt. Diff. ----
+            
+            col += 1
+            
+            item = self.NumTableWidgetItem('%0.1f' % ALTDIFF[row], ALTDIFF[row])
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            if abs(ALTDIFF[row]) >= limitAlt and limitAlt >= 0:
+                item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
+            self.setItem(row, col, item)
+            
+            #---- Horiz. Dist. ----
+            
+            col += 1
+            
+            item = self.NumTableWidgetItem('%0.1f' % HORDIST[row], HORDIST[row])
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)     
+            if HORDIST[row] >= limitDist and limitDist >= 0:
+                item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
+            self.setItem(row, col, item)
+             
+            #---- Correlation Coefficients. ----
+                        
+            for var in range(nVAR):
+                
+                col += 1
+            
+                item = self.NumTableWidgetItem('%0.3f' % CORCOEF[var, row],
+                                               CORCOEF[var, row])
+                item.setFlags(~QtCore.Qt.ItemIsEditable)
+                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                if CORCOEF[var, row] < 0.7 or np.isnan(CORCOEF[var, row]):
+                    item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
+                self.setItem(row, col, item)
+            
+        self.setSortingEnabled(True)     
+ 
+       
+class MyHorizHeader(QtGui.QHeaderView):
+    
+    # https://forum.qt.io/topic/30598/
+    # solved-how-to-display-subscript-text-in-header-of-qtableview/5
+    
+    # http://stackoverflow.com/questions/1956542/
+    # how-to-make-item-view-render-rich-html-text-in-qt
+    
+    # http://stackoverflow.com/questions/2336079/
+    # can-i-have-more-than-one-line-in-a-table-header-in-qt
+        
+    def __init__(self, parent=None):
+        super(MyHorizHeader, self).__init__(QtCore.Qt.Horizontal, parent)
+        
+        self.parent = parent
+        # http://stackoverflow.com/questions/18777554/
+        # why-wont-my-custom-qheaderview-allow-sorting/18777555#18777555
+        self.setClickable(True) 
+        self.setHighlightSections(True)
+        self.container = '''
+                         <table border="0" cellpadding="0" cellspacing="0" 
+                                align="center" width="100%%">
+                           <tr>
+                             <td valign=middle align=center
+                                 style="padding-top:4px; padding-bottom:4px">
+                               %s
+                             </td>
+                           </tr>
+                         </table>
+                         '''
+#        self.setSortIndicatorShown(True)
+                         
+    def paintSection(self, painter, rect, logicalIndex):
+        
+        
+#        painter.save()
+#        QtGui.QHeaderView.paintSection(self, painter, rect, logicalIndex)
+#        painter.restore()
+                        
+        if not rect.isValid():
+            return
+            
+        #-------------------------------------------- is Column Highlighted ----
+        
+        selectedIndx = self.selectionModel().selectedIndexes()
+        isSectionHighlighted = False
+        for index in selectedIndx:
+            if (logicalIndex == index.column()) == True:
+                isSectionHighlighted = True
+        
+        #-------------------------------------------------- prepare options ----
+        
+        opt = QtGui.QStyleOptionHeader()
+        opt.rect = rect
+        opt.section = logicalIndex
+        opt.text = ""
+        
+        visual = self.visualIndex(logicalIndex)        
+        if self.count() == 1:
+            opt.position = QtGui.QStyleOptionHeader.OnlyOneSection
+        elif visual == 0:
+            opt.position = QtGui.QStyleOptionHeader.Beginning
+        elif visual == self.count() - 1:
+            opt.position = QtGui.QStyleOptionHeader.End
+        else:
+            opt.position = QtGui.QStyleOptionHeader.Middle   
+            
+        #---------------------------------------------------- draw sections ----
+
+        self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter)
+               
+        #----------------------------------- prepare the html text yourself ----
+               
+        # determine the height of the Header
+                                            
+        label = str(self.model().headerData(logicalIndex, self.orientation())) 
+        if isSectionHighlighted:
+            label = '<b>%s</b>' % label                                  
+
+        label = self.container % label
+        
+        TextDoc = QtGui.QTextDocument()
+        TextDoc.setTextWidth(rect.width())
+        TextDoc.setDocumentMargin(0)
+        TextDoc.setHtml(label)
+        
+        #--------------------------------------------------- paint the html ----
+        
+        painter.save()
+        
+            
+        dy = (rect.height() - TextDoc.size().height()) / 2 # centerAlign
+        dx = rect.left()                                   # leftAlign
+        painter.translate(dx, dy)
+            
+        TextDoc.drawContents(
+                       painter, QtCore.QRect(0, 0, rect.width(), rect.height()))        
+        
+        
+        painter.restore()
+        
+        
+    def sizeHint(self):
+        
+        # Determine what is the tallest header label and return the value.
+        
+        TextDoc_height = [1] * self.count() 
+        for logicalIndex in range(self.count()):
+            
+            label = str(self.model().headerData(logicalIndex, 
+                                                self.orientation()))
+            label = self.container % label 
+                    
+            TextDoc = QtGui.QTextDocument()
+            TextDoc.setTextWidth(self.sectionSize(logicalIndex))
+            TextDoc.setDocumentMargin(0)
+            TextDoc.setHtml(label)
+            TextDoc_height[logicalIndex] = TextDoc.size().height()
+            
+        baseSize = QtGui.QHeaderView.sizeHint(self)
+        baseSize.setHeight(max(TextDoc_height))
+        
+        return baseSize
+
            
 if __name__ == '__main__':
     

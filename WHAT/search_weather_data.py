@@ -821,6 +821,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         ttipDB  = Tooltips('English')     
         
         #------------------------------------------------------------ Style ----
+        
         self.setFont(StyleDB.font1) 
         self.setFrameStyle(StyleDB.frame)
         self.setShowGrid(False)
@@ -878,7 +879,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             # the sortKey
             def __lt__(self, other):
                 return self.sortKey < other.sortKey
-                
+            
     def eventFilter(self, source, event): #=====================================
 
         # http://stackoverflow.com/questions/13788452/
@@ -1115,7 +1116,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
     
     def save_staList(self, filename): #=========================================
         
-        headerDB = db.headers()
+        headerDB = db.FileHeaders()
               
         #---- Grab the content of the entire table ----
               

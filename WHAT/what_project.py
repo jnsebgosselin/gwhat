@@ -129,9 +129,9 @@ class NewProject(QtGui.QDialog):
         locaCoord_title.setAlignment(QtCore.Qt.AlignLeft)
 
         label_Lat = QtGui.QLabel('Latitude :')
-        label_Lat2 = QtGui.QLabel('N')
+        label_Lat2 = QtGui.QLabel('North')
         label_Lon = QtGui.QLabel('Longitude :')
-        label_Lon2 = QtGui.QLabel('W')
+        label_Lon2 = QtGui.QLabel('West')
         
         self.Lat_SpinBox = QtGui.QDoubleSpinBox()
         self.Lat_SpinBox.setAlignment(QtCore.Qt.AlignCenter)        
@@ -384,7 +384,7 @@ class OpenProject(QtGui.QDialog):
     
     def initUI(self):
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         styleDB = db.styleUI()
             
         #---------------------------------------------------- WINDOW SETUP ----
@@ -798,7 +798,7 @@ class SeFileSystemModel(QtGui.QFileSystemModel):
 
     def data(self, index, role):
         
-        iconDB = db.icons()
+        iconDB = db.Icons()
         
         if index.column() == 0 and role == QtCore.Qt.DecorationRole:
             if os.path.splitext(index.data())[-1] == '.what':
