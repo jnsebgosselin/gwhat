@@ -25,6 +25,7 @@ import sys
 from time import ctime, strftime, sleep
 from os import getcwd, listdir, makedirs, path
 from copy import copy
+import platform
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -310,20 +311,19 @@ class GapFillWeather(QtGui.QWidget):
         self.FillTextBox.setReadOnly(True)
 #        self.FillTextBox.setFrameStyle(styleDB.frame)
         self.FillTextBox.setMinimumWidth(700)        
-        self.FillTextBox.setStyleSheet(
-                                    "QTextEdit {background-color:transparent;}")
+#        self.FillTextBox.setStyleSheet(
+#                                    "QTextEdit {background-color:transparent;}")
         self.FillTextBox.setFrameStyle(0)
         self.FillTextBox.document().setDocumentMargin(10)
         
         self.sta_display_summary = QtGui.QTextEdit()
         self.sta_display_summary.setReadOnly(True)
-        self.sta_display_summary.setStyleSheet(
-                                    "QTextEdit {background-color:transparent;}")
+#        self.sta_display_summary.setStyleSheet(
+#                                    "QTextEdit {background-color:transparent;}")
         self.sta_display_summary.setFrameStyle(0)
         self.sta_display_summary.document().setDocumentMargin(10)
         
         self.gafill_display_table = GapFillDisplayTable(self)
-#        self.gafill_display_table2 = GapFillDisplayTable2(self)
         
 #        grid_rightPanel = QtGui.QGridLayout()
 #        new_table = QtGui.QFrame()
@@ -344,7 +344,7 @@ class GapFillWeather(QtGui.QWidget):
         RIGHT_widget = QtGui.QTabWidget()
         RIGHT_widget.addTab(self.FillTextBox, 'Correlation Coefficients')
         RIGHT_widget.addTab(self.sta_display_summary, 'Missing Data Overview')
-        RIGHT_widget.addTab(self.gafill_display_table, 'Gapfill Display Table')        
+        RIGHT_widget.addTab(self.gafill_display_table, 'New Table (Work-in-Progress)')        
                         
         #-------------------------------------------------------- MAIN GRID ----
         
@@ -1500,6 +1500,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     
     color = ['transparent', styleDB.lightgray]
     index = range(nSTA)
+    TARGET.index
     index.remove(target_station_index)
     counter = 0
     for i in index:
@@ -2439,56 +2440,6 @@ def L1LinearRegression(X, Y):
         B = linalg_lstsq(Xb, Yb)[0]
         
     return B
-
-#===============================================================================
-class GapFillDisplayTable2(QtGui.QTableWidget):
-    
-    """
-    Widget for displaying usefull information for the gapfilling of daily
-    datasets.
-    """
-    
-#===============================================================================
-    
-    def __init__(self, parent=None): #=====================
-        super(GapFillDisplayTable2, self).__init__(parent)
-
-        self.initUI()
-            
-    def initUI(self): #=========================================================
-        
-        styleDB = db.styleUI()
-#        ttipDB  = Tooltips('English') 
-        
-        #------------------------------------------------------------ Style ----
-        
-        self.setFrameStyle(styleDB.frame)
-        self.setShowGrid(False)
-        self.setAlternatingRowColors(True)
-        self.setMinimumWidth(650)
-        
-        #----------------------------------------------------------- Header ----
-        
-#        HEADER = ['Weather Stations', '&#916;Alt.<br>(m)', 'Dist.\n(km)']
-        HEADER = ['', 'Correlation Coefficients' ]
-        
-        myHeader = MyHorizHeader(self)
-        self.setHorizontalHeader(myHeader)
-        
-        self.setColumnCount(len(HEADER))
-        self.setHorizontalHeaderLabels(HEADER)        
-        self.verticalHeader().hide()
-        
-        #----------------------------------------------- Column Size Policy ----
-        
-        w1 = 65
-        w2 = 50
-        self.setColumnWidth(1, 4*w2)
-        
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
-        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Stretch)
-        
-        self.setMinimumHeight(10);
         
 #===============================================================================
 class GapFillDisplayTable(QtGui.QTableWidget):
@@ -2520,7 +2471,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         #----------------------------------------------------------- Header ----
         
 #        HEADER = ['Weather Stations', '&#916;Alt.<br>(m)', 'Dist.\n(km)']
-        HEADER = ['Weather Stations', '&#916;Alt.<br>(m)', 'Dist.<br>(km)',
+        HEADER = ['Neighboring Stations', '&#916;Alt.<br>(m)', 'Dist.<br>(km)',
                   'T<sub>max</sub>', 'T<sub>min</sub>', 'T<sub>mean</sub>',
                   'P<sub>tot</sub>' ]
         
@@ -2537,10 +2488,12 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         w2 = 50
         self.setColumnWidth(1, w1)
         self.setColumnWidth(2, w1)
+#        self.setColumnHidden(2, True)
         self.setColumnWidth(3, w2)
         self.setColumnWidth(4, w2)
         self.setColumnWidth(5, w2)
         self.setColumnWidth(6, w2)
+        
         
         self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Stretch)
@@ -2549,10 +2502,10 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         
     class NumTableWidgetItem(QtGui.QTableWidgetItem): #=========================
         
-    # To be able to sort numerical float item within a given column.
+        # To be able to sort numerical float item within a given column.
 
-    # http://stackoverflow.com/questions/12673598/
-    # python-numerical-sorting-in-qtablewidget
+        # http://stackoverflow.com/questions/12673598/
+        # python-numerical-sorting-in-qtablewidget
     
         def __init__(self, text, sortKey):
             QtGui.QTableWidgetItem.__init__(self, text, 
@@ -2561,9 +2514,9 @@ class GapFillDisplayTable(QtGui.QTableWidget):
             
         # Qt uses a simple < check for sorting items, override this to use
         # the sortKey
+            
         def __lt__(self, other):
-#            print ('%0.2f < %0.2f = %d') % (self.sortKey, other.sortKey, self.sortKey < other.sortKey )
-#            print self.sortKey < other.sortKey
+
             if np.isnan(self.sortKey):
                 return True
             else:
@@ -2593,34 +2546,33 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         
         #------------------------------------------------------- Fill Table ----
         
-        nrow = len(STANAME)
-        self.setRowCount(nrow)
+        nSTA = len(STANAME)
+        self.setRowCount(nSTA - 1)
                 
-#        color = ['transparent', styleDB.lightgray]
-#        index = range(nSTA)
-#        index.remove(target_station_index)
-#        counter = 0
+        indxs = range(nSTA)
+        indxs.remove(TARGET.index)
+        row = 0
         self.setSortingEnabled(False)
-        for row in range(nrow):
+        for indx in indxs:
             
             #---- Weather Station ----
             
             col = 0
             
-            item = QtGui.QTableWidgetItem(STANAME[row])
+            item = QtGui.QTableWidgetItem(STANAME[indx])
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-            item.setToolTip('%s (%s)' % (STANAME[row], CLIMATEID[row]))
+            item.setToolTip('%s (%s)' % (STANAME[indx], CLIMATEID[indx]))
             self.setItem(row, col, item)
             
             #---- Alt. Diff. ----
             
             col += 1
             
-            item = self.NumTableWidgetItem('%0.1f' % ALTDIFF[row], ALTDIFF[row])
+            item = self.NumTableWidgetItem('%0.1f' % ALTDIFF[indx], ALTDIFF[indx])
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
-            if abs(ALTDIFF[row]) >= limitAlt and limitAlt >= 0:
+            if abs(ALTDIFF[indx]) >= limitAlt and limitAlt >= 0:
                 item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
             self.setItem(row, col, item)
             
@@ -2628,10 +2580,10 @@ class GapFillDisplayTable(QtGui.QTableWidget):
             
             col += 1
             
-            item = self.NumTableWidgetItem('%0.1f' % HORDIST[row], HORDIST[row])
+            item = self.NumTableWidgetItem('%0.1f' % HORDIST[indx], HORDIST[indx])
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignCenter)     
-            if HORDIST[row] >= limitDist and limitDist >= 0:
+            if HORDIST[indx] >= limitDist and limitDist >= 0:
                 item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
             self.setItem(row, col, item)
              
@@ -2641,13 +2593,15 @@ class GapFillDisplayTable(QtGui.QTableWidget):
                 
                 col += 1
             
-                item = self.NumTableWidgetItem('%0.3f' % CORCOEF[var, row],
-                                               CORCOEF[var, row])
+                item = self.NumTableWidgetItem('%0.3f' % CORCOEF[var, indx],
+                                               CORCOEF[var, indx])
                 item.setFlags(~QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
-                if CORCOEF[var, row] < 0.7 or np.isnan(CORCOEF[var, row]):
+                if CORCOEF[var, indx] < 0.7 or np.isnan(CORCOEF[var, indx]):
                     item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
                 self.setItem(row, col, item)
+                
+            row += 1                
             
         self.setSortingEnabled(True)     
  
@@ -2663,51 +2617,69 @@ class MyHorizHeader(QtGui.QHeaderView):
     # http://stackoverflow.com/questions/2336079/
     # can-i-have-more-than-one-line-in-a-table-header-in-qt
         
-    def __init__(self, parent=None):
+    def __init__(self, parent=None): #==========================================
         super(MyHorizHeader, self).__init__(QtCore.Qt.Horizontal, parent)
         
-        self.parent = parent
         # http://stackoverflow.com/questions/18777554/
         # why-wont-my-custom-qheaderview-allow-sorting/18777555#18777555
+        
         self.setClickable(True) 
-        self.setHighlightSections(True)
-        self.container = '''
-                         <table border="0" cellpadding="0" cellspacing="0" 
-                                align="center" width="100%%">
-                           <tr>
-                             <td valign=middle align=center
-                                 style="padding-top:4px; padding-bottom:4px">
-                               %s
-                             </td>
-                           </tr>
-                         </table>
-                         '''
-#        self.setSortIndicatorShown(True)
-                         
-    def paintSection(self, painter, rect, logicalIndex):
         
+        self.setHighlightSections(False)
+        self.showSectionSep = False                
+        self.showMouseOverSection = True        
+        self.multirow = True
         
-#        painter.save()
-#        QtGui.QHeaderView.paintSection(self, painter, rect, logicalIndex)
-#        painter.restore()
-                        
-        if not rect.isValid():
-            return
-            
-        #-------------------------------------------- is Column Highlighted ----
+        self.setSortIndicatorShown(False)
         
-        selectedIndx = self.selectionModel().selectedIndexes()
-        isSectionHighlighted = False
-        for index in selectedIndx:
-            if (logicalIndex == index.column()) == True:
-                isSectionHighlighted = True
+    
+    def paintEvent(self, event): #==============================================
         
-        #-------------------------------------------------- prepare options ----
+        qp = QtGui.QPainter()
+        qp.begin(self.viewport())
+        
+        if self.showSectionSep:
+            QtGui.QHeaderView.paintEvent(self, event)
+        else:
+            qp.save()
+            self.paintHeader(qp) 
+            qp.restore()
+       
+        qp.save()
+        self.paintLabels(qp) 
+        qp.restore()  
+        
+        qp.end()
+       
+       
+    def paintHeader(self, qp): #================================================
+
+        # Paint the header box for the entire width of the table. 
+        # This eliminates the separators between each individual section.
         
         opt = QtGui.QStyleOptionHeader()
+        opt.rect = QtCore.QRect(0, 0, self.size().width(), self.size().height())
+        
+        self.style().drawControl(QtGui.QStyle.CE_Header, opt, qp, self)
+        
+        
+    def paintSection(self, painter, rect, logicalIndex):
+
+        if not rect.isValid():
+            return
+        
+        #--------------------------------------------  draw header sections ----
+
+        opt = QtGui.QStyleOptionHeader()
+        opt.initFrom(self) # self.initStyleOption(opt)
+        
         opt.rect = rect
         opt.section = logicalIndex
-        opt.text = ""
+        opt.text = "" 
+#        print dir(opt)
+#        print opt.SO_TabWidgetFrame
+        
+        #------------------------------------------------- section position ----
         
         visual = self.visualIndex(logicalIndex)        
         if self.count() == 1:
@@ -2717,64 +2689,160 @@ class MyHorizHeader(QtGui.QHeaderView):
         elif visual == self.count() - 1:
             opt.position = QtGui.QStyleOptionHeader.End
         else:
-            opt.position = QtGui.QStyleOptionHeader.Middle   
+            opt.position = QtGui.QStyleOptionHeader.Middle
+        
+        #--------------------------------------------- mouse over highlight ----
+        
+        if self.showMouseOverSection:     
+            mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())               
+            if rect.contains(mouse_pos):
+                opt.state =QtGui.QStyle.State_MouseOver
+            else:
+                opt.state = QtGui.QStyle.State_None
+        else:
+            opt.state = QtGui.QStyle.State_None
             
-        #---------------------------------------------------- draw sections ----
+        #---------------------------------------------------- paint section ----
+      
+        self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter, self)
+                
+        
+    def paintLabels(self, qp): #================================================
+        
+        fontfamily = db.styleUI().fontfamily
 
-        self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter)
-               
-        #----------------------------------- prepare the html text yourself ----
-               
-        # determine the height of the Header
-                                            
-        label = str(self.model().headerData(logicalIndex, self.orientation())) 
-        if isSectionHighlighted:
-            label = '<b>%s</b>' % label                                  
+        if self.multirow:
+            headerTable  = '''
+                           <table border="0" cellpadding="0" cellspacing="0" 
+                                  align="center" width="100%%">
+                             <tr>
+                               <td colspan="3"></td>
+                               <td colspan="4" align=center style="padding-top:4px;
+                                   font-size:14px;
+                                   font-family: "%s";">
+                                 Correlation Coefficients
+                               </td>
+                             </tr>
+                             <tr>
+                               <td colspan="3"></td>
+                               <td colspan="4"><hr width=100%%></td>
+                             </tr>
+                             <tr>
+                           ''' % fontfamily
+        else:                       
+            headerTable =  '''
+                           <table border="0" cellpadding="0" cellspacing="0" 
+                                  align="center" width="100%%">
+                             <tr>
+                           '''
+#        shownSectionCount = self.count() - self.hiddenSectionCount () 
+        
+        #---------------------------------- prepare a list of logical index ----
+        
+        LogicalIndex_shown_and_ordered = []        
+        for visualIndex in range(self.count()):
+            logicalIndex = self.logicalIndex (visualIndex)
+            if self.isSectionHidden(logicalIndex):
+                pass
+            else:
+                LogicalIndex_shown_and_ordered.append(logicalIndex)
+        
+        x0 = 0
+        for logicalIndex in LogicalIndex_shown_and_ordered:
 
-        label = self.container % label
-        
-        TextDoc = QtGui.QTextDocument()
-        TextDoc.setTextWidth(rect.width())
-        TextDoc.setDocumentMargin(0)
-        TextDoc.setHtml(label)
-        
-        #--------------------------------------------------- paint the html ----
-        
-        painter.save()
-        
-            
-        dy = (rect.height() - TextDoc.size().height()) / 2 # centerAlign
-        dx = rect.left()                                   # leftAlign
-        painter.translate(dx, dy)
-            
-        TextDoc.drawContents(
-                       painter, QtCore.QRect(0, 0, rect.width(), rect.height()))        
-        
-        
-        painter.restore()
-        
-        
-    def sizeHint(self):
-        
-        # Determine what is the tallest header label and return the value.
-        
-        TextDoc_height = [1] * self.count() 
-        for logicalIndex in range(self.count()):
-            
+            #---------------------------------------------- Grab label text ----
+
             label = str(self.model().headerData(logicalIndex, 
                                                 self.orientation()))
-            label = self.container % label 
-                    
-            TextDoc = QtGui.QTextDocument()
-            TextDoc.setTextWidth(self.sectionSize(logicalIndex))
-            TextDoc.setDocumentMargin(0)
-            TextDoc.setHtml(label)
-            TextDoc_height[logicalIndex] = TextDoc.size().height()
+                                                
+            #------------------------------------------ Highlighting Labels ----
             
-        baseSize = QtGui.QHeaderView.sizeHint(self)
-        baseSize.setHeight(max(TextDoc_height))
+            #---- when item is selected in column ---
+            
+            if self.highlightSections():
+                selectedIndx = self.selectionModel().selectedIndexes()
+                for index in selectedIndx:
+                    if (logicalIndex == index.column()) == True:
+                        label = '<b>%s<b>' % label
+                        break
+                    else:
+                        pass
+                    
+            # OR
+                    
+            #---- when mouse it over section ---        
+                    
+            sectionHeight = self.size().height()  
+            sectionWidth = self.sectionSize(logicalIndex)
+            rect = QtCore.QRect(x0, 0, sectionWidth, sectionHeight)
+            x0 += sectionWidth
+            
+            if self.showMouseOverSection:     
+                mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())               
+                if rect.contains(mouse_pos):
+                    label = '<b>%s<b>' % label
+                else:
+                    pass
+            else:
+                label = '<b>%s<b>' % label
+                                                
+        #---------------------------------------------- Put Labels in Table ----
+                                                
+            headerTable += '''
+                           <td valign=middle align=center width=%d
+                            style="padding-top:8px; padding-bottom:8px;
+                                   font-size:14px;
+                                   font-family:"%s";">
+                             %s
+                           </td>
+                           ''' % (sectionWidth, fontfamily, label)
+        headerTable += '''
+                         </tr>
+                       </table>
+                       '''
+        #----------------------------------------------------- Prepare html ----
+                       
+        TextDoc = QtGui.QTextDocument()
+        TextDoc.setTextWidth(self.size().width())
+        TextDoc.setDocumentMargin(0)
+        TextDoc.setHtml(headerTable)
         
-        return baseSize
+        self.setFixedHeight(TextDoc.size().height())
+#        self.heightHint = TextDoc.size().height()
+        
+        #-------------------------------------------------------- Draw html ----
+        
+        TextDoc.drawContents(qp, 
+                             QtCore.QRect(0, 0, self.size().width(), 
+                                                self.size().height()))
+        
+        
+#    def sizeHint(self):
+#        print 'sizeHint'   
+##        # Determine what is the tallest header label and return the value.
+##        
+##        TextDoc_height = [1] * self.count() 
+##        for logicalIndex in range(self.count()):
+##            
+##            label = str(self.model().headerData(logicalIndex, 
+##                                                self.orientation()))
+##            label = self.container % label 
+##                    
+##            TextDoc = QtGui.QTextDocument()
+##            TextDoc.setTextWidth(self.sectionSize(logicalIndex))
+##            TextDoc.setDocumentMargin(0)
+##            TextDoc.setHtml(label)
+##            TextDoc_height[logicalIndex] = TextDoc.size().height()
+##            
+#        baseSize = QtGui.QHeaderView.sizeHint(self)
+#        baseSize.setHeight(max(TextDoc_height))
+#
+#        baseSize = QtGui.QHeaderView.sizeHint(self)
+#        baseSize.setHeight(self.heightHint)
+#        
+#        print self.heightHint
+        
+#        return baseSize
 
            
 if __name__ == '__main__':

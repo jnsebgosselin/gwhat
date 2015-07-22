@@ -862,7 +862,8 @@ class WLCalc(QtGui.QWidget):
 
         if x != None and y != None and not self.btn_delPeak.autoRaise():
             
-            if len(self.peak_indx) == 0: return
+            if len(self.peak_indx) == 0: 
+                return
                 
             xt = np.empty(len(self.peak_indx))
             yt = np.empty(len(self.peak_indx))

@@ -108,20 +108,24 @@ class AboutWhat(QtGui.QWidget):
         filename = 'Icons/WHAT_banner_750px.png'
         
         # http://doc.qt.io/qt-4.8/richtext-html-subset.html
+       
         
+        
+        fontfamily =  db.styleUI().fontfamily
+            
         about_text = '''
                      <style>
                      p{font-size: 14px;
-                       font-family: Ubuntu, "Segoe UI";
+                       font-family: "%s";
                        margin-right:50px;
                        margin-left:50px}
                      p1{font-size: 16px;
-                        font-family: Ubuntu, "Segoe UI";
+                        font-family: "%s";
                         }
                      p2{font-size: 16px;
-                        font-family: Ubuntu, "Segoe UI";}
+                        font-family: "%s";}
                      </style>
-                     '''
+                     ''' % (fontfamily, fontfamily, fontfamily)
         
         about_text += '''                      
                       <p align="center"> <br>

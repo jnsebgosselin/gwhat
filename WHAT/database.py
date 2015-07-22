@@ -26,11 +26,13 @@ import platform
 
 #----- THIRD PARTY IMPORTS -----
 
-from PySide.QtGui import QIcon, QFont
+from PySide.QtGui import QIcon, QFont, QFontDatabase
 from PySide.QtCore import QSize
 
 software_version = 'WHAT Beta 4.1.7'
 last_modification = '07/07/2015'
+
+
 
 class Icons():
     
@@ -258,6 +260,14 @@ class styleUI():
             self.font1 = QFont('Ubuntu', 11)
             self.font_console = QFont('Ubuntu', 9) 
             self.font_menubar = QFont('Ubuntu', 10)
+            
+#        database = QFontDatabase()
+#        print database.families()
+        
+        if platform.system() == 'Windows':
+            self.fontfamily = "Segoe UI" #"Cambria" #"Calibri" #"Segoe UI""
+        elif platform.system() == 'Linux':
+            self.fontfamily =  "Ubuntu"
     
         
 #        self.fontSize1.setPointSize(11)

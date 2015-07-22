@@ -43,6 +43,7 @@ import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 import xlwt
+
 import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
@@ -163,10 +164,8 @@ class MainWindow(QtGui.QMainWindow):
         
         style = 'Regular'
         size = self.whatPref.fontsize_general
-        if platform.system() == 'Windows':
-            family = 'Segoe UI' # Calibri, Cambria
-        elif platform.system() == 'Linux':
-            family = 'Ubuntu'
+        
+        family = db.styleUI().fontfamily
         
         fontSS = ( "font-style: %s;" % style +
                     "font-size: %s;"  % size  +

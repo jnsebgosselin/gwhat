@@ -17,9 +17,167 @@ from PySide import QtGui, QtCore
 
 import database as db
 
-
-class MyQErrorMessageBox(QtGui.QMessageBox):
+class MyHorizHeader(QtGui.QHeaderView):
     
+    # https://forum.qt.io/topic/30598/
+    # solved-how-to-display-subscript-text-in-header-of-qtableview/5
+    
+    # http://stackoverflow.com/questions/1956542/
+    # how-to-make-item-view-render-rich-html-text-in-qt
+    
+    # http://stackoverflow.com/questions/2336079/
+    # can-i-have-more-than-one-line-in-a-table-header-in-qt
+        
+    def __init__(self, parent=None):
+        super(MyHorizHeader, self).__init__(QtCore.Qt.Horizontal, parent)
+        
+        # http://stackoverflow.com/questions/18777554/
+        # why-wont-my-custom-qheaderview-allow-sorting/18777555#18777555
+        
+        self.setClickable(True) 
+        self.setHighlightSections(True)
+        self.showSectionSep = False
+        self.container = '''
+                         <table border="0" cellpadding="0" cellspacing="0" 
+                                align="center" width="100%%">
+                           <tr>
+                             <td valign=middle align=center
+                                 style="padding-top:4px; padding-bottom:4px">
+                               %s
+                             </td>
+                           </tr>
+                         </table>
+                         '''
+        self.heightHint = 20 # Arbitrary init value. This is updated as
+                             # columns are added to the table.
+        
+#        self.setSortIndicatorShown(True)
+                         
+    def paintSection(self, painter, rect, logicalIndex): #----------------------
+    
+        # This is used only if "showSectionSep == True. Otherwise, the header
+        # is painted with the method "paintHeader"
+                        
+        if not rect.isValid():
+            return
+        
+        opt = QtGui.QStyleOptionHeader()
+        opt.initFrom(self)
+        opt.rect = rect
+        opt.section = logicalIndex
+        opt.text = ""
+        
+        visual = self.visualIndex(logicalIndex)        
+        if self.count() == 1:
+            opt.position = QtGui.QStyleOptionHeader.OnlyOneSection
+        elif visual == 0:
+            opt.position = QtGui.QStyleOptionHeader.Beginning
+        elif visual == self.count() - 1:
+            opt.position = QtGui.QStyleOptionHeader.End
+        else:
+            opt.position = QtGui.QStyleOptionHeader.Middle 
+        
+        self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter, self)
+
+        
+    def paintEvent(self, event): #----------------------------------------------
+                
+        qp = QtGui.QPainter()
+
+        qp.begin(self.viewport())
+
+        if self.showSectionSep:
+            QtGui.QHeaderView.paintEvent(self, event)
+        else:
+            qp.save()
+            self.paintHeader(qp) 
+            qp.restore()
+       
+        qp.save()
+        self.paintLabels(qp) 
+        qp.restore()                            
+        
+        qp.end()
+        
+        
+    def paintLabels(self, qp): #------------------------------------------------
+                         
+        headerTable  = '''
+                       <table border="0" cellpadding="0" cellspacing="0" 
+                              align="center" width="100%%">
+                         <tr>
+                           <td colspan="3"></td>
+                           <td colspan="4" align=center style="padding-top:4px">
+                             Correlation Coefficients
+                           </td>
+                         </tr>
+                         <tr>
+                           <td colspan="3"></td>
+                           <td colspan="4"><hr width=100%%></td>
+                         </tr>
+                         <tr>
+                       '''
+        for logicalIndex in range(self.count()):
+            
+            label = str(self.model().headerData(logicalIndex, 
+                                                self.orientation()))
+                                                
+            #------------------------------------------ Highlighting Header ----
+        
+            if self.highlightSections():
+                selectedIndx = self.selectionModel().selectedIndexes()
+                for index in selectedIndx:
+                    if (logicalIndex == index.column()) == True:
+                        label = '<b>%s<b>' % label
+                        break
+                    else:
+                        pass
+                                                
+            sectionWidth = self.sectionSize(logicalIndex)
+            headerTable += '''
+                           <td valign=middle align=center width=%d
+                            style="padding-top:0px; padding-bottom:4px">
+                             %s
+                           </td>
+                           ''' % (sectionWidth, label)
+        headerTable += '''
+                         </tr>
+                       </table>
+                       '''
+                  
+        TextDoc = QtGui.QTextDocument()
+        TextDoc.setTextWidth(self.size().width())
+        TextDoc.setDocumentMargin(0)
+        TextDoc.setHtml(headerTable)
+        self.heightHint = TextDoc.size().height()
+        
+        TextDoc.drawContents(qp, 
+                             QtCore.QRect(0, 0, self.size().width(), 
+                                                self.size().height()))
+        
+    def paintHeader(self, qp): #------------------------------------------------
+                
+        # Paint the header box for the entire width of the table. 
+        # This effectively eliminates the separators between each
+        # individual section.
+        
+        opt = QtGui.QStyleOptionHeader()
+        opt.rect = QtCore.QRect(0, 0, self.size().width(), self.size().height())
+        
+        self.style().drawControl(QtGui.QStyle.CE_Header, opt, qp, self)
+        
+    def sizeHint(self): #-------------------------------------------------------
+
+        baseSize = QtGui.QHeaderView.sizeHint(self)
+        baseSize.setHeight(self.heightHint)
+        
+        return baseSize
+
+
+#===============================================================================
+class MyQErrorMessageBox(QtGui.QMessageBox):
+#===============================================================================
+   
     def __init__(self, parent=None):
         super(MyQErrorMessageBox, self).__init__(parent)
         
@@ -29,6 +187,10 @@ class MyQErrorMessageBox(QtGui.QMessageBox):
 
 #===============================================================================
 class MyQNavigationToolbar(QtGui.QWidget):
+    """
+    This is a work-in-progress to be able to build a navigation toolbar with
+    a memory.
+    """
 #===============================================================================
     
     currentContentChanged = QtCore.Signal(str)
