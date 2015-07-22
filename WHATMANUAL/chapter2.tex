@@ -2,8 +2,6 @@
 
 \begin{document}
 
-\chapter{Projects Management in WHAT}\label{WHAT_projects}
-
 \section{Introduction}
 
 Data is managed in WHAT by project. That is all input and output files relative to a given project are saved within a common folder called the ``project folder''. This file management system allows you to easily backup and move your projects from one location to the other since all the files relating to a given project are saved at the same place. 
@@ -16,20 +14,25 @@ To start a new project, click on the button \textsl{New Project\dots} with the s
 
 Clicking on the button \textsl{Save} creates a new project folder named after your project title in which your project information are saved in a file with a ``.what'' extension. The new folder is created in the location defined by the \textsl{Save in Folder} directory path. For example, saving the \textsl{My New Project} of Figure~\ref{fig:new_proj_win} would create a folder named ``My New Project'' in the directory ``\textsl{C:\textbackslash{}Users\textbackslash{}johndoe\textbackslash{}WHAT\_4.0.5-beta\textbackslash{}Projects}'' and would saved the project information in the file named ``my\_new\_project.what''. It is possible to change the directory where the project folder is created by clicking the small folder icon located next to the \textsl{Save in Folder} directory path.
 
-\begin{figure}[!ht]
-\centering
-\includegraphics[width=0.5\textwidth]{img/WHAT_Screenshot_newproject}
-\caption[New Project dialog window.]{New Project dialog window.}
-\label{fig:new_proj_win}
-\end{figure}
-
-\FloatBarrier
-
 \section{Open a Project}
 
 To open a new project, click on the name of the currently opened project in the menu bar at the top of WHAT window. This will open a new dialog window where you can browse your folders to select an already existing project file (*.what), and then click Open. WHAT will then open the project and the currently opened project displayed in the menu bar should change to the name of the project you just selected.
 
 The path to your project folder is stored in WHAT in a relative format. This means that if you change the location of your project folder relative the ``WHAT.exe'', your will have to redirect WHAT to the new location of your project by repeating the procedure described in the paragraph above.
+
+\begin{figure}[!h]
+    \setlength{\fboxsep}{0pt}
+    \thisfloatsetup{capbesideposition={right,bottom},
+                    objectset=raggedright}
+    \floatbox[\capbeside]{figure}[\FBwidth]
+	{
+	 \caption{Screenshot of WHAT v4.1.7-beta in Ubuntu-Linux 15.04 showing the \emph{New Project} dialog window.}
+	 \label{fig:new_proj_win}
+	}
+	{
+	 \fbox{\includegraphics[width=0.5\textwidth]{img/WHAT_Screenshot_newproject}}
+	}
+\end{figure}
 
 \section{Project Folder Structure Overview}\label{subsec:folder_structure}
 

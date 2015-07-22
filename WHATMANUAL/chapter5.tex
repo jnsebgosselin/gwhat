@@ -2,8 +2,6 @@
 
 \begin{document}
 
-\chapter{Plotting the data}\label{chap:plotting_data}
-
 WHAT make use of the powerful Python package Matplotlib to render the data in publication-quality graph with complex layout. With this tool and the way WHAT is built internally, there is almost no graph configuration that can't be done. The possibility are seldom limited by the UI and the time it requires to implement and design the addition of a new feature in the UI. It is however very fast to make changes in the source code to make your graph exactly the way it is desired. WHAT is buitl in a modular fashion. This means that it is not needed to run the entire program if only a certain feature is needed. For example, it is possible to plus the hydrograph from the Module Hydroprint of WHAT without the UI. If you have any idea, suggestion or request, please contact us. We would like to hear from you. For example, changing the color, adding a legend or plotting multiple water level time series on a same graph is something that can be easily achieved by modifying the source code, but that can take a lot of time to implement in a good and robust UI design.
 
 The tradeoff for the packaging of code into a UI is that the production of graph in the frame of WHAT UI is more strict and allow for less flexibility to the user. Neverthless, it is still possible to produce very good graph from the UI and new options are added frequently to the program to add more flexibility.
@@ -11,10 +9,11 @@ The tradeoff for the packaging of code into a UI is that the production of graph
 The plotting of the weather and water-level data into a same graph in a publication-quality figure is done in the mode ``Layout'' in the tab called ``Hydrograph'' (see Figure~X).
 
 \begin{figure}[h!]
-\centering
-\includegraphics[width=0.75\textwidth]{img/WHAT_Screenshot002}
-\caption[Mode ``Layout'' of the Tab ``Hydrograph'']{Mode ``Layout'' of the Tab ``Hydrograph''.}
-\label{fig:tab_hydrograph_layout}
+	\setlength{\fboxsep}{0pt}
+	\centering
+	\fbox{\includegraphics[width=0.75\textwidth]{img/WHAT_Screenshot002}}
+	\caption[Mode ``Layout'' of the Tab ``Hydrograph'']{Mode ``Layout'' of the Tab ``Hydrograph''.}
+	\label{fig:tab_hydrograph_layout}
 \end{figure}
 
 The mode Layout and Computation both shares the same data. This means that when importing a water level data file or a weather data file in one mode, will affect the content of the other. Thus, the process of importing water level data is the same as the one explained previously in section X. When a water level data file is loaded into memory, the weather data file of the station closest to the well will also be loaded if the folder Output is not empty and will produce a graph with both of these data series. If a weather data file is loaded before a water level data file, only the weather data series will be plotted. It is possible to disable the plotting of either the weather data file or the water-level time series at anytime in order to plot one or the other dataset alone in a single graph. The purpose of this mode is not to explore interactively the data, nor to conduct computation, but to produce publication-quality graph from the data.
