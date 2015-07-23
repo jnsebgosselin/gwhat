@@ -3,7 +3,8 @@
 \usepackage{geometry}
 \geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
 
-\usepackage[hidelinks]{hyperref}
+\usepackage[hidelinks, colorlinks=true, urlcolor=blue,
+            linkcolor=black, citecolor=black]{hyperref}
 \usepackage{fixltx2e} % For subscript
 \usepackage{graphicx}
 
@@ -51,7 +52,7 @@
 
 \usepackage[authoryear, round, sort&compress]{natbib}
 \bibliographystyle{plainnat}
-\usepackage{cleveref}
+\usepackage[capitalize]{cleveref}
 
 \begin{document}
 %
@@ -73,7 +74,7 @@
 \chapter{Introduction}
     \subfile{chapter1}
 %
-\chapter{Projects Management in WHAT}\label{WHAT_projects}
+\chapter{Data Management by Projects}\label{WHAT_projects}
     \subfile{chapter2}
 \chapter{Creating Gapless Daily Weather Datasets}
     \label{chap:gapfilling}
