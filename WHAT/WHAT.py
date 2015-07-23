@@ -397,7 +397,7 @@ class MainWindow(QtGui.QMainWindow):
         
         '''
         This function is the bottle neck through which all messages writen
-        in tthe console must go through.
+        in the console must go through.
         '''
             
         textime = '<font color=black>[' + ctime()[4:-8] + '] </font>'
@@ -425,6 +425,7 @@ class MainWindow(QtGui.QMainWindow):
             
     
     def open_project(self): #===================================================
+        
         '''
         "open_project" is called by the event "self.project_display.clicked".
         It allows the user to open an already existing project.

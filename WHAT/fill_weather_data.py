@@ -2620,19 +2620,24 @@ class MyHorizHeader(QtGui.QHeaderView):
     def __init__(self, parent=None): #==========================================
         super(MyHorizHeader, self).__init__(QtCore.Qt.Horizontal, parent)
         
+        self.parent = parent
+        
         # http://stackoverflow.com/questions/18777554/
         # why-wont-my-custom-qheaderview-allow-sorting/18777555#18777555
         
         self.setClickable(True) 
         
         self.setHighlightSections(False)
+        self.showMouseOverLabel = True
+
         self.showSectionSep = False                
-        self.showMouseOverSection = True        
+        self.showMouseOverSection = False        
+        
         self.multirow = True
         
         self.setSortIndicatorShown(False)
+        self.heightHint = 20
         
-    
     def paintEvent(self, event): #==============================================
         
         qp = QtGui.QPainter()
@@ -2717,9 +2722,10 @@ class MyHorizHeader(QtGui.QHeaderView):
                                   align="center" width="100%%">
                              <tr>
                                <td colspan="3"></td>
-                               <td colspan="4" align=center style="padding-top:4px;
-                                   font-size:14px;
-                                   font-family: "%s";">
+                               <td colspan="4" align=center 
+                                   style="padding-top:8px;
+                                          font-size:14px;
+                                          font-family: "%s";">
                                  Correlation Coefficients
                                </td>
                              </tr>
@@ -2755,9 +2761,9 @@ class MyHorizHeader(QtGui.QHeaderView):
             label = str(self.model().headerData(logicalIndex, 
                                                 self.orientation()))
                                                 
-            #------------------------------------------ Highlighting Labels ----
+            #------------------------------------------ Put Labels in Table ----
             
-            #---- when item is selected in column ---
+            #---- Highlights labels when item is selected in column ---
             
             if self.highlightSections():
                 selectedIndx = self.selectionModel().selectedIndexes()
@@ -2768,47 +2774,73 @@ class MyHorizHeader(QtGui.QHeaderView):
                     else:
                         pass
                     
-            # OR
+                                     # OR
                     
-            #---- when mouse it over section ---        
+            #---- Highlights labels when mouse it over section ---        
                     
             sectionHeight = self.size().height()  
             sectionWidth = self.sectionSize(logicalIndex)
             rect = QtCore.QRect(x0, 0, sectionWidth, sectionHeight)
             x0 += sectionWidth
             
-            if self.showMouseOverSection:     
+            if self.showMouseOverLabel:     
                 mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())               
                 if rect.contains(mouse_pos):
                     label = '<b>%s<b>' % label
                 else:
                     pass
             else:
-                label = '<b>%s<b>' % label
-                                                
-        #---------------------------------------------- Put Labels in Table ----
+                pass
                                                 
             headerTable += '''
                            <td valign=middle align=center width=%d
-                            style="padding-top:8px; padding-bottom:8px;
+                            style="padding-top:0px; padding-bottom:0px;
                                    font-size:14px;
                                    font-family:"%s";">
                              %s
                            </td>
                            ''' % (sectionWidth, fontfamily, label)
+        
+                       
+        #---------------------------------------------------- Add Sort Icon ----
+
+        headerTable += '</tr><tr>'
+        
+        sortIndicatorSection = self.sortIndicatorSection()
+        
+        if self.sortIndicatorOrder() == QtCore.Qt.SortOrder.DescendingOrder:            
+            filename = 'Icons/triangle_up_center.png' 
+        else:
+            filename = 'Icons/triangle_down_center.png'                         
+            
+        for logicalIndex in LogicalIndex_shown_and_ordered:
+            
+            sectionWidth = self.sectionSize(logicalIndex)
+            if logicalIndex == sortIndicatorSection:
+                txt = '<img src="%s">' % filename
+            else:
+                txt = ''
+            headerTable += '''
+                           <td valign=middle align=center width=%d
+                            style="padding-top:0px; padding-bottom:0px;">
+                             %s
+                           </td>
+                           ''' % (sectionWidth, txt)
+        
+        #----------------------------------------------------- Prepare html ----
+        
         headerTable += '''
                          </tr>
                        </table>
-                       '''
-        #----------------------------------------------------- Prepare html ----
-                       
+                       '''         
+         
         TextDoc = QtGui.QTextDocument()
         TextDoc.setTextWidth(self.size().width())
         TextDoc.setDocumentMargin(0)
         TextDoc.setHtml(headerTable)
         
         self.setFixedHeight(TextDoc.size().height())
-#        self.heightHint = TextDoc.size().height()
+        self.heightHint = TextDoc.size().height()
         
         #-------------------------------------------------------- Draw html ----
         
@@ -2817,32 +2849,14 @@ class MyHorizHeader(QtGui.QHeaderView):
                                                 self.size().height()))
         
         
-#    def sizeHint(self):
-#        print 'sizeHint'   
-##        # Determine what is the tallest header label and return the value.
-##        
-##        TextDoc_height = [1] * self.count() 
-##        for logicalIndex in range(self.count()):
-##            
-##            label = str(self.model().headerData(logicalIndex, 
-##                                                self.orientation()))
-##            label = self.container % label 
-##                    
-##            TextDoc = QtGui.QTextDocument()
-##            TextDoc.setTextWidth(self.sectionSize(logicalIndex))
-##            TextDoc.setDocumentMargin(0)
-##            TextDoc.setHtml(label)
-##            TextDoc_height[logicalIndex] = TextDoc.size().height()
-##            
-#        baseSize = QtGui.QHeaderView.sizeHint(self)
-#        baseSize.setHeight(max(TextDoc_height))
-#
-#        baseSize = QtGui.QHeaderView.sizeHint(self)
-#        baseSize.setHeight(self.heightHint)
-#        
-#        print self.heightHint
+    def sizeHint(self): #=======================================================
+         
+        baseSize = QtGui.QHeaderView.sizeHint(self)
+        baseSize.setHeight(self.heightHint)
         
-#        return baseSize
+        self.parent.repaint()
+        
+        return baseSize
 
            
 if __name__ == '__main__':

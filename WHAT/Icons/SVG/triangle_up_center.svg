@@ -15,7 +15,10 @@
    width="90"
    version="1.1"
    inkscape:version="0.91 r13725"
-   sodipodi:docname="triangle_down.svg">
+   sodipodi:docname="triangle_up_center.svg"
+   inkscape:export-filename="/home/jsgosselin/Documents/Research/Hydrogeology/WHAT/WHAT/Icons/triangle_right.png"
+   inkscape:export-xdpi="248"
+   inkscape:export-ydpi="248">
   <defs
      id="defs10" />
   <sodipodi:namedview
@@ -32,7 +35,7 @@
      id="namedview8"
      showgrid="false"
      inkscape:zoom="3.7083822"
-     inkscape:cx="35.07925"
+     inkscape:cx="-0.7443336"
      inkscape:cy="36.229942"
      inkscape:window-x="65"
      inkscape:window-y="24"
@@ -51,15 +54,15 @@
     </rdf:RDF>
   </metadata>
   <rect
-     x="-7.3242186e-06"
-     y="-7.3242186e-06"
+     x="0"
+     y="0"
      width="90"
      height="90"
      style="fill:none"
      id="rect4616" />
   <path
      inkscape:connector-curvature="0"
-     d="m 70.9133,26.5003 -41.68,0 c 0,0 8.5439,19.752 20.853,37.026 0.0171,0 0.0171,-0.016 0.0171,-0.016 l 0.0171,-0.018 0.0171,-0.018 c 0.0171,-0.016 0.0171,-0.016 0.0171,-0.016 12.702,-18.22 20.775,-37.001 20.775,-37.001 z"
+     d="m 65.8318,63.4915 -41.68,0 c 0,0 8.5439,-19.752 20.853,-37.026 0.0171,0 0.0171,0.016 0.0171,0.016 l 0.0171,0.018 0.0171,0.018 c 0.0171,0.016 0.0171,0.016 0.0171,0.016 12.702,18.22 20.775,37.001 20.775,37.001 z"
      style="color:#000000;fill:#4d4d4d;fill-opacity:1"
      id="path4622" />
 </svg>
