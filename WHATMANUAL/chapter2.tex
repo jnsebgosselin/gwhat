@@ -4,21 +4,21 @@
 
 \section{Introduction}
 
-Data is managed in WHAT by project. That is all input and output files relative to a given project are saved within a common folder called the ``project folder''. This file management system allows you to easily backup and move your projects from one location to the other since all the files relating to a given project are saved at the same place. 
+The data are managed in WHAT by project, that is to say, all input and output files relative to a particular project are stored in a common folder named ``project folder''. This file management system allows to easily backup or copy the data related to a particular project since all the files are saved at the same location.
 
-On first launch, WHAT will automatically open an example that is distributed with the software with all the necessary files to easily and quickly test the functionality of the program. The title of the currently opened project is shown in the menu bar at the top of the interface. Additional information about the project can be displayed by clicking on the small ``i'' icon located next to the project name. There can be only one opened project at a time per instance of WHAT. 
+The first time WHAT is started, the software will automatically open the project ``Example'', which includes all the files necessary to easily and quickly test the different features of the software. The title of the current project is shown in the menu bar located in the upper right corner of the WHAT window. Only one project at a time can be open per instance of WHAT.
 
 \section{Create a New Project}
 
-To start a new project, click on the button \textsl{New Project\dots} with the small folder icon located at the right end of the WHAT menu bar (see Figure~\ref{fig:WHAT_GUI}). This will open a new dialog window (see Figure~\ref{fig:new_proj_win}) where you can enter various information about your project such as its title, author and location coordinates. 
+The creation of a new project can be started by clicking on the \emph{New Project}~{\includegraphics[height=2ex]{img/new_project}} button located in the menu bar (\cref{fig:WHAT_GUI}). This will open a new dialog window (\cref{fig:new_proj_win}) where information about the project can be entered such as its title, author, and location coordinates. Clicking on the button \emph{Save} will create a new project folder named after the project's title. Moreover, information related to the project are saved in a file with an extension ``.what''. It is possible to change the directory where the project is saved by clicking the folder~{\includegraphics[height=2ex]{img/folder}} icon located next to the \emph{Save in Folder} directory path.
 
-Clicking on the button \textsl{Save} creates a new project folder named after your project title in which your project information are saved in a file with a ``.what'' extension. The new folder is created in the location defined by the \textsl{Save in Folder} directory path. For example, saving the \textsl{My New Project} of Figure~\ref{fig:new_proj_win} would create a folder named ``My New Project'' in the directory ``\textsl{C:\textbackslash{}Users\textbackslash{}johndoe\textbackslash{}WHAT\_4.0.5-beta\textbackslash{}Projects}'' and would saved the project information in the file named ``my\_new\_project.what''. It is possible to change the directory where the project folder is created by clicking the small folder icon located next to the \textsl{Save in Folder} directory path.
+For example, information related to the project \emph{My New Project} by John Doe, in \cref{fig:new_proj_win}, would be saved in the file named ``My\_New\_Project.what'', in the folder named ``My New Project'', located in the directory ``\textsl{...\textbackslash{}WHAT\textbackslash{}Projects}''.
 
 \section{Open a Project}
 
-To open a new project, click on the name of the currently opened project in the menu bar at the top of WHAT window. This will open a new dialog window where you can browse your folders to select an already existing project file (*.what), and then click Open. WHAT will then open the project and the currently opened project displayed in the menu bar should change to the name of the project you just selected.
+It is possible to open an existing project by clicking on the button \emph{Project}, which displays the name of the current project, in the upper right corner of the WHAT window. This will open a new dialog window, from which an existing project file (*.what) can be selected and opened. The current project name will then change for the name of the project that was just selected.
 
-The path to your project folder is stored in WHAT in a relative format. This means that if you change the location of your project folder relative the ``WHAT.exe'', your will have to redirect WHAT to the new location of your project by repeating the procedure described in the paragraph above.
+The path to the project folder is stored in a relative format. This means that if the location of the project folder is changed relative the executable of the software (``WHAT.exe''),  WHAT will need to be redirected to the new location of the project by repeating the procedure described in the paragraph above.
 
 \begin{figure}[!h]
     \setlength{\fboxsep}{0pt}
@@ -36,25 +36,32 @@ The path to your project folder is stored in WHAT in a relative format. This mea
 
 \section{Project Folder Structure Overview}\label{subsec:folder_structure}
 
-In addition to the project file (.what file extension) that is created when saving a new project, WHAT automatically generates various files and sub-folders that are required for it to run. This file organization is briefly described here and an example is presented in Figure~\ref{fig:proFolder_organization}. The project folder contains two sub-folders named ``Meteo'' and ``Waterlvl'' in addition to a few other files.
+In addition to the project folder and the ``.what'' file that are created when saving a new project, WHAT automatically generates various files and sub-folders that are required for its execution. This file organization is briefly described below and an example is presented in \cref{fig:proFolder_organization}. The project folder contains two sub-folders named ``Meteo'' and ``Waterlvl'' and a few other files.
 
-\paragraph{Meteo} The folder \emph{Meteo} contains three sub-folders named respectively Raw, Input and Output. The folder \textbf{Raw} is where are saved the weather data files downloaded from the CDCD. These are coma-separated values (CSV) files that contain weather data on a yearly basis. All the data files for a given weather station are saved within a common folder named after the station name and its unique identification number (IDN). For example, in Figure~\ref{fig:proFolder_organization}, the raw data file ``eng-daily-01011980-12311980.csv'' that contains weather data of the station ``Marieville'' for the year 1980 is saved within a folder named ``MARIEVILLE (7024627)'' where the number in parentheses is the unique IDN of the station.
+\paragraph{Meteo :} The sub-folder \emph{Meteo} contains three sub-folders named respectively Raw, Input and Output. The \textbf{Raw} folder is where the weather data downloaded from the CDCD are saved, for each year separately, as csv (coma-separated values) files. All the files related to a same station are saved within a common folder, named after the name of the station and its climate ID. For example, in \cref{fig:proFolder_organization}, the raw data file ``eng-daily-01011980-12311980.csv'', which contains weather data from the station ``Marieville'' for the year 1980, is saved within a folder named ``MARIEVILLE (7024627)'', where the number in parentheses is the climate ID of the station.
 
-The folder \textbf{Input} contains the formatted weather data files produced from the raw data files. These are tab-separated values (TSV) files that are named after the station's name and IDN.
+The folder \textbf{Input} contains the formatted weather data files produced from the raw data files. These are tsv (tab-separated values) files that are named after the name of the station, its climate ID, and the first and last year of the data record.
 
-The folder \textbf{Output} is where are saved the gapless weather time-series produced from the content of the Input folder. These are saved in TSV text files with the extension ``.out''. The files with the extension ``.log'' are TSV text files that contain detailed information about every missing daily weather value that were estimated by the program to produce the gapless time-series (.out files).
+The folder \textbf{Output} is where the gapless weather time-series are saved in tsv files with the extension ``.out''. The files with the extension ``.log'' are tsv files that contain detailed information about the missing daily weather values that were estimated to fill the gaps in the weather datasets. The files with the extension ``.err'' contains a time-series of estimated weather values that were produced with a cross-validation re-sampling technique. These estimated values can be used to evaluate the accuracy of the method.
 
-\paragraph{Waterlvl} The folder ``Waterlvl'' is the preferred location were your water level time-series should be stored. These files can be  either in a Microsoft Excel spreadsheet file format (xls) or in a tab-separated values text format (TSV).
+\paragraph{Waterlvl :} The sub-folder ``Waterlvl'' is the preferred location where the water level datasets related to a same project should be stored. These files can be  either in a Microsoft Excel spreadsheet file format (xls) or in a tab-separated values text format (tsv).
 
-\paragraph{Other Files} The file ``weather\_stations.lst'' is a resource file that is used to store the results of a weather station search in the Canadian Daily Climate Database (CDCD). The file ``graph layout.lst'' is also a resource file in which are stored the layout parameters of the well hydrographs that are produced in the hyhdrograph tab of WHAT. The file ``weather\_datasets\_summary.log'' is an tab-separated values (TSV) file that contains a summary of all the weather data files contained in the ``Input'' folder. The file ``waterlvl\_manual\_measurements.xls'' is used to input manual water level measurements associated with the water level time-series files stored in the ``Waterlvl'' folder. These measurements are plotted on the hydrograph and can also be used to adjust the position of the water-level time-series in the vertical axis when the installation depth of the pressure probe is unknown.\vspace{1cm}
+\paragraph{Other Files :} The files with an ``lst'' extension correspond to the lists of weather stations from the Canadian Daily Climate Database (CDCD) that were saved by the user from the \emph{Download Data} tab. The file ``graph layout.lst'' is a resource file, in which are stored the layout of the well hydrographs that were produced from the \emph{Hydrograph} tab. The file ``weather\_datasets\_summary.log'' is a tsv file that contains a summary of all the weather data files included in the ``Input'' folder. The file ``waterlvl\_manual\_measurements.xls'' contains all the manual water-level measurements from field visits.
 
 \begin{figure}[!ht]
-\centering
-\includegraphics[width=0.5\textwidth]{img/file_and_folder_architecture}
-\caption[Project folder file organization.]{Project folder file organization.}
-\label{fig:proFolder_organization}
+    \setlength{\fboxsep}{0pt}
+    \thisfloatsetup{capbesideposition={right,bottom},
+                    objectset=raggedright}
+    \floatbox[\capbeside]{figure}[\FBwidth]
+   	{
+  	 \caption{File organization of the project folders.}
+  	 \label{fig:proFolder_organization}
+   	}
+   	{
+  	 \fbox{\includegraphics[width=0.5\textwidth]{img/file_and_folder_architecture}}
+   	}
 \end{figure}
 
-\FloatBarrier
+%\FloatBarrier
 
 \end{document}

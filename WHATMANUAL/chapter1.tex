@@ -16,7 +16,7 @@ Below are listed the features that are available in the current version of WHAT,
 
 \begin{itemize}
 
-\item Preparation of Gapless Daily Weather Time-series :
+\item Gapless Daily Weather Time Series Preparation :
    
     \begin{itemize}    
         \item Graphical interface to the online Canadian Daily Climate Database (CDCD) to search for weather station by location coordinate.
@@ -28,7 +28,7 @@ Below are listed the features that are available in the current version of WHAT,
 
     \begin{itemize}
         \item Data exploration in a user-friendly and dynamic graphical environment.
-        \item Production of publication-quality graphs in vectorial format.
+        \item Production of publication-quality graphs in vectorial formats (pdf or svg).
     \end{itemize}
 
 \item Weather Data Analysis :
@@ -51,9 +51,9 @@ Below are listed the features that are available in the current version of WHAT,
 
 \begin{itemize}
 
-\item Synthetic hydrographs production for the estimation of groundwater recharge and prediction of water levels.
+\item Synthetic hydrograph production for the estimation of groundwater recharge and prediction of water levels.
 
-\item Assessment of the level of confinement of the aquifer at the well location based on a barometric response function analysis of the water level record.
+\item Assessment of the level of confinement of the aquifer at the well location based on an analysis of the barometric response function of the water level record.
 
 \end{itemize}
 
@@ -73,14 +73,14 @@ The stand-alone executable for Windows~7 is distributed in a Zip archive that ca
 
 \end{itemize}
 
-Once the content of the Zip archive has been extracted, the program can be started directly from the WHAT.exe executable file that is contained within the folder named WHAT. The software can conveniently run from any location on the computer or from any storage device without the need to install the program beforehand.
+Once the content of the Zip archive has been extracted, the program can be started directly from the ``WHAT.exe'' executable file that is contained within the folder named ``WHAT''. The software can conveniently run from any location on the computer or from any storage device without the need to install the program beforehand.
 
 \section{Overview of the Graphical User Interface}
 \label{sec:GUI_overview}
 
 %There is no traditional menus in WHAT and everything is instead displayed within a menu bar that is located at the top of the interface.
 
-The Graphical User Interface (GUI) of WHAT mainly consists of a menu bar, a console area, and a central view panel (\cref{fig:WHAT_GUI}). The \emph{menu bar} is located in the top right corner of the GUI. This is where you can view the name of the current project, open an already existing project or create a new one. The \emph{console} is located at the bottom of the GUI and is used to report technical information about the various tasks accomplished by the program as well as warning and error messages. The console can be collapsed to save space, or can be extended to the entire window area. The \emph{central view panel} is the main component of the GUI. It is where the various features of the software are displayed. The content of this panel is divided into four tabs: \emph{Download Data}, \emph{Fill Data}, \emph{Hydrograph}, and \emph{About}. These tabs are described in more details below and are shown in \cref{fig:WHAT_GUI_ScnShot}.
+The Graphical User Interface (GUI) of WHAT mainly consists of a menu bar, a console area, and a central view panel (\cref{fig:WHAT_GUI}). The \emph{menu bar} is located in the top right corner of the GUI. This is where the name of the current project is displayed and where it is possible to open an existing project or create a new one. The \emph{console} is located at the bottom of the GUI and is used to report technical information about the various tasks accomplished by the program as well as warning and error messages. The console can be collapsed vertically to save space, or can be extended to the entire window area. The \emph{central view panel} is the main component of the GUI. It is where the various features of the software are displayed. The content of this panel is divided into four tabs: \emph{Download Data}, \emph{Fill Data}, \emph{Hydrograph}, and \emph{About}. These tabs are described in more details below and are shown in \cref{fig:WHAT_GUI_ScnShot}.
 
 \begin{figure}[!hb]
     \setlength{\fboxsep}{0pt}
@@ -130,9 +130,9 @@ The Graphical User Interface (GUI) of WHAT mainly consists of a menu bar, a cons
     \caption[Screenshots of WHAT v4.1.7-beta captured in Ubuntu Linux 15.04.]{Screenshots of WHAT v4.1.7-beta captured in Ubuntu Linux 15.04. showing : (a) the \emph{Download Data} tab, (b) the \emph{Fill Data} tab (c) the \emph{Hydrograph} tab in \emph{Layout} mode, and (d) the \emph{Hydrograph} tab in \emph{Computation} mode.}\label{fig:WHAT_GUI_ScnShot}
 \end{figure}
 
-\paragraph{Fill Data :} This tab (\cref{subfig:ScnShot_001}) provides an automated procedure to estimate and fill the missing values in the daily weather datasets. Missing data from a given station are estimated with data from selected neighboring weather stations using a multiple linear regression model.
+\paragraph{Fill Data :} This tab (\cref{subfig:ScnShot_001}) provides an automated procedure to estimate and fill the missing values in the daily weather datasets. Missing data in a dataset from a given station are estimated with data from selected neighboring weather stations using a multiple linear regression model.
 
-\paragraph{Hydrograph :} This tab is used for viewing and plotting both groundwater level and weather time series. For this purpose, two modes are available: the \emph{layout} and the \emph{computation} mode. Both modes share the same weather and water level datasets and it is possible to switch from one mode to the other at anytime. The \textbf{layout} mode (\cref{subfig:ScnShot_002}) provides a graphical interface to interactively produce publication-quality graphs. The \textbf{computation} mode (\cref{subfig:ScnShot_003}) consists in a dynamic graphical environment where data can be visualized, manipulated and analyzed. Various computational tools are available in this mode, including the estimation of the hydrograph Master Recession Curve (MRC) and the estimation of groundwater recharge.
+\paragraph{Hydrograph :} This tab is used for viewing and plotting both groundwater level and weather time series. For this purpose, two modes are available: the \emph{layout} and the \emph{computation} mode. Both modes share the same weather and water level datasets and it is possible to switch from one mode to the other at anytime. The \textbf{layout} mode (\cref{subfig:ScnShot_002}) provides a graphical interface to interactively produce publication-quality graphs. The \textbf{computation} mode (\cref{subfig:ScnShot_003}) consists in a dynamic graphical environment where data can be visualized, manipulated and analyzed. Various computational tools are available in this mode, including the estimation of the Master Recession Curve (MRC) and the estimation of groundwater recharge.
 
 \paragraph{About :} This tab (\cref{fig:WHAT_GUI}) displays copyright, licensing and general information about WHAT.
 
