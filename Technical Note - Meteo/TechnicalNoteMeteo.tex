@@ -1,0 +1,130 @@
+\documentclass[3p, times, review]{elsarticle} %twocolumn
+
+\usepackage{subfiles}
+
+\usepackage[hidelinks]{hyperref}
+
+\usepackage{lineno}
+\modulolinenumbers[5]
+
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{lipsum}
+
+% Overrinding elsarticle preference to remove indentation of first paragraph after section heading.
+%----------------------------------------
+%http://tex.stackexchange.com/questions/132369/how-to-suppress-indentation-of-first-paragraph-after-heading
+%\makeatletter
+%\let\@afterindenttrue\@afterindentfalse
+%\makeatother
+%----------------------------------------
+
+%---- TABLES ----
+
+\usepackage[list-units = single, range-units = single]{siunitx}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{stfloats} % To be able to put table* and figure* at the bottom of pages
+
+\usepackage[utf8]{inputenc}
+
+\journal{Canadian Journal of Earth Sciences}
+
+%%%%%%%%%%%%%%%%%%%%%%%
+%% Elsevier bibliography styles
+%%%%%%%%%%%%%%%%%%%%%%%
+%% To change the style, put a % in front of the second line of the current style and
+%% remove the % from the second line of the style you would like to use.
+%%%%%%%%%%%%%%%%%%%%%%%
+
+% Harvard
+\bibliographystyle{model2-names}\biboptions{authoryear}
+
+% `Elsevier LaTeX' style
+%\bibliographystyle{elsarticle-num}
+
+\usepackage{cleveref}
+
+\begin{document}
+
+\begin{frontmatter}
+
+\title{A new user-friendly tool to estimate groundwater recharge from daily weather data and well hydrographs}
+
+%% Group authors per affiliation:
+\author[inrs]{J.S.~Gosselin\corref{cor1}}
+\ead{jnsebgosselin@gmail.com}
+
+\author[inrs]{M.~Richard}
+%\ead{Richard.Martel@ete.inrs.ca}
+
+\author[cgc]{C.~Rivard}
+%\ead{Christine.Rivard@RNCan-NRCan.gc.ca}
+
+%\author[inrs]{R.~Lefebvre}
+
+\cortext[cor1]{Corresponding authors}
+
+\address[inrs]{Institut national de la recherche scientifique, Centre Eau Terre Environnement,
+490 rue de la Couronne, Quebec City, Quebec, Canada}
+\address[cgc]{Geological Survey of Canada, Quebec Division, 490 rue de la Couronne, Quebec City, Quebec, Canada}
+
+\begin{abstract}
+	\vspace{-1em}
+	\subfile{section0}
+\end{abstract}
+
+\begin{keyword}
+\texttt{heat transport\sep recharge assessment\sep uncertainty analysis\sep subsurface temperature time series}
+\end{keyword}
+
+\end{frontmatter}
+
+\linenumbers
+
+\section{Introduction}
+%    \subfile{section1}
+%
+%\section{Materials and Methods}
+%    \subsection{Overview of the Methodology}
+%        \subfile{section2.1}
+%    \subsection{Synthetic Data Description}\label{sec:synth_data_desc}
+%        \subfile{section2.2}
+%    \subsection{Inverse Numerical Model of Heat Transport}\label{sec:inv_model}
+%        \subfile{section2.3}
+%%
+%\section{Results}
+%    \subsection{Model Validation}\label{sec:model_validation}
+%        \subfile{section3.1}
+%    \subsection{Impact of Modeling Error}\label{sec:modeling_error} 
+%        \subfile{section3.2}
+%    \subsection{Impact of Input Parameters Uncertainty}\label{sec:input_model_err}
+%        \subfile{section3.3}
+%    \subsection{Impact of Measurement Error}\label{sec:input_obs_err}
+%        \subfile{section3.4}
+%%
+%\section{Discussion}
+%    \subfile{section4}
+%%
+%\section{Conclusion}
+%    \subfile{section5}
+%%
+%\section*{References}
+%    \bibliography{MyLibrary}
+%
+%\appendix
+%\clearpage
+%\onecolumn
+%
+%\begin{minipage}[t]{\textwidth}
+%    \section{Soil Hydraulic and Thermal Curve Properties}
+%\end{minipage}
+%    \subfile{appendixA}\clearpage
+%	
+%\section{Detailed Results of Estimation Errors Sensitivity Analysis}
+%    \subfile{appendixB}
+%    
+%\section{Impact of Temporal and Spatial Variation of the Soil Volumetric Water Content on the Estimation Error.}
+%    \subfile{appendixC}
+     
+\end{document}
