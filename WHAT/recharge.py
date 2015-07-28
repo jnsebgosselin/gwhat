@@ -273,7 +273,7 @@ def surf_water_budget(CRU, RASmax, ETP, PTOT, TAVG):
     {float} RASmax = Maximal Readily Available Storage in mm
     {1D array} ETP = Dailty evapotranspiration in mm
     {1D array} PTOT = Daily total precipitation in mm
-    {1D array} TAVG = Daily average ai temperature in deg. C.
+    {1D array} TAVG = Daily average air temperature in deg. C.
     
     ---- Output ----
     
@@ -524,93 +524,6 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
             
     
     return RECHG
-
-#===============================================================================
-def calculate_ETP(TIME, TAVG, LAT, Ta):
-    """
-    Daily potential evapotranspiration (mm) is calculated with a method adapted
-    from Thornwaite (1948).
-    
-    Requires at least a year of data.
-    
-    #----- INPUT -----
-    
-    TIME = Numeric time in days
-    TAVG = Daily temperature average (deg C)
-    LAT = Latitude in degrees
-    Ta = Monthly air temperature normals
-    
-    #----- OUTPUT -----
-
-    ETP: Daily Potential Evapotranspiration (mm)    
-    
-    #----- SOURCE -----
-    
-    Pereira, A.R. and W.O. Pruitt. 2004. Adaptation of the Thornthwaite scheme
-        for estimating daily reference evapotranspiration. Agricultural Water
-        Management, 66, 251-257.
-    """
-#===============================================================================
-        
-    Ta[Ta < 0] = 0    
-    
-    I = np.sum((0.2 * Ta) ** 1.514) # Heat index
-    a = (6.75e-7 * I**3) - (7.71e-5 * I**2) + (1.7912e-2 * I) + 0.49239
-    
-    TAVG[TAVG < 0] = 0
-    
-    DAYLEN = calculate_daylength(TIME, LAT) # Photoperiod in hr
-    
-    ETP = 16 * (10 * TAVG / I)**a * (DAYLEN / (12. * 30))
-        
-    return ETP
-    
-#===============================================================================   
-def calculate_daylength(TIME, LAT):
-#===============================================================================
-    
-    pi = np.pi
-    
-    LAT = np.radians(LAT) # Latitude in rad
-    
-    #----- CONVERT DAY FORMAT -----
-    
-    # http://stackoverflow.com/questions/13943062
-    
-    DAY = np.zeros(len(TIME))
-    
-    for i in range(len(DAY)):
-        DATE = xldate_as_tuple(TIME[i], 0)
-        DAY[i] = int(date(DATE[0], DATE[1], DATE[2]).timetuple().tm_yday)
-    
-#-------------------------------------------------- DECLINATION OF THE SUN -----    
-    
-    # http://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
-
-    N = DAY - 1
-    
-    A = 2 * pi / 365.24 * (N - 2)
-    B = 2 * pi / pi * 0.0167
-    C = 2 * pi / 365.24 * (N + 10)
-    
-    D = -23.44 * pi / 180.
-            
-    SUNDEC = np.arcsin(np.sin(D) * np.cos(C + B * np.sin(A)))
-    
-#-------------------------------------------------------- SUNRISE EQUATION -----    
-
-    # http:/Omega/en.wikipedia.org/wiki/Sunrise_equation
-
-    OMEGA = np.arccos(-np.tan(LAT) * np.tan(SUNDEC))
-    
-#---------------------------------------------------------- HOURS OF LIGHT -----
-    
-    # http://physics.stackexchange.com/questions/28563/
-    #        hours-of-light-per-day-based-on-latitude-longitude-formula
-    
-    DAYLEN = OMEGA * 2 * 24 / (2 * np.pi) # Day length in hours
-    
-    return DAYLEN
     
 #===============================================================================
 def calc_hydrograph_old(RECHG, RECESS, WLobs):
@@ -670,8 +583,8 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     
     Ta, _, _, _ = calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN) # Monthly normals
     
-    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
-                                                  # evapotranspiration (mm)
+    ETP = meteo.calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
+                                                        # evapotranspiration (mm)
     
     print np.mean(ETP)
     

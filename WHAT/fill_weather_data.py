@@ -39,7 +39,7 @@ from numpy.linalg import lstsq as linalg_lstsq
 
 from MyQWidget import MyQToolBox
 import database as db
-from meteo import make_timeserie_continuous
+import meteo
 from hydroprint import LatLong2Dist
 import MyQWidget
 
@@ -255,10 +255,18 @@ class GapFillWeather(QtGui.QWidget):
         self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis')
         self.full_error_analysis.setCheckState(QtCore.Qt.CheckState.Unchecked)
         
+        btn_add_ETP = QtGui.QToolButton()
+        btn_add_ETP.setIcon(iconDB.refresh)
+        btn_add_ETP.setAutoRaise(True)
+        btn_add_ETP.setIconSize(styleDB.iconSize2)
+        
         advanced_widg = QtGui.QFrame()
         advanced_grid = QtGui.QGridLayout()
         
-        advanced_grid.addWidget(self.full_error_analysis, 0, 0)
+        row = 0
+        advanced_grid.addWidget(self.full_error_analysis, row, 0)
+        row += 1
+        advanced_grid.addWidget(btn_add_ETP, row, 0)
         
         advanced_grid.setSpacing(5)
         advanced_grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
@@ -386,6 +394,10 @@ class GapFillWeather(QtGui.QWidget):
         self.fillworker.EndProcess.connect(self.manage_gapfill)
         self.btn_fill.clicked.connect(self.manage_gapfill)
         self.btn_fill_all.clicked.connect(self.manage_gapfill)
+        
+        #---- others ----
+        
+        btn_add_ETP.clicked.connect(self.add_ETP_to_weather_data_file)
         
         #------------------------------------------------------ MESSAGE BOX ----
                                           
@@ -748,6 +760,42 @@ class GapFillWeather(QtGui.QWidget):
         self.fillworker.start()
             
         return
+        
+    def add_ETP_to_weather_data_file(self): #===============================
+        
+        print 'coucou'
+        
+        dirname = self.workdir + '/Meteo/Output'
+        filename, _ = QtGui.QFileDialog.getOpenFileName(
+                                   self, 'Select a valid water level data file', 
+                                   dirname, '*.out')
+        
+        if not filename:
+            return
+                    
+        #---- Load Meteo -----
+       
+        meteoObj = meteo.MeteoObj()
+        meteoObj.load(filename)
+        
+        PTOT = meteoObj.PTOT # Daily total precipitation (mm)
+        TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
+        TIMEmeteo = meteoObj.TIME # Time (days)
+        LAT = float(meteoObj.LAT) # Latitude (deg)
+        
+        YEAR = meteoObj.YEAR
+        MONTH = meteoObj.MONTH
+        
+        RAIN = meteoObj.RAIN
+        
+        Ta, _, _, _ = meteo.calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN)
+        
+        # Daily potential reference evapotranspiration (mm)
+        ETP = meteo.calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) 
+            
+        print np.mean(ETP)
+        
+
     
 #===============================================================================
 class Target_Station_Info():
@@ -863,7 +911,7 @@ class Weather_File_Info():
             if time_end - time_start + 1 != len(STADAT[:,0]):
                 print; print reader[0][1], ' is not continuous, correcting...'
             
-                STADAT = make_timeserie_continuous(STADAT)
+                STADAT = meteo.make_timeserie_continuous(STADAT)
             
                 print reader[0][1], ' is now continuous.'
             else: # Data is continuous over time
@@ -960,7 +1008,7 @@ class Weather_File_Info():
                     
                     self.TIME = np.copy(time_new)
                     
-        #---------------------------------------------------- FILL MATRICES ----
+            #------------------------------------------------ FILL MATRICES ----
          
             ifirst = np.where(self.TIME == time_new[0])[0][0]
             ilast = np.where(self.TIME == time_new[-1])[0][0]
@@ -2339,6 +2387,9 @@ class FillWorker(QtCore.QThread):
             # MAE = MAE[MAE!=0]
             # MAE = np.mean(MAE)
 
+
+
+
 #===============================================================================
 class GapFill_Parameters():
 # Class that contains all the relevant parameters for the gapfilling procedure.
@@ -2362,7 +2413,9 @@ class GapFill_Parameters():
                           # the target and the neighboring stations.
 
 
-def sort_stations_correlation_order(CORCOEF, target_station_index): #===========
+#===============================================================================
+def sort_stations_correlation_order(CORCOEF, target_station_index): 
+#===============================================================================
         
     # An index is associated with each value of the CORCOEF array.
     Sta_index = range(len(CORCOEF))    
@@ -2605,9 +2658,10 @@ class GapFillDisplayTable(QtGui.QTableWidget):
             
         self.setSortingEnabled(True)     
  
-       
+#===============================================================================      
 class MyHorizHeader(QtGui.QHeaderView):
-    
+#===============================================================================
+
     # https://forum.qt.io/topic/30598/
     # solved-how-to-display-subscript-text-in-header-of-qtableview/5
     

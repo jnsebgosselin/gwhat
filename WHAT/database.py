@@ -296,6 +296,8 @@ class FileHeaders():
         self.weather_stations = [['staName', 'stationId', 'StartYear',
                                   'EndYear', 'Province', 'ClimateID',
                                   'Proximity (km)']]
+                                  
+        #---- weather data (*.out) ----
         
 if __name__ == '__main__':
     pass
