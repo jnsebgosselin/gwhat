@@ -81,17 +81,75 @@ When starting WHAT or when a project is opened, the content of the \emph{Input} 
 
 \subsection{Setting the model parameters}
 
-The first step is to select the station for which missing values in the dataset need to be filled from the drop-down list located under the \emph{Fill data for station} section. Under this list are automatically posted information about the currently selected weather station. It is also possible to define the period for which the data of the selected station will be filled by editing the dates in the fields \emph{From} and \emph{To} located in the left side-panel. By default, dates are set as the first and the last date for which data are available for any of the stations of the list.
+The first step is to select the station for which missing values in the dataset need to be filled. This is done from the drop-down list located under the \emph{Fill data for station} section shown in \cref{fig:fill_data_for}. Under this list are automatically posted information about the currently selected weather station. It is also possible to define the period for which the data of the selected station will be filled by editing the dates fields located next to the \emph{From} and \emph{To} labels. By default, dates are set as the first and the last date for which data are available for any of the stations of the list.
 
-The method used to estimate the missing data for the selected weather station consists in the generation of a multiple linear regression (MLR) model, using synchronous data from selected neighboring stations from the list. The neighboring stations are selected mainly on the basis of the correlation coefficients computed between their data and those of the selected weather station. The values of these coefficients are automatically displayed in the table located in the right side of the interface when a new weather station is selected from the list. Moreover, among the selected neighboring stations, the ones with the highest correlation coefficients have more weight in the model than those with weak correlation coefficients. For this reason, correlation coefficients that fall below a value of 0.7 are shown in red in the table, as a guidance for the user.
+The method used to estimate the missing data for the selected weather station consists in the generation of a multiple linear regression (MLR) model, using synchronous data from selected neighboring stations from the list. The neighboring stations are selected mainly on the basis of the correlation coefficients computed between their data and those of the selected weather station. The values of these coefficients are automatically displayed in the table located in the right side of the interface when a new weather station is selected from the list. Moreover, among the selected neighboring stations, the ones with the highest correlation coefficients have more weight in the model than those with weak correlation coefficients. For this reason, correlation coefficients that fall below a value of 0.7 are shown in red in the table, as a guidance for the user. There are several settings that can be used to control the selection of the neighboring stations, the generation of the MLR model, and the outputs of the gapfilling procedure. An overview of these settings is presented below.
 
-A MLR model is generated for each day for which a data is missing in the dataset of the selected station. This is done because the number of neighboring stations with available data can vary in time. Therefore, for a given date with missing data in the dataset of the selected station, the neighboring stations are selected in decreasing order of their correlation coefficients. Neighboring stations that also have a missing data at this particular date are excluded from the selection process. The maximum number of station that are selected for the generation of the MLR model can be specified in the \emph{Nbr. of stations} field, located in the \emph{Stations Selection Criteria} menu, in the left side-panel. The number of neighboring station that is selected by default is 4. If for a given date, all the neighboring stations have missing data synchronously with the selected station, a NaN value is kept in the dataset at this particular date. 
+\begin{figure}[!h]
+    \setlength{\fboxsep}{0pt}
+    \thisfloatsetup{capbesideposition={right,bottom},
+                    objectset=raggedright}
+    \floatbox[\capbeside]{figure}[\FBwidth]
+	{
+	 \caption{Screenshot of WHAT v4.1.7-beta in Ubuntu-Linux 15.04 showing the \emph{Fill data for station} section. For this setup, missing values in the datasets of the selected weather station (MARIEVILLE) would be filled for the 01/01/1980 to 31/12/2015 period.}
+	 \label{fig:fill_data_for}
+	}
+	{
+	 \fbox{\includegraphics[width=0.35\textwidth]{img/WHAT_Screenshot_Fill_data_for.png}}
+	}
+\end{figure}
 
-Moreover, the correlation between the data of two stations will, in general, decreases as the distance and the altitude difference between them increase. Therefore, the fields \emph{Max. Distance} and \emph{Max. Elevation Diff.}, both located in the \emph{Stations Selection Criteria} menu, allow to specify thresholds for the distance and altitude difference. Neighboring stations exceeding either one of these thresholds will not be used to fill the gaps in the dataset of the selected station. The default values for the distance and altitude difference are set to \SI{100}{km} and \SI{350}{m}, respectively, based on a literature review \citep{tronci_comparison_1986,xia_forest_1999,simolo_improving_2010}. The horizontal distances and elevation differences calculated between the selected station and its neighbors are shown in the table to the right, alongside the correlation coefficients. The values exceeding its corresponding threshold are shown in red.
+\paragraph{Station Selection Criteria :} A MLR model is generated for each day for which a data is missing in the dataset of the selected station. This is done because the number of neighboring stations with available data can vary in time. Therefore, for a given date with missing data in the dataset of the selected station, the neighboring stations are selected in decreasing order of their correlation coefficients. Neighboring stations that also have a missing data at this particular date are excluded from the selection process. The maximum number of station that are selected for the generation of the MLR model can be specified in the \emph{Nbr. of stations} field, located in the \emph{Stations Selection Criteria} menu shown in \cref{fig:selection_criteria}. The number of neighboring station that is selected by default is 4. If for a given date, all the neighboring stations have missing data synchronously with the selected station, a NaN value is kept in the dataset at this particular date. 
 
-Finally, it is also possible to select whether the MLR model is generated using a Ordinary Least Squares (OLS) or a Least Absolute Deviations (LAD) criteria from the \emph{Regression Model} menu, in the left side-panel. A regression based on a LAD is more robust to outliers than a regression based on a OLS, but is more expensive in computation time.
+Moreover, the correlation between the data of two stations will, in general, decreases as the distance and the altitude difference between them increase. Therefore, the fields \emph{Max. Distance} and \emph{Max. Elevation Diff.} allow to specify thresholds for the distance and altitude difference. Neighboring stations exceeding either one of these thresholds will not be used to fill the gaps in the dataset of the selected station. The default values for the distance and altitude difference are set to \SI{100}{km} and \SI{350}{m}, respectively, based on a literature review \citep{tronci_comparison_1986,xia_forest_1999,simolo_improving_2010}. The horizontal distances and elevation differences calculated between the selected station and its neighbors are shown in the table to the right, alongside the correlation coefficients. The values that exceed their corresponding threshold are shown in red.
 
-The \emph{Full Error Analysis} option in the \emph{Advanced Settings} menu is discussed in \cref{subsec:uncertainty}
+\begin{figure}[!hb]
+    \setlength{\fboxsep}{0pt}
+    \thisfloatsetup{capbesideposition={right,bottom},
+                    objectset=raggedright}
+    \floatbox[\capbeside]{figure}[\FBwidth]
+	{
+	 \caption{Screenshot of WHAT v4.1.7-beta in Ubuntu-Linux 15.04 showing the \emph{Advanced Settings} menu.}
+	 \label{fig:selection_criteria}
+	}
+	{
+	 \fbox{\includegraphics[width=0.35\textwidth]{img/WHAT_Screenshot_selection_criteria}}
+	}
+\end{figure}
+
+\paragraph{Regression Model :} It is possible to select whether the MLR model is generated using a Ordinary Least Squares (OLS) or a Least Absolute Deviations (LAD) criteria from the \emph{Regression Model} menu shown in \cref{fig:regression_model}. A regression based on a LAD is more robust to outliers than a regression based on a OLS, but is more expensive in computation time.
+
+\begin{figure}[!ht]
+    \setlength{\fboxsep}{0pt}
+    \thisfloatsetup{capbesideposition={right,bottom},
+                    objectset=raggedright}
+    \floatbox[\capbeside]{figure}[\FBwidth]
+	{
+	 \caption{Screenshot of WHAT v4.1.7-beta in Ubuntu-Linux 15.04 showing the \emph{Regression Model} menu.}
+	 \label{fig:regression_model}
+	}
+	{
+	 \fbox{\includegraphics[width=0.35\textwidth]{img/WHAT_Screenshot_regression_model}}
+	}
+\end{figure}
+
+\paragraph{Advanced Settings :} It is possible to automatically estimate and add the daily Potential Evapotranspiration (ETP) to the output data file produced at the end of the gapfilling procedure of the selected station. This option is enabled by checking the \emph{Add ETP to data file} option in the menu \emph{Advanced Settings} shown in \cref{fig:adv_settings}. The daily ETP is estimated with a method adapted from \cite{thornthwaite_approach_1948}, using the daily mean air temperature time series of the selected station. Alternatively, it is possible to add manually the ETP to an existing weather data file by clicking on the open file~{\includegraphics[height=2ex]{img/open_file}} icon located next to the \emph{Add ETP to data file} option.
+
+The \emph{Full Error Analysis} option can be checked to perform a cross-validation resampling analysis during the gapfilling procedure. The results from this analysis can be used afterward to estimate the accuracy of the method. This option is discussed in more details in \cref{subsec:uncertainty}.
+
+\begin{figure}[!ht]
+    \setlength{\fboxsep}{0pt}
+    \thisfloatsetup{capbesideposition={right,bottom},
+                    objectset=raggedright}
+    \floatbox[\capbeside]{figure}[\FBwidth]
+	{
+	 \caption{Screenshot of WHAT v4.1.7-beta in Ubuntu-Linux 15.04 showing the \emph{Advanced Settings} menu.}
+	 \label{fig:adv_settings}
+	}
+	{
+	 \fbox{\includegraphics[width=0.35\textwidth]{img/WHAT_Screenshot_advanced_settings}}
+	}
+\end{figure}
 
 \subsection{Filling the gaps in the data}\label{subsec:filling_the_gaps}
 
