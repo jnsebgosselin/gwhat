@@ -37,7 +37,7 @@ from numpy.linalg import lstsq as linalg_lstsq
 
 #---- PERSONAL IMPORTS ----
 
-from MyQWidget import MyQToolBox
+from MyQWidget import MyQToolBox, MyQToolButton
 import database as db
 import meteo
 from hydroprint import LatLong2Dist
@@ -133,10 +133,10 @@ class GapFillWeather(QtGui.QWidget):
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
         
-        self.btn_refresh_staList = QtGui.QToolButton()
-        self.btn_refresh_staList.setIcon(iconDB.refresh)
-        self.btn_refresh_staList.setAutoRaise(True)
-        self.btn_refresh_staList.setIconSize(styleDB.iconSize2)
+        btn_refresh_staList = QtGui.QToolButton()
+        btn_refresh_staList.setIcon(iconDB.refresh)
+        btn_refresh_staList.setAutoRaise(True)
+        btn_refresh_staList.setIconSize(styleDB.iconSize2)
         
         self.tarSta_widg = QtGui.QWidget()                     
         tarSta_grid = QtGui.QGridLayout()
@@ -145,7 +145,7 @@ class GapFillWeather(QtGui.QWidget):
         tarSta_grid.addWidget(target_station_label, row, 0, 1, 2)
         row = 1
         tarSta_grid.addWidget(self.target_station, row, 0)
-        tarSta_grid.addWidget(self.btn_refresh_staList, row, 1)
+        tarSta_grid.addWidget(btn_refresh_staList, row, 1)
         row = 2
         tarSta_grid.addWidget(self.target_station_info, row, 0, 1, 2)
         
@@ -185,95 +185,129 @@ class GapFillWeather(QtGui.QWidget):
         
         self.fillDates_widg.setLayout(fillDates_grid)
         
-        #---- Cutoff Values ----
+        def station_sel_criteria(self):
+            
+            labelDB = db.labels('English')
+            
+            #---- Widgets ----
         
-        Nmax_label = QtGui.QLabel(labelDB.NbrSta)
-        self.Nmax = QtGui.QSpinBox ()
-        self.Nmax.setRange(0, 99)
-        self.Nmax.setSingleStep(1)
-        self.Nmax.setValue(4)
-        self.Nmax.setAlignment(QtCore.Qt.AlignCenter)
+            Nmax_label = QtGui.QLabel(labelDB.NbrSta)
+            self.Nmax = QtGui.QSpinBox ()
+            self.Nmax.setRange(0, 99)
+            self.Nmax.setSingleStep(1)
+            self.Nmax.setValue(4)
+            self.Nmax.setAlignment(QtCore.Qt.AlignCenter)
 
-        distlimit_label = QtGui.QLabel(labelDB.distlimit)
-        distlimit_label.setToolTip(ttipDB.distlimit)
-        self.distlimit = QtGui.QSpinBox()
-        self.distlimit.setRange(-1, 9999)
-        self.distlimit.setSingleStep(1)
-        self.distlimit.setValue(100)
-        self.distlimit.setToolTip(ttipDB.distlimit)
-        self.distlimit.setSuffix(' km')
-        self.distlimit.setAlignment(QtCore.Qt.AlignCenter)
+            distlimit_label = QtGui.QLabel(labelDB.distlimit)
+            distlimit_label.setToolTip(ttipDB.distlimit)
+            self.distlimit = QtGui.QSpinBox()
+            self.distlimit.setRange(-1, 9999)
+            self.distlimit.setSingleStep(1)
+            self.distlimit.setValue(100)
+            self.distlimit.setToolTip(ttipDB.distlimit)
+            self.distlimit.setSuffix(' km')
+            self.distlimit.setAlignment(QtCore.Qt.AlignCenter)
 
-        altlimit_label = QtGui.QLabel(labelDB.altlimit)
-        altlimit_label.setToolTip(ttipDB.altlimit)
-        self.altlimit = QtGui.QSpinBox()
-        self.altlimit.setRange(-1, 9999)
-        self.altlimit.setSingleStep(1)
-        self.altlimit.setValue(350)
-        self.altlimit.setToolTip(ttipDB.altlimit)
-        self.altlimit.setSuffix(' m')
-        self.altlimit.setAlignment(QtCore.Qt.AlignCenter)
+            altlimit_label = QtGui.QLabel(labelDB.altlimit)
+            altlimit_label.setToolTip(ttipDB.altlimit)
+            self.altlimit = QtGui.QSpinBox()
+            self.altlimit.setRange(-1, 9999)
+            self.altlimit.setSingleStep(1)
+            self.altlimit.setValue(350)
+            self.altlimit.setToolTip(ttipDB.altlimit)
+            self.altlimit.setSuffix(' m')
+            self.altlimit.setAlignment(QtCore.Qt.AlignCenter)
+            
+            #---- Layout ----
+            
+            container = QtGui.QFrame()                     
+            grid = QtGui.QGridLayout()        
         
-        cutoff_widg = QtGui.QFrame()                     
-        cutoff_grid = QtGui.QGridLayout()        
-        
-        row = 0
-        cutoff_grid.addWidget(self.Nmax, row, 1)
-        cutoff_grid.addWidget(Nmax_label, row, 0)        
-        row += 1
-        cutoff_grid.addWidget(distlimit_label, row, 0)
-        cutoff_grid.addWidget(self.distlimit, row, 1)
-        row += 1
-        cutoff_grid.addWidget(altlimit_label, row, 0)
-        cutoff_grid.addWidget(self.altlimit, row, 1)
+            row = 0
+            grid.addWidget(self.Nmax, row, 1)
+            grid.addWidget(Nmax_label, row, 0)        
+            row += 1
+            grid.addWidget(distlimit_label, row, 0)
+            grid.addWidget(self.distlimit, row, 1)
+            row += 1
+            grid.addWidget(altlimit_label, row, 0)
+            grid.addWidget(self.altlimit, row, 1)
                 
-        cutoff_grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
-        cutoff_grid.setColumnStretch(2, 500)
-        cutoff_grid.setSpacing(10)
-        cutoff_widg.setLayout(cutoff_grid)
+            grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
+            grid.setColumnStretch(2, 500)
+            grid.setSpacing(10)
+            container.setLayout(grid)
+            
+            return container
+        
+        def regression_model(self):
+        
+            #---- Widgets ----
+            
+            self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
+            self.RMSE_regression.setChecked(True)
+            self.ABS_regression = QtGui.QRadioButton(
+                                                    'Least Absolute Deviations')
+            
+            #---- Layout ----
+            
+            container= QtGui.QFrame()
+            grid = QtGui.QGridLayout()
+            
+            row = 0
+            grid.addWidget(self.RMSE_regression, row, 0)
+            row += 1
+            grid.addWidget(self.ABS_regression, row, 0)
+            
+            grid.setSpacing(5)
+            grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
+            container.setLayout(grid)
+            
+            return container
+            
+        def advanced_settings(self):
+            
+            chckstate = QtCore.Qt.CheckState.Unchecked 
+            
+            #---- Row Full Error ----
+            
+            self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis')
+            self.full_error_analysis.setCheckState(chckstate)
+            
+            #---- Row ETP ----
+            
+            self.add_ETP_ckckbox = QtGui.QCheckBox('Add ETP to data file')
+            self.add_ETP_ckckbox.setCheckState(chckstate)
+            
+            btn_add_ETP = MyQToolButton(db.Icons().openFile,
+                                        'Add ETP to data file',
+                                        db.styleUI().iconSize2)
+            btn_add_ETP.clicked.connect(self.btn_add_ETP_isClicked)
+            
+            #---- Row Layout Assembly ----
+            
+            container = QtGui.QFrame()
+            grid = QtGui.QGridLayout()
+            
+            row = 0
+            grid.addWidget(self.full_error_analysis, row, 0)        
+            row += 1
+            grid.addWidget(self.add_ETP_ckckbox, row, 0)
+            grid.addWidget(btn_add_ETP, row, 2)
+            
+            grid.setSpacing(5)
+            grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
+            grid.setRowStretch(row+1, 100)
+            grid.setColumnStretch(1, 100)
+            container.setLayout(grid)
+            
+            return container
                 
-        #---- Regression Model ----
+        #---- STACKED WIDGET ----
         
-        self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
-        self.RMSE_regression.setChecked(True)
-        self.ABS_regression = QtGui.QRadioButton('Least Absolute Deviations')
-        
-        MLRM_widg= QtGui.QFrame()
-        MLRM_grid = QtGui.QGridLayout()
-        
-        row = 0
-        MLRM_grid.addWidget(self.RMSE_regression, row, 0)
-        row += 1
-        MLRM_grid.addWidget(self.ABS_regression, row, 0)
-        
-        MLRM_grid.setSpacing(5)
-        MLRM_grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
-        MLRM_widg.setLayout(MLRM_grid)
-        
-        #---- Advanced Settings ----
-
-        self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis')
-        self.full_error_analysis.setCheckState(QtCore.Qt.CheckState.Unchecked)
-        
-        btn_add_ETP = QtGui.QPushButton('Add ETP to Datafile')
-#        btn_add_ETP.setToolTip(ttipDB.btn_fill_all)
-        btn_add_ETP.setIcon(iconDB.add2list)
-        btn_add_ETP.setIconSize(styleDB.iconSize2)
-        
-        advanced_widg = QtGui.QFrame()
-        advanced_grid = QtGui.QGridLayout()
-        
-        row = 0
-        advanced_grid.addWidget(self.full_error_analysis, row, 0)
-        row += 1
-        advanced_grid.addWidget(btn_add_ETP, row, 0)
-        
-        advanced_grid.setSpacing(5)
-        advanced_grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
-        advanced_grid.setRowStretch(1, 100)
-        advanced_widg.setLayout(advanced_grid)
-        
-        #---- Stacked Widget ----
+        cutoff_widg = station_sel_criteria(self)
+        MLRM_widg = regression_model(self)
+        advanced_widg = advanced_settings(self)        
                 
         self.stack_widget = MyQToolBox()
         self.stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
@@ -377,7 +411,7 @@ class GapFillWeather(QtGui.QWidget):
         
         #----------------------------------------------------------- EVENTS ----
                 
-        self.btn_refresh_staList.clicked.connect(self.load_data_dir_content)
+        btn_refresh_staList.clicked.connect(self.load_data_dir_content)
         
         #---- correlation ----
         
@@ -394,11 +428,7 @@ class GapFillWeather(QtGui.QWidget):
         self.fillworker.EndProcess.connect(self.manage_gapfill)
         self.btn_fill.clicked.connect(self.manage_gapfill)
         self.btn_fill_all.clicked.connect(self.manage_gapfill)
-        
-        #---- others ----
-        
-        btn_add_ETP.clicked.connect(self.add_ETP_to_weather_data_file)
-        
+               
         #------------------------------------------------------ MESSAGE BOX ----
                                           
         self.msgBox = MyQWidget.MyQErrorMessageBox()
@@ -406,8 +436,7 @@ class GapFillWeather(QtGui.QWidget):
         
     def set_workdir(self, directory): #=========================================
         
-        self.workdir = directory
-        
+        self.workdir = directory        
         
     def load_data_dir_content(self) : #=========================================
                 
@@ -594,7 +623,7 @@ class GapFillWeather(QtGui.QWidget):
             
         if time_start > time_end:
             
-            print 'The time period is invalid.'
+            print('The time period is invalid.')
             self.msgBox.setText('<b>Gap Fill Data Record</b> start date is ' +
                                 'set to a later time than the end date.')
             self.msgBox.exec_()
@@ -603,6 +632,16 @@ class GapFillWeather(QtGui.QWidget):
             return
 
         #----------------------------------------------------- Check Sender ----
+
+        # This function can be entered from three different point in the UI:
+
+        # (1) The button "Fill Station" is clicked.
+        # (2) The button "Fill All Stations" is clicked.
+        # (3) From the automated process, when filling the data for all the
+        #     station in batch mode.
+
+        # Depending from where tthis method was initiated, the state of the
+        # system will be checked and manage differently.
         
         nSTA = len(self.WEATHER.STANAME)
         button = self.sender()
@@ -632,18 +671,22 @@ class GapFillWeather(QtGui.QWidget):
                 self.isFillAll_inProgress = False
                 
                 return
+                
+            else:
+                
+                #---- Disable UI and continue the process normally ----
             
-            self.btn_fill.setIcon(iconDB.stop)
-                        
-            self.tarSta_widg.setEnabled(False)
-            self.fillDates_widg.setEnabled(False)
-            self.stack_widget.setEnabled(False)
-            self.btn_fill_all.setEnabled(False)
+                self.btn_fill.setIcon(iconDB.stop)
+                            
+                self.tarSta_widg.setEnabled(False)
+                self.fillDates_widg.setEnabled(False)
+                self.stack_widget.setEnabled(False)
+                self.btn_fill_all.setEnabled(False)
+                
+                self.pbar.show()
             
-            self.pbar.show()
-        
-            self.isFillAll_inProgress = False
-            sta_indx2fill = self.target_station.currentIndex()
+                self.isFillAll_inProgress = False
+                sta_indx2fill = self.target_station.currentIndex()
 
         elif button == self.btn_fill_all:
             
@@ -669,27 +712,32 @@ class GapFillWeather(QtGui.QWidget):
                 self.isFillAll_inProgress = False
                 
                 return
+                
+            else:
             
-            #---- Disable UI ----
+                #---- Disable UI and continue the process normally ----
+                
+                self.btn_fill_all.setIcon(iconDB.stop)
+                self.btn_fill.setEnabled(False)
+                self.tarSta_widg.setEnabled(False)
+                self.fillDates_widg.setEnabled(False)
+                self.stack_widget.setEnabled(False)
+                self.pbar.show()
+                
+                self.isFillAll_inProgress = True
+                sta_indx2fill = 0
+                
+                QtGui.QApplication.processEvents()                
             
-            self.btn_fill_all.setIcon(iconDB.stop)
-            self.btn_fill.setEnabled(False)
-            self.tarSta_widg.setEnabled(False)
-            self.fillDates_widg.setEnabled(False)
-            self.stack_widget.setEnabled(False)
-            self.pbar.show()
-            
-            self.isFillAll_inProgress = True
-            sta_indx2fill = 0
-            
-            QtGui.QApplication.processEvents()                
-        
-            self.correlation_UI()
+                self.correlation_UI()
         
         else: #-------------------------------- Check if process isFinished ----
-
-            sta_indx2fill = self.target_station.currentIndex() + 1
             
+            # Method initiated from an automatic return from the gapfilling
+            # process in batch mode. Iterate over the station list an continue
+            # process normally.
+            
+            sta_indx2fill = self.target_station.currentIndex() + 1            
             
             if self.isFillAll_inProgress == False or sta_indx2fill == nSTA: 
                 
@@ -754,6 +802,7 @@ class GapFillWeather(QtGui.QWidget):
         self.fillworker.regression_mode = self.RMSE_regression.isChecked()
         
         self.fillworker.full_error_analysis = self.full_error_analysis.isChecked()
+        self.fillworker.add_ETP = self.add_ETP_ckckbox.isChecked()
                                         
         #---- Start the Thread ----
                                         
@@ -761,75 +810,84 @@ class GapFillWeather(QtGui.QWidget):
             
         return
         
-    def add_ETP_to_weather_data_file(self): #===================================
+    def btn_add_ETP_isClicked(self): #==========================================
         
         dirname = self.workdir + '/Meteo/Output'
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                    self, 'Select a valid water level data file', 
                                    dirname, '*.out')
         
-        if not filename:
-            return
-                    
-        #---- load and stock original data -----
-                    
-        meteoObj = meteo.MeteoObj()
-        meteoObj.load(filename)   
-       
-        HEADER = copy(meteoObj.HEADER)
-        DATAORIG = np.copy(meteoObj.DATA)
-        DATE = DATAORIG[:, :3]
-        
-        #---- compute air temperature normals ----
-        
-        meteoObj.clean_endsof_file()
-        meteoObj.check_time_continuity()
-        meteoObj.get_TIME(meteoObj.DATA[:, :3])
-        meteoObj.fill_nan()
+        if filename:
+            add_ETP_to_weather_data_file(filename)
+            
+            
+#===============================================================================        
+def add_ETP_to_weather_data_file(filename):
+   
+    """
+    Load data from a weather data file, estimate the ETP and add it to the file.
+    """    
+#===============================================================================
+               
+    #---- load and stock original data -----
                 
-        NORMALS = meteo.calculate_normals(meteoObj.DATA, meteoObj.datatypes)
-        
-        varnames = np.array(meteoObj.HEADER[-1])
-        indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
-
-        Ta = NORMALS[:, indx-3]   # monthly air temperature averages (deg C)        
-        LAT = float(meteoObj.LAT) # Latitude (decimal deg)
-        
-        #--- estimate ETP from original temperature time series ----
+    meteoObj = meteo.MeteoObj()
+    meteoObj.load(filename)   
+   
+    HEADER = copy(meteoObj.HEADER)
+    DATAORIG = np.copy(meteoObj.DATA)
+    DATE = DATAORIG[:, :3]
     
-        TAVG = np.copy(DATAORIG[:, indx])        
-        ETP = meteo.calculate_ETP(DATE, TAVG, LAT, Ta)        
+    #---- compute air temperature normals ----
+    
+    meteoObj.clean_endsof_file()
+    meteoObj.check_time_continuity()
+    meteoObj.get_TIME(meteoObj.DATA[:, :3])
+    meteoObj.fill_nan()
+            
+    NORMALS = meteo.calculate_normals(meteoObj.DATA, meteoObj.datatypes)
+    
+    varnames = np.array(meteoObj.HEADER[-1])
+    indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
 
-        #---- extend data ----
+    Ta = NORMALS[:, indx-3]   # monthly air temperature averages (deg C)        
+    LAT = float(meteoObj.LAT) # Latitude (decimal deg)
+    
+    #--- estimate ETP from original temperature time series ----
 
-        filecontent = copy(HEADER)
-        if np.any(varnames == 'ETP (mm)'):
-            print('Already a ETP time series in the datasets. Overriding data.')
-            
-            # Override ETP in DATA:
-            indx = np.where(varnames == 'ETP (mm)')[0][0]
-            DATAORIG[:, indx] = ETP
+    TAVG = np.copy(DATAORIG[:, indx])        
+    ETP = meteo.calculate_ETP(DATE, TAVG, LAT, Ta)        
+
+    #---- extend data ----
+
+    filecontent = copy(HEADER)
+    if np.any(varnames == 'ETP (mm)'):
+        print('Already a ETP time series in the datasets. Overriding data.')
         
-        else:
-            # Add new variable name to header:
-            filecontent[-1].append('ETP (mm)')
-            
-            # Add ETP to DATA matrix:
-            ETP = ETP[:, np.newaxis]
-            DATAORIG = np.hstack([DATAORIG, ETP])          
-              
-            DATAORIG.tolist()
+        # Override ETP in DATA:
+        indx = np.where(varnames == 'ETP (mm)')[0][0]
+        DATAORIG[:, indx] = ETP
+    
+    else:
+        # Add new variable name to header:
+        filecontent[-1].append('ETP (mm)')
         
-        #---- save data ----
+        # Add ETP to DATA matrix:
+        ETP = ETP[:, np.newaxis]
+        DATAORIG = np.hstack([DATAORIG, ETP])          
+          
+        DATAORIG.tolist()
+    
+    #---- save data ----
+    
+    for i in range(len(DATAORIG[:, 0])):
+        filecontent.append(DATAORIG[i, :]) 
         
-        for i in range(len(DATAORIG[:, 0])):
-            filecontent.append(DATAORIG[i, :]) 
-            
-        with open(filename, 'wb') as f:
-            writer = csv.writer(f,delimiter='\t')
-            writer.writerows(filecontent)
-            
-        print('ETP time series added successfully to %s' % filename)
+    with open(filename, 'wb') as f:
+        writer = csv.writer(f,delimiter='\t')
+        writer.writerows(filecontent)
+        
+    print('ETP time series added successfully to %s' % filename)
             
     
 #===============================================================================
@@ -1694,6 +1752,10 @@ class FillWorker(QtCore.QThread):
         
         self.STOP = False # Flag used to stop the Thread on the UI side
         
+        self.add_ETP = False
+        # If True, computes ETP from daily mean temperature time series with the
+        # function "calculate_ETP" from module "meteo" and add the results 
+        # to the output datafile.
         self.full_error_analysis = False 
         # A complete analysis of the estimation errors is conducted
         # if <full_error_analysis> is set to True.
@@ -2355,6 +2417,9 @@ class FillWorker(QtCore.QThread):
         with open(output_path, 'wb') as f:
             writer = csv.writer(f,delimiter='\t')
             writer.writerows(DATA2SAVE)
+            
+        if self.add_ETP:
+            add_ETP_to_weather_data_file(output_path)            
         
         self.ConsoleSignal.emit('<font color=black>Meteo data saved in ' +
                                 output_path + '</font>')

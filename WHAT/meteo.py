@@ -430,6 +430,8 @@ class MeteoObj():
         
         #---- Fill Temperature based variables ----
         
+        print datatypes
+        
         for var in range(nvar):
         
             nanindx = np.where(np.isnan(X[:, var]))[0]
@@ -442,7 +444,7 @@ class MeteoObj():
                                           X[:, var][nonanindx]) 
                                           
                     print('There was %d nan values' % len(nanindx) +
-                          ' in %s series.' % self.varnames[var]  +
+                          ' in %s series.' % varnames[var]  +
                           ' Missing values estimated through a' +
                           ' linear interpolation.')
                       
@@ -451,7 +453,7 @@ class MeteoObj():
                     X[:, var][nanindx] = 0   
                     
                     print('There was %d nan values' % len(nanindx) +
-                          ' in %s series.' % self.varnames[var] +
+                          ' in %s series.' % varnames[var] +
                           ' Missing values are assigned a 0 value.')
                                            
         self.DATA[:, 3:] = X

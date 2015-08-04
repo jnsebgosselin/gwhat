@@ -17,6 +17,7 @@ from PySide import QtGui, QtCore
 
 import database as db
 
+
 class MyHorizHeader(QtGui.QHeaderView):
     
     # https://forum.qt.io/topic/30598/
@@ -174,6 +175,165 @@ class MyHorizHeader(QtGui.QHeaderView):
         return baseSize
 
 
+
+
+##===============================================================================
+#class MyQNavigationToolbar(QtGui.QWidget):
+#    """
+#    This is a work-in-progress to be able to build a navigation toolbar with
+#    a memory.
+#    """
+##===============================================================================
+#    
+#    currentContentChanged = QtCore.Signal(str)
+#    
+#    def __init__(self, parent=None):
+#        super(MyQNavigationToolbar, self).__init__(parent)
+#        
+#        self.currentIndex = 0 
+#        self.contentMemory = []
+#        self.currentContent = ''
+#        
+#        self.initUI()
+#        
+#    def initUI(self):
+#        
+#        iconDB = db.icons()
+#        styleDB = db.styleUI()
+#        
+#        self.btn_goNext = QtGui.QToolButton()
+#        self.btn_goNext.setIcon(iconDB.go_next)
+#        self.btn_goNext.setAutoRaise(True)
+#        self.btn_goNext.setToolTip('Click to go forward.')
+#        self.btn_goNext.setIconSize(styleDB.iconSize2)
+#        self.btn_goNext.setEnabled(False)
+#        
+#        self.btn_goPrevious = QtGui.QToolButton()
+#        self.btn_goPrevious.setIcon(iconDB.go_previous)
+#        self.btn_goPrevious.setAutoRaise(True)
+#        self.btn_goPrevious.setToolTip('Click to go back.')
+#        self.btn_goPrevious.setIconSize(styleDB.iconSize2)
+#        self.btn_goPrevious.setEnabled(False)
+#        
+#        self.btn_goLast = QtGui.QToolButton()
+#        self.btn_goLast.setIcon(iconDB.go_last)
+#        self.btn_goLast.setAutoRaise(True)
+#        self.btn_goLast.setToolTip('Click to go last.')
+#        self.btn_goLast.setIconSize(styleDB.iconSize2)
+#        self.btn_goLast.setEnabled(False)
+#        
+#        self.btn_goFirst = QtGui.QToolButton()
+#        self.btn_goFirst.setIcon(iconDB.go_first)
+#        self.btn_goFirst.setAutoRaise(True)
+#        self.btn_goFirst.setToolTip('Click to go first.')
+#        self.btn_goFirst.setIconSize(styleDB.iconSize2)
+#        self.btn_goFirst.setEnabled(False)
+#        
+#        goToolbar_grid = QtGui.QGridLayout()
+#        goToolbar_widg = QtGui.QFrame()
+#        
+#        col = 0
+#        goToolbar_grid.addWidget(self.btn_goFirst, 0, col)
+#        col += 1
+#        goToolbar_grid.addWidget(self.btn_goPrevious, 0, col)
+#        col += 1
+#        goToolbar_grid.addWidget(self.btn_goNext, 0, col)
+#        col += 1
+#        goToolbar_grid.addWidget(self.btn_goLast, 0, col)
+#        
+#        goToolbar_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
+#        goToolbar_grid.setSpacing(5)
+#        
+#        goToolbar_widg.setLayout(goToolbar_grid)
+#        
+#        #----------------------------------------------------------- EVENTS ----
+#        
+#        self.btn_goLast.clicked.connect(self.button_isClicked)
+#        self.btn_goFirst.clicked.connect(self.button_isClicked)
+#        self.btn_goNext.clicked.connect(self.button_isClicked)
+#        self.btn_goPrevious.clicked.connect(self.button_isClicked)
+#        
+#    def button_isClicked(self):
+#        
+#         # http://zetcode.com/gui/pysidetutorial/eventsandsignals/
+#        
+#        button = self.sender()
+#       
+#        if button == self.btn_goFirst:            
+#            self.currentIndex = 0
+#            
+#        elif button == self.btn_goLast:            
+#            self.currentIndex = len(self.contentMemory) - 1
+#            
+#        elif button == self.btn_goPrevious:            
+#            self.currentIndex += -1
+#            
+#        elif button == self.btn_goNext:            
+#            self.currentIndex += 1
+#        
+#        self.currentContent = self.contentMemory(self.currentIndex)
+#        
+#        self.update_current_state()        
+#        
+#    def update_current_state(self): #===========================================
+#        
+#        if len(self.contentMemory) > 1:
+#        
+#            if self.currentIndex == (len(self.contentMemory) - 1):
+#                self.btn_goLast.setEnabled(False)
+#                self.btn_goNext.setEnabled(False)
+#                self.btn_goFirst.setEnabled(True)
+#                self.btn_goPrevious.setEnabled(True)
+#            elif self.currentIndex == 0:
+#                self.btn_goLast.setEnabled(True)
+#                self.btn_goNext.setEnabled(True)
+#                self.btn_goFirst.setEnabled(False)
+#                self.btn_goPrevious.setEnabled(False)
+#            else:
+#                self.btn_goLast.setEnabled(True)
+#                self.btn_goNext.setEnabled(True)
+#                self.btn_goFirst.setEnabled(True)
+#                self.btn_goPrevious.setEnabled(True)
+#                
+#        else:
+#            
+#            self.btn_goLast.setEnabled(False)
+#            self.btn_goNext.setEnabled(False)
+#            self.btn_goFirst.setEnabled(False)
+#            self.btn_goPrevious.setEnabled(False)
+#            
+#        self.currentContentChanged.emit(self.currentContent)
+#            
+#                
+#    def addContent(self, content):
+#        
+#        self.contentMemory.append(content)
+#        self.currentIndex = len(self.contentMemory) - 1
+#        self.currentContent = self.contentMemory(self.currentIndex)
+#        
+#        self.update_current_state()        
+#        
+#    def clear(self):
+#        
+#        self.currentIndex = 0
+#        self.contentMemory = []
+#        self.currentContent = ''
+#            
+#        self.update_current_state()    
+
+
+#===============================================================================
+class MyQToolButton(QtGui.QToolButton):
+#===============================================================================
+    def __init__(self, Qicon, ToolTip, IconSize=db.styleUI().iconSize,
+                 *args, **kargs):
+        super(MyQToolButton, self).__init__(*args, **kargs)
+        
+        self.setIcon(Qicon)
+        self.setToolTip(ToolTip)
+        self.setAutoRaise(True)
+        self.setIconSize(IconSize)     
+
 #===============================================================================
 class MyQErrorMessageBox(QtGui.QMessageBox):
 #===============================================================================
@@ -184,151 +344,7 @@ class MyQErrorMessageBox(QtGui.QMessageBox):
         self.setIcon(QtGui.QMessageBox.Warning)
         self.setWindowTitle('Error Message')
         self.setWindowIcon(db.Icons().WHAT)
-
-#===============================================================================
-class MyQNavigationToolbar(QtGui.QWidget):
-    """
-    This is a work-in-progress to be able to build a navigation toolbar with
-    a memory.
-    """
-#===============================================================================
-    
-    currentContentChanged = QtCore.Signal(str)
-    
-    def __init__(self, parent=None):
-        super(MyQNavigationToolbar, self).__init__(parent)
-        
-        self.currentIndex = 0 
-        self.contentMemory = []
-        self.currentContent = ''
-        
-        self.initUI()
-        
-    def initUI(self):
-        
-        iconDB = db.icons()
-        styleDB = db.styleUI()
-        
-        self.btn_goNext = QtGui.QToolButton()
-        self.btn_goNext.setIcon(iconDB.go_next)
-        self.btn_goNext.setAutoRaise(True)
-        self.btn_goNext.setToolTip('Click to go forward.')
-        self.btn_goNext.setIconSize(styleDB.iconSize2)
-        self.btn_goNext.setEnabled(False)
-        
-        self.btn_goPrevious = QtGui.QToolButton()
-        self.btn_goPrevious.setIcon(iconDB.go_previous)
-        self.btn_goPrevious.setAutoRaise(True)
-        self.btn_goPrevious.setToolTip('Click to go back.')
-        self.btn_goPrevious.setIconSize(styleDB.iconSize2)
-        self.btn_goPrevious.setEnabled(False)
-        
-        self.btn_goLast = QtGui.QToolButton()
-        self.btn_goLast.setIcon(iconDB.go_last)
-        self.btn_goLast.setAutoRaise(True)
-        self.btn_goLast.setToolTip('Click to go last.')
-        self.btn_goLast.setIconSize(styleDB.iconSize2)
-        self.btn_goLast.setEnabled(False)
-        
-        self.btn_goFirst = QtGui.QToolButton()
-        self.btn_goFirst.setIcon(iconDB.go_first)
-        self.btn_goFirst.setAutoRaise(True)
-        self.btn_goFirst.setToolTip('Click to go first.')
-        self.btn_goFirst.setIconSize(styleDB.iconSize2)
-        self.btn_goFirst.setEnabled(False)
-        
-        goToolbar_grid = QtGui.QGridLayout()
-        goToolbar_widg = QtGui.QFrame()
-        
-        col = 0
-        goToolbar_grid.addWidget(self.btn_goFirst, 0, col)
-        col += 1
-        goToolbar_grid.addWidget(self.btn_goPrevious, 0, col)
-        col += 1
-        goToolbar_grid.addWidget(self.btn_goNext, 0, col)
-        col += 1
-        goToolbar_grid.addWidget(self.btn_goLast, 0, col)
-        
-        goToolbar_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
-        goToolbar_grid.setSpacing(5)
-        
-        goToolbar_widg.setLayout(goToolbar_grid)
-        
-        #----------------------------------------------------------- EVENTS ----
-        
-        self.btn_goLast.clicked.connect(self.button_isClicked)
-        self.btn_goFirst.clicked.connect(self.button_isClicked)
-        self.btn_goNext.clicked.connect(self.button_isClicked)
-        self.btn_goPrevious.clicked.connect(self.button_isClicked)
-        
-    def button_isClicked(self):
-        
-         # http://zetcode.com/gui/pysidetutorial/eventsandsignals/
-        
-        button = self.sender()
-       
-        if button == self.btn_goFirst:            
-            self.currentIndex = 0
-            
-        elif button == self.btn_goLast:            
-            self.currentIndex = len(self.contentMemory) - 1
-            
-        elif button == self.btn_goPrevious:            
-            self.currentIndex += -1
-            
-        elif button == self.btn_goNext:            
-            self.currentIndex += 1
-        
-        self.currentContent = self.contentMemory(self.currentIndex)
-        
-        self.update_current_state()        
-        
-    def update_current_state(self): #===========================================
-        
-        if len(self.contentMemory) > 1:
-        
-            if self.currentIndex == (len(self.contentMemory) - 1):
-                self.btn_goLast.setEnabled(False)
-                self.btn_goNext.setEnabled(False)
-                self.btn_goFirst.setEnabled(True)
-                self.btn_goPrevious.setEnabled(True)
-            elif self.currentIndex == 0:
-                self.btn_goLast.setEnabled(True)
-                self.btn_goNext.setEnabled(True)
-                self.btn_goFirst.setEnabled(False)
-                self.btn_goPrevious.setEnabled(False)
-            else:
-                self.btn_goLast.setEnabled(True)
-                self.btn_goNext.setEnabled(True)
-                self.btn_goFirst.setEnabled(True)
-                self.btn_goPrevious.setEnabled(True)
-                
-        else:
-            
-            self.btn_goLast.setEnabled(False)
-            self.btn_goNext.setEnabled(False)
-            self.btn_goFirst.setEnabled(False)
-            self.btn_goPrevious.setEnabled(False)
-            
-        self.currentContentChanged.emit(self.currentContent)
-            
-                
-    def addContent(self, content):
-        
-        self.contentMemory.append(content)
-        self.currentIndex = len(self.contentMemory) - 1
-        self.currentContent = self.contentMemory(self.currentIndex)
-        
-        self.update_current_state()        
-        
-    def clear(self):
-        
-        self.currentIndex = 0
-        self.contentMemory = []
-        self.currentContent = ''
-            
-        self.update_current_state()        
-           
+          
            
 #===============================================================================
 class MyQToolBox(QtGui.QWidget):
