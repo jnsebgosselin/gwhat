@@ -30,6 +30,7 @@ from sys import argv
 from os import path, getcwd
 import time
 from datetime import date
+import copy
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -74,15 +75,21 @@ class Tooltips():
         if language == 'French': #--------------------------------- FRENCH -----
             
             pass
-            
-class WeatherAvgGraph(QtGui.QWidget):
+
+#===============================================================================
+class WeatherAvgGraph(QtGui.QWidget): 
+    """
+    GUI that allows to plot weather normals, save the graphs to file, see
+    various stats about the dataset, etc...
+    """
+#===============================================================================
     
     def __init__(self, parent=None):
         super(WeatherAvgGraph, self).__init__(parent)
 
         self.initUI()
         
-    def initUI(self):
+    def initUI(self): #=========================================================
         
         iconDB = db.Icons()
         StyleDB = db.styleUI()
@@ -180,24 +187,16 @@ class WeatherAvgGraph(QtGui.QWidget):
     def generate_graph(self, filename): #=======================================
         
         METEO = MeteoObj()
-        METEO.load(filename)
+        METEO.load_and_format(filename)
         
-        self.station_name = METEO.station_name
+        self.station_name = METEO.STA
         self.setWindowTitle('Weather Averages for %s' % self.station_name)
         
-        YEAR = METEO.YEAR
-        MONTH = METEO.MONTH
-        TAVG = METEO.TAVG
-        TMIN = METEO.TMIN
-        TMAX = METEO.TMAX
-        PTOT = METEO.PTOT
-        RAIN = METEO.RAIN
-        
-        Tmin_norm, Tmax_norm, TNORM, PNORM, RNORM = calculate_normals(
-                                      YEAR, MONTH, TMIN, TMAX, TAVG, PTOT, RAIN)
-                                                  
-        plot_monthly_normals(self.fig, Tmin_norm, Tmax_norm, TNORM, 
-                                       PNORM, RNORM)
+        # DATA = [YEAR, MONTH, DAY, TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}]
+ 
+        NORMALS = calculate_normals(METEO.DATA, METEO.datatypes)
+
+        plot_monthly_normals(self.fig, NORMALS)
                 
         self.fig_widget.draw()
 
@@ -232,236 +231,347 @@ class WeatherAvgGraph(QtGui.QWidget):
             self.meteo_dir = path.dirname(filename)
             
 #===============================================================================        
-class MeteoObj():
+class MeteoObj():    
     """
-    NaN are assigned a value of 0 for Ptot and for air Temp, the value is 
+    This is a class to load and manipulate weather data.
+    
+    nan are assigned a value of 0 for Ptot and for air Temp, the value is 
     calculated with an in-station interpolation.
     """
 #===============================================================================    
 
     def __init__(self):
         
-        self.TIME = []  # Time in numeric format (days)
-        self.TMAX = []  # Daily maximum temperature (deg C)
-        self.TMIN = []  # Daily minimum temperature (deg C)
-        self.TAVG = []  # Daily mean temperature (deg C)
-        self.PTOT = []  # Daily total precipitation (mm)
-        self.RAIN = []  # Daily total liquid precipitation (mm)
-        self.ETP = []   # Daily potential evapotranspiration (mm)
+        self.filename = ''
         
-        self.YEAR = []
-        self.MONTH = []
-        
-        self.TIMEwk = []
-        self.TMAXwk = []
-        self.PTOTwk = []
-        self.RAINwk = []
-        
-        self.info = []
-        self.station_name = []
-        self.LAT = []
-        self.LON = []
+        self.STA = 'Station Name'
+        self.LAT = 'Latitude'
+        self.LON = 'Longitude'
+        self.PRO = 'Province'
+        self.ALT = 'Elevation'
+        self.CID = 'Climate Identifier'
+                
+        self.STADESC = [[None] * 6, [None] * 6]         # station description:
+
+        self.STADESC[0] = ['Station Name', 'Latitude', 'Longitude', 
+                           'Province', 'Elevation', 'Climate Identifier']
         
         self.varnames = []
-    
-    def clean_endsof_file(self, DATA): #========================================
+        
+        self.datatypes = []        
+        # 0 -> not cumulative data:
+        #      ex.: Air Temperature
+        #           Air humidity)
+        # 1 -> cumulative data:
+        #      ex.: Precipitation, ETP
+        
+        self.HEADER = []        
+        self.DATA = []
+        
+        self.TIME = [] # Time in numeric format.
+
+        
+    def load_and_format(self, filename): #======================================
+        
+        #---- load data from file ----
+        
+        self.load(filename)
+        
+        #---- clean data ----
+        
+        self.clean_endsof_file()
+        self.check_time_continuity()
+        self.get_TIME(self.DATA[:, :3])        
+        self.fill_nan()
+        
+        #---- add ETP and RAIN ----
+        
+        self.add_ETP_to_data()
+        self.add_rain_to_data()
+                
+                
+    def load(self, filename): #=================================================
         
         """
-        Remove nan values at the beginning and end of the record if any.
+        Load the info related to the weather station, the date and weather
+        datasets 'as is' from the file.
+        """
+        
+        self.filename = filename
+        
+        labels = np.array(self.STADESC[0])
+
+        with open(filename, 'rb') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+        
+        #---- get info from header and find row where data starts ----
+        
+        for i in range(len(reader)):
+            
+            if len(reader[i]) > 0 :
+                
+                if  reader[i][0] == 'Year':
+                    self.varnames = reader[i]
+                    data_indx = i + 1
+                    self.HEADER = reader[:data_indx]
+                    break
+                
+                if np.any(labels == reader[i][0]):
+                    indx = np.where(labels == reader[i][0])[0]
+                    self.STADESC[1][indx] = reader[i][1]
+        
+        #---- Update class variables ----
+       
+        [self.STA, self.LAT, self.LON,
+         self.PRO, self.ALT, self.CID] = self.STADESC[1]
+                    
+        # DATA = [Year, Month, Day, Tmax, Tmin, Tmean, PTOT, {ETP}, {RAIN}]
+        self.DATA = np.array(reader[data_indx:]).astype('float')
+        
+        #---- assign a datatype to each variables ----
+        
+        datatype0 = ['Max Temp (deg C)', 'Min Temp (deg C)',
+                     'Mean Temp (deg C)']
+        datatype1 = ['Total Precip (mm)', 'Rain (mm)', 'ETP (mm)']
+        
+        nvar = len(self.DATA[0, 3:])
+        self.datatypes = [0] * nvar
+        varname = self.varnames[3:]
+        
+        for i in range(nvar):
+            if varname[i] in datatype0:
+                self.datatypes[i] = 0
+            elif varname[i] in datatype1:
+                self.datatypes[i] = 1
+            else:
+                self.datatypes[i] = 0
+        
+            
+    def clean_endsof_file(self): #==============================================
+        
+        """
+        Remove nan values at the beginning and end of the record if any. Must
+        not be run before the 'TIME' array is generated.
         """
         
         #---- Beginning ----
         
-        for i in range(len(DATA[:, 0])):
-            if np.all(np.isnan(DATA[i, 3:])):
-                DATA = np.delete(DATA, i, axis=0)
+        n = len(self.DATA[:, 0])
+        for i in range(len(self.DATA[:, 0])):
+            if np.all(np.isnan(self.DATA[i, 3:])):
+                self.DATA = np.delete(self.DATA, i, axis=0)                 
             else:
                 break
             
+        if n < len(self.DATA[:, 0]):
+            print('%d empty' % (n - len(self.DATA[:, 0])) +
+                  ' rows of data removed at the beginning of the dataset.')
+            
         #---- End ----
-            
-        for i in range(len(DATA[:, 0])):
-            if np.all(np.isnan(DATA[-i, 3:])):
-                DATA = np.delete(DATA, -i, axis=0)
+        
+        n = len(self.DATA[:, 0])
+        for i in (n - np.arange(n) - 1):  
+            if np.all(np.isnan(self.DATA[i, 3:])):
+                self.DATA = np.delete(self.DATA, i, axis=0)
             else:
-                break   
-
-        return DATA
-        
-        
-    def load(self, fname): #====================================================
-        
-        with open(fname, 'rb') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-
-        for i in range(len(reader)):
+                break 
             
-            if len(reader[i]) > 0 :
-
-                if reader[i][0] == 'Station Name':
-                    print reader[i][0]
-                    self.station_name = reader[i][1]
-                elif reader[i][0] == 'Latitude':
-                    self.LAT = reader[i][1]
-                elif reader[i][0] == 'Longitude':
-                    self.LON = reader[i][1]    
-                elif reader[i][0] == 'Year':
-                    self.varnames = np.array(reader[i])
-                    data_indx = i + 1
-                    break
-
-        DATA = np.array(reader[data_indx:]).astype('float')
+        if n < len(self.DATA[:, 0]):
+            print('%d empty' % (n - len(self.DATA[:, 0])) +
+                  ' rows of data removed at the end of the dataset.')
         
-        #----------------------------------------------- clean ends of data ----
         
-        DATA = self.clean_endsof_file(DATA)
+    def check_time_continuity(self): #==========================================
             
-        #-------------------------------------------- CHECK TIME CONTINUITY ----
-        
-        #Check if data are continuous over time.
-        time_start = xldate_from_date_tuple((DATA[0, 0].astype('int'),
-                                             DATA[0, 1].astype('int'),
-                                             DATA[0, 2].astype('int')), 0)
-
-        time_end = xldate_from_date_tuple((DATA[-1, 0].astype('int'),
-                                           DATA[-1, 1].astype('int'),
-                                           DATA[-1, 2].astype('int')), 0)
+        #-------------------------------------------- check time continuity ----
         
         # Check if the data series is continuous over time and 
         # correct it if not
-        if time_end - time_start + 1 != len(DATA[:,0]):
-            print reader[0][1], ' is not continuous, correcting...'
-            DATA = make_timeserie_continuous(DATA)        
         
-        #Generate a 1D array with date in numeric format
-        TIME = np.arange(time_start, time_end + 1)
-        
-        #----------------------------------------------- REASSIGN VARIABLES ----
-        
-        TMAX = DATA[:, 3]
-        TMIN = DATA[:, 4]
-        TAVG = DATA[:, 5]
-        PTOT = DATA[:, 6] 
-        
-        #----------------------------------------------------- ESTIMATE NAN ----
+        time_start = xldate_from_date_tuple((self.DATA[0, 0].astype('int'),
+                                             self.DATA[0, 1].astype('int'),
+                                             self.DATA[0, 2].astype('int')), 0)
 
-        PTOT[np.isnan(PTOT)] = 0
+        time_end = xldate_from_date_tuple((self.DATA[-1, 0].astype('int'),
+                                           self.DATA[-1, 1].astype('int'),
+                                           self.DATA[-1, 2].astype('int')), 0)
         
-        nonanindx = np.where(~np.isnan(TMAX))[0]
-        if len(nonanindx) < len(TMAX):
-            TMAX = np.interp(TIME, TIME[nonanindx], TMAX[nonanindx])
-            
-        nonanindx = np.where(~np.isnan(TMIN))[0]
-        if len(nonanindx) < len(TMIN):
-            TMIN = np.interp(TIME, TIME[nonanindx], TMIN[nonanindx])
-   
-        #---------------------------------------------------- ESTIMATE RAIN ----
+        if time_end - time_start + 1 != len(self.DATA[:,0]):
+            print('%s is not continuous, correcting...' % self.STA)
+            self.DATA = make_timeserie_continuous(self.DATA)        
+    
+    
+    def get_TIME(self, DATE): #=================================================
+        
+        # Generate a 1D array with date in numeric format because it is not
+        # provided in the '.out' files.        
+        
+        N = len(DATE[:, 0])
+        TIME = np.zeros(N)
+        for i in range (N):
+            TIME[i] = xldate_from_date_tuple((DATE[i, 0].astype('int'),
+                                              DATE[i, 1].astype('int'),
+                                              DATE[i, 2].astype('int')), 0)
+        self.TIME = TIME
+        
+        return TIME
+        
+    def fill_nan(self): #=======================================================
+        
+        datatypes = self.datatypes
+        varnames = self.varnames[3:]
+        nvar = len(varnames)
+        X = np.copy(self.DATA[:, 3:])
+        TIME = np.copy(self.TIME)
+       
+        # preferable to be run before ETP or RAIN is estimated, So that 
+        # there is no missing value in both of these estimated time series. 
+        # However, it needs to be ran after but after 'check_time_continuity'.
+        
+        #---- Fill Temperature based variables ----
+        
+        for var in range(nvar):
+        
+            nanindx = np.where(np.isnan(X[:, var]))[0]
+            if len(nanindx) > 0:        
+                                      
+                if datatypes[var] == 0:
+                    
+                    nonanindx = np.where(~np.isnan(X[:, var]))[0]
+                    X[:, var] = np.interp(TIME, TIME[nonanindx], 
+                                          X[:, var][nonanindx]) 
+                                          
+                    print('There was %d nan values' % len(nanindx) +
+                          ' in %s series.' % self.varnames[var]  +
+                          ' Missing values estimated through a' +
+                          ' linear interpolation.')
+                      
+                elif datatypes[var] == 1:
+                    
+                    X[:, var][nanindx] = 0   
+                    
+                    print('There was %d nan values' % len(nanindx) +
+                          ' in %s series.' % self.varnames[var] +
+                          ' Missing values are assigned a 0 value.')
+                                           
+        self.DATA[:, 3:] = X
+        
+        
+    def add_rain_to_data(self): #===============================================
+       
+        varnames = np.array(self.varnames)
+        if np.any(varnames == 'Rain (mm)'):
+            print('Already a Rain time series in the datasets.')
+            return
+        
+        #---- get PTOT and TAVG from data ----
+        
+        indx = np.where(varnames == 'Total Precip (mm)')[0][0]
+        PTOT = np.copy(self.DATA[:, indx])
+        
+        indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
+        TAVG = np.copy(self.DATA[:, indx])
+        
+        #---- estimate rain ----
         
         RAIN = np.copy(PTOT)
         RAIN[np.where(TAVG < 0)[0]] = 0
+        RAIN = RAIN[:, np.newaxis]
         
-        #------------------------------------------------- UPDATE CLASS VAR ----
-    
-        self.TIME = TIME
-        self.TMAX = TMAX
-        self.TAVG = TAVG
-        self.TMIN = TMIN
-        self.PTOT = PTOT
-        self.RAIN = RAIN
+        #---- extend data ----
         
-        self.YEAR = DATA[:, 0].astype(int)
-        self.MONTH = DATA[:, 1].astype(int)
-        
-        #-------------------------------------------------------------- ETP ----
-        
-        if np.any(self.varnames == 'ETP (mm)'):
-            
-            self.ETP = DATA[:, 7]
-            
-            # Estimate missing values if applicable
-            
-            nonanindx = np.where(~np.isnan(self.ETP))[0]
-            if len(nonanindx) < len(TMAX):
-                self.ETP = np.interp(TIME, TIME[nonanindx],
-                                     self.ETP[nonanindx])                
-                
-        else:
-            print('Daily ETP is not included in the file.')
-            
-        #--------------------------------------- DAILY TO WEEKLY CONVERSION ----        
-        
-        bwidth = 7.
-        nbin = np.floor(len(TIME) / bwidth)
-           
-        #---- Alternate Method (more efficient) ----
-        
-        TIMEbin = TIME[:nbin*bwidth].reshape(nbin, bwidth)
-        TIMEbin = np.mean(TIMEbin, axis=1)
-      
-        TMAXbin = TMAX[:nbin*bwidth].reshape(nbin, bwidth)
-        TMAXbin = np.mean(TMAXbin, axis=1)
-        
-        PTOTbin = PTOT[:nbin*bwidth].reshape(nbin, bwidth)
-        PTOTbin = np.sum(PTOTbin, axis=1)
-        
-        RAINbin = RAIN[:nbin*bwidth].reshape(nbin, bwidth)
-        RAINbin = np.sum(RAINbin, axis=1)
-        
-        nres = len(TIME) - (nbin * bwidth)
-        print 'Nbin residual =', nres
-                
-        #------------------------------------------------- UPDATE CLASS VAR ----
+        self.DATA = np.hstack([self.DATA, RAIN])        
+        self.varnames.append('Rain (mm)')
+        self.datatypes.append(1)
 
-#        self.TIMEwk = TIMEwk
-#        self.TMAXwk = TMAXwk
-#        self.PTOTwk = PTOTwk
-#        self.RAINwk = RAINwk
-        self.TIMEwk = TIMEbin
-        self.TMAXwk = TMAXbin
-        self.PTOTwk = PTOTbin
-        self.RAINwk = RAINbin
+
+    def add_ETP_to_data(self): #================================================
         
-        #----------------------------------------------------- STATION INFO ----
+        varnames = np.array(self.varnames)
+        if np.any(varnames == 'ETP (mm)'):
+            print('Already a ETP time series in the datasets.')
+            return
         
-        FIELDS = ['Station', 'Province', 'Latitude', 'Longitude', 'Altitude']
-                  
+        #---- assign local variable ----
+        
+        DATE = np.copy(self.DATA[:, :3])
+        LAT = np.copy(float(self.LAT))
+
+        indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
+        TAVG = np.copy(self.DATA[:, indx])
+        
+        #---- compute normals ----
+        
+        NORMALS = calculate_normals(self.DATA, self.datatypes)        
+        Ta = NORMALS[:, 2] # monthly air temperature averages (deg Celcius)
+        
+        ETP = calculate_ETP(DATE, TAVG, LAT, Ta)
+        ETP = ETP[:, np.newaxis]
+
+        #---- extend data ----
+
+        self.DATA = np.hstack([self.DATA, ETP])                
+        self.varnames.append('ETP (mm)')
+        self.datatypes.append(1)
+        
+    def build_HTML_table(self): #===============================================
+        
+        # HTML table with the info related to the weather station.
+        
+        
+        FIELDS = self.STADESC[0]
+        VALIST = self.STADESC[1]
+        UNITS =  ['', '', '&deg;', '&deg;', ' m', '']
+                          
         info = '<table border="0" cellpadding="2" cellspacing="0" align="left">'
         for i in range(len(FIELDS)):
             
             try:                 
-                VAL = '%0.2f' % float(reader[i][1])
+                VAL = '%0.1f' % float(VALIST[i])
             except:
-                VAL = reader[i][1]
+                VAL = VALIST[i]
                  
             info += '''<tr>
                          <td width=10></td>
                          <td align="left">%s</td>
                          <td align="left" width=20>:</td>
-                         <td align="left">%s</td>
-                       </tr>''' % (FIELDS[i], VAL)
+                         <td align="left">%s%s</td>
+                       </tr>''' % (FIELDS[i], VAL, UNITS[i])
         info += '</table>'
         
-        self.info = info
-    
-    
-#===============================================================================
-def bin_sum(x, bwidth):
-    """
-    Sum data x over bins of width "bwidth" starting at indice 0 of x.
-    If there is residual data at the end because of the last bin being not
-    complete, data are rejected and removed from the reshaped series.
-    """
-#===============================================================================
-
-    nbin = np.floor(len(x) / bwidth)
-    
-    bheight = x[:nbin*bwidth].reshape(nbin, bwidth)
-    bheight = np.sum(bheight, axis=1)
-    
-#    nres = len(x) - (nbin * bwidth)
-    
-    return bheight
-
+        return info
+        
+           
+#    def daily2weekly(self): #===================================================        
+#        
+#        # THIS METHOD NEEDS UPDATING! Currently, it seems it it not used at all.
+#        
+#        bwidth = 7.
+#        nbin = np.floor(len(TIME) / bwidth)
+#        
+#        TIMEbin = TIME[:nbin*bwidth].reshape(nbin, bwidth)
+#        TIMEbin = np.mean(TIMEbin, axis=1)
+#      
+#        TMAXbin = TMAX[:nbin*bwidth].reshape(nbin, bwidth)
+#        TMAXbin = np.mean(TMAXbin, axis=1)
+#        
+#        PTOTbin = PTOT[:nbin*bwidth].reshape(nbin, bwidth)
+#        PTOTbin = np.sum(PTOTbin, axis=1)
+#        
+#        RAINbin = RAIN[:nbin*bwidth].reshape(nbin, bwidth)
+#        RAINbin = np.sum(RAINbin, axis=1)
+#        
+#        nres = len(TIME) - (nbin * bwidth)
+#        print 'Nbin residual =', nres
+#                
+#        #------------------------------------------- update class variables ----
+#
+#        self.TIMEwk = TIMEbin
+#        self.TMAXwk = TMAXbin
+#        self.PTOTwk = PTOTbin
+#        self.RAINwk = RAINbin
+        
+        
 #===============================================================================
 def make_timeserie_continuous(DATA):
     """
@@ -508,13 +618,221 @@ def make_timeserie_continuous(DATA):
     return DATA
     
             
+
+
 #===============================================================================
-def plot_monthly_normals(fig, Tmin_norm, Tmax_norm, TNORM, PNORM, RNORM,
-                         COLOR=['black', 'black']):
-# Plot monthly normals
+def calculate_normals(DATA, datatypes):    
+    """
+    Calculates monthly normals from daily average air temperature and
+    total daily precipitation time series. 
+    
+    It is assumed that the datased passed through DATA is complete, in 
+    chronological order, without ANY missing value.
+    
+    {2d numpy matrix} DATA = Rows are the time and columns are the variables.
+    
+                             The first three should be a time series containing
+                             the year, month, an day of the month, respectively.
+                             
+                             The remaining columns should contains the weather 
+                             data. 1 columnd -> 1 weather variable. 
+    
+    {1d list} datatype = This is the type of data for which normals are being
+                         calculated. It defines the operation that is goind to
+                         be done to compute the normals. If this value is 
+                         None, all variable are assumed to be of type 0.
+    
+                         0 -> need to be averaged over a month 
+                              (e.g. Air Temperature, air humidity)
+                               
+                         1 -> need to be summed over a month 
+                              (e.g. Precipitation, ETP)
+    """
+#===============================================================================    
+        
+    print('---- calculating normals ----') 
+     
+    #---- assign new variables from input ----
+
+    nvar = len(DATA[0, 3:]) # number of weather variables
+    
+    if datatypes == None or len(datatypes) < nvar:
+        print('datatype incorrect or non existent. Assuming all variables to ' +
+              'be of type 0')
+        datatypes = [0] * nvar
+    
+    YEAR = DATA[:, 0].astype(int)
+    MONTH = DATA[:, 1].astype(int)
+    X = DATA[:, 3:]
+   
+    #---------------------------------------- Do each month, for every year ----
+    
+    # Calculate the average value for each months of each year
+    
+    nyear = np.ptp(YEAR) + 1
+      
+    XMONTH = np.zeros((nyear, 12, nvar)) * np.nan
+    for k in range(nvar):  
+        Xk = X[:, k]
+        for j in range(nyear):
+            for i in range(12):
+            
+                indx = np.where((YEAR == j+YEAR[0]) & (MONTH == i+1))[0]
+                Nday = monthrange(j+YEAR[0], i+1)[1] 
+           
+                if len(indx) < Nday:
+                    # Default nan value will be kept in XMONTH. 
+                
+                    print('Month %d of year %d is incomplete'
+                          % (i+1, j+YEAR[0]))
+                  
+                else:
+                    
+                    if datatypes[k] == 0:
+                        XMONTH[j, i, k] = np.mean(Xk[indx])
+                    elif datatypes[k] == 1:
+                        XMONTH[j, i, k] = np.sum(Xk[indx])
+
+    #---------------------------------------------- compute monthly normals ----
+    
+    # Calculate the normals for each month. This is done by calculating the
+    # mean of the monthly value computed in the above section.
+    
+    XNORM = np.zeros((12, nvar)) * np.nan
+    
+    for k in range(nvar):
+        for i in range(12):
+        
+            indx = np.where(~np.isnan(XMONTH[:, i, k]))[0]
+        
+            if len(indx) > 0:
+            
+                XNORM[i, k] = np.mean(XMONTH[indx, i, k])
+            
+            else:
+
+                # Default nan value is kept in the array.
+        
+                print 'WARNING, some months are empty because of lack of data.'
+    
+    return XNORM
+        
+
+#===============================================================================
+def calculate_ETP(DATE, TAVG, LAT, Ta):
+    """
+    Daily potential evapotranspiration (mm) is calculated with a method adapted
+    from Thornwaite (1948).
+    
+    Requires at least a year of data.
+    
+    #----- INPUT -----
+    
+    {1d numpy array} TIME = Numeric time in days
+    {1d numpy array} TAVG = Daily temperature average (deg C)
+    {float}          LAT = Latitude in degrees
+    {1d numpy array} Ta = Monthly air temperature normals
+    
+    #----- OUTPUT -----
+
+    {1d numpy array} ETP: Daily Potential Evapotranspiration (mm)    
+    
+    #----- SOURCE -----
+    
+    Pereira, A.R. and W.O. Pruitt. 2004. Adaptation of the Thornthwaite scheme
+        for estimating daily reference evapotranspiration. Agricultural Water
+        Management, 66, 251-257.
+    """
+#===============================================================================
+
+    Ta[Ta < 0] = 0   
+    
+    I = np.sum((0.2 * Ta) ** 1.514) # Heat index
+    a = (6.75e-7 * I**3) - (7.71e-5 * I**2) + (1.7912e-2 * I) + 0.49239
+    
+    TAVG[TAVG < 0] = 0
+    
+    DAYLEN = calculate_daylength(DATE, LAT) # Photoperiod in hr
+    
+    ETP = 16 * (10 * TAVG / I)**a * (DAYLEN / (12. * 30))
+       
+    return ETP
+    
+    
+#===============================================================================   
+def calculate_daylength(DATE, LAT):
+    """
+    Calculate the photoperiod for the given latitude at the given time.
+    
+    #----- INPUT -----
+    
+    {1D array} TIME = Numeric time in days.
+    {float}     LAT = latitude in decimal degrees.
+    
+    #----- OUTPUT -----
+    
+    {1D array} DAYLEN = photoperiod in hr.    
+    """
 #===============================================================================
     
+    DATE = DATE.astype(int)
+    pi = np.pi    
+    LAT = np.radians(LAT) # Latitude in rad
+    
+    #----- CONVERT DAY FORMAT -----
+    
+    # http://stackoverflow.com/questions/13943062
+    
+    N = len(DATE[:, 0])
+    DAY = np.zeros(N)    
+    for i in range(N):
+        DAY[i] = int(date(DATE[i, 0], DATE[i, 1],DATE[i, 2]).timetuple().tm_yday)
+        DAY[i] = int(DAY[i])
+        
+    #---------------------------------------------- DECLINATION OF THE SUN -----    
+    
+    # http://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
+
+    N = DAY - 1
+    
+    A = 2 * pi / 365.24 * (N - 2)
+    B = 2 * pi / pi * 0.0167
+    C = 2 * pi / 365.24 * (N + 10)
+    
+    D = -23.44 * pi / 180.
+            
+    SUNDEC = np.arcsin(np.sin(D) * np.cos(C + B * np.sin(A)))
+    
+    #---------------------------------------------------- SUNRISE EQUATION -----    
+
+    # http:/Omega/en.wikipedia.org/wiki/Sunrise_equation
+
+    OMEGA = np.arccos(-np.tan(LAT) * np.tan(SUNDEC))
+    
+    #------------------------------------------------------ HOURS OF LIGHT -----
+    
+    # http://physics.stackexchange.com/questions/28563/
+    #        hours-of-light-per-day-based-on-latitude-longitude-formula
+    
+    DAYLEN = OMEGA * 2 * 24 / (2 * np.pi) # Day length in hours
+    
+    return DAYLEN
+
+#===============================================================================
+def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
+#===============================================================================
+
+    #---- assign local variables ----
+    
+    Tmax_norm = NORMALS[:, 0]
+    Tmin_norm = NORMALS[:, 1]    
+    TNORM = NORMALS[:, 2]
+    PNORM = NORMALS[:, 3]
+    RNORM = NORMALS[:, -1]    
+    
     SNORM = PNORM - RNORM
+    
+    #---- setup layout ----
     
     fig.clf()
     
@@ -747,194 +1065,6 @@ def plot_monthly_normals(fig, Tmin_norm, Tmax_norm, TNORM, PNORM, RNORM,
                
     legend.draw_frame(False)
     
-      
-#===============================================================================    
-def calculate_normals(YEAR, MONTH, TMIN, TMAX, TAVG, PTOT, RAIN):
-    """
-    Calculates monthly normals from daily average air temperature and
-    total daily precipitation time series. Won't return a value if 
-    there is NaN in any of the input time series.
-    
-    #---- INPUT ----
-    
-    {1D array} YEAR = Year for each data in the time series.
-    {1D array} MONTH = Month (1-12) for each data in the time series.
-    {1D array} PTOT = Daily total precipitation in mm
-    {1D array} TAVG = Daily average air temperature in deg. C.
-    
-    #---- OUTPUT ----
-    
-    {1D array} TNORM = Monthly normals for air temperature in deg C.
-    {1D array} PNORM = Monthly normals for total precipitation in mm.
-    {1D array} RNORM = Monthly normals for rain in mm.
-    {1D array} TSTD = Monthly standard deviation for air temperature in deg C.    
-    """
-#===============================================================================
-   
-    #------------------------------------------------------ MONTHLY VALUES -----
-    
-    # Calculate the average value for each months of each year.
-    
-    nYEAR = YEAR[-1] - YEAR[0] + 1
-   
-    TMONTH = np.zeros((nYEAR, 12)) * np.nan
-    Tmin_mth = np.zeros((nYEAR, 12)) * np.nan
-    Tmax_mth = np.zeros((nYEAR, 12)) * np.nan
-    PMONTH = np.zeros((nYEAR, 12)) * np.nan
-    RMONTH = np.zeros((nYEAR, 12)) * np.nan
-    for j in range(nYEAR):
-        for i in range(12):
-            
-            indx = np.where((YEAR == j+YEAR[0]) & (MONTH == i+1))[0]
-            Nday = monthrange(j+YEAR[0], i+1)[1] 
-            
-            if len(indx) < Nday:
-                print 'Month', i+1, 'of year', j+YEAR[0], 'is imcomplete'
-                
-                # Do nothing. Default nan value will be kept.                
-                
-            else:                
-                TMONTH[j, i] = np.mean(TAVG[indx])
-                PMONTH[j, i] = np.sum(PTOT[indx])
-                RMONTH[j, i] = np.sum(RAIN[indx])
-                Tmin_mth[j, i] = np.mean(TMIN[indx])
-                Tmax_mth[j, i] = np.mean(TMAX[indx])
-
-    #------------------------------------------------------ MONTHLY NORMALS ----
-    
-    # Calculate the normals for each month.
-    
-    TNORM = np.zeros(12) * np.nan
-    PNORM = np.zeros(12) * np.nan
-    RNORM = np.zeros(12) * np.nan
-    TSTD = np.zeros(12) * np.nan
-    
-    Tmin_norm = np.zeros(12)
-    Tmax_norm = np.zeros(12)
-    
-    for i in range(12):
-        
-        indx = np.where(~np.isnan(TMONTH[:, i]))[0]
-        
-        if len(indx) > 0:
-            
-            TNORM[i] = np.mean(TMONTH[indx, i])
-            PNORM[i] = np.mean(PMONTH[indx, i])
-            RNORM[i] = np.mean(RMONTH[indx, i])            
-            TSTD[i] = (np.mean((TMONTH[indx, i] - TNORM[i])**2))**0.5
-
-            Tmin_norm[i] = np.mean(Tmin_mth[indx, i]) 
-            Tmax_norm[i] = np.mean(Tmax_mth[indx, i])
-            
-        else:
-            
-            print 'WARNING, some months are empty because of lack of data'
-            
-            # Default nan value is kept in the array.
-
-    return Tmin_norm, Tmax_norm, TNORM, PNORM, RNORM
-
-
-#===============================================================================
-def calculate_ETP(TIME, TAVG, LAT, Ta):
-    """
-    Daily potential evapotranspiration (mm) is calculated with a method adapted
-    from Thornwaite (1948).
-    
-    Requires at least a year of data.
-    
-    #----- INPUT -----
-    
-    TIME = Numeric time in days
-    TAVG = Daily temperature average (deg C)
-    LAT = Latitude in degrees
-    Ta = Monthly air temperature normals
-    
-    #----- OUTPUT -----
-
-    ETP: Daily Potential Evapotranspiration (mm)    
-    
-    #----- SOURCE -----
-    
-    Pereira, A.R. and W.O. Pruitt. 2004. Adaptation of the Thornthwaite scheme
-        for estimating daily reference evapotranspiration. Agricultural Water
-        Management, 66, 251-257.
-    """
-#===============================================================================
-        
-    Ta[Ta < 0] = 0    
-    
-    I = np.sum((0.2 * Ta) ** 1.514) # Heat index
-    a = (6.75e-7 * I**3) - (7.71e-5 * I**2) + (1.7912e-2 * I) + 0.49239
-    
-    TAVG[TAVG < 0] = 0
-    
-    DAYLEN = calculate_daylength(TIME, LAT) # Photoperiod in hr
-    
-    ETP = 16 * (10 * TAVG / I)**a * (DAYLEN / (12. * 30))
-        
-    return ETP
-    
-    
-#===============================================================================   
-def calculate_daylength(TIME, LAT):
-    """
-    Calculate the photoperiod for the given latitude at the given time.
-    
-    #----- INPUT -----
-    
-    {1D array} TIME = Numeric time in days.
-    {float}     LAT = latitude in decimal degrees.
-    
-    #----- OUTPUT -----
-    
-    {1D array} DAYLEN = photoperiod in hr.    
-    """
-#===============================================================================
-    
-    pi = np.pi
-    
-    LAT = np.radians(LAT) # Latitude in rad
-    
-    #----- CONVERT DAY FORMAT -----
-    
-    # http://stackoverflow.com/questions/13943062
-    
-    DAY = np.zeros(len(TIME))
-    
-    for i in range(len(DAY)):
-        DATE = xldate_as_tuple(TIME[i], 0)
-        DAY[i] = int(date(DATE[0], DATE[1], DATE[2]).timetuple().tm_yday)
-    
-    #---------------------------------------------- DECLINATION OF THE SUN -----    
-    
-    # http://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
-
-    N = DAY - 1
-    
-    A = 2 * pi / 365.24 * (N - 2)
-    B = 2 * pi / pi * 0.0167
-    C = 2 * pi / 365.24 * (N + 10)
-    
-    D = -23.44 * pi / 180.
-            
-    SUNDEC = np.arcsin(np.sin(D) * np.cos(C + B * np.sin(A)))
-    
-    #---------------------------------------------------- SUNRISE EQUATION -----    
-
-    # http:/Omega/en.wikipedia.org/wiki/Sunrise_equation
-
-    OMEGA = np.arccos(-np.tan(LAT) * np.tan(SUNDEC))
-    
-    #------------------------------------------------------ HOURS OF LIGHT -----
-    
-    # http://physics.stackexchange.com/questions/28563/
-    #        hours-of-light-per-day-based-on-latitude-longitude-formula
-    
-    DAYLEN = OMEGA * 2 * 24 / (2 * np.pi) # Day length in hours
-    
-    return DAYLEN
-
 if __name__ == '__main__':
 #    plt.rc('font',family='Arial')
     

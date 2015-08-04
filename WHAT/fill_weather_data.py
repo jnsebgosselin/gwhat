@@ -255,9 +255,9 @@ class GapFillWeather(QtGui.QWidget):
         self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis')
         self.full_error_analysis.setCheckState(QtCore.Qt.CheckState.Unchecked)
         
-        btn_add_ETP = QtGui.QToolButton()
-        btn_add_ETP.setIcon(iconDB.refresh)
-        btn_add_ETP.setAutoRaise(True)
+        btn_add_ETP = QtGui.QPushButton('Add ETP to Datafile')
+#        btn_add_ETP.setToolTip(ttipDB.btn_fill_all)
+        btn_add_ETP.setIcon(iconDB.add2list)
         btn_add_ETP.setIconSize(styleDB.iconSize2)
         
         advanced_widg = QtGui.QFrame()
@@ -761,9 +761,7 @@ class GapFillWeather(QtGui.QWidget):
             
         return
         
-    def add_ETP_to_weather_data_file(self): #===============================
-        
-        print 'coucou'
+    def add_ETP_to_weather_data_file(self): #===================================
         
         dirname = self.workdir + '/Meteo/Output'
         filename, _ = QtGui.QFileDialog.getOpenFileName(
@@ -773,29 +771,66 @@ class GapFillWeather(QtGui.QWidget):
         if not filename:
             return
                     
-        #---- Load Meteo -----
-       
+        #---- load and stock original data -----
+                    
         meteoObj = meteo.MeteoObj()
-        meteoObj.load(filename)
+        meteoObj.load(filename)   
+       
+        HEADER = copy(meteoObj.HEADER)
+        DATAORIG = np.copy(meteoObj.DATA)
+        DATE = DATAORIG[:, :3]
         
-        PTOT = meteoObj.PTOT # Daily total precipitation (mm)
-        TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
-        TIMEmeteo = meteoObj.TIME # Time (days)
-        LAT = float(meteoObj.LAT) # Latitude (deg)
+        #---- compute air temperature normals ----
         
-        YEAR = meteoObj.YEAR
-        MONTH = meteoObj.MONTH
+        meteoObj.clean_endsof_file()
+        meteoObj.check_time_continuity()
+        meteoObj.get_TIME(meteoObj.DATA[:, :3])
+        meteoObj.fill_nan()
+                
+        NORMALS = meteo.calculate_normals(meteoObj.DATA, meteoObj.datatypes)
         
-        RAIN = meteoObj.RAIN
-        
-        Ta, _, _, _ = meteo.calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN)
-        
-        # Daily potential reference evapotranspiration (mm)
-        ETP = meteo.calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) 
-            
-        print np.mean(ETP)
-        
+        varnames = np.array(meteoObj.HEADER[-1])
+        indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
 
+        Ta = NORMALS[:, indx-3]   # monthly air temperature averages (deg C)        
+        LAT = float(meteoObj.LAT) # Latitude (decimal deg)
+        
+        #--- estimate ETP from original temperature time series ----
+    
+        TAVG = np.copy(DATAORIG[:, indx])        
+        ETP = meteo.calculate_ETP(DATE, TAVG, LAT, Ta)        
+
+        #---- extend data ----
+
+        filecontent = copy(HEADER)
+        if np.any(varnames == 'ETP (mm)'):
+            print('Already a ETP time series in the datasets. Overriding data.')
+            
+            # Override ETP in DATA:
+            indx = np.where(varnames == 'ETP (mm)')[0][0]
+            DATAORIG[:, indx] = ETP
+        
+        else:
+            # Add new variable name to header:
+            filecontent[-1].append('ETP (mm)')
+            
+            # Add ETP to DATA matrix:
+            ETP = ETP[:, np.newaxis]
+            DATAORIG = np.hstack([DATAORIG, ETP])          
+              
+            DATAORIG.tolist()
+        
+        #---- save data ----
+        
+        for i in range(len(DATAORIG[:, 0])):
+            filecontent.append(DATAORIG[i, :]) 
+            
+        with open(filename, 'wb') as f:
+            writer = csv.writer(f,delimiter='\t')
+            writer.writerows(filecontent)
+            
+        print('ETP time series added successfully to %s' % filename)
+            
     
 #===============================================================================
 class Target_Station_Info():
@@ -2504,7 +2539,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
     
 #===============================================================================
     
-    def __init__(self, parent=None): #=====================
+    def __init__(self, parent=None):
         super(GapFillDisplayTable, self).__init__(parent)
 
         self.initUI()
@@ -2681,7 +2716,7 @@ class MyHorizHeader(QtGui.QHeaderView):
         
         self.setClickable(True) 
         
-        self.setHighlightSections(False)
+        self.setHighlightSections(True)
         self.showMouseOverLabel = True
 
         self.showSectionSep = False                
@@ -2692,10 +2727,14 @@ class MyHorizHeader(QtGui.QHeaderView):
         self.setSortIndicatorShown(False)
         self.heightHint = 20
         
+            
     def paintEvent(self, event): #==============================================
         
         qp = QtGui.QPainter()
         qp.begin(self.viewport())
+        
+#        print self.sender()
+        print event.region
         
         if self.showSectionSep:
             QtGui.QHeaderView.paintEvent(self, event)
@@ -2723,46 +2762,59 @@ class MyHorizHeader(QtGui.QHeaderView):
         
         
     def paintSection(self, painter, rect, logicalIndex):
-
+        
+        # http://qt4-x11.sourcearchive.com/documentation/4.4.3/
+        # classQHeaderView_fd6972445e0a4a0085538a3f620b03d1.
+        # html#fd6972445e0a4a0085538a3f620b03d1
+        
         if not rect.isValid():
             return
         
         #--------------------------------------------  draw header sections ----
 
-        opt = QtGui.QStyleOptionHeader()
-        opt.initFrom(self) # self.initStyleOption(opt)
-        
+        opt = QtGui.QStyleOptionHeader()        
+        self.initStyleOption(opt) # 
+#        opt.initFrom(self) # 
+#        
+#        print(self.model().headerData(logicalIndex, self.orientation()))
+#
         opt.rect = rect
         opt.section = logicalIndex
         opt.text = "" 
 #        print dir(opt)
 #        print opt.SO_TabWidgetFrame
         
-        #------------------------------------------------- section position ----
+#        print int(QtGui.QStyle.State_MouseOver)
         
-        visual = self.visualIndex(logicalIndex)        
-        if self.count() == 1:
-            opt.position = QtGui.QStyleOptionHeader.OnlyOneSection
-        elif visual == 0:
-            opt.position = QtGui.QStyleOptionHeader.Beginning
-        elif visual == self.count() - 1:
-            opt.position = QtGui.QStyleOptionHeader.End
-        else:
-            opt.position = QtGui.QStyleOptionHeader.Middle
+        #------------------------------------------------- section position ----
+
+#        visual = self.visualIndex(logicalIndex)        
+#        if self.count() == 1:
+#            opt.position = QtGui.QStyleOptionHeader.OnlyOneSection
+#        elif visual == 0:
+#            opt.position = QtGui.QStyleOptionHeader.Beginning
+#        elif visual == self.count() - 1:
+#            opt.position = QtGui.QStyleOptionHeader.End
+#        else:
+#            opt.position = QtGui.QStyleOptionHeader.Middle
+#            
+#        sortIndicatorSection = self.sortIndicatorSection()
+#        if sortIndicatorSection==logicalIndex:
+#            opt.state = int(opt.state) + int(QtGui.QStyle.State_Sunken)
         
         #--------------------------------------------- mouse over highlight ----
         
-        if self.showMouseOverSection:     
-            mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())               
-            if rect.contains(mouse_pos):
-                opt.state =QtGui.QStyle.State_MouseOver
-            else:
-                opt.state = QtGui.QStyle.State_None
-        else:
-            opt.state = QtGui.QStyle.State_None
+#        if self.showMouseOverSection:     
+#            mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())               
+#            if rect.contains(mouse_pos):
+#                opt.state = int(opt.state) + 8192
+#            else:
+#                pass
+#        else:
+#            pass
             
         #---------------------------------------------------- paint section ----
-      
+
         self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter, self)
                 
         

@@ -1301,15 +1301,16 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                       self, 'Select a valid weather data file', 
                                       self.meteo_dir, '*.out')       
+
         QtCore.QCoreApplication.processEvents()
         QtCore.QCoreApplication.processEvents()
         QtCore.QCoreApplication.processEvents()
+        
         self.load_meteo_file(filename)
     
            
     def load_meteo_file(self, filename): #======================================
-    
-    
+        
         if not filename:
             print 'Path is empty. Cannot load weather data file.'
             return
@@ -1318,13 +1319,11 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         self.hydrograph2display.fmeteo = filename
         self.hydrograph2display.finfo = filename[:-3] + 'log'
         
-        self.meteo_data.load(filename)
-        
+        self.meteo_data.load_and_format(filename)
+        self.meteo_info_widget.setText(self.meteo_data.INFO)        
         self.parent.write2console(
         '''<font color=black>Weather data set loaded successfully for
-             station %s.</font>''' % self.meteo_data.station_name)
-          
-        self.meteo_info_widget.setText(self.meteo_data.info )
+             station %s.</font>''' % self.meteo_data.STA)
         
         if self.fwaterlvl:
             
@@ -1439,12 +1438,15 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         #----- Check if Weather Data File exists -----
         
         if path.exists(self.hydrograph2display.fmeteo):
-            self.meteo_data.load(self.hydrograph2display.fmeteo)
-            self.meteo_info_widget.setText(self.meteo_data.info )
+            self.meteo_data.load_and_format(self.hydrograph2display.fmeteo)
+            INFO = self.meteo_data.build_HTML_table()
+            self.meteo_info_widget.setText(INFO)
             self.parent.write2console(
             '''<font color=black>Graph layout loaded successfully for 
                well %s.</font>''' % name_well)
+               
             QtCore.QCoreApplication.processEvents()
+            
             self.draw_hydrograph()
         else:
             self.meteo_info_widget.setText('')
@@ -1458,8 +1460,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             self.hydrograph2display.fmeteo = []
             self.hydrograph2display.finfo = []
             
-        self.UpdateUI = True
-    
+        self.UpdateUI = True    
     
     def save_config_isClicked(self): #==========================================
     

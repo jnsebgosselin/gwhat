@@ -326,9 +326,9 @@ class Hydrograph():
         
         return date0, date1
     
-    #---------------------------------------------------------------------------           
-    def generate_hydrograph(self, MeteoObj):
-    #---------------------------------------------------------------------------
+               
+    def generate_hydrograph(self, MeteoObj): #==================================
+
 
         #---- Reinit Fig ----
         
@@ -356,12 +356,15 @@ class Hydrograph():
         
             #---- Assign Weather Data ----
             
-            self.name_meteo = MeteoObj.station_name
+            self.name_meteo = MeteoObj.STA
+            
+            DATA = MeteoObj.DATA
+            # DATA = [YEAR, MONTH, DAY, TMAX, TMIN, TMEAN, PTOT, ETP, RAIN]
             
             self.TIMEmeteo = MeteoObj.TIME # Time in numeric format (days)
-            self.TMAX = MeteoObj.TMAX # Daily maximum temperature (deg C)
-            self.PTOT = MeteoObj.PTOT # Daily total precipitation (mm)        
-            self.RAIN = MeteoObj.RAIN
+            self.TMAX = DATA[:, 3] # Daily maximum temperature (deg C)
+            self.PTOT = DATA[:, 6] # Daily total precipitation (mm)        
+            self.RAIN = DATA[:, -1]
             
             #---- Resample Data in Bins ----
             
@@ -583,15 +586,14 @@ class Hydrograph():
         
         self.isHydrographExists = True
     
-    #---------------------------------------------------------------------------    
-    def resample_bin(self):
-    #---------------------------------------------------------------------------
-    
+        
+    def resample_bin(self): #===================================================
+   
         # 1 day; 7 days; 15 days; 30 days; monthly; yearly  
         self.bwidth = [1., 7., 15., 30., 30., 365.][self.bwidth_indx]
         bwidth = self.bwidth
         
-        if self.bwidth_indx == 0:
+        if self.bwidth_indx == 0: # daily
             
             self.bTIME = np.copy(self.TIMEmeteo)
             self.bTMAX = np.copy(self.TMAX)
@@ -600,10 +602,10 @@ class Hydrograph():
 
         elif self.bwidth_indx in [1, 2, 3]: #7 days; 15 days; 30 days
 
-            self.bTIME = meteo.bin_sum(self.TIMEmeteo, bwidth) / bwidth
-            self.bTMAX = meteo.bin_sum(self.TMAX, bwidth) / bwidth
-            self.bPTOT = meteo.bin_sum(self.PTOT, bwidth)
-            self.bRAIN = meteo.bin_sum(self.RAIN, bwidth)            
+            self.bTIME = self.bin_sum(self.TIMEmeteo, bwidth) / bwidth
+            self.bTMAX = self.bin_sum(self.TMAX, bwidth) / bwidth
+            self.bPTOT = self.bin_sum(self.PTOT, bwidth)
+            self.bRAIN = self.bin_sum(self.RAIN, bwidth)            
 
         elif self.bwidth_indx == 4 : # monthly
             print 'option not yet available, kept default of 1 day'
@@ -611,13 +613,31 @@ class Hydrograph():
         elif self.bwidth_indx == 5 : # yearly
             print 'option not yet available, kept default of 1 day'
             
-    #---------------------------------------------------------------------------
-    def draw_waterlvl(self):
+    
+    def bin_sum(self, x, bwidth): #=============================================
+       
+        """
+        Sum data x over bins of width "bwidth" starting at indice 0 of x.
+        If there is residual data at the end because of the last bin being not
+        complete, data are rejected and removed from the reshaped series.
+        """
+        
+        nbin = np.floor(len(x) / bwidth)
+        
+        bheight = x[:nbin*bwidth].reshape(nbin, bwidth)
+        bheight = np.sum(bheight, axis=1)
+        
+        # nres = len(x) - (nbin * bwidth)
+        
+        return bheight
+            
+    
+    def draw_waterlvl(self): #==================================================
+        
         """
         This method is called the first time the graph is plotted and each
         time water level datum is changed.
         """
-    #---------------------------------------------------------------------------
         
         #-------------------------------------------------- Logger Measures ----
         
@@ -1359,7 +1379,7 @@ if __name__ == '__main__':
     waterLvlObj.load_waterlvl_measures(fname, 'PO16A')
     
     meteoObj = MeteoObj()
-    meteoObj.load(fmeteo)
+    meteoObj.load_and_format(fmeteo)
             
     hydrograph2display = Hydrograph()
     hydrograph2display.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
@@ -1375,4 +1395,5 @@ if __name__ == '__main__':
     hydrograph2display.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
     
     hydrograph2display.generate_hydrograph(meteoObj)  
+    plt.show()
     
