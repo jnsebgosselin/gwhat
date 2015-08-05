@@ -1127,7 +1127,7 @@ class WaterlvlData():
             else: 
                 row += 1
             
-            if row > len(self.time):
+            if row >= len(self.time):
                 print 'WARNING: Waterlvl data file is not formatted correctly'
                 book.release_resources()
                 return False
@@ -1188,6 +1188,9 @@ class WaterlvlData():
         well_info += '</table>'
         
         self.well_info = well_info
+        
+        return True
+        
         
     def load_waterlvl_measures(self, fname, name_well):
         

@@ -598,7 +598,7 @@ class dwnldWeather(QtGui.QWidget):
                 self.btn_get.setIcon(iconDB.download)
                 self.dwnld_indx = 0
                 
-                self.station_table.setEnabled(True)
+#                self.station_table.setEnabled(True)
                 self.pbar.hide()
                 
                 return
@@ -650,7 +650,7 @@ class dwnldWeather(QtGui.QWidget):
                 # Reset UI and variables
                 
                 self.dwnld_indx = 0
-                self.station_table.setEnabled(True)
+#                self.station_table.setEnabled(True)
                 self.pbar.hide()
                 self.btn_get.setIcon(iconDB.download)
                 
@@ -672,7 +672,7 @@ class dwnldWeather(QtGui.QWidget):
         
         #---- Update UI ----
             
-        self.station_table.setEnabled(False)
+#        self.station_table.setEnabled(False)
         self.pbar.show()
         self.btn_get.setIcon(iconDB.stop)
         self.station_table.selectRow(sta2dwnl[0])

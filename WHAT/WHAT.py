@@ -1198,7 +1198,15 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         #----- Load Data -----
         
-        self.waterlvl_data.load(filename)                        
+        state = self.waterlvl_data.load(filename)
+        if state == False:
+            msg = ('WARNING: Waterlvl data file "%s" is not formatted ' +
+                   ' correctly.') % path.basename(filename)
+            print(msg)
+            
+            self.parent.write2console('''<font color=red>%s''' % msg)
+            return False
+            
         name_well = self.waterlvl_data.name_well
                 
         #----- Load Manual Measures -----

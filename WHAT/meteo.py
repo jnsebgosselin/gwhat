@@ -256,6 +256,8 @@ class MeteoObj():
         self.STADESC[0] = ['Station Name', 'Latitude', 'Longitude', 
                            'Province', 'Elevation', 'Climate Identifier']
         
+        self.INFO = []
+        
         self.varnames = []
         
         self.datatypes = []        
@@ -276,6 +278,7 @@ class MeteoObj():
         #---- load data from file ----
         
         self.load(filename)
+        self.build_HTML_table()
         
         #---- clean data ----
         
@@ -523,7 +526,7 @@ class MeteoObj():
         
         FIELDS = self.STADESC[0]
         VALIST = self.STADESC[1]
-        UNITS =  ['', '', '&deg;', '&deg;', ' m', '']
+        UNITS =  ['', '&deg;', '&deg;','', ' m', '']
                           
         info = '<table border="0" cellpadding="2" cellspacing="0" align="left">'
         for i in range(len(FIELDS)):
@@ -540,6 +543,8 @@ class MeteoObj():
                          <td align="left">%s%s</td>
                        </tr>''' % (FIELDS[i], VAL, UNITS[i])
         info += '</table>'
+        
+        self.INFO = info
         
         return info
         
