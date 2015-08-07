@@ -1,7 +1,7 @@
 ![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_banner_lowres(150).png)
 ====
 
-News (2015-07-27): A user guide is available for download [here](https://github.com/jnsebgosselin/WHAT/raw/master/WHATMANUAL/WHATMANUAL.pdf). The guide only covers, for the time being, the creation of gapless daily weather datasets, including the downloading and formatting of weather data from the online Canadian Daily Climatic Database (CDCD).
+News (2015-07-27): A <b>user guide</b> is available for download [here](https://github.com/jnsebgosselin/WHAT/raw/master/WHATMANUAL/WHATMANUAL.pdf). The guide only covers, for the time being, the creation of gapless daily weather datasets, including the downloading and formatting of weather data from the online Canadian Daily Climatic Database (CDCD).
 
 News (2015-01-15): The Governement of Canada issued an update on 15/01/2015 of their website which caused compatibility issues with some features of WHAT. A new version of the software ([WHAT v4.1.2](https://github.com/jnsebgosselin/WHAT/releases)) has been released to fix this problem.
 
