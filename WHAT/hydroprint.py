@@ -26,27 +26,28 @@ from os import path
 from calendar import monthrange
 import csv
 from math import sin, cos, sqrt, atan2, radians
-from time import clock
+#from time import clock
 
 #----- THIRD PARTY IMPORTS -----
 
 import numpy as np
-#import matplotlib
-#matplotlib.use('Qt4Agg')
-#matplotlib.rcParams['backend.qt4']='PySide'
-#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+import matplotlib
+matplotlib.use('Qt4Agg')
+matplotlib.rcParams['backend.qt4']='PySide'
+from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from PySide import QtGui
 import matplotlib.pyplot as plt
-#plt.rcParams['axes.unicode_minus']=True # Need to be investigated
-#import matplotlib.pyplot as plt
+
 from xlrd.xldate import xldate_from_date_tuple
-from xlrd import xldate_as_tuple
-from xlrd import open_workbook
+from xlrd import xldate_as_tuple, open_workbook
+
+#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+#plt.rcParams['axes.unicode_minus']=True # Need to be investigated
 
 #---- PERSONAL IMPORTS ----
 
 import database as db
-import meteo
+#import meteo
 
 class LabelDatabase():
     
@@ -148,14 +149,16 @@ class Hydrograph():
         #   5: yearly
         
         self.NMissPtot = []
-            
+        
+        #----------------------------------------------------------- EVENTS ----
+        
     def set_waterLvlObj(self, WaterLvlObj): #===================================
         self.WaterLvlObj = WaterLvlObj
    
     
     def checkLayout(self, name_well, filename): #===============================
         
-        with open(filename, 'rb') as f:
+        with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
             reader = np.array(reader)
        
@@ -183,14 +186,14 @@ class Hydrograph():
             if nPARA < 11:
                 reader[1:, 10] = 0
             
-            with open(filename, 'wb') as f:
+            with open(filename, 'w') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerows(reader)
              
             msg = ('The "graph_layout.lst" file is from an older version ' +
                    'of WHAT. The old file has been converted to the newer ' +
                    'version.') 
-            print msg
+            print(msg)
         
         # Check if there is a layout stored for the current 
         # selected observation well.
@@ -210,7 +213,7 @@ class Hydrograph():
         # is called. So it can be supposed at this point that everything is
         # fine with the graph layout for this well.
         
-        with open(filename, 'rb') as f:
+        with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
             reader = np.array(reader)
      
@@ -241,7 +244,7 @@ class Hydrograph():
         
         #---- load file ----
         
-        with open(filename, 'rb') as f:
+        with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
             reader = np.array(reader)
         
@@ -262,7 +265,7 @@ class Hydrograph():
         
         #---- save file ----
             
-        with open(filename, 'wb') as f:
+        with open(filename, 'w') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(reader)
     
@@ -618,10 +621,10 @@ class Hydrograph():
             self.bRAIN = self.bin_sum(self.RAIN, bwidth)            
 
         elif self.bwidth_indx == 4 : # monthly
-            print 'option not yet available, kept default of 1 day'
+            print('option not yet available, kept default of 1 day')
 
         elif self.bwidth_indx == 5 : # yearly
-            print 'option not yet available, kept default of 1 day'
+            print('option not yet available, kept default of 1 day')
             
     
     def bin_sum(self, x, bwidth): #=============================================
@@ -891,7 +894,7 @@ class Hydrograph():
                             horizontalalignment='center')
                        
         # Get bounding box dimensions of yaxis ticklabels for ax2
-        renderer = self.fig.canvas.get_renderer()            
+        renderer = self.fig.canvas.get_renderer() 
         bbox2_left, bbox2_right = self.ax2.yaxis.get_ticklabel_extents(renderer)
         
         # bbox are structured in the the following way:     [[ Left , Bottom ],
@@ -1232,7 +1235,7 @@ class WaterlvlData():
                 row += 1
             
             if row >= len(self.time):
-                print 'WARNING: Waterlvl data file is not formatted correctly'
+                print('WARNING: Waterlvl data file is not formatted correctly')
                 book.release_resources()
                 return False
                 
@@ -1256,13 +1259,13 @@ class WaterlvlData():
             
         except:
 
-            print 'WARNING: Waterlvl data file is not formatted correctly'
+            print('WARNING: Waterlvl data file is not formatted correctly')
             book.release_resources()
             return False
         
         book.release_resources()
         
-        print 'Loading waterlvl time-series for well %s' % self.name_well
+        print('Loading waterlvl time-series for well %s' % self.name_well)
 
         #-------------------------------------------------------- WELL INFO ----
         
@@ -1298,7 +1301,7 @@ class WaterlvlData():
         
     def load_waterlvl_measures(self, fname, name_well):
         
-        print 'Loading waterlvl manual measures for well %s' % name_well
+        print('Loading waterlvl manual measures for well %s' % name_well)
         
         WLmes = []
         TIMEmes = []
@@ -1339,13 +1342,13 @@ class WaterlvlData():
 def load_weather_log(fname, varname, bintime, binvalue):
 #===============================================================================
 
-    print 'Resampling missing data markers'
+    print('Resampling missing data markers')
     
     bwidth = bintime[1] - bintime[0]
     
     #---- Load Data ----
     
-    with open(fname, 'rb') as f:
+    with open(fname, 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         reader = list(reader)[36:]
     
@@ -1465,9 +1468,10 @@ def LatLong2Dist(LAT1, LON1, LAT2, LON2):
     
 if __name__ == '__main__':
     
+    import sys
     from meteo import MeteoObj
     
-    plt.close('all')
+    app = QtGui.QApplication(sys.argv)
     
     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fwaterlvl = 'Files4testing/PO16A.xls'
@@ -1504,5 +1508,16 @@ if __name__ == '__main__':
     hydrograph2display.generate_hydrograph(meteoObj) 
     hydrograph2display.fig.savefig('../Projects/Project4Testing/hydrograph.pdf')
     
-    plt.show(block=False)
+    #---- show figure on-screen ----
+        
+    canvas = FigureCanvasQTAgg(hydrograph2display.fig)
+    canvas.show()
+    canvas.setFixedSize(canvas.size())
+    
+    qr = canvas.frameGeometry()
+    cp = QtGui.QDesktopWidget().availableGeometry().center()
+    qr.moveCenter(cp)
+    canvas.move(qr.topLeft())
+    
+    sys.exit(app.exec_())
     

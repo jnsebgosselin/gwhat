@@ -304,7 +304,7 @@ class MeteoObj():
         
         labels = np.array(self.STADESC[0])
 
-        with open(filename, 'rb') as f:
+        with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
         
         #---- get info from header and find row where data starts ----
@@ -433,7 +433,7 @@ class MeteoObj():
         
         #---- Fill Temperature based variables ----
         
-        print datatypes
+        print(datatypes)
         
         for var in range(nvar):
         
@@ -720,7 +720,7 @@ def calculate_normals(DATA, datatypes):
 
                 # Default nan value is kept in the array.
         
-                print 'WARNING, some months are empty because of lack of data.'
+                print('WARNING, some months are empty because of lack of data.')
     
     return XNORM
         
