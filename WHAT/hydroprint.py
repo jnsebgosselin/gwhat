@@ -116,6 +116,7 @@ class Hydrograph():
         self.isLegend = False
         self.meteoOn = True # controls wether meteo data are plotted or not
         self.gridLines = 2 # 0 -> None, 1 -> "-" 2 -> ":"
+        self.datemode = 'month' # 'month' or 'year'
         
         #---- Waterlvl Obj ----
         
@@ -148,7 +149,7 @@ class Hydrograph():
         
         self.NMissPtot = []
             
-    def set_waterLvlObj(self, WaterLvlObj):
+    def set_waterLvlObj(self, WaterLvlObj): #===================================
         self.WaterLvlObj = WaterLvlObj
    
     
@@ -234,10 +235,9 @@ class Hydrograph():
         self.RAINscale = reader[8].astype(float)
         self.WLdatum = reader[9].astype(int)
         self.trend_line = reader[10].astype(int)
+
         
-    #---------------------------------------------------------------------------       
-    def save_layout(self, name_well, filename):
-    #---------------------------------------------------------------------------
+    def save_layout(self, name_well, filename): #===============================
         
         #---- load file ----
         
@@ -266,9 +266,8 @@ class Hydrograph():
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(reader)
     
-    #---------------------------------------------------------------------------       
-    def best_fit_waterlvl(self):
-    #---------------------------------------------------------------------------
+      
+    def best_fit_waterlvl(self): #==============================================
         
         WL = self.WaterLvlObj.lvl   
         if self.WLdatum == 1: # masl
@@ -299,9 +298,8 @@ class Hydrograph():
         
         return self.WLscale, self.WLmin
     
-    #---------------------------------------------------------------------------
-    def best_fit_time(self, TIME):
-    #---------------------------------------------------------------------------
+    
+    def best_fit_time(self, TIME): #============================================
         
         # ----- Data Start -----
         
@@ -330,7 +328,7 @@ class Hydrograph():
     def generate_hydrograph(self, MeteoObj): #==================================
 
 
-        #---- Reinit Fig ----
+        #---- Reinit Figure ----
         
         self.fig.clf()
         self.fig.patch.set_facecolor('white')
@@ -338,7 +336,7 @@ class Hydrograph():
         fheight = self.fheight # Figure height in inches
         fwidth = self.fwidth   # Figure width in inches
         
-        if self.meteoOn==False:
+        if self.meteoOn == False:
             fheight /= 2
 
         self.fig.set_size_inches(fwidth, fheight, forward=True) 
@@ -347,10 +345,10 @@ class Hydrograph():
         
         WaterLvlObj = self.WaterLvlObj 
         
-        #---- Assigne class values ----
+        #---- Assign class values ----
         
         self.label_font_size = 14
-        self.date_labels_display_pattern = 2
+        self.date_labels_display_pattern = 1
         
         if self.meteoOn == True:
         
@@ -381,41 +379,51 @@ class Hydrograph():
         
         #--- Time (host) ---
         
+        # Also holds the gridlines.
+        
         self.ax1 = self.fig.add_axes([0, 0, 1, 1], frameon=False)
 
         #--- Frame ---
         
-        self.ax0 = self.fig.add_axes([0, 0, 1, 1], frameon=True)
-        self.ax0.set_zorder(self.ax1.get_zorder()+20)
+        # Only used to display the frame so it is always on top.
+        
+        self.ax0 = self.fig.add_axes(self.ax1.get_position(), frameon=True)
+        self.ax0.patch.set_visible(False) 
+        self.ax0.set_zorder(self.ax1.get_zorder() + 20)
         self.ax0.tick_params(bottom='off', top='off', left='off', right='off',
                              labelbottom='off', labelleft='off')
-        self.ax0.patch.set_visible(False)        
-                        
+                                       
         #--- Water Levels ---
         
         self.ax2 = self.ax1.twinx()
-        self.ax2.set_zorder(self.ax1.get_zorder()+10)
-        
-        self.update_waterlvl_scale()
+        self.ax2.set_zorder(self.ax1.get_zorder() + 10)      
         self.ax2.yaxis.set_ticks_position('left')
         self.ax2.yaxis.set_label_position('left') 
-        self.ax2.tick_params(axis='y', direction='out', labelsize=10) 
+        self.ax2.tick_params(axis='y', direction='out', labelsize=10)
+        for loc in ['top', 'bottom', 'right', 'left']:
+            self.ax2.spines[loc].set_visible(False)
+            
+        self.update_waterlvl_scale()
         
         if self.meteoOn == True:
                     
             #--- Precipitation ---
             
             self.ax3 = self.ax1.twinx()
-            self.ax3.set_zorder(self.ax1.get_zorder()+10)
+            self.ax3.set_zorder(self.ax1.get_zorder() + 10)
             self.ax3.set_navigate(False)
-        
+            for loc in ['top', 'bottom', 'right', 'left']:
+                self.ax3.spines[loc].set_visible(False) 
+            
             #--- Air Temperature ---
         
             self.ax4 = self.ax1.twinx()
-            self.ax4.set_zorder(self.ax1.get_zorder()-10)
+            self.ax4.set_zorder(self.ax1.get_zorder() - 10)
             self.ax4.set_navigate(False)
+            for loc in ['top', 'bottom', 'right', 'left']:
+                self.ax4.spines[loc].set_visible(False)
         
-        #--- Update margins ---
+        #---------------------------------------------------- Update margins ---
         
         self.bottom_margin = 0.75
         self.set_margins() # set margins for all the axes
@@ -446,6 +454,8 @@ class Hydrograph():
             
         self.dist = LatLong2Dist(LAT1, LON1, LAT2, LON2)
          
+        # display text on figure
+         
         text1_ypos = self.NZGrid + 0.025 / self.dZGrid_inch
        
         self.text1 = self.ax1.text(self.TIMEmax, text1_ypos, '',
@@ -461,7 +471,7 @@ class Hydrograph():
         self.ax1.xaxis.set_ticks_position('bottom')
         self.ax1.tick_params(axis='both',direction='out')
         
-        self.ax1.set_yticks(np.arange(0, self.NZGrid, 1))
+        self.ax1.set_yticks(np.arange(0, self.NZGrid, 2))
         self.ax1.yaxis.set_ticklabels([])
         self.ax1.tick_params(axis='y', length=0)
         self.ax1.patch.set_facecolor('none')
@@ -680,13 +690,14 @@ class Hydrograph():
             self.h_WLmes.set_data(TIMEmes, WLmes)
         
                                                            
-    #---------------------------------------------------------------------------
-    def draw_weather(self):
+    def draw_weather(self): #===================================================
+
         """
         This method is called the first time the graph is plotted and each
         time the time scale is changed by the user.
         """
-    #---------------------------------------------------------------------------
+
+
         if self.meteoOn == False:
             print('meteoOn == False')
             return
@@ -770,57 +781,85 @@ class Hydrograph():
         self.l2_ax4.set_xdata(TIME2X)
         self.l2_ax4.set_ydata(Tmax2X)
         
-    def set_time_scale(self):
+    def set_time_scale(self): #=================================================
+        
+        #------------------------------------------------- time min and max ----
+        
+        if self.datemode == 'year':
             
-        labelDB = LabelDatabase(self.language)
-                        
-        xticks_position, xticks_labels_position, xticks_labels = \
-                generate_xticks_informations(
-                        self.TIMEmin, self.TIMEmax,
-                        self.date_labels_display_pattern, 0,
-                        labelDB.month_names)
-        
-        #---- Remove existing labels from axe ----
-                  
-        self.ax1.set_xticks(xticks_position)
-        
-        for i in range(len(self.xlab)):
-            self.xlab[i].remove()
-        
-        #---- Redraw labels ----
-        
-        self.xlab = []
-        for i in range(len(xticks_labels)) :
+            year = xldate_as_tuple(self.TIMEmin, 0)[0]
+            self.TIMEmin = xldate_from_date_tuple((year, 1, 1), 0)
             
-            xlab = self.ax1.text(xticks_labels_position[i], -0.15,
-                           xticks_labels[i], rotation=45, 
-                           verticalalignment='top', horizontalalignment='right',
-                           fontsize=10)
-                       
-            self.xlab.append(xlab)
+            last_month = xldate_as_tuple(self.TIMEmax, 0)[1] == 1
+            last_day = xldate_as_tuple(self.TIMEmax, 0)[2] == 1
+            
+            if last_month and last_day:
+                pass
+            else:                                
+                year = xldate_as_tuple(self.TIMEmax, 0)[0] + 1
+                self.TIMEmax = xldate_from_date_tuple((year, 1, 1), 0)
+                
+        #------------------------------------------------ xticks and labels ----
         
-        self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
+        #---- compute parameters ----
         
-        #---- ADJUST LABEL xPOSITION ----
+        xticks_info = self.make_xticks_info()
+        
+        #---- major ----
+        
+        self.ax1.set_xticks(xticks_info[0])
+
+        #---- minor ----
+
+        # labels are set using the minor ticks.
+        
+        self.ax1.set_xticks(xticks_info[1], minor=True)
+        self.ax1.tick_params(which='minor', length=0)                             
+        self.ax1.xaxis.set_ticklabels(xticks_info[2], minor=True, rotation=45,
+                                      va='top', ha='right', fontsize=10)
+        
+        #--------------------------------------------- text horiz. position ----
+        
+        # adjust "climatological station" label and 
+        # title horizontal position
         
         self.text1.set_x(self.TIMEmax)
-                                        
-        xTitle = (self.TIMEmin + self.TIMEmax) / 2.
-        self.figTitle.set_x(xTitle)
-       
-    def draw_xlabels(self):
-       
-        labelDB = LabelDatabase(self.language)
+        self.figTitle.set_x((self.TIMEmin + self.TIMEmax) / 2.)
         
-        _, _, xticks_labels = generate_xticks_informations(
-                                            self.TIMEmin, self.TIMEmax,
-                                            self.date_labels_display_pattern, 0,
-                                            labelDB.month_names)
+        #------------------------------------------------------ axis limits ----
+           
+        self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
+        
+#        #---- Remove existing labels from axe ----
+#        
+#        for i in range(len(self.xlab)):
+#            self.xlab[i].remove()
+#        
+#        #---- Redraw labels ----
+#        
+#        self.xlab = []
+#        for i in range(len(xticks_labels)) :
+#            
+#            xlab = self.ax1.text(xticks_labels_position[i], -0.15,
+#                                 xticks_labels[i], rotation=45, 
+#                                 va='top', ha='right', fontsize=10)
+#                       
+#            self.xlab.append(xlab)
+       
+    def draw_xlabels(self): #===================================================
+        
+        # Called when there is a change in language of the labels
+        # of the graph
+        
+        _, _, xticks_labels = self.make_xticks_info()
+        
+        self.ax1.xaxis.set_ticklabels(xticks_labels, minor=True, rotation=45,
+                                      va='top', ha='right', fontsize=10)
                                             
-        for i in range(len(self.xlab)):
-            self.xlab[i].set_text(xticks_labels[i])
+#        for i in range(len(self.xlab)):
+#            self.xlab[i].set_text(xticks_labels[i])
     
-    def draw_ylabels(self):
+    def draw_ylabels(self): #===================================================
         
         #------------------------------------------- Calculate LabelPadding ----
         
@@ -926,7 +965,7 @@ class Hydrograph():
                                                    self.dist)
         self.text1.set_text(text_top_margin)
         
-    def draw_figure_title(self):
+    def draw_figure_title(self): #==============================================
         
         if self.title_state == 1:
 
@@ -936,31 +975,31 @@ class Hydrograph():
 
             self.figTitle.set_text('')
             
-    def set_margins(self):
+    def set_margins(self): #====================================================
         
-        #---- MARGINS (Inches) ----
+        #---- MARGINS (Inches / Fig. Dimension) ----
         
-        left_margin  = 0.85
-        right_margin = 0.85
-        top_margin = 0.35
-        bottom_margin = 0.75  
+        left_margin  = 0.85 / self.fwidth
+        right_margin = 0.85 / self.fwidth
+        top_margin = 0.35 / self.fheight
+        bottom_margin = 0.75 / self.fheight
         
         if self.title_state == 1:
-            top_margin = 0.75
+            top_margin = 0.75 / self.fheight
             
         if self.meteoOn == False:
-            right_margin = 0.35
+            right_margin = 0.35 / self.fwidth
         
         #---- MARGINS (% of figure) ----
         
-        x0 = left_margin / self.fwidth
-        w = 1 - (left_margin + right_margin) / self.fwidth
+        x0 = left_margin
+        w = 1 - (left_margin + right_margin)
         if self.meteoOn == True:            
-            y0 = bottom_margin / self.fheight            
-            h = 1 - (bottom_margin + top_margin) / self.fheight
+            y0 = bottom_margin          
+            h = 1 - (bottom_margin + top_margin)
         else:
-            y0 = bottom_margin / (self.fheight / 2)
-            h = 1 - (bottom_margin + top_margin) / (self.fheight / 2)
+            y0 = bottom_margin / 2.
+            h = 1 - (bottom_margin + top_margin) / 2.
         
         self.ax0.set_position([x0, y0, w, h])
         self.ax1.set_position([x0, y0, w, h])        
@@ -969,7 +1008,7 @@ class Hydrograph():
             self.ax3.set_position([x0, y0, w, h])
             self.ax4.set_position([x0, y0, w, h])
                     
-    def update_waterlvl_scale(self):
+    def update_waterlvl_scale(self): #==========================================
         
         NZGrid = self.NZGrid
         dZGrid = 8
@@ -1003,7 +1042,7 @@ class Hydrograph():
         if self.WLdatum != 1:
             self.ax2.invert_yaxis()
             
-    def update_precip_scale(self):
+    def update_precip_scale(self): #============================================
         
         if self.meteoOn == False:
             return
@@ -1026,7 +1065,9 @@ class Hydrograph():
             y = np.ones(self.NMissPtot) * -5 * RAINscale / 20.
             self.PTOTmiss_dots.set_ydata(y)
             
-    def set_gridLines(self):    # 0 -> None, 1 -> "-" 2 -> ":"
+    def set_gridLines(self): #==================================================
+        
+        # 0 -> None, 1 -> "-" 2 -> ":"
         
         if self.gridLines == 0:
 
@@ -1036,47 +1077,110 @@ class Hydrograph():
 
             self.ax1.tick_params(gridOn=True)
             self.ax1.grid(axis='both', color=[0.35, 0.35, 0.35], linestyle='-',
-                      linewidth=0.5)
+                          linewidth=0.5)
                       
         else:
 
             self.ax1.tick_params(gridOn=True)
             self.ax1.grid(axis='both', color=[0.35, 0.35, 0.35], linestyle=':',
-                      linewidth=0.5, dashes=[0.5, 5])
+                          linewidth=0.5, dashes=[0.5, 5])
+        
+    def make_xticks_info(self): #===============================================
+        
+        #---------------------------------------- horizontal text alignment ----
+        
+        # The strategy here is to:
+        # 1. render some random text ; 
+        # 2. get the height of its bounding box ; 
+        # 3. get the horizontal translation of the top-right corner after a
+        #    rotation of the bbox of 45 degrees ;
+        # 4. sclale the length calculated in step 3 to the height to width
+        #    ratio of the axe ;
+        # 5. convert the lenght calculated in axes coord. to the data coord.
+        #    system ;
+        # 6. remove the random text from the figure.
+        
+        #---- random text bbox height ----
+        
+        txt = self.ax1.text(0.5, 0.5, 'some_dummy_text', fontsize=10, 
+                            ha='right', va='top', transform=self.ax1.transAxes)
+        
+        renderer = self.fig.canvas.get_renderer()
+        bbox = txt.get_window_extent(renderer)
+        bbox = bbox.transformed(self.ax1.transAxes.inverted())
+        
+        #---- horiz. trans. of bbox top-right corner ----
+        
+        dx = bbox.height * np.sin(np.radians(45))
+        
+        #---- scale to axe dimension ----
+                
+        bbox = self.ax1.get_window_extent(renderer)
+        bbox = bbox.transformed(self.fig.dpi_scale_trans.inverted())
+        
+        sdx = dx * bbox.height / bbox.width
+        sdx *= (self.TIMEmax - self.TIMEmin + 1)
+        
+        txt.remove()
+        
+        #---- transform to data coord ----
+                
+        n = self.date_labels_display_pattern
+        month_names = LabelDatabase(self.language).month_names
+       
+        # xticks_labels_offset = 0.012 * (self.TIMEmax - self.TIMEmin + 1)
+        xticks_labels_offset = sdx
+        
+        xticks_labels = []
+        xticks_position = [self.TIMEmin]
+        xticks_labels_position = []
+        
+        if self.datemode == 'month':
             
-        
-
-#===============================================================================
-def generate_xticks_informations(TIMEmin, TIMEmax, n, datemode, month_names):
-#===============================================================================
-
-    i = 0
-               
-    xticks_labels = np.array([])  
-    xticks_position = np.array([TIMEmin])
-    xticks_labels_position = np.array([])
+            i = 0
+            while xticks_position[i] < self.TIMEmax:
+                
+                year = xldate_as_tuple(xticks_position[i], 0)[0]
+                month = xldate_as_tuple(xticks_position[i], 0)[1]
+                
+                month_range = monthrange(year, month)[1]    
+                
+                xticks_position.append(xticks_position[i] + month_range)
+                     
+                if i % n == 0:         
     
-    xticks_labels_offset = 0.012 * (TIMEmax - TIMEmin + 1)    
+                    xticks_labels_position.append(xticks_position[i] +
+                                                  0.5 * month_range +
+                                                  xticks_labels_offset)
+                    
+                    xticks_labels.append("%s '%s" % (month_names[month - 1], 
+                                                     str(year)[-2:]))
+                                                     
+                i += 1
+                
+        elif self.datemode == 'year':
+            
+            i = 0
+            year = xldate_as_tuple(xticks_position[i], 0)[0]
+            while xticks_position[i] < self.TIMEmax:
+                
+                xticks_position.append(
+                                      xldate_from_date_tuple((year+1, 1, 1), 0))
+                year_range = xticks_position[i+1] - xticks_position[i]
+                
+                if i % n == 0:         
     
-    while xticks_position[i] < TIMEmax:
-        year = xldate_as_tuple(xticks_position[i], datemode)[0]
-        month = xldate_as_tuple(xticks_position[i], datemode)[1]
-        
-        month_range = monthrange(year, month)[1]    
-        
-        xticks_position = np.append(xticks_position, 
-                                    xticks_position[i] + month_range )
-        xticks_labels_position = np.append(xticks_labels_position, 
-                  xticks_position[i] + 0.5 * month_range + xticks_labels_offset)
-        if i % n == 0:    
-            xticks_labels = np.append(
-                                 xticks_labels, 
-                                 month_names[month - 1] + " '" + str(year)[-2:])
-        else:
-            xticks_labels = np.append(xticks_labels, " ")
-        i += 1
-        
-    return xticks_position, xticks_labels_position, xticks_labels
+                    xticks_labels_position.append(xticks_position[i] +
+                                                  0.5 * year_range +
+                                                  xticks_labels_offset)
+                    
+                    xticks_labels.append("%d" % year)
+                
+                year += 1
+                i += 1
+                
+                
+        return xticks_position, xticks_labels_position, xticks_labels
 
 
 #===============================================================================             
@@ -1397,6 +1501,8 @@ if __name__ == '__main__':
     hydrograph2display.best_fit_time(waterLvlObj.time)
     hydrograph2display.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
     
-    hydrograph2display.generate_hydrograph(meteoObj)  
-    plt.show()
+    hydrograph2display.generate_hydrograph(meteoObj) 
+    hydrograph2display.fig.savefig('../Projects/Project4Testing/hydrograph.pdf')
+    
+    plt.show(block=False)
     

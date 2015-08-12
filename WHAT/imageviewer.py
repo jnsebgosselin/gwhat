@@ -70,6 +70,8 @@ class ImageViewer(QtGui.QWidget):
         self.scaleStep = 1.2
         self.pan = False
         
+        #---- image container Set Up ----
+        
         self.imageLabel = QtGui.QLabel()
         self.imageLabel.setBackgroundRole(QtGui.QPalette.Base)
         self.imageLabel.setSizePolicy(QtGui.QSizePolicy.Ignored,
@@ -128,7 +130,7 @@ class ImageViewer(QtGui.QWidget):
         self.load_image(image, 0)
     
     def load_image(self, image, scaleFactor=0): #===============================
-
+        
         self.scaleFactor = scaleFactor
                 
         self.imageLabel.setPixmap(QtGui.QPixmap.fromImage(image))
@@ -230,14 +232,15 @@ class ImageViewer(QtGui.QWidget):
         
         new_width = int(self.width * self.scaleStep ** self.scaleFactor)
         new_height = int(self.height * self.scaleStep ** self.scaleFactor)
-        
+                
         self.imageLabel.resize(new_width, new_height)
         
-#        pixmap = QtGui.QPixmap.fromImage(self.image)
+#        pixmap = QtGui.QPixmap.fromImage(self.origImage)
+#        transform = QtGui.QTransform().scale(self.scaleStep ** self.scaleFactor, 
+#                                             self.scaleStep ** self.scaleFactor)
+#        pixmap = pixmap.transformed(transform, QtCore.Qt.SmoothTransformation)
 #        
-#        self.imageLabel.setPixmap(pixmap.scaled(new_width, new_height,
-#                                  spectMode=QtCore.Qt.IgnoreAspectRatio,
-#                                  mode=QtCore.Qt.FastTransformation))
+#        self.imageLabel.setPixmap(pixmap)
 
     def adjust_scrollbar(self, factor):
         
@@ -291,9 +294,8 @@ if __name__ == '__main__':
     # Reference for the RGB to BGR swap:
     # http://sourceforge.net/p/matplotlib/mailman/message/5194542/
       
-    image = QtGui.QImage.rgbSwapped(image)
-    
-    imageViewer.load_image(image, -2)
+    image = QtGui.QImage.rgbSwapped(image)    
+    imageViewer.load_image(image, 0)
     
     
     sys.exit(app.exec_())
