@@ -59,9 +59,8 @@ import database as db
 import MyQWidget
 import what_project
 
-import hydroprint
-from hydroprint import LatLong2Dist
-import imageviewer
+import hydroprint2 as hydroprint
+import imageviewer2 as imageviewer
 
 import meteo
 import waterlvl_calc
@@ -87,13 +86,11 @@ headerDB = []
 # The WORKER section handles all the calculations and data manipulations of
 # the program.
 
-
 ################################################################################
 #                                                                           
 #                            @SECTION GUI                               
 #                                                                          
 ################################################################################
-
 
 # The GUI is composed of a Tab area, a console terminal, and a 
 # progress bar. The Tab area is where the user interacts with the
@@ -190,14 +187,14 @@ class MainWindow(QtGui.QMainWindow):
         global headerDB
         headerDB = db.FileHeaders()
         
-        #------------------------------------------------ MAIN WINDOW SETUP ----
+        #---------------------------------------------- MAIN WINDOW SETUP ----
 
 #        self.setMinimumWidth(1250)
         self.setWindowTitle(db.software_version)
         self.setWindowIcon(iconDB.WHAT)
 #        self.setFont(styleDB.font1)                
                         
-        #----------------------------------------------------- MAIN CONSOLE ----
+        #--------------------------------------------------- MAIN CONSOLE ----
         
         self.main_console = QtGui.QTextEdit()        
         self.main_console.setReadOnly(True)
@@ -217,7 +214,7 @@ class MainWindow(QtGui.QMainWindow):
              Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
            </font>''')
            
-        #------------------------------------------------- PROJECT MENU BAR ----
+        #----------------------------------------------- PROJECT MENU BAR ----
                         
         project_label = QtGui.QLabel('Project :')
         project_label.setAlignment(QtCore.Qt.AlignCenter)
@@ -258,7 +255,7 @@ class MainWindow(QtGui.QMainWindow):
                     "font-family: %s;" % family)
         self.menubar_widget.setStyleSheet("QWidget{%s}" % fontSS)
         
-        #------------------------------------------------------- TAB WIDGET ----
+        #----------------------------------------------------- TAB WIDGET ----
            
         Tab_widget = QtGui.QTabWidget()
         
@@ -302,7 +299,7 @@ class MainWindow(QtGui.QMainWindow):
         
         Tab_widget.setCornerWidget(self.menubar_widget)
         
-        #-------------------------------------------------- SPLITTER WIDGET ----
+        #------------------------------------------------ SPLITTER WIDGET ----
                 
         splitter = QtGui.QSplitter(self)
         splitter.setOrientation(QtCore.Qt.Vertical)
@@ -315,7 +312,7 @@ class MainWindow(QtGui.QMainWindow):
         splitter.setSizes([100, 1]) # Forces initially the main_console to its
                                     # minimal height.       
        
-        #-------------------------------------------------------- MAIN GRID ----
+        #------------------------------------------------------ MAIN GRID ----
         
         main_widget = QtGui.QWidget()
         self.setCentralWidget(main_widget)        
@@ -332,7 +329,7 @@ class MainWindow(QtGui.QMainWindow):
         mainGrid.setSpacing(10)
         main_widget.setLayout(mainGrid)
         
-        #----------------------------------------------------------- EVENTS ----
+        #--------------------------------------------------------- EVENTS ----
         
         self.btn_new_project.clicked.connect(self.show_new_project)
         self.project_display.clicked.connect(self.open_project)
@@ -356,11 +353,11 @@ class MainWindow(QtGui.QMainWindow):
         issuer = self.tab_fill_weather_data.fillworker
         issuer.ConsoleSignal.connect(self.write2console)                                                
         
-        #---------------------------------------------------- MESSAGE BOXES ----
+        #-------------------------------------------------- MESSAGE BOXES ----
        
         self.msgError = MyQWidget.MyQErrorMessageBox()
                    
-        #------------------------------------------------------------- SHOW ----
+        #----------------------------------------------------------- SHOW ----
             
         self.show()
         
@@ -369,7 +366,7 @@ class MainWindow(QtGui.QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
         
-        #------------------------------------------------- CHECK IF PROJECT ----
+        #----------------------------------------------- CHECK IF PROJECT ----
         
         isProjectExists = self.check_project()
         
@@ -393,7 +390,7 @@ class MainWindow(QtGui.QMainWindow):
             self.msgError.exec_()
                 
       
-    def write2console(self, console_text): #====================================
+    def write2console(self, console_text): #==================================
         
         '''
         This function is the bottle neck through which all messages writen
@@ -405,7 +402,7 @@ class MainWindow(QtGui.QMainWindow):
         self.main_console.append(textime + console_text)
     
         
-    def show_new_project(self): #===============================================
+    def show_new_project(self): #=============================================
     
         #---- Center Widget to Main Window ----
         
@@ -424,7 +421,7 @@ class MainWindow(QtGui.QMainWindow):
         self.new_project_window.setFixedSize(self.new_project_window.size())
             
     
-    def open_project(self): #===================================================
+    def open_project(self): #=================================================
         
         '''
         "open_project" is called by the event "self.project_display.clicked".
@@ -440,7 +437,7 @@ class MainWindow(QtGui.QMainWindow):
 #        self.open_project_window.show()
 #        self.open_project_window.setFixedSize(self.open_project_window.size())
         
-        #------------------------------------------- Custom File Dialog (1) ----
+        #----------------------------------------- Custom File Dialog (1) ----
         
 #        self.dialog = QtGui.QFileDialog()
 #        print(self.dialog.sidebarUrls())
@@ -471,13 +468,13 @@ class MainWindow(QtGui.QMainWindow):
             self.projectfile = filename                        
             self.load_project(filename)
             
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     def load_project(self, filename):
         '''
         This method is called either on startup during <initUI> or when a new
         project is chosen with <open_project>.        
         '''
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
         
         self.projectfile = filename 
         
@@ -543,7 +540,7 @@ class MainWindow(QtGui.QMainWindow):
         print('---- PROJECT LOADED ----')
         print('')
       
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
     def check_project(self):
         """
         Check if all files and folders associated with the .what file are
@@ -556,13 +553,13 @@ class MainWindow(QtGui.QMainWindow):
         This method should be run at the start of every method that needs to
         interact with resource file of the current project.
         """
-    #---------------------------------------------------------------------------
+    #-------------------------------------------------------------------------
         
-        print 'Checking project files and folders integrity'
+        print('Checking project files and folders integrity')
         
-        print self.projectfile
+        print(self.projectfile)
         if not path.exists(self.projectfile):
-            print 'Project file does not exist.'
+            print('Project file does not exist.')
             return False
             
         #---- System project folder organization ----
@@ -583,7 +580,7 @@ class MainWindow(QtGui.QMainWindow):
             
             msg = ('No "waterlvl_manual_measurements.xls" file found. ' +
                    'A new one has been created.')
-            print msg
+            print(msg)
             
             # http://stackoverflow.com/questions/13437727
             book = xlwt.Workbook(encoding="utf-8")
@@ -602,7 +599,7 @@ class MainWindow(QtGui.QMainWindow):
                         
             msg = ('No "graph_layout.lst" file found. ' +
                    'A new one has been created.')
-            print msg
+            print(msg)
 
             with open(filename, 'wb') as f:
                 writer = csv.writer(f, delimiter='\t')
@@ -613,11 +610,11 @@ class MainWindow(QtGui.QMainWindow):
     def closeEvent(self,event): 
         event.accept()
                     
-################################################################################
+##############################################################################
         
-class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
+class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
     
-################################################################################
+##############################################################################
     
     def __init__(self, parent):
         super(TabHydrograph, self).__init__(parent)
@@ -625,7 +622,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         self.initUI()
     
         
-    def initUI(self): #=========================================================
+    def initUI(self): #=======================================================
     # Layout is organized with an ensemble of grids that are assembled
     # together on 3 different levels. First level is the main grid.
     # Second level is where are the LEFT, RIGHT and TOOLBAR grids. 
@@ -638,31 +635,80 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
     #                 |               |                |         |
     #                 --------------------------------------------
     #
-    #===========================================================================
+    #=========================================================================
        
-        #--------------------------------------------------------- DATABASE ----
+        #------------------------------------------------------- DATABASE ----
        
         styleDB = db.styleUI()
     
-        #--------------------------------------------------- Variables Init ----
+        #------------------------------------------------- Variables Init ----
         
         self.UpdateUI = True
         self.fwaterlvl = []
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
-        #----------------------------------------------- WEATHER AVG WINDOW ----
+        #--------------------------------------------- WEATHER AVG WINDOW ----
         
         self.weather_avg_graph = meteo.WeatherAvgGraph()
         projectdir = self.parent.projectdir
         self.weather_avg_graph.save_fig_dir = projectdir
         
-        #---------------------------------------------------- waterlvl_calc ----
+        #-------------------------------------------------- waterlvl_calc ----
         
         self.waterlvl_calc = waterlvl_calc.WLCalc()
         self.waterlvl_calc.hide()
         
-        #--------------------------------------------------- LAYOUT TOOLBAR ----
+        #-------------------------------------------- Widget : Page Setup ----
+            
+        class PageSetupWin(QtGui.QWidget):
+            def __init__(self, parent=None):
+                super(PageSetupWin, self).__init__(parent)
+                
+                self.setWindowTitle('Page Setup')
+                
+                #---- Toolbar ----
+                
+                toolbar_widget = QtGui.QWidget()
+                
+                btn_apply = QtGui.QPushButton('Apply')
+                btn_cancel = QtGui.QPushButton('Cancel')
+                
+                toolbar_layout = QtGui.QGridLayout()
+                toolbar_layout.addWidget(btn_apply, 0, 0)
+                toolbar_layout.addWidget(btn_cancel, 0, 1)
+                
+                toolbar_widget.setLayout(toolbar_layout)
+                
+                #---- Figure Size ----
+                
+                figSize_widget =  QtGui.QWidget()
+                
+                self.fwidth = QtGui.QDoubleSpinBox()
+                self.fwidth.setSingleStep(0.05)
+                self.fwidth.setMinimum(11)
+                self.fwidth.setSuffix('  in')
+                self.fwidth.setAlignment(QtCore.Qt.AlignCenter)
+                
+                figSize_layout = QtGui.QGridLayout()
+                figSize_layout.addWidget(QtGui.QLabel('Figure Size:'), 0, 0)
+                figSize_layout.addWidget(self.fwidth, 0, 1)                
+                figSize_layout.addWidget(QtGui.QLabel('x'), 0, 2)
+                figSize_layout.addWidget(QtGui.QLabel('8.5 in'), 0, 3)
+                
+                figSize_widget.setLayout(figSize_layout)
+                
+                #---- Main Layout ----
+                
+                main_layout = QtGui.QGridLayout()
+                main_layout.addWidget(figSize_widget, 0, 0)
+                main_layout.addWidget(toolbar_widget, 1, 0)
+                
+                self.setLayout(main_layout)
+                
+        self.page_setup_win = PageSetupWin()
+        
+        #------------------------------------------------- LAYOUT TOOLBAR ----
 
         graph_title_label = QtGui.QLabel('         ')
         self.graph_title = QtGui.QLineEdit()
@@ -725,7 +771,14 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         btn_save.setIcon(iconDB.save)
         btn_save.setToolTip(ttipDB.save_hydrograph)
         btn_save.setIconSize(styleDB.iconSize)
-
+        
+        btn_page_setup = QtGui.QToolButton()
+        btn_page_setup.setAutoRaise(True)
+        btn_page_setup.setIcon(iconDB.page_setup)
+        btn_page_setup.setToolTip(ttipDB.btn_page_setup)
+        btn_page_setup.setIconSize(styleDB.iconSize)
+        btn_page_setup.clicked.connect(self.btn_page_setup_isClicked)
+        
         separator1 = QtGui.QFrame()
         separator1.setFrameStyle(styleDB.VLine)
         separator2 = QtGui.QFrame()
@@ -762,6 +815,8 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         col += 1
         subgrid_toolbar.addWidget(btn_weather_normals, row, col)
         col += 1
+        subgrid_toolbar.addWidget(btn_page_setup, row, col)
+        col += 1
         subgrid_toolbar.addWidget(graph_title_label, row, col)
         subgrid_toolbar.setColumnStretch(col, 1)
         col += 1
@@ -774,8 +829,8 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
         
         toolbar_widget.setLayout(subgrid_toolbar)
-     
-        #------------------------------------------------ Widget Data Files ----
+        
+        #---------------------------------------------- Widget Data Files ----
        
         btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
         btn_waterlvl_dir.setIcon(iconDB.openFile)
@@ -805,7 +860,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         subgrid_widget.setLayout(subgrid)
         
-        #------------------------------------------------ Scales Tab Widget ----
+        #---------------------------------------------- Scales Tab Widget ----
                 
         #----  Tab Time Scale ----
         
@@ -939,13 +994,13 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.subgrid_labLang_widget.setLayout(subgrid_labLang)
                 
-        #------------------------------------------------------- LEFT PANEL ----
+        #----------------------------------------------------- LEFT PANEL ----
         
         #---- SubGrid Hydrograph Frame ----
         
-        self.hydrograph2display = hydroprint.Hydrograph()
-        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph2display.fig)
-        self.hydrograph_canvas.draw()        
+        self.hydrograph = hydroprint.Hydrograph()
+#        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph)
+#        self.hydrograph_canvas.draw()        
         
         self.hydrograph_scrollarea = imageviewer.ImageViewer()
         
@@ -977,7 +1032,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.grid_layout_widget.setLayout(grid_layout)
         
-        #------------------------------------------------------ RIGHT PANEL ----
+        #---------------------------------------------------- RIGHT PANEL ----
         
         grid_RIGHT = QtGui.QGridLayout()
         grid_RIGHT_widget = QtGui.QFrame()
@@ -997,7 +1052,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         grid_RIGHT.setSpacing(15)
         grid_RIGHT.setRowStretch(row+1, 500)
         
-        #-------------------------------------------------------- MAIN GRID ----
+        #------------------------------------------------------ MAIN GRID ----
                 
         mainGrid_VLine1 = QtGui.QFrame()
         mainGrid_VLine1.setFrameStyle(styleDB.VLine)
@@ -1019,7 +1074,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.setLayout(mainGrid)
                 
-        #---------------------------------------------------- MESSAGE BOXES ----
+        #-------------------------------------------------- MESSAGE BOXES ----
                                           
         self.msgBox = QtGui.QMessageBox()
         self.msgBox.setIcon(QtGui.QMessageBox.Question)
@@ -1032,7 +1087,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                 
         self.msgError = MyQWidget.MyQErrorMessageBox()
         
-        #----------------------------------------------------------- EVENTS ----
+        #--------------------------------------------------------- EVENTS ----
         
         #----- Toolbox Layout -----
         
@@ -1045,12 +1100,13 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         btn_save.clicked.connect(self.select_save_path)
         btn_weather_normals.clicked.connect(self.show_weather_averages)
         
+        
         self.btn_work_waterlvl.clicked.connect(self.toggle_computeMode)
         
         #----- Toolbox Computation -----
         
         self.waterlvl_calc.btn_layout_mode.clicked.connect(
-                                                         self.toggle_layoutMode)
+                                                        self.toggle_layoutMode)
         
         #----- Others -----
         
@@ -1070,23 +1126,33 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         self.date_start_widget.dateChanged.connect(self.time_scale_changed)
         self.date_end_widget.dateChanged.connect(self.time_scale_changed)
         
-        #------------------------------------------------------- Init Image ----
+        #----------------------------------------------------- Init Image ----
         
-        #---- Generate blank image ----
+        self.hydrograph_scrollarea.load_image(self.hydrograph)
         
-        size = self.hydrograph_canvas.size()
-        height = size.height()
-        width = size.width()
-        imgbuffer = self.hydrograph_canvas.buffer_rgba()
-        blank_image = QtGui.QImage(imgbuffer, width, height,
-                                   QtGui.QImage.Format_RGB32)                         
-        blank_image = QtGui.QImage.rgbSwapped(blank_image)
-        
-        #---- Display blank image ----
-                
-        self.hydrograph_scrollarea.load_image(blank_image)
-        
-    def toggle_layoutMode(self): #==============================================
+    def btn_page_setup_isClicked(self): #=====================================
+   
+       if self.page_setup_win.isVisible():
+           
+           self.page_setup_win.close()
+           
+       else:       
+           
+           self.page_setup_win.show()
+                       
+           qr = self.page_setup_win.frameGeometry()
+           
+           wp = self.frameGeometry().width()
+           hp = self.frameGeometry().height()
+           cp = self.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+           
+           qr.moveCenter(cp)
+           self.page_setup_win.move(qr.topLeft())
+           
+           self.page_setup_win.setFixedSize(self.page_setup_win.size())
+
+            
+    def toggle_layoutMode(self): #============================================
         
         self.waterlvl_calc.hide()        
         self.grid_layout_widget.show()
@@ -1099,7 +1165,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
 #        self.subgrid_WLScale_widget.show()
         self.subgrid_labLang_widget.show()
         
-    def toggle_computeMode(self): #=============================================
+    def toggle_computeMode(self): #===========================================
         
         self.grid_layout_widget.hide()
         self.waterlvl_calc.show()
@@ -1112,9 +1178,9 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
 #        self.subgrid_WLScale_widget.hide()
         self.subgrid_labLang_widget.hide()
         
-    def show_weather_averages(self): #==========================================
+    def show_weather_averages(self): #=========================================
         
-        filemeteo = self.hydrograph2display.fmeteo
+        filemeteo = self.hydrograph.fmeteo
         if not filemeteo:
             
             self.parent.write2console(
@@ -1145,13 +1211,13 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.weather_avg_graph.setFixedSize(self.weather_avg_graph.size())           
             
-    def emit_error_message(self, error_text): #=================================
+    def emit_error_message(self, error_text): #================================
         
         self.msgError.setText(error_text)
         self.msgError.exec_()
     
     
-    def select_waterlvl_file(self): #===========================================
+    def select_waterlvl_file(self): #==========================================
         
         '''
         This method is called by <btn_waterlvl_dir> is clicked. It prompts
@@ -1160,13 +1226,13 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
     
         
         filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                   self, 'Select a valid water level data file', 
-                                   self.waterlvl_dir, '*.xls')
+                                  self, 'Select a valid water level data file', 
+                                  self.waterlvl_dir, '*.xls')
         
         self.load_waterlvl(filename)
         
                               
-    def load_waterlvl(self, filename): #========================================
+    def load_waterlvl(self, filename): #=======================================
         
         '''
         If "filename" exists:
@@ -1175,8 +1241,8 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         (3) manual measures are loaded and saved in the class instance 
         "waterlvl_data".
         
-        Then the code check if there is a layout already saved for this well and
-        if yes, will prompt the user if he wants to load it.
+        Then the code check if there is a layout already saved for this well
+        and if yes, will prompt the user if he wants to load it.
         
         Depending if there is a lyout or not, a Weather Data File will be 
         loaded and the hydrograph will be automatically plotted.
@@ -1184,7 +1250,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         
         if not filename:
-            print 'Path is empty. Cannot load water level file.'
+            print('Path is empty. Cannot load water level file.')
             return
             
         self.parent.check_project()
@@ -1216,7 +1282,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         #----- Update Waterlvl Obj -----
         
-        self.hydrograph2display.set_waterLvlObj(self.waterlvl_data)
+        self.hydrograph.set_waterLvlObj(self.waterlvl_data)
         
         #----- Display Well Info in UI -----
         
@@ -1233,7 +1299,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         #---- Well Layout -----
 
         filename = self.parent.projectdir + '/graph_layout.lst'
-        isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
+        isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
                         
         if isLayoutExist == True:
             
@@ -1254,11 +1320,11 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         self.best_fit_time()
         self.select_closest_meteo_file()
             
-        #------------------------------------------------------- Enable UI -----
+        #------------------------------------------------------ Enable UI -----
         
         self.UpdateUI = True
             
-    def select_closest_meteo_file(self): #======================================
+    def select_closest_meteo_file(self): #=====================================
                 
         meteo_folder = self.parent.projectdir + '/Meteo/Output'
         
@@ -1286,7 +1352,8 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                
                     LAT2[i] = float(reader[2][1])
                     LON2[i] = float(reader[3][1])
-                    DIST[i] = LatLong2Dist(LAT1, LON1, LAT2[i], LON2[i])
+                    DIST[i] = hydroprint.LatLong2Dist(LAT1, LON1, LAT2[i], 
+                                                      LON2[i])
                     
                     i += 1
                     
@@ -1298,7 +1365,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                 self.draw_hydrograph()
     
            
-    def select_meteo_file(self): #==============================================
+    def select_meteo_file(self): #=============================================
        
         '''
         This method is called by <btn_weather_dir.clicked.connect>. It prompts
@@ -1320,12 +1387,12 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
     def load_meteo_file(self, filename): #======================================
         
         if not filename:
-            print 'Path is empty. Cannot load weather data file.'
+            print('Path is empty. Cannot load weather data file.')
             return
             
         self.meteo_dir = path.dirname(filename)
-        self.hydrograph2display.fmeteo = filename
-        self.hydrograph2display.finfo = filename[:-3] + 'log'
+        self.hydrograph.fmeteo = filename
+        self.hydrograph.finfo = filename[:-3] + 'log'
         
         self.meteo_data.load_and_format(filename)
         self.meteo_info_widget.setText(self.meteo_data.INFO)        
@@ -1345,7 +1412,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         This method is called either by the methods <save_graph_layout>
         or by <draw_hydrograph>. It fetches the values that are currently 
         displayed in the UI and save them in the class instance 
-        <hydrograph2display> of the class <Hydrograph>.
+        <hydrograph> of the class <Hydrograph>.
         '''
     
         
@@ -1356,27 +1423,29 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         month = self.date_start_widget.date().month()
         day = 1
         date = xldate_from_date_tuple((year, month, day),0)
-        self.hydrograph2display.TIMEmin = date
+        self.hydrograph.TIMEmin = date
         
         year = self.date_end_widget.date().year()
         month = self.date_end_widget.date().month()
         day = 1
         date = xldate_from_date_tuple((year, month, day),0)
-        self.hydrograph2display.TIMEmax = date
+        self.hydrograph.TIMEmax = date
         
-        self.hydrograph2display.WLscale = self.waterlvl_scale.value()
-        self.hydrograph2display.WLmin = self.waterlvl_max.value()
+        self.hydrograph.WLscale = self.waterlvl_scale.value()
+        self.hydrograph.WLmin = self.waterlvl_max.value()
         
-        self.hydrograph2display.RAINscale = self.Ptot_scale.value() 
+        self.hydrograph.RAINscale = self.Ptot_scale.value() 
         
         if self.graph_status.isChecked():
-            self.hydrograph2display.title_state = 1
+            self.hydrograph.title_state = 1
         else:
-            self.hydrograph2display.title_state = 0
+            self.hydrograph.title_state = 0
             
-        self.hydrograph2display.title_text = self.graph_title.text()
+        self.hydrograph.title_text = self.graph_title.text()
         
-        self.hydrograph2display.language = self.language_box.currentText()
+        self.hydrograph.language = self.language_box.currentText()
+        
+        self.hydrograph.set_fig_size(25, 8.5)
              
             
     def load_graph_layout(self): #==============================================
@@ -1401,7 +1470,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
                 
         filename = self.parent.projectdir + '/graph_layout.lst'
         name_well = self.waterlvl_data.name_well
-        isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
+        isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
                     
         if isLayoutExist == False:
             
@@ -1416,37 +1485,37 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         #------------------------------------------------------ Load Layout ----
                     
-        self.hydrograph2display.load_layout(name_well, filename)
+        self.hydrograph.load_layout(name_well, filename)
         
         #------------------------------------------------------- Update UI -----
         
         self.UpdateUI = False
                                          
-        date = self.hydrograph2display.TIMEmin
+        date = self.hydrograph.TIMEmin
         date = xldate_as_tuple(date, 0)
         self.date_start_widget.setDate(QDate(date[0], date[1], date[2]))
         
-        date = self.hydrograph2display.TIMEmax
+        date = self.hydrograph.TIMEmax
         date = xldate_as_tuple(date, 0)
         self.date_end_widget.setDate(QDate(date[0], date[1], date[2]))
                                     
-        self.waterlvl_scale.setValue(self.hydrograph2display.WLscale)
-        self.waterlvl_max.setValue(self.hydrograph2display.WLmin)
-        self.datum_widget.setCurrentIndex (self.hydrograph2display.WLdatum)
+        self.waterlvl_scale.setValue(self.hydrograph.WLscale)
+        self.waterlvl_max.setValue(self.hydrograph.WLmin)
+        self.datum_widget.setCurrentIndex (self.hydrograph.WLdatum)
         
-        self.Ptot_scale.setValue(self.hydrograph2display.RAINscale)
+        self.Ptot_scale.setValue(self.hydrograph.RAINscale)
          
-        if self.hydrograph2display.title_state == 1:
+        if self.hydrograph.title_state == 1:
             self.graph_status.setCheckState(QtCore.Qt.Checked)
         else:                    
             self.graph_status.setCheckState(QtCore.Qt.Unchecked)
             
-        self.graph_title.setText(self.hydrograph2display.title_text)
+        self.graph_title.setText(self.hydrograph.title_text)
         
         #----- Check if Weather Data File exists -----
         
-        if path.exists(self.hydrograph2display.fmeteo):
-            self.meteo_data.load_and_format(self.hydrograph2display.fmeteo)
+        if path.exists(self.hydrograph.fmeteo):
+            self.meteo_data.load_and_format(self.hydrograph.fmeteo)
             INFO = self.meteo_data.build_HTML_table()
             self.meteo_info_widget.setText(INFO)
             self.parent.write2console(
@@ -1460,13 +1529,13 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             self.meteo_info_widget.setText('')
             self.parent.write2console(
             '''<font color=red>Unable to read the weather data file. %s
-               does not exist.</font>''' % self.hydrograph2display.fmeteo)
+               does not exist.</font>''' % self.hydrograph.fmeteo)
             self.emit_error_message(
             '''<b>Unable to read the weather data file.<br><br>
                %s does not exist.<br><br> Please select another weather
-               data file.<b>''' % self.hydrograph2display.fmeteo)
-            self.hydrograph2display.fmeteo = []
-            self.hydrograph2display.finfo = []
+               data file.<b>''' % self.hydrograph.fmeteo)
+            self.hydrograph.fmeteo = []
+            self.hydrograph.finfo = []
             
         self.UpdateUI = True    
     
@@ -1487,7 +1556,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
             return
             
-        if not self.hydrograph2display.fmeteo:
+        if not self.hydrograph.fmeteo:
             
             self.parent.write2console(
             '''<font color=red>No valid weather data file currently selected. 
@@ -1509,7 +1578,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             self.parent.check_project()
             
         name_well = self.waterlvl_data.name_well
-        isLayoutExist = self.hydrograph2display.checkLayout(name_well, filename)
+        isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
         
         #------------------------------------------------------ Save Layout ----
         
@@ -1533,7 +1602,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         self.update_graph_layout_parameter()
         filename = self.parent.projectdir + '/graph_layout.lst'
-        self.hydrograph2display.save_layout(name_well, filename)
+        self.hydrograph.save_layout(name_well, filename)
         self.parent.write2console(
         '''<font color=black>Graph layout saved successfully
              for well %s.</font>''' % name_well)
@@ -1542,7 +1611,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         if len(self.waterlvl_data.lvl) != 0:
             
-            WLscale, WLmin = self.hydrograph2display.best_fit_waterlvl()
+            WLscale, WLmin = self.hydrograph.best_fit_waterlvl()
             
             self.waterlvl_scale.setValue(WLscale)
             self.waterlvl_max.setValue(WLmin)
@@ -1552,7 +1621,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         if len(self.waterlvl_data.time) != 0:
             
             TIME = self.waterlvl_data.time 
-            date0, date1 = self.hydrograph2display.best_fit_time(TIME)
+            date0, date1 = self.hydrograph.best_fit_time(TIME)
             
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))                                                        
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
@@ -1579,9 +1648,9 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
     def save_figure(self, fname): #=============================================
         
-        self.hydrograph2display.generate_hydrograph(self.meteo_data)
+        self.hydrograph.generate_hydrograph(self.meteo_data)
                                        
-        self.hydrograph2display.fig.savefig(fname)
+        self.hydrograph.savefig(fname)
         
     def draw_computeMode_waterlvl(self): #======================================
         
@@ -1602,7 +1671,7 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
             return
             
-        if not self.hydrograph2display.fmeteo:
+        if not self.hydrograph.fmeteo:
             console_text = ('<font color=red>Please select a valid ' +
                             'weather data file</font>')
             self.parent.write2console(console_text)
@@ -1615,21 +1684,21 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
         
         #----- Generate Graph -----
         
-        self.hydrograph2display.generate_hydrograph(self.meteo_data)
+        self.hydrograph.generate_hydrograph(self.meteo_data)
         
         #----- Produce Figure from Graph -----
                         
-        self.hydrograph_canvas.draw()
-
-        size = self.hydrograph_canvas.size()
-        width = size.width()
-        height = size.height()        
-        imgbuffer = self.hydrograph_canvas.buffer_rgba()
-        image = QtGui.QImage(imgbuffer, width, height,
-                             QtGui.QImage.Format_RGB32)                         
-        image = QtGui.QImage.rgbSwapped(image)
+#        self.hydrograph_canvas.draw()
+#
+#        size = self.hydrograph_canvas.size()
+#        width = size.width()
+#        height = size.height()        
+#        imgbuffer = self.hydrograph_canvas.buffer_rgba()
+#        image = QtGui.QImage(imgbuffer, width, height,
+#                             QtGui.QImage.Format_RGB32)                         
+#        image = QtGui.QImage.rgbSwapped(image)
         
-        self.hydrograph_scrollarea.refresh_image(image)
+        self.hydrograph_scrollarea.load_image(self.hydrograph)
     
     def language_changed(self): #===============================================
         
@@ -1637,14 +1706,14 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
             #---- Update Instance Variables ----
             
-            self.hydrograph2display.language = self.language_box.currentText()
+            self.hydrograph.language = self.language_box.currentText()
             
             #---- Update Graph if Exists ----
            
-            if self.hydrograph2display.isHydrographExists == True:
+            if self.hydrograph.isHydrographExists == True:
                 
-                self.hydrograph2display.draw_ylabels()
-                self.hydrograph2display.draw_xlabels()
+                self.hydrograph.draw_ylabels()
+                self.hydrograph.draw_xlabels()
         
                 self.refresh_hydrograph()
                 
@@ -1654,14 +1723,14 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
             #---- Update Instance Variables ----
             
-            self.hydrograph2display.RAINscale = self.Ptot_scale.value()
+            self.hydrograph.RAINscale = self.Ptot_scale.value()
             
             #---- Update Graph if Exists ----
            
-            if self.hydrograph2display.isHydrographExists == True:
+            if self.hydrograph.isHydrographExists == True:
                 
-                self.hydrograph2display.update_precip_scale()
-                self.hydrograph2display.draw_ylabels()
+                self.hydrograph.update_precip_scale()
+                self.hydrograph.draw_ylabels()
             
                 self.refresh_hydrograph()
                 
@@ -1672,15 +1741,15 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
             #---- Update Instance Variables ----
         
-            self.hydrograph2display.WLmin = self.waterlvl_max.value()
-            self.hydrograph2display.WLscale = self.waterlvl_scale.value()
+            self.hydrograph.WLmin = self.waterlvl_max.value()
+            self.hydrograph.WLscale = self.waterlvl_scale.value()
             
             #---- Update Graph if Exists ----
            
-            if self.hydrograph2display.isHydrographExists == True:
+            if self.hydrograph.isHydrographExists == True:
                 
-                self.hydrograph2display.update_waterlvl_scale()
-                self.hydrograph2display.draw_ylabels()
+                self.hydrograph.update_waterlvl_scale()
+                self.hydrograph.draw_ylabels()
             
                 self.refresh_hydrograph()
                 
@@ -1690,13 +1759,13 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             
             #---- Update Instance Variables ----
             
-            self.hydrograph2display.WLdatum = index
-            self.hydrograph2display.WLmin = (self.waterlvl_data.ALT - 
-                                             self.hydrograph2display.WLmin)
+            self.hydrograph.WLdatum = index
+            self.hydrograph.WLmin = (self.waterlvl_data.ALT - 
+                                     self.hydrograph.WLmin)
           
-            self.hydrograph2display.update_waterlvl_scale()            
-            self.hydrograph2display.draw_waterlvl()
-            self.hydrograph2display.draw_ylabels()
+            self.hydrograph.update_waterlvl_scale()            
+            self.hydrograph.draw_waterlvl()
+            self.hydrograph.draw_ylabels()
             
             self.refresh_hydrograph()
     
@@ -1710,21 +1779,21 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
             month = self.date_start_widget.date().month()
             day = 1
             date = xldate_from_date_tuple((year, month, day),0)
-            self.hydrograph2display.TIMEmin = date
+            self.hydrograph.TIMEmin = date
             
             year = self.date_end_widget.date().year()
             month = self.date_end_widget.date().month()
             day = 1
             date = xldate_from_date_tuple((year, month, day),0)
-            self.hydrograph2display.TIMEmax = date
+            self.hydrograph.TIMEmax = date
             
             #---- Update Graph if Exists ----
            
-            if self.hydrograph2display.isHydrographExists == True:
+            if self.hydrograph.isHydrographExists == True:
                
-                self.hydrograph2display.set_time_scale()
-                self.hydrograph2display.draw_weather()
-                self.hydrograph2display.draw_figure_title()
+                self.hydrograph.set_time_scale()
+                self.hydrograph.draw_weather()
+                self.hydrograph.draw_figure_title()
             
                 self.refresh_hydrograph()
     
@@ -1740,57 +1809,47 @@ class TabHydrograph(QtGui.QWidget):                          # @TAB HYDROGRAPH #
            #---- Update Instance Variables ----
            
            if self.graph_status.isChecked():
-               self.hydrograph2display.title_state = 1
-               self.hydrograph2display.title_text = self.graph_title.text()
+               self.hydrograph.title_state = 1
+               self.hydrograph.title_text = self.graph_title.text()
            else:
-               self.hydrograph2display.title_state = 0
+               self.hydrograph.title_state = 0
            
            #---- Update Graph if Exists ----
            
-           if self.hydrograph2display.isHydrographExists == True:
+           if self.hydrograph.isHydrographExists == True:
 
-               self.hydrograph2display.set_margins()
-               self.hydrograph2display.draw_figure_title()
+               self.hydrograph.set_margins()
+               self.hydrograph.draw_figure_title()
                self.refresh_hydrograph()
                
            else: # No hydrograph plotted yet
                pass
                 
-    def fig_title_changed(self): #==============================================
+    def fig_title_changed(self): #============================================
         
         if self.UpdateUI == True :
             
             #---- Update Instance Variables ----
         
-            self.hydrograph2display.title_text = self.graph_title.text()
+            self.hydrograph.title_text = self.graph_title.text()
             
             #---- Update Graph if Exists ----
             
-            if self.hydrograph2display.isHydrographExists == True:
+            if self.hydrograph.isHydrographExists == True:
                         
-                self.hydrograph2display.draw_figure_title()
+                self.hydrograph.draw_figure_title()
                 self.refresh_hydrograph()
 
             else: # No hydrograph plotted yet
                pass
     
-    def refresh_hydrograph(self): #=============================================
-        
-        self.hydrograph_canvas.draw()
-
-        size = self.hydrograph_canvas.size()
-        width = size.width()
-        height = size.height()        
-        imgbuffer = self.hydrograph_canvas.buffer_rgba()
-        image = QtGui.QImage(imgbuffer, width, height,
-                             QtGui.QImage.Format_RGB32)                         
-        image = QtGui.QImage.rgbSwapped(image)
-        
-        self.hydrograph_scrollarea.refresh_image(image)
+    def refresh_hydrograph(self): #===========================================
+       
+        self.hydrograph_scrollarea.load_image(self.hydrograph)
            
          
 
-#===============================================================================    
+#=============================================================================    
 class WHATPref():
     """
     This class contains all the preferences relative to the WHAT interface,
@@ -1901,7 +1960,7 @@ class MyProject():
     
     def load_project_info(self, projectfile): #=================================
             
-        print 'Loading project info'
+        print('Loading project info')
         
         with open(projectfile, 'rb') as f:
             reader = list(csv.reader(f, delimiter='\t'))

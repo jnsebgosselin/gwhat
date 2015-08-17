@@ -39,7 +39,7 @@ class Icons():
     def __init__(self):
         
         self.WHAT = QIcon('Icons/WHAT.png')
-        
+                
         self.play = QIcon('Icons/start.png')
         self.forward = QIcon('Icons/start_all.png')
         self.refresh = QIcon('Icons/refresh.png')
@@ -78,6 +78,7 @@ class Icons():
        
         #----- HYDROGRAPH TOOLBAR -----
         
+        self.page_setup = QIcon('Icons/page_setup.png')
         self.fit_y = QIcon('Icons/fit_y.png')
         self.fit_x = QIcon('Icons/fit_x.png')
         self.save_graph_config = QIcon('Icons/save_config.png')
@@ -114,12 +115,12 @@ class Tooltips():
     
     def __init__(self, language): #================================ ENGLISH ====
         
-        #--------------------------------------------------------- MENU BAR ----
+        #------------------------------------------------------- MENU BAR ----
         
         self.open_project = 'Open Project...'
         self.new_project = 'New Project...'
         
-        #-------------------------------------------- Download Weather Data ----
+        #------------------------------------------ Download Weather Data ----
         
         self.search4stations = ('Search for weather stations in the ' +
                                 'Canadian Daily Climate Database (CDCD)')
@@ -134,7 +135,7 @@ class Tooltips():
         self.btn_select_rawData = 'Select and format raw weather data files' 
         self.btn_save_concatenate = 'Save formated weather data in a csv file'
 
-        #--------------------------------------------------------- FILL TAB ----
+        #------------------------------------------------------- FILL TAB ----
         
         self.altlimit = (
             '''<p>Altitude difference limit over which neighboring stations are
@@ -154,7 +155,7 @@ class Tooltips():
         'Fill the gaps in the daily  weather data for the selected weather ' +
         'station.')
         
-        #--------------------------------------------------- HYDROGRAPH TAB ----
+        #------------------------------------------------- HYDROGRAPH TAB ----
         
         #---- TOOLBAR ----
         
@@ -176,6 +177,7 @@ class Tooltips():
         
         self.weather_normals = ('Plot the yearly and monthly averages for ' +
                                 'the \n Weather Data File currently selected')
+        self.btn_page_setup = ('Show the page setup window')
         
         self.addTitle = 'Add A Title To The Figure Here'
         

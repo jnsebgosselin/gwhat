@@ -40,9 +40,9 @@ from xlrd import xldate_as_tuple
 import numpy as np
 from PySide import QtGui, QtCore
 
-import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4']='PySide'
+import matplotlib as mpl
+mpl.use('Qt4Agg')
+mpl.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 import matplotlib.pyplot as plt
 
@@ -1065,6 +1065,8 @@ def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
     pos = ax1.transData.transform((0., np.max(yticks1)))
     pos = ax1.transAxes.inverted().transform(pos)
     pos[0] = 0.01
+    
+    print pos
     
     legend = ax1.legend(lines, labels,
                         numpoints=1, fontsize=13, borderaxespad=0.,

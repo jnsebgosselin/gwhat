@@ -356,7 +356,7 @@ class dwnldWeather(QtGui.QWidget):
                                                     QtCore.Qt.CheckState(False))          
                     
                     
-    def btn_search4station_isClicked(self): #===================================
+    def btn_search4station_isClicked(self): #=================================
         
         if self.search4stations.isVisible():
             
@@ -378,7 +378,7 @@ class dwnldWeather(QtGui.QWidget):
             self.search4stations.setFixedSize(self.search4stations.size())       
     
     
-    def add_stations2list(self, staList2add): #=================================
+    def add_stations2list(self, staList2add): #===============================
         
         nrow = self.station_table.rowCount()
         rows = range(nrow)

@@ -74,29 +74,25 @@ class Search4Stations(QtGui.QWidget):
               
     def initUI(self):
 
-        #--------------------------------------------------------- DATABASE ----
+        #------------------------------------------------------- DATABASE ----
         
         iconDB = db.Icons()
         styleDB = db.styleUI()
         ttipDB = Tooltips('English')
 
-        #------------------------------------------------------ MAIN WINDOW ----
+        #---------------------------------------------------- MAIN WINDOW ----
         
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(iconDB.WHAT)
-#        self.setMinimumWidth(700)
-
-        #--------------------------------------------------- INIT VARIABLES ----
+        
+        #------------------------------------------------- INIT VARIABLES ----
         
         now = datetime.now()
         
         self.station_table = WeatherStationDisplayTable(0, self)
+        self.isOffline = False # For testing and debugging purpose
         
-#        self.station_table.setMinimumHeight(450)
-        
-        self.isOffline = False
-        
-        #------------------------------------------------ Tab Widget Search ----
+        #---------------------------------------------- Tab Widget Search ----
         
         #---- Search by Proximity ----
                 
@@ -178,7 +174,7 @@ class Search4Stations(QtGui.QWidget):
         tab_widg.addTab(prox_search_widg, 'Proximity')
         tab_widg.addTab(name_search_widg, 'Station Name')
         
-        #---------------------------------------------------- Year Criteria ----
+        #-------------------------------------------------- Year Criteria ----
         
         label_date = QtGui.QLabel('Search for stations with data available')
                      
@@ -270,7 +266,7 @@ class Search4Stations(QtGui.QWidget):
         
         year_widg.setLayout(year_grid)
         
-        #---------------------------------------------------------- TOOLBAR ----
+        #-------------------------------------------------------- TOOLBAR ----
         
         self.btn_search = QtGui.QPushButton('Search Stations')
         self.btn_search.setIcon(iconDB.search)
@@ -298,7 +294,7 @@ class Search4Stations(QtGui.QWidget):
         
         toolbar_widg.setLayout(toolbar_grid)
        
-        #------------------------------------------------------ Left Panel ----
+        #----------------------------------------------------- Left Panel ----
         
         panel_title = QtGui.QLabel('<b>Weather Station Search Criteria :</b>')
                         
@@ -325,7 +321,7 @@ class Search4Stations(QtGui.QWidget):
         left_panel.setLayout(left_panel_grid)
         
                       
-        #-------------------------------------------------------- MAIN GRID ----
+        #------------------------------------------------------ MAIN GRID ----
         
         #---- Widgets ----
         
@@ -351,7 +347,7 @@ class Search4Stations(QtGui.QWidget):
         self.setLayout(grid_search4stations)
         self.setFont(styleDB.font1)
                 
-        #----------------------------------------------------------- EVENTS ----
+        #--------------------------------------------------------- EVENTS ----
         
         self.minYear.valueChanged.connect(self.minYear_changed)
         self.maxYear.valueChanged.connect(self.maxYear_changed)
@@ -466,7 +462,7 @@ class Search4Stations(QtGui.QWidget):
         ClimateID = np.array([]).astype(str)
         staProxim = np.array([]).astype(str)
         
-        #-------------------------------------------------------------- url ----
+        #------------------------------------------------------------ url ----
         
         url =  'http://climate.weather.gc.ca/advanceSearch/'
         url += 'searchHistoricDataStations_e.html?'
@@ -492,7 +488,7 @@ class Search4Stations(QtGui.QWidget):
         
         try:
             
-            #------------------------------------------- Results Extraction ----
+            #----------------------------------------- Results Extraction ----
             
             if self.isOffline:
                 with open('url.txt') as f:
@@ -793,7 +789,7 @@ class Search4Stations(QtGui.QWidget):
         return staInfo
     
     
-#===============================================================================
+#=============================================================================
 class WeatherStationDisplayTable(QtGui.QTableWidget):
     
     """
@@ -805,9 +801,9 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
                         1 -> Years are displayed in a QComboBox
     """
     
-#===============================================================================
+#=============================================================================
     
-    def __init__(self, year_display_mode=0, parent=None): #=====================
+    def __init__(self, year_display_mode=0, parent=None): #====================
         super(WeatherStationDisplayTable, self).__init__(parent)
         
         self.year_display_mode = year_display_mode
@@ -861,7 +857,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         
         #----------------------------------------------------------- Events ----
         
-        self.chkbox_header.stateChanged .connect(self.chkbox_header_isClicked)
+        self.chkbox_header.stateChanged.connect(self.chkbox_header_isClicked)
     
     class NumTableWidgetItem(QtGui.QTableWidgetItem): #=========================
             

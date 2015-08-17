@@ -387,17 +387,17 @@ class OpenProject(QtGui.QDialog):
         iconDB = db.Icons()
         styleDB = db.styleUI()
             
-        #---------------------------------------------------- WINDOW SETUP ----
+        #--------------------------------------------------- WINDOW SETUP ----
     
         self.setWindowTitle('Open Project')
         self.setWindowIcon(iconDB.WHAT)
         self.setFont(styleDB.font1)
         
-        #------------------------------------------------ File System Model ----
+        #---------------------------------------------- File System Model ----
     
         self.model = SeFileSystemModel(self.home)
         
-        #--------------------------------------------------- Tree File View ----
+        #------------------------------------------------- Tree File View ----
 
         self.centralPanel =  QtGui.QListView()
         self.centralPanel.setModel(self.model)

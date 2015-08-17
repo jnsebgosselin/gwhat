@@ -31,18 +31,18 @@ from math import sin, cos, sqrt, atan2, radians
 #----- THIRD PARTY IMPORTS -----
 
 import numpy as np
-import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4'] = 'PySide'
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from PySide import QtGui
+import matplotlib as mpl
+mpl.use('Qt4Agg')
+mpl.rcParams['backend.qt4'] = 'PySide'
+#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_agg import FigureCanvasAgg
 import matplotlib.pyplot as plt
+
+from PySide import QtGui
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple, open_workbook
-
 #from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
-#plt.rcParams['axes.unicode_minus']=True # Need to be investigated
 
 #---- PERSONAL IMPORTS ----
 
@@ -72,27 +72,26 @@ class LabelDatabase():
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 
 
-class Hydrograph():
-    
-    def __init__(self, parent=None):
+class Hydrograph(mpl.figure.Figure):
+    def __init__(self, *args, **kargs):
+        super(Hydrograph, self).__init__(*args, **kargs)
         
         self.isHydrographExists = False
+        
+        #---- set canvas and renderer ----
+        
+        self.set_canvas(FigureCanvasAgg(self))
+        
+        #---- Fig Init ----        
+        
+        self.set_fig_size(15.0, 8.5)        
+        self.patch.set_facecolor('white')
         
         #---- Database ----
         
         HeaderDB = db.FileHeaders()
         self.header = HeaderDB.graph_layout
         
-        #---- Fig Init ----        
-        
-        self.fig = plt.figure()
-        self.fig.patch.set_facecolor('white')
-        
-        self.fheight = 8.5 # Figure height in inches
-        self.fwidth = 25.0 # Figure width in inches   
-        
-        self.fig.set_size_inches(self.fwidth, self.fheight)
-       
         #---- Scales ----
         
         self.WLmin = 0
@@ -151,13 +150,18 @@ class Hydrograph():
         
         self.NMissPtot = []
         
-        #---------------------------------------------------------- EVENTS ----
+    def set_fig_size(self, fwidth, fheight): #================================
         
-    def set_waterLvlObj(self, WaterLvlObj): #==================================
+        self.fwidth = fwidth   # Figure width in inches   
+        self.fheight = fheight # Figure height in inches
+        
+        self.set_size_inches(fwidth, fheight)
+        
+    def set_waterLvlObj(self, WaterLvlObj): #=================================
         self.WaterLvlObj = WaterLvlObj
    
     
-    def checkLayout(self, name_well, filename): #==============================
+    def checkLayout(self, name_well, filename): #=============================
         
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
@@ -208,7 +212,7 @@ class Hydrograph():
         return layoutExist
         
                     
-    def load_layout(self, name_well, filename): #==============================      
+    def load_layout(self, name_well, filename): #=============================      
             
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
@@ -241,7 +245,7 @@ class Hydrograph():
         self.trend_line = reader[10].astype(int)
 
         
-    def save_layout(self, name_well, filename): #==============================
+    def save_layout(self, name_well, filename): #=============================
         
         #---- load file ----
         
@@ -271,7 +275,7 @@ class Hydrograph():
             writer.writerows(reader)
     
       
-    def best_fit_waterlvl(self): #=============================================
+    def best_fit_waterlvl(self): #============================================
         
         WL = self.WaterLvlObj.lvl   
         if self.WLdatum == 1: # masl
@@ -303,7 +307,7 @@ class Hydrograph():
         return self.WLscale, self.WLmin
     
     
-    def best_fit_time(self, TIME): #===========================================
+    def best_fit_time(self, TIME): #==========================================
         
         # ----- Data Start -----
         
@@ -329,13 +333,11 @@ class Hydrograph():
         return date0, date1
     
                
-    def generate_hydrograph(self, MeteoObj): #=================================
-
+    def generate_hydrograph(self, MeteoObj): #================================
 
         #---- Reinit Figure ----
         
-        self.fig.clf()
-        self.fig.patch.set_facecolor('white')
+        self.clf()
         
         fheight = self.fheight # Figure height in inches
         fwidth = self.fwidth   # Figure width in inches
@@ -343,7 +345,7 @@ class Hydrograph():
         if self.meteoOn == False:
             fheight /= 2
 
-        self.fig.set_size_inches(fwidth, fheight, forward=True) 
+        self.set_size_inches(fwidth, fheight, forward=True) 
                         
         #---- Update Variables ----
         
@@ -372,7 +374,7 @@ class Hydrograph():
             
             self.resample_bin()
         
-        #--------------------------------------------------- AXES CREATION ----        
+        #-------------------------------------------------- AXES CREATION ----        
         
         # http://stackoverflow.com/questions/15303284/
         # multiple-y-scales-but-only-one-enabled-for-pan-and-zoom
@@ -385,13 +387,13 @@ class Hydrograph():
         
         # Also holds the gridlines.
         
-        self.ax1 = self.fig.add_axes([0, 0, 1, 1], frameon=False)
+        self.ax1 = self.add_axes([0, 0, 1, 1], frameon=False)
 
         #--- Frame ---
         
         # Only used to display the frame so it is always on top.
         
-        self.ax0 = self.fig.add_axes(self.ax1.get_position(), frameon=True)
+        self.ax0 = self.add_axes(self.ax1.get_position(), frameon=True)
         self.ax0.patch.set_visible(False) 
         self.ax0.set_zorder(self.ax1.get_zorder() + 20)
         self.ax0.tick_params(bottom='off', top='off', left='off', right='off',
@@ -876,11 +878,11 @@ class Hydrograph():
         labPad = 0.3 / 2.54 # in Inches       
         labPad /= axwidth   # relative coord.
         
-        #------------------------------------------ Calculate LabelPadding ----
+        #----------------------------------------- Calculate LabelPadding ----
 
         labelDB = LabelDatabase(self.language)
         
-        #--------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
+        #-------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
         
         if self.WLdatum == 0:       
             lab_ax2 = labelDB.mbgs % self.WaterLvlObj.name_well
@@ -895,7 +897,7 @@ class Hydrograph():
                             horizontalalignment='center')
                        
         # Get bounding box dimensions of yaxis ticklabels for ax2
-        renderer = self.fig.canvas.get_renderer() 
+        renderer = self.canvas.get_renderer() 
         bbox2_left, bbox2_right = self.ax2.yaxis.get_ticklabel_extents(renderer)
         
         # bbox are structured in the the following way:     [[ Left , Bottom ],
@@ -1109,7 +1111,7 @@ class Hydrograph():
         txt = self.ax1.text(0.5, 0.5, 'some_dummy_text', fontsize=10, 
                             ha='right', va='top', transform=self.ax1.transAxes)
         
-        renderer = self.fig.canvas.get_renderer()
+        renderer = self.canvas.get_renderer()
         bbox = txt.get_window_extent(renderer)
         bbox = bbox.transformed(self.ax1.transAxes.inverted())
         
@@ -1120,7 +1122,7 @@ class Hydrograph():
         #---- scale to axe dimension ----
                 
         bbox = self.ax1.get_window_extent(renderer)
-        bbox = bbox.transformed(self.fig.dpi_scale_trans.inverted())
+        bbox = bbox.transformed(self.dpi_scale_trans.inverted())
         
         sdx = dx * bbox.height / bbox.width
         sdx *= (self.TIMEmax - self.TIMEmin + 1)
@@ -1471,8 +1473,10 @@ if __name__ == '__main__':
     
     import sys
     from meteo import MeteoObj
+    
     from imageviewer2 import ImageViewer
     
+
     app = QtGui.QApplication(sys.argv)
     
     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
@@ -1481,6 +1485,8 @@ if __name__ == '__main__':
     import os
 #    import datetime
     import time
+    
+    #---- load data ----
     
     t = os.path.getmtime(fmeteo)
     t = time.gmtime(t)
@@ -1493,29 +1499,32 @@ if __name__ == '__main__':
     
     meteoObj = MeteoObj()
     meteoObj.load_and_format(fmeteo)
-            
-    hydrograph2display = Hydrograph()
-    hydrograph2display.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
-    hydrograph2display.gridLines = 2
     
-    hydrograph2display.title_state = 0 # 1 -> title ; 0 -> no title
-    hydrograph2display.title_text = "Title of the Graph"
-    hydrograph2display.meteoOn = True # 0 -> no meteo ; 1 -> meteo
+    #---- set up hydrograph ----
     
-    hydrograph2display.set_waterLvlObj(waterLvlObj)
-    hydrograph2display.best_fit_waterlvl()
-    hydrograph2display.best_fit_time(waterLvlObj.time)
-    hydrograph2display.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+    hydrograph = Hydrograph()
     
-    hydrograph2display.generate_hydrograph(meteoObj) 
-    hydrograph2display.fig.savefig('../Projects/Project4Testing/hydrograph.pdf')
+    hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
+    hydrograph.gridLines = 2
+    
+    hydrograph.title_state = 0 # 1 -> title ; 0 -> no title
+    hydrograph.title_text = "Title of the Graph"
+    hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
+    
+    hydrograph.set_waterLvlObj(waterLvlObj)
+    hydrograph.best_fit_waterlvl()
+    hydrograph.best_fit_time(waterLvlObj.time)
+    hydrograph.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+    
+    hydrograph.generate_hydrograph(meteoObj) 
+    hydrograph.savefig('../Projects/Project4Testing/hydrograph.pdf')
     
     #---- show figure on-screen ----
     
-    canvas = FigureCanvasQTAgg(hydrograph2display.fig)
+#    canvas = FigureCanvasQTAgg(hydrograph)
     
     imgview = ImageViewer()
-    imgview.load_image(hydrograph2display.fig)
+    imgview.load_image(hydrograph)
     imgview.show()
     
 #    canvas = FigureCanvasQTAgg(hydrograph2display.fig)

@@ -23,7 +23,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
---------------------------------------------------------------------------------
+------------------------------------------------------------------------------
 
 Copyright (C) 2005-2005 Trolltech AS. All rights reserved.
 
@@ -54,16 +54,16 @@ matplotlib.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 import matplotlib.pyplot as plt
 
-#-------------------------------------------------------------------------------
+#=============================================================================
 class ImageViewer(QtGui.QWidget):
     """
     This is a PySide widget class to display a bitmap image in a QScrollArea 
     with zooming and panning capability with CTRL + Mouse_wheel and 
     Left-click event.
     """
-#-------------------------------------------------------------------------------
+#=============================================================================
 
-    def __init__(self, parent=None): #==========================================
+    def __init__(self, parent=None): #========================================
         super(ImageViewer, self).__init__(parent)
         
         self.scaleFactor = 0
@@ -129,7 +129,7 @@ class ImageViewer(QtGui.QWidget):
         
         self.load_image(image, 0)
     
-    def load_image(self, image, scaleFactor=0): #===============================
+    def load_image(self, image, scaleFactor=0): #=============================
         
         self.scaleFactor = scaleFactor
                 
@@ -158,7 +158,7 @@ class ImageViewer(QtGui.QWidget):
         # qgraphicsview-zooming-in-and-out-under-mouse-position
         # -using-mouse-wheel
 
-        #------------------------------------------------------------- ZOOM ----
+        #----------------------------------------------------------- ZOOM ----
         
         if event.type() == QtCore.QEvent.Type.Wheel:
                                
@@ -176,7 +176,7 @@ class ImageViewer(QtGui.QWidget):
             else:
                 return False
         
-        #-------------------------------------------------------------- PAN ----
+        #------------------------------------------------------------ PAN ----
         
         #---- Set ClosedHandCursor ----
         
@@ -184,7 +184,8 @@ class ImageViewer(QtGui.QWidget):
                   
             if event.button() == QtCore.Qt.MouseButton.LeftButton:
                 
-                QtGui.QApplication.setOverrideCursor(QtCore.Qt.ClosedHandCursor)
+                QtGui.QApplication.setOverrideCursor(
+                                                    QtCore.Qt.ClosedHandCursor)
                 self.pan = True
                 self.xclick = event.globalX()
                 self.yclick = event.globalY()
