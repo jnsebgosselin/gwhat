@@ -103,11 +103,8 @@ class dwnldWeather(QtGui.QWidget):
         
         #--------------------------------------------------- Instances init ----
         
-        self.search4stations = Search4Stations(self)
-        self.search4stations.setWindowFlags(QtCore.Qt.Window)
-        
-        self.station_table = WeatherStationDisplayTable(1, self)
-        
+        self.search4stations = Search4Stations(self)        
+        self.station_table = WeatherStationDisplayTable(1, self)        
         self.dwnl_raw_datafiles = DownloadRawDataFiles(self)
         
         #---------------------------------------------------------- TOOLBAR ----
@@ -329,7 +326,7 @@ class dwnldWeather(QtGui.QWidget):
         
         #---- search4stations ----
         
-        btn_search4station.clicked.connect(self.btn_search4station_isClicked) 
+        btn_search4station.clicked.connect(self.search4stations.show)
         self.search4stations.staListSignal.connect(self.add_stations2list)        
         
             
@@ -354,28 +351,6 @@ class dwnldWeather(QtGui.QWidget):
         if nrow == 0:
             self.station_table.chkbox_header.setCheckState(
                                                     QtCore.Qt.CheckState(False))          
-                    
-                    
-    def btn_search4station_isClicked(self): #=================================
-        
-        if self.search4stations.isVisible():
-            
-            self.search4stations.close()
-            
-        else:       
-            
-            self.search4stations.show()
-                        
-            qr = self.search4stations.frameGeometry()
-            
-            wp = self.frameGeometry().width()
-            hp = self.frameGeometry().height()
-            cp = self.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
-            
-            qr.moveCenter(cp)
-            self.search4stations.move(qr.topLeft())
-            
-            self.search4stations.setFixedSize(self.search4stations.size())       
     
     
     def add_stations2list(self, staList2add): #===============================

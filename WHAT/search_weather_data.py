@@ -52,17 +52,17 @@ class Tooltips():
         self.chkbox_header = ('Check of uncheck all the weather stations ' +
                               'in the table.')
     
-        if language == 'French': #--------------------------------- FRENCH -----
+        if language == 'French': #------------------------------- FRENCH -----
             
             pass
 
-#===============================================================================
+#=============================================================================
 class Search4Stations(QtGui.QWidget):
     '''
     Widget that allows the user to search for weather stations on the
     Government of Canada website.
     '''
-#===============================================================================
+#=============================================================================
     
     ConsoleSignal = QtCore.Signal(str)
     staListSignal = QtCore.Signal(list)
@@ -84,6 +84,7 @@ class Search4Stations(QtGui.QWidget):
         
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(iconDB.WHAT)
+        self.setWindowFlags(QtCore.Qt.Window)
         
         #------------------------------------------------- INIT VARIABLES ----
         
@@ -353,6 +354,26 @@ class Search4Stations(QtGui.QWidget):
         self.maxYear.valueChanged.connect(self.maxYear_changed)
         self.btn_search.clicked.connect(self.btn_search_isClicked)
         btn_addSta.clicked.connect(self.btn_addSta_isClicked)
+    
+    def show(self): #=========================================================
+        super(Search4Stations, self).show()        
+        self.activateWindow()
+        self.raise_()
+        
+        qr = self.frameGeometry()
+        if self.parentWidget():
+            parent = self.parentWidget()
+            
+            wp = parent.frameGeometry().width()
+            hp = parent.frameGeometry().height()
+            cp = parent.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+        else:
+            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            
+        qr.moveCenter(cp)                    
+        self.move(qr.topLeft())           
+        self.setFixedSize(self.size())
+            
         
     def minYear_changed(self):
         
@@ -362,6 +383,7 @@ class Search4Stations(QtGui.QWidget):
         max_yr = now.year
                 
         self.maxYear.setRange(min_yr, max_yr)
+        
         
     def maxYear_changed(self):
         
@@ -625,7 +647,7 @@ class Search4Stations(QtGui.QWidget):
                 QtCore.QCoreApplication.processEvents()
                 QtCore.QCoreApplication.processEvents()
                    
-                #------------------------------------------- Get Climate ID ----
+                #----------------------------------------- Get Climate ID ----
                 
                 print('Fetching info for each station...')
                 self.ConsoleSignal.emit('''<font color=black>
@@ -643,7 +665,7 @@ class Search4Stations(QtGui.QWidget):
                 self.ConsoleSignal.emit('''<font color=black>Info fetched for
                 each station successfully.</font>''') 
                 
-                #----------------------------- SORT STATIONS ALPHABETICALLY ----
+                #--------------------------- SORT STATIONS ALPHABETICALLY ----
     
 #                sort_indx = np.argsort(staName[1:])
 #                sort_indx += 1
@@ -666,13 +688,13 @@ class Search4Stations(QtGui.QWidget):
                 ClimateID = ClimateID[sort_indx]
                 staProxim = staProxim[sort_indx]
                 
-                #-------------------------------------------- Save Results ----
+                #------------------------------------------- Save Results ----
                 
                 staList = [staName, StationID, StartYear, EndYear, Prov,
                    ClimateID, staProxim]
                 staList = np.transpose(staList)
                                    
-                #------------------------- Send Signal to load list into UI ----
+                #----------------------- Send Signal to load list into UI ----
                                                 
                 self.station_table.populate_table(staList)
             
@@ -702,7 +724,7 @@ class Search4Stations(QtGui.QWidget):
         return staList
         
     
-    def get_staInfo(self, Prov, StationID): #===================================
+    def get_staInfo(self, Prov, StationID): #=================================
         
         """
         Fetch the Climate Id for a given station. This ID is used to identified
@@ -1130,12 +1152,12 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             writer.writerows(staList)
 
             
-#===============================================================================
+#=============================================================================
 def decdeg2dms(dd):
     '''
     Convert decimal degree lat/lon coordinate to decimal, minute, second format.
     '''    
-#===============================================================================
+#=============================================================================
     
     mnt,sec = divmod(dd*3600, 60)
     deg,mnt = divmod(mnt, 60)
@@ -1143,12 +1165,12 @@ def decdeg2dms(dd):
     return deg, mnt, sec
 
 
-#===============================================================================   
+#=============================================================================   
 def dms2decdeg(deg, mnt, sec):
     '''
     Convert decimal, minute, second format lat/lon coordinate to decimal degree.
     '''
-#===============================================================================
+#=============================================================================
     
     dd = deg + mnt/60. + sec/3600.    
     
@@ -1164,14 +1186,7 @@ if __name__ == '__main__':
     instance1.lat_spinBox.setValue(45.4)
     instance1.lon_spinBox.setValue(73.13)
     instance1.isOffline = True
-
-    #---- SHOW ----
               
     instance1.show()
-    
-    qr = instance1.frameGeometry()
-    cp = QtGui.QDesktopWidget().availableGeometry().center()
-    qr.moveCenter(cp)
-    instance1.move(qr.topLeft())
         
     sys.exit(app.exec_())
