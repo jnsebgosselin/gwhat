@@ -132,10 +132,12 @@ class MplViewer(QtGui.QFrame):
             
             qp.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
             
-            rect = QtCore.QRect(0, 0, self.size().width(),
-                                self.size().height())
+            fw = 4 # frame width
+            rect = QtCore.QRect(0 + fw, 0 + fw, self.size().width() - 2*fw,
+                                self.size().height() - 2*fw)
+
             qp.drawPixmap(rect, self.img) 
-#            qp.drawImage(rect, self.img)
+
         elif self.df == 'svg':    
             self.img.render(qp)
         
@@ -317,6 +319,6 @@ if __name__ == '__main__':
     bbox = fig.get_window_extent()  
     imageViewer.resize(bbox.width*1.2, bbox.height*1.2)
     
-    imageViewer.load_image(fig, 'svg')
+    imageViewer.load_image(fig, 'png')
       
     sys.exit(app.exec_())

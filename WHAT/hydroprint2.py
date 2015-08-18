@@ -84,7 +84,8 @@ class Hydrograph(mpl.figure.Figure):
         
         #---- Fig Init ----        
         
-        self.set_fig_size(15.0, 8.5)        
+        self.fwidth = 11.0
+        self.fheight = 8.5
         self.patch.set_facecolor('white')
         
         #---- Database ----
@@ -150,189 +151,6 @@ class Hydrograph(mpl.figure.Figure):
         
         self.NMissPtot = []
         
-    def set_fig_size(self, fwidth, fheight): #================================
-        
-        self.fwidth = fwidth   # Figure width in inches   
-        self.fheight = fheight # Figure height in inches
-        
-        self.set_size_inches(fwidth, fheight)
-        
-    def set_waterLvlObj(self, WaterLvlObj): #=================================
-        self.WaterLvlObj = WaterLvlObj
-   
-    
-    def checkLayout(self, name_well, filename): #=============================
-        
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-            reader = np.array(reader)
-       
-        # Check if config file is from an old version of Hydroprint
-        # and if yes, convert it to the new version.
-       
-        nCONFG, nPARA = np.shape(reader)
-
-        if nPARA < len(self.header[0]):
-            
-            nMissing = len(self.header[0]) - nPARA
-            
-            col2add = np.zeros((nCONFG, nMissing)).astype(int)
-            col2add = col2add.astype(str)
-            
-            reader = np.hstack((reader, col2add))
-            reader[0] = self.header[0]
-            
-            if nPARA < 8:
-                reader[1:, 7] = 'Add A Title To The Figure Here'
-            if nPARA < 9:
-                reader[1:, 8] = 20
-            if nPARA < 10:
-                reader[1:, 9] = 0
-            if nPARA < 11:
-                reader[1:, 10] = 0
-            
-            with open(filename, 'w') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
-             
-            msg = ('The "graph_layout.lst" file is from an older version ' +
-                   'of WHAT. The old file has been converted to the newer ' +
-                   'version.') 
-            print(msg)
-        
-        # Check if there is a layout stored for the current 
-        # selected observation well.
-        row = np.where(reader[:,0] == name_well)[0]
-           
-        if len(row) > 0:
-            layoutExist = True
-        else:
-            layoutExist = False
-           
-        return layoutExist
-        
-                    
-    def load_layout(self, name_well, filename): #=============================      
-            
-        # A <checkConfig> is supposed to have been carried before this method
-        # is called. So it can be supposed at this point that everything is
-        # fine with the graph layout for this well.
-        
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-            reader = np.array(reader)
-     
-        row = np.where(reader[:,0] == name_well)[0]
-        
-        reader = reader[row][0]
-        
-        self.fmeteo = reader[1]
-        self.finfo = self.fmeteo[:-3] + 'log'
-                          
-        self.WLmin = reader[2].astype(float)
-        self.WLscale = reader[3].astype(float)
-            
-        self.TIMEmin = reader[4].astype(float)
-        self.TIMEmax = reader[5].astype(float)
-        
-        self.title_state = reader[6].astype(float)
-        if self.title_state != 0:
-            self.title_state = 1
-        
-        self.title_text = reader[7].astype(str)
-        self.RAINscale = reader[8].astype(float)
-        self.WLdatum = reader[9].astype(int)
-        self.trend_line = reader[10].astype(int)
-
-        
-    def save_layout(self, name_well, filename): #=============================
-        
-        #---- load file ----
-        
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-            reader = np.array(reader)
-        
-        #---- update content ----
-         
-        rowx = np.where(reader[:,0] == name_well)[0]
-        
-        new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
-               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text,
-               self.RAINscale, self.WLdatum, self.trend_line]
-        
-        if len(rowx) == 0:
-            reader = np.vstack((reader, new))
-        else:
-            reader = np.delete(reader, rowx, 0)
-            reader = np.vstack((reader, new))
-        reader[0] = self.header[0]
-        
-        #---- save file ----
-            
-        with open(filename, 'w') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(reader)
-    
-      
-    def best_fit_waterlvl(self): #============================================
-        
-        WL = self.WaterLvlObj.lvl   
-        if self.WLdatum == 1: # masl
-            WL = self.WaterLvlObj.ALT - WL
-        
-        WL = WL[~np.isnan(WL)]
-        dWL = np.max(WL) - np.min(WL)
-        ygrid = self.NZGrid - 10
-        
-        #----- WL Scale -----
-        
-        SCALE = np.hstack((np.arange(0.05, 0.30, 0.05), 
-                           np.arange(0.3, 5.1, 0.1)))
-        dSCALE = np.abs(SCALE - dWL / ygrid)
-        indx = np.where(dSCALE == np.min(dSCALE))[0][0]
-        
-        self.WLscale = SCALE[indx]
-        
-        #-----WL Min Value-----
-        
-        if self.WLdatum == 0: # mbgs
-            N = np.ceil(np.max(WL) / self.WLscale)
-        elif self.WLdatum == 1: # masl        
-            #WL = self.WaterLvlObj.ALT - WL
-            N = np.floor(np.min(WL) / self.WLscale)
-        
-        self.WLmin = self.WLscale * N
-        
-        return self.WLscale, self.WLmin
-    
-    
-    def best_fit_time(self, TIME): #==========================================
-        
-        # ----- Data Start -----
-        
-        date0 = xldate_as_tuple(TIME[0], 0)
-        date0 = (date0[0], date0[1], 1)
-        
-        self.TIMEmin = xldate_from_date_tuple(date0, 0)
-        
-        # ----- Date End -----
-        
-        date1 = xldate_as_tuple(TIME[-1], 0)
-        
-        year =  date1[0]
-        month = date1[1] + 1
-        if month > 12:
-            month = 1
-            year += 1
-        
-        date1 = (year, month, 1)
-        
-        self.TIMEmax = xldate_from_date_tuple(date1, 0)
-        
-        return date0, date1
-    
-               
     def generate_hydrograph(self, MeteoObj): #================================
 
         #---- Reinit Figure ----
@@ -544,7 +362,7 @@ class Hydrograph(mpl.figure.Figure):
             self.l1_ax4, = self.ax4.plot([], [])                # fill shape
             self.l2_ax4, = self.ax4.plot([], [], color='black') # contour line
         
-            #-------------------------------------- MISSING VALUES MARKERS ----
+            #------------------------------------- MISSING VALUES MARKERS ----
     
             if self.finfo:
                 
@@ -575,11 +393,11 @@ class Hydrograph(mpl.figure.Figure):
                                           
             self.draw_weather()
                 
-        #---------------------------------------------------- DRAW YLABELS ----
+        #--------------------------------------------------- DRAW YLABELS ----
                                                                  
         self.draw_ylabels()
         
-        #---------------------------------------------------------- LEGEND ----
+        #--------------------------------------------------------- LEGEND ----
 
         if self.isLegend == True:
             
@@ -598,10 +416,328 @@ class Hydrograph(mpl.figure.Figure):
             self.ax4.legend([rec1, rec2, rec3, TMAXmiss_dots], labels,
                             loc=[0.01, 0.45], numpoints=1, fontsize=10)
         
-        #----------------------------------------------------- UPDATE FLAG ----
+        #---------------------------------------------------- UPDATE FLAG ----
         
         self.isHydrographExists = True
+        
+    def set_fig_size(self, fwidth, fheight): #================================
+        
+        self.fwidth = fwidth   # Figure width in inches   
+        self.fheight = fheight # Figure height in inches
+        
+        self.set_size_inches(fwidth, fheight)
+        self.set_margins()
+        self.draw_ylabels()
+        self.set_time_scale()
+        
+        self.canvas.draw()
+        
+    def set_margins(self): #==================================================
+        
+        #---- MARGINS (Inches / Fig. Dimension) ----
+        
+        left_margin  = 0.85 / self.fwidth
+        right_margin = 0.85 / self.fwidth
+        top_margin = 0.35 / self.fheight
+        bottom_margin = 0.75 / self.fheight
+        
+        if self.title_state == 1:
+            top_margin = 0.75 / self.fheight
+            
+        if self.meteoOn == False:
+            right_margin = 0.35 / self.fwidth
+        
+        #---- MARGINS (% of figure) ----
+        
+        x0 = left_margin
+        w = 1 - (left_margin + right_margin)
+        if self.meteoOn == True:            
+            y0 = bottom_margin          
+            h = 1 - (bottom_margin + top_margin)
+        else:
+            y0 = bottom_margin / 2.
+            h = 1 - (bottom_margin + top_margin) / 2.
+        
+        self.ax0.set_position([x0, y0, w, h])
+        self.ax1.set_position([x0, y0, w, h])        
+        self.ax2.set_position([x0, y0, w, h])
+        if self.meteoOn == True:
+            self.ax3.set_position([x0, y0, w, h])
+            self.ax4.set_position([x0, y0, w, h])
+            
+            
+    def draw_ylabels(self): #=================================================
+        
+        labelDB = LabelDatabase(self.language)
+        
+        #----------------------------------------- Calculate LabelPadding ----
+        
+        left_margin  = 0.85
+        right_margin = 0.85
+        if self.meteoOn == False:
+            right_margin = 0.35
+            
+        axwidth = (self.fwidth - left_margin - right_margin)
+        print(axwidth)
+        labPad = 0.3 / 2.54 # in Inches       
+        labPad /= axwidth   # relative coord.
+        
+        #-------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
+        
+        if self.WLdatum == 0:       
+            lab_ax2 = labelDB.mbgs % self.WaterLvlObj.name_well
+        elif self.WLdatum == 1:
+            lab_ax2 = labelDB.masl % self.WaterLvlObj.name_well
+         
+        #---- Water Level ----
+         
+        self.ax2.set_ylabel(lab_ax2,rotation=90,
+                            fontsize=self.label_font_size,
+                            verticalalignment='bottom',
+                            horizontalalignment='center')
+                       
+        # Get bounding box dimensions of yaxis ticklabels for ax2
+        renderer = self.canvas.get_renderer() 
+        bbox2_left, _ = self.ax2.yaxis.get_ticklabel_extents(renderer)
+        
+        # bbox are structured in the the following way:   [[ Left , Bottom ],
+        #                                                  [ Right, Top    ]]
+        
+        # Transform coordinates in ax2 coordinate system.       
+        bbox2_left = self.ax2.transAxes.inverted().transform(bbox2_left)
+        
+        # Calculate the labels positions in x and y.
+        ylabel2_xpos = bbox2_left[0, 0] - labPad
+        ylabel2_ypos = (bbox2_left[1, 1] + bbox2_left[0, 1]) / 2.
+        
+        if self.meteoOn == False:            
+            self.ax2.yaxis.set_label_coords(ylabel2_xpos, ylabel2_ypos)
+            return
+            
+        #---- Temperature ----
     
+        self.ax4.set_ylabel(labelDB.temperature, rotation=90, va='bottom',
+                            ha='center', fontsize=self.label_font_size)
+                            
+        # Get bounding box dimensions of yaxis ticklabels for ax4                    
+        bbox4_left, _ = self.ax4.yaxis.get_ticklabel_extents(renderer)
+        
+        # Transform coordinates in ax4 coordinate system.
+        bbox4_left = self.ax4.transAxes.inverted().transform(bbox4_left)        
+        
+        # Calculate the labels positions in x and y.
+        ylabel4_xpos = bbox4_left[0, 0] - labPad
+        ylabel4_ypos = (bbox4_left[1, 1] + bbox4_left[0, 1]) / 2.
+        
+        # Take the position which is farthest from the left y axis in order
+        # to have both labels on the left aligned.
+        ylabel_xpos = min(ylabel2_xpos, ylabel4_xpos)
+
+        self.ax2.yaxis.set_label_coords(ylabel_xpos, ylabel2_ypos)
+        self.ax4.yaxis.set_label_coords(ylabel_xpos, ylabel4_ypos)
+                
+        #---------------------------------------- ylabels : Precipitation ----
+        
+        self.ax3.set_ylabel(labelDB.precip, rotation=270, va='bottom', 
+                            ha='center', fontsize=self.label_font_size)
+                        
+        # Get bounding box dimensions of yaxis ticklabels for ax3
+        _, bbox3_right = self.ax3.yaxis.get_ticklabel_extents(renderer)
+        
+        # Transform coordinates in ax3 coordinate system and
+        # calculate the labels positions in x and y.
+        bbox3_right = self.ax3.transAxes.inverted().transform(bbox3_right)
+        
+        ylabel3_xpos = bbox3_right[1, 0] + labPad
+        ylabel3_ypos = (bbox3_right[1, 1] + bbox3_right[0, 1]) / 2.
+        
+        # Take the position which is farthest from the left y axis in order
+        # to have both labels on the left aligned.
+
+        self.ax3.yaxis.set_label_coords(ylabel3_xpos, ylabel3_ypos)
+        
+        #------------------------------------------ WEATHER STATION LABEL ----
+        
+        text_top_margin = labelDB.station_meteo % (self.name_meteo,
+                                                   self.dist)
+        self.text1.set_text(text_top_margin)
+        
+        
+    def set_waterLvlObj(self, WaterLvlObj): #=================================
+        self.WaterLvlObj = WaterLvlObj
+   
+    
+    def checkLayout(self, name_well, filename): #=============================
+        
+        with open(filename, 'r') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+            reader = np.array(reader)
+       
+        # Check if config file is from an old version of Hydroprint
+        # and if yes, convert it to the new version.
+       
+        nCONFG, nPARA = np.shape(reader)
+
+        if nPARA < len(self.header[0]):
+            
+            nMissing = len(self.header[0]) - nPARA
+            
+            col2add = np.zeros((nCONFG, nMissing)).astype(int)
+            col2add = col2add.astype(str)
+            
+            reader = np.hstack((reader, col2add))
+            reader[0] = self.header[0]
+            
+            if nPARA < 8:
+                reader[1:, 7] = 'Add A Title To The Figure Here'
+            if nPARA < 9:
+                reader[1:, 8] = 20
+            if nPARA < 10:
+                reader[1:, 9] = 0
+            if nPARA < 11:
+                reader[1:, 10] = 0
+            
+            with open(filename, 'w') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(reader)
+             
+            msg = ('The "graph_layout.lst" file is from an older version ' +
+                   'of WHAT. The old file has been converted to the newer ' +
+                   'version.') 
+            print(msg)
+        
+        # Check if there is a layout stored for the current 
+        # selected observation well.
+        row = np.where(reader[:,0] == name_well)[0]
+           
+        if len(row) > 0:
+            layoutExist = True
+        else:
+            layoutExist = False
+           
+        return layoutExist
+        
+                    
+    def load_layout(self, name_well, filename): #=============================      
+            
+        # A <checkConfig> is supposed to have been carried before this method
+        # is called. So it can be supposed at this point that everything is
+        # fine with the graph layout for this well.
+        
+        with open(filename, 'r') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+            reader = np.array(reader)
+     
+        row = np.where(reader[:,0] == name_well)[0]
+        
+        reader = reader[row][0]
+        
+        self.fmeteo = reader[1]
+        self.finfo = self.fmeteo[:-3] + 'log'
+                          
+        self.WLmin = reader[2].astype(float)
+        self.WLscale = reader[3].astype(float)
+            
+        self.TIMEmin = reader[4].astype(float)
+        self.TIMEmax = reader[5].astype(float)
+        
+        self.title_state = reader[6].astype(float)
+        if self.title_state != 0:
+            self.title_state = 1
+        
+        self.title_text = reader[7].astype(str)
+        self.RAINscale = reader[8].astype(float)
+        self.WLdatum = reader[9].astype(int)
+        self.trend_line = reader[10].astype(int)
+
+        
+    def save_layout(self, name_well, filename): #=============================
+        
+        #---- load file ----
+        
+        with open(filename, 'r') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+            reader = np.array(reader)
+        
+        #---- update content ----
+         
+        rowx = np.where(reader[:,0] == name_well)[0]
+        
+        new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
+               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text,
+               self.RAINscale, self.WLdatum, self.trend_line]
+        
+        if len(rowx) == 0:
+            reader = np.vstack((reader, new))
+        else:
+            reader = np.delete(reader, rowx, 0)
+            reader = np.vstack((reader, new))
+        reader[0] = self.header[0]
+        
+        #---- save file ----
+            
+        with open(filename, 'w') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(reader)
+    
+      
+    def best_fit_waterlvl(self): #============================================
+        
+        WL = self.WaterLvlObj.lvl   
+        if self.WLdatum == 1: # masl
+            WL = self.WaterLvlObj.ALT - WL
+        
+        WL = WL[~np.isnan(WL)]
+        dWL = np.max(WL) - np.min(WL)
+        ygrid = self.NZGrid - 10
+        
+        #----- WL Scale -----
+        
+        SCALE = np.hstack((np.arange(0.05, 0.30, 0.05), 
+                           np.arange(0.3, 5.1, 0.1)))
+        dSCALE = np.abs(SCALE - dWL / ygrid)
+        indx = np.where(dSCALE == np.min(dSCALE))[0][0]
+        
+        self.WLscale = SCALE[indx]
+        
+        #-----WL Min Value-----
+        
+        if self.WLdatum == 0: # mbgs
+            N = np.ceil(np.max(WL) / self.WLscale)
+        elif self.WLdatum == 1: # masl        
+            #WL = self.WaterLvlObj.ALT - WL
+            N = np.floor(np.min(WL) / self.WLscale)
+        
+        self.WLmin = self.WLscale * N
+        
+        return self.WLscale, self.WLmin
+    
+    
+    def best_fit_time(self, TIME): #==========================================
+        
+        # ----- Data Start -----
+        
+        date0 = xldate_as_tuple(TIME[0], 0)
+        date0 = (date0[0], date0[1], 1)
+        
+        self.TIMEmin = xldate_from_date_tuple(date0, 0)
+        
+        # ----- Date End -----
+        
+        date1 = xldate_as_tuple(TIME[-1], 0)
+        
+        year =  date1[0]
+        month = date1[1] + 1
+        if month > 12:
+            month = 1
+            year += 1
+        
+        date1 = (year, month, 1)
+        
+        self.TIMEmax = xldate_from_date_tuple(date1, 0)
+        
+        return date0, date1
+        
         
     def resample_bin(self): #==================================================
    
@@ -787,9 +923,9 @@ class Hydrograph(mpl.figure.Figure):
         self.l2_ax4.set_xdata(TIME2X)
         self.l2_ax4.set_ydata(Tmax2X)
         
-    def set_time_scale(self): #================================================
+    def set_time_scale(self): #===============================================
         
-        #------------------------------------------------ time min and max ----
+        #----------------------------------------------- time min and max ----
         
         if self.datemode == 'year':
             
@@ -805,7 +941,7 @@ class Hydrograph(mpl.figure.Figure):
                 year = xldate_as_tuple(self.TIMEmax, 0)[0] + 1
                 self.TIMEmax = xldate_from_date_tuple((year, 1, 1), 0)
                 
-        #----------------------------------------------- xticks and labels ----
+        #---------------------------------------------- xticks and labels ----
         
         #---- compute parameters ----
         
@@ -824,7 +960,7 @@ class Hydrograph(mpl.figure.Figure):
         self.ax1.xaxis.set_ticklabels(xticks_info[2], minor=True, rotation=45,
                                       va='top', ha='right', fontsize=10)
         
-        #-------------------------------------------- text horiz. position ----
+        #------------------------------------------- text horiz. position ----
         
         # adjust "climatological station" label and 
         # title horizontal position
@@ -832,25 +968,9 @@ class Hydrograph(mpl.figure.Figure):
         self.text1.set_x(self.TIMEmax)
         self.figTitle.set_x((self.TIMEmin + self.TIMEmax) / 2.)
         
-        #----------------------------------------------------- axis limits ----
+        #---------------------------------------------------- axis limits ----
            
         self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
-        
-#        #---- Remove existing labels from axe ----
-#        
-#        for i in range(len(self.xlab)):
-#            self.xlab[i].remove()
-#        
-#        #---- Redraw labels ----
-#        
-#        self.xlab = []
-#        for i in range(len(xticks_labels)) :
-#            
-#            xlab = self.ax1.text(xticks_labels_position[i], -0.15,
-#                                 xticks_labels[i], rotation=45, 
-#                                 va='top', ha='right', fontsize=10)
-#                       
-#            self.xlab.append(xlab)
        
     def draw_xlabels(self): #==================================================
         
@@ -862,115 +982,6 @@ class Hydrograph(mpl.figure.Figure):
         self.ax1.xaxis.set_ticklabels(xticks_labels, minor=True, rotation=45,
                                       va='top', ha='right', fontsize=10)
                                             
-#        for i in range(len(self.xlab)):
-#            self.xlab[i].set_text(xticks_labels[i])
-    
-    def draw_ylabels(self): #==================================================
-        
-        #------------------------------------------ Calculate LabelPadding ----
-        
-        left_margin  = 0.85
-        right_margin = 0.85
-        if self.meteoOn == False:
-            right_margin = 0.35
-            
-        axwidth = (self.fwidth - left_margin - right_margin)
-        labPad = 0.3 / 2.54 # in Inches       
-        labPad /= axwidth   # relative coord.
-        
-        #----------------------------------------- Calculate LabelPadding ----
-
-        labelDB = LabelDatabase(self.language)
-        
-        #-------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
-        
-        if self.WLdatum == 0:       
-            lab_ax2 = labelDB.mbgs % self.WaterLvlObj.name_well
-        elif self.WLdatum == 1:
-            lab_ax2 = labelDB.masl % self.WaterLvlObj.name_well
-         
-        #---- Water Level ----
-         
-        self.ax2.set_ylabel(lab_ax2,rotation=90,
-                            fontsize=self.label_font_size,
-                            verticalalignment='bottom',
-                            horizontalalignment='center')
-                       
-        # Get bounding box dimensions of yaxis ticklabels for ax2
-        renderer = self.canvas.get_renderer() 
-        bbox2_left, bbox2_right = self.ax2.yaxis.get_ticklabel_extents(renderer)
-        
-        # bbox are structured in the the following way:     [[ Left , Bottom ],
-        #                                                    [ Right, Top    ]]
-        
-        # Transform coordinates in ax2 coordinate system.       
-        bbox2_left = self.ax2.transAxes.inverted().transform(bbox2_left)
-        
-        # Calculate the labels positions in x and y.
-        ylabel2_xpos = bbox2_left[0, 0] - labPad
-        ylabel2_ypos = (bbox2_left[1, 1] + bbox2_left[0, 1]) / 2.
-        
-        if self.meteoOn == False:            
-            self.ax2.yaxis.set_label_coords(ylabel2_xpos, ylabel2_ypos)
-            return
-            
-        #---- Temperature ----
-    
-        self.ax4.set_ylabel(labelDB.temperature, rotation=90,
-                            fontsize=self.label_font_size,
-                            verticalalignment='bottom',
-                            horizontalalignment='center')
-                            
-        # Get bounding box dimensions of yaxis ticklabels for ax4                    
-        bbox4_left, bbox4_right = self.ax4.yaxis.get_ticklabel_extents(renderer)
-        
-        # Transform coordinates in ax4 coordinate system.
-        bbox4_left = self.ax4.transAxes.inverted().transform(bbox4_left)        
-        
-        # Calculate the labels positions in x and y.
-        ylabel4_xpos = bbox4_left[0, 0] - labPad
-        ylabel4_ypos = (bbox4_left[1, 1] + bbox4_left[0, 1]) / 2.
-        
-        # Take the position which is farthest from the left y axis in order
-        # to have both labels on the left aligned.
-        ylabel_xpos = min(ylabel2_xpos, ylabel4_xpos)
-
-        self.ax2.yaxis.set_label_coords(ylabel_xpos, ylabel2_ypos)
-        self.ax4.yaxis.set_label_coords(ylabel_xpos, ylabel4_ypos)
-    
-        #  Old way I was doing it before. Position of the labels were
-        #  fixed, indepently of the ticks labels format.
-            
-        #  ax4.yaxis.set_label_coords(-.07, (NZGrid - 2.) / NZGrid)
-                
-        #----------------------------------- YLABELS RIGHT (Precipitation) ----
-        
-        self.ax3.set_ylabel(labelDB.precip, rotation=270,
-                            fontsize=self.label_font_size,
-                            verticalalignment='bottom',
-                            horizontalalignment='center')
-                        
-        # Get bounding box dimensions of yaxis ticklabels for ax3
-        bbox3_left, bbox3_right = self.ax3.yaxis.get_ticklabel_extents(renderer)
-        
-        # Transform coordinates in ax3 coordinate system and
-        # calculate the labels positions in x and y.
-        bbox3_right = self.ax3.transAxes.inverted().transform(bbox3_right)
-        
-        ylabel3_xpos = bbox3_right[1, 0] + labPad
-        ylabel3_ypos = (bbox3_right[1, 1] + bbox3_right[0, 1]) / 2.
-        
-        # Take the position which is farthest from the left y axis in order
-        # to have both labels on the left aligned.
-
-        self.ax3.yaxis.set_label_coords(ylabel3_xpos, ylabel3_ypos)
-        
-        #------------------------------------------- WEATHER STATION LABEL ----
-        
-        text_top_margin = labelDB.station_meteo % (self.name_meteo,
-                                                   self.dist)
-        self.text1.set_text(text_top_margin)
-        
     def draw_figure_title(self): #=============================================
         
         if self.title_state == 1:
@@ -981,38 +992,7 @@ class Hydrograph(mpl.figure.Figure):
 
             self.figTitle.set_text('')
             
-    def set_margins(self): #===================================================
-        
-        #---- MARGINS (Inches / Fig. Dimension) ----
-        
-        left_margin  = 0.85 / self.fwidth
-        right_margin = 0.85 / self.fwidth
-        top_margin = 0.35 / self.fheight
-        bottom_margin = 0.75 / self.fheight
-        
-        if self.title_state == 1:
-            top_margin = 0.75 / self.fheight
-            
-        if self.meteoOn == False:
-            right_margin = 0.35 / self.fwidth
-        
-        #---- MARGINS (% of figure) ----
-        
-        x0 = left_margin
-        w = 1 - (left_margin + right_margin)
-        if self.meteoOn == True:            
-            y0 = bottom_margin          
-            h = 1 - (bottom_margin + top_margin)
-        else:
-            y0 = bottom_margin / 2.
-            h = 1 - (bottom_margin + top_margin) / 2.
-        
-        self.ax0.set_position([x0, y0, w, h])
-        self.ax1.set_position([x0, y0, w, h])        
-        self.ax2.set_position([x0, y0, w, h])
-        if self.meteoOn == True:
-            self.ax3.set_position([x0, y0, w, h])
-            self.ax4.set_position([x0, y0, w, h])
+    
                     
     def update_waterlvl_scale(self): #=========================================
         
