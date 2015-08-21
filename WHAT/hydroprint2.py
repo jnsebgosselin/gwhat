@@ -35,7 +35,7 @@ import matplotlib as mpl
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
 #from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_agg import FigureCanvasAgg
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 import matplotlib.pyplot as plt
 
 from PySide import QtGui
@@ -80,7 +80,7 @@ class Hydrograph(mpl.figure.Figure):
         
         #---- set canvas and renderer ----
         
-        self.set_canvas(FigureCanvasAgg(self))
+        self.set_canvas(FigureCanvas(self))
         
         #---- Fig Init ----        
         
@@ -478,7 +478,7 @@ class Hydrograph(mpl.figure.Figure):
             right_margin = 0.35
             
         axwidth = (self.fwidth - left_margin - right_margin)
-        print(axwidth)
+
         labPad = 0.3 / 2.54 # in Inches       
         labPad /= axwidth   # relative coord.
         
@@ -1504,7 +1504,7 @@ if __name__ == '__main__':
 #    canvas = FigureCanvasQTAgg(hydrograph)
     
     imgview = ImageViewer()
-    imgview.load_image(hydrograph)
+    imgview.load_mpl_figure(hydrograph)
     imgview.show()
     
 #    canvas = FigureCanvasQTAgg(hydrograph2display.fig)

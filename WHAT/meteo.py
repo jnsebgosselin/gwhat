@@ -89,7 +89,7 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         self.initUI()
         
-    def initUI(self): #=========================================================
+    def initUI(self): #=======================================================
         
         iconDB = db.Icons()
         StyleDB = db.styleUI()
@@ -102,14 +102,14 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.setFont(StyleDB.font1)
         self.setWindowIcon(iconDB.WHAT)
         
-        #----------------------------------------------------- FigureCanvas ----
+        #--------------------------------------------------- FigureCanvas ----
         
         self.fig = plt.figure()        
         self.fig.set_size_inches(8.5, 5)        
         self.fig.patch.set_facecolor('white')
         self.fig_widget = FigureCanvasQTAgg(self.fig)
         
-        #---------------------------------------------------------- TOOLBAR ----
+        #-------------------------------------------------------- TOOLBAR ----
         
         self.btn_save = QtGui.QToolButton()
         self.btn_save.setAutoRaise(True)
@@ -163,7 +163,7 @@ class WeatherAvgGraph(QtGui.QWidget):
         
         toolbar_widget.setLayout(subgrid_toolbar)
         
-        #-------------------------------------------------------- MAIN GRID ----
+        #------------------------------------------------------ MAIN GRID ----
         
         mainGrid = QtGui.QGridLayout()
         
@@ -179,12 +179,12 @@ class WeatherAvgGraph(QtGui.QWidget):
         
         self.setLayout(mainGrid)
         
-        #------------------------------------------------------------ EVENT ----
+        #---------------------------------------------------------- EVENT ----
         
         self.btn_save.clicked.connect(self.save_graph)
         self.btn_open.clicked.connect(self.select_meteo_file)
         
-    def generate_graph(self, filename): #=======================================
+    def generate_graph(self, filename): #=====================================
         
         METEO = MeteoObj()
         METEO.load_and_format(filename)
@@ -200,7 +200,7 @@ class WeatherAvgGraph(QtGui.QWidget):
                 
         self.fig_widget.draw()
 
-    def save_graph(self): #=====================================================
+    def save_graph(self): #===================================================
         
         dialog_dir = self.save_fig_dir
         dialog_dir += '/WeatherAverages_%s' % self.station_name
@@ -230,7 +230,7 @@ class WeatherAvgGraph(QtGui.QWidget):
             self.generate_graph(filename)
             self.meteo_dir = path.dirname(filename)
             
-#===============================================================================        
+#=============================================================================        
 class MeteoObj():    
     """
     This is a class to load and manipulate weather data.
@@ -238,7 +238,7 @@ class MeteoObj():
     nan are assigned a value of 0 for Ptot and for air Temp, the value is 
     calculated with an in-station interpolation.
     """
-#===============================================================================    
+#=============================================================================    
 
     def __init__(self):
         
@@ -273,7 +273,7 @@ class MeteoObj():
         self.TIME = [] # Time in numeric format.
 
         
-    def load_and_format(self, filename): #======================================
+    def load_and_format(self, filename): #====================================
         
         #---- load data from file ----
         
@@ -293,7 +293,7 @@ class MeteoObj():
         self.add_rain_to_data()
                 
                 
-    def load(self, filename): #=================================================
+    def load(self, filename): #===============================================
         
         """
         Load the info related to the weather station, the date and weather
@@ -350,7 +350,7 @@ class MeteoObj():
                 self.datatypes[i] = 0
         
             
-    def clean_endsof_file(self): #==============================================
+    def clean_endsof_file(self): #============================================
         
         """
         Remove nan values at the beginning and end of the record if any. Must
@@ -384,9 +384,9 @@ class MeteoObj():
                   ' rows of data removed at the end of the dataset.')
         
         
-    def check_time_continuity(self): #==========================================
+    def check_time_continuity(self): #========================================
             
-        #-------------------------------------------- check time continuity ----
+        #------------------------------------------ check time continuity ----
         
         # Check if the data series is continuous over time and 
         # correct it if not
@@ -404,7 +404,7 @@ class MeteoObj():
             self.DATA = make_timeserie_continuous(self.DATA)        
     
     
-    def get_TIME(self, DATE): #=================================================
+    def get_TIME(self, DATE): #===============================================
         
         # Generate a 1D array with date in numeric format because it is not
         # provided in the '.out' files.        
@@ -419,7 +419,7 @@ class MeteoObj():
         
         return TIME
         
-    def fill_nan(self): #=======================================================
+    def fill_nan(self): #=====================================================
         
         datatypes = self.datatypes
         varnames = self.varnames[3:]
@@ -462,7 +462,7 @@ class MeteoObj():
         self.DATA[:, 3:] = X
         
         
-    def add_rain_to_data(self): #===============================================
+    def add_rain_to_data(self): #=============================================
        
         varnames = np.array(self.varnames)
         if np.any(varnames == 'Rain (mm)'):
@@ -490,7 +490,7 @@ class MeteoObj():
         self.datatypes.append(1)
 
 
-    def add_ETP_to_data(self): #================================================
+    def add_ETP_to_data(self): #==============================================
         
         varnames = np.array(self.varnames)
         if np.any(varnames == 'ETP (mm)'):
@@ -519,7 +519,7 @@ class MeteoObj():
         self.varnames.append('ETP (mm)')
         self.datatypes.append(1)
         
-    def build_HTML_table(self): #===============================================
+    def build_HTML_table(self): #=============================================
         
         # HTML table with the info related to the weather station.
         
@@ -549,7 +549,7 @@ class MeteoObj():
         return info
         
            
-#    def daily2weekly(self): #===================================================        
+#    def daily2weekly(self): #================================================        
 #        
 #        # THIS METHOD NEEDS UPDATING! Currently, it seems it it not used at all.
 #        
@@ -571,7 +571,7 @@ class MeteoObj():
 #        nres = len(TIME) - (nbin * bwidth)
 #        print 'Nbin residual =', nres
 #                
-#        #------------------------------------------- update class variables ----
+#        #---------------------------------------- update class variables ----
 #
 #        self.TIMEwk = TIMEbin
 #        self.TMAXwk = TMAXbin
@@ -579,7 +579,7 @@ class MeteoObj():
 #        self.RAINwk = RAINbin
         
         
-#===============================================================================
+#=============================================================================
 def make_timeserie_continuous(DATA):
     """
     This function is called when a time serie of a daily meteorological record
@@ -595,7 +595,7 @@ def make_timeserie_continuous(DATA):
            meteorological data of a given weather station arranged in 
            chronological order. 
     """
-#===============================================================================    
+#=============================================================================    
     
     nVAR = len(DATA[0,:]) - 3 # nVAR = number of meteorological variables
     nan2insert = np.zeros(nVAR) * np.nan    
@@ -623,11 +623,9 @@ def make_timeserie_continuous(DATA):
         i += 1
 
     return DATA
-    
-            
+                
 
-
-#===============================================================================
+#=============================================================================
 def calculate_normals(DATA, datatypes):    
     """
     Calculates monthly normals from daily average air temperature and
@@ -934,8 +932,8 @@ def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
     
     #----- Adjust Space For Text -----
     
-#    Ymax0 = 180 # In case there is a need to force the value
-#    Ymax1 = 25 ; Ymin1 = -20
+    Ymax0 = 180 # In case there is a need to force the value
+    Ymax1 = 25 ; Ymin1 = -20
     
     reqheight = 0.15 # Height for yearly averages text on top of the graph.
     Ymax0 += (Ymax0 - Ymin0) * reqheight 
@@ -1080,9 +1078,9 @@ if __name__ == '__main__':
     app = QtGui.QApplication(argv)   
     instance_1 = WeatherAvgGraph()
             
-    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
+#    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
 #    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
-#    fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
+    fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
     instance_1.save_fig_dir =  '../Projects/Project4Testing'
     instance_1.generate_graph(fmeteo)
     

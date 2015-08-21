@@ -51,9 +51,40 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 from PySide import QtGui, QtCore, QtSvg
 import io
+import copy
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import time
+#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
-#============================================================================     
-class MplViewer(QtGui.QFrame):
+##=============================================================================
+#class MplFigConverter(QtCore.QObject):                     # MplFigConverter #
+##=============================================================================
+#    
+#    QImageSent = QtCore.Signal(QtGui.QImage)
+#    
+#    def __init__(self, mplfig, dpi=300):
+#        super(MplFigConverter, self).__init__()
+#
+#        self.mplfig = mplfig
+#        self.mplfig.set_canvas(FigureCanvas(self.mplfig))      
+#        self.dpi = dpi
+#
+#    def convert_MplFig_to_QPixmap(self):
+#        
+#        base_dpi = self.mplfig.get_dpi()
+#        self.mplfig.dpi = self.dpi
+#        buf, size = self.mplfig.canvas.print_to_buffer()
+#        self.mplfig.dpi = base_dpi
+#        
+#        qimg = QtGui.QImage.rgbSwapped(QtGui.QImage(buf, size[0], size[1],
+#                                       QtGui.QImage.Format_ARGB32))
+#        
+#        self.QImageSent.emit(qimg)
+
+#=============================================================================     
+class MplViewer(QtGui.QFrame):                                   # MplViewer #
+#=============================================================================
+
     def __init__(self, parent=None):
         super(MplViewer, self).__init__(parent)
         
@@ -63,8 +94,14 @@ class MplViewer(QtGui.QFrame):
         self.setStyleSheet("background-color: white")
         
         self.df = 'png' # display format is png or svg. Default is png.
+        self.img = []
         
-    def load_image(self, mplfig, df='png'): #=================================
+#    def process_qimage(self, qimg):
+#
+#        self.img = QtGui.QPixmap(qimg)
+#        self.repaint()
+        
+    def load_mpl_figure(self, mplfig, df='png', dpi=150): #=== Load Image ====
 
         #---------------------------------------------------- figure size ----
         
@@ -93,44 +130,65 @@ class MplViewer(QtGui.QFrame):
             self.img = QtSvg.QSvgRenderer(xmlsr)
             
         else:
+
             self.df = 'png'
             
+            t1 = time.clock()
+
             base_dpi = mplfig.get_dpi()
-            mplfig.dpi = 150
-            
+            mplfig.dpi = dpi            
             buf, size = mplfig.canvas.print_to_buffer()
+            mplfig.dpi = base_dpi
+            
+            t2 = time.clock()
+            
             self.img = QtGui.QImage(buf, size[0], size[1],
                                     QtGui.QImage.Format_ARGB32)
             self.img = QtGui.QImage.rgbSwapped(self.img)
             self.img = QtGui.QPixmap(self.img)
-            
-            mplfig.dpi = base_dpi
+
+            t3 = time.clock()
+            print(t2-t1, t3-t2)
             
             # for the io.BytesIO file buffer approach, use the same 
             # code as for svg to get "img_dta", then do:
             # ----
             # img = QtGui.QImage.fromData(img_dta)
             # self.img = QtGui.QPixmap(img)
+       
+        self.repaint() 
         
-        #-------------------------------------------------------- repaint ----
-        
-        self.repaint()        
+        #            
+#            copy_mplfig = copy.copy(mplfig)  
+#            converter = MplFigConverter(copy_mplfig)
+#                        
+#            thread = QtCore.QThread(self)
+#            converter.moveToThread(thread)
+#            thread.converter = converter
+#            
+#            thread.started.connect(thread.converter.convert_MplFig_to_QPixmap)            
+#            converter.QImageSent.connect(self.process_qimage)
+#            converter.QImageSent.connect(thread.quit)
+#            
+#            thread.start()
                         
-    def paintEvent(self, event):
+    def paintEvent(self, event): #============================ paintEvent ====
         super(MplViewer, self).paintEvent(event)
+
+        if not self.img:
+            return
         
         qp = QtGui.QPainter()
         qp.begin(self)
                 
         if self.df == 'png':            
             
-            # QtGui.QPainter.Antialiasing
-            # QtGui.QPainter.TextAntialiasing
-            # QtGui.QPainter.SmoothPixmapTransform
-            # QtGui.QPainter.HighQualityAntialiasing
-            # QtGui.QPainter.NonCosmeticDefaultPen 
-            
             qp.setRenderHint(QtGui.QPainter.SmoothPixmapTransform)
+                            #QtGui.QPainter.Antialiasing
+                            #QtGui.QPainter.TextAntialiasing
+                            #QtGui.QPainter.SmoothPixmapTransform
+                            #QtGui.QPainter.HighQualityAntialiasing
+                            #QtGui.QPainter.NonCosmeticDefaultPen 
             
             fw = 4 # frame width
             rect = QtCore.QRect(0 + fw, 0 + fw, self.size().width() - 2*fw,
@@ -143,18 +201,19 @@ class MplViewer(QtGui.QFrame):
         
         qp.end()
         
-        
+
 #=============================================================================
-class ImageViewer(QtGui.QScrollArea):
-    
+class ImageViewer(QtGui.QScrollArea):                          # ImageViewer #
+#=============================================================================            
+   
     """
     This is a PySide widget class to display a matplotlib figure image in a 
     QScrollArea with zooming and panning capability with CTRL + Mouse_wheel
     and Left-click event.
     """
-
+    
     def __init__(self, parent=None):
-        super(ImageViewer, self).__init__(parent)
+        super(ImageViewer, self).__init__(parent)    
         
         self.setWindowTitle('Image Viewer')
         self.setAlignment(QtCore.Qt.AlignCenter)
@@ -172,7 +231,7 @@ class ImageViewer(QtGui.QScrollArea):
         self.imageCanvas.installEventFilter(self)
         self.setWidget(self.imageCanvas)
              
-    def eventFilter(self, widget, event): #=================================== 
+    def eventFilter(self, widget, event): #================== eventFilter ==== 
         
         # http://stackoverflow.com/questions/17525608/
         # event-filter-cannot-intercept-wheel-event-from-qscrollarea
@@ -264,8 +323,8 @@ class ImageViewer(QtGui.QScrollArea):
 
         self.imageCanvas.setFixedSize(new_width, new_height)
        
-    def load_image(self, mplfig, df='png'):
-        self.imageCanvas.load_image(mplfig, df)
+    def load_mpl_figure(self, mplfig, df='png', dpi=150):
+        self.imageCanvas.load_mpl_figure(mplfig, df, dpi)
         self.scale_image()
         
     def reset_original_image(self):
@@ -290,6 +349,7 @@ if __name__ == '__main__':
     import sys
     import matplotlib.pyplot as plt
     import numpy as np
+    import matplotlib as mpl
 
     app = QtGui.QApplication(sys.argv)
     
@@ -297,19 +357,28 @@ if __name__ == '__main__':
     
     #---- generate data ----
     
-    N = 50
+    N = 150
     x = np.random.rand(N)
     y = np.random.rand(N)
     colors = np.random.rand(N)
     area = np.pi * (15 * np.random.rand(N)) ** 2
     
     #---- setup figure and plot data ----
+        
+#    fig = mpl.figure.Figure()
+#    canvas = FigureCanvas(fig)
+#    fig.set_canvas(canvas)
     
-    fig, ax = plt.subplots()
+    fig = plt.figure()
+    
+    ax = fig.add_axes([0.075, 0.075, 0.9, 0.9])
     fig.patch.set_facecolor('white')
+    fig.set_size_inches(6, 6)
+    
+    fbbox = fig.get_window_extent()
+    print(fbbox.width, fbbox.height)
     
     ax.scatter(x, y, s=area, c=colors, alpha=0.5)
-    plt.tight_layout()
     
     #------------------------------------------------------- image viewer ----
     
@@ -319,6 +388,6 @@ if __name__ == '__main__':
     bbox = fig.get_window_extent()  
     imageViewer.resize(bbox.width*1.2, bbox.height*1.2)
     
-    imageViewer.load_image(fig, 'png')
+    imageViewer.load_mpl_figure(fig, 'png', dpi=25)
       
     sys.exit(app.exec_())

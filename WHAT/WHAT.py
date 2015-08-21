@@ -47,7 +47,7 @@ import xlwt
 import matplotlib
 matplotlib.use('Qt4Agg')
 matplotlib.rcParams['backend.qt4']='PySide'
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt4agg import FigureCanvas
 #from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 #import matplotlib.pyplot as plt
 #from scipy import signal
@@ -844,7 +844,7 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         btn_page_setup.setIconSize(styleDB.iconSize)
         btn_page_setup.clicked.connect(self.page_setup_win.show)
         
-        class VertSep(QtGui.QFrame):
+        class VertSep(QtGui.QFrame): # vertical separators for the toolbar
             def __init__(self, parent=None):
                 super(VertSep, self).__init__(parent)
                 self.setFrameStyle(styleDB.VLine)
@@ -940,7 +940,8 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         self.waterlvl_scale.setSingleStep(0.05)
         self.waterlvl_scale.setMinimum(0.05)
         self.waterlvl_scale.setSuffix('  m')
-        self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter)        
+        self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter) 
+        self.waterlvl_scale.setKeyboardTracking(False)
         
         label_waterlvl_max = QtGui.QLabel('WL Min :') 
         self.waterlvl_max = QtGui.QDoubleSpinBox()
@@ -949,6 +950,7 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         self.waterlvl_max.setAlignment(QtCore.Qt.AlignCenter)
         self.waterlvl_max.setMinimum(-1000)
         self.waterlvl_max.setMaximum(1000)
+        self.waterlvl_max.setKeyboardTracking(False)
         
         label_datum = QtGui.QLabel('WL Datum :')
         self.datum_widget = QtGui.QComboBox()
@@ -1041,7 +1043,6 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         self.hydrograph = hydroprint.Hydrograph()
 #        self.hydrograph_canvas = FigureCanvasQTAgg(self.hydrograph)
 #        self.hydrograph_canvas.draw()        
-        
         self.hydrograph_scrollarea = imageviewer.ImageViewer()
         
         grid_hydrograph_widget = QtGui.QFrame()
@@ -1176,8 +1177,8 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
 #        self.date_end_widget.dateChanged.connect(self.time_scale_changed)
         
         #----------------------------------------------------- Init Image ----
-        
-        self.hydrograph_scrollarea.load_image(self.hydrograph)
+
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
             
     def toggle_layoutMode(self): #============================================
         
@@ -1256,6 +1257,9 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
                                   self, 'Select a valid water level data file', 
                                   self.waterlvl_dir, '*.xls')
         
+        for i in range(5):
+            QtCore.QCoreApplication.processEvents()
+            
         self.load_waterlvl(filename)
         
                               
@@ -1388,8 +1392,6 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
                           
                 self.load_meteo_file(fmeteo_paths[index])
                 QtCore.QCoreApplication.processEvents()
-                
-                self.draw_hydrograph()
     
            
     def select_meteo_file(self): #============================================
@@ -1717,12 +1719,19 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         
         #----- Generate and Display Graph -----
         
+        for i in range(5):
+             QtCore.QCoreApplication.processEvents()
+        
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.hydrograph.generate_hydrograph(self.meteo_data)
-        self.hydrograph_scrollarea.load_image(self.hydrograph)
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+        QtGui.QApplication.restoreOverrideCursor()
+
         
-    def layout_changed(self):
+    def layout_changed(self): #=========================== layout_changed ====
+    
         sender = self.sender()
-        
+                
         if self.UpdateUI == False:
             return
         
@@ -1732,12 +1741,13 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
                 self.hydrograph.draw_ylabels()
                 self.hydrograph.draw_xlabels()
                 
-        elif sender == self.waterlvl_max or sender == self.waterlvl_scale:                  
+        elif sender in [self.waterlvl_max, self.waterlvl_scale]:
+            
             self.hydrograph.WLmin = self.waterlvl_max.value()
             self.hydrograph.WLscale = self.waterlvl_scale.value()            
             if self.hydrograph.isHydrographExists:
                 self.hydrograph.update_waterlvl_scale()
-                self.hydrograph.draw_ylabels() 
+                self.hydrograph.draw_ylabels()
                 
         elif sender == self.Ptot_scale:
             self.hydrograph.RAINscale = self.Ptot_scale.value()
@@ -1799,159 +1809,20 @@ class TabHydrograph(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         elif sender == self.page_setup_win:
             fwidth = self.page_setup_win.pageSize[0]
             self.hydrograph.set_fig_size(fwidth, 8.5)
-                
-        self.refresh_hydrograph()
-    
-#    def language_changed(self): #=============================================
-#        
-#        if self.UpdateUI == True:
-#            
-#            #---- Update Instance Variables ----
-#            
-#            self.hydrograph.language = self.language_box.currentText()
-#            
-#            #---- Update Graph if Exists ----
-#           
-#            if self.hydrograph.isHydrographExists == True:
-#                
-#                self.hydrograph.draw_ylabels()
-#                self.hydrograph.draw_xlabels()
-#        
-#                self.refresh_hydrograph()
-                
-#    def Ptot_scale_changed(self): #===========================================
-#        
-#        if self.UpdateUI == True:
-#            
-#            #---- Update Instance Variables ----
-#            
-#            self.hydrograph.RAINscale = self.Ptot_scale.value()
-#            
-#            #---- Update Graph if Exists ----
-#           
-#            if self.hydrograph.isHydrographExists == True:
-#                
-#                self.hydrograph.update_precip_scale()
-#                self.hydrograph.draw_ylabels()
-#            
-#                self.refresh_hydrograph()
-                
         
-#    def waterlvl_scale_changed(self): #=======================================
-#        
-#        if self.UpdateUI == True:
-#            
-#            #---- Update Instance Variables ----
-#        
-#            self.hydrograph.WLmin = self.waterlvl_max.value()
-#            self.hydrograph.WLscale = self.waterlvl_scale.value()
-#            
-#            #---- Update Graph if Exists ----
-#           
-#            if self.hydrograph.isHydrographExists == True:
-#                
-#                self.hydrograph.update_waterlvl_scale()
-#                self.hydrograph.draw_ylabels()
-#            
-#                self.refresh_hydrograph()
-                
-#    def datum_changed(self, index): #=========================================
-#        
-#        if self.UpdateUI == True:
-#            
-#            #---- Update Instance Variables ----
-#            
-#            self.hydrograph.WLdatum = index
-#            self.hydrograph.WLmin = (self.waterlvl_data.ALT - 
-#                                     self.hydrograph.WLmin)
-#          
-#            self.hydrograph.update_waterlvl_scale()            
-#            self.hydrograph.draw_waterlvl()
-#            self.hydrograph.draw_ylabels()
-#            
-#            self.refresh_hydrograph()
-    
-#    def time_scale_changed(self): #===========================================
-#        
-#        if self.UpdateUI == True:
-#            
-#            #---- Update Instance Variables ----
-#            
-#            year = self.date_start_widget.date().year()
-#            month = self.date_start_widget.date().month()
-#            day = 1
-#            date = xldate_from_date_tuple((year, month, day), 0)
-#            self.hydrograph.TIMEmin = date
-#            
-#            year = self.date_end_widget.date().year()
-#            month = self.date_end_widget.date().month()
-#            day = 1
-#            date = xldate_from_date_tuple((year, month, day),0)
-#            self.hydrograph.TIMEmax = date
-#            
-#            #---- Update Graph if Exists ----
-#           
-#            if self.hydrograph.isHydrographExists == True:
-#               
-#                self.hydrograph.set_time_scale()
-#                self.hydrograph.draw_weather()
-#                self.hydrograph.draw_figure_title()
-#            
-#                self.refresh_hydrograph()
-#    
-#    def fig_title_state_changed(self): #======================================
-#        
-#        if self.graph_status.isChecked() == True:
-#            self.graph_title.setEnabled(True)
-#        else:
-#            self.graph_title.setEnabled(False)
-#        
-#        if self.UpdateUI == True:
-#           
-#           #---- Update Instance Variables ----
-#           
-#           if self.graph_status.isChecked():
-#               self.hydrograph.title_state = 1
-#               self.hydrograph.title_text = self.graph_title.text()
-#           else:
-#               self.hydrograph.title_state = 0
-#           
-#           #---- Update Graph if Exists ----
-#           
-#           if self.hydrograph.isHydrographExists == True:
-#
-#               self.hydrograph.set_margins()
-#               self.hydrograph.draw_figure_title()
-#               self.refresh_hydrograph()
-#               
-#           else: # No hydrograph plotted yet
-#               pass
-                
-#    def fig_title_changed(self): #============================================
-#        
-#        if self.UpdateUI == True :
-#            
-#            #---- Update Instance Variables ----
-#        
-#            self.hydrograph.title_text = self.graph_title.text()
-#            
-#            #---- Update Graph if Exists ----
-#            
-#            if self.hydrograph.isHydrographExists == True:
-#                        
-#                self.hydrograph.draw_figure_title()
-#                self.refresh_hydrograph()
-#
-#            else: # No hydrograph plotted yet
-#               pass
-    
-    def refresh_hydrograph(self): #===========================================
-       
-        self.hydrograph_scrollarea.load_image(self.hydrograph)
-           
-                                                                         
-
-                
+        # !!!! temporary fix until I can find a better solution !!!!
+        
+#        sender.blockSignals(True)
+        if type(sender) == QtGui.QDoubleSpinBox:
+            sender.setReadOnly(True)
+        for i in range(10):
+             QtCore.QCoreApplication.processEvents() 
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+        for i in range(10):
+             QtCore.QCoreApplication.processEvents()
+        if type(sender) == QtGui.QDoubleSpinBox:
+            sender.setReadOnly(False)
+#        sender.blockSignals(False) 
 
 #=============================================================================    
 class WHATPref():

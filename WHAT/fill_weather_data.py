@@ -2632,7 +2632,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         self.setHorizontalHeader(myHeader)
         
         self.setColumnCount(len(HEADER))
-        self.setHorizontalHeaderLabels(HEADER)        
+        self.setHorizontalHeaderLabels(HEADER)
         self.verticalHeader().hide()
         
         #----------------------------------------------- Column Size Policy ----
@@ -2676,13 +2676,13 @@ class GapFillDisplayTable(QtGui.QTableWidget):
                 return abs(self.sortKey) < abs(other.sortKey)
     
             
-    def populate_table(self, TARGET, WEATHER, FILLPARAM): #=====================
+    def populate_table(self, TARGET, WEATHER, FILLPARAM): #===================
         
-        #---------------------------------------------------- Organize Info ----
+        #-------------------------------------------------- Organize Info ----
 
         styleDB = db.styleUI()
                 
-        #---------------------------------------------------- Organize Info ----
+        #-------------------------------------------------- Organize Info ----
         
         STANAME = WEATHER.STANAME
         CLIMATEID = WEATHER.ClimateID
@@ -2697,7 +2697,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         
         nVAR = len(WEATHER.VARNAME)
         
-        #------------------------------------------------------- Fill Table ----
+        #----------------------------------------------------- Fill Table ----
         
         nSTA = len(STANAME)
         self.setRowCount(nSTA - 1)
@@ -2867,18 +2867,18 @@ class MyHorizHeader(QtGui.QHeaderView):
 #        if sortIndicatorSection==logicalIndex:
 #            opt.state = int(opt.state) + int(QtGui.QStyle.State_Sunken)
         
-        #--------------------------------------------- mouse over highlight ----
+        #------------------------------------------- mouse over highlight ----
         
-#        if self.showMouseOverSection:     
-#            mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())               
-#            if rect.contains(mouse_pos):
-#                opt.state = int(opt.state) + 8192
-#            else:
-#                pass
-#        else:
-#            pass
+        if self.showMouseOverSection:     
+            mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())               
+            if rect.contains(mouse_pos):
+                opt.state = int(opt.state) + 8192
+            else:
+                pass
+        else:
+            pass
             
-        #---------------------------------------------------- paint section ----
+        #-------------------------------------------------- paint section ----
 
         self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter, self)
                 
@@ -2914,7 +2914,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                            '''
 #        shownSectionCount = self.count() - self.hiddenSectionCount () 
         
-        #---------------------------------- prepare a list of logical index ----
+        #-------------------------------- prepare a list of logical index ----
         
         LogicalIndex_shown_and_ordered = []        
         for visualIndex in range(self.count()):
@@ -2927,12 +2927,12 @@ class MyHorizHeader(QtGui.QHeaderView):
         x0 = 0
         for logicalIndex in LogicalIndex_shown_and_ordered:
 
-            #---------------------------------------------- Grab label text ----
+            #-------------------------------------------- Grab label text ----
 
             label = str(self.model().headerData(logicalIndex, 
                                                 self.orientation()))
                                                 
-            #------------------------------------------ Put Labels in Table ----
+            #---------------------------------------- Put Labels in Table ----
             
             #---- Highlights labels when item is selected in column ---
             
@@ -2973,7 +2973,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                            ''' % (sectionWidth, fontfamily, label)
         
                        
-        #---------------------------------------------------- Add Sort Icon ----
+        #-------------------------------------------------- Add Sort Icon ----
 
         headerTable += '</tr><tr>'
         
@@ -2998,7 +2998,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                            </td>
                            ''' % (sectionWidth, txt)
         
-        #----------------------------------------------------- Prepare html ----
+        #--------------------------------------------------- Prepare html ----
         
         headerTable += '''
                          </tr>
@@ -3013,14 +3013,14 @@ class MyHorizHeader(QtGui.QHeaderView):
         self.setFixedHeight(TextDoc.size().height())
         self.heightHint = TextDoc.size().height()
         
-        #-------------------------------------------------------- Draw html ----
+        #------------------------------------------------------ Draw html ----
         
         TextDoc.drawContents(qp, 
                              QtCore.QRect(0, 0, self.size().width(), 
                                                 self.size().height()))
         
         
-    def sizeHint(self): #=======================================================
+    def sizeHint(self): #=====================================================
          
         baseSize = QtGui.QHeaderView.sizeHint(self)
         baseSize.setHeight(self.heightHint)
