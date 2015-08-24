@@ -53,6 +53,7 @@ class GapFillWeather(QtGui.QWidget):
     def __init__(self, parent=None): #========================
         super(GapFillWeather, self).__init__(parent)
 
+        self.workdir = getcwd()
         self.isFillAll_inProgress = False
         self.WEATHER = Weather_File_Info()
         self.TARGET = Target_Station_Info()
@@ -3034,8 +3035,7 @@ if __name__ == '__main__':
     
     app = QtGui.QApplication(sys.argv) 
     
-    instance1 = GapFillWeather()   
-
+    instance1 = GapFillWeather()
     instance1.set_workdir("../Projects/Project4Testing")
 
     #---- SHOW ----
