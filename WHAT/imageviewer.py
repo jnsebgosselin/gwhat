@@ -287,7 +287,8 @@ if __name__ == '__main__':
             
     size = figure_canvas.size()
     width, height = size.width(), size.height()
-    
+    print(width, height)
+    print(figure_canvas.get_width_height())
     imgbuffer = figure_canvas.buffer_rgba()
     image = QtGui.QImage(imgbuffer, width, height,
                          QtGui.QImage.Format_ARGB32)

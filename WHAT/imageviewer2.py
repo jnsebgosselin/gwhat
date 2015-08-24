@@ -52,9 +52,10 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 from PySide import QtGui, QtCore, QtSvg
 import io
 import copy
-from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import time
+#from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 #from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+
+import time
 
 ##=============================================================================
 #class MplFigConverter(QtCore.QObject):                     # MplFigConverter #
@@ -108,6 +109,7 @@ class MplViewer(QtGui.QFrame):                                   # MplViewer #
         bbox = mplfig.get_window_extent()
         self.fwidth  = bbox.width
         self.fheight = bbox.height
+#        renderer = mplfig.canvas.get_renderer()
         
         #------------------------------------------ save figure to buffer ----
         
@@ -133,32 +135,34 @@ class MplViewer(QtGui.QFrame):                                   # MplViewer #
 
             self.df = 'png'
             
-            t1 = time.clock()
-
+            #---- print figure to buffer (include a "draw" call) ----
+            
+#            tstart = time.clock()
             base_dpi = mplfig.get_dpi()
-            mplfig.dpi = dpi            
+            mplfig.dpi = dpi  
             buf, size = mplfig.canvas.print_to_buffer()
             mplfig.dpi = base_dpi
+#            tend = time.clock()
+#            print(tend-tstart)
             
-            t2 = time.clock()
+            #---- convert buffer to QPixmap ----
             
             self.img = QtGui.QImage(buf, size[0], size[1],
                                     QtGui.QImage.Format_ARGB32)
             self.img = QtGui.QImage.rgbSwapped(self.img)
             self.img = QtGui.QPixmap(self.img)
+       
+        self.repaint() 
 
-            t3 = time.clock()
-            print(t2-t1, t3-t2)
+#            size = mplfig.canvas.get_width_height()
+#            buf = mplfig.canvas.buffer_rgba()
             
             # for the io.BytesIO file buffer approach, use the same 
             # code as for svg to get "img_dta", then do:
             # ----
             # img = QtGui.QImage.fromData(img_dta)
             # self.img = QtGui.QPixmap(img)
-       
-        self.repaint() 
-        
-        #            
+            
 #            copy_mplfig = copy.copy(mplfig)  
 #            converter = MplFigConverter(copy_mplfig)
 #                        
@@ -388,6 +392,7 @@ if __name__ == '__main__':
     bbox = fig.get_window_extent()  
     imageViewer.resize(bbox.width*1.2, bbox.height*1.2)
     
-    imageViewer.load_mpl_figure(fig, 'png', dpi=25)
+    fig.canvas.draw()
+    imageViewer.load_mpl_figure(fig, 'png', dpi=150)
       
     sys.exit(app.exec_())

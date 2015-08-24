@@ -26,7 +26,7 @@ from os import path
 from calendar import monthrange
 import csv
 from math import sin, cos, sqrt, atan2, radians
-#from time import clock
+from time import clock
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -122,7 +122,7 @@ class Hydrograph(mpl.figure.Figure):
         self.gridLines = 2 # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'month' # 'month' or 'year'
         self.label_font_size = 14
-        self.date_labels_display_pattern = 3
+        self.date_labels_display_pattern = 2
         
         #---- Waterlvl Obj ----
         
@@ -163,7 +163,7 @@ class Hydrograph(mpl.figure.Figure):
         
         fheight = self.fheight # Figure height in inches
         fwidth = self.fwidth   # Figure width in inches
-        
+
         if self.meteoOn == False:
             fheight /= 2
 
@@ -215,8 +215,6 @@ class Hydrograph(mpl.figure.Figure):
         self.ax0.set_zorder(self.ax1.get_zorder() + 20)
         self.ax0.tick_params(bottom='off', top='off', left='off', right='off',
                              labelbottom='off', labelleft='off')
-#        for loc in ['top', 'bottom', 'right', 'left']:
-#                self.ax0.spines[loc].set_linewidth(0.5)
                                        
         #--- Water Levels ---
         
@@ -289,7 +287,7 @@ class Hydrograph(mpl.figure.Figure):
                    
         #---------------------------------------------------- TIME + GRID ----            
         
-        self.xlab = [] # Initiate variable
+        self.xlabels = [] # Initiate variable
         self.set_time_scale()
         
         self.ax1.xaxis.set_ticklabels([])
@@ -366,34 +364,23 @@ class Hydrograph(mpl.figure.Figure):
             #------------------------------------- MISSING VALUES MARKERS ----
     
             if self.finfo:
+                                
+                #---- Precipitation (v2) ----
                 
-                #---- PRECIPITATION ----
+                t = load_weather_log(self.finfo, 'Total Precip (mm)')
+                y = np.ones(len(t)) * -5 * self.RAINscale / 20.
+                self.ax3.plot(t, y, ls='-', solid_capstyle='projecting', 
+                              lw=1.5, c='red')
                 
-                PTOTmiss_time, _ = load_weather_log(self.finfo,
-                                                    'Total Precip (mm)', 
-                                                    self.bTIME, self.bPTOT)
+                #---- Air Temperature (v2) ----
+                               
+                t = load_weather_log(self.finfo, 'Max Temp (deg C)')
+                y = np.ones(len(t)) * 35
+                self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
+                              lw=1.5, c='red')
                                                         
-                self.NMissPtot = len(PTOTmiss_time)
-                
-                y = np.ones(self.NMissPtot) * -5 * self.RAINscale / 20.
-                
-                self.PTOTmiss_dots, = self.ax3.plot(PTOTmiss_time, y, '.r')
-                plt.setp(self.PTOTmiss_dots, markersize=3)
-                
-                #---- Air Temperature ----
-            
-                Temp_missing_time, _ = load_weather_log(self.finfo,
-                                                        'Max Temp (deg C)',                                   
-                                                        self.bTIME, self.bTMAX)
-                                                        
-                NMissTMAX = len(Temp_missing_time) 
-                y = np.ones(NMissTMAX) * 35
-                
-                TMAXmiss_dots, = self.ax4.plot(Temp_missing_time, y, '.r')
-                plt.setp(TMAXmiss_dots, markersize=3)                
-                                          
             self.draw_weather()
-                
+        
         #--------------------------------------------------- DRAW YLABELS ----
                                                                  
         self.draw_ylabels()
@@ -846,6 +833,7 @@ class Hydrograph(mpl.figure.Figure):
         if self.meteoOn == False:
             print('meteoOn == False')
             return
+            
         #--------------------------------- SUBSAMPLE WEATHER DATA TO PLOT ----
         
         istart = np.where(self.bTIME > self.TIMEmin)[0]
@@ -954,7 +942,7 @@ class Hydrograph(mpl.figure.Figure):
         
         self.ax1.set_xticks(xticks_info[0])
 
-        #---- minor ----
+        #--------------------------------------------------------- xlabels ---
 
         # labels are set using the minor ticks.
         
@@ -963,25 +951,24 @@ class Hydrograph(mpl.figure.Figure):
 #        self.ax1.xaxis.set_ticklabels(xticks_info[2], minor=True, rotation=45,
 #                                      va='top', ha='right', fontsize=10)
         
-        #--------------------------------------------------------- xlabels ---
-        
-        # labels are placed manually instead.
+        # labels are placed manually instead. This is around 25% faster than
+        # using the minor ticks.
         
         #---- Remove labels ----
         
-        for i in range(len(self.xlab)):
-            self.xlab[i].remove()
+        for i in range(len(self.xlabels)):
+            self.xlabels[i].remove()
         
         #---- Redraw labels ----
                                   
-        self.xlab = []
+        self.xlabels = []
         for i in range(len(xticks_info[1])) :
             
-            xlab  = self.ax1.text(xticks_info[1][i], -0.15,
-                                  xticks_info[2][i], rotation=45, 
-                                  va='top', ha='right', fontsize=10)
+            new_label  = self.ax1.text(xticks_info[1][i], -0.15,
+                                       xticks_info[2][i], rotation=45, 
+                                       va='top', ha='right', fontsize=10)
                        
-            self.xlab.append(xlab)
+            self.xlabels.append(new_label)
         
         #------------------------------------------- text horiz. position ----
         
@@ -1010,8 +997,8 @@ class Hydrograph(mpl.figure.Figure):
         
         #---- ploting manually the xlabels instead ----
                             
-        for i in range(len(self.xlab)):
-            self.xlab[i].set_text(xticks_labels[i])
+        for i in range(len(self.xlabels)):
+            self.xlabels[i].set_text(xticks_labels[i])
                                             
     def draw_figure_title(self): #=============================================
         
@@ -1131,10 +1118,10 @@ class Hydrograph(mpl.figure.Figure):
         dx = bbox.height * np.sin(np.radians(45))
         
         #---- scale to axe dimension ----
-                
-        bbox = self.ax1.get_window_extent(renderer)
-        bbox = bbox.transformed(self.dpi_scale_trans.inverted())
         
+        bbox = self.ax1.get_window_extent(renderer) # in pixels
+        bbox = bbox.transformed(self.dpi_scale_trans.inverted()) # in inches
+
         sdx = dx * bbox.height / bbox.width
         sdx *= (self.TIMEmax - self.TIMEmin + 1)
         
@@ -1351,53 +1338,55 @@ class WaterlvlData():
         self.WLmes = WLmes
                 
         return TIMEmes, WLmes
-        
-#===============================================================================      
-def load_weather_log(fname, varname, bintime, binvalue):
+    
 #===============================================================================
-
-    print('Resampling missing data markers')
+def  load_weather_log(fname, varname): 
+#===============================================================================
     
-    bwidth = bintime[1] - bintime[0]
-    
-    #---- Load Data ----
+    print('loading info for missing weather data')
+   
+    #---- load Data ----
     
     with open(fname, 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         reader = list(reader)[36:]
     
-    variable = np.zeros(len(reader)).astype('str') 
-    time = np.zeros(len(reader))
+    #---- load data and convert time ----
+    
+    time = []
+    tseg = [np.nan] * 3
     for i in range(len(reader)):
-        variable[i] = reader[i][0]
-        year = int(float(reader[i][1]))
-        month = int(float(reader[i][2]))
-        day = int(float(reader[i][3]))
-        time[i] = xldate_from_date_tuple((year, month, day), 0)
-    
-    time = time[np.where(variable == varname)[0]]
-    
-    #---- Resample for Bins ----
-    
-    # Each missing value is assigned to a bin. At the end, if a bin has
-    # received multiple hit, only one is kept by calling np.unique.
-    
-    time2 = np.array([])
-    missing_value = np.array([])
-    
-    for t in time:
-        if t >= bintime[0] and t <= bintime[-1]+bwidth:
+        if reader[i][0] == varname:
+            year = int(float(reader[i][1]))
+            month = int(float(reader[i][2]))
+            day = int(float(reader[i][3]))
+            xldate = xldate_from_date_tuple((year, month, day), 0)
             
-            search = np.abs(bintime - t)
-            hit = np.where(search == min(search))[0]
-
-            time2 = np.append(time2, bintime[hit])
-            missing_value = np.append(missing_value, binvalue[hit])
+            if np.isnan(tseg[1]):
+                tseg[1] = xldate 
+                tseg[2] = xldate + 1
+            elif tseg[2] == xldate:
+                tseg[2] += 1
+            else:
+                time.extend(tseg)
+                tseg[1] = xldate
+                tseg[2] = xldate + 1
+    time.append(np.nan)
+    time = np.array(time)
     
-    time2, indices = np.unique(time2, return_index=True)
-    missing_value = missing_value[indices]
+#    time = []
+#    for i in range(len(reader)):
+#        if reader[i][0] == varname:
+#            year = int(float(reader[i][1]))
+#            month = int(float(reader[i][2]))
+#            day = int(float(reader[i][3]))
+#            newt = xldate_from_date_tuple((year, month, day), 0)
+#            time.append(newt)
+#            time.append(newt+1)
+#            time.append(np.nan)
+#    time = np.array(time)
     
-    return time2, missing_value
+    return time
     
 #==============================================================================   
 def filt_data(time, waterlvl, period):
@@ -1536,6 +1525,7 @@ if __name__ == '__main__':
     imgview = ImageViewer()
     imgview.load_mpl_figure(hydrograph)
     imgview.show()
+    hydrograph.savefig('test.pdf')
     
 #    canvas = FigureCanvasQTAgg(hydrograph2display.fig)
 #    canvas.show()
