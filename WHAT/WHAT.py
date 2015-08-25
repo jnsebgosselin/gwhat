@@ -31,20 +31,11 @@ import platform
 import csv
 import sys
 from time import ctime
-from os import listdir, makedirs, path
+from os import makedirs, path
 
 #---- THIRD PARTY IMPORTS ----
 
 from PySide import QtGui, QtCore
-from PySide.QtCore import QDate
-
-import numpy as np
-from xlrd.xldate import xldate_from_date_tuple
-from xlrd import xldate_as_tuple
-import xlwt
-
-#from scipy import signal
-#from statsmodels.regression.quantile_regression import QuantReg
 
 #---- PERSONAL IMPORTS ----
 
@@ -52,11 +43,6 @@ import database as db
 import MyQWidget
 import what_project
 import HydroPrint
-#import hydroprint3 as hydroprint
-#import imageviewer2 as imageviewer
-
-import waterlvl_calc
-
 import dwnld_weather_data
 import fill_weather_data
 

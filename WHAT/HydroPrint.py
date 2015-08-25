@@ -45,11 +45,11 @@ import mplFigViewer2 as mplFigViewer
 import meteo
 import MyQWidget
 
-#=============================================================================
+#==============================================================================
         
-class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
+class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
     
-#=============================================================================
+#==============================================================================
 
     ConsoleSignal = QtCore.Signal(str)
     
@@ -70,20 +70,20 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         
         self.initUI()
         
-    def initUI(self): #=======================================================
+    def initUI(self): #============================================ initUI ====
     
-        #------------------------------------------------------- DATABASE ----
+        #-------------------------------------------------------- DATABASE ----
        
         styleDB = db.styleUI()
         iconDB = db.Icons()
         styleDB = db.styleUI()
         ttipDB = db.Tooltips('English')
         
-        #---------------------------------------------------- Main Window ----
+        #----------------------------------------------------- Main Window ----
         
         self.setWindowIcon(iconDB.WHAT)
         
-        #----------------------------------------- Weather Normals Widget ----
+        #------------------------------------------ Weather Normals Widget ----
         
         self.weather_avg_graph = meteo.WeatherAvgGraph()        
         self.weather_avg_graph.save_fig_dir = self.workdir
@@ -93,12 +93,12 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         self.hydrocalc = HydroCalc.WLCalc()
         self.hydrocalc.hide()
         
-        #---------------------------------------------- Page Setup Widget ----
+        #----------------------------------------------- Page Setup Widget ----
                
         self.page_setup_win = PageSetupWin(self)        
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
 
-        #-------------------------------------------------------- Toolbar ----
+        #--------------------------------------------------------- Toolbar ----
        
         #---- Graph Title Section ----
         
@@ -243,191 +243,229 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         
         self.grid_layout_widget.setLayout(grid_layout)
         
-        #---------------------------------------------- Widget Data Files ----
-       
-        btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
-        btn_waterlvl_dir.setIcon(iconDB.openFile)
-        btn_waterlvl_dir.setIconSize(styleDB.iconSize2)
-        self.well_info_widget = QtGui.QTextEdit()
-        self.well_info_widget.setReadOnly(True)
-        self.well_info_widget.setFixedHeight(150)
+        def make_data_files_panel(self): #-------------- Data Files Panel ----
+            
+            #---- widgets ----
+                    
+            btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
+            btn_waterlvl_dir.setIcon(iconDB.openFile)
+            btn_waterlvl_dir.setIconSize(styleDB.iconSize2)
+            btn_waterlvl_dir.clicked.connect(self.select_waterlvl_file)
+            
+            self.well_info_widget = QtGui.QTextEdit()
+            self.well_info_widget.setReadOnly(True)
+            self.well_info_widget.setFixedHeight(150)
+            
+            btn_weather_dir = QtGui.QPushButton(' Weather Data File')
+            btn_weather_dir.setIcon(iconDB.openFile)
+            btn_weather_dir.setIconSize(styleDB.iconSize2)
+            btn_weather_dir.clicked.connect(self.select_meteo_file)
+            
+            self.meteo_info_widget = QtGui.QTextEdit()
+            self.meteo_info_widget.setReadOnly(True)
+            self.meteo_info_widget.setFixedHeight(150)
+            
+            #---- layout ----
+            
+            self.data_files_panel = QtGui.QWidget()
+            layout = QtGui.QGridLayout()
+                                
+            layout.addWidget(btn_waterlvl_dir, 0, 0)
+            layout.addWidget(self.well_info_widget, 1, 0)
+            layout.addWidget(btn_weather_dir, 2, 0)        
+            layout.addWidget(self.meteo_info_widget, 3, 0)
+            
+            layout.setSpacing(5)
+            layout.setContentsMargins(0, 0, 0, 0)
+            
+            self.data_files_panel.setLayout(layout)
+            
+        make_data_files_panel(self)
         
-        btn_weather_dir = QtGui.QPushButton(' Weather Data File')
-        btn_weather_dir.setIcon(iconDB.openFile)
-        btn_weather_dir.setIconSize(styleDB.iconSize2)
-        self.meteo_info_widget = QtGui.QTextEdit()
-        self.meteo_info_widget.setReadOnly(True)
-        self.meteo_info_widget.setFixedHeight(150)
+        def make_scales_tab_widget(self): #------------- Scales Tab Widget ----
         
-        subgrid = QtGui.QGridLayout()
-        subgrid_widget = QtGui.QWidget()
-                
-        subgrid.addWidget(btn_waterlvl_dir, 0, 0)
-        subgrid.addWidget(self.well_info_widget, 1, 0)
-        subgrid.addWidget(btn_weather_dir, 2, 0)        
-        subgrid.addWidget(self.meteo_info_widget, 3, 0)
+            #---------------------------------------------------  TIME --------
+            
+            #---- widget ----
+            
+            self.date_start_widget = QtGui.QDateEdit()
+            self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
+            self.date_start_widget.setAlignment(QtCore.Qt.AlignCenter)
         
-        subgrid.setSpacing(5)
-#        subgrid.setColumnMinimumWidth(0, 200)
-        subgrid.setContentsMargins(0, 0, 0, 0)
+            self.date_end_widget = QtGui.QDateEdit()
+            self.date_end_widget.setDisplayFormat('01 / MM / yyyy')
+            self.date_end_widget.setAlignment(QtCore.Qt.AlignCenter)
+            
+            self.time_scale_label = QtGui.QComboBox()
+            self.time_scale_label.setEditable(False)
+            self.time_scale_label.setInsertPolicy(QtGui.QComboBox.NoInsert)
+            self.time_scale_label.addItems(['Month', 'Year'])
+            self.time_scale_label.setCurrentIndex(0)
+            
+            #---- layout ----
+            
+            widget_time_scale = QtGui.QFrame()
+            widget_time_scale.setFrameStyle(0)  # styleDB.frame 
+            grid_time_scale = QtGui.QGridLayout()
+            
+            row = 0
+            grid_time_scale.addWidget(QtGui.QLabel('Date Min :'), row, 1)
+            grid_time_scale.addWidget(self.date_start_widget, row, 2)
+            row +=1
+            grid_time_scale.addWidget(QtGui.QLabel('Date Max :'), row, 1)  
+            grid_time_scale.addWidget(self.date_end_widget, row, 2)
+            row += 1
+            grid_time_scale.addWidget(QtGui.QLabel('Date Scale :'), row, 1)  
+            grid_time_scale.addWidget(self.time_scale_label, row, 2)
+            
+            grid_time_scale.setVerticalSpacing(5)
+            grid_time_scale.setHorizontalSpacing(10)
+            grid_time_scale.setContentsMargins(10, 10, 10, 10)
+            grid_time_scale.setColumnStretch(2, 100)
+            
+            widget_time_scale.setLayout(grid_time_scale)
+            
+            #--------------------------------------------- WATER LEVEL --------
+            
+            label_waterlvl_scale = QtGui.QLabel('WL Scale :') 
+            self.waterlvl_scale = QtGui.QDoubleSpinBox()
+            self.waterlvl_scale.setSingleStep(0.05)
+            self.waterlvl_scale.setMinimum(0.05)
+            self.waterlvl_scale.setSuffix('  m')
+            self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter) 
+            self.waterlvl_scale.setKeyboardTracking(False)
+            
+            label_waterlvl_max = QtGui.QLabel('WL Min :') 
+            self.waterlvl_max = QtGui.QDoubleSpinBox()
+            self.waterlvl_max.setSingleStep(0.1)
+            self.waterlvl_max.setSuffix('  m')
+            self.waterlvl_max.setAlignment(QtCore.Qt.AlignCenter)
+            self.waterlvl_max.setMinimum(-1000)
+            self.waterlvl_max.setMaximum(1000)
+            self.waterlvl_max.setKeyboardTracking(False)
+            
+            label_datum = QtGui.QLabel('WL Datum :')
+            self.datum_widget = QtGui.QComboBox()
+            self.datum_widget.addItems(['Ground Surface', 'See Level'])
+            
+            self.subgrid_WLScale_widget = QtGui.QFrame()
+            self.subgrid_WLScale_widget.setFrameStyle(0) # styleDB.frame
+            subgrid_WLScale = QtGui.QGridLayout()
+            
+            row = 0
+            subgrid_WLScale.addWidget(label_waterlvl_scale, row, 1)        
+            subgrid_WLScale.addWidget(self.waterlvl_scale, row, 2)
+            row += 1
+            subgrid_WLScale.addWidget(label_waterlvl_max, row, 1)        
+            subgrid_WLScale.addWidget(self.waterlvl_max, row, 2)
+            row += 1
+            subgrid_WLScale.addWidget(label_datum, row, 1)
+            subgrid_WLScale.addWidget(self.datum_widget, row, 2)
+            
+            subgrid_WLScale.setVerticalSpacing(5)
+            subgrid_WLScale.setHorizontalSpacing(10)
+            subgrid_WLScale.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
+            subgrid_WLScale.setColumnStretch(2, 100)
+            
+            self.subgrid_WLScale_widget.setLayout(subgrid_WLScale)
         
-        subgrid_widget.setLayout(subgrid)
+            #------------------------------------------------- WEATHER --------
+            
+            #---- widgets ----
+            
+            label_Ptot_scale = QtGui.QLabel('Precip. Scale :')
+            self.Ptot_scale = QtGui.QSpinBox()
+            self.Ptot_scale.setSingleStep(5)
+            self.Ptot_scale.setMinimum(5)
+            self.Ptot_scale.setMaximum(50)
+            self.Ptot_scale.setValue(20)        
+            self.Ptot_scale.setSuffix('  mm')
+            self.Ptot_scale.setAlignment(QtCore.Qt.AlignCenter)
+            
+            self.qweather_bin = QtGui.QComboBox()
+            self.qweather_bin.setEditable(False)
+            self.qweather_bin.setInsertPolicy(QtGui.QComboBox.NoInsert)
+            self.qweather_bin.addItems(['day', 'week', 'month'])
+            self.qweather_bin.setCurrentIndex(1)
+            
+            #---- layout ----
+            
+            widget_weather_scale = QtGui.QFrame()
+            widget_weather_scale.setFrameStyle(0)
+            layout = QtGui.QGridLayout()
+            #--
+            row = 1
+            layout.addWidget(label_Ptot_scale, row, 1)        
+            layout.addWidget(self.Ptot_scale, row, 2)
+            row += 1
+            layout.addWidget(QtGui.QLabel('Resampling :'), row, 1)
+            layout.addWidget(self.qweather_bin, row, 2)            
+            #--
+            layout.setVerticalSpacing(5)
+            layout.setHorizontalSpacing(10)
+            layout.setContentsMargins(10, 10, 10, 10) #(L, T, R, B)
+            layout.setColumnStretch(2, 100)
+            layout.setRowStretch(row+1, 100)
+            layout.setRowStretch(0, 100)
+            
+            widget_weather_scale.setLayout(layout)
+                    
+            #----------------------------------------- ASSEMBLING TABS --------
+            
+            self.tabscales = QtGui.QTabWidget()
+            self.tabscales.addTab(widget_time_scale, 'Time')
+            self.tabscales.addTab(self.subgrid_WLScale_widget, 'Water Level')
+            self.tabscales.addTab(widget_weather_scale, 'Weather')
         
-        #---------------------------------------------- Scales Tab Widget ----
-                
-        #----  Tab Time Scale ----
+        make_scales_tab_widget(self)
         
-        label_date_start = QtGui.QLabel('Date Min :')        
-        self.date_start_widget = QtGui.QDateEdit()
-        self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
-        self.date_start_widget.setAlignment(QtCore.Qt.AlignCenter)
+        def make_label_language_widget(self): #----- Label Language Widget ----
+            
+            #---- widgets ----
+            
+            self.language_box = QtGui.QComboBox()
+            self.language_box.setEditable(False)
+            self.language_box.setInsertPolicy(QtGui.QComboBox.NoInsert)
+            self.language_box.addItems(['French', 'English'])
+            self.language_box.setCurrentIndex(1)
+            
+            #---- layout ----
+            
+            self.qAxeLabelsLanguage = QtGui.QFrame()
+            layout = QtGui.QGridLayout()
+            #--
+            layout.addWidget(QtGui.QLabel('Label Language:'), 0, 0)        
+            layout.addWidget(self.language_box, 0, 1)
+            #--
+            layout.setSpacing(5)
+            layout.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)            
+            self.qAxeLabelsLanguage.setLayout(layout)
         
-        label_date_end = QtGui.QLabel('Date Max :')
-        self.date_end_widget = QtGui.QDateEdit()
-        self.date_end_widget.setDisplayFormat('01 / MM / yyyy')
-        self.date_end_widget.setAlignment(QtCore.Qt.AlignCenter)
+        make_label_language_widget(self)
         
-        widget_time_scale = QtGui.QFrame()
-        widget_time_scale.setFrameStyle(0)  # styleDB.frame 
-        grid_time_scale = QtGui.QGridLayout()
+        def make_right_panel(self): #------------------------- Right Panel ----
         
-        row = 0
-        grid_time_scale.addWidget(label_date_start, row, 1)
-        grid_time_scale.addWidget(self.date_start_widget, row, 2)
-        row +=1
-        grid_time_scale.addWidget(label_date_end, row, 1)  
-        grid_time_scale.addWidget(self.date_end_widget, row, 2)
+            self.hydrocalc.widget_MRCparam.hide()
+            
+            RightPanel = QtGui.QFrame()            
+            layout = QtGui.QGridLayout()
+            #--
+            row = 0
+            layout.addWidget(self.data_files_panel, row, 0)
+            row += 1
+            layout.addWidget(self.tabscales, row, 0)
+            layout.addWidget(self.hydrocalc.widget_MRCparam, row, 0)
+            row += 1            
+            layout.addWidget(self.qAxeLabelsLanguage, 2, 0)                        
+            #--
+            layout.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+            layout.setSpacing(15)
+            layout.setRowStretch(row+1, 100)
+            RightPanel.setLayout(layout)
+            
+            return RightPanel
         
-        grid_time_scale.setVerticalSpacing(5)
-        grid_time_scale.setHorizontalSpacing(10)
-        grid_time_scale.setContentsMargins(10, 10, 10, 10)
-        grid_time_scale.setColumnStretch(2, 100)
-#        subgrid_dates.setColumnStretch(0, 100)
-        
-        widget_time_scale.setLayout(grid_time_scale)
-        
-        #---- Tab Water Level Scale ----
-        
-        label_waterlvl_scale = QtGui.QLabel('WL Scale :') 
-        self.waterlvl_scale = QtGui.QDoubleSpinBox()
-        self.waterlvl_scale.setSingleStep(0.05)
-        self.waterlvl_scale.setMinimum(0.05)
-        self.waterlvl_scale.setSuffix('  m')
-        self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter) 
-        self.waterlvl_scale.setKeyboardTracking(False)
-        
-        label_waterlvl_max = QtGui.QLabel('WL Min :') 
-        self.waterlvl_max = QtGui.QDoubleSpinBox()
-        self.waterlvl_max.setSingleStep(0.1)
-        self.waterlvl_max.setSuffix('  m')
-        self.waterlvl_max.setAlignment(QtCore.Qt.AlignCenter)
-        self.waterlvl_max.setMinimum(-1000)
-        self.waterlvl_max.setMaximum(1000)
-        self.waterlvl_max.setKeyboardTracking(False)
-        
-        label_datum = QtGui.QLabel('WL Datum :')
-        self.datum_widget = QtGui.QComboBox()
-        self.datum_widget.addItems(['Ground Surface', 'See Level'])
-        
-        self.subgrid_WLScale_widget = QtGui.QFrame()
-        self.subgrid_WLScale_widget.setFrameStyle(0) # styleDB.frame
-        subgrid_WLScale = QtGui.QGridLayout()
-        
-        row = 0
-        subgrid_WLScale.addWidget(label_waterlvl_scale, row, 1)        
-        subgrid_WLScale.addWidget(self.waterlvl_scale, row, 2)
-        row += 1
-        subgrid_WLScale.addWidget(label_waterlvl_max, row, 1)        
-        subgrid_WLScale.addWidget(self.waterlvl_max, row, 2)
-        row += 1
-        subgrid_WLScale.addWidget(label_datum, row, 1)
-        subgrid_WLScale.addWidget(self.datum_widget, row, 2)
-        
-        subgrid_WLScale.setVerticalSpacing(5)
-        subgrid_WLScale.setHorizontalSpacing(10)
-        subgrid_WLScale.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
-        subgrid_WLScale.setColumnStretch(2, 100)
-#        subgrid_WLScale.setColumnStretch(0, 100)
-        
-        self.subgrid_WLScale_widget.setLayout(subgrid_WLScale)
-        
-        #---- Tab Weather Scale ----
-        
-        label_Ptot_scale = QtGui.QLabel('Precip. Scale :') 
-        self.Ptot_scale = QtGui.QSpinBox()
-        self.Ptot_scale.setSingleStep(5)
-        self.Ptot_scale.setMinimum(5)
-        self.Ptot_scale.setMaximum(50)
-        self.Ptot_scale.setValue(20)        
-        self.Ptot_scale.setSuffix('  mm')
-        self.Ptot_scale.setAlignment(QtCore.Qt.AlignCenter)
-#        self.Ptot_scale.setMinimumWidth(150)
-        
-        widget_weather_scale = QtGui.QFrame()
-        widget_weather_scale.setFrameStyle(0)
-        grid_weather_scale = QtGui.QGridLayout()
-        
-        row = 1
-        grid_weather_scale.addWidget(label_Ptot_scale, row, 1)        
-        grid_weather_scale.addWidget(self.Ptot_scale, row, 2)
-                
-        grid_weather_scale.setVerticalSpacing(5)
-        grid_weather_scale.setHorizontalSpacing(10)
-        grid_weather_scale.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
-        grid_weather_scale.setColumnStretch(2, 100)
-#        grid_Ptot_scale.setColumnStretch(0, 100)
-        grid_weather_scale.setRowStretch(row+1, 100)
-        grid_weather_scale.setRowStretch(0, 100)
-        
-        widget_weather_scale.setLayout(grid_weather_scale)
-                
-        #---- ASSEMBLING TABS ----
-        
-        self.tabscales = QtGui.QTabWidget()
-        self.tabscales.addTab(widget_time_scale, 'Time')
-        self.tabscales.addTab(self.subgrid_WLScale_widget, 'Water Level')
-        self.tabscales.addTab(widget_weather_scale, 'Weather')
-        
-        #---- SubGrid Labels Language ----
-        
-        language_label = QtGui.QLabel('Label Language:')
-        self.language_box = QtGui.QComboBox()
-        self.language_box.setEditable(False)
-        self.language_box.setInsertPolicy(QtGui.QComboBox.NoInsert)
-        self.language_box.addItems(['French', 'English'])
-        self.language_box.setCurrentIndex(1)
-        
-        self.subgrid_labLang_widget = QtGui.QFrame()
-        subgrid_labLang = QtGui.QGridLayout()
-        
-        row = 0
-        subgrid_labLang.addWidget(language_label, row, 0)        
-        subgrid_labLang.addWidget(self.language_box, row, 1)
-        
-        subgrid_labLang.setSpacing(5)
-        subgrid_labLang.setContentsMargins(5, 5, 5, 5) # (L, T, R, B)
-        
-        self.subgrid_labLang_widget.setLayout(subgrid_labLang)
-        
-        #----------------------------------------------------- RIGHT PANEL ----
-        
-        grid_RIGHT = QtGui.QGridLayout()
-        grid_RIGHT_widget = QtGui.QFrame()
-        
-        row = 0
-        col = 0
-        grid_RIGHT.addWidget(subgrid_widget, row, col)
-        row += 1        
-        grid_RIGHT.addWidget(self.tabscales, row, col)
-        grid_RIGHT.addWidget(self.hydrocalc.widget_MRCparam, row, col)
-        self.hydrocalc.widget_MRCparam.hide()
-        row += 1
-        grid_RIGHT.addWidget(self.subgrid_labLang_widget, row, col)
-        
-        grid_RIGHT_widget.setLayout(grid_RIGHT)
-        grid_RIGHT.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
-        grid_RIGHT.setSpacing(15)
-        grid_RIGHT.setRowStretch(row+1, 500)
+        RightPanel = make_right_panel(self)
         
         #------------------------------------------------------- MAIN GRID ----
                 
@@ -439,9 +477,9 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         mainGrid.addWidget(self.grid_layout_widget, 0, 0)
         mainGrid.addWidget(self.hydrocalc, 0, 0)
         mainGrid.addWidget(vSep, 0, 1)
-        mainGrid.addWidget(grid_RIGHT_widget, 0, 2)
+        mainGrid.addWidget(RightPanel, 0, 2)
         
-        mainGrid.setContentsMargins(10, 10, 10, 10) # Left, Top, Right, Bottom 
+        mainGrid.setContentsMargins(10, 10, 10, 10) # (L, T, R, B) 
         mainGrid.setSpacing(15)
         mainGrid.setColumnStretch(0, 500)
         
@@ -472,11 +510,6 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         btn_save.clicked.connect(self.select_save_path)
         btn_weather_normals.clicked.connect(self.show_weather_averages)
         
-        #----- Others -----
-        
-        btn_waterlvl_dir.clicked.connect(self.select_waterlvl_file)
-        btn_weather_dir.clicked.connect(self.select_meteo_file)
-        
         #----- Toggle Mode -----
         
         self.btn_work_waterlvl.clicked.connect(self.toggle_computeMode)
@@ -493,7 +526,9 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         self.graph_status.stateChanged.connect(self.layout_changed)
         self.graph_title.editingFinished.connect(self.layout_changed)        
         self.date_start_widget.dateChanged.connect(self.layout_changed)
-        self.date_end_widget.dateChanged.connect(self.layout_changed)
+        self.date_end_widget.dateChanged.connect(self.layout_changed)        
+        self.qweather_bin.currentIndexChanged.connect(self.layout_changed)
+        self.time_scale_label.currentIndexChanged.connect(self.layout_changed)
         
         #------------------------------------------------------ Init Image ----
         
@@ -556,7 +591,7 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         self.hydrocalc.widget_MRCparam.hide()
         
         self.tabscales.show()
-        self.subgrid_labLang_widget.show()
+        self.qAxeLabelsLanguage.show()
         
     def toggle_computeMode(self): #===========================================
         
@@ -568,7 +603,7 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         self.hydrocalc.widget_MRCparam.show()
         
         self.tabscales.hide()
-        self.subgrid_labLang_widget.hide()
+        self.qAxeLabelsLanguage.hide()
             
         
     def show_weather_averages(self): #========================================
@@ -1171,7 +1206,20 @@ class HydroprintGUI(QtGui.QWidget):                        # @TAB HYDROGRAPH #
         elif sender == self.page_setup_win:
             fwidth = self.page_setup_win.pageSize[0]
             self.hydrograph.set_fig_size(fwidth, 8.5)
-        
+            
+        elif sender == self.qweather_bin:
+            self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex ()
+            self.hydrograph.resample_bin()
+            self.hydrograph.draw_weather()
+            self.hydrograph.draw_ylabels()
+            
+        elif sender == self.time_scale_label:
+            self.hydrograph.datemode = self.time_scale_label.currentText()
+            self.hydrograph.set_time_scale()
+            
+        else:
+            print('No action for this widget yet.')
+                
         # !!!! temporary fix until I can find a better solution !!!!
         
 #        sender.blockSignals(True)

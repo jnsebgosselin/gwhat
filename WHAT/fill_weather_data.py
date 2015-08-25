@@ -40,7 +40,7 @@ from numpy.linalg import lstsq as linalg_lstsq
 from MyQWidget import MyQToolBox, MyQToolButton
 import database as db
 import meteo
-from hydroprint import LatLong2Dist
+from hydrograph3 import LatLong2Dist
 import MyQWidget
 
 

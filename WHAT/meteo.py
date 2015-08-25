@@ -947,7 +947,7 @@ def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
 #    Ymax0 += (Ymax0 - Ymin0) * (reqheight - height4text) 
 #    Ymax1 += (Ymax1 - Ymin1) * (reqheight - height4text)
     
-    #----------------------------------------------------- YTICKS FORMATING ----
+    #---------------------------------------------------- YTICKS FORMATING ----
     
     #----- Precip (host) -----
     
@@ -978,18 +978,18 @@ def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
     ax1.tick_params(axis='y', which='minor', direction='out', gridOn=False)
     ax1.yaxis.set_ticklabels([], minor=True)
     
-    #----------------------------------------------------------------- GRID ----
+    #---------------------------------------------------------------- GRID ----
     
 #    ax0.grid(axis='y', color=[0.5, 0.5, 0.5], linestyle=':', linewidth=1,
 #             dashes=[1, 5])
 #    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-', linewidth=0.5)
 
-    #------------------------------------------------------- SET AXIS RANGE ---- 
+    #------------------------------------------------------ SET AXIS RANGE ---- 
 
     ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
     ax1.axis([Xmin0, Xmax0, Ymin1, Ymax1])
     
-    #--------------------------------------------------------------- LABELS ----
+    #-------------------------------------------------------------- LABELS ----
     
     ax0.set_ylabel('Monthly Total Precipication (mm)', fontsize=label_font_size,
                    verticalalignment='bottom', color=COLOR[1])
@@ -1000,17 +1000,17 @@ def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
                    rotation=270)
     ax1.yaxis.set_label_coords(1.09, 0.5)
 
-    #------------------------------------------------------------- PLOTTING ----
+    #------------------------------------------------------------ PLOTTING ----
     
-    SNOWcolor = [0.85, 0.85, 0.85]
-    RAINcolor = [0, 0, 1]
+    SNOWcolor = db.styleUI().snow
+    RAINcolor = db.styleUI().rain
             
     XPOS = np.arange(0.5, 12.5, 1)
     
-    ax0.bar(XPOS, PNORM, align='center', width=0.5, color=RAINcolor,
-            edgecolor='k', linewidth=0.5)            
-    ax0.bar(XPOS, SNORM, align='center', width=0.5, color=SNOWcolor,
-            edgecolor='k', linewidth=0.5)    
+    ax0.bar(XPOS, PNORM, align='center', width=0.65, color=RAINcolor,
+            edgecolor='k', linewidth=0.)            
+    ax0.bar(XPOS, SNORM, align='center', width=0.65, color=SNOWcolor,
+            edgecolor='k', linewidth=0.)    
     
     #---- Air Temperature ----
     
@@ -1049,8 +1049,8 @@ def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
              
     #--------------------------------------------------------------- LEGEND ----        
 
-    rec1 = plt.Rectangle((0, 0), 1, 1, fc=SNOWcolor)
-    rec2 = plt.Rectangle((0, 0), 1, 1, fc=RAINcolor)
+    rec1 = plt.Rectangle((0, 0), 1, 1, fc=SNOWcolor, ec='none')
+    rec2 = plt.Rectangle((0, 0), 1, 1, fc=RAINcolor, ec='none')
     
     lines = [h2_ax1, h1_ax1, h3_ax1, rec1, rec2]
    

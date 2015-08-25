@@ -32,8 +32,6 @@ from PySide.QtCore import QSize
 software_version = 'WHAT Beta 4.1.7'
 last_modification = '07/07/2015'
 
-
-
 class Icons():
     
     def __init__(self):
@@ -253,6 +251,9 @@ class styleUI():
         
         self.red = '#C83737'
         self.lightgray = '#E6E6E6'
+        self.rain = '#0000CC'
+        self.snow = '0.7'
+        self.wlvl = '#0000CC' #'#000099'
         
         if platform.system() == 'Windows':
             self.font1 = QFont('Segoe UI', 11) # Calibri, Cambria

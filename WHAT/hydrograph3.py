@@ -34,8 +34,8 @@ import numpy as np
 import matplotlib as mpl
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
-#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 #from matplotlib.backends.backend_cairo import FigureCanvasCairo as FigureCanvas
 #from matplotlib.backends.backend_cairo import RendererCairo as Renderer
 import matplotlib.pyplot as plt
@@ -54,10 +54,11 @@ class LabelDatabase():
     
     def __init__(self, language): #------------------------------ English -----
         
-        self.temperature = u'Tmax weekly (°C)'
+        self.temperature = u'Temperature (°C)'
         self.mbgs = 'Water Level at Well %s (mbgs)'
         self.masl = 'Water Level at Well %s (masl)'
-        self.precip = 'Ptot weekly (mm)'
+        self.precip = 'Total Precipitation (%s)'
+        self.precip_units = ['mm/day', 'mm/week', 'mm/month', 'mm/year']
         self.station_meteo = 'Climatological Station = %s (located %0.1f km from the well)'
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
@@ -66,8 +67,9 @@ class LabelDatabase():
             
             self.mbgs = "Niveau d'eau au puits %s (mbgs)"
             self.masl = "Niveau d'eau au puits %s (masl)"
-            self.precip = 'Ptot hebdo (mm)'
-            self.temperature = u'Tmax hebdo (°C)'
+            self.precip = 'Précipitations Totales (mm/%s)'
+            self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
+            self.temperature = u'Température (°C)'
             self.station_meteo = u'Station climatologique = %s (située à %0.1f km du puits)'
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
@@ -92,8 +94,7 @@ class Hydrograph(mpl.figure.Figure):
         
         #---- Database ----
         
-        HeaderDB = db.FileHeaders()
-        self.header = HeaderDB.graph_layout
+        self.header = db.FileHeaders().graph_layout
         
         #---- Scales ----
         
@@ -147,15 +148,13 @@ class Hydrograph(mpl.figure.Figure):
         
         self.bwidth_indx = 1
         #   0: 1 day;
-        #   1: 7 days;
-        #   2: 15 days;
-        #   3: 30 days;
-        #   4: monthly;
-        #   5: yearly
+        #   1: 1 week;
+        #   2: 1 month;
+        #   3: 1 year;
         
         self.NMissPtot = []
         
-    def generate_hydrograph(self, MeteoObj): #================================
+    def generate_hydrograph(self, MeteoObj): #=================================
 
         #---- Reinit Figure ----
         
@@ -191,7 +190,7 @@ class Hydrograph(mpl.figure.Figure):
             
             self.resample_bin()
         
-        #-------------------------------------------------- AXES CREATION ----        
+        #--------------------------------------------------- AXES CREATION ----        
         
         # http://stackoverflow.com/questions/15303284/
         # multiple-y-scales-but-only-one-enabled-for-pan-and-zoom
@@ -246,12 +245,12 @@ class Hydrograph(mpl.figure.Figure):
             for loc in ['top', 'bottom', 'right', 'left']:
                 self.ax4.spines[loc].set_visible(False)
         
-        #-------------------------------------------------- Update margins ---
+        #-------------------------------------------------- Update margins ----
         
         self.bottom_margin = 0.75
         self.set_margins() # set margins for all the axes
         
-        #--------------------------------------------------- FIGURE TITLE ----
+        #---------------------------------------------------- FIGURE TITLE ----
            
         self.dZGrid_inch = (fheight - 2 * self.bottom_margin) / self.NZGrid
             
@@ -305,11 +304,12 @@ class Hydrograph(mpl.figure.Figure):
         
         #---- Continuous Line Datalogger ----
         
-        self.l1_ax2, = self.ax2.plot([], [], '-', zorder = 10, linewidth=1)
+        self.l1_ax2, = self.ax2.plot([], [], '-', zorder = 10, linewidth=1,
+                                     color=db.styleUI().wlvl)
         
         #---- Data Point Datalogger ----
         
-        self.l2_ax2, = self.ax2.plot([], [], '.', color=[0.65, 0.65, 1.],
+        self.l2_ax2, = self.ax2.plot([], [], '.', color=db.styleUI().wlvl,
                                      markersize=5)
                                      
         #---- Manual Mesures ----
@@ -367,17 +367,28 @@ class Hydrograph(mpl.figure.Figure):
                                 
                 #---- Precipitation (v2) ----
                 
+                # vertical shift of 3 points upward
+                vshift = 5/72.
+                offset = mpl.transforms.ScaledTranslation(0., vshift,
+                                                          self.dpi_scale_trans)
+                transform = self.ax3.transData + offset
+                
                 t = load_weather_log(self.finfo, 'Total Precip (mm)')
-                y = np.ones(len(t)) * -5 * self.RAINscale / 20.
+                y = np.zeros(len(t))# * -5 * self.RAINscale / 20.
                 self.ax3.plot(t, y, ls='-', solid_capstyle='projecting', 
-                              lw=1.5, c='red')
+                              lw=1.5, c='red', transform=transform)
                 
                 #---- Air Temperature (v2) ----
-                               
+                
+                # vertical shift of 3 points downward
+                offset = mpl.transforms.ScaledTranslation(0., -vshift,
+                                                          self.dpi_scale_trans)
+                transform = self.ax4.transData + offset
+
                 t = load_weather_log(self.finfo, 'Max Temp (deg C)')
-                y = np.ones(len(t)) * 35
+                y = np.ones(len(t)) * self.ax4.get_ylim()[1]
                 self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
-                              lw=1.5, c='red')
+                              lw=1.5, c='red', transform=transform)
                                                         
             self.draw_weather()
         
@@ -459,7 +470,7 @@ class Hydrograph(mpl.figure.Figure):
         
         labelDB = LabelDatabase(self.language)
         
-        #----------------------------------------- Calculate LabelPadding ----
+        #------------------------------------------ Calculate LabelPadding ----
         
         left_margin  = 0.85
         right_margin = 0.85
@@ -471,7 +482,7 @@ class Hydrograph(mpl.figure.Figure):
         labPad = 0.3 / 2.54 # in Inches       
         labPad /= axwidth   # relative coord.
         
-        #-------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
+        #--------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
         
         if self.WLdatum == 0:       
             lab_ax2 = labelDB.mbgs % self.WaterLvlObj.name_well
@@ -526,38 +537,36 @@ class Hydrograph(mpl.figure.Figure):
         self.ax2.yaxis.set_label_coords(ylabel_xpos, ylabel2_ypos)
         self.ax4.yaxis.set_label_coords(ylabel_xpos, ylabel4_ypos)
                 
-        #---------------------------------------- ylabels : Precipitation ----
+        #--------------------------------------------------- Precipitation ----
         
-        self.ax3.set_ylabel(labelDB.precip, rotation=270, va='bottom', 
+        label = labelDB.precip % labelDB.precip_units[self.bwidth_indx]
+        self.ax3.set_ylabel(label, rotation=270, va='bottom', 
                             ha='center', fontsize=self.label_font_size)
                         
         # Get bounding box dimensions of yaxis ticklabels for ax3
-        _, bbox3_right = self.ax3.yaxis.get_ticklabel_extents(renderer)
+        _, bbox = self.ax3.yaxis.get_ticklabel_extents(renderer)
         
         # Transform coordinates in ax3 coordinate system and
         # calculate the labels positions in x and y.
-        bbox3_right = self.ax3.transAxes.inverted().transform(bbox3_right)
+        bbox = self.ax3.transAxes.inverted().transform(bbox)
         
-        ylabel3_xpos = bbox3_right[1, 0] + labPad
-        ylabel3_ypos = (bbox3_right[1, 1] + bbox3_right[0, 1]) / 2.
+        ylabel3_xpos = bbox[1, 0] + labPad
+        ylabel3_ypos = (bbox[1, 1] + bbox[0, 1]) / 2.
         
-        # Take the position which is farthest from the left y axis in order
-        # to have both labels on the left aligned.
-
         self.ax3.yaxis.set_label_coords(ylabel3_xpos, ylabel3_ypos)
         
-        #------------------------------------------ WEATHER STATION LABEL ----
+        #------------------------------------------- WEATHER STATION LABEL ----
         
         text_top_margin = labelDB.station_meteo % (self.name_meteo,
                                                    self.dist)
         self.text1.set_text(text_top_margin)
         
         
-    def set_waterLvlObj(self, WaterLvlObj): #=================================
+    def set_waterLvlObj(self, WaterLvlObj): #==================================
         self.WaterLvlObj = WaterLvlObj
    
     
-    def checkLayout(self, name_well, filename): #=============================
+    def checkLayout(self, name_well, filename): #==============================
         
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
@@ -608,7 +617,7 @@ class Hydrograph(mpl.figure.Figure):
         return layoutExist
         
                     
-    def load_layout(self, name_well, filename): #=============================      
+    def load_layout(self, name_well, filename): #==============================      
             
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
@@ -641,7 +650,7 @@ class Hydrograph(mpl.figure.Figure):
         self.trend_line = reader[10].astype(int)
 
         
-    def save_layout(self, name_well, filename): #=============================
+    def save_layout(self, name_well, filename): #==============================
         
         #---- load file ----
         
@@ -671,7 +680,7 @@ class Hydrograph(mpl.figure.Figure):
             writer.writerows(reader)
     
       
-    def best_fit_waterlvl(self): #============================================
+    def best_fit_waterlvl(self): #=============================================
         
         WL = self.WaterLvlObj.lvl   
         if self.WLdatum == 1: # masl
@@ -703,7 +712,7 @@ class Hydrograph(mpl.figure.Figure):
         return self.WLscale, self.WLmin
     
     
-    def best_fit_time(self, TIME): #==========================================
+    def best_fit_time(self, TIME): #===========================================
         
         # ----- Data Start -----
         
@@ -729,10 +738,10 @@ class Hydrograph(mpl.figure.Figure):
         return date0, date1
         
         
-    def resample_bin(self): #==================================================
+    def resample_bin(self): #========================== Resampling Weather ====
    
-        # 1 day; 7 days; 15 days; 30 days; monthly; yearly  
-        self.bwidth = [1., 7., 15., 30., 30., 365.][self.bwidth_indx]
+        # day; week; month; year
+        self.bwidth = [1., 7., 30., 365.][self.bwidth_indx]
         bwidth = self.bwidth
         
         if self.bwidth_indx == 0: # daily
@@ -742,21 +751,21 @@ class Hydrograph(mpl.figure.Figure):
             self.bPTOT = np.copy(self.PTOT)
             self.bRAIN = np.copy(self.RAIN)
 
-        elif self.bwidth_indx in [1, 2, 3]: #7 days; 15 days; 30 days
+        else :
 
             self.bTIME = self.bin_sum(self.TIMEmeteo, bwidth) / bwidth
             self.bTMAX = self.bin_sum(self.TMAX, bwidth) / bwidth
             self.bPTOT = self.bin_sum(self.PTOT, bwidth)
             self.bRAIN = self.bin_sum(self.RAIN, bwidth)            
 
-        elif self.bwidth_indx == 4 : # monthly
-            print('option not yet available, kept default of 1 day')
-
-        elif self.bwidth_indx == 5 : # yearly
-            print('option not yet available, kept default of 1 day')
+#        elif self.bwidth_indx == 4 : # monthly
+#            print('option not yet available, kept default of 1 day')
+#
+#        elif self.bwidth_indx == 5 : # yearly
+#            print('option not yet available, kept default of 1 day')
             
     
-    def bin_sum(self, x, bwidth): #============================================
+    def bin_sum(self, x, bwidth): #=============================== bin_sum ====
        
         """
         Sum data x over bins of width "bwidth" starting at indice 0 of x.
@@ -809,7 +818,7 @@ class Hydrograph(mpl.figure.Figure):
             
             self.l2_ax2.set_data([], [])
                         
-        #------------------------------------------------ Manual Measures ----
+        #------------------------------------------------- Manual Measures ----
         
         TIMEmes = self.WaterLvlObj.TIMEmes
         WLmes = self.WaterLvlObj.WLmes
@@ -822,19 +831,21 @@ class Hydrograph(mpl.figure.Figure):
             self.h_WLmes.set_data(TIMEmes, WLmes)
         
                                                            
-    def draw_weather(self): #=================================================
+    def draw_weather(self): #================================ draw_weather ====
 
         """
         This method is called the first time the graph is plotted and each
         time the time scale is changed by the user.
         """
 
-
         if self.meteoOn == False:
             print('meteoOn == False')
             return
             
-        #--------------------------------- SUBSAMPLE WEATHER DATA TO PLOT ----
+        #-------------------------------------------------- SUBSAMPLE DATA ----
+        
+        # For performance purposes, only the data that fit within the limits
+        # of the x axis limits are plotted.
         
         istart = np.where(self.bTIME > self.TIMEmin)[0]
         if len(istart) == 0:
@@ -857,7 +868,7 @@ class Hydrograph(mpl.figure.Figure):
         Ptot = self.bPTOT[istart:iend]
         Rain = self.bRAIN[istart:iend]
         
-        #---------------------------------------------------- PLOT PRECIP ----
+        #----------------------------------------------------- PLOT PRECIP ----
         
         TIME2X = np.zeros(len(time) * 4)
         Ptot2X = np.zeros(len(time) * 4)
@@ -886,11 +897,12 @@ class Hydrograph(mpl.figure.Figure):
         self.RAIN_bar.remove()
         
         self.PTOT_bar = self.ax3.fill_between(TIME2X, 0., Ptot2X, 
-                                              color=(0.65,0.65,0.65),
-                                              alpha=1., edgecolor='none')
+                                              color=db.styleUI().snow, 
+                                              edgecolor='none')
                                             
-        self.RAIN_bar = self.ax3.fill_between(TIME2X, 0., Rain2X, color='blue',
-                                              alpha=1., edgecolor='none')
+        self.RAIN_bar = self.ax3.fill_between(TIME2X, 0., Rain2X, 
+                                              color=db.styleUI().rain,
+                                              edgecolor='none')
                                             
         self.baseline.set_data([self.TIMEmin, self.TIMEmax], [0, 0])
                                                     
@@ -918,7 +930,7 @@ class Hydrograph(mpl.figure.Figure):
         
         #----------------------------------------------- time min and max ----
         
-        if self.datemode == 'year':
+        if self.datemode in ['year', 'Year']:
             
             year = xldate_as_tuple(self.TIMEmin, 0)[0]
             self.TIMEmin = xldate_from_date_tuple((year, 1, 1), 0)
@@ -1105,19 +1117,20 @@ class Hydrograph(mpl.figure.Figure):
         
         #---- random text bbox height ----
         
-        txt = self.ax1.text(0.5, 0.5, 'some_dummy_text', fontsize=10, 
-                            ha='right', va='top', transform=self.ax1.transAxes)
+        dummytxt = self.ax1.text(0.5, 0.5, 'some_dummy_text', fontsize=10, 
+                                 ha='right', va='top',
+                                 transform=self.ax1.transAxes)
         
         renderer = self.canvas.get_renderer()
 
-        bbox = txt.get_window_extent(renderer)
+        bbox = dummytxt.get_window_extent(renderer)
         bbox = bbox.transformed(self.ax1.transAxes.inverted())
         
         #---- horiz. trans. of bbox top-right corner ----
         
         dx = bbox.height * np.sin(np.radians(45))
         
-        #---- scale to axe dimension ----
+        #---- scale dx to axe dimension ----
         
         bbox = self.ax1.get_window_extent(renderer) # in pixels
         bbox = bbox.transformed(self.dpi_scale_trans.inverted()) # in inches
@@ -1125,7 +1138,7 @@ class Hydrograph(mpl.figure.Figure):
         sdx = dx * bbox.height / bbox.width
         sdx *= (self.TIMEmax - self.TIMEmin + 1)
         
-        txt.remove()
+        dummytxt.remove()
         
         #---- transform to data coord ----
                 
@@ -1139,7 +1152,7 @@ class Hydrograph(mpl.figure.Figure):
         xticks_position = [self.TIMEmin]
         xticks_labels_position = []
         
-        if self.datemode == 'month':
+        if self.datemode in ['month', 'Month']:
             
             i = 0
             while xticks_position[i] < self.TIMEmax:
@@ -1162,7 +1175,7 @@ class Hydrograph(mpl.figure.Figure):
                                                      
                 i += 1
                 
-        elif self.datemode == 'year':
+        elif self.datemode in ['year', 'Year']:
             
             i = 0
             year = xldate_as_tuple(xticks_position[i], 0)[0]
@@ -1472,19 +1485,16 @@ def LatLong2Dist(LAT1, LON1, LAT2, LON2):
 if __name__ == '__main__':
     
     import sys
-    from meteo import MeteoObj
-    
-    from imageviewer2 import ImageViewer
+    from meteo import MeteoObj    
+    from mplFigViewer2 import ImageViewer
+    import os
+    import time
     
 
     app = QtGui.QApplication(sys.argv)
     
     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fwaterlvl = 'Files4testing/PO16A.xls'
-    
-    import os
-#    import datetime
-    import time
     
     #---- load data ----
     
