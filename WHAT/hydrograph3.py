@@ -59,7 +59,7 @@ class LabelDatabase():
         self.masl = 'Water Level at Well %s (masl)'
         self.precip = 'Total Precipitation (%s)'
         self.precip_units = ['mm/day', 'mm/week', 'mm/month', 'mm/year']
-        self.station_meteo = 'Climatological Station = %s (located %0.1f km from the well)'
+        self.station_meteo = 'Weather Station = %s (located %0.1f km from the well)'
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
                             
@@ -70,7 +70,7 @@ class LabelDatabase():
             self.precip = 'Précipitations Totales (mm/%s)'
             self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
             self.temperature = u'Température (°C)'
-            self.station_meteo = u'Station climatologique = %s (située à %0.1f km du puits)'
+            self.station_meteo = u'Station météo = %s (située à %0.1f km du puits)'
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 

@@ -78,9 +78,11 @@ class WLCalc(QtGui.QWidget):
         super(WLCalc, self).__init__(parent)
 
         self.initUI()
+        
         self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
         self.fig_MRC_widget.mpl_connect('motion_notify_event',
-                                        self.mouse_vguide)
+                                        self.mouse_vguide)                                        
+        self.fig_MRC_widget.mpl_connect('resize_event', self.setup_ax_margins)
               
     def initUI(self):
         
@@ -105,12 +107,13 @@ class WLCalc(QtGui.QWidget):
         
         self.SOILPROFIL = SoilProfil()
         
-        #---------------------------------------------------- FIGURE CANVAS ----
+        #--------------------------------------------------- FIGURE CANVAS ----
         
         self.setWindowTitle('Master Recession Curve Estimation')
         
-        self.fig_MRC = plt.figure()        
-        self.fig_MRC.set_size_inches(8.5, 5)        
+        self.fig_MRC = plt.figure()
+        
+#        self.fig_MRC.set_size_inches(8.5, 5)        
         self.fig_MRC.patch.set_facecolor('white')
         self.fig_MRC_widget = FigureCanvasQTAgg(self.fig_MRC)
         
@@ -128,7 +131,14 @@ class WLCalc(QtGui.QWidget):
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
         
-        #---------------------------------------------------------- TOOLBAR ----
+        #------------------------------------------------------------ Axes ----
+        
+        #---- Water Level (Host) ----
+        
+        self.ax0 = self.fig_MRC.add_axes([0, 0, 1, 1], zorder=0)
+        self.setup_ax_margins(None)
+        
+        #--------------------------------------------------------- TOOLBAR ----
         
         self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
         self.toolbar.hide()
@@ -270,7 +280,7 @@ class WLCalc(QtGui.QWidget):
                         
         toolbar_widget.setLayout(subgrid_toolbar)
         
-        #--------------------------------------------------- MRC PARAMETERS ----
+        #-------------------------------------------------- MRC PARAMETERS ----
         
         MRCtype_label = QtGui.QLabel('MRC Type :')
         
@@ -307,7 +317,7 @@ class WLCalc(QtGui.QWidget):
         
         self.widget_MRCparam.setLayout(grid_MRCparam)
                 
-        #-------------------------------------------------------- MAIN GRID ----
+        #------------------------------------------------------- MAIN GRID ----
         
         mainGrid = QtGui.QGridLayout()
         
@@ -321,14 +331,14 @@ class WLCalc(QtGui.QWidget):
 #        mainGrid.setSpacing(15)
         mainGrid.setRowStretch(1, 500)
         
-        #---------------------------------------------------- MESSAGE BOXES ----
+        #--------------------------------------------------- MESSAGE BOXES ----
                                           
         self.msgError = QtGui.QMessageBox()
         self.msgError.setIcon(QtGui.QMessageBox.Warning)
         self.msgError.setWindowTitle('Error Message')
         self.msgError.setWindowIcon(iconDB.WHAT)
                 
-        #----------------------------------------------------------- EVENTS ----
+        #---------------------------------------------------------- EVENTS ----
         
         #----- Toolbox -----
         
@@ -585,53 +595,48 @@ class WLCalc(QtGui.QWidget):
         self.peak_memory.append(self.peak_indx)
     
         self.plot_peak()
+        
+    def setup_ax_margins(self, event):
+
+        fheight = self.fig_MRC.get_figheight()
+        fwidth = self.fig_MRC.get_figwidth()
+        
+        left_margin  = 1. / fwidth
+        right_margin = 0.25 / fwidth
+        bottom_margin = 1. / fheight
+        top_margin = 0.25 / fheight
+           
+        x0 = left_margin
+        y0 = bottom_margin
+        w = 1 - (left_margin + right_margin)
+        h = 1 - (bottom_margin + top_margin)
+        
+        self.ax0.set_position([x0, y0, w, h])
                 
     def plot_water_levels(self):
         
         t = self.time
         x = self.water_lvl
-        fig = self.fig_MRC
-        fig.clf()
+
+        self.ax0.cla()
         
-        fheight = fig.get_figheight()
-        fwidth = fig.get_figwidth()
-        
-        #------------------------------------------------------------ RESET ----
+        #----------------------------------------------------------- RESET ----
         
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
-    
-        #---------------------------------------------------------- MARGINS ----
-        
-        left_margin  = 0.85
-        right_margin = 0.25
-        bottom_margin = 0.85
-        top_margin = 0.25
-           
-        x0 = left_margin / fwidth
-        y0 = bottom_margin / fheight
-        w = 1 - (left_margin + right_margin) / fwidth
-        h = 1 - (bottom_margin + top_margin) / fheight
-                        
-        #---------------------------------------------------- AXES CREATION ----        
-        
-        #---- Water Level (Host) ----
-        
-        self.ax0  = fig.add_axes([x0, y0, w, h], zorder=0)
-        self.ax0.patch.set_visible(False)
        
-        #----------------------------------------------------------- XTICKS ---- 
+        #---------------------------------------------------------- XTICKS ---- 
         
         self.ax0.xaxis.set_ticks_position('bottom')
         self.ax0.tick_params(axis='x',direction='out', gridOn=True)
 
-        #----------------------------------------------------------- YTICKS ----
+        #---------------------------------------------------------- YTICKS ----
         
         self.ax0.yaxis.set_ticks_position('left')
         self.ax0.tick_params(axis='y',direction='out', gridOn=True)
                 
-        #--------------------------------------------------- SET AXIS RANGE ---- 
+        #-------------------------------------------------- SET AXIS RANGE ---- 
        
         delta = 0.05
         Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
@@ -644,19 +649,19 @@ class WLCalc(QtGui.QWidget):
         self.ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
         self.ax0.invert_yaxis()
         
-        #----------------------------------------------------------- LABELS ----
+        #---------------------------------------------------------- LABELS ----
     
         self.ax0.set_ylabel('Water level (mbgs)', fontsize=14, labelpad=25,
                             verticalalignment='top', color='black')
         self.ax0.set_xlabel('Time (days)', fontsize=14, labelpad=25,
                             verticalalignment='bottom', color='black')
 
-        #--------------------------------------------------------- PLOTTING ----
+        #-------------------------------------------------------- PLOTTING ----
     
         #---- Water Levels ----
     
-        self.h1_ax0, = self.ax0.plot(t, x, color='blue', clip_on=True, zorder=10,
-                                     marker='None', linestyle='-')
+        self.h1_ax0, = self.ax0.plot(t, x, color='blue', clip_on=True, ls='-',
+                                     zorder=10, marker='None')
         
         #---- Peaks ----
                  
@@ -683,7 +688,7 @@ class WLCalc(QtGui.QWidget):
         if not self.btn_strati.autoRaise():
             self.display_soil_layer()
             
-        #---------------------------------------------------- UPDATE WIDGET ----
+        #--------------------------------------------------- UPDATE WIDGET ----
 
         self.fig_MRC_widget.draw()
         
@@ -851,7 +856,7 @@ class WLCalc(QtGui.QWidget):
         x = event.x
         y = event.y
  
-        #---------------------------------------------------- DELETE A PEAK ---- 
+        #--------------------------------------------------- DELETE A PEAK ---- 
         
         # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
 
@@ -889,7 +894,7 @@ class WLCalc(QtGui.QWidget):
             else:
                 pass
             
-        #------------------------------------------------------- ADD A PEAK ----        
+        #------------------------------------------------------ ADD A PEAK ----        
 
         elif x != None and y != None and not self.btn_editPeak.autoRaise():
         # print(event.xdata, event.ydata)
@@ -1578,7 +1583,7 @@ def mrc2rechg(t, ho, A, B, z, Sy):
                 
 if __name__ == '__main__':
     
-    from hydroprint import WaterlvlData
+    from hydrograph3 import WaterlvlData
     from meteo import MeteoObj
     
     app = QtGui.QApplication(argv)   

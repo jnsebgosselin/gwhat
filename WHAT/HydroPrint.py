@@ -1206,16 +1206,34 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         elif sender == self.page_setup_win:
             fwidth = self.page_setup_win.pageSize[0]
             self.hydrograph.set_fig_size(fwidth, 8.5)
-            
-        elif sender == self.qweather_bin:
+        
+        #---------------------------------------- Sampling of Weather Data ----
+        
+        elif sender == self.qweather_bin: 
             self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex ()
             self.hydrograph.resample_bin()
             self.hydrograph.draw_weather()
             self.hydrograph.draw_ylabels()
+        
+        #-------------------------------------------- Scale of Data Labels ----
             
-        elif sender == self.time_scale_label:
+        elif sender == self.time_scale_label: 
+            
+            year = self.date_start_widget.date().year()
+            month = self.date_start_widget.date().month()
+            day = 1
+            date = xldate_from_date_tuple((year, month, day), 0)
+            self.hydrograph.TIMEmin = date
+            
+            year = self.date_end_widget.date().year()
+            month = self.date_end_widget.date().month()
+            day = 1
+            date = xldate_from_date_tuple((year, month, day),0)
+            self.hydrograph.TIMEmax = date
+            
             self.hydrograph.datemode = self.time_scale_label.currentText()
             self.hydrograph.set_time_scale()
+            self.hydrograph.draw_weather()
             
         else:
             print('No action for this widget yet.')
