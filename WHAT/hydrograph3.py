@@ -222,8 +222,6 @@ class Hydrograph(mpl.figure.Figure):
         self.ax2.yaxis.set_ticks_position('left')
         self.ax2.yaxis.set_label_position('left') 
         self.ax2.tick_params(axis='y', direction='out', labelsize=10)
-        for loc in ['top', 'bottom', 'right', 'left']:
-            self.ax2.spines[loc].set_visible(False)
             
         self.update_waterlvl_scale()
         
@@ -234,17 +232,19 @@ class Hydrograph(mpl.figure.Figure):
             self.ax3 = self.ax1.twinx()
             self.ax3.set_zorder(self.ax1.get_zorder() + 10)
             self.ax3.set_navigate(False)
-            for loc in ['top', 'bottom', 'right', 'left']:
-                self.ax3.spines[loc].set_visible(False) 
             
             #--- Air Temperature ---
         
             self.ax4 = self.ax1.twinx()
             self.ax4.set_zorder(self.ax1.get_zorder() - 10)
             self.ax4.set_navigate(False)
-            for loc in ['top', 'bottom', 'right', 'left']:
-                self.ax4.spines[loc].set_visible(False)
         
+        #--------------------------------------------------- remove spines ----
+        
+        for axe in self.axes[2:]:
+            for loc in axe.spines:
+                axe.spines[loc].set_visible(False)
+                
         #-------------------------------------------------- Update margins ----
         
         self.bottom_margin = 0.75
@@ -322,11 +322,11 @@ class Hydrograph(mpl.figure.Figure):
         
         self.draw_waterlvl()
          
-        #-------------------------------------------------------- WEATHER ----
+        #--------------------------------------------------------- WEATHER ----
         
         if self.meteoOn == True:
             
-            #---------------------------------------------- PRECIPITATION ----
+            #----------------------------------------------- PRECIPITATION ----
             
             self.update_precip_scale()
             
@@ -458,12 +458,8 @@ class Hydrograph(mpl.figure.Figure):
             y0 = bottom_margin / 2.
             h = 1 - (bottom_margin + top_margin) / 2.
         
-        self.ax0.set_position([x0, y0, w, h])
-        self.ax1.set_position([x0, y0, w, h])        
-        self.ax2.set_position([x0, y0, w, h])
-        if self.meteoOn == True:
-            self.ax3.set_position([x0, y0, w, h])
-            self.ax4.set_position([x0, y0, w, h])
+        for axe in self.axes:
+            axe.set_position([x0, y0, w, h])
             
             
     def draw_ylabels(self): #=================================================
