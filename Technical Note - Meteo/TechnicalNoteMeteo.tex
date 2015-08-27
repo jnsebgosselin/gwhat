@@ -11,13 +11,6 @@
 \usepackage{subcaption}
 \usepackage{lipsum}
 
-% Overrinding elsarticle preference to remove indentation of first paragraph after section heading.
-%----------------------------------------
-%http://tex.stackexchange.com/questions/132369/how-to-suppress-indentation-of-first-paragraph-after-heading
-%\makeatletter
-%\let\@afterindenttrue\@afterindentfalse
-%\makeatother
-%----------------------------------------
 
 %---- TABLES ----
 
@@ -25,7 +18,6 @@
 \usepackage{booktabs}
 \usepackage{graphicx}
 \usepackage{stfloats} % To be able to put table* and figure* at the bottom of pages
-
 \usepackage[utf8]{inputenc}
 
 \journal{Canadian Journal of Earth Sciences}
@@ -49,13 +41,13 @@
 
 \begin{frontmatter}
 
-\title{A new user-friendly tool to estimate groundwater recharge from daily weather data and well hydrographs}
+\title{An algorithm for automated estimation of missing daily climate data}
 
 %% Group authors per affiliation:
 \author[inrs]{J.S.~Gosselin\corref{cor1}}
 \ead{jnsebgosselin@gmail.com}
 
-\author[inrs]{M.~Richard}
+\author[inrs]{R.~Martel}
 %\ead{Richard.Martel@ete.inrs.ca}
 
 \author[cgc]{C.~Rivard}
@@ -83,34 +75,16 @@
 \linenumbers
 
 \section{Introduction}
-%    \subfile{section1}
-%
-%\section{Materials and Methods}
-%    \subsection{Overview of the Methodology}
-%        \subfile{section2.1}
-%    \subsection{Synthetic Data Description}\label{sec:synth_data_desc}
-%        \subfile{section2.2}
-%    \subsection{Inverse Numerical Model of Heat Transport}\label{sec:inv_model}
-%        \subfile{section2.3}
-%%
-%\section{Results}
-%    \subsection{Model Validation}\label{sec:model_validation}
-%        \subfile{section3.1}
-%    \subsection{Impact of Modeling Error}\label{sec:modeling_error} 
-%        \subfile{section3.2}
-%    \subsection{Impact of Input Parameters Uncertainty}\label{sec:input_model_err}
-%        \subfile{section3.3}
-%    \subsection{Impact of Measurement Error}\label{sec:input_obs_err}
-%        \subfile{section3.4}
-%%
-%\section{Discussion}
-%    \subfile{section4}
-%%
-%\section{Conclusion}
-%    \subfile{section5}
-%%
-%\section*{References}
-%    \bibliography{MyLibrary}
+    \subfile{section1}
+
+\section{Theory}
+    \subfile{section2}
+
+\section{Discussion}
+    \subfile{section4}
+
+\section*{References}
+    \bibliography{MyLibrary}
 %
 %\appendix
 %\clearpage

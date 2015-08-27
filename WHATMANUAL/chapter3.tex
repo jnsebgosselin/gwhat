@@ -75,7 +75,13 @@ When starting WHAT or when a project is opened, the content of the \emph{Input} 
     }
 \end{figure}
 
-\begin{figure}[!b]
+\subsection{Setting the model parameters}
+
+The first step is to select the station for which missing values in the dataset need to be filled. This is done from the drop-down list located under the \emph{Fill data for station} section shown in \cref{fig:fill_data_for}. Under this list are automatically posted information about the currently selected weather station. It is also possible to define the period for which the data of the selected station will be filled by editing the date fields located next to the \emph{From} and \emph{To} labels. By default, dates are set as the first and the last date for which data are available for any of the stations of the list.
+
+The method used to estimate the missing data for the selected weather station consists in the generation of a multiple linear regression (MLR) model, using synchronous data from selected neighboring stations from the list. The neighboring stations are selected mainly on the basis of the correlation coefficients computed between their data and those of the selected weather station. The values of these coefficients are automatically displayed in the table located in the right side of the interface when a new weather station is selected from the list. Moreover, among the selected neighboring stations, the ones with the highest correlation coefficients have more weight in the model than those with weak correlation coefficients. For this reason, correlation coefficients that fall below a value of 0.7 are shown in red in the table, as a guidance for the user. There are several settings that can be used to control the selection of the neighboring stations, the generation of the MLR model, and the outputs of the gapfilling procedure. An overview of these settings is presented below.
+
+\begin{figure}[!h]
     \setlength{\fboxsep}{0pt}
     \thisfloatsetup{capbesideposition={right,bottom},
                     objectset=raggedright}
@@ -88,12 +94,6 @@ When starting WHAT or when a project is opened, the content of the \emph{Input} 
 	 \fbox{\includegraphics[width=0.35\textwidth]{img/WHAT_Screenshot_Fill_data_for.png}}
 	}
 \end{figure}
-
-\subsection{Setting the model parameters}
-
-The first step is to select the station for which missing values in the dataset need to be filled. This is done from the drop-down list located under the \emph{Fill data for station} section shown in \cref{fig:fill_data_for}. Under this list are automatically posted information about the currently selected weather station. It is also possible to define the period for which the data of the selected station will be filled by editing the dates fields located next to the \emph{From} and \emph{To} labels. By default, dates are set as the first and the last date for which data are available for any of the stations of the list.
-
-The method used to estimate the missing data for the selected weather station consists in the generation of a multiple linear regression (MLR) model, using synchronous data from selected neighboring stations from the list. The neighboring stations are selected mainly on the basis of the correlation coefficients computed between their data and those of the selected weather station. The values of these coefficients are automatically displayed in the table located in the right side of the interface when a new weather station is selected from the list. Moreover, among the selected neighboring stations, the ones with the highest correlation coefficients have more weight in the model than those with weak correlation coefficients. For this reason, correlation coefficients that fall below a value of 0.7 are shown in red in the table, as a guidance for the user. There are several settings that can be used to control the selection of the neighboring stations, the generation of the MLR model, and the outputs of the gapfilling procedure. An overview of these settings is presented below.
 
 \paragraph{Station Selection Criteria :} A MLR model is generated for each day for which a data is missing in the dataset of the selected station. This is done because the number of neighboring stations with available data can vary in time. Therefore, for a given date with missing data in the dataset of the selected station, the neighboring stations are selected in decreasing order of their correlation coefficients. Neighboring stations that also have a missing data at this particular date are excluded from the selection process. The maximum number of station that are selected for the generation of the MLR model can be specified in the \emph{Nbr. of stations} field, located in the \emph{Stations Selection Criteria} menu shown in \cref{fig:selection_criteria}. The number of neighboring station that is selected by default is 4. If for a given date, all the neighboring stations have missing data synchronously with the selected station, a NaN value is kept in the dataset at this particular date. 
 

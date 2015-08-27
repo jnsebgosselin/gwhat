@@ -72,15 +72,18 @@ WHAT 4.1.6/
 WHATMANUAL/Local_Optimum.odt
 WHATMANUAL/Note_Recharge_article.odt
 WHAT_organigram.odt
+Technical Note - Meteo/Revision
+Technical Note - Recharge/
+WHAT/Icons/SVG/dev/
 
-# LaTeX
-WHATMANUAL/*.log
-WHATMANUAL/*.aux
-WHATMANUAL/*.gz
-WHATMANUAL/*.out
-WHATMANUAL/*.bbl
-WHATMANUAL/*.blg
-WHATMANUAL/*.lof
-WHATMANUAL/*.toc
-WHATMANUAL/*.bcf
-WHATMANUAL/*.xml
+# LaTeX Files
+*.log
+*.aux
+*.gz
+*.out
+*.bbl
+*.blg
+*.lof
+*.toc
+*.bcf
+*.xml
