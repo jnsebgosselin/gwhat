@@ -60,7 +60,6 @@ Rainbird manual/
 WHAT.pref
 Doc/
 Backup_Projects/
-Meteo_Ref_notes_JSG.odt
 WHATMANUAL_CR1.docx
 WHATMANUAL_CR1.odt
 WHATMANUAL/Revision/
@@ -72,11 +71,18 @@ WHAT 4.1.6/
 WHATMANUAL/Local_Optimum.odt
 WHATMANUAL/Note_Recharge_article.odt
 WHAT_organigram.odt
-Technical Note - Meteo/Revision
 Technical Note - Recharge/
 WHAT/Icons/SVG/dev/
 
+# Technical Paper Meteo
+
+Author Info Pack (Computer and Geoscience).pdf
+WHAT Technical Note 0.3.odt
+Technical Note - Meteo/Revision
+Meteo_Ref_notes_JSG.odt
+
 # LaTeX Files
+
 *.log
 *.aux
 *.gz
