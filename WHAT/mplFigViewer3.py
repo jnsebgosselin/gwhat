@@ -66,7 +66,7 @@ class MplViewer(QtGui.QFrame):                                    # MplViewer #
         self.img = []
         self.qpix_buff = []
         
-    def load_mpl_figure(self, mplfig, view_dpi=300): #========= Load Image ====
+    def load_mpl_figure(self, mplfig, view_dpi): #========= Load Image ====
         
         self.qpix_buff = []
         
@@ -140,7 +140,7 @@ class MplViewer(QtGui.QFrame):                                    # MplViewer #
         
         #---- draw pixmap ----
         
-        qp.setRenderHint(QtGui.QPainter.Antialiasing, True) 
+#        qp.setRenderHint(QtGui.QPainter.Antialiasing, True) 
         qp.drawPixmap(rect, qpix2print) 
             
         qp.end()
@@ -247,7 +247,7 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
         return QtGui.QWidget.eventFilter(self, widget, event)
 
     def zoomIn(self):
-        if self.scaleFactor < 5:
+        if self.scaleFactor < 3:
             self.scaleFactor += 1
             self.scale_image()
             self.adjust_scrollbar(self.scaleStep)
@@ -267,7 +267,7 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
 
         self.imageCanvas.setFixedSize(new_width, new_height)
        
-    def load_mpl_figure(self, mplfig, view_dpi=300):
+    def load_mpl_figure(self, mplfig, view_dpi=150):
         self.imageCanvas.load_mpl_figure(mplfig, view_dpi)
         self.scale_image()
         
