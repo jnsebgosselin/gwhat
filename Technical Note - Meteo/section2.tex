@@ -63,6 +63,31 @@ Since the number of neighboring stations with available data is not fixed in tim
 
 If for a given day, no neighboring stations have a measured value to fill a gap in the target station dataset, no calculation is done and a ‘‘NaN’’ value is kept in the series instead and the program pass to the next missing value in the target series.
 
+\subsubsection{Multiple Linear Regression Model}
+First, the program will be checking if the sequence of neighboring stations has already been encountered for the current weather variable and, if so, will load the MLR parameters from memory and will directly estimate the missing value. Otherwise, the model will generate a new MLR model using either an Ordinary Least Square (OLS) or a Least Absolute Deviations (LAD) criteria (both options are available). Since daily precipitation series generally represented by long-tailed, positively skewed, distributions, the LAD criterion is typically a better option than the OLS criteria for handling this kind of distribution because it is more robust to outliers (Eischeid et al., 2000, 1995). The downside is an increase in computation time. The MLR using a LAD criterion is computed in WHAT with an iterative reweighted least-squares method (Schlossmacher, 1973; (Eischeid et al., 1995).
+
+
+\subsubsection{Estimating Missing Daily Values}
+
+Once the parameters of the MLR model for a given day with a missing value are known, the missing value in the target time series is estimated as:
+
+\begin{equation}
+    X(t) = a_0 + \sum_{i=1}^{N} a_i \cdot Y_i(t)
+\end{equation}
+
+where Y(t) is the missing value of the target station estimated at time t, Xi are the synchronous values of the neighboring stations, ai are the regression coefficients and N is the total number of neighboring stations used for the regression, up to the maximal value defined in the method (default is four).
+
+When all missing values in the target station dataset have been estimated, the resulting gapless time series is saved in a ‘‘.out’’ file. Detailed information about the estimated values are saved in an accompanying ‘‘.log’’ file (see Section 8.3.1).
+
+\subsection{Step 3: Validation}
+
+WHAT also includes an option to perform a validation of the method used for a particular weather dataset with a jackknife procedure. This option is an advanced feature that can be activated by changing the value of the field ‘‘Full Error Analysis’’ from 0 to 1 in the file named ‘‘WHAT.pref’’ (see Section 8.3.1).
+
+More specifically, when this option is activated, WHAT will estimate a value for the target station for every day of the time series. In other words, loop B in the flowchart of Figure 8.1 will run over all the days of the dataset and not only over days for which there is a missing data. In addition, the memory feature will be deactivated and a MLR model will be estimated for each day independently. If a measured value is present for the current day being estimated, this value will be temporarily discarded from the data series to avoid self-influence of the observation on the estimation procedure
+
+Consequently, the activation of this feature will significantly raise the computation time for filling the gaps in weather time series and should be used only when a detailed analysis of the estimation errors is required. The default information provided in the ‘‘.log’’ should contain sufficient material to fill the needs of a large number of projects. Thus, this process leads to the production of a weather time-series for which every value has been estimated in WHAT. The results are saved in a tsv (tab-separated values) text file with the extension ‘‘.err’’ that is named after the station name and ID similarly to the ‘‘.log’’ and ‘‘.out’’ files.
+The accuracy of the estimation technique can then be assessed by comparing the estimated weather data with the respective non-missing observations in the original weather data file. There is currently no tool provided in WHAT to directly analyze the results from the Jackknife procedure. However, all the source code that has been written? for the production of the figures of Section 8.4 can be downloaded freely on GitHub at (https://github.com/jnsebgosselin/WHAT).
+
 \end{document}
 
 %Among these techniques, methods based on the use of data from neighboring stations are generally favored to within-station methods, i.e. those that only use data from the series being filled.
