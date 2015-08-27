@@ -2,8 +2,8 @@
 """
 ---- NOTICE ----
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox). This code was
-forked from a code provided in the example classes of the Qt Tookit by
+This file is part of WHAT (Well Hydrograph Analysis Toolbox). This code is
+derived from a code provided in the example classes of the Qt Tookit by
 Trolltech AS. Original license is provided below.
 
 ---- LICENSE WHAT ----
@@ -47,37 +47,9 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 #---- THIRD PARTY IMPORTS ----
 
-from PySide import QtGui, QtCore, QtSvg
-import io
+from PySide import QtGui, QtCore
 import time
 import copy
-#from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-
-##=============================================================================
-#class MplFigConverter(QtCore.QObject):                     # MplFigConverter #
-##=============================================================================
-#    
-#    QImageSent = QtCore.Signal(QtGui.QImage)
-#    
-#    def __init__(self, mplfig, dpi=300):
-#        super(MplFigConverter, self).__init__()
-#
-#        self.mplfig = mplfig
-#        self.mplfig.set_canvas(FigureCanvas(self.mplfig))      
-#        self.dpi = dpi
-#
-#    def convert_MplFig_to_QPixmap(self):
-#        
-#        base_dpi = self.mplfig.get_dpi()
-#        self.mplfig.dpi = self.dpi
-#        buf, size = self.mplfig.canvas.print_to_buffer()
-#        self.mplfig.dpi = base_dpi
-#        
-#        qimg = QtGui.QImage.rgbSwapped(QtGui.QImage(buf, size[0], size[1],
-#                                       QtGui.QImage.Format_ARGB32))
-#        
-#        self.QImageSent.emit(qimg)
 
 #==============================================================================   
 class MplViewer(QtGui.QFrame):                                    # MplViewer #
@@ -91,17 +63,10 @@ class MplViewer(QtGui.QFrame):                                    # MplViewer #
         self.setMidLineWidth(1)
         self.setStyleSheet("background-color: white")
         
-        self.df = 'png' # display format is png or svg. Default is png.
         self.img = []
         self.qpix_buff = []
         
-#    def process_qimage(self, qimg):
-#
-#        self.img = QtGui.QPixmap(qimg)
-#        self.repaint()
-        
-    def load_mpl_figure(self, mplfig, df='png', #============== Load Image ====
-                        view_dpi=300): 
+    def load_mpl_figure(self, mplfig, view_dpi=300): #========= Load Image ====
         
         self.qpix_buff = []
         
@@ -119,111 +84,67 @@ class MplViewer(QtGui.QFrame):                                    # MplViewer #
         
         # http://stackoverflow.com/questions/1300908/
         # load-blob-image-data-into-qpixmap
+                    
+        #-- print mpl figure to buffer_rgba --
+
+        # scale dpi of figure to view_dpi
+        orig_fig_dpi = mplfig.get_dpi()            
+        mplfig.dpi = view_dpi 
+        # propagate changes to renderer
+        mplfig.canvas.draw()
+        renderer = mplfig.canvas.get_renderer()
+        orig_ren_dpi = renderer.dpi
+        renderer.dpi = view_dpi
+        # generate img buffer
+        imgbuf = mplfig.canvas.buffer_rgba()
+        imgwidth = int(renderer.width)
+        imgheight =int(renderer.height)
+        # restore fig and renderer dpi
+        renderer.dpi = orig_ren_dpi
+        mplfig.dpi = orig_fig_dpi
         
-        if df == 'svg':
-            self.df = 'svg'
-            
-            fbuffer = io.BytesIO()
-            mplfig.savefig(fbuffer, format='svg')
-            fbuffer.seek(0)
-            img_dta = fbuffer.getvalue()
-            
-            xmlsr = QtCore.QXmlStreamReader(img_dta)
-            self.img = QtSvg.QSvgRenderer(xmlsr)
-            
-        else:
+        #-- convert buffer to QPixmap --
 
-            self.df = 'png'
-            
-            #-- print mpl figure to buffer_rgba --
-
-            # scale dpi of figure to view_dpi
-            orig_fig_dpi = mplfig.get_dpi()            
-            mplfig.dpi = view_dpi 
-            # propagate changes to renderer
-            mplfig.canvas.draw()
-            renderer = mplfig.canvas.get_renderer()
-            orig_ren_dpi = renderer.dpi
-            renderer.dpi = view_dpi
-            # generate img buffer
-            imgbuf = mplfig.canvas.buffer_rgba()
-            imgwidth = int(renderer.width)
-            imgheight =int(renderer.height)
-            # restore fig and renderer dpi
-            renderer.dpi = orig_ren_dpi
-            mplfig.dpi = orig_fig_dpi
-            
-            #-- convert buffer to QPixmap --
-
-            self.img = QtGui.QImage(imgbuf, imgwidth, imgheight,
-                                    QtGui.QImage.Format_ARGB32)
-            self.img = QtGui.QImage.rgbSwapped(self.img)
-            self.img = QtGui.QPixmap(self.img)
+        self.img = QtGui.QImage(imgbuf, imgwidth, imgheight,
+                                QtGui.QImage.Format_ARGB32)
+        self.img = QtGui.QImage.rgbSwapped(self.img)
+        self.img = QtGui.QPixmap(self.img)
             
         self.repaint() 
-
-#            size = mplfig.canvas.get_width_height()
-#            buf = mplfig.canvas.buffer_rgba()
-            
-            # for the io.BytesIO file buffer approach, use the same 
-            # code as for svg to get "img_dta", then do:
-            # ----
-            # img = QtGui.QImage.fromData(img_dta)
-            # self.img = QtGui.QPixmap(img)
-            
-#            copy_mplfig = copy.copy(mplfig)  
-#            converter = MplFigConverter(copy_mplfig)
-#                        
-#            thread = QtCore.QThread(self)
-#            converter.moveToThread(thread)
-#            thread.converter = converter
-#            
-#            thread.started.connect(thread.converter.convert_MplFig_to_QPixmap)            
-#            converter.QImageSent.connect(self.process_qimage)
-#            converter.QImageSent.connect(thread.quit)
-#            
-#            thread.start()
                         
     def paintEvent(self, event): #============================= paintEvent ====
         super(MplViewer, self).paintEvent(event)
-
-        if not self.img:
-            return
         
         qp = QtGui.QPainter()
         qp.begin(self)
-                
-        if self.df == 'png':            
+        
+        #---- prepare paint rect ----
+        
+        fw = self.frameWidth()
+        rect = QtCore.QRect(0 + fw, 0 + fw,
+                            self.size().width() - 2 * fw,
+                            self.size().height() - 2 * fw)            
+        
+        #----- check/update image buffer ---
+        
+        qpix2print = None
+        for qpix in self.qpix_buff:
+            if qpix.size().width() == rect.width():                    
+                qpix2print = qpix                     
+                break
 
-            qp.setRenderHint(QtGui.QPainter.Antialiasing, True)            
-#            qp.setRenderHint(QtGui.QPainter.SmoothPixmapTransform, True)
-#            qp.setRenderHint(QtGui.QPainter.HighQualityAntialiasing, True)
-#            qp.setRenderHint(QtGui.QPainter.NonCosmeticDefaultPen, True)
-#            qp.setRenderHint(QtGui.QPainter.TextAntialiasing, True)
-
-            fw = self.frameWidth()
-            rect = QtCore.QRect(0 + fw, 0 + fw,
-                                self.size().width() - 2 * fw,
-                                self.size().height() - 2 * fw)            
-            
-            qpix2print = None
-            for qpix in self.qpix_buff:
-                if qpix.size().width() == rect.width():                    
-                    qpix2print = qpix                     
-                    break
-
-            if qpix2print == None:
-                print(len(self.qpix_buff))
-                qpix2print = self.img.scaledToWidth(rect.width(),
-                                   mode=QtCore.Qt.SmoothTransformation)
-                self.qpix_buff.append(qpix2print)
-            
-            qp.drawPixmap(rect, qpix2print) 
-
-        elif self.df == 'svg':    
-            self.img.render(qp)
+        if qpix2print == None:
+            qpix2print = self.img.scaledToWidth(rect.width(),
+                             mode=QtCore.Qt.SmoothTransformation)
+            self.qpix_buff.append(qpix2print)
+        
+        #---- draw pixmap ----
+        
+        qp.setRenderHint(QtGui.QPainter.Antialiasing, True) 
+        qp.drawPixmap(rect, qpix2print) 
             
         qp.end()
+        
         
 #==============================================================================
 class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
@@ -346,8 +267,8 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
 
         self.imageCanvas.setFixedSize(new_width, new_height)
        
-    def load_mpl_figure(self, mplfig, df='png', view_dpi=300):
-        self.imageCanvas.load_mpl_figure(mplfig, df, view_dpi)
+    def load_mpl_figure(self, mplfig, view_dpi=300):
+        self.imageCanvas.load_mpl_figure(mplfig, view_dpi)
         self.scale_image()
         
     def reset_original_image(self):
@@ -406,6 +327,6 @@ if __name__ == '__main__':
     imageViewer.resize(bbox.width*1.2, bbox.height*1.2)
     
     fig.canvas.draw()
-    imageViewer.load_mpl_figure(fig, 'png')
+    imageViewer.load_mpl_figure(fig)
       
     sys.exit(app.exec_())

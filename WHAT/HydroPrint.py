@@ -41,7 +41,7 @@ import xlwt
 import HydroCalc
 import database as db
 import hydrograph3 as hydroprint
-import mplFigViewer2 as mplFigViewer
+import mplFigViewer3 as mplFigViewer
 import meteo
 import MyQWidget
 
@@ -1241,14 +1241,14 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         # !!!! temporary fix until I can find a better solution !!!!
         
 #        sender.blockSignals(True)
-        if type(sender) == QtGui.QDoubleSpinBox:
+        if type(sender) in [QtGui.QDoubleSpinBox, QtGui.QSpinBox]:
             sender.setReadOnly(True)
         for i in range(10):
              QtCore.QCoreApplication.processEvents() 
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
         for i in range(10):
              QtCore.QCoreApplication.processEvents()
-        if type(sender) == QtGui.QDoubleSpinBox:
+        if type(sender) in [QtGui.QDoubleSpinBox, QtGui.QSpinBox]:
             sender.setReadOnly(False)
 #        sender.blockSignals(False) 
         

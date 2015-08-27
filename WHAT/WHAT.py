@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Copyright 2014-2015 Jean-Sebastien Gosselin
-
 email: jnsebgosselin@gmail.com
 
 WHAT is free software: you can redistribute it and/or modify

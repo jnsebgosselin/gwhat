@@ -67,7 +67,7 @@ class LabelDatabase():
             
             self.mbgs = "Niveau d'eau au puits %s (mbgs)"
             self.masl = "Niveau d'eau au puits %s (masl)"
-            self.precip = 'Précipitations Totales (mm/%s)'
+            self.precip = u'Précipitations Totales (mm/%s)'
             self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
             self.temperature = u'Température (°C)'
             self.station_meteo = u'Station météo = %s (située à %0.1f km du puits)'
