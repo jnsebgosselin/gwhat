@@ -27,6 +27,7 @@ last_modification = 15/06/2015
 import csv
 from calendar import monthrange
 from sys import argv
+import os
 from os import path, getcwd
 import time
 from datetime import date
@@ -41,10 +42,9 @@ import numpy as np
 from PySide import QtGui, QtCore
 
 import matplotlib as mpl
-mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 #---- PERSONAL IMPORTS ----
 
@@ -72,62 +72,69 @@ class Tooltips():
         self.open = "Open a valid '.out' weather data file"
         self.addTitle = 'Add A Title To The Figure Here (Option not yet available)'
         
-        if language == 'French': #--------------------------------- FRENCH -----
+        if language == 'French': #-------------------------------- FRENCH -----
             
             pass
 
-#===============================================================================
-class WeatherAvgGraph(QtGui.QWidget): 
+#==============================================================================
+class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
+#==============================================================================
+
     """
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
-#===============================================================================
     
     def __init__(self, parent=None):
-        super(WeatherAvgGraph, self).__init__(parent)
+        super(WeatherAvgGraph, self).__init__(parent)        
+        self.setWindowFlags(QtCore.Qt.Window)
 
         self.initUI()
         
-    def initUI(self): #=======================================================
+    def initUI(self): #========================================================
         
         iconDB = db.Icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
         self.station_name = []
-        self.save_fig_dir = getcwd()
-        self.meteo_dir = getcwd()
+        self.save_fig_dir = os.getcwd()
+        self.meteo_dir = os.getcwd()
         
         self.setWindowTitle('Weather Averages')
         self.setFont(StyleDB.font1)
         self.setWindowIcon(iconDB.WHAT)
         
-        #--------------------------------------------------- FigureCanvas ----
+        #---------------------------------------------------- FigureCanvas ----
         
-        self.fig = plt.figure()        
+        self.fig = mpl.figure.Figure()       
         self.fig.set_size_inches(8.5, 5)        
         self.fig.patch.set_facecolor('white')
-        self.fig_widget = FigureCanvasQTAgg(self.fig)
+        self.figcanvas = FigureCanvasQTAgg(self.fig)
         
-        #-------------------------------------------------------- TOOLBAR ----
+        #--------------------------------------------------------- TOOLBAR ----
         
-        self.btn_save = QtGui.QToolButton()
-        self.btn_save.setAutoRaise(True)
-        self.btn_save.setIcon(iconDB.save)
-        self.btn_save.setToolTip(ttipDB.save)
-        self.btn_save.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_save = QtGui.QToolButton()
+        btn_save.setAutoRaise(True)
+        btn_save.setIcon(iconDB.save)
+        btn_save.setToolTip(ttipDB.save)
+        btn_save.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_save.setIconSize(StyleDB.iconSize)
+        btn_save.clicked.connect(self.save_graph)
         
-        self.btn_open = QtGui.QToolButton()
-        self.btn_open.setAutoRaise(True)
-        self.btn_open.setIcon(iconDB.openFile)
-        self.btn_open.setToolTip(ttipDB.open)
-        self.btn_open.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_open = QtGui.QToolButton()
+        btn_open.setAutoRaise(True)
+        btn_open.setIcon(iconDB.openFile)
+        btn_open.setToolTip(ttipDB.open)
+        btn_open.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_open.setIconSize(StyleDB.iconSize)
+        btn_open.clicked.connect(self.select_meteo_file)
         
         self.graph_title = QtGui.QLineEdit()
         self.graph_title.setMaxLength(65)
         self.graph_title.setEnabled(False)
         self.graph_title.setText('Add A Title To The Figure Here')
         self.graph_title.setToolTip(ttipDB.addTitle)
+        self.graph_title.setFixedHeight(StyleDB.size1)
         
         self.graph_status = QtGui.QCheckBox()
         self.graph_status.setEnabled(False)
@@ -140,9 +147,9 @@ class WeatherAvgGraph(QtGui.QWidget):
         
         row = 0
         col = 0
-#        subgrid_toolbar.addWidget(self.btn_open, row, col)        
+#        subgrid_toolbar.addWidget(btn_open, row, col)        
 #        col += 1
-        subgrid_toolbar.addWidget(self.btn_save, row, col)
+        subgrid_toolbar.addWidget(btn_save, row, col)
         col += 1
         subgrid_toolbar.addWidget(separator1, row, col) 
 #        col += 1
@@ -156,21 +163,17 @@ class WeatherAvgGraph(QtGui.QWidget):
         subgrid_toolbar.setHorizontalSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
 #        subgrid_toolbar.setColumnMinimumWidth(col+1, 500)
-                
-        self.btn_save.setIconSize(StyleDB.iconSize)
-        self.btn_open.setIconSize(StyleDB.iconSize)
-        self.graph_title.setFixedHeight(StyleDB.size1)
-        
+            
         toolbar_widget.setLayout(subgrid_toolbar)
         
-        #------------------------------------------------------ MAIN GRID ----
+        #------------------------------------------------------- MAIN GRID ----
         
         mainGrid = QtGui.QGridLayout()
         
         row = 0 
         mainGrid.addWidget(toolbar_widget, row, 0)
         row += 1
-        mainGrid.addWidget(self.fig_widget, row, 0)
+        mainGrid.addWidget(self.figcanvas, row, 0)
                 
         mainGrid.setContentsMargins(15, 15, 15, 15) # Left, Top, Right, Bottom 
         mainGrid.setSpacing(15)
@@ -178,13 +181,8 @@ class WeatherAvgGraph(QtGui.QWidget):
         mainGrid.setColumnStretch(0, 500)
         
         self.setLayout(mainGrid)
-        
-        #---------------------------------------------------------- EVENT ----
-        
-        self.btn_save.clicked.connect(self.save_graph)
-        self.btn_open.clicked.connect(self.select_meteo_file)
-        
-    def generate_graph(self, filename): #=====================================
+                
+    def generate_graph(self, filename): #======================================
         
         METEO = MeteoObj()
         METEO.load_and_format(filename)
@@ -196,24 +194,22 @@ class WeatherAvgGraph(QtGui.QWidget):
  
         NORMALS = calculate_normals(METEO.DATA, METEO.datatypes)
 
-        plot_monthly_normals(self.fig, NORMALS)
-                
-        self.fig_widget.draw()
+        plot_monthly_normals(self.fig, NORMALS)                
+        self.figcanvas.draw()
 
-    def save_graph(self): #===================================================
+    def save_graph(self): #====================================================
         
         dialog_dir = self.save_fig_dir
         dialog_dir += '/WeatherAverages_%s' % self.station_name
         
         dialog = QtGui.QFileDialog()
         dialog.setConfirmOverwrite(True)
-        filename, ftype = dialog.getSaveFileName(
-                                          caption="Save Figure", dir=dialog_dir,
-                                          filter=('*.pdf;;*.svg'))
+        filename, ftype = dialog.getSaveFileName(caption="Save Figure",
+                                                 dir=dialog_dir,
+                                                 filter=('*.pdf'))
                                   
-        if filename:         
-            
-            if filename[-4:] != ftype[1:]:
+        if filename:
+            if filename[-4:] != ftype[1:]: 
                 # Add a file extension if there is none.
                 filename = filename + ftype[1:]
                 
@@ -223,14 +219,36 @@ class WeatherAvgGraph(QtGui.QWidget):
     def select_meteo_file(self):
         dialog_dir = self.meteo_dir
         filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                   self, 'Select a valid weather data file', 
-                                   dialog_dir, '*.out') 
+                                            'Select a valid weather data file', 
+                                            dialog_dir, '*.out') 
                                    
         if filename:
             self.generate_graph(filename)
             self.meteo_dir = path.dirname(filename)
             
-#=============================================================================        
+    def show(self): #================================================ show ====
+        super(WeatherAvgGraph, self).show()    
+        self.raise_()
+        # self.activateWindow()
+        
+        qr = self.frameGeometry()
+        if self.parentWidget():
+            print('coucou')
+            wp = self.parentWidget().frameGeometry().width()
+            hp = self.parentWidget().frameGeometry().height()
+            cp = self.parentWidget().mapToGlobal(QtCore.QPoint(wp/2., hp/2.))        
+        else:
+            cp = QtGui.QDesktopWidget().availableGeometry().center()            
+        qr.moveCenter(cp)                    
+        self.move(qr.topLeft())           
+        self.setFixedSize(self.size())
+        
+#    def closeEvent(self, event):
+#        super(WeatherAvgGraph, self).closeEvent(event)
+#        self.fig.clf()
+        
+            
+#==============================================================================        
 class MeteoObj():    
     """
     This is a class to load and manipulate weather data.
@@ -238,7 +256,7 @@ class MeteoObj():
     nan are assigned a value of 0 for Ptot and for air Temp, the value is 
     calculated with an in-station interpolation.
     """
-#=============================================================================    
+#==============================================================================    
 
     def __init__(self):
         
@@ -273,7 +291,7 @@ class MeteoObj():
         self.TIME = [] # Time in numeric format.
 
         
-    def load_and_format(self, filename): #====================================
+    def load_and_format(self, filename): #=====================================
         
         #---- load data from file ----
         
@@ -823,9 +841,9 @@ def calculate_daylength(DATE, LAT):
     
     return DAYLEN
 
-#===============================================================================
+#==============================================================================
 def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
-#===============================================================================
+#==============================================================================
 
     #---- assign local variables ----
     
@@ -1047,10 +1065,10 @@ def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
              u'Mean Annual Precipitation = %0.1f mm' % np.sum(PNORM),
              fontsize=13, verticalalignment='bottom', transform=ax1.transAxes)
              
-    #--------------------------------------------------------------- LEGEND ----        
+    #-------------------------------------------------------------- LEGEND ----        
 
-    rec1 = plt.Rectangle((0, 0), 1, 1, fc=SNOWcolor, ec='none')
-    rec2 = plt.Rectangle((0, 0), 1, 1, fc=RAINcolor, ec='none')
+    rec1 = mpl.patches.Rectangle((0, 0), 1, 1, fc=SNOWcolor, ec='none')
+    rec2 = mpl.patches.Rectangle((0, 0), 1, 1, fc=RAINcolor, ec='none')
     
     lines = [h2_ax1, h1_ax1, h3_ax1, rec1, rec2]
    
@@ -1064,26 +1082,26 @@ def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
     pos = ax1.transAxes.inverted().transform(pos)
     pos[0] = 0.01
     
-    print pos
-    
     legend = ax1.legend(lines, labels,
                         numpoints=1, fontsize=13, borderaxespad=0.,
                         bbox_to_anchor=pos, loc='upper left')
                
     legend.draw_frame(False)
     
+    return fig
+    
 if __name__ == '__main__':
 #    plt.rc('font',family='Arial')
     
     app = QtGui.QApplication(argv)   
-    instance_1 = WeatherAvgGraph()
-            
+                
 #    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
 #    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
     fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
-    instance_1.save_fig_dir =  '../Projects/Project4Testing'
-    instance_1.generate_graph(fmeteo)
     
-    instance_1.show()
-    instance_1.setFixedSize(instance_1.size());
+    w = WeatherAvgGraph()
+    w.save_fig_dir =  '../Projects/Project4Testing'
+    w.generate_graph(fmeteo)    
+    w.show()
+    
     app.exec_()
