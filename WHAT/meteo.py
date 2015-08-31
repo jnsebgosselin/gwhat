@@ -415,7 +415,7 @@ class MeteoObj():
             self.DATA = make_timeserie_continuous(self.DATA)        
     
     
-    def get_TIME(self, DATE): #===============================================
+    def get_TIME(self, DATE): #================================================
         
         # Generate a 1D array with date in numeric format because it is not
         # provided in the '.out' files.        
@@ -430,7 +430,7 @@ class MeteoObj():
         
         return TIME
         
-    def fill_nan(self): #=====================================================
+    def fill_nan(self): #======================================================
         
         datatypes = self.datatypes
         varnames = self.varnames[3:]
@@ -473,7 +473,7 @@ class MeteoObj():
         self.DATA[:, 3:] = X
         
         
-    def add_rain_to_data(self): #=============================================
+    def add_rain_to_data(self): #==============================================
        
         varnames = np.array(self.varnames)
         if np.any(varnames == 'Rain (mm)'):
@@ -501,7 +501,7 @@ class MeteoObj():
         self.datatypes.append(1)
 
 
-    def add_ETP_to_data(self): #==============================================
+    def add_ETP_to_data(self): #===============================================
         
         varnames = np.array(self.varnames)
         if np.any(varnames == 'ETP (mm)'):
@@ -530,7 +530,7 @@ class MeteoObj():
         self.varnames.append('ETP (mm)')
         self.datatypes.append(1)
         
-    def build_HTML_table(self): #=============================================
+    def build_HTML_table(self): #==============================================
         
         # HTML table with the info related to the weather station.
         
@@ -560,7 +560,7 @@ class MeteoObj():
         return info
         
            
-#    def daily2weekly(self): #================================================        
+#    def daily2weekly(self): #=================================================        
 #        
 #        # THIS METHOD NEEDS UPDATING! Currently, it seems it it not used at all.
 #        
@@ -935,9 +935,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
         
         #-- Tmin --
                                 
-        ax1.plot(XPOS, y, color=colors[2], clip_on=True, marker='o', ls='--',
-                          ms=0, zorder=100,mec=colors[2], mfc='white', mew=1.5,
-                          lw=1.5)
+        ax1.plot(XPOS, y, color=colors[2], clip_on=True, ls='--', lw=1.5,
+                          zorder=100)
         
         #-------------------------------------------------- XTICKS FORMATING -- 
     
