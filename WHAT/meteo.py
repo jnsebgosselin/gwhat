@@ -67,13 +67,13 @@ class LabelDataBase():
             
 class Tooltips():
     
-    def __init__(self, language): #------------------------------- ENGLISH -----
+    def __init__(self, language): #--------------------------------- ENGLISH --
         
         self.save = 'Save graph'
         self.open = "Open a valid '.out' weather data file"
         self.addTitle = 'Add A Title To The Figure Here (Option not yet available)'
         
-        if language == 'French': #-------------------------------- FRENCH -----
+        if language == 'French': #----------------------------------- FRENCH --
             
             pass
 
@@ -161,7 +161,7 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
             
         toolbar_widget.setLayout(subgrid_toolbar)
         
-        #---------------------------------------------  ---------- MAIN GRID --
+        #--------------------------------------------------------- MAIN GRID --
         
         #-- widgets --
         
@@ -185,11 +185,17 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
                 
     def generate_graph(self, filename): #==================== generate_graph ==
         
+        #-- load data from data file --
+        
         METEO = MeteoObj()
         METEO.load_and_format(filename)
         
+        #-- set window name --
+        
         self.station_name = METEO.STA
         self.setWindowTitle('Weather Averages for %s' % self.station_name)
+        
+        #-- calulate and plot weather normals --
         
         # DATA = [YEAR, MONTH, DAY, TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}]
  
@@ -243,10 +249,6 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         qr.moveCenter(cp)                    
         self.move(qr.topLeft())           
         self.setFixedSize(self.size())
-        
-#    def closeEvent(self, event):
-#        self.fig.canvas.flush_events()
-#        super(WeatherAvgGraph, self).closeEvent(event)
         
             
 #==============================================================================        
@@ -925,11 +927,6 @@ class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
                                                            
         #------------------------------------------------------ INIT ARTISTS --
         
-        #-- Precipitation --
-        
-        self.PTOT_bar, = ax0.plot([], [])
-        self.SNOW_bar, = ax0.plot([], [])
-        
         #-- Air Temperature --
         
         XPOS = np.arange(-0.5, 12.51, 1) 
@@ -1126,17 +1123,14 @@ class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
         
         ax = self.figure.axes[1]
         
-        self.PTOT_bar.remove()
-        self.SNOW_bar.remove()
-        del self.PTOT_bar
-        del self.SNOW_bar
-        
-        self.PTOT_bar = ax.fill_between(Xpos, 0., Ptot, edgecolor='none',
-                                        color=db.styleUI().rain)
-                                            
-        self.SNOW_bar = ax.fill_between(Xpos, 0., Snow, edgecolor='none',
-                                        color=db.styleUI().snow)
-                                              
+        for collection in reversed(ax.collections):
+            collection.remove()
+            
+        ax.fill_between(Xpos, 0., Ptot, edgecolor='none', 
+                        color=db.styleUI().rain)
+        ax.fill_between(Xpos, 0., Snow, edgecolor='none',
+                        color=db.styleUI().snow)
+            
     def plot_air_temp(self, Tmax_norm, Tmin_norm, Tmean_norm): #===============
         
         #---- Air Temperature ----
@@ -1211,9 +1205,9 @@ if __name__ == '__main__':
     w.save_fig_dir =  '../Projects/Project4Testing'        
     w.show()
     w.generate_graph(fmeteo)
-#    for i in range(500):
-#        w.generate_graph(fmeteo)
-#        QtCore.QCoreApplication.processEvents()
-#        QtCore.QCoreApplication.processEvents()
+    for i in range(100):
+        w.generate_graph(fmeteo)
+        QtCore.QCoreApplication.processEvents()
+        QtCore.QCoreApplication.processEvents()
     
     app.exec_()

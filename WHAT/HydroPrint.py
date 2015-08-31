@@ -623,12 +623,12 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.weather_avg_graph.generate_graph(filemeteo)            
         self.weather_avg_graph.show()
         
-    def emit_error_message(self, error_text): #================================
+    def emit_error_message(self, error_text): #========== emit_error_message ==
         
         self.msgError.setText(error_text)
         self.msgError.exec_()
         
-    def select_waterlvl_file(self): #==========================================
+    def select_waterlvl_file(self): #================== select_waterlvl_file ==
         
         '''
         This method is called by <btn_waterlvl_dir> is clicked. It prompts
