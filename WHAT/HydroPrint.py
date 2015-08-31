@@ -243,7 +243,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         self.grid_layout_widget.setLayout(grid_layout)
         
-        def make_data_files_panel(self): #-------------- Data Files Panel ----
+        def make_data_files_panel(self): #----------------- Data Files Panel --
             
             #---- widgets ----
                     

@@ -124,40 +124,30 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         btn_open.setIconSize(StyleDB.iconSize)
         btn_open.clicked.connect(self.select_meteo_file)
         
-        self.graph_title = QtGui.QLineEdit()
-        self.graph_title.setMaxLength(65)
-        self.graph_title.setEnabled(False)
-        self.graph_title.setText('Add A Title To The Figure Here')
-        self.graph_title.setToolTip(ttipDB.addTitle)
-        self.graph_title.setFixedHeight(StyleDB.size1)
+#        self.graph_title = QtGui.QLineEdit()
+#        self.graph_title.setMaxLength(65)
+#        self.graph_title.setEnabled(False)
+#        self.graph_title.setText('Add A Title To The Figure Here')
+#        self.graph_title.setToolTip(ttipDB.addTitle)
+#        self.graph_title.setFixedHeight(StyleDB.size1)
+#        
+#        self.graph_status = QtGui.QCheckBox()
+#        self.graph_status.setEnabled(False)
         
-        self.graph_status = QtGui.QCheckBox()
-        self.graph_status.setEnabled(False)
-        
-        separator1 = QtGui.QFrame()
-        separator1.setFrameStyle(StyleDB.VLine)
+#        separator1 = QtGui.QFrame()
+#        separator1.setFrameStyle(StyleDB.VLine)
         
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
         
         row = 0
         col = 0
-#        subgrid_toolbar.addWidget(btn_open, row, col)        
-#        col += 1
         subgrid_toolbar.addWidget(btn_save, row, col)
         col += 1
-        subgrid_toolbar.addWidget(separator1, row, col) 
-#        col += 1
-#        subgrid_toolbar.addWidget(graph_title_label, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.graph_title, row, col)
         subgrid_toolbar.setColumnStretch(col, 4)
-        col += 1
-        subgrid_toolbar.addWidget(self.graph_status, row, col)
                 
-        subgrid_toolbar.setHorizontalSpacing(5)
+        subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-#        subgrid_toolbar.setColumnMinimumWidth(col+1, 500)
             
         toolbar_widget.setLayout(subgrid_toolbar)
         
@@ -176,8 +166,8 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         row += 1
         mainGrid.addWidget(self.fig_weather_normals, row, 0)
                 
-        mainGrid.setContentsMargins(15, 15, 15, 15) # Left, Top, Right, Bottom 
-        mainGrid.setSpacing(15)
+        mainGrid.setContentsMargins(10, 10, 10, 10) # Left, Top, Right, Bottom 
+        mainGrid.setSpacing(10)
         mainGrid.setRowStretch(1, 500)
         mainGrid.setColumnStretch(0, 500)
         
@@ -272,7 +262,7 @@ class MeteoObj():
         self.ALT = 'Elevation'
         self.CID = 'Climate Identifier'
                 
-        self.STADESC = [[None] * 6, [None] * 6]         # station description:
+        self.STADESC = [[None] * 6, [None] * 6] # station description
 
         self.STADESC[0] = ['Station Name', 'Latitude', 'Longitude', 
                            'Province', 'Elevation', 'Climate Identifier']
@@ -314,7 +304,7 @@ class MeteoObj():
         self.add_rain_to_data()
                 
                 
-    def load(self, filename): #===============================================
+    def load(self, filename): #================================================
         
         """
         Load the info related to the weather station, the date and weather
@@ -926,26 +916,28 @@ class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
                            sharex=ax0)
                                                            
         #------------------------------------------------------ INIT ARTISTS --
-        
-        #-- Air Temperature --
-        
+                
         XPOS = np.arange(-0.5, 12.51, 1) 
         y = range(len(XPOS))
         colors = ['#990000', '#FF0000', '#FF6666']
-        self.Tplot1, = ax1.plot(XPOS, y, color=colors[1], clip_on=True,
-                                marker='o', ls='--', ms=6, zorder=100,
-                                mec=colors[1], mfc='white', mew=1.5,
-                                lw=1.5)
         
-        self.Tplot2, = ax1.plot(XPOS, y, color=colors[0], clip_on=True,
-                                marker='o', ls='--', ms=0, zorder=100,
-                                mec=colors[0], mfc='white', mew=1.5,
-                                lw=1.5)
-                           
-        self.Tplot3, = ax1.plot(XPOS, y, color=colors[2], clip_on=True,
-                                marker='o', ls='--', ms=0, zorder=100,
-                                mec=colors[2], mfc='white', mew=1.5,
-                                lw=1.5)
+        #-- Tmax --
+        
+        ax1.plot(XPOS, y, color=colors[0], clip_on=True, ls='--', lw=1.5,
+                          zorder=100)
+                                
+        #-- Tmean --
+        
+        ax1.plot(XPOS, y, color=colors[1], clip_on=True, marker='o', ls='--',
+                          ms=6, zorder=100, mec=colors[1], mfc='white',
+                          mew=1.5, lw=1.5)
+        
+        
+        #-- Tmin --
+                                
+        ax1.plot(XPOS, y, color=colors[2], clip_on=True, marker='o', ls='--',
+                          ms=0, zorder=100,mec=colors[2], mfc='white', mew=1.5,
+                          lw=1.5)
         
         #-------------------------------------------------- XTICKS FORMATING -- 
     
@@ -1132,16 +1124,21 @@ class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
                         color=db.styleUI().snow)
             
     def plot_air_temp(self, Tmax_norm, Tmin_norm, Tmean_norm): #===============
-        
+                        
         #---- Air Temperature ----
         
         Tmean_norm = np.hstack((Tmean_norm[-1], Tmean_norm, Tmean_norm[0]))
         Tmin_norm = np.hstack((Tmin_norm[-1], Tmin_norm, Tmin_norm[0]))
         Tmax_norm = np.hstack((Tmax_norm[-1], Tmax_norm, Tmax_norm[0]))
+        TNORM = [Tmax_norm, Tmean_norm, Tmin_norm]
         
-        self.Tplot1.set_ydata(Tmean_norm)
-        self.Tplot2.set_ydata(Tmax_norm)
-        self.Tplot3.set_ydata(Tmin_norm)
+        for i in range(3):        
+        
+            self.figure.axes[2].lines[i].set_ydata(TNORM[i])
+#        
+#        self.Tplot2.set_ydata(Tmax_norm)
+#        self.Tplot1.set_ydata(Tmean_norm)      
+#        self.Tplot3.set_ydata(Tmin_norm)
         
     def update_yearly_avg(self, TNORM, PNORM): #========== update_yearly_avg ==
         
@@ -1181,7 +1178,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
         
         #-- legend entry --
                 
-        lines = [ax.lines[1], ax.lines[0], ax.lines[2], rec2, rec1]
+        lines = [ax.lines[0], ax.lines[1], ax.lines[2], rec2, rec1]
         labels = ['Max Temp.', 'Mean Temp.', 'Min. Temp.', 'Rain', 'Snow']
         
         #-- plot legend --
@@ -1205,9 +1202,9 @@ if __name__ == '__main__':
     w.save_fig_dir =  '../Projects/Project4Testing'        
     w.show()
     w.generate_graph(fmeteo)
-    for i in range(100):
-        w.generate_graph(fmeteo)
-        QtCore.QCoreApplication.processEvents()
-        QtCore.QCoreApplication.processEvents()
+#    for i in range(250):
+#        w.generate_graph(fmeteo)
+#        QtCore.QCoreApplication.processEvents()
+#        QtCore.QCoreApplication.processEvents()
     
     app.exec_()
