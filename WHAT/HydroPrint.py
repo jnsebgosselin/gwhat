@@ -603,10 +603,10 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         self.tabscales.hide()
         self.qAxeLabelsLanguage.hide()
-            
+                    
+    def show_weather_averages(self): #============== show_weather_averages ====
         
-    def show_weather_averages(self): #========================================
-        filemeteo = self.hydrograph.fmeteo
+        filemeteo = copy.copy(self.hydrograph.fmeteo)
 
         if not filemeteo:
             
@@ -622,6 +622,34 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.weather_avg_graph.save_fig_dir = self.workdir
         self.weather_avg_graph.generate_graph(filemeteo)            
         self.weather_avg_graph.show()
+#        for i in range(15):
+#            self.weather_avg_graph.generate_graph(filemeteo)
+#            self.weather_avg_graph.close()
+#            QtCore.QCoreApplication.processEvents()
+#            self.weather_avg_graph.show()
+#            QtCore.QCoreApplication.processEvents()
+            
+#        for i in range(15):
+#            print(i)
+#            self.weather_avg_graph = meteo.WeatherAvgGraph()
+#    #        weather_avg_graph.save_fig_dir = self.workdir
+##            weather_avg_graph.generate_graph(filemeteo)            
+#            self.weather_avg_graph.show()
+##            weather_avg_graph.destroyed.connect(self.coucou)
+#            self.weather_avg_graph.close()
+#            self.weather_avg_graph.fig_weather_normals.fig.clf()
+#            del self.weather_avg_graph.fig_weather_normals.fig
+#            del self.weather_avg_graph.fig_weather_normals
+#            del self.weather_avg_graph
+#        import gc
+#        for i in range(100):
+#            gc.collect()
+#            for event in range(5):
+#                QtCore.QCoreApplication.processEvents()
+            
+            
+#    def coucou(self):
+#        print 'Coucou deleting'
         
     def emit_error_message(self, error_text): #================================
         
