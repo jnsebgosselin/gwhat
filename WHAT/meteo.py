@@ -27,10 +27,12 @@ last_modification = 15/06/2015
 import csv
 from calendar import monthrange
 from sys import argv
-from os import path, getcwd
-import time
+import os
+from os import path
 from datetime import date
-import copy
+#import copy
+#import time
+
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -41,10 +43,9 @@ import numpy as np
 from PySide import QtGui, QtCore
 
 import matplotlib as mpl
-mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-import matplotlib.pyplot as plt
+#import matplotlib.pyplot as plt
 
 #---- PERSONAL IMPORTS ----
 
@@ -72,62 +73,63 @@ class Tooltips():
         self.open = "Open a valid '.out' weather data file"
         self.addTitle = 'Add A Title To The Figure Here (Option not yet available)'
         
-        if language == 'French': #--------------------------------- FRENCH -----
+        if language == 'French': #-------------------------------- FRENCH -----
             
             pass
 
-#===============================================================================
-class WeatherAvgGraph(QtGui.QWidget): 
+#==============================================================================
+class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
+#==============================================================================
+
     """
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
-#===============================================================================
     
     def __init__(self, parent=None):
-        super(WeatherAvgGraph, self).__init__(parent)
+        super(WeatherAvgGraph, self).__init__(parent)        
+        self.setWindowFlags(QtCore.Qt.Window)
+#        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.initUI()
         
-    def initUI(self): #=======================================================
+    def initUI(self): #========================================================
         
         iconDB = db.Icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
         self.station_name = []
-        self.save_fig_dir = getcwd()
-        self.meteo_dir = getcwd()
+        self.save_fig_dir = os.getcwd()
+        self.meteo_dir = os.getcwd()
         
         self.setWindowTitle('Weather Averages')
         self.setFont(StyleDB.font1)
         self.setWindowIcon(iconDB.WHAT)
+             
+        #--------------------------------------------------------- TOOLBAR ----
         
-        #--------------------------------------------------- FigureCanvas ----
+        btn_save = QtGui.QToolButton()
+        btn_save.setAutoRaise(True)
+        btn_save.setIcon(iconDB.save)
+        btn_save.setToolTip(ttipDB.save)
+        btn_save.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_save.setIconSize(StyleDB.iconSize)
+        btn_save.clicked.connect(self.save_graph)
         
-        self.fig = plt.figure()        
-        self.fig.set_size_inches(8.5, 5)        
-        self.fig.patch.set_facecolor('white')
-        self.fig_widget = FigureCanvasQTAgg(self.fig)
-        
-        #-------------------------------------------------------- TOOLBAR ----
-        
-        self.btn_save = QtGui.QToolButton()
-        self.btn_save.setAutoRaise(True)
-        self.btn_save.setIcon(iconDB.save)
-        self.btn_save.setToolTip(ttipDB.save)
-        self.btn_save.setFocusPolicy(QtCore.Qt.NoFocus)
-        
-        self.btn_open = QtGui.QToolButton()
-        self.btn_open.setAutoRaise(True)
-        self.btn_open.setIcon(iconDB.openFile)
-        self.btn_open.setToolTip(ttipDB.open)
-        self.btn_open.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_open = QtGui.QToolButton()
+        btn_open.setAutoRaise(True)
+        btn_open.setIcon(iconDB.openFile)
+        btn_open.setToolTip(ttipDB.open)
+        btn_open.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_open.setIconSize(StyleDB.iconSize)
+        btn_open.clicked.connect(self.select_meteo_file)
         
         self.graph_title = QtGui.QLineEdit()
         self.graph_title.setMaxLength(65)
         self.graph_title.setEnabled(False)
         self.graph_title.setText('Add A Title To The Figure Here')
         self.graph_title.setToolTip(ttipDB.addTitle)
+        self.graph_title.setFixedHeight(StyleDB.size1)
         
         self.graph_status = QtGui.QCheckBox()
         self.graph_status.setEnabled(False)
@@ -140,9 +142,9 @@ class WeatherAvgGraph(QtGui.QWidget):
         
         row = 0
         col = 0
-#        subgrid_toolbar.addWidget(self.btn_open, row, col)        
+#        subgrid_toolbar.addWidget(btn_open, row, col)        
 #        col += 1
-        subgrid_toolbar.addWidget(self.btn_save, row, col)
+        subgrid_toolbar.addWidget(btn_save, row, col)
         col += 1
         subgrid_toolbar.addWidget(separator1, row, col) 
 #        col += 1
@@ -156,21 +158,23 @@ class WeatherAvgGraph(QtGui.QWidget):
         subgrid_toolbar.setHorizontalSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
 #        subgrid_toolbar.setColumnMinimumWidth(col+1, 500)
-                
-        self.btn_save.setIconSize(StyleDB.iconSize)
-        self.btn_open.setIconSize(StyleDB.iconSize)
-        self.graph_title.setFixedHeight(StyleDB.size1)
-        
+            
         toolbar_widget.setLayout(subgrid_toolbar)
         
-        #------------------------------------------------------ MAIN GRID ----
+        #---------------------------------------------  ---------- MAIN GRID --
+        
+        #-- widgets --
+        
+        self.fig_weather_normals = FigWeatherNormals()
+        
+        #-- layout --
         
         mainGrid = QtGui.QGridLayout()
         
         row = 0 
         mainGrid.addWidget(toolbar_widget, row, 0)
         row += 1
-        mainGrid.addWidget(self.fig_widget, row, 0)
+        mainGrid.addWidget(self.fig_weather_normals, row, 0)
                 
         mainGrid.setContentsMargins(15, 15, 15, 15) # Left, Top, Right, Bottom 
         mainGrid.setSpacing(15)
@@ -178,13 +182,8 @@ class WeatherAvgGraph(QtGui.QWidget):
         mainGrid.setColumnStretch(0, 500)
         
         self.setLayout(mainGrid)
-        
-        #---------------------------------------------------------- EVENT ----
-        
-        self.btn_save.clicked.connect(self.save_graph)
-        self.btn_open.clicked.connect(self.select_meteo_file)
-        
-    def generate_graph(self, filename): #=====================================
+                
+    def generate_graph(self, filename): #==================== generate_graph ==
         
         METEO = MeteoObj()
         METEO.load_and_format(filename)
@@ -195,42 +194,62 @@ class WeatherAvgGraph(QtGui.QWidget):
         # DATA = [YEAR, MONTH, DAY, TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}]
  
         NORMALS = calculate_normals(METEO.DATA, METEO.datatypes)
+        
+        self.fig_weather_normals.plot_monthly_normals(NORMALS)                
+        self.fig_weather_normals.draw()
 
-        plot_monthly_normals(self.fig, NORMALS)
-                
-        self.fig_widget.draw()
-
-    def save_graph(self): #===================================================
+    def save_graph(self): #====================================== save_graph ==
         
         dialog_dir = self.save_fig_dir
         dialog_dir += '/WeatherAverages_%s' % self.station_name
         
         dialog = QtGui.QFileDialog()
         dialog.setConfirmOverwrite(True)
-        filename, ftype = dialog.getSaveFileName(
-                                          caption="Save Figure", dir=dialog_dir,
-                                          filter=('*.pdf;;*.svg'))
+        filename, ftype = dialog.getSaveFileName(caption="Save Figure",
+                                                 dir=dialog_dir,
+                                                 filter=('*.pdf'))
                                   
-        if filename:         
-            
-            if filename[-4:] != ftype[1:]:
+        if filename:
+            if filename[-4:] != ftype[1:]: 
                 # Add a file extension if there is none.
                 filename = filename + ftype[1:]
                 
             self.save_fig_dir = path.dirname(filename)    
-            self.fig.savefig(filename)   
+            self.fig_weather_normals.figure.savefig(filename)   
 
     def select_meteo_file(self):
         dialog_dir = self.meteo_dir
         filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                   self, 'Select a valid weather data file', 
-                                   dialog_dir, '*.out') 
+                                            'Select a valid weather data file', 
+                                            dialog_dir, '*.out') 
                                    
         if filename:
             self.generate_graph(filename)
             self.meteo_dir = path.dirname(filename)
             
-#=============================================================================        
+    def show(self): #================================================== show ==
+        super(WeatherAvgGraph, self).show()    
+        self.raise_()
+        # self.activateWindow()
+        
+        qr = self.frameGeometry()
+        if self.parentWidget():
+            print('coucou')
+            wp = self.parentWidget().frameGeometry().width()
+            hp = self.parentWidget().frameGeometry().height()
+            cp = self.parentWidget().mapToGlobal(QtCore.QPoint(wp/2., hp/2.))        
+        else:
+            cp = QtGui.QDesktopWidget().availableGeometry().center()            
+        qr.moveCenter(cp)                    
+        self.move(qr.topLeft())           
+        self.setFixedSize(self.size())
+        
+#    def closeEvent(self, event):
+#        self.fig.canvas.flush_events()
+#        super(WeatherAvgGraph, self).closeEvent(event)
+        
+            
+#==============================================================================        
 class MeteoObj():    
     """
     This is a class to load and manipulate weather data.
@@ -238,7 +257,7 @@ class MeteoObj():
     nan are assigned a value of 0 for Ptot and for air Temp, the value is 
     calculated with an in-station interpolation.
     """
-#=============================================================================    
+#==============================================================================    
 
     def __init__(self):
         
@@ -273,7 +292,7 @@ class MeteoObj():
         self.TIME = [] # Time in numeric format.
 
         
-    def load_and_format(self, filename): #====================================
+    def load_and_format(self, filename): #=====================================
         
         #---- load data from file ----
         
@@ -794,7 +813,7 @@ def calculate_daylength(DATE, LAT):
         DAY[i] = int(date(DATE[i, 0], DATE[i, 1],DATE[i, 2]).timetuple().tm_yday)
         DAY[i] = int(DAY[i])
         
-    #---------------------------------------------- DECLINATION OF THE SUN -----    
+    #------------------------------------------------ DECLINATION OF THE SUN --    
     
     # http://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
 
@@ -808,13 +827,13 @@ def calculate_daylength(DATE, LAT):
             
     SUNDEC = np.arcsin(np.sin(D) * np.cos(C + B * np.sin(A)))
     
-    #---------------------------------------------------- SUNRISE EQUATION -----    
+    #------------------------------------------------------ SUNRISE EQUATION --
 
     # http:/Omega/en.wikipedia.org/wiki/Sunrise_equation
 
     OMEGA = np.arccos(-np.tan(LAT) * np.tan(SUNDEC))
     
-    #------------------------------------------------------ HOURS OF LIGHT -----
+    #-------------------------------------------------------- HOURS OF LIGHT --
     
     # http://physics.stackexchange.com/questions/28563/
     #        hours-of-light-per-day-based-on-latitude-longitude-formula
@@ -823,267 +842,378 @@ def calculate_daylength(DATE, LAT):
     
     return DAYLEN
 
-#===============================================================================
-def plot_monthly_normals(fig, NORMALS, COLOR=['black', 'black']):
-#===============================================================================
-
-    #---- assign local variables ----
-    
-    Tmax_norm = NORMALS[:, 0]
-    Tmin_norm = NORMALS[:, 1]    
-    TNORM = NORMALS[:, 2]
-    PNORM = NORMALS[:, 3]
-    RNORM = NORMALS[:, -1]    
-    
-    SNORM = PNORM - RNORM
-    
-    #---- setup layout ----
-    
-    fig.clf()
-    
-    label_font_size = 16
-    
-    labelDB = LabelDataBase('English')
-    
-    month_names = labelDB.month_names
-     
-    fig.patch.set_facecolor('white')
-    
-    fheight = fig.get_figheight()
-    fwidth = fig.get_figwidth()
-    
-    left_margin  = 1
-    right_margin = 1
-    bottom_margin = 0.5
-    top_margin = 0.1
-    
-    x0 = left_margin / fwidth
-    y0 = bottom_margin / fheight
-    w0 = 1 - (left_margin + right_margin) / fwidth
-    h0 = 1 - (bottom_margin + top_margin) / fheight
-   
-    #---------------------------------------------------------AXES CREATION-----
-
-    ax0  = fig.add_axes([x0, y0, w0, h0])
-    ax0.patch.set_visible(False)
-    ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=1)
-    ax1.patch.set_visible(False)
-    
-    #------------------------------------------------------XTICKS FORMATING----- 
-    
-    Xmin0 = 0
-    Xmax0 = 12.001
-    
-    ax0.xaxis.set_ticks_position('bottom')
-    ax0.tick_params(axis='x',direction='out')
-    ax0.xaxis.set_ticklabels([])
-    ax0.set_xticks(np.arange(Xmin0, Xmax0))
-    
-    ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
-    ax0.tick_params(axis='x', which='minor', direction='out', gridOn=False,
-                    length=0, labelsize=13)
-    ax0.xaxis.set_ticklabels(month_names, minor=True)
-    
-    ax1.tick_params(axis='x', which='both', bottom='off', top='off',
-                    labelbottom='off')
-    
-    #--------------------------------------------------- DEFINE AXIS RANGE -----
-    
-    if np.sum(PNORM) < 500:
-        Yscale0 = 10 # Precipitation (mm)
-    else:
-        Yscale0 = 20
+#==============================================================================
+class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
+#==============================================================================
+    def __init__(self):
         
-    Yscale1 = 5 # Temperature (deg C)
-    
-    SCA0 = np.arange(0, 10000, Yscale0)
-    SCA1 = np.arange(-100, 100, Yscale1)
-    
-    #----- Precipitation -----
-    
-    indx = np.where(SCA0 > np.max(PNORM))[0][0]   
-    Ymax0 = SCA0[indx+1]
-    
-    indx = np.where(SCA0 <= np.min(SNORM))[0][-1]
-    Ymin0 = SCA0[indx]
-    
-    NZGrid0 = (Ymax0 - Ymin0) / Yscale0
-    
-    #----- Temperature -----
-    
-#    indx = np.where(SCA1 > np.max(TNORM+TSTD))[0][0] 
-    indx = np.where(SCA1 > np.max(Tmax_norm))[0][0]
-    Ymax1 = SCA1[indx]
-    
-#    indx = np.where(SCA1 < np.min(TNORM-TSTD))[0][-1] 
-    indx = np.where(SCA1 < np.min(Tmin_norm))[0][-1]
-    Ymin1 = SCA1[indx]
-    
-    NZGrid1 = (Ymax1 - Ymin1) / Yscale1
-    
-    #----- Uniformization Of The Grids -----
-    
-    if NZGrid0 > NZGrid1:    
-        Ymin1 = Ymax1 - NZGrid0 * Yscale1
-    elif NZGrid0 < NZGrid1:
-        Ymax0 = Ymin0 + NZGrid1 * Yscale0
-    elif NZGrid0 == NZGrid1:
-        pass
-    
-    #----- Adjust Space For Text -----
-    
-    Ymax0 = 180 # In case there is a need to force the value
-    Ymax1 = 25 ; Ymin1 = -20
-    
-    reqheight = 0.15 # Height for yearly averages text on top of the graph.
-    Ymax0 += (Ymax0 - Ymin0) * reqheight 
-    Ymax1 += (Ymax1 - Ymin1) * reqheight
-    
-#    height4text = (Ymax1 - np.max(TNORM+TSTD)) / (Ymax1 - Ymin1)
+        fw, fh = 8.5, 5.
+        fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
         
-#    Ymax0 += (Ymax0 - Ymin0) * (reqheight - height4text) 
-#    Ymax1 += (Ymax1 - Ymin1) * (reqheight - height4text) 
-    
-#    Ymax0 += (Ymax0 - Ymin0) * (reqheight - height4text) 
-#    Ymax1 += (Ymax1 - Ymin1) * (reqheight - height4text)
-    
-    #---------------------------------------------------- YTICKS FORMATING ----
-    
-    #----- Precip (host) -----
-    
-    ax0.yaxis.set_ticks_position('left')
-    
-    yticks = np.arange(Ymin0, Ymax0 - (Ymax0 - Ymin0) * 0.1, Yscale0)
-    ax0.set_yticks(yticks)
-    ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1],
-                    labelsize=13)
-    
-    yticks_minor = np.arange(yticks[0], yticks[-1], 5)
-    ax0.set_yticks(yticks_minor, minor=True)
-    ax0.tick_params(axis='y', which='minor', direction='out')
-    ax0.yaxis.set_ticklabels([], minor=True)
-    
-    ax0.set_axisbelow(True)
-    
-    #----- Air Temp -----
-    
-    yticks1 = np.arange(Ymin1, Ymax1 - (Ymax1 - Ymin1) * 0.1 , Yscale1)    
-    ax1.yaxis.set_ticks_position('right')
-    ax1.set_yticks(yticks1)
-    ax1.tick_params(axis='y', direction='out', labelcolor=COLOR[0],
-                    labelsize=13)
-    
-    yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1/5.)
-    ax1.set_yticks(yticks1_minor, minor=True)
-    ax1.tick_params(axis='y', which='minor', direction='out', gridOn=False)
-    ax1.yaxis.set_ticklabels([], minor=True)
-    
-    #---------------------------------------------------------------- GRID ----
-    
-#    ax0.grid(axis='y', color=[0.5, 0.5, 0.5], linestyle=':', linewidth=1,
-#             dashes=[1, 5])
-#    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-', linewidth=0.5)
+        super(FigWeatherNormals, self).__init__(fig)
+                
+        #---------------------------------------------------- Define Margins --
+       
+        labelDB = LabelDataBase('English')        
+        month_names = labelDB.month_names
+        
+        left_margin = 1 / fw
+        right_margin = 1 / fw
+        bottom_margin = 0.35 / fh
+        top_margin = 0.1 / fh
+                     
+        #--------------------------------------------- Yearly Avg Labels Axe --
+        
+        ax3 = fig.add_axes([0, 0, 1, 1], zorder=1)     
+        ax3.patch.set_visible(False)
+        ax3.tick_params(axis='both', bottom='off', top='off',
+                                     labelbottom='off', labeltop='off',
+                                     left='off', right='off',
+                                     labelleft='off', labelright='off')
+        ax3.spines['bottom'].set_visible(False)
+        
+        #-- Mean Annual Avg Labels --
+        
+        # place first label at the top left corner of ax1 with a horizontal
+        # and vertical padding of 3 points.
+        
+        padding = mpl.transforms.ScaledTranslation(5/72., -3/72., 
+                                                   fig.dpi_scale_trans)        
+        transform = ax3.transAxes + padding
+        
+        ax3.text(0., 1., 'Mean Annual Air Temperature', 
+                 fontsize=13, va='top', transform=transform)
+                                  
+        # place second label below the first label with a vertical padding
+        # of 3 points.
+                                  
+        renderer = self.get_renderer()                     
+        bbox = ax3.texts[0].get_window_extent(renderer)
+        bbox = bbox.transformed(ax3.transAxes.inverted())
+                                  
+        ax3.text(0., bbox.y0, 'Mean Annual Precipitation', 
+                 fontsize=13, va='top', transform=transform)
+        
+        bbox = ax3.texts[1].get_window_extent(renderer)
+        bbox = bbox.transformed(fig.transFigure.inverted())
+        
+        #-- update geometry --
 
-    #------------------------------------------------------ SET AXIS RANGE ---- 
-
-    ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
-    ax1.axis([Xmin0, Xmax0, Ymin1, Ymax1])
+        x0 = left_margin
+        w0 = 1 - (left_margin + right_margin)
+        h0 = 1 - bbox.y0 + (3/72. / fw)
+        y0 = 1 - h0 - top_margin
+        
+        ax3.set_position([x0, y0, w0, h0])
+        
+        #--------------------------------------------------------- Data Axes --
+        
+        h0 = y0 - bottom_margin
+        y0 = y0 - h0
+        
+        #-- Precip --
+        
+        ax0  = fig.add_axes([x0, y0, w0, h0], zorder=1)
+        ax0.patch.set_visible(False)
+        ax0.spines['top'].set_visible(False)
+        ax0.set_axisbelow(True)
+        
+        #-- Air Temp. --
+        
+        ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=5, 
+                           sharex=ax0)
+                                                           
+        #------------------------------------------------------ INIT ARTISTS --
+        
+        #-- Precipitation --
+        
+        self.PTOT_bar, = ax0.plot([], [])
+        self.SNOW_bar, = ax0.plot([], [])
+        
+        #-- Air Temperature --
+        
+        XPOS = np.arange(-0.5, 12.51, 1) 
+        y = range(len(XPOS))
+        colors = ['#990000', '#FF0000', '#FF6666']
+        self.Tplot1, = ax1.plot(XPOS, y, color=colors[1], clip_on=True,
+                                marker='o', ls='--', ms=6, zorder=100,
+                                mec=colors[1], mfc='white', mew=1.5,
+                                lw=1.5)
+        
+        self.Tplot2, = ax1.plot(XPOS, y, color=colors[0], clip_on=True,
+                                marker='o', ls='--', ms=0, zorder=100,
+                                mec=colors[0], mfc='white', mew=1.5,
+                                lw=1.5)
+                           
+        self.Tplot3, = ax1.plot(XPOS, y, color=colors[2], clip_on=True,
+                                marker='o', ls='--', ms=0, zorder=100,
+                                mec=colors[2], mfc='white', mew=1.5,
+                                lw=1.5)
+        
+        #-------------------------------------------------- XTICKS FORMATING -- 
     
-    #-------------------------------------------------------------- LABELS ----
+        Xmin0 = 0
+        Xmax0 = 12.001
+        
+        #-- major --
+        
+        ax0.xaxis.set_ticks_position('bottom')
+        ax0.tick_params(axis='x',direction='out')
+        ax0.xaxis.set_ticklabels([])
+        ax0.set_xticks(np.arange(Xmin0, Xmax0))
+        
+        ax1.tick_params(axis='x', which='both', bottom='off', top='off',
+                        labelbottom='off')
+        
+        #-- minor --
+        
+        ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
+        ax0.tick_params(axis='x', which='minor', direction='out',
+                        length=0, labelsize=13)
+        ax0.xaxis.set_ticklabels(month_names, minor=True)
+        
+        #-------------------------------------------------------------- GRID --
+        
+    #    ax0.grid(axis='y', color=[0.5, 0.5, 0.5], linestyle=':', linewidth=1,
+    #             dashes=[1, 5])
+    #    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-',
+#                 linewidth=0.5)
+        
+        #------------------------------------------------------------- XLIMS --
+                             
+        ax0.set_xlim(Xmin0, Xmax0)
+        
+        #------------------------------------------------------- Plot Legend --
+        
+        self.plot_legend()
+                             
+    def plot_monthly_normals(self, NORMALS, COLOR=['black', 'black']):
+        
+        #-------------------------------------------- assign local variables --
     
-    ax0.set_ylabel('Monthly Total Precipication (mm)', fontsize=label_font_size,
-                   verticalalignment='bottom', color=COLOR[1])
-    ax0.yaxis.set_label_coords(-0.09, 0.5)
+        Tmax_norm = NORMALS[:, 0]
+        Tmin_norm = NORMALS[:, 1]
+        TNORM = NORMALS[:, 2]
+        PNORM = NORMALS[:, 3]
+        RNORM = NORMALS[:, -1]        
+        SNORM = PNORM - RNORM
     
-    ax1.set_ylabel(u'Monthly Mean Air Temperature (°C)', color=COLOR[0],
-                   fontsize=label_font_size, verticalalignment='bottom',
-                   rotation=270)
-    ax1.yaxis.set_label_coords(1.09, 0.5)
-
-    #------------------------------------------------------------ PLOTTING ----
+        #------------------------------------------------- DEFINE AXIS RANGE --
     
-    SNOWcolor = db.styleUI().snow
-    RAINcolor = db.styleUI().rain
+        if np.sum(PNORM) < 500:
+            Yscale0 = 10 # Precipitation (mm)
+        else:
+            Yscale0 = 20
             
-    XPOS = np.arange(0.5, 12.5, 1)
-    
-    ax0.bar(XPOS, PNORM, align='center', width=0.65, color=RAINcolor,
-            edgecolor='k', linewidth=0.)            
-    ax0.bar(XPOS, SNORM, align='center', width=0.65, color=SNOWcolor,
-            edgecolor='k', linewidth=0.)    
-    
-    #---- Air Temperature ----
-    
-    colors = ['#990000', '#FF0000', '#FF6666']
-    
-    TNORM = np.hstack((TNORM[-1], TNORM, TNORM[0]))
-    Tmin_norm = np.hstack((Tmin_norm[-1], Tmin_norm, Tmin_norm[0]))
-    Tmax_norm = np.hstack((Tmax_norm[-1], Tmax_norm, Tmax_norm[0]))
-#    TSTD = np.hstack((TSTD[-1], TSTD, TSTD[0])) 
-    
-    XPOS = np.arange(-0.5, Xmax0+0.5) 
-    
-    h1_ax1, = ax1.plot(XPOS, TNORM, color=colors[1], clip_on=True,
-                       marker='o', ls='--', ms=6, zorder=100,
-                       mec=colors[1], mfc='white', mew=1.5, lw=1.5)
-    
-    h2_ax1, = ax1.plot(XPOS, Tmax_norm, color=colors[0], clip_on=True,
-                       marker='o', ls='--', ms=0, zorder=100,
-                       mec=colors[0], mfc='white', mew=1.5, lw=1.)
-                       
-    h3_ax1, = ax1.plot(XPOS, Tmin_norm, color=colors[2], clip_on=True,
-                       marker='o', ls='--', ms=0, zorder=100,
-                       mec=colors[2], mfc='white', mew=1.5, lw=1.)
-                         
-#    ax1.errorbar(XPOS, TNORM, yerr=TSTD, color='red', fmt='o', ecolor='black',
-#                 capthick=1.2, elinewidth=1.2, clip_on=True, zorder=100)
-    
-    #---- Yearly Averages Labels ----
-            
-    ax1.text(0.02, 0.94, 
-             u'Mean Annual Air Temperature = %0.1f °C' % np.mean(TNORM[1:-1]),
-             fontsize=13, verticalalignment='bottom', transform=ax1.transAxes)
-    ax1.text(0.02, 0.88,
-             u'Mean Annual Precipitation = %0.1f mm' % np.sum(PNORM),
-             fontsize=13, verticalalignment='bottom', transform=ax1.transAxes)
-             
-    #--------------------------------------------------------------- LEGEND ----        
+        Yscale1 = 5 # Temperature (deg C)
+        
+        SCA0 = np.arange(0, 10000, Yscale0)
+        SCA1 = np.arange(-100, 100, Yscale1)
+        
+        #-- Precipitation --
+        
+        indx = np.where(SCA0 > np.max(PNORM))[0][0]   
+        Ymax0 = SCA0[indx+1]
+        
+        indx = np.where(SCA0 <= np.min(SNORM))[0][-1]
+        Ymin0 = SCA0[indx]
+        
+        NZGrid0 = (Ymax0 - Ymin0) / Yscale0
+        
+        #-- Temperature --
+        
+        indx = np.where(SCA1 > np.max(Tmax_norm))[0][0]
+        Ymax1 = SCA1[indx]
+        
+        indx = np.where(SCA1 < np.min(Tmin_norm))[0][-1]
+        Ymin1 = SCA1[indx]
+        
+        NZGrid1 = (Ymax1 - Ymin1) / Yscale1
+        
+        #-- Uniformization Of The Grids --
+        
+        if NZGrid0 > NZGrid1:    
+            Ymin1 = Ymax1 - NZGrid0 * Yscale1
+        elif NZGrid0 < NZGrid1:
+            Ymax0 = Ymin0 + NZGrid1 * Yscale0
+        elif NZGrid0 == NZGrid1:
+            pass
+        
+        #-- Adjust Space For Text --
+        
+#        # In case there is a need to force the value
+#        #----
+#        Ymax0 = 180 
+#        Ymax1 = 25 ; Ymin1 = -20
+#        #----
+        
+        #-------------------------------------------------- YTICKS FORMATING --
 
-    rec1 = plt.Rectangle((0, 0), 1, 1, fc=SNOWcolor, ec='none')
-    rec2 = plt.Rectangle((0, 0), 1, 1, fc=RAINcolor, ec='none')
-    
-    lines = [h2_ax1, h1_ax1, h3_ax1, rec1, rec2]
-   
-    labels = ['Max Temp.', 'Mean Temp.', 'Min. Temp.', 'Snow', 'Rain']
-    
-    # Get the bounding box of the original legend
-#    renderer = fig.canvas.get_renderer()
-#     bb = leg.legendPatch.get_bbox().inverse_transformed(ax.transAxes)
-    
-    pos = ax1.transData.transform((0., np.max(yticks1)))
-    pos = ax1.transAxes.inverted().transform(pos)
-    pos[0] = 0.01
-    
-    print pos
-    
-    legend = ax1.legend(lines, labels,
-                        numpoints=1, fontsize=13, borderaxespad=0.,
-                        bbox_to_anchor=pos, loc='upper left')
+        ax0 = self.figure.axes[1]
+        ax1 = self.figure.axes[2]
+        
+        #-- Precip (host) --
                
-    legend.draw_frame(False)
+        yticks = np.arange(Ymin0, Ymax0 + Yscale0/10., Yscale0)
+        ax0.yaxis.set_ticks_position('right') 
+        ax0.set_yticks(yticks)
+        ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1],
+                        labelsize=13)
+        
+        yticks_minor = np.arange(yticks[0], yticks[-1], 5)
+        ax0.set_yticks(yticks_minor, minor=True)
+        ax0.tick_params(axis='y', which='minor', direction='out')
+        ax0.yaxis.set_ticklabels([], minor=True)
+        
+        #-- Air Temp --
+        
+        yticks1 = np.arange(Ymin1, Ymax1 + Yscale1/10., Yscale1)    
+        ax1.yaxis.set_ticks_position('left')
+        ax1.set_yticks(yticks1)
+        ax1.tick_params(axis='y', direction='out', labelcolor=COLOR[0],
+                        labelsize=13)
+        
+        yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1/5.)
+        ax1.set_yticks(yticks1_minor, minor=True)
+        ax1.tick_params(axis='y', which='minor', direction='out')
+        ax1.yaxis.set_ticklabels([], minor=True)
+        
+        #---------------------------------------------------- SET AXIS RANGE -- 
+
+        ax0.set_ylim(Ymin0, Ymax0)
+        ax1.set_ylim(Ymin1, Ymax1)
+        
+        #------------------------------------------------------------ LABELS --
+
+        ax0.set_ylabel('Monthly Total Precipication (mm)', va='bottom',
+                       fontsize=16, color=COLOR[1], rotation=270)                            
+        ax0.yaxis.set_label_coords(1.09, 0.5)
+        
+        ax1.set_ylabel(u'Monthly Mean Air Temperature (°C)', va='bottom',
+                       fontsize=16, color=COLOR[0])        
+        ax1.yaxis.set_label_coords(-0.09, 0.5)
+        
+        #---------------------------------------------------------- PLOTTING --
+        
+        self.plot_precip(PNORM, SNORM)
+        self.plot_air_temp(Tmax_norm, Tmin_norm, TNORM)
+        self.update_yearly_avg(TNORM, PNORM)
+        
+    def plot_precip(self, PNORM, SNORM): #====================== plot_precip ==
+        
+        #-- define vertices manually --
+        
+        Xmid = np.arange(0.5, 12.5, 1)                
+        n = 0.5
+        f = 0.65 # Space between individual bar.
+        
+        Xpos = np.vstack((Xmid - n * f,
+                          Xmid - n * f,
+                          Xmid + n * f,
+                          Xmid + n * f)).transpose().flatten()
+        
+        Ptot = np.vstack((PNORM * 0,
+                          PNORM,
+                          PNORM,
+                          PNORM * 0)).transpose().flatten()
+        
+        Snow = np.vstack((SNORM * 0,
+                          SNORM,
+                          SNORM,
+                          SNORM * 0)).transpose().flatten()
+        
+        #-- plot data --
+        
+        ax = self.figure.axes[1]
+        
+        self.PTOT_bar.remove()
+        self.SNOW_bar.remove()
+        del self.PTOT_bar
+        del self.SNOW_bar
+        
+        self.PTOT_bar = ax.fill_between(Xpos, 0., Ptot, edgecolor='none',
+                                        color=db.styleUI().rain)
+                                            
+        self.SNOW_bar = ax.fill_between(Xpos, 0., Snow, edgecolor='none',
+                                        color=db.styleUI().snow)
+                                              
+    def plot_air_temp(self, Tmax_norm, Tmin_norm, Tmean_norm): #===============
+        
+        #---- Air Temperature ----
+        
+        Tmean_norm = np.hstack((Tmean_norm[-1], Tmean_norm, Tmean_norm[0]))
+        Tmin_norm = np.hstack((Tmin_norm[-1], Tmin_norm, Tmin_norm[0]))
+        Tmax_norm = np.hstack((Tmax_norm[-1], Tmax_norm, Tmax_norm[0]))
+        
+        self.Tplot1.set_ydata(Tmean_norm)
+        self.Tplot2.set_ydata(Tmax_norm)
+        self.Tplot3.set_ydata(Tmin_norm)
+        
+    def update_yearly_avg(self, TNORM, PNORM): #========== update_yearly_avg ==
+        
+        ax = self.figure.axes[0]
+        
+        #-- update position --
+        
+        bbox = ax.texts[0].get_window_extent(self.get_renderer())
+        bbox = bbox.transformed(ax.transAxes.inverted())
+        
+        ax.texts[1].set_position((0, bbox.y0))
+        
+        #-- update labels --
+        
+        ax.texts[0].set_text(u'Mean Annual Air Temperature = %0.1f °C' % 
+                             np.mean(TNORM))
+                         
+        ax.texts[1].set_text(u'Mean Annual Precipitation = %0.1f mm' % 
+                             np.sum(PNORM))
+                             
+    def plot_legend(self): #==================================== plot_legend ==
+        
+        ax = self.figure.axes[2] # Axe on which the legend is hosted
+        
+        #-- bbox transform --
+        
+        padding = mpl.transforms.ScaledTranslation(5/72., -5/72., 
+                                                   self.figure.dpi_scale_trans)        
+        transform = ax.transAxes + padding
+        
+        #-- proxy artists --
+        
+        rec1 = mpl.patches.Rectangle((0, 0), 1, 1, fc=db.styleUI().snow, 
+                                                   ec='none')
+        rec2 = mpl.patches.Rectangle((0, 0), 1, 1, fc=db.styleUI().rain,
+                                                   ec='none')
+        
+        #-- legend entry --
+                
+        lines = [ax.lines[1], ax.lines[0], ax.lines[2], rec2, rec1]
+        labels = ['Max Temp.', 'Mean Temp.', 'Min. Temp.', 'Rain', 'Snow']
+        
+        #-- plot legend --
+        
+        leg = ax.legend(lines, labels, numpoints=1, fontsize=13,
+                        borderaxespad=0, loc='upper left', borderpad=0,
+                        bbox_to_anchor=(0, 1), bbox_transform=transform)                   
+        leg.draw_frame(False)        
+
     
 if __name__ == '__main__':
 #    plt.rc('font',family='Arial')
     
     app = QtGui.QApplication(argv)   
-    instance_1 = WeatherAvgGraph()
-            
+                
 #    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
 #    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
     fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
-    instance_1.save_fig_dir =  '../Projects/Project4Testing'
-    instance_1.generate_graph(fmeteo)
     
-    instance_1.show()
-    instance_1.setFixedSize(instance_1.size());
+    w = WeatherAvgGraph()
+    w.save_fig_dir =  '../Projects/Project4Testing'        
+    w.show()
+    w.generate_graph(fmeteo)
+#    for i in range(500):
+#        w.generate_graph(fmeteo)
+#        QtCore.QCoreApplication.processEvents()
+#        QtCore.QCoreApplication.processEvents()
+    
     app.exec_()
