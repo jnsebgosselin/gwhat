@@ -215,7 +215,7 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
                 filename = filename + ftype[1:]
                 
             self.save_fig_dir = path.dirname(filename)    
-            self.fig.savefig(filename)   
+            self.fig_weather_normals.figure.savefig(filename)   
 
     def select_meteo_file(self):
         dialog_dir = self.meteo_dir
