@@ -161,7 +161,7 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
             
         toolbar_widget.setLayout(subgrid_toolbar)
         
-        #------------------------------------------------------- MAIN GRID ----
+        #---------------------------------------------  ---------- MAIN GRID --
         
         #-- widgets --
         
@@ -1137,19 +1137,19 @@ class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
         self.SNOW_bar = ax.fill_between(Xpos, 0., Snow, edgecolor='none',
                                         color=db.styleUI().snow)
                                               
-    def plot_air_temp(self, Tmax_norm, Tmin_norm, TNORM): #====================
+    def plot_air_temp(self, Tmax_norm, Tmin_norm, Tmean_norm): #===============
         
         #---- Air Temperature ----
         
-        TNORM = np.hstack((TNORM[-1], TNORM, TNORM[0]))
+        Tmean_norm = np.hstack((Tmean_norm[-1], Tmean_norm, Tmean_norm[0]))
         Tmin_norm = np.hstack((Tmin_norm[-1], Tmin_norm, Tmin_norm[0]))
         Tmax_norm = np.hstack((Tmax_norm[-1], Tmax_norm, Tmax_norm[0]))
         
-        self.Tplot1.set_ydata(TNORM)
+        self.Tplot1.set_ydata(Tmean_norm)
         self.Tplot2.set_ydata(Tmax_norm)
         self.Tplot3.set_ydata(Tmin_norm)
         
-    def update_yearly_avg(self, TNORM, PNORM): #===============================
+    def update_yearly_avg(self, TNORM, PNORM): #========== update_yearly_avg ==
         
         ax = self.figure.axes[0]
         
@@ -1168,7 +1168,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):               # FigWeatherNormals #
         ax.texts[1].set_text(u'Mean Annual Precipitation = %0.1f mm' % 
                              np.sum(PNORM))
                              
-    def plot_legend(self): #===================================================
+    def plot_legend(self): #==================================== plot_legend ==
         
         ax = self.figure.axes[2] # Axe on which the legend is hosted
         
