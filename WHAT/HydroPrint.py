@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 import csv
 import sys
 import os
+import copy
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -85,8 +86,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         #------------------------------------------ Weather Normals Widget ----
         
-        self.weather_avg_graph = meteo.WeatherAvgGraph()        
-        self.weather_avg_graph.save_fig_dir = self.workdir
+        self.weather_avg_graph = meteo.WeatherAvgGraph(self)
         
         #------------------------------------------------ HydroCalc Widget ----
         
@@ -243,7 +243,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         self.grid_layout_widget.setLayout(grid_layout)
         
-        def make_data_files_panel(self): #-------------- Data Files Panel ----
+        def make_data_files_panel(self): #----------------- Data Files Panel --
             
             #---- widgets ----
                     
@@ -537,8 +537,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
     def set_workdir(self, directory): #========================================
         
         self.workdir = directory 
-        self.weather_avg_graph.save_fig_dir = directory
-        
+                
         self.meteo_dir = directory + '/Meteo/Output'
         self.waterlvl_dir = directory + '/Water Levels'
         self.save_fig_dir = directory
@@ -581,7 +580,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerows(fcontent)
                 
-    def toggle_layoutMode(self): #============================================
+    def toggle_layoutMode(self): #=============================================
         
         self.hydrocalc.hide()        
         self.grid_layout_widget.show()
@@ -593,7 +592,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.tabscales.show()
         self.qAxeLabelsLanguage.show()
         
-    def toggle_computeMode(self): #===========================================
+    def toggle_computeMode(self): #====================== toggle_computeMode ==
         
         self.grid_layout_widget.hide()
         self.hydrocalc.show()
@@ -604,11 +603,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         self.tabscales.hide()
         self.qAxeLabelsLanguage.hide()
-            
+                    
+    def show_weather_averages(self): #================ show_weather_averages ==
         
-    def show_weather_averages(self): #========================================
-        
-        filemeteo = self.hydrograph.fmeteo
+        filemeteo = copy.copy(self.hydrograph.fmeteo)
+
         if not filemeteo:
             
             self.ConsoleSignal.emit(
@@ -620,32 +619,16 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
             return
         
-        self.weather_avg_graph.generate_graph(filemeteo)
-        
-        #---- SHOW ----
-        
-        # Force the window to show in the center of the WHAT window.
-        
+        self.weather_avg_graph.save_fig_dir = self.workdir
+        self.weather_avg_graph.generate_graph(filemeteo)            
         self.weather_avg_graph.show()
-                                
-        qr = self.weather_avg_graph.frameGeometry()
-           
-        wp = self.frameGeometry().width()
-        hp = self.frameGeometry().height()
-        cp = self.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
-            
-        qr.moveCenter(cp)
-        self.weather_avg_graph.move(qr.topLeft())
         
-        self.weather_avg_graph.setFixedSize(self.weather_avg_graph.size())           
-            
-    def emit_error_message(self, error_text): #===============================
+    def emit_error_message(self, error_text): #========== emit_error_message ==
         
         self.msgError.setText(error_text)
         self.msgError.exec_()
-    
-    
-    def select_waterlvl_file(self): #=========================================
+        
+    def select_waterlvl_file(self): #================== select_waterlvl_file ==
         
         '''
         This method is called by <btn_waterlvl_dir> is clicked. It prompts
