@@ -63,7 +63,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.waterlvl_data = hydroprint.WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
-        #---- memory path variable ----
+        #-- memory path variable --
         
         self.meteo_dir = self.workdir + '/Meteo/Output'
         self.waterlvl_dir = self.workdir + '/Water Levels'
@@ -71,36 +71,36 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         self.initUI()
         
-    def initUI(self): #============================================ initUI ====
+    def initUI(self): #============================================== initUI ==
     
-        #-------------------------------------------------------- DATABASE ----
+        #---------------------------------------------------------- DATABASE --
        
         styleDB = db.styleUI()
         iconDB = db.Icons()
         styleDB = db.styleUI()
         ttipDB = db.Tooltips('English')
         
-        #----------------------------------------------------- Main Window ----
+        #------------------------------------------------------- Main Window --
         
         self.setWindowIcon(iconDB.WHAT)
         
-        #------------------------------------------ Weather Normals Widget ----
+        #-------------------------------------------- Weather Normals Widget --
         
         self.weather_avg_graph = meteo.WeatherAvgGraph(self)
         
-        #------------------------------------------------ HydroCalc Widget ----
+        #-------------------------------------------------- HydroCalc Widget --
         
         self.hydrocalc = HydroCalc.WLCalc()
         self.hydrocalc.hide()
         
-        #----------------------------------------------- Page Setup Widget ----
+        #------------------------------------------------- Page Setup Widget --
                
         self.page_setup_win = PageSetupWin(self)        
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
 
-        #--------------------------------------------------------- Toolbar ----
+        #----------------------------------------------------------- Toolbar --
        
-        #---- Graph Title Section ----
+        #-- Graph Title Section --
         
         graph_title_widget = QtGui.QWidget()
         
@@ -119,7 +119,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         graph_title_widget.setLayout(graph_title_layout)        
         
-        #---- Toolbar Buttons ----
+        #-- Toolbar Buttons --
         
         btn_loadConfig = QtGui.QToolButton()
         btn_loadConfig.setAutoRaise(True)
@@ -187,7 +187,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 super(VSep, self).__init__(parent)
                 self.setFrameStyle(styleDB.VLine)
         
-        #---- Layout ----
+        #-- Layout --
         
         btn_list = [self.btn_work_waterlvl, VSep(), btn_save, btn_draw,
                     btn_loadConfig, btn_saveConfig, VSep(), 
@@ -198,7 +198,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
            
-        row = 0; col=0
+        row, col = 0, 0
         for btn in btn_list:
             subgrid_toolbar.addWidget(btn, row, col)
             col += 1
@@ -208,9 +208,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         toolbar_widget.setLayout(subgrid_toolbar)
         
-        #----------------------------------------------------- LEFT PANEL ----
+        #-------------------------------------------------------- LEFT PANEL --
         
-        #---- SubGrid Hydrograph Frame ----
+        #-- SubGrid Hydrograph Frame --
         
         self.hydrograph = hydroprint.Hydrograph()
         self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
@@ -226,7 +226,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         grid_hydrograph_widget.setLayout(grid_hydrograph)
         
-        #----- ASSEMBLING SubGrids -----
+        #-- ASSEMBLING SubGrids --
                 
         grid_layout = QtGui.QGridLayout()
         self.grid_layout_widget = QtGui.QFrame()
@@ -245,7 +245,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         def make_data_files_panel(self): #----------------- Data Files Panel --
             
-            #---- widgets ----
+            #-- widgets --
                     
             btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
             btn_waterlvl_dir.setIcon(iconDB.openFile)
@@ -265,7 +265,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.meteo_info_widget.setReadOnly(True)
             self.meteo_info_widget.setFixedHeight(150)
             
-            #---- layout ----
+            #-- layout --
             
             self.data_files_panel = QtGui.QWidget()
             layout = QtGui.QGridLayout()
@@ -282,11 +282,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
         make_data_files_panel(self)
         
-        def make_scales_tab_widget(self): #------------- Scales Tab Widget ----
+        def make_scales_tab_widget(self): #--------------- Scales Tab Widget --
         
-            #---------------------------------------------------  TIME --------
+            #-------------------------------------------------------  TIME ----
             
-            #---- widget ----
+            #-- widget --
             
             self.date_start_widget = QtGui.QDateEdit()
             self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
@@ -325,7 +325,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
             widget_time_scale.setLayout(grid_time_scale)
             
-            #--------------------------------------------- WATER LEVEL --------
+            #------------------------------------------------- WATER LEVEL ----
             
             label_waterlvl_scale = QtGui.QLabel('WL Scale :') 
             self.waterlvl_scale = QtGui.QDoubleSpinBox()
@@ -369,9 +369,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
             self.subgrid_WLScale_widget.setLayout(subgrid_WLScale)
         
-            #------------------------------------------------- WEATHER --------
+            #----------------------------------------------------- WEATHER ----
             
-            #---- widgets ----
+            #-- widgets --
             
             label_Ptot_scale = QtGui.QLabel('Precip. Scale :')
             self.Ptot_scale = QtGui.QSpinBox()
@@ -388,7 +388,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.qweather_bin.addItems(['day', 'week', 'month'])
             self.qweather_bin.setCurrentIndex(1)
             
-            #---- layout ----
+            #-- layout --
             
             widget_weather_scale = QtGui.QFrame()
             widget_weather_scale.setFrameStyle(0)
