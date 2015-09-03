@@ -2,9 +2,9 @@
 
 \begin{document}
 
-The algorithm described in this paper for filling the gaps in daily air temperature and total precipitation datasets is based on the implementation of the classical MLR method presented in \cite{eischeid_creating_2000}. The MLR method is a robust, efficient, accurate, and well known method that can indirectly account for local effects, such as topography, land cover, land use and surface water. While creating serially complete daily datasets of air temperature and total precipitation for the western U.S., \cite{eischeid_creating_2000} found that the MLR method consistently outperformed the other classical methods tested (normal ratio, inverse distance, optimal interpolation, and single best estimator). The same result was also found by \cite{xia_forest_1999} for a study in Bavaria, Germany. Moreover, in a study conducted in Iran for different climate conditions (dry to extra humid conditions), \cite{kashani_evaluation_2011} found that the estimation obtained with the MLR method compared well with those obtained with more recent methods, more specifically the artificial neural network (reference) and the genetic programming (references) techniques.
+The algorithm described in this paper is based on the implementation of the classical MLR (Multiple Linear Regresion) method presented in \cite{eischeid_creating_2000}. The MLR method is robust and well known and can indirectly account for local effects, such as topography, land cover, land use and surface water. While creating serially complete daily datasets of air temperature and total precipitation for the western U.S., \cite{eischeid_creating_2000} found that the MLR method consistently outperformed the other classical methods tested (normal ratio, inverse distance, optimal interpolation, and single best estimator). The same result was also found by \cite{xia_forest_1999} for a study in Bavaria, Germany. Moreover, in a study conducted in Iran for different climate conditions (dry to extra humid conditions), \cite{kashani_evaluation_2011} found that the estimation obtained with the MLR method compared well with those obtained with more recent methods, more specifically the artificial neural network (reference) and the genetic programming (references) techniques.
 
-The algorithm that was developed in this work for filling the gaps in weather datasets is presented in the flowchart of \cref{fig:fillworker_flowchart}. It consists of two nested loops: the external `Loop A' iterates over the time series of four weather variables (min, max, and mean air temperature and total precipitation) for the target station while the inner `Loop B' iterates over every missing value in each data series. The estimation of a single missing value is achieved with a two-step procedure. The first step consists in selecting the data series with the best correlation coefficient, which also respect a certain number of conditions. The second step consists in building a MLR model and estimating the missing values. This is described in more details below.
+\Cref{fig:fillworker_flowchart} presents a flowchart of the algorithm used in WHAT for filling the gaps in the daily weather dataset for a given target station using data from the neighboring stations. The algorithm consists of two nested loops: the external `Loop A' iterates over the weather variables in the dataset of the target station (min, max, and mean air temperature and total precipitation), while the inner `Loop B' iterates over the missing values in the data series for a given variable. Each missing value is estimated independently with a two-step procedure. The first step consists in the selection of the neighboring stations, whose data will be used to estimate the missing value in the dataset of the target station. The second step consists in building a MLR model and estimating the missing value.
 
 \begin{figure}[!p]
     \centering
@@ -28,6 +28,15 @@ The first step consists in calculating the correlation coefficients between data
 \subsection{Loop B}
 
 \subsubsection{Selection of the neighboring stations}
+%Problems arise when
+%using climatological data because of missing values and
+%the varying availability of stations through time
+
+%The number (never greater than four) of neighboring
+%stations meeting the criteria is not fixed in time. It varies
+%depending on available station data for the year/month/
+%day in question. As such, the interpolation models may
+%also change in time.
 
 The selection of surrounding stations is critically important for the accurate estimation of missing weather data (Eischeid et al., 1995). Problems arise though because of synchronized missing values in the target and neighboring weather station datasets that varies trough time. This is illustrated in Table 8.1, where theoretical time-series of air temperature data with a realistic distribution of missing values are presented.
 
