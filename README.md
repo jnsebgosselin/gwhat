@@ -65,7 +65,7 @@ Once the content of the Zip archive has been extracted, the program can be start
 
 # Output Samples
 
-![Weather yearly and monthly averages](https://github.com/jnsebgosselin/WHAT/blob/master/Images/Normals_Marieville.png)
+![Weather yearly and monthly averages](https://github.com/jnsebgosselin/WHAT/blob/master/Images/weather_normals_sample.png)
 
 ![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
 
