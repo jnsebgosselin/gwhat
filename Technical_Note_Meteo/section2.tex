@@ -1,10 +1,10 @@
-\documentclass[ARTICLETHERMIC.tex]{subfiles}
+\documentclass[TechnicalNoteMeteo.tex]{subfiles}
 
 \begin{document}
 
 The algorithm described in this paper is based on the implementation of the classical MLR (Multiple Linear Regression) method presented in \cite{eischeid_creating_2000}. The MLR method is robust and well known and can indirectly account for local effects, such as topography, land cover, land use and surface water. While creating serially complete daily datasets of air temperature and total precipitation for the western U.S., \cite{eischeid_creating_2000} found that the MLR method consistently outperformed the other classical methods tested (normal ratio, inverse distance, optimal interpolation, and single best estimator). The same result was also found by \cite{xia_forest_1999} for a study in Bavaria, Germany. Moreover, in a study conducted in Iran for different climate conditions (dry to extra humid conditions), \cite{kashani_evaluation_2011} found that the estimation obtained with the MLR method compared well with those obtained with more recent methods, more specifically the artificial neural network (reference) and the genetic programming (references) techniques.
 
-\Cref{fig:fillworker_flowchart} presents a flowchart of the algorithm used in WHAT for filling the gaps in the daily weather dataset for a given target station using data from the neighboring stations. The algorithm consists of two nested loops: the external `Loop A' iterates over the weather variables in the dataset of the target station (min, max, and mean air temperature and total precipitation), while the inner `Loop B' iterates over the missing values in the data series for a given variable. Each missing value is estimated independently with a two-step procedure. The first step of the procedure consists in the selection of the neighboring stations. The second step consists in building a MLR model and estimating the missing value in the dataset of the target station. 
+\Cref{fig:fillworker_flowchart} presents a flowchart of the algorithm used in WHAT for filling the gaps in the daily weather dataset for a given target station using data from the neighboring stations. The algorithm consists of two nested loops: the external `Loop A' iterates over the weather variables in the dataset of the target station (min, max, and mean air temperature and total precipitation), while the inner `Loop B' iterates over the missing values in the data series for a given variable. Each missing value is estimated independently with a two-step procedure. The first step of the procedure consists in the selection of the neighboring stations. The second step consists in building a MLR model from the data of the selected weather stations and estimating the missing value in the dataset of the target station. 
 
 \begin{figure}[!p]
     \centering
@@ -15,22 +15,15 @@ The algorithm described in this paper is based on the implementation of the clas
 
 \subsection{Loop A}
 
-\subsubsection{Quality Control}
+\subsubsection{Correlation Coefficients Calculations}
 
-Prior to the analysis of weather time series, it is important to apply quality control constraints to ensure that the data do not violate obvious constraints associated with minimum, maximum, and average daily air temperature and daily cumulative precipitation. 
+The first step consists in calculating the correlation coefficients between the available data of the target station and those of the neighboring stations for the j\textsuperscript{th} weather variable of the dataset. A correlation coefficient is calculated for each neighboring station individually using all the available data. Neighboring stations that have less than 182 days (half a year) with synchronous data with the target station are discarded and won't be used for filling the gaps the time series of the target station for this weather variable.
 
-The program will identify irregularities or inconsistencies to insure that maximum, minimum and average daily temperatures are coherent for a given day and that all daily precipitation values are positive. Erroneous values are replaced by nan values in the dataset. These values will subsequently be estimated by the program from neighboring stations.
-
-\subsubsection{Station Correlation Assessment}
-
-The first step consists in calculating the correlation coefficients between data of the target station and those of the neighboring stations for each of the four weather variables: minimum, maximum and average daily temperatures and daily cumulative precipitation. These coefficients are calculated for the entire time-series for each neighboring station individually. If there are less than 182 synchronous values between the data of the target station and those of a neighboring station for a given variable, the correlation is not computed and a ‘‘NaN’’ value is kept instead.
+Moreover, data correlation between two stations will generally decreases as the horizontal and vertical distances between them increase. It is possible to specify a cutoff distance and a cutoff altitude difference for which neighboring stations that fall above these cutoff values are thereafter ignored in the gapfilling algorithm. The default values are set to \SI{100}{km} and \SI{350}{m} for the horizontal and vertical distance respectively based on the literature \cite{tronci_comparison_1986,xia_forest_1999,simolo_improving_2010}.
 
 \subsection{Loop B}
 
 \subsubsection{Selection of the neighboring stations}
-%Problems arise when
-%using climatological data because of missing values and
-%the varying availability of stations through time
 
 %The number (never greater than four) of neighboring
 %stations meeting the criteria is not fixed in time. It varies
@@ -38,11 +31,7 @@ The first step consists in calculating the correlation coefficients between data
 %day in question. As such, the interpolation models may
 %also change in time.
 
-The selection of surrounding stations is critically important for the accurate estimation of missing weather data (Eischeid et al., 1995). Problems arise though because of synchronized missing values in the target and neighboring weather station datasets that varies trough time. This is illustrated in Table 8.1, where theoretical time-series of air temperature data with a realistic distribution of missing values are presented.
-
-In \cref{tab:selectStations}, there are missing values in the target station dataset for days 2, 4, and 5. The missing value on day 2 will then be estimated with the data of the neighboring stations Y1, Y3, and Y4 since station Y2 is also missing a value on this day. All neighboring stations will be used for the estimation of the missing value on day 4, while only stations Y1 and Y2 have data available for the estimation of the missing value on day 5.
-
-Data correlation between two stations will generally decreases as the horizontal and vertical distances increase. It is possible to specify a cutoff distance and a cutoff altitude difference for which neighboring stations that fall above these cutoff values are ignored by the program. The default values are set to 100 km and 350 m for the horizontal and vertical distance respectively based on the literature (Simolo et al., 2010; Tronci et al., 1986; Xia et al., 1999).
+The selection of surrounding stations is critically important for the accurate estimation of missing weather data \cite{eischeid_creating_2000}. Problems arise though because the list of neighboring stations with available data can vary from one day to the other due to synchronous missing data with the target station. An example of this problem is illustrated in \cref{tab:selectStations}, where theoretical time-series of air temperature data are presented. In this example,  there are missing values in the dataset of the target station, Y, for days 2, 4, and 5. The missing value on day 2 will be estimated with data from the neighboring stations X1, X3, and X4 since there is also a missing value on this day for station X2. All neighboring stations will be used for the estimation of the missing value on day 4. Finally, only stations X1 and X2 will be used for the estimation of the missing value on day 5.
 
 \begin{table}[!hb]
 \newcommand{\nan}{\multicolumn{1}{c}{\textbf{nan}}}
@@ -60,15 +49,19 @@ S[table-format = 1]
 %\rowcolor{gray!30}
 1 & 11.0 & 12.0 & 12.0 & 12.5 & 10.0 \\
 2 & \nan & 12.0 & \nan & 13.0 & 12.2 \\
-3 &  7.5 &  8.5 &  8.5 &  8.0 &  8.9 \\
-4 & \nan &  6.0 &  4.5 &  5.0 &  4.4 \\
-5 & \nan &  8.0 &  8.5 & \nan & \nan \\
+3 &   7.5 &  8.5 &   8.5 &  8.0 &  8.9 \\
+4 & \nan &  6.0 &   4.5 &  5.0 &  4.4 \\
+5 & \nan &  8.0 &   8.5 & \nan & \nan \\
 \bottomrule
 \end{tabular}
 \label{tab:selectStations}
 \end{table}
 
-Since the number of neighboring stations with available data is not fixed in time, it is not possible to use a single MLR model to fill all the missing values for the target station all at once. For each missing value in the target station dataset, the program keeps only the datasets of the neighboring stations that also have data at this particular time. Data series of stations that do not respect the cutoff criteria for distance and elevation differences are also ignored. Data from neighboring stations are selected in descending order of their correlation coefficient with the target station, up to a maximal number of stations defined in the method parameters. The default value for the maximal number of neighboring station was set to four, based on the literature (Eischeid et al., 1995; Xia et al., 1999).
+Therefore, it is not possible to use a single MLR model to estimate all the missing values in the dataset of the target station all at once. 
+
+For each missing value in the target station dataset, the program keeps only the datasets of the neighboring stations that also have data at this particular time. 
+
+Data from neighboring stations are selected in descending order of their correlation coefficient with the target station, up to a maximal number of stations defined in the method parameters. The default value for the maximal number of neighboring station was set to four, based on the literature (Eischeid et al., 1995; Xia et al., 1999).
 
 If for a given day, no neighboring stations have a measured value to fill a gap in the target station dataset, no calculation is done and a ‘‘NaN’’ value is kept in the series instead and the program pass to the next missing value in the target series.
 
@@ -98,6 +91,12 @@ Consequently, the activation of this feature will significantly raise the comput
 The accuracy of the estimation technique can then be assessed by comparing the estimated weather data with the respective non-missing observations in the original weather data file. There is currently no tool provided in WHAT to directly analyze the results from the Jackknife procedure. However, all the source code that has been written? for the production of the figures of Section 8.4 can be downloaded freely on GitHub at (https://github.com/jnsebgosselin/WHAT).
 
 \end{document}
+
+%\subsubsection{Quality Control}
+
+%Prior to the analysis of weather time series, it is important to apply quality control constraints to ensure that the data do not violate obvious constraints associated with minimum, maximum, and average daily air temperature and daily cumulative precipitation. 
+
+%The program will identify irregularities or inconsistencies to insure that maximum, minimum and average daily temperatures are coherent for a given day and that all daily precipitation values are positive. Erroneous values are replaced by nan values in the dataset. These values will subsequently be estimated by the program from neighboring stations.
 
 %The first step of the procedure consists in the selection of the neighboring stations, whose data will be used to estimate the missing value in the dataset of the target station. The second step consists in building a MLR model and estimating the missing value.
 
