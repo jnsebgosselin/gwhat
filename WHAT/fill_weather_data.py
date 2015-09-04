@@ -44,13 +44,13 @@ from hydrograph3 import LatLong2Dist
 import MyQWidget
 
 
-#===============================================================================
+#==============================================================================
 class GapFillWeather(QtGui.QWidget):
-#===============================================================================
+#==============================================================================
     
     ConsoleSignal = QtCore.Signal(str)
     
-    def __init__(self, parent=None): #========================
+    def __init__(self, parent=None):
         super(GapFillWeather, self).__init__(parent)
 
         self.workdir = getcwd()
@@ -66,7 +66,7 @@ class GapFillWeather(QtGui.QWidget):
         
         self.initUI()        
                
-    def initUI(self): #=========================================================
+    def initUI(self): #========================================================
         
         """        
         Layout is organized with an ensemble of grids that are assembled
@@ -84,19 +84,19 @@ class GapFillWeather(QtGui.QWidget):
                     
         """    
         
-        #--------------------------------------------------------- Database ----
+        #---------------------------------------------------------- Database --
         
         styleDB = db.styleUI()
         iconDB = db.Icons()
         ttipDB = db.Tooltips('English')
         labelDB = db.labels('English')
         
-        #------------------------------------------------------ Main Window ----
+        #------------------------------------------------------- Main Window --
         
         self.setWindowIcon(iconDB.WHAT)
 #        self.setFont(styleDB.font1) 
         
-        #---------------------------------------------------------- TOOLBAR ----
+        #----------------------------------------------------------- TOOLBAR --
         
         self.btn_fill = QtGui.QPushButton(labelDB.btn_fill_weather)
         self.btn_fill.setIcon(iconDB.fill_data)
@@ -124,7 +124,7 @@ class GapFillWeather(QtGui.QWidget):
         
         widget_toolbar.setLayout(grid_toolbar)
         
-        #------------------------------------------------------- LEFT PANEL ----
+        #-------------------------------------------------------- LEFT PANEL --
         
         #---- Target Station ----
         
@@ -152,7 +152,7 @@ class GapFillWeather(QtGui.QWidget):
         
         tarSta_grid.setSpacing(5)
         tarSta_grid.setColumnStretch(0, 500)
-        tarSta_grid.setContentsMargins(0, 0, 0, 10) #Left, Top, Right, Bottom
+        tarSta_grid.setContentsMargins(0, 0, 0, 10) # (L, T, R, B)
         self.tarSta_widg.setLayout(tarSta_grid)
         
         #---- Gapfill Dates ----
@@ -181,7 +181,7 @@ class GapFillWeather(QtGui.QWidget):
         fillDates_grid.addWidget(self.date_end_widget, row, col)        
                 
         fillDates_grid.setColumnStretch(row+1, 500)
-        fillDates_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
+        fillDates_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         fillDates_grid.setSpacing(10)
         
         self.fillDates_widg.setLayout(fillDates_grid)
@@ -248,7 +248,7 @@ class GapFillWeather(QtGui.QWidget):
             self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
             self.RMSE_regression.setChecked(True)
             self.ABS_regression = QtGui.QRadioButton(
-                                                    'Least Absolute Deviations')
+                                      'Least Absolute Deviations')
             
             #---- Layout ----
             
@@ -261,12 +261,12 @@ class GapFillWeather(QtGui.QWidget):
             grid.addWidget(self.ABS_regression, row, 0)
             
             grid.setSpacing(5)
-            grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
+            grid.setContentsMargins(10, 0, 10, 0) # (L, T, R, B)
             container.setLayout(grid)
             
             return container
             
-        def advanced_settings(self):
+        def advanced_settings(self): #==================== advanced settings ==
             
             chckstate = QtCore.Qt.CheckState.Unchecked 
             
@@ -348,21 +348,21 @@ class GapFillWeather(QtGui.QWidget):
         
         self.LEFT_widget.setLayout(grid_leftPanel)
         
-        #------------------------------------------------------ RIGHT PANEL ----
+        #----------------------------------------------------- RIGHT PANEL ----
        
         self.FillTextBox = QtGui.QTextEdit()
         self.FillTextBox.setReadOnly(True)
 #        self.FillTextBox.setFrameStyle(styleDB.frame)
         self.FillTextBox.setMinimumWidth(700)        
 #        self.FillTextBox.setStyleSheet(
-#                                    "QTextEdit {background-color:transparent;}")
+#                                  "QTextEdit {background-color:transparent;}")
         self.FillTextBox.setFrameStyle(0)
         self.FillTextBox.document().setDocumentMargin(10)
         
         self.sta_display_summary = QtGui.QTextEdit()
         self.sta_display_summary.setReadOnly(True)
 #        self.sta_display_summary.setStyleSheet(
-#                                    "QTextEdit {background-color:transparent;}")
+#                                  "QTextEdit {background-color:transparent;}")
         self.sta_display_summary.setFrameStyle(0)
         self.sta_display_summary.document().setDocumentMargin(10)
         
@@ -380,16 +380,17 @@ class GapFillWeather(QtGui.QWidget):
 #        grid_rightPanel.setRowStretch(row, 500)
 ##        grid_rightPanel.setColumnStretch(0, 500)
 #        grid_rightPanel.setSpacing(0)
-#        grid_rightPanel.setContentsMargins(0, 0, 0, 0) #Left, Top, Right, Bottom
+#        grid_rightPanel.setContentsMargins(0, 0, 0, 0) #(L, T, R, B)
 #                        
 #        new_table.setLayout(grid_rightPanel)
         
         RIGHT_widget = QtGui.QTabWidget()
         RIGHT_widget.addTab(self.FillTextBox, 'Correlation Coefficients')
         RIGHT_widget.addTab(self.sta_display_summary, 'Missing Data Overview')
-        RIGHT_widget.addTab(self.gafill_display_table, 'New Table (Work-in-Progress)')        
+        RIGHT_widget.addTab(self.gafill_display_table,
+                            'New Table (Work-in-Progress)')        
                         
-        #-------------------------------------------------------- MAIN GRID ----
+        #--------------------------------------------------------- MAIN GRID --
         
         grid_MAIN = QtGui.QGridLayout()
         
@@ -404,13 +405,13 @@ class GapFillWeather(QtGui.QWidget):
                 
         self.setLayout(grid_MAIN)
         
-        #----------------------------------------------------- Progress Bar ----
+        #------------------------------------------------------ Progress Bar --
 
         self.pbar = QtGui.QProgressBar()
         self.pbar.setValue(0)
         self.pbar.hide()
         
-        #----------------------------------------------------------- EVENTS ----
+        #------------------------------------------------------------ EVENTS --
                 
         btn_refresh_staList.clicked.connect(self.load_data_dir_content)
         
@@ -420,8 +421,9 @@ class GapFillWeather(QtGui.QWidget):
         self.distlimit.valueChanged.connect(self.correlation_table_display)
         self.altlimit.valueChanged.connect(self.correlation_table_display)
         self.date_start_widget.dateChanged.connect(
-                                                 self.correlation_table_display)
-        self.date_end_widget.dateChanged.connect(self.correlation_table_display)
+                                                self.correlation_table_display)
+        self.date_end_widget.dateChanged.connect(
+                                                self.correlation_table_display)
         
         #---- gapfill ----
         
@@ -430,16 +432,16 @@ class GapFillWeather(QtGui.QWidget):
         self.btn_fill.clicked.connect(self.manage_gapfill)
         self.btn_fill_all.clicked.connect(self.manage_gapfill)
                
-        #------------------------------------------------------ MESSAGE BOX ----
+        #------------------------------------------------------- MESSAGE BOX --
                                           
         self.msgBox = MyQWidget.MyQErrorMessageBox()
         
         
-    def set_workdir(self, directory): #=========================================
+    def set_workdir(self, directory): #===================== Set Working Dir ==
         
         self.workdir = directory        
         
-    def load_data_dir_content(self) : #=========================================
+    def load_data_dir_content(self) : #=================== Load Weather Data ==
                 
         '''
         Initiate the loading of Weater Data Files contained in the 
@@ -488,7 +490,7 @@ class GapFillWeather(QtGui.QWidget):
         self.CORRFLAG = 'on'
         
     
-    def set_fill_and_save_dates(self): #========================================
+    def set_fill_and_save_dates(self): #=======================================
         
         """
         Set first and last dates of the data serie in the boxes of the
@@ -514,7 +516,7 @@ class GapFillWeather(QtGui.QWidget):
             self.date_end_widget.setMaximumDate(DateMax)
             
             
-    def correlation_table_display(self): #======================================
+    def correlation_table_display(self): #=====================================
     
         """
         This method plot the table in the display area. It is separated from
@@ -554,7 +556,7 @@ class GapFillWeather(QtGui.QWidget):
             'Do nothing'
             
            
-    def correlation_UI(self): #=================================================
+    def correlation_UI(self): #================================================
         
         """
         Calculate automatically the correlation coefficients when a target
@@ -588,7 +590,7 @@ class GapFillWeather(QtGui.QWidget):
         elif self.CORRFLAG == 'off':
             'Do nothing'
     
-    def restoreUI(self): #======================================================
+    def restoreUI(self): #=====================================================
         
         iconDB = db.Icons()
         
@@ -606,11 +608,11 @@ class GapFillWeather(QtGui.QWidget):
 
         self.pbar.hide()
             
-    def manage_gapfill(self): #=================================================
+    def manage_gapfill(self): #================================================
         
         iconDB = db.Icons()
                     
-        #-------------------------------------------- CHECK FOR DATA ERRORS ----
+        #--------------------------------------------- CHECK FOR DATA ERRORS --
                             
         y = self.date_start_widget.date().year()
         m = self.date_start_widget.date().month()
@@ -632,9 +634,9 @@ class GapFillWeather(QtGui.QWidget):
             
             return
 
-        #----------------------------------------------------- Check Sender ----
+        #------------------------------------------------------ Check Sender --
 
-        # This function can be entered from three different point in the UI:
+        # This function can be entered from three different points in the UI:
 
         # (1) The button "Fill Station" is clicked.
         # (2) The button "Fill All Stations" is clicked.
@@ -649,7 +651,7 @@ class GapFillWeather(QtGui.QWidget):
         
         if button == self.btn_fill:
             
-            #--------------------------------- Check if Station is Selected ----
+            #---------------------------------- Check if Station is Selected --
 
             if self.target_station.currentIndex() == -1:
 
@@ -660,13 +662,13 @@ class GapFillWeather(QtGui.QWidget):
                 
                 return
                 
-            #------------------------------------- Stop Thread (if running) ----
+            #-------------------------------------- Stop Thread (if running) --
                 
             if self.fillworker.isRunning(): # Stop the process
 
                 self.restoreUI()
                 
-                #---- Pass a flag to the worker to tell him to stop ----
+                #-- Pass a flag to the worker to tell him to stop --
                 
                 self.fillworker.STOP = True
                 self.isFillAll_inProgress = False
@@ -675,7 +677,7 @@ class GapFillWeather(QtGui.QWidget):
                 
             else:
                 
-                #---- Disable UI and continue the process normally ----
+                #-- Disable UI and continue the process normally --
             
                 self.btn_fill.setIcon(iconDB.stop)
                             
@@ -691,7 +693,7 @@ class GapFillWeather(QtGui.QWidget):
 
         elif button == self.btn_fill_all:
             
-            #--------------------------- Check if Station List is not Empty ----
+            #---------------------------- Check if Station List is not Empty --
 
             if nSTA == 0:
 
@@ -701,13 +703,13 @@ class GapFillWeather(QtGui.QWidget):
                 
                 return
             
-            #------------------------------------- Stop Thread (if running) ----
+            #-------------------------------------- Stop Thread (if running) --
             
             if self.fillworker.isRunning(): # Stop the process
                 print'Coucou fill worker is running'
                 self.restoreUI()
                 
-                #---- Pass a flag to the worker to tell him to stop ----
+                #-- Pass a flag to the worker to tell him to stop --
                 
                 self.fillworker.STOP = True
                 self.isFillAll_inProgress = False
@@ -716,7 +718,7 @@ class GapFillWeather(QtGui.QWidget):
                 
             else:
             
-                #---- Disable UI and continue the process normally ----
+                #-- Disable UI and continue the process normally --
                 
                 self.btn_fill_all.setIcon(iconDB.stop)
                 self.btn_fill.setEnabled(False)
@@ -732,7 +734,7 @@ class GapFillWeather(QtGui.QWidget):
             
                 self.correlation_UI()
         
-        else: #-------------------------------- Check if process isFinished ----
+        else: #--------------------------------- Check if process isFinished --
             
             # Method initiated from an automatic return from the gapfilling
             # process in batch mode. Iterate over the station list an continue
@@ -756,7 +758,7 @@ class GapFillWeather(QtGui.QWidget):
                     
                pass            
                             
-        #-------------------------------------------------------- UPDATE UI ----
+        #--------------------------------------------------------- UPDATE UI --
                             
         self.CORRFLAG = 'off' 
         self.target_station.setCurrentIndex(sta_indx2fill)
@@ -767,9 +769,9 @@ class GapFillWeather(QtGui.QWidget):
         # Calculate correlation coefficient for the next station.
         self.correlation_UI()
         
-        #----------------------------------------------------- START THREAD ----
+        #------------------------------------------------------ START THREAD --
         
-        #----- Wait for the QThread to finish -----
+        #-- Wait for the QThread to finish --
         
         # Protection in case the QTread did not had time to close completely
         # before starting the downloading process for the next station.
@@ -786,7 +788,7 @@ class GapFillWeather(QtGui.QWidget):
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 return
                 
-        #---- Pass information to the worker ----
+        #-- Pass information to the worker --
         
         self.fillworker.project_dir = self.workdir
         
@@ -811,26 +813,27 @@ class GapFillWeather(QtGui.QWidget):
             
         return
         
-    def btn_add_ETP_isClicked(self): #==========================================
+    def btn_add_ETP_isClicked(self): #=========================================
         
         dirname = self.workdir + '/Meteo/Output'
         filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                   self, 'Select a valid water level data file', 
-                                   dirname, '*.out')
+                                  self, 'Select a valid water level data file', 
+                                  dirname, '*.out')
         
         if filename:
             add_ETP_to_weather_data_file(filename)
             
             
-#===============================================================================        
+#==============================================================================        
 def add_ETP_to_weather_data_file(filename):
    
     """
-    Load data from a weather data file, estimate the ETP and add it to the file.
+    Load data from a weather data file, estimate the ETP and add it to
+    the file.
     """    
-#===============================================================================
+#==============================================================================
                
-    #---- load and stock original data -----
+    #-- load and stock original data --
                 
     meteoObj = meteo.MeteoObj()
     meteoObj.load(filename)   
@@ -839,7 +842,7 @@ def add_ETP_to_weather_data_file(filename):
     DATAORIG = np.copy(meteoObj.DATA)
     DATE = DATAORIG[:, :3]
     
-    #---- compute air temperature normals ----
+    #-- compute air temperature normals --
     
     meteoObj.clean_endsof_file()
     meteoObj.check_time_continuity()
@@ -854,12 +857,12 @@ def add_ETP_to_weather_data_file(filename):
     Ta = NORMALS[:, indx-3]   # monthly air temperature averages (deg C)        
     LAT = float(meteoObj.LAT) # Latitude (decimal deg)
     
-    #--- estimate ETP from original temperature time series ----
+    #-- estimate ETP from original temperature time series --
 
     TAVG = np.copy(DATAORIG[:, indx])        
     ETP = meteo.calculate_ETP(DATE, TAVG, LAT, Ta)        
 
-    #---- extend data ----
+    #-- extend data --
 
     filecontent = copy(HEADER)
     if np.any(varnames == 'ETP (mm)'):
@@ -879,24 +882,25 @@ def add_ETP_to_weather_data_file(filename):
           
         DATAORIG.tolist()
     
-    #---- save data ----
+    #-- save data --
     
     for i in range(len(DATAORIG[:, 0])):
         filecontent.append(DATAORIG[i, :]) 
         
-    with open(filename, 'wb') as f:
+    with open(filename, 'w') as f:
         writer = csv.writer(f,delimiter='\t')
         writer.writerows(filecontent)
         
     print('ETP time series added successfully to %s' % filename)
             
     
-#===============================================================================
+#==============================================================================
 class Target_Station_Info():
-# Class that contains all the information relative the target station, including
-# correlation coefficient 2d matrix, altitude difference and horizontal
-# distances arrays. The instance of this class in the code is TARGET.
-#===============================================================================
+# Class that contains all the information relative the target station, 
+# including correlation coefficient 2d matrix, altitude difference and 
+# horizontal distances arrays. The instance of this class in the code is 
+# TARGET.
+#==============================================================================
 
 
     def __init__(self):        
@@ -924,7 +928,7 @@ class Target_Station_Info():
                           # station and every other station. Target station is
                           # included with a 0 value at index <index>
         
-#===============================================================================
+#==============================================================================
 class Weather_File_Info():
     """
     <Weather_File_Info> class contains all the weather data and station info
@@ -939,7 +943,7 @@ class Weather_File_Info():
                rows are the time
                columns are the stations listed in STANAME
     """
-#=============================================================================== 
+#============================================================================== 
         
     def __init__(self):
         
@@ -957,13 +961,13 @@ class Weather_File_Info():
         self.DATE_END = []   # Date end of the original data records
         self.NUMMISS = []    # Number of missing data
         
-    def load_and_format_data(self, fnames):  #==================================
+    def load_and_format_data(self, fnames):  #=================================
         
         # fnames = list of paths of weater data files
     
         nSTA = len(fnames) # Number of weather data file
         
-        #-------------------------------------------- INITIALIZED VARIABLES ----
+        #--------------------------------------------- INITIALIZED VARIABLES --
         
         self.STANAME = np.zeros(nSTA).astype('str')
         self.ALT = np.zeros(nSTA)
@@ -979,9 +983,9 @@ class Weather_File_Info():
         
         for i in range(nSTA):
         
-            #------------------------------------------ WEATHER DATA IMPORT ----
+            #------------------------------------------- WEATHER DATA IMPORT --
         
-            with open(fnames[i], 'rb') as f:
+            with open(fnames[i], 'r') as f:
                 reader = list(csv.reader(f, delimiter='\t'))
             
             STADAT = np.array(reader[8:]).astype('float')
@@ -989,31 +993,29 @@ class Weather_File_Info():
             self.DATE_START[i, :] = STADAT[0, :3]
             self.DATE_END[i, :] = STADAT[-1, :3]
             
-            #---------------------------------------- TIME CONTINUITY CHECK ----
+            #----------------------------------------- TIME CONTINUITY CHECK --
             
             # Check if data are continuous over time. If not, the serie will be
             # made continuous and the gaps will be filled with nan values.
             
             time_start = xldate_from_date_tuple((STADAT[0, 0].astype('int'),
                                                  STADAT[0, 1].astype('int'),
-                                                 STADAT[0, 2].astype('int')), 0)
+                                                 STADAT[0, 2].astype('int')),
+                                                0)
 
             time_end = xldate_from_date_tuple((STADAT[-1, 0].astype('int'),
                                                STADAT[-1, 1].astype('int'),
                                                STADAT[-1, 2].astype('int')), 0)
             
-            if time_end - time_start + 1 != len(STADAT[:,0]):
-                print; print reader[0][1], ' is not continuous, correcting...'
-            
-                STADAT = meteo.make_timeserie_continuous(STADAT)
-            
-                print reader[0][1], ' is now continuous.'
-            else: # Data is continuous over time
-                pass
+            if (time_end - time_start + 1) != len(STADAT[:,0]):
+                print
+                print('%s is not continuous, correcting...' % reader[0][1])            
+                STADAT = meteo.make_timeserie_continuous(STADAT)            
+                print ('%s is now continuous.' % reader[0][1])
             
             time_new = np.arange(time_start, time_end + 1)
             
-            #------------------------------------------- FIRST TIME ROUTINE ----
+            #-------------------------------------------- FIRST TIME ROUTINE --
             
             if i == 0:
                 self.VARNAME = reader[7][3:]
@@ -1022,10 +1024,8 @@ class Weather_File_Info():
                 self.DATA = np.zeros((len(STADAT[:, 0]), nSTA, nVAR)) * np.nan
                 self.DATE = STADAT[:, :3]
                 self.NUMMISS = np.zeros((nSTA, nVAR)).astype('int')
-            else:
-                pass
                 
-            #------------------------------------ <DATA> & <TIME> RESHAPING ----
+            #------------------------------------- <DATA> & <TIME> RESHAPING --
             
             # This part of the function fits neighboring data series to the
             # target data serie in the 3D data matrix. Default values in the
@@ -1102,7 +1102,7 @@ class Weather_File_Info():
                     
                     self.TIME = np.copy(time_new)
                     
-            #------------------------------------------------ FILL MATRICES ----
+            #------------------------------------------------- FILL MATRICES --
          
             ifirst = np.where(self.TIME == time_new[0])[0][0]
             ilast = np.where(self.TIME == time_new[-1])[0][0]
@@ -1114,12 +1114,14 @@ class Weather_File_Info():
             isnan = np.isnan(STADAT[:, 3:])
             self.NUMMISS[i, :] = np.sum(isnan, axis=0)
             
-            # Check if a station with this name already exist.
+            # Check if a station with this name already exist. If it does, add
+            # a number at the end of the name so it is possible to
+            # differentiate them in the list.
             
             isNameExist = np.where(reader[0][1] == self.STANAME)[0]
             if len(isNameExist) > 0:
                 
-                print 'Station name already exists, adding a number at the end'
+                print('Station name already exists. Added a number at the end')
                 
                 count = 2
                 while len(isNameExist) > 0:
@@ -1138,7 +1140,7 @@ class Weather_File_Info():
             self.ALT[i] = float(reader[4][1])
             self.ClimateID[i] = str(reader[5][1])
             
-        #-------------------------------------- SORT STATION ALPHABETICALLY ----
+        #--------------------------------------- SORT STATION ALPHABETICALLY --
 
         sort_index = np.argsort(self.STANAME)
         
@@ -1154,9 +1156,10 @@ class Weather_File_Info():
         self.DATE_START = self.DATE_START[sort_index]
         self.DATE_END = self.DATE_END[sort_index]
         
-        #---------------------------------------------- GENERATE DATE SERIE ----
+        #----------------------------------------------- GENERATE DATE SERIE --
     
-        # Rebuild a date matrix if <DATA> size changed.
+        # Rebuild a date matrix if <DATA> size changed. Otherwise, do nothing
+        # and keep *Date* as is.
     
         if FLAG_date == True:
             self.DATE = np.zeros((len(self.TIME), 3))
@@ -1165,17 +1168,15 @@ class Weather_File_Info():
                 self.DATE[i, 0] = date_tuple[0]
                 self.DATE[i, 1] = date_tuple[1]
                 self.DATE[i, 2] = date_tuple[2]
-        if FLAG_date == False:
-            'Do nothing, keep <DATE> as is'
-
     
-    def generate_summary(self, project_folder): #===============================
+    def generate_summary(self, project_folder): #==============================
 
         """
-        This method will generate a summary of the weather records including all
-        the data files contained in "/<project_folder>/Meteo/Input", including
-        dates when the records begin and end, total number of data, and total 
-        number of data missing for each meteorological variable, and more.
+        This method will generate a summary of the weather records including
+        allcthe data files contained in "/<project_folder>/Meteo/Input",
+        including dates when the records begin and end, total number of data,
+        and total number of data missing for each meteorological variable, and
+        more.
         """
         
         CONTENT = [['#', 'STATION NAMES', 'ClimateID',
@@ -1228,11 +1229,11 @@ class Weather_File_Info():
         
         output_path = project_folder + '/weather_datasets_summary.log'
                 
-        with open(output_path, 'wb') as f:
+        with open(output_path, 'w') as f:
             writer = csv.writer(f,delimiter='\t')
             writer.writerows(CONTENT)
             
-    def read_summary(self, project_folder): #===============================
+    def read_summary(self, project_folder): #==================================
 
         """
         This method read the content of the file generated by the method
@@ -1240,17 +1241,17 @@ class Weather_File_Info():
         formatted table
         """
         
-        #-------------------------------------------------------- read data ----
+        #--------------------------------------------------------- read data --
         
         filename = project_folder + '/weather_datasets_summary.log'
-        with open(filename, 'rb') as f:
+        with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
             reader = reader[1:]
         
 #        FIELDS = ['&#916;Alt.<br>(m)', 'Dist.<br>(km)', 'Tmax', 
 #                  'Tmin', 'Tmean', 'Ptot']
         
-        #------------------------------------------- generate table summary ----
+        #-------------------------------------------- generate table summary --
         
         table = '''
                 <table border="0" cellpadding="3" cellspacing="0" 
@@ -1352,13 +1353,13 @@ class Weather_File_Info():
         
         return table
             
-#===============================================================================
+#==============================================================================
 def alt_and_dist_calc(WEATHER, target_station_index):
     """
-    <alt_and_dist_calc> computes the horizontal distance in km and the altitude
-    difference in m between the target station and each neighboring stations
+    Computes the horizontal distance in km and the altitude difference
+    in m between the target station and each neighboring stations
     """
-#===============================================================================
+#==============================================================================
    
     ALT = WEATHER.ALT
     LAT = WEATHER.LAT
@@ -1381,7 +1382,7 @@ def alt_and_dist_calc(WEATHER, target_station_index):
     
     return HORDIST, ALTDIFF
 
-#===============================================================================
+#==============================================================================
 def correlation_worker(WEATHER, target_station_index):
 # This function computes the correlation coefficients between the 
 # target station and the neighboring stations for each meteorological variable.
@@ -1389,7 +1390,7 @@ def correlation_worker(WEATHER, target_station_index):
 # Results are stored in a 2D matrix <CORCOEF> where:#  
 #   rows :    meteorological variables
 #   columns : weather stations
-#===============================================================================
+#==============================================================================
 
     DATA = WEATHER.DATA
     
@@ -1432,7 +1433,7 @@ def correlation_worker(WEATHER, target_station_index):
 
     return CORCOEF
 
-#===============================================================================
+#==============================================================================
 def correlation_table_generation(TARGET, WEATHER, FILLPARAM): 
     
     """
@@ -1441,7 +1442,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     selected by the user.
     """
     
-#===============================================================================                                  
+#==============================================================================                                  
     
     styleDB = db.styleUI()
     
@@ -1454,7 +1455,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     limitDist = FILLPARAM.limitDist
     limitAlt = FILLPARAM.limitAlt
     
-    #---------------------------------------------TARGET STATION INFO TABLE-----
+    #--------------------------------------------- TARGET STATION INFO TABLE --
     
     date_start = xldate_as_tuple(FILLPARAM.time_start, 0)
     date_start = '%02d/%02d/%04d' % (WEATHER.DATE_START[TARGET.index, 2],
@@ -1487,7 +1488,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
         
     target_info +=  '</table>' 
     
-    #---------------------------------------------------------SORT STATIONS-----
+    #--------------------------------------------------------- SORT STATIONS --
     
     # Stations best correlated with the target station are displayed toward
     # the top of the table while neighboring stations poorly correlated are
@@ -1513,7 +1514,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     index_start = np.where(TIME == FILLPARAM.time_start)[0][0]
     index_end = np.where(TIME == FILLPARAM.time_end)[0][0]
               
-    #---------------------------------------------- Determine filling dates ----
+    #----------------------------------------------- Determine filling dates --
     
     fill_date_start = xldate_as_tuple(FILLPARAM.time_start, 0)
     fill_date_start = '%02d/%02d/%04d' % (fill_date_start[2],
@@ -1525,7 +1526,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                                         fill_date_end[1],
                                         fill_date_end[0])
                                         
-    #--------------------------------------------------- missing data table ----
+    #---------------------------------------------------- missing data table --
    
     table1 = '''
              <p align=justify>               
@@ -1580,7 +1581,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                </table>
                <br><br>'''
     
-    #--------------------------------------------------- corr. coeff. table ----
+    #---------------------------------------------------- corr. coeff. table --
     table2 = table1          
     table2 += '''
               <p align="justify">
@@ -1718,14 +1719,17 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
              
     return table2, target_info
 
-#===============================================================================
+#==============================================================================
 class FillWorker(QtCore.QThread):
     """
     This functions is started on the UI side when the "Fill" or "Fill All"
     button of the Tab named "Fill Data" is clicked on. It is the main routine
     that fill the missing data in the weather record.
     """
-#===============================================================================
+#==============================================================================
+    
+    # TODO: This need to be converted in the recommended uses of QThread in
+    #       the documentation with *movetothread* method.
     
     ProgBarSignal = QtCore.Signal(int)
     ConsoleSignal = QtCore.Signal(str)
@@ -1754,8 +1758,8 @@ class FillWorker(QtCore.QThread):
         self.STOP = False # Flag used to stop the Thread on the UI side
         
         self.add_ETP = False
-        # If True, computes ETP from daily mean temperature time series with the
-        # function "calculate_ETP" from module "meteo" and add the results 
+        # If True, computes ETP from daily mean temperature time series with 
+        # the function "calculate_ETP" from module "meteo" and add the results 
         # to the output datafile.
         self.full_error_analysis = False 
         # A complete analysis of the estimation errors is conducted
@@ -1778,7 +1782,7 @@ class FillWorker(QtCore.QThread):
         VARNAME = self.WEATHER.VARNAME  # Meteorological variable names.
         nVAR = len(VARNAME)  # Number of meteorological variable.
         
-        #-------------------------------------------- Target Station Header ----
+        #--------------------------------------------- Target Station Header --
         
         target_station_index = self.TARGET.index
         target_station_name = self.TARGET.name
@@ -1791,7 +1795,7 @@ class FillWorker(QtCore.QThread):
         target_station_alt = round(target_station_alt, 2)
         target_station_clim = self.WEATHER.ClimateID[target_station_index]
         
-        #-----------------------------------------------------------------------
+        #----------------------------------------------------------------------
         
         STANAME = np.copy(self.WEATHER.STANAME)
         CORCOEF = np.copy(self.TARGET.CORCOEF)
@@ -1806,20 +1810,19 @@ class FillWorker(QtCore.QThread):
         limitDist = self.limitDist
         limitAlt = self.limitAlt
         
-
-        # Save target data serie in a new 2D matrix that will be filled during
-        # the data completion process
+        # Save target data serie in a new 2D matrix that will
+        # be filled during the data completion process
         Y2fill = np.copy(DATA[:, target_station_index, :])
         
         if self.full_error_analysis == True:
             YpFULL = np.copy(Y2fill) * np.nan
-            print; print 'A full error analysis will be performed'; print
+            print; print('A full error analysis will be performed'); print
         
         msg = 'Data completion for station %s started' % target_station_name
         print(msg)
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         
-        #-------------------------------------------- CHECK CUTOFF CRITERIA ----        
+        #--------------------------------------------- CHECK CUTOFF CRITERIA --        
         
         # Remove neighboring stations that do not respect the distance
         # or altitude difference cutoffs.
@@ -1838,7 +1841,7 @@ class FillWorker(QtCore.QThread):
         
         check_HORDIST_and_ALTDIFF = check_HORDIST * check_ALTDIFF
         index_HORDIST_and_ALTDIFF = np.where(
-                                           check_HORDIST_and_ALTDIFF == True)[0]                                  
+                                          check_HORDIST_and_ALTDIFF == True)[0]                                  
     
         STANAME = STANAME[index_HORDIST_and_ALTDIFF]
         DATA = DATA[:, index_HORDIST_and_ALTDIFF, :]
@@ -1849,7 +1852,7 @@ class FillWorker(QtCore.QThread):
         
         target_station_index = np.where(STANAME == self.TARGET.name)[0][0]
 
-        #---------------------------- Identifies Variables With Enough Data ----
+        #----------------------------- Identifies Variables With Enough Data --
         
         # NOTE: When a station does not have enough data for a given variable,
         #       its correlation coefficient is set to nan in CORCOEF. If all
@@ -1869,7 +1872,7 @@ class FillWorker(QtCore.QThread):
                            'is not enough data!') % (var+1, nVAR)
                 print message
         
-        #-------------------------------------------------------- FILL LOOP ----
+        #--------------------------------------------------------- FILL LOOP --
 
         FLAG_nan = False # If some missing data can't be completed because 
                          # all the neighboring stations are empty, a flag is
@@ -1905,13 +1908,13 @@ class FillWorker(QtCore.QThread):
         
         for var in var2fill:
             
-#            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 #            if self.STOP == True:
 #                self.ConsoleSignal.emit(                           
 #                    '''<font color=red>Completion process for station %s 
 #                         stopped.</font>''' % target_station_name)
 #                break 
-#            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+#            # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                             
             message = ('Data completion for variable %d/%d in progress'
                        ) % (var+1, nVAR)
@@ -1953,20 +1956,19 @@ class FillWorker(QtCore.QThread):
                 
                 sleep(0.000001) #If no sleep, the UI becomes whacked
                 
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 
                 if self.STOP == True:
                     
-                    print 'BREAK!!!!'
-                    self.ConsoleSignal.emit(                           
-                    '''<font color=red>Completion process for station %s 
-                         stopped.</font>''' % target_station_name)
-                    
+                    msg = ('Completion process for station %s stopped.' %
+                           target_station_name)
+                    print(msg)
+                    self.ConsoleSignal.emit('<font color=red>msg</font>')                    
                     self.STOP = False
                     
                     return
                     
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                   
                 # Find neighboring stations with valid entries at 
                 # row <row> in <YX>. Target station is stored at index 0.
@@ -2059,11 +2061,11 @@ class FillWorker(QtCore.QThread):
                         YXcolm = YXcolm[:, colm]
                         
                         # Force the value of the target station to a NAN value
-                        # for this row. This should only have an impact when the
-                        # option "full_error_analysis" is activated. This is to
-                        # actually remove the data being estimated from the
-                        # dataset like in should properly be done in the 
-                        # jackknife procedure.
+                        # for this row. This should only have an impact when 
+                        # the option "full_error_analysis" is activated. This 
+                        # is to actually remove the data being estimated 
+                        # from the dataset like in should properly be done 
+                        # in the jackknife procedure.
                         YXcolm[row, 0] = np.nan
                         
                         # All rows containing NAN entries are removed.
@@ -2104,7 +2106,7 @@ class FillWorker(QtCore.QThread):
                             #results = model.fit(q=0.5)
                             #A = results.params
                             
-                        #--------------------------------------------- RMSE ----
+                        #-------------------------------------- Compute RMSE --
                         
                         # Calculate a RMSE between the estimated and
                         # measured values of the target station.
@@ -2128,7 +2130,7 @@ class FillWorker(QtCore.QThread):
                         A = RegCoeff_memory[index_memory]
                         RMSE = RMSE_memory[index_memory]
                                             
-                    #----------------------------- MISSING VALUE ESTIMATION ----
+                    #------------------------------ MISSING VALUE ESTIMATION --
                     
                     # Calculate missing value of Y at row <row>.
                     Y_row = np.dot(A, X_row)
@@ -2142,7 +2144,7 @@ class FillWorker(QtCore.QThread):
                     # Round the results.
                     Y_row = round(Y_row ,1)
                     
-                    #---------------------------------------- STORE RESULTS ----
+                    #----------------------------------------- STORE RESULTS --
                   
                     if self.full_error_analysis == True:
                         YpFULL[row, var] = Y_row
@@ -2179,7 +2181,7 @@ class FillWorker(QtCore.QThread):
                 fill_progress += 1.
                 self.ProgBarSignal.emit(fill_progress/progress_total * 100)
                 
-            #----------------- Calculate Estimation Error for this variable ----
+            #------------------ Calculate Estimation Error for this variable --
             
             if it_avg > 0:
                 AVG_RMSE[var] /= it_avg
@@ -2192,7 +2194,7 @@ class FillWorker(QtCore.QThread):
                              ) % (var+1, nVAR)
             print print_message             
 
-        #=============================================== WRITE DATA TO FILE ====
+        #================================================ WRITE DATA TO FILE ==
                     
         self.ConsoleSignal.emit('<font color=black>Data completion ' + 
                                 'for station ' + target_station_name +
@@ -2204,7 +2206,7 @@ class FillWorker(QtCore.QThread):
                 'completed because all neighboring station were empty ' +
                 'for that period</font>')
     
-        #----------------------------------------- INFO DATA POSTPROCESSING ----
+        #------------------------------------------ INFO DATA POSTPROCESSING --
         
         # Put target station name and information to the begining of the
         # STANANE array and INFO matrix.
@@ -2240,7 +2242,7 @@ class FillWorker(QtCore.QThread):
         INFO_X = INFO_X.astype('str')
         INFO_X[INFO_X == 'nan'] = ''
        
-        #------------------------------------------------------- HEADER ----
+        #------------------------------------------------------------ HEADER --
               
         HEADER = [['Station Name', target_station_name]]
         HEADER.append(['Province', target_station_prov])
@@ -2253,7 +2255,7 @@ class FillWorker(QtCore.QThread):
         HEADER.append(['Created on', strftime("%d/%m/%Y")])
         HEADER.append([])
         
-        #----------------------------------------------- LOG GENERATION ----
+        #---------------------------------------------------- LOG GENERATION --
         
         record_date_start = '%04d/%02d/%02d' % (YEAR[index_start],
                                                 MONTH[index_start],
@@ -2373,7 +2375,7 @@ class FillWorker(QtCore.QThread):
             
             INFO_total.append(info_row_builder)
                 
-        #---------------------------------------------------- SAVE INFO ----
+        #--------------------------------------------------------- SAVE INFO --
                                   
         YearStart = str(int(YEAR[index_start])) 
         YearEnd = str(int(YEAR[index_end]))
@@ -2388,7 +2390,7 @@ class FillWorker(QtCore.QThread):
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.log')
         
-        with open(output_path, 'wb') as f:
+        with open(output_path, 'w') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(INFO_total)
         
@@ -2396,7 +2398,7 @@ class FillWorker(QtCore.QThread):
             '<font color=black>Info file saved in ' + output_path +
             '</font>')
             
-        #---------------------------------------------------- SAVE DATA ----
+        #--------------------------------------------------------- SAVE DATA --
         
         DATA2SAVE = copy(HEADER)
         DATA2SAVE.append(['Year', 'Month', 'Day'])
@@ -2415,7 +2417,7 @@ class FillWorker(QtCore.QThread):
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.out')
         
-        with open(output_path, 'wb') as f:
+        with open(output_path, 'w') as f:
             writer = csv.writer(f,delimiter='\t')
             writer.writerows(DATA2SAVE)
             
@@ -2426,7 +2428,7 @@ class FillWorker(QtCore.QThread):
                                 output_path + '</font>')
         self.ProgBarSignal.emit(0)
         
-        #----------------------------------- SAVE ERROR ANALYSIS REPORT ----
+        #---------------------------------------- SAVE ERROR ANALYSIS REPORT --
         
         if self.full_error_analysis == True:
             
@@ -2444,11 +2446,11 @@ class FillWorker(QtCore.QThread):
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.err')
                            
-            with open(output_path, 'wb') as f:
+            with open(output_path, 'w') as f:
                 writer = csv.writer(f,delimiter='\t')
                 writer.writerows(error_analysis_report)
         
-            #---------------------------------------- SOME CALCULATIONS ----
+            #--------------------------------------------- SOME CALCULATIONS --
             
             RMSE = np.zeros(nVAR)
             ERRMAX  = np.zeros(nVAR)
@@ -2478,24 +2480,17 @@ class FillWorker(QtCore.QThread):
             index = np.where(DIFF[:, -1] == ERRMAX[-1])
             print YEAR[index], MONTH[index], DAY[index]
         
-        print; print '!Data completion completed successfully!'; print                 
+        print; print('!Data completion completed successfully!'); print                 
         self.STOP = False # Just in case. This is a precaution override.  
         self.EndProcess.emit(1) 
         
         return 
-        
-            # MAE = np.abs(Y - Yp)
-            # MAE = MAE[MAE!=0]
-            # MAE = np.mean(MAE)
 
-
-
-
-#===============================================================================
+#==============================================================================
 class GapFill_Parameters():
 # Class that contains all the relevant parameters for the gapfilling procedure.
 # Main instance of this class in the code is <FILLPARAM>.
-#===============================================================================    
+#==============================================================================   
     
    def __init__(self):
        
@@ -3021,7 +3016,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                                                 self.size().height()))
         
         
-    def sizeHint(self): #=====================================================
+    def sizeHint(self): #======================================================
          
         baseSize = QtGui.QHeaderView.sizeHint(self)
         baseSize.setHeight(self.heightHint)
