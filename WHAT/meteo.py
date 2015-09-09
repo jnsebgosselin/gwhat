@@ -29,9 +29,8 @@ from sys import argv
 import os
 from os import path
 from datetime import date
-#import copy
+import copy
 #import time
-
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -587,9 +586,78 @@ class MeteoObj():
 #        self.TMAXwk = TMAXbin
 #        self.PTOTwk = PTOTbin
 #        self.RAINwk = RAINbin
+
+
+#==============================================================================        
+def add_ETP_to_weather_data_file(filename):   
+    """
+    Load data from a weather data file, estimate the ETP and add it to
+    the file.
+    """    
+#==============================================================================
+               
+    #-- load and stock original data --
+                
+    meteoObj = MeteoObj()
+    meteoObj.load(filename)   
+   
+    HEADER = copy.copy(meteoObj.HEADER)
+    DATAORIG = np.copy(meteoObj.DATA)
+    DATE = DATAORIG[:, :3]
+    
+    #-- compute air temperature normals --
+    
+    meteoObj.clean_endsof_file()
+    meteoObj.check_time_continuity()
+    meteoObj.get_TIME(meteoObj.DATA[:, :3])
+    meteoObj.fill_nan()
+            
+    NORMALS = calculate_normals(meteoObj.DATA, meteoObj.datatypes)
+    
+    varnames = np.array(meteoObj.HEADER[-1])
+    indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
+
+    Ta = NORMALS[:, indx-3]   # monthly air temperature averages (deg C)        
+    LAT = float(meteoObj.LAT) # Latitude (decimal deg)
+    
+    #-- estimate ETP from original temperature time series --
+
+    TAVG = np.copy(DATAORIG[:, indx])        
+    ETP = calculate_ETP(DATE, TAVG, LAT, Ta)        
+
+    #-- extend data --
+
+    filecontent = copy.copy(HEADER)
+    if np.any(varnames == 'ETP (mm)'):
+        print('Already a ETP time series in the datasets. Overriding data.')
+        
+        # Override ETP in DATA:
+        indx = np.where(varnames == 'ETP (mm)')[0][0]
+        DATAORIG[:, indx] = ETP
+    
+    else:
+        # Add new variable name to header:
+        filecontent[-1].append('ETP (mm)')
+        
+        # Add ETP to DATA matrix:
+        ETP = ETP[:, np.newaxis]
+        DATAORIG = np.hstack([DATAORIG, ETP])          
+          
+        DATAORIG.tolist()
+    
+    #-- save data --
+    
+    for i in range(len(DATAORIG[:, 0])):
+        filecontent.append(DATAORIG[i, :]) 
+        
+    with open(filename, 'w') as f:
+        writer = csv.writer(f,delimiter='\t')
+        writer.writerows(filecontent)
+        
+    print('ETP time series added successfully to %s' % filename)
         
         
-#=============================================================================
+#==============================================================================
 def make_timeserie_continuous(DATA):
     """
     This function is called when a time serie of a daily meteorological record
@@ -605,7 +673,7 @@ def make_timeserie_continuous(DATA):
            meteorological data of a given weather station arranged in 
            chronological order. 
     """
-#=============================================================================    
+#==============================================================================    
     
     nVAR = len(DATA[0,:]) - 3 # nVAR = number of meteorological variables
     nan2insert = np.zeros(nVAR) * np.nan    
@@ -635,7 +703,7 @@ def make_timeserie_continuous(DATA):
     return DATA
                 
 
-#=============================================================================
+#==============================================================================
 def calculate_normals(DATA, datatypes):    
     """
     Calculates monthly normals from daily average air temperature and
@@ -663,7 +731,7 @@ def calculate_normals(DATA, datatypes):
                          1 -> need to be summed over a month 
                               (e.g. Precipitation, ETP)
     """
-#===============================================================================    
+#==============================================================================    
         
     print('---- calculating normals ----') 
      
@@ -708,7 +776,7 @@ def calculate_normals(DATA, datatypes):
                     elif datatypes[k] == 1:
                         XMONTH[j, i, k] = np.sum(Xk[indx])
 
-    #---------------------------------------------- compute monthly normals ----
+    #----------------------------------------------- compute monthly normals --
     
     # Calculate the normals for each month. This is done by calculating the
     # mean of the monthly value computed in the above section.
@@ -733,7 +801,7 @@ def calculate_normals(DATA, datatypes):
     return XNORM
         
 
-#===============================================================================
+#==============================================================================
 def calculate_ETP(DATE, TAVG, LAT, Ta):
     """
     Daily potential evapotranspiration (mm) is calculated with a method adapted
@@ -758,7 +826,7 @@ def calculate_ETP(DATE, TAVG, LAT, Ta):
         for estimating daily reference evapotranspiration. Agricultural Water
         Management, 66, 251-257.
     """
-#===============================================================================
+#==============================================================================
 
     Ta[Ta < 0] = 0   
     
@@ -774,7 +842,7 @@ def calculate_ETP(DATE, TAVG, LAT, Ta):
     return ETP
     
     
-#===============================================================================   
+#==============================================================================   
 def calculate_daylength(DATE, LAT):
     """
     Calculate the photoperiod for the given latitude at the given time.
@@ -788,7 +856,7 @@ def calculate_daylength(DATE, LAT):
     
     {1D array} DAYLEN = photoperiod in hr.    
     """
-#===============================================================================
+#==============================================================================
     
     DATE = DATE.astype(int)
     pi = np.pi    

@@ -3,6 +3,8 @@
 Copyright 2014-2015 Jean-Sebastien Gosselin
 email: jnsebgosselin@gmail.com
 
+This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+
 WHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -20,17 +22,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #-- STANDARD LIBRARY IMPORTS --
 
 import csv
-from time import ctime, strftime, sleep
-from os import getcwd, listdir, makedirs, path
+from time import strftime, sleep
+from os import getcwd
 from copy import copy
 
 #-- THIRD PARTY IMPORTS --
 
-from PySide import QtGui, QtCore
+from PySide import QtCore
 import numpy as np
-from xlrd.xldate import xldate_from_date_tuple
-from xlrd import xldate_as_tuple
 from numpy.linalg import lstsq as linalg_lstsq
+
+#-- PERSONAL IMPORTS --
+
+import meteo
+import database as db
 
 #==============================================================================
 class GapFillWeather(QtCore.QThread):
@@ -50,7 +55,7 @@ class GapFillWeather(QtCore.QThread):
     
     def __init__(self, parent=None):
         super(GapFillWeather, self).__init__(parent)
-       
+        
         #--------------------------------------------------- Required Inputs --
         
         self.time_start = 0
@@ -81,7 +86,7 @@ class GapFillWeather(QtCore.QThread):
         # cross-validation procedure 
         # if *full_error_analysis* is *True*.
         
-    def fill_data(self): 
+    def run(self): 
         
         #-------------------------------------------- Assign Local Variables --
         
@@ -725,7 +730,7 @@ class GapFillWeather(QtCore.QThread):
             writer.writerows(DATA2SAVE)
             
         if self.add_ETP:
-            add_ETP_to_weather_data_file(output_path)            
+            meteo.add_ETP_to_weather_data_file(output_path)            
         
         self.ConsoleSignal.emit('<font color=black>Meteo data saved in ' +
                                 output_path + '</font>')
@@ -870,4 +875,5 @@ def L1LinearRegression(X, Y):
     return B
         
 if __name__ == '__main__':
-    print('coucou')
+    print('Testing code not implemented yet because the structure')
+    print('of the code does not allow it yet.')
