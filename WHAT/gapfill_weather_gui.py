@@ -40,15 +40,16 @@ import database as db
 import meteo
 from hydrograph3 import LatLong2Dist
 import MyQWidget
+#from gapfill_weather_algorithm import
 
 #==============================================================================
-class GapFillWeather(QtGui.QWidget):
+class GapFillWeatherGUI(QtGui.QWidget):
 #==============================================================================
     
     ConsoleSignal = QtCore.Signal(str)
     
     def __init__(self, parent=None):
-        super(GapFillWeather, self).__init__(parent)
+        super(GapFillWeatherGUI, self).__init__(parent)
 
         self.workdir = getcwd()
         self.isFillAll_inProgress = False
@@ -3016,7 +3017,7 @@ if __name__ == '__main__':
     
     app = QtGui.QApplication(sys.argv) 
     
-    instance1 = GapFillWeather()
+    instance1 = GapFillWeatherGUI()
     instance1.set_workdir("../Projects/Project4Testing")
 
     #---- SHOW ----
