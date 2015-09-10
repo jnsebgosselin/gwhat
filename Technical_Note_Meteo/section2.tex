@@ -33,7 +33,6 @@ Neighboring stations with available data are selected in descending order of the
 
 Each time a MLR model is generated for a given sequence of neighboring stations, the program stores the model parameters into memory. Therefore, after the selection process of the neighboring stations is done for a given day with a missing data (\cref{sec:select_stations}), the program checks if the sequence of selected stations has already been encountered before for the current weather variable. If so, the stored MLR parameters will be use directly to estimate the missing data for the current day. Otherwise, the model will generate a new MLR model and will store the results into memory. Since a MLR model is generated only one time for a given sequence of neighboring stations, this means that the algorithm becomes faster with time.
 
-
 using either an Ordinary Least Square (OLS) or a Least Absolute Deviations (LAD) criteria (both options are available). Since daily precipitation series generally represented by long-tailed, positively skewed, distributions, the LAD criterion is typically a better option than the OLS criteria for handling this kind of distribution because it is more robust to outliers (Eischeid et al., 2000, 1995). The downside is an increase in computation time. The MLR using a LAD criterion is computed in WHAT with an iterative reweighted least-squares method (Schlossmacher, 1973; (Eischeid et al., 1995).
 
 
@@ -47,11 +46,11 @@ Once the parameters of the MLR model for a given day with a missing value are kn
 
 where Y(t) is the missing value of the target station estimated at time t, Xi are the synchronous values of the neighboring stations, ai are the regression coefficients and N is the total number of neighboring stations used for the regression, up to the maximal value defined in the method (default is four).
 
-When all missing values in the target station dataset have been estimated, the resulting gapless time series is saved in a ‘‘.out’’ file. Detailed information about the estimated values are saved in an accompanying ‘‘.log’’ file (see Section 8.3.1).
+When all missing values in the target station dataset have been estimated, the resulting gapless time series is saved in a `.out' file. Detailed information about the estimated values are saved in an accompanying `.log' file.
 
 \subsection{Step 3: Validation}
 
-WHAT also includes an option to perform a validation of the method used for a particular weather dataset with a jackknife procedure. This option is an advanced feature that can be activated by changing the value of the field ‘‘Full Error Analysis’’ from 0 to 1 in the file named ‘‘WHAT.pref’’ (see Section 8.3.1).
+WHAT also includes an option to perform a validation of the method used for a particular weather dataset with a cross-validation procedure.
 
 More specifically, when this option is activated, WHAT will estimate a value for the target station for every day of the time series. In other words, loop B in the flowchart of Figure 8.1 will run over all the days of the dataset and not only over days for which there is a missing data. In addition, the memory feature will be deactivated and a MLR model will be estimated for each day independently. If a measured value is present for the current day being estimated, this value will be temporarily discarded from the data series to avoid self-influence of the observation on the estimation procedure
 

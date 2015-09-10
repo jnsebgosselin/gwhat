@@ -43,7 +43,6 @@ from PySide import QtGui, QtCore
 import matplotlib as mpl
 mpl.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-#import matplotlib.pyplot as plt
 
 #---- PERSONAL IMPORTS ----
 

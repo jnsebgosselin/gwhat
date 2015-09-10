@@ -36,12 +36,13 @@ from xlrd import xldate_as_tuple
 
 #-- PERSONAL IMPORTS --
 
+import meteo
 from MyQWidget import MyQToolBox, MyQToolButton
 import database as db
-import meteo
 from hydrograph3 import LatLong2Dist
 import MyQWidget
-from gapfill_weather_algorithm import GapFillWeather as FillWorker
+from gapfill_weather_algorithm import (GapFillWeather, WeatherData, 
+                                       TargetStationInfo, correlation_worker)
 
 #==============================================================================
 class GapFillWeatherGUI(QtGui.QWidget):
@@ -54,10 +55,10 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         self.workdir = getcwd()
         self.isFillAll_inProgress = False
-        self.WEATHER = Weather_File_Info()
-        self.TARGET = Target_Station_Info()
+        self.WEATHER = WeatherData()
+        self.TARGET = TargetStationInfo()
         
-        self.fillworker = FillWorker(self)        
+        self.fillworker = GapFillWeather(self)        
         self.FILLPARAM = GapFill_Parameters()
         
         self.CORRFLAG = 'on'  # Correlation calculation won't be triggered by
@@ -84,6 +85,8 @@ class GapFillWeatherGUI(QtGui.QWidget):
         """    
         
         #---------------------------------------------------------- Database --
+        
+        #TODO: cleanup the language, tooltips and labels.
         
         styleDB = db.styleUI()
         iconDB = db.Icons()
@@ -125,7 +128,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
         #-------------------------------------------------------- LEFT PANEL --
         
-        #---- Target Station ----
+        #-- Target Station --
         
         target_station_label = QtGui.QLabel('<b>%s</b>' % labelDB.fill_station)
         self.target_station = QtGui.QComboBox()
@@ -154,7 +157,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         tarSta_grid.setContentsMargins(0, 0, 0, 10) # (L, T, R, B)
         self.tarSta_widg.setLayout(tarSta_grid)
         
-        #---- Gapfill Dates ----
+        #-- Gapfill Dates --
         
         label_From = QtGui.QLabel('From :  ')
         self.date_start_widget = QtGui.QDateEdit()
@@ -189,7 +192,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
             
             labelDB = db.labels('English')
             
-            #---- Widgets ----
+            #-- Widgets --
         
             Nmax_label = QtGui.QLabel(labelDB.NbrSta)
             self.Nmax = QtGui.QSpinBox ()
@@ -218,7 +221,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
             self.altlimit.setSuffix(' m')
             self.altlimit.setAlignment(QtCore.Qt.AlignCenter)
             
-            #---- Layout ----
+            #-- Layout --
             
             container = QtGui.QFrame()                     
             grid = QtGui.QGridLayout()        
@@ -242,14 +245,14 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
         def regression_model(self):
         
-            #---- Widgets ----
+            #-- Widgets --
             
             self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
             self.RMSE_regression.setChecked(True)
             self.ABS_regression = QtGui.QRadioButton(
                                       'Least Absolute Deviations')
             
-            #---- Layout ----
+            #-- Layout --
             
             container= QtGui.QFrame()
             grid = QtGui.QGridLayout()
@@ -269,12 +272,12 @@ class GapFillWeatherGUI(QtGui.QWidget):
             
             chckstate = QtCore.Qt.CheckState.Unchecked 
             
-            #---- Row Full Error ----
+            #-- Row Full Error --
             
             self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis')
             self.full_error_analysis.setCheckState(chckstate)
             
-            #---- Row ETP ----
+            #-- Row ETP --
             
             self.add_ETP_ckckbox = QtGui.QCheckBox('Add ETP to data file')
             self.add_ETP_ckckbox.setCheckState(chckstate)
@@ -284,7 +287,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
                                         db.styleUI().iconSize2)
             btn_add_ETP.clicked.connect(self.btn_add_ETP_isClicked)
             
-            #---- Row Layout Assembly ----
+            #-- Row Layout Assembly --
             
             container = QtGui.QFrame()
             grid = QtGui.QGridLayout()
@@ -820,464 +823,9 @@ class GapFillWeatherGUI(QtGui.QWidget):
             meteo.add_ETP_to_weather_data_file(filename)
             
 
-#==============================================================================
-class Target_Station_Info():
-# Class that contains all the information relative the target station, 
-# including correlation coefficient 2d matrix, altitude difference and 
-# horizontal distances arrays. The instance of this class in the code is 
-# TARGET.
-#==============================================================================
 
+        
 
-    def __init__(self):        
-        self.index = -1 # Target station index in the DATA matrix and STANAME
-                        # array of the class WEATHER.
-        
-        self.name = [] # Target station name
-        
-        self.province = []
-        self.altitude = []
-        self.longitude = []
-        self.latitude = []
-        
-        self.CORCOEF = [] # 2D matrix containing the correlation coefficients 
-                          # betweein the target station and the neighboring
-                          # stations for each meteorological variable.
-                          # row : meteorological variables
-                          # colm: weather stations
-        
-        self.ALTDIFF = [] # Array with altitude difference between the target
-                          # station and every other station. Target station is
-                          # included with a 0 value at index <index>.
-        
-        self.HORDIST = [] # Array with horizontal distance between the target
-                          # station and every other station. Target station is
-                          # included with a 0 value at index <index>
-        
-#==============================================================================
-class Weather_File_Info():
-    """
-    <Weather_File_Info> class contains all the weather data and station info
-    that are needed for the gapfilling algorithm.
-        
-    Data = Weather data organised in a 3D matrix [i, j, k], where:
-
-               layer k=1 is Maximum Daily Temperature
-               layer k=2 is Minimum Daily Temperature
-               layer k=3 is Daily Mean Temperature
-               layer k=4 is Total Daily Precipitation
-               rows are the time
-               columns are the stations listed in STANAME
-    """
-#============================================================================== 
-        
-    def __init__(self):
-        
-        self.DATA = []       # Weather data
-        self.DATE = []       # Date in tuple format [YEAR, MONTH, DAY]
-        self.TIME = []       # Date in numeric format
-        self.STANAME = []    # Station names
-        self.ALT = []        # Station elevation in m
-        self.LAT = []        # Station latitude in decimal degree
-        self.LON = []        # Station longitude in decimal degree
-        self.VARNAME = []    # Names of the meteorological variables
-        self.ClimateID = []  # Climate Identifiers of weather station
-        self.PROVINCE = []   # Provinces where weater station are located        
-        self.DATE_START = [] # Date start of the original data records
-        self.DATE_END = []   # Date end of the original data records
-        self.NUMMISS = []    # Number of missing data
-        
-    def load_and_format_data(self, fnames):  #=================================
-        
-        # fnames = list of paths of weater data files
-    
-        nSTA = len(fnames) # Number of weather data file
-        
-        #--------------------------------------------- INITIALIZED VARIABLES --
-        
-        self.STANAME = np.zeros(nSTA).astype('str')
-        self.ALT = np.zeros(nSTA)
-        self.LAT = np.zeros(nSTA)
-        self.LON = np.zeros(nSTA)
-        self.PROVINCE = np.zeros(nSTA).astype('str')
-        self.ClimateID = np.zeros(nSTA).astype('str')
-        self.DATE_START = np.zeros((nSTA, 3)).astype('int')
-        self.DATE_END = np.zeros((nSTA, 3)).astype('int')
-            
-        FLAG_date = False # If True, a new DATE matrix will be rebuilt at the
-                          # of this routine.
-        
-        for i in range(nSTA):
-        
-            #------------------------------------------- WEATHER DATA IMPORT --
-        
-            with open(fnames[i], 'r') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
-            
-            STADAT = np.array(reader[8:]).astype('float')
-            
-            self.DATE_START[i, :] = STADAT[0, :3]
-            self.DATE_END[i, :] = STADAT[-1, :3]
-            
-            #----------------------------------------- TIME CONTINUITY CHECK --
-            
-            # Check if data are continuous over time. If not, the serie will be
-            # made continuous and the gaps will be filled with nan values.
-            
-            time_start = xldate_from_date_tuple((STADAT[0, 0].astype('int'),
-                                                 STADAT[0, 1].astype('int'),
-                                                 STADAT[0, 2].astype('int')),
-                                                0)
-
-            time_end = xldate_from_date_tuple((STADAT[-1, 0].astype('int'),
-                                               STADAT[-1, 1].astype('int'),
-                                               STADAT[-1, 2].astype('int')), 0)
-            
-            if (time_end - time_start + 1) != len(STADAT[:,0]):
-                print
-                print('%s is not continuous, correcting...' % reader[0][1])            
-                STADAT = meteo.make_timeserie_continuous(STADAT)            
-                print ('%s is now continuous.' % reader[0][1])
-            
-            time_new = np.arange(time_start, time_end + 1)
-            
-            #-------------------------------------------- FIRST TIME ROUTINE --
-            
-            if i == 0:
-                self.VARNAME = reader[7][3:]
-                nVAR = len(self.VARNAME) # number of meteorological variable
-                self.TIME = np.copy(time_new)
-                self.DATA = np.zeros((len(STADAT[:, 0]), nSTA, nVAR)) * np.nan
-                self.DATE = STADAT[:, :3]
-                self.NUMMISS = np.zeros((nSTA, nVAR)).astype('int')
-                
-            #------------------------------------- <DATA> & <TIME> RESHAPING --
-            
-            # This part of the function fits neighboring data series to the
-            # target data serie in the 3D data matrix. Default values in the
-            # 3D data matrix are nan.
-        
-            if self.TIME[0] <= time_new[0]:
-                
-                if self.TIME[-1] >= time_new[-1]:
-                    
-                    #    [---------------]    self.TIME
-                    #         [-----]         time_new
-                    
-                    pass
-                    
-                else:
-                    
-                    #    [--------------]         self.TIME
-                    #         [--------------]    time_new
-                    #                    
-                    #           OR
-                    #
-                    #    [--------------]           self.TIME
-                    #                     [----]    time_new
-                                        
-                    FLAG_date = True
-                    
-                    # Expand <DATA> and <TIME> to fit the new data serie
-                    
-                    EXPND = np.zeros((time_new[-1] - self.TIME[-1],
-                                      nSTA, nVAR)) * np.nan
-                    
-                    self.DATA = np.vstack((self.DATA, EXPND))
-                
-                    self.TIME = np.arange(self.TIME[0], time_new[-1] + 1)
-                 
-            elif self.TIME[0] > time_new[0]:
-                
-                if self.TIME[-1] >= time_new[-1]:
-            
-                    #        [----------]    self.TIME
-                    #    [----------]        time_new
-                    #           
-                    #            OR
-                    #           [----------]    self.TIME
-                    #    [----]                 time_new
-                    
-                    FLAG_date = True
-                    
-                    # Expand <DATA> and <TIME> to fit the new data serie
-                    
-                    EXPND = np.zeros((self.TIME[0] - time_new[0],
-                                  nSTA, nVAR)) * np.nan
-                                  
-                    self.DATA = np.vstack((EXPND, self.DATA))
-                
-                    self.TIME = np.arange(time_new[0], self.TIME[-1] + 1)
-            
-                else:
-                    
-                    #        [----------]        self.TIME
-                    #    [------------------]    time_new
-                    
-                    FLAG_date = True
-                    
-                    # Expand <DATA> and <TIME> to fit the new data serie
-                    
-                    EXPNDbeg = np.zeros((self.TIME[0] - time_new[0],
-                                         nSTA, nVAR)) * np.nan
-                    
-                    EXPNDend = np.zeros((time_new[-1] - self.TIME[-1],
-                                         nSTA, nVAR)) * np.nan
-                    
-                    self.DATA = np.vstack((EXPNDbeg, self.DATA, EXPNDend))
-                    
-                    self.TIME = np.copy(time_new)
-                    
-            #------------------------------------------------- FILL MATRICES --
-         
-            ifirst = np.where(self.TIME == time_new[0])[0][0]
-            ilast = np.where(self.TIME == time_new[-1])[0][0]
-            
-            self.DATA[ifirst:ilast+1, i, :] = STADAT[:, 3:]
-            
-            # Calculate number of missing data.
-            
-            isnan = np.isnan(STADAT[:, 3:])
-            self.NUMMISS[i, :] = np.sum(isnan, axis=0)
-            
-            # Check if a station with this name already exist. If it does, add
-            # a number at the end of the name so it is possible to
-            # differentiate them in the list.
-            
-            isNameExist = np.where(reader[0][1] == self.STANAME)[0]
-            if len(isNameExist) > 0:
-                
-                print('Station name already exists. Added a number at the end')
-                
-                count = 2
-                while len(isNameExist) > 0:
-                    newname = '%s (%d)' % (reader[0][1], count)
-                    isNameExist = np.where(newname == self.STANAME)[0]
-                    count += 1
-                
-                self.STANAME[i] = newname
-                
-            else:
-                self.STANAME[i] = reader[0][1]
-                        
-            self.PROVINCE[i] = reader[1][1]
-            self.LAT[i] = float(reader[2][1])
-            self.LON[i] = float(reader[3][1])
-            self.ALT[i] = float(reader[4][1])
-            self.ClimateID[i] = str(reader[5][1])
-            
-        #--------------------------------------- SORT STATION ALPHABETICALLY --
-
-        sort_index = np.argsort(self.STANAME)
-        
-        self.DATA = self.DATA[:, sort_index, :]
-        self.STANAME = self.STANAME[sort_index]
-        self.PROVINCE = self.PROVINCE[sort_index]
-        self.LAT = self.LAT[sort_index]
-        self.LON = self.LON[sort_index]
-        self.ALT = self.ALT[sort_index]
-        self.ClimateID = self.ClimateID[sort_index]
-        
-        self.NUMMISS = self.NUMMISS[sort_index, :]
-        self.DATE_START = self.DATE_START[sort_index]
-        self.DATE_END = self.DATE_END[sort_index]
-        
-        #----------------------------------------------- GENERATE DATE SERIE --
-    
-        # Rebuild a date matrix if <DATA> size changed. Otherwise, do nothing
-        # and keep *Date* as is.
-    
-        if FLAG_date == True:
-            self.DATE = np.zeros((len(self.TIME), 3))
-            for i in range(len(self.TIME)):
-                date_tuple = xldate_as_tuple(self.TIME[i], 0)
-                self.DATE[i, 0] = date_tuple[0]
-                self.DATE[i, 1] = date_tuple[1]
-                self.DATE[i, 2] = date_tuple[2]
-    
-    def generate_summary(self, project_folder): #==============================
-
-        """
-        This method will generate a summary of the weather records including
-        allcthe data files contained in "/<project_folder>/Meteo/Input",
-        including dates when the records begin and end, total number of data,
-        and total number of data missing for each meteorological variable, and
-        more.
-        """
-        
-        CONTENT = [['#', 'STATION NAMES', 'ClimateID',
-                    'Lat. (dd)', 'Lon. (dd)', 'Alt. (m)',
-                    'DATE START', 'DATE END', 'Nbr YEARS' , 'TOTAL DATA',
-                    'MISSING Tmax', 'MISSING Tmin', 'MISSING Tmean',
-                    'Missing Precip']]
-                                
-        for i in range(len(self.STANAME)):
-            record_date_start = '%04d/%02d/%02d' % (self.DATE_START[i, 0],
-                                                    self.DATE_START[i, 1],
-                                                    self.DATE_START[i, 2]) 
-                                                    
-            record_date_end = '%04d/%02d/%02d' % (self.DATE_END[i, 0],
-                                                  self.DATE_END[i, 1],
-                                                  self.DATE_END[i, 2])
-                                                  
-            time_start = xldate_from_date_tuple((self.DATE_START[i, 0],
-                                                 self.DATE_START[i, 1],
-                                                 self.DATE_START[i, 2]), 0)
-    
-            time_end = xldate_from_date_tuple((self.DATE_END[i, 0],
-                                               self.DATE_END[i, 1],
-                                               self.DATE_END[i, 2]), 0)
-                                               
-            number_data = float(time_end - time_start + 1)
-            
-            CONTENT.append([i+1 , self.STANAME[i],
-                            self.ClimateID[i],
-                            '%0.2f' % self.LAT[i],
-                            '%0.2f' % self.LON[i],
-                            '%0.2f' % self.ALT[i],
-                            record_date_start,
-                            record_date_end,
-                            '%0.1f' % (number_data / 365.25),
-                            number_data])
-                            
-            # Missing data information for each meteorological variables   
-            for var in range(len(self.VARNAME)):
-                CONTENT[-1].extend(['%d' % (self.NUMMISS[i, var])])
-                
-#                txt1 = self.NUMMISS[i, var]
-#                txt2 = self.NUMMISS[i, var] / number_data * 100
-#                CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
-            
-#            # Total missing data information.
-#            txt1 = np.sum(self.NUMMISS[i, :])
-#            txt2 = txt1 / (number_data * nVAR) * 100
-#            CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
-        
-        output_path = project_folder + '/weather_datasets_summary.log'
-                
-        with open(output_path, 'w') as f:
-            writer = csv.writer(f,delimiter='\t')
-            writer.writerows(CONTENT)
-            
-    def read_summary(self, project_folder): #==================================
-
-        """
-        This method read the content of the file generated by the method
-        <generate_summary> and will return the content of the file in a HTML
-        formatted table
-        """
-        
-        #--------------------------------------------------------- read data --
-        
-        filename = project_folder + '/weather_datasets_summary.log'
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-            reader = reader[1:]
-        
-#        FIELDS = ['&#916;Alt.<br>(m)', 'Dist.<br>(km)', 'Tmax', 
-#                  'Tmin', 'Tmean', 'Ptot']
-        
-        #-------------------------------------------- generate table summary --
-        
-        table = '''
-                <table border="0" cellpadding="3" cellspacing="0" 
-                 align="center">  
-                  <tr>
-                    <td colspan="10"><hr></td>
-                  </tr>                             
-                  <tr> 
-                    <td align="center" valign="bottom"  width=30 rowspan="3">
-                      #
-                    </td>
-                    <td align="left" valign="bottom" rowspan="3">
-                      Station
-                    </td>
-                    <td align="center" valign="bottom" rowspan="3">
-                      Climate<br>ID
-                    </td>
-                    <td align="center" valign="bottom" rowspan="3">
-                      From<br>year
-                    </td>
-                    <td align="center" valign="bottom" rowspan="3">
-                      To<br>year
-                    </td>
-                    <td align="center" valign="bottom" rowspan="3">
-                      Nbr.<br>of<br>years
-                    <td align="center" valign="middle" colspan="4">
-                      % of missing data for
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="4"><hr></td>
-                  </tr>
-                  <tr>                    
-                    <td align="center" valign="middle">
-                      T<sub>max</sub>
-                    </td>
-                    <td align="center" valign="middle">
-                      T<sub>min</sub>
-                    </td>
-                    <td align="center" valign="middle">
-                      T<sub>mean</sub>
-                    </td>
-                    <td align="center" valign="middle">
-                      P<sub>tot</sub>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="10"><hr></td>
-                  </tr> 
-                '''
-        for i in range(len(reader)):
-            
-            color = ['transparent', '#E6E6E6']
-            
-            Ntotal = float(reader[i][9])
-            TMAX = float(reader[i][10]) / Ntotal * 100
-            TMIN = float(reader[i][11]) / Ntotal * 100
-            TMEAN = float(reader[i][12]) / Ntotal * 100
-            PTOT = float(reader[i][13]) / Ntotal * 100
-            firstyear = reader[i][6][:4]
-            lastyear = reader[i][7][:4]
-            nyears = float(lastyear) - float(firstyear)
-            
-            table += '''
-                     <tr bgcolor="%s">
-                       <td align="center" valign="middle">
-                         %02d
-                       </td>
-                       <td align="left" valign="middle">
-                         <font size="3">%s</font>
-                       </td>
-                       <td align="center" valign="middle">
-                         <font size="3">%s</font>
-                       </td>
-                       <td align="center" valign="middle">
-                         <font size="3">%s</font>
-                       </td>
-                       <td align="center" valign="middle">
-                         <font size="3">%s</font>
-                       </td>
-                       <td align="center" valign="middle">
-                         <font size="3">%0.0f</font>
-                       </td>
-                       <td align="center" valign="middle">%0.0f</td>
-                       <td align="center" valign="middle">%0.0f</td>
-                       <td align="center" valign="middle">%0.0f</td>
-                       <td align="center" valign="middle">%0.0f</td>
-                     </tr>
-                     ''' % (color[i%2], i+1, reader[i][1], reader[i][2],
-                            firstyear, lastyear, nyears, 
-                            TMAX, TMIN, TMEAN, PTOT)
-        
-        table += """
-                   <tr>
-                     <td colspan="10"><hr></td>
-                   </tr>
-                 </table>
-                 """
-        
-        return table
             
 #==============================================================================
 def alt_and_dist_calc(WEATHER, target_station_index):
@@ -1308,56 +856,7 @@ def alt_and_dist_calc(WEATHER, target_station_index):
     
     return HORDIST, ALTDIFF
 
-#==============================================================================
-def correlation_worker(WEATHER, target_station_index):
-# This function computes the correlation coefficients between the 
-# target station and the neighboring stations for each meteorological variable.
-# 
-# Results are stored in a 2D matrix <CORCOEF> where:#  
-#   rows :    meteorological variables
-#   columns : weather stations
-#==============================================================================
 
-    DATA = WEATHER.DATA
-    
-    nVAR = len(DATA[0, 0, :])  # number of meteorological variables
-    nSTA = len(DATA[0, :, 0])  # number of stations including target
-   
-    print; print 'Data import completed'
-    print 'correlation coefficients computation in progress'
-    
-    CORCOEF = np.zeros((nVAR, nSTA)) * np.nan
-    
-    Ndata_limit = int(365 / 2.) # Minimum number of pair of data necessary
-                                # between the target and a neighboring station
-                                # to compute a correlation coefficient.
-
-    for i in range(nVAR): 
-        for j in range(nSTA):
-                        
-            # Rows with nan entries are removed from the data matrix.
-            DATA_nonan = np.copy(DATA[:, (target_station_index, j), i])
-            DATA_nonan = DATA_nonan[~np.isnan(DATA_nonan).any(axis=1)]
-
-            # Compute how many pair of data are available for the correlation
-            # coefficient calculation. For the precipitation, entries with 0
-            # are not considered.
-            if i in (0, 1, 2):
-                Nnonan = len(DATA_nonan[:, 0])           
-            else:                
-                Nnonan = sum((DATA_nonan != 0).any(axis=1))
-            
-            # A correlation coefficient is computed between the target station
-            # and the neighboring station <j> for the variable <i> if there is
-            # enough data.
-            if Nnonan >= Ndata_limit:
-                CORCOEF[i, j] = np.corrcoef(DATA_nonan, rowvar=0)[0,1:]
-            else:
-                pass #Do nothing. Value will be nan by default.
-        
-    print 'correlation coefficients computation completed' ; print        
-
-    return CORCOEF
 
 #==============================================================================
 def correlation_table_generation(TARGET, WEATHER, FILLPARAM): 
