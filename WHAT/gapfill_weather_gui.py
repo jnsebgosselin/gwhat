@@ -1671,12 +1671,10 @@ class GapFill_Parameters():
 
 #==============================================================================
 class GapFillDisplayTable(QtGui.QTableWidget):
-    
     """
     Widget for displaying usefull information for the gapfilling of daily
     datasets.
-    """
-    
+    """    
 #==============================================================================
     
     def __init__(self, parent=None):

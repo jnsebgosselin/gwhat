@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import csv
 from time import strftime, sleep
-from os import getcwd
+import os
 from copy import copy
 
 #-- THIRD PARTY IMPORTS --
@@ -62,29 +62,28 @@ class GapFillWeather(QtCore.QThread):
         self.time_end = 0
         self.WEATHER = []
         self.TARGET = []
-        self.project_dir = getcwd()
+        self.project_dir = os.getcwd()
+        self.STOP = False # Flag used to stop the algorithm from a GUI
+        self.isParamsValid = False
         
-        #------------------------------------------------- Method Parameters --
+        #----------------------------------------- Define Parameters Default --
         
+        # if *regression_mode* = 1: Ordinary Least Square
+        # if *regression_mode* = 0: Least Absolute Deviations
+        #
+        # if *add_ETP* is *True*: computes ETP from daily mean temperature              
+        # time series with the function *calculate_ETP* from module *meteo*
+        # and adds the results to the output datafile.
+        #              
+        # if *full_error_analysis* is *True*: a complete analysis of the
+        # estimation errors is conducted with a cross-validation procedure.
+                       
         self.Nbr_Sta_max = 4
         self.limitDist = 100
-        self.limitAlt = 350
-        
-        self.regression_mode = True
-        # --> if True = Ordinary Least Square
-        # --> if False = Least Absolute Deviations
-        
-        self.STOP = False # Flag used to stop the Thread on the UI side
-        
+        self.limitAlt = 350        
+        self.regression_mode = 1
         self.add_ETP = False
-        # If True, computes ETP from daily mean temperature time series with 
-        # the function "calculate_ETP" from module "meteo" and add the results 
-        # to the output datafile.
-        
-        self.full_error_analysis = False 
-        # A complete analysis of the estimation errors is conducted with a
-        # cross-validation procedure 
-        # if *full_error_analysis* is *True*.
+        self.full_error_analysis = False
         
     def run(self): 
         
@@ -244,8 +243,8 @@ class GapFillWeather(QtCore.QThread):
             # Data for this variable are stored in a 2D matrix where the raws
             # are the weather data of the current variable to fill for each
             # time frame and the columns are the weather station, arranged in
-            # descending correlation order. Target station data serie should be
-            # contained at j = 0.
+            # descending correlation order. Target station data serie should
+            # be contained at j = 0.
             YX = np.copy(DATA[:, Sta_index, var])              
             
             # Find rows where data are missing between the date limits
@@ -821,7 +820,7 @@ def sort_stations_correlation_order(CORCOEF, target_station_index):
     
     return Sta_index
         
-#==============================================================================    
+#==============================================================================   
 def L1LinearRegression(X, Y): 
     """
     L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
@@ -875,5 +874,5 @@ def L1LinearRegression(X, Y):
     return B
         
 if __name__ == '__main__':
-    print('Testing code not implemented yet because the structure')
-    print('of the code does not allow it yet.')
+    
+    gapfill_weather = GapFillWeather()
