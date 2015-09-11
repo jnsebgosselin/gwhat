@@ -1345,7 +1345,7 @@ class MyHorizHeader(QtGui.QHeaderView):
     # http://stackoverflow.com/questions/2336079/
     # can-i-have-more-than-one-line-in-a-table-header-in-qt
         
-    def __init__(self, parent=None): #==========================================
+    def __init__(self, parent=None): #=========================================
         super(MyHorizHeader, self).__init__(QtCore.Qt.Horizontal, parent)
         
         self.parent = parent
@@ -1367,7 +1367,7 @@ class MyHorizHeader(QtGui.QHeaderView):
         self.heightHint = 20
         
             
-    def paintEvent(self, event): #==============================================
+    def paintEvent(self, event): #=============================================
         
         qp = QtGui.QPainter()
         qp.begin(self.viewport())
@@ -1389,7 +1389,7 @@ class MyHorizHeader(QtGui.QHeaderView):
         qp.end()
        
        
-    def paintHeader(self, qp): #================================================
+    def paintHeader(self, qp): #===============================================
 
         # Paint the header box for the entire width of the table. 
         # This eliminates the separators between each individual section.
@@ -1409,7 +1409,7 @@ class MyHorizHeader(QtGui.QHeaderView):
         if not rect.isValid():
             return
         
-        #--------------------------------------------  draw header sections ----
+        #---------------------------------------------  draw header sections --
 
         opt = QtGui.QStyleOptionHeader()        
         self.initStyleOption(opt) # 
@@ -1457,7 +1457,7 @@ class MyHorizHeader(QtGui.QHeaderView):
         self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter, self)
                 
         
-    def paintLabels(self, qp): #===============================================
+    def paintLabels(self, qp): #=============================== Paint Labels ==
         
         fontfamily = db.styleUI().fontfamily
 
@@ -1508,7 +1508,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                                                 
             #------------------------------------------- Put Labels in Table --
             
-            #---- Highlights labels when item is selected in column ---
+            #-- Highlights labels when item is selected in column --
             
             if self.highlightSections():
                 selectedIndx = self.selectionModel().selectedIndexes()
@@ -1521,7 +1521,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                     
                                      # OR
                     
-            #---- Highlights labels when mouse it over section ---        
+            #-- Highlights labels when mouse it over section --
                     
             sectionHeight = self.size().height()  
             sectionWidth = self.sectionSize(logicalIndex)
@@ -1594,7 +1594,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                                                 self.size().height()))
         
         
-    def sizeHint(self): #======================================================
+    def sizeHint(self): #========================================= Size Hint ==
          
         baseSize = QtGui.QHeaderView.sizeHint(self)
         baseSize.setHeight(self.heightHint)

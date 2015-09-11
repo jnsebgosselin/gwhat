@@ -45,6 +45,19 @@ class GapFillWeather(QtCore.QThread):
     This functions is started on the GUI side when the *Fill* or *Fill All*
     button of the Tab named *Fill Data* is clicked on. It is the main routine
     that fill the missing data in the weather record.
+    
+    Parameters
+    ----------
+    Nbr_Sta_max : int
+    limitDist : float
+    limitAlt : float
+    regression_mode : int
+    add_ETP : bool
+    full_error_analysis : bool
+    
+    Returns
+    -------
+    TODO
     """
 #==============================================================================
    

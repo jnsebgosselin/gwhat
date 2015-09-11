@@ -1,0 +1,107 @@
+\documentclass[12pt, letterpaper, fleqn]{report}
+
+\usepackage{geometry}
+\geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
+
+\usepackage[hidelinks, colorlinks=true, urlcolor=blue,
+            linkcolor=black, citecolor=black]{hyperref}
+\usepackage{fixltx2e} % For subscript
+\usepackage{graphicx}
+
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{floatrow}
+\floatsetup[table]{capposition=top}
+
+\usepackage{fix-cm} % Permit Computer Modern fonts at arbitrary sizes
+\usepackage{placeins} % De­fines a \FloatBar­rier com­mand, be­yond which floats may not pass
+
+\usepackage{subfiles}
+\usepackage{float}
+\usepackage{adjustbox}
+
+\usepackage[list-units = single,range-units = single]{siunitx}
+
+\usepackage{booktabs}
+\usepackage[table]{xcolor} % Internally load "colortbl"
+\usepackage{tabularx}
+
+%\usepackage{microtype}
+%\DisableLigatures{encoding = *, family = * }
+
+\usepackage[utf8]{inputenc}
+\DeclareUnicodeCharacter{00A0}{~}
+
+% Very Good Table Example:
+
+% http://tex.stackexchange.com/questions/64761/
+% add-just-a-little-more-padding-to-my-table
+
+% http://tex.stackexchange.com/questions/30530/
+% remove-chapter-from-the-chapter-title-but-keep-chapter-number-in-the-table-o
+
+\makeatletter
+\def\@makechapterhead#1{
+  \vspace*{50\p@}
+  {\parindent \z@ \raggedright \normalfont
+   \huge\bfseries \thechapter \hspace{0.5cm} \interlinepenalty\@M
+   \Huge \bfseries #1\par\nobreak
+   \vskip 40\p@
+  }}
+  \makeatother
+
+\usepackage[authoryear, round, sort&compress]{natbib}
+\bibliographystyle{plainnat}
+\usepackage[capitalize]{cleveref}
+
+\begin{document}
+%
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+    \centering
+    \subfile{chapter0.1}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+%
+\chapter*{License}
+    \subfile{chapter0.2}
+%    
+\tableofcontents
+\listoffigures
+%
+%\part{User Manual}
+%
+\chapter{Introduction}
+    \subfile{chapter1}
+%
+\chapter{Data Management by Projects}\label{WHAT_projects}
+    \subfile{chapter2}
+\chapter{Creating Gapless Daily Weather Datasets}
+    \label{chap:gapfilling}
+    \subfile{chapter3}
+    
+%\subfile{chapter4} % Water Level Time Series Preparation
+%\chapter{Plotting weather and water level data}\label{chap:plotting_data}
+%    \subfile{chapter5}
+%\subfile{chapter6} % Data interpretation
+
+%\part{Technical Documentation}
+
+%\subfile{chapter7} % Data interpretation
+%\subfile{chapter8} % Data interpretation
+%\subfile{chapter9} % Data interpretation
+%\subfile{chapter10} % BRF
+
+%\part{Appendices}
+
+\appendix
+
+\subfile{annexeA}
+%\subfile{annexeB} % Exemple Monteregie Est - Level of Confinment of the Roc Aquifer
+\chapter{Description of the weather data file format used in WHAT}
+    \label{sec:weather_datafile_format}
+    \subfile{annexeC}
+%
+\bibliography{WHATMANUAL}
+
+\end{document}
