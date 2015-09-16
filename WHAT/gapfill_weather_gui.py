@@ -21,11 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #-- STANDARD LIBRARY IMPORTS --
 
-import csv
+#import csv
 import sys
-from time import ctime, strftime, sleep
-from os import getcwd, listdir, makedirs, path
-from copy import copy
+from time import sleep #ctime, strftime, sleep
+from os import getcwd, listdir, path
 
 #-- THIRD PARTY IMPORTS --
 
@@ -54,15 +53,23 @@ class GapFillWeatherGUI(QtGui.QWidget):
         super(GapFillWeatherGUI, self).__init__(parent)
 
         self.workdir = getcwd()
-        self.isFillAll_inProgress = False
-        self.WEATHER = WeatherData()
-        self.TARGET = TargetStationInfo()
-        
-        self.fillworker = GapFillWeather(self)        
+        self.isFillAll_inProgress = False                
+              
         self.FILLPARAM = GapFill_Parameters()
         
         self.CORRFLAG = 'on'  # Correlation calculation won't be triggered by
                               # events when this is 'off'
+        
+        #-- setup gap fill worker and thread --
+        
+        self.fillworker = GapFillWeather(self)  
+        
+        self.gap_fill_worker = GapFillWeather() 
+        self.gap_fill_thread = QtCore.QThread() 
+        self.gap_fill_worker.moveToThread(self.gap_fill_thread)  
+        
+        self.WEATHER = WeatherData()
+        self.TARGET = TargetStationInfo()                     
         
         self.initUI()        
                
@@ -429,10 +436,11 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
         #---- gapfill ----
         
-        self.fillworker.ProgBarSignal.connect(self.pbar.setValue)
-        self.fillworker.ProcessFinished.connect(self.manage_gapfill)
-        self.btn_fill.clicked.connect(self.manage_gapfill)
-        self.btn_fill_all.clicked.connect(self.manage_gapfill)
+        self.gap_fill_worker.ProgBarSignal.connect(self.pbar.setValue)
+        self.gap_fill_worker.ProcessFinished.connect(
+                                                   self.gap_fill_worker_return)
+        self.btn_fill.clicked.connect(self.gap_fill_btn_clicked)
+        self.btn_fill_all.clicked.connect(self.gap_fill_btn_clicked)
                
         #------------------------------------------------------- MESSAGE BOX --
                                           
@@ -582,12 +590,9 @@ class GapFillWeatherGUI(QtGui.QWidget):
             self.ConsoleSignal.emit(
             '''<font color=black>
                  Correlation coefficients calculation for station %s completed
-               </font>''' % (self.TARGET.name))
-                                      
+               </font>''' % (self.TARGET.name))                                      
             self.correlation_table_display()
             
-        elif self.CORRFLAG == 'off':
-            'Do nothing'
     
     def restoreUI(self): #=====================================================
         
@@ -606,141 +611,107 @@ class GapFillWeatherGUI(QtGui.QWidget):
         QtGui.QApplication.processEvents()
 
         self.pbar.hide()
-            
-    def manage_gapfill(self): #================================================
         
-        iconDB = db.Icons()
-                    
-        #--------------------------------------------- CHECK FOR DATA ERRORS --
-                            
-        y = self.date_start_widget.date().year()
-        m = self.date_start_widget.date().month()
-        d = self.date_start_widget.date().month()
-        time_start = xldate_from_date_tuple((y, m, d), 0)
- 
-        y = self.date_end_widget.date().year()
-        m = self.date_end_widget.date().month()
-        d = self.date_end_widget.date().day()
-        time_end = xldate_from_date_tuple((y, m, d), 0)
+    def get_time_from_qdatedit(self, obj):
+        
+        y = obj.date().year() 
+        m = obj.date().month() 
+        d = obj.date().day()
+
+        return xldate_from_date_tuple((y, m, d), 0)
+    
             
+    def gap_fill_btn_clicked(self): #============== Gap-Fill Button Clicked ==
+        
+        #-------------------------------------------- Stop Thread if Running --
+        
+        if self.gap_fill_thread.isRunning(): 
+            
+            print('!Stopping the gap-filling routine!')
+                        
+            #-- Pass a flag to the worker to tell him to stop --
+            
+            self.gap_fill_worker.STOP = True
+            self.isFillAll_inProgress = False
+            # UI will be restored in *gap_fill_worker_return* method
+            
+            return
+                    
+        #----------------------------------------------------- Data is Empty --
+        
+        #-- Check if Station List is Empty --
+        
+        nSTA = len(self.WEATHER.STANAME)        
+        if nSTA == 0:
+            self.msgBox.setText('There is no data to fill.')
+            self.msgBox.exec_()
+            print('There is no data to fill.')
+            
+            return
+                    
+        #-------------------------------------------- CHECK FOR DATES ERRORS --
+                            
+        time_start = self.get_time_from_qdatedit(self.date_start_widget)
+        time_end = self.get_time_from_qdatedit(self.date_end_widget)
+
         if time_start > time_end:
             
             print('The time period is invalid.')
             self.msgBox.setText('<b>Gap Fill Data Record</b> start date is ' +
                                 'set to a later time than the end date.')
             self.msgBox.exec_()
-            
-            
+                        
             return
-
-        #------------------------------------------------------ Check Sender --
-
-        # This function can be entered from three different points in the UI:
-
-        # (1) The button "Fill Station" is clicked.
-        # (2) The button "Fill All Stations" is clicked.
-        # (3) From the automated process, when filling the data for all the
-        #     station in batch mode.
-
-        # Depending from where tthis method was initiated, the state of the
-        # system will be checked and manage differently.
-        
-        nSTA = len(self.WEATHER.STANAME)
-        button = self.sender()
-        
-        if button == self.btn_fill:
             
-            #---------------------------------- Check if Station is Selected --
+        #------------------------------------------------ Check Which Button --
+            
+        button = self.sender()        
+        if button == self.btn_fill: #---------------------- Fill One Station --
+            
+            #-- Check if Station is Selected --
 
             if self.target_station.currentIndex() == -1:
-
                 self.msgBox.setText('No <b>weather station</b> is currently ' +
                                     'selected.')
                 self.msgBox.exec_()
-                print 'No weather station selected.'
+                print('No weather station is currently selected.')
                 
                 return
+                        
+            self.btn_fill_all.setEnabled(False)
+            self.isFillAll_inProgress = False
+            sta_indx2fill = self.target_station.currentIndex()
                 
-            #-------------------------------------- Stop Thread (if running) --
+        elif button == self.btn_fill_all: #--------------- Fill All Stations --
                 
-            if self.fillworker.isRunning(): # Stop the process
+            self.btn_fill.setEnabled(False)
+            self.isFillAll_inProgress = True
+            sta_indx2fill = 0            
+            
+        #-- Disable UI and continue the process normally --
 
-                self.restoreUI()
-                
-                #-- Pass a flag to the worker to tell him to stop --
-                
-                self.fillworker.STOP = True
-                self.isFillAll_inProgress = False
-                
-                return
-                
-            else:
-                
-                #-- Disable UI and continue the process normally --
-            
-                self.btn_fill.setIcon(iconDB.stop)
-                            
-                self.tarSta_widg.setEnabled(False)
-                self.fillDates_widg.setEnabled(False)
-                self.stack_widget.setEnabled(False)
-                self.btn_fill_all.setEnabled(False)
-                
-                self.pbar.show()
-            
-                self.isFillAll_inProgress = False
-                sta_indx2fill = self.target_station.currentIndex()
-
-        elif button == self.btn_fill_all:
-            
-            #---------------------------- Check if Station List is not Empty --
-
-            if nSTA == 0:
-
-                self.msgBox.setText('There is no data to fill.')
-                self.msgBox.exec_()
-                print'There is no data to fill.'
-                
-                return
-            
-            #-------------------------------------- Stop Thread (if running) --
-            
-            if self.fillworker.isRunning(): # Stop the process
-                print'Coucou fill worker is running'
-                self.restoreUI()
-                
-                #-- Pass a flag to the worker to tell him to stop --
-                
-                self.fillworker.STOP = True
-                self.isFillAll_inProgress = False
-                
-                return
-                
-            else:
-            
-                #-- Disable UI and continue the process normally --
-                
-                self.btn_fill_all.setIcon(iconDB.stop)
-                self.btn_fill.setEnabled(False)
-                self.tarSta_widg.setEnabled(False)
-                self.fillDates_widg.setEnabled(False)
-                self.stack_widget.setEnabled(False)
-                self.pbar.show()
-                
-                self.isFillAll_inProgress = True
-                sta_indx2fill = 0
-                
-                QtGui.QApplication.processEvents()                
-            
-                self.correlation_UI()
+        button.setIcon(db.Icons().stop)
+        self.fillDates_widg.setEnabled(False)
+        self.tarSta_widg.setEnabled(False)
+        self.stack_widget.setEnabled(False)
+        self.pbar.show()
         
-        else: #--------------------------------- Check if process isFinished --
-            
-            # Method initiated from an automatic return from the gapfilling
-            # process in batch mode. Iterate over the station list an continue
-            # process normally.
-            
+        QtGui.QApplication.processEvents()   
+        
+        self.gap_fill_start(sta_indx2fill)
+        
+        
+    def gap_fill_worker_return(self, event): #============== Gap-Fill Return ==
+
+        # Method initiated from an automatic return from the gapfilling
+        # process in batch mode. Iterate over the station list an continue
+        # process normally.
+    
+        self.gap_fill_thread.quit()
+
+        nSTA = len(self.WEATHER.STANAME)
+        if event == True:
             sta_indx2fill = self.target_station.currentIndex() + 1            
-            
             if self.isFillAll_inProgress == False or sta_indx2fill == nSTA: 
                 
                 # Single fill process completed sucessfully for the current
@@ -748,15 +719,16 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 # sucessfully for all the weather stations in the list.
 
                 self.restoreUI()
-                return
-                
-            else:
-                    
-               # Fill All process in progress, continue with next
-               # weather station in the list.
-                    
-               pass            
-                            
+            else:                
+                self.gap_fill_start(sta_indx2fill)
+            
+        else:
+            print('Gap-filling rountine stopped... restoring UI.')
+            self.restoreUI()
+            
+            
+    def gap_fill_start(self, sta_indx2fill): #=============== Gap-Fill Start ==
+            
         #--------------------------------------------------------- UPDATE UI --
                             
         self.CORRFLAG = 'off' 
@@ -769,48 +741,34 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.correlation_UI()
         
         #------------------------------------------------------ START THREAD --
-        
-        #-- Wait for the QThread to finish --
-        
-        # Protection in case the QTread did not had time to close completely
-        # before starting the downloading process for the next station.
-        
-        waittime = 0
-        while self.fillworker.isRunning():
-            print('Waiting for the fill weather data thread to close')
-            sleep(1)
-            waittime += 1
-            if waittime > 15:
-                msg = ('This function is not working as intended.' +
-                       ' Please report a bug.')
-                print(msg)
-                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-                return
                 
         #-- Pass information to the worker --
         
-        self.fillworker.project_dir = self.workdir
+        self.gap_fill_worker.workdir = self.workdir
         
-        self.fillworker.time_start = time_start
-        self.fillworker.time_end = time_end   
+        time_start = self.get_time_from_qdatedit(self.date_start_widget)
+        time_end = self.get_time_from_qdatedit(self.date_end_widget)        
+        self.gap_fill_worker.time_start = time_start
+        self.gap_fill_worker.time_end = time_end   
 
-        self.fillworker.Nbr_Sta_max = self.Nmax.value()
-        self.fillworker.limitDist = self.distlimit.value()
-        self.fillworker.limitAlt = self.altlimit.value()                     
+        self.gap_fill_worker.Nbr_Sta_max = self.Nmax.value()
+        self.gap_fill_worker.limitDist = self.distlimit.value()
+        self.gap_fill_worker.limitAlt = self.altlimit.value()                     
         
-        self.fillworker.WEATHER = self.WEATHER
-        self.fillworker.TARGET = self.TARGET
+        self.gap_fill_worker.WEATHER = self.WEATHER
+        self.gap_fill_worker.TARGET = self.TARGET
                                     
-        self.fillworker.regression_mode = self.RMSE_regression.isChecked()
+        self.gap_fill_worker.regression_mode = self.RMSE_regression.isChecked()
         
-        self.fillworker.full_error_analysis = self.full_error_analysis.isChecked()
-        self.fillworker.add_ETP = self.add_ETP_ckckbox.isChecked()
+        self.gap_fill_worker.full_error_analysis = \
+            self.full_error_analysis.isChecked()
+        self.gap_fill_worker.add_ETP = self.add_ETP_ckckbox.isChecked()
                                         
         #---- Start the Thread ----
                                         
-        self.fillworker.start()
+        self.gap_fill_thread.start()
+        self.gap_fill_worker.FillDataSignal.emit(True)
             
-        return
         
     def btn_add_ETP_isClicked(self): #=========================================
         

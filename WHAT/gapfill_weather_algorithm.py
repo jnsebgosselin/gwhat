@@ -41,7 +41,7 @@ import meteo
 import database as db
 
 #==============================================================================
-class GapFillWeather(QtCore.QThread):
+class GapFillWeather(QtCore.QObject):
     """
     This functions is started on the GUI side when the *Fill* or *Fill All*
     button of the Tab named *Fill Data* is clicked on. It is the main routine
@@ -55,10 +55,6 @@ class GapFillWeather(QtCore.QThread):
     regression_mode : int
     add_ETP : bool
     full_error_analysis : bool
-    
-    Returns
-    -------
-    TODO
     """
 #==============================================================================
    
@@ -68,6 +64,7 @@ class GapFillWeather(QtCore.QThread):
     ProgBarSignal = QtCore.Signal(int)
     ConsoleSignal = QtCore.Signal(str)
     ProcessFinished = QtCore.Signal(bool)
+    FillDataSignal = QtCore.Signal(bool)
     
     def __init__(self, parent=None):
         super(GapFillWeather, self).__init__(parent)
@@ -78,8 +75,6 @@ class GapFillWeather(QtCore.QThread):
         self.time_end = 0
         self.WEATHER = []
         self.TARGET = []
-        # TODO: replace self.project_dir by self.workdir in the code.
-        self.project_dir = os.getcwd()
         self.workdir = os.getcwd()
         self.STOP = False # Flag used to stop the algorithm from a GUI
         self.isParamsValid = False
@@ -103,11 +98,12 @@ class GapFillWeather(QtCore.QThread):
         self.add_ETP = False
         self.full_error_analysis = False
         
-    def set_workdir(self, directory): #===================== Set Working Dir ==
+        #------------------------------------------------- Signals and Slots --
         
-        self.workdir = directory 
+        self.FillDataSignal.connect(self.fill_data)
+
         
-    def run(self): #============================ Fill Weather Data Algorithm ==
+    def fill_data(self): #====================== Fill Weather Data Algorithm ==
         
         #-------------------------------------------- Assign Local Variables --
         
@@ -295,6 +291,7 @@ class GapFillWeather(QtCore.QThread):
                     print(msg)
                     self.ConsoleSignal.emit('<font color=red>msg</font>')                    
                     self.STOP = False
+                    self.ProcessFinished.emit(False) 
                     
                     return                    
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -715,7 +712,7 @@ class GapFillWeather(QtCore.QThread):
         target_station_name = target_station_name.replace('\\', '_')
         target_station_name = target_station_name.replace('/', '_')
 
-        output_path = (self.project_dir + '/Meteo/Output/' + 
+        output_path = (self.workdir + '/Meteo/Output/' + 
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.log')
         
@@ -742,7 +739,7 @@ class GapFillWeather(QtCore.QThread):
         for i in range(len(ALLDATA)):
             DATA2SAVE.append(ALLDATA[i])
         
-        output_path = (self.project_dir + '/Meteo/Output/' + 
+        output_path = (self.workdir + '/Meteo/Output/' + 
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.out')
         
@@ -771,7 +768,7 @@ class GapFillWeather(QtCore.QThread):
             for i in range(len(ALLDATA)):
                 error_analysis_report.append(ALLDATA[i])
             
-            output_path = (self.project_dir + '/Meteo/Output/' + 
+            output_path = (self.workdir + '/Meteo/Output/' + 
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.err')
                            
@@ -833,8 +830,7 @@ def correlation_worker(WEATHER, target_station_index):
     nVAR = len(DATA[0, 0, :])  # number of meteorological variables
     nSTA = len(DATA[0, :, 0])  # number of stations including target
    
-    print('\nData import completed')
-    print('correlation coefficients computation in progress')
+    print('\ncorrelation coefficients computation in progress')
     
     CORCOEF = np.zeros((nVAR, nSTA)) * np.nan
     
