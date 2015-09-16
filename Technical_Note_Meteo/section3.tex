@@ -2,7 +2,11 @@
 
 \begin{document}
 
-The routine is implemented as a python class object 
+The code is compliant with either Python 3.4 or 2.7.9. It requires numpy, xlrd and PySide. The algorithm is organized as a base class of the Qt GUI Framework using the PySide binding. Signals are also emitted at various stade in the gap-filling routine. This has been done to facilitate the addition of a Graphical User Interface on top of the algorithm with the Qt GUI Development framework.
+
+It the class for the algorithm comes with two companion class:. The first class is used to load the weather data into memory, align correctly the data series in regard to time, and do some quality check on the data. The class is used to hold all relative information regarding the target station, including the correlation coefficient calculated between the target station and its neighbors.
+
+The algorithm is implemented in the free and open source software WHAT which provides a user friendly and convenient interface. For using the algorithm on the command line, the first step consist firstly to gene
 
 \subsection{Parameters}\label{sec:parameters}
 
