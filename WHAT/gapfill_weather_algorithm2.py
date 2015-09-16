@@ -55,10 +55,6 @@ class GapFillWeather(QtCore.QThread):
     regression_mode : int
     add_ETP : bool
     full_error_analysis : bool
-    
-    Returns
-    -------
-    TODO
     """
 #==============================================================================
    
@@ -68,6 +64,7 @@ class GapFillWeather(QtCore.QThread):
     ProgBarSignal = QtCore.Signal(int)
     ConsoleSignal = QtCore.Signal(str)
     ProcessFinished = QtCore.Signal(bool)
+    FillDataSignal = QtCore.Signal(bool)
     
     def __init__(self, parent=None):
         super(GapFillWeather, self).__init__(parent)
@@ -101,11 +98,12 @@ class GapFillWeather(QtCore.QThread):
         self.add_ETP = False
         self.full_error_analysis = False
         
-    def set_workdir(self, directory): #===================== Set Working Dir ==
+        #------------------------------------------------- Signals and Slots --
         
-        self.workdir = directory 
+        self.FillDataSignal.connect(self.fill_data)
+
         
-    def run(self): #============================ Fill Weather Data Algorithm ==
+    def fill_data(self): #====================== Fill Weather Data Algorithm ==
         
         #-------------------------------------------- Assign Local Variables --
         

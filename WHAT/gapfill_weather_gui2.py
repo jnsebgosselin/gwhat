@@ -21,11 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #-- STANDARD LIBRARY IMPORTS --
 
-import csv
+#import csv
 import sys
-from time import ctime, strftime, sleep
-from os import getcwd, listdir, makedirs, path
-from copy import copy
+from time import sleep #ctime, strftime, sleep
+from os import getcwd, listdir, path
 
 #-- THIRD PARTY IMPORTS --
 
@@ -54,15 +53,23 @@ class GapFillWeatherGUI(QtGui.QWidget):
         super(GapFillWeatherGUI, self).__init__(parent)
 
         self.workdir = getcwd()
-        self.isFillAll_inProgress = False
-        self.WEATHER = WeatherData()
-        self.TARGET = TargetStationInfo()
-        
-        self.fillworker = GapFillWeather(self)        
+        self.isFillAll_inProgress = False                
+              
         self.FILLPARAM = GapFill_Parameters()
         
         self.CORRFLAG = 'on'  # Correlation calculation won't be triggered by
                               # events when this is 'off'
+        
+        #-- setup gap fill worker and thread --
+        
+        self.fillworker = GapFillWeather(self)  
+        
+        self.gap_fill_worker = GapFillWeather() 
+        self.gap_fill_thread = QtCore.QThread() 
+        self.gap_fill_worker.moveToThread(self.gap_fill_thread)  
+        
+        self.WEATHER = WeatherData()
+        self.TARGET = TargetStationInfo()                     
         
         self.initUI()        
                
@@ -429,8 +436,10 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
         #---- gapfill ----
         
-        self.fillworker.ProgBarSignal.connect(self.pbar.setValue)
-        self.fillworker.ProcessFinished.connect(self.manage_gapfill)
+        self.gap_fill_worker.ProgBarSignal.connect(self.pbar.setValue)
+        self.gap_fill_worker.ProcessFinished.connect(
+                                                   self.gap_fill_worker_return)
+        
         self.btn_fill.clicked.connect(self.manage_gapfill)
         self.btn_fill_all.clicked.connect(self.manage_gapfill)
                
@@ -606,6 +615,11 @@ class GapFillWeatherGUI(QtGui.QWidget):
         QtGui.QApplication.processEvents()
 
         self.pbar.hide()
+        
+    def gap_fill_worker_return(self, event): #=================================
+    
+        self.gap_fill_thread.quit()
+        self.manage_gapfill()
             
     def manage_gapfill(self): #================================================
         
@@ -663,13 +677,14 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 
             #-------------------------------------- Stop Thread (if running) --
                 
-            if self.fillworker.isRunning(): # Stop the process
-
+            if self.gap_fill_thread.isRunning(): # Stop the process
+                print('!Stopping the gap-filling routine!')
+                self.gap_fill_thread.quit()
                 self.restoreUI()
                 
                 #-- Pass a flag to the worker to tell him to stop --
                 
-                self.fillworker.STOP = True
+                self.gap_fill_worker.STOP = True
                 self.isFillAll_inProgress = False
                 
                 return
@@ -704,13 +719,14 @@ class GapFillWeatherGUI(QtGui.QWidget):
             
             #-------------------------------------- Stop Thread (if running) --
             
-            if self.fillworker.isRunning(): # Stop the process
-                print'Coucou fill worker is running'
+            if self.gap_fill_thread.isRunning(): # Stop the process
+                print('!Stopping the gap-filling routine!')
+                self.gap_fill_thread.quit()
                 self.restoreUI()
                 
                 #-- Pass a flag to the worker to tell him to stop --
                 
-                self.fillworker.STOP = True
+                self.gap_fill_worker.STOP = True
                 self.isFillAll_inProgress = False
                 
                 return
@@ -746,17 +762,13 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 # Single fill process completed sucessfully for the current
                 # selected weather station OR Fill All process completed 
                 # sucessfully for all the weather stations in the list.
+                
+                # if Else, *Fill All* process in progress, continue with next
+                # weather station in the list.
 
                 self.restoreUI()
                 return
-                
-            else:
-                    
-               # Fill All process in progress, continue with next
-               # weather station in the list.
-                    
-               pass            
-                            
+                           
         #--------------------------------------------------------- UPDATE UI --
                             
         self.CORRFLAG = 'off' 
@@ -770,10 +782,15 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
         #------------------------------------------------------ START THREAD --
         
+        self.gap_fill_thread.quit()
+        
         #-- Wait for the QThread to finish --
         
+        # TODO: PROBABLY DEPRECATED NOW WITH THE NEW STRUCTURE. TO CONFIRM 
+        # THIS IN WINDOWS.
+        
         # Protection in case the QTread did not had time to close completely
-        # before starting the downloading process for the next station.
+        # before starting the gap-filling process for the next station.
         
         waittime = 0
         while self.fillworker.isRunning():
@@ -789,26 +806,27 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 
         #-- Pass information to the worker --
         
-        self.fillworker.workdir = self.workdir
+        self.gap_fill_worker.workdir = self.workdir
         
-        self.fillworker.time_start = time_start
-        self.fillworker.time_end = time_end   
+        self.gap_fill_worker.time_start = time_start
+        self.gap_fill_worker.time_end = time_end   
 
-        self.fillworker.Nbr_Sta_max = self.Nmax.value()
-        self.fillworker.limitDist = self.distlimit.value()
-        self.fillworker.limitAlt = self.altlimit.value()                     
+        self.gap_fill_worker.Nbr_Sta_max = self.Nmax.value()
+        self.gap_fill_worker.limitDist = self.distlimit.value()
+        self.gap_fill_worker.limitAlt = self.altlimit.value()                     
         
-        self.fillworker.WEATHER = self.WEATHER
-        self.fillworker.TARGET = self.TARGET
+        self.gap_fill_worker.WEATHER = self.WEATHER
+        self.gap_fill_worker.TARGET = self.TARGET
                                     
-        self.fillworker.regression_mode = self.RMSE_regression.isChecked()
+        self.gap_fill_worker.regression_mode = self.RMSE_regression.isChecked()
         
-        self.fillworker.full_error_analysis = self.full_error_analysis.isChecked()
-        self.fillworker.add_ETP = self.add_ETP_ckckbox.isChecked()
+        self.gap_fill_worker.full_error_analysis = self.full_error_analysis.isChecked()
+        self.gap_fill_worker.add_ETP = self.add_ETP_ckckbox.isChecked()
                                         
         #---- Start the Thread ----
                                         
-        self.fillworker.start()
+        self.gap_fill_thread.start()
+        self.gap_fill_worker.FillDataSignal.emit(True)
             
         return
         
