@@ -41,7 +41,7 @@ import meteo
 import database as db
 
 #==============================================================================
-class GapFillWeather(QtCore.QThread):
+class GapFillWeather(QtCore.QObject):
     """
     This functions is started on the GUI side when the *Fill* or *Fill All*
     button of the Tab named *Fill Data* is clicked on. It is the main routine
@@ -291,6 +291,7 @@ class GapFillWeather(QtCore.QThread):
                     print(msg)
                     self.ConsoleSignal.emit('<font color=red>msg</font>')                    
                     self.STOP = False
+                    self.ProcessFinished.emit(False) 
                     
                     return                    
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -829,8 +830,7 @@ def correlation_worker(WEATHER, target_station_index):
     nVAR = len(DATA[0, 0, :])  # number of meteorological variables
     nSTA = len(DATA[0, :, 0])  # number of stations including target
    
-    print('\nData import completed')
-    print('correlation coefficients computation in progress')
+    print('\ncorrelation coefficients computation in progress')
     
     CORCOEF = np.zeros((nVAR, nSTA)) * np.nan
     
