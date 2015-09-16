@@ -41,8 +41,8 @@ from MyQWidget import MyQToolBox, MyQToolButton
 import database as db
 from hydrograph3 import LatLong2Dist
 import MyQWidget
-from gapfill_weather_algorithm import (GapFillWeather, WeatherData, 
-                                       TargetStationInfo, correlation_worker)
+from gapfill_weather_algorithm2 import (GapFillWeather, WeatherData, 
+                                        TargetStationInfo, correlation_worker)
 
 #==============================================================================
 class GapFillWeatherGUI(QtGui.QWidget):
@@ -789,7 +789,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 
         #-- Pass information to the worker --
         
-        self.fillworker.project_dir = self.workdir
+        self.fillworker.workdir = self.workdir
         
         self.fillworker.time_start = time_start
         self.fillworker.time_end = time_end   

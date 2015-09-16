@@ -78,8 +78,6 @@ class GapFillWeather(QtCore.QThread):
         self.time_end = 0
         self.WEATHER = []
         self.TARGET = []
-        # TODO: replace self.project_dir by self.workdir in the code.
-        self.project_dir = os.getcwd()
         self.workdir = os.getcwd()
         self.STOP = False # Flag used to stop the algorithm from a GUI
         self.isParamsValid = False
@@ -715,7 +713,7 @@ class GapFillWeather(QtCore.QThread):
         target_station_name = target_station_name.replace('\\', '_')
         target_station_name = target_station_name.replace('/', '_')
 
-        output_path = (self.project_dir + '/Meteo/Output/' + 
+        output_path = (self.workdir + '/Meteo/Output/' + 
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.log')
         
@@ -742,7 +740,7 @@ class GapFillWeather(QtCore.QThread):
         for i in range(len(ALLDATA)):
             DATA2SAVE.append(ALLDATA[i])
         
-        output_path = (self.project_dir + '/Meteo/Output/' + 
+        output_path = (self.workdir + '/Meteo/Output/' + 
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.out')
         
@@ -771,7 +769,7 @@ class GapFillWeather(QtCore.QThread):
             for i in range(len(ALLDATA)):
                 error_analysis_report.append(ALLDATA[i])
             
-            output_path = (self.project_dir + '/Meteo/Output/' + 
+            output_path = (self.workdir + '/Meteo/Output/' + 
                        target_station_name + ' (' + target_station_clim +
                        ')'+ '_' + YearStart + '-' +  YearEnd + '.err')
                            
