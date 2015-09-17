@@ -39,6 +39,7 @@ from PySide import QtCore
 
 import meteo
 import database as db
+from hydrograph3 import LatLong2Dist
 
 #==============================================================================
 class GapFillWeather(QtCore.QObject):
@@ -59,7 +60,8 @@ class GapFillWeather(QtCore.QObject):
 #==============================================================================
    
     # Definition of signals that can be used to easily add a Graphical User
-    # Interface with Qt on top of this algorithm.
+    # Interface with Qt on top of this algorithm and to start some of the
+    # method from an independent thread.
     
     ProgBarSignal = QtCore.Signal(int)
     ConsoleSignal = QtCore.Signal(str)
@@ -71,11 +73,15 @@ class GapFillWeather(QtCore.QObject):
         
         #--------------------------------------------------- Required Inputs --
         
-        self.time_start = 0
-        self.time_end = 0
-        self.WEATHER = []
-        self.TARGET = []
-        self.workdir = os.getcwd()
+        self.time_start = None
+        self.time_end = None
+        
+        self.WEATHER = WeatherData()        
+        self.TARGET = TargetStationInfo()
+
+        self.outputDir = None
+        self.inputDir = None
+        
         self.STOP = False # Flag used to stop the algorithm from a GUI
         self.isParamsValid = False
         
@@ -100,8 +106,56 @@ class GapFillWeather(QtCore.QObject):
         
         #------------------------------------------------- Signals and Slots --
         
+        # This is only used if managed from a UI.
+        
         self.FillDataSignal.connect(self.fill_data)
+        
+    def load_data(self): #======================================== Load Data ==
+        
+        if self.inputDir == None:
+            print('Please specify a valid input data file directory.')
+            return []
+            
+        if not os.path.exists(self.inputDir):
+            print('Data Directory path does not exists.')
+            return []
+                        
+        #-- Generate a list of data file paths --
+                        
+        Sta_path = []
+        for files in os.listdir(self.inputDir):
+            if files.endswith(".csv"):
+                Sta_path.append(self.inputDir + '/' + files)
+                
+        if len(Sta_path) == 0:
+            print('Data Directory is empty.')
+            return []
+                
+        self.WEATHER.load_and_format_data(Sta_path)        
+        self.WEATHER.generate_summary(self.outputDir)
+        
+        self.TARGET.index = -1
+        
+        return self.WEATHER.STANAME
+        
+    def set_target_station(self, index):
 
+        # Update information for the target station.
+        self.TARGET.index = index
+        self.TARGET.name = self.WEATHER.STANAME[index]
+        
+        # calculate correlation coefficient between data series of the
+        # target station and each neighboring station for every
+        # meteorological variable
+        self.TARGET.CORCOEF = correlation_worker(self.WEATHER, index)
+        
+        # Calculate horizontal distance and altitude difference between
+        # the target station and each neighboring station.
+        self.TARGET.HORDIST, self.TARGET.ALTDIFF = \
+                                         alt_and_dist_calc(self.WEATHER, index)
+        
+    def read_summary(self):
+        return self.WEATHER.read_summary(self.outputDir)
         
     def fill_data(self): #====================== Fill Weather Data Algorithm ==
         
@@ -712,17 +766,18 @@ class GapFillWeather(QtCore.QObject):
         target_station_name = target_station_name.replace('\\', '_')
         target_station_name = target_station_name.replace('/', '_')
 
-        output_path = (self.workdir + '/Meteo/Output/' + 
-                       target_station_name + ' (' + target_station_clim +
-                       ')'+ '_' + YearStart + '-' +  YearEnd + '.log')
-        
+        output_path = '%s%s (%s)_%s-%s.log' % (self.outputDir, 
+                                               target_station_name,
+                                               target_station_clim,
+                                               YearStart,
+                                               YearEnd)
+                
         with open(output_path, 'w') as f:
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(INFO_total)
         
         self.ConsoleSignal.emit(
-            '<font color=black>Info file saved in ' + output_path +
-            '</font>')
+            '<font color=black>Info file saved in %s.</font>' % output_path)
             
         #--------------------------------------------------------- SAVE DATA --
         
@@ -739,9 +794,11 @@ class GapFillWeather(QtCore.QObject):
         for i in range(len(ALLDATA)):
             DATA2SAVE.append(ALLDATA[i])
         
-        output_path = (self.workdir + '/Meteo/Output/' + 
-                       target_station_name + ' (' + target_station_clim +
-                       ')'+ '_' + YearStart + '-' +  YearEnd + '.out')
+        output_path = '%s%s (%s)_%s-%s.out' % (self.outputDir, 
+                                               target_station_name,
+                                               target_station_clim,
+                                               YearStart,
+                                               YearEnd)
         
         with open(output_path, 'w') as f:
             writer = csv.writer(f,delimiter='\t')
@@ -768,9 +825,11 @@ class GapFillWeather(QtCore.QObject):
             for i in range(len(ALLDATA)):
                 error_analysis_report.append(ALLDATA[i])
             
-            output_path = (self.workdir + '/Meteo/Output/' + 
-                       target_station_name + ' (' + target_station_clim +
-                       ')'+ '_' + YearStart + '-' +  YearEnd + '.err')
+            output_path = '%s%s (%s)_%s-%s.err' % (self.outputDir, 
+                                                   target_station_name,
+                                                   target_station_clim,
+                                                   YearStart,
+                                                   YearEnd)                                               
                            
             with open(output_path, 'w') as f:
                 writer = csv.writer(f,delimiter='\t')
@@ -899,7 +958,38 @@ class TargetStationInfo():
         self.HORDIST = [] # Array with horizontal distance between the target
                           # station and every other station. Target station is
                           # included with a 0 value at index <index>
-        
+
+#==============================================================================
+def alt_and_dist_calc(WEATHER, index):
+    """
+    Computes the horizontal distance in km and the altitude difference
+    in m between the target station and each neighboring stations
+    
+    index: Target Station Index
+    """
+#==============================================================================
+   
+    ALT = WEATHER.ALT
+    LAT = WEATHER.LAT
+    LON = WEATHER.LON
+
+    nSTA = len(ALT) # number of stations including target
+    
+    HORDIST = np.zeros(nSTA) # distances of neighboring station from target
+    ALTDIFF = np.zeros(nSTA) # altitude differences
+    
+    for i in range(nSTA): 
+        HORDIST[i]  = LatLong2Dist(LAT[index], 
+                                   LON[index],
+                                   LAT[i], LON[i])
+                                           
+        ALTDIFF[i] = ALT[i] - ALT[index]
+    
+    HORDIST = np.round(HORDIST, 1)
+    ALTDIFF = np.round(ALTDIFF, 1)
+    
+    return HORDIST, ALTDIFF        
+
         
 #==============================================================================
 class WeatherData():
@@ -1147,7 +1237,7 @@ class WeatherData():
 
         """
         This method will generate a summary of the weather records including
-        allcthe data files contained in "/<project_folder>/Meteo/Input",
+        all the data files contained in */<project_folder>/Meteo/Input*,
         including dates when the records begin and end, total number of data,
         and total number of data missing for each meteorological variable, and
         more.
@@ -1214,7 +1304,7 @@ class WeatherData():
         <generate_summary> and will return the content of the file in a HTML
         formatted table
         """
-        
+                
         #--------------------------------------------------------- read data --
         
         filename = project_folder + '/weather_datasets_summary.log'
@@ -1410,3 +1500,30 @@ def L1LinearRegression(X, Y):
 if __name__ == '__main__':
     
     gapfill_weather = GapFillWeather()
+    
+    workdir = "../Projects/Project4Testing"
+    
+    gapfill_weather.outputDir = workdir + '/Meteo/Output'
+    gapfill_weather.inputDir = workdir + '/Meteo/Input'
+    stanames = gapfill_weather.load_data()
+    print(stanames)
+    
+    set_target_station()    
+    
+#   self.gap_fill_worker.TARGET = self.TARGET
+       
+#    time_start = self.get_time_from_qdatedit(self.date_start_widget)
+#    time_end = self.get_time_from_qdatedit(self.date_end_widget)        
+#        self.gap_fill_worker.time_start = time_start
+#        self.gap_fill_worker.time_end = time_end   
+#
+    #-- method parameters --       
+    gapfill_weather.Nbr_Sta_max = 4
+    gapfill_weather.limitDist = 100
+    gapfill_weather.limitAlt = 350                                  
+    gapfill_weather.regression_mode = 0
+    
+    #-- additional options --
+    gapfill_weather.full_error_analysis = False
+    gapfill_weather.add_ETP = False
+      

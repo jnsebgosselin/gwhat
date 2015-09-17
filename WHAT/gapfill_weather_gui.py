@@ -38,7 +38,6 @@ from xlrd import xldate_as_tuple
 import meteo
 from MyQWidget import MyQToolBox, MyQToolButton
 import database as db
-from hydrograph3 import LatLong2Dist
 import MyQWidget
 from gapfill_weather_algorithm import (GapFillWeather, WeatherData, 
                                        TargetStationInfo, correlation_worker)
@@ -68,8 +67,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.gap_fill_thread = QtCore.QThread() 
         self.gap_fill_worker.moveToThread(self.gap_fill_thread)  
         
-        self.WEATHER = WeatherData()
-        self.TARGET = TargetStationInfo()                     
+#        self.TARGET = TargetStationInfo()                     
         
         self.initUI()        
                
@@ -449,56 +447,41 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
     def set_workdir(self, directory): #===================== Set Working Dir ==
         
-        self.workdir = directory        
+        self.workdir = directory
+        self.gap_fill_worker.inputDir = directory + '/Meteo/Input'
+        self.gap_fill_worker.outputDir = directory + '/Meteo/Output'
         
     def load_data_dir_content(self) : #=================== Load Weather Data ==
                 
         '''
         Initiate the loading of Weater Data Files contained in the 
-        </Meteo/Input> folder and display the resulting station list in the
-        Target station combo box widget.
+        */Meteo/Input* folder and display the resulting station list in the
+        *Target station* combo box widget.
         '''
-                
+
+        #-- reset UI --
+        
         self.FillTextBox.setText('')        
         self.target_station_info.setText('')
         self.target_station.clear()
         QtGui.QApplication.processEvents()
         
+        #-- load data and fill UI with info --
+        
         self.CORRFLAG = 'off' # Correlation calculation won't 
                               # be triggered when this is off
         
-        input_folder = self.workdir + '/Meteo/Input'
+        stanames = self.gap_fill_worker.load_data() 
+        self.target_station.addItems(stanames)
+        self.target_station.setCurrentIndex(-1)        
+        self.sta_display_summary.setHtml(self.gap_fill_worker.read_summary())            
+         
+#        self.TARGET.index = -1
         
-        if path.exists(input_folder):            
+        if len(stanames) > 0:            
+            self.set_fill_and_save_dates()
             
-            # Generate a list of data file paths.            
-            Sta_path = []
-            for files in listdir(input_folder):
-                if files.endswith(".csv"):
-                    Sta_path.append(input_folder + '/' + files)
-            
-            # Load and format the data and display the results.
-            if len(Sta_path) > 0:
-                
-                self.WEATHER.load_and_format_data(Sta_path)
-                self.WEATHER.generate_summary(self.workdir)
-                summary_table = self.WEATHER.read_summary(self.workdir)
-                self.sta_display_summary.setHtml(summary_table)
-                
-                self.set_fill_and_save_dates()
-                
-                self.target_station.addItems(self.WEATHER.STANAME)
-                
-                self.target_station.setCurrentIndex(-1)
-                self.TARGET.index = -1
-                
-            else:
-                'Data Directory is empty. Do nothing'
-        else:
-            'Data Directory path does not exists. Do nothing'
-            
-        self.CORRFLAG = 'on'
-        
+        self.CORRFLAG = 'on'        
     
     def set_fill_and_save_dates(self): #=======================================
         
@@ -507,12 +490,12 @@ class GapFillWeatherGUI(QtGui.QWidget):
         *Fill and Save* area.
         """                                                              
         
-        if len(self.WEATHER.DATE) > 0: 
+        if len(self.gap_fill_worker.WEATHER.DATE) > 0: 
 
             self.date_start_widget.setEnabled(True)
             self.date_end_widget.setEnabled(True)
             
-            DATE = self.WEATHER.DATE
+            DATE = self.gap_fill_worker.WEATHER.DATE
             
             DateMin = QtCore.QDate(DATE[0, 0], DATE[0, 1], DATE[0, 2])
             DateMax = QtCore.QDate(DATE[-1, 0], DATE[-1, 1], DATE[-1, 2])
@@ -551,13 +534,15 @@ class GapFillWeatherGUI(QtGui.QWidget):
             d = self.date_end_widget.date().day()
             self.FILLPARAM.time_end = xldate_from_date_tuple((y, m, d), 0)
             
-            self.gafill_display_table.populate_table(self.TARGET,
-                                                     self.WEATHER,
-                                                     self.FILLPARAM)
+            self.gafill_display_table.populate_table(
+                self.gap_fill_worker.TARGET,
+                self.gap_fill_worker.WEATHER,
+                self.FILLPARAM)
            
-            table, target_info = correlation_table_generation(self.TARGET,
-                                                              self.WEATHER,
-                                                              self.FILLPARAM)
+            table, target_info = correlation_table_generation(
+                self.gap_fill_worker.TARGET,
+                self.gap_fill_worker.WEATHER,
+                self.FILLPARAM)
    
             self.FillTextBox.setText(table)
             self.target_station_info.setText(target_info)
@@ -567,30 +552,20 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
         """
         Calculate automatically the correlation coefficients when a target
-        station is selected by the user in the drop-down menu.
+        station is selected by the user in the drop-down menu or if a new
+        station is selected programmatically.
         """
         
         if self.CORRFLAG == 'on' and self.target_station.currentIndex() != -1:
             
-            # Update information for the target station.
-            self.TARGET.index = self.target_station.currentIndex()
-            self.TARGET.name = self.WEATHER.STANAME[self.TARGET.index]
+            index = self.target_station.currentIndex()
+            self.gap_fill_worker.set_target_station(index)
             
-            # calculate correlation coefficient between data series of the
-            # target station and each neighboring station for every
-            # meteorological variable
-            self.TARGET.CORCOEF = correlation_worker(self.WEATHER, 
-                                                     self.TARGET.index)
-                                                
-            # Calculate horizontal distance and altitude difference between
-            # the target station and each neighboring station,
-            self.TARGET.HORDIST, self.TARGET.ALTDIFF = \
-                              alt_and_dist_calc(self.WEATHER, self.TARGET.index)
-            
-            self.ConsoleSignal.emit(
-            '''<font color=black>
-                 Correlation coefficients calculation for station %s completed
-               </font>''' % (self.TARGET.name))                                      
+            msg = ('Correlation coefficients calculation for ' +
+                   'station %s completed') % self.gap_fill_worker.TARGET.name            
+            self.ConsoleSignal.emit('<font color=black>%s</font>' % msg )
+            print(msg)
+                                  
             self.correlation_table_display()
             
     
@@ -641,7 +616,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
         #-- Check if Station List is Empty --
         
-        nSTA = len(self.WEATHER.STANAME)        
+        nSTA = len(self.gap_fill_worker.WEATHER.STANAME)        
         if nSTA == 0:
             self.msgBox.setText('There is no data to fill.')
             self.msgBox.exec_()
@@ -709,7 +684,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
     
         self.gap_fill_thread.quit()
 
-        nSTA = len(self.WEATHER.STANAME)
+        nSTA = len(self.gap_fill_worker.WEATHER.STANAME)
         if event == True:
             sta_indx2fill = self.target_station.currentIndex() + 1            
             if self.isFillAll_inProgress == False or sta_indx2fill == nSTA: 
@@ -717,13 +692,15 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 # Single fill process completed sucessfully for the current
                 # selected weather station OR Fill All process completed 
                 # sucessfully for all the weather stations in the list.
-
+                                
                 self.restoreUI()
             else:                
                 self.gap_fill_start(sta_indx2fill)
             
         else:
-            print('Gap-filling rountine stopped... restoring UI.')
+            print('Gap-filling routine stopped... restoring UI.')
+            self.gap_fill_worker.STOP = False
+            self.isFillAll_inProgress = False
             self.restoreUI()
             
             
@@ -733,8 +710,9 @@ class GapFillWeatherGUI(QtGui.QWidget):
                             
         self.CORRFLAG = 'off' 
         self.target_station.setCurrentIndex(sta_indx2fill)
-        self.TARGET.index = self.target_station.currentIndex()
-        self.TARGET.name = self.WEATHER.STANAME[self.TARGET.index]                        
+#        self.TARGET.index = self.target_station.currentIndex()
+#        self.TARGET.name = \
+#            self.gap_fill_worker.WEATHER.STANAME[self.TARGET.index]                        
         self.CORRFLAG = 'on'   
         
         # Calculate correlation coefficient for the next station.
@@ -744,7 +722,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 
         #-- Pass information to the worker --
         
-        self.gap_fill_worker.workdir = self.workdir
+        self.gap_fill_worker.outputDir = self.workdir + '/Meteo/Output/'
         
         time_start = self.get_time_from_qdatedit(self.date_start_widget)
         time_end = self.get_time_from_qdatedit(self.date_end_widget)        
@@ -755,8 +733,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.gap_fill_worker.limitDist = self.distlimit.value()
         self.gap_fill_worker.limitAlt = self.altlimit.value()                     
         
-        self.gap_fill_worker.WEATHER = self.WEATHER
-        self.gap_fill_worker.TARGET = self.TARGET
+#        self.gap_fill_worker.TARGET = self.TARGET
                                     
         self.gap_fill_worker.regression_mode = self.RMSE_regression.isChecked()
         
@@ -780,42 +757,6 @@ class GapFillWeatherGUI(QtGui.QWidget):
         if filename:
             meteo.add_ETP_to_weather_data_file(filename)
             
-
-
-        
-
-            
-#==============================================================================
-def alt_and_dist_calc(WEATHER, target_station_index):
-    """
-    Computes the horizontal distance in km and the altitude difference
-    in m between the target station and each neighboring stations
-    """
-#==============================================================================
-   
-    ALT = WEATHER.ALT
-    LAT = WEATHER.LAT
-    LON = WEATHER.LON
-
-    nSTA = len(ALT) # number of stations including target
-    
-    HORDIST = np.zeros(nSTA) # distances of neighboring station from target
-    ALTDIFF = np.zeros(nSTA) # altitude differences
-    
-    for i in range(nSTA): 
-        HORDIST[i]  = LatLong2Dist(LAT[target_station_index], 
-                                   LON[target_station_index],
-                                   LAT[i], LON[i])
-                                           
-        ALTDIFF[i] = ALT[i] - ALT[target_station_index]
-    
-    HORDIST = np.round(HORDIST, 1)
-    ALTDIFF = np.round(ALTDIFF, 1)
-    
-    return HORDIST, ALTDIFF
-
-
-
 #==============================================================================
 def correlation_table_generation(TARGET, WEATHER, FILLPARAM): 
     
