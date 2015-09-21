@@ -510,7 +510,7 @@ class Search4Stations(QtGui.QWidget):
         
         try:
             
-            #----------------------------------------- Results Extraction ----
+            #-------------------------------------------- Results Extraction --
             
             if self.isOffline:
                 with open('url.txt') as f:
@@ -524,7 +524,7 @@ class Search4Stations(QtGui.QWidget):
                 with open("url.txt", "wb") as local_file:
                     local_file.write(stnresults)
          
-            #---- Number of Stations Found ----
+            #-- Number of Stations Found --
         
             txt2find = ' stations found'
             indx_e = stnresults.find(txt2find, 0)
@@ -533,6 +533,7 @@ class Search4Stations(QtGui.QWidget):
                 msg = '<font color=red>No weather station found.</font>'                
                 self.ConsoleSignal.emit(msg)
                 
+                staList = []
                 Nsta = 0
                 
             else:
