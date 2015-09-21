@@ -3,6 +3,8 @@
 \usepackage{subfiles}
 
 \usepackage[hidelinks]{hyperref}
+\usepackage{fixltx2e} %for subscripts
+\usepackage[svgnames,table]{xcolor}
 
 \usepackage{lineno}
 \modulolinenumbers[5]
@@ -75,14 +77,14 @@
 \section{Introduction}
     \subfile{section1}
 
-\section{Theory}
+\section{Theory}\label{sec:Theory}
     \subfile{section2}
     
 \section{Operation}\label{sec:Howto}
     \subfile{section3}
     
 \section{Application: Monteregie Est Case Study}\label{sec:MontEstCaseStudy}
-    \subfile{section4}
+    \subfile{section4.1}
 
 \section{Discussion}
     \subfile{section5}

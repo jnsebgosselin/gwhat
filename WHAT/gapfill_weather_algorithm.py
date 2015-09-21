@@ -34,7 +34,6 @@ from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 from PySide import QtCore
 
-
 #-- PERSONAL IMPORTS --
 
 import meteo
@@ -65,7 +64,7 @@ class GapFillWeather(QtCore.QObject):
     
     ProgBarSignal = QtCore.Signal(int)
     ConsoleSignal = QtCore.Signal(str)
-    ProcessFinished = QtCore.Signal(bool)
+    GapFillFinished = QtCore.Signal(bool)
     FillDataSignal = QtCore.Signal(bool)
     
     def __init__(self, parent=None):
@@ -206,7 +205,9 @@ class GapFillWeather(QtCore.QObject):
             print('\nA full error analysis will be performed\n')
         
         msg = 'Data completion for station %s started' % target_station_name
+        print('--------------------------------------------------')
         print(msg)
+        print('--------------------------------------------------')
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         
         #--------------------------------------------- CHECK CUTOFF CRITERIA --        
@@ -298,7 +299,7 @@ class GapFillWeather(QtCore.QObject):
         
         for var in var2fill:
                                         
-            msg = ('Data completion for variable %d/%d in progress' %
+            msg = ('Data completion for variable %d/%d in progress...' %
                    (var+1, nVAR))
             print msg
             
@@ -345,7 +346,7 @@ class GapFillWeather(QtCore.QObject):
                     print(msg)
                     self.ConsoleSignal.emit('<font color=red>msg</font>')                    
                     self.STOP = False
-                    self.ProcessFinished.emit(False) 
+                    self.GapFillFinished.emit(False) 
                     
                     return                    
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
@@ -570,7 +571,7 @@ class GapFillWeather(QtCore.QObject):
                 AVG_RMSE[var] = np.nan
                 AVG_NSTA[var] = np.nan
                 
-            print_message = ('Data completion for variable %d/%d completed'
+            print_message = ('Data completion for variable %d/%d completed.'
                              ) % (var+1, nVAR)
             print print_message             
 
@@ -766,11 +767,11 @@ class GapFillWeather(QtCore.QObject):
         target_station_name = target_station_name.replace('\\', '_')
         target_station_name = target_station_name.replace('/', '_')
 
-        output_path = '%s%s (%s)_%s-%s.log' % (self.outputDir, 
-                                               target_station_name,
-                                               target_station_clim,
-                                               YearStart,
-                                               YearEnd)
+        output_path = '%s/%s (%s)_%s-%s.log' % (self.outputDir, 
+                                                target_station_name,
+                                                target_station_clim,
+                                                YearStart,
+                                                YearEnd)
                 
         with open(output_path, 'w') as f:
             writer = csv.writer(f, delimiter='\t')
@@ -794,11 +795,11 @@ class GapFillWeather(QtCore.QObject):
         for i in range(len(ALLDATA)):
             DATA2SAVE.append(ALLDATA[i])
         
-        output_path = '%s%s (%s)_%s-%s.out' % (self.outputDir, 
-                                               target_station_name,
-                                               target_station_clim,
-                                               YearStart,
-                                               YearEnd)
+        output_path = '%s/%s (%s)_%s-%s.out' % (self.outputDir, 
+                                                target_station_name,
+                                                target_station_clim,
+                                                YearStart,
+                                                YearEnd)
         
         with open(output_path, 'w') as f:
             writer = csv.writer(f,delimiter='\t')
@@ -825,7 +826,7 @@ class GapFillWeather(QtCore.QObject):
             for i in range(len(ALLDATA)):
                 error_analysis_report.append(ALLDATA[i])
             
-            output_path = '%s%s (%s)_%s-%s.err' % (self.outputDir, 
+            output_path = '%s/%s (%s)_%s-%s.err' % (self.outputDir, 
                                                    target_station_name,
                                                    target_station_clim,
                                                    YearStart,
@@ -866,8 +867,9 @@ class GapFillWeather(QtCore.QObject):
             print YEAR[index], MONTH[index], DAY[index]
         
         print('\n!Data completion completed successfully!\n')
+        print('--------------------------------------------------')
         self.STOP = False # Just in case. This is a precaution override.          
-        self.ProcessFinished.emit(True) 
+        self.GapFillFinished.emit(True) 
         
         return
        
@@ -994,18 +996,23 @@ def alt_and_dist_calc(WEATHER, index):
 #==============================================================================
 class WeatherData():
     """
-    *WeatherData* class contains all the weather data and weather station info
-    that are needed for the gapfilling algorithm defined in the
+    This class contains all the weather data and weather station info
+    that are needed for the gapfilling algorithm that is defined in the
     *GapFillWeather* class.
-        
-    Data = Weather data organised in a 3D matrix [i, j, k], where:
-
-               layer k=1 is Maximum Daily Temperature
-               layer k=2 is Minimum Daily Temperature
-               layer k=3 is Daily Mean Temperature
-               layer k=4 is Total Daily Precipitation
-               rows are the time
-               columns are the stations listed in STANAME
+    
+    Class Attributes
+    ----------------    
+    DATA: Numpy matrix [i, j, k] contraining the weather data where:
+        - layer k=0 is Maximum Daily Temperature
+        - layer k=1 is Minimum Daily Temperature
+        - layer k=2 is Daily Mean Temperature
+        - layer k=3 is Total Daily Precipitation
+        - rows i are the time
+        - columns j are the stations listed in STANAME
+    STANAME: Numpy Array
+        Contains the name of the weather stations. If a station name already
+        exists in the list when adding a new station, a number is added at
+        the end of the new name.
     """
 #============================================================================== 
         
@@ -1014,15 +1021,18 @@ class WeatherData():
         self.DATA = []       # Weather data
         self.DATE = []       # Date in tuple format [YEAR, MONTH, DAY]
         self.TIME = []       # Date in numeric format
+        
+        self.DATE_START = [] # Date on which the data record begins
+        self.DATE_END = []   # Date on which data record ends
+        
         self.STANAME = []    # Station names
         self.ALT = []        # Station elevation in m
         self.LAT = []        # Station latitude in decimal degree
         self.LON = []        # Station longitude in decimal degree
         self.VARNAME = []    # Names of the meteorological variables
         self.ClimateID = []  # Climate Identifiers of weather station
-        self.PROVINCE = []   # Provinces where weater station are located        
-        self.DATE_START = [] # Date start of the original data records
-        self.DATE_END = []   # Date end of the original data records
+        self.PROVINCE = []   # Provinces where weater station are located 
+
         self.NUMMISS = []    # Number of missing data
         
     def load_and_format_data(self, fnames):  #=================================
@@ -1031,7 +1041,7 @@ class WeatherData():
     
         nSTA = len(fnames) # Number of weather data file
         
-        #--------------------------------------------- INITIALIZED VARIABLES --
+        #---------------------------------------------------- VARIABLES INIT --
         
         self.STANAME = np.zeros(nSTA).astype('str')
         self.ALT = np.zeros(nSTA)
@@ -1165,29 +1175,31 @@ class WeatherData():
                     self.DATA = np.vstack((EXPNDbeg, self.DATA, EXPNDend))
                     
                     self.TIME = np.copy(time_new)
-                    
-            #------------------------------------------------- FILL MATRICES --
-         
+                  
             ifirst = np.where(self.TIME == time_new[0])[0][0]
-            ilast = np.where(self.TIME == time_new[-1])[0][0]
-            
+            ilast = np.where(self.TIME == time_new[-1])[0][0]            
             self.DATA[ifirst:ilast+1, i, :] = STADAT[:, 3:]
             
-            # Calculate number of missing data.
+            #---------------------------------------------------- Other Info --
+            
+            #-- Nbr. of Missing Data --
             
             isnan = np.isnan(STADAT[:, 3:])
             self.NUMMISS[i, :] = np.sum(isnan, axis=0)
             
-            # Check if a station with this name already exist. If it does, add
-            # a number at the end of the name so it is possible to
-            # differentiate them in the list.
+            #-- station name --
+            
+            # Check if a station with this name already exist in the list. 
+            # If so, a number at the end of the name is added so it is 
+            # possible to differentiate them in the list.
             
             isNameExist = np.where(reader[0][1] == self.STANAME)[0]
             if len(isNameExist) > 0:
                 
-                print('Station name already exists. Added a number at the end')
+                print('Station name %s already exists. ' +
+                      'Added a number at the end.') % reader[0][1]
                 
-                count = 2
+                count = 1
                 while len(isNameExist) > 0:
                     newname = '%s (%d)' % (reader[0][1], count)
                     isNameExist = np.where(newname == self.STANAME)[0]
@@ -1197,8 +1209,10 @@ class WeatherData():
                 
             else:
                 self.STANAME[i] = reader[0][1]
-                        
-            self.PROVINCE[i] = reader[1][1]
+            
+            #-- other station info --
+            
+            self.PROVINCE[i] = str(reader[1][1])
             self.LAT[i] = float(reader[2][1])
             self.LON[i] = float(reader[3][1])
             self.ALT[i] = float(reader[4][1])
@@ -1236,7 +1250,7 @@ class WeatherData():
     def generate_summary(self, project_folder): #==============================
 
         """
-        This method will generate a summary of the weather records including
+        This method generates a summary of the weather records including
         all the data files contained in */<project_folder>/Meteo/Input*,
         including dates when the records begin and end, total number of data,
         and total number of data missing for each meteorological variable, and
@@ -1499,31 +1513,42 @@ def L1LinearRegression(X, Y):
         
 if __name__ == '__main__':
     
+    #-- create an instance of the class *GapFillWeather* --
+    
     gapfill_weather = GapFillWeather()
     
-    workdir = "../Projects/Project4Testing"
+    #-- setup input and output directory --
     
+    workdir = "../Projects/Project4Testing"    
     gapfill_weather.outputDir = workdir + '/Meteo/Output'
     gapfill_weather.inputDir = workdir + '/Meteo/Input'
+    
+    #-- load weather data files --
+    
     stanames = gapfill_weather.load_data()
-    print(stanames)
+    print(stanames) 
     
-    set_target_station()    
+    #-- setup target station and do some calculation --
     
-#   self.gap_fill_worker.TARGET = self.TARGET
-       
-#    time_start = self.get_time_from_qdatedit(self.date_start_widget)
-#    time_end = self.get_time_from_qdatedit(self.date_end_widget)        
-#        self.gap_fill_worker.time_start = time_start
-#        self.gap_fill_worker.time_end = time_end   
-#
-    #-- method parameters --       
+    gapfill_weather.set_target_station(0)    
+          
+    #-- define the time plage over which data will be gap-filled --
+    
+    gapfill_weather.time_start = gapfill_weather.WEATHER.TIME[0]
+    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[-1] 
+      
+    #-- setup method parameters --
+        
     gapfill_weather.Nbr_Sta_max = 4
     gapfill_weather.limitDist = 100
     gapfill_weather.limitAlt = 350                                  
     gapfill_weather.regression_mode = 0
     
-    #-- additional options --
+    #-- define additional options --
+    
     gapfill_weather.full_error_analysis = False
     gapfill_weather.add_ETP = False
+    
+    #-- fill data --
       
+#    gapfill_weather.fill_data()

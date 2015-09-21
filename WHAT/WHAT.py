@@ -93,16 +93,16 @@ headerDB = []
 # Tab area and are only used to give information to the user about the 
 # state and activities of the main program.
 
-#===============================================================================
+#==============================================================================
 class MainWindow(QtGui.QMainWindow):
         
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
-#===============================================================================
+#==============================================================================
         
         self.initUI()
         
-    def initUI(self): #=========================================================
+    def initUI(self): #========================================================
         """
         A generic widget is first set as the central widget of the
         MainWindow. Then, a QGridLayout is applied to this central
@@ -120,14 +120,14 @@ class MainWindow(QtGui.QMainWindow):
         QGridLayout.
         """
         
-        #-------------------------------------------------- CLASS INSTANCES ----
+        #--------------------------------------------------- CLASS INSTANCES --
         
         self.projectInfo = MyProject(self)
         self.whatPref = WHATPref(self)
         self.new_project_window = what_project.NewProject(db.software_version)
 #        self.open_project_window = what_project.OpenProject()
         
-        #------------------------------------------------------ PREFERENCES ----
+        #------------------------------------------------------- PREFERENCES --
                 
         self.whatPref.load_pref_file()
         
@@ -142,12 +142,12 @@ class MainWindow(QtGui.QMainWindow):
         family = db.styleUI().fontfamily
         
         fontSS = ( "font-style: %s;" % style +
-                    "font-size: %s;"  % size  +
-                    "font-family: %s;" % family)
+                   "font-size: %s;"  % size  +
+                   "font-family: %s;" % family)
                     
         self.setStyleSheet("QWidget{%s}" % fontSS)
                                     
-        #-------------------------------------------------------- DATABASES ----
+        #--------------------------------------------------------- DATABASES --
         
         # http://stackoverflow.com/questions/423379/
         # using-global-variables-in-a-function-other-
@@ -164,14 +164,14 @@ class MainWindow(QtGui.QMainWindow):
         global headerDB
         headerDB = db.FileHeaders()
         
-        #---------------------------------------------- MAIN WINDOW SETUP ----
+        #------------------------------------------------- MAIN WINDOW SETUP --
 
 #        self.setMinimumWidth(1250)
         self.setWindowTitle(db.software_version)
         self.setWindowIcon(iconDB.WHAT)
 #        self.setFont(styleDB.font1)                
                         
-        #--------------------------------------------------- MAIN CONSOLE ----
+        #------------------------------------------------------ MAIN CONSOLE --
         
         self.main_console = QtGui.QTextEdit()        
         self.main_console.setReadOnly(True)
@@ -371,21 +371,20 @@ class MainWindow(QtGui.QMainWindow):
             self.msgError.exec_()
                 
       
-    def write2console(self, console_text): #==================================
+    def write2console(self, console_text): #=============== Write To Console ==
         
         '''
         This function is the bottle neck through which all messages writen
         in the console must go through.
         '''
             
-        textime = '<font color=black>[' + ctime()[4:-8] + '] </font>'
-                        
+        textime = '<font color=black>[%s] </font>' % ctime()[4:-8]
         self.main_console.append(textime + console_text)
     
         
-    def show_new_project(self): #=============================================
+    def show_new_project(self): #=============================== New Project ==
     
-        #---- Center Widget to Main Window ----
+        #-- Center Widget to Main Window --
         
         # Adapted from:
         # http://zetcode.com/gui/pysidetutorial/firstprograms
@@ -647,23 +646,23 @@ class WHATPref():
             print
         
 
-#=============================================================================                
+#==============================================================================                
 class MyProject():
     """
     This class contains all the info and utilities to manage the current 
     active project.
     """
-#=============================================================================
+#==============================================================================
 
     
-    def __init__(self, parent=None): #========================================
+    def __init__(self, parent=None): #=========================================
         
         self.name = ''
         self.lat = 0
         self.lon = 0
         
     
-    def load_project_info(self, projectfile): #===============================
+    def load_project_info(self, projectfile): #================================
             
         print('Loading project info')
         

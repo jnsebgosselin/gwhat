@@ -435,7 +435,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         #---- gapfill ----
         
         self.gap_fill_worker.ProgBarSignal.connect(self.pbar.setValue)
-        self.gap_fill_worker.ProcessFinished.connect(
+        self.gap_fill_worker.GapFillFinished.connect(
                                                    self.gap_fill_worker_return)
         self.btn_fill.clicked.connect(self.gap_fill_btn_clicked)
         self.btn_fill_all.clicked.connect(self.gap_fill_btn_clicked)
@@ -1444,8 +1444,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                              %s
                            </td>
                            ''' % (sectionWidth, fontfamily, label)
-        
-                       
+                               
         #----------------------------------------------------- Add Sort Icon --
 
         headerTable += '</tr><tr>'

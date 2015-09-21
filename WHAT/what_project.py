@@ -38,12 +38,12 @@ from PySide import QtGui, QtCore
 import database as db
 
 
-#===============================================================================
+#==============================================================================
 class NewProject(QtGui.QDialog):
     """
     Dialog window to create a new WHAT project.
     """
-#===============================================================================
+#==============================================================================
 
     NewProjectSignal = QtCore.Signal(str)
     
@@ -76,7 +76,7 @@ class NewProject(QtGui.QDialog):
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
         
-        #----------------------------------------------------- WINDOW SETUP ----
+        #------------------------------------------------------ WINDOW SETUP --
         
         self.setWindowTitle('New Project')
         self.setWindowIcon(iconDB.WHAT)
