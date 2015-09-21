@@ -124,7 +124,6 @@ class MainWindow(QtGui.QMainWindow):
         
         self.projectInfo = MyProject(self)
         self.whatPref = WHATPref(self)
-        self.new_project_window = what_project.NewProject(db.software_version)
 #        self.open_project_window = what_project.OpenProject()
         
         #------------------------------------------------------- PREFERENCES --
@@ -307,11 +306,10 @@ class MainWindow(QtGui.QMainWindow):
         mainGrid.setSpacing(10)
         main_widget.setLayout(mainGrid)
         
-        #--------------------------------------------------------- EVENTS ----
+        #------------------------------------------------------------ EVENTS --
         
         self.btn_new_project.clicked.connect(self.show_new_project)
         self.project_display.clicked.connect(self.open_project)
-        self.new_project_window.NewProjectSignal.connect(self.load_project)
 #        self.open_project_window.OpenProjectSignal.connect(self.load_project) 
 
         #---- Console Signal Piping ----
@@ -334,11 +332,11 @@ class MainWindow(QtGui.QMainWindow):
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)                                                      
         
-        #-------------------------------------------------- MESSAGE BOXES ----
+        #----------------------------------------------------- MESSAGE BOXES --
        
         self.msgError = MyQWidget.MyQErrorMessageBox()
                    
-        #----------------------------------------------------------- SHOW ----
+        #-------------------------------------------------------------- SHOW --
             
         self.show()
         
@@ -347,7 +345,7 @@ class MainWindow(QtGui.QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
         
-        #----------------------------------------------- CHECK IF PROJECT ----
+        #-------------------------------------------------- CHECK IF PROJECT --
         
         isProjectExists = self.check_project()
         
@@ -372,7 +370,7 @@ class MainWindow(QtGui.QMainWindow):
                 
       
     def write2console(self, console_text): #=============== Write To Console ==
-        
+    
         '''
         This function is the bottle neck through which all messages writen
         in the console must go through.
@@ -383,25 +381,12 @@ class MainWindow(QtGui.QMainWindow):
     
         
     def show_new_project(self): #=============================== New Project ==
+                    
+        new_project_window = what_project.NewProject(self)
+        new_project_window.NewProjectSignal.connect(self.load_project)
+        new_project_window.show()
     
-        #-- Center Widget to Main Window --
-        
-        # Adapted from:
-        # http://zetcode.com/gui/pysidetutorial/firstprograms
-                        
-        self.new_project_window.clear_UI()
-        
-        qr = self.new_project_window.frameGeometry()
-        cp = self.frameGeometry().center()
-        qr.moveCenter(cp)
-        self.new_project_window.move(qr.topLeft())
-        
-        self.new_project_window.setModal(True)
-        self.new_project_window.show()
-        self.new_project_window.setFixedSize(self.new_project_window.size())
-            
-    
-    def open_project(self): #=================================================
+    def open_project(self): #================================== Open Project ==
         
         '''
         "open_project" is called by the event "self.project_display.clicked".
@@ -436,7 +421,7 @@ class MainWindow(QtGui.QMainWindow):
 #        
 #        self.dialog.exec_()
        
-        #----------------------------------------------------- Stock Dialog ----
+        #------------------------------------------------------ Stock Dialog --
        
         directory = path.abspath('../Projects')
 

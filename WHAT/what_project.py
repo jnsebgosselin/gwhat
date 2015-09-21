@@ -47,12 +47,20 @@ class NewProject(QtGui.QDialog):
 
     NewProjectSignal = QtCore.Signal(str)
     
-    def __init__(self, software_version, parent=None):
+    def __init__(self, parent=None):
         super(NewProject, self).__init__(parent)
         
-        self.initUI(software_version)
+        self.setWindowFlags(QtCore.Qt.Window)
+        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setModal(True)
         
-    def initUI(self, software_version):
+        self.setWindowTitle('New Project')
+        self.setWindowIcon(db.Icons().WHAT)
+        self.setFont(db.styleUI().font1)
+        
+        self.initUI()
+        
+    def initUI(self):
         
         # Use this screen to name your new WHAT project, select the location
         # for your new project, and select the type of project.
@@ -76,13 +84,7 @@ class NewProject(QtGui.QDialog):
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
         
-        #------------------------------------------------------ WINDOW SETUP --
-        
-        self.setWindowTitle('New Project')
-        self.setWindowIcon(iconDB.WHAT)
-        self.setFont(StyleDB.font1)
-        
-        #----------------------------------------------------- PROJECT INFO ----
+        #------------------------------------------------------ PROJECT INFO --
         
         #---- WIDGETS ----
         
@@ -96,7 +98,7 @@ class NewProject(QtGui.QDialog):
         self.date = QtGui.QLabel('%02d / %02d / %d  %02d:%02d' % now)
         
         createdby_label = QtGui.QLabel('Software:')
-        self.createdby = QtGui.QLabel(software_version)
+        self.createdby = QtGui.QLabel(db.software_version)
         
         #---- GRID ----
         
@@ -123,7 +125,7 @@ class NewProject(QtGui.QDialog):
         
         proINfo_widget.setLayout(proInfo_grid)
         
-        #--------------------------------------------- LOCATION COORDINATES ----
+        #---------------------------------------------- LOCATION COORDINATES --
         
         locaCoord_title = QtGui.QLabel('<b>Project Location Coordinates:</b>')
         locaCoord_title.setAlignment(QtCore.Qt.AlignLeft)
@@ -183,7 +185,7 @@ class NewProject(QtGui.QDialog):
         
         locaCoord_widget.setLayout(locaCoord_grid)
         
-        #--------------------------------------------------------- Toolbar ----
+        #----------------------------------------------------------- Toolbar --
         
         btn_save_project = QtGui.QPushButton(' Save')
         btn_save_project.setIcon(iconDB.new_project)
@@ -210,7 +212,7 @@ class NewProject(QtGui.QDialog):
         
         toolbar_widget.setLayout(toolbar_grid)
         
-        #------------------------------------------------------------- MAIN ----
+        #-------------------------------------------------------------- MAIN --
         
         directory_label = QtGui.QLabel('Save in Folder:')
         self.directory = QtGui.QLineEdit()
@@ -242,13 +244,11 @@ class NewProject(QtGui.QDialog):
         newProject_grid.setContentsMargins(15, 15, 15, 15) # (L, T, R, B)
         
         self.setLayout(newProject_grid)
-        
-         
-        
+                
         #----------------------------------------------------------- EVENTS ----
 
         btn_save_project.clicked.connect(self.save_project)
-        btn_cancel.clicked.connect(self.cancel_save_project)
+        btn_cancel.clicked.connect(self.close)
         btn_browse.clicked.connect(self.browse_saveIn_folder)
    
     def save_project(self):
@@ -272,10 +272,9 @@ class NewProject(QtGui.QDialog):
             pathExists = os.path.exists(project_dir)
             count += 1
         
-        print
-        print '---------------'
-        print 'Creating files and folder achitecture for the new project in:'
-        print project_dir
+        print('\n---------------')
+        print('Creating files and folder achitecture for the new project in:')
+        print(project_dir)
         print
         
         #---- Create Files and Folders ----        
@@ -321,20 +320,15 @@ class NewProject(QtGui.QDialog):
                                     
             self.close()
             
-            print '---------------'
+            print('---------------')
             
             self.NewProjectSignal.emit(fname)
 
         except:
 
-            print 'There was a problem creating the project. Project not saved.'
-            print '---------------'
-        
-        
-    def cancel_save_project(self):
-        
-        self.close()
-        
+            print('There was a problem creating the project. Project not saved.')
+            print('---------------')
+       
     def browse_saveIn_folder(self):
         
         folder = QtGui.QFileDialog.getExistingDirectory(self, 
@@ -344,7 +338,7 @@ class NewProject(QtGui.QDialog):
         if folder:
             self.directory.setText(folder)
             
-    def clear_UI(self):
+    def reset_UI(self):
         
         self.name.clear()        
         self.author.clear()
@@ -362,6 +356,26 @@ class NewProject(QtGui.QDialog):
         
         self.Lat_SpinBox.setValue(0)
         self.Lon_SpinBox.setValue(0)
+        
+    def show(self): #================================================== show ==
+        super(NewProject, self).show()    
+        self.raise_()
+        
+        # Adapted from:
+        # http://zetcode.com/gui/pysidetutorial/firstprograms
+        
+        qr = self.frameGeometry()
+        if self.parentWidget():
+            print('coucou')
+            wp = self.parentWidget().frameGeometry().width()
+            hp = self.parentWidget().frameGeometry().height()
+            cp = self.parentWidget().mapToGlobal(QtCore.QPoint(wp/2., hp/2.))        
+        else:
+            cp = QtGui.QDesktopWidget().availableGeometry().center()            
+        qr.moveCenter(cp)                    
+        self.move(qr.topLeft())           
+        self.setFixedSize(self.size())
+        
         
 #===============================================================================
 class OpenProject(QtGui.QDialog):
@@ -812,14 +826,13 @@ class SeFileSystemModel(QtGui.QFileSystemModel):
   
 if __name__ == '__main__':
     
-    app = QtGui.QApplication(argv)   
-    instance_1 = NewProject('WHAT')
-    instance_1.show()
-#    instance_1.setFixedSize(instance_1.size())
+    app = QtGui.QApplication(argv)
     
     instance_2 = OpenProject()
     instance_2.show()
-#    instance_2.setFixedSize(instance_2.size())
+    
+    instance_1 = NewProject()
+    instance_1.show()
     
     app.exec_() 
 
