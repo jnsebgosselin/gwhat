@@ -25,6 +25,7 @@ import csv
 from time import strftime, sleep
 import os
 from copy import copy
+from time import clock
 
 #-- THIRD PARTY IMPORTS --
 
@@ -157,6 +158,8 @@ class GapFillWeather(QtCore.QObject):
         return self.WEATHER.read_summary(self.outputDir)
         
     def fill_data(self): #====================== Fill Weather Data Algorithm ==
+
+        tstart = clock()
         
         #-------------------------------------------- Assign Local Variables --
         
@@ -866,7 +869,8 @@ class GapFillWeather(QtCore.QObject):
             index = np.where(DIFF[:, -1] == ERRMAX[-1])
             print YEAR[index], MONTH[index], DAY[index]
         
-        print('\n!Data completion completed successfully!\n')
+        print('\n!Data completion completed ' +
+              'successfully in %0.2f sec!' % (clock() - tstart))
         print('--------------------------------------------------')
         self.STOP = False # Just in case. This is a precaution override.          
         self.GapFillFinished.emit(True) 
@@ -1551,4 +1555,4 @@ if __name__ == '__main__':
     
     #-- fill data --
       
-#    gapfill_weather.fill_data()
+    gapfill_weather.fill_data()

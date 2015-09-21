@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
 
-#---- STANDARD LIBRARY IMPORTS ----
+#-- STANDARD LIBRARY IMPORTS --
 
 import platform
 import csv
@@ -32,11 +32,11 @@ import sys
 from time import ctime
 from os import makedirs, path
 
-#---- THIRD PARTY IMPORTS ----
+#-- THIRD PARTY IMPORTS --
 
 from PySide import QtGui, QtCore
 
-#---- PERSONAL IMPORTS ----
+#-- PERSONAL IMPORTS --
 
 import database as db
 import MyQWidget
