@@ -65,11 +65,9 @@ class GapFillWeatherGUI(QtGui.QWidget):
         
         self.gap_fill_worker = GapFillWeather() 
         self.gap_fill_thread = QtCore.QThread() 
-        self.gap_fill_worker.moveToThread(self.gap_fill_thread)  
+        self.gap_fill_worker.moveToThread(self.gap_fill_thread)
         
-#        self.TARGET = TargetStationInfo()                     
-        
-        self.initUI()        
+        self.initUI()      
                
     def initUI(self): #========================================================
         
@@ -437,13 +435,14 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.gap_fill_worker.ProgBarSignal.connect(self.pbar.setValue)
         self.gap_fill_worker.GapFillFinished.connect(
                                                    self.gap_fill_worker_return)
+        self.gap_fill_worker.ConsoleSignal.connect(self.ConsoleSignal.emit)
+        
         self.btn_fill.clicked.connect(self.gap_fill_btn_clicked)
         self.btn_fill_all.clicked.connect(self.gap_fill_btn_clicked)
                
         #------------------------------------------------------- MESSAGE BOX --
                                           
         self.msgBox = MyQWidget.MyQErrorMessageBox()
-        
         
     def set_workdir(self, directory): #===================== Set Working Dir ==
         
@@ -583,6 +582,8 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.fillDates_widg.setEnabled(True)
         self.stack_widget.setEnabled(True)
         
+        self.pbar.setValue(0)
+        
         QtGui.QApplication.processEvents()
 
         self.pbar.hide()
@@ -697,7 +698,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
             else:                
                 self.gap_fill_start(sta_indx2fill)
             
-        else:
+        elif event == False:
             print('Gap-filling routine stopped... restoring UI.')
             self.gap_fill_worker.STOP = False
             self.isFillAll_inProgress = False

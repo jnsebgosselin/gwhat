@@ -43,7 +43,7 @@ import MyQWidget
 import what_project
 import HydroPrint
 import dwnld_weather_data
-import fill_weather_data
+from gapfill_weather_gui import GapFillWeatherGUI
 
 from about_WHAT import AboutWhat
 
@@ -255,7 +255,7 @@ class MainWindow(QtGui.QMainWindow):
         
         #---- gapfill weather data ----
         
-        self.tab_fill_weather_data = fill_weather_data.GapFillWeather(self)
+        self.tab_fill_weather_data = GapFillWeatherGUI(self)
         self.tab_fill_weather_data.set_workdir(self.projectdir)
         
         #---- hydrograph ----
@@ -267,7 +267,7 @@ class MainWindow(QtGui.QMainWindow):
         
         tab_about = AboutWhat(self)
         
-        #---- TABS ASSEMBLY ----
+        #-- TABS ASSEMBLY --
         
         Tab_widget.addTab(self.tab_dwnld_data, labelDB.TAB1)        
         Tab_widget.addTab(self.tab_fill_weather_data, labelDB.TAB2) 
@@ -276,7 +276,7 @@ class MainWindow(QtGui.QMainWindow):
         
         Tab_widget.setCornerWidget(self.menubar_widget)
         
-        #------------------------------------------------ SPLITTER WIDGET ----
+        #--------------------------------------------------- SPLITTER WIDGET --
                 
         splitter = QtGui.QSplitter(self)
         splitter.setOrientation(QtCore.Qt.Vertical)
@@ -312,22 +312,13 @@ class MainWindow(QtGui.QMainWindow):
         self.project_display.clicked.connect(self.open_project)
 #        self.open_project_window.OpenProjectSignal.connect(self.load_project) 
 
-        #---- Console Signal Piping ----
+        #-- Console Signal Piping --
         
         issuer = self.tab_dwnld_data
         issuer.ConsoleSignal.connect(self.write2console)  
 
-        issuer = self.tab_dwnld_data.search4stations
-        issuer.ConsoleSignal.connect(self.write2console)
-
-        issuer =  self.tab_dwnld_data.dwnl_raw_datafiles 
-        issuer.ConsoleSignal.connect(self.write2console)  
-
         issuer = self.tab_fill_weather_data
         issuer.ConsoleSignal.connect(self.write2console)
-
-        issuer = self.tab_fill_weather_data.fillworker
-        issuer.ConsoleSignal.connect(self.write2console)  
         
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)                                                      
@@ -499,8 +490,8 @@ class MainWindow(QtGui.QMainWindow):
         print('---- PROJECT LOADED ----')
         print('')
       
-    #-------------------------------------------------------------------------
-    def check_project(self):
+    
+    def check_project(self): #================ Check Project Files Integrity ==
         """
         Check if all files and folders associated with the .what file are
         presents in the project folder. If some files or folders are missing,
@@ -512,16 +503,15 @@ class MainWindow(QtGui.QMainWindow):
         This method should be run at the start of every method that needs to
         interact with resource file of the current project.
         """
-    #-------------------------------------------------------------------------
-        
-        print('Checking project files and folders integrity')
-        
+            
+        print('Checking project files and folders integrity')        
         print(self.projectfile)
+        
         if not path.exists(self.projectfile):
             print('Project file does not exist.')
             return False
             
-        #---- System project folder organization ----
+        #-- System project folder organization --
        
         if not path.exists(self.projectdir + '/Meteo/Raw'):
             makedirs(self.projectdir + '/Meteo/Raw')
@@ -657,13 +647,6 @@ class MyProject():
         self.name = reader[0][1].decode('utf-8')
         self.lat = float(reader[6][1])
         self.lon = float(reader[7][1])
-        
-       
-################################################################################
-#                                                                           
-#                              MAIN FUNCTION
-#                                                                          
-################################################################################       
 
         
 if __name__ == '__main__':

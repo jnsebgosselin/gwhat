@@ -18,15 +18,6 @@ from PySide import QtGui, QtCore
 import database as db
 
 #==============================================================================
-class MyDialogWindow(QtGui.QDialog):
-#==============================================================================
-    
-    def __init__(self, parent=None):
-        super(MyDialogWindow, self).__init__(parent)     
-        
-        
-
-#==============================================================================
 class MyQToolButton(QtGui.QToolButton):
 #==============================================================================
     def __init__(self, Qicon, ToolTip, IconSize=db.styleUI().iconSize,

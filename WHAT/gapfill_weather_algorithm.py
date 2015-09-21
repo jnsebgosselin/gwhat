@@ -344,7 +344,7 @@ class GapFillWeather(QtCore.QObject):
                     msg = ('Completion process for station %s stopped.' %
                            target_station_name)
                     print(msg)
-                    self.ConsoleSignal.emit('<font color=red>msg</font>')                    
+                    self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)                    
                     self.STOP = False
                     self.GapFillFinished.emit(False) 
                     

@@ -89,25 +89,25 @@ class dwnldWeather(QtGui.QWidget):
         
     def initUI(self): #=========================================================
         
-        #--------------------------------------------------------- Database ----
+        #---------------------------------------------------------- Database --
         
         styleDB = db.styleUI()
         iconDB = db.Icons()
         ttipDB = Tooltips('English')
         labelDB = db.labels('English')
         
-        #------------------------------------------------------ Main Window ----
+        #------------------------------------------------------- Main Window --
         
         self.setWindowIcon(iconDB.WHAT)
         self.setFont(styleDB.font1)        
         
-        #--------------------------------------------------- Instances init ----
+        #---------------------------------------------------- Instances init --
         
         self.search4stations = Search4Stations(self)        
         self.station_table = WeatherStationDisplayTable(1, self)        
         self.dwnl_raw_datafiles = DownloadRawDataFiles(self)
         
-        #---------------------------------------------------------- TOOLBAR ----
+        #----------------------------------------------------------- TOOLBAR --
        
         btn_save_menu = QtGui.QMenu()
         btn_save_menu.addAction('Save As...', self.btn_saveAs_staList_isClicked)
@@ -306,6 +306,7 @@ class dwnldWeather(QtGui.QWidget):
         self.dwnl_raw_datafiles.EndSignal.connect(self.manage_raw_data_dwnld)
         self.dwnl_raw_datafiles.MergeSignal.connect(self.concatenate_and_display)
         self.dwnl_raw_datafiles.ProgBarSignal.connect(self.pbar.setValue)
+        self.dwnl_raw_datafiles.ConsoleSignal.connect(self.ConsoleSignal.emit)
         
         #---- concatenate raw data ----
         
@@ -327,7 +328,8 @@ class dwnldWeather(QtGui.QWidget):
         #---- search4stations ----
         
         btn_search4station.clicked.connect(self.search4stations.show)
-        self.search4stations.staListSignal.connect(self.add_stations2list)        
+        self.search4stations.staListSignal.connect(self.add_stations2list) 
+        self.search4stations.ConsoleSignal.connect(self.ConsoleSignal.emit)
         
             
     def set_workdir(self, directory): #=========================================
