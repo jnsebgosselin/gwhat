@@ -576,24 +576,43 @@ class GapFillWeather(QtCore.QObject):
                 
             print_message = ('Data completion for variable %d/%d completed.'
                              ) % (var+1, nVAR)
-            print print_message             
-
-        #================================================ WRITE DATA TO FILE ==
-                    
-        self.ConsoleSignal.emit('<font color=black>Data completion ' + 
-                                'for station ' + target_station_name +
-                                ' completed</font>')
-                                
+            print print_message    
+            
+        #---------------------------------------------------- End of Routine --
+            
+        msg = ('Data completion for station %s completed successfully ' +
+               'in %0.2f sec.') % (target_station_name, (clock() - tstart))
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
+        print('\n' + msg)
+        print('--------------------------------------------------')
+        
         if FLAG_nan == True:
             self.ConsoleSignal.emit(
                 '<font color=red>WARNING: Some missing data were not ' +
                 'completed because all neighboring station were empty ' +
                 'for that period</font>')
-    
-        #------------------------------------------ INFO DATA POSTPROCESSING --
+        
+        #================================================ WRITE DATA TO FILE ==
+        
+        #------------------------------------------------------------ Header --
+              
+        HEADER = [['Station Name', target_station_name],
+                  ['Province', target_station_prov],
+                  ['Latitude', target_station_lat],
+                  ['Longitude', target_station_lon],
+                  ['Elevation', target_station_alt],
+                  ['Climate Identifier', target_station_clim],
+                  [],
+                  ['Created by', db.software_version],
+                  ['Created on', strftime("%d/%m/%Y")],
+                  []]
+        
+        #--------------------------------------------------------- .log file --
+        
+        #---- INFO DATA POSTPROCESSING ----
         
         # Put target station name and information to the begining of the
-        # STANANE array and INFO matrix.
+        # STANAME array and INFO matrix.
         INFO_Yname = STANAME[target_station_index]
         INFO_Y = INFO_YX[:, target_station_index].astype('str')
                     
@@ -625,21 +644,8 @@ class GapFillWeather(QtCore.QObject):
         # Replace nan values by ''
         INFO_X = INFO_X.astype('str')
         INFO_X[INFO_X == 'nan'] = ''
-       
-        #------------------------------------------------------------ HEADER --
-              
-        HEADER = [['Station Name', target_station_name]]
-        HEADER.append(['Province', target_station_prov])
-        HEADER.append(['Latitude', target_station_lat])
-        HEADER.append(['Longitude', target_station_lon])
-        HEADER.append(['Elevation', target_station_alt])
-        HEADER.append(['Climate Identifier', target_station_clim])
-        HEADER.append([])
-        HEADER.append(['Created by', db.software_version])
-        HEADER.append(['Created on', strftime("%d/%m/%Y")])
-        HEADER.append([])
-        
-        #---------------------------------------------------- LOG GENERATION --
+               
+        #---- Info Summary ----   
         
         record_date_start = '%04d/%02d/%02d' % (YEAR[index_start],
                                                 MONTH[index_start],
@@ -649,31 +655,25 @@ class GapFillWeather(QtCore.QObject):
                                               MONTH[index_end],
                                               DAY[index_end])
         
-        INFO_total = copy(HEADER)
-        
-        INFO_total.append(['*** FILL PROCEDURE INFO ***'])
-        
-        INFO_total.append([])
+        INFO_total = copy(HEADER)        
+        INFO_total.extend([['*** FILL PROCEDURE INFO ***'],[]])
         if self.regression_mode == True:
             INFO_total.append(['MLR model', 'Ordinary Least Square'])
         elif self.regression_mode == False:
             INFO_total.append(['MLR model', 'Least Absolute Deviations'])
-        INFO_total.append(['Precip correction', 'Not Available'])
-        INFO_total.append(['Wet days correction', 'Not Available'])
-        INFO_total.append(['Max number of stations', str(Nbr_Sta_max)])
-        INFO_total.append(['Cutoff distance (km)', str(limitDist)])
-        INFO_total.append(['Cutoff altitude difference (m)', str(limitAlt)])
-        INFO_total.append(['Date Start', record_date_start])
-        INFO_total.append(['Date End', record_date_end])
-        INFO_total.append([])
-        INFO_total.append([])
-                    
-        INFO_total.append(['*** SUMMARY TABLE ***'])
-        
-        INFO_total.append([])
-        INFO_total.append(['CLIMATE VARIABLE', 'TOTAL MISSING',
-                           'TOTAL FILLED', '', 'AVG. NBR STA.',
-                           'AVG. RMSE', ''])
+        INFO_total.extend([['Precip correction', 'Not Available'],
+                           ['Wet days correction', 'Not Available'],
+                           ['Max number of stations', str(Nbr_Sta_max)],
+                           ['Cutoff distance (km)', str(limitDist)],
+                           ['Cutoff altitude difference (m)', str(limitAlt)],
+                           ['Date Start', record_date_start],
+                           ['Date End', record_date_end],
+                           [], [],
+                           ['*** SUMMARY TABLE ***'],
+                           [],
+                           ['CLIMATE VARIABLE', 'TOTAL MISSING',
+                            'TOTAL FILLED', '', 'AVG. NBR STA.', 'AVG. RMSE',
+                            '']])      
         INFO_total[-1].extend(INFO_Xname)
         
         total_nbr_data = index_end - index_start + 1
@@ -703,10 +703,10 @@ class GapFillWeather(QtCore.QObject):
                 fill_percent = 100
             
             nbr_nan = '%d (%0.1f %% of total)' % (nbr_nan, nan_percent)
- 
+            
             nbr_nofill = '%d (%0.1f %% of missing)' % (nbr_nofill,
                                                        nofill_percent)
-
+                                                       
             nbr_fill_txt = '%d (%0.1f %% of missing)' % (nbr_fill,
                                                          fill_percent)
        
@@ -715,51 +715,56 @@ class GapFillWeather(QtCore.QObject):
                                '%0.2f' % AVG_RMSE[var], ''])
 
             for i in range(len(station_use_counter[0, :])):
-                percentage = round(
-                            station_use_counter[var, i] / nbr_fill * 100, 1)
-                           
+                pc = round(station_use_counter[var, i] / nbr_fill * 100, 1)
+                if np.isnan(pc): pc = 0
                 INFO_total[-1].extend([
-                '%d (%0.1f %% of filled)' % (station_use_counter[var, i],
-                                             percentage)])
-
-        nbr_fill_percent = round(nbr_fill_total / nbr_nan_total * 100, 1)
-        nbr_fill_total_txt = '%d (%0.1f %% of missing)' % \
-                                          (nbr_fill_total, nbr_fill_percent)
+                '%d (%0.1f %% of filled)' % (station_use_counter[var, i], pc)])
         
-        nan_total_percent = round(
-                           nbr_nan_total / (total_nbr_data * nVAR) * 100, 1)
+        try:
+            nbr_fill_percent = round(nbr_fill_total / nbr_nan_total * 100, 1)
+        except:
+            nbr_fill_percent = 0
+            
+        nbr_fill_total_txt = '%d (%0.1f %% of missing)' % (nbr_fill_total,
+                                                           nbr_fill_percent)
+        #-- summary for totals --
+                                                           
+        nan_total_percent = \
+            round(nbr_nan_total / (total_nbr_data * nVAR) * 100, 1)
         nbr_nan_total = '%d (%0.1f %% of total)' % (nbr_nan_total,
                                                     nan_total_percent)
         INFO_total.append([])
         INFO_total.append(['TOTAL', nbr_nan_total, nbr_fill_total_txt, 
                           '', '---', '---', ''])
+                          
         for i in range(len(station_use_counter_total)):
-                percentage = round(
-                     station_use_counter_total[i] / nbr_fill_total * 100, 1)
-                text2add = '%d (%0.1f %% of filled)' \
+            percentage = \
+                round(station_use_counter_total[i] / nbr_fill_total * 100, 1)
+            text2add = '%d (%0.1f %% of filled)' \
                                 % (station_use_counter_total[i], percentage)
-                INFO_total[-1].extend([text2add])            
-        INFO_total.append([])
-        INFO_total.append([])
+            INFO_total[-1].extend([text2add])
+            
+        #---- Info Detailed ----
         
-        INFO_total.append(['*** DETAILED REPORT ***'])
-        
-        INFO_total.append([])
-        INFO_total.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY',
-                           'NBR STA.','RMSE'])
+        INFO_total.extend([[],[],
+                           ['*** DETAILED REPORT ***'],
+                           [],
+                           ['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'NBR STA.',
+                            'RMSE']])        
         INFO_total[-1].extend([INFO_Yname])
         INFO_total[-1].extend(INFO_Xname)
+        
         INFO_ROW = INFO_ROW.tolist()
-        INFO_RMSE = np.round(INFO_RMSE, 2).astype('str')
+        INFO_RMSE = np.round(INFO_RMSE, 2).astype('str')        
         for i in range(len(INFO_Y)):
             info_row_builder = [INFO_VAR[i], INFO_YEAR[i], INFO_MONTH[i],
                                 '%d' % INFO_DAY[i], '%0.0f' % INFO_NSTA[i],
                                 INFO_RMSE[i], INFO_Y[i]]
             info_row_builder.extend(INFO_X[i])
             
-            INFO_total.append(info_row_builder)
-                
-        #--------------------------------------------------------- SAVE INFO --
+            INFO_total.append(info_row_builder)                
+        
+        #---- Save File ----
                                   
         YearStart = str(int(YEAR[index_start])) 
         YearEnd = str(int(YEAR[index_end]))
@@ -781,22 +786,28 @@ class GapFillWeather(QtCore.QObject):
             writer.writerows(INFO_total)
         
         self.ConsoleSignal.emit(
-            '<font color=black>Info file saved in %s.</font>' % output_path)
+               '<font color=black>Info file saved in %s.</font>' % output_path)
             
-        #--------------------------------------------------------- SAVE DATA --
+        #--------------------------------------------------------- .out file --
         
-        DATA2SAVE = copy(HEADER)
-        DATA2SAVE.append(['Year', 'Month', 'Day'])
-        DATA2SAVE[-1].extend(VARNAME)
-               
+        #---- Prepare Header ----
+        
+        fcontent = copy(HEADER)
+        fcontent.append(['Year', 'Month', 'Day'])
+        fcontent[-1].extend(VARNAME)
+        
+        #---- Add Data ----
+        
         ALLDATA = np.vstack((YEAR[index_start:index_end+1],
                              MONTH[index_start:index_end+1],
                              DAY[index_start:index_end+1], 
                              Y2fill[index_start:index_end+1].transpose())
                              ).transpose()
-        ALLDATA.tolist() 
-        for i in range(len(ALLDATA)):
-            DATA2SAVE.append(ALLDATA[i])
+        ALLDATA.tolist()
+        
+        fcontent.extend(ALLDATA)
+        
+        #---- Save Data ----
         
         output_path = '%s/%s (%s)_%s-%s.out' % (self.outputDir, 
                                                 target_station_name,
@@ -806,46 +817,56 @@ class GapFillWeather(QtCore.QObject):
         
         with open(output_path, 'w') as f:
             writer = csv.writer(f,delimiter='\t')
-            writer.writerows(DATA2SAVE)
+            writer.writerows(fcontent)
             
+        msg = 'Meteo data saved in %s.' % output_path
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
+        
+        #---- Add ETP to File ----
+        
         if self.add_ETP:
             meteo.add_ETP_to_weather_data_file(output_path)            
         
-        self.ConsoleSignal.emit('<font color=black>Meteo data saved in ' +
-                                output_path + '</font>')
-        self.ProgBarSignal.emit(0)
-        
-        #---------------------------------------- SAVE ERROR ANALYSIS REPORT --
+        #--------------------------------------------------------- .err file --
         
         if self.full_error_analysis == True:
             
-            error_analysis_report = copy(HEADER)
-            error_analysis_report.append(['Year', 'Month', 'Day'])
-            error_analysis_report[-1].extend(VARNAME)
+            #---- prepare header ----
+            
+            fcontent = copy(HEADER)
+            fcontent.append(['Year', 'Month', 'Day'])
+            fcontent[-1].extend(VARNAME)
+            
+            #---- add data ----
             
             ALLDATA = np.vstack((YEAR, MONTH, DAY, YpFULL.transpose()))
             ALLDATA = ALLDATA.transpose()                 
             ALLDATA.tolist() 
+            
             for i in range(len(ALLDATA)):
-                error_analysis_report.append(ALLDATA[i])
+                fcontent.append(ALLDATA[i])
+            
+            #---- save file ----
             
             output_path = '%s/%s (%s)_%s-%s.err' % (self.outputDir, 
-                                                   target_station_name,
-                                                   target_station_clim,
-                                                   YearStart,
-                                                   YearEnd)                                               
+                                                    target_station_name,
+                                                    target_station_clim,
+                                                    YearStart,
+                                                    YearEnd)                                               
                            
             with open(output_path, 'w') as f:
                 writer = csv.writer(f,delimiter='\t')
-                writer.writerows(error_analysis_report)
+                writer.writerows(fcontent)
         
-            #--------------------------------------------- SOME CALCULATIONS --
+            #---- SOME CALCULATIONS ----
             
             RMSE = np.zeros(nVAR)
             ERRMAX  = np.zeros(nVAR)
             ERRSUM = np.zeros(nVAR)
             for i in range(nVAR):
+                
                 errors = YpFULL[:, i] - Y2fill[:, i]
+                errors = errors[~np.isnan(errors)]
                 
                 rmse = errors**2 
                 rmse = rmse[rmse != 0]                  
@@ -855,8 +876,7 @@ class GapFillWeather(QtCore.QObject):
                 errmax = np.max(errmax)
                 
                 errsum = np.sum(errors)
-                
-                
+                                
                 RMSE[i] = rmse
                 ERRMAX[i] = errmax
                 ERRSUM[i] = errsum
@@ -864,17 +884,11 @@ class GapFillWeather(QtCore.QObject):
             print(RMSE)
             print(ERRMAX)
             print(ERRSUM)
-            
-            DIFF = np.abs(YpFULL- Y2fill)
-            index = np.where(DIFF[:, -1] == ERRMAX[-1])
-            print YEAR[index], MONTH[index], DAY[index]
+
+        #------------------------------------------------------- End Routine --            
         
-        print('\n!Data completion completed ' +
-              'successfully in %0.2f sec!' % (clock() - tstart))
-        print('--------------------------------------------------')
         self.STOP = False # Just in case. This is a precaution override.          
-        self.GapFillFinished.emit(True) 
-        
+        self.GapFillFinished.emit(True)        
         return
        
        
@@ -1539,7 +1553,7 @@ if __name__ == '__main__':
     #-- define the time plage over which data will be gap-filled --
     
     gapfill_weather.time_start = gapfill_weather.WEATHER.TIME[0]
-    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[-1] 
+    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[1000] 
       
     #-- setup method parameters --
         
