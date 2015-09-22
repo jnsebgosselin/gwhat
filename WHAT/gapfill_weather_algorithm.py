@@ -328,12 +328,15 @@ class GapFillWeather(QtCore.QObject):
             row_nan = np.where(np.isnan(YX[:, 0]))[0]
             row_nan = row_nan[row_nan >= index_start]
             row_nan = row_nan[row_nan <= index_end]
+            
             it_avg = 0 # counter used in the calculation of average RMSE
                        # and NSTA values.
             
             if self.full_error_analysis == True :
-                row2fill = range(len(Y2fill[:, 0])) # All the data of the time 
-                                                    # series will be estimated 
+                # All the data of the time series between the specified 
+                # time indexes will be estimated. 
+                row2fill = range(index_start, index_end+1)
+#                row2fill = range(len(Y2fill[:, 0])) 
             else:
                 row2fill = row_nan                
                                                
@@ -434,7 +437,7 @@ class GapFillWeather(QtCore.QObject):
                         # 'full_error_analysis' is not active. Otherwise, the
                         # memory remains empty and a new MLR model is built
                         # for each value of the data series.
-                        if self.full_error_analysis != True: 
+                        if self.full_error_analysis == False: 
                             colm_memory = np.append(colm_memory, colm_seq)
                     
                         # Columns of DATA for the variable VAR are sorted
@@ -831,22 +834,28 @@ class GapFillWeather(QtCore.QObject):
         
         if self.full_error_analysis == True:
             
-            #---- prepare header ----
+            #---- Prepare Header ----
             
             fcontent = copy(HEADER)
             fcontent.append(['Year', 'Month', 'Day'])
             fcontent[-1].extend(VARNAME)
             
-            #---- add data ----
+            #---- Add Data ----
             
-            ALLDATA = np.vstack((YEAR, MONTH, DAY, YpFULL.transpose()))
+#            ALLDATA = np.vstack((YEAR, MONTH, DAY, YpFULL.transpose()))
+            ALLDATA = np.vstack((YEAR[index_start:index_end+1],
+                                 MONTH[index_start:index_end+1],
+                                 DAY[index_start:index_end+1], 
+                                 YpFULL[index_start:index_end+1].transpose()))
             ALLDATA = ALLDATA.transpose()                 
-            ALLDATA.tolist() 
+            ALLDATA.tolist()
             
-            for i in range(len(ALLDATA)):
-                fcontent.append(ALLDATA[i])
+            fcontent.extend(ALLDATA)
             
-            #---- save file ----
+#            for i in range(len(ALLDATA)):
+#                fcontent.append(ALLDATA[i])
+            
+            #---- Save File ----
             
             output_path = '%s/%s (%s)_%s-%s.err' % (self.outputDir, 
                                                     target_station_name,
@@ -1553,7 +1562,7 @@ if __name__ == '__main__':
     #-- define the time plage over which data will be gap-filled --
     
     gapfill_weather.time_start = gapfill_weather.WEATHER.TIME[0]
-    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[1000] 
+    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[10] 
       
     #-- setup method parameters --
         
@@ -1564,7 +1573,7 @@ if __name__ == '__main__':
     
     #-- define additional options --
     
-    gapfill_weather.full_error_analysis = False
+    gapfill_weather.full_error_analysis = True
     gapfill_weather.add_ETP = False
     
     #-- fill data --
