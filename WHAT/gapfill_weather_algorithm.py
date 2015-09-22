@@ -509,10 +509,9 @@ class GapFillWeather(QtCore.QObject):
                         RegCoeff_memory.append(A)
                         RMSE_memory.append(RMSE)
                     
-                    else:
-                        
-                    # Regression coefficients and RSME are recalled
-                    # from the memory matrices.
+                    else:                        
+                        # Regression coefficients and RSME are recalled
+                        # from the memory matrices.
 
                         A = RegCoeff_memory[index_memory]
                         RMSE = RMSE_memory[index_memory]
@@ -528,8 +527,8 @@ class GapFillWeather(QtCore.QObject):
                     if var in (3, 4, 5):
                         Y_row = max(Y_row, 0)
                         
-                    # Round the results.
-                    Y_row = round(Y_row ,1)
+                    # Round the results.                    
+#                    Y_row = np.round(Y_row, 1)
                     
                     #----------------------------------------- STORE RESULTS --
                   
@@ -587,6 +586,7 @@ class GapFillWeather(QtCore.QObject):
                'in %0.2f sec.') % (target_station_name, (clock() - tstart))
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         print('\n' + msg)
+        print('Saving data to files...')
         print('--------------------------------------------------')
         
         if FLAG_nan == True:
@@ -783,10 +783,8 @@ class GapFillWeather(QtCore.QObject):
                                                 target_station_clim,
                                                 YearStart,
                                                 YearEnd)
-                
-        with open(output_path, 'w') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(INFO_total)
+
+        self.save_content_to_file(output_path, INFO_total)
         
         self.ConsoleSignal.emit(
                '<font color=black>Info file saved in %s.</font>' % output_path)
@@ -800,15 +798,26 @@ class GapFillWeather(QtCore.QObject):
         fcontent[-1].extend(VARNAME)
         
         #---- Add Data ----
+            
+        for row in range(index_start, index_end+1):            
+            fcontent.append(['%d' % YEAR[row],
+                             '%d' % MONTH[row],
+                             '%d' % DAY[row]])
+                             
+            y = ['%0.1f' % i for i in Y2fill[row, :]]
+            fcontent[-1].extend(y)
+
+#        TODO: This is the old way I was saving stuff. Need to be 
+#              deleted when new method is validated. 
         
-        ALLDATA = np.vstack((YEAR[index_start:index_end+1],
-                             MONTH[index_start:index_end+1],
-                             DAY[index_start:index_end+1], 
-                             Y2fill[index_start:index_end+1].transpose())
-                             ).transpose()
-        ALLDATA.tolist()
+#        ALLDATA = np.vstack((YEAR[index_start:index_end+1],
+#                             MONTH[index_start:index_end+1],
+#                             DAY[index_start:index_end+1], 
+#                             Y2fill[index_start:index_end+1].transpose())
+#                             ).transpose()
+#        ALLDATA.tolist()
         
-        fcontent.extend(ALLDATA)
+#        fcontent.extend(ALLDATA)
         
         #---- Save Data ----
         
@@ -818,9 +827,7 @@ class GapFillWeather(QtCore.QObject):
                                                 YearStart,
                                                 YearEnd)
         
-        with open(output_path, 'w') as f:
-            writer = csv.writer(f,delimiter='\t')
-            writer.writerows(fcontent)
+        self.save_content_to_file(output_path, fcontent)
             
         msg = 'Meteo data saved in %s.' % output_path
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
@@ -837,23 +844,37 @@ class GapFillWeather(QtCore.QObject):
             #---- Prepare Header ----
             
             fcontent = copy(HEADER)
-            fcontent.append(['Year', 'Month', 'Day'])
-            fcontent[-1].extend(VARNAME)
-            
+            fcontent.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'Ym', 'Yp',
+                             'Yp-Ym'])
+    
             #---- Add Data ----
             
-#            ALLDATA = np.vstack((YEAR, MONTH, DAY, YpFULL.transpose()))
-            ALLDATA = np.vstack((YEAR[index_start:index_end+1],
-                                 MONTH[index_start:index_end+1],
-                                 DAY[index_start:index_end+1], 
-                                 YpFULL[index_start:index_end+1].transpose()))
-            ALLDATA = ALLDATA.transpose()                 
-            ALLDATA.tolist()
+            for var in range(len(VARNAME)):
+                for row in range(index_start, index_end+1):
+                    ym = DATA[row, target_station_index, var]
+                    yp = YpFULL[row, var]                    
+                    fcontent.append([VARNAME[var],
+                                    '%d' % YEAR[row],
+                                    '%d' % MONTH[row],
+                                    '%d' % DAY[row],
+                                    '%0.1f' % ym,
+                                    '%0.1f' % yp,                                    
+                                    '%0.1f' % (yp - ym)])
+
+#            TODO: This is the old way I was saving stuff. Need to be 
+#                  deleted when new method is validated.            
             
-            fcontent.extend(ALLDATA)
+#            fcontent.append(['Year', 'Month', 'Day'])
+#            fcontent[-1].extend(VARNAME)
             
-#            for i in range(len(ALLDATA)):
-#                fcontent.append(ALLDATA[i])
+#            ALLDATA = np.vstack((YEAR[index_start:index_end+1],
+#                                 MONTH[index_start:index_end+1],
+#                                 DAY[index_start:index_end+1], 
+#                                 YpFULL[index_start:index_end+1].transpose()))
+#            ALLDATA = ALLDATA.transpose()                 
+#            ALLDATA.tolist()
+#            
+#            fcontent.extend(ALLDATA)
             
             #---- Save File ----
             
@@ -862,10 +883,8 @@ class GapFillWeather(QtCore.QObject):
                                                     target_station_clim,
                                                     YearStart,
                                                     YearEnd)                                               
-                           
-            with open(output_path, 'w') as f:
-                writer = csv.writer(f,delimiter='\t')
-                writer.writerows(fcontent)
+            
+            self.save_content_to_file(output_path, fcontent)
         
             #---- SOME CALCULATIONS ----
             
@@ -890,8 +909,11 @@ class GapFillWeather(QtCore.QObject):
                 ERRMAX[i] = errmax
                 ERRSUM[i] = errsum
             
-            print(RMSE)
+            print('RMSE :')
+            print(np.round(RMSE, 2))
+            print('Maximum Error :')
             print(ERRMAX)
+            print('Cumulative Error :')
             print(ERRSUM)
 
         #------------------------------------------------------- End Routine --            
@@ -899,6 +921,13 @@ class GapFillWeather(QtCore.QObject):
         self.STOP = False # Just in case. This is a precaution override.          
         self.GapFillFinished.emit(True)        
         return
+    
+    @staticmethod
+    def save_content_to_file(fname, fcontent): #======= Save Content to File ==
+        
+        with open(fname, 'w') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(fcontent)
        
        
 #==============================================================================
@@ -1562,7 +1591,7 @@ if __name__ == '__main__':
     #-- define the time plage over which data will be gap-filled --
     
     gapfill_weather.time_start = gapfill_weather.WEATHER.TIME[0]
-    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[10] 
+    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[500] 
       
     #-- setup method parameters --
         
