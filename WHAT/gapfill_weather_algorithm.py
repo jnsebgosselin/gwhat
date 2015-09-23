@@ -188,16 +188,16 @@ class GapFillWeather(QtCore.QObject):
         
         #--------------------------------------------- Target Station Header --
         
-        target_station_index = self.TARGET.index
+        tarStaIndx = self.TARGET.index
         target_station_name = self.TARGET.name
-        target_station_prov = self.WEATHER.PROVINCE[target_station_index]
-        target_station_lat = self.WEATHER.LAT[target_station_index]
+        target_station_prov = self.WEATHER.PROVINCE[tarStaIndx]
+        target_station_lat = self.WEATHER.LAT[tarStaIndx]
         target_station_lat = round(target_station_lat, 2)
-        target_station_lon = self.WEATHER.LON[target_station_index]
+        target_station_lon = self.WEATHER.LON[tarStaIndx]
         target_station_lon = round(target_station_lon, 2)
-        target_station_alt = self.WEATHER.ALT[target_station_index]
+        target_station_alt = self.WEATHER.ALT[tarStaIndx]
         target_station_alt = round(target_station_alt, 2)
-        target_station_clim = self.WEATHER.ClimateID[target_station_index]
+        target_station_clim = self.WEATHER.ClimateID[tarStaIndx]
         
         #----------------------------------------------------------------------
         
@@ -218,7 +218,7 @@ class GapFillWeather(QtCore.QObject):
         # filled with estimated data during the gap-filling process. The
         # content of this matrix will be used to produce *.err* file.
         
-        Y2fill = np.copy(DATA[:, target_station_index, :])
+        Y2fill = np.copy(DATA[:, tarStaIndx, :])
         YXmFILL = np.zeros(np.shape(DATA)) * np.nan
         log_RMSE = np.zeros(np.shape(Y2fill))
         
@@ -263,7 +263,7 @@ class GapFillWeather(QtCore.QObject):
         #           be determined.
         # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         
-        target_station_index = np.where(STANAME == self.TARGET.name)[0][0]
+        tarStaIndx = np.where(STANAME == self.TARGET.name)[0][0]
 
         #--------------------------------- Checks Variables With Enough Data --
         
@@ -333,7 +333,7 @@ class GapFillWeather(QtCore.QObject):
             # <DATA>, <STANAME>, and <CORCOEF>.
             
             Sta_index = sort_stations_correlation_order(CORCOEF[var, :],
-                                                        target_station_index)
+                                                        tarStaIndx)
             
             # Data for the current weather variable <var> are stored in a 
             # 2D matrix where the rows are the daily weather data and the
@@ -571,7 +571,7 @@ class GapFillWeather(QtCore.QObject):
                         # Note also that the first index corresponds to the
                         # target station, in other words:
                         #                        
-                        #     target_station_index == Sta_index_row[0]
+                        #     tarStaIndx == Sta_index_row[0]
                         
                         Sta_index_row = Sta_index[colm]
                         
@@ -603,7 +603,7 @@ class GapFillWeather(QtCore.QObject):
                             YXmFILL[row, Sta_index_row[0], var] = Y_row                                               
                             YXmFILL[row, Sta_index_row[1:], var] = X_row[1:]
                         else:
-                            YXmFILL[row, Sta_index_row[0], var] = ym_row
+                            YXmFILL[row, Sta_index_row[0], var] = Y_row
                             YXmFILL[row, Sta_index_row[1:], var] = X_row
                     
                 fill_progress += 1.
@@ -655,8 +655,7 @@ class GapFillWeather(QtCore.QObject):
     
         #---- Info Data Post-Processing ----
         
-        XYinfo = self.postprocess_fillinfo(STANAME, YXmFILL, 
-                                           target_station_index)
+        XYinfo = self.postprocess_fillinfo(STANAME, YXmFILL, tarStaIndx)
         Yname, Yp = XYinfo[0], XYinfo[1]
         Xnames, Xm = XYinfo[2], XYinfo[3]
         Xcount_var, Xcount_tot = XYinfo[4], XYinfo[5]
@@ -699,8 +698,7 @@ class GapFillWeather(QtCore.QObject):
         nbr_nan_total = 0
         for var in range(nVAR):
             
-            nbr_nan = np.isnan(DATA[index_start:index_end+1,
-                                    target_station_index, var])
+            nbr_nan = np.isnan(DATA[index_start:index_end+1, tarStaIndx, var])
             nbr_nan = float(np.sum(nbr_nan))
             
             nbr_nan_total += nbr_nan
@@ -775,7 +773,7 @@ class GapFillWeather(QtCore.QObject):
             for row in range(index_start, index_end+1):
                 
                 yp = Yp[row, var]
-                ym = DATA[row, target_station_index, var]                                  
+                ym = DATA[row, tarStaIndx, var]                                  
                 xm = ['' if np.isnan(i) else '%0.1f' % i for i in 
                       Xm[row, :, var]]                
                 nsta = len(np.where(~np.isnan(Xm[row, :, var]))[0])
@@ -857,8 +855,7 @@ class GapFillWeather(QtCore.QObject):
             
             #---- Info Data Post-Processing ----
                 
-            XYinfo = self.postprocess_fillinfo(STANAME, YXmFULL, 
-                                               target_station_index)
+            XYinfo = self.postprocess_fillinfo(STANAME, YXmFULL, tarStaIndx)
             Yname, Ym = XYinfo[0], XYinfo[1]
             Xnames, Xm = XYinfo[2], XYinfo[3]
             
@@ -986,7 +983,7 @@ class GapFillWeather(QtCore.QObject):
        
        
 #==============================================================================
-def correlation_worker(WEATHER, target_station_index):
+def correlation_worker(WEATHER, tarStaIndx):
     """
     This function computes the correlation coefficients between the target
     station and the neighboring stations for each meteorological variable.
@@ -1014,7 +1011,7 @@ def correlation_worker(WEATHER, target_station_index):
         for j in range(nSTA):
                         
             # Rows with nan entries are removed from the data matrix.
-            DATA_nonan = np.copy(DATA[:, (target_station_index, j), i])
+            DATA_nonan = np.copy(DATA[:, (tarStaIndx, j), i])
             DATA_nonan = DATA_nonan[~np.isnan(DATA_nonan).any(axis=1)]
 
             # Compute how many pair of data are available for the correlation
@@ -1543,7 +1540,7 @@ class WeatherData():
         return table
         
 #==============================================================================
-def sort_stations_correlation_order(CORCOEF, target_station_index): 
+def sort_stations_correlation_order(CORCOEF, tarStaIndx): 
 #==============================================================================
         
     # An index is associated with each value of the CORCOEF array.
@@ -1553,7 +1550,7 @@ def sort_stations_correlation_order(CORCOEF, target_station_index):
     # Remove target station from the stack. This is necessary in case there is
     # some data that belong to the same station, but without the same length.
     
-    CORCOEF = np.delete(CORCOEF, target_station_index, axis=0)
+    CORCOEF = np.delete(CORCOEF, tarStaIndx, axis=0)
     
     # Stations for which the correlation coefficient is nan are removed.
     
@@ -1569,7 +1566,7 @@ def sort_stations_correlation_order(CORCOEF, target_station_index):
     # *Sta_index* array. 
     
     Sta_index = np.copy(CORCOEF[:, 0].astype('int'))
-    Sta_index = np.insert(Sta_index, 0, target_station_index)
+    Sta_index = np.insert(Sta_index, 0, tarStaIndx)
     
     return Sta_index
         
@@ -1628,42 +1625,42 @@ def L1LinearRegression(X, Y):
         
 if __name__ == '__main__':
     
-    #-- create an instance of the class *GapFillWeather* --
+    #---- create an instance of the class *GapFillWeather* ----
     
     gapfill_weather = GapFillWeather()
     
-    #-- setup input and output directory --
+    #---- setup input and output directory ----
     
     workdir = "../Projects/Project4Testing"    
     gapfill_weather.outputDir = workdir + '/Meteo/Output'
     gapfill_weather.inputDir = workdir + '/Meteo/Input'
     
-    #-- load weather data files --
+    #---- load weather data files ----
     
     stanames = gapfill_weather.load_data()
     print(stanames) 
     
-    #-- setup target station and do some calculation --
+    #---- setup target station and do some calculation ----
     
     gapfill_weather.set_target_station(0)    
           
-    #-- define the time plage over which data will be gap-filled --
+    #---- define the time plage over which data will be gap-filled ----
     
     gapfill_weather.time_start = gapfill_weather.WEATHER.TIME[0]
-    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[1000] 
+    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[-1] 
       
-    #-- setup method parameters --
+    #---- setup method parameters ----
         
     gapfill_weather.Nbr_Sta_max = 4
     gapfill_weather.limitDist = 100
     gapfill_weather.limitAlt = 350                                  
     gapfill_weather.regression_mode = 0
     
-    #-- define additional options --
+    #---- define additional options ----
     
     gapfill_weather.full_error_analysis = False
     gapfill_weather.add_ETP = False
     
-    #-- fill data --
+    #---- fill data ----
       
     gapfill_weather.fill_data()
