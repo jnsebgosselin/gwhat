@@ -163,8 +163,8 @@ class GapFillWeather(QtCore.QObject):
         
         #-------------------------------------------- Assign Local Variables --
         
-        DATA = np.copy(self.WEATHER.DATA)
-
+        #---- Time Related Variables ----
+        
         DATE = np.copy(self.WEATHER.DATE)        
         YEAR, MONTH, DAY = DATE[:, 0], DATE[:, 1], DATE[:, 2]
         
@@ -172,15 +172,17 @@ class GapFillWeather(QtCore.QObject):
         index_start = np.where(TIME == self.time_start)[0][0]
         index_end = np.where(TIME == self.time_end)[0][0]
         
-        VARNAME = self.WEATHER.VARNAME  # Name of the weather variables
+        #---- Weather Stations Related Variables ----
+        
+        DATA = np.copy(self.WEATHER.DATA)       # Daily Weather Data
+        VARNAME = np.copy(self.WEATHER.VARNAME) # Name of the weather variables      
+        STANAME = np.copy(self.WEATHER.STANAME) # Name of the weather stations
+        CORCOEF = np.copy(self.TARGET.CORCOEF)  # Correlation Coefficients
+        
         nVAR = len(VARNAME)  # Number of weather variables
-        STANAME = np.copy(self.WEATHER.STANAME)
-        CORCOEF = np.copy(self.TARGET.CORCOEF)
         
-        HORDIST = np.copy(self.TARGET.HORDIST)
-        ALTDIFF = np.copy(np.abs(self.TARGET.ALTDIFF))
+        #---- Method Parameters ----
         
-        Nbr_Sta_max = self.Nbr_Sta_max
         limitDist = self.limitDist
         limitAlt = self.limitAlt
         
@@ -199,28 +201,43 @@ class GapFillWeather(QtCore.QObject):
         
         #----------------------------------------------------------------------
         
-        # Save target data serie in a new 2D matrix that will
-        # be filled during the data completion process
-        Y2fill = np.copy(DATA[:, target_station_index, :])
-        
-        if self.full_error_analysis == True:
-            YpFULL = np.copy(Y2fill) * np.nan
-            print('\nA full error analysis will be performed\n')
-        
         msg = 'Data completion for station %s started' % target_station_name
         print('--------------------------------------------------')
         print(msg)
         print('--------------------------------------------------')
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         
+        #------------------------------------------- Init Container Matrices --
+        
+        # Save the weather data series of the target station in a new 
+        # 2D matrix named <Y2fill>. The NaN values contained in this matrix
+        # will be filled during the data completion process
+        
+        # When *full_error_analysis* is activated, an additional empty
+        # 2D matrix named <YpFULL> is created. This matrix will be completely
+        # filled with estimated data during the gap-filling process. The
+        # content of this matrix will be used to produce *.err* file.
+        
+        Y2fill = np.copy(DATA[:, target_station_index, :])
+        YXmFILL = np.zeros(np.shape(DATA)) * np.nan
+        log_RMSE = np.zeros(np.shape(Y2fill))
+        
+        if self.full_error_analysis == True:
+            print('\n!A full error analysis will be performed!\n')
+            YpFULL = np.copy(Y2fill) * np.nan
+            YXmFULL = np.zeros(np.shape(DATA)) * np.nan
+        
         #--------------------------------------------- CHECK CUTOFF CRITERIA --        
         
         # Remove the neighboring stations that do not respect the distance
-        # or altitude difference cutoffs.
+        # or altitude difference cutoff criteria.
         
-        # If cutoff limits are set to a negative number, all stations are kept
-        # regardless of their distance or altitude difference with the target
-        # station.
+        # Note : If cutoff limits are set to a negative number, all stations
+        #        are kept regardless of their distance or altitude difference
+        #        with the target station.
+        
+        HORDIST = self.TARGET.HORDIST
+        ALTDIFF = np.abs(self.TARGET.ALTDIFF)
         
         if limitDist > 0:
             check_HORDIST = HORDIST < limitDist
@@ -235,7 +252,7 @@ class GapFillWeather(QtCore.QObject):
         check_ALL = check_HORDIST * check_ALTDIFF
         index_ALL = np.where(check_ALL == True)[0]                                  
        
-        # Keep only the stations that respect all the treshold values
+        # Keeps only the stations that respect all the treshold values        
         
         STANAME = STANAME[index_ALL]
         DATA = DATA[:, index_ALL, :]
@@ -251,7 +268,7 @@ class GapFillWeather(QtCore.QObject):
         #--------------------------------- Checks Variables With Enough Data --
         
         # NOTE: When a station does not have enough data for a given variable,
-        #       its correlation coefficient is set to nan in CORCOEF. If all
+        #       its correlation coefficient is set to NaN in CORCOEF. If all
         #       the stations have a value of nan in the correlation table for
         #       a given variable, it means there is not enough data available
         #       overall to estimate and fill missing data for it.
@@ -266,7 +283,7 @@ class GapFillWeather(QtCore.QObject):
                 print(msg)
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
         
-        #--------------------------------------------------------- FILL LOOP --
+        #------------------------------------------------ Init Gap-Fill Loop --
 
         FLAG_nan = False # If some missing data can't be completed because 
                          # all the neighboring stations are empty, a flag is
@@ -275,7 +292,12 @@ class GapFillWeather(QtCore.QObject):
         
         nbr_nan_total = np.isnan(Y2fill[index_start:index_end+1, var2fill])
         nbr_nan_total = np.sum(nbr_nan_total)
-
+        
+        #---- Variable for the progression of the routine ----
+        
+        # *progress_total* and *fill_progress* are used to display the
+        # progression of the gap-filling procedure on a UI progression bar.
+        
         if self.full_error_analysis == True:
             progress_total = np.size(Y2fill[:, var2fill])
         else:
@@ -283,48 +305,47 @@ class GapFillWeather(QtCore.QObject):
             
         fill_progress = 0
         
-        # *progress_total* and *fill_progress* are used to display the task
-        # progression on the UI progression bar.
-        
-        INFO_VAR = np.zeros(nbr_nan_total).astype('str')
-        INFO_NSTA = np.zeros(nbr_nan_total).astype('float')
-        INFO_RMSE = np.zeros(nbr_nan_total).astype('float')
-        INFO_ROW = np.zeros(nbr_nan_total).astype('int')
-        INFO_YEAR = np.zeros(nbr_nan_total).astype('int')
-        INFO_MONTH = np.zeros(nbr_nan_total).astype('int')
-        INFO_DAY =  np.zeros(nbr_nan_total).astype('int')
-        INFO_YX = np.zeros((nbr_nan_total, len(STANAME))) * np.nan
-        it_info = 0 # Number of missing data estimated iteration counter
+        #---- Init. variable for .log file ----
         
         AVG_RMSE = np.zeros(nVAR).astype('float')
         AVG_NSTA = np.zeros(nVAR).astype('float')
-        station_use_counter = np.zeros((nVAR, len(STANAME))).astype('int')
+        
+        #--------------------------------------------------------- FILL LOOP --
+        
+        # OUTER LOOP: iterates over all the weather variables with enough 
+        #             measured data.
         
         for var in var2fill:
                                         
-            msg = ('Data completion for variable %d/%d in progress...' %
-                   (var+1, nVAR))
-            print msg
+            print('Data completion for variable %d/%d in progress...' %
+                  (var+1, nVAR))
+            
+            #---- Memory Variables ----
             
             colm_memory = np.array([]) # Column sequence memory matrix
-            RegCoeff_memory = [] # Regression coefficient memory matrix
-            RMSE_memory = []
+            RegCoeff_memory = []       # Regression coefficient memory matrix
+            RMSE_memory = []           # RMSE memory matrix
             
             # Sort station in descending correlation coefficient order.
-            # Target station index should be pulled at index 0 since its
-            # correlation with itself is 1.
+            # The index of the *target station* is pulled at index 0.
+            
+            # <Sta_index> refers to the indices of the columns of the matrices
+            # <DATA>, <STANAME>, and <CORCOEF>.
+            
             Sta_index = sort_stations_correlation_order(CORCOEF[var, :],
                                                         target_station_index)
             
-            # Data for this variable are stored in a 2D matrix where the raws
-            # are the weather data of the current variable to fill for each
-            # time frame and the columns are the weather station, arranged in
-            # descending correlation order. Target station data serie should
-            # be contained at j = 0.
+            # Data for the current weather variable <var> are stored in a 
+            # 2D matrix where the rows are the daily weather data and the
+            # columns are the weather stations, ordered in descending
+            # correlation order. The data series of the *target station* is
+            # contained at j = 0.
+            
             YX = np.copy(DATA[:, Sta_index, var])              
             
-            # Find rows where data are missing between the date limits
-            # that correspond to index_start and index_end
+            # Finds rows where data are missing between the date limits
+            # at the time indexes <index_start> and <index_end>.
+            
             row_nan = np.where(np.isnan(YX[:, 0]))[0]
             row_nan = row_nan[row_nan >= index_start]
             row_nan = row_nan[row_nan <= index_end]
@@ -336,15 +357,21 @@ class GapFillWeather(QtCore.QObject):
                 # All the data of the time series between the specified 
                 # time indexes will be estimated. 
                 row2fill = range(index_start, index_end+1)
-#                row2fill = range(len(Y2fill[:, 0])) 
             else:
                 row2fill = row_nan                
-                                               
+           
+            # INNER LOOP: iterates over all the days with missing values.
+            
             for row in row2fill:
                 
                 sleep(0.000001) #If no sleep, the UI becomes whacked
                 
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!                
+                
+                # This block of code is used only to stop the gap-filling 
+                # routine from a UI by setting the <STOP> flag attributes to
+                # *True*.
+                
                 if self.STOP == True:
                     
                     msg = ('Completion process for station %s stopped.' %
@@ -354,11 +381,17 @@ class GapFillWeather(QtCore.QObject):
                     self.STOP = False
                     self.GapFillFinished.emit(False) 
                     
-                    return                    
+                    return   
+                    
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                   
                 # Find neighboring stations with valid entries at 
-                # row <row> in <YX>. Target station is stored at index 0.
+                # row <row> in <YX>. The *Target station* is stored at index 0.
+                
+                # WARNING: Note that the target station is not considered in
+                #          the `np.where` call. It will be added back later
+                #          on in the code.
+                
                 colm = np.where(~np.isnan(YX[row, 1:]))[0]                    
                 
                 if np.size(colm) == 0:
@@ -370,41 +403,32 @@ class GapFillWeather(QtCore.QObject):
                         YpFULL[row, var] = np.nan
                     
                     if row in row_nan:
-                        Y2fill[row, var] = np.nan
-                        
+                        Y2fill[row, var] = np.nan                        
                         FLAG_nan = True # A warning comment will be issued at
                                         # the end of the completion process.
-                        
-                        INFO_VAR[it_info] = VARNAME[var]
-                        INFO_NSTA[it_info] = np.nan
-                        INFO_RMSE[it_info] = np.nan
-                        INFO_ROW[it_info] = int(row)
-                        INFO_YEAR[it_info] = str(int(YEAR[row]))
-                        INFO_MONTH[it_info] = str(int(MONTH[row]))
-                        INFO_DAY[it_info] =  DAY[row]
-                        INFO_YX[it_info, :] = np.nan  
-                        
-                        it_info += 1
                 else:
-                    
-                    # Neighboring stations are not empty, continue with the
-                    # missing data estimation procedure for this row.
                 
-                    # Number of station to include in the regression model.
-                    NSTA = min(len(colm), Nbr_Sta_max)
+                    # Determines the number of neighboring station to include 
+                    # in the regression model.
+                    
+                    NSTA = min(len(colm), self.Nbr_Sta_max)
                     
                     # Remove superflux station from <colm>.
+                    
                     colm = colm[:NSTA]
                     
-                    # Add an index 0 at index 0 to include the target
-                    # station and correct index of the neighboring stations
+                    # Adds back an index 0 at index 0 to include the target
+                    # station and add 1 to the indexes of the neighboring
+                    # stations
+                    
                     colm = colm + 1
                     colm = np.insert(colm, 0, 0)
                     
-                    # Store values of the independent variables 
+                    # Stores the values of the independent variables 
                     # (neighboring stations) for this row in a new array.
-                    # An intercept term is added if Var is temperature type
+                    # An intercept term is added if <var> is temperature type
                     # variable, but not if it is precipitation type.
+                    
                     if var in (0, 1, 2):
                         X_row = np.hstack((1, YX[row, colm[1:]]))
                     else:
@@ -425,6 +449,7 @@ class GapFillWeather(QtCore.QObject):
                     # previously in the routine. Regression coefficients
                     # are calculated only once for a given neighboring
                     # station combination.
+                    
                     index_memory = np.where(colm_memory == colm_seq)[0]                                   
                     
                     if len(index_memory) == 0:
@@ -437,6 +462,7 @@ class GapFillWeather(QtCore.QObject):
                         # 'full_error_analysis' is not active. Otherwise, the
                         # memory remains empty and a new MLR model is built
                         # for each value of the data series.
+                        
                         if self.full_error_analysis == False: 
                             colm_memory = np.append(colm_memory, colm_seq)
                     
@@ -444,23 +470,27 @@ class GapFillWeather(QtCore.QObject):
                         # in descending correlation coefficient and the 
                         # information is stored in a 2D matrix (The data for 
                         # the target station are included at index j=0).
+                    
                         YXcolm = np.copy(YX)       
                         YXcolm = YXcolm[:, colm]
                         
-                        # Force the value of the target station to a NAN value
+                        # Force the value of the target station to a NaN value
                         # for this row. This should only have an impact when 
                         # the option "full_error_analysis" is activated. This 
                         # is to actually remove the data being estimated 
-                        # from the dataset like in should properly be done 
-                        # in the jackknife procedure.
+                        # from the dataset like it should properly be done 
+                        # in a cross-validation procedure.
+                        
                         YXcolm[row, 0] = np.nan
                         
-                        # All rows containing NAN entries are removed.
+                        # All rows containing NaN entries are removed.
+                        
                         YXcolm = YXcolm[~np.isnan(YXcolm).any(axis=1)]
                     
                         # Rows for which precipitation of the target station
                         # and all neighboring station is 0 are removed. Only
                         # applicable for precipitation, not air temperature.
+                    
                         if var == 3:                        
                             YXcolm = YXcolm[~(YXcolm == 0).all(axis=1)]  
                                             
@@ -469,10 +499,9 @@ class GapFillWeather(QtCore.QObject):
                 
                         # Add a unitary array to X for the intercept term if
                         # variable is a temperature type data.
+                
                         if var in (0, 1, 2):
                             X = np.hstack((np.ones((len(Y), 1)), X))
-                        else:
-                            'Do not add an intercept term'
                     
                         if self.regression_mode == True:
                             # Ordinary Least Square regression
@@ -506,6 +535,8 @@ class GapFillWeather(QtCore.QObject):
                         RMSE = RMSE[RMSE != 0]      # MAE = MAE[MAE!=0]
                         RMSE = np.mean(RMSE)**0.5   # MAE = np.mean(MAE)
                         
+                        #------------------------------------- Add to Memory --
+                        
                         RegCoeff_memory.append(A)
                         RMSE_memory.append(RMSE)
                     
@@ -519,50 +550,61 @@ class GapFillWeather(QtCore.QObject):
                     #------------------------------ MISSING VALUE ESTIMATION --
                     
                     # Calculate missing value of Y at row <row>.
+                    
                     Y_row = np.dot(A, X_row)
                     
                     # Limit precipitation based variable to positive values.
                     # This may happens when there is one or more negative 
                     # regression coefficients in A
+
                     if var in (3, 4, 5):
                         Y_row = max(Y_row, 0)
-                        
-                    # Round the results.                    
-#                    Y_row = np.round(Y_row, 1)
                     
                     #----------------------------------------- STORE RESULTS --
                   
                     if self.full_error_analysis == True:
                         YpFULL[row, var] = Y_row
                         
+                        # Gets the indexes of the stations that were used for
+                        # estimating the data at <row>. <Sta_index_row> relates
+                        # to the colums of <DATA>, <STANAME>, and <CORCOEF>.
+                        # Note also that the first index corresponds to the
+                        # target station, in other words:
+                        #                        
+                        #     target_station_index == Sta_index_row[0]
+                        
+                        Sta_index_row = Sta_index[colm]
+                        
+                        # Gets the measured value for the target station for
+                        # <var> at <row>.
+                        
+                        ym_row  = DATA[row, Sta_index_row[0], var] 
+                        
+                        # There is a need to take into account that a intercept
+                        # term has been added for temperature-like variables.
+                        
+                        if var in (0, 1, 2):
+                            YXmFULL[row, Sta_index_row[0], var] = ym_row                                               
+                            YXmFULL[row, Sta_index_row[1:], var] = X_row[1:]
+                        else:
+                            YXmFULL[row, Sta_index_row[0], var] = ym_row
+                            YXmFULL[row, Sta_index_row[1:], var] = X_row
+                                              
                     if row in row_nan:
-                        Y2fill[row, var] = Y_row
-
-                        INFO_VAR[it_info] = VARNAME[var]
-                        INFO_NSTA[it_info] = NSTA
-                        INFO_RMSE[it_info] = RMSE
-                        INFO_ROW[it_info] = int(row)
-                        INFO_YEAR[it_info] = str(int(YEAR[row]))
-                        INFO_MONTH[it_info] = str(int(MONTH[row]))
-                        INFO_DAY[it_info] =  DAY[row]
+                        Y2fill[row, var] = Y_row                        
+                        log_RMSE[row, var] = RMSE
                         
                         AVG_RMSE[var] += RMSE
                         AVG_NSTA[var] += NSTA
                         it_avg += 1
                         
                         Sta_index_row = Sta_index[colm]
-                        if var in (0, 1, 2):                    
-                            INFO_YX[it_info, Sta_index_row[0]] = Y_row
-                            INFO_YX[it_info, Sta_index_row[1:]] = X_row[1:]
+                        if var in (0, 1, 2):                            
+                            YXmFILL[row, Sta_index_row[0], var] = Y_row                                               
+                            YXmFILL[row, Sta_index_row[1:], var] = X_row[1:]
                         else:
-                            INFO_YX[it_info, Sta_index_row[0]] = Y_row
-                            INFO_YX[it_info, Sta_index_row[1:]] = X_row
-                        
-                        it_info += 1 # Total number of missing data counter    
-                        
-                        INFO_BOOLEAN = np.zeros(len(STANAME))
-                        INFO_BOOLEAN[Sta_index_row] = 1
-                        station_use_counter[var, :] += INFO_BOOLEAN
+                            YXmFILL[row, Sta_index_row[0], var] = ym_row
+                            YXmFILL[row, Sta_index_row[1:], var] = X_row
                     
                 fill_progress += 1.
                 self.ProgBarSignal.emit(fill_progress/progress_total * 100)
@@ -575,10 +617,9 @@ class GapFillWeather(QtCore.QObject):
             else:
                 AVG_RMSE[var] = np.nan
                 AVG_NSTA[var] = np.nan
-                
-            print_message = ('Data completion for variable %d/%d completed.'
-                             ) % (var+1, nVAR)
-            print print_message    
+
+            print('Data completion for variable %d/%d completed.' %
+                  (var+1, nVAR))
             
         #---------------------------------------------------- End of Routine --
             
@@ -611,44 +652,16 @@ class GapFillWeather(QtCore.QObject):
                   []]
         
         #--------------------------------------------------------- .log file --
+    
+        #---- Info Data Post-Processing ----
         
-        #---- INFO DATA POSTPROCESSING ----
-        
-        # Put target station name and information to the begining of the
-        # STANAME array and INFO matrix.
-        INFO_Yname = STANAME[target_station_index]
-        INFO_Y = INFO_YX[:, target_station_index].astype('str')
-                    
-        INFO_Xname = np.delete(STANAME, target_station_index)
-        INFO_X = np.delete(INFO_YX, target_station_index, axis=1)
-        
-        station_use_counter = np.delete(station_use_counter,
-                                        target_station_index, axis=1)
+        XYinfo = self.postprocess_fillinfo(STANAME, YXmFILL, 
+                                           target_station_index)
+        Yname, Yp = XYinfo[0], XYinfo[1]
+        Xnames, Xm = XYinfo[2], XYinfo[3]
+        Xcount_var, Xcount_tot = XYinfo[4], XYinfo[5]
 
-        # Check for neighboring stations that were used for filling data
-        station_use_counter_total = np.sum(station_use_counter, axis=0)
-        index = np.where(station_use_counter_total > 0)[0]
-        
-        # Keep only stations that were used for filling data
-        INFO_Xname = INFO_Xname[index]
-        INFO_X = INFO_X[:, index]
-        station_use_counter_total = station_use_counter_total[index]
-        station_use_counter = station_use_counter[:, index]
-        
-        # Sort neighboring stations by importance
-        index = np.argsort(station_use_counter_total * -1)
-        
-        INFO_Xname = INFO_Xname[index]
-        INFO_X = INFO_X[:, index]
-        
-        station_use_counter_total = station_use_counter_total[index]
-        station_use_counter = station_use_counter[:, index]
-        
-        # Replace nan values by ''
-        INFO_X = INFO_X.astype('str')
-        INFO_X[INFO_X == 'nan'] = ''
-               
-        #---- Info Summary ----   
+        #---- Gap-Fill Info Summary ----   
         
         record_date_start = '%04d/%02d/%02d' % (YEAR[index_start],
                                                 MONTH[index_start],
@@ -658,26 +671,28 @@ class GapFillWeather(QtCore.QObject):
                                               MONTH[index_end],
                                               DAY[index_end])
         
-        INFO_total = copy(HEADER)        
-        INFO_total.extend([['*** FILL PROCEDURE INFO ***'],[]])
+        fcontent = copy(HEADER)        
+        fcontent.extend([['*** FILL PROCEDURE INFO ***'],[]])
         if self.regression_mode == True:
-            INFO_total.append(['MLR model', 'Ordinary Least Square'])
+            fcontent.append(['MLR model', 'Ordinary Least Square'])
         elif self.regression_mode == False:
-            INFO_total.append(['MLR model', 'Least Absolute Deviations'])
-        INFO_total.extend([['Precip correction', 'Not Available'],
-                           ['Wet days correction', 'Not Available'],
-                           ['Max number of stations', str(Nbr_Sta_max)],
-                           ['Cutoff distance (km)', str(limitDist)],
-                           ['Cutoff altitude difference (m)', str(limitAlt)],
-                           ['Date Start', record_date_start],
-                           ['Date End', record_date_end],
-                           [], [],
-                           ['*** SUMMARY TABLE ***'],
-                           [],
-                           ['CLIMATE VARIABLE', 'TOTAL MISSING',
-                            'TOTAL FILLED', '', 'AVG. NBR STA.', 'AVG. RMSE',
-                            '']])      
-        INFO_total[-1].extend(INFO_Xname)
+            fcontent.append(['MLR model', 'Least Absolute Deviations'])
+        fcontent.extend([['Precip correction', 'Not Available'],
+                         ['Wet days correction', 'Not Available'],
+                         ['Max number of stations', str(self.Nbr_Sta_max)],
+                         ['Cutoff distance (km)', str(limitDist)],
+                         ['Cutoff altitude difference (m)', str(limitAlt)],
+                         ['Date Start', record_date_start],
+                         ['Date End', record_date_end],
+                         [], [],
+                         ['*** SUMMARY TABLE ***'],
+                         [],
+                         ['CLIMATE VARIABLE', 'TOTAL MISSING',
+                          'TOTAL FILLED', '', 'AVG. NBR STA.', 'AVG. RMSE',
+                          '']])      
+        fcontent[-1].extend(Xnames)
+        
+        #---- Missing Data Summary ----   
         
         total_nbr_data = index_end - index_start + 1
         nbr_fill_total = 0
@@ -713,59 +728,70 @@ class GapFillWeather(QtCore.QObject):
             nbr_fill_txt = '%d (%0.1f %% of missing)' % (nbr_fill,
                                                          fill_percent)
        
-            INFO_total.append([VARNAME[var], nbr_nan, nbr_fill_txt, '',
-                               '%0.1f' % AVG_NSTA[var],
-                               '%0.2f' % AVG_RMSE[var], ''])
+            fcontent.append([VARNAME[var], nbr_nan, nbr_fill_txt, '',
+                             '%0.1f' % AVG_NSTA[var],
+                             '%0.2f' % AVG_RMSE[var], ''])
+            
+            for i in range(len(Xnames)):                
+                if nbr_fill == 0:
+                    pc = 0
+                else:
+                    pc = Xcount_var[i, var] / float(nbr_fill) * 100                
+                fcontent[-1].append('%d (%0.1f %% of filled)' % 
+                                    (Xcount_var[i, var], pc))
 
-            for i in range(len(station_use_counter[0, :])):
-                pc = round(station_use_counter[var, i] / nbr_fill * 100, 1)
-                if np.isnan(pc): pc = 0
-                INFO_total[-1].extend([
-                '%d (%0.1f %% of filled)' % (station_use_counter[var, i], pc)])
+        #---- Total Missing ----
+        
+        pc = nbr_nan_total / (total_nbr_data * nVAR) * 100        
+        nbr_nan_total = '%d (%0.1f %% of total)' % (nbr_nan_total, pc)
+        
+        #---- Total Filled ----
         
         try:
-            nbr_fill_percent = round(nbr_fill_total / nbr_nan_total * 100, 1)
+            pc = nbr_fill_total / nbr_nan_total * 100
         except:
-            nbr_fill_percent = 0
-            
-        nbr_fill_total_txt = '%d (%0.1f %% of missing)' % (nbr_fill_total,
-                                                           nbr_fill_percent)
-        #-- summary for totals --
-                                                           
-        nan_total_percent = \
-            round(nbr_nan_total / (total_nbr_data * nVAR) * 100, 1)
-        nbr_nan_total = '%d (%0.1f %% of total)' % (nbr_nan_total,
-                                                    nan_total_percent)
-        INFO_total.append([])
-        INFO_total.append(['TOTAL', nbr_nan_total, nbr_fill_total_txt, 
-                          '', '---', '---', ''])
-                          
-        for i in range(len(station_use_counter_total)):
-            percentage = \
-                round(station_use_counter_total[i] / nbr_fill_total * 100, 1)
-            text2add = '%d (%0.1f %% of filled)' \
-                                % (station_use_counter_total[i], percentage)
-            INFO_total[-1].extend([text2add])
-            
+            pc = 0            
+        nbr_fill_total_txt = '%d (%0.1f %% of missing)' % (nbr_fill_total, pc)
+        
+        fcontent.extend([[],
+                         ['TOTAL', nbr_nan_total, nbr_fill_total_txt, 
+                          '', '---', '---', '']])
+        
+        for i in range(len(Xnames)):
+            pc = Xcount_tot[i] / nbr_fill_total * 100
+            text2add = '%d (%0.1f %% of filled)' % (Xcount_tot[i], pc)
+            fcontent[-1].append(text2add)
+                    
         #---- Info Detailed ----
         
-        INFO_total.extend([[],[],
-                           ['*** DETAILED REPORT ***'],
-                           [],
-                           ['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'NBR STA.',
-                            'RMSE']])        
-        INFO_total[-1].extend([INFO_Yname])
-        INFO_total[-1].extend(INFO_Xname)
-        
-        INFO_ROW = INFO_ROW.tolist()
-        INFO_RMSE = np.round(INFO_RMSE, 2).astype('str')        
-        for i in range(len(INFO_Y)):
-            info_row_builder = [INFO_VAR[i], INFO_YEAR[i], INFO_MONTH[i],
-                                '%d' % INFO_DAY[i], '%0.0f' % INFO_NSTA[i],
-                                INFO_RMSE[i], INFO_Y[i]]
-            info_row_builder.extend(INFO_X[i])
-            
-            INFO_total.append(info_row_builder)                
+        fcontent.extend([[],[],
+                         ['*** DETAILED REPORT ***'],
+                         [],
+                         ['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'NBR STA.',
+                          'RMSE', Yname]])        
+        fcontent[-1].extend(Xnames)        
+                        
+        for var in var2fill:
+            for row in range(index_start, index_end+1):
+                
+                yp = Yp[row, var]
+                ym = DATA[row, target_station_index, var]                                  
+                xm = ['' if np.isnan(i) else '%0.1f' % i for i in 
+                      Xm[row, :, var]]                
+                nsta = len(np.where(~np.isnan(Xm[row, :, var]))[0])
+                
+                # Write the info only if there is a missing value in
+                # the data series of the target station.
+                
+                if np.isnan(ym):
+                    fcontent.append([VARNAME[var],
+                                     '%d' % YEAR[row],
+                                     '%d' % MONTH[row],
+                                     '%d' % DAY[row],
+                                     '%d' % nsta,
+                                     '%0.2f' % log_RMSE[row, var],
+                                     '%0.1f' % yp])
+                    fcontent[-1].extend(xm)
         
         #---- Save File ----
                                   
@@ -784,7 +810,7 @@ class GapFillWeather(QtCore.QObject):
                                                 YearStart,
                                                 YearEnd)
 
-        self.save_content_to_file(output_path, INFO_total)
+        self.save_content_to_file(output_path, fcontent)
         
         self.ConsoleSignal.emit(
                '<font color=black>Info file saved in %s.</font>' % output_path)
@@ -806,19 +832,7 @@ class GapFillWeather(QtCore.QObject):
                              
             y = ['%0.1f' % i for i in Y2fill[row, :]]
             fcontent[-1].extend(y)
-
-#        TODO: This is the old way I was saving stuff. Need to be 
-#              deleted when new method is validated. 
-        
-#        ALLDATA = np.vstack((YEAR[index_start:index_end+1],
-#                             MONTH[index_start:index_end+1],
-#                             DAY[index_start:index_end+1], 
-#                             Y2fill[index_start:index_end+1].transpose())
-#                             ).transpose()
-#        ALLDATA.tolist()
-        
-#        fcontent.extend(ALLDATA)
-        
+            
         #---- Save Data ----
         
         output_path = '%s/%s (%s)_%s-%s.out' % (self.outputDir, 
@@ -841,40 +855,45 @@ class GapFillWeather(QtCore.QObject):
         
         if self.full_error_analysis == True:
             
+            #---- Info Data Post-Processing ----
+                
+            XYinfo = self.postprocess_fillinfo(STANAME, YXmFULL, 
+                                               target_station_index)
+            Yname, Ym = XYinfo[0], XYinfo[1]
+            Xnames, Xm = XYinfo[2], XYinfo[3]
+            
             #---- Prepare Header ----
             
             fcontent = copy(HEADER)
-            fcontent.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'Ym', 'Yp',
-                             'Yp-Ym'])
-    
-            #---- Add Data ----
+            fcontent.append(['', '', '', '', 'Est. Err.', Yname, Yname])
+            fcontent[-1].extend(Xnames)
+            fcontent.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'Ypre-Ymes',
+                             'Ypre', 'Ymes'])
+            for i in range(len(Xnames)):
+                fcontent[-1].append('X%d' % i)
             
-            for var in range(len(VARNAME)):
+            #---- Add Data to fcontent ----
+                
+            for var in range(nVAR):
                 for row in range(index_start, index_end+1):
-                    ym = DATA[row, target_station_index, var]
-                    yp = YpFULL[row, var]                    
-                    fcontent.append([VARNAME[var],
-                                    '%d' % YEAR[row],
-                                    '%d' % MONTH[row],
-                                    '%d' % DAY[row],
-                                    '%0.1f' % ym,
-                                    '%0.1f' % yp,                                    
-                                    '%0.1f' % (yp - ym)])
-
-#            TODO: This is the old way I was saving stuff. Need to be 
-#                  deleted when new method is validated.            
-            
-#            fcontent.append(['Year', 'Month', 'Day'])
-#            fcontent[-1].extend(VARNAME)
-            
-#            ALLDATA = np.vstack((YEAR[index_start:index_end+1],
-#                                 MONTH[index_start:index_end+1],
-#                                 DAY[index_start:index_end+1], 
-#                                 YpFULL[index_start:index_end+1].transpose()))
-#            ALLDATA = ALLDATA.transpose()                 
-#            ALLDATA.tolist()
-#            
-#            fcontent.extend(ALLDATA)
+                    
+                    yp = YpFULL[row, var]  
+                    ym = Ym[row, var]                                      
+                    xm = ['' if np.isnan(i) else '%0.1f' % i for i in 
+                          Xm[row, :, var]]
+                    
+                    # Write the info only if there is a measured value in
+                    # the data series of the target station.
+                    
+                    if not np.isnan(ym):
+                        fcontent.append([VARNAME[var],
+                                        '%d' % YEAR[row],
+                                        '%d' % MONTH[row],
+                                        '%d' % DAY[row],                                        
+                                        '%0.1f' % (yp - ym),
+                                        '%0.1f' % yp,
+                                        '%0.1f' % ym])
+                        fcontent[-1].extend(xm)
             
             #---- Save File ----
             
@@ -920,7 +939,43 @@ class GapFillWeather(QtCore.QObject):
         
         self.STOP = False # Just in case. This is a precaution override.          
         self.GapFillFinished.emit(True)        
+        
         return
+    
+    @staticmethod                                           
+    def postprocess_fillinfo(staName, YXmFULL, tarStaIndx): #==================
+                
+        # Extracts info related to the target station from the
+        # <YXmFull> matrix.
+        Yname = staName[tarStaIndx]
+        Xnames = np.delete(staName, tarStaIndx)
+      
+        Ym = YXmFULL[:, tarStaIndx, :]
+        Xm = np.delete(YXmFULL, tarStaIndx, axis=1)
+        
+        # Counts how many times each neigboring station was used for
+        # estimating the data of the target stations.
+        
+        Xcount_var = np.sum(~np.isnan(Xm), axis=0)
+        Xcount_tot = np.sum(Xcount_var, axis=1)
+        
+        # Removes the neighboring stations that were not used
+        
+        indx = np.where(Xcount_tot > 0)[0]
+        Xnames = Xnames[indx]
+        Xm = Xm[:, indx]
+        
+        Xcount_var = Xcount_var[indx, :]
+        Xcount_tot = Xcount_tot[indx]
+                
+        # Sort the neighboring stations by importance :
+
+        indx = np.argsort(Xcount_tot * -1)
+
+        Xnames = Xnames[indx]
+        Xm = Xm[:, indx]
+
+        return Yname, Ym, Xnames, Xm, Xcount_var, Xcount_tot
     
     @staticmethod
     def save_content_to_file(fname, fcontent): #======= Save Content to File ==
@@ -1492,8 +1547,8 @@ def sort_stations_correlation_order(CORCOEF, target_station_index):
 #==============================================================================
         
     # An index is associated with each value of the CORCOEF array.
-    Sta_index = range(len(CORCOEF))    
-    CORCOEF = np.vstack((Sta_index, CORCOEF)).transpose()
+        
+    CORCOEF = np.vstack((range(len(CORCOEF)), CORCOEF)).transpose()
     
     # Remove target station from the stack. This is necessary in case there is
     # some data that belong to the same station, but without the same length.
@@ -1501,15 +1556,19 @@ def sort_stations_correlation_order(CORCOEF, target_station_index):
     CORCOEF = np.delete(CORCOEF, target_station_index, axis=0)
     
     # Stations for which the correlation coefficient is nan are removed.
+    
     CORCOEF = CORCOEF[~np.isnan(CORCOEF).any(axis=1)] 
                
     # The station indexes are sorted in descending order of their
     # correlation coefficient.
+               
     CORCOEF = CORCOEF[np.flipud(np.argsort(CORCOEF[:, 1])), :]
     
-    Sta_index = np.copy(CORCOEF[:, 0].astype('int'))
+    # The sorted station indexes are extracted from the *CORCOEF* matrix and
+    # the target station index is added back at the beginning of the
+    # *Sta_index* array. 
     
-    # Add target station to the first value of the array.
+    Sta_index = np.copy(CORCOEF[:, 0].astype('int'))
     Sta_index = np.insert(Sta_index, 0, target_station_index)
     
     return Sta_index
@@ -1591,7 +1650,7 @@ if __name__ == '__main__':
     #-- define the time plage over which data will be gap-filled --
     
     gapfill_weather.time_start = gapfill_weather.WEATHER.TIME[0]
-    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[500] 
+    gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[1000] 
       
     #-- setup method parameters --
         
@@ -1602,7 +1661,7 @@ if __name__ == '__main__':
     
     #-- define additional options --
     
-    gapfill_weather.full_error_analysis = True
+    gapfill_weather.full_error_analysis = False
     gapfill_weather.add_ETP = False
     
     #-- fill data --
