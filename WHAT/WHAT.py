@@ -190,7 +190,7 @@ class MainWindow(QtGui.QMainWindow):
              Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
            </font>''')
            
-        #----------------------------------------------- PROJECT MENU BAR ----
+        #-------------------------------------------------- PROJECT MENU BAR --
                         
         project_label = QtGui.QLabel('Project :')
         project_label.setAlignment(QtCore.Qt.AlignCenter)
