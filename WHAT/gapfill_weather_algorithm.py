@@ -332,8 +332,7 @@ class GapFillWeather(QtCore.QObject):
             # <Sta_index> refers to the indices of the columns of the matrices
             # <DATA>, <STANAME>, and <CORCOEF>.
             
-            Sta_index = sort_stations_correlation_order(CORCOEF[var, :],
-                                                        tarStaIndx)
+            Sta_index = self.sort_sta_corrcoef(CORCOEF[var, :], tarStaIndx)
             
             # Data for the current weather variable <var> are stored in a 
             # 2D matrix where the rows are the daily weather data and the
@@ -864,8 +863,8 @@ class GapFillWeather(QtCore.QObject):
             fcontent = copy(HEADER)
             fcontent.append(['', '', '', '', 'Est. Err.', Yname, Yname])
             fcontent[-1].extend(Xnames)
-            fcontent.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'Ypre-Ymes',
-                             'Ypre', 'Ymes'])
+            fcontent.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY', 
+                             'Ypre-Ymes', 'Ypre', 'Ymes'])
             for i in range(len(Xnames)):
                 fcontent[-1].append('X%d' % i)
             
@@ -942,8 +941,8 @@ class GapFillWeather(QtCore.QObject):
     @staticmethod                                           
     def postprocess_fillinfo(staName, YXmFULL, tarStaIndx): #==================
                 
-        # Extracts info related to the target station from the
-        # <YXmFull> matrix.
+        # Extracts info related to the target station from <YXmFull>.
+                
         Yname = staName[tarStaIndx]
         Xnames = np.delete(staName, tarStaIndx)
       
@@ -956,7 +955,7 @@ class GapFillWeather(QtCore.QObject):
         Xcount_var = np.sum(~np.isnan(Xm), axis=0)
         Xcount_tot = np.sum(Xcount_var, axis=1)
         
-        # Removes the neighboring stations that were not used
+        # Removes the neighboring stations that were not used.
         
         indx = np.where(Xcount_tot > 0)[0]
         Xnames = Xnames[indx]
@@ -965,7 +964,7 @@ class GapFillWeather(QtCore.QObject):
         Xcount_var = Xcount_var[indx, :]
         Xcount_tot = Xcount_tot[indx]
                 
-        # Sort the neighboring stations by importance :
+        # Sort the neighboring stations by importance.
 
         indx = np.argsort(Xcount_tot * -1)
 
@@ -973,6 +972,35 @@ class GapFillWeather(QtCore.QObject):
         Xm = Xm[:, indx]
 
         return Yname, Ym, Xnames, Xm, Xcount_var, Xcount_tot
+        
+        
+    @staticmethod
+    def sort_sta_corrcoef(CORCOEF, tarStaIndx): #============= Sort Stations ==
+            
+        # Associated an index to each value of <CORCOEF>.
+            
+        CORCOEF = np.vstack((range(len(CORCOEF)), CORCOEF)).transpose()
+        
+        # Removes target station from the stack. This is necessary in case
+        # there is two or more data file from a same station.        
+        
+        CORCOEF = np.delete(CORCOEF, tarStaIndx, axis=0)
+        
+        # Removes stations with a NaN correlation coefficient.        
+        
+        CORCOEF = CORCOEF[~np.isnan(CORCOEF).any(axis=1)] 
+                   
+        # Sorts station in descending order of their correlation coefficient.                   
+        
+        CORCOEF = CORCOEF[np.flipud(np.argsort(CORCOEF[:, 1])), :]
+        
+        # The sorted station indexes are extracted from <CORCOEF> and the 
+        # target station index is added back at the beginning of <Sta_index>.
+        
+        Sta_index = np.copy(CORCOEF[:, 0].astype('int'))
+        Sta_index = np.insert(Sta_index, 0, tarStaIndx)
+        
+        return Sta_index
     
     @staticmethod
     def save_content_to_file(fname, fcontent): #======= Save Content to File ==
@@ -1539,36 +1567,7 @@ class WeatherData():
         
         return table
         
-#==============================================================================
-def sort_stations_correlation_order(CORCOEF, tarStaIndx): 
-#==============================================================================
-        
-    # An index is associated with each value of the CORCOEF array.
-        
-    CORCOEF = np.vstack((range(len(CORCOEF)), CORCOEF)).transpose()
-    
-    # Remove target station from the stack. This is necessary in case there is
-    # some data that belong to the same station, but without the same length.
-    
-    CORCOEF = np.delete(CORCOEF, tarStaIndx, axis=0)
-    
-    # Stations for which the correlation coefficient is nan are removed.
-    
-    CORCOEF = CORCOEF[~np.isnan(CORCOEF).any(axis=1)] 
-               
-    # The station indexes are sorted in descending order of their
-    # correlation coefficient.
-               
-    CORCOEF = CORCOEF[np.flipud(np.argsort(CORCOEF[:, 1])), :]
-    
-    # The sorted station indexes are extracted from the *CORCOEF* matrix and
-    # the target station index is added back at the beginning of the
-    # *Sta_index* array. 
-    
-    Sta_index = np.copy(CORCOEF[:, 0].astype('int'))
-    Sta_index = np.insert(Sta_index, 0, tarStaIndx)
-    
-    return Sta_index
+
         
 #==============================================================================   
 def L1LinearRegression(X, Y): 
