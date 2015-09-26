@@ -114,7 +114,7 @@ class Hydrograph(mpl.figure.Figure):
         self.title_text = 'Add A Title To The Figure Here'
         self.language = 'English'
                    
-        #---- Layout Options
+        #---- Layout Options ----
         
         self.WLdatum = 0 # 0: mbgs;  1: masl
         self.trend_line = 0
@@ -239,18 +239,18 @@ class Hydrograph(mpl.figure.Figure):
             self.ax4.set_zorder(self.ax1.get_zorder() - 10)
             self.ax4.set_navigate(False)
         
-        #--------------------------------------------------- remove spines ----
+        #----------------------------------------------------- Remove Spines --
         
         for axe in self.axes[2:]:
             for loc in axe.spines:
                 axe.spines[loc].set_visible(False)
                 
-        #-------------------------------------------------- Update margins ----
+        #---------------------------------------------------- Update margins --
         
         self.bottom_margin = 0.75
         self.set_margins() # set margins for all the axes
         
-        #---------------------------------------------------- FIGURE TITLE ----
+        #------------------------------------------------------ FIGURE TITLE --
            
         self.dZGrid_inch = (fheight - 2 * self.bottom_margin) / self.NZGrid
             
@@ -264,7 +264,7 @@ class Hydrograph(mpl.figure.Figure):
                                       
         self.draw_figure_title()
         
-        #------------------------------------------- WEATHER STATION TEXT ----
+        #---------------------------------------------- WEATHER STATION TEXT --
         
         # Calculate horizontal distance between weather station and
         # observation well.
@@ -284,7 +284,7 @@ class Hydrograph(mpl.figure.Figure):
                                    rotation=0, verticalalignment='bottom',
                                    horizontalalignment='right', fontsize=10)
                    
-        #---------------------------------------------------- TIME + GRID ----            
+        #------------------------------------------------------- TIME + GRID --
         
         self.xlabels = [] # Initiate variable
         self.set_time_scale()
@@ -300,7 +300,7 @@ class Hydrograph(mpl.figure.Figure):
         
         self.set_gridLines()         
             
-        #---------------------------------------------------- WATER LEVEL ----
+        #------------------------------------------------------- WATER LEVEL --
         
         #---- Continuous Line Datalogger ----
         
@@ -322,11 +322,11 @@ class Hydrograph(mpl.figure.Figure):
         
         self.draw_waterlvl()
          
-        #--------------------------------------------------------- WEATHER ----
+        #----------------------------------------------------------- WEATHER --
         
         if self.meteoOn == True:
             
-            #----------------------------------------------- PRECIPITATION ----
+            #------------------------------------------------- PRECIPITATION --
             
             self.update_precip_scale()
             
@@ -341,7 +341,7 @@ class Hydrograph(mpl.figure.Figure):
             self.baseline, = self.ax3.plot([self.TIMEmin, self.TIMEmax],
                                            [0, 0], 'k')
                  
-            #-------------------------------------------- AIR TEMPERATURE ----
+            #----------------------------------------------- AIR TEMPERATURE --
           
             TEMPmin = -40
             TEMPscale = 20
@@ -361,7 +361,7 @@ class Hydrograph(mpl.figure.Figure):
             self.l1_ax4, = self.ax4.plot([], [])                # fill shape
             self.l2_ax4, = self.ax4.plot([], [], color='black') # contour line
         
-            #------------------------------------- MISSING VALUES MARKERS ----
+            #---------------------------------------- MISSING VALUES MARKERS --
     
             if self.finfo:
                                 
@@ -392,11 +392,11 @@ class Hydrograph(mpl.figure.Figure):
                                                         
             self.draw_weather()
         
-        #--------------------------------------------------- DRAW YLABELS ----
+        #------------------------------------------------------ DRAW YLABELS --
                                                                  
         self.draw_ylabels()
         
-        #--------------------------------------------------------- LEGEND ----
+        #------------------------------------------------------------ LEGEND --
 
         if self.isLegend == True:
             
@@ -415,7 +415,7 @@ class Hydrograph(mpl.figure.Figure):
             self.ax4.legend([rec1, rec2, rec3, TMAXmiss_dots], labels,
                             loc=[0.01, 0.45], numpoints=1, fontsize=10)
         
-        #---------------------------------------------------- UPDATE FLAG ----
+        #------------------------------------------------------- UPDATE FLAG --
         
         self.isHydrographExists = True
         
@@ -466,7 +466,7 @@ class Hydrograph(mpl.figure.Figure):
         
         labelDB = LabelDatabase(self.language)
         
-        #------------------------------------------ Calculate LabelPadding ----
+        #-------------------------------------------- Calculate LabelPadding --
         
         left_margin  = 0.85
         right_margin = 0.85
@@ -478,7 +478,7 @@ class Hydrograph(mpl.figure.Figure):
         labPad = 0.3 / 2.54 # in Inches       
         labPad /= axwidth   # relative coord.
         
-        #--------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
+        #----------------------------------- YLABELS LEFT (Temp. & Waterlvl) --
         
         if self.WLdatum == 0:       
             lab_ax2 = labelDB.mbgs % self.WaterLvlObj.name_well
@@ -553,8 +553,7 @@ class Hydrograph(mpl.figure.Figure):
         
         #------------------------------------------- WEATHER STATION LABEL ----
         
-        text_top_margin = labelDB.station_meteo % (self.name_meteo,
-                                                   self.dist)
+        text_top_margin = labelDB.station_meteo % (self.name_meteo, self.dist)                                                   
         self.text1.set_text(text_top_margin)
         
         
@@ -734,7 +733,7 @@ class Hydrograph(mpl.figure.Figure):
         return date0, date1
         
         
-    def resample_bin(self): #========================== Resampling Weather ====
+    def resample_bin(self): #============================ Resampling Weather ==
    
         # day; week; month; year
         self.bwidth = [1., 7., 30., 365.][self.bwidth_indx]
@@ -761,7 +760,7 @@ class Hydrograph(mpl.figure.Figure):
 #            print('option not yet available, kept default of 1 day')
             
     
-    def bin_sum(self, x, bwidth): #=============================== bin_sum ====
+    def bin_sum(self, x, bwidth): #================================= bin_sum ==
        
         """
         Sum data x over bins of width "bwidth" starting at indice 0 of x.
@@ -786,7 +785,7 @@ class Hydrograph(mpl.figure.Figure):
         time water level datum is changed.
         """
         
-        #------------------------------------------------- Logger Measures ----
+        #--------------------------------------------------- Logger Measures --
         
         time = self.WaterLvlObj.time
         
@@ -814,7 +813,7 @@ class Hydrograph(mpl.figure.Figure):
             
             self.l2_ax2.set_data([], [])
                         
-        #------------------------------------------------- Manual Measures ----
+        #--------------------------------------------------- Manual Measures --
         
         TIMEmes = self.WaterLvlObj.TIMEmes
         WLmes = self.WaterLvlObj.WLmes
@@ -827,7 +826,7 @@ class Hydrograph(mpl.figure.Figure):
             self.h_WLmes.set_data(TIMEmes, WLmes)
         
                                                            
-    def draw_weather(self): #================================ draw_weather ====
+    def draw_weather(self): #================================== draw_weather ==
 
         """
         This method is called the first time the graph is plotted and each
@@ -838,7 +837,7 @@ class Hydrograph(mpl.figure.Figure):
             print('meteoOn == False')
             return
             
-        #-------------------------------------------------- SUBSAMPLE DATA ----
+        #---------------------------------------------------- SUBSAMPLE DATA --
         
         # For performance purposes, only the data that fit within the limits
         # of the x axis limits are plotted.
@@ -864,7 +863,7 @@ class Hydrograph(mpl.figure.Figure):
         Ptot = self.bPTOT[istart:iend]
         Rain = self.bRAIN[istart:iend]
         
-        #----------------------------------------------------- PLOT PRECIP ----
+        #------------------------------------------------------- PLOT PRECIP --
         
         TIME2X = np.zeros(len(time) * 4)
         Ptot2X = np.zeros(len(time) * 4)
@@ -902,7 +901,7 @@ class Hydrograph(mpl.figure.Figure):
                                             
         self.baseline.set_data([self.TIMEmin, self.TIMEmax], [0, 0])
                                                     
-        #--------------------------------------------------- PLOT AIR TEMP ----
+        #----------------------------------------------------- PLOT AIR TEMP --
         
         TIME2X = np.zeros(len(time)*2)
         Tmax2X = np.zeros(len(time)*2)
@@ -922,9 +921,9 @@ class Hydrograph(mpl.figure.Figure):
         self.l2_ax4.set_xdata(TIME2X)
         self.l2_ax4.set_ydata(Tmax2X)
         
-    def set_time_scale(self): #===============================================
+    def set_time_scale(self): #================================================
         
-        #----------------------------------------------- time min and max ----
+        #-------------------------------------------------- time min and max --
         
         if self.datemode in ['year', 'Year']:
             
@@ -940,7 +939,7 @@ class Hydrograph(mpl.figure.Figure):
                 year = xldate_as_tuple(self.TIMEmax, 0)[0] + 1
                 self.TIMEmax = xldate_from_date_tuple((year, 1, 1), 0)
                 
-        #---------------------------------------------- xticks and labels ----
+        #------------------------------------------------- xticks and labels --
         
         #---- compute parameters ----
         
@@ -950,7 +949,7 @@ class Hydrograph(mpl.figure.Figure):
         
         self.ax1.set_xticks(xticks_info[0])
 
-        #--------------------------------------------------------- xlabels ---
+        #----------------------------------------------------------- xlabels --
 
         # labels are set using the minor ticks.
         
@@ -978,7 +977,7 @@ class Hydrograph(mpl.figure.Figure):
                        
             self.xlabels.append(new_label)
         
-        #------------------------------------------- text horiz. position ----
+        #---------------------------------------------- text horiz. position --
         
         # adjust "climatological station" label and 
         # title horizontal position
@@ -986,7 +985,7 @@ class Hydrograph(mpl.figure.Figure):
         self.text1.set_x(self.TIMEmax)
         self.figTitle.set_x((self.TIMEmin + self.TIMEmax) / 2.)
         
-        #---------------------------------------------------- axis limits ----
+        #------------------------------------------------------- axis limits --
            
         self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
        
@@ -1098,7 +1097,7 @@ class Hydrograph(mpl.figure.Figure):
         
     def make_xticks_info(self): #=============================================
         
-        #-------------------------------------- horizontal text alignment ----
+        #----------------------------------------- horizontal text alignment --
         
         # The strategy here is to:
         # 1. render some random text ; 
@@ -1141,7 +1140,6 @@ class Hydrograph(mpl.figure.Figure):
         n = self.date_labels_display_pattern
         month_names = LabelDatabase(self.language).month_names
        
-        # xticks_labels_offset = 0.012 * (self.TIMEmax - self.TIMEmin + 1)
         xticks_labels_offset = sdx
         
         xticks_labels = []

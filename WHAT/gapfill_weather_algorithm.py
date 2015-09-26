@@ -141,16 +141,19 @@ class GapFillWeather(QtCore.QObject):
     def set_target_station(self, index):
 
         # Update information for the target station.
+
         self.TARGET.index = index
         self.TARGET.name = self.WEATHER.STANAME[index]
         
         # calculate correlation coefficient between data series of the
         # target station and each neighboring station for every
-        # meteorological variable
+        # weather variable
+        
         self.TARGET.CORCOEF = correlation_worker(self.WEATHER, index)
         
         # Calculate horizontal distance and altitude difference between
         # the target station and each neighboring station.
+        
         self.TARGET.HORDIST, self.TARGET.ALTDIFF = \
                                          alt_and_dist_calc(self.WEATHER, index)
         
@@ -365,8 +368,7 @@ class GapFillWeather(QtCore.QObject):
                 
                 sleep(0.000001) #If no sleep, the UI becomes whacked
                 
-                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!                
-                
+                # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!                                
                 # This block of code is used only to stop the gap-filling 
                 # routine from a UI by setting the <STOP> flag attributes to
                 # *True*.
@@ -380,13 +382,12 @@ class GapFillWeather(QtCore.QObject):
                     self.STOP = False
                     self.GapFillFinished.emit(False) 
                     
-                    return   
-                    
+                    return                      
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                   
                 # Find neighboring stations with valid entries at 
                 # row <row> in <YX>. The *Target station* is stored at index 0.
-                
+                #
                 # WARNING: Note that the target station is not considered in
                 #          the `np.where` call. It will be added back later
                 #          on in the code.
@@ -451,12 +452,11 @@ class GapFillWeather(QtCore.QObject):
                     
                     index_memory = np.where(colm_memory == colm_seq)[0]                                   
                     
-                    if len(index_memory) == 0:
-                        
-                    # First time this neighboring station combination
-                    # is encountered in the routine, regression
-                    # coefficients are then calculated.
-                    
+                    if len(index_memory) == 0:                        
+                        # First time this neighboring station combination
+                        # is encountered in the routine, regression
+                        # coefficients are then calculated.
+                        #
                         # The memory is activated only if the option
                         # 'full_error_analysis' is not active. Otherwise, the
                         # memory remains empty and a new MLR model is built
@@ -476,9 +476,9 @@ class GapFillWeather(QtCore.QObject):
                         # Force the value of the target station to a NaN value
                         # for this row. This should only have an impact when 
                         # the option "full_error_analysis" is activated. This 
-                        # is to actually remove the data being estimated 
-                        # from the dataset like it should properly be done 
-                        # in a cross-validation procedure.
+                        # is to actually remove the data being estimated from
+                        # the dataset like it should properly be done in a
+                        # cross-validation procedure.
                         
                         YXcolm[row, 0] = np.nan
                         
@@ -501,25 +501,10 @@ class GapFillWeather(QtCore.QObject):
                 
                         if var in (0, 1, 2):
                             X = np.hstack((np.ones((len(Y), 1)), X))
-                    
-                        if self.regression_mode == True:
-                            # Ordinary Least Square regression
-                            A = linalg_lstsq(X, Y)[0]
-                        else:
-                            # Least Absolute Deviations regression
-                            A = L1LinearRegression(X, Y)
-                            
-                            # This section of the code is if I decide at
-                            # some point to use this package instead of
-                            # my own custom function.
-                            
-                            #model = sm.OLS(Y, X) 
-                            #results = model.fit()
-                            #print results.params
-                            
-                            #model = QuantReg(Y, X)
-                            #results = model.fit(q=0.5)
-                            #A = results.params
+                        
+                        #-------------------------------- Generate MLR Model --
+                        
+                        A = self.build_MLR_model(X, Y)
                             
                         #-------------------------------------- Compute RMSE --
                         
@@ -635,7 +620,9 @@ class GapFillWeather(QtCore.QObject):
                 'completed because all neighboring station were empty ' +
                 'for that period</font>')
         
-        #================================================ WRITE DATA TO FILE ==
+        #======================================================================
+        #                                                 WRITE DATA TO FILE 
+        #======================================================================
         
         #------------------------------------------------------------ Header --
               
@@ -937,6 +924,31 @@ class GapFillWeather(QtCore.QObject):
         self.GapFillFinished.emit(True)        
         
         return
+    
+    
+    def build_MLR_model(self, X, Y): #====================== Build MLR Model ==
+        
+        if self.regression_mode == True:
+            # Ordinary Least Square regression
+            A = linalg_lstsq(X, Y)[0]
+        else:
+            # Least Absolute Deviations regression
+            A = L1LinearRegression(X, Y)
+            
+            # This section of the code is if I decide at
+            # some point to use this package instead of
+            # my own custom function.
+            
+            #model = sm.OLS(Y, X) 
+            #results = model.fit()
+            #print results.params
+            
+            #model = QuantReg(Y, X)
+            #results = model.fit(q=0.5)
+            #A = results.params
+            
+        return A
+    
     
     @staticmethod                                           
     def postprocess_fillinfo(staName, YXmFULL, tarStaIndx): #==================
