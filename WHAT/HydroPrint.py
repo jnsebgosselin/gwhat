@@ -740,7 +740,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.select_closest_meteo_file()
             
             
-    def select_closest_meteo_file(self): #====================================
+    def select_closest_meteo_file(self): #=====================================
                 
         meteo_folder = self.workdir + '/Meteo/Output'
         
@@ -751,9 +751,14 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
             # Generate a list of data file paths.            
             fmeteo_paths = []
-            for files in os.listdir(meteo_folder):
-                if files.endswith(".out"):
-                    fmeteo_paths.append(meteo_folder + '/' + files)
+            for root, directories, filenames in os.walk(meteo_folder):
+                for filename in filenames:
+                    if os.path.splitext(filename)[1] == '.out':
+                        fmeteo_paths.append(os.path.join(root, filename))
+            
+#            for files in os.listdir(meteo_folder):
+#                if files.endswith(".out"):
+#                    fmeteo_paths.append(meteo_folder + '/' + files)
                     
             if len(fmeteo_paths) > 0:
             

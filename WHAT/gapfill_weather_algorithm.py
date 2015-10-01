@@ -40,6 +40,7 @@ from PySide import QtCore
 import meteo
 import database as db
 from hydrograph3 import LatLong2Dist
+from gapfill_weather_postprocess import PostProcessErr
 
 #==============================================================================
 class GapFillWeather(QtCore.QObject):
@@ -624,6 +625,15 @@ class GapFillWeather(QtCore.QObject):
         #                                                 WRITE DATA TO FILE 
         #======================================================================
         
+        #---- Check dirname ----
+        
+        dirname = '%s/%s (%s)/' % (self.outputDir,
+                                   target_station_name,
+                                   target_station_clim)
+                                   
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+            
         #------------------------------------------------------------ Header --
               
         HEADER = [['Station Name', target_station_name],
@@ -787,13 +797,12 @@ class GapFillWeather(QtCore.QObject):
         
         target_station_name = target_station_name.replace('\\', '_')
         target_station_name = target_station_name.replace('/', '_')
-
-        output_path = '%s/%s (%s)_%s-%s.log' % (self.outputDir, 
-                                                target_station_name,
-                                                target_station_clim,
-                                                YearStart,
-                                                YearEnd)
-
+        
+        fname = '%s (%s)_%s-%s.log' % (target_station_name,
+                                       target_station_clim,
+                                       YearStart, YearEnd)
+        
+        output_path = dirname + fname
         self.save_content_to_file(output_path, fcontent)
         
         self.ConsoleSignal.emit(
@@ -819,12 +828,11 @@ class GapFillWeather(QtCore.QObject):
             
         #---- Save Data ----
         
-        output_path = '%s/%s (%s)_%s-%s.out' % (self.outputDir, 
-                                                target_station_name,
-                                                target_station_clim,
-                                                YearStart,
-                                                YearEnd)
-        
+        fname = '%s (%s)_%s-%s.out' % (target_station_name,
+                                       target_station_clim,
+                                       YearStart, YearEnd)
+                                       
+        output_path = dirname + fname
         self.save_content_to_file(output_path, fcontent)
             
         msg = 'Meteo data saved in %s.' % output_path
@@ -880,14 +888,19 @@ class GapFillWeather(QtCore.QObject):
             
             #---- Save File ----
             
-            output_path = '%s/%s (%s)_%s-%s.err' % (self.outputDir, 
-                                                    target_station_name,
-                                                    target_station_clim,
-                                                    YearStart,
-                                                    YearEnd)                                               
-            
+            fname = '%s (%s)_%s-%s.err' % (target_station_name,
+                                       target_station_clim,
+                                       YearStart, YearEnd)
+                                       
+            output_path = dirname + fname
             self.save_content_to_file(output_path, fcontent)
-        
+            print('Generating %s.' % fname)
+            
+            #---- Plot some graphs ----
+            
+            pperr = PostProcessErr(output_path)
+            pperr.generates_graphs()
+            
             #---- SOME CALCULATIONS ----
             
             RMSE = np.zeros(nVAR)
