@@ -53,15 +53,21 @@ When all the missing values in the dataset of target station have been estimated
 
 Each time a new MLR model is generated from a sequence of neighboring stations, an estimation of the accuracy of the model is made for the weather variable for which missing data are being estimated. This is done by first using the model to estimate the values for the days in the data series of the target station for which there exists a measured value. The accuracy of the MLR model is then approximated by computing a Root-Mean-Square Error (RMSE) between the estimated values and the respective measured values. The RMSE thus calculated is saved, along with the estimated value, in the `.log' file.
 
-The algorithm also includes a cross-validation re-sampling procedure to estimate the accuracy of the method to fill the gaps in the dataset with a more rigorous approach. The procedure to enable this functionality in the algorithm is presented in \cref{sec:parameters}.
+The algorithm also includes a cross-validation re-sampling procedure to estimate the accuracy of the method to fill the gaps in the dataset with a more rigorous approach. The procedure to enable this functionality in the algorithm is presented in \cref{sec:parameters}. The procedure consists in estimating a value for each day of the dataset of the target station, even for days for which data are not missing. In other words, when this option is enabled, the loop B in the flowchart of \cref{fig:fillworker_flowchart} will iterate over all the days of the dataset instead of only iterating over days with a missing data. Before estimating a value for a given day, the corresponding measured data in the dataset of the target station is temporarily discarded to avoid self-influence of this observation on the generation of the MLR model. Therefore, a new MLR model must also be generated for each day independently. Since model parameters cannot be recalled from previous models, the computation time of the gap filling procedure is significantly increased, especially if the least absolute deviation regression method is selected.
 
-The procedure consists in estimating a value for each day of the dataset of the target station, even for days for which data are not missing. In other words, when this option is enabled, the loop B in the flowchart of \cref{fig:fillworker_flowchart} will iterate over all the days of the dataset instead of only iterating over days with a missing data. Before estimating a value for a given day, the corresponding measured data in the dataset of the target station is temporarily discarded to avoid self-influence of this observation on the generation of the MLR model. Therefore, a new MLR model must also be generated for each day independently. Since model parameters cannot be recalled from previous models, the computation time of the gap filling procedure is significantly increased, especially if the least absolute deviation regression method is selected.
+LOO, Leave One Out.
 
 After a value has been estimated for a given day, the corresponding observed data is put back in the dataset of the selected station. When a value for every day of the dataset has thus been estimated, the estimated values are saved in a file with the extension `.err', along with the `.log' and `.out' files described in \cref{sec:est_miss_values}. The accuracy of the method can then be estimated by computing the RMSE between the estimated weather data and the respective non-missing observations in the original dataset of the selected station. Though costly in computation time, enabling this option can provide interesting insights on the performance of the procedure for the specific datasets used for a given project.
 
 Moreover, the graphs that are presented in Section blabla are also produced upon the completion of the gap-filling routine for a given station blablabla.
 
 \end{document}
+
+%Essentially, the classifier is trained on a subset of the training data set, and tested on the remainder. This process is repeated systematically so that all the points in the training set are tested.
+
+%Cross-validation is a way to predict the fit of a model to a hypothetical validation set when an explicit validation set is not available.
+
+%Thus if we fit the model and compute the MSE on the training set, we will get an optimistically biased assessment of how well the model will fit an independent data set. This biased estimate is called the in-sample estimate of the fit, whereas the cross-validation estimate is an out-of-sample estimate.
 
 %\subsubsection{Quality Control}
 
