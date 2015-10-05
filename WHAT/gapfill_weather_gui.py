@@ -39,8 +39,7 @@ import meteo
 from MyQWidget import MyQToolBox, MyQToolButton
 import database as db
 import MyQWidget
-from gapfill_weather_algorithm import (GapFillWeather, WeatherData, 
-                                       TargetStationInfo, correlation_worker)
+from gapfill_weather_algorithm import GapFillWeather
 
 #==============================================================================
 class GapFillWeatherGUI(QtGui.QWidget):

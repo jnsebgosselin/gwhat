@@ -21,19 +21,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #-- STANDARD LIBRARY IMPORTS --
 
-import csv
+import csv, os
 from time import strftime, sleep
-import os
 from copy import copy
 from time import clock
 
 #-- THIRD PARTY IMPORTS --
-
 import numpy as np
-from numpy.linalg import lstsq as linalg_lstsq
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 from PySide import QtCore
+
+import statsmodels.api as sm
 
 #-- PERSONAL IMPORTS --
 
@@ -488,8 +487,9 @@ class GapFillWeather(QtCore.QObject):
                         YXcolm = YXcolm[~np.isnan(YXcolm).any(axis=1)]
                     
                         # Rows for which precipitation of the target station
-                        # and all neighboring station is 0 are removed. Only
-                        # applicable for precipitation, not air temperature.
+                        # and all the neighboring stations is 0 are removed. 
+                        # Only applicable for precipitation, not air 
+                        # temperature.
                     
                         if var == 3:                        
                             YXcolm = YXcolm[~(YXcolm == 0).all(axis=1)]  
@@ -841,7 +841,15 @@ class GapFillWeather(QtCore.QObject):
         #---- Add ETP to File ----
         
         if self.add_ETP:
-            meteo.add_ETP_to_weather_data_file(output_path)            
+            meteo.add_ETP_to_weather_data_file(output_path)
+            
+        #---- Produces Weather Normals Graph ----
+            
+        w = meteo.FigWeatherNormals()
+        w.plot_monthly_normals(output_path)                
+        figname = dirname + 'weather_normals.pdf'
+        print('Generating %s.' % figname)
+        w.figure.savefig(figname)
         
         #--------------------------------------------------------- .err file --
         
@@ -941,24 +949,33 @@ class GapFillWeather(QtCore.QObject):
     
     def build_MLR_model(self, X, Y): #====================== Build MLR Model ==
         
-        if self.regression_mode == True:
-            # Ordinary Least Square regression
-            A = linalg_lstsq(X, Y)[0]
-        else:
-            # Least Absolute Deviations regression
-            A = L1LinearRegression(X, Y)
+        if self.regression_mode == 1: # Ordinary Least Square regression
             
-            # This section of the code is if I decide at
-            # some point to use this package instead of
-            # my own custom function.
+            # http://statsmodels.sourceforge.net/devel/generated/
+            # statsmodels.regression.linear_model.OLS.html
             
-            #model = sm.OLS(Y, X) 
-            #results = model.fit()
-            #print results.params
+            model = sm.regression.linear_model.OLS(Y, X) 
+            results = model.fit()
+            A = results.params     
             
-            #model = QuantReg(Y, X)
-            #results = model.fit(q=0.5)
-            #A = results.params
+            # Using Numpy function:            
+            A2 = np.linalg.lstsq(X, Y)[0]
+            
+            print(A)
+            print(A2)
+            print
+            
+        else: # Least Absolute Deviations regression
+            
+            # http://statsmodels.sourceforge.net/devel/generated/
+            # statsmodels.regression.quantile_regression.QuantReg.html
+            
+            model = sm.regression.quantile_regression.QuantReg(Y, X)
+            results = model.fit(q=0.5)
+            A = results.params
+            
+            # Using Homemade function:            
+            # A = L1LinearRegression(X, Y)
             
         return A
     
@@ -1678,11 +1695,13 @@ if __name__ == '__main__':
     gapfill_weather.Nbr_Sta_max = 4
     gapfill_weather.limitDist = 100
     gapfill_weather.limitAlt = 350                                  
-    gapfill_weather.regression_mode = 0
+    gapfill_weather.regression_mode = 1
+    # 0 -> Least Absolute Deviation Model
+    # 1 -> Ordinary Least-Square Model
     
     #---- define additional options ----
     
-    gapfill_weather.full_error_analysis = False
+    gapfill_weather.full_error_analysis = True
     gapfill_weather.add_ETP = False
     
     #---- fill data ----

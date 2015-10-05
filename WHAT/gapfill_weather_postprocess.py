@@ -26,12 +26,13 @@ from copy import copy
 
 #---- THIRD PARTY IMPORTS ----
 
-from PySide import QtGui
+#from PySide import QtGui
 
 import matplotlib as mpl
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 import numpy as np
 import scipy.stats as stats 
@@ -41,7 +42,7 @@ from xlrd.xldate import xldate_from_date_tuple
 
 #---- PERSONAL IMPORTS ----
 
-#import meteo
+import meteo
 #import database as db
 #from hydrograph3 import LatLong2Dist
 
@@ -490,18 +491,20 @@ if __name__ == '__main__': #=========================================== Main ==
     
     dirname = '../Projects/Monteregie Est/Meteo/Output/'
     for root, directories, filenames in os.walk(dirname):
-        for filename in filenames:
+        for filename in filenames:            
             if os.path.splitext(filename)[1] == '.err':
-                print('')
+                print('---- %s ----' % os.path.basename(root))
                 pperr = PostProcessErr(os.path.join(root, filename))
                 pperr.generates_graphs()
-                
-#    fname = ( +
-#             'BROME (7020840)/' +
-#             'BROME (7020840)_1980-2009.err')    
-#    pperr = PostProcessErr(fname)
-#    pperr.generates_graphs()
-    
+            elif os.path.splitext(filename)[1] == '.out':
+                print('---- %s ----' % os.path.basename(root))
+                w = meteo.FigWeatherNormals()
+                w.plot_monthly_normals(os.path.join(root, filename))                
+                savename = 'weather_normals.pdf'
+                print('Generating %s.' % savename)
+                w.figure.savefig(os.path.join(root, savename))
+
+
 #    for i in range(4):
 #        plot_rmse_vs_time(Ym[i], Yp[i], Time[i], Date[i], varNames[i])
     
