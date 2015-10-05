@@ -2,7 +2,9 @@
 """
 Copyright 2014-2015 Jean-Sebastien Gosselin
 email: jnsebgosselin@gmail.com
+
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+
 WHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
@@ -41,7 +43,7 @@ import database as db
 
 class Tooltips():
     
-    def __init__(self, language): #------------------------------- ENGLISH -----
+    def __init__(self, language): #------------------------------- ENGLISH ----
         
         self.undo = 'Undo'
         self.clearall = 'Clear all extremum from the graph'
@@ -68,11 +70,17 @@ class Tooltips():
                           ' using the MRC calculated and the water-table' +
                           ' fluctuation principle')
         
-        if language == 'French': #--------------------------------- FRENCH -----
+        if language == 'French': #--------------------------------- FRENCH ----
             
             pass
         
 class WLCalc(QtGui.QWidget):
+    """
+    This is the interface where are plotted the water level time series. It is
+    possible to dynamically zoom and span the data, change the display,
+    i.e. display the data as a continuous line or idividual dot, perform a
+    MRC and ultimately estimate groundwater recharge.
+    """
     
     def __init__(self, parent=None):
         super(WLCalc, self).__init__(parent)
@@ -125,20 +133,20 @@ class WLCalc(QtGui.QWidget):
         fig_frame_grid.addWidget(self.fig_MRC_widget, 0, 0)
         
         self.fig_frame_widget.setLayout(fig_frame_grid)
-        fig_frame_grid.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom
+        fig_frame_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
         
         self.fig_frame_widget.setFrameStyle(StyleDB.frame)
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
         
-        #------------------------------------------------------------ Axes ----
+        #-------------------------------------------------------------- Axes --
         
         #---- Water Level (Host) ----
         
         self.ax0 = self.fig_MRC.add_axes([0, 0, 1, 1], zorder=0)
         self.setup_ax_margins(None)
         
-        #--------------------------------------------------------- TOOLBAR ----
+        #----------------------------------------------------------- TOOLBAR --
         
         self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
         self.toolbar.hide()
@@ -280,7 +288,7 @@ class WLCalc(QtGui.QWidget):
                         
         toolbar_widget.setLayout(subgrid_toolbar)
         
-        #-------------------------------------------------- MRC PARAMETERS ----
+        #---------------------------------------------------- MRC PARAMETERS --
         
         MRCtype_label = QtGui.QLabel('MRC Type :')
         
@@ -317,7 +325,7 @@ class WLCalc(QtGui.QWidget):
         
         self.widget_MRCparam.setLayout(grid_MRCparam)
                 
-        #------------------------------------------------------- MAIN GRID ----
+        #--------------------------------------------------------- MAIN GRID --
         
         mainGrid = QtGui.QGridLayout()
         
@@ -331,14 +339,14 @@ class WLCalc(QtGui.QWidget):
 #        mainGrid.setSpacing(15)
         mainGrid.setRowStretch(1, 500)
         
-        #--------------------------------------------------- MESSAGE BOXES ----
+        #----------------------------------------------------- MESSAGE BOXES --
                                           
         self.msgError = QtGui.QMessageBox()
         self.msgError.setIcon(QtGui.QMessageBox.Warning)
         self.msgError.setWindowTitle('Error Message')
         self.msgError.setWindowIcon(iconDB.WHAT)
                 
-        #---------------------------------------------------------- EVENTS ----
+        #------------------------------------------------------------ EVENTS --
         
         #----- Toolbox -----
         
@@ -620,23 +628,23 @@ class WLCalc(QtGui.QWidget):
 
         self.ax0.cla()
         
-        #----------------------------------------------------------- RESET ----
+        #------------------------------------------------------------- RESET --
         
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
        
-        #---------------------------------------------------------- XTICKS ---- 
+        #------------------------------------------------------------ XTICKS --
         
         self.ax0.xaxis.set_ticks_position('bottom')
         self.ax0.tick_params(axis='x',direction='out', gridOn=True)
 
-        #---------------------------------------------------------- YTICKS ----
+        #------------------------------------------------------------ YTICKS --
         
         self.ax0.yaxis.set_ticks_position('left')
         self.ax0.tick_params(axis='y',direction='out', gridOn=True)
                 
-        #-------------------------------------------------- SET AXIS RANGE ---- 
+        #---------------------------------------------------- SET AXIS RANGE --
        
         delta = 0.05
         Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
@@ -649,14 +657,14 @@ class WLCalc(QtGui.QWidget):
         self.ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
         self.ax0.invert_yaxis()
         
-        #---------------------------------------------------------- LABELS ----
+        #------------------------------------------------------------ LABELS --
     
         self.ax0.set_ylabel('Water level (mbgs)', fontsize=14, labelpad=25,
                             verticalalignment='top', color='black')
         self.ax0.set_xlabel('Time (days)', fontsize=14, labelpad=25,
                             verticalalignment='bottom', color='black')
 
-        #-------------------------------------------------------- PLOTTING ----
+        #---------------------------------------------------------- PLOTTING --
     
         #---- Water Levels ----
     
@@ -670,7 +678,8 @@ class WLCalc(QtGui.QWidget):
                                      
         #---- Vertical guide line under cursor ----
                                      
-        self.ly = self.ax0.axvline(x=.5, ymin=0, ymax=1, color='red', zorder=40)
+        self.ly = self.ax0.axvline(x=.5, ymin=0, ymax=1, color='red',
+                                   zorder=40)
         
         #---- Cross Remove Peaks ----
         
@@ -688,7 +697,7 @@ class WLCalc(QtGui.QWidget):
         if not self.btn_strati.autoRaise():
             self.display_soil_layer()
             
-        #--------------------------------------------------- UPDATE WIDGET ----
+        #----------------------------------------------------- UPDATE WIDGET --
 
         self.fig_MRC_widget.draw()
         
@@ -1396,15 +1405,17 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
          
     return A, B, hp, RMSE
 
-#===============================================================================    
+#==============================================================================    
 def calc_synth_hydrograph(A, B, h, dt, ipeak):
     """
     Compute synthetic hydrograph with a time-forward implicit numerical scheme
     during periods where the water level recedes identified by the "ipeak"
     pointers.
+    
+    This is documented in logbook#10 p.79.
     """    
     
-#===============================================================================
+#==============================================================================
     
     maxpeak = ipeak[:-1:2] # Time indexes delimiting period where water level
     minpeak = ipeak[1::2]  # recedes.
@@ -1432,7 +1443,7 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
     
     return hp
 
-#===============================================================================    
+#==============================================================================    
 class SoilProfil():
     """
     zlayer = Position of the layer boundaries in mbgs where 0 is the ground
@@ -1443,7 +1454,7 @@ class SoilProfil():
     
     Sy = Soil specific yield.
     """
-#===============================================================================
+#==============================================================================
     
     def __init__(self):
         
@@ -1485,8 +1496,9 @@ def mrc2rechg(t, ho, A, B, z, Sy):
     in mbgs (t and ho) and the soil column description (z and Sy), using
     the water-level fluctuation principle.
        
-    ---- INPUTS ----
-    {1D array} t = Time in days 
+    INPUTS
+    ------
+    {1D array} t : Time in days 
     {1D array} ho = Observed water level in mbgs
     {float}    A = Model parameter of the MRC
     {float}    B = Model parameter of the MRC
@@ -1497,13 +1509,16 @@ def mrc2rechg(t, ho, A, B, z, Sy):
                       beginning of periods while even index numbers are for
                       the end of periods.
                          
-    ---- OUTPUTS ----
+    OUTPUTS
+    -------
        
-    {1D array} RECHG = Groundwater recharge time series in m                        
+    {1D array} RECHG = Groundwater recharge time series in m
+
+    Note: This is documented in logbook #11, p.23.
     """
 #===============================================================================
     
-    #---- Check ----
+    #---- Check Data Integrity ----
     
     if np.min(ho) < 0:
         print('Water level rise above ground surface. Please check your data.')
@@ -1523,7 +1538,7 @@ def mrc2rechg(t, ho, A, B, z, Sy):
     
     for i in range(len(dt)):
         
-        #--- Calculate projected water level at i+1 ----
+        # Calculate projected water level at i+1
         
         LUMP1 = (1 - A * dt[i] / 2)
         LUMP2 = B * dt[i]
@@ -1531,7 +1546,7 @@ def mrc2rechg(t, ho, A, B, z, Sy):
         
         hp = (LUMP1 * ho[i] + LUMP2) * LUMP3
         
-        #---- Calculate resulting recharge over dt (See logbook #11, p.23) ----
+        # Calculate resulting recharge over dt (See logbook #11, p.23)
                 
         hup = min(hp, ho[i+1])
         hlo = max(hp, ho[i+1])
@@ -1543,9 +1558,10 @@ def mrc2rechg(t, ho, A, B, z, Sy):
         RECHG[i] -= (z[ilo+1] - hlo) * Sy[ilo]
         RECHG[i] -= (hup - z[iup]) * Sy[iup]
         
-        RECHG[i] *= np.sign(hp - ho[i+1]) # Will be positif in most cases. In
-        # theory, it should always be positive, but error in the MRC and noise
-        # in the data can cause hp to be above ho in some cases.
+        RECHG[i] *= np.sign(hp - ho[i+1]) 
+        # RECHG[i] will be positive in most cases. In theory, it should always
+        # be positive, but error in the MRC and noise in the data can cause hp
+        # to be above ho in some cases.
                        
 #        rechg2[i] = -(ho[i+1] - hp) * Sy2 # Do not forget it is mbgs
     

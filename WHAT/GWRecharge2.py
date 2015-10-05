@@ -333,7 +333,7 @@ def surf_water_budget(CRU, RASmax, ETP, PTOT, TAVG):
     
     return RECHG
     
-#===============================================================================
+#==============================================================================
 def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     '''
     In this version, I tried to incorporate the flow of water in the
@@ -350,7 +350,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     
     HWT = Water table depth (mmbgs)
     '''
-#===============================================================================
+#==============================================================================
     
     N = len(ETP)    
     PAVL = np.zeros(N)    # Available Precipitation
@@ -403,17 +403,17 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
     
     VWC = np.zeros((nz, nt))
     
-    #--------------------------------------------------- INITIAL CONDITIONS ----
+    #---------------------------------------------------- INITIAL CONDITIONS --
     
     Pc = z - HWT[0]
     VWC[:, 0], Krw = calc_VWC(Pc, SoilObj)
     
-    #----------------------------------------------------------- SIMULATION ----
+    #------------------------------------------------------------ SIMULATION --
 
 
     for i in range(10): #range(0, N-1):
         
-        #--------------------------------- SURFACE STORAGE and INFILTRATION ----
+        #---------------------------------- SURFACE STORAGE and INFILTRATION --
 
         #---- Precipitation and Snowmelt ----          
 
@@ -454,7 +454,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
         
         for t in range(24):
         
-            #--------------------------------------------- POTENTIAL FLUXES ----
+            #---------------------------------------------- POTENTIAL FLUXES --
 #            print VWCt[0] 
             Pc, Krw = calc_Pc(VWCt, SoilObj)
             print '%0.2f, %0.2f, %0.2f, %0.2f' % (VWCt[0] , Krw[0], VWCt[1], Krw[1])
@@ -490,7 +490,7 @@ def calc_recharge(CRU, RASmax, ETP, PTOT, TAVG):
        
         VWC[:, i+1]=  VWCdt
         
-            #------------------------------------------- SUBSURFACE ROUTING ----
+            #-------------------------------------------- SUBSURFACE ROUTING --
 
 #            for j in range(len(z)):
 #                
@@ -561,15 +561,14 @@ def calc_hydrograph(RECHG, RECESS, WL0, Sy):
     # It should also be possible to do a Crank-Nicholson on this. I should
     # check this out.
     
-    Sy = 0.18
     WLsim = np.zeros(len(RECHG))
     WLsim[-1] = WL0
     for i in range(len(RECHG)-1, 0, -1):            
         WLsim[i-1] = WLsim[i] + (RECHG[i] / Sy) - RECESS[i]
-        if WLsim[i-1] >= 6800:
-            Sy = 0.29
-        else:
-            Sy = 0.18
+#        if WLsim[i-1] >= 6800:
+#            Sy = 0.29
+#        else:
+#            Sy = 0.18
 
     return WLsim
 
