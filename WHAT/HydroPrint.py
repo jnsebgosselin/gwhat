@@ -80,15 +80,15 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         styleDB = db.styleUI()
         ttipDB = db.Tooltips('English')
         
-        #------------------------------------------------------- Main Window --
+        #---- Main Window ----
         
         self.setWindowIcon(iconDB.WHAT)
         
-        #-------------------------------------------- Weather Normals Widget --
+        #---- Weather Normals Widget ----
         
         self.weather_avg_graph = meteo.WeatherAvgGraph(self)
         
-        #-------------------------------------------------- HydroCalc Widget --
+        #---- HydroCalc Widget ----
         
         self.hydrocalc = HydroCalc.WLCalc()
         self.hydrocalc.hide()
@@ -198,10 +198,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
            
-        row, col = 0, 0
-        for btn in btn_list:
+        row = 0
+        for col, btn in enumerate(btn_list):
             subgrid_toolbar.addWidget(btn, row, col)
-            col += 1
                        
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
@@ -646,7 +645,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.load_waterlvl(filename)
         
                               
-    def load_waterlvl(self, filename): #======================================
+    def load_waterlvl(self, filename): #=================== Load Water Level ==
         
         '''
         If "filename" exists:
@@ -661,10 +660,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         Depending if there is a lyout or not, a Weather Data File will be 
         loaded and the hydrograph will be automatically plotted.
         '''
-        
-        
-        if not filename:
-            print('Path is empty. Cannot load water level file.')
+                
+        if not os.path.exists(filename):
+            print('Path does not exist. Cannot load water level file.')
             return
             
         self.check_files()
@@ -680,8 +678,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         if state == False:
             msg = ('WARNING: Waterlvl data file "%s" is not formatted ' +
                    ' correctly.') % os.path.basename(filename)
-            print(msg)
-            
+            print(msg)            
             self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
             return False
             
@@ -704,9 +701,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         '''<font color=black>Water level data set loaded successfully for
              well %s.</font>''' % name_well)
              
-        #---- Update "Compute" Mode Graph ----
+        #---- Update Graph of "Compute" Mode ----
         
-        self.draw_computeMode_waterlvl()
+        self.hydrocalc.load_waterLvl_data(self.fwaterlvl)
         
         #---- Well Layout -----
 
@@ -1066,22 +1063,15 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 
             self.save_fig_dir = os.path.dirname(fname)
             self.save_figure(fname)
+
             
-    def save_figure(self, fname): #===========================================
+    def save_figure(self, fname): #========================= Save Hydrograph ==
         
-        self.hydrograph.generate_hydrograph(self.meteo_data)
-                                       
+        self.hydrograph.generate_hydrograph(self.meteo_data)                                       
         self.hydrograph.savefig(fname)
-        
-    def draw_computeMode_waterlvl(self): #====================================
-        
-        self.hydrocalc.time = self.waterlvl_data.time
-        self.hydrocalc.water_lvl = self.waterlvl_data.lvl
-        self.hydrocalc.soilFilename = self.waterlvl_data.soilFilename
-        
-        self.hydrocalc.plot_water_levels() 
+
     
-    def draw_hydrograph(self): #==============================================
+    def draw_hydrograph(self): #============================ Draw Hydrograph ==
         
         if not self.fwaterlvl:
             console_text = ('<font color=red>Please select a valid water ' +

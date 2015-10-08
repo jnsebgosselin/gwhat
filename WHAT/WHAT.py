@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
 
-#-- STANDARD LIBRARY IMPORTS --
+#---- STANDARD LIBRARY IMPORTS ----
 
 import platform
 import csv
@@ -32,11 +32,11 @@ import sys
 from time import ctime
 from os import makedirs, path
 
-#-- THIRD PARTY IMPORTS --
+#---- THIRD PARTY IMPORTS ----
 
 from PySide import QtGui, QtCore
 
-#-- PERSONAL IMPORTS --
+#---- PERSONAL IMPORTS ----
 
 import database as db
 import MyQWidget
@@ -63,11 +63,11 @@ headerDB = []
 # The WORKER section handles all the calculations and data manipulations of
 # the program.
 
-################################################################################
+###############################################################################
 #                                                                           
 #                            @SECTION GUI                               
 #                                                                          
-################################################################################
+###############################################################################
 
 # The GUI is composed of a Tab area, a console terminal, and a 
 # progress bar. The Tab area is where the user interacts with the
@@ -231,7 +231,7 @@ class MainWindow(QtGui.QMainWindow):
                     "font-family: %s;" % family)
         self.menubar_widget.setStyleSheet("QWidget{%s}" % fontSS)
         
-        #----------------------------------------------------- TAB WIDGET ----
+        #-------------------------------------------------------- TAB WIDGET --
            
         Tab_widget = QtGui.QTabWidget()
         

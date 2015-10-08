@@ -48,9 +48,7 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 #---- THIRD PARTY IMPORTS ----
 
 from PySide import QtGui, QtCore, QtSvg
-import io
-import time
-import copy
+import io, time, copy
 #from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 #from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -213,7 +211,6 @@ class MplViewer(QtGui.QFrame):                                    # MplViewer #
                     break
 
             if qpix2print == None:
-                print(len(self.qpix_buff))
                 qpix2print = self.img.scaledToWidth(rect.width(),
                                    mode=QtCore.Qt.SmoothTransformation)
                 self.qpix_buff.append(qpix2print)

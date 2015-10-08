@@ -428,8 +428,6 @@ class MeteoObj():
         
         #---- Fill Temperature based variables ----
         
-        print(datatypes)
-        
         for var in range(nvar):
         
             nanindx = np.where(np.isnan(X[:, var]))[0]

@@ -22,9 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 #----- STANDARD LIBRARY IMPORTS -----
 
-from os import path
 from calendar import monthrange
-import csv
+import csv, os
 from math import sin, cos, sqrt, atan2, radians
 from time import clock
 
@@ -75,7 +74,12 @@ class LabelDatabase():
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 
 
-class Hydrograph(mpl.figure.Figure):
+#==============================================================================
+
+class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
+    
+#==============================================================================
+    
     def __init__(self, *args, **kargs):
         super(Hydrograph, self).__init__(*args, **kargs)
         
@@ -305,11 +309,11 @@ class Hydrograph(mpl.figure.Figure):
         #---- Continuous Line Datalogger ----
         
         self.l1_ax2, = self.ax2.plot([], [], '-', zorder = 10, linewidth=1,
-                                     color=db.styleUI().wlvl)
+                                     color='#0000CC')
         
         #---- Data Point Datalogger ----
         
-        self.l2_ax2, = self.ax2.plot([], [], '.', color=db.styleUI().wlvl,
+        self.l2_ax2, = self.ax2.plot([], [], '.', color='#0000CC',
                                      markersize=5)
                                      
         #---- Manual Mesures ----
@@ -319,6 +323,13 @@ class Hydrograph(mpl.figure.Figure):
                                             
         plt.setp(self.h_WLmes, markerfacecolor='none', markersize=5,
                  markeredgecolor=(1, 0.25, 0.25), markeredgewidth=1.5)
+        
+        #---- Predicted Recession Curves ----
+        
+        self.plot_recess, = self.ax2.plot([], [], color='red', lw=1.5,
+                                          dashes=[5, 3], zorder = 100,
+                                          alpha=0.65)
+        
         
         self.draw_waterlvl()
          
@@ -420,7 +431,7 @@ class Hydrograph(mpl.figure.Figure):
         self.isHydrographExists = True
         
                 
-    def set_fig_size(self, fwidth, fheight): #================================
+    def set_fig_size(self, fwidth, fheight): #=================================
         
         self.fwidth = fwidth   # Figure width in inches   
         self.fheight = fheight # Figure height in inches
@@ -432,7 +443,7 @@ class Hydrograph(mpl.figure.Figure):
         
         self.canvas.draw()
         
-    def set_margins(self): #==================================================
+    def set_margins(self): #===================================================
         
         #---- MARGINS (Inches / Fig. Dimension) ----
         
@@ -460,8 +471,9 @@ class Hydrograph(mpl.figure.Figure):
         
         for axe in self.axes:
             axe.set_position([x0, y0, w, h])
-            
-            
+    
+
+        
     def draw_ylabels(self): #=================================================
         
         labelDB = LabelDatabase(self.language)
@@ -776,9 +788,14 @@ class Hydrograph(mpl.figure.Figure):
         # nres = len(x) - (nbin * bwidth)
         
         return bheight
-            
     
-    def draw_waterlvl(self): #=================================================
+    def draw_recession(self): #============================== Draw Recession ==
+
+        t = self.WaterLvlObj.trecess
+        wl = self.WaterLvlObj.hrecess
+        self.plot_recess.set_data(t, wl)
+    
+    def draw_waterlvl(self): #============================= Draw Water Level ==
         
         """
         This method is called the first time the graph is plotted and each
@@ -789,16 +806,12 @@ class Hydrograph(mpl.figure.Figure):
         
         time = self.WaterLvlObj.time
         
-        if self.WLdatum == 1: # masl
-        
-            water_lvl = self.WaterLvlObj.ALT - self.WaterLvlObj.lvl
-                                                                
-        else: # mbgs -> yaxis is inverted
-        
+        if self.WLdatum == 1: # masl        
+            water_lvl = self.WaterLvlObj.ALT - self.WaterLvlObj.lvl                                                                
+        else: # mbgs -> yaxis is inverted        
             water_lvl = self.WaterLvlObj.lvl
 
-        if self.trend_line == 1:
-            
+        if self.trend_line == 1:            
             tfilt, wlfilt = filt_data(time, water_lvl, 7)
             
             self.l1_ax2.set_data(tfilt, wlfilt)
@@ -806,8 +819,7 @@ class Hydrograph(mpl.figure.Figure):
                           
             self.l2_ax2.set_data(time, water_lvl)
                           
-        else:
-            
+        else:            
             self.l1_ax2.set_data(time, water_lvl)
             self.l1_ax2.set_label('Water Level')
             
@@ -1195,32 +1207,50 @@ class Hydrograph(mpl.figure.Figure):
 
 
 #==============================================================================             
-class WaterlvlData():
+
+class WaterlvlData():                                          # WaterlvlData #
+    
 #==============================================================================
+    """
+    Class used to load the water level data files.
+    """
 
     def __init__(self):
-        
-        self.time = []
-        self.lvl = []
-        self.name_well = []
-        self.well_info = [] # html table to display in the UI
-                
-        self.WLmes = []
-        self.TIMEmes = []
-        
-        self.LAT = []
-        self.LON = []
-        self.ALT = []
         
         self.wlvlFilename = []
         self.soilFilename = []
         
-    def load(self, fname):
+        #---- Water Level Time Series ----
         
-        self.wlvlFilename = fname
+        self.time = []
+        self.lvl = []
         
-        fileName, fileExtension = path.splitext(fname)
+        #---- Well Info ----
         
+        self.name_well = []
+        self.municipality = []
+        self.well_info = [] # html table to display in the UI
+        self.LAT = []
+        self.LON = []
+        self.ALT = []
+        
+        #---- Manual Measurements ----
+        
+        self.WLmes = []
+        self.TIMEmes = []
+        
+        #---- Recession ----
+        
+        self.trecess = []
+        self.hrecess = []
+        self.A, self.B = None, None
+        
+    def load(self, fname): #=============================== Water Level Data ==
+        
+        print('Loading waterlvl time-series for well %s...' % self.name_well)
+        
+        self.wlvlFilename = fname        
+        fileName, fileExtension = os.path.splitext(fname)        
         self.soilFilename = fileName + '.sol'
         
         #---- Open First Sheet ----
@@ -1252,7 +1282,6 @@ class WaterlvlData():
         #---- Load Data ----
         
         try:
-
             self.time = self.time[start_rowx:]
             self.time = np.array(self.time).astype(float)        
         
@@ -1261,36 +1290,44 @@ class WaterlvlData():
             self.LAT = header[1]
             self.LON = header[2]
             self.ALT = header[3]
+            self.municipality = header[4]
             
-            self.lvl = sheet.col_values(1, start_rowx=start_rowx, end_rowx=None)
-            self.lvl = np.array(self.lvl).astype(float)
-            
+            self.lvl = sheet.col_values(1, start_rowx=start_rowx,
+                                        end_rowx=None)
+            self.lvl = np.array(self.lvl).astype(float)            
         except:
-
             print('WARNING: Waterlvl data file is not formatted correctly')
             book.release_resources()
             return False
         
         book.release_resources()
         
-        print('Loading waterlvl time-series for well %s' % self.name_well)
-
-        #------------------------------------------------------- WELL INFO ----
+        self.generate_HTML_table()
+        self.load_interpretation_file()
         
-        FIELDS = ['Well Name', 'Latitude', 'Longitude', 'Altitude',
-                  'Municipality']
+        print('Waterlvl time-series for well %s loaded.' % self.name_well)
+        
+        return True
+    
+    def generate_HTML_table(self): #============================= HTML Table ==
+        
+        FIELDS = [['Well Name', self.name_well],
+                  ['Latitude', self.LAT],
+                  ['Longitude', self.LON],
+                  ['Altitude', self.ALT],
+                  ['Municipality', self.municipality]]
                   
         well_info = '''
                     <table border="0" cellpadding="2" cellspacing="0" 
                     align="left">
                     '''
-        
-        for i in range(len(FIELDS)):
+            
+        for row in range(len(FIELDS)):
             
              try:                 
-                 VAL = '%0.2f' % float(header[i])
+                 VAL = '%0.2f' % float(FIELDS[row][1])
              except:
-                 VAL = header[i]
+                 VAL = FIELDS[row][1]
                  
              well_info += '''
                           <tr>
@@ -1299,35 +1336,30 @@ class WaterlvlData():
                             <td align="left" width=20>:</td>
                             <td align="left">%s</td>
                           </tr>
-                          ''' % (FIELDS[i], VAL)
+                          ''' % (FIELDS[row][0], VAL)
         well_info += '</table>'
         
         self.well_info = well_info
         
-        return True
+        return well_info
         
-        
-    def load_waterlvl_measures(self, fname, name_well):
+    def load_waterlvl_measures(self, fname, name_well): #=== Manual Measures ==
         
         print('Loading waterlvl manual measures for well %s' % name_well)
         
-        WLmes = []
-        TIMEmes = []
+        WLmes, TIMEmes = [], []
             
-        if path.exists(fname):
+        if os.path.exists(fname):
             
             #---- Import Data ----
             
             reader = open_workbook(fname)
+            sheet = reader.sheet_by_index(0)
             
-            NAME = reader.sheet_by_index(0).col_values(0, start_rowx=1,
-                                                       end_rowx=None)
-                                                                   
-            TIME = reader.sheet_by_index(0).col_values(1, start_rowx=1,
-                                                       end_rowx=None)
+            NAME = sheet.col_values(0, start_rowx=1, end_rowx=None)                                                                   
+            TIME = sheet.col_values(1, start_rowx=1, end_rowx=None)            
+            OBS = sheet.col_values(2, start_rowx=1, end_rowx=None)
             
-            OBS = reader.sheet_by_index(0).col_values(2, start_rowx=1,
-                                                      end_rowx=None)
             #---- Convert to Numpy ----
                                                       
             NAME = np.array(NAME).astype('str')
@@ -1335,8 +1367,7 @@ class WaterlvlData():
             OBS = np.array(OBS).astype('float')
                        
             if len(NAME) > 1:
-                rowx = np.where(NAME == name_well)[0]
-            
+                rowx = np.where(NAME == name_well)[0]            
                 if len(rowx) > 0:
                     WLmes = OBS[rowx]
                     TIMEmes = TIME[rowx]
@@ -1345,10 +1376,50 @@ class WaterlvlData():
         self.WLmes = WLmes
                 
         return TIMEmes, WLmes
+        
+    def load_interpretation_file(self): #=============== Interpretation File ==
+        
+        #---- Check if file exists ----
+        
+        wifname = os.path.splitext(self.wlvlFilename)[0] + '.wif'
+        if not os.path.exists(wifname):
+            print('%s does not exist' % wifname)
+            return False
+        
+        #---- Open File ----
+        
+        with open(wifname, 'r') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+        
+        #---- Find Recess Data ----
+        
+        row = 0
+        while True:
+            if row >= len(reader):
+                print('Something is wrong with the .wif file.' )
+                return False
+            
+            try:
+                if reader[row][0] == 'Time':
+                    break
+            except IndexError: 
+                pass
+            
+            row += 1
+        row += 1
+        
+        #---- Save Data in Class Attributes ----
+        
+        dat = np.array(reader[row:]).astype('float')
+        self.trecess = dat[:, 0]
+        self.hrecess = dat[:, 1]
+        
+        return True
     
-#===============================================================================
+    
+#==============================================================================
 def  load_weather_log(fname, varname): 
-#===============================================================================
+#==============================================================================
     
     print('loading info for missing weather data')
    
@@ -1481,64 +1552,62 @@ if __name__ == '__main__':
     import sys
     from meteo import MeteoObj    
     from mplFigViewer2 import ImageViewer
-    import os
-    import time
     
-
     app = QtGui.QApplication(sys.argv)
+    
+    #------------------------------------------------------------- load data --
     
     fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
     fwaterlvl = 'Files4testing/PO16A.xls'
     
-    #---- load data ----
-    
-    t = os.path.getmtime(fmeteo)
-    t = time.gmtime(t)
+    dirname = '../Projects/Pont-Rouge/'
+    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+    fwaterlvl = dirname + 'Water Levels/5080001.xls'
     
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
     
-    fname = 'Files4testing/waterlvl_manual_measurements.xls'
-    waterLvlObj.load_waterlvl_measures(fname, 'PO16A')
+#    fname = 'Files4testing/waterlvl_manual_measurements.xls'
+#    waterLvlObj.load_waterlvl_measures(fname, 'PO16A')
     
     meteoObj = MeteoObj()
     meteoObj.load_and_format(fmeteo)
     
-    #---- set up hydrograph ----
+    #----------------------------------------------------- set up hydrograph --
     
     hydrograph = Hydrograph()
-    hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
-    hydrograph.gridLines = 2
+    hydrograph.set_waterLvlObj(waterLvlObj)
+    hydrograph.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
     
+    #---- Layout Options ----
+    
+    hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
+    hydrograph.gridLines = 2 # Gridlines Style    
     hydrograph.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph.title_text = "Title of the Graph"
     hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
+    hydrograph.datemode = 'year' # 'month' or 'year'
+    hydrograph.bwidth_indx = 2 # Meteo Bin Width
+    #   0: 1 day;
+    #   1: 1 week;
+    #   2: 1 month;
+    #   3: 1 year;
+    hydrograph.RAINscale = 40
     
-    hydrograph.set_waterLvlObj(waterLvlObj)
     hydrograph.best_fit_waterlvl()    
-    hydrograph.best_fit_time(waterLvlObj.time)    
-    hydrograph.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+    hydrograph.best_fit_time(waterLvlObj.time)
     
     hydrograph.generate_hydrograph(meteoObj) 
+    hydrograph.draw_recession()
+
     hydrograph.savefig('../Projects/Project4Testing/hydrograph.pdf')
     
-    #---- show figure on-screen ----
-    
-#    canvas = FigureCanvasQTAgg(hydrograph)
+    #------------------------------------------------- show figure on-screen --
     
     imgview = ImageViewer()
     imgview.load_mpl_figure(hydrograph)
     imgview.show()
     hydrograph.savefig('test.pdf')
-    
-#    canvas = FigureCanvasQTAgg(hydrograph2display.fig)
-#    canvas.show()
-#    canvas.setFixedSize(canvas.size())
-#    
-#    qr = canvas.frameGeometry()
-#    cp = QtGui.QDesktopWidget().availableGeometry().center()
-#    qr.moveCenter(cp)
-#    canvas.move(qr.topLeft())
     
     sys.exit(app.exec_())
     

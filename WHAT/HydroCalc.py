@@ -21,17 +21,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from sys import argv
 from time import clock
-import csv
-from os import path
+import csv, os
 
 #---- THIRD PARTY IMPORTS ----
 
 import numpy as np
 from PySide import QtGui, QtCore
 
-import matplotlib
-matplotlib.use('Qt4Agg')
-matplotlib.rcParams['backend.qt4']='PySide'
+import matplotlib as mpl
+mpl.use('Qt4Agg')
+mpl.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
@@ -39,42 +38,48 @@ import matplotlib.pyplot as plt
 #---- PERSONAL IMPORTS ----
 
 import database as db
+from hydrograph3 import WaterlvlData
 
 
 class Tooltips():
     
-    def __init__(self, language): #------------------------------- ENGLISH ----
+    def __init__(self, language): #--------------------  ----------- ENGLISH --
+        
+        #---- Toolbar ----
         
         self.undo = 'Undo'
         self.clearall = 'Clear all extremum from the graph'
-        self.home = 'Reset original view.'
-        self.editPeak = ('Toggle edit mode to manually add extremums ' +
-                         'to the graph')
+        self.home = 'Reset original view.'        
         self.delPeak = ('Toggle edit mode to manually remove extremums ' +
                         'from the graph')
         self.pan = 'Pan axes with left mouse, zoom with right'
         self.MRCalc = ('Calculate the Master Recession Curve (MRC) for the ' +
                        'selected time pertiods')
-        self.find_peak = 'Automated search for local extremum (EXPERIMENTAL FEATURE)'
-        
+        self.editPeak = ('Toggle edit mode to manually add extremums ' +
+                         'to the graph')                         
         self.toggle_layout_mode = ('Toggle between layout and computation ' +
-                                   'mode (EXPERIMENTAL FEATURE)')
-                                   
+                                   'mode (EXPERIMENTAL FEATURE)')                    
+        self.find_peak = ('Automated search for local ' +
+                          'extremum (EXPERIMENTAL FEATURE)')                                   
         self.btn_Waterlvl_lineStyle = ('Show water lvl data as dots instead ' +
-                                       'of a continuous line')
-                                       
+                                       'of a continuous line')                                       
         self.btn_strati = ('Toggle on and off the display of the soil' +
-                           ' stratigraphic layers')
-                           
+                           ' stratigraphic layers')                           
+        self.btn_save_interp = 'Save Calculated MRC to file.'                           
         self.mrc2rechg = ('Compute recharge from the water level time series' +
                           ' using the MRC calculated and the water-table' +
                           ' fluctuation principle')
         
-        if language == 'French': #--------------------------------- FRENCH ----
+        if language == 'French': #----------  ----------------------- FRENCH --
             
             pass
-        
-class WLCalc(QtGui.QWidget):
+
+#==============================================================================        
+
+class WLCalc(QtGui.QWidget):                                         # WLCalc #
+    
+#==============================================================================
+    
     """
     This is the interface where are plotted the water level time series. It is
     possible to dynamically zoom and span the data, change the display,
@@ -84,8 +89,36 @@ class WLCalc(QtGui.QWidget):
     
     def __init__(self, parent=None):
         super(WLCalc, self).__init__(parent)
+        
+        #---------------------------------------------------- INIT VARIABLES --
+        
+        self.isGraphExists = False
+        
+        #---- Water Level Time series ----
+        
+        self.waterLvl_data = WaterlvlData()
+        self.time = []
+        self.water_lvl = []
+        
+        #---- Recession Curve Parameters ----
 
-        self.initUI()
+        self.A = None
+        self.B = None
+        self.RMSE = None
+        self.hrecess = []
+        
+        self.peak_indx = np.array([]).astype(int)
+        self.peak_memory = [np.array([]).astype(int)]
+        print(len(self.peak_memory))
+        
+        #---- Soil Profiles ----
+        
+        self.soilFilename = []
+        self.SOILPROFIL = SoilProfil()
+        
+        #----------------------------------------------------------- INIT UI --
+        
+        self.initUI()               
         
         self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
         self.fig_MRC_widget.mpl_connect('motion_notify_event',
@@ -93,31 +126,14 @@ class WLCalc(QtGui.QWidget):
         self.fig_MRC_widget.mpl_connect('resize_event', self.setup_ax_margins)
               
     def initUI(self):
-        
-        #--------------------------------------------------- INIT VARIABLES ----
-        
+                        
         iconDB = db.Icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
         
-        self.isGraphExists = False
-        self.peak_indx = np.array([]).astype(int)
-        self.peak_memory = [np.array([]).astype(int)]
-        self.time = []
-        self.water_lvl = []
-        
-        self.soilFilename = []
-        
-        self.A = []
-        self.B = []
-        
-        #---- load soil column info ----
-        
-        self.SOILPROFIL = SoilProfil()
-        
-        #--------------------------------------------------- FIGURE CANVAS ----
-        
         self.setWindowTitle('Master Recession Curve Estimation')
+        
+        #----------------------------------------------------- FIGURE CANVAS --
         
         self.fig_MRC = plt.figure()
         
@@ -147,145 +163,79 @@ class WLCalc(QtGui.QWidget):
         self.setup_ax_margins(None)
         
         #----------------------------------------------------------- TOOLBAR --
-        
+            
         self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
         self.toolbar.hide()
         
-        self.btn_layout_mode = QtGui.QToolButton()
-        self.btn_layout_mode.setAutoRaise(False)
-        self.btn_layout_mode.setIcon(iconDB.toggleMode)
-        self.btn_layout_mode.setToolTip(ttipDB.toggle_layout_mode)
-        self.btn_layout_mode.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_layout_mode.setIconSize(StyleDB.iconSize)
+        #---- Toolbar Buttons ----
         
-        self.btn_undo = QtGui.QToolButton()
-        self.btn_undo.setAutoRaise(True)
-        self.btn_undo.setIcon(iconDB.undo)
-        self.btn_undo.setToolTip(ttipDB.undo)
-        self.btn_undo.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_undo.setEnabled(False)
-        self.btn_undo.setIconSize(StyleDB.iconSize)
+        class toolBarBtn(QtGui.QToolButton):
+            def __init__(self, icon, ttip, autoRaise=True, 
+                         enabled=True, parent=None):
+                super(toolBarBtn, self).__init__(parent)
+                self.setFocusPolicy(QtCore.Qt.NoFocus)
+                self.setIconSize(StyleDB.iconSize)
+                self.setIcon(icon)
+                self.setToolTip(ttip)
+                self.setAutoRaise(autoRaise)
+                self.setEnabled(enabled)
+                
+        self.btn_layout_mode = toolBarBtn(iconDB.toggleMode,
+                                          ttipDB.toggle_layout_mode, 
+                                          autoRaise=False)
+                                          
+        self.btn_undo = toolBarBtn(iconDB.undo, ttipDB.undo, enabled=False)
         
-        self.btn_clearPeak = QtGui.QToolButton()
-        self.btn_clearPeak.setAutoRaise(True)
-        self.btn_clearPeak.setIcon(iconDB.clear_search)
-        self.btn_clearPeak.setToolTip(ttipDB.clearall)
-        self.btn_clearPeak.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_clearPeak.setIconSize(StyleDB.iconSize)
+        self.btn_clearPeak = toolBarBtn(iconDB.clear_search, ttipDB.clearall)
         
-        self.btn_home = QtGui.QToolButton()
-        self.btn_home.setAutoRaise(True)
-        self.btn_home.setIcon(iconDB.home)
-        self.btn_home.setToolTip(ttipDB.home)
-        self.btn_home.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_home.setIconSize(StyleDB.iconSize)
+        self.btn_home = toolBarBtn(iconDB.home, ttipDB.home)
         
-#        self.btn_findPeak = QtGui.QToolButton()
-#        self.btn_findPeak.setAutoRaise(True)
-#        self.btn_findPeak.setIcon(iconDB.findPeak2)
-#        self.btn_findPeak.setToolTip(ttipDB.find_peak)
-#        self.btn_findPeak.setFocusPolicy(QtCore.Qt.NoFocus)
-#        self.btn_findPeak.setIconSize(StyleDB.iconSize)
+        self.btn_editPeak = toolBarBtn(iconDB.add_point, ttipDB.editPeak)
+                
+        self.btn_delPeak = toolBarBtn(iconDB.erase, ttipDB.delPeak)
         
-        self.btn_editPeak = QtGui.QToolButton()
-        self.btn_editPeak.setAutoRaise(True)
-        self.btn_editPeak.setIcon(iconDB.add_point)
-        self.btn_editPeak.setToolTip(ttipDB.editPeak)
-        self.btn_editPeak.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_editPeak.setIconSize(StyleDB.iconSize)
+        self.btn_pan = toolBarBtn(iconDB.pan, ttipDB.pan) 
         
-        self.btn_delPeak = QtGui.QToolButton()
-        self.btn_delPeak.setAutoRaise(True)
-        self.btn_delPeak.setIcon(iconDB.erase)
-        self.btn_delPeak.setToolTip(ttipDB.delPeak)
-        self.btn_delPeak.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_delPeak.setIconSize(StyleDB.iconSize)
+        self.btn_MRCalc = toolBarBtn(iconDB.MRCalc, ttipDB.MRCalc)
+                
+        self.btn_strati = toolBarBtn(iconDB.stratigraphy, ttipDB.btn_strati)
         
-        self.btn_pan = QtGui.QToolButton()
-        self.btn_pan.setAutoRaise(True)
-        self.btn_pan.setIcon(iconDB.pan)
-        self.btn_pan.setToolTip(ttipDB.pan)
-        self.btn_pan.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_pan.setIconSize(StyleDB.iconSize)
-        
-        self.btn_MRCalc = QtGui.QToolButton()
-        self.btn_MRCalc.setAutoRaise(True)
-        self.btn_MRCalc.setIcon(iconDB.MRCalc)
-        self.btn_MRCalc.setToolTip(ttipDB.MRCalc)
-        self.btn_MRCalc.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_MRCalc.setIconSize(StyleDB.iconSize)
-        
-#        self.btn_mrc2rechg = QtGui.QToolButton()
-#        self.btn_mrc2rechg.setAutoRaise(True)
-#        self.btn_mrc2rechg.setIcon(iconDB.mrc2rechg)
-#        self.btn_mrc2rechg.setToolTip(ttipDB.mrc2rechg)
-#        self.btn_mrc2rechg.setFocusPolicy(QtCore.Qt.NoFocus)
-#        self.btn_mrc2rechg.setIconSize(StyleDB.iconSize)
-        
-        self.btn_Waterlvl_lineStyle = QtGui.QToolButton()
-        self.btn_Waterlvl_lineStyle.setAutoRaise(True)
-        self.btn_Waterlvl_lineStyle.setIcon(iconDB.showDataDots)
-        self.btn_Waterlvl_lineStyle.setToolTip(ttipDB.btn_Waterlvl_lineStyle)
-        self.btn_Waterlvl_lineStyle.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_Waterlvl_lineStyle.setIconSize(StyleDB.iconSize)
-        
-        self.btn_strati = QtGui.QToolButton()
-        self.btn_strati.setAutoRaise(True)
-        self.btn_strati.setIcon(iconDB.stratigraphy)
-        self.btn_strati.setToolTip(ttipDB.btn_strati)
-        self.btn_strati.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_strati.setIconSize(StyleDB.iconSize)
-                        
-        separator1 = QtGui.QFrame()
-        separator1.setFrameStyle(StyleDB.VLine)
-        separator2 = QtGui.QFrame()
-        separator2.setFrameStyle(StyleDB.VLine)
-        separator3 = QtGui.QFrame()
-        separator3.setFrameStyle(StyleDB.VLine)
-        separator4 = QtGui.QFrame()
-        separator4.setFrameStyle(StyleDB.VLine)
-        
+        self.btn_Waterlvl_lineStyle = toolBarBtn(iconDB.showDataDots,
+                                                 ttipDB.btn_Waterlvl_lineStyle)
+                                                 
+        self.btn_save_interp = toolBarBtn(iconDB.save,
+                                          ttipDB.btn_save_interp)
+                                                 
+#        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
+                                                 
+#        self.btn_mrc2rechg = toolBarBtn(iconDB.mrc2rechg, ttipDB.mrc2rechg)
+                                
+        #----- Toolbar Vertical Separators ------
+                                
+        class VSep(QtGui.QFrame): # 
+            def __init__(self, parent=None):
+                super(VSep, self).__init__(parent)
+                self.setFrameStyle(db.styleUI().VLine)
+                
+        #---- Grid Layout ----
+
+        btn_list = [self.btn_layout_mode, VSep(), self.btn_undo,
+                    self.btn_clearPeak, self.btn_editPeak, self.btn_delPeak,
+                    VSep(), self.btn_home, self.btn_pan, VSep(),
+                    self.btn_MRCalc, self.btn_save_interp, VSep(),
+                    self.btn_Waterlvl_lineStyle, self.btn_strati]
+                    
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
         
         row = 0
-        col = 0
-        subgrid_toolbar.addWidget(self.btn_layout_mode, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(separator3, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.btn_undo, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.btn_clearPeak, row, col)                
-        col += 1        
-#        subgrid_toolbar.addWidget(self.btn_findPeak, row, col)
-#        col += 1 
-        subgrid_toolbar.addWidget(self.btn_editPeak, row, col)
-        col += 1        
-        subgrid_toolbar.addWidget(self.btn_delPeak, row, col)
-        col += 1        
-        subgrid_toolbar.addWidget(separator1, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.btn_home, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.btn_pan, row, col)
-        col += 1        
-        subgrid_toolbar.addWidget(separator2, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.btn_MRCalc, row, col)
-        col += 1
-#        subgrid_toolbar.addWidget(self.btn_mrc2rechg, row, col)
-#        col += 1        
-        subgrid_toolbar.addWidget(separator4, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.btn_Waterlvl_lineStyle, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.btn_strati, row, col)
-                
+        for col, btn in enumerate(btn_list):
+            subgrid_toolbar.addWidget(btn, row, col)
+        subgrid_toolbar.setColumnStretch(col+1, 500)
+
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-        subgrid_toolbar.setColumnStretch(col+1, 500)
-                        
+                                
         toolbar_widget.setLayout(subgrid_toolbar)
         
         #---------------------------------------------------- MRC PARAMETERS --
@@ -313,7 +263,7 @@ class WLCalc(QtGui.QWidget):
         grid_MRCparam.addWidget(MRCtype_label, row, col)
         col += 1
         grid_MRCparam.addWidget(self.MRC_type, row, col)
-        row += 1
+#        row += 1
 #        grid_MRCparam.addWidget(self.MRC_ObjFnType, row, col)
         row += 1
         col = 0
@@ -339,13 +289,6 @@ class WLCalc(QtGui.QWidget):
 #        mainGrid.setSpacing(15)
         mainGrid.setRowStretch(1, 500)
         
-        #----------------------------------------------------- MESSAGE BOXES --
-                                          
-        self.msgError = QtGui.QMessageBox()
-        self.msgError.setIcon(QtGui.QMessageBox.Warning)
-        self.msgError.setWindowTitle('Error Message')
-        self.msgError.setWindowIcon(iconDB.WHAT)
-                
         #------------------------------------------------------------ EVENTS --
         
         #----- Toolbox -----
@@ -355,42 +298,109 @@ class WLCalc(QtGui.QWidget):
         self.btn_home.clicked.connect(self.home)
 #        self.btn_findPeak.clicked.connect(self.find_peak)
         self.btn_editPeak.clicked.connect(self.edit_peak)
-        self.btn_delPeak.clicked.connect(self.delete_peak)
-        self.btn_pan.clicked.connect(self.pan_graph)
-        self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
-        self.btn_Waterlvl_lineStyle.clicked.connect(
-                                                 self.change_waterlvl_lineStyle)
+        self.btn_delPeak.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
+        
+        self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
         self.btn_strati.clicked.connect(self.btn_strati_isClicked)
 #        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
         
+    def emit_error_message(self, error_text): #============== Emit Error MSG ==
         
-    def emit_error_message(self, error_text):
+        msgError = QtGui.QMessageBox()
+        msgError.setIcon(QtGui.QMessageBox.Warning)
+        msgError.setWindowTitle('Error Message')
+        msgError.setWindowIcon(db.Icons().WHAT)
         
-        self.msgError.setText(error_text)
-        self.msgError.exec_()
+        msgError.setText(error_text)
+        msgError.exec_()  
     
-    def btn_MRCalc_isClicked(self):
+    def load_waterLvl_data(self, filename): #============== Load Water Level ==
         
-        if self.isGraphExists == False:
-            print 'Graph is empty'
-            self.emit_error_message(
-            '''<b>Please select a valid Water Level Data File first.</b>''')
+        #---- Water Level Data ----
+        
+        self.waterLvl_data.load(filename)
+        
+        self.water_lvl = self.waterLvl_data.lvl
+        self.time = self.waterLvl_data.time
+        self.soilFilename = self.waterLvl_data.soilFilename
+        
+        self.plot_water_levels()
+        self.load_MRC_interp()
+        
+    def load_MRC_interp(self): #============================ Load MRC Interp ==
+                
+        #---- Load .wif file ----
+                
+        isWif = self.waterLvl_data.load_interpretation_file()
+        if isWif == False: #No .wif file has been created yet for this well
+            return
+        
+        #---- Extract Local Extram Times ----
+        
+        tr = self.waterLvl_data.trecess
+        hr = self.waterLvl_data.hrecess
+        
+        tb = [] # Time boundary for recession segments            
+        for i in range(len(tr)):            
+            if not np.isnan(hr[i]):
+                try:
+                    if np.isnan(hr[i-1]) or np.isnan(hr[i+1]):
+                        tb.append(tr[i])
+                except IndexError:
+                    tb.append(tr[i])
+        
+        #---- Convert Time to Indexes ----
+        
+        time = self.waterLvl_data.time
+        self.peak_indx = np.zeros(len(tb)).astype(int)
+        for i in range(len(tb)):
+            self.peak_indx[i] = np.where(tb[i] == time)[0]
+        
+        #---- Recalculate and Plot Results ----
+        
+        self.peak_memory[0] = self.peak_indx        
+        self.plot_peak()
+        self.btn_MRCalc_isClicked()
+
+        
+    def aToolbarBtn_isClicked(self): #============= A Toolbar Btn is Clicked ==
+        
+        if not self.waterLvl_data.wlvlFilename:
+            msg = 'Please select a valid Water Level Data File first.'
+            print(msg)
+            self.emit_error_message('<b>%s</b>' % msg)
             return
             
-        if len(self.peak_indx) == 0:
-             print 'No extremum selected'
-             return
+        if self.sender() == self.btn_MRCalc:
+            self.btn_MRCalc_isClicked()
+        elif self.sender() == self.btn_Waterlvl_lineStyle:
+            self.change_waterlvl_lineStyle()
+        elif self.sender() == self.btn_save_interp:
+            self.save_interp()
+        elif self.sender() == self.btn_delPeak:
+            self.delete_peak()
+        elif self.sender() == self.btn_pan:
+            self.pan_graph()
+        
+    def btn_MRCalc_isClicked(self): #=========================== Compute MRC ==
         
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
-        A, B, hp, obj = mrc_calc(self.time, self.water_lvl, self.peak_indx, 
-                                 self.MRC_type.currentIndex())
+        A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx, 
+                                  self.MRC_type.currentIndex())        
         
+        if A == None:
+            QtGui.QApplication.restoreOverrideCursor()
+            return
+            
         #---- display result ----
         
         txt = u'∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
         self.MRC_results.setText(txt)        
-        txt = '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), obj)                          
+        txt = '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)                          
         self.MRC_results.append(txt)
         
         #---- plot result ----
@@ -399,14 +409,16 @@ class WLCalc(QtGui.QWidget):
         self.h3_ax0.set_ydata(hp)        
         self.fig_MRC_widget.draw()
                 
-        #---- store result in class var ----
+        #---- store result in class attributes ----
         
         self.A = A
         self.B = B
+        self.RMSE = RMSE
+        self.hrecess = hp
         
         #---- Compute Recharge ----
         
-        if path.exists(self.soilFilename):
+        if os.path.exists(self.soilFilename):
 
             self.SOILPROFIL.load_info(self.soilFilename) 
             
@@ -421,24 +433,66 @@ class WLCalc(QtGui.QWidget):
             self.MRC_results.append(txt)
             
         QtGui.QApplication.restoreOverrideCursor()
+
         
-    def btn_mrc2rechg_isClicked(self):
+    def save_interp(self): #========= Save Interpretation Params and Results ==
+        
+        print('Saving MRC interpretation...')
+        
+        wlvlFilename = self.waterLvl_data.wlvlFilename
+        fileName, fileExtension = os.path.splitext(wlvlFilename)
+        
+        interpFilename = fileName + '.wif'
+        
+        if self.A == None:
+            print('No MRC interpretation to save.')
+            return False
+        
+        fcontent = [['Well Name :', self.waterLvl_data.name_well],
+                    ['Latitude :', self.waterLvl_data.LAT],
+                    ['Longitude :', self.waterLvl_data.LON],
+                    ['Altitude :', self.waterLvl_data.ALT],
+                    ['Municipality :', self.waterLvl_data.municipality],
+                    [],
+                    ['*** MRC Parameters => dh/dt(m/d) = -A * h + B ***'],
+                    [],
+                    ['A (1/d) :', self.A],
+                    ['B (m/d) :', self.B],
+                    ['RMSE (m):', '%0.4f' % self.RMSE],
+                    [],
+                    ['*** Observed and Predicted Water Level ***'],
+                    [],
+                    ['Time', 'hrcs(mbgs)', 'hobs(mbgs)', 'hpre(mbgs)']]
+                    
+        for i in range(len(self.time)):
+            fcontent.append([self.time[i],
+                             '%0.2f' % self.hrecess[i],
+                             '%0.2f' % self.water_lvl[i]])                    
+                    
+        with open(interpFilename, 'w') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(fcontent)
+        
+        print('MRC interpretation Saved.')
+        
+        return True
+        
+    def btn_mrc2rechg_isClicked(self): #========== Compute Recharge from MRC ==
         
         if not self.A and not self.B:
             print('Need to calculate MRC equation first.')
             return
             
-        if not path.exists(self.soilFilename):
+        if not os.path.exists(self.soilFilename):
             print('A ".sol" file is needed for the calculation of' +
                   ' groundwater recharge from the MRC')
             return
             
-        self.SOILPROFIL.load_info(self.soilFilename)        
-        
+        self.SOILPROFIL.load_info(self.soilFilename)
         mrc2rechg(self.time, self.water_lvl, self.A, self.B,
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
             
-    def plot_peak(self):
+    def plot_peak(self): #======================================= Plot Peaks ==
                 
         if len(self.peak_memory) == 1:
             self.btn_undo.setEnabled(False)
@@ -452,13 +506,7 @@ class WLCalc(QtGui.QWidget):
                                    
             self.fig_MRC_widget.draw()
     
-    def find_peak(self):
-        
-        if self.isGraphExists == False:
-            print 'Graph is empty'
-            self.emit_error_message(
-            '''<b>Please select a valid Water Level Data File first.</b>''')
-            return
+    def find_peak(self): #=============================== Find Local Extrema ==
         
         n_j, n_add = local_extrema(self.water_lvl, 4 * 5)
         
@@ -482,7 +530,7 @@ class WLCalc(QtGui.QWidget):
     def edit_peak(self):
 
         if self.isGraphExists == False:
-            print 'Graph is empty'
+            print('Graph is empty')
             self.emit_error_message(
             '''<b>Please select a valid Water Level Data File first.</b>''')
             return
@@ -510,12 +558,6 @@ class WLCalc(QtGui.QWidget):
             
     def delete_peak(self):
         
-        if self.isGraphExists == False:
-            print 'Graph is empty'
-            self.emit_error_message(
-            '''<b>Please select a valid Water Level Data File first.</b>''')
-            return
-        
         if self.btn_delPeak.autoRaise():
             
             # Activate <delete_peak>
@@ -538,12 +580,6 @@ class WLCalc(QtGui.QWidget):
             self.btn_delPeak.setAutoRaise(True)
         
     def pan_graph(self):
-        
-        if self.isGraphExists == False:
-            print 'Graph is empty'
-            self.emit_error_message(
-            '''<b>Please select a valid Water Level Data File first.</b>''')
-            return
                 
         if self.btn_pan.autoRaise():
 
@@ -566,7 +602,7 @@ class WLCalc(QtGui.QWidget):
     def home(self):
         
         if self.isGraphExists == False:
-            print 'Graph is empty'
+            print('Graph is empty')
             self.emit_error_message(
             '''<b>Please select a valid Water Level Data File first.</b>''')
             return
@@ -576,7 +612,7 @@ class WLCalc(QtGui.QWidget):
     def undo(self):
         
         if self.isGraphExists == False:
-            print 'Graph is empty'
+            print('Graph is empty')
             self.emit_error_message(
             '''<b>Please select a valid Water Level Data File first.</b>''')
             return
@@ -594,7 +630,7 @@ class WLCalc(QtGui.QWidget):
     def clear_all_peaks(self):
         
         if self.isGraphExists == False:
-            print 'Graph is empty'
+            print('Graph is empty')
             self.emit_error_message(
             '''<b>Please select a valid Water Level Data File first.</b>''')
             return
@@ -734,7 +770,7 @@ class WLCalc(QtGui.QWidget):
         
         #---- Check ----
         
-        if not path.exists(self.soilFilename):
+        if not os.path.exists(self.soilFilename):
             print('No ".sol" file found for this well.')
             self.btn_strati.setAutoRaise(True)
             return
@@ -792,10 +828,6 @@ class WLCalc(QtGui.QWidget):
                 
         
     def change_waterlvl_lineStyle(self):
-        
-        if self.isGraphExists == False:
-            print 'Graph is empty'            
-            return
             
         if self.btn_Waterlvl_lineStyle.autoRaise():
             
@@ -956,7 +988,7 @@ class WLCalc(QtGui.QWidget):
            
             self.plot_peak()    
    
-#===============================================================================
+#==============================================================================
 def local_extrema(x, Deltan):
     """
     Code adapted from a MATLAB script at 
@@ -1041,7 +1073,7 @@ def local_extrema(x, Deltan):
         else:
             flagmin = 0
             
-        #--------------------------------------------------- SEARCH FOR MAX ----
+        #---------------------------------------------------- SEARCH FOR MAX --
             
         xmax = np.max(x[nc:nlim+1])
         nmax = np.where(x[nc:nlim+1] == xmax)[0][0] + nc   
@@ -1058,7 +1090,7 @@ def local_extrema(x, Deltan):
         else: 
             flagmax=0
        
-        #------------------------------------------------------- MIN or MAX ----
+        #-------------------------------------------------------- MIN or MAX --
 
         # The extremum closest to nc is kept for analysis
         if flagmin == 1 and flagmax == 1:
@@ -1220,17 +1252,18 @@ def local_extrema(x, Deltan):
     return n_j, kadd
     
 
-#===============================================================================
+#==============================================================================
 def mrc_calc(t, h, ipeak, MRCTYPE=1):
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
     the aquifer from the water level time series using a modified Gauss-Newton
     optimization method.
     
-    ---- INPUT ----
+    INPUTS
+    ------
     h : water level time series in mbgs
     t : time in days
-    ipeak: indices where the maxima and minima are located in h
+    ipeak: sequence of indices where the maxima and minima are located in h
     
     MRCTYPE: MRC equation type    
     
@@ -1238,31 +1271,30 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
              MODE = 1 -> exponential (dh/dt = -a*h + b)
     
     """
-#===============================================================================
-   
-    #-------------------------------------------------------- Quality Check ----
-
-    ipeak = np.sort(ipeak)
+#==============================================================================
     
+    A, B, hp, RMSE = None, None, None, None
+    
+    #---------------------------------------------------------- Check MinMax --
+    
+    if len(ipeak) == 0:
+        print('No extremum selected')
+        return A, B, hp, RMSE
+        
+    ipeak = np.sort(ipeak)    
     maxpeak = ipeak[:-1:2]
     minpeak = ipeak[1::2]
-    
     dpeak = (h[maxpeak] - h[minpeak]) * -1 # WARNING: Don't forget it is mbgs
+    
     if np.any(dpeak < 0):
-        print 'There is a problem with the pair-ditribution of min-max'
-        return
-    if len(ipeak) == 0:
-        print 'No extremum selected'
-        return
-    
-    print; print '---- MRC calculation started ----'; print
-    print 'MRCTYPE =', ['Linear', 'Exponential'][MRCTYPE]
-    print
-    
-    # nsegmnt = len(minpeak)
+        print('There is a problem with the pair-ditribution of min-max')
+        return A, B, hp, RMSE
         
-    #--------------------------------------------------------- Optimization ----
+    #---------------------------------------------------------- Optimization --
 
+    print('\n---- MRC calculation started ----\n')
+    print('MRCTYPE = %s\n' % (['Linear', 'Exponential'][MRCTYPE]))
+    
     tstart = clock()
     
     # If MRCTYPE is 0, then the parameter A is kept to a value of 0 throughout
@@ -1412,7 +1444,7 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
     during periods where the water level recedes identified by the "ipeak"
     pointers.
     
-    This is documented in logbook#10 p.79.
+    This is documented in logbook#10 p.79-80, 106.
     """    
     
 #==============================================================================
@@ -1598,32 +1630,16 @@ def mrc2rechg(t, ho, A, B, z, Sy):
         
                 
 if __name__ == '__main__':
-    
-    from hydrograph3 import WaterlvlData
+        
     from meteo import MeteoObj
     
     app = QtGui.QApplication(argv)   
-    instance_1 = WLCalc()
-    instance_1.show()
-    instance_1.widget_MRCparam.show()
     
-    fwaterlvl = 'Files4testing/PO01.xls'
+    w = WLCalc()
+    w.show()
+    w.widget_MRCparam.show()
     
-    waterLvlObj = WaterlvlData()
-    waterLvlObj.load(fwaterlvl)
-
-    water_lvl = waterLvlObj.lvl
-    water_lvl = water_lvl[400:1000]
-
-    time = waterLvlObj.time
-    time = time[400:1000]
-    
-    #---- Push info to WLcalc instance ----
-    
-    instance_1.water_lvl = water_lvl
-    instance_1.time = time
-    instance_1.soilFilename = waterLvlObj.soilFilename
-    
-    instance_1.plot_water_levels()
+    fwaterlvl = '../Projects/Pont-Rouge/Water Levels/5080001.xls'
+    w.load_waterLvl_data(fwaterlvl)
        
     app.exec_() 
