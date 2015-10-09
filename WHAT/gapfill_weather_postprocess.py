@@ -104,8 +104,8 @@ class PostProcessErr(object):
         for i, var in enumerate(self.varNames):
             indx = np.where(DATA[:, 0] == var)[0]
             
-            self.Yp.append(DATA[indx, 5].astype(float))
-            self.Ym.append(DATA[indx, 6].astype(float))
+            self.Yp.append(DATA[indx, 7].astype(float))
+            self.Ym.append(DATA[indx, 8].astype(float))
             
             y = DATA[indx, 1].astype(int)
             m = DATA[indx, 2].astype(int)
