@@ -653,7 +653,7 @@ class GapFillWeather(QtCore.QObject):
         clean_tarStaName = clean_tarStaName.replace('/', '_')
         
         dirname = '%s/%s (%s)/' % (self.outputDir,
-                                   clean_tarName,
+                                   clean_tarStaName,
                                    target_station_clim)
                                    
         if not os.path.exists(dirname):
@@ -828,7 +828,7 @@ class GapFillWeather(QtCore.QObject):
         YearStart = str(int(YEAR[index_start])) 
         YearEnd = str(int(YEAR[index_end]))
         
-        fname = '%s (%s)_%s-%s.log' % (clean_tarName,
+        fname = '%s (%s)_%s-%s.log' % (clean_tarStaName,
                                        target_station_clim,
                                        YearStart, YearEnd)
         
@@ -858,7 +858,7 @@ class GapFillWeather(QtCore.QObject):
             
         #---- Save Data ----
         
-        fname = '%s (%s)_%s-%s.out' % (clean_tarName,
+        fname = '%s (%s)_%s-%s.out' % (clean_tarStaName,
                                        target_station_clim,
                                        YearStart, YearEnd)
                                        
@@ -896,8 +896,8 @@ class GapFillWeather(QtCore.QObject):
             fcontent = copy(HEADER)
             fcontent.append(['', '', '', '', 'Est. Err.', Yname, Yname])
             fcontent[-1].extend(Xnames)
-            fcontent.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY', 
-                             'Ypre-Ymes', 'Ypre', 'Ymes'])
+            fcontent.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'Ndata',
+                             'RMSE', 'Ypre-Ymes', 'Ypre', 'Ymes'])
             for i in range(len(Xnames)):
                 fcontent[-1].append('X%d' % i)
             
@@ -918,7 +918,9 @@ class GapFillWeather(QtCore.QObject):
                         fcontent.append([VARNAME[var],
                                         '%d' % YEAR[row],
                                         '%d' % MONTH[row],
-                                        '%d' % DAY[row],                                        
+                                        '%d' % DAY[row],
+                                        '%s' % log_Ndat[row, var],
+                                        '%0.2f' % log_RMSE[row, var],                                       
                                         '%0.1f' % (yp - ym),
                                         '%0.1f' % yp,
                                         '%0.1f' % ym])
@@ -926,7 +928,7 @@ class GapFillWeather(QtCore.QObject):
             
             #---- Save File ----
             
-            fname = '%s (%s)_%s-%s.err' % (clean_tarName,
+            fname = '%s (%s)_%s-%s.err' % (clean_tarStaName,
                                            target_station_clim,
                                            YearStart, YearEnd)
                                        
