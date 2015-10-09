@@ -377,6 +377,7 @@ class MainWindow(QtGui.QMainWindow):
         new_project_window.NewProjectSignal.connect(self.load_project)
         new_project_window.show()
     
+    
     def open_project(self): #================================== Open Project ==
         
         '''
@@ -463,10 +464,6 @@ class MainWindow(QtGui.QMainWindow):
         self.project_display.setText(self.projectInfo.name)
         self.project_display.adjustSize()
             
-        #---- Load Weather Input Files ----
-        
-        self.tab_fill_weather_data.load_data_dir_content()
-        
         #-------------------------------------------- Update child widgets ----
         
         #---- dwnld_weather_data ----
@@ -481,6 +478,7 @@ class MainWindow(QtGui.QMainWindow):
         #---- fill_weather_data ----
                                                            
         self.tab_fill_weather_data.set_workdir(self.projectdir)
+        self.tab_fill_weather_data.load_data_dir_content()
         
         #---- hydrograph ----
         

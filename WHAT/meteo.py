@@ -253,8 +253,6 @@ class MeteoObj():
         
         self.INFO = []
         
-        self.varnames = []
-        
         self.datatypes = []        
         # 0 -> not cumulative data:
         #      ex.: Air Temperature
@@ -262,6 +260,7 @@ class MeteoObj():
         # 1 -> cumulative data:
         #      ex.: Precipitation, ETP
         
+        self.varnames = []
         self.HEADER = []        
         self.DATA = []
         
@@ -269,6 +268,9 @@ class MeteoObj():
 
         
     def load_and_format(self, filename): #=====================================
+        
+        print('Loading weather data from "%s"...' %
+              os.path.basename(filename))
         
         #---- load data from file ----
         
@@ -286,6 +288,8 @@ class MeteoObj():
         
         self.add_ETP_to_data()
         self.add_rain_to_data()
+        
+        print('Weather data loaded.')
                 
                 
     def load(self, filename): #================================================

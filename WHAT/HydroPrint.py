@@ -45,6 +45,7 @@ import hydrograph3 as hydroprint
 import mplFigViewer3 as mplFigViewer
 import meteo
 import MyQWidget
+from waterlvldata import WaterlvlData
 
 #==============================================================================
         
@@ -60,7 +61,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.workdir = os.getcwd()
         self.UpdateUI = True
         self.fwaterlvl = []
-        self.waterlvl_data = hydroprint.WaterlvlData()
+        self.waterlvl_data = WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
         
         #-- memory path variable --

@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Copyright 2014-2015 Jean-Sebastien Gosselin
-
 email: jnsebgosselin@gmail.com
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
@@ -41,35 +40,37 @@ import matplotlib.pyplot as plt
 from PySide import QtGui
 
 from xlrd.xldate import xldate_from_date_tuple
-from xlrd import xldate_as_tuple, open_workbook
+from xlrd import xldate_as_tuple
 #from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 
 #---- PERSONAL IMPORTS ----
 
 import database as db
-#import meteo
+from waterlvldata import WaterlvlData
 
 class LabelDatabase():
     
-    def __init__(self, language): #------------------------------ English -----
+    def __init__(self, language): #--------------------------------- English --
         
         self.temperature = u'Temperature (°C)'
         self.mbgs = 'Water Level at Well %s (mbgs)'
         self.masl = 'Water Level at Well %s (masl)'
         self.precip = 'Total Precipitation (%s)'
         self.precip_units = ['mm/day', 'mm/week', 'mm/month', 'mm/year']
-        self.station_meteo = 'Weather Station = %s (located %0.1f km from the well)'
+        self.station_meteo = ('Weather Station = %s ' +
+                              '(located %0.1f km from the well)')
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
                             
-        if language == 'French': #-------------------------------- French -----
+        if language == 'French': #----------------------------------- French --
             
             self.mbgs = "Niveau d'eau au puits %s (mbgs)"
             self.masl = "Niveau d'eau au puits %s (masl)"
             self.precip = u'Précipitations Totales (mm/%s)'
             self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
             self.temperature = u'Température (°C)'
-            self.station_meteo = u'Station météo = %s (située à %0.1f km du puits)'
+            self.station_meteo = (u'Station météo = %s ' +
+                                   '(située à %0.1f km du puits)')
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 
@@ -92,8 +93,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         #---- Fig Init ----        
         
-        self.fwidth = 11.0
-        self.fheight = 8.5
+        self.fwidth, self.fheight = 11.0, 8.5
         self.patch.set_facecolor('white')
         
         #---- Database ----
@@ -1206,217 +1206,6 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         return xticks_position, xticks_labels_position, xticks_labels
 
 
-#==============================================================================             
-
-class WaterlvlData():                                          # WaterlvlData #
-    
-#==============================================================================
-    """
-    Class used to load the water level data files.
-    """
-
-    def __init__(self):
-        
-        self.wlvlFilename = []
-        self.soilFilename = []
-        
-        #---- Water Level Time Series ----
-        
-        self.time = []
-        self.lvl = []
-        
-        #---- Well Info ----
-        
-        self.name_well = []
-        self.municipality = []
-        self.well_info = [] # html table to display in the UI
-        self.LAT = []
-        self.LON = []
-        self.ALT = []
-        
-        #---- Manual Measurements ----
-        
-        self.WLmes = []
-        self.TIMEmes = []
-        
-        #---- Recession ----
-        
-        self.trecess = []
-        self.hrecess = []
-        self.A, self.B = None, None
-        
-    def load(self, fname): #=============================== Water Level Data ==
-        
-        print('Loading waterlvl time-series for well %s...' % self.name_well)
-        
-        self.wlvlFilename = fname        
-        fileName, fileExtension = os.path.splitext(fname)        
-        self.soilFilename = fileName + '.sol'
-        
-        #---- Open First Sheet ----
-        
-        book = open_workbook(fname, on_demand=True)
-        sheet = book.sheet_by_index(0)
-        
-        #---- Search for First Line With Data ----
-        
-        self.time = sheet.col_values(0, start_rowx=0, end_rowx=None)
-        self.time = np.array(self.time)
-       
-        row = 0
-        hit = False
-        while hit == False:
-            
-            if self.time[row] == 'Date':
-                hit = True
-            else: 
-                row += 1
-            
-            if row >= len(self.time):
-                print('WARNING: Waterlvl data file is not formatted correctly')
-                book.release_resources()
-                return False
-                
-        start_rowx = row + 1
-           
-        #---- Load Data ----
-        
-        try:
-            self.time = self.time[start_rowx:]
-            self.time = np.array(self.time).astype(float)        
-        
-            header = sheet.col_values(1, start_rowx=0, end_rowx=5)
-            self.name_well = header[0]
-            self.LAT = header[1]
-            self.LON = header[2]
-            self.ALT = header[3]
-            self.municipality = header[4]
-            
-            self.lvl = sheet.col_values(1, start_rowx=start_rowx,
-                                        end_rowx=None)
-            self.lvl = np.array(self.lvl).astype(float)            
-        except:
-            print('WARNING: Waterlvl data file is not formatted correctly')
-            book.release_resources()
-            return False
-        
-        book.release_resources()
-        
-        self.generate_HTML_table()
-        self.load_interpretation_file()
-        
-        print('Waterlvl time-series for well %s loaded.' % self.name_well)
-        
-        return True
-    
-    def generate_HTML_table(self): #============================= HTML Table ==
-        
-        FIELDS = [['Well Name', self.name_well],
-                  ['Latitude', self.LAT],
-                  ['Longitude', self.LON],
-                  ['Altitude', self.ALT],
-                  ['Municipality', self.municipality]]
-                  
-        well_info = '''
-                    <table border="0" cellpadding="2" cellspacing="0" 
-                    align="left">
-                    '''
-            
-        for row in range(len(FIELDS)):
-            
-             try:                 
-                 VAL = '%0.2f' % float(FIELDS[row][1])
-             except:
-                 VAL = FIELDS[row][1]
-                 
-             well_info += '''
-                          <tr>
-                            <td width=10></td>
-                            <td align="left">%s</td>
-                            <td align="left" width=20>:</td>
-                            <td align="left">%s</td>
-                          </tr>
-                          ''' % (FIELDS[row][0], VAL)
-        well_info += '</table>'
-        
-        self.well_info = well_info
-        
-        return well_info
-        
-    def load_waterlvl_measures(self, fname, name_well): #=== Manual Measures ==
-        
-        print('Loading waterlvl manual measures for well %s' % name_well)
-        
-        WLmes, TIMEmes = [], []
-            
-        if os.path.exists(fname):
-            
-            #---- Import Data ----
-            
-            reader = open_workbook(fname)
-            sheet = reader.sheet_by_index(0)
-            
-            NAME = sheet.col_values(0, start_rowx=1, end_rowx=None)                                                                   
-            TIME = sheet.col_values(1, start_rowx=1, end_rowx=None)            
-            OBS = sheet.col_values(2, start_rowx=1, end_rowx=None)
-            
-            #---- Convert to Numpy ----
-                                                      
-            NAME = np.array(NAME).astype('str')
-            TIME = np.array(TIME).astype('float')
-            OBS = np.array(OBS).astype('float')
-                       
-            if len(NAME) > 1:
-                rowx = np.where(NAME == name_well)[0]            
-                if len(rowx) > 0:
-                    WLmes = OBS[rowx]
-                    TIMEmes = TIME[rowx]
-            
-        self.TIMEmes = TIMEmes
-        self.WLmes = WLmes
-                
-        return TIMEmes, WLmes
-        
-    def load_interpretation_file(self): #=============== Interpretation File ==
-        
-        #---- Check if file exists ----
-        
-        wifname = os.path.splitext(self.wlvlFilename)[0] + '.wif'
-        if not os.path.exists(wifname):
-            print('%s does not exist' % wifname)
-            return False
-        
-        #---- Open File ----
-        
-        with open(wifname, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-        
-        #---- Find Recess Data ----
-        
-        row = 0
-        while True:
-            if row >= len(reader):
-                print('Something is wrong with the .wif file.' )
-                return False
-            
-            try:
-                if reader[row][0] == 'Time':
-                    break
-            except IndexError: 
-                pass
-            
-            row += 1
-        row += 1
-        
-        #---- Save Data in Class Attributes ----
-        
-        dat = np.array(reader[row:]).astype('float')
-        self.trecess = dat[:, 0]
-        self.hrecess = dat[:, 1]
-        
-        return True
-    
-    
 #==============================================================================
 def  load_weather_log(fname, varname): 
 #==============================================================================

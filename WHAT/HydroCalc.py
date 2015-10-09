@@ -38,8 +38,7 @@ import matplotlib.pyplot as plt
 #---- PERSONAL IMPORTS ----
 
 import database as db
-from hydrograph3 import WaterlvlData
-
+from waterlvldata import WaterlvlData
 
 class Tooltips():
     
@@ -392,6 +391,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx, 
                                   self.MRC_type.currentIndex())        
         
+        print A, B
         if A == None:
             QtGui.QApplication.restoreOverrideCursor()
             return
@@ -1320,7 +1320,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
     
     while 1:
                     
-        #---- Calculating Jacobian Numerically ---- 
+        #---- Calculating Jacobian (X) Numerically ---- 
         
         hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
         XB = (hdB[tindx] - hp[tindx]) / tolmax
@@ -1329,18 +1329,18 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             hdA = calc_synth_hydrograph(A + tolmax, B, h, dt, ipeak)
             XA = (hdA[tindx] - hp[tindx]) / tolmax
             
-            Xt  = np.vstack((XA, XB))
+            Xt  = np.vstack((XA, XB))            
         elif MRCTYPE == 0:
-            Xt = XB        
-        
+            Xt = XB
+            
         X = Xt.transpose()
-                          
+
         #---- Solving Linear System ----
             
         dh = h[tindx] - hp[tindx]
         XtX = np.dot(Xt, X)                
         Xtdh = np.dot(Xt, dh)
-
+        
         #---- Scaling ----
         
         C = np.dot(Xt, X) * np.identity(NP)
@@ -1370,7 +1370,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             #---- Calculating parameter change vector ----
     
             dr = np.linalg.tensorsolve(CtXtXCImrCinv, CtXtdh, axes=None)
-    
+
             #---- Checking Marquardt condition ----
             
             NUM = np.dot(dr.transpose(), CtXtdh)
@@ -1395,10 +1395,10 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             
             if MRCTYPE == 1:
                 A = Aold + dr[0]
-                B = Bold + dr[1]
-            if MRCTYPE == 0:
-                B = Bold + dr[0]
-        
+                B = Bold + dr[1]                
+            elif MRCTYPE == 0:
+                B = Bold + dr[0, 0]
+                
             #---- Applying parameter bound-constraints ----
             
             A = np.max((A, 0)) # lower bound
@@ -1415,8 +1415,8 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             else:
                 break
 
-        print(u'A = %0.3f ; B= %0.3f; RMSE = %f ; Cos_theta = %0.3f' 
-              % (A, B, RMSE, cos))
+#        print(u'A = %0.3f ; B= %0.3f; RMSE = %f ; Cos_theta = %0.3f' 
+#              % (A, B, RMSE, cos))
     
         #---- Checking tolerance ----
     

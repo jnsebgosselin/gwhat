@@ -416,7 +416,7 @@ class GapFillWeather(QtCore.QObject):
                     # Remove superflux station from <colm>.
                     
                     colm = colm[:NSTA]
-                    
+
                     # Adds back an index 0 at index 0 to include the target
                     # station and add 1 to the indexes of the neighboring
                     # stations
@@ -484,8 +484,14 @@ class GapFillWeather(QtCore.QObject):
                         
                         # All rows containing NaN entries are removed.
                         
+                        print(colm)
+                        print(np.shape(YXcolm))
+                        
                         YXcolm = YXcolm[~np.isnan(YXcolm).any(axis=1)]
-                    
+                        
+                        print(np.shape(YXcolm))
+                        print
+
                         # Rows for which precipitation of the target station
                         # and all the neighboring stations is 0 are removed. 
                         # Only applicable for precipitation, not air 
@@ -959,11 +965,11 @@ class GapFillWeather(QtCore.QObject):
             A = results.params     
             
             # Using Numpy function:            
-            A2 = np.linalg.lstsq(X, Y)[0]
+#            A = np.linalg.lstsq(X, Y)[0]
             
-            print(A)
-            print(A2)
-            print
+#            print(A)
+#            print(A2)
+#            print
             
         else: # Least Absolute Deviations regression
             
@@ -1672,7 +1678,7 @@ if __name__ == '__main__':
     
     #---- setup input and output directory ----
     
-    workdir = "../Projects/Project4Testing"    
+    workdir = "../Projects/Valcartier"    
     gapfill_weather.outputDir = workdir + '/Meteo/Output'
     gapfill_weather.inputDir = workdir + '/Meteo/Input'
     
@@ -1683,7 +1689,7 @@ if __name__ == '__main__':
     
     #---- setup target station and do some calculation ----
     
-    gapfill_weather.set_target_station(0)    
+    gapfill_weather.set_target_station(8)    
           
     #---- define the time plage over which data will be gap-filled ----
     
@@ -1695,13 +1701,13 @@ if __name__ == '__main__':
     gapfill_weather.Nbr_Sta_max = 4
     gapfill_weather.limitDist = 100
     gapfill_weather.limitAlt = 350                                  
-    gapfill_weather.regression_mode = 1
+    gapfill_weather.regression_mode = 0
     # 0 -> Least Absolute Deviation Model
     # 1 -> Ordinary Least-Square Model
     
     #---- define additional options ----
     
-    gapfill_weather.full_error_analysis = True
+    gapfill_weather.full_error_analysis = False
     gapfill_weather.add_ETP = False
     
     #---- fill data ----
