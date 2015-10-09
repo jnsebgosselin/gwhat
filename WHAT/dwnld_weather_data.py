@@ -1029,6 +1029,8 @@ class DownloadRawDataFiles(QtCore.QThread):
            <font color=black> for station %s</font>''' % StaName)
         self.ProgBarSignal.emit(0)         
         
+        StaName = StaName.replace('\\', '_')
+        StaName = StaName.replace('\\', '_')
         dirname += '/%s (%s)' % (StaName, climateID)
         if not path.exists(dirname):
             makedirs(dirname)

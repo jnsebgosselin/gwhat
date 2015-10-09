@@ -223,7 +223,9 @@ class GapFillWeather(QtCore.QObject):
         
         Y2fill = np.copy(DATA[:, tarStaIndx, :])
         YXmFILL = np.zeros(np.shape(DATA)) * np.nan
-        log_RMSE = np.zeros(np.shape(Y2fill))
+        log_RMSE = np.zeros(np.shape(Y2fill)) * np.nan
+        log_Ndat = np.zeros(np.shape(Y2fill)).astype(str)
+        log_Ndat[:] = 'nan'
         
         if self.full_error_analysis == True:
             print('\n!A full error analysis will be performed!\n')
@@ -325,9 +327,10 @@ class GapFillWeather(QtCore.QObject):
             
             #---- Memory Variables ----
             
-            colm_memory = np.array([]) # Column sequence memory matrix
-            RegCoeff_memory = []       # Regression coefficient memory matrix
-            RMSE_memory = []           # RMSE memory matrix
+            colm_memory = np.array([])  # Column sequence memory matrix
+            RegCoeff_memory = []  # Regression coefficient memory matrix
+            RMSE_memory = []  # RMSE memory matrix
+            Ndat_memory = []  # Nbr. of data used for the regression
             
             # Sort station in descending correlation coefficient order.
             # The index of the *target station* is pulled at index 0.
@@ -408,8 +411,8 @@ class GapFillWeather(QtCore.QObject):
                                         # the end of the completion process.
                 else:
                 
-                    # Determines the number of neighboring station to include 
-                    # in the regression model.
+                    # Determines the number of neighboring stations to 
+                    # include in the regression model.
                     
                     NSTA = min(len(colm), self.Nbr_Sta_max)
                     
@@ -482,15 +485,21 @@ class GapFillWeather(QtCore.QObject):
                         
                         YXcolm[row, 0] = np.nan
                         
-                        # All rows containing NaN entries are removed.
+                        #---- Removes Rows with NaN ----
                         
-                        print(colm)
-                        print(np.shape(YXcolm))
+                        # Removes row for which a data is missing in the
+                        # target station data series
+                        
+                        YXcolm = YXcolm[~np.isnan(YXcolm[:, 0])]
+                        ntot = np.shape(YXcolm)
+                        
+                        # All rows containing NaN entries for any of the
+                        # neighboring stations are removod are removed.
                         
                         YXcolm = YXcolm[~np.isnan(YXcolm).any(axis=1)]
+                        nreg = np.shape(YXcolm)
                         
-                        print(np.shape(YXcolm))
-                        print
+                        Ndat = '%d/%d' % (nreg[0], ntot[0])
 
                         # Rows for which precipitation of the target station
                         # and all the neighboring stations is 0 are removed. 
@@ -530,6 +539,7 @@ class GapFillWeather(QtCore.QObject):
                         
                         RegCoeff_memory.append(A)
                         RMSE_memory.append(RMSE)
+                        Ndat_memory.append(Ndat)
                     
                     else:                        
                         # Regression coefficients and RSME are recalled
@@ -537,6 +547,7 @@ class GapFillWeather(QtCore.QObject):
 
                         A = RegCoeff_memory[index_memory]
                         RMSE = RMSE_memory[index_memory]
+                        Ndat = Ndat_memory[index_memory]
                                             
                     #------------------------------ MISSING VALUE ESTIMATION --
                     
@@ -552,7 +563,10 @@ class GapFillWeather(QtCore.QObject):
                         Y_row = max(Y_row, 0)
                     
                     #----------------------------------------- STORE RESULTS --
-                  
+                    
+                    log_RMSE[row, var] = RMSE
+                    log_Ndat[row, var] = Ndat
+                        
                     if self.full_error_analysis == True:
                         YpFULL[row, var] = Y_row
                         
@@ -583,12 +597,7 @@ class GapFillWeather(QtCore.QObject):
                                               
                     if row in row_nan:
                         Y2fill[row, var] = Y_row                        
-                        log_RMSE[row, var] = RMSE
-                        
-                        AVG_RMSE[var] += RMSE
-                        AVG_NSTA[var] += NSTA
-                        it_avg += 1
-                        
+                                                
                         Sta_index_row = Sta_index[colm]
                         if var in (0, 1, 2):                            
                             YXmFILL[row, Sta_index_row[0], var] = Y_row                                               
@@ -596,6 +605,10 @@ class GapFillWeather(QtCore.QObject):
                         else:
                             YXmFILL[row, Sta_index_row[0], var] = Y_row
                             YXmFILL[row, Sta_index_row[1:], var] = X_row
+                            
+                        AVG_RMSE[var] += RMSE
+                        AVG_NSTA[var] += NSTA
+                        it_avg += 1
                     
                 fill_progress += 1.
                 self.ProgBarSignal.emit(fill_progress/progress_total * 100)
@@ -633,8 +646,14 @@ class GapFillWeather(QtCore.QObject):
         
         #---- Check dirname ----
         
+        # Check if the characters "/" or "\" are present in the station 
+        # name and replace these characters by "-" if applicable.
+        
+        clean_tarStaName = target_station_name.replace('\\', '_')
+        clean_tarStaName = clean_tarStaName.replace('/', '_')
+        
         dirname = '%s/%s (%s)/' % (self.outputDir,
-                                   target_station_name,
+                                   clean_tarName,
                                    target_station_clim)
                                    
         if not os.path.exists(dirname):
@@ -658,9 +677,19 @@ class GapFillWeather(QtCore.QObject):
         #---- Info Data Post-Processing ----
         
         XYinfo = self.postprocess_fillinfo(STANAME, YXmFILL, tarStaIndx)
-        Yname, Yp = XYinfo[0], XYinfo[1]
-        Xnames, Xm = XYinfo[2], XYinfo[3]
+        Yname, Ypre = XYinfo[0], XYinfo[1]
+        Xnames, Xmes = XYinfo[2], XYinfo[3]
         Xcount_var, Xcount_tot = XYinfo[4], XYinfo[5]
+        
+        # Yname: name of the target station
+        # Ypre: Value predicted with the model for the target station
+        # Xnames: names of the neighboring station to estimate Ypre
+        # Xmes: Value of the measured data used to predict Ypre
+        # Xcount_var: Number of times each neighboring station was used to
+        #             predict Ypre, weather variable wise.
+        # Xcount_tot: Number of times each neighboring station was used to
+        #             predict Ypre for all variables.
+        
 
         #---- Gap-Fill Info Summary ----   
         
@@ -768,17 +797,17 @@ class GapFillWeather(QtCore.QObject):
                          ['*** DETAILED REPORT ***'],
                          [],
                          ['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'NBR STA.',
-                          'RMSE', Yname]])        
+                          'Ndata', 'RMSE', Yname]])        
         fcontent[-1].extend(Xnames)        
                         
         for var in var2fill:
             for row in range(index_start, index_end+1):
                 
-                yp = Yp[row, var]
-                ym = DATA[row, tarStaIndx, var]                                  
+                yp = Ypre[row, var]
+                ym = DATA[row, tarStaIndx, var]
                 xm = ['' if np.isnan(i) else '%0.1f' % i for i in 
-                      Xm[row, :, var]]                
-                nsta = len(np.where(~np.isnan(Xm[row, :, var]))[0])
+                      Xmes[row, :, var]]                
+                nsta = len(np.where(~np.isnan(Xmes[row, :, var]))[0])
                 
                 # Write the info only if there is a missing value in
                 # the data series of the target station.
@@ -789,6 +818,7 @@ class GapFillWeather(QtCore.QObject):
                                      '%d' % MONTH[row],
                                      '%d' % DAY[row],
                                      '%d' % nsta,
+                                     '%s' % log_Ndat[row, var],
                                      '%0.2f' % log_RMSE[row, var],
                                      '%0.1f' % yp])
                     fcontent[-1].extend(xm)
@@ -797,14 +827,8 @@ class GapFillWeather(QtCore.QObject):
                                   
         YearStart = str(int(YEAR[index_start])) 
         YearEnd = str(int(YEAR[index_end]))
-
-        # Check if the characters "/" or "\" are present in the station 
-        # name and replace these characters by "-" if applicable.
         
-        target_station_name = target_station_name.replace('\\', '_')
-        target_station_name = target_station_name.replace('/', '_')
-        
-        fname = '%s (%s)_%s-%s.log' % (target_station_name,
+        fname = '%s (%s)_%s-%s.log' % (clean_tarName,
                                        target_station_clim,
                                        YearStart, YearEnd)
         
@@ -834,7 +858,7 @@ class GapFillWeather(QtCore.QObject):
             
         #---- Save Data ----
         
-        fname = '%s (%s)_%s-%s.out' % (target_station_name,
+        fname = '%s (%s)_%s-%s.out' % (clean_tarName,
                                        target_station_clim,
                                        YearStart, YearEnd)
                                        
@@ -865,7 +889,7 @@ class GapFillWeather(QtCore.QObject):
                 
             XYinfo = self.postprocess_fillinfo(STANAME, YXmFULL, tarStaIndx)
             Yname, Ym = XYinfo[0], XYinfo[1]
-            Xnames, Xm = XYinfo[2], XYinfo[3]
+            Xnames, Xmes = XYinfo[2], XYinfo[3]
             
             #---- Prepare Header ----
             
@@ -885,7 +909,7 @@ class GapFillWeather(QtCore.QObject):
                     yp = YpFULL[row, var]  
                     ym = Ym[row, var]                                      
                     xm = ['' if np.isnan(i) else '%0.1f' % i for i in 
-                          Xm[row, :, var]]
+                          Xmes[row, :, var]]
                     
                     # Write the info only if there is a measured value in
                     # the data series of the target station.
@@ -902,9 +926,9 @@ class GapFillWeather(QtCore.QObject):
             
             #---- Save File ----
             
-            fname = '%s (%s)_%s-%s.err' % (target_station_name,
-                                       target_station_clim,
-                                       YearStart, YearEnd)
+            fname = '%s (%s)_%s-%s.err' % (clean_tarName,
+                                           target_station_clim,
+                                           YearStart, YearEnd)
                                        
             output_path = dirname + fname
             self.save_content_to_file(output_path, fcontent)
@@ -965,11 +989,7 @@ class GapFillWeather(QtCore.QObject):
             A = results.params     
             
             # Using Numpy function:            
-#            A = np.linalg.lstsq(X, Y)[0]
-            
-#            print(A)
-#            print(A2)
-#            print
+            # ´A = np.linalg.lstsq(X, Y)[0]
             
         else: # Least Absolute Deviations regression
             
@@ -987,27 +1007,29 @@ class GapFillWeather(QtCore.QObject):
     
     
     @staticmethod                                           
-    def postprocess_fillinfo(staName, YXmFULL, tarStaIndx): #==================
+    def postprocess_fillinfo(staName, YX, tarStaIndx): #=======================
                 
-        # Extracts info related to the target station from <YXmFull>.
+        # Extracts info related to the target station from <YXmFull>  and the
+        # info related to the neighboring stations. Xm is for the
+        # neighboring stations and Ym is for the target stations.
                 
-        Yname = staName[tarStaIndx]
-        Xnames = np.delete(staName, tarStaIndx)
+        Yname = staName[tarStaIndx]                       # target station name
+        Xnames = np.delete(staName, tarStaIndx)     # neighboring station names
       
-        Ym = YXmFULL[:, tarStaIndx, :]
-        Xm = np.delete(YXmFULL, tarStaIndx, axis=1)
+        Y = YX[:, tarStaIndx, :]                          # Target station data
+        X = np.delete(YX, tarStaIndx, axis=1)        # Neighboring station data
         
         # Counts how many times each neigboring station was used for
         # estimating the data of the target stations.
         
-        Xcount_var = np.sum(~np.isnan(Xm), axis=0)
+        Xcount_var = np.sum(~np.isnan(X), axis=0)
         Xcount_tot = np.sum(Xcount_var, axis=1)
         
         # Removes the neighboring stations that were not used.
         
         indx = np.where(Xcount_tot > 0)[0]
         Xnames = Xnames[indx]
-        Xm = Xm[:, indx]
+        X = X[:, indx]
         
         Xcount_var = Xcount_var[indx, :]
         Xcount_tot = Xcount_tot[indx]
@@ -1015,11 +1037,10 @@ class GapFillWeather(QtCore.QObject):
         # Sort the neighboring stations by importance.
 
         indx = np.argsort(Xcount_tot * -1)
-
         Xnames = Xnames[indx]
-        Xm = Xm[:, indx]
+        X = X[:, indx]
 
-        return Yname, Ym, Xnames, Xm, Xcount_var, Xcount_tot
+        return Yname, Y, Xnames, X, Xcount_var, Xcount_tot
         
         
     @staticmethod
@@ -1615,60 +1636,59 @@ class WeatherData():
         
         return table
         
-
         
-#==============================================================================   
-def L1LinearRegression(X, Y): 
-    """
-    L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
-    (Iterative reweighted least squares)
-
-    B = L1LinearRegression(Y,X)
-
-    B = discovered linear coefficients 
-    X = independent variables 
-    Y = dependent variable 
-
-    Note 1: An intercept term is NOT assumed (need to append a unit column if
-            needed). 
-    Note 2: a.k.a. LAD, LAE, LAR, LAV, least absolute, etc. regression 
-
-    SOURCE:
-    This function is originally from a Matlab code written by Will Dwinnell
-    www.matlabdatamining.blogspot.ca/2007/10/l-1-linear-regression.html
-    Last accessed on 21/07/2014
-    """
-#==============================================================================
- 
-    # Determine size of predictor data.
-    n, m = np.shape(X)
-    
-    # Initialize with least-squares fit.
-    B = linalg_lstsq(X, Y)[0]                               
-    BOld = np.copy(B) 
-    
-    # Force divergence.
-    BOld[0] += 1e-5
-
-    # Repeat until convergence.
-    while np.max(np.abs(B - BOld)) > 1e-6:
-         
-        BOld = np.copy(B)
-        
-        # Calculate new observation weights based on residuals from old 
-        # coefficients. 
-        weight =  np.dot(B, X.transpose()) - Y
-        weight =  np.abs(weight)
-        weight[weight < 1e-6] = 1e-6 # to avoid division by zero
-        weight = weight**-0.5
-        
-        # Calculate new coefficients.
-        Xb = np.tile(weight, (m, 1)).transpose() * X      
-        Yb = weight * Y
-        
-        B = linalg_lstsq(Xb, Yb)[0]
-        
-    return B
+##==============================================================================   
+#def L1LinearRegression(X, Y): 
+#    """
+#    L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
+#    (Iterative reweighted least squares)
+#
+#    B = L1LinearRegression(Y,X)
+#
+#    B = discovered linear coefficients 
+#    X = independent variables 
+#    Y = dependent variable 
+#
+#    Note 1: An intercept term is NOT assumed (need to append a unit column if
+#            needed). 
+#    Note 2: a.k.a. LAD, LAE, LAR, LAV, least absolute, etc. regression 
+#
+#    SOURCE:
+#    This function is originally from a Matlab code written by Will Dwinnell
+#    www.matlabdatamining.blogspot.ca/2007/10/l-1-linear-regression.html
+#    Last accessed on 21/07/2014
+#    """
+##==============================================================================
+# 
+#    # Determine size of predictor data.
+#    n, m = np.shape(X)
+#    
+#    # Initialize with least-squares fit.
+#    B = linalg_lstsq(X, Y)[0]                               
+#    BOld = np.copy(B) 
+#    
+#    # Force divergence.
+#    BOld[0] += 1e-5
+#
+#    # Repeat until convergence.
+#    while np.max(np.abs(B - BOld)) > 1e-6:
+#         
+#        BOld = np.copy(B)
+#        
+#        # Calculate new observation weights based on residuals from old 
+#        # coefficients. 
+#        weight =  np.dot(B, X.transpose()) - Y
+#        weight =  np.abs(weight)
+#        weight[weight < 1e-6] = 1e-6 # to avoid division by zero
+#        weight = weight**-0.5
+#        
+#        # Calculate new coefficients.
+#        Xb = np.tile(weight, (m, 1)).transpose() * X      
+#        Yb = weight * Y
+#        
+#        B = linalg_lstsq(Xb, Yb)[0]
+#        
+#    return B
         
 if __name__ == '__main__':
     
