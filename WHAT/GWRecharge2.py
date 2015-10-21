@@ -21,131 +21,287 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #----- STANDARD LIBRARY IMPORTS -----
       
-from datetime import date
-import csv
+#from datetime import date
+#import csv
 
 #----- THIRD PARTY IMPORTS -----
 
 import numpy as np
-from xlrd import xldate_as_tuple
-from xlrd.xldate import xldate_from_date_tuple
+#from xlrd import xldate_as_tuple
+#from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
 
 #----- PERSONAL LIBRARY IMPORTS -----
 
-from meteo import MeteoObj, calculate_normals
+from meteo import MeteoObj
 from waterlvldata import WaterlvlData
 
-
-#==============================================================================
-def calc_hydrograph_up(RECHG, RECESS, WLobs):
-    """
-    This is a forward numerical explicit scheme for generating the
-    synthetic well hydrograph.
-    """
 #==============================================================================
 
-    Sy = -sum(RECHG) / (-sum(RECESS) + WLobs[-1] - WLobs[0])
-    
-    WLsim = np.zeros(len(WLobs))
-    print '%0.2f' % Sy
-    if Sy > 0.4 or Sy < 0.3:
-        WLsim[:] = np.nan
-    else:
-        WLsim[0] = WLobs[0]
-         
-        for i in range(0, len(WLobs) - 1):            
-            WLsim[i+1] = WLsim[i] - (RECHG[i] / Sy) + RECESS[i]
-
-    return WLsim, Sy
-    
-
-
-#==============================================================================
-
-class SynthHydrograph(object):
+class SynthHydrograph(object):                              # SynthHydrograph #
     
 #==============================================================================
     
-    def __init__(self, fmeteo, fwaterlvl):
+    def __init__(self, fmeteo, fwaterlvl, CRU, Sy=0.25):
     
         #---- Load Data ----
     
         print('--------')
         self.meteoObj = MeteoObj()
-        self.meteoObj.load_and_format(fmeteo)
+        self.meteoObj.load_and_format(fmeteo) # Includes the estimation of ETP
+                                              # if not already present in file.
         print('--------')
         self.waterlvlObj = WaterlvlData()
         self.waterlvlObj.load(fwaterlvl)
+        print('--------')
         
-        #---- Do Some Stuff ----
+        #---- Make the water level time series continuous ----
         
-        varnames = np.array(self.meteoObj.varnames)
+        ts, te = self.waterlvlObj.time[0], self.waterlvlObj.time[-1]
+        self.twlvl = np.arange(ts, te+1)
+        self.WLVLobs = np.interp(self.twlvl, self.waterlvlObj.time,
+                                 self.waterlvlObj.lvl)
+        
+
+        #---- Plotting the Results ----
+        
+        import datetime
+        
+        tweatr = self.meteoObj.TIME
+        
+        ts = np.where(self.twlvl[0] == tweatr)[0][0]
+        te = np.where(self.twlvl[-1] == tweatr)[0][0] 
+        
+        YEAR = self.meteoObj.DATA[ts:te+1,0]
+        MONTH = self.meteoObj.DATA[ts:te+1,1]
+        DAY = self.meteoObj.DATA[ts:te+1,2]
+        
+        DATE = [0] * len(self.twlvl)
+        for t in range(len(self.twlvl)):
+            DATE[t] = datetime.datetime(int(YEAR[t]), int(MONTH[t]),
+                                        int(DAY[t]), 0)
+        
+        #---- prepare figure and plot obs. ----
+        
+        fig = plt.figure(figsize=(11, 6))
+        ax = fig.add_axes([0.08, 0.1, 0.75, 0.8])
+        fig.suptitle('Synthetic hydrographs with Sy = %0.2f' % Sy, fontsize=20)
+        
+        ax.plot(DATE, self.WLVLobs, '0.65', lw=1.5)
+        
+        #---- Multiple Fit ----
+        
+        CRU = np.array([0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55])
+        RASMAX = [0] * len(CRU)
+        WLVLPRE = [0] * len(CRU)
+        RECHG = [0] * len(CRU)
+        for i in range(len(CRU)):
+            RASMAX[i], WLVLPRE[i], RECHG[i] = self.opt_RASmax(Sy, CRU[i])
+        
+        for i in range(len(CRU)):
+            RMSE = np.mean((WLVLPRE[i] - self.WLVLobs*1000)**2)**0.5
+            NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE[i])
+            rechg = np.mean(RECHG[i]) * 365
+            
+            label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
+                     'RMSE = % 0.0f mm\nNSE = %0.2f\n' +
+                     'Rechg = %0.0f mm/y'
+                     ) % (CRU[i], RASMAX[i], RMSE, NSE, rechg)
+            ax.plot(DATE, WLVLPRE[i]/1000., alpha=0.65, lw=1.5, label=label)
+        
+        #---- Best Fit ----
+        
+#        Cru, RASmax, WLVLPRE, RECHG = self.opt_CruRASmax(Sy)
+#        
+#        RMSE = np.mean((WLVLPRE - self.WLVLobs*1000)**2)**0.5
+#        NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE)
+#        rechg = np.mean(RECHG) * 365
+#        
+#        label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
+#                 'RMSE = % 0.0f mm\nNSE = %0.2f\n' +
+#                 'Rechg = %0.0f mm/y'
+#                 ) % (Cru, RASmax, RMSE, NSE, rechg)
+#                 
+#        ax.plot(DATE, WLVLPRE/1000., alpha=0.65, lw=1.5, label=label)
+        
+        #--------           
+        
+        ax.set_ylabel('Water Level (mbgs)', fontsize=16) 
+        ax.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':', lw=1)
+        ax.set_axisbelow(True)
+        
+        ax.legend(loc=[1.01, 0], ncol=1, fontsize=8)
+        ax.invert_yaxis()
+        
+#        fname = '%0.2f.pdf' % Sy
+#        fig.savefig(fname)
+        
+#    def plot_synth_hydrograph(0):
+#        pass
+    
+    @staticmethod
+    def nash_sutcliffe(Xobs, Xpre):
+        # Source: Wikipedia
+        # https://en.wikipedia.org/wiki/
+        # Nash%E2%80%93Sutcliffe_model_efficiency_coefficient
+        
+        NSE = 1 - np.sum((Xobs - Xpre)**2) / np.sum((Xobs - np.mean(Xobs))**2)
+        return NSE        
+        
+    def opt_CruRASmax(self, Sy): #========================== Optimize RASmax ==
+        
+        Cru = 0.
+        RMSEnew = 10**6 # force divergence
+        dCru = 0.1
+        while abs(dCru) >= 0.01:
+            while 1:
+                RMSEold = np.copy(RMSEnew)
+                
+                Cru += dCru
+                RASMAX, WLVLpre, RECHG = self.opt_RASmax(Sy, Cru)
+                
+                RMSEnew = (np.mean((self.WLVLobs * 1000 - WLVLpre)**2))**0.5
+                
+                if RMSEnew > RMSEold:
+                    dCru /= -10.
+                    break
+                
+        return Cru, RASMAX, WLVLpre, RECHG
+                
+    def opt_RASmax(self, Sy, CRU): #======================== Optimize RASmax ==
+        
+        #---- weather observations ----
+        
         ETP = self.meteoObj.DATA[:, 7]
         PTOT = self.meteoObj.DATA[:, 6]
-        TAVG = self.meteoObj.DATA[:, 6]
+        TAVG = self.meteoObj.DATA[:, 5]
+        tweatr = self.meteoObj.TIME + 10
         
-        WLVLobs = self.waterlvlObj.lvl * 1000
+        #---- water lvl observations ----
+        
+        twlvl = self.twlvl
+        WLVLobs = self.WLVLobs * 1000
+        
+        ts = np.where(twlvl[0] == tweatr)[0][0]
+        te = np.where(twlvl[-1] == tweatr)[0][0]        
+        
+        #---- MRC ----
+        
         A, B = self.waterlvlObj.A, self.waterlvlObj.B
-        
-        CRU = 0.39 
-        RASmax = 90 
-        Sy = 0.25
-        
-        RECHG = self.surf_water_budget(CRU, RASmax, ETP, PTOT, TAVG)
-        WLVLpre = self.calc_hydrograph_down(RECHG, A, B, WLVLobs[-1], Sy)
-        
-        indx = np.where(self.waterlvlObj.time[-1] == self.meteoObj.TIME)[0]
-        print indx 
-        
-        plt.close('all')
-        fig, ax = plt.subplots()
-        ax.plot(self.waterlvlObj.time, WLVLobs)
-        ax.plot(self.meteoObj.TIME + 40, WLVLpre, 'r')
-        ax.invert_yaxis()
-        plt.show(block=False)
-        
-        Wsy = self.calc_hydrograph_down(RECHG, A, B, WLVLobs[-1], Sy * 1.05)
-        ss_sy = (Wsy-WLVLpre) / 0.05
 
-        Rcru = self.surf_water_budget(CRU * 1.05, RASmax, ETP, PTOT, TAVG)
-        Wcru = self.calc_hydrograph_down(Rcru, A, B, WLVLobs[-1], Sy)
-        ss_cru = (Wcru-WLVLpre) / 0.05
+        #---- Gauss-Newton ----
         
-        Rras = self.surf_water_budget(CRU, RASmax * 1.05, ETP, PTOT, TAVG)
-        Wras = self.calc_hydrograph_down(Rras, A, B, WLVLobs[-1], Sy)
-        ss_ras = (Wras-WLVLpre) / 0.05
+        tolmax = 0.1       
+        RASMAX = 100.
         
-        ss_mat = np.vstack((ss_sy, ss_cru, ss_ras))
+        RECHGpre = self.surf_water_budget(CRU, RASMAX, ETP, PTOT, TAVG)
+        WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B, WLVLobs[0],
+                                       Sy, nscheme='forward')
+        RMSE = (np.mean((WLVLobs - WLVLpre)**2))**0.5
+#        print('RASmax = %0.1f mm ; RMSE = %0.2f mm' % (RASMAX, RMSE))
         
-        VCo_mat = np.dot(ss_mat, ss_mat.T)
-        
-        pcc = np.zeros((3,3)) + np.diag([1,1,1])
-        #qz and porosity
-        pcc[0,1] = VCo_mat[0,1]/(VCo_mat[0,0]**0.5*VCo_mat[1,1]**0.5)
-        pcc[1,0] = pcc[0,1]
-        #qz and soil moisture
-        pcc[0,2] = VCo_mat[0,2]/(VCo_mat[0,0]**0.5*VCo_mat[2,2]**0.5)
-        pcc[2,0] = pcc[0,2]
-        #porosity and soil moisture
-        pcc[2,1] = VCo_mat[2,1]/(VCo_mat[2,2]**0.5*VCo_mat[1,1]**0.5)
-        pcc[1,2] = pcc[2,1]
-        
-        print pcc
+        it = 0
+        while 1:
+            
+            it += 1
+            if it > 50:
+                print('Not converging.')
+                break                
+            
+            #---- Calculating Jacobian (X) Numerically ---- 
+            
+            rechg = self.surf_water_budget(CRU, RASMAX + tolmax, ETP,
+                                           PTOT, TAVG) 
+                                           
+            wlvl = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs[0],
+                                        Sy, nscheme='forward')
+            X = Xt = (wlvl - WLVLpre) / tolmax            
 
+            if np.sum(X) == 0:
+                rechg_yearly = np.mean(RECHGpre) * 365
+                RASMAX = np.inf
+#                print('!Uppermost limit of RASmax!') 
+                print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
+                      'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
+                      ) % (CRU, RASMAX, RMSE, rechg_yearly)              
+                return RASMAX, WLVLpre, RECHGpre
+            
+            #---- Solving Linear System ----
+            
+            dh = WLVLobs - WLVLpre
+            XtX = np.dot(Xt, X)                
+            Xtdh = np.dot(Xt, dh)
+            
+            dr = np.linalg.tensorsolve(XtX, Xtdh, axes=None)
+            
+            #---- Storing old parameter values ----
+            
+            RASMAXold = np.copy(RASMAX)
+            RMSEold = np.copy(RMSE)
+
+            while 1: # Loop for Damping (to prevent overshoot)
+                
+                #---- Calculating new paramter values ----
+
+                RASMAX = RASMAXold + dr
+                    
+                #---- Applying parameter bound-constraints ----
+                
+                if RASMAX < 0:
+                    RASMAX = 0
+                    rechg_yearly = np.mean(RECHGpre) * 365
+#                    print('!Lowermost limit of RASmax!')
+                    print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
+                          'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
+                          ) % (CRU, RASMAX, RMSE, rechg_yearly)
+                          
+                    return RASMAX, WLVLpre, RECHGpre
+                    
+                #---- Solving for new parameter values ----
+                
+                RECHGpre = self.surf_water_budget(CRU, RASMAX, ETP, PTOT, TAVG)
+                WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B,
+                                               WLVLobs[0], Sy,
+                                               nscheme='forward')
+                RMSE = (np.mean((WLVLobs - WLVLpre)**2))**0.5
+                
+                #---- Checking overshoot ----
+                
+                if (RMSE - RMSEold) > 0.001:
+                    dr = dr * 0.5
+                else:
+                    break
+    
+            #---- Checking tolerance ----
         
+            tol = np.abs(RASMAX - RASMAXold)            
+            
+            if tol < tolmax:
+#                out = np.correlate(WLVLobs, WLVLpre[:-100])
+#                plt.plot(out)
+                rechg_yearly = np.mean(RECHGpre) * 365
+                print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
+                      'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
+                      ) % (CRU, RASMAX, RMSE, rechg_yearly)
+                return RASMAX, WLVLpre, RECHGpre
+                            
         
     @staticmethod
-    def surf_water_budget(CRU, RASmax, ETP, PTOT, TAVG): #=====================
+    def surf_water_budget(CRU, RASmax, ETP, PTOT,   #===== Surf Water Budget ==
+                          TAVG, TMELT=1.5, CM=4 ):
+                          
     
         """    
         Input
         -----
         {float} CRU = Runoff coefficient
-        {float} RASmax = Maximal Readily Available Storage in mm
+        {float} RASmax = Readily Available Storage Max in mm
         {1D array} ETP = Dailty evapotranspiration in mm
         {1D array} PTOT = Daily total precipitation in mm
         {1D array} TAVG = Daily average air temperature in deg. C.
+        
+        CM: Daily melt coefficient
+        TMELT: Temperature treshold for snowmelt
         
         Output
         ------
@@ -153,18 +309,15 @@ class SynthHydrograph(object):
         """
         
         N = len(ETP)    
-        PAVL = np.zeros(N)    # Available Precipitation
-        PACC = np.zeros(N)    # Accumulated Precipitation
-        RU = np.zeros(N)      # Runoff
-        I = np.zeros(N)       # Infiltration
-        ETR = np.zeros(N)     # Evapotranspiration Real
-        dRAS = np.zeros(N)    # Variation of RAW
-        RAS = np.zeros(N)     # Readily Available Storage
-        RECHG = np.zeros(N)   # Recharge (mm)
-        
-        TMELT = 0 # Temperature treshold for snowmelt
-        CM = 4 # Daily melt coefficient
-        
+        PAVL = np.zeros(N)   # Available Precipitation
+        PACC = np.zeros(N)   # Accumulated Precipitation
+        RU = np.zeros(N)     # Runoff
+        I = np.zeros(N)      # Infiltration
+        ETR = np.zeros(N)    # Evapotranspiration Real
+        dRAS = np.zeros(N)   # Variation of RAW
+        RAS = np.zeros(N)    # Readily Available Storage
+        RECHG = np.zeros(N)  # Recharge (mm)
+                
         MP = CM * (TAVG - TMELT)  # Snow Melt Potential
         MP[MP < 0] = 0
         
@@ -206,628 +359,234 @@ class SynthHydrograph(object):
         
         return RECHG
     
-    @staticmethod
-    def calc_hydrograph_down(RECHG, A, B, WL0, Sy): #====== Calc. Hydrograph ==
     
+    @staticmethod
+    def calc_hydrograph(RECHG, A, B, WL0, Sy, nscheme='forward'): #============        
         """
+        This is a forward numerical explicit scheme for generating the
+        synthetic well hydrograph.
+        
+        This is a backward explicit scheme to produce a synthetic well
+        hydrograph. The water level starts at the last days in the observed
+        water level time series and generate the hydrograph by going backward
+        in time. This is very usefull when one which to produce water level
+        for the period of time before water level measurements are
+        available.
+        
         Parameters
         ----------
         Wlpre: Predicted Water Level (mm)
         Sy: Specific Yield
         RECHG: Groundwater Recharge (mm)
         
-        A, B: MRC Parameters, where: Recess(mm/d) = -A * h + B    
+        A, B: MRC Parameters, where: Recess(m/d) = -A * h + B
+        nscheme: Option are "forward" or "downdward" depending if the 
+                 hydrograph is being built forward in time or backward. 
+                 Default is "forward".
         """
-    
-        # This is a backward numerical explicit scheme. This was used to do
-        # the interpretation of the hydrograph at Dundurn. I need to find 
-        # where I've documented this.
-        #
+        
         # It should also be possible to do a Crank-Nicholson on this. I should
         # check this out.
         
-        WLpre = np.zeros(len(RECHG)) * np.nan
-        WLpre[-1] = WL0
+        WLpre = np.zeros(len(RECHG)+1) * np.nan
+        WLpre[0] = WL0
         
-        for i in reversed(range(1, len(RECHG))):
-            RECESS = (B - A * WLpre[i] / 1000.) * 1000
-            if RECESS < 0:
-                RECESS = 0
-            elif RECESS > B * 1000:
-                RECESS = B * 1000
+        if nscheme == 'backward':
+            for i in reversed(range(len(RECHG))):
+                RECESS = (B - A * WLpre[i] / 1000.) * 1000
+                RECESS = max(RECESS, 0)
+                
+                WLpre[i] = WLpre[i+1] + (RECHG[i] / Sy) - RECESS
             
-            WLpre[i-1] = WLpre[i] + (RECHG[i] / Sy) - RECESS
+        elif nscheme == 'forward':
+            for i in range(len(RECHG)):
+                RECESS = (B - A * WLpre[i] / 1000.) * 1000
+                RECESS = max(RECESS, 0)
+                            
+                WLpre[i+1] = WLpre[i] - (RECHG[i] / Sy) + RECESS
+        else:
+            WLpre = []
             
         return WLpre
-    
-#    #---- Assign Variables ----
-#    
-#    PTOT = meteoObj.PTOT # Daily total precipitation (mm)    
-#    YEAR = meteoObj.YEAR
-#    
-#    PTOT = meteoObj.PTOT # Daily total precipitation (mm)
-#    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
-#    TIMEmeteo = meteoObj.TIME # Time (days)
-#    LAT = float(meteoObj.LAT) # Latitude (deg)
-#    
-#    YEAR = meteoObj.YEAR
-#    MONTH = meteoObj.MONTH
-#    
-#    RAIN = meteoObj.RAIN
-#    
-#    Ta, _, _, _ = calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN) # Monthly normals
-#    
-#    ETP = meteo.calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
-#                                                        # evapotranspiration (mm) 
         
     
-#============================================================================== 
-def bestfit_hydrograph(meteoObj, waterlvlObj):
-#==============================================================================
+    @staticmethod
+    def mrc2rechg(t, hobs, A, B, z, Sy): #=====================================
+ 
+        """
+        Calculate groundwater recharge from the Master Recession Curve (MRC)
+        equation defined by the parameters A and B, the water level time series
+        in mbgs (t and ho) and the soil column description (z and Sy), using
+        the water-level fluctuation principle.
+           
+        INPUTS
+        ------
+        {1D array} t : Time in days 
+        {1D array} hobs = Observed water level in mbgs
+        {float}    A = Model parameter of the MRC
+        {float}    B = Model parameter of the MRC
+        {1D array} z = Depth of the soil layer limits
+        {1D array} Sy = Specific yield for each soil layer
+        {1D array} indx = Time index defining the periods over which recharge
+                          is to be computed. Odd index numbers are for the
+                          beginning of periods while even index numbers are for
+                          the end of periods.
+                             
+        OUTPUTS
+        -------       
+        {1D array} RECHG = Groundwater recharge time series in m
+    
+        Note: This is documented in logbook #11, p.23.
+        """
+        
+        #---- Check Data Integrity ----
+        
+        if np.min(hobs) < 0:
+            print('Water level rise above ground surface. Please check your data.')
+            return
+    
+        dz = np.diff(z) # Tickness of soil layer
+        
+        dt = np.diff(t)
+        RECHG = np.zeros(len(dt))
+        
+        # !Do not forget it is mbgs. Everything is upside down!
+
+        for i in range(len(dt)):
+            
+            # Calculate projected water level at i+1
+            
+            LUMP1 = 1 - A * dt[i] / 2
+            LUMP2 = B * dt[i]
+            LUMP3 = (1 + A * dt[i] / 2) ** -1
+            
+            hp = (LUMP1 * hobs[i] + LUMP2) * LUMP3
+            
+            # Calculate resulting recharge over dt (See logbook #11, p.23)
+                    
+            hup = min(hp, hobs[i+1])
+            hlo = max(hp, hobs[i+1])
+                    
+            iup = np.where(hup >= z)[0][-1]
+            ilo = np.where(hlo >= z)[0][-1]
+            
+            RECHG[i] = np.sum(dz[iup:ilo+1] * Sy[iup:ilo+1])        
+            RECHG[i] -= (z[ilo+1] - hlo) * Sy[ilo]
+            RECHG[i] -= (hup - z[iup]) * Sy[iup]
+            
+            # RECHG[i] will be positive in most cases. In theory, it should always
+            # be positive, but error in the MRC and noise in the data can cause hp
+            # to be above ho in some cases.
+            
+            RECHG[i] *= np.sign(hp - hobs[i+1])
+               
+        return RECHG 
+
+if __name__ == '__main__':
    
     plt.close('all')
-    
-    #---- Load Meteo -----
-    
-    PTOT = meteoObj.PTOT # Daily total precipitation (mm)
-    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
-    TIMEmeteo = meteoObj.TIME # Time (days)
-    LAT = float(meteoObj.LAT) # Latitude (deg)
-    
-    YEAR = meteoObj.YEAR
-    MONTH = meteoObj.MONTH
-    
-    RAIN = meteoObj.RAIN
-    
-    Ta, _, _, _ = calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN) # Monthly normals
-    
-    ETP = meteo.calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
-                                                        # evapotranspiration (mm)
-    
-    print np.mean(ETP)
-    
-    #---- Load Waterlvl -----
-    
-    WLogger = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
-    TIMEwater = waterlvlObj.time  # Time (days)
-    
-#  ----------------------------------------------------- LONG TREND ANALYSIS --
-    
-#    indx0 = np.where(TIMEmeteo <= TIMEwater[0])[0][-1]
-#    indxE = np.where(TIMEmeteo >= TIMEwater[-1])[0][0]
-    
-#    Resample observed water level on a daily basis.
-#    WLobs = np.interp(TIMEmeteo[indx0:indxE], TIMEwater, WLobs)
-#    plt.plot(-WLobs)
-
-    CRU = np.arange(0, 0.31, 0.05)
-    RASmax = np.zeros(len(CRU))
-    RMSE = np.zeros(len(CRU))
-    RECHyr = np.zeros(len(CRU))
-    
-    RECESS = np.ones(len(TIMEmeteo)) * 0.69 # Water level recession (mm/d)
-    WL0 = 6150 #np.mean(WLogger) #Initial water level (mm)
-    Sy = 0.35 - 0.06
-    
-    #---- MANUAL OBS. WL ----
-    
-    TIMEobs = np.array([35034, 35400, 35674, 40878, 41214, 41609, 41876])
-    
-    WLobs = np.array([6.8+0.73, 6.8+0.59, 6.8+0.64, 6.8, 6.47, 6.29, 6.15]) * 1000
-    
-    plt.plot(TIMEobs, -WLobs, 'or')
-    
-    indx = np.zeros(len(TIMEobs))
-    for i in range(len(TIMEobs)):
-        indx[i] = np.where(TIMEobs[i] == TIMEmeteo)[0][0]        
-    indx = indx.astype(int)
-    
-    # The program search for solutions with a long time trend that is close to
-    # zero. There is no unique solution, but each solution gives mean recharge
-    # rates that are equivalent and equal to the recession.
-    
-    for it in range(len(CRU)):
-        
-        RECHG = surf_water_budget(CRU[it], RASmax[it], ETP, PTOT, TAVG)
-        WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
-    
-#        SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]        
-#        delta_RAS = 10
-#        while abs(delta_RAS) >= 0.001:
-#            while 1:
-#                SLOPEold = np.copy(SLOPEnew)
-#                
-#                RASmax[it] += delta_RAS
-#                
-#                RECHG = surf_water_budget(CRU[it], RASmax[it], ETP, PTOT, TAVG)
-#                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
-#                
-##                dWL = WLobs[0] - WL[indx[0]]
-##                WLobs -= dWL
-#                
-#                print (np.mean(WLsim[indx] - WLobs)**2)**0.5
-#                
-#                SLOPEnew = np.polyfit(TIMEmeteo, WLsim, 1)[0]
-#                
-##                print SLOPEnew                
-#                
-#                if np.sign(SLOPEold) != np.sign(SLOPEnew):
-#                    delta_RAS /= -10.
-#                    break
-#                
-#                if abs(SLOPEold) < abs(SLOPEnew):
-#                    delta_RAS *= -1
-#                    break
-                
-                
-        RMSEnew = 10**6
-        delta_RAS = 10
-        while abs(delta_RAS) >= 0.1:
-            while 1:
-                RMSEold = np.copy(RMSEnew)
-                
-                RASmax[it] += delta_RAS
-                RMSE[it] = RMSEold
-                
-                RECHG = surf_water_budget(CRU[it], RASmax[it], ETP, PTOT, TAVG)
-                WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
-                
-#                dWL = WLobs[-1] - WLsim[indx[-1]]
-#                WLobs -= dWL
-                
-                RMSEnew = (np.mean((WLsim[indx] - WLobs)**2))**0.5
-                
-                print RMSEnew                
-                
-                if RMSEnew > RMSEold:
-                    delta_RAS /= -10.
-                    break
-                
-#                if abs(SLOPEold) < abs(SLOPEnew):
-#                    delta_RAS *= -1
-#                    break
-                
-        RECHyr[it] = np.mean(RECHG) * 365
-        print 'NEW solution'
-#        print RECHyr[it]
-        plt.plot(TIMEmeteo, -WLsim, color='gray')
-        
-        plt.pause(0.1)
-    
-    print CRU
-    print RASmax  
-    print RECHyr
-    print RMSE     
-    
-    WLintrp = np.interp(TIMEwater, TIMEmeteo, WLsim)
-    dWL = np.mean(WLintrp) - np.mean(WLogger)
-    WLogger += dWL
-    print dWL
-                
-#    plt.plot(TIMEwater, -WLogger, color='r')
-    
-#    RECHG = surf_water_budget(0, 35.81, ETP, PTOT, TAVG)
-#    WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
-    
-#    plt.figure()
-#    plt.plot(TIMEmeteo, -WLsim, color='blue')
-#    plt.plot(TIMEwater, -WLogger, 'r')
-
-    indx = np.where(RMSE == np.min(RMSE))[0][0]
-    
-    RECHG = surf_water_budget(CRU[indx], RASmax[indx], ETP, PTOT, TAVG)
-    WLsim = calc_hydrograph(RECHG, RECESS, WL0, Sy)
-    
-    return RECHG, WLsim
-    
-#==============================================================================
-def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
-#==============================================================================
-   
-#    RUNOFF = SIMOUT.WBudget[:, 13]
-#    ET = SIMOUT.WBudget[:, 6]
-#    PRECIP = SIMOUT.WBudget[:, 3]
-#    RECHG = SIMOUT.WBudget[:, 12]
-#    Z = SIMOUT.Z
-
-#    index = np.where(Z > 1)[0][0]    
-        
-#    QWSOIL = SIMOUT.QWSOIL[:, index] # Water Flux just below 1.0 m depth
-    YEAR = np.arange(1970, 2015).astype('int')    
-    NYear = len(YEAR)
-    
-#    DATE_YEAR = SIMOUT.DATE[1:, 2].astype('int')
-
-    YEARLY_PRECIP = np.zeros(NYear) 
-    YEARLY_RECHG = np.zeros(NYear) 
-#    YEARLY_RUNOFF = np.zeros(NYear)
-#    YEARLY_ET = np.zeros(NYear)
-#    YEARLY_QWSOIL = np.zeros(NYear)
-    
-    for i in range(NYear):
-        indexes = np.where(DATE_YEAR == YEAR[i])[0]
-        
-        YEARLY_PRECIP[i] = np.sum(PRECIP[indexes])
-        YEARLY_RECHG[i] = np.sum(RECHG[indexes])
-#        YEARLY_RUNOFF[i] = np.sum(RUNOFF[indexes])
-#        YEARLY_ET[i] = np.sum(ET[indexes])
-#        YEARLY_QWSOIL[i] = np.sum(QWSOIL[indexes])
-    
-    print
-    print 'Mean Yearly Precip = ', np.mean(YEARLY_PRECIP), 'mm'
-    print 'Mean Yearly Recharge = ', np.mean(YEARLY_RECHG), 'mm'
-#    print 'Mean Yearly Runoff = ', np.mean(YEARLY_RUNOFF), 'mm'
-#    print 'Mean Yearly ET = ', np.mean(YEARLY_ET), 'mm'
-#    print 'Mean Yearly Recharge @ 1m = ', np.mean(YEARLY_QWSOIL), 'mm'
-                    
-    fig = plt.figure(figsize=(15, 7))
-    fig.patch.set_facecolor('white')
-    
-    fheight = fig.get_figheight()
-    fwidth = fig.get_figwidth()
-    
-    left_margin  = 1
-    right_margin = 0.35
-    bottom_margin = 0.75
-    top_margin = 0.25
-    
-    x0 = left_margin / fwidth
-    y0 = bottom_margin / fheight
-    w0 = 1 - (left_margin + right_margin) / fwidth
-    h0 = 1 - (bottom_margin + top_margin) / fheight
-   
-    #---------------------------------------------------------AXES CREATION-----
-
-    ax0  = fig.add_axes([x0, y0, w0, h0])
-    ax0.patch.set_visible(False)
-        
-    #------------------------------------------------------------AXIS RANGE-----       
-    
-    Ymin0 = 0
-    Ymax0 = 650#1800
-    
-    Xmin0 = YEAR[0] - 1
-    Xmax0 = YEAR[-1]
-    
-    #------------------------------------------------------XTICKS FORMATING----- 
-   
-    ax0.xaxis.set_ticks_position('bottom')
-    ax0.tick_params(axis='x',direction='out', gridOn=False)
-    ax0.set_xticks(YEAR)
-    ax0.xaxis.set_ticklabels([])
-    
-    ax0.set_xticks(YEAR[::2]-0.4, minor=True)
-    ax0.tick_params(axis='x', which='minor', length=0, gridOn=False, pad=5)
-    ax0.xaxis.set_ticklabels(YEAR[::2], minor=True, rotation=90,
-                             horizontalalignment='center')
-    
-    #------------------------------------------------------YTICKS FORMATING-----
- 
-    ax0.yaxis.set_ticks_position('left')
-    ax0.tick_params(axis='y',direction='out', gridOn=True)
-    
-    ax0.set_yticks(np.arange(0, 700, 50), minor=True)
-    ax0.tick_params(axis='y',direction='out', which='minor', gridOn=True)
-    
-    #------------------------------------------------------------AXIS RANGE-----
-    
-    ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
-
-    #----------------------------------------------------------------LABELS-----
-    
-    ax0.set_ylabel('Equivalent Water (mm)', fontsize=14,
-                   verticalalignment='bottom')
-    ax0.yaxis.set_label_coords(-0.04, 0.5)
-
-#    
-#    ax0.set_xlabel(LabelDB.years, fontsize=label_font_size,
-#                   verticalalignment='top')
-#    ax0.xaxis.set_label_coords(0.5, -0.075)
-    
-    #--------------------------------------------------------------PLOTTING-----
-                         
-    lspoint = '-'
-    lstrend = '--'
-    
-    #----- PRECIP -----
-    
-    ax0.plot(YEAR-0.5, YEARLY_PRECIP,
-             color='blue', markeredgecolor='None', marker='o',
-             markersize=5, linestyle=lspoint, label='Precipitation',
-             clip_on=False, zorder=100)
-             
-    A = np.polyfit(YEAR-0.5, YEARLY_PRECIP, 1)
-    print 'Trend Precip =', A[0], ' mm/y'
-    TREND1 = A[0]*(YEAR-0.5) + A[1]
-    ax0.plot(YEAR-0.5, TREND1, color='blue', linestyle=lstrend,
-             marker='None', label='Trend Line Precipitation', clip_on=False,
-             zorder=100)
-    
-
-    ax0.text(YEAR[0] + 0.25, 515,
-             'Mean Yearly Precipitation = %d mm' % np.mean(YEARLY_PRECIP),
-             color='b', fontsize=14)
-             
-    ax0.text(YEAR[0] + 0.25, 165,
-             'Mean Yearly Recharge = %d mm' % np.mean(YEARLY_RECHG),
-             color='orange', fontsize=14)
-    
-    #----- RECHG -----
-    
-    ax0.plot(YEAR-0.5, YEARLY_RECHG,
-             color='orange', markeredgecolor='None', marker='^',
-             markersize=8, linestyle=lspoint, label='Recharge',
-             clip_on=False, zorder=100)  
-             
-    A = np.polyfit(YEAR-0.5, YEARLY_RECHG, 1)
-    print 'Trend Rechg =', A[0], ' mm/y'
-    TREND1 = A[0]*(YEAR-0.5) + A[1]
-    ax0.plot(YEAR-0.5, TREND1, color='orange', linestyle=lstrend,
-             marker='None', label='Trend Line Recharge', clip_on=False,
-             zorder=100)             
-    
-#    #----- RUNOF -----    
-#    
-#    ax0.plot(YEAR-0.5, YEARLY_RUNOFF,
-#             color='red', markeredgecolor='None', marker='s',
-#             markersize=5, linestyle=lspoint, label='Runoff',
-#             clip_on=False, zorder=100)
-#             
-#    A = np.polyfit(YEAR-0.5, YEARLY_RUNOFF, 1)
-#    print 'Trend Runoff =', A[0], ' mm/y'
-#    TREND1 = A[0]*(YEAR-0.5) + A[1]
-#    ax0.plot(YEAR-0.5, TREND1, color='red', linestyle=lstrend,
-#             marker='None', label='Trend Line Runoff', clip_on=False,
-#             zorder=100) 
-#    
-#    #----- ETP -----
-#        
-#    ax0.plot(YEAR-0.5, YEARLY_ET,
-#             color='green', markeredgecolor='None', marker='D',
-#             markersize=5, linestyle=lspoint, label='ETP',
-#             clip_on=False, zorder=100)
-#             
-#    A = np.polyfit(YEAR-0.5, YEARLY_ET, 1)
-#    print 'Trend ETP =', A[0], ' mm/y'
-#    TREND1 = A[0]*(YEAR-0.5) + A[1]
-#    ax0.plot(YEAR-0.5, TREND1, color='green', linestyle=lstrend,
-#             marker='None', label='Trend Line ETP', clip_on=False,
-#             zorder=100) 
-
-    #----------------------------------------------------------------LEGEND-----   
-    
-    ax0.legend(loc=2, ncol=2, numpoints=1, fontsize=14)
-    
-    
-#===============================================================================
-def plot_water_budget_monthly(YEAR, MONTH, years2plot):
-#===============================================================================
-    
-    # 0 = DAY                 8 = CANOPY (CHANGE IN STORAGE)
-    # 1 = HR                  9 = SNOW (CHANGE IN STORAGE)
-    # 2 = YR                 10 = RESIDUE (CHANGE IN STORAGE)
-    # 3 = PRECIP             11 = SOIL (CHANGE IN STORAGE)
-    # 4 = SNOWMELT           12 = DEEP PERC
-    # 5 = PRECIP INTRCP      13 = RUNOFF
-    # 6 = ET                 14 = PONDED
-    # 7 = PLANT TRANSP       15 = CUMUL ET
-    #                        16 = ERROR'
-    
-#    YEAR = SIMOUT.DATE[:-1, 2].astype('int')
-    
-    years_index = np.where(np.in1d(YEAR, years2plot))[0]
-#    years_index = np.where(YEAR == years2plot)[0]
-    
-#    MONTH = SIMOUT.MONTH[years_index]
-    
-#    RUNOFF = SIMOUT.WBudget[years_index, 13]
-#    ET = SIMOUT.WBudget[years_index, 6]
-    PRECIP = SIMOUT.WBudget[years_index, 3]
-    RECHG = SIMOUT.WBudget[years_index, 12]
-    QWSOIL = SIMOUT.QWSOIL[years_index, 13] # Water Flux @ 1.1 m
-
-    month_names = LabelDB.month_names
-    
-    NYear = len(years2plot)#1. #np.max(YEAR) - np.min(YEAR)
-    
-    MONTH_PRECIP = np.zeros(12) 
-    MONTH_RECHG = np.zeros(12) 
-    MONTH_RUNOFF = np.zeros(12)
-    MONTH_ET = np.zeros(12)
-    MONTH_QWSOIL = np.zeros(12)
-    
-    for i in range(12):
-        indexes = np.where(MONTH[1:] == i+1)[0]
-        
-        MONTH_PRECIP[i] = np.sum(PRECIP[indexes]) / NYear
-        MONTH_RECHG[i] = np.sum(RECHG[indexes]) / NYear
-        MONTH_RUNOFF[i] = np.sum(RUNOFF[indexes]) / NYear
-        MONTH_ET[i] = np.sum(ET[indexes]) / NYear
-        MONTH_QWSOIL[i] = np.sum(QWSOIL[indexes]) / NYear
-        
-    #----------------------------------------------------- FIGURE CREATION -----   
-
-    fig = plt.figure(figsize=(11*0.75, 6.5*0.75))
-    fig.patch.set_facecolor('white')
-    
-    fheight = fig.get_figheight()
-    fwidth = fig.get_figwidth()
-    
-    left_margin  = 1
-    right_margin = 0.25
-    bottom_margin = 0.5
-    top_margin = 0.25
-    
-    x0 = left_margin / fwidth
-    y0 = bottom_margin / fheight
-    w0 = 1 - (left_margin + right_margin) / fwidth
-    h0 = 1 - (bottom_margin + top_margin) / fheight
-   
-    #------------------------------------------------------- AXES CREATION -----
-
-    ax0  = fig.add_axes([x0, y0, w0, h0])
-    ax0.patch.set_visible(False)
-        
-    #---------------------------------------------------- XTICKS FORMATING ----- 
-    
-    ax0.xaxis.set_ticks_position('bottom')
-    ax0.tick_params(axis='x',direction='out', gridOn=False)
-    ax0.xaxis.set_ticklabels([])
-    ax0.set_xticks(np.arange(0, 13))
-    
-    ax0.set_xticks(np.arange(0.5, 12.5), minor=True)
-    ax0.tick_params(axis='x', which='minor', length=0, gridOn=False)
-    ax0.xaxis.set_ticklabels(month_names, minor=True)
-    
-    #------------------------------------------------------YTICKS FORMATING-----
-    
-    Ymax0 = np.max([np.max(MONTH_PRECIP), np.max(MONTH_RECHG),
-                   np.max(MONTH_RUNOFF), np.max(MONTH_ET),
-                   np.max(MONTH_QWSOIL)])
-    Ymax0 = np.ceil(Ymax0 / 10.) * 10
-
-    Ymin0 = 0
-   
-    ax0.yaxis.set_ticks_position('left')
-    ax0.tick_params(axis='y',direction='out', gridOn=True)
-    
-    #---------------------------------------------------------- AXIS RANGE -----
-
-    ax0.axis([0, 12, Ymin0, Ymax0])
-
-    #----------------------------------------------------------------LABELS-----
-    
-    ax0.set_ylabel('Equivalent Water (mm)', fontsize=label_font_size,
-                   verticalalignment='bottom')
-    ax0.yaxis.set_label_coords(-0.085, 0.5)
-#    
-#    ax0.set_xlabel(LabelDB.years, fontsize=label_font_size,
-#                   verticalalignment='top')
-#    ax0.xaxis.set_label_coords(0.5, -0.075)
-    
-    #--------------------------------------------------------------PLOTTING-----
-   
-    bar_width = 0.2
-    
-    XPOS = np.arange(0.2, 12.2, 1)
-    ax0.bar(XPOS, MONTH_PRECIP, align='center', width=bar_width,
-            color='blue', label='Precipitation')
-    XPOS = np.arange(0.4, 12.4, 1)
-    ax0.bar(XPOS, MONTH_QWSOIL, align='center', width=bar_width,
-            color='orange', label='Recharge')
-    XPOS = np.arange(0.8, 12.8, 1)   
-    ax0.bar(XPOS, MONTH_RUNOFF, align='center', width=bar_width,
-            color='red',  label='Surface Runoff')
-    XPOS = np.arange(0.6, 12.6, 1)    
-    ax0.bar(XPOS, MONTH_ET, align='center', width=bar_width,
-            color='green', label='Evapotranspiration') 
-            
-    #----------------------------------------------------------------LEGEND-----   
-    
-    ax0.legend(loc=1, ncol=1)
-
-    
-if __name__ == '__main__':
-    
     
     dirname = '../Projects/Pont-Rouge/'
     fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
     fwaterlvl = dirname + 'Water Levels/5080001.xls'
-
-    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl)
     
-#    plt.close('all')
-#    # fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-#    fmeteo = "Files4testing/SASKATOON INT'L A and RCS_1950-2014.out"
-##    fmeteo = 'Files4testing/OUTLOOK PFRA_1980-2014.out'
-#    meteoObj = MeteoObj()
-#    meteoObj.load(fmeteo)
-#    
-#    fwaterlvl = 'Files4testing/P19 2013-2014.xls'
-#    waterlvlObj = WaterlvlData()
-#    waterlvlObj.load(fwaterlvl)  
-#    
-#    PTOT = meteoObj.PTOT # Daily total precipitation (mm)
-#    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
-#    TIMEmeteo = meteoObj.TIME # Time (days)
-#    LAT = float(meteoObj.LAT) # Latitude (deg)
-#    
-#    YEAR = meteoObj.YEAR
-#    MONTH = meteoObj.MONTH
-#    
-#    RAIN = meteoObj.RAIN
-#    
-#    Ta, _, _, _ = calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN) # Monthly normals
-#    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
-                                                   # evapotranspiration (mm)
+    CRU = np.array([0.2, 0.3, 0.4, 0.5])
     
-#    RECHG = calc_recharge(0.1, 25, ETP, PTOT, TAVG)
+#    CRU = [0.3]
+    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, CRU, Sy=0.28)
     
-    #---- OLD VERSION WITH NO UNSATURATED TRANSPORT (used for Dundurn) ----
+#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, CRU, Sy=0.3)
+    
+#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, CRU, Sy=0.25)
+    
+#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, CRU, Sy=0.2)
+    
+    plt.show()
+    
+    
+    
+    
+#    Sy = 0.25
+#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, Sy, CRU)
+#    Sy = 0.25
+#    CRU = [0.45]
+#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, Sy, CRU)
+    
+#    plt.show()
+#    for Sy in [0.2, 0.25, 0.3, 0.35]:
+#        synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, Sy, CRU)
+    
+    
+    #        self.compare_rechg(twlvl, RECHGobs, tmeteo, RECHGpre)
+    
+#    @ staticmethod
+#    def compare_rechg(tobs, Robs, tpre, Rpre):
 #        
-#    plt.close('all')
-#    
-#    # fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-#    fmeteo = "Files4testing/SASKATOON INT'L A and RCS_1950-2014.out"
-##    fmeteo = 'Files4testing/OUTLOOK PFRA_1980-2014.out'
-#    meteoObj = MeteoObj()
-#    meteoObj.load(fmeteo)
-#    
-#    fwaterlvl = 'Files4testing/P19 2013-2014.xls'
-#    waterlvlObj = WaterlvlData()
-#    waterlvlObj.load(fwaterlvl)
+#        CORRCOEF = []
+        
+#        bwidth = 7.
+#        nbin = np.floor(len(Robs) / bwidth)
+#
+#        Robs_week = Robs[:nbin*bwidth].reshape(nbin, bwidth)
+#        Robs_week = np.sum(Robs_week, axis=1)
+        
+#        for i in range(100):
+#            
+#            tindx_start = np.where(tobs[0] == (tpre + i))[0][0]
+#            tindx_end = np.where(tobs[-1] == (tpre + i))[0][0]
 #        
-#    PTOT = meteoObj.PTOT # Daily total precipitation (mm)    
-#    YEAR = meteoObj.YEAR
+#            Rpre2 = Rpre[tindx_start:tindx_end]
+#            
+#            Rpre2_week = Rpre2[:nbin*bwidth].reshape(nbin, bwidth)
+#            Rpre2_week = np.sum(Rpre2_week, axis=1)
+#
+#            CORRCOEF.append(np.corrcoef(Rpre2_week, Robs_week)[0, 1])
+                
 
-#    RAIN = meteoObj.RAIN
-#    TAVG = meteoObj.TAVG # Daily mean temperature (deg C)
-#    TIMEmeteo = meteoObj.TIME # Time (days)
-#    LAT = float(meteoObj.LAT) # Latitude (deg)
-#    MONTH = meteoObj.MONTH
-    
-#    Ta, _, _, _ = calculate_normals(YEAR, MONTH, TAVG, PTOT, RAIN) # Monthly normals
-#    ETP = calculate_ETP(TIMEmeteo, TAVG, LAT, Ta) # Daily potential reference 
-#                                                  # evapotranspiration (mm)
-    
-    # The program search for solutions with a long time trend that is close to
-    # zero. There is no unique solution, but each solution gives mean recharge
-    # rates that are equivalent and equal to the recession.
-    
-#    RECHG, WL = bestfit_hydrograph(meteoObj, waterlvlObj)    
-##    YEAR = np.arange(1986, 2006).astype('int')       
-#    plot_water_budget_yearly(PTOT, RECHG, YEAR)
-#    
-#    WLogger = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
-#    TIMELogger = waterlvlObj.time  # Time (days)
-#    plot_synth_hydrograph(WL, meteoObj.TIME, WLogger, TIMELogger)
-#    
-#    #---- Save the data in file
-#    
-#    filename = 'recharge_Dundurn_daily.tsv'
-#    
-#    # We will keep results only from 1970 to the present.
-#    tindx = np.where( YEAR == 1970)[0][0]
-#    
-#    fileout = np.array([['Time (day)', 'Recharge (mm/day)']])
-#    
-#    data = np.vstack((meteoObj.TIME[tindx:], RECHG[tindx:])).transpose()
-#       
-#    fileout = np.vstack((fileout, data))
-#    
-#    
-#    with open(filename, 'wb') as f:
-#        writer = csv.writer(f,delimiter='\t')
-#        writer.writerows(fileout)
-    
-    #---- Other Calculus ----
-   
-    # Estimation of the wilting point for plants
-    
-#    SoilObj = SoilTypes(10)
-#    VWC, _ = calc_VWC([-164573], SoilObj)
-#    print VWC
-    
-#    SoilObj = SoilTypes(8)
-#    Pc, K = calc_Pc([0.3], SoilObj)
-#    print K
+#        print(np.sum(Robs)/len(Robs) * 365)
+#        Robs[Robs<1] = 0
+#
+#        fig, ax = plt.subplots(2,1)
+#        ax[0].plot(tobs[:-1], Robs)
+#        ax[1].plot(tpre, Rpre)
+#        plt.show(block=False)
+        
+        
+#        print indx_start, indx_end
+#        print(len(RECHGpre))
+#        print(len(RECHGobs))
+        
+#        print len(RECHGpre[indx_start:indx_end+1])
+#        print len(RECHGobs)
+        
+#        out = np.correlate(RECHGobs, RECHGpre[indx_start:indx_end+1])
+       
+
+        
+#        Wsy = self.calc_hydrograph_down(RECHG, A, B, WLVLobs[-1], Sy * 1.05)
+#        ss_sy = (Wsy-WLVLpre) / 0.05
+#
+#        Rcru = self.surf_water_budget(CRU * 1.05, RASmax, ETP, PTOT, TAVG)
+#        Wcru = self.calc_hydrograph_down(Rcru, A, B, WLVLobs[-1], Sy)
+#        ss_cru = (Wcru-WLVLpre) / 0.05
+#        
+#        Rras = self.surf_water_budget(CRU, RASmax * 1.05, ETP, PTOT, TAVG)
+#        Wras = self.calc_hydrograph_down(Rras, A, B, WLVLobs[-1], Sy)
+#        ss_ras = (Wras-WLVLpre) / 0.05
+#        
+#        ss_mat = np.vstack((ss_sy, ss_cru, ss_ras))
+#        
+#        VCo_mat = np.dot(ss_mat, ss_mat.T)
+#        
+#        pcc = np.zeros((3,3)) + np.diag([1,1,1])
+#        #qz and porosity=
+#        pcc[0,1] = VCo_mat[0,1]/(VCo_mat[0,0]**0.5*VCo_mat[1,1]**0.5)
+#        pcc[1,0] = pcc[0,1]
+#        #qz and soil moisture
+#        pcc[0,2] = VCo_mat[0,2]/(VCo_mat[0,0]**0.5*VCo_mat[2,2]**0.5)
+#        pcc[2,0] = pcc[0,2]
+#        #porosity and soil moisture
+#        pcc[2,1] = VCo_mat[2,1]/(VCo_mat[2,2]**0.5*VCo_mat[1,1]**0.5)
+#        pcc[1,2] = pcc[2,1]
+#        
+#        print pcc

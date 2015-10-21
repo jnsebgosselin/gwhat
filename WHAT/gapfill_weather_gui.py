@@ -596,7 +596,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         return xldate_from_date_tuple((y, m, d), 0)
     
             
-    def gap_fill_btn_clicked(self): #============== Gap-Fill Button Clicked ==
+    def gap_fill_btn_clicked(self): #=============== Gap-Fill Button Clicked ==
         
         #-------------------------------------------- Stop Thread if Running --
         

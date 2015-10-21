@@ -329,17 +329,22 @@ class PostProcessErr(object):
         #---- Measured Gamma PDF ----
         
         alpha, loc, beta = stats.gamma.fit(Ymes)
-        x = np.arange(0.1, Xmax, 0.1)
+        x = np.arange(0.5, Xmax, 0.1)
         ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '-', lw=2,
                  alpha=1., color=c1, label='Gamma PDF (measured)')
         
         #---- Predicted Gamma PDF ----
         
         alpha, loc, beta = stats.gamma.fit(Ypre)
-        x = np.arange(0.1, Xmax, 0.1)
+        x = np.arange(0.5, Xmax, 0.1)
         ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '--r',
                  lw=2, alpha=0.85, color=c2, label='Gamma PDF (estimated)')
-                 
+        
+        #------------------------------------------------------- Axis Limits --
+        
+#        ax0.set_xlim(0, Xmax)
+        ax0.axis(xmin=0, xmax=Xmax, ymax=1)
+        
         #------------------------------------------------------------ Labels --
         
         #---- axis labels ----
@@ -395,10 +400,6 @@ class PostProcessErr(object):
         transform = ax0.transAxes + padding
         
         ax0.text(0., 0., msg, transform=transform, va='bottom', ha='left')
-        
-        #------------------------------------------------------- Axis Limits --
-        
-        ax0.set_xlim(0, Xmax)
         
         #-------------------------------------------------------------- Draw --
         
@@ -489,7 +490,7 @@ if __name__ == '__main__': #=========================================== Main ==
     # https://www.quora.com/Whats-the-easiest-way-to-recursively-get-a-list-
     # of-all-the-files-in-a-directory-tree-in-Python
     
-    dirname = '../Projects/Monteregie Est/Meteo/Output/'
+    dirname = '../Projects/Valcartier/Meteo/Output/'
     for root, directories, filenames in os.walk(dirname):
         for filename in filenames:            
             if os.path.splitext(filename)[1] == '.err':

@@ -42,7 +42,7 @@ from waterlvldata import WaterlvlData
 
 class Tooltips():
     
-    def __init__(self, language): #--------------------  ----------- ENGLISH --
+    def __init__(self, language): #--------------------------------- ENGLISH --
         
         #---- Toolbar ----
         
@@ -69,7 +69,7 @@ class Tooltips():
                           ' using the MRC calculated and the water-table' +
                           ' fluctuation principle')
         
-        if language == 'French': #----------  ----------------------- FRENCH --
+        if language == 'French': #----------------------------------- FRENCH --
             
             pass
 
@@ -159,6 +159,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         #---- Water Level (Host) ----
         
         self.ax0 = self.fig_MRC.add_axes([0, 0, 1, 1], zorder=0)
+        
         self.setup_ax_margins(None)
         
         #----------------------------------------------------------- TOOLBAR --
@@ -673,12 +674,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         #------------------------------------------------------------ XTICKS --
         
         self.ax0.xaxis.set_ticks_position('bottom')
-        self.ax0.tick_params(axis='x',direction='out', gridOn=True)
+        self.ax0.tick_params(axis='x',direction='out')
 
         #------------------------------------------------------------ YTICKS --
         
         self.ax0.yaxis.set_ticks_position('left')
-        self.ax0.tick_params(axis='y',direction='out', gridOn=True)
+        self.ax0.tick_params(axis='y',direction='out')
                 
         #---------------------------------------------------- SET AXIS RANGE --
        
@@ -732,9 +733,14 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         if not self.btn_strati.autoRaise():
             self.display_soil_layer()
-            
+        
+        #---- Setup Gridlines
+        
+        self.ax0.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':')
+        self.ax0.set_axisbelow(True)
+        
         #----------------------------------------------------- UPDATE WIDGET --
-
+        
         self.fig_MRC_widget.draw()
         
         self.isGraphExists = True
@@ -1523,7 +1529,7 @@ class SoilProfil():
 #===============================================================================    
 def mrc2rechg(t, ho, A, B, z, Sy):
     """
-    Calculate groundwater recharge from the Master Recession Curve 
+    Calculate groundwater recharge from the Master Recession Curve (MRC)
     equation defined by the parameters A and B, the water level time series
     in mbgs (t and ho) and the soil column description (z and Sy), using
     the water-level fluctuation principle.
@@ -1542,37 +1548,33 @@ def mrc2rechg(t, ho, A, B, z, Sy):
                       the end of periods.
                          
     OUTPUTS
-    -------
-       
+    -------       
     {1D array} RECHG = Groundwater recharge time series in m
 
     Note: This is documented in logbook #11, p.23.
     """
 #===============================================================================
-    
+    print z
+    print Sy
     #---- Check Data Integrity ----
     
     if np.min(ho) < 0:
         print('Water level rise above ground surface. Please check your data.')
         return
 
-    dz = np.diff(z)
+    dz = np.diff(z) # Tickness of soil layer
     print dz
     
     dt = np.diff(t)
     RECHG = np.zeros(len(dt))
     
-#    # for validation only
-#    Sy2 = np.mean(Sy)
-#    rechg2 = np.zeros(len(dt))
-    
-    # !!! Do not forget it is mbgs !!!
+    # !Do not forget it is mbgs. Everything is upside down!
     
     for i in range(len(dt)):
         
         # Calculate projected water level at i+1
         
-        LUMP1 = (1 - A * dt[i] / 2)
+        LUMP1 = 1 - A * dt[i] / 2
         LUMP2 = B * dt[i]
         LUMP3 = (1 + A * dt[i] / 2) ** -1
         
@@ -1590,15 +1592,13 @@ def mrc2rechg(t, ho, A, B, z, Sy):
         RECHG[i] -= (z[ilo+1] - hlo) * Sy[ilo]
         RECHG[i] -= (hup - z[iup]) * Sy[iup]
         
-        RECHG[i] *= np.sign(hp - ho[i+1]) 
+        RECHG[i] *= np.sign(hp - ho[i+1])
+        
         # RECHG[i] will be positive in most cases. In theory, it should always
         # be positive, but error in the MRC and noise in the data can cause hp
         # to be above ho in some cases.
-                       
-#        rechg2[i] = -(ho[i+1] - hp) * Sy2 # Do not forget it is mbgs
     
     print("Recharge = %0.2f m" % np.sum(RECHG))
-#    print("Recharge2 = %0.2f m" % np.sum(rechg2))
            
     return RECHG
     

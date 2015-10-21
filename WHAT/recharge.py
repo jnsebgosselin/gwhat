@@ -603,7 +603,7 @@ def bestfit_hydrograph(meteoObj, waterlvlObj):
     WLogger = waterlvlObj.lvl * 1000 # Observed groundwater level (mbgs)
     TIMEwater = waterlvlObj.time  # Time (days)
     
-#----------------------------------------------------- LONG TREND ANALYSIS ----
+    #--------------------------------------------------- LONG TREND ANALYSIS --
     
 #    indx0 = np.where(TIMEmeteo <= TIMEwater[0])[0][-1]
 #    indxE = np.where(TIMEmeteo >= TIMEwater[-1])[0][0]

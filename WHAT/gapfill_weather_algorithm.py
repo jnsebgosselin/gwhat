@@ -894,7 +894,8 @@ class GapFillWeather(QtCore.QObject):
             #---- Prepare Header ----
             
             fcontent = copy(HEADER)
-            fcontent.append(['', '', '', '', 'Est. Err.', Yname, Yname])
+            fcontent.append(['', '', '', '', '', '',
+                             'Est. Err.', Yname, Yname])
             fcontent[-1].extend(Xnames)
             fcontent.append(['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'Ndata',
                              'RMSE', 'Ypre-Ymes', 'Ypre', 'Ymes'])
@@ -997,6 +998,9 @@ class GapFillWeather(QtCore.QObject):
             
             # http://statsmodels.sourceforge.net/devel/generated/
             # statsmodels.regression.quantile_regression.QuantReg.html
+            
+            # http://statsmodels.sourceforge.net/devel/examples/
+            # notebooks/generated/quantile_regression.html
             
             model = sm.regression.quantile_regression.QuantReg(Y, X)
             results = model.fit(q=0.5)

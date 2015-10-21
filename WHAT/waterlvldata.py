@@ -71,6 +71,7 @@ class WaterlvlData():                                          # WaterlvlData #
         self.hrecess = []
         self.A, self.B = None, None
         
+                
     def load(self, fname): #=============================== Water Level Data ==
         
         print('Loading waterlvl time-series...')
@@ -134,40 +135,6 @@ class WaterlvlData():                                          # WaterlvlData #
         print('Waterlvl time-series for well %s loaded.' % self.name_well)
         
         return True
-    
-    def generate_HTML_table(self): #============================= HTML Table ==
-        
-        FIELDS = [['Well Name', self.name_well],
-                  ['Latitude', self.LAT],
-                  ['Longitude', self.LON],
-                  ['Altitude', self.ALT],
-                  ['Municipality', self.municipality]]
-                  
-        well_info = '''
-                    <table border="0" cellpadding="2" cellspacing="0" 
-                    align="left">
-                    '''
-            
-        for row in range(len(FIELDS)):
-            
-             try:                 
-                 VAL = '%0.2f' % float(FIELDS[row][1])
-             except:
-                 VAL = FIELDS[row][1]
-                 
-             well_info += '''
-                          <tr>
-                            <td width=10></td>
-                            <td align="left">%s</td>
-                            <td align="left" width=20>:</td>
-                            <td align="left">%s</td>
-                          </tr>
-                          ''' % (FIELDS[row][0], VAL)
-        well_info += '</table>'
-        
-        self.well_info = well_info
-        
-        return well_info
         
     def load_waterlvl_measures(self, fname, name_well): #=== Manual Measures ==
         
@@ -245,6 +212,42 @@ class WaterlvlData():                                          # WaterlvlData #
         self.hrecess = dat[:, 1]
         
         return True
+
+        
+    def generate_HTML_table(self): #============================= HTML Table ==
+        
+        FIELDS = [['Well Name', self.name_well],
+                  ['Latitude', self.LAT],
+                  ['Longitude', self.LON],
+                  ['Altitude', self.ALT],
+                  ['Municipality', self.municipality]]
+                  
+        well_info = '''
+                    <table border="0" cellpadding="2" cellspacing="0" 
+                    align="left">
+                    '''
+            
+        for row in range(len(FIELDS)):
+            
+             try:                 
+                 VAL = '%0.2f' % float(FIELDS[row][1])
+             except:
+                 VAL = FIELDS[row][1]
+                 
+             well_info += '''
+                          <tr>
+                            <td width=10></td>
+                            <td align="left">%s</td>
+                            <td align="left" width=20>:</td>
+                            <td align="left">%s</td>
+                          </tr>
+                          ''' % (FIELDS[row][0], VAL)
+        well_info += '</table>'
+        
+        self.well_info = well_info
+        
+        return well_info
+        
 
 if __name__ == '__main__':
     
