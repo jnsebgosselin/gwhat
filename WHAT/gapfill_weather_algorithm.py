@@ -32,7 +32,10 @@ from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 from PySide import QtCore
 
-import statsmodels.api as sm
+#import statsmodels.api as sm
+#import statsmodels.regression as sm_reg
+from statsmodels.regression.linear_model import OLS
+from statsmodels.regression.quantile_regression import QuantReg
 
 #-- PERSONAL IMPORTS --
 
@@ -987,12 +990,12 @@ class GapFillWeather(QtCore.QObject):
             # http://statsmodels.sourceforge.net/devel/generated/
             # statsmodels.regression.linear_model.OLS.html
             
-            model = sm.regression.linear_model.OLS(Y, X) 
+            model = OLS(Y, X) 
             results = model.fit()
             A = results.params     
             
             # Using Numpy function:            
-            # ´A = np.linalg.lstsq(X, Y)[0]
+#            A = np.linalg.lstsq(X, Y)[0]
             
         else: # Least Absolute Deviations regression
             
@@ -1002,12 +1005,12 @@ class GapFillWeather(QtCore.QObject):
             # http://statsmodels.sourceforge.net/devel/examples/
             # notebooks/generated/quantile_regression.html
             
-            model = sm.regression.quantile_regression.QuantReg(Y, X)
+            model = QuantReg(Y, X)
             results = model.fit(q=0.5)
             A = results.params
             
             # Using Homemade function:            
-            # A = L1LinearRegression(X, Y)
+#            A = L1LinearRegression(X, Y)
             
         return A
     
@@ -1643,58 +1646,58 @@ class WeatherData():
         return table
         
         
-##==============================================================================   
-#def L1LinearRegression(X, Y): 
-#    """
-#    L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
-#    (Iterative reweighted least squares)
-#
-#    B = L1LinearRegression(Y,X)
-#
-#    B = discovered linear coefficients 
-#    X = independent variables 
-#    Y = dependent variable 
-#
-#    Note 1: An intercept term is NOT assumed (need to append a unit column if
-#            needed). 
-#    Note 2: a.k.a. LAD, LAE, LAR, LAV, least absolute, etc. regression 
-#
-#    SOURCE:
-#    This function is originally from a Matlab code written by Will Dwinnell
-#    www.matlabdatamining.blogspot.ca/2007/10/l-1-linear-regression.html
-#    Last accessed on 21/07/2014
-#    """
-##==============================================================================
-# 
-#    # Determine size of predictor data.
-#    n, m = np.shape(X)
-#    
-#    # Initialize with least-squares fit.
-#    B = linalg_lstsq(X, Y)[0]                               
-#    BOld = np.copy(B) 
-#    
-#    # Force divergence.
-#    BOld[0] += 1e-5
-#
-#    # Repeat until convergence.
-#    while np.max(np.abs(B - BOld)) > 1e-6:
-#         
-#        BOld = np.copy(B)
-#        
-#        # Calculate new observation weights based on residuals from old 
-#        # coefficients. 
-#        weight =  np.dot(B, X.transpose()) - Y
-#        weight =  np.abs(weight)
-#        weight[weight < 1e-6] = 1e-6 # to avoid division by zero
-#        weight = weight**-0.5
-#        
-#        # Calculate new coefficients.
-#        Xb = np.tile(weight, (m, 1)).transpose() * X      
-#        Yb = weight * Y
-#        
-#        B = linalg_lstsq(Xb, Yb)[0]
-#        
-#    return B
+#==============================================================================   
+def L1LinearRegression(X, Y): 
+    """
+    L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
+    (Iterative reweighted least squares)
+
+    B = L1LinearRegression(Y,X)
+
+    B = discovered linear coefficients 
+    X = independent variables 
+    Y = dependent variable 
+
+    Note 1: An intercept term is NOT assumed (need to append a unit column if
+            needed). 
+    Note 2: a.k.a. LAD, LAE, LAR, LAV, least absolute, etc. regression 
+
+    SOURCE:
+    This function is originally from a Matlab code written by Will Dwinnell
+    www.matlabdatamining.blogspot.ca/2007/10/l-1-linear-regression.html
+    Last accessed on 21/07/2014
+    """
+#==============================================================================
+ 
+    # Determine size of predictor data.
+    n, m = np.shape(X)
+    
+    # Initialize with least-squares fit.
+    B = np.linalg.lstsq(X, Y)[0]                               
+    BOld = np.copy(B) 
+    
+    # Force divergence.
+    BOld[0] += 1e-5
+
+    # Repeat until convergence.
+    while np.max(np.abs(B - BOld)) > 1e-6:
+         
+        BOld = np.copy(B)
+        
+        # Calculate new observation weights based on residuals from old 
+        # coefficients. 
+        weight =  np.dot(B, X.transpose()) - Y
+        weight =  np.abs(weight)
+        weight[weight < 1e-6] = 1e-6 # to avoid division by zero
+        weight = weight**-0.5
+        
+        # Calculate new coefficients.
+        Xb = np.tile(weight, (m, 1)).transpose() * X      
+        Yb = weight * Y
+        
+        B = np.linalg.lstsq(Xb, Yb)[0]
+        
+    return B
         
 if __name__ == '__main__':
     

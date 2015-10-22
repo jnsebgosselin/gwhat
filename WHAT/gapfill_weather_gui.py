@@ -679,7 +679,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
     def gap_fill_worker_return(self, event): #============== Gap-Fill Return ==
 
         # Method initiated from an automatic return from the gapfilling
-        # process in batch mode. Iterate over the station list an continue
+        # process in batch mode. Iterate over the station list and continue
         # process normally.
     
         self.gap_fill_thread.quit()
@@ -705,7 +705,25 @@ class GapFillWeatherGUI(QtGui.QWidget):
             
             
     def gap_fill_start(self, sta_indx2fill): #=============== Gap-Fill Start ==
-            
+        
+        #----- Wait for the QThread to finish -----
+        
+        # Protection in case the QTread did not had time to close completely
+        # before starting the downloading process for the next station.
+        
+        waittime = 0
+        while self.gap_fill_thread.isRunning():
+            print('Waiting for the fill weather data thread to close ' +
+                  'before processing with the next station.')
+            sleep(1)
+            waittime += 1
+            if waittime > 15:
+                msg = ('This function is not working as intended.' +
+                       ' Please report a bug.')
+                print(msg)
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                return
+                
         #--------------------------------------------------------- UPDATE UI --
                             
         self.CORRFLAG = 'off' 
@@ -722,7 +740,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 
         #-- Pass information to the worker --
         
-        self.gap_fill_worker.outputDir = self.workdir + '/Meteo/Output/'
+        self.gap_fill_worker.outputDir = self.workdir + '/Meteo/Output'
         
         time_start = self.get_time_from_qdatedit(self.date_start_widget)
         time_end = self.get_time_from_qdatedit(self.date_end_widget)        

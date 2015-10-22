@@ -35,7 +35,7 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 #from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 import numpy as np
-import scipy.stats as stats 
+import scipy.stats as stats
 
 from xlrd.xldate import xldate_from_date_tuple
 #from xlrd import xldate_as_tuple

@@ -83,35 +83,36 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         #---- prepare figure and plot obs. ----
         
-        fig = plt.figure(figsize=(11, 6))
-        ax = fig.add_axes([0.08, 0.1, 0.75, 0.8])
-        fig.suptitle('Synthetic hydrographs with Sy = %0.2f' % Sy, fontsize=20)
-        
-        ax.plot(DATE, self.WLVLobs, '0.65', lw=1.5)
+#        fig = plt.figure(figsize=(11, 6))
+#        ax = fig.add_axes([0.08, 0.1, 0.75, 0.8])
+#        fig.suptitle('Synthetic hydrographs with Sy = %0.2f' % Sy, fontsize=20)
+#        
+#        ax.plot(DATE, self.WLVLobs, '0.65', lw=1.5)
         
         #---- Multiple Fit ----
         
-        CRU = np.array([0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55])
-        RASMAX = [0] * len(CRU)
-        WLVLPRE = [0] * len(CRU)
-        RECHG = [0] * len(CRU)
-        for i in range(len(CRU)):
-            RASMAX[i], WLVLPRE[i], RECHG[i] = self.opt_RASmax(Sy, CRU[i])
-        
-        for i in range(len(CRU)):
-            RMSE = np.mean((WLVLPRE[i] - self.WLVLobs*1000)**2)**0.5
-            NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE[i])
-            rechg = np.mean(RECHG[i]) * 365
-            
-            label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
-                     'RMSE = % 0.0f mm\nNSE = %0.2f\n' +
-                     'Rechg = %0.0f mm/y'
-                     ) % (CRU[i], RASMAX[i], RMSE, NSE, rechg)
-            ax.plot(DATE, WLVLPRE[i]/1000., alpha=0.65, lw=1.5, label=label)
+#        CRU = np.array([0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55])
+#        RASMAX = [0] * len(CRU)
+#        WLVLPRE = [0] * len(CRU)
+#        RECHG = [0] * len(CRU)
+#        for i in range(len(CRU)):
+#            RASMAX[i], WLVLPRE[i], RECHG[i] = self.opt_RASmax(Sy, CRU[i])
+#        
+#        for i in range(len(CRU)):
+#            RMSE = np.mean((WLVLPRE[i] - self.WLVLobs*1000)**2)**0.5
+#            NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE[i])
+#            rechg = np.mean(RECHG[i]) * 365
+#            
+#            label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
+#                     'RMSE = % 0.0f mm\nNSE = %0.2f\n' +
+#                     'Rechg = %0.0f mm/y'
+#                     ) % (CRU[i], RASMAX[i], RMSE, NSE, rechg)
+#            ax.plot(DATE, WLVLPRE[i]/1000., alpha=0.65, lw=1.5, label=label)
         
         #---- Best Fit ----
         
-#        Cru, RASmax, WLVLPRE, RECHG = self.opt_CruRASmax(Sy)
+        Cru, RASmax, WLVLPRE, RECHG = self.opt_Cru(Sy)
+        
 #        
 #        RMSE = np.mean((WLVLPRE - self.WLVLobs*1000)**2)**0.5
 #        NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE)
@@ -126,12 +127,12 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         #--------           
         
-        ax.set_ylabel('Water Level (mbgs)', fontsize=16) 
-        ax.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':', lw=1)
-        ax.set_axisbelow(True)
-        
-        ax.legend(loc=[1.01, 0], ncol=1, fontsize=8)
-        ax.invert_yaxis()
+#        ax.set_ylabel('Water Level (mbgs)', fontsize=16) 
+#        ax.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':', lw=1)
+#        ax.set_axisbelow(True)
+#        
+#        ax.legend(loc=[1.01, 0], ncol=1, fontsize=8)
+#        ax.invert_yaxis()
         
 #        fname = '%0.2f.pdf' % Sy
 #        fig.savefig(fname)
@@ -148,23 +149,35 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         NSE = 1 - np.sum((Xobs - Xpre)**2) / np.sum((Xobs - np.mean(Xobs))**2)
         return NSE        
         
-    def opt_CruRASmax(self, Sy): #========================== Optimize RASmax ==
+    def opt_Cru(self, Sy): #================================ Optimize RASmax ==
         
-        Cru = 0.
-        RMSEnew = 10**6 # force divergence
-        dCru = 0.1
-        while abs(dCru) >= 0.01:
-            while 1:
-                RMSEold = np.copy(RMSEnew)
-                
-                Cru += dCru
-                RASMAX, WLVLpre, RECHG = self.opt_RASmax(Sy, Cru)
-                
-                RMSEnew = (np.mean((self.WLVLobs * 1000 - WLVLpre)**2))**0.5
-                
-                if RMSEnew > RMSEold:
-                    dCru /= -10.
-                    break
+        Cru = np.arange(0.05, 1., 0.05)
+        RMSE = np.zeros(len(Cru))
+        RASMAX = np.zeros(len(Cru))
+        RECHG = [0] * len(Cru)
+        WLVLpre = [0] * len(Cru)
+        
+        for i, cru in enumerate(Cru):
+            RASMAX[i], WLVLpre[i], RECHG[i] = self.opt_RASmax(Sy, cru)
+            RMSE[i] = (np.mean((self.WLVLobs * 1000 - WLVLpre[i])**2))**0.5
+        
+        print(Cru)
+        print(RMSE)  
+            
+#        RMSEnew = 10**6 # force divergence
+#        dCru = 0.1
+#        while abs(dCru) >= 0.01:
+#            while 1:
+#                RMSEold = np.copy(RMSEnew)
+#                
+#                Cru += dCru
+#                RASMAX, WLVLpre, RECHG = self.opt_RASmax(Sy, Cru)
+#                
+#                RMSEnew = (np.mean((self.WLVLobs * 1000 - WLVLpre)**2))**0.5
+#                
+#                if RMSEnew > RMSEold:
+#                    dCru /= -10.
+#                    break
                 
         return Cru, RASMAX, WLVLpre, RECHG
                 

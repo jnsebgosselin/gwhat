@@ -445,7 +445,7 @@ class MeteoObj():
                                           
                     print('There was %d nan values' % len(nanindx) +
                           ' in %s series.' % varnames[var]  +
-                          ' Missing values estimated through a' +
+                          ' Missing values estimated with a' +
                           ' linear interpolation.')
                       
                 elif datatypes[var] == 1:
@@ -728,8 +728,8 @@ def calculate_normals(DATA, datatypes):
     nvar = len(DATA[0, 3:]) # number of weather variables
     
     if datatypes == None or len(datatypes) < nvar:
-        print('datatype incorrect or non existent. Assuming all variables to ' +
-              'be of type 0')
+        print('datatype incorrect or non existent. Assuming all variables ' +
+              'to be of type 0')
         datatypes = [0] * nvar
     
     YEAR = DATA[:, 0].astype(int)
@@ -741,6 +741,7 @@ def calculate_normals(DATA, datatypes):
     # Calculate the average value for each months of each year
     
     nyear = np.ptp(YEAR) + 1
+    flagIncomplete = False 
       
     XMONTH = np.zeros((nyear, 12, nvar)) * np.nan
     for k in range(nvar):  
@@ -752,18 +753,21 @@ def calculate_normals(DATA, datatypes):
                 Nday = monthrange(j+YEAR[0], i+1)[1] 
            
                 if len(indx) < Nday:
-                    # Default nan value will be kept in XMONTH. 
-                
-                    print('Month %d of year %d is incomplete'
-                          % (i+1, j+YEAR[0]))
-                  
+                    # Default nan value will be kept in XMONTH. A flag is
+                    # raised and a comment is issued afterward.
+                    
+                    flagIncomplete = True                                    
+
                 else:
                     
                     if datatypes[k] == 0:
                         XMONTH[j, i, k] = np.mean(Xk[indx])
                     elif datatypes[k] == 1:
                         XMONTH[j, i, k] = np.sum(Xk[indx])
-
+    if flagIncomplete:
+        print('Some months were not complete and were not considered in ' +
+              'the calculation of the weather normals.')
+              
     #----------------------------------------------- compute monthly normals --
     
     # Calculate the normals for each month. This is done by calculating the

@@ -32,6 +32,9 @@ import sys
 from time import ctime
 from os import makedirs, path
 
+from multiprocessing import freeze_support
+freeze_support()
+
 #---- THIRD PARTY IMPORTS ----
 
 from PySide import QtGui, QtCore
@@ -648,7 +651,7 @@ class MyProject():
 
         
 if __name__ == '__main__':
-    
+        
     app = QtGui.QApplication(sys.argv)
     print('Starting WHAT...')
     instance_1 = MainWindow()
