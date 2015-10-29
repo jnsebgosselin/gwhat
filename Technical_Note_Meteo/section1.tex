@@ -2,25 +2,10 @@
 
 \begin{document}
 
-Climate data are useful in several fields of Earth sciences, including hydrology, hydrogeology and agronomy. However, weather datasets are, most of the time, incomplete. This can represent a major hindrance in various applications, such as for the use of hydrological or hydrogeological models that heavily depend on these data. Filling the gaps in weather datasets can quickly become a tedious task as the size of the data records and the number of stations increase. Moreover, it can also be quite complex when aspects such as time-efficiency of the method and accuracy of the estimated missing values are taken into account. This is particularly true for the estimation of missing daily precipitation data because of their high spatial and temporal variability \citep{simolo_improving_2010}. Although there are various methods to estimate missing daily weather data that are well covered in textbooks and technical papers, few tools to perform this task efficiently and automatically are available.
+Daily weather data are useful in several fields of Earth sciences, including hydrology, hydrogeology and agronomy. However, weather datasets are, most of the time, incomplete. This can represent a major hindrance in various applications, such as for the use of hydrological or hydrogeological simulators (e.g. SWAT, HELP, SHAW), which heavily depend on these data. Filling the gaps in weather datasets can quickly become a tedious task as the length of the data records and the number of stations increase. Moreover, it can also be quite complex when aspects such as time-efficiency of the method and accuracy of the estimated missing values are taken into account. This is particularly true for the estimation of missing daily precipitation data because of their high spatial and temporal variability \citep{simolo_improving_2010}. Although various methods to estimate missing daily weather data are documented in technical papers \citep[i.e.][]{degaetano_method_1995, simolo_improving_2010}, few published tools to perform this task efficiently and automatically are available.
 
-This paper presents an open source algorithm, written in the Python programming language, that can be used to automatically fill the gaps in daily weather datasets and to assess the uncertainty on the estimated values. An application of the method, using the WHAT software, is also presented for the Mont\'er\'egie Est study area, located in southern Quebec, Canada. 
-
-for filling the gaps in the daily weather datasets of a given weather station (hereafter called the target station) using data from the neighboring stations. 
-
-Can also be used to compute daily potential evapotranspiration.
-
-The algorithm is available for free at : . In addition, it is included as part of the WHAT software, which blablabla.
-
-Secondly, the program also includes an automated, robust, and efficient method to quickly and easily fill the gaps in the daily weather datasets downloaded from the CDCD. WHAT also includes a cross-validation resampling algorithm to conveniently validate and assess the uncertainty of the estimated missing values.
-
-In addition the algorithm can also b
-
-
-A guide for the operation of the software \cite{gosselin_what_2015} is available for download at this web address: \url{https://github.com/jnsebgosselin/WHAT}.
-
-
+This paper addresses this issue by presenting an open source algorithm, written in the Python programming language, that was developed to fill the gaps in daily weather datasets with an automated, robust, and efficient method. The missing weather data in the records of a given weather station (hereafter called the target station) are estimated through a Multiple Linear Regression (MLR) model using synchronous measurements from neighboring stations. The algorithm also includes an option to asses the validity of the method and the uncertainty of the estimated missing values through a cross-validation resampling technique. 
+ 
+In addition, a Graphical User Interface (GUI) for the algorithm has been developed and is included in the WHAT software \citep{gosselin_what_2015}. The algorithm and the WHAT software are both available for free at this web address: \url{https://github.com/jnsebgosselin/WHAT}. An example of an application of the algorithm, using the GUI provided in WHAT, is also presented at the end of this paper for the Mont\'er\'egie Est study area (southern Quebec, Canada).
 
 \end{document}
-
-%In addition to the handling of missing data, WHAT includes cross-validation resampling technique, to conveniently validate and assess the uncertainty of the estimated missing values. This feature represents a valuable tool for quickly assess the performance of the method for a given study area.

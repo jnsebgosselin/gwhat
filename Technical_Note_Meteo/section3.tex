@@ -2,18 +2,71 @@
 
 \begin{document}
 
-The code is compliant with either Python 3.4 or 2.7.9 or later. It requires numpy , xlrd and PySide or any later version of these librairies. The algorithm is organized as a base class of the Qt GUI Framework using the PySide binding. Signals are also emitted at various stade in the gap-filling routine. This has been done to facilitate the addition of a Graphical User Interface on top of the algorithm with the Qt GUI Development framework. There is an mininimal working example of application that is documented at the end of the file with the algorithm at the end of the file.
+It is possible to use the algorithm with the Graphical User Interface~(GUI) that is included in the free and open source software WHAT (Well Hydrograph Analysis Toolbox). A detailed description on the use of the algorithm with WHAT is provided in the user guide of the software \citep{gosselin_what_2015}.
 
-The algorithm is also implemented in the free and open source software WHAT which provides a user friendly and convenient interface. Detailed information about the use of the algorithm with the interface of WHAT are provided in the user guide of WHAT.
+Alternately, the gap-filling algorithm can be run directly from the command line in a Python interpreter version 3.4 or 2.7 or later. The external libraries \emph{NumPy}, \emph{Matplotlib}, \emph{xlrd}, \emph{PySide} and \emph{Statsmodels} are required for the program to run. A minimal working example of an application is documented at the end of the python file. Some data samples to run the example are also provided with the algorithm.
+
+The present section of this paper covers the format of the input data that is required for running the algorithm and the various outputs that are generated after a gap-less weather dataset has been successfully produced with the algorithm. Additional information about the input and output of the gap-filling algorithm is also provided in the user guide of the WHAT software.
+
+\subsection{Input Data}\label{subsec:input}
+
+It is possible to use weather data from any sources with the gap-filling algorithm, as long as the data are saved in tab-separated values file with the `.csv' extension. Also, the labels in the first column of the file must be faithfully observed, since the algorithm is reading these to know where to retrieve the station information and the weather data within the file. It is recommended to use a copy of one of the sample files that are provided with the algorithm and fill-in directly the station information and the weather data. A ``NaN'' value must be entered where data are missing. The daily data must also be in chronological order, but do not need to be continuous over time. That is, missing blocks of data (e.g., several days, months or years) can be completely omitted from the time-series. 
+
+All the input weather data files must be saved in one single location that must be specified to the gap-filling algorithm. The algorithm will automatically scan this location for valid weather data files and will store the data in memory for analysis.
 
 \subsection{Parameters}\label{sec:parameters}
 
-\subsection{Input Data}
+The gap-filling algorithm is written as a Python class object, with the method parameters defined as class attributes. When using the gap-filling algorithm directly in a Python interpreter (without the GUI), the method parameters are specified by directly defining the value of their corresponding class attribute. An example is given at the end of the python file and each parameters is documented in the help section of the algorithm class, within the code. Additional information is also provided in the user guide of the WHAT software. A list of the different method parameters for the current version of the algorithm is presented in \cref{tab:method_parameter}.
 
-It is possible to use weather data from any sources in WHAT, given the right format is used, either to fill the gaps in the weather time series and/or to interpret water level time series. For this purpose, it is recommended to use a copy of one of the sample files that are provided in the project example (distributed with the software) and fill the information and the data directly in it. The file must be kept in a text format using tab-separated values either with the extension ‘‘.csv’’ or ‘‘.out’’, depending if you want to fill the gaps in the weather time series or  interpret water level time series. This can be achieved with any standard spreadsheet application such as Microsoft Excel or LibreOffice Calc. The format of the header must be faithfully observed for those files. In addition, ``NaN'' values must be entered where data are missing. Data must also be in chronological order, but do not need to be continuous over time. That is, missing blocks of data (e.g., several days, months or years) can be completely omitted in the time-series. These missing blocks of data will be filled during the gap filling procedure or will be ignored for the plotting of the hydrograph.
+\begin{table}[!bh]
+    \setstretch{1.0}
+    % \rowcolors{2}{gray!10}{}
+    \centering
+    \caption{List of method parameters for version 1.0 of the gapfilling algorithm.}
+    \begin{tabular}{lcp{10.5cm}}
+        \toprule
+        Parameter name & Default value & Description\\
+        \midrule
+        Nbr\_Sta\_max & 4 & Set the maximal number of neighboring stations that is used for the generation of the MLR models to estimate the missing daily weather data.\\[1em]
+        limitDist & 100 km & Neighboring stations that are farther away from the target station than the specified value are completely excluded from the gap-filling procedure. \\[1em]
+        limitAlt & 350 m & Neighboring stations with an absolute elevation difference with the target station that is higher than the specified value are completely excluded from the gap-filling procedure.\\[1em]
+        regression\_mode & LAD & Define the optimization criteria that is used for the regression in the generation of the MLR model as described in \cref{subsec:MLR_gen}. The two options available are \emph{OLS}~(Ordinary Least Squares) or \emph{LAD}~(Least Absolute Deviations). \\[1em]
+        full\_error\_analysis & False & When set to \emph{True}, the accuracy of the method, for the dataset of the target station, will be estimated with the cross-validation procedure described in \cref{subsec:crossval}. \\[1em]
+        add\_ETP & False & When set to \emph{True}, daily potential evapotranspiration will be estimated from the daily temperature data series and will be saved in the `.out' file, along with the gapless data series produced with the gapfill algorithm. \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:method_parameter}
+\end{table}
 
 \subsection{Output}\label{sec:output}
 
-\end{document}
+All the outputs that are produced after a gap-less weather dataset has been produced successfully are saved in a sub-folder named after the name of the target station, in a directory that must be specified to the gap-filling algorithm.
 
-%It the class for the algorithm comes with two companion class:. The first class is used to load the weather data into memory, align correctly the data series in regard to time, and do some quality check on the data. The class is used to hold all relative information regarding the target station, including the correlation coefficient calculated between the target station and its neighbors.
+The gap-less weather datasets are saved in a tab-separated values file with a `.out' extension. Detailed information about the estimated values that were used to fill the gaps in the data series are also saved in an accompanying `.log' file. An histogram showing the yearly and monthly weather normals, calculated from the gap-less data series previously generated with the algorithm, is also produced and saved in a pdf format. 
+
+The results from the cross-validation procedure, if the option is enabled in the algorithm, are saved in a `.err' file. A figure comparing the probability density function of the original daily precipitation series to the estimated is also produced and saved in a pdf format. Scatter plots comparing the estimated and measured weather data are also produced for each variable of the dataset and saved in a pdf format. A list of the different output files that are produced with the current version of the algorithm is presented in \cref{tab:output_files}.
+
+\begin{table}[!ht]
+    \setstretch{1.0}
+    \centering
+    \caption{List of outouts for version 1.0 of the gapfilling algorithm. The name of the file are given for the weather station BROME.}
+    \begin{tabular}{lcp{8.5cm}}
+        \toprule
+        File name & File type & Description\\
+        \midrule
+        BROME (7020840)\_1980-2009.out & data & \\[1em]
+        BROME (7020840)\_1980-2009.err & data & \\[1em]
+        BROME (7020840)\_1980-2009.log & data & \\[1em]  
+        weather\_datasets\_summary.log & data & \\[1em]       
+        weather\_normals.pdf & figure & \\[1em]
+        precip\_PDF.pdf  & figure & \\[1em]
+        Max Temp (deg C).pdf & figure & \\[1em]
+        Max Temp (deg C).pdf & figure & \\[1em]
+        Mean Temp (deg C).pdf & figure & \\[1em]
+        Min Temp (deg C).pdf & figure & \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:output_files}
+\end{table}
+
+\end{document}
