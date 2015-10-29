@@ -64,13 +64,13 @@ class LabelDatabase():
                             
         if language == 'French': #----------------------------------- French --
             
-            self.mbgs = "Niveau d'eau au puits %s (mbgs)"
-            self.masl = "Niveau d'eau au puits %s (masl)"
+            self.mbgs = u"Niveau d'eau au puits %s (mbgs)"
+            self.masl = u"Niveau d'eau au puits %s (masl)"
             self.precip = u'Précipitations Totales (mm/%s)'
             self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
             self.temperature = u'Température (°C)'
             self.station_meteo = (u'Station météo = %s ' +
-                                   '(située à %0.1f km du puits)')
+                                  u'(située à %0.1f km du puits)')
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 
@@ -1346,12 +1346,12 @@ if __name__ == '__main__':
     
     #------------------------------------------------------------- load data --
     
-    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-    fwaterlvl = 'Files4testing/PO16A.xls'
+#    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
+#    fwaterlvl = 'Files4testing/PO16A.xls'
     
-    dirname = '../Projects/Pont-Rouge/'
-    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    fwaterlvl = dirname + 'Water Levels/5080001.xls'
+    dirname = '../Projects/Pont-Rouge'
+    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+    fwaterlvl = dirname + '/Water Levels/5080001.xls'
     
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
@@ -1366,22 +1366,22 @@ if __name__ == '__main__':
     
     hydrograph = Hydrograph()
     hydrograph.set_waterLvlObj(waterLvlObj)
-    hydrograph.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+    hydrograph.finfo = (dirname + 
+                        '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.log')
+#    hydrograph.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
     
     #---- Layout Options ----
     
+    hydrograph.fwidth = 45 # Width of the figure in inches
     hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
     hydrograph.gridLines = 2 # Gridlines Style    
     hydrograph.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph.title_text = "Title of the Graph"
     hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
-    hydrograph.datemode = 'year' # 'month' or 'year'
-    hydrograph.bwidth_indx = 2 # Meteo Bin Width
-    #   0: 1 day;
-    #   1: 1 week;
-    #   2: 1 month;
-    #   3: 1 year;
-    hydrograph.RAINscale = 40
+    hydrograph.datemode = 'month' # 'month' or 'year'
+    hydrograph.bwidth_indx = 1 # Meteo Bin Width
+    # 0: daily | 1: weekly | 2: monthly | 3: yearly
+    hydrograph.RAINscale = 20
     
     hydrograph.best_fit_waterlvl()    
     hydrograph.best_fit_time(waterLvlObj.time)
@@ -1389,14 +1389,14 @@ if __name__ == '__main__':
     hydrograph.generate_hydrograph(meteoObj) 
     hydrograph.draw_recession()
 
-    hydrograph.savefig('../Projects/Project4Testing/hydrograph.pdf')
+    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
+#    hydrograph.savefig('../Projects/Project4Testing/hydrograph.pdf')
     
     #------------------------------------------------- show figure on-screen --
     
     imgview = ImageViewer()
     imgview.load_mpl_figure(hydrograph)
     imgview.show()
-    hydrograph.savefig('test.pdf')
     
     sys.exit(app.exec_())
     

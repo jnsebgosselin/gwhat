@@ -182,27 +182,17 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 
         self.btn_layout_mode = toolBarBtn(iconDB.toggleMode,
                                           ttipDB.toggle_layout_mode, 
-                                          autoRaise=False)
-                                          
-        self.btn_undo = toolBarBtn(iconDB.undo, ttipDB.undo, enabled=False)
-        
-        self.btn_clearPeak = toolBarBtn(iconDB.clear_search, ttipDB.clearall)
-        
-        self.btn_home = toolBarBtn(iconDB.home, ttipDB.home)
-        
-        self.btn_editPeak = toolBarBtn(iconDB.add_point, ttipDB.editPeak)
-                
-        self.btn_delPeak = toolBarBtn(iconDB.erase, ttipDB.delPeak)
-        
-        self.btn_pan = toolBarBtn(iconDB.pan, ttipDB.pan) 
-        
-        self.btn_MRCalc = toolBarBtn(iconDB.MRCalc, ttipDB.MRCalc)
-                
-        self.btn_strati = toolBarBtn(iconDB.stratigraphy, ttipDB.btn_strati)
-        
+                                          autoRaise=False)                                          
+        self.btn_undo = toolBarBtn(iconDB.undo, ttipDB.undo, enabled=False)        
+        self.btn_clearPeak = toolBarBtn(iconDB.clear_search, ttipDB.clearall)        
+        self.btn_home = toolBarBtn(iconDB.home, ttipDB.home)        
+        self.btn_editPeak = toolBarBtn(iconDB.add_point, ttipDB.editPeak)                
+        self.btn_delPeak = toolBarBtn(iconDB.erase, ttipDB.delPeak)        
+        self.btn_pan = toolBarBtn(iconDB.pan, ttipDB.pan)         
+        self.btn_MRCalc = toolBarBtn(iconDB.MRCalc, ttipDB.MRCalc)                
+        self.btn_strati = toolBarBtn(iconDB.stratigraphy, ttipDB.btn_strati)        
         self.btn_Waterlvl_lineStyle = toolBarBtn(iconDB.showDataDots,
-                                                 ttipDB.btn_Waterlvl_lineStyle)
-                                                 
+                                                 ttipDB.btn_Waterlvl_lineStyle)                                                 
         self.btn_save_interp = toolBarBtn(iconDB.save,
                                           ttipDB.btn_save_interp)
                                                  
@@ -338,7 +328,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         if isWif == False: #No .wif file has been created yet for this well
             return
         
-        #---- Extract Local Extram Times ----
+        #---- Extract Local Extremum Times ----
         
         tr = self.waterLvl_data.trecess
         hr = self.waterLvl_data.hrecess
@@ -461,11 +451,17 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                     ['B (m/d) :', self.B],
                     ['RMSE (m):', '%0.4f' % self.RMSE],
                     [],
+                    ['*** Model Parameters ***'],
+                    [],
+                    ['Sy :', ''],
+                    ['RASmax :', ''],
+                    ['Cru :', ''],
+                    [],
                     ['*** Observed and Predicted Water Level ***'],
                     [],
                     ['Time', 'hrcs(mbgs)', 'hobs(mbgs)', 'hpre(mbgs)']]
-                    
-        for i in range(len(self.time)):
+        
+        for i in range(len(self.time)):            
             fcontent.append([self.time[i],
                              '%0.2f' % self.hrecess[i],
                              '%0.2f' % self.water_lvl[i]])                    
@@ -610,7 +606,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             
         self.toolbar.home()
 
-    def undo(self):
+    def undo(self): #================================================== Undo ==
         
         if self.isGraphExists == False:
             print('Graph is empty')
@@ -628,7 +624,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         else:
             pass
             
-    def clear_all_peaks(self):
+    def clear_all_peaks(self): #============================ Clear All Peaks ==
         
         if self.isGraphExists == False:
             print('Graph is empty')
@@ -641,7 +637,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
     
         self.plot_peak()
         
-    def setup_ax_margins(self, event):
+    def setup_ax_margins(self, event): #====================== Setup Margins ==
 
         fheight = self.fig_MRC.get_figheight()
         fwidth = self.fig_MRC.get_figwidth()
@@ -658,7 +654,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         self.ax0.set_position([x0, y0, w, h])
                 
-    def plot_water_levels(self):
+    def plot_water_levels(self): #======================== Plot Water Levels ==
         
         t = self.time
         x = self.water_lvl
@@ -763,7 +759,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.btn_strati.setAutoRaise(True)
             self.hide_soil_layer()        
         
-    def hide_soil_layer(self):
+    def hide_soil_layer(self): #============================ Hide Soil Layer ==
         
         for i in range(len(self.zlayer)):
             self.layers[i].remove()
@@ -772,7 +768,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         self.fig_MRC_widget.draw()
         
-    def display_soil_layer(self):
+    def display_soil_layer(self): #====================== Display Soil Layer ==
         
         #---- Check ----
         
@@ -833,7 +829,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.fig_MRC_widget.draw()
                 
         
-    def change_waterlvl_lineStyle(self):
+    def change_waterlvl_lineStyle(self): #================ Change Line Style ==
             
         if self.btn_Waterlvl_lineStyle.autoRaise():
             
@@ -851,7 +847,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             
         self.fig_MRC_widget.draw()
             
-    def mouse_vguide(self, event):
+    def mouse_vguide(self, event): #====================== Mouse Vert. Guide ==
 
         # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
         if not self.btn_editPeak.autoRaise():

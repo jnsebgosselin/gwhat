@@ -198,7 +198,7 @@ class WaterlvlData():                                          # WaterlvlData #
                 elif reader[row][0] == 'A (1/d) :':
                     self.A = float(reader[row][1])
                 elif reader[row][0] == 'B (m/d) :':
-                    self.B = float(reader[row][1])
+                    self.B = float(reader[row][1])                
             except IndexError: 
                 pass
             

@@ -22,7 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #----- STANDARD LIBRARY IMPORTS -----
       
 #from datetime import date
-#import csv
+import csv
+import datetime
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -42,7 +43,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
     
 #==============================================================================
     
-    def __init__(self, fmeteo, fwaterlvl, CRU, Sy=0.25):
+    def __init__(self, fmeteo, fwaterlvl):
     
         #---- Load Data ----
     
@@ -62,11 +63,10 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         self.WLVLobs = np.interp(self.twlvl, self.waterlvlObj.time,
                                  self.waterlvlObj.lvl)
         
-
-        #---- Plotting the Results ----
+        #---- Prepare DATE time series ----
         
-        import datetime
-        
+        # Converting time in a date format readable by matplotlib
+               
         tweatr = self.meteoObj.TIME
         
         ts = np.where(self.twlvl[0] == tweatr)[0][0]
@@ -76,56 +76,9 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         MONTH = self.meteoObj.DATA[ts:te+1,1]
         DAY = self.meteoObj.DATA[ts:te+1,2]
         
-        DATE = [0] * len(self.twlvl)
-        for t in range(len(self.twlvl)):
-            DATE[t] = datetime.datetime(int(YEAR[t]), int(MONTH[t]),
-                                        int(DAY[t]), 0)
-        
-        #---- prepare figure and plot obs. ----
-        
-#        fig = plt.figure(figsize=(11, 6))
-#        ax = fig.add_axes([0.08, 0.1, 0.75, 0.8])
-#        fig.suptitle('Synthetic hydrographs with Sy = %0.2f' % Sy, fontsize=20)
-#        
-#        ax.plot(DATE, self.WLVLobs, '0.65', lw=1.5)
+        self.DATE = self.convert_time_to_date(YEAR, MONTH, DAY)
         
         #---- Multiple Fit ----
-        
-#        CRU = np.array([0.2, 0.3, 0.35, 0.4, 0.45, 0.5, 0.55])
-#        RASMAX = [0] * len(CRU)
-#        WLVLPRE = [0] * len(CRU)
-#        RECHG = [0] * len(CRU)
-#        for i in range(len(CRU)):
-#            RASMAX[i], WLVLPRE[i], RECHG[i] = self.opt_RASmax(Sy, CRU[i])
-#        
-#        for i in range(len(CRU)):
-#            RMSE = np.mean((WLVLPRE[i] - self.WLVLobs*1000)**2)**0.5
-#            NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE[i])
-#            rechg = np.mean(RECHG[i]) * 365
-#            
-#            label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
-#                     'RMSE = % 0.0f mm\nNSE = %0.2f\n' +
-#                     'Rechg = %0.0f mm/y'
-#                     ) % (CRU[i], RASMAX[i], RMSE, NSE, rechg)
-#            ax.plot(DATE, WLVLPRE[i]/1000., alpha=0.65, lw=1.5, label=label)
-        
-        #---- Best Fit ----
-        
-        Cru, RASmax, WLVLPRE, RECHG = self.opt_Cru(Sy)
-        
-#        
-#        RMSE = np.mean((WLVLPRE - self.WLVLobs*1000)**2)**0.5
-#        NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE)
-#        rechg = np.mean(RECHG) * 365
-#        
-#        label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
-#                 'RMSE = % 0.0f mm\nNSE = %0.2f\n' +
-#                 'Rechg = %0.0f mm/y'
-#                 ) % (Cru, RASmax, RMSE, NSE, rechg)
-#                 
-#        ax.plot(DATE, WLVLPRE/1000., alpha=0.65, lw=1.5, label=label)
-        
-        #--------           
         
 #        ax.set_ylabel('Water Level (mbgs)', fontsize=16) 
 #        ax.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':', lw=1)
@@ -136,12 +89,163 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
 #        fname = '%0.2f.pdf' % Sy
 #        fig.savefig(fname)
-        
+#        
 #    def plot_synth_hydrograph(0):
 #        pass
-    
     @staticmethod
-    def nash_sutcliffe(Xobs, Xpre):
+    def convert_time_to_date(YEAR, MONTH, DAY): #============== Convert Date ==
+                
+        DATE = [0] * len(YEAR)
+        for t in range(len(YEAR)):
+            DATE[t] = datetime.datetime(int(YEAR[t]), int(MONTH[t]),
+                                        int(DAY[t]), 0)
+                                        
+        return DATE
+        
+    def plot_best_fit(self, Sy): #============================ Plot Best Fit ==
+        
+        #---- Prepare Figure and Plot Obs. ----
+        
+        fwidth, fheight = 18, 6
+        fig = plt.figure(figsize=(fwidth, fheight))        
+        fig.suptitle('Synthetic hydrographs with Sy = %0.2f' % Sy, fontsize=20)
+       
+        lmarg  = 0.85 / fwidth
+        rmarg = 1.75 / fwidth
+        tmarg = 0.5 / fheight
+        bmarg = 0.65 / fheight
+        
+        axwidth = 1 - (lmarg + rmarg)
+        axheight = 1 - (bmarg + tmarg)
+        
+        ax = fig.add_axes([lmarg, bmarg, axwidth, axheight])
+        
+        #---- Produces Results ----
+        
+        Cru, RASmax, WLVLPRE, RECHG = self.opt_Cru(Sy)
+        
+        RMSE = np.mean((WLVLPRE - self.WLVLobs*1000)**2)**0.5
+        NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE)
+        rechg = np.mean(RECHG) * 365
+        
+        #---- plot results ----
+        
+        ax.plot(self.DATE, self.WLVLobs, '0.65', lw=1.5,
+                label='Observed\nWater Levels')
+        
+        label = ('Cru = %0.2f\n' +
+                 'RASmax = %0.0f mm\n' + 
+                 'RMSE = %0.0f mm\n' +
+                 'NSE = %0.2f\n' +
+                 'Rechg = %0.0f mm/y'
+                 ) % (Cru, RASmax, RMSE, NSE, rechg)
+                 
+        ax.plot(self.DATE, WLVLPRE/1000., alpha=0.65, lw=1.5, label=label)
+        
+        #---- Figure setup ----
+        
+        ax.set_ylabel('Water Level (mbgs)', fontsize=16) 
+        ax.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':', lw=1)
+        ax.set_axisbelow(True)
+        
+        ax.legend(loc=[1.01, 0], ncol=1, fontsize=8)
+        ax.invert_yaxis()
+        
+        fname = 'Bestfit_Sy=%0.2f.pdf' % Sy
+        fig.savefig(fname)
+        
+        #---- Saving Data to File ----
+
+        filename = 'Sy=%0.2f_data.csv' % Sy
+        filecontent = [['*** Model Parameters ***'],
+                       [],
+                       ['Sy :', '%0.2f' % Sy],
+                       ['RASmax (mm) :', '%0.0f' % RASmax],
+                       ['Cru :', '%0.2f' % Cru],
+                       [],
+                       ['*** Model Results ***'],
+                       [],
+                       ['RMSE (mm) :', '%0.0f' % RMSE],
+                       ['NSE :', '%0.2f' % NSE],
+                       ['Rechg (mm/y) :', '%0.0f' % rechg],
+                       [],
+                       ['*** Observed and Predicted Water Level ***'],
+                       [],
+                       ['Time (d)', 'hobs(mbgs)', 'hpre(mbgs)', 'Rechg (mm/d)']]
+        for i in range(len(self.twlvl)-1):
+            filecontent.append([self.twlvl[i],
+                                '%0.2f' % (WLVLPRE[i]/1000.),
+                                '%0.2f' % self.WLVLobs[i],
+                                '%0.0f' % RECHG[i]]) 
+
+        filecontent.append([self.twlvl[-1],
+                            '%0.2f' % (WLVLPRE[-1]/1000.),
+                            '%0.2f' % self.WLVLobs[-1]])
+
+        with open(filename, 'w') as f:
+            writer = csv.writer(f,delimiter='\t')
+            writer.writerows(filecontent)
+        
+        
+    def plot_multiple_fit(self, Sy, CRU): #=================== Plot Multiple ==
+
+        #---- Prepare Figure and Plot Obs. ----
+        
+        fwidth, fheight = 18, 6
+        fig = plt.figure(figsize=(fwidth, fheight))        
+        fig.suptitle('Synthetic hydrographs with Sy = %0.2f' % Sy, fontsize=20)
+       
+        lmarg  = 0.85 / fwidth
+        rmarg = 1.75 / fwidth
+        tmarg = 0.5 / fheight
+        bmarg = 0.65 / fheight
+        
+        axwidth = 1 - (lmarg + rmarg)
+        axheight = 1 - (bmarg + tmarg)
+        
+        ax = fig.add_axes([lmarg, bmarg, axwidth, axheight])
+        
+        #---- Produces Results ----
+        
+        RASMAX = [0] * len(CRU)
+        WLVLPRE = [0] * len(CRU)
+        RECHG = [0] * len(CRU)
+        for i in range(len(CRU)):
+            RASMAX[i], WLVLPRE[i], RECHG[i] = self.opt_RASmax(Sy, CRU[i])
+        
+        #---- Plot Results ----
+        
+        ax.plot(self.DATE, self.WLVLobs, '0.5', lw=1.5,
+                label='Observed\nWater Levels')
+        
+        for i in range(len(CRU)):
+            RMSE = np.mean((WLVLPRE[i] - self.WLVLobs*1000)**2)**0.5
+            NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE[i])
+            rechg = np.mean(RECHG[i]) * 365
+            
+            label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
+                     'RMSE = % 0.0f mm\nNSE = %0.2f\n' +
+                     'Rechg = %0.0f mm/y'
+                     ) % (CRU[i], RASMAX[i], RMSE, NSE, rechg)
+                     
+            ax.plot(self.DATE, WLVLPRE[i]/1000., alpha=0.65, lw=1.5,
+                    label=label)        
+        
+        #---- Figure Setup ----
+        
+        ax.set_ylabel('Water Level (mbgs)', fontsize=16) 
+        ax.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':', lw=1)
+        ax.set_axisbelow(True)
+        
+        ax.legend(loc=[1.01, 0], ncol=1, fontsize=8)
+        ax.invert_yaxis()
+        
+        fname = 'Multifit_Sy=%0.2f.pdf' % Sy
+        fig.savefig(fname)
+        
+        
+    @staticmethod
+    def nash_sutcliffe(Xobs, Xpre): #======================== Nash-Sutcliffe ==
         # Source: Wikipedia
         # https://en.wikipedia.org/wiki/
         # Nash%E2%80%93Sutcliffe_model_efficiency_coefficient
@@ -149,9 +253,9 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         NSE = 1 - np.sum((Xobs - Xpre)**2) / np.sum((Xobs - np.mean(Xobs))**2)
         return NSE        
         
-    def opt_Cru(self, Sy): #================================ Optimize RASmax ==
+    def opt_Cru(self, Sy): #=================================== Optimize Cru ==
         
-        Cru = np.arange(0.05, 1., 0.05)
+        Cru = np.arange(0.05, 0.7, 0.05)
         RMSE = np.zeros(len(Cru))
         RASMAX = np.zeros(len(Cru))
         RECHG = [0] * len(Cru)
@@ -161,9 +265,22 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             RASMAX[i], WLVLpre[i], RECHG[i] = self.opt_RASmax(Sy, cru)
             RMSE[i] = (np.mean((self.WLVLobs * 1000 - WLVLpre[i])**2))**0.5
         
-        print(Cru)
-        print(RMSE)  
-            
+        print('')        
+        
+        indx = np.where(RMSE == np.min(RMSE))[0][0]
+        
+        Cru = np.arange(Cru[indx]-0.05, Cru[indx]+0.06, 0.01)        
+        RMSE = np.zeros(len(Cru))
+        RASMAX = np.zeros(len(Cru))
+        RECHG = [0] * len(Cru)
+        WLVLpre = [0] * len(Cru)
+        
+        for i, cru in enumerate(Cru):
+            RASMAX[i], WLVLpre[i], RECHG[i] = self.opt_RASmax(Sy, cru)
+            RMSE[i] = (np.mean((self.WLVLobs * 1000 - WLVLpre[i])**2))**0.5
+        
+        indx = np.where(RMSE == np.min(RMSE))[0][0]
+        
 #        RMSEnew = 10**6 # force divergence
 #        dCru = 0.1
 #        while abs(dCru) >= 0.01:
@@ -179,7 +296,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
 #                    dCru /= -10.
 #                    break
                 
-        return Cru, RASMAX, WLVLpre, RECHG
+        return Cru[indx], RASMAX[indx], WLVLpre[indx], RECHG[indx]
                 
     def opt_RASmax(self, Sy, CRU): #======================== Optimize RASmax ==
         
@@ -204,18 +321,17 @@ class SynthHydrograph(object):                              # SynthHydrograph #
 
         #---- Gauss-Newton ----
         
-        tolmax = 0.1       
+        tolmax = 1.      
         RASMAX = 100.
+        dRAS = 0.1
         
         RECHGpre = self.surf_water_budget(CRU, RASMAX, ETP, PTOT, TAVG)
-        WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B, WLVLobs[0],
+        WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B, WLVLobs,
                                        Sy, nscheme='forward')
         RMSE = (np.mean((WLVLobs - WLVLpre)**2))**0.5
-#        print('RASmax = %0.1f mm ; RMSE = %0.2f mm' % (RASMAX, RMSE))
         
         it = 0
-        while 1:
-            
+        while 1:            
             it += 1
             if it > 50:
                 print('Not converging.')
@@ -223,17 +339,16 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             
             #---- Calculating Jacobian (X) Numerically ---- 
             
-            rechg = self.surf_water_budget(CRU, RASMAX + tolmax, ETP,
+            rechg = self.surf_water_budget(CRU, RASMAX * (1+dRAS), ETP,
                                            PTOT, TAVG) 
                                            
-            wlvl = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs[0],
+            wlvl = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
                                         Sy, nscheme='forward')
-            X = Xt = (wlvl - WLVLpre) / tolmax            
+            X = Xt = (wlvl - WLVLpre) / (RASMAX * dRAS)       
 
             if np.sum(X) == 0:
                 rechg_yearly = np.mean(RECHGpre) * 365
                 RASMAX = np.inf
-#                print('!Uppermost limit of RASmax!') 
                 print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
                       'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
                       ) % (CRU, RASMAX, RMSE, rechg_yearly)              
@@ -253,40 +368,39 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             RMSEold = np.copy(RMSE)
 
             while 1: # Loop for Damping (to prevent overshoot)
-                
+
                 #---- Calculating new paramter values ----
 
                 RASMAX = RASMAXold + dr
                     
-                #---- Applying parameter bound-constraints ----
-                
-                if RASMAX < 0:
-                    RASMAX = 0
-                    rechg_yearly = np.mean(RECHGpre) * 365
-#                    print('!Lowermost limit of RASmax!')
-                    print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
-                          'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
-                          ) % (CRU, RASMAX, RMSE, rechg_yearly)
-                          
-                    return RASMAX, WLVLpre, RECHGpre
-                    
                 #---- Solving for new parameter values ----
                 
                 RECHGpre = self.surf_water_budget(CRU, RASMAX, ETP, PTOT, TAVG)
-                WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B,
-                                               WLVLobs[0], Sy,
-                                               nscheme='forward')
+                WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B, WLVLobs,
+                                               Sy, nscheme='forward')
                 RMSE = (np.mean((WLVLobs - WLVLpre)**2))**0.5
                 
                 #---- Checking overshoot ----
                 
-                if (RMSE - RMSEold) > 0.001:
+                if (RMSE - RMSEold) > 0.1:
                     dr = dr * 0.5
                 else:
                     break
+                
+            #---- Applying parameter bound-constraints ----
+            
+            if RASMAX < 0:
+                RASMAX = 0
+                rechg_yearly = np.mean(RECHGpre) * 365
+                print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
+                      'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
+                      ) % (CRU, RASMAX, RMSE, rechg_yearly)
+                      
+                return RASMAX, WLVLpre, RECHGpre
     
             #---- Checking tolerance ----
-        
+#            print RASMAX
+            
             tol = np.abs(RASMAX - RASMAXold)            
             
             if tol < tolmax:
@@ -297,13 +411,11 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                       'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
                       ) % (CRU, RASMAX, RMSE, rechg_yearly)
                 return RASMAX, WLVLpre, RECHGpre
-                            
         
     @staticmethod
     def surf_water_budget(CRU, RASmax, ETP, PTOT,   #===== Surf Water Budget ==
                           TAVG, TMELT=1.5, CM=4 ):
-                          
-    
+        
         """    
         Input
         -----
@@ -372,9 +484,8 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         return RECHG
     
-    
     @staticmethod
-    def calc_hydrograph(RECHG, A, B, WL0, Sy, nscheme='forward'): #============        
+    def calc_hydrograph(RECHG, A, B, WLobs, Sy, nscheme='forward'): #==========
         """
         This is a forward numerical explicit scheme for generating the
         synthetic well hydrograph.
@@ -391,6 +502,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         Wlpre: Predicted Water Level (mm)
         Sy: Specific Yield
         RECHG: Groundwater Recharge (mm)
+        WLobs: Observed Water Level (mm)
         
         A, B: MRC Parameters, where: Recess(m/d) = -A * h + B
         nscheme: Option are "forward" or "downdward" depending if the 
@@ -402,9 +514,11 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         # check this out.
         
         WLpre = np.zeros(len(RECHG)+1) * np.nan
-        WLpre[0] = WL0
         
         if nscheme == 'backward':
+            
+            WLpre[0] = WLobs[-1]
+            
             for i in reversed(range(len(RECHG))):
                 RECESS = (B - A * WLpre[i] / 1000.) * 1000
                 RECESS = max(RECESS, 0)
@@ -412,10 +526,16 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                 WLpre[i] = WLpre[i+1] + (RECHG[i] / Sy) - RECESS
             
         elif nscheme == 'forward':
+            
+            WLpre[0] = WLobs[0]
+            
             for i in range(len(RECHG)):
+#                if i%365 == 0:
+#                    WLpre[i+1] = WLobs[i]
+#                else:                
                 RECESS = (B - A * WLpre[i] / 1000.) * 1000
                 RECESS = max(RECESS, 0)
-                            
+                        
                 WLpre[i+1] = WLpre[i] - (RECHG[i] / Sy) + RECESS
         else:
             WLpre = []
@@ -502,17 +622,13 @@ if __name__ == '__main__':
     dirname = '../Projects/Pont-Rouge/'
     fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
     fwaterlvl = dirname + 'Water Levels/5080001.xls'
+        
+    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl)
     
-    CRU = np.array([0.2, 0.3, 0.4, 0.5])
-    
-#    CRU = [0.3]
-    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, CRU, Sy=0.28)
-    
-#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, CRU, Sy=0.3)
-    
-#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, CRU, Sy=0.25)
-    
-#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, CRU, Sy=0.2)
+    Sy = 0.28
+    synth_hydrograph.plot_best_fit(Sy)
+#    CRU = [0.2, 0.24, 0.5]    
+#    synth_hydrograph.plot_multiple_fit(Sy, CRU)
     
     plt.show()
     
