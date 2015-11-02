@@ -6,6 +6,7 @@
 \usepackage{fixltx2e} %for subscripts
 \usepackage[svgnames,table]{xcolor}
 \usepackage{setspace}
+\definecolor{c1}{rgb}{0.784313725, 0.215686275, 0.215686275}
 
 \usepackage{lineno}
 \modulolinenumbers[5]
@@ -13,6 +14,8 @@
 \usepackage{caption}
 \usepackage{subcaption}
 \usepackage{lipsum}
+\usepackage{floatrow}
+\floatsetup[table]{capposition=top}
 
 
 %---- TABLES ----
@@ -38,7 +41,7 @@
 % `Elsevier LaTeX' style
 %\bibliographystyle{elsarticle-num}
 
-\usepackage{cleveref}
+\usepackage[capitalise]{cleveref}
 
 \begin{document}
 
@@ -92,8 +95,13 @@
 
 \section*{References}
     \bibliography{MyLibrary}
-%
-%\appendix
+
+\clearpage
+\appendix
+\section{}\label{appendix}
+    \subfile{appendix}
+
+
 %\clearpage
 %\onecolumn
 %

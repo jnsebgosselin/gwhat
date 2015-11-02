@@ -1,0 +1,52 @@
+\documentclass[ARTICLETHERMIC.tex]{subfiles}
+
+\begin{document}
+
+\begin{table}[!h]
+    \setstretch{1.0}
+    % \rowcolors{2}{gray!10}{}
+    \centering
+    \caption{List of method parameters for version 1.0 of the gapfilling algorithm.}
+    \begin{tabular}{lcp{10.5cm}}
+        \toprule
+        Parameter name & Default value & Description\\
+        \midrule
+        Nbr\_Sta\_max & 4 & Set the maximal number of neighboring stations that is used for the generation of the MLR models to estimate the missing daily weather data.\\[1em]
+        limitDist & 100 km & Neighboring stations that are farther away from the target station than the specified value are completely excluded from the gap-filling procedure. \\[1em]
+        limitAlt & 350 m & Neighboring stations with an absolute elevation difference with the target station that is higher than the specified value are completely excluded from the gap-filling procedure.\\[1em]
+        regression\_mode & LAD & Define the optimization criteria that is used for the regression in the generation of the MLR model as described in \cref{subsec:MLR_gen}. The two options available are \emph{OLS}~(Ordinary Least Squares) or \emph{LAD}~(Least Absolute Deviations). \\[1em]
+        full\_error\_analysis & False & When set to \emph{True}, the accuracy of the method, for the dataset of the target station, will be estimated with the cross-validation procedure described in \cref{subsec:crossval}. \\[1em]
+        add\_ETP & False & When set to \emph{True}, daily potential evapotranspiration will be estimated from the daily temperature data series and will be saved in the `.out' file, along with the gapless data series produced with the gapfill algorithm. \\[1em]
+        inputDir \\
+        outputDir \\
+        time\_start\\
+        time\_end\\
+        \bottomrule
+    \end{tabular}
+    \label{tab:method_parameter}
+\end{table}
+
+\begin{table}[!h]
+    \setstretch{1.0}
+    \centering
+    \caption{List of outouts for version 1.0 of the gapfilling algorithm. The name of the file are given for the weather station BROME.}
+    \begin{tabular}{lcp{8.5cm}}
+        \toprule
+        File name & File type & Description\\
+        \midrule
+        BROME (7020840)\_1980-2009.out & data & \\[1em]
+        BROME (7020840)\_1980-2009.err & data & \\[1em]
+        BROME (7020840)\_1980-2009.log & data & \\[1em]  
+        weather\_datasets\_summary.log & data & \\[1em]       
+        weather\_normals.pdf & figure & \cref{fig:weatherNormals} \\[1em]
+        precip\_PDF.pdf  & figure & \\[1em]
+        Max Temp (deg C).pdf & figure & \\[1em]
+        Max Temp (deg C).pdf & figure & \\[1em]
+        Mean Temp (deg C).pdf & figure & \\[1em]
+        Min Temp (deg C).pdf & figure & \\
+        \bottomrule
+    \end{tabular}
+    \label{tab:output_files}
+\end{table}
+
+\end{document}

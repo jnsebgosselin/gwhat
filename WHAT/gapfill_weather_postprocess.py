@@ -295,7 +295,7 @@ class PostProcessErr(object):
     
     @staticmethod
     def plot_gamma_dist(Ymes, Ypre, fname): #================ Plot Gamma PDF ==
-                   
+        
         fw, fh = 6, 6
         fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
         canvas = FigureCanvas(fig)
@@ -313,7 +313,7 @@ class PostProcessErr(object):
         h0 = 1 - (bottomMargin + topMargin)
             
         ax0 = fig.add_axes([x0, y0, w0, h0])    
-        ax0.set_yscale('log')
+        ax0.set_yscale('log', nonposy='clip')
         
         Xmax = max(np.ceil(np.max(Ymes)/10.) * 10, 120)
         
@@ -322,8 +322,8 @@ class PostProcessErr(object):
         c1, c2 = '#6495ED', 'red'
         
         #---- Histogram ----
-                 
-        ax0.hist(Ymes, bins=20, color=c1, normed=True, histtype='stepfilled',
+        
+        ax0.hist(Ymes, bins=20, color=c1, histtype='stepfilled', normed=True, 
                  alpha=0.25, ec=c1, label='Measured Data PDF')  
                  
         #---- Measured Gamma PDF ----
@@ -385,9 +385,9 @@ class PostProcessErr(object):
         f = len(preWetDays) / float(len(mesWetDays)) * 100
         
         if f > 100:
-            msg = 'Number of wet days overestimated by %0.1f%%' % f
+            msg = 'Number of wet days overestimated by %0.1f%%' % (f - 100)
         else:
-            msg = 'Number of wet days underestimated by %0.1f%%' % f
+            msg = 'Number of wet days underestimated by %0.1f%%' % (100 - f)
         
         #---- Get Legend Box Position and Extent ----
         
@@ -485,12 +485,15 @@ def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
            
 if __name__ == '__main__': #=========================================== Main ==
     
-#    app = QtGui.QApplication(sys.argv)
-    
     # https://www.quora.com/Whats-the-easiest-way-to-recursively-get-a-list-
     # of-all-the-files-in-a-directory-tree-in-Python
     
-    dirname = '../Projects/Valcartier/Meteo/Output/'
+    dirname = '../Projects/Monteregie Est/Meteo/Output/'
+
+#    filename = dirname + 'BROME (7020840)/BROME (7020840)_1980-2009.err'
+#    pperr = PostProcessErr(filename)
+#    pperr.generates_graphs()
+                
     for root, directories, filenames in os.walk(dirname):
         for filename in filenames:            
             if os.path.splitext(filename)[1] == '.err':
@@ -504,10 +507,3 @@ if __name__ == '__main__': #=========================================== Main ==
                 savename = 'weather_normals.pdf'
                 print('Generating %s.' % savename)
                 w.figure.savefig(os.path.join(root, savename))
-
-
-#    for i in range(4):
-#        plot_rmse_vs_time(Ym[i], Yp[i], Time[i], Date[i], varNames[i])
-    
-#    sys.exit(app.exec_())
-
