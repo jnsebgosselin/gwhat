@@ -1,29 +1,29 @@
 \documentclass[TechnicalNoteMeteo.tex]{subfiles}
 \begin{document}
 
-\begin{table}[!p]
+\begin{landscape}
+\begin{table}
     \centering
     \setstretch{1.25}
-    \caption{List of selected weather stations in the study area and related information about missing data for the 1980-2009 period}
-    %\rowcolors{6}{gray!10}{}
+    \caption{Results of the cross-validation procedure for the 19 weather stations located within the Monteregie Est study area for the 1980-2009 period. The Root-Mean-Square Error~(RMSE), the Mean-Absolute Error~(MAE), the Mean Error~(ME) and the correlation coefficient~(r), are given for each weather variables. The mean, max, and min values for all the station, for each estimator (RMSE, MAE, ME, and r), are also provided at the bottom of the table.}
     \resizebox{1.\linewidth}{!}{
     \begin{tabular}{            
         l
         S[table-format = 1.1]
         S[table-format = 1.1]
-        S[table-format = 1.2]
+        S[table-format = -1.2]
         S[table-format = 1.3]
         S[table-format = 1.1]
         S[table-format = 1.1]
-        S[table-format = 1.2]
+        S[table-format = -1.2]
         S[table-format = 1.3]
         S[table-format = 1.1]
         S[table-format = 1.1]
-        S[table-format = 1.2]
+        S[table-format = -1.2]
         S[table-format = 1.3]
         S[table-format = 1.1]
         S[table-format = 1.1]
-        S[table-format = 1.2]
+        S[table-format = -1.2]
         S[table-format = 1.3]
     	}
     	\toprule
@@ -39,8 +39,7 @@
         Brome & 1.1 & 0.7 & -0.07 & 0.996 & 1.8 & 1.3 & -0.11 & 0.989 & 1.1 & 0.8 & -0.08 & 0.996 & 3.0 & 1.3 & -0.17 & 0.902 \\
         Farnham & 1.0 & 0.7 & -0.02 & 0.997 & 1.3 & 1.0 & -0.03 & 0.994 & 0.9 & 0.6 & -0.02 & 0.997 & 2.7 & 1.1 & -0.09 & 0.912 \\
         Fleury & 0.9 & 0.6 & -0.00 & 0.997 & 1.2 & 0.9 & -0.00 & 0.995 & 0.8 & 0.6 & -0.00 & 0.998 & 2.5 & 1.0 & -0.04 & 0.928 \\
-        Georgeville & 1.2 & 0.8 & -0.01 & 0.995 & 1.5 & 1.2 & 0.01 & 0.991 & 1.0 & 0.8 & -0.01 & 0.996 & 2.9 & 1.3 & -0.13 & 0.902 \\
-        Granby & 0.9 & 0.6 & 0.02 & 0.997 & 1.3 & 1.0 & -0.01 & 0.993 & 0.9 & 0.7 & -0.00 & 0.997 &  2.8 & 1.2 & -0.03 & 0.912 \\
+        Granby & 0.9 & 0.6 & 0.02 & 0.997 & 1.3 & 1.0 & -0.01 & 0.993 & 0.9 & 0.7 & -0.00 & 0.997 & 2.8 & 1.2 & -0.03 & 0.912 \\
         Iberville & 0.9 & 0.6 & 0.00 & 0.997 & 1.2 & 0.9 & 0.06 & 0.994 & 0.8 & 0.6 & 0.03 & 0.998 & 2.6 & 1.1 & -0.12 & 0.915 \\
         Marieville & 0.9 & 0.6 & -0.00 & 0.997 & 1.2 & 0.8 & 0.03 & 0.995 & 0.8 & 0.5 & 0.01 & 0.998 & 2.8 & 1.1 & 0.00 & 0.908 \\
         Philipsburg & 1.2 & 0.8 & 0.02 & 0.995 & 1.4 & 1.0 & -0.00 & 0.993 & 0.9 & 0.7 & 0.01 & 0.997 & 2.8 & 1.1 & 0.00 & 0.908 \\
@@ -51,18 +50,88 @@
         St. Bernard & 1.4 & 1.0 & -0.03 & 0.993 & 1.6 & 1.1 & -0.06 & 0.990 & 1.1 & 0.8 & -0.04 & 0.995 & 3.4 & 1.3 & 0.03 & 0.847 \\
         St. Guillaume & 1.0 & 0.7 & 0.00 & 0.997 & 1.2 & 0.8 & -0.01 & 0.995 & 0.8 & 0.6 & -0.00 & 0.998 & 2.3 & 1.0 & -0.01 & 0.927 \\
         St.Hyacinthe 2 & 0.9 & 0.6 & -0.01 & 0.997 & 1.2 & 0.9 & -0.01 & 0.995 & 0.8 & 0.6 & -0.02 & 0.998 & 2.5 & 1.0 & -0.06 & 0.921 \\
-        St. Nazaire \\
-        Ste. Madeleine \\
-        Sutton \\
-        Vercheres \\
+        St. Nazaire & 1.0 & 0.7 & 0.01 & 0.997 & 1.4 & 1.0 & 0.02 & 0.993 & 0.9 & 0.6 & 0.01 & 0.997 & 2.6 & 1.1 & -0.08 & 0.911 \\
+        Ste. Madeleine & 1.0 & 0.7 & 0.02 & 0.996 & 1.2 & 0.8 & -0.01 & 0.995 & 0.8 & 0.6 & 0.00 & 0.998 & 2.6 & 1.0 & 0.01 & 0.919 \\
+        Sutton & 0.9 & 0.6 & 0.00 & 0.997 & 1.2 & 0.9 & -0.00 & 0.994 & 0.8 & 0.6 & -0.00 & 0.998 & 2.9 & 1.3 & -0.07 & 0.912 \\
+        Vercheres & 1.1 & 0.7 & 0.03 & 0.996 & 1.3 & 1.0 & 0.05 & 0.993 & 0.9 & 0.6 & 0.04 & 0.997 & 2.6 & 1.1 & -0.10 & 0.895 \\
         \midrule
-        Mean \\
-        Max \\
-        Min \\
+        Mean & 1.1 & 0.7 & -0.00 & 0.996 & 1.4 & 1.0 & 0.01 & 0.993 & 0.9 & 0.7 & 0.00 & 0.997 & 2.8 & 1.1 & -0.06 & 0.901 \\
+        Max & 1.5 & 1.0 & 0.03 & 0.997 & 2.0 & 1.4 & 0.15 & 0.995 & 1.2 & 0.9 & 0.07 & 0.998 & 3.4 & 1.4 & 0.03 & 0.928 \\
+        Min & 0.9 & 0.6 & -0.07 & 0.993 & 1.2 & 0.8 & -0.11 & 0.987 & 0.8 & 0.5 & -0.08 & 0.995 & 2.3 & 1.0 & -0.17 & 0.847 \\
         \bottomrule
     \end{tabular}
-    }
+    }    
     \label{tab:crossval_restuls}
 \end{table}
+\end{landscape}
+
+%\begin{landscape}
+%\begin{table}
+%    \centering
+%    \setstretch{1.25}
+%    \caption{List of selected weather stations in the study area and related information about missing data for the 1980-2009 period}
+%    \resizebox{1.\linewidth}{!}{
+%    \begin{tabular}{            
+%        l
+%        S[table-format = 1.1]
+%        S[table-format = 1.1]
+%        S[table-format = -1.2]
+%        S[table-format = 1.3]
+%        S[table-format = 1.1]
+%        S[table-format = 1.1]
+%        S[table-format = 1.1]
+%        S[table-format = -1.2]
+%        S[table-format = 1.3]
+%        S[table-format = 1.1]
+%        S[table-format = 1.1]
+%        S[table-format = 1.1]
+%        S[table-format = -1.2]
+%        S[table-format = 1.3]
+%        S[table-format = 1.1]
+%        S[table-format = 1.1]
+%        S[table-format = 1.1]
+%        S[table-format = -1.2]
+%        S[table-format = 1.3]
+%        S[table-format = 1.1]
+%    	}
+%    	\toprule
+%    	& \multicolumn{5}{c}{T\textsubscript{max}} & \multicolumn{5}{c}{T\textsubscript{min}} & \multicolumn{5}{c}{T\textsubscript{mean}}  & \multicolumn{5}{c}{P\textsubscript{tot}} \\
+%    	\cmidrule(lr){2-6}
+%    	\cmidrule(lr){7-11}
+%    	\cmidrule(lr){12-16}
+%    	\cmidrule(lr){17-21}
+%    	{Station} & {RMSE} & {MAE} & {ME} & {r} & {E\textsubscript{max}} & {RMSE} & {MAE} & {ME} & {r} & {E\textsubscript{max}} & {RMSE} & {MAE} & {ME} & {r} & {E\textsubscript{max}} & {RMSE} & {MAE} & {ME} & {r} & {E\textsubscript{max}} \\
+%    	{name} & {\SIUnitSymbolCelsius} & {\SIUnitSymbolCelsius} & {\SIUnitSymbolCelsius} & {-} & {\SIUnitSymbolCelsius} & {\SIUnitSymbolCelsius} & {\SIUnitSymbolCelsius} & {\SIUnitSymbolCelsius} & {-} & {\SIUnitSymbolCelsius} & {\SIUnitSymbolCelsius} & {\SIUnitSymbolCelsius} & {\SIUnitSymbolCelsius} & {-} & {\SIUnitSymbolCelsius} & \si{mm} & \si{mm} & \si{mm} & {-} & \si{mm} \\
+%    	\midrule
+%        Bonsecours & 1.2 & 0.8 & 0.00 & 0.995 & & 1.7 & 1.3 & 0.15 & 0.989 & & 1.1 & 0.8 & 0.02 & 0.996 && 3.1 & 1.4 & -0.10 & 0.890 & \\
+%        Brome & 1.1 & 0.7 & -0.07 & 0.996 & & 1.8 & 1.3 & -0.11 & 0.989 && 1.1 & 0.8 & -0.08 & 0.996 && 3.0 & 1.3 & -0.17 & 0.902 & \\
+%        Farnham & 1.0 & 0.7 & -0.02 & 0.997 & & 1.3 & 1.0 & -0.03 & 0.994 && 0.9 & 0.6 & -0.02 & 0.997 && 2.7 & 1.1 & -0.09 & 0.912 & \\
+%        Fleury & 0.9 & 0.6 & -0.00 & 0.997 & & 1.2 & 0.9 & -0.00 & 0.995 && 0.8 & 0.6 & -0.00 & 0.998 && 2.5 & 1.0 & -0.04 & 0.928 & \\
+%        Georgeville & 1.2 & 0.8 & -0.01 & 0.995 & & 1.5 & 1.2 & 0.01 & 0.991 && 1.0 & 0.8 & -0.01 & 0.996 && 2.9 & 1.3 & -0.13 & 0.902 & \\
+%        Granby & 0.9 & 0.6 & 0.02 & 0.997 & & 1.3 & 1.0 & -0.01 & 0.993 && 0.9 & 0.7 & -0.00 & 0.997 &&  2.8 & 1.2 & -0.03 & 0.912 & \\
+%        Iberville & 0.9 & 0.6 & 0.00 & 0.997 & & 1.2 & 0.9 & 0.06 & 0.994 && 0.8 & 0.6 & 0.03 & 0.998 && 2.6 & 1.1 & -0.12 & 0.915 & \\
+%        Marieville & 0.9 & 0.6 & -0.00 & 0.997 & & 1.2 & 0.8 & 0.03 & 0.995 && 0.8 & 0.5 & 0.01 & 0.998 && 2.8 & 1.1 & 0.00 & 0.908 & \\
+%        Philipsburg & 1.2 & 0.8 & 0.02 & 0.995 & & 1.4 & 1.0 & -0.00 & 0.993 && 0.9 & 0.7 & 0.01 & 0.997 && 2.8 & 1.1 & 0.00 & 0.908 & \\
+%        Pierreville & 1.0 & 0.7 & 0.00 & 0.997 & & 1.3 & 1.0 & -0.02 & 0.994 && 0.9 & 0.7 & -0.01 & 0.997 && 2.6 & 1.0 & -0.01 & 0.903 & \\
+%        Sabrevois & 1.1 & 0.7 & -0.00 & 0.996 & & 1.2 & 0.8 & 0.01 & 0.995 && 0.8 & 0.6 & 0.01 & 0.998 && 3.1 & 1.2 & -0.2 & 0.875 & \\
+%        Sorel & 1.2 & 0.8 & 0.01 & 0.996 & & 2.0 & 1.4 & 0.13 & 0.987 && 1.1 & 0.8 & 0.07 & 0.996 && 2.9 & 1.1 & -0.06 & 0.886 & \\
+%        St. Amable & 1.5 & 1.0 & -0.01 & 0.993 & & 1.8 & 1.3 & 0.02 & 0.988 && 1.2 & 0.9 & 0.00 & 0.995 && 2.9 & 1.2 & -0.04 & 0.890 & \\
+%        St. Bernard & 1.4 & 1.0 & -0.03 & 0.993 & & 1.6 & 1.1 & -0.06 & 0.990 && 1.1 & 0.8 & -0.04 & 0.995 && 3.4 & 1.3 & 0.03 & 0.847 & \\
+%        St. Guillaume & 1.0 & 0.7 & 0.00 & 0.997 & & 1.2 & 0.8 & -0.01 & 0.995 && 0.8 & 0.6 & -0.00 & 0.998 && 2.3 & 1.0 & -0.01 & 0.927 & \\
+%        St.Hyacinthe 2 & 0.9 & 0.6 & -0.01 & 0.997 & & 1.2 & 0.9 & -0.01 & 0.995 && 0.8 & 0.6 & -0.02 & 0.998 && 2.5 & 1.0 & -0.06 & 0.921 & \\
+%        St. Nazaire & 1.0 & 0.7 & 0.01 & 0.997 & & 1.4 & 1.0 & 0.02 & 0.993 && 0.9 & 0.6 & 0.01 & 0.997 && 2.6 & 1.1 & -0.08 & 0.911 & \\
+%        Ste. Madeleine & 1.0 & 0.7 & 0.02 & 0.996 & & 1.2 & 0.8 & -0.01 & 0.995 && 0.8 & 0.6 & 0.00 & 0.998 && 2.6 & 1.0 & 0.01 & 0.919 & \\
+%        Sutton & 0.9 & 0.6 & 0.00 & 0.997 & & 1.2 & 0.9 & -0.00 & 0.994 && 0.8 & 0.6 & -0.00 & 0.998 && 2.9 & 1.3 & -0.07 & 0.912 & \\
+%        Vercheres & 1.1 & 0.7 & 0.03 & 0.996 & & 1.3 & 1.0 & 0.05 & 0.993 && 0.9 & 0.6 & 0.04 & 0.997 && 2.6 & 1.1 & -0.10 & 0.895 & \\
+%        \midrule
+%        Mean \\
+%        Max \\
+%        Min \\
+%        \bottomrule
+%    \end{tabular}
+%    }    
+%    \label{tab:crossval_restuls}
+%\end{table}
+%\end{landscape}
 
 \end{document}

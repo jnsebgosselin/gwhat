@@ -25,6 +25,7 @@
 \usepackage{graphicx}
 \usepackage{stfloats} % To be able to put table* and figure* at the bottom of pages
 \usepackage[utf8]{inputenc}
+\usepackage{pdflscape} % For putting a page in landscape format.
 
 \journal{Canadian Journal of Earth Sciences}
 
@@ -71,7 +72,7 @@
 \end{abstract}
 
 \begin{keyword}
-\texttt{heat transport\sep recharge assessment\sep uncertainty analysis\sep subsurface temperature time series}
+\texttt{Weather Stations\sep Precipitation\sep Air Temperature\sep Daily Missing Data}
 \end{keyword}
 
 \end{frontmatter}
@@ -93,6 +94,8 @@
 \section{Conclusion}
     \subfile{section5}
 
+\clearpage
+
 \section*{References}
     \bibliography{MyLibrary}
 
@@ -100,20 +103,5 @@
 \appendix
 \section{}\label{appendix}
     \subfile{appendix}
-
-
-%\clearpage
-%\onecolumn
-%
-%\begin{minipage}[t]{\textwidth}
-%    \section{Soil Hydraulic and Thermal Curve Properties}
-%\end{minipage}
-%    \subfile{appendixA}\clearpage
-%	
-%\section{Detailed Results of Estimation Errors Sensitivity Analysis}
-%    \subfile{appendixB}
-%    
-%\section{Impact of Temporal and Spatial Variation of the Soil Volumetric Water Content on the Estimation Error.}
-%    \subfile{appendixC}
      
 \end{document}

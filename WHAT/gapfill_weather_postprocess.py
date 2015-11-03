@@ -57,10 +57,13 @@ class PostProcessErr(object):
         self.Time = None
         self.Date = None
         
+        self.staName = None
+        self.climID = None
+        
         self.fname = fname
         self.dirname = os.path.dirname(self.fname)
-        self.load_err_file()
 
+        self.load_err_file()
         
     def load_err_file(self): #=============================== Load err. File ==
         
@@ -144,15 +147,54 @@ class PostProcessErr(object):
         
         for i in range(len(self.Yp)):
             fname = '%s/%s.pdf' % (self.dirname, self.varNames[i])
-            self.plot_est_err(self.Ym[i], self.Yp[i], self.varNames[i], fname)
+            print('------------------------')
             print('Generating %s.' % (os.path.basename(fname)))
+            print('------------------------')            
+            self.plot_est_err(self.Ym[i], self.Yp[i], self.varNames[i], fname)
             
             if self.varNames[i] == 'Total Precip (mm)':
                 fname = '%s/%s.pdf' % (self.dirname, 'precip_PDF')
                 self.plot_gamma_dist(self.Ym[i], self.Yp[i], fname)
                 print('Generating %s.' % (os.path.basename(fname)))
-                
+            
+    def generates_summary(self): #======================== Generates Summary ==
+
+        Ypre = self.Yp
+        Ymes = self.Ym
         
+        for i in range(len(Ypre)):
+            
+            RMSE = (np.mean((Ypre[i] - Ymes[i]) ** 2)) ** 0.5
+            MAE = np.mean(np.abs(Ypre[i] - Ymes[i]))
+            ME = np.mean(Ypre[i] - Ymes[i])
+            r = np.corrcoef(Ypre[i], Ymes[i])[1, 0]
+
+            Emax = np.min(Ypre[i] - Ymes[i])
+            Emin = np.max(Ypre[i] - Ymes[i])
+            
+            dirname = 'summary/'
+            if not os.path.exists(dirname):
+                os.mkdir(dirname)
+            filename = dirname + self.varNames[i] + '.csv'
+            
+            #---- Generate File ----
+            
+            if not os.path.exists(filename):
+                header = [['Station', 'RMSE', 'MAE', 'ME',
+                           'r', 'Emax', 'Emin']]
+                with open(filename, 'w') as f:
+                    writer = csv.writer(f,delimiter='\t')
+                    writer.writerows(header)
+            
+            #---- Write Stats to File ----
+            
+            rowcontent = [[self.staName, '%0.1f' % RMSE, '%0.1f' % MAE,
+                           '%0.2f' % ME, '%0.3f' % r, '%0.1f' % Emax,
+                           '%0.1f' % Emin]]
+            with open(filename, 'a') as f:
+                writer = csv.writer(f,delimiter='\t')
+                writer.writerows(rowcontent)
+             
     @staticmethod
     def plot_est_err(Ymes, Ypre, varName, fname): #============= Est. Errors ==
             
@@ -208,7 +250,14 @@ class PostProcessErr(object):
         MAE = np.mean(np.abs(Ypre - Ymes))
         ME = np.mean(Ypre - Ymes)
         r = np.corrcoef(Ypre, Ymes)[1, 0]
+        print('RMSE=%0.1f ; MAE=%0.1f ; ME=%0.2f ; r=%0.3f' %
+              (RMSE, MAE, ME, r))
+
+        Emax = np.min(Ypre - Ymes)
+        Emin = np.max(Ypre - Ymes)
         
+        print('Emax=%0.1f ; Emin=%0.1f' % (Emax, Emin))
+                
         #---- Generate and Plot Labels ----
         
         if varName in ['Max Temp (deg C)', 'Mean Temp (deg C)',
@@ -498,7 +547,7 @@ if __name__ == '__main__': #=========================================== Main ==
         for filename in filenames:            
             if os.path.splitext(filename)[1] == '.err':
                 print('---- %s ----' % os.path.basename(root))
-                pperr = PostProcessErr(os.path.join(root, filename))
+                pperr = PostProcessErr(os.path.join(root, filename))                
                 pperr.generates_graphs()
             elif os.path.splitext(filename)[1] == '.out':
                 print('---- %s ----' % os.path.basename(root))
@@ -507,3 +556,12 @@ if __name__ == '__main__': #=========================================== Main ==
                 savename = 'weather_normals.pdf'
                 print('Generating %s.' % savename)
                 w.figure.savefig(os.path.join(root, savename))
+    
+#    for root, directories, filenames in os.walk(dirname):
+#        for filename in filenames: 
+#            if os.path.splitext(filename)[1] == '.err':
+#                print filename
+#                pperr = PostProcessErr(os.path.join(root, filename))
+#                pperr.generates_summary()
+            
+    print('fini stie')

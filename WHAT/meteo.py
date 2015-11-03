@@ -1153,11 +1153,11 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         #---- Adjust Space For Text ----
         
-#        # In case there is a need to force the value
-#        #----
-#        Ymax0 = 180 
-#        Ymax1 = 25 ; Ymin1 = -20
-#        #----
+        # In case there is a need to force the value
+        #----
+        # Ymax0 = 200 
+        # Ymax1 = 30 ; Ymin1 = -20
+        #----
         
         #-------------------------------------------------- YTICKS FORMATING --
 
@@ -1285,7 +1285,7 @@ if __name__ == '__main__':
                 
 #    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
 #    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
-    fmeteo = "Files4testing/QUEBEC-JEAN LESAGE INTL A_1985-2005.out"
+    fmeteo = "Files4testing/BONSECOURS (7020828)_1980-2009.out"
     
     w = WeatherAvgGraph()
     w.save_fig_dir =  '../Projects/Monteregie Est'

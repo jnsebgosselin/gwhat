@@ -17,33 +17,33 @@
         regression\_mode & LAD & Define the optimization criteria that is used for the regression in the generation of the MLR model as described in \cref{subsec:MLR_gen}. The two options available are \emph{OLS}~(Ordinary Least Squares) or \emph{LAD}~(Least Absolute Deviations). \\[1em]
         full\_error\_analysis & False & When set to \emph{True}, the accuracy of the method, for the dataset of the target station, will be estimated with the cross-validation procedure described in \cref{subsec:crossval}. \\[1em]
         add\_ETP & False & When set to \emph{True}, daily potential evapotranspiration will be estimated from the daily temperature data series and will be saved in the `.out' file, along with the gapless data series produced with the gapfill algorithm. \\[1em]
-        inputDir \\
-        outputDir \\
-        time\_start\\
-        time\_end\\
+        inputDir & - & Directory where the algorithm search for valid weather data file. \\[1em]
+        outputDir  & - & Directory where are saved all the outputs data files and figures when the gap-filling process for a station is completed successfully. Files associated with a given station are saved in a sub-folder named after the weather station. \\[1em]
+        time\_start & - & Time in the weather dataset from which the gap-filling procedure will start. \\[1em]
+        time\_end & - & Time in the weather dataset to which the gap-filling procedure will be completed. \\[1em]
         \bottomrule
     \end{tabular}
     \label{tab:method_parameter}
 \end{table}
 
 \begin{table}[!h]
-    \setstretch{1.0}
     \centering
+    \setstretch{1.}
     \caption{List of outouts for version 1.0 of the gapfilling algorithm. The name of the file are given for the weather station BROME.}
     \begin{tabular}{lcp{8.5cm}}
         \toprule
         File name & File type & Description\\
         \midrule
-        BROME (7020840)\_1980-2009.out & data & \\[1em]
-        BROME (7020840)\_1980-2009.err & data & \\[1em]
-        BROME (7020840)\_1980-2009.log & data & \\[1em]  
-        weather\_datasets\_summary.log & data & \\[1em]       
-        weather\_normals.pdf & figure & \cref{fig:weatherNormals} \\[1em]
-        precip\_PDF.pdf  & figure & \\[1em]
-        Max Temp (deg C).pdf & figure & \\[1em]
-        Max Temp (deg C).pdf & figure & \\[1em]
-        Mean Temp (deg C).pdf & figure & \\[1em]
-        Min Temp (deg C).pdf & figure & \\
+        BROME (7020840)\_1980-2009.out & data & Tab-separated values file containing the gap-less weather dataset. \\[1em]
+        BROME (7020840)\_1980-2009.log & data & Tab-separated values file containing detailed information about each daily weather value estimated to fill the gaps in the original weather data series.\\[1em]
+        BROME (7020840)\_1980-2009.err & data & Tab-separated values file containing the results of the cross-validation procedure. \\[1em]
+        weather\_datasets\_summary.log & data & Tab-separated values file listing all the weather station for which a data file was available in the `inputDir'. For each station, information about the location coordinates (latitude and longitude), elevation, years for which data are available, and proportion of missing data are also provided.\\[1em]    
+        weather\_normals.pdf & figure & Graphs presenting the yearly and monthly weather normals for precipitation and max, min, and mean air temperature, calculated from the gap-less weather dataset. Examples of these graphs are shown in \cref{fig:weatherNormals}. \\[1em]
+        precip\_PDF.pdf  & figure & Graph showing the gamma probability density functions that were estimated from the estimated and observed daily precipitation time series. The histogram of the distribution of the observed daily precipitation events is also shown. An example is provided in \cref{fig:precip_PDF}. \\[1em]
+        Max Temp (deg C).pdf & figure & Scatter plot comparing the goodness of fit between the observed and estimated daily max temperature series. An example is presented in \cref{subfig:maxtemp_err}. \\[1em]
+        Min Temp (deg C).pdf & figure & Scatter plot comparing the goodness of fit between the observed and estimated daily min temperature series. An example is presented in \cref{subfig:mintemp_err}.\\[1em]
+        Mean Temp (deg C).pdf & figure & Scatter plot comparing the goodness of fit between the observed and estimated daily mean temperature series. An example is presented in \cref{subfig:meantemp_err}.\\[1em]
+        Total Precip (mm).pdf & figure & Scatter plot comparing the goodness of fit between the observed and estimated daily total precipitation series. An example is presented in \cref{fig:precip_err}. \\[1em]
         \bottomrule
     \end{tabular}
     \label{tab:output_files}

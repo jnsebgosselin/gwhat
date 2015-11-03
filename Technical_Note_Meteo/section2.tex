@@ -9,7 +9,7 @@ A flowchart of our gap-filling algorithm is shown in \cref{fig:fillworker_flowch
 \begin{figure}[!p]
     \centering
     \includegraphics[width=\textwidth]{img/Flowchart-filling_missing_weather.pdf} 
-    \caption{}
+    \caption{Flowchart of the gap-filling algorithm presented in this paper.}
     \label{fig:fillworker_flowchart}
 \end{figure}
 
@@ -17,13 +17,13 @@ A flowchart of our gap-filling algorithm is shown in \cref{fig:fillworker_flowch
 
 Correlation coefficients are calculated between the available data of the target station and those of the neighboring stations for each weather variable individually. The coefficients are calculated using all the available data. However, neighboring stations that have less than 182 days (half a year) of synchronous data with the target station or that have a correlation coefficient below a value of 0.35, for a given weather variable, are not used to fill the gaps in the data for that weather variable. The 0.35 threshold is based on the value used by \cite{eischeid_creating_2000} in their application of the method. 
 
-Moreover, it is possible to discard completely from the gap-filling procedure neighboring stations that are located farther away from the target station than specified thresholds, either in the horizontal or the vertical direction. The default values are set to \SI{100}{km} and \SI{350}{m} for the horizontal and vertical distance respectively, based on the values found in the literature \citep{tronci_comparison_1986,xia_forest_1999,simolo_improving_2010}.
+Moreover, it is possible to discard completely from the gap-filling procedure neighboring stations that are located farther away from the target station than specified threshold values, either in the horizontal or the vertical direction. The default values are set to \SI{100}{km} and \SI{350}{m} for the horizontal and vertical distance respectively, based on the values found in the literature \citep{tronci_comparison_1986,xia_forest_1999,simolo_improving_2010}.
 
 \subsection{Selection of the Neighboring Stations}\label{sec:select_stations}
 
-As stated by \cite{eischeid_creating_2000}, the selection of neighboring stations is critically important for the accurate estimation of missing weather data. Problems arise though because the set of neighboring stations with available data can vary from one day to the other. Therefore, the process of selecting the neighboring stations for the generation of a MLR model is repeated for each missing value in the dataset of the target station. 
+As stated by \cite{eischeid_creating_2000}, the selection of neighboring stations is critically important for the accurate estimation of missing weather data. Problems arise though because the list of neighboring stations with available data can vary from one day to the other. Therefore, the process of selecting the neighboring stations for the generation of a MLR model must be done for each missing value in the dataset of the target station separately. 
 
-The neighboring stations with available data are selected in descending order of their correlation coefficient, up to a maximal number of stations that can be specified as a parameter in the algorithm. The default value for the maximal number of neighboring stations used for the generation of the MLR models is 4. Tests run by \cite{eischeid_creating_2000} showed that using more then 4 neighboring stations did not significantly improve, and may even have degraded, the accuracy of the estimates. If for a given day with a missing value, no neighboring stations have a measured value, no calculation is done and a ‘NaN' value is kept in the dataset. 
+For a given day with a missing value, the neighboring stations with available data on that day are selected in descending order of their correlation coefficient, up to a maximal number of stations that can be specified as a parameter in the algorithm. The default value for the maximal number of neighboring stations used for the generation of the MLR models is 4. Tests run by \cite{eischeid_creating_2000} showed that using more then 4 neighboring stations did not significantly improve, and may even have degraded, the accuracy of the estimates. If for a given day with a missing value, no neighboring stations have a measured value, no calculation is done and a ‘NaN' value is kept in the dataset. 
 
 \subsection{Generation of the Multiple Linear Regression Model}\label{subsec:MLR_gen}
 
@@ -32,7 +32,6 @@ Each time a MLR model is generated for a given sequence of neighboring stations,
 The MLR models can be generated using either an Ordinary Least Square~(OLS) or a Least Absolute Deviations~(LAD) criteria. Since daily precipitation series are generally characterized by long-tailed and positively skewed distributions, the LAD method is more appropriate than the OLS method since it is more robust to outliers \citep{menke_geophysical_1989,eischeid_creating_2000}. The downside in using the LAD method is an increase in computation time by about a factor 10 compared to the OLS method. The resolution of the MLR models with the LAD method is achieved using an iterative reweighted least-squares method (reference).
 
 %https://en.wikipedia.org/wiki/Iteratively_reweighted_least_squares
-
 
 \subsection{Estimating Missing Daily Values}\label{sec:est_miss_values}
 
@@ -48,7 +47,7 @@ It is possible to have a negative regression coefficients for the less correlate
 
 \subsection{Uncertainty of the estimated values}\label{subsec:crossval}
 
-The accuracy of each MLR model generated throughout the gap-filling procedure is estimated by computing the root mean of squared residuals of the regression. It is also possible to evaluate the accuracy of the whole method (instead of each MLR model individually) for the entire dataset of given weather station with a Leave One Out (LOO) cross-validation procedure. The procedure consists in estimating a value for each day of the data series of each weather variable for which a measured data is available in the dataset (in addition to the days with missing data). In other words, the loops A and B in the flowchart of \cref{fig:fillworker_flowchart} iterates over all the days and all the weather variables of the dataset instead of only iterating over days with a missing data. Before estimating a value for a given day, the corresponding measured data is temporarily discarded from the dataset of the target station to avoid self-influence of this observation on the generation of the MLR model. The accuracy of the method is then estimated by computing the Root-Mean-Square Error (RMSE), the Mean-Absolute Error (MAE), the Mean Error (ME) and the correlation coefficient~(r) between the estimated weather data and the respective non-missing observations in the original dataset of the target station.
+The accuracy of each MLR model generated throughout the gap-filling procedure is estimated by computing the root mean of squared residuals of the regression. It is also possible to evaluate the accuracy of the whole method (instead of each MLR model individually) for the entire dataset of given weather station with a Leave One Out (LOO) cross-validation procedure. The procedure consists in estimating a value for each day of the data series of each weather variable for which a measured data is available in the dataset (in addition to the days with missing data). In other words, the loops A and B in the flowchart of \cref{fig:fillworker_flowchart} iterates over all the days and all the weather variables of the dataset instead of only iterating over days with a missing data. Before estimating a value for a given day, the corresponding measured data is temporarily discarded from the dataset of the target station to avoid self-influence of this observation on the generation of the MLR model. The accuracy of the method is then estimated by computing the Root-Mean-Square Error~(RMSE), the Mean-Absolute Error~(MAE), the Mean Error~(ME) and the correlation coefficient~(r) between the estimated weather data and the respective non-missing observations in the original dataset of the target station.
 
 Since a new MLR model must be generated for each day independently when doing the cross-validation procedure, the computation time of the gap-filling procedure is thus significantly increased. This is especially true if the MLR model is generated with the least absolute deviation regression method. For this reason, the cross-validation procedure is by default not activated in the algorithm.
 

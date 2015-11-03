@@ -2,6 +2,8 @@
 
 \begin{document}
 
+This article presented the main capabilities of an open source algorithm, written in the Python programming language, for filling the gaps in daily weather data with an automated, robust and efficient method. The method has also been validated against a set of data from 19 weather stations located in the Monteregie Est region, in Quebec, Canada. For this purpose, the cross-validation procedure, that is included with the algorithm, was used to conveniently asses the uncertainty of the method for each of the 19 weather stations. The method yielded consistent and reliable estimates for all the weather station tested. The RMSE and MAE are both below \SIlist{2.0;1.4}{\celsius} for max, min, and mean daily air temperature, while it less than \SIlist{3.4;1.4}{\celsius}, respectively, for precipitation. These results compare well with other published studies that used a similar method that the one used in this study. 
 
+In addition, the algorithm can also be used with a Graphical User Interface (GUI) that is part of the free and Open Source software WHAT (Well Hydrograph Analysis Toolbox). WHAT has been developed to estimate groundwater recharge by combining water level measurements with daily weather data time series. It also includes a graphical interface to easily search for weather stations in the online Canadian Daily Climate Database~(CDCD) and download and format automatically the available data. The gap-filling algorithm that was presented in this paper can represent a powerful tool that could save a lot of time in any project requiring complete daily weather data time-series. Development of the algorithm is still in progress and new features might be added in the future.
 
 \end{document}
