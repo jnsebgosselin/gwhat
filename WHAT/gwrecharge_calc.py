@@ -36,6 +36,7 @@ import matplotlib.pyplot as plt
 
 from meteo import MeteoObj
 from waterlvldata import WaterlvlData
+from gwrecharge_post import plot_water_budget_yearly
 
 #==============================================================================
 
@@ -72,18 +73,21 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         #---- Prepare DATE time series ----
         
-        # Converting time in a date format readable by matplotlib
+        # Converting time in a date format readable by matplotlib and also make
+        # the weather and water level time series synchroneous.
                
         tweatr = self.meteoObj.TIME
         
-        ts = np.where(self.twlvl[0] == tweatr)[0][0]
-        te = np.where(self.twlvl[-1] == tweatr)[0][0] 
+        ts = self.ts = np.where(self.twlvl[0] == tweatr)[0][0]
+        te = self.te = np.where(self.twlvl[-1] == tweatr)[0][0] 
         
-        YEAR = self.meteoObj.DATA[ts:te+1,0]
-        MONTH = self.meteoObj.DATA[ts:te+1,1]
-        DAY = self.meteoObj.DATA[ts:te+1,2]
+        self.YEAR = self.meteoObj.DATA[ts:te+1,0]
+        self.MONTH = self.meteoObj.DATA[ts:te+1,1]
+        DAY = self.meteoObj.DATA[ts:te+1,2]        
+        self.TIME = self.meteoObj.TIME[ts:te+1]
+        self.PRECIP = self.meteoObj.DATA[:, 6][ts:te+1]
         
-        self.DATE = self.convert_time_to_date(YEAR, MONTH, DAY)
+        self.DATE = self.convert_time_to_date(self.YEAR, self.MONTH, DAY)
         
         #---- Multiple Fit ----
         
@@ -96,9 +100,6 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
 #        fname = '%0.2f.pdf' % Sy
 #        fig.savefig(fname)
-#        
-#    def plot_synth_hydrograph(0):
-#        pass
         
     @staticmethod
     def convert_time_to_date(YEAR, MONTH, DAY): #============== Convert Date ==
@@ -312,22 +313,17 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         indx = np.where(RMSE == np.min(RMSE))[0][0]
         
-#        RMSEnew = 10**6 # force divergence
-#        dCru = 0.1
-#        while abs(dCru) >= 0.01:
-#            while 1:
-#                RMSEold = np.copy(RMSEnew)
-#                
-#                Cru += dCru
-#                RASMAX, WLVLpre, RECHG = self.opt_RASmax(Sy, Cru)
-#                
-#                RMSEnew = (np.mean((self.WLVLobs * 1000 - WLVLpre)**2))**0.5
-#                
-#                if RMSEnew > RMSEold:
-#                    dCru /= -10.
-#                    break
-                
-        return Cru[indx], RASMAX[indx], WLVLpre[indx], RECHG[indx]
+        #---- Plot Yearly GW Recharge ----
+        
+        PRECIP = self.meteoObj.DATA[:, 6]
+        YEAR = self.meteoObj.DATA[:, 0]
+       
+        plot_water_budget_yearly(PRECIP, RECHG[indx], YEAR)
+        
+        #---- Plot Yearly GW Recharge ----
+        
+        return Cru[indx], RASMAX[indx], WLVLpre[indx], RECHG[indx]        
+        
                 
     def opt_RASmax(self, Sy, CRU): #======================== Optimize RASmax ==
         
@@ -344,7 +340,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         WLVLobs = self.WLVLobs * 1000
         
         ts = np.where(twlvl[0] == tweatr)[0][0]
-        te = np.where(twlvl[-1] == tweatr)[0][0]        
+        te = np.where(twlvl[-1] == tweatr)[0][0]     
         
         #---- MRC ----
         
@@ -666,7 +662,7 @@ if __name__ == '__main__':
       
     synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl)
     
-    Sy = 0.32
+    Sy = 0.25
     synth_hydrograph.plot_best_fit(Sy)
 #    CRU = [0.2, 0.24, 0.5]    
 #    synth_hydrograph.plot_multiple_fit(Sy, CRU)
