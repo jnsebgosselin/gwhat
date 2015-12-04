@@ -56,12 +56,19 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         self.waterlvlObj.load(fwaterlvl)
         print('--------')
         
+        self.twlvl = self.waterlvlObj.time
+        self.WLVLobs = self.waterlvlObj.lvl
+        self.NaNindx = np.where(~np.isnan(self.WLVLobs))
+        
         #---- Make the water level time series continuous ----
         
-        ts, te = self.waterlvlObj.time[0], self.waterlvlObj.time[-1]
-        self.twlvl = np.arange(ts, te+1)
-        self.WLVLobs = np.interp(self.twlvl, self.waterlvlObj.time,
-                                 self.waterlvlObj.lvl)
+        # Not needed anymore since this is done within the *load* method of
+        # the *WaterlvlData* class.
+        
+        # ts, te = self.waterlvlObj.time[0], self.waterlvlObj.time[-1]
+        # self.twlvl = np.arange(ts, te+1)
+        # self.WLVLobs = np.interp(self.twlvl, self.waterlvlObj.time,
+        #                          self.waterlvlObj.lvl)
         
         #---- Prepare DATE time series ----
         
@@ -92,6 +99,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
 #        
 #    def plot_synth_hydrograph(0):
 #        pass
+        
     @staticmethod
     def convert_time_to_date(YEAR, MONTH, DAY): #============== Convert Date ==
                 
@@ -120,12 +128,14 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         ax = fig.add_axes([lmarg, bmarg, axwidth, axheight])
         
-        #---- Produces Results ----
+        #---- Produces Results (Optimization) ----
         
         Cru, RASmax, WLVLPRE, RECHG = self.opt_Cru(Sy)
         
-        RMSE = np.mean((WLVLPRE - self.WLVLobs*1000)**2)**0.5
-        NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE)
+        RMSE = self.calc_RMSE(self.WLVLobs[self.NaNindx]*1000,
+                              WLVLPRE[self.NaNindx])                                 
+        NSE = self.nash_sutcliffe(self.WLVLobs[self.NaNindx]*1000,
+                                  WLVLPRE[self.NaNindx])
         rechg = np.mean(RECHG) * 365
         
         #---- plot results ----
@@ -251,9 +261,25 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         # Nash%E2%80%93Sutcliffe_model_efficiency_coefficient
         
         NSE = 1 - np.sum((Xobs - Xpre)**2) / np.sum((Xobs - np.mean(Xobs))**2)
-        return NSE        
+        
+        return NSE 
+    
+    @staticmethod
+    def calc_RMSE(Xobs, Xpre): #======================================= RMSE ==
+        
+        RMSE = (np.mean((Xobs - Xpre)**2))**0.5
+
+        return RMSE
         
     def opt_Cru(self, Sy): #=================================== Optimize Cru ==
+        
+        # Optimization is not with a robust approach where all posiblities are
+        # tested and the one with the lowest RMSE is chosen as the optimal
+        # solution. This was done because the conventional Gauss-Newton
+        # approach was not converging well and there was problem with local
+        # extremum.
+        
+        #---- Rough Optimization (0.05 step) ----
         
         Cru = np.arange(0.05, 0.7, 0.05)
         RMSE = np.zeros(len(Cru))
@@ -262,10 +288,14 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         WLVLpre = [0] * len(Cru)
         
         for i, cru in enumerate(Cru):
+            
             RASMAX[i], WLVLpre[i], RECHG[i] = self.opt_RASmax(Sy, cru)
-            RMSE[i] = (np.mean((self.WLVLobs * 1000 - WLVLpre[i])**2))**0.5
+            RMSE[i] = self.calc_RMSE(self.WLVLobs[self.NaNindx] * 1000, 
+                                     WLVLpre[i][self.NaNindx])
         
         print('')        
+        
+        #---- Fine Optimization (0.01 ste) ----
         
         indx = np.where(RMSE == np.min(RMSE))[0][0]
         
@@ -277,7 +307,8 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         for i, cru in enumerate(Cru):
             RASMAX[i], WLVLpre[i], RECHG[i] = self.opt_RASmax(Sy, cru)
-            RMSE[i] = (np.mean((self.WLVLobs * 1000 - WLVLpre[i])**2))**0.5
+            RMSE[i] = self.calc_RMSE(self.WLVLobs[self.NaNindx] * 1000, 
+                                     WLVLpre[i][self.NaNindx])
         
         indx = np.where(RMSE == np.min(RMSE))[0][0]
         
@@ -328,7 +359,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         RECHGpre = self.surf_water_budget(CRU, RASMAX, ETP, PTOT, TAVG)
         WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B, WLVLobs,
                                        Sy, nscheme='forward')
-        RMSE = (np.mean((WLVLobs - WLVLpre)**2))**0.5
+        RMSE = self.calc_RMSE(WLVLobs[self.NaNindx], WLVLpre[self.NaNindx])
         
         it = 0
         while 1:            
@@ -344,7 +375,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                                            
             wlvl = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
                                         Sy, nscheme='forward')
-            X = Xt = (wlvl - WLVLpre) / (RASMAX * dRAS)       
+            X = Xt = (wlvl[self.NaNindx] - WLVLpre[self.NaNindx]) / (RASMAX * dRAS)       
 
             if np.sum(X) == 0:
                 rechg_yearly = np.mean(RECHGpre) * 365
@@ -356,7 +387,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             
             #---- Solving Linear System ----
             
-            dh = WLVLobs - WLVLpre
+            dh = WLVLobs[self.NaNindx] - WLVLpre[self.NaNindx]
             XtX = np.dot(Xt, X)                
             Xtdh = np.dot(Xt, dh)
             
@@ -378,8 +409,9 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                 RECHGpre = self.surf_water_budget(CRU, RASMAX, ETP, PTOT, TAVG)
                 WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B, WLVLobs,
                                                Sy, nscheme='forward')
-                RMSE = (np.mean((WLVLobs - WLVLpre)**2))**0.5
-                
+                RMSE = self.calc_RMSE(WLVLobs[self.NaNindx],
+                                      WLVLpre[self.NaNindx])
+
                 #---- Checking overshoot ----
                 
                 if (RMSE - RMSEold) > 0.1:
@@ -615,17 +647,26 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                
         return RECHG 
 
+    
 if __name__ == '__main__':
    
     plt.close('all')
     
-    dirname = '../Projects/Pont-Rouge/'
-    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    fwaterlvl = dirname + 'Water Levels/5080001.xls'
-        
+    #---- Pont-Rouge ----
+    
+    # dirname = '../Projects/Pont-Rouge/'
+    # fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+    # fwaterlvl = dirname + 'Water Levels/5080001.xls'
+      
+    #---- Valcartier ----
+
+    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
+    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
+    fwaterlvl = dirname + '/Water Levels/valcartier.xls'      
+      
     synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl)
     
-    Sy = 0.28
+    Sy = 0.32
     synth_hydrograph.plot_best_fit(Sy)
 #    CRU = [0.2, 0.24, 0.5]    
 #    synth_hydrograph.plot_multiple_fit(Sy, CRU)

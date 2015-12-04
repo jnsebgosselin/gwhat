@@ -129,6 +129,13 @@ class WaterlvlData():                                          # WaterlvlData #
         
         book.release_resources()
         
+        #---- Make time series continuous ----
+        
+        self.time, self.lvl = self.make_waterlvl_continuous(self.time, 
+                                                            self.lvl)
+        
+        #---- Other stuff ----
+        
         self.generate_HTML_table()
         self.load_interpretation_file()
         
@@ -212,6 +219,32 @@ class WaterlvlData():                                          # WaterlvlData #
         self.hrecess = dat[:, 1]
         
         return True
+        
+    @staticmethod
+    def make_waterlvl_continuous(time, wlvl): #================================
+
+        """
+        This method produce a continuous daily water level time series. Missing
+        data are filled with NaN values.
+        """
+        
+        print('Making water level continuous...')   
+
+        i = 0    
+        while i < len(time) - 1:
+            
+            # If dates 1 and 2 are not consecutive, add a nan row to DATA
+            # after date 1.
+                              
+            if time[i+1] - time[i] > 1: 
+                wlvl = np.insert(wlvl, i+1, np.nan, 0)
+                time = np.insert(time, i+1, time[i]+1, 0)
+            
+            i += 1
+            
+        print('Making water level continuous done.')
+    
+        return time, wlvl
 
         
     def generate_HTML_table(self): #============================= HTML Table ==

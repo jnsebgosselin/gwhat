@@ -1348,10 +1348,18 @@ if __name__ == '__main__':
     
 #    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
 #    fwaterlvl = 'Files4testing/PO16A.xls'
+
+    #---- Pont Rouge ----
     
-    dirname = '../Projects/Pont-Rouge'
-    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    fwaterlvl = dirname + '/Water Levels/5080001.xls'
+#    dirname = '../Projects/Pont-Rouge'
+#    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+#    fwaterlvl = dirname + '/Water Levels/5080001.xls'
+    
+    #---- Valcartier ----
+    
+    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
+    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
+    fwaterlvl = dirname + '/Water Levels/valcartier.xls' 
     
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
@@ -1367,7 +1375,7 @@ if __name__ == '__main__':
     hydrograph = Hydrograph()
     hydrograph.set_waterLvlObj(waterLvlObj)
     hydrograph.finfo = (dirname + 
-                        '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.log')
+                        '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.log')
 #    hydrograph.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
     
     #---- Layout Options ----
