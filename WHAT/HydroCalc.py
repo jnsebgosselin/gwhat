@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 from sys import argv
 from time import clock
 import csv, os
+import datetime
 
 #---- THIRD PARTY IMPORTS ----
 
@@ -34,6 +35,9 @@ mpl.rcParams['backend.qt4']='PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
+
+from xlrd import xldate_as_tuple
+from xlrd.xldate import xldate_from_date_tuple
 
 #---- PERSONAL IMPORTS ----
 
@@ -68,6 +72,8 @@ class Tooltips():
         self.mrc2rechg = ('Compute recharge from the water level time series' +
                           ' using the MRC calculated and the water-table' +
                           ' fluctuation principle')
+        self.btn_dateFormat = ('x axis label time format: ' +
+                               'date or MS Excel numeric')
         
         if language == 'French': #----------------------------------- FRENCH --
             
@@ -82,7 +88,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
     """
     This is the interface where are plotted the water level time series. It is
     possible to dynamically zoom and span the data, change the display,
-    i.e. display the data as a continuous line or idividual dot, perform a
+    i.e. display the data as a continuous line or individual dot, perform a
     MRC and ultimately estimate groundwater recharge.
     """
     
@@ -96,8 +102,20 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         #---- Water Level Time series ----
         
         self.waterLvl_data = WaterlvlData()
+        
         self.time = []
+        self.txls = [] # time in Excel format
+        self.tmpl = [] # time in matplotlib format        
         self.water_lvl = []
+        
+        #---- Date System ----
+        
+        t1 = xldate_from_date_tuple((2000, 1, 1), 0) # time in Excel
+        t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1)) # Time in 
+        self.dt4xls2mpl = t2-t1 # Delta between the datum of both date system
+                
+        self.dformat = 1 # Date format: can either be 0 for Excel format or
+                         #              1 for Matplotlib format.
         
         #---- Recession Curve Parameters ----
 
@@ -195,6 +213,11 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                                                  ttipDB.btn_Waterlvl_lineStyle)                                                 
         self.btn_save_interp = toolBarBtn(iconDB.save,
                                           ttipDB.btn_save_interp)
+        self.btn_dateFormat = toolBarBtn(iconDB.calendar,
+                                         ttipDB.btn_dateFormat)
+        self.btn_dateFormat.setAutoRaise(1-self.dformat)
+        # 0: Excel Numeric Date Format
+        # 1: Matplotlib Date Format        
                                                  
 #        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
                                                  
@@ -213,7 +236,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                     self.btn_clearPeak, self.btn_editPeak, self.btn_delPeak,
                     VSep(), self.btn_home, self.btn_pan, VSep(),
                     self.btn_MRCalc, self.btn_save_interp, VSep(),
-                    self.btn_Waterlvl_lineStyle, self.btn_strati]
+                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat,
+                    self.btn_strati]
                     
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -295,6 +319,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
         self.btn_strati.clicked.connect(self.btn_strati_isClicked)
+        self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
 #        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
         
     def emit_error_message(self, error_text): #============== Emit Error MSG ==
@@ -317,7 +342,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.time = self.waterLvl_data.time
         self.soilFilename = self.waterLvl_data.soilFilename
         
-        self.plot_water_levels()
+        self.init_hydrograph()
         self.load_MRC_interp()
         
     def load_MRC_interp(self): #============================ Load MRC Interp ==
@@ -374,6 +399,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.delete_peak()
         elif self.sender() == self.btn_pan:
             self.pan_graph()
+        elif self.sender() == self.btn_dateFormat:
+            self.switch_date_format()
         
     def btn_MRCalc_isClicked(self): #=========================== Compute MRC ==
         
@@ -396,8 +423,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         #---- plot result ----
         
-        self.h3_ax0.set_xdata(self.time)
-        self.h3_ax0.set_ydata(hp)        
+        self.h3_ax0.set_ydata(hp)
+        self.h3_ax0.set_xdata(self.time + self.dt4xls2mpl * self.dformat)
         self.fig_MRC_widget.draw()
                 
         #---- store result in class attributes ----
@@ -498,8 +525,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             
         if self.isGraphExists == True:
             
-            self.h2_ax0.set_xdata(self.time[self.peak_indx])
             self.h2_ax0.set_ydata(self.water_lvl[self.peak_indx])
+            self.h2_ax0.set_xdata(self.time[self.peak_indx] + 
+                                  self.dt4xls2mpl * self.dformat)
                                    
             self.fig_MRC_widget.draw()
     
@@ -653,12 +681,55 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         h = 1 - (bottom_margin + top_margin)
         
         self.ax0.set_position([x0, y0, w, h])
-                
-    def plot_water_levels(self): #======================== Plot Water Levels ==
+    
+    def switch_date_format(self): #====================== Switch Date Format ==
         
-        t = self.time
-        x = self.water_lvl
-
+        #---- Change UI and System Variable State ----
+        
+        if self.dformat == 0:   # 0 for Excel numeric date format
+            self.btn_dateFormat.setAutoRaise(False)
+            self.dformat = 1    # 1 for Matplotlib format
+            print('switching to matplotlib date format')
+        elif self.dformat == 1: # 1 for Matplotlib format
+            self.btn_dateFormat.setAutoRaise(True)
+            self.dformat = 0    # 0 for Excel numeric date format    
+            print('switching to Excel numeric date format')            
+        
+        #---- Change xtick Labels Date Format ----
+               
+        if self.dformat == 1:
+            xloc = mpl.dates.AutoDateLocator()
+            self.ax0.xaxis.set_major_locator(xloc)
+            xfmt = mpl.dates.AutoDateFormatter(xloc)        
+            self.ax0.xaxis.set_major_formatter(xfmt)
+        elif self.dformat == 0:
+            xfmt = mpl.ticker.ScalarFormatter()
+            self.ax0.xaxis.set_major_formatter(xfmt)
+            self.ax0.get_xaxis().get_major_formatter().set_useOffset(False)
+                        
+        #---- Adjust Axis Range ----
+        
+        xlim =  self.ax0.get_xlim() 
+        if self.dformat == 1:
+            self.ax0.set_xlim(xlim[0] + self.dt4xls2mpl,
+                              xlim[1] + self.dt4xls2mpl)
+        elif self.dformat == 0:
+            self.ax0.set_xlim(xlim[0] - self.dt4xls2mpl,
+                              xlim[1] - self.dt4xls2mpl)
+        
+        #---- Adjust Water Levels, Peak and MRC Time Frame ----
+        
+        t = self.time + self.dt4xls2mpl * self.dformat
+        
+        self.h1_ax0.set_xdata(t)                              # Water Levels         
+        self.h3_ax0.set_xdata(t)                              # MRC
+        self.h2_ax0.set_xdata(self.time[self.peak_indx] +     # Peaks
+                              self.dt4xls2mpl * self.dformat)
+        
+        self.fig_MRC_widget.draw()
+        
+    def init_hydrograph(self): # =============================== Init. Graph ==
+        
         self.ax0.cla()
         
         #------------------------------------------------------------- RESET --
@@ -666,29 +737,16 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
-       
+        
         #------------------------------------------------------------ XTICKS --
         
         self.ax0.xaxis.set_ticks_position('bottom')
         self.ax0.tick_params(axis='x',direction='out')
-
+        
         #------------------------------------------------------------ YTICKS --
         
         self.ax0.yaxis.set_ticks_position('left')
         self.ax0.tick_params(axis='y',direction='out')
-                
-        #---------------------------------------------------- SET AXIS RANGE --
-       
-        delta = 0.05
-        Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
-        Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
-        
-        indx = np.where(~np.isnan(x))
-        Ymin0 = np.min(x[indx]) - (np.max(x[indx]) - np.min(x[indx])) * delta
-        Ymax0 = np.max(x[indx]) + (np.max(x[indx]) - np.min(x[indx])) * delta
-    
-        self.ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
-        self.ax0.invert_yaxis()
         
         #------------------------------------------------------------ LABELS --
     
@@ -696,27 +754,30 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                             verticalalignment='top', color='black')
         self.ax0.set_xlabel('Time (days)', fontsize=14, labelpad=25,
                             verticalalignment='bottom', color='black')
-
+                            
         #---------------------------------------------------------- PLOTTING --
-    
-        #---- Water Levels ----
-    
-        self.h1_ax0, = self.ax0.plot(t, x, color='blue', clip_on=True, ls='-',
-                                     zorder=10, marker='None')
         
+        #---- Water Levels ----
+        
+        y = self.water_lvl
+        t = self.time + self.dt4xls2mpl * self.dformat
+        
+        self.h1_ax0, = self.ax0.plot(t, y, color='blue', clip_on=True, ls='-',
+                                     zorder=10, marker='None')
+                
         #---- Peaks ----
                  
         self.h2_ax0, = self.ax0.plot([], [], color='red', clip_on=True, 
                                      zorder=30, marker='o', linestyle='None')
-                                     
+
         #---- Vertical guide line under cursor ----
-                                     
-        self.ly = self.ax0.axvline(x=.5, ymin=0, ymax=1, color='red',
+        
+        self.ly = self.ax0.axvline(1, ymin=0, ymax=1, color='red',
                                    zorder=40)
         
         #---- Cross Remove Peaks ----
         
-        self.xcross, = self.ax0.plot(-1, 0, color='red', clip_on=True, 
+        self.xcross, = self.ax0.plot(1, 0, color='red', clip_on=True, 
                                      zorder=20, marker='x', linestyle='None',
                                      markersize = 15, markeredgewidth = 3)
                                      
@@ -734,14 +795,42 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         self.ax0.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':')
         self.ax0.set_axisbelow(True)
+                
+        #---- Setup Axis Range ----
         
-        #----------------------------------------------------- UPDATE WIDGET --
+        y = self.water_lvl
+        t = self.time + self.dt4xls2mpl * self.dformat
         
-        self.fig_MRC_widget.draw()
+        delta = 0.05
+        Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
+        Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
+        
+        indx = np.where(~np.isnan(y))
+        Ymin0 = np.min(y[indx]) - (np.max(y[indx]) - np.min(y[indx])) * delta
+        Ymax0 = np.max(y[indx]) + (np.max(y[indx]) - np.min(y[indx])) * delta
+        
+        self.ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
+        self.ax0.invert_yaxis()
+        
+        #---- Setup xtick Labels Date Format ----
+               
+        if self.dformat == 1:
+            xloc = mpl.dates.AutoDateLocator()
+            self.ax0.xaxis.set_major_locator(xloc)
+            xfmt = mpl.dates.AutoDateFormatter(xloc)        
+            self.ax0.xaxis.set_major_formatter(xfmt)
+        elif self.dformat == 0:
+            xfmt = mpl.ticker.ScalarFormatter()
+            self.ax0.xaxis.set_major_formatter(xfmt)
+            self.ax0.get_xaxis().get_major_formatter().set_useOffset(False)
+        
+        #---- Draw the Graph ----
         
         self.isGraphExists = True
-    
-    def btn_strati_isClicked(self):
+        self.fig_MRC_widget.draw()
+        
+
+    def btn_strati_isClicked(self): #================ Show/Hide Stratigraphy ==
         
         #---- Checks ----
         
@@ -855,11 +944,10 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
            # Trace a red vertical guide (line) that folows the mouse marker.
            
             x = event.xdata
-            
-            # update the line positions
-            self.ly.set_xdata(x)
-            
-            self.fig_MRC_widget.draw()
+            if x:            
+                # update the line positions
+                self.ly.set_xdata(x)            
+                self.fig_MRC_widget.draw()
             
         elif not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
             
@@ -871,7 +959,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             
             xt = np.empty(len(self.peak_indx))
             yt = np.empty(len(self.peak_indx))
-            xpeak = self.time[self.peak_indx]
+            xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
             ypeak = self.water_lvl[self.peak_indx]
             
             for i in range(len(self.peak_indx)):                
@@ -879,74 +967,79 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
            
             r = ((xt - x)**2 + (yt - y)**2)**0.5
             
-            if np.min(r) < 15 :
-
+            if np.min(r) < 15 : # put the cross over the nearest peak
+                                
                 indx = np.where(r == np.min(r))[0][0]
                                 
                 self.xcross.set_xdata(xpeak[indx])
                 self.xcross.set_ydata(ypeak[indx])
                 
                 self.fig_MRC_widget.draw()
-            else:
+            else: # hide the cross outside of the plotting area
+            
                 self.xcross.set_xdata(-1)
                 
                 self.fig_MRC_widget.draw()            
         else:
             pass
             
-    def onclick(self, event):
+    def onclick(self, event): #------------------------------ On Mouse Click --
         
         x = event.x
         y = event.y
  
-        #--------------------------------------------------- DELETE A PEAK ---- 
+        #----------------------------------------------------- DELETE A PEAK --
         
         # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
 
         if x != None and y != None and not self.btn_delPeak.autoRaise():
-            
+        
             if len(self.peak_indx) == 0: 
                 return
                 
             xt = np.empty(len(self.peak_indx))
             yt = np.empty(len(self.peak_indx))
-            xpeak = self.time[self.peak_indx]
+            xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
             ypeak = self.water_lvl[self.peak_indx]
         
             for i in range(len(self.peak_indx)):                
-                xt[i], yt[i] = self.ax0.transData.transform((xpeak[i],ypeak[i]))
+                xt[i], yt[i] = self.ax0.transData.transform((xpeak[i],
+                                                             ypeak[i]))
        
             r = ((xt - x)**2 + (yt - y)**2)**0.5
         
             if np.min(r) < 15 :
 
                 indx = np.where(r == np.min(r))[0][0]
-                            
+                
+                # Update the plot
                 self.xcross.set_xdata(xpeak[indx])
                 self.xcross.set_ydata(ypeak[indx])
                 
+                # Remove peak from peak index sequence
                 self.peak_indx = np.delete(self.peak_indx, indx)
                 self.peak_memory.append(self.peak_indx)
                 
                 xpeak = np.delete(xpeak, indx)
                 ypeak = np.delete(ypeak, indx)
                 
-                
-                self.xcross.set_xdata(-1)            
+                # hide the cross outside of the plotting area
+                self.xcross.set_xdata(1)            
                 self.plot_peak()
             else:
                 pass
             
-        #------------------------------------------------------ ADD A PEAK ----        
-
+        #-------------------------------------------------------- ADD A PEAK --
+            
         elif x != None and y != None and not self.btn_editPeak.autoRaise():
+        
         # print(event.xdata, event.ydata)
             
             xclic = event.xdata
         
             # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
             
-            x = self.time
+            x = self.time + self.dt4xls2mpl * self.dformat
             y = self.water_lvl
             
             indxmin = np.where(x < xclic)[0]
@@ -1252,7 +1345,29 @@ def local_extrema(x, Deltan):
 #            n_j[Jest] = np.sign(n_j[Jest]) * nf
    
     return n_j, kadd
-    
+
+
+##==============================================================================
+#def xls2mpl(time):
+#    
+#    """
+#    Create a date series readable by mpl from a numeric time series (time).
+#    """
+#    
+#    mpldate = [0] * len(time)
+#    for i, t in enumerate(time):
+#                    
+#        d = xldate_as_tuple(t, 0)            
+#        mpldate[i] = datetime.datetime(d[0], d[1], d[2], 0)
+#        
+#    return mpldate
+#    
+#def mpl2xls(date):
+#    """
+#    Create a numeric time series readable by excell from a matplotlib
+#    date series.
+#    """
+#    time = mpl.dates.date2num(date)
 
 #==============================================================================
 def mrc_calc(t, h, ipeak, MRCTYPE=1):
@@ -1635,7 +1750,10 @@ if __name__ == '__main__':
     w.show()
     w.widget_MRCparam.show()
     
-    fwaterlvl = '../Projects/Pont-Rouge/Water Levels/5080001.xls'
+    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
+    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
+    fwaterlvl = dirname + '/Water Levels/valcartier2.xls' 
+    
     w.load_waterLvl_data(fwaterlvl)
        
     app.exec_() 

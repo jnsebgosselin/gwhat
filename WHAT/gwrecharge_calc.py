@@ -230,8 +230,11 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                 label='Observed\nWater Levels')
         
         for i in range(len(CRU)):
-            RMSE = np.mean((WLVLPRE[i] - self.WLVLobs*1000)**2)**0.5
-            NSE = self.nash_sutcliffe(self.WLVLobs*1000, WLVLPRE[i])
+            
+            RMSE = self.calc_RMSE(self.WLVLobs[self.NaNindx]*1000,
+                                  WLVLPRE[i][self.NaNindx])                                 
+            NSE = self.nash_sutcliffe(self.WLVLobs[self.NaNindx]*1000,
+                                      WLVLPRE[i][self.NaNindx])
             rechg = np.mean(RECHG[i]) * 365
             
             label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
@@ -251,7 +254,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         ax.legend(loc=[1.01, 0], ncol=1, fontsize=8)
         ax.invert_yaxis()
         
-        fname = 'Multifit_Sy=%0.2f.pdf' % Sy
+        fname = 'Multi_Analysis/Sy=%0.2f_Cru=%0.2f.pdf' % (Sy, CRU[0])
         fig.savefig(fname)
         
         
@@ -274,7 +277,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
     def opt_Cru(self, Sy): #=================================== Optimize Cru ==
         
-        # Optimization is not with a robust approach where all posiblities are
+        # Optimization is done with a robust approach where all posiblities are
         # tested and the one with the lowest RMSE is chosen as the optimal
         # solution. This was done because the conventional Gauss-Newton
         # approach was not converging well and there was problem with local
@@ -294,7 +297,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             RMSE[i] = self.calc_RMSE(self.WLVLobs[self.NaNindx] * 1000, 
                                      WLVLpre[i][self.NaNindx])
         
-        print('')        
+        print('')
         
         #---- Fine Optimization (0.01 ste) ----
         
@@ -332,7 +335,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         ETP = self.meteoObj.DATA[:, 7]
         PTOT = self.meteoObj.DATA[:, 6]
         TAVG = self.meteoObj.DATA[:, 5]
-        tweatr = self.meteoObj.TIME + 10
+        tweatr = self.meteoObj.TIME + 0 # Here we introduce the time lag
         
         #---- water lvl observations ----
         
@@ -376,7 +379,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             if np.sum(X) == 0:
                 rechg_yearly = np.mean(RECHGpre) * 365
                 RASMAX = np.inf
-                print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
+                print('Cru = %0.3f ; RASmax = %0.0f mm ; ' +
                       'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
                       ) % (CRU, RASMAX, RMSE, rechg_yearly)              
                 return RASMAX, WLVLpre, RECHGpre
@@ -435,7 +438,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
 #                out = np.correlate(WLVLobs, WLVLpre[:-100])
 #                plt.plot(out)
                 rechg_yearly = np.mean(RECHGpre) * 365
-                print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
+                print('Cru = %0.3f ; RASmax = %0.0f mm ; ' +
                       'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
                       ) % (CRU, RASMAX, RMSE, rechg_yearly)
                 return RASMAX, WLVLpre, RECHGpre
@@ -658,19 +661,21 @@ if __name__ == '__main__':
 
     dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
     fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
-    fwaterlvl = dirname + '/Water Levels/valcartier.xls'      
-      
+    fwaterlvl = dirname + '/Water Levels/valcartier2.xls'      
+    
+    #---- Calculations ----
+    
     synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl)
     
     Sy = 0.25
-    synth_hydrograph.plot_best_fit(Sy)
-#    CRU = [0.2, 0.24, 0.5]    
-#    synth_hydrograph.plot_multiple_fit(Sy, CRU)
+#    synth_hydrograph.plot_best_fit(Sy)
     
-    plt.show()
+    CRU = np.arange(0.25, 0.31, 0.005)
+#    CRU = np.arange(0, 0.65, 0.05)
+    for cru in CRU:    
+        synth_hydrograph.plot_multiple_fit(Sy, [cru])
     
-    
-    
+    # plt.show()
     
 #    Sy = 0.25
 #    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, Sy, CRU)

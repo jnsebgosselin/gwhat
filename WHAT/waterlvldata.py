@@ -25,6 +25,7 @@ from calendar import monthrange
 import csv, os
 from math import sin, cos, sqrt, atan2, radians
 from time import clock
+import datetime
 
 #----- THIRD PARTY IMPORTS -----
 
@@ -48,7 +49,7 @@ class WaterlvlData():                                          # WaterlvlData #
         
         #---- Water Level Time Series ----
         
-        self.time = []
+        self.time = [] # time series in excel numeric format
         self.lvl = []
         
         #---- Well Info ----
@@ -133,7 +134,7 @@ class WaterlvlData():                                          # WaterlvlData #
         
         self.time, self.lvl = self.make_waterlvl_continuous(self.time, 
                                                             self.lvl)
-        
+                    
         #---- Other stuff ----
         
         self.generate_HTML_table()

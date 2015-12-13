@@ -1359,7 +1359,7 @@ if __name__ == '__main__':
     
     dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
     fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
-    fwaterlvl = dirname + '/Water Levels/valcartier.xls' 
+    fwaterlvl = dirname + '/Water Levels/valcartier2.xls' 
     
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
