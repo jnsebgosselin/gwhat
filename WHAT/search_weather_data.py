@@ -975,8 +975,8 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             item = QtGui.QTableWidgetItem(staList[row][0])
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
-            item.setToolTip(staList[row][0])
-            self.setItem(row, col, item)
+            item.setToolTip(staList[row][0])            
+            self.setItem(row, col, item)            
             
             #---- Proximity ----
             

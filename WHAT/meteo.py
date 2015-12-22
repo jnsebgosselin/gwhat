@@ -62,7 +62,8 @@ class Tooltips():
         
         self.save = 'Save graph'
         self.open = "Open a valid '.out' weather data file"
-        self.addTitle = 'Add A Title To The Figure Here (Option not yet available)'
+        self.addTitle = 'Add a Title to the Figure Here.'
+        self.btn_showStats = 'Show monthly weather normals data table.'
         
         if language == 'French': #----------------------------------- FRENCH --
             
@@ -70,16 +71,13 @@ class Tooltips():
 
 #==============================================================================
 class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
-    """
-    GUI that holds the weather normal graph.
-    """
-#==============================================================================
-
+    
     """
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
-    
+#==============================================================================
+   
     def __init__(self, parent=None):
         super(WeatherAvgGraph, self).__init__(parent)        
         self.setWindowFlags(QtCore.Qt.Window)
@@ -92,6 +90,9 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         iconDB = db.Icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
+        
+        self.NORMALS = [] # 2D matrix holding all the weather normals
+                          # [TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}] 
         self.station_name = []
         self.save_fig_dir = os.getcwd()
         self.meteo_dir = os.getcwd()
@@ -118,6 +119,14 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         btn_open.setIconSize(StyleDB.iconSize)
         btn_open.clicked.connect(self.select_meteo_file)
         
+        btn_showStats = QtGui.QToolButton()
+        btn_showStats.setAutoRaise(True)
+        btn_showStats.setIcon(iconDB.showGrid)
+        btn_showStats.setToolTip(ttipDB.btn_showStats)
+        btn_showStats.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_showStats.setIconSize(StyleDB.iconSize)
+        btn_showStats.clicked.connect(self.show_monthly_grid)
+        
 #        self.graph_title = QtGui.QLineEdit()
 #        self.graph_title.setMaxLength(65)
 #        self.graph_title.setEnabled(False)
@@ -140,6 +149,8 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         col += 1
         subgrid_toolbar.addWidget(btn_open, row, col)
         col += 1
+        subgrid_toolbar.addWidget(btn_showStats, row, col)        
+        col += 1
         subgrid_toolbar.setColumnStretch(col, 4)
                 
         subgrid_toolbar.setSpacing(5)
@@ -152,6 +163,8 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         #---- widgets ----
         
         self.fig_weather_normals = FigWeatherNormals()
+        self.grid_weather_normals = GridWeatherNormals()
+        self.grid_weather_normals.hide()
         
         #---- layout ----
         
@@ -161,21 +174,55 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         mainGrid.addWidget(toolbar_widget, row, 0)
         row += 1
         mainGrid.addWidget(self.fig_weather_normals, row, 0)
+        row += 1
+        mainGrid.addWidget(self.grid_weather_normals, row, 0)
                 
         mainGrid.setContentsMargins(10, 10, 10, 10) # Left, Top, Right, Bottom 
         mainGrid.setSpacing(10)
-        mainGrid.setRowStretch(1, 500)
+        mainGrid.setRowStretch(row, 500)
         mainGrid.setColumnStretch(0, 500)
         
         self.setLayout(mainGrid)
-                
+        
+    def show_monthly_grid(self): #=========== Show Monthly Normals Data Grid ==
+
+        if self.grid_weather_normals.isHidden():
+            self.grid_weather_normals.show()
+            self.setFixedHeight(self.size().height()+250)
+#            self.setFixedWidth(self.size().width()+75)
+            self.sender().setAutoRaise(False)
+        else:
+            self.grid_weather_normals.hide()
+            self.setFixedHeight(self.size().height()-250)
+#            self.setFixedWidth(self.size().width()-75)
+            self.sender().setAutoRaise(True)
+        
     def generate_graph(self, filename): #=========== Generate and Draw Graph ==
         
-        self.station_name = \
-            self.fig_weather_normals.plot_monthly_normals(filename)
+        #------------------------------------------------------ Prepare Data --
+        
+        #---- load data from data file ----
+        
+        METEO = MeteoObj()
+        METEO.load_and_format(filename)
+        
+        #---- calulate weather normals ----
+        
+        # DATA = [YEAR, MONTH, DAY, TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}] 
+        self.NORMALS, self.MTHSER = calculate_normals(METEO.DATA,
+                                                      METEO.datatypes)
+                
+        #------------------------------------------------------ Plot Normals --
+        
+        self.station_name = METEO.STA
+        self.fig_weather_normals.plot_monthly_normals(self.NORMALS)
         self.fig_weather_normals.draw()
         
         self.setWindowTitle('Weather Averages for %s' % self.station_name)
+        
+        #----------------------------------------------- Generate Data Table --
+        
+        self.grid_weather_normals.populate_table(self.NORMALS)
 
     def save_graph(self): #====================================== save_graph ==
         
@@ -194,9 +241,85 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
                 filename = filename + ftype[1:]
                 
             self.save_fig_dir = os.path.dirname(filename)    
-            self.fig_weather_normals.figure.savefig(filename)   
+            self.fig_weather_normals.figure.savefig(filename)  
+            
+            #---- Save Companion files ----
+            
+            filename = self.save_fig_dir
+            filename += '/WeatherAverages_%s.csv' % self.station_name
+            self.save_normal_table(filename)
+                        
+            filename = self.save_fig_dir
+            filename += '/MonthlySeries_%s.csv' % self.station_name
+            self.save_monthly_series(filename)
 
+    def save_normal_table(self, filename): #=========== Save Normals to File ==
+        
+        NORMALS = self.NORMALS
+        
+        #--------------------------------------------- Generate File Content --
+        
+        fcontent = [['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
+                     'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']]  
 
+        #---- Air Temperature ----
+
+        Tvar = ['Daily Tmax (degC)', 'Daily Tmin (degC)', 'Daily Tavg (degC)']
+        for i in range(3):
+            fcontent.append([Tvar[i]])
+            # months
+            for j in range(12):
+                fcontent[-1].extend(['%0.1f' % NORMALS[j, i]])
+            # years
+            fcontent[-1].extend(['%0.1f' % np.mean(NORMALS[:, i])])
+            
+        #---- rain ----
+            
+        fcontent.append(['Rain (mm)'])
+        # months
+        for j in range(12):
+            fcontent[-1].extend(['%0.1f' % NORMALS[j, 5]])
+        # year
+        fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 5])])
+        
+        #---- snow ----
+        
+        fcontent.append(['Snow (mm)'])
+        # months
+        for j in range(12):
+            snowval = NORMALS[j, 3] - NORMALS[j, 5]
+            fcontent[5].extend(['%0.1f' % snowval])
+        # year
+        fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 3] - NORMALS[:, 5])])
+        
+        #---- total precipitation ----
+        
+        fcontent.append(['Total Precip. (mm)'])
+        for j in range(12):
+            fcontent[-1].extend(['%0.1f' % NORMALS[j, 3]])
+        # year
+        fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 3])])
+        
+        #---- ETP ----
+        
+        fcontent.append(['ETP (mm)'])
+        for j in range(12):
+            fcontent[-1].extend(['%0.1f' % NORMALS[j, 4]])
+        # year
+        fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 4])])
+                            
+        #------------------------------------------------------ Save to File --                
+                            
+        with open(filename, 'w')as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer.writerows(fcontent) 
+            
+    def save_monthly_series(self, filename): # ========= Save Monthly Series ==
+            
+        with open(filename, 'w')as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer.writerows(self.MTHSER)  
+    
     def select_meteo_file(self): #=============== Select a Weather Data File ==
 
         filename, _ = QtGui.QFileDialog.getOpenFileName(self,
@@ -222,8 +345,7 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
             cp = QtGui.QDesktopWidget().availableGeometry().center()            
         qr.moveCenter(cp)                    
         self.move(qr.topLeft())           
-        self.setFixedSize(self.size())
-        
+        self.setFixedSize(self.size())        
             
 #==============================================================================        
 class MeteoObj():    
@@ -383,7 +505,7 @@ class MeteoObj():
                   ' rows of data removed at the end of the dataset.')
         
         
-    def check_time_continuity(self): #========================================
+    def check_time_continuity(self): #=========================================
             
         #------------------------------------------ check time continuity ----
         
@@ -504,7 +626,7 @@ class MeteoObj():
         
         #---- compute normals ----
         
-        NORMALS = calculate_normals(self.DATA, self.datatypes)        
+        NORMALS, _ = calculate_normals(self.DATA, self.datatypes)        
         Ta = NORMALS[:, 2] # monthly air temperature averages (deg Celcius)
         
         ETP = calculate_ETP(DATE, TAVG, LAT, Ta)
@@ -600,7 +722,7 @@ def add_ETP_to_weather_data_file(filename):
     meteoObj.get_TIME(meteoObj.DATA[:, :3])
     meteoObj.fill_nan()
             
-    NORMALS = calculate_normals(meteoObj.DATA, meteoObj.datatypes)
+    NORMALS, _ = calculate_normals(meteoObj.DATA, meteoObj.datatypes)
     
     varnames = np.array(meteoObj.HEADER[-1])
     indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
@@ -736,11 +858,11 @@ def calculate_normals(DATA, datatypes):
     MONTH = DATA[:, 1].astype(int)
     X = DATA[:, 3:]
    
-    #---------------------------------------- Do each month, for every year ----
+    #--------------------------------------- Do each month, for every year ----
     
     # Calculate the average value for each months of each year
     
-    nyear = np.ptp(YEAR) + 1
+    nyear = np.ptp(YEAR) + 1 # Range of values (max - min) along an axis
     flagIncomplete = False 
       
     XMONTH = np.zeros((nyear, 12, nvar)) * np.nan
@@ -767,6 +889,16 @@ def calculate_normals(DATA, datatypes):
     if flagIncomplete:
         print('Some months were not complete and were not considered in ' +
               'the calculation of the weather normals.')
+    
+    # Produde a monthly series for saving to a file higher up in the code
+    # structure.      
+              
+    MTHSER = [['Year', 'Month', 'Daily Tmax (degC)', 'Daily Tmin (degC)',
+               'Daily Tavg (degC)', 'Total Precip (mm)', 'ETP (mm)']]
+    for i in range(nyear):
+        for j in range(12):
+            MTHSER.append([i+YEAR[0], j+1])
+            MTHSER[-1].extend(XMONTH[i, j, :-1])
               
     #----------------------------------------------- compute monthly normals --
     
@@ -788,10 +920,9 @@ def calculate_normals(DATA, datatypes):
 
                 # Default nan value is kept in the array.
         
-                print('WARNING, some months are empty because of lack of data.')
+                print('WARNING, some months are empty with no data.')
     
-    return XNORM
-        
+    return XNORM, MTHSER
 
 #==============================================================================
 def calculate_ETP(DATE, TAVG, LAT, Ta):
@@ -897,6 +1028,11 @@ def calculate_daylength(DATE, LAT):
 class FigWeatherNormals(FigureCanvasQTAgg):
     """
     This is the class that does all the plotting of the weather normals.
+    
+    ax0 is used to plot precipitation
+    ax1 is used to plot air temperature
+    ax3 is used to plot the legend on top of the graph.
+    
     """
 #==============================================================================
     
@@ -912,8 +1048,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         #---------------------------------------------------- Define Margins --
         
-        left_margin = 1 / fw
-        right_margin = 1 / fw
+        left_margin = 1. / fw
+        right_margin = 1. / fw
         bottom_margin = 0.35 / fh
         top_margin = 0.1 / fh
                      
@@ -1036,6 +1172,28 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                         length=0, labelsize=13)
         ax0.xaxis.set_ticklabels(month_names, minor=True)
         
+        #-------------------------------------------------- Yticks Formating --
+        
+        COLOR=['black', 'black']
+        
+        #---- Precipitation ----
+        
+        ax0.yaxis.set_ticks_position('right') 
+        ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1],
+                        labelsize=13)
+                        
+        ax0.tick_params(axis='y', which='minor', direction='out')
+        ax0.yaxis.set_ticklabels([], minor=True)
+        
+        #---- Air Temp. ----
+        
+        ax1.yaxis.set_ticks_position('left')
+        ax1.tick_params(axis='y', direction='out', labelcolor=COLOR[0],
+                        labelsize=13)
+        
+        ax1.tick_params(axis='y', which='minor', direction='out')
+        ax1.yaxis.set_ticklabels([], minor=True)
+                        
         #-------------------------------------------------------------- GRID --
         
     #    ax0.grid(axis='y', color=[0.5, 0.5, 0.5], linestyle=':', linewidth=1,
@@ -1082,19 +1240,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         leg.draw_frame(False)
                
                
-    def plot_monthly_normals(self, filename, COLOR=['black', 'black']): #======
-        
-        #------------------------------------------------------ Prepare Data --
-        
-        #---- load data from data file ----
-        
-        METEO = MeteoObj()
-        METEO.load_and_format(filename)
-        
-        #---- calulate weather normals ----
-        
-        # DATA = [YEAR, MONTH, DAY, TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}] 
-        NORMALS = calculate_normals(METEO.DATA, METEO.datatypes)
+    def plot_monthly_normals(self, NORMALS, COLOR=['black', 'black']): #======
         
         #-------------------------------------------- assign local variables --
     
@@ -1156,7 +1302,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # In case there is a need to force the value
         #----
         # Ymax0 = 200 
-        # Ymax1 = 30 ; Ymin1 = -20
+        # Ymax1 = 25 ; Ymin1 = -25
         #----
         
         #-------------------------------------------------- YTICKS FORMATING --
@@ -1166,30 +1312,20 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         #---- Precip (host) ----
                
-        yticks = np.arange(Ymin0, Ymax0 + Yscale0/10., Yscale0)
-        ax0.yaxis.set_ticks_position('right') 
-        ax0.set_yticks(yticks)
-        ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1],
-                        labelsize=13)
+        yticks = np.arange(Ymin0, Ymax0 + Yscale0/10., Yscale0)        
+        ax0.set_yticks(yticks)        
         
         yticks_minor = np.arange(yticks[0], yticks[-1], 5)
         ax0.set_yticks(yticks_minor, minor=True)
-        ax0.tick_params(axis='y', which='minor', direction='out')
-        ax0.yaxis.set_ticklabels([], minor=True)
-        
+                
         #---- Air Temp ----
         
-        yticks1 = np.arange(Ymin1, Ymax1 + Yscale1/10., Yscale1)    
-        ax1.yaxis.set_ticks_position('left')
+        yticks1 = np.arange(Ymin1, Ymax1 + Yscale1/10., Yscale1)        
         ax1.set_yticks(yticks1)
-        ax1.tick_params(axis='y', direction='out', labelcolor=COLOR[0],
-                        labelsize=13)
-        
+                
         yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1/5.)
         ax1.set_yticks(yticks1_minor, minor=True)
-        ax1.tick_params(axis='y', which='minor', direction='out')
-        ax1.yaxis.set_ticklabels([], minor=True)
-        
+                
         #---------------------------------------------------- SET AXIS RANGE -- 
 
         ax0.set_ylim(Ymin0, Ymax0)
@@ -1211,9 +1347,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.plot_air_temp(Tmax_norm, Tmin_norm, Tavg_norm)
         self.update_yearly_avg(Tavg_norm, Ptot_norm)
         
-        return METEO.STA
-        
-    def plot_precip(self, PNORM, SNORM): #====================== plot_precip ==
+    def plot_precip(self, PNORM, SNORM): #======================= plot_precip ==
         
         #-- define vertices manually --
         
@@ -1258,7 +1392,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             self.figure.axes[2].lines[i].set_ydata(Tnorm)
             
         
-    def update_yearly_avg(self, TNORM, PNORM): #========== update_yearly_avg ==
+    def update_yearly_avg(self, TNORM, PNORM): #=========== update_yearly_avg ==
         
         ax = self.figure.axes[0]
         
@@ -1276,7 +1410,131 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                          
         ax.texts[1].set_text(u'Mean Annual Precipitation = %0.1f mm' % 
                              np.sum(PNORM))
-                                                    
+
+#==============================================================================
+class GridWeatherNormals(QtGui.QTableWidget):
+#==============================================================================
+
+    def __init__(self, parent=None):
+        super(GridWeatherNormals, self).__init__(parent)
+              
+        self.initUI()
+
+    def initUI(self): #====================================================
+    
+        StyleDB = db.styleUI()
+        
+        #--------------------------------------------------------- Style --
+        
+        fnt = StyleDB.font1
+        fnt.setPointSize(10)
+        self.setFont(StyleDB.font1)
+        
+        self.setFrameStyle(StyleDB.frame)
+        self.setShowGrid(False)
+        self.setAlternatingRowColors(True)
+#        self.setMinimumWidth(650)
+        
+        #-------------------------------------------------------- Header --
+       
+        
+        HEADER = ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
+                  'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR')     
+        
+        self.setColumnCount(len(HEADER))
+        self.setHorizontalHeaderLabels(HEADER)  
+        
+        self.setRowCount(7)
+        self.setVerticalHeaderLabels([u'Daily Tmax (°C)', u'Daily Tmin (°C)',
+                                      u'Daily Tavg (°C)', u'Rain (mm)',
+                                      u'Snow (mm)', u'Total Precip (mm)',
+                                      'ETP (mm)']) 
+        
+    def populate_table(self, NORMALS):
+
+        #---- Air Temperature ----
+
+        for row in range(3):
+            # Months
+            for col in range(12):
+                item = QtGui.QTableWidgetItem('%0.1f' % NORMALS[col, row])
+                item.setFlags(~QtCore.Qt.ItemIsEditable)
+                item.setTextAlignment(QtCore.Qt.AlignCenter)                
+                self.setItem(row, col, item)
+            
+            # Year
+            yearVal = np.mean(NORMALS[:, row])
+            item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.setItem(row, 12, item)
+            
+        #---- Rain ----
+            
+        row = 3
+        # Months
+        for col in range(12):
+            item = QtGui.QTableWidgetItem('%0.1f' % NORMALS[col, -1])
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.setItem(row, col, item)
+            
+        # Year
+        yearVal = np.sum(NORMALS[:, -1])
+        item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
+        item.setFlags(~QtCore.Qt.ItemIsEditable)
+        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.setItem(row, 12, item)
+        
+        #---- Snow ----
+        
+        row = 4
+        # Months
+        for col in range(12):
+            snow4cell = NORMALS[col, 3] - NORMALS[col, -1]
+            item = QtGui.QTableWidgetItem('%0.1f' % snow4cell)
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.setItem(row, col, item)            
+        # Year
+        yearVal = np.sum(NORMALS[:, 3] - NORMALS[:, -1])    
+        item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
+        item.setFlags(~QtCore.Qt.ItemIsEditable)
+        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.setItem(row, 12, item)
+        
+        #---- Total Precip ----
+        
+        row = 5
+        # Months
+        for col in range(12):
+            item = QtGui.QTableWidgetItem('%0.1f' % NORMALS[col, 3])
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.setItem(row, col, item)
+        # Year
+        yearVal = np.sum(NORMALS[:, 3])    
+        item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
+        item.setFlags(~QtCore.Qt.ItemIsEditable)
+        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.setItem(row, 12, item)
+        
+        #---- ETP ----
+        
+        row = 6
+        for col in range(12):
+            item = QtGui.QTableWidgetItem('%0.1f' % NORMALS[col, 4])
+            item.setFlags(~QtCore.Qt.ItemIsEditable)
+            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            self.setItem(row, col, item)
+        # Year
+        yearVal = np.sum(NORMALS[:, 4])    
+        item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
+        item.setFlags(~QtCore.Qt.ItemIsEditable)
+        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        self.setItem(row, 12, item)
+       
+        self.resizeColumnsToContents()        
                              
 if __name__ == '__main__':
 #    plt.rc('font',family='Arial')
@@ -1292,6 +1550,7 @@ if __name__ == '__main__':
     w.meteo_dir = '../Projects/Monteregie Est/Meteo/Output'
     w.show()
     w.generate_graph(fmeteo)
+    w.save_normal_table('test.csv')
 #    for i in range(250):
 #        w.generate_graph(fmeteo)
 #        QtCore.QCoreApplication.processEvents()

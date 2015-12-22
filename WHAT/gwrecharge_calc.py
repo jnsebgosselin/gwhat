@@ -254,7 +254,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         ax.legend(loc=[1.01, 0], ncol=1, fontsize=8)
         ax.invert_yaxis()
         
-        fname = 'Multi_Analysis/Sy=%0.2f_Cru=%0.2f.pdf' % (Sy, CRU[0])
+        fname = 'Multi_Analysis/Sy=%0.2f_Cru=%0.3f.pdf' % (Sy, CRU[0])
         fig.savefig(fname)
         
         
@@ -363,7 +363,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         it = 0
         while 1:            
             it += 1
-            if it > 50:
+            if it > 100:
                 print('Not converging.')
                 break                
             
@@ -670,7 +670,8 @@ if __name__ == '__main__':
     Sy = 0.25
 #    synth_hydrograph.plot_best_fit(Sy)
     
-    CRU = np.arange(0.25, 0.31, 0.005)
+#    CRU = np.arange(0.385, 0.365, 0.005)
+    CRU = [0.385]
 #    CRU = np.arange(0, 0.65, 0.05)
     for cru in CRU:    
         synth_hydrograph.plot_multiple_fit(Sy, [cru])

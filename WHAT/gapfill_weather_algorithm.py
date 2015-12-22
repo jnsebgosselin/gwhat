@@ -35,8 +35,8 @@ from PySide import QtCore
 
 #import statsmodels.api as sm
 #import statsmodels.regression as sm_reg
-from statsmodels.regression.linear_model import OLS
-from statsmodels.regression.quantile_regression import QuantReg
+# from statsmodels.regression.linear_model import OLS
+# from statsmodels.regression.quantile_regression import QuantReg
 
 #-- PERSONAL IMPORTS --
 
@@ -878,9 +878,13 @@ class GapFillWeather(QtCore.QObject):
             meteo.add_ETP_to_weather_data_file(output_path)
             
         #---- Produces Weather Normals Graph ----
-            
+        
+        METEO = meteo.MeteoObj()
+        METEO.load_and_format(output_path)
+        NORMALS, _ = meteo.calculate_normals(METEO.DATA, METEO.datatypes)
+                                                     
         w = meteo.FigWeatherNormals()
-        w.plot_monthly_normals(output_path)                
+        w.plot_monthly_normals(NORMALS)                
         figname = dirname + 'weather_normals.pdf'
         print('Generating %s.' % figname)
         w.figure.savefig(figname)
@@ -991,12 +995,12 @@ class GapFillWeather(QtCore.QObject):
             # http://statsmodels.sourceforge.net/devel/generated/
             # statsmodels.regression.linear_model.OLS.html
             
-            model = OLS(Y, X) 
-            results = model.fit()
-            A = results.params     
+#            model = OLS(Y, X) 
+#            results = model.fit()
+#            A = results.params     
             
             # Using Numpy function:            
-#            A = np.linalg.lstsq(X, Y)[0]
+            A = np.linalg.lstsq(X, Y)[0]
             
         else: # Least Absolute Deviations regression
             
@@ -1006,12 +1010,12 @@ class GapFillWeather(QtCore.QObject):
             # http://statsmodels.sourceforge.net/devel/examples/
             # notebooks/generated/quantile_regression.html
             
-            model = QuantReg(Y, X)
-            results = model.fit(q=0.5)
-            A = results.params
+#            model = QuantReg(Y, X)
+#            results = model.fit(q=0.5)
+#            A = results.params
             
             # Using Homemade function:            
-#            A = L1LinearRegression(X, Y)
+            A = L1LinearRegression(X, Y)
             
         return A
     

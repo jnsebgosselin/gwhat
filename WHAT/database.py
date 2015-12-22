@@ -29,7 +29,7 @@ import platform
 from PySide.QtGui import QIcon, QFont, QFontDatabase
 from PySide.QtCore import QSize
 
-software_version = 'WHAT Beta 4.1.7'
+software_version = 'WHAT Beta 4.1.8'
 last_modification = '07/07/2015'
 
 class Icons():
@@ -65,6 +65,10 @@ class Icons():
         
         self.plus_sign = QIcon('Icons/plus_sign.png')
         self.add2list = QIcon('Icons/add2list.png')
+        
+        #---- Weather Averages ----
+        
+        self.showGrid = QIcon('Icons/grid.png')        
         
         #---- Fill Weather Data ----
         
