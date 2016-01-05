@@ -524,7 +524,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
            
             y = self.date_start_widget.date().year()
             m = self.date_start_widget.date().month()
-            d = self.date_start_widget.date().month()
+            d = self.date_start_widget.date().day()
             self.FILLPARAM.time_start = xldate_from_date_tuple((y, m, d), 0)
      
             y = self.date_end_widget.date().year()

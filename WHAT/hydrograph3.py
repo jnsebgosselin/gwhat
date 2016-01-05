@@ -121,8 +121,8 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #---- Layout Options ----
         
         self.WLdatum = 0 # 0: mbgs;  1: masl
-        self.trend_line = 0
-        self.isLegend = False
+        self.trend_line = True
+        self.isLegend = True
         self.meteoOn = True # controls wether meteo data are plotted or not
         self.gridLines = 2 # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'month' # 'month' or 'year'
@@ -312,9 +312,10 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                      color='#0000CC')
         
         #---- Data Point Datalogger ----
-        
-        self.l2_ax2, = self.ax2.plot([], [], '.', color='#0000CC',
-                                     markersize=5)
+                  
+        self.l2_ax2, = self.ax2.plot([], [], '.',                                     
+                                     color=[204./255, 204./255, 255./255],
+                                     markersize=5, alpha=0.5)
                                      
         #---- Manual Mesures ----
                                      
@@ -413,18 +414,32 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             
             #---- Water Level ----
             
-            self.ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)
+            # self.ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)
             
             #---- Weather ----
     
-            rec1 = plt.Rectangle((0, 0), 1, 1, fc=[0.65,0.65,0.65])
-            rec2 = plt.Rectangle((0, 0), 1, 1, fc=[0, 0, 1])
-            rec3 = plt.Rectangle((0, 0), 1, 1, fc=[1, 0.65, 0.65])
+            rec1 = plt.Rectangle((0, 0), 1, 1, fc=[0.65,0.65,0.65],
+                                 ec=[0.65,0.65,0.65])
+            rec2 = plt.Rectangle((0, 0), 1, 1, fc=[0, 0, 1], ec=[0, 0, 1])
+            rec3 = plt.Rectangle((0, 0), 1, 1, fc=[1, 0.65, 0.65],
+                                 ec='black')
+            lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
+                             lw=1.5, c='red')
+            lin2, = self.ax2.plot([], [], '-', zorder = 10, linewidth=1,
+                                  color='#0000CC')
+        
+        #---- Data Point Datalogger ----
+                  
+            lin3, = self.ax2.plot([], [], '.',                                     
+                                  color=[204./255, 204./255, 255./255],
+                                  markersize=5, alpha=0.5)
            
-            labels = ['Snow', 'Rain', 'Air Temperature', 'Missing Data']
+            labels = ['Snow', 'Rain', 'Air Temperature', 'Missing Data',
+                      'Water Level (Trend)', 'Water Level (Data)']
             
-            self.ax4.legend([rec1, rec2, rec3, TMAXmiss_dots], labels,
-                            loc=[0.01, 0.45], numpoints=1, fontsize=10)
+            self.ax4.legend([rec1, rec2, rec3, lin1, lin2, lin3], labels,
+                            loc=[0.8, 0.025], numpoints=3, fontsize=10,
+                            frameon=False)
         
         #------------------------------------------------------- UPDATE FLAG --
         
@@ -654,7 +669,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.title_text = reader[7].astype(str)
         self.RAINscale = reader[8].astype(float)
         self.WLdatum = reader[9].astype(int)
-        self.trend_line = reader[10].astype(int)
+        self.trend_line = reader[10]
 
         
     def save_layout(self, name_well, filename): #==============================
@@ -811,7 +826,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         else: # mbgs -> yaxis is inverted        
             water_lvl = self.WaterLvlObj.lvl
 
-        if self.trend_line == 1:            
+        if self.trend_line == 1:   
             tfilt, wlfilt = filt_data(time, water_lvl, 7)
             
             self.l1_ax2.set_data(tfilt, wlfilt)
@@ -1357,9 +1372,20 @@ if __name__ == '__main__':
     
     #---- Valcartier ----
     
-    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
-    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
-    fwaterlvl = dirname + '/Water Levels/valcartier2.xls' 
+    #---- Valcartier ----
+    
+#    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
+#    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
+#    fwaterlvl = dirname + '/Water Levels/valcartier2.xls' 
+#    finfo = (dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.log')
+    
+    #---- Dundurn ----
+    
+    dirname = '/home/jnsebgosselin/Dropbox/Projects WHAT/Dundurn'
+    fmeteo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.out"
+#    fwaterlvl = dirname + '/Water Levels/P19 2013-2014.xls' 
+    fwaterlvl = dirname + '/Water Levels/P22 2014-2015.xls' 
+    finfo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.log"
     
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
@@ -1374,14 +1400,13 @@ if __name__ == '__main__':
     
     hydrograph = Hydrograph()
     hydrograph.set_waterLvlObj(waterLvlObj)
-    hydrograph.finfo = (dirname + 
-                        '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.log')
-#    hydrograph.finfo = 'Files4testing/AUTEUIL_2000-2013.log'
+    hydrograph.finfo = finfo 
     
     #---- Layout Options ----
     
-    hydrograph.fwidth = 45 # Width of the figure in inches
+    hydrograph.fwidth = 11 # Width of the figure in inches
     hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
+    hydrograph.trend_line = True
     hydrograph.gridLines = 2 # Gridlines Style    
     hydrograph.title_state = 0 # 1 -> title ; 0 -> no title
     hydrograph.title_text = "Title of the Graph"
@@ -1389,7 +1414,7 @@ if __name__ == '__main__':
     hydrograph.datemode = 'month' # 'month' or 'year'
     hydrograph.bwidth_indx = 1 # Meteo Bin Width
     # 0: daily | 1: weekly | 2: monthly | 3: yearly
-    hydrograph.RAINscale = 20
+    hydrograph.RAINscale = 10
     
     hydrograph.best_fit_waterlvl()    
     hydrograph.best_fit_time(waterLvlObj.time)
@@ -1397,8 +1422,8 @@ if __name__ == '__main__':
     hydrograph.generate_hydrograph(meteoObj) 
     hydrograph.draw_recession()
 
-    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
-#    hydrograph.savefig('../Projects/Project4Testing/hydrograph.pdf')
+#    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
+    hydrograph.savefig(dirname + '/hydrograph.pdf')
     
     #------------------------------------------------- show figure on-screen --
     

@@ -197,7 +197,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.setToolTip(ttip)
                 self.setAutoRaise(autoRaise)
                 self.setEnabled(enabled)
-                
+             
         self.btn_layout_mode = toolBarBtn(iconDB.toggleMode,
                                           ttipDB.toggle_layout_mode, 
                                           autoRaise=False)                                          
@@ -342,8 +342,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.time = self.waterLvl_data.time
         self.soilFilename = self.waterLvl_data.soilFilename
         
-        self.init_hydrograph()
+        self.init_hydrograph()        
         self.load_MRC_interp()
+        
+        #---- Reset UI ----
+        
+        self.btn_Waterlvl_lineStyle.setAutoRaise(True)
         
     def load_MRC_interp(self): #============================ Load MRC Interp ==
                 
@@ -721,10 +725,14 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         t = self.time + self.dt4xls2mpl * self.dformat
         
-        self.h1_ax0.set_xdata(t)                              # Water Levels         
-        self.h3_ax0.set_xdata(t)                              # MRC
-        self.h2_ax0.set_xdata(self.time[self.peak_indx] +     # Peaks
-                              self.dt4xls2mpl * self.dformat)
+        self.h1_ax0.set_xdata(t) # Water Levels  
+        
+        if len(self.hrecess) > 0: # MRC
+             self.h3_ax0.set_xdata(t)                              
+        
+        if len(self.peak_indx) > 0: # Peaks
+            self.h2_ax0.set_xdata(self.time[self.peak_indx] +     
+                                  self.dt4xls2mpl * self.dformat)
         
         self.fig_MRC_widget.draw()
         

@@ -48,9 +48,8 @@ from gapfill_weather_postprocess import PostProcessErr
 #==============================================================================
 class GapFillWeather(QtCore.QObject):
     """
-    This functions is started on the GUI side when the *Fill* or *Fill All*
-    button of the Tab named *Fill Data* is clicked on. It is the main routine
-    that fill the missing data in the weather record.
+    This class manage all that is related to the gap-filling of weather data
+    records, including reading the data file in disk.
     
     Parameters
     ----------
@@ -131,18 +130,16 @@ class GapFillWeather(QtCore.QObject):
             if files.endswith(".csv"):
                 Sta_path.append(self.inputDir + '/' + files)
                 
-        if len(Sta_path) == 0:
-            print('Data Directory is empty.')
-            return []
-                
-        self.WEATHER.load_and_format_data(Sta_path)        
-        self.WEATHER.generate_summary(self.outputDir)
+        print('%d valid weather data files found in Input folder.' % 
+              len(Sta_path))
         
+        self.WEATHER.load_and_format_data(Sta_path)            
+        self.WEATHER.generate_summary(self.outputDir)        
         self.TARGET.index = -1
         
         return self.WEATHER.STANAME
         
-    def set_target_station(self, index):
+    def set_target_station(self, index): #=============== Set Target Station ==
 
         # Update information for the target station.
 
@@ -161,7 +158,8 @@ class GapFillWeather(QtCore.QObject):
         self.TARGET.HORDIST, self.TARGET.ALTDIFF = \
                                          alt_and_dist_calc(self.WEATHER, index)
         
-    def read_summary(self):
+    def read_summary(self): #================== Read Weather Station Summary ==
+    
         return self.WEATHER.read_summary(self.outputDir)
         
     def fill_data(self): #====================== Fill Weather Data Algorithm ==
@@ -1089,7 +1087,7 @@ class GapFillWeather(QtCore.QObject):
     def save_content_to_file(fname, fcontent): #======= Save Content to File ==
         
         with open(fname, 'w') as f:
-            writer = csv.writer(f, delimiter='\t')
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
        
        
@@ -1110,7 +1108,7 @@ def correlation_worker(WEATHER, tarStaIndx):
     nVAR = len(DATA[0, 0, :])  # number of meteorological variables
     nSTA = len(DATA[0, :, 0])  # number of stations including target
    
-    print('\ncorrelation coefficients computation in progress')
+    print('\nCorrelation coefficients computation in progress...')
     
     CORCOEF = np.zeros((nVAR, nSTA)) * np.nan
     
@@ -1141,7 +1139,7 @@ def correlation_worker(WEATHER, tarStaIndx):
             else:
                 pass #Do nothing. Value will be nan by default.
         
-    print('correlation coefficients computation completed\n')
+    print('Correlation coefficients computation completed.\n')
 
     return CORCOEF
      
@@ -1260,6 +1258,18 @@ class WeatherData():
     
         nSTA = len(fnames) # Number of weather data file
         
+        if nSTA == 0: # Reset states of all class variables
+            self.STANAME = []
+            self.ALT = []
+            self.LAT = []
+            self.LON = []
+            self.PROVINCE = []
+            self.ClimateID = []
+            self.DATE_START = []
+            self.DATE_END = []
+            
+            return False
+            
         #---------------------------------------------------- VARIABLES INIT --
         
         self.STANAME = np.zeros(nSTA).astype('str')
@@ -1465,6 +1475,8 @@ class WeatherData():
                 self.DATE[i, 0] = date_tuple[0]
                 self.DATE[i, 1] = date_tuple[1]
                 self.DATE[i, 2] = date_tuple[2]
+                
+        return True
     
     def generate_summary(self, project_folder): #==============================
 
@@ -1476,11 +1488,11 @@ class WeatherData():
         more.
         """
         
-        CONTENT = [['#', 'STATION NAMES', 'ClimateID',
-                    'Lat. (dd)', 'Lon. (dd)', 'Alt. (m)',
-                    'DATE START', 'DATE END', 'Nbr YEARS' , 'TOTAL DATA',
-                    'MISSING Tmax', 'MISSING Tmin', 'MISSING Tmean',
-                    'Missing Precip']]
+        fcontent = [['#', 'STATION NAMES', 'ClimateID',
+                     'Lat. (dd)', 'Lon. (dd)', 'Alt. (m)',
+                     'DATE START', 'DATE END', 'Nbr YEARS' , 'TOTAL DATA',
+                     'MISSING Tmax', 'MISSING Tmin', 'MISSING Tmean',
+                     'Missing Precip']]
                                 
         for i in range(len(self.STANAME)):
             record_date_start = '%04d/%02d/%02d' % (self.DATE_START[i, 0],
@@ -1501,19 +1513,19 @@ class WeatherData():
                                                
             number_data = float(time_end - time_start + 1)
             
-            CONTENT.append([i+1 , self.STANAME[i],
-                            self.ClimateID[i],
-                            '%0.2f' % self.LAT[i],
-                            '%0.2f' % self.LON[i],
-                            '%0.2f' % self.ALT[i],
-                            record_date_start,
-                            record_date_end,
-                            '%0.1f' % (number_data / 365.25),
-                            number_data])
+            fcontent.append([i+1 , self.STANAME[i],
+                             self.ClimateID[i],
+                             '%0.2f' % self.LAT[i],
+                             '%0.2f' % self.LON[i],
+                             '%0.2f' % self.ALT[i],
+                             record_date_start,
+                             record_date_end,
+                             '%0.1f' % (number_data / 365.25),
+                             number_data])
                             
             # Missing data information for each meteorological variables   
             for var in range(len(self.VARNAME)):
-                CONTENT[-1].extend(['%d' % (self.NUMMISS[i, var])])
+                fcontent[-1].extend(['%d' % (self.NUMMISS[i, var])])
                 
 #                txt1 = self.NUMMISS[i, var]
 #                txt2 = self.NUMMISS[i, var] / number_data * 100
@@ -1527,8 +1539,8 @@ class WeatherData():
         output_path = project_folder + '/weather_datasets_summary.log'
                 
         with open(output_path, 'w') as f:
-            writer = csv.writer(f,delimiter='\t')
-            writer.writerows(CONTENT)
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer.writerows(fcontent)
             
     def read_summary(self, project_folder): #==================================
 
@@ -1723,8 +1735,8 @@ if __name__ == '__main__':
     # was produced for the target station will be saved within the output
     # directory, in a sub-folder named after the name of the target station.
     
-    gapfill_weather.inputDir = '../Projects/Valcartier/Meteo/Input'
-    gapfill_weather.outputDir = '../Projects/Valcartier/Meteo/Output'
+    gapfill_weather.inputDir = '../Projects/Example/Meteo/Input'
+    gapfill_weather.outputDir = '../Projects/Example/Meteo/Output'
     
     # 3 ---------------------------------------- Load weather the data files --
     
@@ -1738,7 +1750,7 @@ if __name__ == '__main__':
     
     # The station at index 8 is defined as the target station
     
-    gapfill_weather.set_target_station(8) 
+    gapfill_weather.set_target_station(0) 
           
     # 5 ---------------------------------------------- Define the time plage --
     
@@ -1777,4 +1789,4 @@ if __name__ == '__main__':
     # the list *staname* where the target station is redefined at each
     # iteration as in step 4 and rerun the *fill_data* method each time.
     
-    gapfill_weather.fill_data()
+#    gapfill_weather.fill_data()

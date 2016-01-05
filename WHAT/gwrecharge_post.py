@@ -38,29 +38,89 @@ import matplotlib.pyplot as plt
 from meteo import MeteoObj
 from waterlvldata import WaterlvlData
 
+
 #==============================================================================
-def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
+def plot_water_budget_yearly(language = 'English'):
 #==============================================================================
-   
-    YEAR = np.arange(1994, 2016).astype('int')    
-    NYear = len(YEAR)
+    
+    #---- Load Results from csv ----
+        
+    fname = 'water_budget.csv'
+    
+    with open(fname, 'r') as f:
+        reader = np.array(list(csv.reader(f, delimiter='\t'))[1:])
+            
+    DATA = np.array(reader[1:])        
+        
+    YEARS = DATA[:, 0].astype('int')
+    MONTHS = DATA[:, 1].astype('int')
+    
+    PRECIP = DATA[:, 3].astype('float')  
+    RU = DATA[:, 4].astype('float')
+    ETR = DATA[:, 5].astype('float')
+    RECHG = DATA[:, 6].astype('float')
+    RAS = DATA[:, 7].astype('float')
+    
+    #---- Define new variables ----
+
+    yr2plot = np.arange(1997, 2014).astype('int')
+    NYear = len(yr2plot)
     
     YEARLY_PRECIP = np.zeros(NYear) 
     YEARLY_RECHG = np.zeros(NYear) 
-#    YEARLY_RUNOFF = np.zeros(NYear)
-#    YEARLY_ET = np.zeros(NYear)
-#    YEARLY_QWSOIL = np.zeros(NYear)
+    YEARLY_RU = np.zeros(NYear)
+    YEARLY_ETR = np.zeros(NYear)
+    YEARLY_dRAS = np.zeros(NYear)
     
-    #---- Convert Daily to Yearly ----
+    #---- Convert daily to hydrological year ----
+    
+    # the hydrological year is defined from October 1 to September 30 of the
+    # next year.
     
     for i in range(NYear):
-        indexes = np.where(DATE_YEAR == YEAR[i])[0]
+        yr0 = yr2plot[i]
+        yr1 = yr0 + 1
         
-        YEARLY_PRECIP[i] = np.sum(PRECIP[indexes])
-        YEARLY_RECHG[i] = np.sum(RECHG[indexes])
-#        YEARLY_RUNOFF[i] = np.sum(RUNOFF[indexes])
-#        YEARLY_ET[i] = np.sum(ET[indexes])
-#        YEARLY_QWSOIL[i] = np.sum(QWSOIL[indexes])
+        indx0 = np.where((YEARS == yr0)&(MONTHS==10))[0][0]
+        indx1 = np.where((YEARS == yr1)&(MONTHS==9))[0][-1]
+                
+        YEARLY_PRECIP[i] = np.sum(PRECIP[indx0:indx1+1])
+        YEARLY_RECHG[i] = np.sum(RECHG[indx0:indx1+1])
+        YEARLY_RU[i] = np.sum(RU[indx0:indx1+1])
+        YEARLY_ETR[i] = np.sum(ETR[indx0:indx1+1])
+        YEARLY_dRAS[i] = RAS[indx1+1] - RAS[indx0]
+        
+        print(YEARLY_PRECIP[i] - YEARLY_RECHG[i] - YEARLY_RU[i] - 
+              YEARLY_ETR[i] - YEARLY_dRAS[i])
+        
+    #---- Convert daily to calendar year ----
+    
+#    for i in range(NYear):
+#        
+#        indexes = np.where(YEARS == yr2plot[i])[0]
+#        
+#        YEARLY_PRECIP[i] = np.sum(PRECIP[indexes])
+#        YEARLY_RECHG[i] = np.sum(RECHG[indexes])
+#        YEARLY_RU[i] = np.sum(RU[indexes])
+#        YEARLY_ETR[i] = np.sum(ETR[indexes])
+        
+    #---- Save Results in a csv ----
+    
+    fname = 'water_budget_yearly.csv'
+    fcontent = [['From', 'To', 'PRECIP(mm)', 'RU(mm)',
+                     'ETR(mm)', 'RECHG(mm)', 'dRAS(mm)']]
+    for i in range(NYear):      
+        fcontent.append(['01/10/%d' % yr2plot[i], 
+                         '30/09/%d' % (yr2plot[i]+1),
+                         '%0.1f' % YEARLY_PRECIP[i],
+                         '%0.1f' % YEARLY_RU[i],
+                         '%0.1f' % YEARLY_ETR[i],
+                         '%0.1f' % YEARLY_RECHG[i],
+                         '%0.1f' % YEARLY_dRAS[i]])
+                                
+    with open(fname, 'w') as f:
+        writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+        writer.writerows(fcontent)
     
 #    print
 #    print 'Mean Yearly Precip = ', np.mean(YEARLY_PRECIP), 'mm'
@@ -92,24 +152,24 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
         
     #------------------------------------------------------------ AXIS RANGE --       
     
-    Ymin0 = 0
-    Ymax0 = 1800
+    Ymin0 = 200
+    Ymax0 = 1600
     
-    Xmin0 = YEAR[0] - 1
-    Xmax0 = YEAR[-1]
+    Xmin0 = yr2plot[0] - 0.5
+    Xmax0 = yr2plot[-1] + 0.5
     
     #------------------------------------------------------ XTICKS FORMATING -- 
-   
+    
+    tcklabl = [''] * NYear
+    for i in range(NYear):
+        if yr2plot[i] >= 2000:
+            tcklabl[i] = "'%02d" % (yr2plot[i] - 2000)
+        else:
+            tcklabl[i] = "'%02d" % (yr2plot[i] - 1900)
+        
     ax0.xaxis.set_ticks_position('bottom')
     ax0.tick_params(axis='x',direction='out', gridOn=False, labelsize=14)
-    ax0.set_xticks(YEAR)
-    ax0.xaxis.set_ticklabels([])
-    
-    ax0.set_xticks(YEAR[::2]-0.4, minor=True)
-    ax0.tick_params(axis='x', which='minor', length=0, gridOn=False, pad=5,
-                    labelsize=14)
-    ax0.xaxis.set_ticklabels(YEAR[::2], minor=True, rotation=90,
-                             horizontalalignment='center')
+    ax0.set_xticks(yr2plot)
     
     #------------------------------------------------------ YTICKS FORMATING --
  
@@ -124,95 +184,286 @@ def plot_water_budget_yearly(PRECIP, RECHG, DATE_YEAR):
     ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
 
     #---------------------------------------------------------------- LABELS --
-    
-    ax0.set_ylabel('Equivalent Water (mm)', fontsize=16,
+    ylabl = 'Equivalent Water (mm)'
+    xlabl = ('Hydrological Years (October 1st of one ' +
+             'year to September 30th of the next)')
+    if language == 'French' :  
+        ylabl = u"Colonne d'eau équivalente (mm)"
+        xlabl = (u"Année Hydrologique (1er octobre d'une " +
+                 u"année au 30 septembre de l'année suivante)")
+                 
+    ax0.set_ylabel(ylabl, fontsize=16,
                    verticalalignment='bottom')
     ax0.yaxis.set_label_coords(-0.05, 0.5)
 
-#    
-#    ax0.set_xlabel(LabelDB.years, fontsize=label_font_size,
-#                   verticalalignment='top')
-#    ax0.xaxis.set_label_coords(0.5, -0.075)
+    ax0.set_xlabel(xlabl, fontsize=16, verticalalignment='top')
+    ax0.xaxis.set_label_coords(0.5, -0.075)
     
     #-------------------------------------------------------------- PLOTTING --
-                         
+    
+    COLOR = [[0./255, 128./255, 255./255],
+             [0./255, 76./255, 153./255],
+             [0./255, 25./255, 51./255],              
+             [102./255, 178./255, 255./255]]
+    LABEL = ['Total Precipitation', 'Recharge', 'Runoff',
+             'Real Evapotranspiration']
+    if language == 'French' :        
+        LABEL = [u'Précipitations Totales', 'Recharge', 'Ruissellement',
+                 u'Évapotranspiration Réelle']      
+             
+    MARKER = ['o', 'h', 's', 'D']
+    DATA = [YEARLY_PRECIP, YEARLY_RECHG, YEARLY_RU, YEARLY_ETR]
     lspoint = '-'
-    lstrend = '--'
+#    lstrend = '--'
     
-    #----- PRECIP -----
-    
-    ax0.plot(YEAR-0.5, YEARLY_PRECIP,
-             color='blue', markeredgecolor='None', marker='o',
-             markersize=5, linestyle=lspoint, label='Precipitation',
-             clip_on=False, zorder=100)
+    for i in range(4):
+        ax0.plot(yr2plot, DATA[i], color=COLOR[i], markeredgecolor='white',
+                 marker=MARKER[i], markersize=9, linestyle=lspoint,
+                 label=LABEL[i], clip_on=False, zorder=100, alpha=0.85)
              
-    A = np.polyfit(YEAR-0.5, YEARLY_PRECIP, 1)
-    print 'Trend Precip =', A[0], ' mm/y'
-    TREND1 = A[0]*(YEAR-0.5) + A[1]
-    ax0.plot(YEAR-0.5, TREND1, color='blue', linestyle=lstrend,
-             marker='None', label='Trend Line Precipitation', clip_on=False,
-             zorder=100)
-    
-    #----- RECHG -----
-    
-    ax0.plot(YEAR-0.5, YEARLY_RECHG,
-             color='orange', markeredgecolor='None', marker='^',
-             markersize=8, linestyle=lspoint, label='Recharge',
-             clip_on=False, zorder=100)  
-             
-    A = np.polyfit(YEAR-0.5, YEARLY_RECHG, 1)
-    print 'Trend Rechg =', A[0], ' mm/y'
-    TREND1 = A[0]*(YEAR-0.5) + A[1]
-    ax0.plot(YEAR-0.5, TREND1, color='orange', linestyle=lstrend,
-             marker='None', label='Trend Line Recharge', clip_on=False,
-             zorder=100)             
-    
-#    #----- RUNOF -----    
-#    
-#    ax0.plot(YEAR-0.5, YEARLY_RUNOFF,
-#             color='red', markeredgecolor='None', marker='s',
-#             markersize=5, linestyle=lspoint, label='Runoff',
-#             clip_on=False, zorder=100)
-#             
-#    A = np.polyfit(YEAR-0.5, YEARLY_RUNOFF, 1)
-#    print 'Trend Runoff =', A[0], ' mm/y'
+#    A = np.polyfit(YEAR-0.5, YEARLY_PRECIP, 1)
+#    print 'Trend Precip =', A[0], ' mm/y'
 #    TREND1 = A[0]*(YEAR-0.5) + A[1]
-#    ax0.plot(YEAR-0.5, TREND1, color='red', linestyle=lstrend,
-#             marker='None', label='Trend Line Runoff', clip_on=False,
-#             zorder=100) 
-#    
-#    #----- ETP -----
-#        
-#    ax0.plot(YEAR-0.5, YEARLY_ET,
-#             color='green', markeredgecolor='None', marker='D',
-#             markersize=5, linestyle=lspoint, label='ETP',
-#             clip_on=False, zorder=100)
-#             
-#    A = np.polyfit(YEAR-0.5, YEARLY_ET, 1)
-#    print 'Trend ETP =', A[0], ' mm/y'
-#    TREND1 = A[0]*(YEAR-0.5) + A[1]
-#    ax0.plot(YEAR-0.5, TREND1, color='green', linestyle=lstrend,
-#             marker='None', label='Trend Line ETP', clip_on=False,
-#             zorder=100) 
-
+#    ax0.plot(YEAR-0.5, TREND1, color='blue', linestyle=lstrend,
+#             marker='None', label='Trend Line Precipitation', clip_on=False,
+    
     #------------------------------------------------------- YEARLY AVERAGES -- 
     
-    ax0.text(YEAR[0] - 1 + 0.1, 40,
-         'Mean Yearly Precipitation = %d mm' % np.mean(YEARLY_PRECIP),
-         color='b', fontsize=14)
-             
-    ax0.text(YEAR[0] - 1 + 0.1, 130,
-             'Mean Yearly Recharge = %d mm' % np.mean(YEARLY_RECHG),
-             color='orange', fontsize=14)
+#    ax0.text(YEAR[0] - 1 + 0.1, 40,
+#         'Mean Yearly Precipitation = %d mm' % np.mean(YEARLY_PRECIP),
+#         color='b', fontsize=14)
+#             
+#    ax0.text(YEAR[0] - 1 + 0.1, 130,
+#             'Mean Yearly Recharge = %d mm' % np.mean(YEARLY_RECHG),
+#             color='orange', fontsize=14)
              
     #---------------------------------------------------------------- LEGEND --   
     
-    ax0.legend(loc=2, ncol=2, numpoints=1, fontsize=14)
+    ax0.legend(loc=2, ncol=3, numpoints=1, fontsize=14, frameon=False)
     
     fig.savefig('yearly_budget.pdf')
 
+#==============================================================================
+def plot_water_budget_yearly2(language='English'):
+#==============================================================================
+    
+    #---- Load Results from csv ----
+        
+    fname = 'water_budget.csv'
+    
+    with open(fname, 'r') as f:
+        reader = np.array(list(csv.reader(f, delimiter='\t'))[1:])
+            
+    DATA = np.array(reader[1:])        
+        
+    YEARS = DATA[:, 0].astype('int')
+    MONTHS = DATA[:, 1].astype('int')
+    
+    PRECIP = DATA[:, 3].astype('float')  
+    RU = DATA[:, 4].astype('float')
+    ETR = DATA[:, 5].astype('float')
+    RECHG = DATA[:, 6].astype('float')
+    RAS = DATA[:, 7].astype('float')
+    
+    #---- Define new variables ----
 
+    yr2plot = np.arange(1997, 2014).astype('int')
+    NYear = len(yr2plot)
+    
+    YEARLY_PRECIP = np.zeros(NYear) 
+    YEARLY_RECHG = np.zeros(NYear) 
+    YEARLY_RU = np.zeros(NYear)
+    YEARLY_ETR = np.zeros(NYear)
+    YEARLY_dRAS = np.zeros(NYear)
+    
+    #---- Convert daily to hydrological year ----
+    
+    # the hydrological year is defined from October 1 to September 30 of the
+    # next year.
+    
+    for i in range(NYear):
+        yr0 = yr2plot[i]
+        yr1 = yr0 + 1
+        
+        indx0 = np.where((YEARS == yr0)&(MONTHS==10))[0][0]
+        indx1 = np.where((YEARS == yr1)&(MONTHS==9))[0][-1]
+                
+        YEARLY_PRECIP[i] = np.sum(PRECIP[indx0:indx1+1])
+        YEARLY_RECHG[i] = np.sum(RECHG[indx0:indx1+1])
+        YEARLY_RU[i] = np.sum(RU[indx0:indx1+1])
+        YEARLY_ETR[i] = np.sum(ETR[indx0:indx1+1])
+        YEARLY_dRAS[i] = RAS[indx1+1] - RAS[indx0]
+        
+        print(YEARLY_PRECIP[i] - YEARLY_RECHG[i] - YEARLY_RU[i] - 
+              YEARLY_ETR[i] - YEARLY_dRAS[i])
 
+    #---- Save Results in a csv ----
+    
+    fname = 'water_budget_yearly.csv'
+    fcontent = [['From', 'To', 'PRECIP(mm)', 'RU(mm)',
+                     'ETR(mm)', 'RECHG(mm)', 'dRAS(mm)']]
+    for i in range(NYear):      
+        fcontent.append(['01/10/%d' % yr2plot[i], 
+                         '30/09/%d' % (yr2plot[i]+1),
+                         '%0.1f' % YEARLY_PRECIP[i],
+                         '%0.1f' % YEARLY_RU[i],
+                         '%0.1f' % YEARLY_ETR[i],
+                         '%0.1f' % YEARLY_RECHG[i],
+                         '%0.1f' % YEARLY_dRAS[i]])
+                                
+    with open(fname, 'w') as f:
+        writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+        writer.writerows(fcontent)
+        
+    #---- Produce Figure ----
+    
+    fig = plt.figure(figsize=(15, 7))
+    fig.patch.set_facecolor('white')
+    
+    fheight = fig.get_figheight()
+    fwidth = fig.get_figwidth()
+    
+    left_margin  = 1
+    right_margin = 0.35
+    bottom_margin = 1.
+    top_margin = 0.25
+    
+    x0 = left_margin / fwidth
+    y0 = bottom_margin / fheight
+    w0 = 1 - (left_margin + right_margin) / fwidth
+    h0 = 1 - (bottom_margin + top_margin) / fheight
+   
+    #--------------------------------------------------------- AXES CREATION --
+
+    ax0  = fig.add_axes([x0, y0, w0, h0])
+    ax0.patch.set_visible(False)
+    for axis in ['top','bottom','left','right']:
+        ax0.spines[axis].set_linewidth(0.5)
+        
+    #------------------------------------------------------------ AXIS RANGE --       
+    
+    Ymin0 = 0
+    Ymax0 = 1700
+    
+    Xmin0 = 0
+    Xmax0 = NYear * 3
+    
+    #------------------------------------------------------ XTICKS FORMATING -- 
+    
+    xtcklabl = [''] * NYear
+    for i in range(NYear):
+        
+        yr1 = str(yr2plot[i])[-2:]
+        yr2 = str(yr2plot[i]+1)[-2:]
+        xtcklabl[i] = "'%s - '%s" % (yr1, yr2)
+        
+    xtckpos = np.arange(NYear * 3 + 1)
+                         
+    ax0.xaxis.set_ticks_position('bottom')
+    ax0.tick_params(axis='x',direction='out')
+    ax0.xaxis.set_ticklabels([])
+    ax0.set_xticks(xtckpos[::3])
+    
+    ax0.set_xticks(xtckpos[::3] + 1.5, minor=True)        
+    ax0.tick_params(axis='x', which='minor', length=0, labelsize=12, pad=2)
+    ax0.xaxis.set_ticklabels(xtcklabl, minor=True, rotation=45, ha='right')
+    
+    #------------------------------------------------------ YTICKS FORMATING --
+ 
+    ax0.yaxis.set_ticks_position('left')
+    ax0.set_yticks(np.arange(0, Ymax0, 500))
+    ax0.tick_params(axis='y',direction='out', gridOn=False, labelsize=14)
+    
+    ax0.set_yticks(np.arange(0, Ymax0, 50), minor=True)
+    ax0.tick_params(axis='y',direction='out', which='minor', gridOn=False)
+    
+    #------------------------------------------------------------ AXIS RANGE --
+    
+    ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
+
+    #---------------------------------------------------------------- LABELS --
+    ylabl = 'Equivalent Water (mm)'
+    xlabl = ('Hydrological Years (October 1st of one ' +
+             'year to September 30th of the next)')
+    if language == 'French' :  
+        ylabl = u"Colonne d'eau équivalente (mm)"
+        xlabl = (u"Année Hydrologique (1er octobre d'une " +
+                 u"année au 30 septembre de l'année suivante)")
+                 
+    ax0.set_ylabel(ylabl, fontsize=16,
+                   verticalalignment='bottom')
+    ax0.yaxis.set_label_coords(-0.05, 0.5)
+    
+    ax0.set_xlabel(xlabl, fontsize=16, verticalalignment='top')
+    ax0.xaxis.set_label_coords(0.5, -0.125)
+    
+    #-------------------------------------------------------------- PLOTTING --
+    
+    COLOR = [[0./255, 25./255, 51./255],
+             [0./255, 76./255, 153./255],
+             [0./255, 128./255, 255./255],              
+             [102./255, 178./255, 255./255]]
+             
+    LABEL = ['Total Precipitation', 'Recharge', 'Runoff',
+             'Real Evapotranspiration']
+    if language == 'French' :       
+        LABEL = [u'Précipitations Totales', 'Recharge', 'Ruissellement',
+                 u'Évapotranspiration Réelle']
+
+    bar_width = 0.85
+
+    ax0.bar(xtckpos[1::3], YEARLY_PRECIP, align='center', width=bar_width,
+            color=COLOR[0], edgecolor='None', label=LABEL[0])
+    
+    var2plot = YEARLY_RECHG + YEARLY_ETR + YEARLY_RU
+    ax0.bar(xtckpos[2::3], var2plot, align='center', width=bar_width,
+            color=COLOR[3], edgecolor='None', label=LABEL[2])
+            
+    var2plot = YEARLY_RECHG + YEARLY_ETR
+    ax0.bar(xtckpos[2::3], var2plot, align='center', width=bar_width,
+            color=COLOR[2], edgecolor='None', label=LABEL[3])
+    
+    var2plot = YEARLY_RECHG
+    ax0.bar(xtckpos[2::3], var2plot, align='center', width=bar_width,
+            color=COLOR[1], edgecolor='None', label=LABEL[1])
+
+    #--------------------------------------------------------- PLOTTING TEXT --
+    
+    for i in range(NYear):
+        y = YEARLY_PRECIP[i] / 2.
+        x = 1 + 3 * i
+        txt = '%0.1f' % YEARLY_PRECIP[i]
+        ax0.text(x, y, txt, color='white', va='center', ha='center',
+                 rotation=90, fontsize=10)
+                 
+        y = YEARLY_RECHG[i] / 2.
+        x = 2 + 3 * i
+        txt = '%0.1f' % YEARLY_RECHG[i]
+        ax0.text(x, y, txt, color='white', va='center', ha='center',
+                 rotation=90, fontsize=10)
+                 
+        y = YEARLY_ETR[i] / 2. + YEARLY_RECHG[i]
+        x = 2 + 3 * i
+        txt = '%0.1f' % YEARLY_ETR[i]
+        ax0.text(x, y, txt, color='black', va='center', ha='center',
+                 rotation=90, fontsize=10)
+                 
+        y = YEARLY_RU[i] / 2. + YEARLY_RECHG[i] + YEARLY_ETR[i]
+        x = 2 + 3 * i
+        txt = '%0.1f' % YEARLY_RU[i]
+        ax0.text(x, y, txt, color='black', va='center', ha='center',
+                 rotation=90, fontsize=10)
+    #---------------------------------------------------------------- LEGEND --   
+    
+    ax0.legend(loc=2, ncol=2, numpoints=1, fontsize=14, frameon=False)
+    
+    fig.savefig('yearly_budget2.pdf')
+    
+if __name__ == '__main__':
+    
+    plt.close('all')
+    plot_water_budget_yearly(language='French')
+    plot_water_budget_yearly2(language='French')
 
 
 

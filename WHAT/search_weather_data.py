@@ -619,7 +619,7 @@ class Search4Stations(QtGui.QWidget):
                         
                         if start_year.isdigit(): # daily data exist
                              
-                            if (int(end_year) - int(start_year)) >= nbrYear:
+                            if (int(end_year)-int(start_year)+1) >= nbrYear:
                            
                                 print("adding %s"  % station_name)
         

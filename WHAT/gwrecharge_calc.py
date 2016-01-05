@@ -221,8 +221,13 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         RASMAX = [0] * len(CRU)
         WLVLPRE = [0] * len(CRU)
         RECHG = [0] * len(CRU)
+        RU = [0] * len(CRU)
+        ETR = [0] * len(CRU)
+        RAS = [0] * len(CRU)
+        PACC = [0] * len(CRU)
         for i in range(len(CRU)):
-            RASMAX[i], WLVLPRE[i], RECHG[i] = self.opt_RASmax(Sy, CRU[i])
+            RASMAX[i], WLVLPRE[i], RECHG[i], RU[i], ETR[i], RAS[i], PACC[i] = \
+                self.opt_RASmax(Sy, CRU[i])
         
         #---- Plot Results ----
         
@@ -256,6 +261,40 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         fname = 'Multi_Analysis/Sy=%0.2f_Cru=%0.3f.pdf' % (Sy, CRU[0])
         fig.savefig(fname)
+        
+        #---- Post Processing Results ----
+        
+        PRECIP = self.meteoObj.DATA[:, 6]
+        YEAR = self.meteoObj.DATA[:, 0]
+        MONTH = self.meteoObj.DATA[:, 1]
+        DAY = self.meteoObj.DATA[:, 2]
+        RECHG = RECHG[0]
+        RU = RU[0]
+        ETR = ETR[0]
+        RAS = RAS[0]
+        PACC = PACC[0]
+        
+#        plot_water_budget_yearly(PRECIP, RECHG, YEAR, RU, ETR)
+        
+        #---- Save Results in csv ----
+        
+        fname = 'water_budget.csv'
+        fcontent = [['YEAR(mm)', 'MONTH', 'DAY', 'PRECIP(mm)', 'RU(mm)',
+                     'ETR(mm)', 'RECHG(mm)', 'RAS(mm)', 'PACC(mm)']]
+        for i in range(len(PRECIP)):      
+            fcontent.append(['%d' % YEAR[i], 
+                             '%d' % MONTH[i],
+                             '%d' % DAY[i],
+                             '%f' % PRECIP[i],
+                             '%f' % RU[i],
+                             '%f' % ETR[i],
+                             '%f' % RECHG[i],
+                             '%f' % RAS[i],
+                             '%f' % PACC[i]])
+                                
+        with open(fname, 'w') as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer.writerows(fcontent)
         
         
     @staticmethod
@@ -315,16 +354,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                                      WLVLpre[i][self.NaNindx])
         
         indx = np.where(RMSE == np.min(RMSE))[0][0]
-        
-        #---- Plot Yearly GW Recharge ----
-        
-        PRECIP = self.meteoObj.DATA[:, 6]
-        YEAR = self.meteoObj.DATA[:, 0]
        
-        plot_water_budget_yearly(PRECIP, RECHG[indx], YEAR)
-        
-        #---- Plot Yearly GW Recharge ----
-        
         return Cru[indx], RASMAX[indx], WLVLpre[indx], RECHG[indx]        
         
                 
@@ -335,7 +365,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         ETP = self.meteoObj.DATA[:, 7]
         PTOT = self.meteoObj.DATA[:, 6]
         TAVG = self.meteoObj.DATA[:, 5]
-        tweatr = self.meteoObj.TIME + 0 # Here we introduce the time lag
+        tweatr = self.meteoObj.TIME + 10 # Here we introduce the time lag
         
         #---- water lvl observations ----
         
@@ -355,8 +385,9 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         RASMAX = 100.
         dRAS = 0.1
         
-        RECHGpre = self.surf_water_budget(CRU, RASMAX, ETP, PTOT, TAVG)
-        WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B, WLVLobs,
+        RECHG, _, _, _, _ = self.surf_water_budget(CRU, RASMAX, ETP,
+                                                   PTOT, TAVG)
+        WLVLpre = self.calc_hydrograph(RECHG[ts:te], A, B, WLVLobs,
                                        Sy, nscheme='forward')
         RMSE = self.calc_RMSE(WLVLobs[self.NaNindx], WLVLpre[self.NaNindx])
         
@@ -369,20 +400,20 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             
             #---- Calculating Jacobian (X) Numerically ---- 
             
-            rechg = self.surf_water_budget(CRU, RASMAX * (1+dRAS), ETP,
-                                           PTOT, TAVG) 
+            rechg, _, _, _, _ = self.surf_water_budget(CRU, RASMAX * (1+dRAS),
+                                                       ETP, PTOT, TAVG) 
                                            
             wlvl = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
                                         Sy, nscheme='forward')
             X = Xt = (wlvl[self.NaNindx] - WLVLpre[self.NaNindx]) / (RASMAX * dRAS)       
 
             if np.sum(X) == 0:
-                rechg_yearly = np.mean(RECHGpre) * 365
+                rechg_yearly = np.mean(RECHG) * 365
                 RASMAX = np.inf
                 print('Cru = %0.3f ; RASmax = %0.0f mm ; ' +
                       'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
                       ) % (CRU, RASMAX, RMSE, rechg_yearly)              
-                return RASMAX, WLVLpre, RECHGpre
+                return RASMAX, WLVLpre, RECHG
             
             #---- Solving Linear System ----
             
@@ -404,9 +435,10 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                 RASMAX = RASMAXold + dr
                     
                 #---- Solving for new parameter values ----
-                
-                RECHGpre = self.surf_water_budget(CRU, RASMAX, ETP, PTOT, TAVG)
-                WLVLpre = self.calc_hydrograph(RECHGpre[ts:te], A, B, WLVLobs,
+
+                RECHG, RU, ETR, RAS, PACC = self.surf_water_budget(
+                                                  CRU, RASMAX, ETP, PTOT, TAVG)
+                WLVLpre = self.calc_hydrograph(RECHG[ts:te], A, B, WLVLobs,
                                                Sy, nscheme='forward')
                 RMSE = self.calc_RMSE(WLVLobs[self.NaNindx],
                                       WLVLpre[self.NaNindx])
@@ -422,12 +454,12 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             
             if RASMAX < 0:
                 RASMAX = 0
-                rechg_yearly = np.mean(RECHGpre) * 365
+                rechg_yearly = np.mean(RECHG) * 365
                 print('Cru = %0.2f ; RASmax = %0.0f mm ; ' +
                       'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
                       ) % (CRU, RASMAX, RMSE, rechg_yearly)
                       
-                return RASMAX, WLVLpre, RECHGpre
+                return RASMAX, WLVLpre, RECHG
     
             #---- Checking tolerance ----
 #            print RASMAX
@@ -437,15 +469,14 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             if tol < tolmax:
 #                out = np.correlate(WLVLobs, WLVLpre[:-100])
 #                plt.plot(out)
-                rechg_yearly = np.mean(RECHGpre) * 365
+                rechg_yearly = np.mean(RECHG) * 365
                 print('Cru = %0.3f ; RASmax = %0.0f mm ; ' +
                       'RMSE = %0.1f mm ; Rechg = %0.0f mm' 
                       ) % (CRU, RASMAX, RMSE, rechg_yearly)
-                return RASMAX, WLVLpre, RECHGpre
+                return RASMAX, WLVLpre, RECHG, RU, ETR, RAS, PACC
         
     @staticmethod
-    def surf_water_budget(CRU, RASmax, ETP, PTOT,   #===== Surf Water Budget ==
-                          TAVG, TMELT=1.5, CM=4 ):
+    def surf_water_budget(CRU, RASmax, ETP, PTOT, TAVG, TMELT=1.5, CM=4 ):
         
         """    
         Input
@@ -464,7 +495,8 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         {1D array} RECHG = Daily groundwater recharge in mm    
         """
         
-        N = len(ETP)    
+        N = len(ETP)
+
         PAVL = np.zeros(N)   # Available Precipitation
         PACC = np.zeros(N)   # Accumulated Precipitation
         RU = np.zeros(N)     # Runoff
@@ -480,23 +512,38 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         PACC[0] = 0
         RAS[0] = RASmax
         
-        for i in range(0, N - 1):
+        for i in range(N-1):
     
-            #----- Precipitation -----          
-    
+            #----- Precipitation, Accumulation, and Melt -----
+            
             if TAVG[i] > TMELT:  # Rain
             
-                if MP[i] >= PACC[i]: # Rain on Bareground
-                    PAVL[i+1] = PACC[i] + PTOT[i]
+                if MP[i] >= PACC[i]: # Rain on Bareground (All snow is melted)
+                    PAVL[i] = PACC[i] + PTOT[i]
                     PACC[i+1] = 0
                     
-                elif MP[i] < PACC[i]: #Rain on Snow
-                    PAVL[i+1] = MP[i]
+                elif MP[i] < PACC[i]: # Rain on Snow
+                    PAVL[i] = MP[i]
                     PACC[i+1] = PACC[i] - MP[i] + PTOT[i]                
                     
-            elif TAVG[i] <= TMELT: #Snow
-                PAVL[i+1] = 0
+            elif TAVG[i] <= TMELT: # Snow
+                PAVL[i] = 0
                 PACC[i+1] = PACC[i] + PTOT[i]
+                
+    
+#            if TAVG[i] > TMELT:  # Rain
+#            
+#                if MP[i] >= PACC[i]: # Rain on Bareground
+#                    PAVL[i+1] = PACC[i] + PTOT[i]
+#                    PACC[i+1] = 0
+#                    
+#                elif MP[i] < PACC[i]: #Rain on Snow
+#                    PAVL[i+1] = MP[i]
+#                    PACC[i+1] = PACC[i] - MP[i] + PTOT[i]                
+#                    
+#            elif TAVG[i] <= TMELT: #Snow
+#                PAVL[i+1] = 0
+#                PACC[i+1] = PACC[i] + PTOT[i]
                 
             #----- Infiltration and Runoff -----
             
@@ -505,15 +552,22 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             
             #----- ETR, Recharge and Storage change -----
             
+            #Intermediate Step
             dRAS[i] = min(I[i], RASmax - RAS[i])
-            RAS[i+1] = RAS[i] + dRAS[i] #intermediate step
-            RECHG[i] = I[i] - dRAS[i]
+            RAS[i+1] = RAS[i] + dRAS[i]
             
-            ETR[i] = min(ETP[i], RAS[i])
-            
+            #Final Step
+            RECHG[i] = I[i] - dRAS[i]            
+            ETR[i] = min(ETP[i], RAS[i])            
             RAS[i+1] = RAS[i+1] - ETR[i]
+            
+            # Evaportransporation is calculated after recharge. It is assumed
+            # that recharge occurs on a time scale that is faster than
+            # evapotranspiration in permeable soil.
+            
+        print np.sum(PTOT - ETR - RECHG - RU) - (RAS[-1] - RAS[0])
         
-        return RECHG
+        return RECHG, RU, ETR, RAS, PACC
     
     @staticmethod
     def calc_hydrograph(RECHG, A, B, WLobs, Sy, nscheme='forward'): #==========
@@ -653,15 +707,15 @@ if __name__ == '__main__':
     
     #---- Pont-Rouge ----
     
-    # dirname = '../Projects/Pont-Rouge/'
-    # fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    # fwaterlvl = dirname + 'Water Levels/5080001.xls'
+    dirname = '../Projects/Pont-Rouge/'
+    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+    fwaterlvl = dirname + 'Water Levels/5080001.xls'
       
     #---- Valcartier ----
 
-    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
-    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
-    fwaterlvl = dirname + '/Water Levels/valcartier2.xls'      
+#    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
+#    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
+#    fwaterlvl = dirname + '/Water Levels/valcartier2.xls'      
     
     #---- Calculations ----
     
@@ -671,94 +725,12 @@ if __name__ == '__main__':
 #    synth_hydrograph.plot_best_fit(Sy)
     
 #    CRU = np.arange(0.385, 0.365, 0.005)
-    CRU = [0.385]
+    CRU = [0.31]
 #    CRU = np.arange(0, 0.65, 0.05)
     for cru in CRU:    
         synth_hydrograph.plot_multiple_fit(Sy, [cru])
+        
+    print('Fin')
     
-    # plt.show()
+    plt.show()
     
-#    Sy = 0.25
-#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, Sy, CRU)
-#    Sy = 0.25
-#    CRU = [0.45]
-#    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, Sy, CRU)
-    
-#    plt.show()
-#    for Sy in [0.2, 0.25, 0.3, 0.35]:
-#        synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl, Sy, CRU)
-    
-    
-    #        self.compare_rechg(twlvl, RECHGobs, tmeteo, RECHGpre)
-    
-#    @ staticmethod
-#    def compare_rechg(tobs, Robs, tpre, Rpre):
-#        
-#        CORRCOEF = []
-        
-#        bwidth = 7.
-#        nbin = np.floor(len(Robs) / bwidth)
-#
-#        Robs_week = Robs[:nbin*bwidth].reshape(nbin, bwidth)
-#        Robs_week = np.sum(Robs_week, axis=1)
-        
-#        for i in range(100):
-#            
-#            tindx_start = np.where(tobs[0] == (tpre + i))[0][0]
-#            tindx_end = np.where(tobs[-1] == (tpre + i))[0][0]
-#        
-#            Rpre2 = Rpre[tindx_start:tindx_end]
-#            
-#            Rpre2_week = Rpre2[:nbin*bwidth].reshape(nbin, bwidth)
-#            Rpre2_week = np.sum(Rpre2_week, axis=1)
-#
-#            CORRCOEF.append(np.corrcoef(Rpre2_week, Robs_week)[0, 1])
-                
-
-#        print(np.sum(Robs)/len(Robs) * 365)
-#        Robs[Robs<1] = 0
-#
-#        fig, ax = plt.subplots(2,1)
-#        ax[0].plot(tobs[:-1], Robs)
-#        ax[1].plot(tpre, Rpre)
-#        plt.show(block=False)
-        
-        
-#        print indx_start, indx_end
-#        print(len(RECHGpre))
-#        print(len(RECHGobs))
-        
-#        print len(RECHGpre[indx_start:indx_end+1])
-#        print len(RECHGobs)
-        
-#        out = np.correlate(RECHGobs, RECHGpre[indx_start:indx_end+1])
-       
-
-        
-#        Wsy = self.calc_hydrograph_down(RECHG, A, B, WLVLobs[-1], Sy * 1.05)
-#        ss_sy = (Wsy-WLVLpre) / 0.05
-#
-#        Rcru = self.surf_water_budget(CRU * 1.05, RASmax, ETP, PTOT, TAVG)
-#        Wcru = self.calc_hydrograph_down(Rcru, A, B, WLVLobs[-1], Sy)
-#        ss_cru = (Wcru-WLVLpre) / 0.05
-#        
-#        Rras = self.surf_water_budget(CRU, RASmax * 1.05, ETP, PTOT, TAVG)
-#        Wras = self.calc_hydrograph_down(Rras, A, B, WLVLobs[-1], Sy)
-#        ss_ras = (Wras-WLVLpre) / 0.05
-#        
-#        ss_mat = np.vstack((ss_sy, ss_cru, ss_ras))
-#        
-#        VCo_mat = np.dot(ss_mat, ss_mat.T)
-#        
-#        pcc = np.zeros((3,3)) + np.diag([1,1,1])
-#        #qz and porosity=
-#        pcc[0,1] = VCo_mat[0,1]/(VCo_mat[0,0]**0.5*VCo_mat[1,1]**0.5)
-#        pcc[1,0] = pcc[0,1]
-#        #qz and soil moisture
-#        pcc[0,2] = VCo_mat[0,2]/(VCo_mat[0,0]**0.5*VCo_mat[2,2]**0.5)
-#        pcc[2,0] = pcc[0,2]
-#        #porosity and soil moisture
-#        pcc[2,1] = VCo_mat[2,1]/(VCo_mat[2,2]**0.5*VCo_mat[1,1]**0.5)
-#        pcc[1,2] = pcc[2,1]
-#        
-#        print pcc

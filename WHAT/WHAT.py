@@ -292,7 +292,7 @@ class MainWindow(QtGui.QMainWindow):
         splitter.setSizes([100, 1]) # Forces initially the main_console to its
                                     # minimal height.       
        
-        #------------------------------------------------------ MAIN GRID ----
+        #--------------------------------------------------------- MAIN GRID --
         
         main_widget = QtGui.QWidget()
         self.setCentralWidget(main_widget)        
@@ -421,20 +421,20 @@ class MainWindow(QtGui.QMainWindow):
         directory = path.abspath('../Projects')
 
         filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                      self, 'Open Project', directory, '*.what')
+                                     self, 'Open Project', directory, '*.what')
                                    
         if filename:
 
             self.projectfile = filename                        
             self.load_project(filename)
             
-    #-------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
     def load_project(self, filename):
         '''
         This method is called either on startup during <initUI> or when a new
         project is chosen with <open_project>.        
         '''
-    #-------------------------------------------------------------------------
+    #--------------------------------------------------------------------------
         
         self.projectfile = filename 
         
@@ -473,10 +473,10 @@ class MainWindow(QtGui.QMainWindow):
         
         self.tab_dwnld_data.set_workdir(self.projectdir)
         self.tab_dwnld_data.search4stations.lat_spinBox.setValue(
-                                                           self.projectInfo.lat)
+                                                          self.projectInfo.lat)
                                                            
         self.tab_dwnld_data.search4stations.lon_spinBox.setValue(
-                                                           self.projectInfo.lon)
+                                                          self.projectInfo.lon)
                                                            
         #---- fill_weather_data ----
                                                            
