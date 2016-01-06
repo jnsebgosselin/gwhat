@@ -1,4 +1,4 @@
-\documentclass[12pt, letterpaper, fleqn]{report}
+\documentclass[12pt, letterpaper]{report} %fleqn
 
 \usepackage{geometry}
 \geometry{left=2cm, right=2cm, top=2cm, bottom=2cm}
@@ -7,6 +7,8 @@
             linkcolor=black, citecolor=black]{hyperref}
 \usepackage{fixltx2e} % For subscript
 \usepackage{graphicx}
+\pdfminorversion=4 % This is a workaround for a bug with image insertion which prevent the document from being read correctly in Adobe... I haven't found a better solution yet.
+%http://tex.stackexchange.com/questions/64448/how-to-overcome-acrobat-reader-error-131-with-a-pdflatex-doc
 
 \usepackage{caption}
 \usepackage{subcaption}
@@ -52,6 +54,7 @@
 
 \usepackage[authoryear, round, sort&compress]{natbib}
 \bibliographystyle{plainnat}
+
 \usepackage[capitalize]{cleveref}
 
 \begin{document}
@@ -79,6 +82,15 @@
 %    
 \chapter{Creating Gapless Daily Weather Datasets}\label{chap:gapfilling}
     \subfile{chapter3}
+%
+\appendix
+   
+\subfile{annexeA}
+%\subfile{annexeB} % Exemple Monteregie Est - Level of Confinment of the Roc Aquifer
+\chapter{Description of the weather data file format used in WHAT}\label{sec:weather_datafile_format}
+\subfile{annexeC}
+%
+\bibliography{WHATMANUAL}
 %    
 %\subfile{chapter4} % Water Level Time Series Preparation
 %\chapter{Plotting weather and water level data}\label{chap:plotting_data}
@@ -94,13 +106,6 @@
 
 %\part{Appendices}
 
-\appendix
 
-\subfile{annexeA}
-%\subfile{annexeB} % Exemple Monteregie Est - Level of Confinment of the Roc Aquifer
-\chapter{Description of the weather data file format used in WHAT}    \label{sec:weather_datafile_format}
-    \subfile{annexeC}
-%
-\bibliography{WHATMANUAL}
 
 \end{document}

@@ -4,15 +4,7 @@
 
 \chapter{MRC Estimation}
 
-The Master Recession Curve (MRC) is a mathematical expression describing the average behavior of the declining water-table at a particular site during periods when groundwater recharge is negligible. The strength of this correlation and thus the validity of the MRC depends on many factors, including the local topography, seasonality of the climate, hydraulic properties of the subsurface porous medium, and depth to the water-table \citep{heppner_computer_2005}. 
 
-Estimation of the MRC from a well hydrograph is done in WHAT in two step. The first step consists in the determination of the local extremum in the hydrograph in order to identify the period of time when the water-table recedes and the groundwater recharge is supposed negligible. 
-
-La seconde étape consiste à l'optimization des paramètres de l'équation mathématique décrivant la MRC. The MRC takes the form of a linear relation between water-table elevation and water-table declining rate. The resulting water-table recession hydrograph has the familiar exponential decline shape (MONTRER UN EXEMPLE). :
-
-Since the MRC can varie with seasonality of the climate, a different MRC can be estimated for the winter and summer. This option is not yet implemented in the code but will be shortly.
-
-Water-table fluctuation principle states that recharge is the product of water-table rise and the specific yield. variation of water-table due to recharge can be difficult to estimate because water-tables typically are in transient state of decline between storm or recharge events. predict what the water-table elevation would be at the succeeding time step in the absence of recharge. The predicted water-table elevation is compared to the measured water-table elevation and the difference between these 2 values is multiplied by the specific yield to get recharge for that time step. The user is responsible for providing the best coefficient for the MRC function.
 
 \section{Local Extremum Search}
 
