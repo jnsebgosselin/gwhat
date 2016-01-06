@@ -1136,9 +1136,20 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 
         elif sender == self.datum_widget:
             self.hydrograph.WLdatum = self.datum_widget.currentIndex()
-            self.hydrograph.WLmin = (self.waterlvl_data.ALT - 
-                                     self.hydrograph.WLmin)
-
+            
+            #---- compute new WLmin ----
+            
+            # This is calculated so that trailing zeros in the altitude of the
+            # well is not carried to the y axis labels, so that they remain a
+            # int multiple of *WLscale*.
+            
+            yoffset = int(self.waterlvl_data.ALT / self.hydrograph.WLscale)
+            yoffset *= self.hydrograph.WLscale            
+            self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)                                     
+            
+            #---- Update graph and draw ----
+            
+            self.waterlvl_max.setValue(self.hydrograph.WLmin)
             self.hydrograph.update_waterlvl_scale()            
             self.hydrograph.draw_waterlvl()
             self.hydrograph.draw_ylabels()
@@ -1159,7 +1170,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.hydrograph.set_time_scale()
             self.hydrograph.draw_weather()
             self.hydrograph.draw_figure_title()
-                
+        
         elif sender == self.graph_title:
                 
             #---- Update Instance Variables ----
@@ -1186,7 +1197,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             fwidth = self.page_setup_win.pageSize[0]
             self.hydrograph.set_fig_size(fwidth, 8.5)
         
-        #---------------------------------------- Sampling of Weather Data ----
+        #------------------------------------------- Weather Data resampling --
         
         elif sender == self.qweather_bin: 
             self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex ()
@@ -1194,8 +1205,8 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.hydrograph.draw_weather()
             self.hydrograph.draw_ylabels()
         
-        #-------------------------------------------- Scale of Data Labels ----
-            
+        #------------------------------------------------- Scale Data Labels --
+        
         elif sender == self.time_scale_label: 
             
             year = self.date_start_widget.date().year()

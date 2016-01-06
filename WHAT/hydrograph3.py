@@ -121,7 +121,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #---- Layout Options ----
         
         self.WLdatum = 0 # 0: mbgs;  1: masl
-        self.trend_line = True
+        self.trend_line = 0
         self.isLegend = True
         self.meteoOn = True # controls wether meteo data are plotted or not
         self.gridLines = 2 # 0 -> None, 1 -> "-" 2 -> ":"
@@ -425,21 +425,21 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                  ec='black')
             lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
                              lw=1.5, c='red')
-            lin2, = self.ax2.plot([], [], '-', zorder = 10, linewidth=1,
-                                  color='#0000CC')
+            lin2, = plt.plot([], [], '-', zorder = 10, linewidth=1,
+                             color='#0000CC', ms=15)
         
         #---- Data Point Datalogger ----
                   
-            lin3, = self.ax2.plot([], [], '.',                                     
-                                  color=[204./255, 204./255, 255./255],
-                                  markersize=5, alpha=0.5)
-           
-            labels = ['Snow', 'Rain', 'Air Temperature', 'Missing Data',
-                      'Water Level (Trend)', 'Water Level (Data)']
+            lin3, = self.ax2.plot([], [], '.', ms=10, alpha=0.5,                                  
+                                  color=[150./255, 150./255, 255./255])
             
-            self.ax4.legend([rec1, rec2, rec3, lin1, lin2, lin3], labels,
-                            loc=[0.8, 0.025], numpoints=3, fontsize=10,
-                            frameon=False)
+            handles = [rec1, rec2, rec3, lin1, lin2, lin3, self.h_WLmes]
+            labels = ['Snow', 'Rain', 'Air Temperature', 'Missing Data',
+                      'Water Level (Trend)', 'Water Level (Data)',
+                      'Manual Measures']
+            
+            self.ax4.legend(handles, labels, loc=[0.8, 0.025], numpoints=1,
+                            fontsize=10, frameon=False)
         
         #------------------------------------------------------- UPDATE FLAG --
         
@@ -669,7 +669,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.title_text = reader[7].astype(str)
         self.RAINscale = reader[8].astype(float)
         self.WLdatum = reader[9].astype(int)
-        self.trend_line = reader[10]
+        self.trend_line = reader[10].astype(int)
+        
+        print('Trend Line', self.trend_line)
 
         
     def save_layout(self, name_well, filename): #==============================
@@ -816,7 +818,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         This method is called the first time the graph is plotted and each
         time water level datum is changed.
         """
-        
+
         #--------------------------------------------------- Logger Measures --
         
         time = self.WaterLvlObj.time
@@ -1381,7 +1383,7 @@ if __name__ == '__main__':
     
     #---- Dundurn ----
     
-    dirname = '/home/jnsebgosselin/Dropbox/Projects WHAT/Dundurn'
+    dirname = '/home/jnsebgosselin/Dropbox/WHAT/Projects/Dundurn'
     fmeteo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.out"
 #    fwaterlvl = dirname + '/Water Levels/P19 2013-2014.xls' 
     fwaterlvl = dirname + '/Water Levels/P22 2014-2015.xls' 
@@ -1405,7 +1407,7 @@ if __name__ == '__main__':
     #---- Layout Options ----
     
     hydrograph.fwidth = 11 # Width of the figure in inches
-    hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
+    hydrograph.WLdatum = 1 # 0 -> mbgs ; 1 -> masl
     hydrograph.trend_line = True
     hydrograph.gridLines = 2 # Gridlines Style    
     hydrograph.title_state = 0 # 1 -> title ; 0 -> no title
