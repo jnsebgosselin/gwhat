@@ -122,7 +122,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         self.WLdatum = 0 # 0: mbgs;  1: masl
         self.trend_line = 0
-        self.isLegend = True
+        self.isLegend = False
         self.meteoOn = True # controls wether meteo data are plotted or not
         self.gridLines = 2 # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'month' # 'month' or 'year'
@@ -643,36 +643,36 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
-        # fine with the graph layout for this well.
+        # fine with the graph layout for this well and that it does exist.
         
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
-            reader = np.array(reader)
-     
-        row = np.where(reader[:,0] == name_well)[0]
+            
+        for row in range(len(reader)):
+            if reader[row][0].decode('utf-8') == name_well:
+                break
+            else:
+                row +=1
+       
+        reader = reader[row]
         
-        reader = reader[row][0]
-        
-        self.fmeteo = reader[1]
+        self.fmeteo = reader[1].decode('utf-8')
         self.finfo = self.fmeteo[:-3] + 'log'
                           
-        self.WLmin = reader[2].astype(float)
-        self.WLscale = reader[3].astype(float)
+        self.WLmin = float(reader[2])
+        self.WLscale = float(reader[3])
             
-        self.TIMEmin = reader[4].astype(float)
-        self.TIMEmax = reader[5].astype(float)
+        self.TIMEmin = float(reader[4])
+        self.TIMEmax = float(reader[5])
         
-        self.title_state = reader[6].astype(float)
+        self.title_state = float(reader[6])
         if self.title_state != 0:
             self.title_state = 1
         
-        self.title_text = reader[7].astype(str)
-        self.RAINscale = reader[8].astype(float)
-        self.WLdatum = reader[9].astype(int)
-        self.trend_line = reader[10].astype(int)
-        
-        print('Trend Line', self.trend_line)
-
+        self.title_text = reader[7].decode('utf-8')
+        self.RAINscale = float(reader[8])
+        self.WLdatum = int(reader[9])
+        self.trend_line = int(reader[10])
         
     def save_layout(self, name_well, filename): #==============================
         
@@ -680,23 +680,31 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
-            reader = np.array(reader)
         
         #---- update content ----
-         
-        rowx = np.where(reader[:,0] == name_well)[0]
         
-        new = [name_well, self.fmeteo, self.WLmin, self.WLscale, 
-               self.TIMEmin, self.TIMEmax,self.title_state, self.title_text,
+        # this is necessary for Windows when there is an accented character
+        # in the path of the meteo data file, in the name of the well, or in
+        # the title of the graph.
+        
+        name_well = name_well.encode('utf-8')
+        fmeteo = self.fmeteo.encode('utf-8')
+        graph_title = self.title_text.encode('utf-8')
+        
+        new = [name_well, fmeteo, self.WLmin, self.WLscale, 
+               self.TIMEmin, self.TIMEmax,self.title_state, graph_title,
                self.RAINscale, self.WLdatum, self.trend_line]
         
-        if len(rowx) == 0:
-            reader = np.vstack((reader, new))
-        else:
-            reader = np.delete(reader, rowx, 0)
-            reader = np.vstack((reader, new))
+        for row in range(len(reader)):
+            if reader[row][0] == name_well:
+                del reader[row]
+                break
+            else:
+                row +=1
+                
+        reader.append(new)           
         reader[0] = self.header[0]
-        
+      
         #---- save file ----
             
         with open(filename, 'w') as f:

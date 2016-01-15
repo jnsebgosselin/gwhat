@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2015 Jean-Sebastien Gosselin
-
+Copyright 2014-2016 Jean-Sebastien Gosselin
 email: jnsebgosselin@gmail.com
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
@@ -674,6 +673,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.fwaterlvl = filename
         
         #----- Load Data -----
+        
+        self.ConsoleSignal.emit(
+        '''<font color=black>Loading water level data...</font>''')
+        for i in range(5):
+             QtCore.QCoreApplication.processEvents()
         
         state = self.waterlvl_data.load(filename)
         if state == False:

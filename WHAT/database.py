@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2015 Jean-Sebastien Gosselin
+Copyright 2014-2016 Jean-Sebastien Gosselin
+email: jnsebgosselin@gmail.com
 
 email: jnsebgosselin@gmail.com
 
@@ -29,8 +30,8 @@ import platform
 from PySide.QtGui import QIcon, QFont, QFontDatabase
 from PySide.QtCore import QSize
 
-software_version = 'WHAT Beta 4.1.8'
-last_modification = '07/07/2015'
+software_version = 'WHAT Beta 4.1.9'
+last_modification = '14/01/2016'
 
 class Icons():
     

@@ -227,7 +227,8 @@ class PostProcessErr(object):
         #---- Estimation Error ----
         
         hscat, = ax0.plot(Ymes, Ypre, '.', mec='k', mfc='k', ms=12, alpha=0.35)
-             
+        hscat.set_rasterized(True)
+        
         #---- 1:1 Line ----
         
         dl = 12    # dashes length
@@ -337,7 +338,7 @@ class PostProcessErr(object):
         
         #-------------------------------------------------------------- Draw --
         
-        fig.savefig(fname)
+        fig.savefig(fname, dpi=300)
 
         return canvas
     
@@ -539,23 +540,29 @@ if __name__ == '__main__': #=========================================== Main ==
     
     dirname = '../Projects/Monteregie Est/Meteo/Output/'
 
-#    filename = dirname + 'BROME (7020840)/BROME (7020840)_1980-2009.err'
-#    pperr = PostProcessErr(filename)
-#    pperr.generates_graphs()
-                
-    for root, directories, filenames in os.walk(dirname):
-        for filename in filenames:            
-            if os.path.splitext(filename)[1] == '.err':
-                print('---- %s ----' % os.path.basename(root))
-                pperr = PostProcessErr(os.path.join(root, filename))                
-                pperr.generates_graphs()
-            elif os.path.splitext(filename)[1] == '.out':
-                print('---- %s ----' % os.path.basename(root))
-                w = meteo.FigWeatherNormals()
-                w.plot_monthly_normals(os.path.join(root, filename))                
-                savename = 'weather_normals.pdf'
-                print('Generating %s.' % savename)
-                w.figure.savefig(os.path.join(root, savename))
+    filename = dirname + 'GRANBY (7022800)/GRANBY (7022800)_1980-2009.err'
+    pperr = PostProcessErr(filename)
+    pperr.generates_graphs()
+
+#    for root, directories, filenames in os.walk(dirname):
+#        for filename in filenames:            
+#            if os.path.splitext(filename)[1] == '.err':
+#                print('---- %s ----' % os.path.basename(root))
+#                pperr = PostProcessErr(os.path.join(root, filename))                
+#                pperr.generates_graphs()
+#            elif os.path.splitext(filename)[1] == '.out':
+#                print('---- %s ----' % os.path.basename(root))
+#                
+#                METEO = meteo.MeteoObj()
+#                METEO.load_and_format(os.path.join(root, filename))
+#                NORMALS, _ = meteo.calculate_normals(METEO.DATA, 
+#                                                     METEO.datatypes)
+#        
+#                w = meteo.FigWeatherNormals()                
+#                w.plot_monthly_normals(NORMALS)                
+#                savename = 'weather_normals.pdf'
+#                print('Generating %s.' % savename)
+#                w.figure.savefig(os.path.join(root, savename))
     
 #    for root, directories, filenames in os.walk(dirname):
 #        for filename in filenames: 
