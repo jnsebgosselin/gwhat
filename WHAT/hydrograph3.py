@@ -48,32 +48,86 @@ from xlrd import xldate_as_tuple
 import database as db
 from waterlvldata import WaterlvlData
 
+class Colors():
+    def __init__(self):   
+        
+        self.temp = [1, 0.65, 0.65]
+        self.rain = [0, 0, 1]
+        self.snow = [0.65,0.65,0.65]
+        self.wlvlline = [0, 0, 0.75]
+        self.wlvldots = [0.8, 0.8, 1]
+        self.wlvlmeas = [1, 0.25, 0.25]
+        
+    def load_colors_db(self): #================================= Load Colors ==
+        print('-------------- Colors Database --------------')
+        fname = 'Colors.db'
+        if not os.path.exists(fname):
+            print('No color database file exists, creating one...')
+            fcontent = [['air temp. :',  1,    0.65, 0.65],
+                        ['rain :',        0,    0,    1],
+                        ['snow :',        0.65, 0.65, 0.65],
+                        ['wlvl (line) :', 0,    0,    0.75],
+                        ['wlvl (dots) :', 0.9, 0.9, 1],
+                        ['wlvl (meas) :', 1,    0.25, 0.25]]
+
+            with open(fname, 'w') as f:
+                writer = csv.writer(f, delimiter='\t')
+                writer.writerows(fcontent)
+                
+        else:
+            print('Loading colors database...')
+            with open(fname, 'r') as f:
+                reader = list(csv.reader(f, delimiter='\t'))
+            
+            self.temp = [float(i) for i in reader[0][1:]]
+            self.rain = [float(i) for i in reader[1][1:]]
+            self.snow = [float(i) for i in reader[2][1:]]
+            self.wlvlline = [float(i) for i in reader[3][1:]]
+            self.wlvldots = [float(i) for i in reader[4][1:]]
+            self.wlvlmeas = [float(i) for i in reader[5][1:]]            
+        print('Colors database loaded sucessfully.')
+        print('---------------------------------------------')
+                         
 class LabelDatabase():
     
     def __init__(self, language): #--------------------------------- English --
         
         self.temperature = u'Temperature (°C)'
-        self.mbgs = 'Water Level at Well %s (mbgs)'
-        self.masl = 'Water Level at Well %s (masl)'
-        self.precip = 'Total Precipitation (%s)'
+#        self.mbgs = 'Water Level at Well %s (mbgs)'
+#        self.masl = 'Water Level at Well %s (masl)'
+        self.mbgs = 'Water Level (mbgs)'
+        self.masl = 'Water Level (masl)'
+        self.precip = 'Precipitation (%s)'
         self.precip_units = ['mm/day', 'mm/week', 'mm/month', 'mm/year']
-        self.station_meteo = ('Weather Station = %s ' +
+        self.title = 'Well %s'
+        self.station_meteo = ('Weather Station %s\n' +
                               '(located %0.1f km from the well)')
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
                             
+        self.legend = ['Snow', 'Rain', 'Air Temperature', 'Missing Data',
+                       'Water Level (Trend)', 'Water Level',
+                       'Water Level (Data)', 'Manual Measures']         
+                            
         if language == 'French': #----------------------------------- French --
             
-            self.mbgs = u"Niveau d'eau au puits %s (mbgs)"
-            self.masl = u"Niveau d'eau au puits %s (masl)"
-            self.precip = u'Précipitations Totales (mm/%s)'
+#            self.mbgs = u"Niveau d'eau au puits %s (mbgs)"
+#            self.masl = u"Niveau d'eau au puits %s (masl)"
+            self.mbgs = u"Niveau d'eau (mbgs)"
+            self.masl = u"Niveau d'eau (masl)"
+            self.precip = u'Précipitations (%s)'
             self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
             self.temperature = u'Température (°C)'
-            self.station_meteo = (u'Station météo = %s ' +
+            self.title = 'Puits %s'
+            self.station_meteo = (u'Station météo %s\n' +
                                   u'(située à %0.1f km du puits)')
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
-
+                                
+            self.legend = ['Neige', 'Pluie', u"Température de l'air", 
+                           u'Données manquantes',
+                           "Niveau d'eau (tendance)", "Niveau d'eau",
+                           u"Niveau d'eau (données)", 'Mesures Manuelles']
 
 #==============================================================================
 
@@ -99,6 +153,8 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #---- Database ----
         
         self.header = db.FileHeaders().graph_layout
+        self.colorsDB = Colors()
+        self.colorsDB.load_colors_db()
         
         #---- Scales ----
         
@@ -114,15 +170,17 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         #---- Labels ----  
         
-        self.title_state = 0 # 0: No title; 1: With Title
-        self.title_text = 'Add A Title To The Figure Here'
         self.language = 'English'
-                   
+        
+        #---- Legend  and Title ----
+                
+        self.isLegend = 1
+        self.isGraphTitle = 1
+                           
         #---- Layout Options ----
         
         self.WLdatum = 0 # 0: mbgs;  1: masl
         self.trend_line = 0
-        self.isLegend = False
         self.meteoOn = True # controls wether meteo data are plotted or not
         self.gridLines = 2 # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'month' # 'month' or 'year'
@@ -157,7 +215,8 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #   3: 1 year;
         
         self.NMissPtot = []
-        
+    
+    
     def generate_hydrograph(self, MeteoObj): #=================================
 
         #---- Reinit Figure ----
@@ -208,6 +267,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         # Also holds the gridlines.
         
         self.ax1 = self.add_axes([0, 0, 1, 1], frameon=False)
+        self.ax1.set_zorder(100) 
         
         #--- Frame ---
         
@@ -215,14 +275,14 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         self.ax0 = self.add_axes(self.ax1.get_position(), frameon=True)
         self.ax0.patch.set_visible(False) 
-        self.ax0.set_zorder(self.ax1.get_zorder() + 20)
+        self.ax0.set_zorder(self.ax1.get_zorder() + 200)
         self.ax0.tick_params(bottom='off', top='off', left='off', right='off',
                              labelbottom='off', labelleft='off')
                                        
         #--- Water Levels ---
         
         self.ax2 = self.ax1.twinx()
-        self.ax2.set_zorder(self.ax1.get_zorder() + 10)      
+        self.ax2.set_zorder(self.ax1.get_zorder() + 100)      
         self.ax2.yaxis.set_ticks_position('left')
         self.ax2.yaxis.set_label_position('left') 
         self.ax2.tick_params(axis='y', direction='out', labelsize=10)
@@ -234,13 +294,13 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             #--- Precipitation ---
             
             self.ax3 = self.ax1.twinx()
-            self.ax3.set_zorder(self.ax1.get_zorder() + 10)
+            self.ax3.set_zorder(self.ax1.get_zorder() + 50)
             self.ax3.set_navigate(False)
             
             #--- Air Temperature ---
         
             self.ax4 = self.ax1.twinx()
-            self.ax4.set_zorder(self.ax1.get_zorder() - 10)
+            self.ax4.set_zorder(self.ax1.get_zorder() - 50)
             self.ax4.set_navigate(False)
         
         #----------------------------------------------------- Remove Spines --
@@ -255,20 +315,22 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.set_margins() # set margins for all the axes
         
         #------------------------------------------------------ FIGURE TITLE --
-           
+        
+        #---- Well Name ----
+        
         self.dZGrid_inch = (fheight - 2 * self.bottom_margin) / self.NZGrid
             
-        xTitle = (self.TIMEmin + self.TIMEmax) / 2.
-        ytitle = self.NZGrid + (0.4 / self.dZGrid_inch)
+        xTitle = self.TIMEmin #(self.TIMEmin + self.TIMEmax) / 2.
+        ytitle = self.NZGrid + (0.5 / self.dZGrid_inch)
         
-        self.figTitle = self.ax1.text(xTitle, ytitle, self.title_text,
+        self.figTitle = self.ax1.text(xTitle, ytitle, '',
                                       fontsize=18 * fheight / 8.5,
-                                      horizontalalignment='center', 
+                                      horizontalalignment='left', 
                                       verticalalignment='center')
                                       
-        self.draw_figure_title()
         
-        #---------------------------------------------- WEATHER STATION TEXT --
+        
+        #---- Weather Station ----
         
         # Calculate horizontal distance between weather station and
         # observation well.
@@ -282,12 +344,13 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
          
         # display text on figure
          
-        text1_ypos = self.NZGrid + 0.025 / self.dZGrid_inch
-       
-        self.text1 = self.ax1.text(self.TIMEmax, text1_ypos, '',
+        text1_ypos = self.NZGrid + 0.05 / self.dZGrid_inch       
+        self.text1 = self.ax1.text(self.TIMEmin, text1_ypos, '',
                                    rotation=0, verticalalignment='bottom',
-                                   horizontalalignment='right', fontsize=10)
-                   
+                                   horizontalalignment='left', fontsize=10)
+        
+        self.draw_figure_title()
+          
         #------------------------------------------------------- TIME + GRID --
         
         self.xlabels = [] # Initiate variable
@@ -309,13 +372,13 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #---- Continuous Line Datalogger ----
         
         self.l1_ax2, = self.ax2.plot([], [], '-', zorder = 10, linewidth=1,
-                                     color='#0000CC')
+                                     color=self.colorsDB.wlvlline)
         
         #---- Data Point Datalogger ----
-                  
+        
         self.l2_ax2, = self.ax2.plot([], [], '.',                                     
-                                     color=[204./255, 204./255, 255./255],
-                                     markersize=5, alpha=0.5)
+                                     color=self.colorsDB.wlvldots,
+                                     markersize=5)
                                      
         #---- Manual Mesures ----
                                      
@@ -323,7 +386,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                      label='Manual measures')
                                             
         plt.setp(self.h_WLmes, markerfacecolor='none', markersize=5,
-                 markeredgecolor=(1, 0.25, 0.25), markeredgewidth=1.5)
+                 markeredgecolor=self.colorsDB.wlvlmeas, markeredgewidth=1.5)
         
         #---- Predicted Recession Curves ----
         
@@ -409,66 +472,111 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.draw_ylabels()
         
         #------------------------------------------------------------ LEGEND --
-
-        if self.isLegend == True:
-            
-            #---- Water Level ----
-            
-            # self.ax2.legend(loc=4, numpoints=1, fontsize=10, ncol=2)
-            
-            #---- Weather ----
-    
-            rec1 = plt.Rectangle((0, 0), 1, 1, fc=[0.65,0.65,0.65],
-                                 ec=[0.65,0.65,0.65])
-            rec2 = plt.Rectangle((0, 0), 1, 1, fc=[0, 0, 1], ec=[0, 0, 1])
-            rec3 = plt.Rectangle((0, 0), 1, 1, fc=[1, 0.65, 0.65],
-                                 ec='black')
-            lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
-                             lw=1.5, c='red')
-            lin2, = plt.plot([], [], '-', zorder = 10, linewidth=1,
-                             color='#0000CC', ms=15)
         
-        #---- Data Point Datalogger ----
-                  
-            lin3, = self.ax2.plot([], [], '.', ms=10, alpha=0.5,                                  
-                                  color=[150./255, 150./255, 255./255])
-            
-            handles = [rec1, rec2, rec3, lin1, lin2, lin3, self.h_WLmes]
-            labels = ['Snow', 'Rain', 'Air Temperature', 'Missing Data',
-                      'Water Level (Trend)', 'Water Level (Data)',
-                      'Manual Measures']
-            
-            self.ax4.legend(handles, labels, loc=[0.8, 0.025], numpoints=1,
-                            fontsize=10, frameon=False)
+        self.set_legend()
         
         #------------------------------------------------------- UPDATE FLAG --
         
         self.isHydrographExists = True
         
+    def set_legend(self): #========================================== Legend ==
+    
+        if self.isLegend ==  1:
+            
+            #------------------------------------------------------- Entry ----
+            
+            labelDB = LabelDatabase(self.language).legend
+            
+            #---- Precipitation 
+                       
+            rec1 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.snow ,   # Snow
+                                 ec=self.colorsDB.snow)
+                            
+            rec2 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rain ,   # Rain
+                                 ec=self.colorsDB.rain)
+            
+            lg_handles = [rec1, rec2]            
+            lg_labels = [labelDB[0], labelDB[1]]
+            
+            
+            #---- Air Temperature ----  
+            
+            rec3 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.temp,
+                                 ec='black')
+            
+            lg_handles.append(rec3)
+            lg_labels.append(labelDB[2])
+            
+            #---- Missing Data Markers ----
+            
+            lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
+                         lw=1.5, c='red')
+                         
+            lg_handles.append(lin1)
+            lg_labels.append(labelDB[3])
+            
+            #---- Water Levels (continuous line) ----
+            
+            #---- Continuous Line Datalogger ----
+            
+            lin2, = plt.plot([], [], '-', zorder = 10, linewidth=1,
+                             color=self.colorsDB.wlvlline, ms=15)
+            lg_handles.append(lin2)
+            if self.trend_line == 1:
+                lg_labels.append(labelDB[4])
+            else:
+                lg_labels.append(labelDB[5])
                 
-    def set_fig_size(self, fwidth, fheight): #=================================
-        
-        self.fwidth = fwidth   # Figure width in inches   
-        self.fheight = fheight # Figure height in inches
-        
-        self.set_size_inches(fwidth, fheight)
+            #---- Water Levels (data points) ----
+
+            if self.trend_line == 1:
+                lin3, = self.ax2.plot([], [], '.', ms=10, alpha=0.5,                                  
+                                      color=self.colorsDB.wlvldots)  
+                lg_handles.append(lin3)
+                lg_labels.append(labelDB[6])
+                
+            #---- Manual Measures ---- 
+            
+            if len(self.WaterLvlObj.WLmes) > 1:             
+                lg_handles.append(self.h_WLmes)
+                lg_labels.append(labelDB[7])
+                
+            #---------------------------------------------------- Position ----
+            
+            
+            #-------------------------------------------------------- Draw ----
+#            LOCS = ['right', 'center left', 'upper right', 'lower right',
+#                    'center', 'lower left', 'center right', 'upper left',
+#                    'upper center', 'lower center']
+            # ncol = int(np.ceil(len(lg_handles)/2.))
+            self.ax2.legend(lg_handles, lg_labels, bbox_to_anchor=[1., 1.],
+                            loc='lower right', ncol=3,
+                            numpoints=1, fontsize=10, frameon=False)
+            self.ax2.get_legend().set_zorder(100)
+        else:
+            if self.ax2.get_legend():
+                self.ax2.get_legend().set_visible(False)
+    
+    def update_fig_size(self): #================================== Fig. Size ==
+       
+        self.set_size_inches(self.fwidth, self.fheight)
         self.set_margins()
         self.draw_ylabels()
         self.set_time_scale()
         
         self.canvas.draw()
         
-    def set_margins(self): #===================================================
+    def set_margins(self): #======================================== Margins ==
         
         #---- MARGINS (Inches / Fig. Dimension) ----
         
         left_margin  = 0.85 / self.fwidth
         right_margin = 0.85 / self.fwidth
-        top_margin = 0.35 / self.fheight
+        top_margin = 0.25 / self.fheight
         bottom_margin = 0.75 / self.fheight
         
-        if self.title_state == 1:
-            top_margin = 0.75 / self.fheight
+        if self.isGraphTitle == 1 or self.isLegend == 1:
+            top_margin += 0.45 / self.fheight
             
         if self.meteoOn == False:
             right_margin = 0.35 / self.fwidth
@@ -485,8 +593,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             h = 1 - (bottom_margin + top_margin) / 2.
         
         for axe in self.axes:
-            axe.set_position([x0, y0, w, h])
-    
+            axe.set_position([x0, y0, w, h])    
 
         
     def draw_ylabels(self): #=================================================
@@ -508,9 +615,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #----------------------------------- YLABELS LEFT (Temp. & Waterlvl) --
         
         if self.WLdatum == 0:       
-            lab_ax2 = labelDB.mbgs % self.WaterLvlObj.name_well
+            lab_ax2 = labelDB.mbgs# % self.WaterLvlObj.name_well
         elif self.WLdatum == 1:
-            lab_ax2 = labelDB.masl % self.WaterLvlObj.name_well
+            lab_ax2 = labelDB.masl# % self.WaterLvlObj.name_well
          
         #---- Water Level ----
          
@@ -578,11 +685,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         self.ax3.yaxis.set_label_coords(ylabel3_xpos, ylabel3_ypos)
         
-        #------------------------------------------- WEATHER STATION LABEL ----
+        #---------------------------------------------------- Figure Title ----
         
-        text_top_margin = labelDB.station_meteo % (self.name_meteo, self.dist)                                                   
-        self.text1.set_text(text_top_margin)
-        
+        self.draw_figure_title()
         
     def set_waterLvlObj(self, WaterLvlObj): #==================================
         self.WaterLvlObj = WaterLvlObj
@@ -610,13 +715,17 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             reader[0] = self.header[0]
             
             if nPARA < 8:
-                reader[1:, 7] = 'Add A Title To The Figure Here'
+                reader[1:, 7] = 1 # show legend
             if nPARA < 9:
                 reader[1:, 8] = 20
             if nPARA < 10:
                 reader[1:, 9] = 0
             if nPARA < 11:
-                reader[1:, 10] = 0
+                reader[1:, 10] = 0 # show water level trend line
+            if nPARA < 12:
+                reader[1:, 11] = 11. # figure width
+            if nPARA < 13:
+                reader[1:, 12] = 8.5 # figure height
             
             with open(filename, 'w') as f:
                 writer = csv.writer(f, delimiter='\t')
@@ -647,7 +756,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
-            
+        
+        #---- Find row for Well ----
+        
         for row in range(len(reader)):
             if reader[row][0].decode('utf-8') == name_well:
                 break
@@ -655,6 +766,8 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 row +=1
        
         reader = reader[row]
+        
+        #---- Fetch Info ----
         
         self.fmeteo = reader[1].decode('utf-8')
         self.finfo = self.fmeteo[:-3] + 'log'
@@ -665,14 +778,26 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.TIMEmin = float(reader[4])
         self.TIMEmax = float(reader[5])
         
-        self.title_state = float(reader[6])
-        if self.title_state != 0:
-            self.title_state = 1
+        try: self.isGraphTitle = min(abs(int(reader[6])), 1)
+        except: self.isGraphTitle = 1
         
-        self.title_text = reader[7].decode('utf-8')
-        self.RAINscale = float(reader[8])
-        self.WLdatum = int(reader[9])
-        self.trend_line = int(reader[10])
+        try: self.isLegend = min(abs(int(reader[7])), 1)
+        except: self.isLegend = 1
+        
+        try: self.RAINscale = abs(int(reader[8]))
+        except: self.RAINscale = 20
+
+        try: self.WLdatum = min(abs(int(reader[9])), 1)
+        except: self.WLdatum = 1
+        
+        try: self.trend_line = min(abs(int(reader[10])), 1)
+        except: self.trend_line = 1
+        
+        try: self.fwidth = abs(float(reader[11]))
+        except: self.fwidth = 11.
+        
+        try: self.fheight = abs(float(reader[12]))
+        except: self.fheight = 8.5
         
     def save_layout(self, name_well, filename): #==============================
         
@@ -689,12 +814,12 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         name_well = name_well.encode('utf-8')
         fmeteo = self.fmeteo.encode('utf-8')
-        graph_title = self.title_text.encode('utf-8')
         
         new = [name_well, fmeteo, self.WLmin, self.WLscale, 
-               self.TIMEmin, self.TIMEmax,self.title_state, graph_title,
-               self.RAINscale, self.WLdatum, self.trend_line]
-        
+               self.TIMEmin, self.TIMEmax,self.isGraphTitle, self.isLegend,
+               self.RAINscale, self.WLdatum, self.trend_line, self.fwidth,
+               self.fheight]
+       
         for row in range(len(reader)):
             if reader[row][0] == name_well:
                 del reader[row]
@@ -929,11 +1054,11 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.RAIN_bar.remove()
         
         self.PTOT_bar = self.ax3.fill_between(TIME2X, 0., Ptot2X, 
-                                              color=db.styleUI().snow, 
+                                              color=self.colorsDB.snow, 
                                               edgecolor='none')
                                             
         self.RAIN_bar = self.ax3.fill_between(TIME2X, 0., Rain2X, 
-                                              color=db.styleUI().rain,
+                                              color=self.colorsDB.rain,
                                               edgecolor='none')
                                             
         self.baseline.set_data([self.TIMEmin, self.TIMEmax], [0, 0])
@@ -1019,8 +1144,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         # adjust "climatological station" label and 
         # title horizontal position
         
-        self.text1.set_x(self.TIMEmax)
-        self.figTitle.set_x((self.TIMEmin + self.TIMEmax) / 2.)
+        self.text1.set_x(self.TIMEmin)
+        self.figTitle.set_x(self.TIMEmin)
+#        self.figTitle.set_x((self.TIMEmin + self.TIMEmax) / 2.)
         
         #------------------------------------------------------- axis limits --
            
@@ -1046,12 +1172,15 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                             
     def draw_figure_title(self): #=============================================
         
-        if self.title_state == 1:
-
-            self.figTitle.set_text(self.title_text)
-            
+        labelDB = LabelDatabase(self.language)
+        
+        if self.isGraphTitle == 1:
+            self.text1.set_text(labelDB.station_meteo % (self.name_meteo,
+                                                         self.dist))
+        
+            self.figTitle.set_text(labelDB.title % self.WaterLvlObj.name_well)
         else:
-
+            self.text1.set_text('')
             self.figTitle.set_text('')
                 
                     
@@ -1418,8 +1547,9 @@ if __name__ == '__main__':
     hydrograph.WLdatum = 1 # 0 -> mbgs ; 1 -> masl
     hydrograph.trend_line = True
     hydrograph.gridLines = 2 # Gridlines Style    
-    hydrograph.title_state = 0 # 1 -> title ; 0 -> no title
-    hydrograph.title_text = "Title of the Graph"
+    hydrograph.isGraphTitle = 1 # 1 -> title ; 0 -> no title
+    hydrograph.isLegend = 1
+    
     hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
     hydrograph.datemode = 'month' # 'month' or 'year'
     hydrograph.bwidth_indx = 1 # Meteo Bin Width

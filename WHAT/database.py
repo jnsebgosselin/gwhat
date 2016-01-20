@@ -30,8 +30,8 @@ import platform
 from PySide.QtGui import QIcon, QFont, QFontDatabase
 from PySide.QtCore import QSize
 
-software_version = 'WHAT Beta 4.1.9'
-last_modification = '14/01/2016'
+software_version = 'WHAT Beta 4.1.10'
+last_modification = '20/01/2016'
 
 class Icons():
     
@@ -297,8 +297,9 @@ class FileHeaders():
         
         self.graph_layout = [['Name Well', 'Station Meteo', 'Min. Waterlvl',
                               'Waterlvl Scale', 'Date Start', 'Date End',
-                              'Fig. Title State', 'Fig. Title Text',
-                              'Precip. Scale', 'Waterlvl Ref.', 'Trend Line']]
+                              'Show Graph Title', 'Show Legend',
+                              'Precip. Scale', 'Waterlvl Ref.', 'Trend Line',
+                              'Fig. Width', 'Fig. Height']]
         
         #---- weather_stations.lst ----
                  

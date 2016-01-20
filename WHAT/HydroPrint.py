@@ -100,25 +100,6 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         #----------------------------------------------------------- Toolbar --
        
-        #-- Graph Title Section --
-        
-        graph_title_widget = QtGui.QWidget()
-        
-        self.graph_title = QtGui.QLineEdit()
-        self.graph_title.setMaxLength(65)
-        self.graph_title.setEnabled(False)
-        self.graph_title.setText('Add A Title To The Figure Here')
-        self.graph_title.setToolTip(ttipDB.addTitle)
-        self.graph_status = QtGui.QCheckBox() 
-        
-        graph_title_layout = QtGui.QGridLayout()
-        graph_title_layout.addWidget(QtGui.QLabel('         '), 0, 0)
-        graph_title_layout.addWidget(self.graph_title, 0, 1)
-        graph_title_layout.addWidget(self.graph_status, 0, 2)
-        graph_title_layout.setColumnStretch(1, 100)
-        
-        graph_title_widget.setLayout(graph_title_layout)        
-        
         #-- Toolbar Buttons --
         
         btn_loadConfig = QtGui.QToolButton()
@@ -192,8 +173,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         btn_list = [self.btn_work_waterlvl, VSep(), btn_save, btn_draw,
                     btn_loadConfig, btn_saveConfig, VSep(), 
                     btn_bestfit_waterlvl, btn_bestfit_time, btn_closest_meteo,
-                    VSep(), btn_weather_normals, btn_page_setup,
-                    graph_title_widget]
+                    VSep(), btn_weather_normals, btn_page_setup]
         
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -204,6 +184,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                        
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
+        subgrid_toolbar.setColumnStretch(col + 1, 100)
         
         toolbar_widget.setLayout(subgrid_toolbar)
         
@@ -522,8 +503,6 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.waterlvl_scale.valueChanged.connect(self.layout_changed)
         self.Ptot_scale.valueChanged.connect(self.layout_changed)
         self.date_start_widget.dateChanged.connect(self.layout_changed)
-        self.graph_status.stateChanged.connect(self.layout_changed)
-        self.graph_title.editingFinished.connect(self.layout_changed)        
         self.date_start_widget.dateChanged.connect(self.layout_changed)
         self.date_end_widget.dateChanged.connect(self.layout_changed)        
         self.qweather_bin.currentIndexChanged.connect(self.layout_changed)
@@ -837,6 +816,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             return
         
         #---- dates ----
+        
         year = self.date_start_widget.date().year()
         month = self.date_start_widget.date().month()
         day = 1
@@ -855,24 +835,30 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.hydrograph.WLmin = self.waterlvl_max.value()        
         self.hydrograph.RAINscale = self.Ptot_scale.value() 
         
-        #---- graph title ----
-        
-        if self.graph_status.isChecked():
-            self.hydrograph.title_state = 1
-        else:
-            self.hydrograph.title_state = 0            
-        self.hydrograph.title_text = self.graph_title.text()
-        
         #---- label language ----
         
         self.hydrograph.language = self.language_box.currentText()
         
+        #------------------------------------------------------ Page Setup ----
+        
+        #---- Water Level Trend ----
+        
+        self.hydrograph.trend_line = int(self.page_setup_win.isTrendLine)
+                    
+        #---- legend ----
+        
+        self.hydrograph.isLegend = int(self.page_setup_win.isLegend)            
+                                      
+        #---- graph title ----
+        
+        self.hydrograph.isGraphTitle = int(self.page_setup_win.isGraphTitle)            
+                
         #---- figure size ----
         
         self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
              
             
-    def load_graph_layout(self): #============================================
+    def load_graph_layout(self): #======================== Load Graoh Layout ==
     
 
         self.check_files()
@@ -914,7 +900,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         #----------------------------------------------------- Update UI -----
         
         self.UpdateUI = False
-                                         
+        
+        #---- Scales ----
+        
         date = self.hydrograph.TIMEmin
         date = xldate_as_tuple(date, 0)
         self.date_start_widget.setDate(QDate(date[0], date[1], date[2]))
@@ -928,14 +916,32 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.datum_widget.setCurrentIndex (self.hydrograph.WLdatum)
         
         self.Ptot_scale.setValue(self.hydrograph.RAINscale)
-         
-        if self.hydrograph.title_state == 1:
-            self.graph_status.setCheckState(QtCore.Qt.Checked)
-        else:                    
-            self.graph_status.setCheckState(QtCore.Qt.Unchecked)
-            
-        self.graph_title.setText(self.hydrograph.title_text)
         
+        #---- Page Setup ----
+        
+        self.page_setup_win.pageSize = (self.hydrograph.fwidth, 
+                                        self.hydrograph.fheight)
+        self.page_setup_win.isLegend = self.hydrograph.isLegend
+        self.page_setup_win.isGraphTitle = self.hydrograph.isGraphTitle
+        self.page_setup_win.isTrendLine = self.hydrograph.trend_line
+        
+        if self.hydrograph.isGraphTitle == 1:
+            self.page_setup_win.title_on.toggle()
+        else:                    
+            self.page_setup_win.title_off.toggle()
+            
+        if self.hydrograph.isLegend == 1:
+            self.page_setup_win.legend_on.toggle()
+        else:                    
+            self.page_setup_win.legend_off.toggle()
+            
+        if self.hydrograph.trend_line == 1:
+            self.page_setup_win.trend_on.toggle()
+        else:                    
+            self.page_setup_win.trend_off.toggle()
+            
+        self.page_setup_win.fwidth.setValue(self.hydrograph.fwidth)
+                    
         #----- Check if Weather Data File exists -----
         
         if os.path.exists(self.hydrograph.fmeteo):
@@ -1109,36 +1115,37 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         
     def layout_changed(self): #=========================== layout_changed ====
-    
+        """
+        When an element of the graph layout is changed in the UI, 
+        """
+        
         sender = self.sender()
                 
         if self.UpdateUI == False:
             return
-
-        if not self.hydrograph.isHydrographExists:
-            return
         
         if sender == self.language_box:
             self.hydrograph.language = self.language_box.currentText()
-
-            self.hydrograph.draw_ylabels()
-            self.hydrograph.draw_xlabels()
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.draw_ylabels()
+                self.hydrograph.draw_xlabels()
+                self.hydrograph.set_legend()
                 
-        elif sender in [self.waterlvl_max, self.waterlvl_scale]:
-            
+        elif sender in [self.waterlvl_max, self.waterlvl_scale]:            
             self.hydrograph.WLmin = self.waterlvl_max.value()
             self.hydrograph.WLscale = self.waterlvl_scale.value()            
-
-            self.hydrograph.update_waterlvl_scale()
-            self.hydrograph.draw_ylabels()
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.update_waterlvl_scale()
+                self.hydrograph.draw_ylabels()
                 
         elif sender == self.Ptot_scale:
             self.hydrograph.RAINscale = self.Ptot_scale.value()
-
-            self.hydrograph.update_precip_scale()
-            self.hydrograph.draw_ylabels()
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.update_precip_scale()
+                self.hydrograph.draw_ylabels()
                 
         elif sender == self.datum_widget:
+            
             self.hydrograph.WLdatum = self.datum_widget.currentIndex()
             
             #---- compute new WLmin ----
@@ -1148,15 +1155,17 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             # int multiple of *WLscale*.
             
             yoffset = int(self.waterlvl_data.ALT / self.hydrograph.WLscale)
-            yoffset *= self.hydrograph.WLscale            
+            yoffset *= self.hydrograph.WLscale  
+            
             self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)                                     
+            self.waterlvl_max.setValue(yoffset - self.hydrograph.WLmin)
             
             #---- Update graph and draw ----
             
-            self.waterlvl_max.setValue(self.hydrograph.WLmin)
-            self.hydrograph.update_waterlvl_scale()            
-            self.hydrograph.draw_waterlvl()
-            self.hydrograph.draw_ylabels()
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.update_waterlvl_scale()            
+                self.hydrograph.draw_waterlvl()
+                self.hydrograph.draw_ylabels()
                 
         elif sender in [self.date_start_widget, self.date_end_widget]:            
             year = self.date_start_widget.date().year()
@@ -1171,63 +1180,54 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             date = xldate_from_date_tuple((year, month, day),0)
             self.hydrograph.TIMEmax = date
             
-            self.hydrograph.set_time_scale()
-            self.hydrograph.draw_weather()
-            self.hydrograph.draw_figure_title()
-        
-        elif sender == self.graph_title:
-                
-            #---- Update Instance Variables ----
-            
-            self.hydrograph.title_text = self.graph_title.text()
-                
-            #---- Update Graph if Exists ----
-                
-            self.hydrograph.draw_figure_title()
-        
-        elif sender == self.graph_status:        
-            self.graph_title.setEnabled(self.graph_status.isChecked())
-           
-            if self.graph_status.isChecked():
-                self.hydrograph.title_state = 1
-                self.hydrograph.title_text = self.graph_title.text()
-            else:
-                self.hydrograph.title_state = 0
-           
-            self.hydrograph.set_margins()
-            self.hydrograph.draw_figure_title()
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.set_time_scale()
+                self.hydrograph.draw_weather()
+                self.hydrograph.draw_figure_title()
                 
         elif sender == self.page_setup_win:
-            fwidth = self.page_setup_win.pageSize[0]
-            self.hydrograph.set_fig_size(fwidth, 8.5)
+            self.hydrograph.trend_line = int(self.page_setup_win.isTrendLine)
+            self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
+            self.hydrograph.isLegend = int(self.page_setup_win.isLegend)
+            self.hydrograph.isGraphTitle = \
+                int(self.page_setup_win.isGraphTitle)
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.update_fig_size() 
+                # Implicitly call : set_margins()
+                #                   draw_ylabels()
+                #                   set_time_scale()
+                #                   draw_figure_title
+            
+                self.hydrograph.draw_waterlvl() 
+                self.hydrograph.set_legend()
         
         #------------------------------------------- Weather Data resampling --
         
         elif sender == self.qweather_bin: 
             self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex ()
-            self.hydrograph.resample_bin()
-            self.hydrograph.draw_weather()
-            self.hydrograph.draw_ylabels()
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.resample_bin()
+                self.hydrograph.draw_weather()
+                self.hydrograph.draw_ylabels()
         
         #------------------------------------------------- Scale Data Labels --
         
         elif sender == self.time_scale_label: 
+            self.hydrograph.datemode = self.time_scale_label.currentText()
             
             year = self.date_start_widget.date().year()
             month = self.date_start_widget.date().month()
-            day = 1
-            date = xldate_from_date_tuple((year, month, day), 0)
+            date = xldate_from_date_tuple((year, month, 1), 0)
             self.hydrograph.TIMEmin = date
             
             year = self.date_end_widget.date().year()
             month = self.date_end_widget.date().month()
-            day = 1
-            date = xldate_from_date_tuple((year, month, day),0)
+            date = xldate_from_date_tuple((year, month, 1),0)
             self.hydrograph.TIMEmax = date
-            
-            self.hydrograph.datemode = self.time_scale_label.currentText()
-            self.hydrograph.set_time_scale()
-            self.hydrograph.draw_weather()
+        
+            if self.hydrograph.isHydrographExists:            
+                self.hydrograph.set_time_scale()
+                self.hydrograph.draw_weather()
             
         else:
             print('No action for this widget yet.')
@@ -1247,11 +1247,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 #        sender.blockSignals(False) 
         
         
-#=============================================================================
+#==============================================================================
         
 class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
 
-#=============================================================================
+#==============================================================================
             
     newPageSetupSent = QtCore.Signal(bool)
     
@@ -1264,6 +1264,9 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         #---- Default Values ----
         
         self.pageSize = (11., 8.5)
+        self.isLegend = True
+        self.isGraphTitle = True
+        self.isTrendLine = False
         
         #---- Toolbar ----
         
@@ -1304,24 +1307,79 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         
         figSize_widget.setLayout(figSize_layout)
         
+        #---- Legend ----
+        
+        legend_widget =  QtGui.QWidget()
+        
+        self.legend_on = QtGui.QRadioButton('On')
+        self.legend_on.toggle()
+        self.legend_off = QtGui.QRadioButton('Off')        
+        
+        legend_layout = QtGui.QGridLayout()
+        legend_layout.addWidget(QtGui.QLabel('Legend:'), 0, 0)
+        legend_layout.addWidget(self.legend_on, 0, 1)
+        legend_layout.addWidget(self.legend_off, 0, 2)
+        legend_layout.setColumnStretch(3, 100)
+        
+        legend_widget.setLayout(legend_layout)
+        
+        #----- Graph title -----
+        
+        title_widget =  QtGui.QWidget()
+        
+        self.title_on = QtGui.QRadioButton('On')
+        self.title_on.toggle()
+        self.title_off = QtGui.QRadioButton('Off')        
+        
+        title_layout = QtGui.QGridLayout()
+        title_layout.addWidget(QtGui.QLabel('Graph Title:'), 0, 0)
+        title_layout.addWidget(self.title_on, 0, 1)
+        title_layout.addWidget(self.title_off, 0, 2)
+        title_layout.setColumnStretch(3, 100)
+        
+        title_widget.setLayout(title_layout)
+        
+        #---- Trend Line ----
+        
+        trend_widget =  QtGui.QWidget()
+        
+        self.trend_on = QtGui.QRadioButton('On')        
+        self.trend_off = QtGui.QRadioButton('Off')  
+        self.trend_off.toggle()
+        
+        trend_layout = QtGui.QGridLayout()
+        trend_layout.addWidget(QtGui.QLabel('Water Level Trend:'), 0, 0)
+        trend_layout.addWidget(self.trend_on, 0, 1)
+        trend_layout.addWidget(self.trend_off, 0, 2)
+        trend_layout.setColumnStretch(3, 100)
+        
+        trend_widget.setLayout(trend_layout)
+        
         #---- Main Layout ----
         
         main_layout = QtGui.QGridLayout()
         main_layout.addWidget(figSize_widget, 0, 0)
-        main_layout.addWidget(toolbar_widget, 1, 0)
-        
+        main_layout.addWidget(legend_widget, 2, 0)
+        main_layout.addWidget(title_widget, 3, 0)
+        main_layout.addWidget(trend_widget, 4, 0)        
+        main_layout.addWidget(toolbar_widget, 5, 0)
+                
         self.setLayout(main_layout)
         
-    def btn_OK_isClicked(self):
+    def btn_OK_isClicked(self): #==============================================
         self.btn_apply_isClicked()
         self.close()
         
-    def btn_apply_isClicked(self): #==================================
+    def btn_apply_isClicked(self): #===========================================
         
-        self.pageSize = (self.fwidth.value(), 8.5)                
+        self.pageSize = (self.fwidth.value(), 8.5)
+        self.isLegend = self.legend_on.isChecked()
+        self.isGraphTitle = self.title_on.isChecked()
+        self.isTrendLine = self.trend_on.isChecked()
+        
         self.newPageSetupSent.emit(True)
-    
-    def closeEvent(self, event): #====================================
+            
+    def closeEvent(self, event): #=============================================
         super(PageSetupWin, self).closeEvent(event)
 
         #---- Refresh UI ----
@@ -1332,7 +1390,22 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         
         self.fwidth.setValue(self.pageSize[0])
         
-    def show(self): #=================================================
+        if self.isLegend == True:
+            self.legend_on.toggle()
+        else:
+            self.legend_off.toggle()
+            
+        if self.isGraphTitle == True:
+            self.title_on.toggle()
+        else:
+            self.title_off.toggle()
+            
+        if self.isTrendLine == True:
+            self.trend_on.toggle()
+        else:
+            self.trend_off.toggle()
+        
+    def show(self): #==========================================================
         super(PageSetupWin, self).show()
         self.activateWindow()
         self.raise_()
