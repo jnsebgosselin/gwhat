@@ -48,47 +48,63 @@ from xlrd import xldate_as_tuple
 import database as db
 from waterlvldata import WaterlvlData
 
+#==============================================================================
+
 class Colors():
+
+#==============================================================================
+  
     def __init__(self):   
         
-        self.temp = [1, 0.65, 0.65]
-        self.rain = [0, 0, 1]
-        self.snow = [0.65,0.65,0.65]
-        self.wlvlline = [0, 0, 0.75]
-        self.wlvldots = [0.8, 0.8, 1]
-        self.wlvlmeas = [1, 0.25, 0.25]
+        self.rgb = [[1, 0.65, 0.65],           # Air Temperature
+                    [0, 135/255., 193/255.],   # Rain
+                    [0.65,0.65,0.65],          # Snow
+                    [0, 73/255., 104/255.],    # Water Level (solid line)
+                    [0.8, 0.8, 1],             # Water Level (data dots)
+                    [1, 0.25, 0.25]]           # Water Level (measures)
+                    
+
+        self.labels = ['Air Temperature', 'Rain', 'Snow',
+                       'Water Level (solid line)',
+                       'Water Level (data dots)',
+                       'Water Level (man. obs.)']
         
     def load_colors_db(self): #================================= Load Colors ==
-        print('-------------- Colors Database --------------')
+
         fname = 'Colors.db'
         if not os.path.exists(fname):
-            print('No color database file exists, creating one...')
-            fcontent = [['air temp. :',  1,    0.65, 0.65],
-                        ['rain :',        0,    0,    1],
-                        ['snow :',        0.65, 0.65, 0.65],
-                        ['wlvl (line) :', 0,    0,    0.75],
-                        ['wlvl (dots) :', 0.9, 0.9, 1],
-                        ['wlvl (meas) :', 1,    0.25, 0.25]]
-
-            with open(fname, 'w') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(fcontent)
+            print('No color database file exists, creating a new one...')
+            self.save_colors_db()
                 
         else:
             print('Loading colors database...')
             with open(fname, 'r') as f:
                 reader = list(csv.reader(f, delimiter='\t'))
             
-            self.temp = [float(i) for i in reader[0][1:]]
-            self.rain = [float(i) for i in reader[1][1:]]
-            self.snow = [float(i) for i in reader[2][1:]]
-            self.wlvlline = [float(i) for i in reader[3][1:]]
-            self.wlvldots = [float(i) for i in reader[4][1:]]
-            self.wlvlmeas = [float(i) for i in reader[5][1:]]            
+            for row in range(len(reader)):
+                self.rgb[row] = [float(i) for i in reader[row][1:]]    
+
         print('Colors database loaded sucessfully.')
-        print('---------------------------------------------')
+        
+    def save_colors_db(self): #================================= Save Colors ==        
+        
+        fname = 'Colors.db'
+        fcontent = []
+        for i in range(len(self.labels)):
+            fcontent.append([self.labels[i]])
+            fcontent[-1].extend(self.rgb[i])
+
+        with open(fname, 'w') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(fcontent)
+            
+        print('Color database saved successfully')
+
+#==============================================================================
                          
 class LabelDatabase():
+
+#==============================================================================
     
     def __init__(self, language): #--------------------------------- English --
         
@@ -372,12 +388,12 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #---- Continuous Line Datalogger ----
         
         self.l1_ax2, = self.ax2.plot([], [], '-', zorder = 10, linewidth=1,
-                                     color=self.colorsDB.wlvlline)
+                                     color=self.colorsDB.rgb[3])
         
         #---- Data Point Datalogger ----
         
         self.l2_ax2, = self.ax2.plot([], [], '.',                                     
-                                     color=self.colorsDB.wlvldots,
+                                     color=self.colorsDB.rgb[4],
                                      markersize=5)
                                      
         #---- Manual Mesures ----
@@ -386,7 +402,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                      label='Manual measures')
                                             
         plt.setp(self.h_WLmes, markerfacecolor='none', markersize=5,
-                 markeredgecolor=self.colorsDB.wlvlmeas, markeredgewidth=1.5)
+                 markeredgecolor=self.colorsDB.rgb[5], markeredgewidth=1.5)
         
         #---- Predicted Recession Curves ----
         
@@ -487,13 +503,16 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             
             labelDB = LabelDatabase(self.language).legend
             
-            #---- Precipitation 
+            #---- Precipitation ----
+            
+            # Snow
                        
-            rec1 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.snow ,   # Snow
-                                 ec=self.colorsDB.snow)
-                            
-            rec2 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rain ,   # Rain
-                                 ec=self.colorsDB.rain)
+            rec1 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[2] , 
+                                 ec=self.colorsDB.rgb[2])
+            # Rain  
+                                 
+            rec2 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[1] ,
+                                 ec=self.colorsDB.rgb[1])
             
             lg_handles = [rec1, rec2]            
             lg_labels = [labelDB[0], labelDB[1]]
@@ -501,7 +520,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             
             #---- Air Temperature ----  
             
-            rec3 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.temp,
+            rec3 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[0],
                                  ec='black')
             
             lg_handles.append(rec3)
@@ -520,7 +539,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             #---- Continuous Line Datalogger ----
             
             lin2, = plt.plot([], [], '-', zorder = 10, linewidth=1,
-                             color=self.colorsDB.wlvlline, ms=15)
+                             color=self.colorsDB.rgb[3], ms=15)
             lg_handles.append(lin2)
             if self.trend_line == 1:
                 lg_labels.append(labelDB[4])
@@ -531,7 +550,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
             if self.trend_line == 1:
                 lin3, = self.ax2.plot([], [], '.', ms=10, alpha=0.5,                                  
-                                      color=self.colorsDB.wlvldots)  
+                                      color=self.colorsDB.rgb[4])  
                 lg_handles.append(lin3)
                 lg_labels.append(labelDB[6])
                 
@@ -556,6 +575,19 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         else:
             if self.ax2.get_legend():
                 self.ax2.get_legend().set_visible(False)
+                
+    def update_colors(self): #================================ Update Colors ==
+        self.colorsDB.load_colors_db()
+        
+        if not self.isHydrographExists:
+            return
+
+        plt.setp(self.l1_ax2, color=self.colorsDB.rgb[3])
+        plt.setp(self.l2_ax2, color=self.colorsDB.rgb[4])
+        plt.setp(self.h_WLmes, markeredgecolor=self.colorsDB.rgb[5])
+        self.draw_weather()
+        
+        self.set_legend()
     
     def update_fig_size(self): #================================== Fig. Size ==
        
@@ -1054,11 +1086,11 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.RAIN_bar.remove()
         
         self.PTOT_bar = self.ax3.fill_between(TIME2X, 0., Ptot2X, 
-                                              color=self.colorsDB.snow, 
+                                              color=self.colorsDB.rgb[2], 
                                               edgecolor='none')
                                             
         self.RAIN_bar = self.ax3.fill_between(TIME2X, 0., Rain2X, 
-                                              color=self.colorsDB.rain,
+                                              color=self.colorsDB.rgb[1],
                                               edgecolor='none')
                                             
         self.baseline.set_data([self.TIMEmin, self.TIMEmax], [0, 0])
@@ -1073,11 +1105,10 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         TIME2X[1:2*len(time):2] = time + n
         Tmax2X[0:2*len(time)-1:2] = Tmax
         Tmax2X[1:2*len(time):2] = Tmax
-
-        color = [255./255, 204./255, 204./255]        
         
         self.l1_ax4.remove()
-        self.l1_ax4 = self.ax4.fill_between(TIME2X, 0., Tmax2X, color=color,
+        self.l1_ax4 = self.ax4.fill_between(TIME2X, 0., Tmax2X,
+                                            color=self.colorsDB.rgb[0],
                                             edgecolor='none')
         
         self.l2_ax4.set_xdata(TIME2X)

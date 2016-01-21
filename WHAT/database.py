@@ -92,6 +92,7 @@ class Icons():
         self.meteo = QIcon('Icons/meteo.png')
         self.work = QIcon('Icons/work.png')
         self.toggleMode = QIcon('Icons/toggleMode2.png')
+        self.color_picker = QIcon('Icons/color_picker.png')
         
         #----- MRC TOOLBAR -----
         

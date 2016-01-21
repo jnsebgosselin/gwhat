@@ -97,6 +97,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                
         self.page_setup_win = PageSetupWin(self)        
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
+        
+        #---------------------------------------------- Color Palette Widget --
+               
+        self.color_palette_win = ColorsSetupWin(self)        
+        self.color_palette_win.newColorSetupSent.connect(self.update_colors)
 
         #----------------------------------------------------------- Toolbar --
        
@@ -163,6 +168,13 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         btn_page_setup.setIconSize(styleDB.iconSize)
         btn_page_setup.clicked.connect(self.page_setup_win.show)
         
+        btn_color_pick = QtGui.QToolButton()
+        btn_color_pick.setAutoRaise(True)
+        btn_color_pick.setIcon(iconDB.color_picker)
+#        btn_color_pick.setToolTip(ttipDB.btn_page_setup)
+        btn_color_pick.setIconSize(styleDB.iconSize)
+        btn_color_pick.clicked.connect(self.color_palette_win.show)
+        
         class VSep(QtGui.QFrame): # vertical separators for the toolbar
             def __init__(self, parent=None):
                 super(VSep, self).__init__(parent)
@@ -173,7 +185,8 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         btn_list = [self.btn_work_waterlvl, VSep(), btn_save, btn_draw,
                     btn_loadConfig, btn_saveConfig, VSep(), 
                     btn_bestfit_waterlvl, btn_bestfit_time, btn_closest_meteo,
-                    VSep(), btn_weather_normals, btn_page_setup]
+                    VSep(), btn_weather_normals, btn_page_setup,
+                    btn_color_pick]
         
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -581,6 +594,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         self.tabscales.hide()
         self.qAxeLabelsLanguage.hide()
+        
+    def update_colors(self): #================================ Update Colors ==
+        
+        self.hydrograph.update_colors()
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
                     
     def show_weather_averages(self): #================ show_weather_averages ==
         
@@ -863,7 +881,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.check_files()
         
-        #----------------------------------- Check if Waterlvl Data Exist ----
+        #------------------------------------ Check if Waterlvl Data Exist ----
         
         if not self.fwaterlvl:
             
@@ -876,7 +894,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
             return
         
-        #----------------------------------------- Check if Layout Exists ----
+        #------------------------------------------ Check if Layout Exists ----
                 
         filename = self.workdir + '/graph_layout.lst'
         name_well = self.waterlvl_data.name_well
@@ -893,11 +911,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                                              
             return
         
-        #---------------------------------------------------- Load Layout ----
+        #----------------------------------------------------- Load Layout ----
                     
         self.hydrograph.load_layout(name_well, filename)
         
-        #----------------------------------------------------- Update UI -----
+        #------------------------------------------------------ Update UI -----
         
         self.UpdateUI = False
         
@@ -969,7 +987,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
         self.UpdateUI = True    
     
-    def save_config_isClicked(self): #========================================
+    def save_config_isClicked(self): #=========================================
         
         if not self.fwaterlvl:
             
@@ -1245,6 +1263,158 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         if type(sender) in [QtGui.QDoubleSpinBox, QtGui.QSpinBox]:
             sender.setReadOnly(False)
 #        sender.blockSignals(False) 
+
+#==============================================================================
+        
+class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
+
+#==============================================================================      
+    
+    newColorSetupSent = QtCore.Signal(bool)
+    
+    def __init__(self, parent=None):
+        super(ColorsSetupWin, self).__init__(parent)
+        
+        self.setWindowTitle('Colors Palette Setup')
+        self.setWindowFlags(QtCore.Qt.Window)
+        
+        self.initUI()
+        
+    def initUI(self):
+                    
+        #---- Toolbar ----
+        
+        toolbar_widget = QtGui.QWidget()
+        
+        btn_apply = QtGui.QPushButton('Apply')
+        btn_apply.clicked.connect(self.btn_apply_isClicked)
+        btn_cancel = QtGui.QPushButton('Cancel')
+        btn_cancel.clicked.connect(self.close)
+        btn_OK = QtGui.QPushButton('OK')
+        btn_OK.clicked.connect(self.btn_OK_isClicked)
+        btn_reset = QtGui.QPushButton('Reset Defaults')
+        btn_reset.clicked.connect(self.reset_defaults)
+        
+        toolbar_layout = QtGui.QGridLayout()
+        toolbar_layout.addWidget(btn_reset, 1, 0, 1, 3)
+        toolbar_layout.addWidget(btn_OK, 2, 0)
+        toolbar_layout.addWidget(btn_cancel, 2, 1)
+        toolbar_layout.addWidget(btn_apply, 2, 2)
+        
+        toolbar_layout.setColumnStretch(3, 100)
+        toolbar_layout.setRowStretch(0, 100)
+        
+        toolbar_widget.setLayout(toolbar_layout)
+        
+        #---- Color Grid ----
+        
+        colorsDB = hydroprint.Colors()
+        colorsDB.load_colors_db()
+        
+        colorGrid_widget =  QtGui.QWidget()
+        
+        self.colorGrid_layout = QtGui.QGridLayout()
+        for i in range(len(colorsDB.rgb)):
+            self.colorGrid_layout.addWidget(
+                QtGui.QLabel('%s :' % colorsDB.labels[i]), i, 0)
+                
+            btn = QtGui.QToolButton()
+            btn.setAutoRaise(True)
+            btn.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+            btn.clicked.connect(self.pick_color)
+            btn.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
+                              (int(colorsDB.rgb[i][0]*255),
+                               int(colorsDB.rgb[i][1]*255),
+                               int(colorsDB.rgb[i][2]*255)))
+            self.colorGrid_layout.addWidget(btn, i, 3)
+        self.colorGrid_layout.setColumnStretch(2, 100)
+        
+        colorGrid_widget.setLayout(self.colorGrid_layout)
+            
+        #---- Main Layout ----
+        
+        main_layout = QtGui.QGridLayout()
+        main_layout.addWidget(colorGrid_widget, 0, 0)
+        main_layout.addWidget(toolbar_widget, 1, 0)                
+        self.setLayout(main_layout)
+        
+    def reset_defaults(self): #============================= Reset Deafaults ==
+       
+        colorsDB = hydroprint.Colors()
+        
+        nrow = self.colorGrid_layout.rowCount()
+        for row in range(nrow):
+            btn = self.colorGrid_layout.itemAtPosition(row, 3).widget()
+            btn.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
+                              (int(colorsDB.rgb[row][0]*255),
+                               int(colorsDB.rgb[row][1]*255),
+                               int(colorsDB.rgb[row][2]*255)))
+        
+    def pick_color(self): #================================= Pick New Colors ==
+        
+        sender = self.sender()
+        color = QtGui.QColorDialog.getColor(sender.palette().base().color())
+        if color.isValid():
+            rgb = color.getRgb()[:-1]        
+            sender.setStyleSheet("background-color: rgb(%i,%i,%i)" % rgb)
+    
+    def btn_OK_isClicked(self): #======================================== OK ==
+        self.btn_apply_isClicked()
+        self.close()
+        
+    def btn_apply_isClicked(self): #================================== Apply ==
+        
+        colorsDB = hydroprint.Colors()
+        colorsDB.load_colors_db()
+        
+        nrow = self.colorGrid_layout.rowCount()
+        for row in range(nrow):
+            item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
+            rgb = item.palette().base().color().getRgb()[:-1]
+            
+            colorsDB.rgb[row] = [rgb[0]/255., rgb[1]/255., rgb[2]/255.]
+        
+        colorsDB.save_colors_db()        
+        self.newColorSetupSent.emit(True)
+        
+    def closeEvent(self, event): #==================================== Close ==
+        super(ColorsSetupWin, self).closeEvent(event)
+
+        #---- Refresh UI ----
+        
+        # If cancel or X is clicked, the parameters will be reset to
+        # the values they had the last time "Accept" button was
+        # clicked.
+        
+        colorsDB = hydroprint.Colors()
+        colorsDB.load_colors_db()
+        
+        nrow = self.colorGrid_layout.rowCount()
+        for row in range(nrow):
+            item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
+            item.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
+                               (int(colorsDB.rgb[row][0]*255),
+                                int(colorsDB.rgb[row][1]*255),
+                                int(colorsDB.rgb[row][2]*255)))
+        
+    def show(self): #================================================== Show ==
+        super(ColorsSetupWin, self).show()
+        self.activateWindow()
+        self.raise_()
+        
+        qr = self.frameGeometry()
+        if self.parentWidget():
+            parent = self.parentWidget()
+            
+            wp = parent.frameGeometry().width()
+            hp = parent.frameGeometry().height()
+            cp = parent.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+        else:
+            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            
+        qr.moveCenter(cp)                    
+        self.move(qr.topLeft())           
+        self.setFixedSize(self.size())
         
         
 #==============================================================================
