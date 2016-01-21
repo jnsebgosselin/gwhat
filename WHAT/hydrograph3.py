@@ -56,12 +56,12 @@ class Colors():
   
     def __init__(self):   
         
-        self.rgb = [[1, 0.65, 0.65],           # Air Temperature
-                    [0, 135/255., 193/255.],   # Rain
-                    [0.65,0.65,0.65],          # Snow
-                    [0, 73/255., 104/255.],    # Water Level (solid line)
-                    [0.8, 0.8, 1],             # Water Level (data dots)
-                    [1, 0.25, 0.25]]           # Water Level (measures)
+        self.rgb = [[255./255, 212./255, 212./255],  # Air Temperature
+                    [ 23./255,  52./255,  88./255],  # Rain
+                    [165./255, 165./255, 165./255],  # Snow
+                    [ 45./255, 100./255, 167./255],  # Water Level (solid line)
+                    [0.8, 0.8, 1],                   # Water Level (data dots)
+                    [255./255,   0./255,   0./255]]  # Water Level (measures)
                     
 
         self.labels = ['Air Temperature', 'Rain', 'Snow',

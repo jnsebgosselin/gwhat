@@ -1176,7 +1176,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             yoffset *= self.hydrograph.WLscale  
             
             self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)                                     
-            self.waterlvl_max.setValue(yoffset - self.hydrograph.WLmin)
+            self.waterlvl_max.setValue(self.hydrograph.WLmin)
             
             #---- Update graph and draw ----
             

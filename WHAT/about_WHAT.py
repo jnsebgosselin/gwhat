@@ -142,7 +142,7 @@ class AboutWhat(QtGui.QWidget):
                       </p1>
                       <p2 align=center> 
                         Copyright 2014-2015 Jean-S&eacute;bastien Gosselin<br>
-                        jnsebgosselin@gmail.com                      
+                        jean-sebastien.gosselin@ete.inrs.ca                      
                       <br>
                       <br>                                             
                         Institut National de la Recherche Scientifique<br>
