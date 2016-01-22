@@ -171,7 +171,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         btn_color_pick = QtGui.QToolButton()
         btn_color_pick.setAutoRaise(True)
         btn_color_pick.setIcon(iconDB.color_picker)
-#        btn_color_pick.setToolTip(ttipDB.btn_page_setup)
+        btn_color_pick.setToolTip(ttipDB.color_palette)
         btn_color_pick.setIconSize(styleDB.iconSize)
         btn_color_pick.clicked.connect(self.color_palette_win.show)
         

@@ -30,7 +30,7 @@ import platform
 from PySide.QtGui import QIcon, QFont, QFontDatabase
 from PySide.QtCore import QSize
 
-software_version = 'WHAT Beta 4.1.11'
+software_version = 'WHAT Beta 4.1.11-1'
 last_modification = '21/01/2016'
 
 class Icons():
@@ -188,6 +188,9 @@ class Tooltips():
         
         self.work_waterlvl = ('Toggle between layout and computation ' +
                               'mode (EXPERIMENTAL FEATURE)')
+                              
+        self.color_palette = ('Show a window to setup the color palette ' +
+                              'used to draw the hydrograph')
         
         if language == 'French': #================================== FRENCH ====
             
