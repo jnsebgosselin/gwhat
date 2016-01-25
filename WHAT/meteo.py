@@ -41,6 +41,7 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 #---- PERSONAL IMPORTS ----
 
 import database as db
+from hydrograph3 import Colors
 
 class LabelDataBase():  
     
@@ -1222,9 +1223,12 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         #-- proxy artists --
         
-        rec1 = mpl.patches.Rectangle((0, 0), 1, 1, fc=db.styleUI().snow, 
+        colors = Colors()
+        colors.load_colors_db()
+        
+        rec1 = mpl.patches.Rectangle((0, 0), 1, 1, fc=colors.rgb[2], 
                                                    ec='none')
-        rec2 = mpl.patches.Rectangle((0, 0), 1, 1, fc=db.styleUI().rain,
+        rec2 = mpl.patches.Rectangle((0, 0), 1, 1, fc=colors.rgb[1],
                                                    ec='none')
         
         #-- legend entry --
@@ -1337,7 +1341,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                        fontsize=16, color=COLOR[1], rotation=270)                            
         ax0.yaxis.set_label_coords(1.09, 0.5)
         
-        ax1.set_ylabel(u'Monthly Mean Air Temperature (°C)', va='bottom',
+        ax1.set_ylabel(u'Monthly Air Temperature (°C)', va='bottom',
                        fontsize=16, color=COLOR[0])        
         ax1.yaxis.set_label_coords(-0.09, 0.5)
         
@@ -1347,8 +1351,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.plot_air_temp(Tmax_norm, Tmin_norm, Tavg_norm)
         self.update_yearly_avg(Tavg_norm, Ptot_norm)
         
-    def plot_precip(self, PNORM, SNORM): #======================= plot_precip ==
-        
+    def plot_precip(self, PNORM, SNORM): #====================== plot_precip ==
+                
         #-- define vertices manually --
         
         Xmid = np.arange(0.5, 12.5, 1)                
@@ -1376,13 +1380,16 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         for collection in reversed(ax.collections):
             collection.remove()
-            
+        
+        colors = Colors()
+        colors.load_colors_db()
+        
         ax.fill_between(Xpos, 0., Ptot, edgecolor='none', 
-                        color=db.styleUI().rain)
+                        color=colors.rgb[1])
         ax.fill_between(Xpos, 0., Snow, edgecolor='none',
-                        color=db.styleUI().snow)
+                        color=colors.rgb[2])
             
-    def plot_air_temp(self, Tmax_norm, Tmin_norm, Tavg_norm): #================
+    def plot_air_temp(self, Tmax_norm, Tmin_norm, Tavg_norm): #=== Air Temp. ==
         
         Tavg_norm = np.hstack((Tavg_norm[-1], Tavg_norm, Tavg_norm[0]))
         Tmin_norm = np.hstack((Tmin_norm[-1], Tmin_norm, Tmin_norm[0]))
@@ -1392,7 +1399,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             self.figure.axes[2].lines[i].set_ydata(Tnorm)
             
         
-    def update_yearly_avg(self, TNORM, PNORM): #=========== update_yearly_avg ==
+    def update_yearly_avg(self, TNORM, PNORM): #========= Update Yearly Avg. ==
         
         ax = self.figure.axes[0]
         
