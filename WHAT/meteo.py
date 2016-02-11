@@ -47,15 +47,34 @@ class LabelDataBase():
     
     
     def __init__(self, language):
-        
-        self.ANPRECIP = 'Annual Total Precipitation (mm)'
-        self.ANTEMP = u'Average Annual Air Temperature (°C)'
-        
+        #---- Legend ----
+        self.Pyrly = 'Annual total precipitation = %0.0f mm'
+        self.Tyrly = u'Average annual air temperature = %0.1f °C'
+        self.rain = 'Rain'
+        self.snow = 'Snow'
+        self.Tmax = 'Temp. max.'
+        self.Tmin = 'Temp. min.'
+        self.Tavg = 'Temp. mean'
+        #---- Labels ----   
+        self.Tlabel = u'Monthly Air Temperature (°C)'
+        self.Plabel = 'Monthly Total Precipitation (mm)'             
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
         
         if language == 'French':
-            'Option not available at the moment'
+            #---- Legend ----
+            self.Pyrly = u'Précipitations totales annuelles = %0.0f mm'
+            self.Tyrly = u"Température moyenne annuelle = %0.1f °C"
+            self.rain = 'Pluie'
+            self.snow = 'Neige'
+            self.Tmax = u'Températures min.'
+            self.Tmin = u'Températures max.'
+            self.Tavg = u'Températures moy.'
+            #---- Labels ----
+            self.Tlabel = u'Températures moyennes mensuelles (°C)'
+            self.Plabel = u'Précipitations totales mensuelles (mm)'                    
+            self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
+                                "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
             
 class Tooltips():
     
@@ -83,7 +102,14 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         super(WeatherAvgGraph, self).__init__(parent)        
         self.setWindowFlags(QtCore.Qt.Window)
 #        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
-
+        
+        self.NORMALS = [] # 2D matrix holding all the weather normals
+                          # [TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}] 
+        self.station_name = []
+        self.save_fig_dir = os.getcwd()
+        self.meteo_dir = os.getcwd()
+        self.language = 'English'
+        
         self.initUI()
         
     def initUI(self): #========================================================
@@ -91,12 +117,6 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
         iconDB = db.Icons()
         StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
-        
-        self.NORMALS = [] # 2D matrix holding all the weather normals
-                          # [TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}] 
-        self.station_name = []
-        self.save_fig_dir = os.getcwd()
-        self.meteo_dir = os.getcwd()
         
         self.setWindowTitle('Weather Averages')
         self.setFont(StyleDB.font1)
@@ -197,6 +217,10 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
             self.setFixedHeight(self.size().height()-250)
 #            self.setFixedWidth(self.size().width()-75)
             self.sender().setAutoRaise(True)
+    
+    def set_lang(self, lang): #================================ Set Language ==
+        self.fig_weather_normals.set_lang(lang)
+        self.fig_weather_normals.draw()
         
     def generate_graph(self, filename): #=========== Generate and Draw Graph ==
         
@@ -1037,14 +1061,17 @@ class FigWeatherNormals(FigureCanvasQTAgg):
     """
 #==============================================================================
     
-    def __init__(self):
+    def __init__(self, lang='English'):
         
         fw, fh = 8.5, 5.
         fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
         
         super(FigWeatherNormals, self).__init__(fig)
         
-        labelDB = LabelDataBase('English')        
+        self.lang = lang
+        self.NORMALS = []
+        
+        labelDB = LabelDataBase(self.lang)        
         month_names = labelDB.month_names
         
         #---------------------------------------------------- Define Margins --
@@ -1175,13 +1202,10 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         #-------------------------------------------------- Yticks Formating --
         
-        COLOR=['black', 'black']
-        
         #---- Precipitation ----
         
         ax0.yaxis.set_ticks_position('right') 
-        ax0.tick_params(axis='y', direction='out', labelcolor=COLOR[1],
-                        labelsize=13)
+        ax0.tick_params(axis='y', direction='out', labelsize=13)
                         
         ax0.tick_params(axis='y', which='minor', direction='out')
         ax0.yaxis.set_ticklabels([], minor=True)
@@ -1189,8 +1213,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         #---- Air Temp. ----
         
         ax1.yaxis.set_ticks_position('left')
-        ax1.tick_params(axis='y', direction='out', labelcolor=COLOR[0],
-                        labelsize=13)
+        ax1.tick_params(axis='y', direction='out', labelsize=13)
         
         ax1.tick_params(axis='y', which='minor', direction='out')
         ax1.yaxis.set_ticklabels([], minor=True)
@@ -1210,7 +1233,15 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         self.plot_legend()
         
+    def set_lang(self, lang): #================================ Set Language ==
+        self.lang = lang
         
+        self.plot_legend()
+        self.set_axes_labels()
+        self.update_yearly_avg()
+        month_names = LabelDataBase(self.lang).month_names
+        self.figure.axes[1].xaxis.set_ticklabels(month_names, minor=True)
+    
     def plot_legend(self): #==================================== plot_legend ==
         
         ax = self.figure.axes[2] # Axe on which the legend is hosted
@@ -1232,9 +1263,11 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                                                    ec='none')
         
         #-- legend entry --
-                
+        
         lines = [ax.lines[0], ax.lines[1], ax.lines[2], rec2, rec1]
-        labels = ['Max Temp.', 'Mean Temp.', 'Min. Temp.', 'Rain', 'Snow']
+        labelDB = LabelDataBase(self.lang)
+        labels = [labelDB.Tmax, labelDB.Tavg, labelDB.Tmin,
+                  labelDB.rain, labelDB.snow]
         
         #-- plot legend --
         
@@ -1244,7 +1277,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         leg.draw_frame(False)
                
                
-    def plot_monthly_normals(self, NORMALS, COLOR=['black', 'black']): #======
+    def plot_monthly_normals(self, NORMALS): #=================================
+        
+        self.NORMALS = NORMALS
         
         #-------------------------------------------- assign local variables --
     
@@ -1337,19 +1372,24 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         #------------------------------------------------------------ LABELS --
 
-        ax0.set_ylabel('Monthly Total Precipication (mm)', va='bottom',
-                       fontsize=16, color=COLOR[1], rotation=270)                            
-        ax0.yaxis.set_label_coords(1.09, 0.5)
-        
-        ax1.set_ylabel(u'Monthly Air Temperature (°C)', va='bottom',
-                       fontsize=16, color=COLOR[0])        
-        ax1.yaxis.set_label_coords(-0.09, 0.5)
+        self.set_axes_labels()
         
         #---------------------------------------------------------- PLOTTING --
         
         self.plot_precip(Ptot_norm, Snow_norm)
         self.plot_air_temp(Tmax_norm, Tmin_norm, Tavg_norm)
-        self.update_yearly_avg(Tavg_norm, Ptot_norm)
+        self.update_yearly_avg()
+        
+    def set_axes_labels(self):
+        labelDB = LabelDataBase(self.lang) 
+        
+        ax0 = self.figure.axes[1]
+        ax0.set_ylabel(labelDB.Plabel, va='bottom', fontsize=16, rotation=270)                            
+        ax0.yaxis.set_label_coords(1.09, 0.5)
+        
+        ax1 = self.figure.axes[2]
+        ax1.set_ylabel(labelDB.Tlabel, va='bottom', fontsize=16)        
+        ax1.yaxis.set_label_coords(-0.09, 0.5)
         
     def plot_precip(self, PNORM, SNORM): #====================== plot_precip ==
                 
@@ -1399,7 +1439,10 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             self.figure.axes[2].lines[i].set_ydata(Tnorm)
             
         
-    def update_yearly_avg(self, TNORM, PNORM): #========= Update Yearly Avg. ==
+    def update_yearly_avg(self): #======================= Update Yearly Avg. ==
+    
+        Tavg_norm = self.NORMALS[:, 2]
+        Ptot_norm = self.NORMALS[:, 3]
         
         ax = self.figure.axes[0]
         
@@ -1411,12 +1454,10 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax.texts[1].set_position((0, bbox.y0))
         
         #---- update labels ----
-        
-        ax.texts[0].set_text(u'Mean Annual Air Temperature = %0.1f °C' % 
-                             np.mean(TNORM))
-                         
-        ax.texts[1].set_text(u'Mean Annual Precipitation = %0.1f mm' % 
-                             np.sum(PNORM))
+        labelDB = LabelDataBase(self.lang)
+
+        ax.texts[0].set_text(labelDB.Tyrly % np.mean(Tavg_norm))
+        ax.texts[1].set_text(labelDB.Pyrly % np.sum(Ptot_norm))
 
 #==============================================================================
 class GridWeatherNormals(QtGui.QTableWidget):
@@ -1550,13 +1591,15 @@ if __name__ == '__main__':
                 
 #    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
 #    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
-    fmeteo = "Files4testing/BONSECOURS (7020828)_1980-2009.out"
+#    fmeteo = "Files4testing/BONSECOURS (7020828)_1980-2009.out"
+    fmeteo = "Files4testing/FORTIERVILLE (7022494)_2013-2015.out"
     
     w = WeatherAvgGraph()
     w.save_fig_dir =  '../Projects/Monteregie Est'
     w.meteo_dir = '../Projects/Monteregie Est/Meteo/Output'
     w.show()
     w.generate_graph(fmeteo)
+    w.set_lang('French')
     w.save_normal_table('test.csv')
 #    for i in range(250):
 #        w.generate_graph(fmeteo)
