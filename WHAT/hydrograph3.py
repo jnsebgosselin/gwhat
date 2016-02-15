@@ -56,12 +56,19 @@ class Colors():
   
     def __init__(self):   
         
-        self.rgb = [[255./255, 212./255, 212./255],  # Air Temperature
-                    [ 23./255,  52./255,  88./255],  # Rain
-                    [165./255, 165./255, 165./255],  # Snow
-                    [ 45./255, 100./255, 167./255],  # Water Level (solid line)
-                    [0.8, 0.8, 1],                   # Water Level (data dots)
-                    [255./255,   0./255,   0./255]]  # Water Level (measures)
+        self.RGB = [[255, 212, 212],  # Air Temperature
+                    [ 23,  52,  88],  # Rain
+                    [165, 165, 165],  # Snow
+                    [ 45, 100, 167],  # Water Level (solid line)
+                    [204, 204, 204],  # Water Level (data dots)
+                    [255,   0,   0]]  # Water Level (measures)
+        
+        self.rgb = [[255./255, 212./255, 212./255], # Air Temperature
+                    [ 23./255,  52./255,  88./255], # Rain
+                    [165./255, 165./255, 165./255], # Snow
+                    [ 45./255, 100./255, 167./255], # Water Level (solid line)
+                    [0.8, 0.8, 1],                  # Water Level (data dots)
+                    [255./255,   0./255,   0./255]] # Water Level (measures)
                     
 
         self.labels = ['Air Temperature', 'Rain', 'Snow',
@@ -82,7 +89,8 @@ class Colors():
                 reader = list(csv.reader(f, delimiter='\t'))
             
             for row in range(len(reader)):
-                self.rgb[row] = [float(i) for i in reader[row][1:]]    
+                self.RGB[row] = [int(i) for i in reader[row][1:]]
+                self.rgb[row] = [(int(i)/255.) for i in reader[row][1:]]
 
         print('Colors database loaded sucessfully.')
         
@@ -92,7 +100,7 @@ class Colors():
         fcontent = []
         for i in range(len(self.labels)):
             fcontent.append([self.labels[i]])
-            fcontent[-1].extend(self.rgb[i])
+            fcontent[-1].extend(self.RGB[i])
 
         with open(fname, 'w') as f:
             writer = csv.writer(f, delimiter='\t')

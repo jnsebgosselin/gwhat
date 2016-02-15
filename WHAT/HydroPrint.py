@@ -1325,9 +1325,9 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
             btn.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
             btn.clicked.connect(self.pick_color)
             btn.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
-                              (int(colorsDB.rgb[i][0]*255),
-                               int(colorsDB.rgb[i][1]*255),
-                               int(colorsDB.rgb[i][2]*255)))
+                              (colorsDB.RGB[i][0],
+                               colorsDB.RGB[i][1],
+                               colorsDB.RGB[i][2]))
             self.colorGrid_layout.addWidget(btn, i, 3)
         self.colorGrid_layout.setColumnStretch(2, 100)
         
@@ -1347,10 +1347,10 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         nrow = self.colorGrid_layout.rowCount()
         for row in range(nrow):
             btn = self.colorGrid_layout.itemAtPosition(row, 3).widget()
-            btn.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
-                              (int(colorsDB.rgb[row][0]*255),
-                               int(colorsDB.rgb[row][1]*255),
-                               int(colorsDB.rgb[row][2]*255)))
+            btn.setStyleSheet("background-color: rgb(%i,%i,%i)" %  
+                              (colorsDB.RGB[row][0],
+                               colorsDB.RGB[row][1],
+                               colorsDB.RGB[row][2]))
         
     def pick_color(self): #================================= Pick New Colors ==
         
@@ -1374,6 +1374,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             rgb = item.palette().base().color().getRgb()[:-1]
             
+            colorsDB.RGB[row] = [rgb[0], rgb[1], rgb[2]]
             colorsDB.rgb[row] = [rgb[0]/255., rgb[1]/255., rgb[2]/255.]
         
         colorsDB.save_colors_db()        
@@ -1395,9 +1396,9 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         for row in range(nrow):
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             item.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
-                               (int(colorsDB.rgb[row][0]*255),
-                                int(colorsDB.rgb[row][1]*255),
-                                int(colorsDB.rgb[row][2]*255)))
+                               (colorsDB.RGB[row][0],
+                                colorsDB.RGB[row][1],
+                                colorsDB.RGB[row][2]))
         
     def show(self): #================================================== Show ==
         super(ColorsSetupWin, self).show()
