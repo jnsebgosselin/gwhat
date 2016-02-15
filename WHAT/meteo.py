@@ -219,6 +219,7 @@ class WeatherAvgGraph(QtGui.QWidget):                       # WeatherAvgGraph #
             self.sender().setAutoRaise(True)
     
     def set_lang(self, lang): #================================ Set Language ==
+        self.language = lang        
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
         
@@ -1235,7 +1236,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
     def set_lang(self, lang): #================================ Set Language ==
         self.lang = lang
-        
+        if len(self.NORMALS)==0:
+            return            
         self.plot_legend()
         self.set_axes_labels()
         self.update_yearly_avg()
@@ -1598,8 +1600,8 @@ if __name__ == '__main__':
     w.save_fig_dir =  '../Projects/Monteregie Est'
     w.meteo_dir = '../Projects/Monteregie Est/Meteo/Output'
     w.show()
-    w.generate_graph(fmeteo)
-    w.set_lang('French')
+    w.set_lang('English')
+    w.generate_graph(fmeteo)    
     w.save_normal_table('test.csv')
 #    for i in range(250):
 #        w.generate_graph(fmeteo)

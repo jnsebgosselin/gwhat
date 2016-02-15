@@ -567,7 +567,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                    'A new one has been created.')
             print(msg)
 
-            with open(filename, 'wb') as f:
+            with open(filename, 'w') as f:
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerows(fcontent)
                 
@@ -1148,6 +1148,8 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 self.hydrograph.draw_ylabels()
                 self.hydrograph.draw_xlabels()
                 self.hydrograph.set_legend()
+                
+            self.weather_avg_graph.set_lang(self.language_box.currentText())
                 
         elif sender in [self.waterlvl_max, self.waterlvl_scale]:            
             self.hydrograph.WLmin = self.waterlvl_max.value()
