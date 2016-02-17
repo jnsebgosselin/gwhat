@@ -34,9 +34,9 @@
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
-     inkscape:zoom="0.65186406"
-     inkscape:cx="791.88057"
-     inkscape:cy="228.17322"
+     inkscape:zoom="2.6074562"
+     inkscape:cx="1079.2566"
+     inkscape:cy="94.019782"
      inkscape:window-x="65"
      inkscape:window-y="24"
      inkscape:window-maximized="1"
@@ -835,13 +835,13 @@
      sodipodi:nodetypes="cccc" />
   <path
      style="opacity:0.75;fill:url(#linearGradient4147);fill-opacity:1;stroke:none;display:inline;enable-background:new"
-     d="m 907.82536,380.60827 c 22.3723,39.39027 95.44394,97.43543 126.82894,106.2254 106.0939,27.40618 189.6921,-16.53523 218.0087,-68.16852 -187.7609,28.15913 -227.5638,-120.80755 -344.83764,-38.05688 z"
+     d="m 907.82536,380.60827 c 22.3723,39.39027 95.44394,97.43543 126.82894,106.2254 95.739,2.09415 158.6273,-22.67148 218.0087,-68.16852 -187.7609,28.15913 -227.5638,-120.80755 -344.83764,-38.05688 z"
      id="path3852-7-7"
      inkscape:connector-curvature="0"
      sodipodi:nodetypes="cccc" />
   <path
      style="opacity:0.75;fill:url(#linearGradient4144);fill-opacity:1;stroke:none;display:inline;enable-background:new"
-     d="m 924.36876,416.68458 c 19.0777,30.26202 88.05524,66.88242 114.81844,73.63541 90.4703,21.05509 153.5752,-2.79071 177.7218,-42.45856 -160.1109,21.63356 -181.8893,-87.77927 -292.54024,-31.17685 z"
+     d="m 924.36876,416.68458 c 19.0777,30.26202 88.05524,66.88242 114.81844,73.63541 77.239,1.11228 129.7972,-15.25497 177.7218,-42.45856 -160.1109,21.63356 -181.8893,-87.77927 -292.54024,-31.17685 z"
      id="path3852-7"
      inkscape:connector-curvature="0"
      sodipodi:nodetypes="cccc" />
@@ -853,15 +853,6 @@
      height="395.8898"
      style="opacity:0.23000004;fill:none;stroke:#4d4d4d;stroke-width:26;stroke-miterlimit:4;stroke-dasharray:none"
      id="rect16-9" />
-  <rect
-     width="431.33667"
-     x="876.45245"
-     y="57.318405"
-     rx="215.65013"
-     height="431.33731"
-     style="fill:none;stroke:#333333;stroke-width:25;stroke-miterlimit:4;stroke-dasharray:none"
-     id="rect16-5"
-     clip-path="none" />
   <text
      xml:space="preserve"
      style="font-size:337.92733765px;font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:125%;letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;font-family:Liberation Sans;-inkscape-font-specification:Liberation Sans Bold"
@@ -893,4 +884,13 @@
          y="472.81418"
          style="font-size:52px;font-style:italic;fill:#333333;fill-opacity:1;-inkscape-font-specification:Sans Italic"
          id="tspan3094">Well Hydrograph Analysis Toolbox</tspan></tspan></text>
+  <rect
+     width="431.33667"
+     x="876.45245"
+     y="57.318405"
+     rx="215.65013"
+     height="431.33731"
+     style="fill:none;stroke:#333333;stroke-width:25;stroke-miterlimit:4;stroke-dasharray:none"
+     id="rect16-5"
+     clip-path="none" />
 </svg>

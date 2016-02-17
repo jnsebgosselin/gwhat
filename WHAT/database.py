@@ -303,7 +303,9 @@ class FileHeaders():
                               'Waterlvl Scale', 'Date Start', 'Date End',
                               'Show Graph Title', 'Show Legend',
                               'Precip. Scale', 'Waterlvl Ref.', 'Trend Line',
-                              'Fig. Width', 'Fig. Height']]
+                              'Fig. Width', 'Fig. Height', 'Color Palette',
+                              'Label Lang.', 'Date mode', 'Date Disp. Pattern',
+                              'Weather Bin Width']]
         
         #---- weather_stations.lst ----
                  
