@@ -207,7 +207,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.trend_line = 0
         self.meteoOn = True # controls wether meteo data are plotted or not
         self.gridLines = 2 # 0 -> None, 1 -> "-" 2 -> ":"
-        self.datemode = 'month' # 'month' or 'year'
+        self.datemode = 'Month' # 'month' or 'year'
         self.label_font_size = 14
         self.date_labels_display_pattern = 2
         
@@ -473,7 +473,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 transform = self.ax3.transData + offset
                 
                 t = load_weather_log(self.finfo, 'Total Precip (mm)')
-                y = np.zeros(len(t))# * -5 * self.RAINscale / 20.
+                y = np.zeros(len(t))
                 self.ax3.plot(t, y, ls='-', solid_capstyle='projecting', 
                               lw=1.5, c='red', transform=transform)
                 
@@ -483,12 +483,13 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 offset = mpl.transforms.ScaledTranslation(0., -vshift,
                                                           self.dpi_scale_trans)
                 transform = self.ax4.transData + offset
-
+                
                 t = load_weather_log(self.finfo, 'Max Temp (deg C)')
                 y = np.ones(len(t)) * self.ax4.get_ylim()[1]
-                self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
+                self.ax4.plot(t, y, ls='-',
+                              solid_capstyle='projecting',
                               lw=1.5, c='red', transform=transform)
-                                                        
+                                                       
             self.draw_weather()
         
         #------------------------------------------------------ DRAW YLABELS --
@@ -735,60 +736,108 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
     
     def checkLayout(self, name_well, filename): #==============================
         
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-            reader = np.array(reader)
-       
-        # Check if config file is from an old version of Hydroprint
-        # and if yes, convert it to the new version.
-       
-        nCONFG, nPARA = np.shape(reader)
-
-        if nPARA < len(self.header[0]):
-            
-            nMissing = len(self.header[0]) - nPARA
-            
-            col2add = np.zeros((nCONFG, nMissing)).astype(int)
-            col2add = col2add.astype(str)
-            
-            reader = np.hstack((reader, col2add))
-            reader[0] = self.header[0]
-            
-            if nPARA < 8:
-                reader[1:, 7] = 1 # show legend
-            if nPARA < 9:
-                reader[1:, 8] = 20
-            if nPARA < 10:
-                reader[1:, 9] = 0
-            if nPARA < 11:
-                reader[1:, 10] = 0 # show water level trend line
-            if nPARA < 12:
-                reader[1:, 11] = 11. # figure width
-            if nPARA < 13:
-                reader[1:, 12] = 8.5 # figure height
-            
-            with open(filename, 'w') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(reader)
-             
-            msg = ('The "graph_layout.lst" file is from an older version ' +
-                   'of WHAT. The old file has been converted to the newer ' +
-                   'version.') 
-            print(msg)
-        
         # Check if there is a layout stored for the current 
         # selected observation well.
+        
+        with open(filename, 'r') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+            reader = np.array(reader)            
+        
         row = np.where(reader[:,0] == name_well)[0]
            
         if len(row) > 0:
-            layoutExist = True
+            return True
         else:
-            layoutExist = False
-           
-        return layoutExist
+            return False
+       
+#        # Check if config file is from an old version of Hydroprint
+#        # and if yes, convert it to the new version.
+#       
+#        nCONFG, nPARA = np.shape(reader)
+#
+#        if nPARA < len(self.header[0]):
+#            
+#            nMissing = len(self.header[0]) - nPARA
+#            
+#            col2add = np.zeros((nCONFG, nMissing)).astype(int)
+#            col2add = col2add.astype(str)
+#            
+#            reader = np.hstack((reader, col2add))
+#            reader[0] = self.header[0]
+#            
+#            if nPARA < 8:
+#                reader[1:, 7] = 1 # show legend
+#            if nPARA < 9:
+#                reader[1:, 8] = 20
+#            if nPARA < 10:
+#                reader[1:, 9] = 0
+#            if nPARA < 11:
+#                reader[1:, 10] = 0 # show water level trend line
+#            if nPARA < 12:
+#                reader[1:, 11] = 11. # figure width
+#            if nPARA < 13:
+#                reader[1:, 12] = 8.5 # figure height
+#            if nPARA < 14:
+#                reader[1:, 13] = 'None' # Color Palette, keep default
+#            
+#            with open(filename, 'w') as f:
+#                writer = csv.writer(f, delimiter='\t')
+#                writer.writerows(reader)
+#             
+#            msg = ('The "graph_layout.lst" file is from an older version ' +
+#                   'of WHAT. The old file has been converted to the newer ' +
+#                   'version.') 
+#            print(msg)
         
-                    
-    def load_layout(self, name_well, filename): #==============================      
+        
+        
+    def save_layout(self, name_well, filename): #=============== Save Layout ==
+        
+        #---- load file ----
+        
+        with open(filename, 'r') as f:
+            reader = list(csv.reader(f, delimiter='\t'))
+        
+        #---- update content ----
+        
+        # this is necessary for Windows when there is an accented character
+        # in the path of the meteo data file, in the name of the well, or in
+        # the title of the graph.
+        
+        name_well = name_well.encode('utf-8')
+        fmeteo = self.fmeteo.encode('utf-8')
+        
+        colorStack = ''
+        for color in self.colorsDB.RGB:
+            for code in color:
+                colorStack = colorStack + str(code) + ','
+            colorStack = colorStack[:-1] + ';'
+        colorStack = colorStack[:-1]
+        
+        new = [name_well, fmeteo, self.WLmin, self.WLscale, 
+               self.TIMEmin, self.TIMEmax,self.isGraphTitle, self.isLegend,
+               self.RAINscale, self.WLdatum, self.trend_line, self.fwidth,
+               self.fheight, colorStack, self.language, self.datemode,
+               self.date_labels_display_pattern, self.bwidth_indx]
+    
+        for row in range(len(reader)):
+            if reader[row][0] == name_well:
+                del reader[row]
+                break
+            else:
+                row +=1
+                
+        reader.append(new)           
+        reader[0] = self.header[0]
+      
+        #---- save file ----
+            
+        with open(filename, 'w') as f:
+            writer = csv.writer(f, delimiter='\t')
+            writer.writerows(reader)
+
+               
+    def load_layout(self, name_well, filename): #=============== Load Layout ==      
             
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
@@ -838,46 +887,44 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         try: self.fheight = abs(float(reader[12]))
         except: self.fheight = 8.5
-        
-    def save_layout(self, name_well, filename): #==============================
-        
-        #---- load file ----
-        
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-        
-        #---- update content ----
-        
-        # this is necessary for Windows when there is an accented character
-        # in the path of the meteo data file, in the name of the well, or in
-        # the title of the graph.
-        
-        name_well = name_well.encode('utf-8')
-        fmeteo = self.fmeteo.encode('utf-8')
-        
-        new = [name_well, fmeteo, self.WLmin, self.WLscale, 
-               self.TIMEmin, self.TIMEmax,self.isGraphTitle, self.isLegend,
-               self.RAINscale, self.WLdatum, self.trend_line, self.fwidth,
-               self.fheight]
-       
-        for row in range(len(reader)):
-            if reader[row][0] == name_well:
-                del reader[row]
-                break
-            else:
-                row +=1
-                
-        reader.append(new)           
-        reader[0] = self.header[0]
-      
-        #---- save file ----
+
+        try:
+            colorStack = reader[13]
+            colors = colorStack.rsplit(';')
+            for i, color in enumerate(colors):
+                color = color.rsplit(',')
+                print color
+                for j in range(3):
+                    self.colorsDB.RGB[i][j] = int(color[j])
+                    self.colorsDB.rgb[i][j] = int(color[j])/255.
+            print('Color Palette loaded from layout.')
+            self.colorsDB.save_colors_db()
+        except: 
+            print('!Color Palette is wrong. Keeping defaults.!')
             
-        with open(filename, 'w') as f:
-            writer = csv.writer(f, delimiter='\t')
-            writer.writerows(reader)
-    
+        try: self.language = reader[14]
+        except: self.language = 'English'
+        
+        try:            
+            if reader[15].lower() in ['month', 'year']:
+                self.datemode = reader[15]
+            else:
+                self.datemode = 'month'
+        except:
+            self.datemode = 'month'
+            
+        try: self.date_labels_display_pattern = int(reader[16])
+        except: self.date_labels_display_pattern = 2
+            
+        try:
+            if int(reader[17]) in [0, 1, 2]:
+                self.bwidth_indx = int(reader[17])
+            else:
+                self.bwidth_indx = 1 
+        except:
+            self.bwidth_indx = 1 
       
-    def best_fit_waterlvl(self): #=============================================
+    def best_fit_waterlvl(self): #==================== Best Fit Water Levels ==
         
         WL = self.WaterLvlObj.lvl   
         if self.WLdatum == 1: # masl
@@ -1126,7 +1173,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         #-------------------------------------------------- time min and max --
         
-        if self.datemode in ['year', 'Year']:
+        if self.datemode.lower() == 'year':
             
             year = xldate_as_tuple(self.TIMEmin, 0)[0]
             self.TIMEmin = xldate_from_date_tuple((year, 1, 1), 0)
@@ -1351,7 +1398,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         xticks_position = [self.TIMEmin]
         xticks_labels_position = []
         
-        if self.datemode in ['month', 'Month']:
+        if self.datemode.lower() == 'month':
             
             i = 0
             while xticks_position[i] < self.TIMEmax:
@@ -1374,7 +1421,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                                      
                 i += 1
                 
-        elif self.datemode in ['year', 'Year']:
+        elif self.datemode.lower() == 'year':
             
             i = 0
             year = xldate_as_tuple(xticks_position[i], 0)[0]
@@ -1414,7 +1461,7 @@ def  load_weather_log(fname, varname):
     #---- load data and convert time ----
     
     time = []
-    tseg = [np.nan] * 3
+    tseg = [np.nan, np.nan, np.nan]
     for i in range(len(reader)):
         if reader[i][0] == varname:
             year = int(float(reader[i][1]))

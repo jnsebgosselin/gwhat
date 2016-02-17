@@ -821,8 +821,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.draw_hydrograph()
     
     
-    def update_graph_layout_parameter(self): #================================
-    
+    def update_graph_layout_parameter(self): #=================================
         '''
         This method is called either by the methods <save_graph_layout>
         or by <draw_hydrograph>. It fetches the values that are currently 
@@ -837,14 +836,12 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         year = self.date_start_widget.date().year()
         month = self.date_start_widget.date().month()
-        day = 1
-        date = xldate_from_date_tuple((year, month, day),0)
+        date = xldate_from_date_tuple((year, month, 1),0)
         self.hydrograph.TIMEmin = date
         
         year = self.date_end_widget.date().year()
         month = self.date_end_widget.date().month()
-        day = 1
-        date = xldate_from_date_tuple((year, month, day),0)
+        date = xldate_from_date_tuple((year, month, 1),0)
         self.hydrograph.TIMEmax = date
         
         #---- scales ----
@@ -898,10 +895,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 
         filename = self.workdir + '/graph_layout.lst'
         name_well = self.waterlvl_data.name_well
-        isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
-                    
-        if isLayoutExist == False:
-            
+        
+        isLayoutExist = self.hydrograph.checkLayout(name_well, filename)                    
+        if isLayoutExist == False:            
             self.ConsoleSignal.emit(
             '''<font color=red>No graph layout exists for well %s.
                </font>''' % name_well)
@@ -934,6 +930,23 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.datum_widget.setCurrentIndex (self.hydrograph.WLdatum)
         
         self.Ptot_scale.setValue(self.hydrograph.RAINscale)
+        self.qweather_bin.setCurrentIndex(self.hydrograph.bwidth_indx)
+        
+        #---- Labels ----
+        
+        if self.hydrograph.language.lower() == 'french':
+            self.language_box.setCurrentIndex(0)
+        else:
+            self.language_box.setCurrentIndex(1)            
+            
+        if self.hydrograph.datemode.lower() == 'year':
+            self.time_scale_label.setCurrentIndex(1)
+        else:
+            self.time_scale_label.setCurrentIndex(0)
+        
+        #---- Color Palette ----
+        
+        self.color_palette_win.update_colors()
         
         #---- Page Setup ----
         
@@ -1351,7 +1364,20 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
                               (colorsDB.RGB[row][0],
                                colorsDB.RGB[row][1],
                                colorsDB.RGB[row][2]))
+                               
+    def update_colors(self): #================================ Update Colors ==
         
+        colorsDB = hydroprint.Colors()
+        colorsDB.load_colors_db()
+        
+        nrow = self.colorGrid_layout.rowCount()
+        for row in range(nrow):
+            item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
+            item.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
+                               (colorsDB.RGB[row][0],
+                                colorsDB.RGB[row][1],
+                                colorsDB.RGB[row][2]))
+                                
     def pick_color(self): #================================= Pick New Colors ==
         
         sender = self.sender()
@@ -1389,16 +1415,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         # the values they had the last time "Accept" button was
         # clicked.
         
-        colorsDB = hydroprint.Colors()
-        colorsDB.load_colors_db()
-        
-        nrow = self.colorGrid_layout.rowCount()
-        for row in range(nrow):
-            item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
-            item.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
-                               (colorsDB.RGB[row][0],
-                                colorsDB.RGB[row][1],
-                                colorsDB.RGB[row][2]))
+        self.update_colors()
         
     def show(self): #================================================== Show ==
         super(ColorsSetupWin, self).show()
