@@ -1314,7 +1314,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         colorsDB.load_colors_db()
         
         colorGrid_widget =  QtGui.QWidget()
-        
+        print 'coucou'
         self.colorGrid_layout = QtGui.QGridLayout()
         for i in range(len(colorsDB.rgb)):
             self.colorGrid_layout.addWidget(
@@ -1323,7 +1323,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
             btn = QtGui.QToolButton()
             btn.setAutoRaise(True)
             btn.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
-            btn.clicked.connect(self.pick_color)
+            btn.clicked.connect(self.pick_color)            
             btn.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
                               (int(colorsDB.rgb[i][0]*255),
                                int(colorsDB.rgb[i][1]*255),
