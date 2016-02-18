@@ -1631,7 +1631,7 @@ if __name__ == '__main__':
     hydrograph.draw_recession()
 
 #    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
-    hydrograph.savefig(dirname + '/hydrograph.pdf')
+    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
     
     #------------------------------------------------- show figure on-screen --
     
