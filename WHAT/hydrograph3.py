@@ -210,6 +210,8 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.datemode = 'Month' # 'month' or 'year'
         self.label_font_size = 14
         self.date_labels_display_pattern = 2
+        self.isMRC = False # plot or not the estimated recession segment that
+                           # were used to estimate the MRC
         
         #---- Waterlvl Obj ----
         
@@ -512,36 +514,41 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             
             labelDB = LabelDatabase(self.language).legend
             
-            #---- Precipitation ----
+            lg_handles = []            
+            lg_labels = []
             
-            # Snow
-                       
-            rec1 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[2] , 
-                                 ec=self.colorsDB.rgb[2])
-            # Rain  
-                                 
-            rec2 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[1] ,
-                                 ec=self.colorsDB.rgb[1])
+            if self.meteoOn:
+
+                #---- Snow ----
+                           
+                rec1 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[2] , 
+                                     ec=self.colorsDB.rgb[2])
+                
+                lg_handles.append(rec1)
+                lg_labels.append(labelDB[0])
+                # Rain  
+                                     
+                rec2 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[1] ,
+                                     ec=self.colorsDB.rgb[1])
+                
+                lg_handles.append(rec2)
+                lg_labels.append(labelDB[1])
             
-            lg_handles = [rec1, rec2]            
-            lg_labels = [labelDB[0], labelDB[1]]
+                #---- Air Temperature ----  
+                
+                rec3 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[0],
+                                     ec='black')
+                
+                lg_handles.append(rec3)
+                lg_labels.append(labelDB[2])
             
-            
-            #---- Air Temperature ----  
-            
-            rec3 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[0],
-                                 ec='black')
-            
-            lg_handles.append(rec3)
-            lg_labels.append(labelDB[2])
-            
-            #---- Missing Data Markers ----
-            
-            lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
-                         lw=1.5, c='red')
-                         
-            lg_handles.append(lin1)
-            lg_labels.append(labelDB[3])
+                #---- Missing Data Markers ----
+                
+                lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
+                             lw=1.5, c='red')
+                             
+                lg_handles.append(lin1)
+                lg_labels.append(labelDB[3])
             
             #---- Water Levels (continuous line) ----
             
@@ -568,6 +575,10 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             if len(self.WaterLvlObj.WLmes) > 1:             
                 lg_handles.append(self.h_WLmes)
                 lg_labels.append(labelDB[7])
+            
+            if self.isMRC:
+                lg_labels.append('Estimated Recession')
+                lg_handles.append(self.plot_recess)
                 
             #---------------------------------------------------- Position ----
             
@@ -609,32 +620,34 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
     def set_margins(self): #======================================== Margins ==
         
+        fheight = self.fheight
+        if self.meteoOn == False:
+            fheight = self.fheight / 2.
+        
         #---- MARGINS (Inches / Fig. Dimension) ----
         
         left_margin  = 0.85 / self.fwidth
-        right_margin = 0.85 / self.fwidth
-        top_margin = 0.25 / self.fheight
-        bottom_margin = 0.75 / self.fheight
         
-        if self.isGraphTitle == 1 or self.isLegend == 1:
-            top_margin += 0.45 / self.fheight
-            
         if self.meteoOn == False:
-            right_margin = 0.35 / self.fwidth
+            right_margin = 0.15 / self.fwidth
+        else:
+            right_margin = 0.85 / self.fwidth
+                
+        bottom_margin = 0.55 / fheight
+        
+        top_margin = 0.25 / fheight
+        if self.isGraphTitle == 1 or self.isLegend == 1:
+            if self.meteoOn == False:
+                top_margin += 0.2 / fheight
+            else:
+                top_margin += 0.45 / fheight
         
         #---- MARGINS (% of figure) ----
         
-        x0 = left_margin
-        w = 1 - (left_margin + right_margin)
-        if self.meteoOn == True:            
-            y0 = bottom_margin          
-            h = 1 - (bottom_margin + top_margin)
-        else:
-            y0 = bottom_margin / 2.
-            h = 1 - (bottom_margin + top_margin) / 2.
-        
         for axe in self.axes:
-            axe.set_position([x0, y0, w, h])    
+            axe.set_position([left_margin, bottom_margin, 
+                              1 - (left_margin + right_margin),
+                              1 - (bottom_margin + top_margin)])    
 
         
     def draw_ylabels(self): #=================================================
@@ -748,47 +761,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         if len(row) > 0:
             return True
         else:
-            return False
-       
-#        # Check if config file is from an old version of Hydroprint
-#        # and if yes, convert it to the new version.
-#       
-#        nCONFG, nPARA = np.shape(reader)
-#
-#        if nPARA < len(self.header[0]):
-#            
-#            nMissing = len(self.header[0]) - nPARA
-#            
-#            col2add = np.zeros((nCONFG, nMissing)).astype(int)
-#            col2add = col2add.astype(str)
-#            
-#            reader = np.hstack((reader, col2add))
-#            reader[0] = self.header[0]
-#            
-#            if nPARA < 8:
-#                reader[1:, 7] = 1 # show legend
-#            if nPARA < 9:
-#                reader[1:, 8] = 20
-#            if nPARA < 10:
-#                reader[1:, 9] = 0
-#            if nPARA < 11:
-#                reader[1:, 10] = 0 # show water level trend line
-#            if nPARA < 12:
-#                reader[1:, 11] = 11. # figure width
-#            if nPARA < 13:
-#                reader[1:, 12] = 8.5 # figure height
-#            if nPARA < 14:
-#                reader[1:, 13] = 'None' # Color Palette, keep default
-#            
-#            with open(filename, 'w') as f:
-#                writer = csv.writer(f, delimiter='\t')
-#                writer.writerows(reader)
-#             
-#            msg = ('The "graph_layout.lst" file is from an older version ' +
-#                   'of WHAT. The old file has been converted to the newer ' +
-#                   'version.') 
-#            print(msg)
-        
+            return False        
         
         
     def save_layout(self, name_well, filename): #=============== Save Layout ==
@@ -1026,11 +999,13 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         return bheight
     
-    def draw_recession(self): #============================== Draw Recession ==
-
+    def draw_recession(self): #============================== Draw Recession ==      
         t = self.WaterLvlObj.trecess
         wl = self.WaterLvlObj.hrecess
         self.plot_recess.set_data(t, wl)
+        
+        self.isMRC = True
+        self.set_legend()
     
     def draw_waterlvl(self): #============================= Draw Water Level ==
         
@@ -1201,13 +1176,13 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         # labels are set using the minor ticks.
         
+        # labels are placed manually instead. This is around 25% faster than
+        # using the minor ticks.
+        
 #        self.ax1.set_xticks(xticks_info[1], minor=True)
 #        self.ax1.tick_params(which='minor', length=0) 
 #        self.ax1.xaxis.set_ticklabels(xticks_info[2], minor=True, rotation=45,
 #                                      va='top', ha='right', fontsize=10)
-        
-        # labels are placed manually instead. This is around 25% faster than
-        # using the minor ticks.
         
         #---- Remove labels ----
         
@@ -1215,13 +1190,18 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             self.xlabels[i].remove()
         
         #---- Redraw labels ----
+        
+        padding = mpl.transforms.ScaledTranslation(0, -3/72., 
+                                                   self.dpi_scale_trans)        
+        transform = self.ax1.transData + padding
                                   
         self.xlabels = []
         for i in range(len(xticks_info[1])) :
             
-            new_label  = self.ax1.text(xticks_info[1][i], -0.15,
+            new_label  = self.ax1.text(xticks_info[1][i], 0,
                                        xticks_info[2][i], rotation=45, 
-                                       va='top', ha='right', fontsize=10)
+                                       va='top', ha='right', fontsize=10.,
+                                       transform=transform)
                        
             self.xlabels.append(new_label)
         
@@ -1275,7 +1255,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         NZGrid = self.NZGrid
         dZGrid = 8
         if self.meteoOn == False:
-            NZGrid = NZGrid/2+2
+            NZGrid = NZGrid/2 + 2
             dZGrid = 0
             
         if self.WLdatum == 1:   # masl
@@ -1591,9 +1571,10 @@ if __name__ == '__main__':
 
     #---- Pont Rouge ----
     
-#    dirname = '../Projects/Pont-Rouge'
-#    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-#    fwaterlvl = dirname + '/Water Levels/5080001.xls'
+    dirname = '../Projects/Pont-Rouge'
+    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+    finfo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.log'
+    fwaterlvl = dirname + '/Water Levels/5080001.xls'
     
     #---- Valcartier ----
     
@@ -1606,11 +1587,11 @@ if __name__ == '__main__':
     
     #---- Dundurn ----
     
-    dirname = '/home/jnsebgosselin/Dropbox/WHAT/Projects/Dundurn'
-    fmeteo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.out"
+#    dirname = '/home/jnsebgosselin/Dropbox/WHAT/Projects/Dundurn'
+#    fmeteo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.out"
 #    fwaterlvl = dirname + '/Water Levels/P19 2013-2014.xls' 
-    fwaterlvl = dirname + '/Water Levels/P22 2014-2015.xls' 
-    finfo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.log"
+#    fwaterlvl = dirname + '/Water Levels/P22 2014-2015.xls' 
+#    finfo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.log"
     
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
@@ -1630,14 +1611,15 @@ if __name__ == '__main__':
     #---- Layout Options ----
     
     hydrograph.fwidth = 11 # Width of the figure in inches
-    hydrograph.WLdatum = 1 # 0 -> mbgs ; 1 -> masl
-    hydrograph.trend_line = True
+    hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
+    hydrograph.trend_line = False
     hydrograph.gridLines = 2 # Gridlines Style    
-    hydrograph.isGraphTitle = 1 # 1 -> title ; 0 -> no title
+    hydrograph.isGraphTitle = 0 # 1 -> title ; 0 -> no title
     hydrograph.isLegend = 1
-    
-    hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
-    hydrograph.datemode = 'month' # 'month' or 'year'
+        
+    hydrograph.meteoOn = False # 0 -> no meteo ; 1 -> meteo
+    hydrograph.datemode = 'year' # 'month' or 'year'
+    hydrograph.date_labels_display_pattern = 1
     hydrograph.bwidth_indx = 1 # Meteo Bin Width
     # 0: daily | 1: weekly | 2: monthly | 3: yearly
     hydrograph.RAINscale = 10
@@ -1649,7 +1631,7 @@ if __name__ == '__main__':
     hydrograph.draw_recession()
 
 #    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
-    hydrograph.savefig(dirname + '/hydrograph.pdf')
+    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
     
     #------------------------------------------------- show figure on-screen --
     

@@ -1260,8 +1260,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
             if self.hydrograph.isHydrographExists:            
                 self.hydrograph.set_time_scale()
-                self.hydrograph.draw_weather()
-            
+                self.hydrograph.draw_weather()            
         else:
             print('No action for this widget yet.')
                 
