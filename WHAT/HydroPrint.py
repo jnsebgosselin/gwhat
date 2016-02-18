@@ -1374,6 +1374,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             rgb = item.palette().base().color().getRgb()[:-1]
             
+            colorsDB.RGB[row] = [rgb[0], rgb[1], rgb[2]]
             colorsDB.rgb[row] = [rgb[0]/255., rgb[1]/255., rgb[2]/255.]
         
         colorsDB.save_colors_db()        

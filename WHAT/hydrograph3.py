@@ -754,14 +754,19 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
-            reader = np.array(reader)            
         
-        row = np.where(reader[:,0] == name_well)[0]
+        for line in reader:
+            if line[0]== name_well:
+                return True
+                
+        return False
+        
+#        row = np.where(reader[:,0] == name_well)[0]
            
-        if len(row) > 0:
-            return True
-        else:
-            return False        
+#        if len(row) > 0:
+#            return True
+#        else:
+#            return False        
         
         
     def save_layout(self, name_well, filename): #=============== Save Layout ==
