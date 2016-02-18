@@ -314,6 +314,117 @@ class SynthHydrograph(object):                              # SynthHydrograph #
 
         return RMSE
         
+    def GLUE(self, Sy, RASmax, Cro): #================================= GLUE ==
+        self.Sy = Sy
+        self.RASmax = RASmax
+        self.Cro = Cro
+        
+        U_RAS = np.arange(RASmax[0], RASmax[1]+1, 5)
+        U_Cro = np.arange(CRO[0], CRO[1]+0.05, 0.05)
+        
+        #---- weather observations ----
+        
+        ETP = self.meteoObj.DATA[:, 7]
+        PTOT = self.meteoObj.DATA[:, 6]
+        TAVG = self.meteoObj.DATA[:, 5]
+        
+        #---- Produce realization ----
+        
+        RMSE = []
+        RECHG = []
+        WLest = []
+                
+        Sy0 = np.mean(Sy)               
+        for i, cro in enumerate(U_Cro):
+            for j, rasmax in enumerate(U_RAS):
+                rechg, _, _, _, _ = self.surf_water_budget(cro, rasmax,
+                                                           ETP, PTOT, TAVG)
+                Sy, RMSE, RECHG = self.opt_Sy(cro, rasmax, Sy0, rechg)                
+                Sy0 = Sy
+                
+                print('Cru = %0.3f ; RASmax = %0.0f mm ; ' +
+                      'Sy = %0.3f ; RMSE = %0.1f' ) % (cro, rasmax, Sy, RMSE)
+                
+    def opt_Sy(self, cro, rasmax, Sy0, rechg):#================= Optimize Sy ==
+        
+        tweatr = self.meteoObj.TIME + 10 # Here we introduce the time lag
+        
+        #---- water lvl observations ----
+        
+        twlvl = self.twlvl
+        WLVLobs = self.WLVLobs * 1000
+        
+        ts = np.where(twlvl[0] == tweatr)[0][0]
+        te = np.where(twlvl[-1] == tweatr)[0][0]
+        
+        #---- MRC ----
+        
+        A, B = self.waterlvlObj.A, self.waterlvlObj.B
+        
+        #---- Gauss-Newton ----
+        
+        tolmax = 0.001      
+        Sy = Sy0
+        dSy = 0.01
+                
+        WLVLpre = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
+                                       Sy, nscheme='forward')
+        RMSE = self.calc_RMSE(WLVLobs[self.NaNindx], WLVLpre[self.NaNindx])
+        
+        it = 0
+        while 1:            
+            it += 1
+            if it > 100:
+                print('Not converging.')
+                break                
+            
+            #---- Calculating Jacobian (X) Numerically ---- 
+                                           
+            wlvl = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
+                                        Sy * (1+dSy), nscheme='forward')
+            X = Xt = (wlvl[self.NaNindx] - WLVLpre[self.NaNindx]) / (Sy * dSy)       
+            
+            #---- Solving Linear System ----
+            
+            dh = WLVLobs[self.NaNindx] - WLVLpre[self.NaNindx]
+            XtX = np.dot(Xt, X)                
+            Xtdh = np.dot(Xt, dh)
+            
+            dr = np.linalg.tensorsolve(XtX, Xtdh, axes=None)
+            
+            #---- Storing old parameter values ----
+            
+            Syold = np.copy(Sy)
+            RMSEold = np.copy(RMSE)
+
+            while 1: # Loop for Damping (to prevent overshoot)
+
+                #---- Calculating new paramter values ----
+
+                Sy = Syold + dr
+                    
+                #---- Solving for new parameter values ----
+
+                WLVLpre = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
+                                               Sy, nscheme='forward')
+                RMSE = self.calc_RMSE(WLVLobs[self.NaNindx],
+                                      WLVLpre[self.NaNindx])
+
+                #---- Checking overshoot ----
+                
+                if (RMSE - RMSEold) > 0.1:
+                    dr = dr * 0.5
+                else:
+                    break
+    
+            #---- Checking tolerance ----
+            
+            tol = np.abs(Sy - Syold)            
+            
+            if tol < tolmax:
+                return Sy, RMSE
+            
+        
     def opt_Cru(self, Sy): #=================================== Optimize Cru ==
         
         # Optimization is done with a robust approach where all posiblities are
@@ -565,7 +676,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             # that recharge occurs on a time scale that is faster than
             # evapotranspiration in permeable soil.
             
-        print np.sum(PTOT - ETR - RECHG - RU) - (RAS[-1] - RAS[0])
+#        print np.sum(PTOT - ETR - RECHG - RU) - (RAS[-1] - RAS[0])
         
         return RECHG, RU, ETR, RAS, PACC
     
@@ -721,16 +832,24 @@ if __name__ == '__main__':
     
     synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl)
     
-    Sy = 0.25
+    Sy = [0.2, 0.3]
+    RASmax = [25, 200]
+    CRO = [0.2, 0.4]
+    
+    synth_hydrograph.GLUE(Sy, RASmax, CRO)
+    
+    
+    
+#    Sy = 0.25
 #    synth_hydrograph.plot_best_fit(Sy)
     
 #    CRU = np.arange(0.385, 0.365, 0.005)
-    CRU = [0.31]
-#    CRU = np.arange(0, 0.65, 0.05)
-    for cru in CRU:    
-        synth_hydrograph.plot_multiple_fit(Sy, [cru])
+#    CRU = [0.31]
+#    CRU = np.arange(0, 0.65, 0.05)    
+#    for cru in CRU:    
+#        synth_hydrograph.plot_multiple_fit(Sy, [cru])
         
     print('Fin')
     
-    plt.show()
+#    plt.show()
     
