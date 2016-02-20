@@ -29,6 +29,8 @@ import datetime
 #----- THIRD PARTY IMPORTS -----
 
 import numpy as np
+import h5py
+import matplotlib as mpl
 #from xlrd import xldate_as_tuple
 #from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
@@ -38,7 +40,227 @@ import matplotlib.pyplot as plt
 from meteo import MeteoObj
 from waterlvldata import WaterlvlData
 
+def plot_rechg_GLUE(language='English'):
+    
+    fname = 'GLUE.h5'
+    with h5py.File(fname,'r') as hf:
+        data = hf.get('recharge')
+        rechg = np.array(data)
+        
+        data = hf.get('RMSE')
+        RMSE = np.array(data)
+        
+        data = hf.get('Time')
+        TIME = np.array(data)
+        
+        data = hf.get('Weather')
+        WEATHER = np.array(data)
+        YEARS = WEATHER[:, 0].astype(int)
+        MONTHS = WEATHER[:, 1].astype(int)
+        PTOT = WEATHER[:, 6].astype(float)
+        
+        data = hf.get('Sy')
+        Sy = np.array(data)
+        
+        data = hf.get('RASmax')
+        RASmax = np.array(data)
+        
+        data = hf.get('Cru')
+        Cru = np.array(data)
+        
+    print np.min(Sy), np.max(Sy) 
+    print np.min(RASmax), np.max(RASmax)
+    print np.min(Cru), np.max(Cru)
+        
+    CDF = np.cumsum(RMSE / np.sum(RMSE))
+    
+    Rbound = []
+    for i in range(len(TIME)):
+        isort = np.argsort(rechg[:, i])
+        Rbound.append(
+            np.interp([0.05, 0.5, 0.95], CDF[isort], rechg[isort, i]))
+    Rbound = np.array(Rbound)
+    
+    #---- Define new variables ----
 
+    yr2plot = np.arange(1997, 2014).astype('int')
+    NYear = len(yr2plot)
+    
+    #---- Convert daily to hydrological year ----
+    
+    # the hydrological year is defined from October 1 to September 30 of the
+    # next year.
+    
+    max_rechg_yrly = []
+    min_rechg_yrly = []
+    prob_rechg_yrly = []
+    ptot_yrly = []
+    
+    for i in range(NYear):
+        yr0 = yr2plot[i]
+        yr1 = yr0 + 1
+        
+        indx0 = np.where((YEARS == yr0)&(MONTHS==10))[0][0]
+        indx1 = np.where((YEARS == yr1)&(MONTHS==9))[0][-1]
+                
+        max_rechg_yrly.append(np.sum(Rbound[indx0:indx1+1, 2]))        
+        min_rechg_yrly.append(np.sum(Rbound[indx0:indx1+1, 0]))
+        prob_rechg_yrly.append(np.sum(Rbound[indx0:indx1+1, 1]))
+        ptot_yrly.append(np.sum(PTOT[indx0:indx1+1]))
+    
+    max_rechg_yrly = np.array(max_rechg_yrly)
+    min_rechg_yrly = np.array(min_rechg_yrly)
+    prob_rechg_yrly = np.array(prob_rechg_yrly)
+    ptot_yrly = np.array(ptot_yrly)
+    
+    
+
+    #-------------------------------------------------------- Produce Figure --
+    
+    fig = plt.figure(figsize=(10, 6))
+    fig.patch.set_facecolor('white')
+    
+    fheight = fig.get_figheight()
+    fwidth = fig.get_figwidth()
+    
+    left_margin  = 1
+    right_margin = 0.35
+    bottom_margin = 1.1
+    top_margin = 0.25
+    
+    x0 = left_margin / fwidth
+    y0 = bottom_margin / fheight
+    w0 = 1 - (left_margin + right_margin) / fwidth
+    h0 = 1 - (bottom_margin + top_margin) / fheight
+   
+    #--------------------------------------------------------- AXES CREATION --
+
+    ax0  = fig.add_axes([x0, y0, w0, h0])
+    ax0.patch.set_visible(False)
+    for axis in ['top','bottom','left','right']:
+        ax0.spines[axis].set_linewidth(0.5)
+    ax0.set_axisbelow(True)
+    
+    #------------------------------------------------------------ AXIS RANGE --       
+    
+    Ymin0 = 100
+    Ymax0 = 700
+    
+    Xmin0 = min(yr2plot)-1
+    Xmax0 = max(yr2plot)+1
+    
+    #------------------------------------------------------ XTICKS FORMATING -- 
+    
+    xtcklabl = [''] * NYear
+    for i in range(NYear):        
+        yr1 = str(yr2plot[i])[-2:]
+        yr2 = str(yr2plot[i]+1)[-2:]
+        xtcklabl[i] = "'%s - '%s" % (yr1, yr2)
+                         
+    ax0.xaxis.set_ticks_position('bottom')
+    ax0.tick_params(axis='x',direction='out')
+    ax0.set_xticks(yr2plot)
+    ax0.xaxis.set_ticklabels(xtcklabl, rotation=45, ha='right')
+    
+    #------------------------------------------------------ YTICKS FORMATING --
+ 
+    ax0.yaxis.set_ticks_position('left')
+    ax0.set_yticks(np.arange(0, Ymax0+1, 100))
+    ax0.tick_params(axis='y',direction='out', gridOn=True, labelsize=12)
+    ax0.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
+             linewidth=0.5, dashes=[0.5, 5])
+    
+    ax0.set_yticks(np.arange(0, Ymax0, 50), minor=True)
+    ax0.tick_params(axis='y',direction='out', which='minor', gridOn=False)
+    
+    #------------------------------------------------------------ AXIS RANGE --
+    
+    ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
+
+    #---------------------------------------------------------------- LABELS --
+    ylabl = 'Annual Recharge (mm/y)'
+    xlabl = ('Hydrological Years (October 1st of one ' +
+             'year to September 30th of the next)')
+    if language == 'French' :  
+        ylabl = u"Colonne d'eau équivalente (mm)"
+        xlabl = (u"Année Hydrologique (1er octobre d'une " +
+                 u"année au 30 septembre de l'année suivante)")
+                 
+    ax0.set_ylabel(ylabl, fontsize=16,
+                   verticalalignment='bottom')
+    ax0.yaxis.set_label_coords(-0.07, 0.5)
+    
+    ax0.set_xlabel(xlabl, fontsize=16, verticalalignment='top')
+    ax0.xaxis.set_label_coords(0.5, -0.175)
+    
+    #-------------------------------------------------------------- PLOTTING --
+    
+#    ax0.plot(yr2plot, ptot_yrly-900, marker='s', zorder=0)
+    
+    ax0.plot(yr2plot, prob_rechg_yrly, ls='--', color='0.35', zorder=100)    
+    
+    yerr = [prob_rechg_yrly-min_rechg_yrly, max_rechg_yrly-prob_rechg_yrly]
+    herr = ax0.errorbar(yr2plot, prob_rechg_yrly, yerr=yerr,
+                        fmt='o', capthick=1, capsize=3, ecolor='0',
+                        elinewidth=1, mfc='White', mec='0', ms=5, mew=1,
+                        zorder=200)
+    
+    #---------------------------------------------------------------- Legend --
+      
+    lg_handles = [herr[0], herr[1]]            
+    lg_labels = ['Recharge (GLUE 50)', 'Recharge (GLUE 5/95)']
+    
+    ax0.legend(lg_handles, lg_labels, ncol=1, fontsize=12, frameon=False,
+               numpoints=1, loc='upper left')
+               
+    #-------------------------------------------------------------- Averages --
+    
+    print('Mean annual Recharge (GLUE 95) = %0.f mm/y' % np.mean(max_rechg_yrly))
+    print('Mean annual Recharge (GLUE 50)= %0.f mm/y' % np.mean(prob_rechg_yrly))
+    print('Mean annual Recharge (GLUE 5) = %0.f mm/y' % np.mean(min_rechg_yrly))
+    
+    
+    
+#    (GLUE 5/50/95) = %0.f / %0.f / %0.f mm/y 
+#            % (np.mean(min_rechg_yrly),
+#               np.mean(prob_rechg_yrly),
+#               np.mean(max_rechg_yrly)))
+    
+    text = (('Mean annual recharge : (GLUE 5) %d mm/y ; ' +
+            '(GLUE 50) %d mm/y  ; (GLUE 95) %d mm/y')
+            % (np.mean(min_rechg_yrly),
+               np.mean(prob_rechg_yrly),
+               np.mean(max_rechg_yrly)))
+              
+    
+    dx, dy = 5/72., 5/72.
+    padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)        
+    transform = ax0.transAxes + padding
+    ax0.text(0., 0., text, va='bottom', fontsize=12, transform=transform)
+    
+    #----- Some Calculation ----
+        
+    print('')
+    print ('%d behavioural realizations' % len(RMSE))
+    indx = np.where(prob_rechg_yrly == np.max(prob_rechg_yrly))[0][0]
+    print ('Max. Recharge is %d mm/y at year %s' %
+           (np.max(prob_rechg_yrly), xtcklabl[indx])            
+           ) 
+    indx = np.where(prob_rechg_yrly == np.min(prob_rechg_yrly))[0][0]
+    print ('Min. Recharge is %d mm/y at year %s' %
+           (np.min(prob_rechg_yrly), xtcklabl[indx])            
+           ) 
+    Runcer = max_rechg_yrly - min_rechg_yrly
+    print('Max uncertainty is %d mm/y at year %s'
+          % (np.max(Runcer) ,
+             xtcklabl[np.where(Runcer == np.max(Runcer))[0][0]])
+          )
+    print('Min uncertainty is %d mm/y at year %s'
+          % (np.min(Runcer) ,
+             xtcklabl[np.where(Runcer == np.min(Runcer))[0][0]])
+          ) 
+    
+    
 #==============================================================================
 def plot_water_budget_yearly(language = 'English'):
 #==============================================================================
@@ -462,8 +684,10 @@ def plot_water_budget_yearly2(language='English'):
 if __name__ == '__main__':
     
     plt.close('all')
-    plot_water_budget_yearly(language='French')
-    plot_water_budget_yearly2(language='French')
-
+#    plot_water_budget_yearly(language='French')
+#    plot_water_budget_yearly2(language='French')
+    
+    plot_rechg_GLUE()
+    plt.show()
 
 

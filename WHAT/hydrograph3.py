@@ -253,7 +253,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         fwidth = self.fwidth   # Figure width in inches
 
         if self.meteoOn == False:
-            fheight /= 2
+            fheight /= 2.
 
         self.set_size_inches(fwidth, fheight, forward=True) 
                         
@@ -346,7 +346,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         self.dZGrid_inch = (fheight - 2 * self.bottom_margin) / self.NZGrid
             
-        xTitle = self.TIMEmin #(self.TIMEmin + self.TIMEmax) / 2.
+        xTitle = self.TIMEmin
         ytitle = self.NZGrid + (0.5 / self.dZGrid_inch)
         
         self.figTitle = self.ax1.text(xTitle, ytitle, '',
@@ -354,8 +354,6 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                       horizontalalignment='left', 
                                       verticalalignment='center')
                                       
-        
-        
         #---- Weather Station ----
         
         # Calculate horizontal distance between weather station and
@@ -386,7 +384,11 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.ax1.xaxis.set_ticks_position('bottom')
         self.ax1.tick_params(axis='both',direction='out')
         
-        self.ax1.set_yticks(np.arange(0, self.NZGrid, 2))
+        if self.meteoOn:
+            self.ax1.set_yticks(np.arange(0, self.NZGrid, 2))
+        else:
+            self.ax1.set_yticks(np.arange(0, 6, 1))
+            self.ax1.axis(ymin=0, ymax=6)
         self.ax1.yaxis.set_ticklabels([])
         self.ax1.tick_params(axis='y', length=0)
         self.ax1.patch.set_facecolor('none')
@@ -650,7 +652,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                               1 - (bottom_margin + top_margin)])    
 
         
-    def draw_ylabels(self): #=================================================
+    def draw_ylabels(self): #================================= Draw Y Labels ==
         
         labelDB = LabelDatabase(self.language)
         
@@ -1196,7 +1198,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         #---- Redraw labels ----
         
-        padding = mpl.transforms.ScaledTranslation(0, -3/72., 
+        padding = mpl.transforms.ScaledTranslation(0, -5/72., 
                                                    self.dpi_scale_trans)        
         transform = self.ax1.transData + padding
                                   
@@ -1629,7 +1631,10 @@ if __name__ == '__main__':
     # 0: daily | 1: weekly | 2: monthly | 3: yearly
     hydrograph.RAINscale = 10
     
-    hydrograph.best_fit_waterlvl()    
+#    hydrograph.best_fit_waterlvl()
+    hydrograph.WLmin = 10.7
+    hydrograph.WLscale = 0.2
+    
     hydrograph.best_fit_time(waterLvlObj.time)
     
     hydrograph.generate_hydrograph(meteoObj) 

@@ -339,7 +339,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             for j, rasmax in enumerate(U_RAS):
                 rechg, _, _, _, _ = self.surf_water_budget(cro, rasmax,
                                                            ETP, PTOT, TAVG)
-                Sy, RMSE, RECHG = self.opt_Sy(cro, rasmax, Sy0, rechg)                
+                Sy, RMSE = self.opt_Sy(cro, rasmax, Sy0, rechg)                
                 Sy0 = Sy
                 
                 print('Cru = %0.3f ; RASmax = %0.0f mm ; ' +
@@ -837,8 +837,6 @@ if __name__ == '__main__':
     CRO = [0.2, 0.4]
     
     synth_hydrograph.GLUE(Sy, RASmax, CRO)
-    
-    
     
 #    Sy = 0.25
 #    synth_hydrograph.plot_best_fit(Sy)
