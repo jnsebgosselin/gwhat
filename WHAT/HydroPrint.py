@@ -370,7 +370,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.Ptot_scale = QtGui.QSpinBox()
             self.Ptot_scale.setSingleStep(5)
             self.Ptot_scale.setMinimum(5)
-            self.Ptot_scale.setMaximum(50)
+            self.Ptot_scale.setMaximum(100)
             self.Ptot_scale.setValue(20)        
             self.Ptot_scale.setSuffix('  mm')
             self.Ptot_scale.setAlignment(QtCore.Qt.AlignCenter)
