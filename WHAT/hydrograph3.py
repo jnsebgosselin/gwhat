@@ -1122,7 +1122,6 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         """
 
         if self.meteoOn == False:
-            print('meteoOn == False')
             return
             
         #---------------------------------------------------- SUBSAMPLE DATA --
