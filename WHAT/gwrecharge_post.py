@@ -71,13 +71,21 @@ def plot_rechg_GLUE(language='English'):
     print np.min(Sy), np.max(Sy) 
     print np.min(RASmax), np.max(RASmax)
     print np.min(Cru), np.max(Cru)
-  
-    RMSE = RMSE / np.sum(RMSE)
+    
+    #---- Resampling ----
+    
+#    indx = np.where((Sy >= 0.225) & (Sy <= 0.275))[0]
+#    RMSE = RMSE[indx]
+#    rechg = rechg[indx, :]
+    
+    #---- Calculation GLUE ----
+    
+    RMSE = RMSE / np.sum(RMSE) # Rescaling
         
     Rbound = []
     for i in range(len(TIME)):
-        isort = np.argsort(rechg[:, i])
-        CDF = np.cumsum(RMSE[isort])        
+        isort = np.argsort(rechg[:, i]) # Sorting predicted values
+        CDF = np.cumsum(RMSE[isort])    # Cumulative Density Function     
         Rbound.append(np.interp([0.05, 0.5, 0.95], CDF, rechg[isort, i]))            
     Rbound = np.array(Rbound)
     
@@ -217,13 +225,6 @@ def plot_rechg_GLUE(language='English'):
     print('Mean annual Recharge (GLUE 95) = %0.f mm/y' % np.mean(max_rechg_yrly))
     print('Mean annual Recharge (GLUE 50)= %0.f mm/y' % np.mean(prob_rechg_yrly))
     print('Mean annual Recharge (GLUE 5) = %0.f mm/y' % np.mean(min_rechg_yrly))
-    
-    
-    
-#    (GLUE 5/50/95) = %0.f / %0.f / %0.f mm/y 
-#            % (np.mean(min_rechg_yrly),
-#               np.mean(prob_rechg_yrly),
-#               np.mean(max_rechg_yrly)))
     
     text = (('Mean annual recharge : (GLUE 5) %d mm/y ; ' +
             '(GLUE 50) %d mm/y  ; (GLUE 95) %d mm/y')

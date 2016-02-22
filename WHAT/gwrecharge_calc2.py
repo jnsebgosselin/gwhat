@@ -149,15 +149,44 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         fname = 'GLUE.h5'
         with h5py.File(fname,'r') as hf:
             data = hf.get('hydrograph')
-            wlvl = np.array(data)
+            hydrograph = np.array(data)
+            
+            data = hf.get('Time')
+            tweatr = np.array(data)
+            
+            data = hf.get('RMSE')
+            RMSE = np.array(data)
+        
+        RMSE = RMSE / np.sum(RMSE)
+        
+        hGLUE = []
+        for i in range(len(hydrograph[0, :])):
+            isort = np.argsort(hydrograph[:, i])
+            CDF = np.cumsum(RMSE[isort])
+            hGLUE.append(
+                np.interp([0.05, 0.5, 0.95], CDF, hydrograph[isort, i]))
                 
-        max_wlvl = np.max(wlvl, axis=0)
-        min_wlvl = np.min(wlvl, axis=0)
-    
+        hGLUE = np.array(hGLUE)
+        min_wlvl = hGLUE[:, 0] / 1000.
+        max_wlvl = hGLUE[:, 2] / 1000.
+
         self.fig.axes[0].fill_between(self.DATE,
-                                      max_wlvl/1000., min_wlvl/1000.,
+                                      max_wlvl, min_wlvl,
                                       color='0.5', lw=1.5, alpha=0.65,
-                                      zorder=10)        
+                                      zorder=10)
+        
+        #---- Calculate Containement Ratio ----
+        
+        obs_wlvl = self.WLVLobs
+        CR = 0 
+        for i in range(len(obs_wlvl)):
+            if obs_wlvl[i] >= min_wlvl[i] and obs_wlvl[i]<=max_wlvl[i]:
+                CR += 1.
+        CR = CR / len(obs_wlvl) * 100
+        
+        print('Containement Ratio = %0.1f' % CR)
+    
+                
         
     @staticmethod
     def nash_sutcliffe(Xobs, Xpre): #======================== Nash-Sutcliffe ==

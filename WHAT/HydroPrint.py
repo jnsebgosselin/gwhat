@@ -935,6 +935,10 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         self.Ptot_scale.setValue(self.hydrograph.RAINscale)
         
+        #---- Color Palette ----
+        
+        self.color_palette_win.load_colors()
+        
         #---- Page Setup ----
         
         self.page_setup_win.pageSize = (self.hydrograph.fwidth, 
@@ -1209,6 +1213,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         elif sender == self.page_setup_win:
             self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
             self.hydrograph.fheight = self.page_setup_win.pageSize[1]
+            self.hydrograph.va_ratio = self.page_setup_win.va_ratio
             
             self.hydrograph.trend_line = int(self.page_setup_win.isTrendLine)            
             self.hydrograph.isLegend = int(self.page_setup_win.isLegend)
@@ -1326,23 +1331,35 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
             btn = QtGui.QToolButton()
             btn.setAutoRaise(True)
             btn.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
-            btn.clicked.connect(self.pick_color)            
-            btn.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
-                              (int(colorsDB.rgb[i][0]*255),
-                               int(colorsDB.rgb[i][1]*255),
-                               int(colorsDB.rgb[i][2]*255)))
+            btn.clicked.connect(self.pick_color)
+            
             self.colorGrid_layout.addWidget(btn, i, 3)
+        self.load_colors()
         self.colorGrid_layout.setColumnStretch(2, 100)
         
         colorGrid_widget.setLayout(self.colorGrid_layout)
-            
+        
         #---- Main Layout ----
         
         main_layout = QtGui.QGridLayout()
         main_layout.addWidget(colorGrid_widget, 0, 0)
         main_layout.addWidget(toolbar_widget, 1, 0)                
         self.setLayout(main_layout)
+    
+    def load_colors(self): #==================================== Load Colors ==
+    
+        colorsDB = hydroprint.Colors()
+        colorsDB.load_colors_db()
         
+        nrow = self.colorGrid_layout.rowCount()
+        for row in range(nrow):
+            item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
+            item.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
+                                   (colorsDB.RGB[row][0],
+                                    colorsDB.RGB[row][1],
+                                    colorsDB.RGB[row][2])
+                               )
+                                
     def reset_defaults(self): #============================= Reset Deafaults ==
        
         colorsDB = hydroprint.Colors()
@@ -1351,9 +1368,10 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         for row in range(nrow):
             btn = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             btn.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
-                              (int(colorsDB.rgb[row][0]*255),
-                               int(colorsDB.rgb[row][1]*255),
-                               int(colorsDB.rgb[row][2]*255)))
+                                  (colorsDB.RGB[row][0],
+                                   colorsDB.RGB[row][1],
+                                   colorsDB.RGB[row][2])
+                              )
         
     def pick_color(self): #================================= Pick New Colors ==
         
@@ -1392,16 +1410,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         # the values they had the last time "Accept" button was
         # clicked.
         
-        colorsDB = hydroprint.Colors()
-        colorsDB.load_colors_db()
-        
-        nrow = self.colorGrid_layout.rowCount()
-        for row in range(nrow):
-            item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
-            item.setStyleSheet("background-color: rgb(%i,%i,%i)" % 
-                               (int(colorsDB.rgb[row][0]*255),
-                                int(colorsDB.rgb[row][1]*255),
-                                int(colorsDB.rgb[row][2]*255)))
+        self.load_colors()        
         
     def show(self): #================================================== Show ==
         super(ColorsSetupWin, self).show()
@@ -1443,6 +1452,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.isLegend = True
         self.isGraphTitle = True
         self.isTrendLine = False
+        self.va_ratio = 0.15
         
         #---- Toolbar ----
         
@@ -1481,12 +1491,22 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.fheight.setSuffix('  in')
         self.fheight.setAlignment(QtCore.Qt.AlignCenter)
         
+        self.va_ratio_spinBox = QtGui.QDoubleSpinBox()
+        self.va_ratio_spinBox.setSingleStep(0.01)
+        self.va_ratio_spinBox.setMinimum(0.1)
+        self.va_ratio_spinBox.setMaximum(0.99)
+        self.va_ratio_spinBox.setValue(self.va_ratio)
+        self.va_ratio_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+        
         figSize_layout = QtGui.QGridLayout()
-        figSize_layout.addWidget(QtGui.QLabel('Figure Size:'), 0, 0)
-        figSize_layout.addWidget(self.fwidth, 0, 1)                
-        figSize_layout.addWidget(QtGui.QLabel('x'), 0, 2)
-        figSize_layout.addWidget(self.fheight, 0, 3)
-        figSize_layout.setColumnStretch(4, 100)
+        figSize_layout.addWidget(QtGui.QLabel('Figure Width :'), 0, 0)
+        figSize_layout.addWidget(self.fwidth, 0, 2)                
+        figSize_layout.addWidget(QtGui.QLabel('Figure Height :'), 1, 0)
+        figSize_layout.addWidget(self.fheight, 1, 2)
+        figSize_layout.addWidget(QtGui.QLabel('Top/Bottom Ratio :'), 2, 0)
+        figSize_layout.addWidget(self.va_ratio_spinBox, 2, 2)   
+            
+        figSize_layout.setColumnStretch(1, 100)
         
         figSize_widget.setLayout(figSize_layout)
         
@@ -1496,13 +1516,13 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         
         self.legend_on = QtGui.QRadioButton('On')
         self.legend_on.toggle()
-        self.legend_off = QtGui.QRadioButton('Off')        
+        self.legend_off = QtGui.QRadioButton('Off')      
         
         legend_layout = QtGui.QGridLayout()
-        legend_layout.addWidget(QtGui.QLabel('Legend:'), 0, 0)
-        legend_layout.addWidget(self.legend_on, 0, 1)
-        legend_layout.addWidget(self.legend_off, 0, 2)
-        legend_layout.setColumnStretch(3, 100)
+        legend_layout.addWidget(QtGui.QLabel('Legend :'), 0, 0)
+        legend_layout.addWidget(self.legend_on, 0, 2)
+        legend_layout.addWidget(self.legend_off, 0, 3)
+        legend_layout.setColumnStretch(1, 100)
         
         legend_widget.setLayout(legend_layout)
         
@@ -1515,10 +1535,10 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.title_off = QtGui.QRadioButton('Off')        
         
         title_layout = QtGui.QGridLayout()
-        title_layout.addWidget(QtGui.QLabel('Graph Title:'), 0, 0)
-        title_layout.addWidget(self.title_on, 0, 1)
-        title_layout.addWidget(self.title_off, 0, 2)
-        title_layout.setColumnStretch(3, 100)
+        title_layout.addWidget(QtGui.QLabel('Graph Title :'), 0, 0)
+        title_layout.addWidget(self.title_on, 0, 2)
+        title_layout.addWidget(self.title_off, 0, 3)
+        title_layout.setColumnStretch(1, 100)
         
         title_widget.setLayout(title_layout)
         
@@ -1531,10 +1551,10 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.trend_off.toggle()
         
         trend_layout = QtGui.QGridLayout()
-        trend_layout.addWidget(QtGui.QLabel('Water Level Trend:'), 0, 0)
-        trend_layout.addWidget(self.trend_on, 0, 1)
-        trend_layout.addWidget(self.trend_off, 0, 2)
-        trend_layout.setColumnStretch(3, 100)
+        trend_layout.addWidget(QtGui.QLabel('Water Level Trend :'), 0, 0)
+        trend_layout.addWidget(self.trend_on, 0, 2)
+        trend_layout.addWidget(self.trend_off, 0, 3)
+        trend_layout.setColumnStretch(1, 100)
         
         trend_widget.setLayout(trend_layout)
         
@@ -1559,6 +1579,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.isLegend = self.legend_on.isChecked()
         self.isGraphTitle = self.title_on.isChecked()
         self.isTrendLine = self.trend_on.isChecked()
+        self.va_ratio = self.va_ratio_spinBox.value()
         
         self.newPageSetupSent.emit(True)
             
@@ -1573,6 +1594,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         
         self.fwidth.setValue(self.pageSize[0])
         self.fheight.setValue(self.pageSize[1])
+        self.va_ratio_spinBox.setValue(self.va_ratio)
         
         if self.isLegend == True:
             self.legend_on.toggle()
