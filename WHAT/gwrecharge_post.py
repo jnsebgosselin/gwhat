@@ -71,14 +71,14 @@ def plot_rechg_GLUE(language='English'):
     print np.min(Sy), np.max(Sy) 
     print np.min(RASmax), np.max(RASmax)
     print np.min(Cru), np.max(Cru)
+  
+    RMSE = RMSE / np.sum(RMSE)
         
-    CDF = np.cumsum(RMSE / np.sum(RMSE))
-    
     Rbound = []
     for i in range(len(TIME)):
         isort = np.argsort(rechg[:, i])
-        Rbound.append(
-            np.interp([0.05, 0.5, 0.95], CDF[isort], rechg[isort, i]))
+        CDF = np.cumsum(RMSE[isort])        
+        Rbound.append(np.interp([0.05, 0.5, 0.95], CDF, rechg[isort, i]))            
     Rbound = np.array(Rbound)
     
     #---- Define new variables ----
@@ -112,8 +112,7 @@ def plot_rechg_GLUE(language='English'):
     min_rechg_yrly = np.array(min_rechg_yrly)
     prob_rechg_yrly = np.array(prob_rechg_yrly)
     ptot_yrly = np.array(ptot_yrly)
-    
-    
+        
 
     #-------------------------------------------------------- Produce Figure --
     
@@ -143,8 +142,8 @@ def plot_rechg_GLUE(language='English'):
     
     #------------------------------------------------------------ AXIS RANGE --       
     
-    Ymin0 = 100
-    Ymax0 = 700
+    Ymin0 = 0
+    Ymax0 = 600
     
     Xmin0 = min(yr2plot)-1
     Xmax0 = max(yr2plot)+1
