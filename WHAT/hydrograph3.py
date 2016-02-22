@@ -174,7 +174,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         self.fwidth, self.fheight = 11.0, 8.5
         self.patch.set_facecolor('white')
-        self.NZGrid = 8 # Dundurn: 17 # Old version: 26
+        self.NZGrid = 8 # Number of interval in the grid of the bottom part
+        self.va_ratio = 0.15  # Vertical height ratio between the top part
+                              # and the bottom part of the graph
         
         #---- Database ----
         
@@ -328,13 +330,11 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             
         #--- Bottom Graph Grid ---
         
-        self.axLow = self.add_axes(self.ax2.get_position(), frameon=True)
+        self.axLow = self.ax1.twinx()
         self.axLow.patch.set_visible(False) 
         self.axLow.set_zorder(self.ax2.get_zorder() - 50)
         self.axLow.tick_params(bottom='off', top='off', left='off', right='off',
                                labelbottom='off', labelleft='off')
-#        self.axLow.set_yticks(np.arange(1, self.NZGrid))
-#        self.axLow.axis(ymin=0, ymax=self.NZGrid)
         
         self.update_waterlvl_scale()
         
@@ -385,6 +385,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                       transform=transform)
         
         self.draw_figure_title()
+        
         #-------------------------------------------------------------- TIME --
         
         self.xlabels = [] # Initiate variable
@@ -424,8 +425,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         self.plot_recess, = self.ax2.plot([], [], color='red', lw=1.5,
                                           dashes=[5, 3], zorder = 100,
-                                          alpha=0.65)
-        
+                                          alpha=0.65)        
         
         self.draw_waterlvl()
          
@@ -482,7 +482,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             t = load_weather_log(self.finfo, 'Total Precip (mm)')
             y = np.ones(len(t)) * self.ax4.get_ylim()[0]                
             self.ax4.plot(t, y, ls='-', solid_capstyle='projecting', 
-                          lw=1.5, c='red', transform=transform)
+                          lw=1., c='red', transform=transform)
             
             #---- Air Temperature (v2) ----
             
@@ -494,7 +494,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             t = load_weather_log(self.finfo, 'Max Temp (deg C)')
             y = np.ones(len(t)) * self.ax4.get_ylim()[1]
             self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
-                          lw=1.5, c='red', transform=transform)
+                          lw=1., c='red', transform=transform)
                                                        
             self.draw_weather()
         
@@ -549,7 +549,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 #---- Missing Data Markers ----
                 
                 lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
-                             lw=1.5, c='red')
+                             lw=1., c='red')
                              
                 lg_handles.append(lin1)
                 lg_labels.append(labelDB[3])
@@ -633,7 +633,6 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         print('Setting up graph margins')
 
         fheight = self.fheight
-        print fheight
             
         #---- MARGINS (Inches / Fig. Dimension) ----
         
@@ -644,42 +643,43 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         else:
             right_margin = 0.85 / self.fwidth
                 
-        bottom_margin = 0.55 / fheight
+        bottom_margin = 0.55 / self.fheight
         
-        top_margin = 0.25 / fheight
+        top_margin = 0.25 / self.fheight
         if self.isGraphTitle == 1 or self.isLegend == 1:
             if self.meteoOn == False:
                 top_margin += 0.2 / fheight
             else:
                 top_margin += 0.45 / fheight
         
-        #---- MARGINS (% of figure) ----
+        #---- MARGINS (% of figure) ----        
         
         if self.meteoOn:
-            vratio = 0.15
+            va_ratio = self.va_ratio
         else:
-            vratio = 0
+            va_ratio = 0
         
         htot = 1 - (bottom_margin + top_margin)
-        htop = htot * vratio 
-        hlow = htot * (1-vratio)
+        htop = htot * va_ratio 
+        hlow = htot * (1-va_ratio)
+        wtot = 1 - (left_margin + right_margin)
         
         # Host, Frame, Water Levels, Precipitation, Air Temperature
         
         for i, axe in enumerate(self.axes):
             if i == 4: # Air Temperature
-                axe.set_position([left_margin, bottom_margin + hlow, 
-                                  1 - (left_margin + right_margin), htop]) 
+                axe.set_position([left_margin, bottom_margin + hlow,  
+                                  wtot, htop]) 
             elif i in [0, 1]: # Time, Frame
-                axe.set_position([left_margin, bottom_margin, 
-                                  1 - (left_margin + right_margin), htot])  
+                axe.set_position([left_margin, bottom_margin, wtot, htot])
+                                    
             else:
-                axe.set_position([left_margin, bottom_margin, 
-                                  1 - (left_margin + right_margin), hlow])    
+                axe.set_position([left_margin, bottom_margin, wtot, hlow]) 
+                                     
 
         
     def draw_ylabels(self): #================================= Draw Y Labels ==
-        
+       
         labelDB = LabelDatabase(self.language)
         
         #-------------------------------------------- Calculate LabelPadding --
@@ -1090,15 +1090,11 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         if self.trend_line == 1:   
             tfilt, wlfilt = filt_data(time, water_lvl, 7)
             
-            self.l1_ax2.set_data(tfilt, wlfilt)
-            self.l1_ax2.set_label('WL Trend Line')
-                          
+            self.l1_ax2.set_data(tfilt, wlfilt)                          
             self.l2_ax2.set_data(time, water_lvl)
                           
         else:            
-            self.l1_ax2.set_data(time, water_lvl)
-            self.l1_ax2.set_label('Water Level')
-            
+            self.l1_ax2.set_data(time, water_lvl)            
             self.l2_ax2.set_data([], [])
                         
         #--------------------------------------------------- Manual Measures --
@@ -1313,33 +1309,35 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         
         self.axLow.set_yticks(np.arange(1, self.NZGrid))
         self.axLow.axis(ymin=0, ymax=NZGrid)
+        self.axLow.yaxis.set_ticklabels([])
                   
         if self.WLdatum == 1:   # masl        
             WLmin = self.WLmin
             WLscale = self.WLscale
             WLmax = WLmin + (NZGrid * WLscale)
-            
-            self.ax2.axis(ymin=WLmin, ymax=WLmax)
+                        
             if self.meteoOn:
-                self.ax2.set_yticks(np.arange(WLmin, WLmax - 2.9*WLscale,
+                self.ax2.set_yticks(np.arange(WLmin, WLmax - 1.9*WLscale,
                                               WLscale))
             else:
                 self.ax2.set_yticks(np.arange(WLmin, WLmax + 0.1*WLscale,
                                               WLscale))
+                                              
+            self.ax2.axis(ymin=WLmin, ymax=WLmax)
             
         else: # mbgs: Y axis is inverted        
             WLmax = self.WLmin
             WLscale = self.WLscale    
             WLmin = WLmax - (NZGrid * WLscale)
-            
-            self.ax2.axis(ymin=WLmin, ymax=WLmax)
+
             if self.meteoOn:
-                self.ax2.set_yticks(np.arange(WLmax, WLmin + 2.9*WLscale,
+                self.ax2.set_yticks(np.arange(WLmax, WLmin + 1.9*WLscale,
                                               -WLscale))
             else:
                 self.ax2.set_yticks(np.arange(WLmax, WLmin - 0.1*WLscale,
                                               -WLscale))
             
+            self.ax2.axis(ymin=WLmin, ymax=WLmax)
             self.ax2.invert_yaxis()
             
     def update_precip_scale(self): #==================== Precipitation Scale ==
@@ -1356,35 +1354,26 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
     def set_gridLines(self): #=================================== Grid Lines ==
         
         # 0 -> None, 1 -> "-" 2 -> ":"
-        
-#        ax_time = self.axes[]
-        # Host, Frame, Water Levels, Precipitation, Air Temperature
-        
-        axTime = self.axes[0]
-        axTemp = self.axes[4]
-        
-        for ax in self.axes:
-            ax.tick_params(gridOn=False)
-        
+              
         if self.gridLines == 0:
             for ax in self.axes:
-                ax.tick_params(gridOn=False)
+                ax._gridOn = False
 
         elif self.gridLines == 1: 
-            axTemp.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle='-',
-                        linewidth=0.5, which='minor')
+            self.ax4.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle='-',
+                          linewidth=0.5, which='minor')
             self.axLow.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle='-',
                             linewidth=0.5)
-            axTime.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle='-',
-                        linewidth=0.5)
+            self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle='-',
+                          linewidth=0.5)
                       
         else:
-            axTemp.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
+            self.ax4.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
                         linewidth=0.5, dashes=[0.5, 5], which='minor')
             self.axLow.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
                             linewidth=0.5, dashes=[0.5, 5])
-            axTime.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle=':',
-                        linewidth=0.5, dashes=[0.5, 5])
+            self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle=':',
+                          linewidth=0.5, dashes=[0.5, 5])
                    
     def make_xticks_info(self): #=============================================
         
@@ -1666,50 +1655,57 @@ if __name__ == '__main__':
     hydrograph = Hydrograph()
     hydrograph.set_waterLvlObj(waterLvlObj)
     hydrograph.finfo = finfo 
-    
+        
     #---- Layout Options ----
     
-    hydrograph.fwidth = 11 # Width of the figure in inches
-    hydrograph.fheight = 5    
+    hydrograph.fwidth = 11. # Width of the figure in inches
+    hydrograph.fheight = 8.5
     
     hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
     hydrograph.trend_line = False
     hydrograph.gridLines = 2 # Gridlines Style    
-    hydrograph.isGraphTitle = 0 # 1 -> title ; 0 -> no title
+    hydrograph.isGraphTitle = 1 # 1 -> title ; 0 -> no title
     hydrograph.isLegend = 1
         
-    hydrograph.meteoOn = False # 0 -> no meteo ; 1 -> meteo
+    hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
     hydrograph.datemode = 'year' # 'month' or 'year'
     hydrograph.date_labels_display_pattern = 1
     hydrograph.bwidth_indx = 2 # Meteo Bin Width
     # 0: daily | 1: weekly | 2: monthly | 3: yearly
     hydrograph.RAINscale = 100
     
-    #---- MRC ----
-    
-    hydrograph.NZGrid = 11
-    hydrograph.WLmin = 10.75
-    hydrograph.WLscale = 0.25
-    
     hydrograph.best_fit_time(waterLvlObj.time)    
-    hydrograph.generate_hydrograph(meteoObj) 
-    
-    hydrograph.draw_recession()
-    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
-    
-    hydrograph.isMRC = False
-    
-    #---- GLUE ----
-    
-    hydrograph.NZGrid = 14
-    hydrograph.WLmin = 11.25
-    hydrograph.WLscale = 0.25
-    
-    hydrograph.best_fit_time(waterLvlObj.time)    
+    hydrograph.best_fit_waterlvl()
     hydrograph.generate_hydrograph(meteoObj)
     
-    hydrograph.draw_GLUE()
-    hydrograph.savefig(dirname + '/GLUE_hydrograph.pdf')
+#    #---- MRC ----
+#    
+#    hydrograph.fheight = 5.
+#    hydrograph.isGraphTitle = 0
+#    
+#    hydrograph.NZGrid = 11
+#    hydrograph.WLmin = 10.75
+#    hydrograph.WLscale = 0.25
+#    
+#    hydrograph.best_fit_time(waterLvlObj.time)    
+#    hydrograph.generate_hydrograph(meteoObj) 
+#    
+#    hydrograph.draw_recession()
+#    hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
+#    
+#    hydrograph.isMRC = False
+#    
+#    #---- GLUE ----
+#    
+#    hydrograph.NZGrid = 14
+#    hydrograph.WLmin = 11.25
+#    hydrograph.WLscale = 0.25
+#    
+#    hydrograph.best_fit_time(waterLvlObj.time)    
+#    hydrograph.generate_hydrograph(meteoObj)
+#    
+#    hydrograph.draw_GLUE()
+#    hydrograph.savefig(dirname + '/GLUE_hydrograph.pdf')
     
     #------------------------------------------------- show figure on-screen --
     

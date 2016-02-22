@@ -959,6 +959,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.page_setup_win.trend_off.toggle()
             
         self.page_setup_win.fwidth.setValue(self.hydrograph.fwidth)
+        self.page_setup_win.fheight.setValue(self.hydrograph.fheight)
                     
         #----- Check if Weather Data File exists -----
         
@@ -1206,8 +1207,10 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 self.hydrograph.draw_figure_title()
                 
         elif sender == self.page_setup_win:
-            self.hydrograph.trend_line = int(self.page_setup_win.isTrendLine)
             self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
+            self.hydrograph.fheight = self.page_setup_win.pageSize[1]
+            
+            self.hydrograph.trend_line = int(self.page_setup_win.isTrendLine)            
             self.hydrograph.isLegend = int(self.page_setup_win.isLegend)
             self.hydrograph.isGraphTitle = \
                 int(self.page_setup_win.isGraphTitle)
@@ -1471,11 +1474,18 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.fwidth.setSuffix('  in')
         self.fwidth.setAlignment(QtCore.Qt.AlignCenter)
         
+        self.fheight = QtGui.QDoubleSpinBox()
+        self.fheight.setSingleStep(0.05)
+        self.fheight.setMinimum(5.)
+        self.fheight.setValue(self.pageSize[1])
+        self.fheight.setSuffix('  in')
+        self.fheight.setAlignment(QtCore.Qt.AlignCenter)
+        
         figSize_layout = QtGui.QGridLayout()
         figSize_layout.addWidget(QtGui.QLabel('Figure Size:'), 0, 0)
         figSize_layout.addWidget(self.fwidth, 0, 1)                
         figSize_layout.addWidget(QtGui.QLabel('x'), 0, 2)
-        figSize_layout.addWidget(QtGui.QLabel('8.5 in'), 0, 3)
+        figSize_layout.addWidget(self.fheight, 0, 3)
         figSize_layout.setColumnStretch(4, 100)
         
         figSize_widget.setLayout(figSize_layout)
@@ -1545,7 +1555,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         
     def btn_apply_isClicked(self): #===========================================
         
-        self.pageSize = (self.fwidth.value(), 8.5)
+        self.pageSize = (self.fwidth.value(), self.fheight.value())
         self.isLegend = self.legend_on.isChecked()
         self.isGraphTitle = self.title_on.isChecked()
         self.isTrendLine = self.trend_on.isChecked()
@@ -1562,6 +1572,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         # clicked.
         
         self.fwidth.setValue(self.pageSize[0])
+        self.fheight.setValue(self.pageSize[1])
         
         if self.isLegend == True:
             self.legend_on.toggle()
@@ -1578,7 +1589,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         else:
             self.trend_off.toggle()
         
-    def show(self): #==========================================================
+    def show(self): #================================================== Show ==
         super(PageSetupWin, self).show()
         self.activateWindow()
         self.raise_()
