@@ -432,9 +432,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #----------------------------------------------------------- WEATHER --
             
         #---- PRECIPITATION ----
-        
-        self.update_precip_scale()
-        
+                
         self.ax3.yaxis.set_ticks_position('right')
         self.ax3.yaxis.set_label_position('right')
         self.ax3.tick_params(axis='y', direction='out', labelsize=10)
@@ -443,7 +441,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.RAIN_bar, = self.ax3.plot([], [])
         self.baseline, = self.ax3.plot([self.TIMEmin, self.TIMEmax],
                                        [0, 0], 'k')
-             
+        
         #---- AIR TEMPERATURE ----
       
         TEMPmin = -40
@@ -496,7 +494,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
                           lw=1., c='red', transform=transform)
                                                        
-            self.draw_weather()
+        self.draw_weather()
         
         #------------------------------------------------------ DRAW YLABELS --
                                                                  
@@ -818,7 +816,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                self.RAINscale, self.WLdatum, self.trend_line, self.fwidth,
                self.fheight, colorStack, self.language, self.datemode,
                self.date_labels_display_pattern, self.bwidth_indx,
-               self.va_ratio]
+               self.va_ratio, self.NZGrid]
     
         for row in range(len(reader)):
             if reader[row][0] == name_well:
@@ -930,6 +928,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             if self.va_ratio < 0.05:
                 self.va_ratio = 0.05                
         except: self.va_ratio = 0.15
+        
+        try: self.NZGrid = int(reader[19])
+        except: self.NZGrid = 8
       
     def best_fit_waterlvl(self): #==================== Best Fit Water Levels ==
         
@@ -1189,7 +1190,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.RAIN_bar = self.ax3.fill_between(TIME2X, 0., Rain2X, 
                                               color=self.colorsDB.rgb[1],
                                               edgecolor='none')
-                                            
+
         self.baseline.set_data([self.TIMEmin, self.TIMEmax], [0, 0])
                                                     
         #----------------------------------------------------- PLOT AIR TEMP --
@@ -1209,7 +1210,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                                             edgecolor='none')
         
         self.l2_ax4.set_xdata(TIME2X)
-        self.l2_ax4.set_ydata(Tmax2X)
+        self.l2_ax4.set_ydata(Tmax2X)        
+        
+        self.update_precip_scale()
         
     def set_time_scale(self): #================================================
         
@@ -1353,10 +1356,27 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         if self.meteoOn == False:
             return
         
-        RAINscale = self.RAINscale
+        ymax = self.NZGrid * self.RAINscale
         
-        self.ax3.axis(ymin=0, ymax=self.NZGrid*RAINscale)
-        self.ax3.set_yticks(np.arange(0, 3.9*RAINscale, RAINscale))
+        try:
+            p = self.PTOT_bar.get_paths()[0]
+            v = p.vertices
+            y = v[:,1]
+            
+            ymax = self.NZGrid * self.RAINscale
+            
+            yticksmax = 0
+            while 1:
+                if yticksmax > max(y):
+                    break
+                yticksmax += self.RAINscale
+            yticksmax = min(ymax, yticksmax) + self.RAINscale/2.
+            
+        except:
+            yticksmax = 3.9 * self.RAINscale
+        
+        self.ax3.axis(ymin=0, ymax=ymax)
+        self.ax3.set_yticks(np.arange(0, yticksmax, self.RAINscale))
         self.ax3.invert_yaxis()
             
     def set_gridLines(self): #=================================== Grid Lines ==

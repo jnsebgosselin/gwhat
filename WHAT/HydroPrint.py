@@ -320,15 +320,14 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
             #------------------------------------------------- WATER LEVEL ----
             
-            label_waterlvl_scale = QtGui.QLabel('WL Scale :') 
             self.waterlvl_scale = QtGui.QDoubleSpinBox()
             self.waterlvl_scale.setSingleStep(0.05)
             self.waterlvl_scale.setMinimum(0.05)
             self.waterlvl_scale.setSuffix('  m')
             self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter) 
             self.waterlvl_scale.setKeyboardTracking(False)
+            self.waterlvl_scale.valueChanged.connect(self.layout_changed)
             
-            label_waterlvl_max = QtGui.QLabel('WL Min :') 
             self.waterlvl_max = QtGui.QDoubleSpinBox()
             self.waterlvl_max.setSingleStep(0.1)
             self.waterlvl_max.setSuffix('  m')
@@ -336,25 +335,38 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.waterlvl_max.setMinimum(-1000)
             self.waterlvl_max.setMaximum(1000)
             self.waterlvl_max.setKeyboardTracking(False)
+            self.waterlvl_max.valueChanged.connect(self.layout_changed)
             
-            label_datum = QtGui.QLabel('WL Datum :')
+            self.NZGridWL_spinBox = QtGui.QSpinBox()
+            self.NZGridWL_spinBox.setSingleStep(1)
+            self.NZGridWL_spinBox.setMinimum(1)
+            self.NZGridWL_spinBox.setMaximum(50)
+            self.NZGridWL_spinBox.setValue(self.hydrograph.NZGrid)
+            self.NZGridWL_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+            self.NZGridWL_spinBox.setKeyboardTracking(False)
+            self.NZGridWL_spinBox.valueChanged.connect(self.layout_changed)
+            
             self.datum_widget = QtGui.QComboBox()
             self.datum_widget.addItems(['Ground Surface', 'See Level'])
+            self.datum_widget.currentIndexChanged.connect(self.layout_changed)
             
             self.subgrid_WLScale_widget = QtGui.QFrame()
             self.subgrid_WLScale_widget.setFrameStyle(0) # styleDB.frame
             subgrid_WLScale = QtGui.QGridLayout()
             
             row = 0
-            subgrid_WLScale.addWidget(label_waterlvl_scale, row, 1)        
+            subgrid_WLScale.addWidget(QtGui.QLabel('WL Scale :'), row, 1)        
             subgrid_WLScale.addWidget(self.waterlvl_scale, row, 2)
             row += 1
-            subgrid_WLScale.addWidget(label_waterlvl_max, row, 1)        
+            subgrid_WLScale.addWidget(QtGui.QLabel('WL Min :'), row, 1)        
             subgrid_WLScale.addWidget(self.waterlvl_max, row, 2)
             row += 1
-            subgrid_WLScale.addWidget(label_datum, row, 1)
+            subgrid_WLScale.addWidget(QtGui.QLabel('Grid Div. :'), row, 1)
+            subgrid_WLScale.addWidget(self.NZGridWL_spinBox, row, 2)
+            row += 1
+            subgrid_WLScale.addWidget(QtGui.QLabel('WL Datum :'), row, 1)
             subgrid_WLScale.addWidget(self.datum_widget, row, 2)
-            
+                        
             subgrid_WLScale.setVerticalSpacing(5)
             subgrid_WLScale.setHorizontalSpacing(10)
             subgrid_WLScale.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
@@ -509,11 +521,8 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.hydrocalc.btn_layout_mode.clicked.connect(self.toggle_layoutMode)
         
         #----- Hydrograph Layout -----
-        
-        self.datum_widget.currentIndexChanged.connect(self.layout_changed)
+                
         self.language_box.currentIndexChanged.connect(self.layout_changed)
-        self.waterlvl_max.valueChanged.connect(self.layout_changed)
-        self.waterlvl_scale.valueChanged.connect(self.layout_changed)
         self.Ptot_scale.valueChanged.connect(self.layout_changed)
         self.date_start_widget.dateChanged.connect(self.layout_changed)
         self.date_start_widget.dateChanged.connect(self.layout_changed)
@@ -931,7 +940,8 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                                     
         self.waterlvl_scale.setValue(self.hydrograph.WLscale)
         self.waterlvl_max.setValue(self.hydrograph.WLmin)
-        self.datum_widget.setCurrentIndex (self.hydrograph.WLdatum)
+        self.datum_widget.setCurrentIndex(self.hydrograph.WLdatum)
+        self.NZGridWL_spinBox.setValue(self.hydrograph.NZGrid)
         
         self.Ptot_scale.setValue(self.hydrograph.RAINscale)
         
@@ -1165,6 +1175,13 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 self.hydrograph.update_waterlvl_scale()
                 self.hydrograph.draw_ylabels()
                 
+        elif sender == self.NZGridWL_spinBox:
+            self.hydrograph.NZGrid = self.NZGridWL_spinBox.value()
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.update_waterlvl_scale()
+                self.hydrograph.update_precip_scale()
+                self.hydrograph.draw_ylabels()
+                
         elif sender == self.Ptot_scale:
             self.hydrograph.RAINscale = self.Ptot_scale.value()
             if self.hydrograph.isHydrographExists:
@@ -1228,7 +1245,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 #                   set_time_scale()
                 #                   draw_figure_title
             
-                self.hydrograph.draw_waterlvl() 
+                self.hydrograph.draw_waterlvl()
                 self.hydrograph.set_legend()
         
         #------------------------------------------- Weather Data resampling --
@@ -1455,6 +1472,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.isGraphTitle = True
         self.isTrendLine = False
         self.va_ratio = 0.15
+        self.NZGrid = 8
         
         #---- Toolbar ----
         
@@ -1494,21 +1512,45 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.fheight.setAlignment(QtCore.Qt.AlignCenter)
         
         self.va_ratio_spinBox = QtGui.QDoubleSpinBox()
-        self.va_ratio_spinBox.setSingleStep(0.05)
+        self.va_ratio_spinBox.setSingleStep(0.01)
         self.va_ratio_spinBox.setMinimum(0.1)
         self.va_ratio_spinBox.setMaximum(0.95)
         self.va_ratio_spinBox.setValue(self.va_ratio)
         self.va_ratio_spinBox.setAlignment(QtCore.Qt.AlignCenter)
         
+        class HSep(QtGui.QFrame): # vertical separators for the toolbar
+            def __init__(self, parent=None):
+                super(HSep, self).__init__(parent)                
+                self.setFrameStyle(db.styleUI().HLine)
+            
+        class QTitle(QtGui.QLabel): # vertical separators for the toolbar
+            def __init__(self, label, parent=None):
+                super(QTitle, self).__init__(label, parent)                
+                self.setAlignment(QtCore.Qt.AlignCenter)
+        
         figSize_layout = QtGui.QGridLayout()
-        figSize_layout.addWidget(QtGui.QLabel('Figure Width :'), 0, 0)
-        figSize_layout.addWidget(self.fwidth, 0, 2)                
-        figSize_layout.addWidget(QtGui.QLabel('Figure Height :'), 1, 0)
-        figSize_layout.addWidget(self.fheight, 1, 2)
-        figSize_layout.addWidget(QtGui.QLabel('Top/Bottom Ratio :'), 2, 0)
-        figSize_layout.addWidget(self.va_ratio_spinBox, 2, 2)   
+        row = 0
+        figSize_layout.addWidget(QTitle('FIGURE SIZE\n'), row, 0, 1, 3)
+        row += 1
+        figSize_layout.addWidget(QtGui.QLabel('Figure Width :'), row, 0)
+        figSize_layout.addWidget(self.fwidth, row, 2)
+        row += 1               
+        figSize_layout.addWidget(QtGui.QLabel('Figure Height :'), row, 0)
+        figSize_layout.addWidget(self.fheight, row, 2)
+        row += 1
+        figSize_layout.addWidget(
+            QtGui.QLabel('Top/Bottom Axes Ratio :'), row, 0)
+        figSize_layout.addWidget(self.va_ratio_spinBox, row, 2)
+        row += 1
+        figSize_layout.addWidget(HSep(), row, 0, 1, 3)                
+        row += 1
+        figSize_layout.addWidget(HSep(), row, 0, 1, 3)
+        row += 1        
+        figSize_layout.addWidget(
+            QTitle('GRAPH ELEMENTS VISIBILITY\n'), row, 0, 1, 3)
             
         figSize_layout.setColumnStretch(1, 100)
+        figSize_layout.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         
         figSize_widget.setLayout(figSize_layout)
         
@@ -1525,6 +1567,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         legend_layout.addWidget(self.legend_on, 0, 2)
         legend_layout.addWidget(self.legend_off, 0, 3)
         legend_layout.setColumnStretch(1, 100)
+        legend_layout.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         
         legend_widget.setLayout(legend_layout)
         
@@ -1541,6 +1584,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         title_layout.addWidget(self.title_on, 0, 2)
         title_layout.addWidget(self.title_off, 0, 3)
         title_layout.setColumnStretch(1, 100)
+        title_layout.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         
         title_widget.setLayout(title_layout)
         
@@ -1557,6 +1601,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         trend_layout.addWidget(self.trend_on, 0, 2)
         trend_layout.addWidget(self.trend_off, 0, 3)
         trend_layout.setColumnStretch(1, 100)
+        trend_layout.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
         
         trend_widget.setLayout(trend_layout)
         
