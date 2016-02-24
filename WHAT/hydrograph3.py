@@ -817,7 +817,8 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                self.TIMEmin, self.TIMEmax,self.isGraphTitle, self.isLegend,
                self.RAINscale, self.WLdatum, self.trend_line, self.fwidth,
                self.fheight, colorStack, self.language, self.datemode,
-               self.date_labels_display_pattern, self.bwidth_indx]
+               self.date_labels_display_pattern, self.bwidth_indx,
+               self.va_ratio]
     
         for row in range(len(reader)):
             if reader[row][0] == name_well:
@@ -892,7 +893,6 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             colors = colorStack.rsplit(';')
             for i, color in enumerate(colors):
                 color = color.rsplit(',')
-                print color
                 for j in range(3):
                     self.colorsDB.RGB[i][j] = int(color[j])
                     self.colorsDB.rgb[i][j] = int(color[j])/255.
@@ -922,6 +922,14 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 self.bwidth_indx = 1 
         except:
             self.bwidth_indx = 1 
+            
+        try: 
+            self.va_ratio = abs(float(reader[18]))
+            if self.va_ratio > 0.95:
+                self.va_ratio = 0.95
+            if self.va_ratio < 0.05:
+                self.va_ratio = 0.05                
+        except: self.va_ratio = 0.15
       
     def best_fit_waterlvl(self): #==================== Best Fit Water Levels ==
         

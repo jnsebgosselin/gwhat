@@ -943,6 +943,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         
         self.page_setup_win.pageSize = (self.hydrograph.fwidth, 
                                         self.hydrograph.fheight)
+        self.page_setup_win.va_ratio = self.hydrograph.va_ratio
         self.page_setup_win.isLegend = self.hydrograph.isLegend
         self.page_setup_win.isGraphTitle = self.hydrograph.isGraphTitle
         self.page_setup_win.isTrendLine = self.hydrograph.trend_line
@@ -964,7 +965,8 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
         self.page_setup_win.fwidth.setValue(self.hydrograph.fwidth)
         self.page_setup_win.fheight.setValue(self.hydrograph.fheight)
-                    
+        self.page_setup_win.va_ratio_spinBox.setValue(self.hydrograph.va_ratio)
+        
         #----- Check if Weather Data File exists -----
         
         if os.path.exists(self.hydrograph.fmeteo):
@@ -1492,9 +1494,9 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.fheight.setAlignment(QtCore.Qt.AlignCenter)
         
         self.va_ratio_spinBox = QtGui.QDoubleSpinBox()
-        self.va_ratio_spinBox.setSingleStep(0.01)
+        self.va_ratio_spinBox.setSingleStep(0.05)
         self.va_ratio_spinBox.setMinimum(0.1)
-        self.va_ratio_spinBox.setMaximum(0.99)
+        self.va_ratio_spinBox.setMaximum(0.95)
         self.va_ratio_spinBox.setValue(self.va_ratio)
         self.va_ratio_spinBox.setAlignment(QtCore.Qt.AlignCenter)
         
