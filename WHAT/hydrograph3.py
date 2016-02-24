@@ -175,7 +175,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.fwidth, self.fheight = 11.0, 8.5
         self.patch.set_facecolor('white')
         self.NZGrid = 8 # Number of interval in the grid of the bottom part
-        self.va_ratio = 0.15  # Vertical height ratio between the top part
+        self.va_ratio = 0.18  # Vertical height ratio between the top part
                               # and the bottom part of the graph
         
         #---- Database ----
@@ -1266,8 +1266,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         transform = self.ax1.transData + padding
                                   
         self.xlabels = []
-        for i in range(len(xticks_info[1])) :
-            
+        for i in range(len(xticks_info[1])) :            
             new_label  = self.ax1.text(xticks_info[1][i], 0,
                                        xticks_info[2][i], rotation=45, 
                                        va='top', ha='right', fontsize=10.,

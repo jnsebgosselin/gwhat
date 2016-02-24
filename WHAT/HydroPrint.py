@@ -276,7 +276,19 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         make_data_files_panel(self)
         
         def make_scales_tab_widget(self): #--------------- Scales Tab Widget --
-        
+            
+            class QRowLayout(QtGui.QWidget):
+                def __init__(self, items, parent=None):
+                    super(QRowLayout, self).__init__(parent)
+                    
+                    layout = QtGui.QGridLayout()
+                    for col, item in enumerate(items):
+                        layout.addWidget(item, 0, col)                        
+                    layout.setContentsMargins(0, 0, 0, 0)
+                    layout.setColumnStretch(0, 100)
+                    
+                    self.setLayout(layout)                                                
+                        
             #-------------------------------------------------------  TIME ----
             
             #-- widget --
@@ -284,16 +296,30 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.date_start_widget = QtGui.QDateEdit()
             self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
             self.date_start_widget.setAlignment(QtCore.Qt.AlignCenter)
+            self.date_start_widget.dateChanged.connect(self.layout_changed)
         
             self.date_end_widget = QtGui.QDateEdit()
             self.date_end_widget.setDisplayFormat('01 / MM / yyyy')
-            self.date_end_widget.setAlignment(QtCore.Qt.AlignCenter)
+            self.date_end_widget.setAlignment(QtCore.Qt.AlignCenter)            
+            self.date_end_widget.dateChanged.connect(self.layout_changed)
             
             self.time_scale_label = QtGui.QComboBox()
             self.time_scale_label.setEditable(False)
             self.time_scale_label.setInsertPolicy(QtGui.QComboBox.NoInsert)
             self.time_scale_label.addItems(['Month', 'Year'])
             self.time_scale_label.setCurrentIndex(0)
+            self.time_scale_label.currentIndexChanged.connect(
+                self.layout_changed)
+            
+            self.dateDispFreq_spinBox = QtGui.QSpinBox()
+            self.dateDispFreq_spinBox.setSingleStep(1)
+            self.dateDispFreq_spinBox.setMinimum(1)
+            self.dateDispFreq_spinBox.setMaximum(100)
+            self.dateDispFreq_spinBox.setValue(
+                self.hydrograph.date_labels_display_pattern)
+            self.dateDispFreq_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+            self.dateDispFreq_spinBox.setKeyboardTracking(False)
+            self.dateDispFreq_spinBox.valueChanged.connect(self.layout_changed)
             
             #---- layout ----
             
@@ -301,20 +327,17 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             widget_time_scale.setFrameStyle(0)  # styleDB.frame 
             grid_time_scale = QtGui.QGridLayout()
             
-            row = 0
-            grid_time_scale.addWidget(QtGui.QLabel('Date Min :'), row, 1)
-            grid_time_scale.addWidget(self.date_start_widget, row, 2)
-            row +=1
-            grid_time_scale.addWidget(QtGui.QLabel('Date Max :'), row, 1)  
-            grid_time_scale.addWidget(self.date_end_widget, row, 2)
-            row += 1
-            grid_time_scale.addWidget(QtGui.QLabel('Date Scale :'), row, 1)  
-            grid_time_scale.addWidget(self.time_scale_label, row, 2)
+            GRID = [[QtGui.QLabel('From :'), self.date_start_widget],
+                    [QtGui.QLabel('To :'), self.date_end_widget],
+                    [QtGui.QLabel('Scale :'), self.time_scale_label],
+                    [QtGui.QLabel('Date Disp. Pattern:'),
+                     self.dateDispFreq_spinBox]]
+            
+            for i, ROW in enumerate(GRID):
+               grid_time_scale.addWidget(QRowLayout(ROW), i, 1)
             
             grid_time_scale.setVerticalSpacing(5)
-            grid_time_scale.setHorizontalSpacing(10)
             grid_time_scale.setContentsMargins(10, 10, 10, 10)
-            grid_time_scale.setColumnStretch(2, 100)
             
             widget_time_scale.setLayout(grid_time_scale)
             
@@ -327,6 +350,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter) 
             self.waterlvl_scale.setKeyboardTracking(False)
             self.waterlvl_scale.valueChanged.connect(self.layout_changed)
+            self.waterlvl_scale.setFixedWidth(100)
             
             self.waterlvl_max = QtGui.QDoubleSpinBox()
             self.waterlvl_max.setSingleStep(0.1)
@@ -336,6 +360,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.waterlvl_max.setMaximum(1000)
             self.waterlvl_max.setKeyboardTracking(False)
             self.waterlvl_max.valueChanged.connect(self.layout_changed)
+            self.waterlvl_max.setFixedWidth(100)
             
             self.NZGridWL_spinBox = QtGui.QSpinBox()
             self.NZGridWL_spinBox.setSingleStep(1)
@@ -354,23 +379,16 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.subgrid_WLScale_widget.setFrameStyle(0) # styleDB.frame
             subgrid_WLScale = QtGui.QGridLayout()
             
-            row = 0
-            subgrid_WLScale.addWidget(QtGui.QLabel('WL Scale :'), row, 1)        
-            subgrid_WLScale.addWidget(self.waterlvl_scale, row, 2)
-            row += 1
-            subgrid_WLScale.addWidget(QtGui.QLabel('WL Min :'), row, 1)        
-            subgrid_WLScale.addWidget(self.waterlvl_max, row, 2)
-            row += 1
-            subgrid_WLScale.addWidget(QtGui.QLabel('Grid Div. :'), row, 1)
-            subgrid_WLScale.addWidget(self.NZGridWL_spinBox, row, 2)
-            row += 1
-            subgrid_WLScale.addWidget(QtGui.QLabel('WL Datum :'), row, 1)
-            subgrid_WLScale.addWidget(self.datum_widget, row, 2)
-                        
+            GRID = [[QtGui.QLabel('Minimum :'), self.waterlvl_max],
+                    [QtGui.QLabel('Scale :'), self.waterlvl_scale],                    
+                    [QtGui.QLabel('Grid Divisions :'), self.NZGridWL_spinBox],
+                    [QtGui.QLabel('Datum :'), self.datum_widget]]
+            
+            for i, ROW in enumerate(GRID):
+               subgrid_WLScale.addWidget(QRowLayout(ROW), i, 1)
+            
             subgrid_WLScale.setVerticalSpacing(5)
-            subgrid_WLScale.setHorizontalSpacing(10)
             subgrid_WLScale.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
-            subgrid_WLScale.setColumnStretch(2, 100)
             
             self.subgrid_WLScale_widget.setLayout(subgrid_WLScale)
         
@@ -378,7 +396,6 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             
             #-- widgets --
             
-            label_Ptot_scale = QtGui.QLabel('Precip. Scale :')
             self.Ptot_scale = QtGui.QSpinBox()
             self.Ptot_scale.setSingleStep(5)
             self.Ptot_scale.setMinimum(5)
@@ -398,20 +415,16 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             widget_weather_scale = QtGui.QFrame()
             widget_weather_scale.setFrameStyle(0)
             layout = QtGui.QGridLayout()
-            #--
-            row = 1
-            layout.addWidget(label_Ptot_scale, row, 1)        
-            layout.addWidget(self.Ptot_scale, row, 2)
-            row += 1
-            layout.addWidget(QtGui.QLabel('Resampling :'), row, 1)
-            layout.addWidget(self.qweather_bin, row, 2)            
-            #--
+            
+            GRID = [[QtGui.QLabel('Precip. Scale :'), self.Ptot_scale],
+                    [QtGui.QLabel('Resampling :'), self.qweather_bin]]
+            
+            for i, ROW in enumerate(GRID):
+               layout.addWidget(QRowLayout(ROW), i, 1)
+                        
             layout.setVerticalSpacing(5)
-            layout.setHorizontalSpacing(10)
             layout.setContentsMargins(10, 10, 10, 10) #(L, T, R, B)
-            layout.setColumnStretch(2, 100)
-            layout.setRowStretch(row+1, 100)
-            layout.setRowStretch(0, 100)
+            layout.setRowStretch(i+1, 100)
             
             widget_weather_scale.setLayout(layout)
                     
@@ -523,12 +536,8 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         #----- Hydrograph Layout -----
                 
         self.language_box.currentIndexChanged.connect(self.layout_changed)
-        self.Ptot_scale.valueChanged.connect(self.layout_changed)
-        self.date_start_widget.dateChanged.connect(self.layout_changed)
-        self.date_start_widget.dateChanged.connect(self.layout_changed)
-        self.date_end_widget.dateChanged.connect(self.layout_changed)        
-        self.qweather_bin.currentIndexChanged.connect(self.layout_changed)
-        self.time_scale_label.currentIndexChanged.connect(self.layout_changed)
+        self.Ptot_scale.valueChanged.connect(self.layout_changed)                
+        self.qweather_bin.currentIndexChanged.connect(self.layout_changed)        
         
         #------------------------------------------------------ Init Image ----
         
@@ -937,6 +946,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         date = self.hydrograph.TIMEmax
         date = xldate_as_tuple(date, 0)
         self.date_end_widget.setDate(QDate(date[0], date[1], date[2]))
+        
+        self.dateDispFreq_spinBox.setValue(
+            self.hydrograph.date_labels_display_pattern)
                                     
         self.waterlvl_scale.setValue(self.hydrograph.WLscale)
         self.waterlvl_max.setValue(self.hydrograph.WLmin)
@@ -1229,6 +1241,14 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 self.hydrograph.draw_weather()
                 self.hydrograph.draw_figure_title()
                 
+        elif sender == self.dateDispFreq_spinBox:
+            self.hydrograph.date_labels_display_pattern = \
+                self.dateDispFreq_spinBox.value()
+                
+            if self.hydrograph.isHydrographExists:
+                self.hydrograph.set_time_scale()
+                self.hydrograph.draw_xlabels()
+                
         elif sender == self.page_setup_win:
             self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
             self.hydrograph.fheight = self.page_setup_win.pageSize[1]
@@ -1471,7 +1491,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.isLegend = True
         self.isGraphTitle = True
         self.isTrendLine = False
-        self.va_ratio = 0.15
+        self.va_ratio = 0.18
         self.NZGrid = 8
         
         #---- Toolbar ----
@@ -1541,8 +1561,6 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         figSize_layout.addWidget(
             QtGui.QLabel('Top/Bottom Axes Ratio :'), row, 0)
         figSize_layout.addWidget(self.va_ratio_spinBox, row, 2)
-        row += 1
-        figSize_layout.addWidget(HSep(), row, 0, 1, 3)                
         row += 1
         figSize_layout.addWidget(HSep(), row, 0, 1, 3)
         row += 1        
