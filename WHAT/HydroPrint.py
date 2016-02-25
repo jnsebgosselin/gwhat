@@ -370,6 +370,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.NZGridWL_spinBox.setAlignment(QtCore.Qt.AlignCenter)
             self.NZGridWL_spinBox.setKeyboardTracking(False)
             self.NZGridWL_spinBox.valueChanged.connect(self.layout_changed)
+            self.NZGridWL_spinBox.setFixedWidth(100)
             
             self.datum_widget = QtGui.QComboBox()
             self.datum_widget.addItems(['Ground Surface', 'See Level'])
@@ -399,7 +400,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.Ptot_scale = QtGui.QSpinBox()
             self.Ptot_scale.setSingleStep(5)
             self.Ptot_scale.setMinimum(5)
-            self.Ptot_scale.setMaximum(100)
+            self.Ptot_scale.setMaximum(500)
             self.Ptot_scale.setValue(20)        
             self.Ptot_scale.setSuffix('  mm')
             self.Ptot_scale.setAlignment(QtCore.Qt.AlignCenter)
@@ -801,7 +802,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 for i in range(5): QtCore.QCoreApplication.processEvents()
     
            
-    def select_meteo_file(self): #============================================
+    def select_meteo_file(self): #=============================================
        
         '''
         This method is called by <btn_weather_dir.clicked.connect>. It prompts
@@ -818,7 +819,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.load_meteo_file(filename)
     
            
-    def load_meteo_file(self, filename): #====================================
+    def load_meteo_file(self, filename): #=====================================
         
         if not filename:
             print('Path is empty. Cannot load weather data file.')

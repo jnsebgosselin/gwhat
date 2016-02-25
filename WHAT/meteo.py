@@ -666,8 +666,7 @@ class MeteoObj():
         
     def build_HTML_table(self): #==============================================
         
-        # HTML table with the info related to the weather station.
-        
+        # HTML table with the info related to the weather station.        
         
         FIELDS = self.STADESC[0]
         VALIST = self.STADESC[1]
@@ -675,12 +674,7 @@ class MeteoObj():
                           
         info = '<table border="0" cellpadding="2" cellspacing="0" align="left">'
         for i in range(len(FIELDS)):
-            
-            try:                 
-                VAL = '%0.1f' % float(VALIST[i])
-            except:
-                VAL = VALIST[i]
-                 
+            VAL = VALIST[i]    
             info += '''<tr>
                          <td width=10></td>
                          <td align="left">%s</td>
