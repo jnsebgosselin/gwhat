@@ -208,26 +208,44 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.setEnabled(enabled)
              
         self.btn_layout_mode = toolBarBtn(
-            iconDB.toggleMode, ttipDB.toggle_layout_mode, autoRaise=False)                                          
+                 iconDB.toggleMode, ttipDB.toggle_layout_mode, autoRaise=False)                                          
+        
         self.btn_undo = toolBarBtn(iconDB.undo, ttipDB.undo, enabled=False)        
-        self.btn_clearPeak = toolBarBtn(iconDB.clear_search, ttipDB.clearall)        
-        self.btn_home = toolBarBtn(iconDB.home, ttipDB.home)        
-        self.btn_editPeak = toolBarBtn(iconDB.add_point, ttipDB.editPeak)                
-        self.btn_delPeak = toolBarBtn(iconDB.erase, ttipDB.delPeak)        
-        self.btn_pan = toolBarBtn(iconDB.pan, ttipDB.pan)         
-        self.btn_MRCalc = toolBarBtn(iconDB.MRCalc, ttipDB.MRCalc)                
-        self.btn_strati = toolBarBtn(iconDB.stratigraphy, ttipDB.btn_strati)        
+        self.btn_undo.clicked.connect(self.undo)
+        
+        self.btn_clearPeak = toolBarBtn(iconDB.clear_search, ttipDB.clearall)
+        self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
+        
+        self.btn_home = toolBarBtn(iconDB.home, ttipDB.home)
+        self.btn_home.clicked.connect(self.home)
+        
+        self.btn_editPeak = toolBarBtn(iconDB.add_point, ttipDB.editPeak)
+        self.btn_editPeak.clicked.connect(self.edit_peak)
+               
+        self.btn_delPeak = toolBarBtn(iconDB.erase, ttipDB.delPeak)
+        self.btn_delPeak.clicked.connect(self.aToolbarBtn_isClicked)
+        
+        self.btn_pan = toolBarBtn(iconDB.pan, ttipDB.pan)
+        self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
+        
+        self.btn_MRCalc = toolBarBtn(iconDB.MRCalc, ttipDB.MRCalc)
+        self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
+                
+        self.btn_strati = toolBarBtn(iconDB.stratigraphy, ttipDB.btn_strati)
+        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
+        
         self.btn_Waterlvl_lineStyle = toolBarBtn(
-            iconDB.showDataDots, ttipDB.btn_Waterlvl_lineStyle)                                                 
-        self.btn_save_interp = toolBarBtn(
-            iconDB.save, ttipDB.btn_save_interp)
+                            iconDB.showDataDots, ttipDB.btn_Waterlvl_lineStyle) 
+        self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
+                                                
+        self.btn_save_interp = toolBarBtn(iconDB.save, ttipDB.btn_save_interp)
+        self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
             
-        self.btn_dateFormat = toolBarBtn(iconDB.calendar,
-                                         ttipDB.btn_dateFormat,
-                                         autoRaise=1-self.dformat)
-                                         # dformat:
-                                         # 0: Excel Numeric Date Format
-                                         # 1: Matplotlib Date Format   
+        self.btn_dateFormat = toolBarBtn(
+              iconDB.calendar, ttipDB.btn_dateFormat, autoRaise=1-self.dformat)
+        self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
+        # dformat: 0 -> Excel Numeric Date Format
+        #          1 -> Matplotlib Date Format   
         
         self.btn_recharge = toolBarBtn(iconDB.page_setup, ttipDB.btn_recharge)
         self.btn_recharge.clicked.connect(self.rechg_setup_win.show)
@@ -235,9 +253,11 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.btn_synthHydro = toolBarBtn(iconDB.page_setup)
         self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
                                                                       
-#        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)                                                 
+#        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
+#        self.btn_findPeak.clicked.connect(self.find_peak)
 #        self.btn_mrc2rechg = toolBarBtn(iconDB.mrc2rechg, ttipDB.mrc2rechg)
-                                
+#        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
+
         #----- Toolbar Vertical Separators ------
                                 
         class VSep(QtGui.QFrame): # 
@@ -257,9 +277,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
         
-        row = 0
         for col, btn in enumerate(btn_list):
-            subgrid_toolbar.addWidget(btn, row, col)
+            subgrid_toolbar.addWidget(btn, 0, col)
         subgrid_toolbar.setColumnStretch(col+1, 500)
 
         subgrid_toolbar.setSpacing(5)
@@ -287,8 +306,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.widget_MRCparam = QtGui.QFrame()
 #        self.widget_MRCparam.setFrameStyle(StyleDB.frame)
         
-        row = 0
-        col = 0
+        col, row = 0, 0
         grid_MRCparam.addWidget(MRCtype_label, row, col)
         col += 1
         grid_MRCparam.addWidget(self.MRC_type, row, col)
@@ -316,25 +334,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         mainGrid.setRowStretch(1, 500)
         
         self.setLayout(mainGrid)
-        
-        #------------------------------------------------------------ EVENTS --
-        
-        #----- Toolbox -----
-        
-        self.btn_undo.clicked.connect(self.undo)
-        self.btn_clearPeak.clicked.connect(self.clear_all_peaks)        
-        self.btn_home.clicked.connect(self.home)
-#        self.btn_findPeak.clicked.connect(self.find_peak)
-        self.btn_editPeak.clicked.connect(self.edit_peak)
-        self.btn_delPeak.clicked.connect(self.aToolbarBtn_isClicked)
-        self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
-        self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
-        self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
-        
-        self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
-        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
-        self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
-#        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
+
         
     def emit_error_message(self, error_text): #============== Emit Error MSG ==
         

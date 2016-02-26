@@ -214,8 +214,7 @@ class MainWindow(QtGui.QMainWindow):
         self.menubar_widget = QtGui.QWidget()
         subgrid_menubar = QtGui.QGridLayout()
         
-        row = 0
-        col = 0
+        row, col = 0, 0
         subgrid_menubar.addWidget(project_label, row, col)
         col += 1
         subgrid_menubar.addWidget(self.project_display, row, col)
