@@ -501,6 +501,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         mainGrid.setContentsMargins(10, 10, 10, 10) # (L, T, R, B) 
         mainGrid.setSpacing(15)
         mainGrid.setColumnStretch(0, 500)
+        mainGrid.setColumnMinimumWidth(2, 250)
         
         self.setLayout(mainGrid)
         
@@ -1480,7 +1481,7 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
             
     newPageSetupSent = QtCore.Signal(bool)
     
-    def __init__(self, parent=None):
+    def __init__(self, parent=None): #================================= Init ==
         super(PageSetupWin, self).__init__(parent)
         
         self.setWindowTitle('Page Setup')
@@ -1494,6 +1495,10 @@ class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
         self.isTrendLine = False
         self.va_ratio = 0.18
         self.NZGrid = 8
+        
+        self.initUI()
+        
+    def initUI(self): #============================================= Init UI ==
         
         #---- Toolbar ----
         

@@ -76,6 +76,7 @@ class Tooltips():
                           ' fluctuation principle')
         self.btn_dateFormat = ('x axis label time format: ' +
                                'date or MS Excel numeric')
+        self.btn_recharge = ('Show window for recharge estimation')
         
         if language == 'French': #----------------------------------- FRENCH --
             
@@ -135,16 +136,18 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.soilFilename = []
         self.SOILPROFIL = SoilProfil()
         
-        #----------------------------------------------------------- INIT UI --
+        #---- Recharge ----
+        
+        self.rechg_setup_win = RechgSetupWin()
+        
+        self.synth_hydro_widg = SynthHydroWidg()
+        self.synth_hydro_widg.hide()
+        
+        #---- INIT UI ----
         
         self.initUI()               
-        
-        self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
-        self.fig_MRC_widget.mpl_connect('motion_notify_event',
-                                        self.mouse_vguide)                                        
-        self.fig_MRC_widget.mpl_connect('resize_event', self.setup_ax_margins)
               
-    def initUI(self):
+    def initUI(self): #============================================= Init UI ==
                         
         iconDB = db.Icons()
         StyleDB = db.styleUI()
@@ -154,11 +157,15 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         #----------------------------------------------------- FIGURE CANVAS --
         
-        self.fig_MRC = plt.figure()
+        self.fig_MRC = mpl.figure.Figure()
         
-#        self.fig_MRC.set_size_inches(8.5, 5)        
         self.fig_MRC.patch.set_facecolor('white')
+        
         self.fig_MRC_widget = FigureCanvasQTAgg(self.fig_MRC)
+        self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
+        self.fig_MRC_widget.mpl_connect('resize_event', self.setup_ax_margins)
+        self.fig_MRC_widget.mpl_connect('motion_notify_event',
+                                        self.mouse_vguide)
         
         # Put figure canvas in a QFrame widget.
         
@@ -190,7 +197,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         #---- Toolbar Buttons ----
         
         class toolBarBtn(QtGui.QToolButton):
-            def __init__(self, icon, ttip, autoRaise=True, 
+            def __init__(self, icon, ttip=None, autoRaise=True, 
                          enabled=True, parent=None):
                 super(toolBarBtn, self).__init__(parent)
                 self.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -200,9 +207,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.setAutoRaise(autoRaise)
                 self.setEnabled(enabled)
              
-        self.btn_layout_mode = toolBarBtn(iconDB.toggleMode,
-                                          ttipDB.toggle_layout_mode, 
-                                          autoRaise=False)                                          
+        self.btn_layout_mode = toolBarBtn(
+            iconDB.toggleMode, ttipDB.toggle_layout_mode, autoRaise=False)                                          
         self.btn_undo = toolBarBtn(iconDB.undo, ttipDB.undo, enabled=False)        
         self.btn_clearPeak = toolBarBtn(iconDB.clear_search, ttipDB.clearall)        
         self.btn_home = toolBarBtn(iconDB.home, ttipDB.home)        
@@ -211,18 +217,25 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.btn_pan = toolBarBtn(iconDB.pan, ttipDB.pan)         
         self.btn_MRCalc = toolBarBtn(iconDB.MRCalc, ttipDB.MRCalc)                
         self.btn_strati = toolBarBtn(iconDB.stratigraphy, ttipDB.btn_strati)        
-        self.btn_Waterlvl_lineStyle = toolBarBtn(iconDB.showDataDots,
-                                                 ttipDB.btn_Waterlvl_lineStyle)                                                 
-        self.btn_save_interp = toolBarBtn(iconDB.save,
-                                          ttipDB.btn_save_interp)
+        self.btn_Waterlvl_lineStyle = toolBarBtn(
+            iconDB.showDataDots, ttipDB.btn_Waterlvl_lineStyle)                                                 
+        self.btn_save_interp = toolBarBtn(
+            iconDB.save, ttipDB.btn_save_interp)
+            
         self.btn_dateFormat = toolBarBtn(iconDB.calendar,
-                                         ttipDB.btn_dateFormat)
-        self.btn_dateFormat.setAutoRaise(1-self.dformat)
-        # 0: Excel Numeric Date Format
-        # 1: Matplotlib Date Format        
-                                                 
-#        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
-                                                 
+                                         ttipDB.btn_dateFormat,
+                                         autoRaise=1-self.dformat)
+                                         # dformat:
+                                         # 0: Excel Numeric Date Format
+                                         # 1: Matplotlib Date Format   
+        
+        self.btn_recharge = toolBarBtn(iconDB.page_setup, ttipDB.btn_recharge)
+        self.btn_recharge.clicked.connect(self.rechg_setup_win.show)
+        
+        self.btn_synthHydro = toolBarBtn(iconDB.page_setup)
+        self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
+                                                                      
+#        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)                                                 
 #        self.btn_mrc2rechg = toolBarBtn(iconDB.mrc2rechg, ttipDB.mrc2rechg)
                                 
         #----- Toolbar Vertical Separators ------
@@ -239,7 +252,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                     VSep(), self.btn_home, self.btn_pan, VSep(),
                     self.btn_MRCalc, self.btn_save_interp, VSep(),
                     self.btn_Waterlvl_lineStyle, self.btn_dateFormat,
-                    self.btn_strati]
+                    self.btn_recharge, self.btn_synthHydro]
                     
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -295,15 +308,14 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         mainGrid = QtGui.QGridLayout()
         
-        row = 0 
-        mainGrid.addWidget(toolbar_widget, row, 0)
-        row += 1
-        mainGrid.addWidget(self.fig_frame_widget, row, 0)        
-              
-        self.setLayout(mainGrid)
+        items = [toolbar_widget, self.fig_frame_widget, self.synth_hydro_widg]
+        for row, item in enumerate(items):
+            mainGrid.addWidget(item, row, 0)          
+        
         mainGrid.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom 
-#        mainGrid.setSpacing(15)
         mainGrid.setRowStretch(1, 500)
+        
+        self.setLayout(mainGrid)
         
         #------------------------------------------------------------ EVENTS --
         
@@ -1721,46 +1733,235 @@ def mrc2rechg(t, ho, A, B, z, Sy):
            
     return RECHG
     
+#==============================================================================
+        
+class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
 
-##===============================================================================    
-#class NewFig(QtGui.QWidget):
-##===============================================================================
-#            
-#    def __init__(self, A, B, parent=None):
-#        super(NewFig, self).__init__(parent)
-#            
-#        self.fig = plt.figure()        
-#        self.fig_MRC_widget = FigureCanvasQTAgg(self.fig)
-#        self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
-#        
-#        plt.plot(A, A, '.')
-#        
-#        grid = QtGui.QGridLayout()
-#       
-#        row = 0
-#        col = 0
-#        grid.addWidget(self.fig_MRC_widget, row, col)
-#        row += 1
-#        grid.addWidget(self.toolbar, row, col)
-#        
-#        self.setLayout(grid)
-#        
-#        self.fig_MRC_widget.draw() 
+#==============================================================================
+    
+    newSynthHydroGrapSent = QtCore.Signal(bool)
+    
+    def __init__(self, parent=None): #================================= Init ==
+        super(SynthHydroWidg, self).__init__(parent)
+        
+        self.initUI()
+        
+    def initUI(self): #============================================= Init UI ==
+#        self.QSy_max = MyQDSpin(0.005, 0.005, 0.95)
+        class MyQDSpin(QtGui.QDoubleSpinBox):
+            def __init__(self, step, min, max, dec, val,
+                         suffix=None, parent=None):
+                super(MyQDSpin, self).__init__(parent)
+                
+                self.setSingleStep(step)
+                self.setMinimum(min)
+                self.setMaximum(max)
+                self.setDecimals(dec)
+                self.setValue(val)
+                self.setAlignment(QtCore.Qt.AlignCenter) 
+                if suffix:
+                    self.setSuffix(' %s' % suffix)
+                    
+        class HSep(QtGui.QFrame): # horizontal separators for the toolbar
+            def __init__(self, parent=None):
+                super(HSep, self).__init__(parent)                
+                self.setFrameStyle(db.styleUI().HLine)
+                    
+        self.QSy = MyQDSpin(0.005, 0.005, 0.95, 2, 0.2)        
+        self.QRAS = MyQDSpin(1, 0, 1000, 0, 100, 'mm')
+        self.CRO = MyQDSpin(0.01, 0, 1, 2, 0.3)
+        
+        self.Tcrit = MyQDSpin(0.1, -25, 25, 1, 0, u'°C')
+        self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, u'°C')
+        self.CM = MyQDSpin(0.1, 0, 100, 1, 2.7,u'mm/°C')
+                    
+        main_grid = QtGui.QGridLayout()
+        
+        items = [QtGui.QLabel('Sy:'), self.QSy,
+                 QtGui.QLabel('Rasmax:'), self.QRAS,
+                 QtGui.QLabel('Cro:'), self.CRO,
+                 QtGui.QLabel('Tcrit:'), self.Tcrit,
+                 QtGui.QLabel('Tmelt:'), self.Tmelt,
+                 QtGui.QLabel('CM:'), self.CM]
+        
+        for col, item in enumerate(items):        
+            main_grid.addWidget(item, 1, col) 
+#        main_grid.addWidget(HSep(), 0, 0, 1, col+1)
+        
+        main_grid.setColumnStretch(col+1, 100)
+        main_grid.setContentsMargins(0, 0, 0, 0)
+        
+        self.setLayout(main_grid)
+        
+    def toggleOnOff(self):        
+        if self.isVisible():
+            self.hide()
+        else:
+            self.show()
         
                 
-if __name__ == '__main__':
         
-    from meteo import MeteoObj
+#==============================================================================
+        
+class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
+
+#==============================================================================
+            
+#    newPageSetupSent = QtCore.Signal(bool)
     
+    def __init__(self, parent=None): #================================= Init ==
+        super(RechgSetupWin, self).__init__(parent)
+        
+        self.setWindowTitle('Recharge Calibration Setup')
+        self.setWindowFlags(QtCore.Qt.Window)
+        
+        self.initUI()
+        
+    def initUI(self): #============================================= Init UI ==
+        
+        class QRowLayout(QtGui.QWidget):
+            def __init__(self, items, parent=None):
+                super(QRowLayout, self).__init__(parent)
+                
+                layout = QtGui.QGridLayout()
+                for col, item in enumerate(items):
+                    layout.addWidget(item, 0, col)                    
+                layout.setContentsMargins(0, 0, 0, 0)
+                layout.setColumnStretch(0, 100)                
+                self.setLayout(layout)
+        
+        class MyQDSpin(QtGui.QDoubleSpinBox):
+            def __init__(self, step, min, max, suffix=None, parent=None):
+                super(MyQDSpin, self).__init__(parent)
+                
+                self.setSingleStep(step)
+                self.setMinimum(min)
+                self.setMaximum(max)
+                self.setAlignment(QtCore.Qt.AlignCenter) 
+                if suffix:
+                    self.setSuffix(' %s' % suffix)
+                    
+        class HSep(QtGui.QFrame): # vertical separators for the toolbar
+            def __init__(self, parent=None):
+                super(HSep, self).__init__(parent)                
+                self.setFrameStyle(db.styleUI().HLine)
+        
+        #----------------------------------------------------------- Toolbar --
+        
+        toolbar_widget = QtGui.QWidget()
+        
+        btn_calib = QtGui.QPushButton('Calibrate')
+        btn_calib.clicked.connect(self.btn_calibrate_isClicked)        
+        
+        btn_cancel = QtGui.QPushButton('Cancel')
+        btn_cancel.clicked.connect(self.close)
+                        
+        toolbar_layout = QtGui.QGridLayout()
+        
+        toolbar_layout.addWidget(btn_calib, 0, 0)
+        toolbar_layout.addWidget(btn_cancel, 0, 1)
+        
+        toolbar_layout.setColumnStretch(2, 100)
+        toolbar_layout.setContentsMargins(0, 15, 0, 0) # (L, T, R, B)
+        
+        toolbar_widget.setLayout(toolbar_layout)
+        
+        #-------------------------------------------------------- Parameters --
+                
+        self.QSy_max = MyQDSpin(0.005, 0.005, 0.95)
+        self.QSy_min = MyQDSpin(0.005, 0.005, 0.95)
+        
+        self.QRAS_max = MyQDSpin(1, 0, 1000, 'mm')
+        self.QRAS_min = MyQDSpin(1, 0, 1000, 'mm')
+        
+        self.CRO_max = MyQDSpin(0.01, 0, 1)
+        self.CRO_min = MyQDSpin(0.01, 0, 1)
+        
+        self.Tcrit = MyQDSpin(0.1, -25, 25, u'°C')
+        self.Tmelt = MyQDSpin(0.1, -25, 25, u'°C')
+        self.CM = MyQDSpin(0.1, 0, 100, u'mm/°C')
+        
+        QTitle = QtGui.QLabel('Calibration Range')
+        QTitle.setAlignment(QtCore.Qt.AlignCenter)
+        
+        self.btn_calibrate = QtGui.QPushButton('Calibrate')
+               
+        mainLayout = QtGui.QGridLayout()
+        
+        row = 0
+        mainLayout.addWidget(QtGui.QLabel('Parameter'), row, 0)
+        mainLayout.addWidget(QTitle, row, 2, 1, 3)
+        row += 1
+        mainLayout.addWidget(HSep(), row, 0, 1, 5)
+        row += 1
+        mainLayout.addWidget(QtGui.QLabel('Sy :'), row, 0)
+        mainLayout.addWidget(self.QSy_min, row, 2)
+        mainLayout.addWidget(QtGui.QLabel('to'), row, 3)
+        mainLayout.addWidget(self.QSy_max, row, 4)
+        row += 1
+        mainLayout.addWidget(QtGui.QLabel('RASmax :'), row, 0)
+        mainLayout.addWidget(self.QRAS_min, row, 2)
+        mainLayout.addWidget(QtGui.QLabel('to'), row, 3)
+        mainLayout.addWidget(self.QRAS_max, row, 4)
+        row += 1
+        mainLayout.addWidget(QtGui.QLabel('Cro :'), row, 0)
+        mainLayout.addWidget(self.CRO_min, row, 2)
+        mainLayout.addWidget(QtGui.QLabel('to'), row, 3)
+        mainLayout.addWidget(self.CRO_max, row, 4)
+        row += 1
+        mainLayout.addWidget(HSep(), row, 0, 1, 5)
+        row += 1
+        mainLayout.addWidget(QtGui.QLabel('Tcrit :'), row, 0)
+        mainLayout.addWidget(self.Tcrit, row, 2)
+        row += 1
+        mainLayout.addWidget(QtGui.QLabel('Tmelt :'), row, 0)
+        mainLayout.addWidget(self.Tmelt, row, 2)
+        row += 1
+        mainLayout.addWidget(QtGui.QLabel('Tmelt :'), row, 0)
+        mainLayout.addWidget(self.CM, row, 2)
+        row += 1
+        mainLayout.addWidget(toolbar_widget, row, 0, 1, 5)        
+        
+        self.setLayout(mainLayout)
+        
+    def closeEvent(self, event): #=================================== Cancel ==
+        super(RechgSetupWin, self).closeEvent(event)
+        print 'Closing Window'
+        
+    def btn_calibrate_isClicked(self): #========================== Calibrate ==
+        print 'Calibration started'
+        
+    def show(self): #================================================== Show ==
+        super(RechgSetupWin, self).show()
+        self.activateWindow()
+        self.raise_()
+        
+        qr = self.frameGeometry()
+        if self.parentWidget():
+            parent = self.parentWidget()
+            
+            wp = parent.frameGeometry().width()
+            hp = parent.frameGeometry().height()
+            cp = parent.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+        else:
+            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            
+        qr.moveCenter(cp)                    
+        self.move(qr.topLeft())           
+        self.setFixedSize(self.size())
+         
+                
+if __name__ == '__main__':
+   
     app = QtGui.QApplication(argv)   
     
     w = WLCalc()
     w.show()
     w.widget_MRCparam.show()
     
-    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
-    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
-    fwaterlvl = dirname + '/Water Levels/valcartier2.xls' 
+    dirname = '/home/jnsebgosselin/Dropbox/WHAT/Projects/Pont-Rouge'
+    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)/STE CHRISTINE (7017000)_1960-2015.out'
+    fwaterlvl = dirname + '/Water Levels/5080001.xls' 
     
     w.load_waterLvl_data(fwaterlvl)
        
