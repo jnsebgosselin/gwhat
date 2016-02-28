@@ -873,20 +873,23 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         #---- compute recharge ----
         rechg, _, _, _, _ = \
             self.synth_hydrograph.surf_water_budget(Cro, RASmax)                        
-        WLpre = self.synth_hydrograph.calc_hydrograph(rechg, Sy)
         
-        #---- water lvl observations ----
 
-        tweatr = self.meteo_data.TIME + 10 # Here we introduce the time lag
-        
+        #---- compute water levels ----
+
+        tweatr = self.meteo_data.TIME + 10 # Here we introduce the time lag        
         twlvl = self.time
-        WLVLobs = self.water_lvl * 1000
         
         ts = np.where(twlvl[0] == tweatr)[0][0]
         te = np.where(twlvl[-1] == tweatr)[0][0]
         
-        self.plt_wlpre.set_data(self.synth_hydrograph.DATE , WLpre)
+        WLpre = self.synth_hydrograph.calc_hydrograph(rechg[ts:te], Sy)
         
+        #---- plot water levels ----
+        
+        self.plt_wlpre.set_data(self.synth_hydrograph.DATE , WLpre/1000.)   
+        
+        self.fig_MRC_widget.draw()
         
 
     def btn_strati_isClicked(self): #================ Show/Hide Stratigraphy ==
@@ -1808,9 +1811,9 @@ class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
                 if parent:
                     self.valueChanged.connect(parent.param_changed)
                     
-        self.QSy = MyQDSpin(0.005, 0.005, 0.95, 3, 0.2, parent=self)
+        self.QSy = MyQDSpin(0.001, 0.005, 0.95, 3, 0.2, parent=self)
         self.QRAS = MyQDSpin(1, 0, 1000, 0, 100, 'mm', parent=self)
-        self.CRO = MyQDSpin(0.01, 0, 1, 2, 0.3, parent=self)
+        self.CRO = MyQDSpin(0.001, 0, 1, 3, 0.3, parent=self)
         
         self.Tcrit = MyQDSpin(0.1, -25, 25, 1, 0, u'°C', parent=self)
         self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, u'°C', parent=self)
@@ -1834,12 +1837,15 @@ class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
         
         self.setLayout(main_grid)
         
-    def param_changed(self): # =========================== Parameter Changed ==       
+    def get_parameters(self): #======================== Get Parameter Values ==
         parameters = {'Sy': self.QSy.value(),
                       'RASmax': self.QRAS.value(),
                       'Cro': self.CRO.value()}
-                 
-        self.newHydroParaSent.emit(parameters)
+                      
+        return parameters
+        
+    def param_changed(self): # =========================== Parameter Changed ==       
+        self.newHydroParaSent.emit(self.get_parameters())
                  
         
     def toggleOnOff(self): # ====================== Toggle Visibility On/Off ==       
@@ -1847,6 +1853,7 @@ class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
             self.hide()
         else:
             self.show()
+            self.newHydroParaSent.emit(self.get_parameters())
         
                 
         
