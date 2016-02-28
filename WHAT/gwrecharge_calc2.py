@@ -45,22 +45,50 @@ class SynthHydrograph(object):                              # SynthHydrograph #
     
 #==============================================================================
     
-    def __init__(self, fmeteo, fwaterlvl):
-    
+    def __init__(self): #============================================== Init ==
+        
+        self.meteoObj = MeteoObj()
+        self.ETP, self.PTOT, self.TAVG = [], [], []
+        
+        self.waterlvlObj = WaterlvlData()
+        self.A, self.B = None, None
+        
+        self.twlvl = []
+        self.WLVLobs = []
+        self.NaNindx = []
+        
+        self.YEAR = []
+        self.MONTH = []
+        self.TIME = []
+        self.PRECIP = []
+        
+        self.DATE = []
+        
+    def load_data(self, fmeteo, fwaterlvl): #===================== Load Data ==
+        
         #---- Load Data ----
     
         print('--------')
-        self.meteoObj = MeteoObj()
+        
         self.meteoObj.load_and_format(fmeteo) # Includes the estimation of ETP
                                               # if not already present in file.
-        print('--------')
-        self.waterlvlObj = WaterlvlData()
-        self.waterlvlObj.load(fwaterlvl)
+        
+        self.ETP = self.meteoObj.DATA[:, 7]
+        self.PTOT = self.meteoObj.DATA[:, 6]
+        self.TAVG = self.meteoObj.DATA[:, 5]
+        
         print('--------')
         
+        self.waterlvlObj.load(fwaterlvl)
+        
+        self.A, self.B = self.waterlvlObj.A, self.waterlvlObj.B
         self.twlvl = self.waterlvlObj.time
         self.WLVLobs = self.waterlvlObj.lvl
         self.NaNindx = np.where(~np.isnan(self.WLVLobs))
+        
+        print('--------')
+        
+        
         
         #---- Prepare DATE time series ----
         
@@ -79,6 +107,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         self.PRECIP = self.meteoObj.DATA[:, 6][ts:te+1]
         
         self.DATE = self.convert_time_to_date(self.YEAR, self.MONTH, DAY)
+    
        
     @staticmethod
     def convert_time_to_date(YEAR, MONTH, DAY): #============== Convert Date ==
@@ -144,15 +173,12 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         ax.legend(lg_handles, lg_labels, ncol=2, fontsize=12, frameon=False,
                   numpoints=1)
                         
-    def plot_prediction(self):
+    def plot_prediction(self): #============================ Plot Prediction ==
         
         fname = 'GLUE.h5'
         with h5py.File(fname,'r') as hf:
             data = hf.get('hydrograph')
             hydrograph = np.array(data)
-            
-            data = hf.get('Time')
-            tweatr = np.array(data)
             
             data = hf.get('RMSE')
             RMSE = np.array(data)
@@ -233,12 +259,6 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         U_RAS = np.arange(RASmax[0], RASmax[1]+1, 1)
         U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.01)
         
-        #---- weather observations ----
-        
-        ETP = self.meteoObj.DATA[:, 7]
-        PTOT = self.meteoObj.DATA[:, 6]
-        TAVG = self.meteoObj.DATA[:, 5]
-        
         #---- Produce realization ----
         
         set_RMSE = []
@@ -251,8 +271,8 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         Sy0 = np.mean(Sy)               
         for i, cro in enumerate(U_Cro):
             for j, rasmax in enumerate(U_RAS):
-                rechg, _, _, _, _ = self.surf_water_budget(cro, rasmax,
-                                                           ETP, PTOT, TAVG)
+                rechg, _, _, _, _ = self.surf_water_budget(cro, rasmax)
+                                   
                 SyOpt, RMSE, wlvlest = self.opt_Sy(cro, rasmax, Sy0, rechg)                
                 Sy0 = SyOpt
                 
@@ -289,18 +309,13 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         ts = np.where(twlvl[0] == tweatr)[0][0]
         te = np.where(twlvl[-1] == tweatr)[0][0]
         
-        #---- MRC ----
-        
-        A, B = self.waterlvlObj.A, self.waterlvlObj.B
-        
         #---- Gauss-Newton ----
         
         tolmax = 0.001      
         Sy = Sy0
         dSy = 0.01
                 
-        WLVLpre = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
-                                       Sy, nscheme='forward')
+        WLVLpre = self.calc_hydrograph(rechg[ts:te], Sy)
         RMSE = self.calc_RMSE(WLVLobs[self.NaNindx], WLVLpre[self.NaNindx])
         
         it = 0
@@ -312,8 +327,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
             
             #---- Calculating Jacobian (X) Numerically ---- 
                                            
-            wlvl = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
-                                        Sy * (1+dSy), nscheme='forward')
+            wlvl = self.calc_hydrograph(rechg[ts:te], Sy * (1+dSy))
             X = Xt = (wlvl[self.NaNindx] - WLVLpre[self.NaNindx]) / (Sy * dSy)       
             
             #---- Solving Linear System ----
@@ -337,8 +351,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                     
                 #---- Solving for new parameter values ----
 
-                WLVLpre = self.calc_hydrograph(rechg[ts:te], A, B, WLVLobs,
-                                               Sy, nscheme='forward')
+                WLVLpre = self.calc_hydrograph(rechg[ts:te])
                 RMSE = self.calc_RMSE(WLVLobs[self.NaNindx],
                                       WLVLpre[self.NaNindx])
 
@@ -357,8 +370,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
                 return Sy, RMSE, WLVLpre
             
                    
-    @staticmethod
-    def surf_water_budget(CRU, RASmax, ETP, PTOT, TAVG, TMELT=1.5, CM=4 ):
+    def surf_water_budget(self, CRU, RASmax, TMELT=1.5, CM=4 ):
         
         """    
         Input
@@ -376,7 +388,9 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         ------
         {1D array} RECHG = Daily groundwater recharge in mm    
         """
-        
+        ETP = self.ETP
+        PTOT = self.PTOT
+        TAVG = self.TAVG
         N = len(ETP)
 
         PAVL = np.zeros(N)   # Available Precipitation
@@ -451,8 +465,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         return RECHG, RU, ETR, RAS, PACC
     
-    @staticmethod
-    def calc_hydrograph(RECHG, A, B, WLobs, Sy, nscheme='forward'): #==========
+    def calc_hydrograph(self, RECHG, Sy, nscheme='forward'): #==========
         """
         This is a forward numerical explicit scheme for generating the
         synthetic well hydrograph.
@@ -479,6 +492,9 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         
         # It should also be possible to do a Crank-Nicholson on this. I should
         # check this out.
+        
+        A, B = self.A, self.B
+        WLobs = self.WLVLobs * 1000
         
         WLpre = np.zeros(len(RECHG)+1) * np.nan
         
@@ -600,7 +616,8 @@ if __name__ == '__main__':
     
     #---- Calculations ----
     
-    synth_hydrograph = SynthHydrograph(fmeteo, fwaterlvl)
+    synth_hydrograph = SynthHydrograph()
+    synth_hydrograph.load_data(fmeteo, fwaterlvl)
     
     Sy = [0.2, 0.3]
     RASmax = [0, 150]
@@ -608,184 +625,7 @@ if __name__ == '__main__':
     
 #    synth_hydrograph.GLUE(Sy, RASmax, Cru) 
     
-#    U_RAS = np.arange(RASmax[0], RASmax[1]+0.5, 1)
-#    U_Cro = np.arange(Cru[0], Cru[1]+0.005, 0.01)
-    
-#    print len(U_RAS) * len(U_Cro)
-    
     synth_hydrograph.calc_recharge()    
     synth_hydrograph.initPlot()
     synth_hydrograph.plot_prediction()
     plt.show()
-    
-#    synth_hydrograph.initPlot()   
-#    synth_hydrograph.fig.canvas.manager.show()
-    
-#    
-    
-    #    Sy = 0.25
-#    synth_hydrograph.plot_best_fit(Sy)
-    
-#    CRU = np.arange(0.385, 0.365, 0.005)
-#    CRU = [0.31]
-#    CRU = np.arange(0, 0.65, 0.05)    
-#    for cru in CRU:    
-#        synth_hydrograph.plot_multiple_fit(Sy, [cru])
-        
-
-        
-#        fname = 'Bestfit_Sy=%0.2f.pdf' % Sy
-#        fig.savefig(fname)
-       
-        
-        
-#    def plot_best_fit(self, Sy): #============================ Plot Best Fit ==
-#        
-#        
-#        #---- plot results ----
-#        
-#        ax.plot(self.DATE, self.WLVLobs, '0.65', lw=1.5,
-#                label='Observed\nWater Levels')
-#        
-#        label = ('Cru = %0.2f\n' +
-#                 'RASmax = %0.0f mm\n' + 
-#                 'RMSE = %0.0f mm\n' +
-#                 'NSE = %0.2f\n' +
-#                 'Rechg = %0.0f mm/y'
-#                 ) % (Cru, RASmax, RMSE, NSE, rechg)
-#                 
-#        ax.plot(self.DATE, WLVLPRE/1000., alpha=0.65, lw=1.5, label=label)
-#        
-#        
-#        
-#        #---- Saving Data to File ----
-#
-#        filename = 'Sy=%0.2f_data.csv' % Sy
-#        filecontent = [['*** Model Parameters ***'],
-#                       [],
-#                       ['Sy :', '%0.2f' % Sy],
-#                       ['RASmax (mm) :', '%0.0f' % RASmax],
-#                       ['Cru :', '%0.2f' % Cru],
-#                       [],
-#                       ['*** Model Results ***'],
-#                       [],
-#                       ['RMSE (mm) :', '%0.0f' % RMSE],
-#                       ['NSE :', '%0.2f' % NSE],
-#                       ['Rechg (mm/y) :', '%0.0f' % rechg],
-#                       [],
-#                       ['*** Observed and Predicted Water Level ***'],
-#                       [],
-#                       ['Time (d)', 'hobs(mbgs)', 'hpre(mbgs)', 'Rechg (mm/d)']]
-#        for i in range(len(self.twlvl)-1):
-#            filecontent.append([self.twlvl[i],
-#                                '%0.2f' % (WLVLPRE[i]/1000.),
-#                                '%0.2f' % self.WLVLobs[i],
-#                                '%0.0f' % RECHG[i]]) 
-#
-#        filecontent.append([self.twlvl[-1],
-#                            '%0.2f' % (WLVLPRE[-1]/1000.),
-#                            '%0.2f' % self.WLVLobs[-1]])
-#
-#        with open(filename, 'w') as f:
-#            writer = csv.writer(f,delimiter='\t')
-#            writer.writerows(filecontent)
-#        
-#def plot_multiple_fit(self, Sy, CRU): #=================== Plot Multiple ==
-#
-#        #---- Prepare Figure and Plot Obs. ----
-#        
-#        fwidth, fheight = 18, 6
-#        fig = plt.figure(figsize=(fwidth, fheight))        
-#        fig.suptitle('Synthetic hydrographs with Sy = %0.2f' % Sy, fontsize=20)
-#       
-#        lmarg  = 0.85 / fwidth
-#        rmarg = 1.75 / fwidth
-#        tmarg = 0.5 / fheight
-#        bmarg = 0.65 / fheight
-#        
-#        axwidth = 1 - (lmarg + rmarg)
-#        axheight = 1 - (bmarg + tmarg)
-#        
-#        ax = fig.add_axes([lmarg, bmarg, axwidth, axheight])
-#        
-#        #---- Produces Results ----
-#        
-#        RASMAX = [0] * len(CRU)
-#        WLVLPRE = [0] * len(CRU)
-#        RECHG = [0] * len(CRU)
-#        RU = [0] * len(CRU)
-#        ETR = [0] * len(CRU)
-#        RAS = [0] * len(CRU)
-#        PACC = [0] * len(CRU)
-#        for i in range(len(CRU)):
-#            RASMAX[i], WLVLPRE[i], RECHG[i], RU[i], ETR[i], RAS[i], PACC[i] = \
-#                self.opt_RASmax(Sy, CRU[i])
-#        
-#        #---- Plot Results ----
-#        
-#        ax.plot(self.DATE, self.WLVLobs, '0.5', lw=1.5,
-#                label='Observed\nWater Levels')
-#        
-#        for i in range(len(CRU)):
-#            
-#            RMSE = self.calc_RMSE(self.WLVLobs[self.NaNindx]*1000,
-#                                  WLVLPRE[i][self.NaNindx])                                 
-#            NSE = self.nash_sutcliffe(self.WLVLobs[self.NaNindx]*1000,
-#                                      WLVLPRE[i][self.NaNindx])
-#            rechg = np.mean(RECHG[i]) * 365
-#            
-#            label = ('Cru = %0.2f\nRASmax = %0.0f\n' + 
-#                     'RMSE = % 0.0f mm\nNSE = %0.2f\n' +
-#                     'Rechg = %0.0f mm/y'
-#                     ) % (CRU[i], RASMAX[i], RMSE, NSE, rechg)
-#                     
-#            ax.plot(self.DATE, WLVLPRE[i]/1000., alpha=0.65, lw=1.5,
-#                    label=label)        
-#        
-#        #---- Figure Setup ----
-#        
-#        ax.set_ylabel('Water Level (mbgs)', fontsize=16) 
-#        ax.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':', lw=1)
-#        ax.set_axisbelow(True)
-#        
-#        ax.legend(loc=[1.01, 0], ncol=1, fontsize=8)
-#        ax.invert_yaxis()
-#        
-#        fname = 'Multi_Analysis/Sy=%0.2f_Cru=%0.3f.pdf' % (Sy, CRU[0])
-#        fig.savefig(fname)
-#        
-#        #---- Post Processing Results ----
-#        
-#        PRECIP = self.meteoObj.DATA[:, 6]
-#        YEAR = self.meteoObj.DATA[:, 0]
-#        MONTH = self.meteoObj.DATA[:, 1]
-#        DAY = self.meteoObj.DATA[:, 2]
-#        RECHG = RECHG[0]
-#        RU = RU[0]
-#        ETR = ETR[0]
-#        RAS = RAS[0]
-#        PACC = PACC[0]
-#        
-##        plot_water_budget_yearly(PRECIP, RECHG, YEAR, RU, ETR)
-#        
-#        #---- Save Results in csv ----
-#        
-#        fname = 'water_budget.csv'
-#        fcontent = [['YEAR(mm)', 'MONTH', 'DAY', 'PRECIP(mm)', 'RU(mm)',
-#                     'ETR(mm)', 'RECHG(mm)', 'RAS(mm)', 'PACC(mm)']]
-#        for i in range(len(PRECIP)):      
-#            fcontent.append(['%d' % YEAR[i], 
-#                             '%d' % MONTH[i],
-#                             '%d' % DAY[i],
-#                             '%f' % PRECIP[i],
-#                             '%f' % RU[i],
-#                             '%f' % ETR[i],
-#                             '%f' % RECHG[i],
-#                             '%f' % RAS[i],
-#                             '%f' % PACC[i]])
-#                                
-#        with open(fname, 'w') as f:
-#            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-#            writer.writerows(fcontent)   
-#    
-    

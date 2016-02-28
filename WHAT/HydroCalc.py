@@ -44,7 +44,9 @@ from xlrd.xldate import xldate_from_date_tuple
 #---- PERSONAL IMPORTS ----
 
 import database as db
+import meteo
 from waterlvldata import WaterlvlData
+from gwrecharge_calc2 import SynthHydrograph
 
 class Tooltips():
     
@@ -111,6 +113,10 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.tmpl = [] # time in matplotlib format        
         self.water_lvl = []
         
+        #---- Weather Data ----
+        
+        self.meteo_data = meteo.MeteoObj()
+        
         #---- Date System ----
         
         t1 = xldate_from_date_tuple((2000, 1, 1), 0) # time in Excel
@@ -142,11 +148,14 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         self.synth_hydro_widg = SynthHydroWidg()
         self.synth_hydro_widg.hide()
+        self.synth_hydro_widg.newHydroParaSent.connect(self.plot_synth_hydro)
+        
+        self.synth_hydrograph = SynthHydrograph()
         
         #---- INIT UI ----
         
         self.initUI()               
-              
+             
     def initUI(self): #============================================= Init UI ==
                         
         iconDB = db.Icons()
@@ -288,8 +297,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         #---------------------------------------------------- MRC PARAMETERS --
         
-        MRCtype_label = QtGui.QLabel('MRC Type :')
-        
         self.MRC_type = QtGui.QComboBox()
         self.MRC_type.addItems(['Linear', 'Exponential'])
         self.MRC_type.setCurrentIndex(1)
@@ -306,15 +313,13 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.widget_MRCparam = QtGui.QFrame()
 #        self.widget_MRCparam.setFrameStyle(StyleDB.frame)
         
-        col, row = 0, 0
-        grid_MRCparam.addWidget(MRCtype_label, row, col)
-        col += 1
-        grid_MRCparam.addWidget(self.MRC_type, row, col)
+        row = 0
+        grid_MRCparam.addWidget(QtGui.QLabel('MRC Type :'), row, 0)
+        grid_MRCparam.addWidget(self.MRC_type, row, 1)
 #        row += 1
 #        grid_MRCparam.addWidget(self.MRC_ObjFnType, row, col)
         row += 1
-        col = 0
-        grid_MRCparam.addWidget(self.MRC_results, row, col, 1, 2)
+        grid_MRCparam.addWidget(self.MRC_results, row, 0, 1, 2)
         
         grid_MRCparam.setSpacing(5)
         grid_MRCparam.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
@@ -344,7 +349,11 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         msgError.setWindowIcon(db.Icons().WHAT)
         
         msgError.setText(error_text)
-        msgError.exec_()  
+        msgError.exec_()
+        
+    def load_weather_data(self, filename): #============== Load Weather Data ==
+        print('Load Weather Data')        
+        self.meteo_data.load_and_format(filename)
     
     def load_waterLvl_data(self, filename): #============== Load Water Level ==
         
@@ -786,7 +795,10 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         self.h1_ax0, = self.ax0.plot(t, y, color='blue', clip_on=True, ls='-',
                                      zorder=10, marker='None')
-                
+        
+        self.plt_wlpre, = self.ax0.plot([], [], color='red', clip_on=True,
+                                        ls='-', zorder=10, marker='None')
+        
         #---- Peaks ----
                  
         self.h2_ax0, = self.ax0.plot([], [], color='red', clip_on=True, 
@@ -806,8 +818,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         #---- Recession ----
                                      
         self.h3_ax0, = self.ax0.plot([], [], color='red', clip_on=True,
-                                     zorder=15, marker='None', linestyle='--')                          
-        
+                                     zorder=15, marker='None', linestyle='--')
+                
         #---- Strati ----
         
         if not self.btn_strati.autoRaise():
@@ -850,6 +862,31 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         
         self.isGraphExists = True
         self.fig_MRC_widget.draw()
+        
+    def plot_synth_hydro(self, parameters): # ==== Plot Synthetic Hydrograph ==
+        print parameters
+        Cro = parameters['Cro']
+        RASmax = parameters['RASmax']
+        Sy = parameters['Sy']
+#        parameters['jack']
+        
+        #---- compute recharge ----
+        rechg, _, _, _, _ = \
+            self.synth_hydrograph.surf_water_budget(Cro, RASmax)                        
+        WLpre = self.synth_hydrograph.calc_hydrograph(rechg, Sy)
+        
+        #---- water lvl observations ----
+
+        tweatr = self.meteo_data.TIME + 10 # Here we introduce the time lag
+        
+        twlvl = self.time
+        WLVLobs = self.water_lvl * 1000
+        
+        ts = np.where(twlvl[0] == tweatr)[0][0]
+        te = np.where(twlvl[-1] == tweatr)[0][0]
+        
+        self.plt_wlpre.set_data(self.synth_hydrograph.DATE , WLpre)
+        
         
 
     def btn_strati_isClicked(self): #================ Show/Hide Stratigraphy ==
@@ -1739,7 +1776,7 @@ class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
 
 #==============================================================================
     
-    newSynthHydroGrapSent = QtCore.Signal(bool)
+    newHydroParaSent = QtCore.Signal(dict)
     
     def __init__(self, parent=None): #================================= Init ==
         super(SynthHydroWidg, self).__init__(parent)
@@ -1748,6 +1785,13 @@ class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
         
     def initUI(self): #============================================= Init UI ==
 #        self.QSy_max = MyQDSpin(0.005, 0.005, 0.95)
+        
+        
+        class HSep(QtGui.QFrame): # horizontal separators for the toolbar
+            def __init__(self, parent=None):
+                super(HSep, self).__init__(parent)                
+                self.setFrameStyle(db.styleUI().HLine)
+        
         class MyQDSpin(QtGui.QDoubleSpinBox):
             def __init__(self, step, min, max, dec, val,
                          suffix=None, parent=None):
@@ -1761,19 +1805,16 @@ class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
                 self.setAlignment(QtCore.Qt.AlignCenter) 
                 if suffix:
                     self.setSuffix(' %s' % suffix)
+                if parent:
+                    self.valueChanged.connect(parent.param_changed)
                     
-        class HSep(QtGui.QFrame): # horizontal separators for the toolbar
-            def __init__(self, parent=None):
-                super(HSep, self).__init__(parent)                
-                self.setFrameStyle(db.styleUI().HLine)
-                    
-        self.QSy = MyQDSpin(0.005, 0.005, 0.95, 2, 0.2)        
-        self.QRAS = MyQDSpin(1, 0, 1000, 0, 100, 'mm')
-        self.CRO = MyQDSpin(0.01, 0, 1, 2, 0.3)
+        self.QSy = MyQDSpin(0.005, 0.005, 0.95, 3, 0.2, parent=self)
+        self.QRAS = MyQDSpin(1, 0, 1000, 0, 100, 'mm', parent=self)
+        self.CRO = MyQDSpin(0.01, 0, 1, 2, 0.3, parent=self)
         
-        self.Tcrit = MyQDSpin(0.1, -25, 25, 1, 0, u'°C')
-        self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, u'°C')
-        self.CM = MyQDSpin(0.1, 0, 100, 1, 2.7,u'mm/°C')
+        self.Tcrit = MyQDSpin(0.1, -25, 25, 1, 0, u'°C', parent=self)
+        self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, u'°C', parent=self)
+        self.CM = MyQDSpin(0.1, 0, 100, 1, 2.7,u'mm/°C', parent=self)
                     
         main_grid = QtGui.QGridLayout()
         
@@ -1793,7 +1834,15 @@ class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
         
         self.setLayout(main_grid)
         
-    def toggleOnOff(self):        
+    def param_changed(self): # =========================== Parameter Changed ==       
+        parameters = {'Sy': self.QSy.value(),
+                      'RASmax': self.QRAS.value(),
+                      'Cro': self.CRO.value()}
+                 
+        self.newHydroParaSent.emit(parameters)
+                 
+        
+    def toggleOnOff(self): # ====================== Toggle Visibility On/Off ==       
         if self.isVisible():
             self.hide()
         else:
@@ -1960,9 +2009,11 @@ if __name__ == '__main__':
     w.widget_MRCparam.show()
     
     dirname = '/home/jnsebgosselin/Dropbox/WHAT/Projects/Pont-Rouge'
-    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)/STE CHRISTINE (7017000)_1960-2015.out'
+    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
     fwaterlvl = dirname + '/Water Levels/5080001.xls' 
     
     w.load_waterLvl_data(fwaterlvl)
+    w.load_weather_data(fmeteo)
+    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
        
     app.exec_() 
