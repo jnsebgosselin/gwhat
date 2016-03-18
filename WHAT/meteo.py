@@ -1156,23 +1156,24 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         y = range(len(XPOS))
         colors = ['#990000', '#FF0000', '#FF6666']
         
+        
+        
         #---- Tmax ----
         
-        ax1.plot(XPOS, y, color=colors[0], clip_on=True, ls='--', lw=1.5,
-                          zorder=100)
-                                
+        htmax, = ax1.plot(XPOS, y, color=colors[0], clip_on=True, ls='--',
+                          lw=1.5, zorder=100)
+                                        
         #---- Tmean ----
         
-        ax1.plot(XPOS, y, color=colors[1], clip_on=True, marker='o', ls='--',
-                          ms=6, zorder=100, mec=colors[1], mfc='white',
-                          mew=1.5, lw=1.5)
-        
+        htavg, = ax1.plot(XPOS, y, color=colors[1], clip_on=True, marker='o',
+                          ls='--', ms=6, zorder=100, mec=colors[1],
+                          mfc='white', mew=1.5, lw=1.5)
         
         #---- Tmin ----
                                 
-        ax1.plot(XPOS, y, color=colors[2], clip_on=True, ls='--', lw=1.5,
-                          zorder=100)
-        
+        htmin, = ax1.plot(XPOS, y, color=colors[2], clip_on=True, ls='--',
+                          lw=1.5, zorder=100)
+                          
         #-------------------------------------------------- XTICKS FORMATING -- 
     
         Xmin0 = 0
@@ -1224,6 +1225,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                              
         ax0.set_xlim(Xmin0, Xmax0)
         
+        
+                              
         #------------------------------------------------------- Plot Legend --
         
         self.plot_legend()
@@ -1336,14 +1339,15 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         # In case there is a need to force the value
         #----
-        # Ymax0 = 200 
-        # Ymax1 = 25 ; Ymin1 = -25
+        Ymax0 = 180 
+        Ymax1 = 25 ; Ymin1 = -20
         #----
         
         #-------------------------------------------------- YTICKS FORMATING --
 
         ax0 = self.figure.axes[1]
         ax1 = self.figure.axes[2]
+        ax3 = self.figure.axes[0]
         
         #---- Precip (host) ----
                
@@ -1376,6 +1380,25 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.plot_air_temp(Tmax_norm, Tmin_norm, Tavg_norm)
         self.update_yearly_avg()
         
+        #---------------------------------------------------------- Clipping --
+        
+        # There is currently a bug regarding this. So we need to do a 
+        # workaround
+        
+        x0, x1 = ax1.get_position().x0, ax1.get_position().x1
+        y0, y1 = ax1.get_position().y0, ax3.get_position().y1 
+        
+        dummy_ax = self.figure.add_axes([x0, y0, x1-x0, y1-y0])
+        dummy_ax.patch.set_visible(False)
+        dummy_ax.axis('off')
+        
+        dummy_plot, = dummy_ax.plot([], [], clip_on=True)
+        
+        clip_bbox = dummy_plot.get_clip_box()
+                        
+        for line in ax1.lines: 
+            line.set_clip_box(clip_bbox)
+            
     def set_axes_labels(self):
         labelDB = LabelDataBase(self.lang) 
         
@@ -1595,8 +1618,9 @@ if __name__ == '__main__':
     w.meteo_dir = '../Projects/Monteregie Est/Meteo/Output'
     w.show()
     w.set_lang('English')
-    w.generate_graph(fmeteo)    
-    w.save_normal_table('test.csv')
+    w.generate_graph(fmeteo)
+    w.fig_weather_normals.figure.savefig('test.pdf')
+#    w.save_normal_table('test.csv')
 #    for i in range(250):
 #        w.generate_graph(fmeteo)
 #        QtCore.QCoreApplication.processEvents()
