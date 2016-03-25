@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2015 Jean-Sebastien Gosselin
+Copyright 2014-2016 Jean-Sebastien Gosselin
 email: jnsebgosselin@gmail.com
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
@@ -27,7 +27,7 @@ from copy import copy
 #---- THIRD PARTY IMPORTS ----
 
 #from PySide import QtGui
-
+import h5py
 import matplotlib as mpl
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
@@ -52,8 +52,8 @@ class PostProcessErr(object):
    
     def __init__(self, fname):
         
-        self.Yp = None
-        self.Ym = None 
+        self.Yp = None # Predicted value at target station
+        self.Ym = None # Measured value at target station
         self.Time = None
         self.Date = None
         
@@ -73,8 +73,7 @@ class PostProcessErr(object):
         #---- Finds Station Info + First Row of Data ----
         
         row = 0
-        while True:
-            
+        while True:            
             if row > 25:
                 print('Something is wrong with the ' +
                       'formatting of the .err file')
@@ -146,7 +145,13 @@ class PostProcessErr(object):
     def generates_graphs(self): #========================== Generates Graphs ==
         
         for i in range(len(self.Yp)):
-            fname = '%s/%s.pdf' % (self.dirname, self.varNames[i])
+            name = self.varNames[i]
+            name = name.lower()
+            name = name.replace(" ", "_")
+            name = name.replace("(","")
+            name = name.replace(")","")
+            print name
+            fname = '%s/%s.pdf' % (self.dirname, name)
             print('------------------------')
             print('Generating %s.' % (os.path.basename(fname)))
             print('------------------------')            
@@ -333,7 +338,7 @@ class PostProcessErr(object):
     
         #------------------------------------------------------------ Legend --       
         
-        ax0.legend([hscat, hbl], ['Daily Weather Data', '1:1'],
+        ax0.legend([hscat, hbl], ['Daily weather data', '1:1'],
                    loc='upper left', numpoints=1, frameon=False, fontsize=16)
         
         #-------------------------------------------------------------- Draw --
@@ -365,7 +370,7 @@ class PostProcessErr(object):
         ax0 = fig.add_axes([x0, y0, w0, h0])    
         ax0.set_yscale('log', nonposy='clip')
         
-        Xmax = max(np.ceil(np.max(Ymes)/10.) * 10, 120)
+        Xmax = max(np.ceil(np.max(Ymes)/10.) * 10, 80)
         
         #------------------------------------------------------------- Plots --
         
@@ -374,7 +379,7 @@ class PostProcessErr(object):
         #---- Histogram ----
         
         ax0.hist(Ymes, bins=20, color=c1, histtype='stepfilled', normed=True, 
-                 alpha=0.25, ec=c1, label='Measured Data PDF')  
+                 alpha=0.25, ec=c1, label='Measured data PDF')  
                  
         #---- Measured Gamma PDF ----
         
@@ -399,7 +404,7 @@ class PostProcessErr(object):
         
         #---- axis labels ----
     
-        ax0.set_xlabel('Daily Precipitation (mm)', fontsize=18, labelpad=15)
+        ax0.set_xlabel('Daily Total Precipitation (mm)', fontsize=18, labelpad=15)
         ax0.set_ylabel('Probability', fontsize=18, labelpad=15)
         
         #---- yticks labels ----
@@ -532,6 +537,60 @@ def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
     fig.savefig(name + '_polar_error.pdf')
     canvas.show()
     
+def compute_wet_days_LatexTable(dirname):
+    fname = 'wet_days_0.5mm.csv'
+    fcontent=[['station', 'Meas. wet days', 'Pred. wet days', 'Err.(days)',
+               'Err.(%)']]
+                            
+    for root, directories, filenames in os.walk(dirname):
+        for filename in filenames:            
+            if os.path.splitext(filename)[1] == '.err':
+                print('---- %s ----' % os.path.basename(root))
+                pperr = PostProcessErr(os.path.join(root, filename)) 
+                
+                preWetDays = np.where(pperr.Yp[3] > 0.5)[0]
+                mesWetDays = np.where(pperr.Ym[3] > 0.5)[0]
+        
+                Npre = len(preWetDays)
+                Nmes = len(mesWetDays)
+                f = (Npre - Nmes) / float(Nmes) * 100
+                
+                print('Averaged nbr. of meas. wet days per year = %0.1f days' 
+                      % (Nmes/30.))
+                print('Averaged nbr. of pred. wet days per year = %0.1f days' 
+                      % (Npre/30.))
+                print('Estimation Error = %0.1f days' % ((Npre-Nmes)/30.))
+                print('Estimation Error = %0.1f %%' % (f))
+        
+                MI = np.mean(pperr.Ym[3][mesWetDays])
+                SD = np.std(pperr.Ym[3][mesWetDays])
+                print('Precipitation intensity = %0.1f mm/day' % MI)
+                print('Precipitation sdt = %0.1f mm/day' % SD)
+                
+                fcontent.append([pperr.staName,
+                                 '%d'%(Nmes/30.), 
+                                 '%d'%(Npre/30.),
+                                 '%d'%((Npre-Nmes)/30.),
+                                 '%0.1f'%f])
+ 
+    with open(fname, 'a') as f:
+        writer = csv.writer(f,delimiter='\t')
+        writer.writerows(fcontent)
+                
+def compute_err_boxplot(dirname):
+    
+    Ym_tot = []
+    Yp_tot = []
+    
+    for root, directories, filenames in os.walk(dirname):
+        for filename in filenames:            
+            if os.path.splitext(filename)[1] == '.err':
+                print('---- %s ----' % os.path.basename(root))
+                pperr = PostProcessErr(os.path.join(root, filename)) 
+                
+                Ym_tot.extend(pperr.Ym)
+                Yp_tot.extend(pperr.Yp)
+                               
            
 if __name__ == '__main__': #=========================================== Main ==
     
@@ -539,6 +598,30 @@ if __name__ == '__main__': #=========================================== Main ==
     # of-all-the-files-in-a-directory-tree-in-Python
     
     dirname = '../Projects/Monteregie Est/Meteo/Output/'
+#    compute_wet_days_LatexTable(dirname)
+    
+    
+#    Ym_tot = []
+#    Yp_tot = []
+#    
+#    for root, directories, filenames in os.walk(dirname):
+#        for filename in filenames:            
+#            if os.path.splitext(filename)[1] == '.err':
+#                print('---- %s ----' % os.path.basename(root))
+#                pperr = PostProcessErr(os.path.join(root, filename)) 
+#                
+#                Ym_tot.extend(pperr.Ym[3])
+#                Yp_tot.extend(pperr.Yp[3])
+    
+#    Yp_tot = np.array(Yp_tot)
+#    Ym_tot = np.array(Ym_tot)
+    
+#    err = Yp_tot - Ym_tot
+#    
+#    with h5py.File('err_pooled.h5', 'w') as hf:
+#            hf.create_dataset('err', data=err)
+#            hf.create_dataset('Yp', data=Yp_tot)
+#            hf.create_dataset('Ym', data=Ym_tot)
 
     filename = dirname + 'GRANBY (7022800)/GRANBY (7022800)_1980-2009.err'
     pperr = PostProcessErr(filename)

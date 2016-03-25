@@ -1541,7 +1541,7 @@ class WeatherData():
         with open(output_path, 'w') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
-            
+         
     def read_summary(self, project_folder): #==================================
 
         """
@@ -1718,7 +1718,7 @@ def L1LinearRegression(X, Y):
         
 if __name__ == '__main__':
     
-    # 1 ------------------- Create an instance of the class *GapFillWeather* --
+    # 1 - Create an instance of the class *GapFillWeather* --------------------
     
     # The algorithm is built as a base class of the Qt GUI Framework 
     # using the PySide binding. Signals are also emitted at various stade 
@@ -1728,7 +1728,7 @@ if __name__ == '__main__':
     
     gapfill_weather = GapFillWeather()
     
-    # 2 ----------------------------------- Setup input and output directory --
+    # 2 - Setup input and output directory ------------------------------------
     
     # Weather data files must be put all together in the input directory.
     # The outputs produced by the algorithm after a gap-less weather dataset 
@@ -1738,7 +1738,7 @@ if __name__ == '__main__':
     gapfill_weather.inputDir = '../Projects/Example/Meteo/Input'
     gapfill_weather.outputDir = '../Projects/Example/Meteo/Output'
     
-    # 3 ---------------------------------------- Load weather the data files --
+    # 3 - Load weather the data files -----------------------------------------
     
     # Datafiles are loaded directly from the input directory defined in
     # step 2.
@@ -1746,13 +1746,13 @@ if __name__ == '__main__':
     stanames = gapfill_weather.load_data()
     print(stanames) 
     
-    # 4 ----------------------------------------------- Setup target station --
+    # 4 - Setup target station ------------------------------------------------
     
     # The station at index 8 is defined as the target station
     
     gapfill_weather.set_target_station(0) 
           
-    # 5 ---------------------------------------------- Define the time plage --
+    # 5 - Define the time plage -----------------------------------------------
     
     # Gaps in the weather data will be filled only between *time_start* and
     # *time_end*
@@ -1760,7 +1760,7 @@ if __name__ == '__main__':
     gapfill_weather.time_start = gapfill_weather.WEATHER.TIME[0]
     gapfill_weather.time_end = gapfill_weather.WEATHER.TIME[-1] 
       
-    # 6 -------------------------------------------- Setup method parameters --
+    # 6 - Setup method parameters ---------------------------------------------
     
     # See the help of class *GapFillWeather* for a description of each
     # parameter.
@@ -1772,7 +1772,7 @@ if __name__ == '__main__':
     # 0 -> Least Absolute Deviation (LAD)
     # 1 -> Ordinary Least-Square (OLS)
     
-    # 7 ------------------------------------------ Define additional options --
+    # 7 - Define additional options -------------------------------------------
     
     # See the help of class *GapFillWeather* for a description of each
     # option.
@@ -1780,7 +1780,7 @@ if __name__ == '__main__':
     gapfill_weather.full_error_analysis = False
     gapfill_weather.add_ETP = False
     
-    # 8 ---------------------------- Gap-fill the data of the target station --
+    # 8 - Gap-fill the data of the target station -----------------------------
     
     # A gap-less weather dataset will be produced for the target weather
     # station defined in step 4, for the time plage defined in step 5.
