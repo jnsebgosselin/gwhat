@@ -168,13 +168,32 @@ class Search4Stations(QtGui.QWidget):
         
         name_search_widg.setLayout(name_search_grid)
         
+        #---- Search by Province ----
+        
+        self.prov_widg = QtGui.QComboBox()
+        self.prov_widg.addItems(['QC', 'AB'])
+        
+        prov_search_widg = QtGui.QFrame()
+        prov_search_grid = QtGui.QGridLayout()
+        
+        prov_search_grid.addWidget(QtGui.QLabel('Province :'), 1, 1)
+        prov_search_grid.addWidget(self.prov_widg, 1, 2)
+        
+#        prov_search_grid.setColumnStretch(0, 100)
+        prov_search_grid.setColumnStretch(3, 100)
+        prov_search_grid.setRowStretch(0, 100)        
+        prov_search_grid.setRowStretch(2, 100)
+        
+        prov_search_widg.setLayout(prov_search_grid)
+        
         #---- Assemble TabWidget ----
         
-        tab_widg = QtGui.QTabWidget()
+        self.tab_widg = QtGui.QTabWidget()
         
-        tab_widg.addTab(prox_search_widg, 'Proximity')
-        tab_widg.addTab(name_search_widg, 'Station Name')
-        
+        self.tab_widg.addTab(prox_search_widg, 'Proximity')        
+        self.tab_widg.addTab(prov_search_widg, 'Province')
+        #tab_widg.addTab(name_search_widg, 'Station Name')
+                
         #-------------------------------------------------- Year Criteria ----
         
         label_date = QtGui.QLabel('Search for stations with data available')
@@ -308,7 +327,7 @@ class Search4Stations(QtGui.QWidget):
         row = 0
         left_panel_grid.addWidget(panel_title, row, 0)
         row += 1
-        left_panel_grid.addWidget(tab_widg, row, 0)
+        left_panel_grid.addWidget(self.tab_widg, row, 0)
         row += 1
         left_panel_grid.addWidget(year_widg, row, 0) 
         row += 1
@@ -418,6 +437,7 @@ class Search4Stations(QtGui.QWidget):
 #        self.close()
 
         #---- Generate New List ----
+
         # http://doc.qt.io/qt-5/qt.html#CursorShape-enum
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         
@@ -433,14 +453,7 @@ class Search4Stations(QtGui.QWidget):
         QtCore.QCoreApplication.processEvents()
         QtCore.QCoreApplication.processEvents()
         
-        LAT = self.lat_spinBox.value()
-        LON = self.lon_spinBox.value()
-        RADIUS = self.radius_SpinBox.value()
-        startYear = self.minYear.value()
-        endYear = self.maxYear.value()
-        nbrYear = self.nbrYear.value()
-      
-        self.search_envirocan(LAT, LON, RADIUS, startYear, endYear, nbrYear)
+        self.search_envirocan()
             
         QtGui.QApplication.restoreOverrideCursor()
         
@@ -448,8 +461,7 @@ class Search4Stations(QtGui.QWidget):
         print("-------------- FIN -------------")
         print("")
   
-    
-    def search_envirocan(self, LAT, LON, RADIUS, YearMin, YearMax, nbrYear):
+    def search_envirocan(self):
         
         """
         Search on the Government of Canada website for weather stations with
@@ -465,7 +477,15 @@ class Search4Stations(QtGui.QWidget):
         
         If an error is raised, an empty list is returned. 
         """
-            
+        
+        PROV = self.prov_widg.currentText()
+        LAT = self.lat_spinBox.value()
+        LON = self.lon_spinBox.value()
+        RADIUS = self.radius_SpinBox.value()
+        YearMin = self.minYear.value()
+        YearMax = self.maxYear.value()
+        nbrYear = self.nbrYear.value()
+        
         Nmax = 100. # Number of results per page (maximum possible is 100)
             
 #        StationID = np.array(['stationId']) # to download the data from server
@@ -485,29 +505,37 @@ class Search4Stations(QtGui.QWidget):
         staProxim = np.array([]).astype(str)
         
         #------------------------------------------------------------ url ----
-        
+     
         url =  'http://climate.weather.gc.ca/advanceSearch/'
         url += 'searchHistoricDataStations_e.html?'
-        url += 'searchType=stnProx&timeframe=1&txtRadius=%d' % RADIUS
-        url += '&selCity=&selPark=&optProxType=custom'
+                
+        if self.tab_widg.currentIndex() == 0:
+            url += 'searchType=stnProx&timeframe=1&txtRadius=%d' % RADIUS
+            url += '&selCity=&selPark=&optProxType=custom'
+            
+            deg, mnt, sec = decdeg2dms(np.abs(LAT))
+            url += '&txtCentralLatDeg=%d' % deg
+            url += '&txtCentralLatMin=%d' % mnt
+            url += '&txtCentralLatSec=%d' % sec
     
-        deg, mnt, sec = decdeg2dms(np.abs(LAT))
-        url += '&txtCentralLatDeg=%d' % deg
-        url += '&txtCentralLatMin=%d' % mnt
-        url += '&txtCentralLatSec=%d' % sec
-    
-        deg, mnt, sec = decdeg2dms(np.abs(LON))
-        url += '&txtCentralLongDeg=%d' % deg
-        url += '&txtCentralLongMin=%d' % mnt
-        url += '&txtCentralLongSec=%d' % sec
-    
+            deg, mnt, sec = decdeg2dms(np.abs(LON))
+            url += '&txtCentralLongDeg=%d' % deg
+            url += '&txtCentralLongMin=%d' % mnt
+            url += '&txtCentralLongSec=%d' % sec
+        elif self.tab_widg.currentIndex() == 1:
+            url += 'searchType=stnProv&timeframe=1&lstProvince=%s' % PROV
+        
         url += '&optLimit=yearRange'
         url += '&StartYear=%d' % YearMin
         url += '&EndYear=%d' % YearMax
         url += '&Year=2013&Month=6&Day=4'
         url += '&selRowPerPage=%d' % Nmax
-        url += '&cmdProxSubmit=Search' 
         
+        if self.tab_widg.currentIndex() == 0:
+            url += '&cmdProxSubmit=Search' 
+        elif self.tab_widg.currentIndex() == 1:
+            url += '&cmdProvSubmit=Search'
+            
         try:
             
             #-------------------------------------------- Results Extraction --
@@ -521,12 +549,16 @@ class Search4Stations(QtGui.QWidget):
             
                 # write downloaded content to local file for debugging purpose
                 
-                with open("url.txt", "wb") as local_file:
+                with open("url.txt", "w") as local_file:
                     local_file.write(stnresults)
          
             #-- Number of Stations Found --
-        
-            txt2find = ' stations found'
+            
+            if self.tab_widg.currentIndex() == 0:
+                txt2find = ' stations found'
+            if self.tab_widg.currentIndex() == 1:
+                txt2find = ' locations match'
+                
             indx_e = stnresults.find(txt2find, 0)
             if indx_e == -1:
                 print 'No weather station found.'            
@@ -542,7 +574,7 @@ class Search4Stations(QtGui.QWidget):
                 print '%d weather stations found.' % Nsta
                 
                 Npage = int(np.ceil(Nsta / Nmax))
-                
+                print('Total number of page = % d' % Npage)
                 for page in range(Npage):
                     
                     print 'Page :', page
@@ -555,11 +587,13 @@ class Search4Stations(QtGui.QWidget):
                     else:
                         f = urlopen(url4page)
                         stnresults = f.read()
+                        
+#                        with open("url4page.txt", "w") as local_file:
+#                            local_file.write(stnresults)
                     
-                    indx_e = 0
-                   
-                    for row in range(int(Nmax)): # Scan each row of the
-                                                 # current page
+                    indx_e = 0     
+                    # Scan each row of the current page
+                    for row in range(int(Nmax)): 
     
                         #---- StartDate and EndDate ----
                         
@@ -596,27 +630,33 @@ class Search4Stations(QtGui.QWidget):
                         province = stnresults[indx_0+n:indx_e]
                         
                         #---- Name ----
-                        
+
                         txt2find  = '<div class="span-2 row-end row-start marg'
-                        txt2find += 'in-bottom-none station wordWrap stnWidth">'
+                        txt2find += 'in-bottom-none station'
+                        if self.tab_widg.currentIndex() == 0:
+                            txt2find += ' wordWrap stnWidth">'
+                        if self.tab_widg.currentIndex() == 1:
+                            txt2find += '  wordWrap">'
                         n = len(txt2find)
                         indx_0 = stnresults.find(txt2find, indx_e)
                         indx_e = stnresults.find('</div>', indx_0)
-                        
                         station_name = stnresults[indx_0+n:indx_e]
                         station_name = station_name.strip()
-                        
+                       
                         #---- Proximity ----
                         
-                        txt2find  = '<div class="span-1 row-end row-start '
-                        txt2find += 'margin-bottom-none day_mth_yr wordWrap">'
-                        n = len(txt2find)
-                        indx_0 = stnresults.find(txt2find, indx_e)
-                        indx_e = stnresults.find('</div>', indx_0)
+                        if self.tab_widg.currentIndex() == 0:
+                            txt2find  = '<div class="span-1 row-end row-start '
+                            txt2find += 'margin-bottom-none day_mth_yr wordWrap">'
+                            n = len(txt2find)
+                            indx_0 = stnresults.find(txt2find, indx_e)
+                            indx_e = stnresults.find('</div>', indx_0)
                         
-                        station_proxim = stnresults[indx_0+n:indx_e]
-                        station_proxim = station_proxim.strip()
-                        
+                            station_proxim = stnresults[indx_0+n:indx_e]
+                            station_proxim = station_proxim.strip()
+                        elif self.tab_widg.currentIndex() == 1:
+                            station_proxim = 0
+                            
                         if start_year.isdigit(): # daily data exist
                              
                             if (int(end_year)-int(start_year)+1) >= nbrYear:
@@ -692,7 +732,7 @@ class Search4Stations(QtGui.QWidget):
                 #------------------------------------------- Save Results ----
                 
                 staList = [staName, StationID, StartYear, EndYear, Prov,
-                   ClimateID, staProxim]
+                           ClimateID, staProxim]
                 staList = np.transpose(staList)
                                    
                 #----------------------- Send Signal to load list into UI ----
@@ -1186,7 +1226,7 @@ if __name__ == '__main__':
 
     instance1.lat_spinBox.setValue(45.4)
     instance1.lon_spinBox.setValue(73.13)
-    instance1.isOffline = True
+    instance1.isOffline = False
               
     instance1.show()
         
