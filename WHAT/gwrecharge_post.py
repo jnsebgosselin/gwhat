@@ -177,7 +177,7 @@ def plot_rechg_GLUE(language='English'):
     ax0.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
              linewidth=0.5, dashes=[0.5, 5])
     
-    ax0.set_yticks(np.arange(0, Ymax0, 50), minor=True)
+    ax0.set_yticks(np.arange(0, Ymax0, 25), minor=True)
     ax0.tick_params(axis='y',direction='out', which='minor', gridOn=False)
     
     #------------------------------------------------------------ AXIS RANGE --
@@ -189,9 +189,10 @@ def plot_rechg_GLUE(language='English'):
     xlabl = ('Hydrological Years (October 1st of one ' +
              'year to September 30th of the next)')
     if language == 'French' :  
-        ylabl = u"Colonne d'eau équivalente (mm)"
-        xlabl = (u"Année Hydrologique (1er octobre d'une " +
-                 u"année au 30 septembre de l'année suivante)")
+        ylabl = u"Recharge annuelle (mm/a)"
+        xlabl = (u"Années Hydrologiques")
+#        xlabl = (u"Années Hydrologiques (1er octobre d'une " +
+#                 u"année au 30 septembre de l'année suivante)")
                  
     ax0.set_ylabel(ylabl, fontsize=16,
                    verticalalignment='bottom')
@@ -226,12 +227,16 @@ def plot_rechg_GLUE(language='English'):
     print('Mean annual Recharge (GLUE 50)= %0.f mm/y' % np.mean(prob_rechg_yrly))
     print('Mean annual Recharge (GLUE 5) = %0.f mm/y' % np.mean(min_rechg_yrly))
     
-    text = (('Mean annual recharge : (GLUE 5) %d mm/y ; ' +
-            '(GLUE 50) %d mm/y  ; (GLUE 95) %d mm/y')
-            % (np.mean(min_rechg_yrly),
-               np.mean(prob_rechg_yrly),
-               np.mean(max_rechg_yrly)))
-              
+    if language == 'French':
+        text  = 'Recharge annuelle moyenne : '
+        text += '(GLUE 5) %d mm/a ; ' % np.mean(min_rechg_yrly)
+        text += '(GLUE 50) %d mm/a ; ' % np.mean(prob_rechg_yrly) 
+        text += '(GLUE 95) %d mm/a' % np.mean(max_rechg_yrly)
+    else:
+        text  = 'Mean annual recharge : '
+        text += '(GLUE 5) %d mm/y ; ' % np.mean(min_rechg_yrly)
+        text += '(GLUE 50) %d mm/y ; ' % np.mean(prob_rechg_yrly) 
+        text += '(GLUE 95) %d mm/y' % np.mean(max_rechg_yrly)
     
     dx, dy = 5/72., 5/72.
     padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)        
@@ -687,7 +692,7 @@ if __name__ == '__main__':
 #    plot_water_budget_yearly(language='French')
 #    plot_water_budget_yearly2(language='French')
     
-    plot_rechg_GLUE()
+    plot_rechg_GLUE('French')
     plt.show()
 
 

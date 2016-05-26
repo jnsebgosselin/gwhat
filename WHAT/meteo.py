@@ -1224,8 +1224,6 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         #------------------------------------------------------------- XLIMS --
                              
         ax0.set_xlim(Xmin0, Xmax0)
-        
-        
                               
         #------------------------------------------------------- Plot Legend --
         
@@ -1339,8 +1337,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         
         # In case there is a need to force the value
         #----
-        Ymax0 = 180 
-        Ymax1 = 25 ; Ymin1 = -20
+        #Ymax0 = 200 
+        #Ymax1 = 30 ; Ymin1 = -20
         #----
         
         #-------------------------------------------------- YTICKS FORMATING --
@@ -1609,9 +1607,9 @@ if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)   
                 
 #    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
-#    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
+    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
 #    fmeteo = "Files4testing/BONSECOURS (7020828)_1980-2009.out"
-    fmeteo = "Files4testing/FORTIERVILLE (7022494)_2013-2015.out"
+#   fmeteo = "Files4testing/FORTIERVILLE (7022494)_2013-2015.out"
     
     w = WeatherAvgGraph()
     w.save_fig_dir =  '../Projects/Monteregie Est'

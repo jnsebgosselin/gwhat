@@ -130,15 +130,17 @@ class LabelDatabase():
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
                             
-        self.legend = ['Snow', 'Rain', 'Air Temperature', 'Missing Data',
-                       'Water Level (Trend)', 'Water Level',
-                       'Water Level (Data)', 'Manual Measures']         
+        self.legend = ['Snow', 'Rain', 'Air temperature', 'Missing data',
+                       'Water level (trend)', 'Water level',
+                       'Water level (data)', 'Manual measures',
+                       'Estimated recession']         
                             
         if language == 'French': #----------------------------------- French --
             
 #            self.mbgs = u"Niveau d'eau au puits %s (mbgs)"
 #            self.masl = u"Niveau d'eau au puits %s (masl)"
-            self.mbgs = u"Niveau d'eau (mbgs)"
+            self.mbgs = u"Niveau d'eau (m sous la surface)"
+#            self.mbgs = u"Niveau d'eau (mbgs)"
             self.masl = u"Niveau d'eau (masl)"
             self.precip = u'Précipitations (%s)'
             self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
@@ -152,7 +154,8 @@ class LabelDatabase():
             self.legend = ['Neige', 'Pluie', u"Température de l'air", 
                            u'Données manquantes',
                            "Niveau d'eau (tendance)", "Niveau d'eau",
-                           u"Niveau d'eau (données)", 'Mesures Manuelles']
+                           u"Niveau d'eau (données)", 'Mesures manuelles',
+                           u'Récession simulée']
 
 #==============================================================================
 
@@ -579,7 +582,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 lg_labels.append(labelDB[7])
             
             if self.isMRC:
-                lg_labels.append('Estimated Recession')
+                lg_labels.append(labelDB[8])
                 lg_handles.append(self.plot_recess)
                 
             if self.isGLUE:
@@ -1683,27 +1686,27 @@ if __name__ == '__main__':
     hydrograph.set_waterLvlObj(waterLvlObj)
     hydrograph.finfo = finfo 
         
-    #---- Layout Options ----
+    #---- Normal plot ----
     
-    hydrograph.fwidth = 11. # Width of the figure in inches
-    hydrograph.fheight = 8.5
+#    hydrograph.fwidth = 11. # Width of the figure in inches
+#    hydrograph.fheight = 8.5
+#    
+#    hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
+#    hydrograph.trend_line = False
+#    hydrograph.gridLines = 2 # Gridlines Style    
+#    hydrograph.isGraphTitle = 1 # 1 -> title ; 0 -> no title
+#    hydrograph.isLegend = 1
+#        
+#    hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
+#    hydrograph.datemode = 'year' # 'month' or 'year'
+#    hydrograph.date_labels_display_pattern = 1
+#    hydrograph.bwidth_indx = 2 # Meteo Bin Width
+#    # 0: daily | 1: weekly | 2: monthly | 3: yearly
+#    hydrograph.RAINscale = 100
     
-    hydrograph.WLdatum = 0 # 0 -> mbgs ; 1 -> masl
-    hydrograph.trend_line = False
-    hydrograph.gridLines = 2 # Gridlines Style    
-    hydrograph.isGraphTitle = 1 # 1 -> title ; 0 -> no title
-    hydrograph.isLegend = 1
-        
-    hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
-    hydrograph.datemode = 'year' # 'month' or 'year'
-    hydrograph.date_labels_display_pattern = 1
-    hydrograph.bwidth_indx = 2 # Meteo Bin Width
-    # 0: daily | 1: weekly | 2: monthly | 3: yearly
-    hydrograph.RAINscale = 100
-    
-    hydrograph.best_fit_time(waterLvlObj.time)    
-    hydrograph.best_fit_waterlvl()
-    hydrograph.generate_hydrograph(meteoObj)
+#    hydrograph.best_fit_time(waterLvlObj.time)    
+#    hydrograph.best_fit_waterlvl()
+#    hydrograph.generate_hydrograph(meteoObj)
     
 #    #---- MRC ----
 #    
@@ -1722,17 +1725,28 @@ if __name__ == '__main__':
 #    
 #    hydrograph.isMRC = False
 #    
-#    #---- GLUE ----
-#    
-#    hydrograph.NZGrid = 14
-#    hydrograph.WLmin = 11.25
-#    hydrograph.WLscale = 0.25
-#    
-#    hydrograph.best_fit_time(waterLvlObj.time)    
-#    hydrograph.generate_hydrograph(meteoObj)
-#    
-#    hydrograph.draw_GLUE()
-#    hydrograph.savefig(dirname + '/GLUE_hydrograph.pdf')
+    #---- GLUE ----
+    
+    hydrograph.fwidth = 11.
+    hydrograph.fheight = 5.
+    hydrograph.language = 'English'
+    
+    hydrograph.NZGrid = 14
+    hydrograph.WLmin = 11.25
+    hydrograph.WLscale = 0.25
+    
+    hydrograph.isGraphTitle = 0 # 1 -> title ; 0 -> no title
+    hydrograph.isLegend = 1
+    hydrograph.meteoOn = False
+    hydrograph.datemode = 'year' # 'month' or 'year'
+    hydrograph.date_labels_display_pattern = 1
+    
+    hydrograph.best_fit_time(waterLvlObj.time)    
+    hydrograph.generate_hydrograph(meteoObj)
+    
+    hydrograph.draw_GLUE()
+    hydrograph.draw_recession()
+    hydrograph.savefig(dirname + '/GLUE_hydrograph.pdf')
     
     #------------------------------------------------- show figure on-screen --
     

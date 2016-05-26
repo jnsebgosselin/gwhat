@@ -1300,6 +1300,10 @@ class WeatherData():
             
             # Check if data are continuous over time. If not, the serie will be
             # made continuous and the gaps will be filled with nan values.
+            print reader[0][1]
+            print STADAT[0, 0]
+            print STADAT[0, 1]
+            print STADAT[0, 2]                        
             
             time_start = xldate_from_date_tuple((STADAT[0, 0].astype('int'),
                                                  STADAT[0, 1].astype('int'),
@@ -1308,7 +1312,8 @@ class WeatherData():
 
             time_end = xldate_from_date_tuple((STADAT[-1, 0].astype('int'),
                                                STADAT[-1, 1].astype('int'),
-                                               STADAT[-1, 2].astype('int')), 0)
+                                               STADAT[-1, 2].astype('int')),
+                                              0)
             
             if (time_end - time_start + 1) != len(STADAT[:,0]):
                 print

@@ -70,8 +70,8 @@ class SynthHydrograph(object):                              # SynthHydrograph #
     
         print('--------')
         
-        self.meteoObj.load_and_format(fmeteo) # Includes the estimation of ETP
-                                              # if not already present in file.
+        self.meteoObj.load_and_format(fmeteo) 
+        # Includes the estimation of ETP if not already present in file.
         
         self.ETP = self.meteoObj.DATA[:, 7]
         self.PTOT = self.meteoObj.DATA[:, 6]
@@ -87,8 +87,6 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         self.NaNindx = np.where(~np.isnan(self.WLVLobs))
         
         print('--------')
-        
-        
         
         #---- Prepare DATE time series ----
         
@@ -107,8 +105,7 @@ class SynthHydrograph(object):                              # SynthHydrograph #
         self.PRECIP = self.meteoObj.DATA[:, 6][ts:te+1]
         
         self.DATE = self.convert_time_to_date(self.YEAR, self.MONTH, DAY)
-    
-       
+           
     @staticmethod
     def convert_time_to_date(YEAR, MONTH, DAY): #============== Convert Date ==
                 

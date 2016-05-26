@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2015 Jean-Sebastien Gosselin
-
+Copyright 2014-2016 Jean-Sebastien Gosselin
 email: jnsebgosselin@gmail.com
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
@@ -42,7 +41,7 @@ import MyQWidget
 
 class Tooltips():
     
-    def __init__(self, language): #------------------------------- ENGLISH -----
+    def __init__(self, language): #------------------------------ ENGLISH -----
         
         self.search4stations = ('Search for weather stations in the ' +
                                 'Canadian Daily Climate Database (CDCD)')
@@ -56,11 +55,11 @@ class Tooltips():
         self.btn_select_rawData = 'Select and format raw weather data files' 
         self.btn_save_concatenate = 'Save formated weather data in a csv file'
         
-        if language == 'French': #--------------------------------- FRENCH -----
+        if language == 'French': #-------------------------------- FRENCH -----
             
             pass
 
-#===============================================================================
+#==============================================================================
 class dwnldWeather(QtGui.QWidget):
     """
     Interface that allow to download daily weather data from the governement
@@ -294,11 +293,11 @@ class dwnldWeather(QtGui.QWidget):
         
         self.setLayout(main_grid)
         
-        #------------------------------------------------------ MESSAGE BOX ----
+        #----------------------------------------------------- MESSAGE BOX ----
         
         self.msgBox = MyQWidget.MyQErrorMessageBox()
                 
-        #----------------------------------------------------------- EVENTS ----
+        #---------------------------------------------------------- EVENTS ----
         
         #---- download raw data ----
         
@@ -332,12 +331,12 @@ class dwnldWeather(QtGui.QWidget):
         self.search4stations.ConsoleSignal.connect(self.ConsoleSignal.emit)
         
             
-    def set_workdir(self, directory): #=========================================
+    def set_workdir(self, directory): #========================================
         
         self.workdir = directory
         
         
-    def btn_delSta_isClicked(self): #===========================================    
+    def btn_delSta_isClicked(self): #==========================================    
         
         rows = self.station_table.get_checked_rows()
         
@@ -355,7 +354,7 @@ class dwnldWeather(QtGui.QWidget):
                                                     QtCore.Qt.CheckState(False))          
     
     
-    def add_stations2list(self, staList2add): #===============================
+    def add_stations2list(self, staList2add): #================================
         
         nrow = self.station_table.rowCount()
         rows = range(nrow)
@@ -1011,7 +1010,7 @@ class DownloadRawDataFiles(QtCore.QThread):
           
     def run(self): 
         
-        #------------------------------------------------------------ INIT -----
+        #----------------------------------------------------------- INIT -----
         
         dirname = self.dirname
         
@@ -1035,7 +1034,7 @@ class DownloadRawDataFiles(QtCore.QThread):
         if not path.exists(dirname):
             makedirs(dirname)
             
-        #-------------------------------------------------------- DOWNLOAD -----
+        #------------------------------------------------------- DOWNLOAD -----
             
         # Data are downloaded on a yearly basis from yStart to yEnd
          
@@ -1051,10 +1050,11 @@ class DownloadRawDataFiles(QtCore.QThread):
             
             fname = dirname + '/eng-daily-0101%s-1231%s.csv' % (year, year) 
             
-            url = ('http://climate.weather.gc.ca/climateData/bulkdata_e.html?' +
-                   'format=csv&stationID=' + str(staID) + '&Year=' + str(year) +
-                   '&Month=1&Day=1&timeframe=2&submit=Download+Data')
-            
+            url = ('http://climate.weather.gc.ca/climate_data/' +
+                   'bulk_data_e.html?format=csv&stationID=' + str(staID) +
+                   '&Year=' + str(year) +'&Month=1&Day=1&timeframe=2' +
+                   '&submit=Download+Data')
+
             #----- Download Data For That Year -----
             
             if path.exists(fname):
@@ -1106,7 +1106,7 @@ class DownloadRawDataFiles(QtCore.QThread):
                             
             i += 1
             
-        #----------------------------------------------------- End of Task -----
+        #---------------------------------------------------- End of Task -----
         
         if self.STOP == True:
             

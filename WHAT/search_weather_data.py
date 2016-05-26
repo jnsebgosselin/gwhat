@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 Copyright 2014-2015 Jean-Sebastien Gosselin
-
 email: jnsebgosselin@gmail.com
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
@@ -38,7 +37,7 @@ import database as db
 
 class Tooltips():
     
-    def __init__(self, language): #------------------------------- ENGLISH -----
+    def __init__(self, language): #------------------------------ ENGLISH -----
         
         #---- Search4Stations ----
         
@@ -52,17 +51,17 @@ class Tooltips():
         self.chkbox_header = ('Check of uncheck all the weather stations ' +
                               'in the table.')
     
-        if language == 'French': #------------------------------- FRENCH -----
+        if language == 'French': #-------------------------------- FRENCH -----
             
             pass
 
-#=============================================================================
+#==============================================================================
 class Search4Stations(QtGui.QWidget):
     '''
     Widget that allows the user to search for weather stations on the
     Government of Canada website.
     '''
-#=============================================================================
+#==============================================================================
     
     ConsoleSignal = QtCore.Signal(str)
     staListSignal = QtCore.Signal(list)
@@ -74,19 +73,19 @@ class Search4Stations(QtGui.QWidget):
               
     def initUI(self):
 
-        #------------------------------------------------------- DATABASE ----
+        #-------------------------------------------------------- DATABASE ----
         
         iconDB = db.Icons()
         styleDB = db.styleUI()
         ttipDB = Tooltips('English')
 
-        #---------------------------------------------------- MAIN WINDOW ----
+        #----------------------------------------------------- MAIN WINDOW ----
         
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(iconDB.WHAT)
         self.setWindowFlags(QtCore.Qt.Window)
         
-        #------------------------------------------------- INIT VARIABLES ----
+        #-------------------------------------------------- INIT VARIABLES ----
         
         now = datetime.now()
         
@@ -119,14 +118,16 @@ class Search4Stations(QtGui.QWidget):
         self.lon_spinBox.setMaximum(180)
         self.lon_spinBox.setSuffix(u' °')
         
-        label_radius = QtGui.QLabel('Search Radius :')
+        self.radius_SpinBox = QtGui.QComboBox()
+        self.radius_SpinBox.addItems(['25 km', '50 km', '100 km', '200 km'])
         
-        self.radius_SpinBox = QtGui.QSpinBox()
-        self.radius_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
-        self.radius_SpinBox.setSingleStep(5)
-        self.radius_SpinBox.setMinimum(5)
-        self.radius_SpinBox.setMaximum(500)
-        self.radius_SpinBox.setSuffix(' km')
+#        self.radius_SpinBox = QtGui.QSpinBox()
+#        self.radius_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
+#        self.radius_SpinBox.setSingleStep(5)
+#        self.radius_SpinBox.setValue(25)
+#        self.radius_SpinBox.setMinimum(5)
+#        self.radius_SpinBox.setMaximum(500)
+#        self.radius_SpinBox.setSuffix(' km')
        
         prox_search_widg = QtGui.QWidget()
         prox_search_grid = QtGui.QGridLayout()
@@ -141,7 +142,7 @@ class Search4Stations(QtGui.QWidget):
         prox_search_grid.addWidget(self.lon_spinBox, row, col+1)
         prox_search_grid.addWidget(label_Lon2, row, col+2)
         row += 1
-        prox_search_grid.addWidget(label_radius, row, col)
+        prox_search_grid.addWidget(QtGui.QLabel('Search Radius :'), row, col)
         prox_search_grid.addWidget(self.radius_SpinBox, row, col+1) 
                         
         prox_search_grid.setColumnStretch(0, 100)
@@ -151,22 +152,6 @@ class Search4Stations(QtGui.QWidget):
         prox_search_grid.setContentsMargins(10, 10, 10, 10) # (L, T, R, B)
         
         prox_search_widg.setLayout(prox_search_grid)
-        
-        #---- Search by Name ----
-        
-        title = QtGui.QLabel('<b>Coming Soon to Theaters Near You</b>')
-        
-        name_search_widg = QtGui.QFrame()
-        name_search_grid = QtGui.QGridLayout()
-        
-        name_search_grid.addWidget(title, 1, 1)
-        
-        name_search_grid.setColumnStretch(0, 100)
-        name_search_grid.setRowStretch(0, 100)
-        name_search_grid.setColumnStretch(2, 100)
-        name_search_grid.setRowStretch(2, 100)
-        
-        name_search_widg.setLayout(name_search_grid)
         
         #---- Search by Province ----
         
@@ -192,9 +177,8 @@ class Search4Stations(QtGui.QWidget):
         
         self.tab_widg.addTab(prox_search_widg, 'Proximity')        
         self.tab_widg.addTab(prov_search_widg, 'Province')
-        #tab_widg.addTab(name_search_widg, 'Station Name')
                 
-        #-------------------------------------------------- Year Criteria ----
+        #--------------------------------------------------- Year Criteria ----
         
         label_date = QtGui.QLabel('Search for stations with data available')
                      
@@ -286,7 +270,7 @@ class Search4Stations(QtGui.QWidget):
         
         year_widg.setLayout(year_grid)
         
-        #-------------------------------------------------------- TOOLBAR ----
+        #--------------------------------------------------------- TOOLBAR ----
         
         self.btn_search = QtGui.QPushButton('Search Stations')
         self.btn_search.setIcon(iconDB.search)
@@ -367,14 +351,14 @@ class Search4Stations(QtGui.QWidget):
         self.setLayout(grid_search4stations)
         self.setFont(styleDB.font1)
                 
-        #--------------------------------------------------------- EVENTS ----
+        #---------------------------------------------------------- EVENTS ----
         
         self.minYear.valueChanged.connect(self.minYear_changed)
         self.maxYear.valueChanged.connect(self.maxYear_changed)
         self.btn_search.clicked.connect(self.btn_search_isClicked)
         btn_addSta.clicked.connect(self.btn_addSta_isClicked)
     
-    def show(self): #=========================================================
+    def show(self): #==========================================================
         super(Search4Stations, self).show()        
         self.activateWindow()
         self.raise_()
@@ -481,7 +465,8 @@ class Search4Stations(QtGui.QWidget):
         PROV = self.prov_widg.currentText()
         LAT = self.lat_spinBox.value()
         LON = self.lon_spinBox.value()
-        RADIUS = self.radius_SpinBox.value()
+        RADIUS = self.radius_SpinBox.currentText ()
+        RADIUS = int(RADIUS[:-3])
         YearMin = self.minYear.value()
         YearMax = self.maxYear.value()
         nbrYear = self.nbrYear.value()
@@ -504,10 +489,12 @@ class Search4Stations(QtGui.QWidget):
         ClimateID = np.array([]).astype(str)
         staProxim = np.array([]).astype(str)
         
-        #------------------------------------------------------------ url ----
-     
-        url =  'http://climate.weather.gc.ca/advanceSearch/'
-        url += 'searchHistoricDataStations_e.html?'
+        #------------------------------------------------------------- url ----
+        
+        # Last updated: May 25th, 2016
+        
+        url =  'http://climate.weather.gc.ca/historical_data/'
+        url += 'search_historic_data_stations_e.html?'
                 
         if self.tab_widg.currentIndex() == 0:
             url += 'searchType=stnProx&timeframe=1&txtRadius=%d' % RADIUS
@@ -555,13 +542,13 @@ class Search4Stations(QtGui.QWidget):
             #-- Number of Stations Found --
             
             if self.tab_widg.currentIndex() == 0:
-                txt2find = ' stations found'
+                txt2find = 'stations found within a search radius'
             if self.tab_widg.currentIndex() == 1:
-                txt2find = ' locations match'
+                txt2find = 'locations match'
                 
             indx_e = stnresults.find(txt2find, 0)
             if indx_e == -1:
-                print 'No weather station found.'            
+                print('No weather station found.')
                 msg = '<font color=red>No weather station found.</font>'                
                 self.ConsoleSignal.emit(msg)
                 
@@ -569,14 +556,24 @@ class Search4Stations(QtGui.QWidget):
                 Nsta = 0
                 
             else:
-                indx_0 = stnresults.find('<p>', indx_e-10)
-                Nsta = int(stnresults[indx_0+3:indx_e])
-                print '%d weather stations found.' % Nsta
+                # go backward from indx_e and find where the number starts
                 
-                Npage = int(np.ceil(Nsta / Nmax))
+                indx_0 = np.copy(indx_e)
+                while 1:
+                    indx_0 += -1
+                    if stnresults[indx_0] == '>':
+                        indx_0 += 1
+                        break
+                Nsta = int(stnresults[indx_0:indx_e])                
+                print '%d weather stations found.' % Nsta
+
+                # Fetch stations page per page
+                
+                Npage = int(np.ceil(Nsta / float(Nmax)))
                 print('Total number of page = % d' % Npage)
-                for page in range(Npage):
-                    
+                
+                staCount = 0 # global station counter
+                for page in range(Npage):                    
                     print 'Page :', page
                     
                     startRow = (Nmax * page) + 1
@@ -588,23 +585,36 @@ class Search4Stations(QtGui.QWidget):
                         f = urlopen(url4page)
                         stnresults = f.read()
                         
-#                        with open("url4page.txt", "w") as local_file:
-#                            local_file.write(stnresults)
-                    
-                    indx_e = 0     
+                        # Write result in a local file for debugging purposes
+                        filename = 'url4page%d.txt' % page                        
+                        with open(filename, 'w') as local_file:
+                            local_file.write(stnresults)
+                         
                     # Scan each row of the current page
-                    for row in range(int(Nmax)): 
-    
-                        #---- StartDate and EndDate ----
+                    while 1:
                         
-                        txt2find  =  '<input type="hidden" name='
-                        txt2find +=  '"dlyRange" value="'
+                        
+                        #---- Location of station information block ----
+                        
+                        indx_e = 0
+                        txt2find = ('<form action="/climate_data/'
+                                    'interform_e.html" method="post" '
+                                    'id="stnRequest%d">') % staCount
+
                         n = len(txt2find)
                         indx_0 = stnresults.find(txt2find, indx_e)
-                        if indx_0 == -1: # No result left on this page                       
+                        if indx_0 == -1:
+                           # No result left on this page. Break the loop and
+                           # iterate to the next page if it exists
                             break
-                        else:
-                            pass
+                        else:                        
+                            indx_e = indx_0 + n
+                            
+                        #---- StartDate and EndDate ----
+
+                        txt2find  =  'name="dlyRange" value="'
+                        n = len(txt2find)
+                        indx_0 = stnresults.find(txt2find, indx_e)
                         indx_e = stnresults.find('|', indx_0)
                         
                         start_year = stnresults[indx_0+n:indx_0+n+4]
@@ -612,51 +622,46 @@ class Search4Stations(QtGui.QWidget):
                         
                         #---- StationID ----
                         
-                        txt2find  = ('<input type="hidden" name=' +
-                                     '"StationID" value="')
+                        txt2find  = 'name="StationID" value="'
                         n = len(txt2find)
                         indx_0 = stnresults.find(txt2find, indx_e)
-                        indx_e = stnresults.find('" />', indx_0)
+                        indx_e = stnresults.find('"', indx_0+n)
                         
                         station_id = stnresults[indx_0+n:indx_e]
                         
                         #---- Province ----
                         
-                        txt2find = '<input type="hidden" name="Prov" value="'
+                        txt2find = 'name="Prov" value="'
                         n = len(txt2find)
                         indx_0 = stnresults.find(txt2find, indx_e)
-                        indx_e = stnresults.find('" />', indx_0)
+                        indx_e = stnresults.find('"', indx_0+n)
                         
                         province = stnresults[indx_0+n:indx_e]
                         
-                        #---- Name ----
+                        #---- Station Name ----
 
-                        txt2find  = '<div class="span-2 row-end row-start marg'
-                        txt2find += 'in-bottom-none station'
-                        if self.tab_widg.currentIndex() == 0:
-                            txt2find += ' wordWrap stnWidth">'
-                        if self.tab_widg.currentIndex() == 1:
-                            txt2find += '  wordWrap">'
+                        txt2find  = ('<div class="col-lg-3 col-md-3'
+                                     ' col-sm-3 col-xs-3">')
                         n = len(txt2find)
                         indx_0 = stnresults.find(txt2find, indx_e)
                         indx_e = stnresults.find('</div>', indx_0)
                         station_name = stnresults[indx_0+n:indx_e]
-                        station_name = station_name.strip()
-                       
+                        station_name = station_name.strip()     
+
                         #---- Proximity ----
                         
                         if self.tab_widg.currentIndex() == 0:
-                            txt2find  = '<div class="span-1 row-end row-start '
-                            txt2find += 'margin-bottom-none day_mth_yr wordWrap">'
+                            txt2find  = ('<div class="col-lg-2 col-md-2'
+                                         ' col-sm-2 col-xs-2">')
                             n = len(txt2find)
                             indx_0 = stnresults.find(txt2find, indx_e)
-                            indx_e = stnresults.find('</div>', indx_0)
+                            indx_e = stnresults.find('</div>', indx_0+n)
                         
                             station_proxim = stnresults[indx_0+n:indx_e]
                             station_proxim = station_proxim.strip()
                         elif self.tab_widg.currentIndex() == 1:
                             station_proxim = 0
-                            
+                       
                         if start_year.isdigit(): # daily data exist
                              
                             if (int(end_year)-int(start_year)+1) >= nbrYear:
@@ -669,31 +674,30 @@ class Search4Stations(QtGui.QWidget):
                                 Prov = np.append(Prov, province)
                                 staName = np.append(staName, station_name)
                                 staProxim = np.append(staProxim, station_proxim)
-                                
-                                
                             else:                                
                                 print("not adding %s (not enough data)" 
                                       % station_name)
-                                
                         else:
                             print("not adding %s (no daily data)" 
                                   % station_name)
-                                    
-                msg  = '%d weather stations with daily data' % (len(staName))
-                msg += ' for at least %d years' % nbrYear
-                msg += ' between %d and %d' % (YearMin, YearMax)
+                                  
+                        staCount += 1
+
+                msg  = ('%d weather stations with daily data'
+                        ' for at least %d years'
+                        ' between %d and %d'
+                        ) % (len(staName), nbrYear,YearMin, YearMax)
                 print(msg) 
                 msg = '<font color=green>' + msg + '</font>'
                 self.ConsoleSignal.emit(msg)         
                 QtCore.QCoreApplication.processEvents()
                 QtCore.QCoreApplication.processEvents()
                    
-                #----------------------------------------- Get Climate ID ----
+                #------------------------------------------- Get Climate ID ----
                 
-                print('Fetching info for each station...')
-                self.ConsoleSignal.emit('''<font color=black>
-                                             Fetching info for each station...
-                                           </font>''')  
+                msg = ('Fetching info for each station...')
+                print(msg)
+                self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)  
                 QtCore.QCoreApplication.processEvents()
                 QtCore.QCoreApplication.processEvents()
                          
@@ -701,23 +705,12 @@ class Search4Stations(QtGui.QWidget):
                     staInfo = self.get_staInfo(Prov[sta], StationID[sta])
                     climate_id = staInfo[5]
                     ClimateID = np.append(ClimateID, climate_id)
-                    
-                print('Info fetched for each station successfully.')
-                self.ConsoleSignal.emit('''<font color=black>Info fetched for
-                each station successfully.</font>''') 
                 
-                #--------------------------- SORT STATIONS ALPHABETICALLY ----
-    
-#                sort_indx = np.argsort(staName[1:])
-#                sort_indx += 1
-#                
-#                StartYear[1:] = StartYear[sort_indx]
-#                EndYear[1:] = EndYear[sort_indx]
-#                StationID[1:] = StationID[sort_indx]
-#                Prov[1:] = Prov[sort_indx]
-#                staName[1:] = staName[sort_indx]
-#                ClimateID[1:] = ClimateID[sort_indx]
-#                staProxim[1:] = staProxim[sort_indx]
+                msg = 'Info fetched for each station successfully.'
+                print(msg)
+                self.ConsoleSignal.emit('<font color=black>%s</font>' % msg) 
+                
+                #----------------------------- SORT STATIONS ALPHABETICALLY ----
                 
                 sort_indx = np.argsort(staName)
 
@@ -729,13 +722,13 @@ class Search4Stations(QtGui.QWidget):
                 ClimateID = ClimateID[sort_indx]
                 staProxim = staProxim[sort_indx]
                 
-                #------------------------------------------- Save Results ----
+                #--------------------------------------------- Save Results ----
                 
                 staList = [staName, StationID, StartYear, EndYear, Prov,
                            ClimateID, staProxim]
                 staList = np.transpose(staList)
                                    
-                #----------------------- Send Signal to load list into UI ----
+                #------------------------- Send Signal to load list into UI ----
                                                 
                 self.station_table.populate_table(staList)
             
@@ -765,18 +758,21 @@ class Search4Stations(QtGui.QWidget):
         return staList
         
     
-    def get_staInfo(self, Prov, StationID): #=================================
+    def get_staInfo(self, Prov, StationID): #===================================
         
         """
-        Fetch the Climate Id for a given station. This ID is used to identified
+        Fetch the Climate Id for a given station. This ID is used to identify
         the station in the CDCD, but not for downloading the data from 
         the server.
         
         This information is not available when doing a search for stations 
         and need to be fetch for each station individually.
         """        
-    
-        url = ("http://climate.weather.gc.ca/climateData/dailydata_e.html?" + 
+#        http://climate.weather.gc.ca/climate_data/
+#        daily_data_e.html?
+#        hlyRange=%7C&dlyRange=1950-12-01%7C2015-01-31&mlyRange=1950-01-01%7C2015-01-01&StationID=5431&Prov=QC&urlExtension=_e.html&searchType=stnProx&optLimit=yearRange&Month=1&Day=25&StartYear=1840&EndYear=2016&Year=2015&selRowPerPage=25&Line=0&txtRadius=25&optProxType=custom&selCity=&selPark=&txtCentralLatDeg=45&txtCentralLatMin=0&txtCentralLatSec=0&txtCentralLongDeg=73&txtCentralLongMin=0&txtCentralLongSec=0&timeframe=2
+        url = ('http://climate.weather.gc.ca/'
+               'climate_data/daily_data_e.html?'
                "timeframe=2&Prov=%s&StationID=%s") % (Prov, StationID)
         
         if self.isOffline:
@@ -786,40 +782,31 @@ class Search4Stations(QtGui.QWidget):
             f = urlopen(url)                    
             urlread = f.read()
             
-            with open("urlsingle.txt", "wb") as local_file:
+            with open("urlsinglestation.txt", "wb") as local_file:
                 local_file.write(urlread)
         
         #---- Station Name ----
-            
-        txt2find = '<th colspan="6" class="boxColor margin-bottom-none"><b>'
+        
+        txt2find = '<p class="text-center table-header pdng-md mrgn-bttm-0">'
         n = len(txt2find)
         indx_0 = urlread.find(txt2find, 0) + n
-        indx_e = urlread.find('<br />', indx_0)
+        indx_e = urlread.find('<br/>', indx_0)
         
         staName = urlread[indx_0:indx_e]
         staName = staName.strip()
         
         #---- Climate ID ----
         
-        # Need to navigate the result in 2 steps to be sure
-        
-        indx_e = 0
-    
-        txt2find = ('<a href="http://climate.weather.gc.ca/' + 
-                    'glossary_e.html#climate_ID">Climate ID</a>:')
+        txt2find = ('aria-labelledby="climateid">')
         n = len(txt2find)
-        indx_0 = urlread.find(txt2find, indx_e) + n
         
-        txt2find = ('<td>')
-        n = len(txt2find)
-        indx_0 = urlread.find(txt2find, indx_0)
-    
-        indx_e = urlread.find('</td>', indx_0)
-        
-        climate_id = urlread[indx_0+n:indx_e]
+        indx_0 = urlread.find(txt2find, 0) + n
+        indx_e = urlread.find('</div>', indx_0)
+
+        climate_id = urlread[indx_0:indx_e]
         climate_id = climate_id.strip() # removes blank spaces at beginning 
                                         # and end of the str
-        
+
         #---- Start Year ----
         
         txt2find = '<option value="'
@@ -831,9 +818,9 @@ class Search4Stations(QtGui.QWidget):
         #---- End Year ----
         
         txt2find = '" selected="'
-        indx_e = urlread.find(txt2find, indx_0) - 4
+        indx_e = urlread.find(txt2find, indx_0)
         
-        endYear = urlread[indx_e:indx_e+4]
+        endYear = urlread[indx_e-4:indx_e]
         
         #---- Proximity ----
         
@@ -848,7 +835,7 @@ class Search4Stations(QtGui.QWidget):
                    Prov,
                    climate_id,
                    proximity]
-              
+
         return staInfo
     
     
@@ -1193,12 +1180,12 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             writer.writerows(staList)
 
             
-#=============================================================================
+#==============================================================================
 def decdeg2dms(dd):
     '''
     Convert decimal degree lat/lon coordinate to decimal, minute, second format.
     '''    
-#=============================================================================
+#==============================================================================
     
     mnt,sec = divmod(dd*3600, 60)
     deg,mnt = divmod(mnt, 60)
@@ -1206,12 +1193,12 @@ def decdeg2dms(dd):
     return deg, mnt, sec
 
 
-#=============================================================================   
+#==============================================================================   
 def dms2decdeg(deg, mnt, sec):
     '''
     Convert decimal, minute, second format lat/lon coordinate to decimal degree.
     '''
-#=============================================================================
+#==============================================================================
     
     dd = deg + mnt/60. + sec/3600.    
     
@@ -1222,12 +1209,14 @@ if __name__ == '__main__':
     
     app = QtGui.QApplication(sys.argv) 
     
-    instance1 = Search4Stations()   
-
-    instance1.lat_spinBox.setValue(45.4)
-    instance1.lon_spinBox.setValue(73.13)
-    instance1.isOffline = False
+    search4sta = Search4Stations()   
+    
+#    search4sta.get_staInfo('QC', 5406)
+        
+    search4sta.lat_spinBox.setValue(45.4)
+    search4sta.lon_spinBox.setValue(73.13)
+    search4sta.isOffline = False
               
-    instance1.show()
+    search4sta.show()
         
     sys.exit(app.exec_())

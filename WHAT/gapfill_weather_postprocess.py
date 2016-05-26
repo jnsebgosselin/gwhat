@@ -142,7 +142,7 @@ class PostProcessErr(object):
             
         return
     
-    def generates_graphs(self): #========================== Generates Graphs ==
+    def generates_graphs(self, language='English'): #====== Generates Graphs ==
         
         for i in range(len(self.Yp)):
             name = self.varNames[i]
@@ -155,11 +155,13 @@ class PostProcessErr(object):
             print('------------------------')
             print('Generating %s.' % (os.path.basename(fname)))
             print('------------------------')            
-            self.plot_est_err(self.Ym[i], self.Yp[i], self.varNames[i], fname)
+            self.plot_est_err(self.Ym[i], self.Yp[i], self.varNames[i], fname,
+                              language)
             
             if self.varNames[i] == 'Total Precip (mm)':
                 fname = '%s/%s.pdf' % (self.dirname, 'precip_PDF')
-                self.plot_gamma_dist(self.Ym[i], self.Yp[i], fname)
+                self.plot_gamma_dist(self.Ym[i], self.Yp[i], fname,
+                                     language)
                 print('Generating %s.' % (os.path.basename(fname)))
             
     def generates_summary(self): #======================== Generates Summary ==
@@ -201,7 +203,8 @@ class PostProcessErr(object):
                 writer.writerows(rowcontent)
              
     @staticmethod
-    def plot_est_err(Ymes, Ypre, varName, fname): #============= Est. Errors ==
+    def plot_est_err(Ymes, Ypre, varName, fname, #============== Est. Errors ==
+                     language='English'): 
             
         Ymax = np.ceil(np.max(Ymes) / 10) * 10
         Ymin = np.floor(np.min(Ymes) / 10) * 10
@@ -318,19 +321,36 @@ class PostProcessErr(object):
         
         #---- Axis ----
         
+        
         if varName == 'Max Temp (deg C)':
-            var = u'Daily Max Temperature (°C)'
+            if language == 'French':
+                var = u'Températures maximales journalières %s (°C)'
+            else:
+                var = u'%s Daily Max Temperature (°C)'
         elif varName == 'Mean Temp (deg C)':
-            var = u'Daily Mean Temperature (°C)'
+            if language == 'French':
+                var = u'Températures moyennes journalières %s (°C)'
+            else:
+                var = u'%s Daily Mean Temperature (°C)'            
         elif varName == 'Min Temp (deg C)':
-            var = u'Daily Min Temperature (°C)'
+            if language == 'French':
+                var = u'Températures minimales journalières %s (°C)'
+            else:
+                var = u'%s Daily Min Temperature (°C)'
         elif varName == 'Total Precip (mm)':
-            var = 'Daily Total Precipitation (mm)'
+            if language == 'French':
+                var = u'Précipitations totales journalières %s (mm)'
+            else:
+                var = '%s Daily Total Precipitation (mm)'
         else:
             var = ''
-            
-        ax0.set_ylabel('Measured %s' % var, fontsize=16, labelpad=15)
-        ax0.set_xlabel('Predicted %s' % var, fontsize=16, labelpad=15)
+
+        if language == 'French':
+            ax0.set_ylabel(var % u'mesurées', fontsize=16, labelpad=15)
+            ax0.set_xlabel(var % u'prédites', fontsize=16, labelpad=15)
+        else:
+            ax0.set_ylabel(var % 'Measured', fontsize=16, labelpad=15)
+            ax0.set_xlabel(var % 'Predicted', fontsize=16, labelpad=15)
     
         #-------------------------------------------------------------- Axis --
         
@@ -338,7 +358,12 @@ class PostProcessErr(object):
     
         #------------------------------------------------------------ Legend --       
         
-        ax0.legend([hscat, hbl], ['Daily weather data', '1:1'],
+        if language == 'French':
+            lglabels = ['Données journalières', '1:1']
+        else:
+            lglabels = ['Daily weather data', '1:1']
+
+        ax0.legend([hscat, hbl], lglabels,
                    loc='upper left', numpoints=1, frameon=False, fontsize=16)
         
         #-------------------------------------------------------------- Draw --
@@ -349,7 +374,8 @@ class PostProcessErr(object):
     
     
     @staticmethod
-    def plot_gamma_dist(Ymes, Ypre, fname): #================ Plot Gamma PDF ==
+    def plot_gamma_dist(Ymes, Ypre, fname, #================= Plot Gamma PDF ==
+                        language='English'): 
         
         fw, fh = 6, 6
         fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
@@ -376,24 +402,31 @@ class PostProcessErr(object):
         
         c1, c2 = '#6495ED', 'red'
         
+        if language == 'French':
+            lg_labels = [u'DP des données mesurées', u'FDP Gamma (mesurée)',
+                         u'FDP Gamma (estimée)']
+        else:
+            lg_labels = ['Measured data PDF', 'Gamma PDF (measured)',
+                         'Gamma PDF (estimated)']
+        
         #---- Histogram ----
         
         ax0.hist(Ymes, bins=20, color=c1, histtype='stepfilled', normed=True, 
-                 alpha=0.25, ec=c1, label='Measured data PDF')  
+                 alpha=0.25, ec=c1, label=lg_labels[0])  
                  
         #---- Measured Gamma PDF ----
         
         alpha, loc, beta = stats.gamma.fit(Ymes)
         x = np.arange(0.5, Xmax, 0.1)
         ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '-', lw=2,
-                 alpha=1., color=c1, label='Gamma PDF (measured)')
+                 alpha=1., color=c1, label=lg_labels[1])
         
         #---- Predicted Gamma PDF ----
         
         alpha, loc, beta = stats.gamma.fit(Ypre)
         x = np.arange(0.5, Xmax, 0.1)
         ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '--r',
-                 lw=2, alpha=0.85, color=c2, label='Gamma PDF (estimated)')
+                 lw=2, alpha=0.85, color=c2, label=lg_labels[2])
         
         #------------------------------------------------------- Axis Limits --
         
@@ -403,9 +436,16 @@ class PostProcessErr(object):
         #------------------------------------------------------------ Labels --
         
         #---- axis labels ----
-    
-        ax0.set_xlabel('Daily Total Precipitation (mm)', fontsize=18, labelpad=15)
-        ax0.set_ylabel('Probability', fontsize=18, labelpad=15)
+        
+        if language == 'French':
+            ax0.set_xlabel(u'Précipitations totales journalières (mm)', 
+                           fontsize=18, labelpad=15)
+            ax0.set_ylabel('Probabilité', fontsize=18, labelpad=15)
+        else:
+            ax0.set_xlabel('Daily Total Precipitation (mm)', fontsize=18,
+                           labelpad=15)
+            ax0.set_ylabel('Probability', fontsize=18, labelpad=15)
+        
         
         #---- yticks labels ----
         
@@ -440,9 +480,15 @@ class PostProcessErr(object):
         f = len(preWetDays) / float(len(mesWetDays)) * 100
         
         if f > 100:
-            msg = 'Number of wet days overestimated by %0.1f%%' % (f - 100)
+            if language == 'French':
+                msg = u'Nombre de jours pluvieux surestimé de %0.1f%%' % (f - 100)
+            else:
+                msg = 'Number of wet days overestimated by %0.1f%%' % (f - 100)
         else:
-            msg = 'Number of wet days underestimated by %0.1f%%' % (100 - f)
+            if language == 'French':
+                msg = u'Nombre de jours pluvieux sous-estimé de %0.1f%%' % (100 - f)
+            else:
+                msg = 'Number of wet days underestimated by %0.1f%%' % (100 - f)
         
         #---- Get Legend Box Position and Extent ----
         
@@ -625,7 +671,7 @@ if __name__ == '__main__': #=========================================== Main ==
 
     filename = dirname + 'GRANBY (7022800)/GRANBY (7022800)_1980-2009.err'
     pperr = PostProcessErr(filename)
-    pperr.generates_graphs()
+    pperr.generates_graphs(language='French')
 
 #    for root, directories, filenames in os.walk(dirname):
 #        for filename in filenames:            

@@ -579,7 +579,7 @@ class WHATPref():
             writer.writerows(fcontent)
     
            
-    def load_pref_file(self): #===============================================
+    def load_pref_file(self): #=================================================
             
         if not path.exists('WHAT.pref'):
             
@@ -622,23 +622,22 @@ class WHATPref():
             print
         
 
-#==============================================================================                
+#================================================================================                
 class MyProject():
     """
     This class contains all the info and utilities to manage the current 
     active project.
     """
-#==============================================================================
+#================================================================================
 
     
-    def __init__(self, parent=None): #=========================================
+    def __init__(self, parent=None): #==========================================
         
         self.name = ''
         self.lat = 0
         self.lon = 0
-        
-    
-    def load_project_info(self, projectfile): #================================
+            
+    def load_project_info(self, projectfile): #=================================
             
         print('Loading project info')
         
@@ -651,8 +650,13 @@ class MyProject():
 
         
 if __name__ == '__main__':
-        
-    app = QtGui.QApplication(sys.argv)
-    print('Starting WHAT...')
-    instance_1 = MainWindow()
-    sys.exit(app.exec_())
+    import logging
+    logging.basicConfig(filename='WHAT.log',level=logging.DEBUG,
+                        format='%(asctime)s - %(levelname)s:%(message)s')
+    try:
+        app = QtGui.QApplication(sys.argv)
+        print('Starting WHAT...')
+        instance_1 = MainWindow()
+        sys.exit(app.exec_())
+    except Exception, e:
+        logging.exception(str(e))
