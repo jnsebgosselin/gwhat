@@ -42,7 +42,7 @@ import database as db
 import hydrograph3 as hydroprint
 import mplFigViewer3 as mplFigViewer
 import meteo
-import MyQWidget
+import custom_widgets as MyQWidget
 from waterlvldata import WaterlvlData
 
 
@@ -67,7 +67,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.initUI()
 
-    def initUI(self): #============================================== initUI ==
+    def initUI(self):  # ======================================================
 
         #---------------------------------------------------------- DATABASE --
 
@@ -205,7 +205,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
 
         grid_hydrograph_widget = QtGui.QFrame()
-        grid_hydrograph =  QtGui.QGridLayout()
+        grid_hydrograph = QtGui.QGridLayout()
 
         grid_hydrograph.addWidget(self.hydrograph_scrollarea, 0, 0)
 
@@ -642,7 +642,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.weather_avg_graph.generate_graph(filemeteo)
         self.weather_avg_graph.show()
 
-    def emit_error_message(self, error_text): #========== emit_error_message ==
+    def emit_error_message(self, error_text):  # ==============================
 
         self.msgError.setText(error_text)
         self.msgError.exec_()

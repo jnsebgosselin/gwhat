@@ -791,8 +791,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         return False
 
-
-    def save_layout(self, name_well, filename): #=============== Save Layout ==
+    def save_layout(self, name_well, filename):  # ============================
 
         #---- load file ----
 
@@ -838,8 +837,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             writer = csv.writer(f, delimiter='\t')
             writer.writerows(reader)
 
-
-    def load_layout(self, name_well, filename): #=============== Load Layout ==
+    def load_layout(self, name_well, filename):  # ============================
 
         # A <checkConfig> is supposed to have been carried before this method
         # is called. So it can be supposed at this point that everything is
@@ -851,7 +849,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #---- Find row for Well ----
 
         for row in range(len(reader)):
-            if reader[row][0].decode('utf-8') == name_well:
+            if reader[row][0] == name_well:
                 break
             else:
                 row += 1
@@ -860,7 +858,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         #---- Fetch Info ----
 
-        self.fmeteo = reader[1].decode('utf-8')
+        self.fmeteo = reader[1]
         self.finfo = self.fmeteo[:-3] + 'log'
 
         self.WLmin = float(reader[2])
@@ -869,26 +867,40 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.TIMEmin = float(reader[4])
         self.TIMEmax = float(reader[5])
 
-        try: self.isGraphTitle = min(abs(int(reader[6])), 1)
-        except: self.isGraphTitle = 1
+        try:
+            self.isGraphTitle = min(abs(int(reader[6])), 1)
+        except:
+            self.isGraphTitle = 1
 
-        try: self.isLegend = min(abs(int(reader[7])), 1)
-        except: self.isLegend = 1
+        try:
+            self.isLegend = min(abs(int(reader[7])), 1)
+        except:
+            self.isLegend = 1
 
-        try: self.RAINscale = abs(int(reader[8]))
-        except: self.RAINscale = 20
+        try:
+            self.RAINscale = abs(int(reader[8]))
+        except:
+            self.RAINscale = 20
 
-        try: self.WLdatum = min(abs(int(reader[9])), 1)
-        except: self.WLdatum = 1
+        try:
+            self.WLdatum = min(abs(int(reader[9])), 1)
+        except:
+            self.WLdatum = 1
 
-        try: self.trend_line = min(abs(int(reader[10])), 1)
-        except: self.trend_line = 1
+        try:
+            self.trend_line = min(abs(int(reader[10])), 1)
+        except:
+            self.trend_line = 1
 
-        try: self.fwidth = abs(float(reader[11]))
-        except: self.fwidth = 11.
+        try:
+            self.fwidth = abs(float(reader[11]))
+        except:
+            self.fwidth = 11.
 
-        try: self.fheight = abs(float(reader[12]))
-        except: self.fheight = 8.5
+        try:
+            self.fheight = abs(float(reader[12]))
+        except:
+            self.fheight = 8.5
 
         try:
             colorStack = reader[13]
@@ -903,8 +915,10 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         except:
             print('!Color Palette is wrong. Keeping defaults.!')
 
-        try: self.language = reader[14]
-        except: self.language = 'English'
+        try:
+            self.language = reader[14]
+        except:
+            self.language = 'English'
 
         try:
             if reader[15].lower() in ['month', 'year']:
@@ -914,8 +928,10 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         except:
             self.datemode = 'month'
 
-        try: self.date_labels_display_pattern = int(reader[16])
-        except: self.date_labels_display_pattern = 2
+        try:
+            self.date_labels_display_pattern = int(reader[16])
+        except:
+            self.date_labels_display_pattern = 2
 
         try:
             if int(reader[17]) in [0, 1, 2]:
@@ -931,15 +947,18 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 self.va_ratio = 0.95
             if self.va_ratio < 0.05:
                 self.va_ratio = 0.05
-        except: self.va_ratio = 0.15
+        except:
+            self.va_ratio = 0.15
 
-        try: self.NZGrid = int(reader[19])
-        except: self.NZGrid = 8
+        try:
+            self.NZGrid = int(reader[19])
+        except:
+            self.NZGrid = 8
 
-    def best_fit_waterlvl(self): #==================== Best Fit Water Levels ==
+    def best_fit_waterlvl(self):  # ===========================================
 
         WL = self.WaterLvlObj.lvl
-        if self.WLdatum == 1: # masl
+        if self.WLdatum == 1:  # masl
             WL = self.WaterLvlObj.ALT - WL
 
         WL = WL[~np.isnan(WL)]
