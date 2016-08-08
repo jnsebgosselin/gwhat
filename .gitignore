@@ -51,7 +51,11 @@ docs/_build/
 target/
 
 # Personal Ignore
-Backup/
+WHAT/url*
+/Backup
+User_Manual/Backup
+User_Manual/Revision
+WHAT/backup
 Redaction/
 Reference/
 Projects/
@@ -67,6 +71,7 @@ log_changes.odt
 WHAT 4.1.5/
 WHAT 4.1.6/
 WHAT 4.1.7/
+WHAT 4.1.9/
 WHAT/url.txt
 WHAT/urlsingle.txt
 Organigram.svg
@@ -96,3 +101,5 @@ Meteo_Ref_notes_JSG.odt
 *.bcf
 *.xml
 *.spl
+
+WHAT/gotogit.sh
