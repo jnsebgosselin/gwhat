@@ -34,85 +34,85 @@ from PySide import QtGui, QtCore
 import database as db
 
 #===============================================================================
-     
-class AboutWhat(QtGui.QWidget):                                                 
-    
+
+class AboutWhat(QtGui.QWidget):
+
 #===============================================================================
-    
+
     def __init__(self, parent=None): #=====
         super(AboutWhat, self).__init__(parent)
-        
-        self.parent = parent        
-        self.initUI_About()   
-        
+
+        self.parent = parent
+        self.initUI_About()
+
     def initUI_About(self): #===================================================
-        
+
         #--------------------------------------------------------- DATABASE ----
-        
+
         iconDB = db.Icons()
         styleDB = db.styleUI()
 
         #------------------------------------------------------ MAIN WINDOW ----
-        
+
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(iconDB.WHAT)
 #        self.setMinimumHeight(700)
 #        self.setFont(styleDB.font1)
-        
+
         #----------------------------------------------------- AboutTextBox ----
-        
+
         self.AboutTextBox = QtGui.QTextBrowser()
-        self.AboutTextBox.installEventFilter(self)    
+        self.AboutTextBox.installEventFilter(self)
         self.AboutTextBox.setReadOnly(True)
         self.AboutTextBox.setFixedWidth(850)
         self.AboutTextBox.setFrameStyle(0)
         self.AboutTextBox.setHorizontalScrollBarPolicy(
-                                                   QtCore.Qt.ScrollBarAlwaysOff)
+            QtCore.Qt.ScrollBarAlwaysOff)
         self.AboutTextBox.setOpenExternalLinks(True)
-        
+
         # http://stackoverflow.com/questions/9554435/
-        # qtextedit-background-color-change-also-the-color-of-scrollbar        
+        # qtextedit-background-color-change-also-the-color-of-scrollbar
         self.AboutTextBox.setStyleSheet('QTextEdit {background-color:"white"}')
-        
+
         #http://stackoverflow.com/questions/26441999/
-        #how-do-i-remove-the-space-between-qplaintextedit-and-its-contents        
+        #how-do-i-remove-the-space-between-qplaintextedit-and-its-contents
         self.AboutTextBox.document().setDocumentMargin(0)
-        
+
         # self.AboutTextBox.setAlignment(QtCore.Qt.AlignCenter)
         # self.AboutTextBox.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
 
         self.set_html_in_AboutTextBox()
-                                      
-        #-------------------------------------------------------- Main Grid ---- 
-        
+
+        #------------------------------------------------------- Main Grid ----
+
         grid = QtGui.QGridLayout()
         grid.setSpacing(10)
-        
+
         grid.addWidget(self.AboutTextBox, 0, 1)
-        
+
 #        grid.setColumnStretch(1, 500)
 #        grid.setColumnStretch(2, 500)
         grid.setContentsMargins(10, 10, 10, 10)
 #        grid.setColumnMinimumWidth(1, 850)
-        
+
         self.setLayout(grid)
-        
+
     def set_html_in_AboutTextBox(self): #=======================================
-        
+
         #---- Image Logo ----
-        
+
         width = 750 #self.AboutTextBox.size().width()
         version = db.software_version
         date = db.last_modification
-        
+
         filename = 'Icons/WHAT_banner_750px.png'
-        
+
         # http://doc.qt.io/qt-4.8/richtext-html-subset.html
-       
-        
-        
+
+
+
         fontfamily =  db.styleUI().fontfamily
-            
+
         about_text = '''
                      <style>
                      p{font-size: 14px;
@@ -126,25 +126,25 @@ class AboutWhat(QtGui.QWidget):
                         font-family: "%s";}
                      </style>
                      ''' % (fontfamily, fontfamily, fontfamily)
-        
-        about_text += '''                      
+
+        about_text += '''
                       <p align="center"> <br>
                         <img src="%s" width="%d">
                       </p>
                       ''' % (filename, width)
-        
+
 #        #---- Header ----
-#        
-        about_text += '''                        
+#
+        about_text += '''
                       <p1 align=center>
                         <br><br>
-                        Version %s<br>                        
+                        Version %s<br>
                       </p1>
-                      <p2 align=center> 
+                      <p2 align=center>
                         Copyright 2014-2015 Jean-S&eacute;bastien Gosselin<br>
-                        jean-sebastien.gosselin@ete.inrs.ca                      
+                        jean-sebastien.gosselin@ete.inrs.ca
                       <br>
-                      <br>                                             
+                      <br>
                         Institut National de la Recherche Scientifique<br>
                         Research Center Eau Terre Environnement, Quebec City,
                         QC, Canada<br>
@@ -154,68 +154,68 @@ class AboutWhat(QtGui.QWidget):
                         <br>
                       </p2>
                       ''' % (version[5:])
-                        
-        #---- License ----                
-                        
+
+        #---- License ----
+
         about_text += '''
                       <p align = "justify">
-                        %s is free software: you can redistribute it and/or 
+                        %s is free software: you can redistribute it and/or
                         modify it under the terms
-                        of the GNU General Public License as published by the 
-                        Free Software Foundation, either version 3 of the 
-                        License, or (at your option) any later version. 
+                        of the GNU General Public License as published by the
+                        Free Software Foundation, either version 3 of the
+                        License, or (at your option) any later version.
                       </p>
                       <p align="justify">
                         This program is distributed in the hope that it will be
                         useful, but WITHOUT ANY WARRANTY; without even the
                         implied warranty of MERCHANTABILITY or FITNESS FOR A
-                        PARTICULAR PURPOSE. See the GNU General Public 
+                        PARTICULAR PURPOSE. See the GNU General Public
                         License for more details.
                       </p>
                       <p align="justify">
-                        You should have received a copy of the GNU General  
-                        Public License along with this program.  If not, see  
+                        You should have received a copy of the GNU General
+                        Public License along with this program.  If not, see
                         <a href="http://www.gnu.org/licenses">
                           http://www.gnu.org/licenses
-                        </a>.                                           
+                        </a>.
                       </p>
                       <p align="right">%s</p>
                       ''' % (version, date)
-                      
-         
+
+
         self.AboutTextBox.setHtml(about_text)
-        
+
     def eventFilter(self, obj, event): #========================================
-    
+
         # http://stackoverflow.com/questions/13788452/
         # pyqt-how-to-handle-event-without-inheritance
-    
+
         # https://srinikom.github.io/pyside-docs/PySide/QtCore/QObject.
         # html#PySide.QtCore.PySide.QtCore.QObject.installEventFilter
 
 #        if event.type() == QtCore.QEvent.Type.Resize:
-#            
+#
 #            self.set_html_in_AboutTextBox() # To Keep the image logo to the
 #                                            # same width as the QTextEdit box
-            
-        if event.type() == QtCore.QEvent.Type.FontChange:            
+
+        if event.type() == QtCore.QEvent.Type.FontChange:
             return True # Eat the event to disable zooming
-                        
+
         return QtGui.QWidget.eventFilter(self, obj, event)
 
 if __name__ == '__main__':
-    
+
     app = QtGui.QApplication(sys.argv)
-    
+
     instance1 = AboutWhat()
-    
+
     #---- SHOW ----
-              
+
     instance1.show()
-    
+
     qr = instance1.frameGeometry()
     cp = QtGui.QDesktopWidget().availableGeometry().center()
     qr.moveCenter(cp)
     instance1.move(qr.topLeft())
-        
+
     sys.exit(app.exec_())
