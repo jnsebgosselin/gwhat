@@ -1158,54 +1158,50 @@ class TargetStationInfo():
 #==============================================================================
 
     def __init__(self):
-        self.index = -1 # Target station index in the DATA matrix and STANAME
-                        # array of the class WEATHER.
+        self.index = -1  # Target station index in the DATA matrix and STANAME
+                         # array of the class WEATHER.
 
-        self.name = [] # Target station name
+        self.name = []  # Target station name
 
         self.province = []
         self.altitude = []
         self.longitude = []
         self.latitude = []
 
-        self.CORCOEF = [] # 2D matrix containing the correlation coefficients
-                          # betweein the target station and the neighboring
-                          # stations for each meteorological variable.
-                          # row : meteorological variables
-                          # colm: weather stations
+        self.CORCOEF = []  # 2D matrix containing the correlation coefficients
+                           # betweein the target station and the neighboring
+                           # stations for each meteorological variable.
+                           # row : meteorological variables
+                           # colm: weather stations
 
-        self.ALTDIFF = [] # Array with altitude difference between the target
-                          # station and every other station. Target station is
-                          # included with a 0 value at index <index>.
+        self.ALTDIFF = []  # Array with altitude difference between the target
+                           # station and every other station. Target station is
+                           # included with a 0 value at index <index>.
 
-        self.HORDIST = [] # Array with horizontal distance between the target
-                          # station and every other station. Target station is
-                          # included with a 0 value at index <index>
+        self.HORDIST = []  # Array with horizontal distance between the target
+                           # station and every other station. Target station is
+                           # included with a 0 value at index <index>
 
-#==============================================================================
-def alt_and_dist_calc(WEATHER, index):
+
+def alt_and_dist_calc(WEATHER, index):  # =====================================
     """
     Computes the horizontal distance in km and the altitude difference
     in m between the target station and each neighboring stations
 
     index: Target Station Index
     """
-#==============================================================================
 
     ALT = WEATHER.ALT
     LAT = WEATHER.LAT
     LON = WEATHER.LON
 
-    nSTA = len(ALT) # number of stations including target
+    nSTA = len(ALT)  # number of stations including target
 
-    HORDIST = np.zeros(nSTA) # distances of neighboring station from target
-    ALTDIFF = np.zeros(nSTA) # altitude differences
+    HORDIST = np.zeros(nSTA)  # distances of neighboring station from target
+    ALTDIFF = np.zeros(nSTA)  # altitude differences
 
     for i in range(nSTA):
-        HORDIST[i]  = LatLong2Dist(LAT[index],
-                                   LON[index],
-                                   LAT[i], LON[i])
-
+        HORDIST[i] = LatLong2Dist(LAT[index], LON[index], LAT[i], LON[i])
         ALTDIFF[i] = ALT[i] - ALT[index]
 
     HORDIST = np.round(HORDIST, 1)
@@ -1214,7 +1210,7 @@ def alt_and_dist_calc(WEATHER, index):
     return HORDIST, ALTDIFF
 
 
-class WeatherData():
+class WeatherData():  # #######################################################
     """
     This class contains all the weather data and weather station info
     that are needed for the gapfilling algorithm that is defined in the
@@ -1235,7 +1231,7 @@ class WeatherData():
         the end of the new name.
     """
 
-    def __init__(self):
+    def __init__(self):  # ====================================================
 
         self.DATA = []        # Weather data
         self.DATE = []        # Date in tuple format [YEAR, MONTH, DAY]
@@ -1302,7 +1298,7 @@ class WeatherData():
 
             # Check if data are continuous over time. If not, the serie will be
             # made continuous and the gaps will be filled with nan values.
-            print reader[0][1]
+            print(reader[0][1])
 
             time_start = xldate_from_date_tuple((STADAT[0, 0].astype('int'),
                                                  STADAT[0, 1].astype('int'),
@@ -1317,7 +1313,7 @@ class WeatherData():
             if (time_end - time_start + 1) != len(STADAT[:, 0]):
                 print('\n%s is not continuous, correcting...' % reader[0][1])
                 STADAT = meteo.make_timeserie_continuous(STADAT)
-                print ('%s is now continuous.' % reader[0][1])
+                print('%s is now continuous.' % reader[0][1])
 
             time_new = np.arange(time_start, time_end + 1)
 
@@ -1428,8 +1424,9 @@ class WeatherData():
             isNameExist = np.where(reader[0][1] == self.STANAME)[0]
             if len(isNameExist) > 0:
 
-                print('Station name %s already exists. ' +
-                      'Added a number at the end.') % reader[0][1]
+                msg = ('Station name %s already exists. '
+                       'Added a number at the end.') % reader[0][1]
+                print(msg)
 
                 count = 1
                 while len(isNameExist) > 0:
@@ -1481,7 +1478,7 @@ class WeatherData():
 
         return True
 
-    def generate_summary(self, project_folder): #==============================
+    def generate_summary(self, project_folder):  # ============================
 
         """
         This method generates a summary of the weather records including
@@ -1493,7 +1490,7 @@ class WeatherData():
 
         fcontent = [['#', 'STATION NAMES', 'ClimateID',
                      'Lat. (dd)', 'Lon. (dd)', 'Alt. (m)',
-                     'DATE START', 'DATE END', 'Nbr YEARS' , 'TOTAL DATA',
+                     'DATE START', 'DATE END', 'Nbr YEARS', 'TOTAL DATA',
                      'MISSING Tmax', 'MISSING Tmin', 'MISSING Tmean',
                      'Missing Precip']]
 
@@ -1516,7 +1513,7 @@ class WeatherData():
 
             number_data = float(time_end - time_start + 1)
 
-            fcontent.append([i+1 , self.STANAME[i],
+            fcontent.append([i+1, self.STANAME[i],
                              self.ClimateID[i],
                              '%0.2f' % self.LAT[i],
                              '%0.2f' % self.LON[i],
@@ -1545,7 +1542,7 @@ class WeatherData():
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
-    def read_summary(self, project_folder): #==================================
+    def read_summary(self, project_folder):  # ================================
 
         """
         This method read the content of the file generated by the method

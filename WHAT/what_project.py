@@ -245,16 +245,16 @@ class NewProject(QtGui.QDialog):
 
         self.setLayout(newProject_grid)
 
-        #----------------------------------------------------------- EVENTS ----
+        #---------------------------------------------------------- EVENTS ----
 
         btn_save_project.clicked.connect(self.save_project)
         btn_cancel.clicked.connect(self.close)
         btn_browse.clicked.connect(self.browse_saveIn_folder)
 
-    def save_project(self):
+    def save_project(self):  # ================================================
 
         project_name = self.name.text()
-        if project_name == '' :
+        if project_name == '':
             print('Please enter a valid Project name')
             return
 
@@ -299,8 +299,8 @@ class NewProject(QtGui.QDialog):
             fname = project_dir + '/%s.what' % project_name
             if not os.path.exists(fname):
 
-                project_name = project_name.encode('utf-8')
-                author = self.author.text().encode('utf-8')
+                project_name = project_name
+                author = self.author.text()
 
                 filecontent = [['Project name:', project_name],
                                ['Author:', author],
@@ -312,9 +312,9 @@ class NewProject(QtGui.QDialog):
                                ['Longitude (DD W):', self.Lon_SpinBox.value()]
                                ]
 
-                print('Creating file %s.what' % project_name.decode('utf8'))
+                print('Creating file %s.what' % project_name)
 
-                with open(fname, 'wb') as f:
+                with open(fname, 'w', encoding='utf-8') as f:
                     writer = csv.writer(f, delimiter='\t')
                     writer.writerows(filecontent)
 
@@ -324,10 +324,11 @@ class NewProject(QtGui.QDialog):
 
             self.NewProjectSignal.emit(fname)
 
-        except:
-
-            print('There was a problem creating the project. Project not saved.')
-            print('---------------')
+        except Exception as e:
+            raise e
+#            print('There was a problem creating the project. '
+#                  'Project not saved.')
+#            print('---------------')
 
     def browse_saveIn_folder(self):
 

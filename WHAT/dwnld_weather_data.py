@@ -41,7 +41,7 @@ from PySide import QtGui, QtCore
 
 import database as db
 from search_weather_data import WeatherStationDisplayTable, Search4Stations
-import MyQWidget
+import custom_widgets as MyQWidget
 
 class Tooltips():
 
@@ -289,7 +289,7 @@ class dwnldWeather(QtGui.QWidget):
         main_grid.addWidget(display_label, 0, 2)
         main_grid.addWidget(rightPanel_widg, 1, 2)
 
-        main_grid.setContentsMargins(10, 10, 10, 10) # [L, T, R, B]
+        main_grid.setContentsMargins(10, 10, 10, 10)  # [L, T, R, B]
         main_grid.setColumnStretch(0, 500)
         main_grid.setRowStretch(1, 500)
         main_grid.setVerticalSpacing(5)
@@ -307,7 +307,8 @@ class dwnldWeather(QtGui.QWidget):
 
         self.btn_get.clicked.connect(self.manage_raw_data_dwnld)
         self.dwnl_raw_datafiles.EndSignal.connect(self.manage_raw_data_dwnld)
-        self.dwnl_raw_datafiles.MergeSignal.connect(self.concatenate_and_display)
+        self.dwnl_raw_datafiles.MergeSignal.connect(
+            self.concatenate_and_display)
         self.dwnl_raw_datafiles.ProgBarSignal.connect(self.pbar.setValue)
         self.dwnl_raw_datafiles.ConsoleSignal.connect(self.ConsoleSignal.emit)
 

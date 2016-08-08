@@ -36,13 +36,17 @@ from xlrd import xldate_as_tuple
 #-- PERSONAL IMPORTS --
 
 import meteo
-from MyQWidget import MyQToolBox, MyQToolButton
+from custom_widgets import MyQToolButton, QToolPanel
+import custom_widgets as MyQWidget
 import database as db
-import MyQWidget
 from gapfill_weather_algorithm import GapFillWeather
 
 
+# =============================================================================
+
 class GapFillWeatherGUI(QtGui.QWidget):
+
+# =============================================================================
 
     ConsoleSignal = QtCore.Signal(str)
 
@@ -184,7 +188,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         fillDates_grid.addWidget(self.date_end_widget, row, col)
 
         fillDates_grid.setColumnStretch(row+1, 500)
-        fillDates_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        fillDates_grid.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
         fillDates_grid.setSpacing(10)
 
         self.fillDates_widg.setLayout(fillDates_grid)
@@ -196,7 +200,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
             #-- Widgets --
 
             Nmax_label = QtGui.QLabel(labelDB.NbrSta)
-            self.Nmax = QtGui.QSpinBox ()
+            self.Nmax = QtGui.QSpinBox()
             self.Nmax.setRange(0, 99)
             self.Nmax.setSingleStep(1)
             self.Nmax.setValue(4)
@@ -313,7 +317,9 @@ class GapFillWeatherGUI(QtGui.QWidget):
         MLRM_widg = regression_model(self)
         advanced_widg = advanced_settings(self)
 
-        self.stack_widget = MyQToolBox()
+        self.stack_widget = QToolPanel()
+        self.stack_widget.setIcons(QtGui.QIcon('Icons/triangle_right.png'),
+                                   QtGui.QIcon('Icons/triangle_down.png'))
         self.stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
         self.stack_widget.addItem(MLRM_widg, 'Regression Model :')
         self.stack_widget.addItem(advanced_widg, 'Advanced Settings :')
@@ -771,16 +777,13 @@ class GapFillWeatherGUI(QtGui.QWidget):
         if filename:
             meteo.add_ETP_to_weather_data_file(filename)
 
-#==============================================================================
-def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
 
+def correlation_table_generation(TARGET, WEATHER, FILLPARAM):  # ==============
     """
     This fucntion generate an HTML output to be displayed in the
     <Fill Data> tab display area after a target station has been
     selected by the user.
     """
-
-#==============================================================================
 
     styleDB = db.styleUI()
 
@@ -980,7 +983,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
               '''
 
     color = ['transparent', styleDB.lightgray]
-    index = range(nSTA)
+    index = list(range(nSTA))
     TARGET.index
     index.remove(target_station_index)
     counter = 0
@@ -1187,7 +1190,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         nSTA = len(STANAME)
         self.setRowCount(nSTA - 1)
 
-        indxs = range(nSTA)
+        indxs = list(range(nSTA))
         indxs.remove(TARGET.index)
         row = 0
         self.setSortingEnabled(False)
@@ -1286,7 +1289,7 @@ class MyHorizHeader(QtGui.QHeaderView):
         qp.begin(self.viewport())
 
 #        print self.sender()
-        print event.region
+        print(event.region)
 
         if self.showSectionSep:
             QtGui.QHeaderView.paintEvent(self, event)
@@ -1405,7 +1408,7 @@ class MyHorizHeader(QtGui.QHeaderView):
 
         LogicalIndex_shown_and_ordered = []
         for visualIndex in range(self.count()):
-            logicalIndex = self.logicalIndex (visualIndex)
+            logicalIndex = self.logicalIndex(visualIndex)
             if self.isSectionHidden(logicalIndex):
                 pass
             else:
@@ -1426,7 +1429,7 @@ class MyHorizHeader(QtGui.QHeaderView):
             if self.highlightSections():
                 selectedIndx = self.selectionModel().selectedIndexes()
                 for index in selectedIndx:
-                    if (logicalIndex == index.column()) == True:
+                    if (logicalIndex == index.column()) is True:
                         label = '<b>%s<b>' % label
                         break
                     else:

@@ -39,7 +39,9 @@ from PySide import QtGui, QtCore
 import database as db
 
 
+# =============================================================================
 class Tooltips():
+# =============================================================================
 
     def __init__(self, language):  # ---------------------------- ENGLISH -----
 
@@ -59,7 +61,10 @@ class Tooltips():
             pass
 
 
+# =============================================================================
 class Search4Stations(QtGui.QWidget):
+# =============================================================================
+
     '''
     Widget that allows the user to search for weather stations on the
     Government of Canada website.
@@ -68,12 +73,12 @@ class Search4Stations(QtGui.QWidget):
     ConsoleSignal = QtCore.Signal(str)
     staListSignal = QtCore.Signal(list)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None):  # =======================================
         super(Search4Stations, self).__init__(parent)
 
         self.initUI()
 
-    def initUI(self):
+    def initUI(self):  # ======================================================
 
         #-------------------------------------------------------- DATABASE ----
 
@@ -360,8 +365,8 @@ class Search4Stations(QtGui.QWidget):
 
     def show(self):  # ========================================================
         super(Search4Stations, self).show()
-        self.activateWindow()
-        self.raise_()
+        # self.activateWindow()
+        # self.raise_()
 
         qr = self.frameGeometry()
         if self.parentWidget():
@@ -762,6 +767,7 @@ class Search4Stations(QtGui.QWidget):
         return staInfo
 
 
+#==============================================================================
 class WeatherStationDisplayTable(QtGui.QTableWidget):
     """
     Widget for displaying a weather station list.

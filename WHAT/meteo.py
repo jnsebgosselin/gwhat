@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 """
 Copyright 2014-2016 Jean-Sebastien Gosselin
 email: jnsebgosselin@gmail.com
@@ -226,7 +225,7 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
 
-    def generate_graph(self, filename): #=========== Generate and Draw Graph ==
+    def generate_graph(self, filename):  # ========= Generate and Draw Graph ==
 
         #------------------------------------------------------ Prepare Data --
 
@@ -253,7 +252,7 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         self.grid_weather_normals.populate_table(self.NORMALS)
 
-    def save_graph(self): #====================================== save_graph ==
+    def save_graph(self):  # ==================================== save_graph ==
 
         dialog_dir = self.save_fig_dir
         dialog_dir += '/WeatherAverages_%s' % self.station_name
@@ -282,7 +281,7 @@ class WeatherAvgGraph(QtGui.QWidget):
             filename += '/MonthlySeries_%s.csv' % self.station_name
             self.save_monthly_series(filename)
 
-    def save_normal_table(self, filename): #=========== Save Normals to File ==
+    def save_normal_table(self, filename):  # ========= Save Normals to File ==
 
         NORMALS = self.NORMALS
 
@@ -343,13 +342,13 @@ class WeatherAvgGraph(QtGui.QWidget):
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
-    def save_monthly_series(self, filename): # ========= Save Monthly Series ==
+    def save_monthly_series(self, filename):  # ======== Save Monthly Series ==
 
         with open(filename, 'w')as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(self.MTHSER)
 
-    def select_meteo_file(self): #=============== Select a Weather Data File ==
+    def select_meteo_file(self):  # ============= Select a Weather Data File ==
 
         filename, _ = QtGui.QFileDialog.getOpenFileName(self,
                           'Select a valid weather data file', self.meteo_dir,
@@ -440,8 +439,7 @@ class MeteoObj():
 
         print('Weather data loaded.')
 
-
-    def load(self, filename): #================================================
+    def load(self, filename):  # ==============================================
 
         """
         Load the info related to the weather station, the date and weather
@@ -459,9 +457,9 @@ class MeteoObj():
 
         for i in range(len(reader)):
 
-            if len(reader[i]) > 0 :
+            if len(reader[i]) > 0:
 
-                if  reader[i][0] == 'Year':
+                if reader[i][0] == 'Year':
                     self.varnames = reader[i]
                     data_indx = i + 1
                     self.HEADER = reader[:data_indx]
@@ -497,9 +495,7 @@ class MeteoObj():
             else:
                 self.datatypes[i] = 0
 
-
-    def clean_endsof_file(self): #============================================
-
+    def clean_endsof_file(self):  # ===========================================
         """
         Remove nan values at the beginning and end of the record if any. Must
         not be run before the 'TIME' array is generated.
@@ -531,8 +527,7 @@ class MeteoObj():
             print('%d empty' % (n - len(self.DATA[:, 0])) +
                   ' rows of data removed at the end of the dataset.')
 
-
-    def check_time_continuity(self): #=========================================
+    def check_time_continuity(self):  # =======================================
 
         #------------------------------------------ check time continuity ----
 
@@ -547,19 +542,18 @@ class MeteoObj():
                                            self.DATA[-1, 1].astype('int'),
                                            self.DATA[-1, 2].astype('int')), 0)
 
-        if time_end - time_start + 1 != len(self.DATA[:,0]):
+        if time_end - time_start + 1 != len(self.DATA[:, 0]):
             print('%s is not continuous, correcting...' % self.STA)
             self.DATA = make_timeserie_continuous(self.DATA)
 
-
-    def get_TIME(self, DATE): #================================================
+    def get_TIME(self, DATE):  # ==============================================
 
         # Generate a 1D array with date in numeric format because it is not
         # provided in the '.out' files.
 
         N = len(DATE[:, 0])
         TIME = np.zeros(N)
-        for i in range (N):
+        for i in range(N):
             TIME[i] = xldate_from_date_tuple((DATE[i, 0].astype('int'),
                                               DATE[i, 1].astype('int'),
                                               DATE[i, 2].astype('int')), 0)
@@ -567,7 +561,7 @@ class MeteoObj():
 
         return TIME
 
-    def fill_nan(self): #======================================================
+    def fill_nan(self):  # ====================================================
 
         datatypes = self.datatypes
         varnames = self.varnames[3:]
@@ -607,8 +601,7 @@ class MeteoObj():
 
         self.DATA[:, 3:] = X
 
-
-    def add_rain_to_data(self): #==============================================
+    def add_rain_to_data(self):  # ============================================
 
         varnames = np.array(self.varnames)
         if np.any(varnames == 'Rain (mm)'):
@@ -945,6 +938,7 @@ def calculate_normals(DATA, datatypes):
 
     return XNORM, MTHSER
 
+
 #==============================================================================
 def calculate_ETP(DATE, TAVG, LAT, Ta):
     """
@@ -1041,9 +1035,10 @@ def calculate_daylength(DATE, LAT):
     # http://physics.stackexchange.com/questions/28563/
     #        hours-of-light-per-day-based-on-latitude-longitude-formula
 
-    DAYLEN = OMEGA * 2 * 24 / (2 * np.pi) # Day length in hours
+    DAYLEN = OMEGA * 2 * 24 / (2 * np.pi)  # Day length in hours
 
     return DAYLEN
+
 
 #==============================================================================
 class FigWeatherNormals(FigureCanvasQTAgg):
@@ -1083,7 +1078,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # the total precipitation are displayed in <ax3>, which is placed on
         # top of the axes that display the data (<ax0> and <ax1>).
 
-        ax3 = fig.add_axes([0, 0, 1, 1], zorder=1) # temporary position
+        ax3 = fig.add_axes([0, 0, 1, 1], zorder=1)  # temporary position
         ax3.patch.set_visible(False)
         ax3.spines['bottom'].set_visible(False)
         ax3.tick_params(axis='both', bottom='off', top='off', left='off',
@@ -1137,7 +1132,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         #---- Precip ----
 
-        ax0  = fig.add_axes([x0, y0, axw, axh], zorder=1)
+        ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1)
         ax0.patch.set_visible(False)
         ax0.spines['top'].set_visible(False)
         ax0.set_axisbelow(True)
@@ -1156,8 +1151,6 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         XPOS = np.arange(-0.5, 12.51, 1)
         y = range(len(XPOS))
         colors = ['#990000', '#FF0000', '#FF6666']
-
-
 
         #---- Tmax ----
 
@@ -1183,7 +1176,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         #---- major ----
 
         ax0.xaxis.set_ticks_position('bottom')
-        ax0.tick_params(axis='x',direction='out')
+        ax0.tick_params(axis='x', direction='out')
         ax0.xaxis.set_ticklabels([])
         ax0.set_xticks(np.arange(Xmin0, Xmax0))
 
@@ -1409,7 +1402,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax1.set_ylabel(labelDB.Tlabel, va='bottom', fontsize=16)
         ax1.yaxis.set_label_coords(-0.09, 0.5)
 
-    def plot_precip(self, PNORM, SNORM): #====================== plot_precip ==
+    def plot_precip(self, PNORM, SNORM):  # ===================================
 
         #-- define vertices manually --
 
@@ -1477,9 +1470,12 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax.texts[0].set_text(labelDB.Tyrly % np.mean(Tavg_norm))
         ax.texts[1].set_text(labelDB.Pyrly % np.sum(Ptot_norm))
 
-#==============================================================================
+
+# =============================================================================
+
 class GridWeatherNormals(QtGui.QTableWidget):
-#==============================================================================
+
+# =============================================================================
 
     def __init__(self, parent=None):
         super(GridWeatherNormals, self).__init__(parent)
