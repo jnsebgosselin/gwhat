@@ -155,7 +155,7 @@ The Graphical User Interface (GUI) of WHAT mainly consists of a menu bar, a cons
 %\label{fig:WHAT_workflow}
 %\end{figure}
 %
-%The workflow shown in Figure~\ref{fig:WHAT_workflow} represents the interpretation of the data for only one well at one particular location. But, WHAT is also well suited for regional characterization projects that requires the management of data from multiple locations within a large study area. More specifically, the software allows to navigate easily through the different water level and weather datasets related to a given study area and makes the comparison of the data and the mass production of graphs and analyses efficient and easy. This can represent a substantial gain in time and data manipulation when the number of well for a given study area is important and when there is a need to update the data multiple times over the course of the project. Details about the management of projects in WHAT is presented in Section~\ref{WHAT_projects}.
+%The workflow shown in Figure~\ref{fig:WHAT_workflow} represents the interpretation of the data for only one well at one particular location. But, WHAT is also well suited for regional characterization projects that requires the management of data from multiple locations within a large study area. More specifically, the software allows to navigate easily through the different water level and weather datasets related to a given study area and makes the comparison of the data and the mass production of graphs and analyses efficient and easy. This can represent a substantial gain in time and data manipulation when the number of well for a given study area is important and when there is a need to update the data multiple times over the course of the project. Details about the management of projects in WHAT is presented in Section~\ref{WHAT_projects}.jnsebgosselin@gmail.com
 %
 %The first step in the proposed workflow of Figure~\ref{fig:WHAT_workflow} for the interpretation of water level time series is the preparation of gapless weather datasets. This include downloading and formatting weather data from the CDCD database and estimating the missing daily values within each record by using data from selected neighboring stations. This step is covered in details in Section~\ref{chap:gapfilling}. The second step is the processing of the water level time series, including the validation and correction of the data. This is covered in details in Section~\ref{chap:wlvl_formatting}.
 %
@@ -166,32 +166,3 @@ The Graphical User Interface (GUI) of WHAT mainly consists of a menu bar, a cons
 %Using the drill log of the well, the hydrograph, and the barometric response function, it should be possible to determine with a good degree of confidence if the well is in confined or unconfined conditions. For the latter case, the water level and weather data time series can be used jointly to asses the groundwater recharge of the aquifer. The first step of this task consists in the estimation of the Master Recession Curve (MRC) of the hydrograph. In the second step, groundwater recharge is estimated as the residual of a daily soil moisture balance (DSMB) model and the resulting fluxes are substituted into a mathematical model of the aquifer groundwater balance to produce a synthetic well hydrograph. The third and final step of the method consists in the calibration of the DSMB model parameters, based on the comparison of synthetic and observed well hydrographs. An example of groundwater recharge estimation is provided in Appendix~D for a well located at Rougemont in Monteregie Est, Quebec, Canada.
 
 \end{document}
-
-
-%\begin{itemize}
-%
-%\item The preparation of gapless daily weather time-series (total precipitation and air temperature), including:
-%    
-%    \begin{itemize}
-%        \item A graphical interface to query the online Canadian Daily Climate Database (CDCD) for weather stations by location coordinates, download the available data for the selected stations, and automatically organize the data in a format compatible with WHAT.
-%                
-%        \item An automated, robust, and efficient algorithm to quickly and easily fill the gaps in the dataset from a given station by using data from selected neighboring stations.
-%    \end{itemize}
-%
-%\item Various tools to generate publication-quality graphs from the weather and water level datasets.
-%
-%\item A user-friendly and dynamic graphical environment to visualization the data.
-%
-%\item The calculation of the master recession curve (MRC) of the well hydrograph and the estimation of groundwater recharge using a continuous water-table fluctuation approach.
-%
-%\end{itemize}
-%
-%\paragraph*{Features planned for future versions of WHAT:}
-%
-%\begin{itemize}
-%
-%\item The estimation of groundwater recharge with a method consisting in the optimization of a daily water surface budget to the water level time series measured in the Well. The sdaily water surface budget uses as input the gapless daily weather datasets that can be generated directly with WHAT.
-%
-%\item The assessment of the level of confinement of the aquifer at the well location based on the barometric response function of the well \citep{butler_jr._new_2011,bohling_kansas_2011}.
-%
-%\end{itemize}
