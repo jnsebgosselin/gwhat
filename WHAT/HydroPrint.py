@@ -39,7 +39,7 @@ from xlrd import xldate_as_tuple
 
 import HydroCalc
 import database as db
-import hydrograph3 as hydroprint
+import hydrograph3 as hydrograph
 import mplFigViewer3 as mplFigViewer
 import meteo
 import custom_widgets as MyQWidget
@@ -201,7 +201,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         #-- SubGrid Hydrograph Frame --
 
-        self.hydrograph = hydroprint.Hydrograph()
+        self.hydrograph = hydrograph.Hydrograph()
         self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
 
         grid_hydrograph_widget = QtGui.QFrame()
@@ -271,7 +271,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         make_data_files_panel(self)
 
-        def make_scales_tab_widget(self): #--------------- Scales Tab Widget --
+        def make_scales_tab_widget(self):  # ==================================
 
             class QRowLayout(QtGui.QWidget):
                 def __init__(self, items, parent=None):
@@ -285,9 +285,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
                     self.setLayout(layout)
 
-            #-------------------------------------------------------  TIME ----
+            # ------------------------------------------------------  TIME ----
 
-            #-- widget --
+            # -- widget --
 
             self.date_start_widget = QtGui.QDateEdit()
             self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
@@ -317,7 +317,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.dateDispFreq_spinBox.setKeyboardTracking(False)
             self.dateDispFreq_spinBox.valueChanged.connect(self.layout_changed)
 
-            #---- layout ----
+            # ---- layout ----
 
             widget_time_scale = QtGui.QFrame()
             widget_time_scale.setFrameStyle(0)  # styleDB.frame
@@ -330,14 +330,14 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                      self.dateDispFreq_spinBox]]
 
             for i, ROW in enumerate(GRID):
-               grid_time_scale.addWidget(QRowLayout(ROW), i, 1)
+                grid_time_scale.addWidget(QRowLayout(ROW), i, 1)
 
             grid_time_scale.setVerticalSpacing(5)
             grid_time_scale.setContentsMargins(10, 10, 10, 10)
 
             widget_time_scale.setLayout(grid_time_scale)
 
-            #------------------------------------------------- WATER LEVEL ----
+            # ------------------------------------------------ WATER LEVEL ----
 
             self.waterlvl_scale = QtGui.QDoubleSpinBox()
             self.waterlvl_scale.setSingleStep(0.05)
@@ -790,12 +790,12 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 i = 0
                 for fmeteo in fmeteo_paths:
 
-                    with open(fmeteo, 'rb') as f:
+                    with open(fmeteo, 'r') as f:
                         reader = list(csv.reader(f, delimiter='\t'))
 
                     LAT2[i] = float(reader[2][1])
                     LON2[i] = float(reader[3][1])
-                    DIST[i] = hydroprint.LatLong2Dist(LAT1, LON1, LAT2[i],
+                    DIST[i] = hydrograph.LatLong2Dist(LAT1, LON1, LAT2[i],
                                                       LON2[i])
 
                     i += 1
@@ -1362,7 +1362,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
         #---- Color Grid ----
 
-        colorsDB = hydroprint.Colors()
+        colorsDB = hydrograph.Colors()
         colorsDB.load_colors_db()
 
         colorGrid_widget =  QtGui.QWidget()
@@ -1392,7 +1392,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
     def load_colors(self): #==================================== Load Colors ==
 
-        colorsDB = hydroprint.Colors()
+        colorsDB = hydrograph.Colors()
         colorsDB.load_colors_db()
 
         nrow = self.colorGrid_layout.rowCount()
@@ -1406,7 +1406,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
     def reset_defaults(self): #============================= Reset Deafaults ==
 
-        colorsDB = hydroprint.Colors()
+        colorsDB = hydrograph.Colors()
 
         nrow = self.colorGrid_layout.rowCount()
         for row in range(nrow):
@@ -1431,7 +1431,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
     def btn_apply_isClicked(self): #================================== Apply ==
 
-        colorsDB = hydroprint.Colors()
+        colorsDB = hydrograph.Colors()
         colorsDB.load_colors_db()
 
         nrow = self.colorGrid_layout.rowCount()

@@ -73,13 +73,12 @@ class Colors():
                     [0.8, 0.8, 1],                  # Water Level (data dots)
                     [255./255,   0./255,   0./255]] # Water Level (measures)
 
-
         self.labels = ['Air Temperature', 'Rain', 'Snow',
                        'Water Level (solid line)',
                        'Water Level (data dots)',
                        'Water Level (man. obs.)']
 
-    def load_colors_db(self): #================================================
+    def load_colors_db(self):  # ==============================================
 
         fname = 'Colors.db'
         if not os.path.exists(fname):
@@ -97,7 +96,7 @@ class Colors():
 
         print('Colors database loaded sucessfully.')
 
-    def save_colors_db(self): #================================= Save Colors ==
+    def save_colors_db(self):  # ==============================================
 
         fname = 'Colors.db'
         fcontent = []
@@ -106,7 +105,7 @@ class Colors():
             fcontent[-1].extend(self.RGB[i])
 
         with open(fname, 'w') as f:
-            writer = csv.writer(f, delimiter='\t')
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
         print('Color database saved successfully')
@@ -778,7 +777,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.WaterLvlObj = WaterLvlObj
 
 
-    def checkLayout(self, name_well, filename): #==============================
+    def checkLayout(self, name_well, filename):  # ============================
 
         # Check if there is a layout stored for the current
         # selected observation well.
@@ -787,26 +786,25 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             reader = list(csv.reader(f, delimiter='\t'))
 
         for line in reader:
-            if line[0]== name_well:
+            if line[0] == name_well:
                 return True
 
         return False
 
     def save_layout(self, name_well, filename):  # ============================
 
-        #---- load file ----
+        # ---- load file ----
 
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
 
-        #---- update content ----
+        # ---- update content ----
 
         # this is necessary for Windows when there is an accented character
         # in the path of the meteo data file, in the name of the well, or in
         # the title of the graph.
 
-        name_well = name_well.encode('utf-8')
-        fmeteo = self.fmeteo.encode('utf-8')
+        fmeteo = self.fmeteo
 
         colorStack = ''
         for color in self.colorsDB.RGB:
@@ -816,7 +814,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         colorStack = colorStack[:-1]
 
         new = [name_well, fmeteo, self.WLmin, self.WLscale,
-               self.TIMEmin, self.TIMEmax,self.isGraphTitle, self.isLegend,
+               self.TIMEmin, self.TIMEmax, self.isGraphTitle, self.isLegend,
                self.RAINscale, self.WLdatum, self.trend_line, self.fwidth,
                self.fheight, colorStack, self.language, self.datemode,
                self.date_labels_display_pattern, self.bwidth_indx,
@@ -827,15 +825,15 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 del reader[row]
                 break
             else:
-                row +=1
+                row += 1
 
         reader.append(new)
         reader[0] = self.header[0]
 
-        #---- save file ----
+        # ---- save file ----
 
         with open(filename, 'w') as f:
-            writer = csv.writer(f, delimiter='\t')
+            writer = csv.writer(f, delimiter='\t',  lineterminator='\n')
             writer.writerows(reader)
 
     def load_layout(self, name_well, filename):  # ============================
@@ -847,7 +845,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
 
-        #---- Find row for Well ----
+        # ---- Find row for Well ----
 
         for row in range(len(reader)):
             if reader[row][0] == name_well:
@@ -857,7 +855,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         reader = reader[row]
 
-        #---- Fetch Info ----
+        # ---- Fetch Info ----
 
         self.fmeteo = reader[1]
         self.finfo = self.fmeteo[:-3] + 'log'
@@ -1040,8 +1038,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 #        elif self.bwidth_indx == 5 : # yearly
 #            print('option not yet available, kept default of 1 day')
 
-
-    def bin_sum(self, x, bwidth): #================================= bin_sum ==
+    def bin_sum(self, x, bwidth):  # ==========================================
 
         """
         Sum data x over bins of width "bwidth" starting at indice 0 of x.
@@ -1178,7 +1175,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         Ptot = self.bPTOT[istart:iend]
         Rain = self.bRAIN[istart:iend]
 
-        #------------------------------------------------------- PLOT PRECIP --
+        # ------------------------------------------------------ PLOT PRECIP --
 
         TIME2X = np.zeros(len(time) * 4)
         Ptot2X = np.zeros(len(time) * 4)
@@ -1207,11 +1204,11 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         self.PTOT_bar = self.ax3.fill_between(TIME2X, 0., Ptot2X,
                                               color=self.colorsDB.rgb[2],
-                                              edgecolor='None')
+                                              linewidth=0.0)
 
         self.RAIN_bar = self.ax3.fill_between(TIME2X, 0., Rain2X,
                                               color=self.colorsDB.rgb[1],
-                                              edgecolor='None')
+                                              linewidth=0.0)
 
         self.baseline.set_data([self.TIMEmin, self.TIMEmax], [0, 0])
 
@@ -1229,7 +1226,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.l1_ax4.remove()
         self.l1_ax4 = self.ax4.fill_between(TIME2X, 0., Tmax2X,
                                             color=self.colorsDB.rgb[0],
-                                            edgecolor='none')
+                                            edgecolor='None')
 
         self.l2_ax4.set_xdata(TIME2X)
         self.l2_ax4.set_ydata(Tmax2X)

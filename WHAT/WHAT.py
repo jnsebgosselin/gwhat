@@ -25,11 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
 
-#---- STANDARD LIBRARY IMPORTS ----
+# ---- STANDARD LIBRARY IMPORTS ----
 
 import platform
 import csv
 import sys
+import os
 from time import ctime
 from os import makedirs, path
 
@@ -43,7 +44,7 @@ from PySide import QtGui, QtCore
 #---- PERSONAL IMPORTS ----
 
 import database as db
-import MyQWidget
+import custom_widgets as MyQWidget
 import what_project
 import HydroPrint
 import dwnld_weather_data
@@ -178,7 +179,6 @@ class MainWindow(QtGui.QMainWindow):
         self.main_console = QtGui.QTextEdit()
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
-#        self.main_console.setFont(styleDB.font_console)
 
         size = self.whatPref.fontsize_console
         fontSS = ('font-style: %s;'
@@ -188,11 +188,11 @@ class MainWindow(QtGui.QMainWindow):
         self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
 
         self.write2console('''<font color=black>Thanks for using %s.
-        </font>''' % db.software_version)
-        self.write2console(
-        '''<font color=black>Please report any bug or wishful feature to
-             Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
-           </font>''')
+            </font>''' % db.software_version)
+        self.write2console('''<font color=black>
+            Please report any bug or wishful feature to
+            Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
+            </font>''')
 
         #-------------------------------------------------- PROJECT MENU BAR --
 
@@ -417,13 +417,12 @@ class MainWindow(QtGui.QMainWindow):
 
         #------------------------------------------------------ Stock Dialog --
 
-        directory = path.abspath('../Projects')
+        directory = os.path.abspath('../Projects')
 
         filename, _ = QtGui.QFileDialog.getOpenFileName(
             self, 'Open Project', directory, '*.what')
 
         if filename:
-
             self.projectfile = filename
             self.load_project(filename)
 
@@ -437,9 +436,9 @@ class MainWindow(QtGui.QMainWindow):
         print('\n-------------------------------')
         print('LOADING PROJECT...')
         print('-------------------------------\n')
-        print('Loading "%s"' % path.relpath(self.projectfile))
+        print('Loading "%s"' % os.path.relpath(self.projectfile))
 
-        self.projectdir = path.dirname(self.projectfile)
+        self.projectdir = os.path.dirname(self.projectfile)
 
         #----Update WHAT.pref file ----
 
@@ -524,7 +523,7 @@ class MainWindow(QtGui.QMainWindow):
         event.accept()
 
 
-class WHATPref():
+class WHATPref():  # ##########################################################
     """
     This class contains all the preferences relative to the WHAT interface,
     including:
@@ -535,86 +534,79 @@ class WHATPref():
 
     language: Language in which the GUI is displayed (not the labels
               of graphs).
-
-    full_error_analysis: Option that enable when equal to 1 the error analysis
-                         of the missing weather data routine. This option is
-                         experimental, that is why it has not been added to the
-                         UI yet.
     """
 
     def __init__(self, parent=None):  # =======================================
 
         if platform.system() == 'Windows':
-            self.projectfile = '..\Projects\Example\Example.what'
+            self.projectfile = '..\\Projects\\Example\\Example.what'
         elif platform.system() == 'Linux':
             self.projectfile = '../Projects/Example/Example.what'
 
         self.language = 'English'
 
-        self.full_error_analysis = 0
         self.fontsize_general = '14px'
         self.fontsize_console = '10px'
         self.fontsize_menubar = '12px'
 
     def save_pref_file(self):  # ==============================================
 
-        projectfile = path.relpath(self.projectfile).encode('utf-8')
+        print('\nSaving WHAT preferences to file...')
 
-        fcontent = [['Project File:', projectfile],
+        fcontent = [['Project File:', os.path.relpath(self.projectfile)],
                     ['Language:', self.language],
-                    ['Full Error Analysis:', self.full_error_analysis],
                     ['Font-Size-General:', self.fontsize_general],
                     ['Font-Size-Console:', self.fontsize_console],
                     ['Font-Size-Menubar:', self.fontsize_menubar]]
 
-        with open('WHAT.pref', 'wb') as f:
-            writer = csv.writer(f, delimiter='\t')
+        if (sys.version_info < (3, 0)):  # Python 2
+            for i, line in enumerate(fcontent):
+                for j, item in enumerate(line):
+                    fcontent[i][j] = item.encode('utf-8')
+
+        with open('WHAT.pref', 'w') as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
-    def load_pref_file(self):  # ==============================================
+        print('WHAT preferences saved.')
 
-        if not path.exists('WHAT.pref'):
+    def load_pref_file(self, circloop=False):  # ==============================
 
-            # Default values will be kept and a new .pref file will be
-            # generated
+        # cicrcloop argument is a protection to prevent a circular loop
+        # in case something goes wrong.
 
-            print('No "WHAT.pref" file found. A new one has been created.')
-
-            self.save_pref_file()
-
-        else:
-
-            with open('WHAT.pref', 'rb') as f:
+        try:
+            with open('WHAT.pref', 'rt') as f:
                 reader = list(csv.reader(f, delimiter='\t'))
 
-            self.projectfile = reader[0][1].decode('utf-8')
+            self.projectfile = reader[0][1]
+            if (sys.version_info < (3, 0)):  # Python 2
+                self.projectfile = self.projectfile.decode('utf-8')
             if platform.system() == 'Linux':
                 self.projectfile = self.projectfile.replace('\\', '/')
 
             self.language = reader[1][1]
+            self.fontsize_general = reader[2][1]
+            self.fontsize_console = reader[3][1]
+            self.fontsize_menubar = reader[4][1]
 
-            try:
-                self.full_error_analysis = int(reader[2][1])
-            except:
-                self.full_error_analysis = 0
-            try:
-                self.fontsize_general = reader[3][1]
-            except:
-                pass  # keep default value
-            try:
-                self.fontsize_console = reader[4][1]
-            except:
-                pass  # keep default value
-            try:
-                self.fontsize_menubar = reader[5][1]
-            except:
-                pass  # keep default value
+        except Exception as e:
 
-            print('self.full_error_analysis = %d' % self.full_error_analysis)
-            print
+            # Default values will be kept and a new .pref file will be
+            # generated :
+
+            print(('No valid "WHAT.pref" file found. '
+                   'A new one has been created from default.'))
+            self.save_pref_file()
+
+            if circloop is False:
+                # Rerun method to load default file :
+                self.load_pref_file(circloop=True)
+            else:
+                raise e
 
 
-class MyProject():
+class MyProject():  # #########################################################
     """
     This class contains all the info and utilities to manage the current
     active project.
@@ -623,22 +615,35 @@ class MyProject():
     def __init__(self, parent=None):  # =======================================
 
         self.name = ''
+        self.author = ''
         self.lat = 0
         self.lon = 0
 
     def load_project_info(self, projectfile):  # ==============================
 
-        print('Loading project info')
+        print('-------------------------------')
+        print('Loading project info :')
 
-        with open(projectfile, 'rb') as f:
+        with open(projectfile, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
 
-        self.name = reader[0][1].decode('utf-8')
+        self.name = reader[0][1]
+        self.author = reader[1][1]
         self.lat = float(reader[6][1])
         self.lon = float(reader[7][1])
 
+        if (sys.version_info < (3, 0)):  # Python 2
+            self.name = self.name.decode('utf-8')
+            self.author = self.author.decode('utf-8')
 
-if __name__ == '__main__':
+        print('  - Project name : %s' % self.name)
+        print('  - Author : %s' % self.author)
+        print('  - Lat. : %0.2f' % self.lat)
+        print('  - Lon. : %0.2f' % self.lon)
+        print('Project info loaded.')
+        print('-------------------------------')
+
+if __name__ == '__main__':  # #################################################
 
 #    app = QtGui.QApplication(sys.argv)
 #    print('Starting WHAT...')
@@ -656,3 +661,4 @@ if __name__ == '__main__':
         sys.exit(app.exec_())
     except Exception as e:
         logging.exception(str(e))
+        raise e
