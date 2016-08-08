@@ -374,18 +374,18 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
     def load_MRC_interp(self): #============================ Load MRC Interp ==
 
-        #---- Load .wif file ----
+        # ---- Load .wif file ----
 
         isWif = self.waterLvl_data.load_interpretation_file()
-        if isWif == False: #No .wif file has been created yet for this well
+        if isWif == False:  # No .wif file has been created yet for this well
             return
 
-        #---- Extract Local Extremum Times ----
+        # ---- Extract Local Extremum Times ----
 
         tr = self.waterLvl_data.trecess
         hr = self.waterLvl_data.hrecess
 
-        tb = [] # Time boundary for recession segments
+        tb = []  # Time boundary for recession segments
         for i in range(len(tr)):
             if not np.isnan(hr[i]):
                 try:
@@ -394,14 +394,16 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 except IndexError:
                     tb.append(tr[i])
 
-        #---- Convert Time to Indexes ----
-
+        # ---- Convert Time to Indexes ----
         time = self.waterLvl_data.time
         self.peak_indx = np.zeros(len(tb)).astype(int)
-        for i in range(len(tb)):
-            self.peak_indx[i] = np.where(tb[i] == time)[0]
 
-        #---- Recalculate and Plot Results ----
+        for i in range(len(tb)):
+            close = np.isclose(tb[i], time, rtol=0, atol=10**-6)
+            indx = np.where(close == True)[0][0]
+            self.peak_indx[i] = indx
+
+        # ---- Recalculate and Plot Results ----
 
         self.peak_memory[0] = self.peak_indx
         self.plot_peak()
@@ -1499,7 +1501,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
 
     while 1:
 
-        #---- Calculating Jacobian (X) Numerically ----
+        # ---- Calculating Jacobian (X) Numerically ----
 
         hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
         XB = (hdB[tindx] - hp[tindx]) / tolmax
@@ -1671,7 +1673,7 @@ class SoilProfil():
 
         #---- load soil column info ----
 
-        with open(filename,'rb') as f:
+        with open(filename,'r') as f:
             reader = list(csv.reader(f, delimiter="\t"))
 
         NLayer = len(reader)
