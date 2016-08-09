@@ -35,7 +35,6 @@ from time import ctime
 from os import makedirs, path
 
 from multiprocessing import freeze_support
-freeze_support()
 
 # ---- THIRD PARTY IMPORTS ----
 
@@ -50,6 +49,9 @@ import HydroPrint
 import dwnld_weather_data
 from gapfill_weather_gui import GapFillWeatherGUI
 from about_WHAT import AboutWhat
+
+freeze_support()
+
 
 # ---- DATABASES ----
 
@@ -549,7 +551,7 @@ class WHATPref():  # ##########################################################
             '..', 'Projects', 'Example', 'Example.what')
         self.language = 'English'
         self.fontsize_general = '14px'
-        self.fontsize_console = '10px'
+        self.fontsize_console = '12px'
         self.fontsize_menubar = '12px'
 
     def save_pref_file(self):  # ==============================================
