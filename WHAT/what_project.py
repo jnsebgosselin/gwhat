@@ -38,12 +38,12 @@ from PySide import QtGui, QtCore
 import database as db
 
 
-#==============================================================================
+# =============================================================================
 class NewProject(QtGui.QDialog):
     """
     Dialog window to create a new WHAT project.
     """
-#==============================================================================
+# =============================================================================
 
     NewProjectSignal = QtCore.Signal(str)
 
@@ -65,28 +65,23 @@ class NewProject(QtGui.QDialog):
         # Use this screen to name your new WHAT project, select the location
         # for your new project, and select the type of project.
 
-        #---- Databases ----
+        # --- Databases ----
 
         iconDB = db.Icons()
         StyleDB = db.styleUI()
 
-        #---- Save In Folder ----
+        # ---- Save In Folder ----
 
-        if platform.system() == 'Windows':
-            save_in_folder = '..\Projects'
-        elif platform.system() == 'Linux':
-            save_in_folder = '../Projects'
+        save_in_folder = os.path.abspath(os.path.join('..', 'Projects'))
 
-        save_in_folder = os.path.abspath(save_in_folder)
-
-        #---- Current Date ----
+        # ---- Current Date ----
 
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
 
-        #------------------------------------------------------ PROJECT INFO --
+        # ----------------------------------------------------- PROJECT INFO --
 
-        #---- WIDGETS ----
+        # ---- WIDGETS ----
 
         name_label = QtGui.QLabel('Project Title:')
         self.name = QtGui.QLineEdit()
@@ -100,7 +95,7 @@ class NewProject(QtGui.QDialog):
         createdby_label = QtGui.QLabel('Software:')
         self.createdby = QtGui.QLabel(db.software_version)
 
-        #---- GRID ----
+        # ---- GRID ----
 
         proINfo_widget = QtGui.QFrame()
         proInfo_grid = QtGui.QGridLayout()
@@ -121,11 +116,11 @@ class NewProject(QtGui.QDialog):
         proInfo_grid.setSpacing(10)
         proInfo_grid.setColumnStretch(1, 100)
         proInfo_grid.setColumnMinimumWidth(1, 250)
-        proInfo_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        proInfo_grid.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
         proINfo_widget.setLayout(proInfo_grid)
 
-        #---------------------------------------------- LOCATION COORDINATES --
+        # --------------------------------------------- LOCATION COORDINATES --
 
         locaCoord_title = QtGui.QLabel('<b>Project Location Coordinates:</b>')
         locaCoord_title.setAlignment(QtCore.Qt.AlignLeft)
@@ -181,11 +176,11 @@ class NewProject(QtGui.QDialog):
         locaCoord_grid.addWidget(HLine2, row, 0, 1, 11)
 
         locaCoord_grid.setSpacing(10)
-        locaCoord_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        locaCoord_grid.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
         locaCoord_widget.setLayout(locaCoord_grid)
 
-        #----------------------------------------------------------- Toolbar --
+        # ---------------------------------------------------------- Toolbar --
 
         btn_save_project = QtGui.QPushButton(' Save')
         btn_save_project.setIcon(iconDB.new_project)
@@ -208,11 +203,11 @@ class NewProject(QtGui.QDialog):
 
         toolbar_grid.setSpacing(10)
         toolbar_grid.setColumnStretch(col+1, 100)
-        toolbar_grid.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        toolbar_grid.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
         toolbar_widget.setLayout(toolbar_grid)
 
-        #-------------------------------------------------------------- MAIN --
+        # ------------------------------------------------------------- MAIN --
 
         directory_label = QtGui.QLabel('Save in Folder:')
         self.directory = QtGui.QLineEdit()
@@ -241,11 +236,11 @@ class NewProject(QtGui.QDialog):
 
         newProject_grid.setVerticalSpacing(25)
         newProject_grid.setColumnMinimumWidth(1, 350)
-        newProject_grid.setContentsMargins(15, 15, 15, 15) # (L, T, R, B)
+        newProject_grid.setContentsMargins(15, 15, 15, 15)  # (L, T, R, B)
 
         self.setLayout(newProject_grid)
 
-        #---------------------------------------------------------- EVENTS ----
+        # --------------------------------------------------------- EVENTS ----
 
         btn_save_project.clicked.connect(self.save_project)
         btn_cancel.clicked.connect(self.close)
@@ -258,18 +253,15 @@ class NewProject(QtGui.QDialog):
             print('Please enter a valid Project name')
             return
 
-        #---- Project Directory Name ----
+        # ---- Project Directory Name ----
 
         # If directory already exist, a number is added at the end within ().
 
         project_dir = self.directory.text() + '/' + project_name
-        pathExists = os.path.exists(project_dir)
-
         count = 1
-        while pathExists == True:
-            project_dir = self.directory.text() + '/%s (%d)' % (project_name,
-                                                                count)
-            pathExists = os.path.exists(project_dir)
+        while os.path.exists(project_dir):
+            project_dir = os.path.join(self.directory.text(),
+                                       '/%s (%d)' % (project_name, count))
             count += 1
 
         print('\n---------------')
@@ -277,13 +269,13 @@ class NewProject(QtGui.QDialog):
         print(project_dir)
         print
 
-        #---- Create Files and Folders ----
+        # ---- Create Files and Folders ----
 
         try:
 
             os.makedirs(project_dir)
 
-            #---- folder architecture ----
+            # ---- folder architecture ----
 
             if not os.path.exists(project_dir + '/Meteo/Raw'):
                 os.makedirs(project_dir + '/Meteo/Raw')
@@ -294,16 +286,12 @@ class NewProject(QtGui.QDialog):
             if not os.path.exists(project_dir + '/Water Levels'):
                 os.makedirs(project_dir + '/Water Levels')
 
-            #---- project.what ----
+            # ---- project.what ----
 
-            fname = project_dir + '/%s.what' % project_name
+            fname = os.path.join(project_dir, '/%s.what' % project_name)
             if not os.path.exists(fname):
-
-                project_name = project_name
-                author = self.author.text()
-
                 filecontent = [['Project name:', project_name],
-                               ['Author:', author],
+                               ['Author:', self.author.text()],
                                ['Created:', self.date.text()],
                                ['Modified:', self.date.text()],
                                ['Software:', self.createdby.text()],
@@ -315,7 +303,7 @@ class NewProject(QtGui.QDialog):
                 print('Creating file %s.what' % project_name)
 
                 with open(fname, 'w', encoding='utf-8') as f:
-                    writer = csv.writer(f, delimiter='\t')
+                    writer = csv.writer(f, delimiter='\t', lineterminator='\n')
                     writer.writerows(filecontent)
 
             self.close()
@@ -326,9 +314,6 @@ class NewProject(QtGui.QDialog):
 
         except Exception as e:
             raise e
-#            print('There was a problem creating the project. '
-#                  'Project not saved.')
-#            print('---------------')
 
     def browse_saveIn_folder(self):
 
@@ -358,7 +343,7 @@ class NewProject(QtGui.QDialog):
         self.Lat_SpinBox.setValue(0)
         self.Lon_SpinBox.setValue(0)
 
-    def show(self): #================================================== show ==
+    def show(self):  # ========================================================
         super(NewProject, self).show()
         self.raise_()
 

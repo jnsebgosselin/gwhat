@@ -37,11 +37,11 @@ from os import makedirs, path
 from multiprocessing import freeze_support
 freeze_support()
 
-#---- THIRD PARTY IMPORTS ----
+# ---- THIRD PARTY IMPORTS ----
 
 from PySide import QtGui, QtCore
 
-#---- PERSONAL IMPORTS ----
+# ---- PERSONAL IMPORTS ----
 
 import database as db
 import custom_widgets as MyQWidget
@@ -51,7 +51,7 @@ import dwnld_weather_data
 from gapfill_weather_gui import GapFillWeatherGUI
 from about_WHAT import AboutWhat
 
-#---- DATABASES ----
+# ---- DATABASES ----
 
 labelDB = []
 iconDB = []
@@ -167,14 +167,21 @@ class MainWindow(QtGui.QMainWindow):
         global headerDB
         headerDB = db.FileHeaders()
 
-        #------------------------------------------------- MAIN WINDOW SETUP --
+        # ------------------------------------------------ MAIN WINDOW SETUP --
 
         self.setWindowTitle(db.software_version)
-        self.setWindowIcon(iconDB.WHAT)
+        self.setWindowIcon(QtGui.QIcon(os.path.join('Icons', 'WHAT.png')))
+
 #        self.setMinimumWidth(1250)
 #        self.setFont(styleDB.font1)
 
-        #------------------------------------------------------ MAIN CONSOLE --
+        if platform.system() == 'Windows':
+            import ctypes
+            myappid = 'what_application'  # arbitrary string
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                myappid)
+
+        # ----------------------------------------------------- MAIN CONSOLE --
 
         self.main_console = QtGui.QTextEdit()
         self.main_console.setReadOnly(True)
@@ -194,7 +201,7 @@ class MainWindow(QtGui.QMainWindow):
             Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
             </font>''')
 
-        #-------------------------------------------------- PROJECT MENU BAR --
+        # ------------------------------------------------- PROJECT MENU BAR --
 
         project_label = QtGui.QLabel('Project :')
         project_label.setAlignment(QtCore.Qt.AlignCenter)
@@ -235,11 +242,11 @@ class MainWindow(QtGui.QMainWindow):
                   ) % (style, size, family)
         self.menubar_widget.setStyleSheet("QWidget{%s}" % fontSS)
 
-        #-------------------------------------------------------- TAB WIDGET --
+        # ------------------------------------------------------- TAB WIDGET --
 
         Tab_widget = QtGui.QTabWidget()
 
-        #---- Custom TabBar Height ----
+        # ---- Custom TabBar Height ----
 
         # http://stackoverflow.com/questions/12428917/
         # pyqt4-set-size-of-the-tab-bar-in-qtabwidget
@@ -253,26 +260,26 @@ class MainWindow(QtGui.QMainWindow):
         tab_bar = TabBar()
         Tab_widget.setTabBar(tab_bar)
 
-        #---- download weather data ----
+        # ---- download weather data ----
 
         self.tab_dwnld_data = dwnld_weather_data.dwnldWeather(self)
         self.tab_dwnld_data.set_workdir(self.projectdir)
 
-        #---- gapfill weather data ----
+        # ---- gapfill weather data ----
 
         self.tab_fill_weather_data = GapFillWeatherGUI(self)
         self.tab_fill_weather_data.set_workdir(self.projectdir)
 
-        #---- hydrograph ----
+        # ---- hydrograph ----
 
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self)
         self.tab_hydrograph.set_workdir(self.projectdir)
 
-        #---- about ----
+        # ---- about ----
 
         tab_about = AboutWhat(self)
 
-        #-- TABS ASSEMBLY --
+        # -- TABS ASSEMBLY --
 
         Tab_widget.addTab(self.tab_dwnld_data, labelDB.TAB1)
         Tab_widget.addTab(self.tab_fill_weather_data, labelDB.TAB2)
@@ -281,7 +288,7 @@ class MainWindow(QtGui.QMainWindow):
 
         Tab_widget.setCornerWidget(self.menubar_widget)
 
-        #--------------------------------------------------- SPLITTER WIDGET --
+        # -------------------------------------------------- SPLITTER WIDGET --
 
         splitter = QtGui.QSplitter(self)
         splitter.setOrientation(QtCore.Qt.Vertical)
@@ -294,7 +301,7 @@ class MainWindow(QtGui.QMainWindow):
         # Forces initially the main_console to its minimal height:
         splitter.setSizes([100, 1])
 
-        #--------------------------------------------------------- MAIN GRID --
+        # -------------------------------------------------------- MAIN GRID --
 
         main_widget = QtGui.QWidget()
         self.setCentralWidget(main_widget)
@@ -311,13 +318,13 @@ class MainWindow(QtGui.QMainWindow):
         mainGrid.setSpacing(10)
         main_widget.setLayout(mainGrid)
 
-        #------------------------------------------------------------ EVENTS --
+        # ----------------------------------------------------------- EVENTS --
 
         self.btn_new_project.clicked.connect(self.show_new_project)
         self.project_display.clicked.connect(self.open_project)
 #        self.open_project_window.OpenProjectSignal.connect(self.load_project)
 
-        #-- Console Signal Piping --
+        # -- Console Signal Piping --
 
         issuer = self.tab_dwnld_data
         issuer.ConsoleSignal.connect(self.write2console)
@@ -328,11 +335,11 @@ class MainWindow(QtGui.QMainWindow):
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)
 
-        #----------------------------------------------------- MESSAGE BOXES --
+        # ---------------------------------------------------- MESSAGE BOXES --
 
         self.msgError = MyQWidget.MyQErrorMessageBox()
 
-        #-------------------------------------------------------------- SHOW --
+        # ------------------------------------------------------------- SHOW --
 
         self.show()
 
@@ -341,7 +348,7 @@ class MainWindow(QtGui.QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-        #-------------------------------------------------- CHECK IF PROJECT --
+        # ------------------------------------------------- CHECK IF PROJECT --
 
         isProjectExists = self.check_project()
 
@@ -396,7 +403,7 @@ class MainWindow(QtGui.QMainWindow):
 #        self.open_project_window.show()
 #        self.open_project_window.setFixedSize(self.open_project_window.size())
 
-        #----------------------------------------- Custom File Dialog (1) ----
+        # ----------------------------------------- Custom File Dialog (1) ----
 
 #        self.dialog = QtGui.QFileDialog()
 #        print(self.dialog.sidebarUrls())
@@ -415,7 +422,7 @@ class MainWindow(QtGui.QMainWindow):
 #
 #        self.dialog.exec_()
 
-        #------------------------------------------------------ Stock Dialog --
+        # ----------------------------------------------------- Stock Dialog --
 
         directory = os.path.abspath('../Projects')
 
@@ -440,20 +447,20 @@ class MainWindow(QtGui.QMainWindow):
 
         self.projectdir = os.path.dirname(self.projectfile)
 
-        #----Update WHAT.pref file ----
+        # ----Update WHAT.pref file ----
 
         self.whatPref.projectfile = self.projectfile
         self.whatPref.save_pref_file()
 
-        #---- Check Project ----
+        # ---- Check Project ----
 
         self.check_project()
 
-        #---- Load Project Info ----
+        # ---- Load Project Info ----
 
         self.projectInfo.load_project_info(self.projectfile)
 
-        #---- Update UI ----
+        # ---- Update UI ----
 
         self.tab_dwnld_data.setEnabled(True)
         self.tab_fill_weather_data.setEnabled(True)
@@ -462,9 +469,9 @@ class MainWindow(QtGui.QMainWindow):
         self.project_display.setText(self.projectInfo.name)
         self.project_display.adjustSize()
 
-        #-------------------------------------------- Update child widgets ----
+        # ------------------------------------------- Update child widgets ----
 
-        #---- dwnld_weather_data ----
+        # ---- dwnld_weather_data ----
 
         self.tab_dwnld_data.set_workdir(self.projectdir)
         self.tab_dwnld_data.search4stations.lat_spinBox.setValue(
@@ -473,12 +480,12 @@ class MainWindow(QtGui.QMainWindow):
         self.tab_dwnld_data.search4stations.lon_spinBox.setValue(
             self.projectInfo.lon)
 
-        #---- fill_weather_data ----
+        # ---- fill_weather_data ----
 
         self.tab_fill_weather_data.set_workdir(self.projectdir)
         self.tab_fill_weather_data.load_data_dir_content()
 
-        #---- hydrograph ----
+        # ---- hydrograph ----
 
         self.tab_hydrograph.set_workdir(self.projectdir)
 
@@ -506,7 +513,7 @@ class MainWindow(QtGui.QMainWindow):
             print('Project file does not exist.')
             return False
 
-        #-------------------------------- System project folder organization --
+        # ------------------------------- System project folder organization --
 
         if not path.exists(self.projectdir + '/Meteo/Raw'):
             makedirs(self.projectdir + '/Meteo/Raw')
@@ -538,13 +545,9 @@ class WHATPref():  # ##########################################################
 
     def __init__(self, parent=None):  # =======================================
 
-        if platform.system() == 'Windows':
-            self.projectfile = '..\\Projects\\Example\\Example.what'
-        elif platform.system() == 'Linux':
-            self.projectfile = '../Projects/Example/Example.what'
-
+        self.projectfile = os.path.join(
+            '..', 'Projects', 'Example', 'Example.what')
         self.language = 'English'
-
         self.fontsize_general = '14px'
         self.fontsize_console = '10px'
         self.fontsize_menubar = '12px'
@@ -559,12 +562,7 @@ class WHATPref():  # ##########################################################
                     ['Font-Size-Console:', self.fontsize_console],
                     ['Font-Size-Menubar:', self.fontsize_menubar]]
 
-        if (sys.version_info < (3, 0)):  # Python 2
-            for i, line in enumerate(fcontent):
-                for j, item in enumerate(line):
-                    fcontent[i][j] = item.encode('utf-8')
-
-        with open('WHAT.pref', 'w') as f:
+        with open('WHAT.pref', 'w', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
@@ -576,12 +574,10 @@ class WHATPref():  # ##########################################################
         # in case something goes wrong.
 
         try:
-            with open('WHAT.pref', 'rt') as f:
+            with open('WHAT.pref', 'r', encoding='utf-8') as f:
                 reader = list(csv.reader(f, delimiter='\t'))
 
             self.projectfile = reader[0][1]
-            if (sys.version_info < (3, 0)):  # Python 2
-                self.projectfile = self.projectfile.decode('utf-8')
             if platform.system() == 'Linux':
                 self.projectfile = self.projectfile.replace('\\', '/')
 
@@ -591,6 +587,7 @@ class WHATPref():  # ##########################################################
             self.fontsize_menubar = reader[4][1]
 
         except Exception as e:
+            print(e)
 
             # Default values will be kept and a new .pref file will be
             # generated :
@@ -624,17 +621,13 @@ class MyProject():  # #########################################################
         print('-------------------------------')
         print('Loading project info :')
 
-        with open(projectfile, 'r') as f:
+        with open(projectfile, 'r', encoding='utf-8') as f:
             reader = list(csv.reader(f, delimiter='\t'))
 
         self.name = reader[0][1]
         self.author = reader[1][1]
         self.lat = float(reader[6][1])
         self.lon = float(reader[7][1])
-
-        if (sys.version_info < (3, 0)):  # Python 2
-            self.name = self.name.decode('utf-8')
-            self.author = self.author.decode('utf-8')
 
         print('  - Project name : %s' % self.name)
         print('  - Author : %s' % self.author)
