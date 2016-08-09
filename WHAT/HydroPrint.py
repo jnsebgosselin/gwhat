@@ -19,14 +19,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-#---- STANDARD LIBRARY IMPORTS ----
+# STANDARD LIBRARY IMPORTS :
 
 import csv
 import sys
 import os
 import copy
 
-#---- THIRD PARTY IMPORTS ----
+# THIRD PARTY IMPORTS :
 
 from PySide import QtGui, QtCore
 from PySide.QtCore import QDate
@@ -35,7 +35,7 @@ import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-#---- PERSONAL IMPORTS ----
+# PERSONAL IMPORTS :
 
 import HydroCalc
 import database as db
@@ -43,10 +43,20 @@ import hydrograph3 as hydrograph
 import mplFigViewer3 as mplFigViewer
 import meteo
 import custom_widgets as MyQWidget
+from custom_widgets import VSep, MyQToolButton
 from waterlvldata import WaterlvlData
 
+class VSep(QtGui.QFrame):  # vertical separators for the toolbar
+            def __init__(self, parent=None):
+                super(VSep, self).__init__(parent)
+                self.setFrameStyle(db.styleUI().VLine)
+
+
+# =============================================================================
 
 class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
+
+# =============================================================================
 
     ConsoleSignal = QtCore.Signal(str)
 
@@ -59,61 +69,55 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.waterlvl_data = WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
 
-        #-- memory path variable --
+        # memory path variable
 
         self.meteo_dir = self.workdir + '/Meteo/Output'
         self.waterlvl_dir = self.workdir + '/Water Levels'
         self.save_fig_dir = self.workdir
 
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self):  # ======================================================
+    def __initUI__(self):  # ==================================================
 
-        #---------------------------------------------------------- DATABASE --
+        # DATABASE :
 
         styleDB = db.styleUI()
         iconDB = db.Icons()
         styleDB = db.styleUI()
         ttipDB = db.Tooltips('English')
 
-        #---- Main Window ----
+        # Main Window :
 
         self.setWindowIcon(iconDB.WHAT)
 
-        #---- Weather Normals Widget ----
+        # Weather Normals Widget :
 
         self.weather_avg_graph = meteo.WeatherAvgGraph(self)
 
-        #---- HydroCalc Widget ----
+        # HydroCalc Widget :
 
         self.hydrocalc = HydroCalc.WLCalc()
         self.hydrocalc.hide()
 
-        #------------------------------------------------- Page Setup Widget --
+        # Page Setup Widget :
 
         self.page_setup_win = PageSetupWin(self)
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
 
-        #---------------------------------------------- Color Palette Widget --
+        # Color Palette Widget :
 
         self.color_palette_win = ColorsSetupWin(self)
         self.color_palette_win.newColorSetupSent.connect(self.update_colors)
 
-        #----------------------------------------------------------- Toolbar --
+        # ---------------------------------------------------------- Toolbar --
 
-        #-- Toolbar Buttons --
+        # BUTTONS :
 
-        btn_loadConfig = QtGui.QToolButton()
-        btn_loadConfig.setAutoRaise(True)
-        btn_loadConfig.setIcon(iconDB.load_graph_config)
-        btn_loadConfig.setToolTip(ttipDB.loadConfig)
-        btn_loadConfig.setIconSize(styleDB.iconSize)
+        btn_loadConfig = MyQToolButton(iconDB.load_graph_config,
+                                       ttipDB.loadConfig)
 
-        btn_saveConfig = QtGui.QToolButton()
-        btn_saveConfig.setAutoRaise(True)
-        btn_saveConfig.setIcon(iconDB.save_graph_config)
-        btn_saveConfig.setToolTip(ttipDB.saveConfig)
-        btn_saveConfig.setIconSize(styleDB.iconSize)
+        btn_saveConfig = MyQToolButton(iconDB.save_graph_config,
+                                       ttipDB.saveConfig)
 
         btn_bestfit_waterlvl = QtGui.QToolButton()
         btn_bestfit_waterlvl.setAutoRaise(True)
@@ -171,12 +175,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         btn_color_pick.setIconSize(styleDB.iconSize)
         btn_color_pick.clicked.connect(self.color_palette_win.show)
 
-        class VSep(QtGui.QFrame): # vertical separators for the toolbar
-            def __init__(self, parent=None):
-                super(VSep, self).__init__(parent)
-                self.setFrameStyle(styleDB.VLine)
-
-        #-- Layout --
+        # LAYOUT :
 
         btn_list = [self.btn_work_waterlvl, VSep(), btn_save, btn_draw,
                     btn_loadConfig, btn_saveConfig, VSep(),
@@ -197,9 +196,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         toolbar_widget.setLayout(subgrid_toolbar)
 
-        #-------------------------------------------------------- LEFT PANEL --
+        # ------------------------------------------------------- LEFT PANEL --
 
-        #-- SubGrid Hydrograph Frame --
+        # SubGrid Hydrograph Frame :
 
         self.hydrograph = hydrograph.Hydrograph()
         self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
@@ -211,11 +210,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         grid_hydrograph.setRowStretch(0, 500)
         grid_hydrograph.setColumnStretch(0, 500)
-        grid_hydrograph.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        grid_hydrograph.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
         grid_hydrograph_widget.setLayout(grid_hydrograph)
 
-        #-- ASSEMBLING SubGrids --
+        # ASSEMBLING SubGrids :
 
         grid_layout = QtGui.QGridLayout()
         self.grid_layout_widget = QtGui.QFrame()
@@ -225,16 +224,16 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         row += 1
         grid_layout.addWidget(grid_hydrograph_widget, row, 0)
 
-        grid_layout.setContentsMargins(0, 0, 0, 0) # Left, Top, Right, Bottom
+        grid_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
         grid_layout.setSpacing(5)
         grid_layout.setColumnStretch(0, 500)
         grid_layout.setRowStretch(1, 500)
 
         self.grid_layout_widget.setLayout(grid_layout)
 
-        def make_data_files_panel(self): #----------------- Data Files Panel --
+        def make_data_files_panel(self):  # ===================================
 
-            #-- widgets --
+            # Widgets :
 
             btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
             btn_waterlvl_dir.setIcon(iconDB.openFile)
@@ -254,7 +253,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.meteo_info_widget.setReadOnly(True)
             self.meteo_info_widget.setFixedHeight(150)
 
-            #-- layout --
+            # Layout :
 
             self.data_files_panel = QtGui.QWidget()
             layout = QtGui.QGridLayout()

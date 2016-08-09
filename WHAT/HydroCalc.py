@@ -19,21 +19,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-#---- STANDARD LIBRARY IMPORTS ----
+# STANDARD LIBRARY IMPORTS :
 
 from sys import argv
 from time import clock
-import csv, os
+import csv
+import os
 import datetime
 
-#---- THIRD PARTY IMPORTS ----
+# THIRD PARTY IMPORTS :
 
 import numpy as np
 from PySide import QtGui, QtCore
 
 import matplotlib as mpl
 mpl.use('Qt4Agg')
-mpl.rcParams['backend.qt4']='PySide'
+mpl.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
@@ -358,6 +359,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
     def load_waterLvl_data(self, filename): #============== Load Water Level ==
 
         #---- Water Level Data ----
+
+        print(filename)
 
         self.waterLvl_data.load(filename)
 
@@ -1978,15 +1981,15 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
 
         self.setLayout(mainLayout)
 
-    def closeEvent(self, event): #=================================== Cancel ==
+    def closeEvent(self, event): #=============================================
         super(RechgSetupWin, self).closeEvent(event)
         print('Closing Window')
 
-    def btn_calibrate_isClicked(self): #========================== Calibrate ==
+    def btn_calibrate_isClicked(self): # ========================= Calibrate ==
         print('Calibration started')
 
-    def show(self): #================================================== Show ==
-        super(RechgSetupWin, self).show()
+    def show(self):  # ========================================================
+
         self.activateWindow()
         self.raise_()
 
@@ -2004,6 +2007,8 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
         self.move(qr.topLeft())
         self.setFixedSize(self.size())
 
+        super(RechgSetupWin, self).show()
+
 
 if __name__ == '__main__':
 
@@ -2013,9 +2018,11 @@ if __name__ == '__main__':
     w.show()
     w.widget_MRCparam.show()
 
-    dirname = '/home/jnsebgosselin/Dropbox/WHAT/Projects/Pont-Rouge'
-    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    fwaterlvl = dirname + '/Water Levels/5080001.xls'
+    dirname = os.path.join(
+        os.path.dirname(os.getcwd()), 'Projects', 'Pont-Rouge')
+    fmeteo = os.path.join(
+        dirname, 'Meteo', 'Output', 'STE CHRISTINE (7017000)_1960-2015.out')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', '5080001.xls')
 
     w.load_waterLvl_data(fwaterlvl)
     w.load_weather_data(fmeteo)
