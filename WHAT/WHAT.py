@@ -103,9 +103,9 @@ class MainWindow(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(MainWindow, self).__init__(parent)
 
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self):  # ======================================================
+    def __initUI__(self):  # ==================================================
         """
         A generic widget is first set as the central widget of the
         MainWindow. Then, a QGridLayout is applied to this central
