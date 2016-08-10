@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#----- STANDARD LIBRARY IMPORTS -----
+# STANDARD LIBRARY IMPORTS :
 
 from calendar import monthrange
 import os
@@ -28,7 +28,7 @@ import sys
 from datetime import date
 #import time
 
-#----- THIRD PARTY IMPORTS -----
+# THIRD PARTY IMPORTS :
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -40,11 +40,10 @@ import matplotlib as mpl
 mpl.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
-#---- PERSONAL IMPORTS ----
+# PERSONAL IMPORTS :
 
 import database as db
 from hydrograph3 import Colors
-
 
 class LabelDataBase():
 
@@ -358,7 +357,7 @@ class WeatherAvgGraph(QtGui.QWidget):
             self.generate_graph(filename)
             self.meteo_dir = os.path.dirname(filename)
 
-    def show(self): #================================================== show ==
+    def show(self):  # ========================================================
         super(WeatherAvgGraph, self).show()
         self.raise_()
         # self.activateWindow()
@@ -376,7 +375,11 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.setFixedSize(self.size())
 
 
+###############################################################################
+
+
 class MeteoObj():
+
     """
     This is a class to load and manipulate weather data.
 

@@ -19,26 +19,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-#----- STANDARD LIBRARY IMPORTS -----
+# STANDARD LIBRARY IMPORTS :
 
 from calendar import monthrange
 import csv
 import os
-from math import sin, cos, sqrt, atan2, radians
 from time import clock
 import datetime
 
-#----- THIRD PARTY IMPORTS -----
+#THIRD PARTY IMPORTS :
 
 import numpy as np
 from xlrd import xldate_as_tuple, open_workbook
 
 
-#==============================================================================
+###############################################################################
+
 
 class WaterlvlData():                                          # WaterlvlData #
-
-#==============================================================================
     """
     Class used to load the water level data files.
     """
@@ -48,33 +46,32 @@ class WaterlvlData():                                          # WaterlvlData #
         self.wlvlFilename = []
         self.soilFilename = []
 
-        #---- Water Level Time Series ----
+        # --- Water Level Time Series --- #
 
-        self.time = [] # time series in excel numeric format
-        self.lvl = []
+        self.time = []  # time series in excel numeric format
+        self.lvl = []   # water level in mbgs (meters below ground surface)
 
-        #---- Well Info ----
+        # --- Well Info --- #
 
         self.name_well = []
         self.municipality = []
-        self.well_info = [] # html table to display in the UI
+        self.well_info = []  # html table to display in the UI
         self.LAT = []
         self.LON = []
         self.ALT = []
 
-        #---- Manual Measurements ----
+        # --- Manual Measurements --- #
 
         self.WLmes = []
         self.TIMEmes = []
 
-        #---- Recession ----
+        # Recession :
 
         self.trecess = []
         self.hrecess = []
         self.A, self.B = None, None
 
-
-    def load(self, fname): #=============================== Water Level Data ==
+    def load(self, fname):  # =================================================
 
         print('Loading waterlvl time-series...')
 
@@ -82,12 +79,10 @@ class WaterlvlData():                                          # WaterlvlData #
         fileName, fileExtension = os.path.splitext(fname)
         self.soilFilename = fileName + '.sol'
 
-        #---- Open First Sheet ----
-
         book = open_workbook(fname, on_demand=True)
         sheet = book.sheet_by_index(0)
 
-        #---- Search for First Line With Data ----
+        # Search for First Line With Data ----
 
         self.time = sheet.col_values(0, start_rowx=0, end_rowx=None)
         self.time = np.array(self.time)
@@ -131,12 +126,12 @@ class WaterlvlData():                                          # WaterlvlData #
 
         book.release_resources()
 
-        #---- Make time series continuous ----
+        # Make time series continuous :
 
         self.time, self.lvl = self.make_waterlvl_continuous(self.time,
                                                             self.lvl)
 
-        #---- Other stuff ----
+        # Other stuff :
 
         self.generate_HTML_table()
         self.load_interpretation_file()
