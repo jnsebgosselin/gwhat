@@ -26,7 +26,7 @@ import csv
 import copy
 import sys
 from datetime import date
-#import time
+# import time
 
 # THIRD PARTY IMPORTS :
 
@@ -219,7 +219,7 @@ class WeatherAvgGraph(QtGui.QWidget):
 #            self.setFixedWidth(self.size().width()-75)
             self.sender().setAutoRaise(True)
 
-    def set_lang(self, lang): #================================ Set Language ==
+    def set_lang(self, lang):  # ==============================================
         self.language = lang
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
@@ -1211,18 +1211,18 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax1.tick_params(axis='y', which='minor', direction='out')
         ax1.yaxis.set_ticklabels([], minor=True)
 
-        #-------------------------------------------------------------- GRID --
+        # ------------------------------------------------------------- GRID --
 
     #    ax0.grid(axis='y', color=[0.5, 0.5, 0.5], linestyle=':', linewidth=1,
     #             dashes=[1, 5])
     #    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-',
 #                 linewidth=0.5)
 
-        #------------------------------------------------------------- XLIMS --
+        # ------------------------------------------------------------ XLIMS --
 
         ax0.set_xlim(Xmin0, Xmax0)
 
-        #------------------------------------------------------- Plot Legend --
+        # ------------------------------------------------------ Plot Legend --
 
         self.plot_legend()
 
@@ -1236,34 +1236,32 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         month_names = LabelDataBase(self.lang).month_names
         self.figure.axes[1].xaxis.set_ticklabels(month_names, minor=True)
 
-    def plot_legend(self): #==================================== plot_legend ==
+    def plot_legend(self):  # =================================================
 
-        ax = self.figure.axes[2] # Axe on which the legend is hosted
+        ax = self.figure.axes[2]  # Axe on which the legend is hosted
 
-        #-- bbox transform --
+        # --- bbox transform --- #
 
         padding = mpl.transforms.ScaledTranslation(5/72., -5/72.,
                                                    self.figure.dpi_scale_trans)
         transform = ax.transAxes + padding
 
-        #-- proxy artists --
+        # --- proxy artists --- #
 
         colors = Colors()
         colors.load_colors_db()
 
-        rec1 = mpl.patches.Rectangle((0, 0), 1, 1, fc=colors.rgb[2],
-                                                   ec='none')
-        rec2 = mpl.patches.Rectangle((0, 0), 1, 1, fc=colors.rgb[1],
-                                                   ec='none')
+        rec1 = mpl.patches.Rectangle((0, 0), 1, 1, fc=colors.rgb[2], ec='none')
+        rec2 = mpl.patches.Rectangle((0, 0), 1, 1, fc=colors.rgb[1], ec='none')
 
-        #-- legend entry --
+        # --- legend entry --- #
 
         lines = [ax.lines[0], ax.lines[1], ax.lines[2], rec2, rec1]
         labelDB = LabelDataBase(self.lang)
         labels = [labelDB.Tmax, labelDB.Tavg, labelDB.Tmin,
                   labelDB.rain, labelDB.snow]
 
-        #-- plot legend --
+        # --- plot legend --- #
 
         leg = ax.legend(lines, labels, numpoints=1, fontsize=13,
                         borderaxespad=0, loc='upper left', borderpad=0,

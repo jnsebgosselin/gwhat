@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2015 Jean-Sebastien Gosselin
+Copyright 2014-2016 Jean-Sebastien Gosselin
 email: jnsebgosselin@gmail.com
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
@@ -19,7 +19,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#-- STANDARD LIBRARY IMPORTS --
+from __future__ import division, unicode_literals
+
+# STANDARD LIBRARY IMPORTS :
 
 import csv
 import os
@@ -27,24 +29,27 @@ from time import strftime, sleep
 from copy import copy
 from time import clock
 
-#-- THIRD PARTY IMPORTS --
+# THIRD PARTY IMPORTS :
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 from PySide import QtCore
 
-#import statsmodels.api as sm
-#import statsmodels.regression as sm_reg
+# import statsmodels.api as sm
+# import statsmodels.regression as sm_reg
 # from statsmodels.regression.linear_model import OLS
 # from statsmodels.regression.quantile_regression import QuantReg
 
-#-- PERSONAL IMPORTS --
+# PERSONAL IMPORTS :
 
 import meteo
 import database as db
 from hydrograph3 import LatLong2Dist
 from gapfill_weather_postprocess import PostProcessErr
+
+
+###############################################################################
 
 
 class GapFillWeather(QtCore.QObject):
@@ -74,7 +79,7 @@ class GapFillWeather(QtCore.QObject):
     def __init__(self, parent=None):
         super(GapFillWeather, self).__init__(parent)
 
-        #--------------------------------------------------- Required Inputs --
+        # -------------------------------------------------- Required Inputs --
 
         self.time_start = None
         self.time_end = None
@@ -88,7 +93,7 @@ class GapFillWeather(QtCore.QObject):
         self.STOP = False  # Flag used to stop the algorithm from a GUI
         self.isParamsValid = False
 
-        #----------------------------------------- Define Parameters Default --
+        # ---------------------------------------- Define Parameters Default --
 
         # if *regression_mode* = 1: Ordinary Least Square
         # if *regression_mode* = 0: Least Absolute Deviations
@@ -107,7 +112,7 @@ class GapFillWeather(QtCore.QObject):
         self.add_ETP = False
         self.full_error_analysis = False
 
-        #------------------------------------------------- Signals and Slots --
+        # ------------------------------------------------ Signals and Slots --
 
         # This is only used if managed from a UI.
 
@@ -160,19 +165,21 @@ class GapFillWeather(QtCore.QObject):
         # the target station and each neighboring station.
 
         self.TARGET.HORDIST, self.TARGET.ALTDIFF = \
-                                         alt_and_dist_calc(self.WEATHER, index)
+            alt_and_dist_calc(self.WEATHER, index)
 
-    def read_summary(self): #================== Read Weather Station Summary ==
-
+    def read_summary(self):  # ================================================
         return self.WEATHER.read_summary(self.outputDir)
 
-    def fill_data(self): #====================== Fill Weather Data Algorithm ==
+    def fill_data(self):  # ===================================================
+
+        # This is the main routine that fills the missing data for the target
+        # station
 
         tstart = clock()
 
-        #-------------------------------------------- Assign Local Variables --
+        # ------------------------------------------- Assign Local Variables --
 
-        #---- Time Related Variables ----
+        # ---- Time Related Variables ---- #
 
         DATE = np.copy(self.WEATHER.DATE)
         YEAR, MONTH, DAY = DATE[:, 0], DATE[:, 1], DATE[:, 2]
@@ -181,21 +188,21 @@ class GapFillWeather(QtCore.QObject):
         index_start = np.where(TIME == self.time_start)[0][0]
         index_end = np.where(TIME == self.time_end)[0][0]
 
-        #---- Weather Stations Related Variables ----
+        # ---- Weather Stations Related Variables ---- #
 
-        DATA = np.copy(self.WEATHER.DATA)       # Daily Weather Data
-        VARNAME = np.copy(self.WEATHER.VARNAME) # Name of the weather variables
-        STANAME = np.copy(self.WEATHER.STANAME) # Name of the weather stations
-        CORCOEF = np.copy(self.TARGET.CORCOEF)  # Correlation Coefficients
+        DATA = np.copy(self.WEATHER.DATA)        # Daily Weather Data
+        VARNAME = np.copy(self.WEATHER.VARNAME)  # Weather variable names
+        STANAME = np.copy(self.WEATHER.STANAME)  # Weather station names
+        CORCOEF = np.copy(self.TARGET.CORCOEF)   # Correlation Coefficients
 
         nVAR = len(VARNAME)  # Number of weather variables
 
-        #---- Method Parameters ----
+        # ---- Method Parameters ---- #
 
         limitDist = self.limitDist
         limitAlt = self.limitAlt
 
-        #--------------------------------------------- Target Station Header --
+        # -------------------------------------------- Target Station Header --
 
         tarStaIndx = self.TARGET.index
         target_station_name = self.TARGET.name
@@ -208,7 +215,7 @@ class GapFillWeather(QtCore.QObject):
         target_station_alt = round(target_station_alt, 2)
         target_station_clim = self.WEATHER.ClimateID[tarStaIndx]
 
-        #----------------------------------------------------------------------
+        # ---------------------------------------------------------------------
 
         msg = 'Data completion for station %s started' % target_station_name
         print('--------------------------------------------------')
@@ -216,7 +223,7 @@ class GapFillWeather(QtCore.QObject):
         print('--------------------------------------------------')
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
-        #------------------------------------------- Init Container Matrices --
+        # ------------------------------------------ Init Container Matrices --
 
         # Save the weather data series of the target station in a new
         # 2D matrix named <Y2fill>. The NaN values contained in this matrix
@@ -233,12 +240,12 @@ class GapFillWeather(QtCore.QObject):
         log_Ndat = np.zeros(np.shape(Y2fill)).astype(str)
         log_Ndat[:] = 'nan'
 
-        if self.full_error_analysis == True:
+        if self.full_error_analysis is True:
             print('\n!A full error analysis will be performed!\n')
             YpFULL = np.copy(Y2fill) * np.nan
             YXmFULL = np.zeros(np.shape(DATA)) * np.nan
 
-        #--------------------------------------------- CHECK CUTOFF CRITERIA --
+        # -------------------------------------------- CHECK CUTOFF CRITERIA --
 
         # Remove the neighboring stations that do not respect the distance
         # or altitude difference cutoff criteria.
@@ -276,7 +283,7 @@ class GapFillWeather(QtCore.QObject):
 
         tarStaIndx = np.where(STANAME == self.TARGET.name)[0][0]
 
-        #--------------------------------- Checks Variables With Enough Data --
+        # -------------------------------- Checks Variables With Enough Data --
 
         # NOTE: When a station does not have enough data for a given variable,
         #       its correlation coefficient is set to NaN in CORCOEF. If all
@@ -294,17 +301,18 @@ class GapFillWeather(QtCore.QObject):
                 print(msg)
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
 
-        #------------------------------------------------ Init Gap-Fill Loop --
+        # ----------------------------------------------- Init Gap-Fill Loop --
 
-        FLAG_nan = False # If some missing data can't be completed because
-                         # all the neighboring stations are empty, a flag is
-                         # raised and a comment is issued at the end of the
-                         # completion process.
+        # If some missing data can't be completed because all the neighboring
+        # stations are empty, a flag is raised and a comment is issued at the
+        # end of the completion process.
+
+        FLAG_nan = False
 
         nbr_nan_total = np.isnan(Y2fill[index_start:index_end+1, var2fill])
         nbr_nan_total = np.sum(nbr_nan_total)
 
-        #---- Variable for the progression of the routine ----
+        # ---- Variable for the progression of the routine ---- #
 
         # *progress_total* and *fill_progress* are used to display the
         # progression of the gap-filling procedure on a UI progression bar.
@@ -316,12 +324,12 @@ class GapFillWeather(QtCore.QObject):
 
         fill_progress = 0
 
-        #---- Init. variable for .log file ----
+        # ---- Init. variable for .log file ---- #
 
         AVG_RMSE = np.zeros(nVAR).astype('float')
         AVG_NSTA = np.zeros(nVAR).astype('float')
 
-        #--------------------------------------------------------- FILL LOOP --
+        # -------------------------------------------------------- FILL LOOP --
 
         # OUTER LOOP: iterates over all the weather variables with enough
         #             measured data.
@@ -331,7 +339,7 @@ class GapFillWeather(QtCore.QObject):
             print('Data completion for variable %d/%d in progress...' %
                   (var+1, nVAR))
 
-            #---- Memory Variables ----
+            # ---- Memory Variables ---- #
 
             colm_memory = np.array([])  # Column sequence memory matrix
             RegCoeff_memory = []  # Regression coefficient memory matrix
@@ -361,8 +369,8 @@ class GapFillWeather(QtCore.QObject):
             row_nan = row_nan[row_nan >= index_start]
             row_nan = row_nan[row_nan <= index_end]
 
-            it_avg = 0 # counter used in the calculation of average RMSE
-                       # and NSTA values.
+            # counter used in the calculation of average RMSE and NSTA values.
+            it_avg = 0
 
             if self.full_error_analysis == True :
                 # All the data of the time series between the specified
@@ -375,7 +383,7 @@ class GapFillWeather(QtCore.QObject):
 
             for row in row2fill:
 
-                sleep(0.000001) #If no sleep, the UI becomes whacked
+                sleep(0.000001)  # If no sleep, the UI becomes whacked
 
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 # This block of code is used only to stop the gap-filling
@@ -413,8 +421,10 @@ class GapFillWeather(QtCore.QObject):
 
                     if row in row_nan:
                         Y2fill[row, var] = np.nan
-                        FLAG_nan = True # A warning comment will be issued at
-                                        # the end of the completion process.
+                        FLAG_nan = True
+                        # A warning comment will be issued at the end of the
+                        # the completion process.
+
                 else:
 
                     # Determines the number of neighboring stations to
@@ -491,7 +501,7 @@ class GapFillWeather(QtCore.QObject):
 
                         YXcolm[row, 0] = np.nan
 
-                        #---- Removes Rows with NaN ----
+                        # ---- Removes Rows with NaN ----
 
                         # Removes row for which a data is missing in the
                         # target station data series
@@ -515,8 +525,8 @@ class GapFillWeather(QtCore.QObject):
                         if var == 3:
                             YXcolm = YXcolm[~(YXcolm == 0).all(axis=1)]
 
-                        Y = YXcolm[:, 0]  # Dependant variable (target)
-                        X = YXcolm[:, 1:] # Independant variables (neighbors)
+                        Y = YXcolm[:, 0]   # Dependant variable (target)
+                        X = YXcolm[:, 1:]  # Independant variables (neighbors)
 
                         # Add a unitary array to X for the intercept term if
                         # variable is a temperature type data.
@@ -524,11 +534,11 @@ class GapFillWeather(QtCore.QObject):
                         if var in (0, 1, 2):
                             X = np.hstack((np.ones((len(Y), 1)), X))
 
-                        #-------------------------------- Generate MLR Model --
+                        # ------------------------------- Generate MLR Model --
 
                         A = self.build_MLR_model(X, Y)
 
-                        #-------------------------------------- Compute RMSE --
+                        # ------------------------------------- Compute RMSE --
 
                         # Calculate a RMSE between the estimated and
                         # measured values of the target station.
@@ -982,17 +992,16 @@ class GapFillWeather(QtCore.QObject):
             print('Cumulative Error :')
             print(ERRSUM)
 
-        #------------------------------------------------------- End Routine --
+        # ------------------------------------------------------ End Routine --
 
-        self.STOP = False # Just in case. This is a precaution override.
+        self.STOP = False  # Just in case. This is a precaution override.
         self.GapFillFinished.emit(True)
 
         return
 
+    def build_MLR_model(self, X, Y):  # =======================================
 
-    def build_MLR_model(self, X, Y): #====================== Build MLR Model ==
-
-        if self.regression_mode == 1: # Ordinary Least Square regression
+        if self.regression_mode == 1:  # Ordinary Least Square regression
 
             # http://statsmodels.sourceforge.net/devel/generated/
             # statsmodels.regression.linear_model.OLS.html
@@ -1004,7 +1013,7 @@ class GapFillWeather(QtCore.QObject):
             # Using Numpy function:
             A = np.linalg.lstsq(X, Y)[0]
 
-        else: # Least Absolute Deviations regression
+        else:  # Least Absolute Deviations regression
 
             # http://statsmodels.sourceforge.net/devel/generated/
             # statsmodels.regression.quantile_regression.QuantReg.html
@@ -1021,9 +1030,8 @@ class GapFillWeather(QtCore.QObject):
 
         return A
 
-
     @staticmethod
-    def postprocess_fillinfo(staName, YX, tarStaIndx): #=======================
+    def postprocess_fillinfo(staName, YX, tarStaIndx):  # =====================
 
         # Extracts info related to the target station from <YXmFull>  and the
         # info related to the neighboring stations. Xm is for the
@@ -1058,9 +1066,8 @@ class GapFillWeather(QtCore.QObject):
 
         return Yname, Y, Xnames, X, Xcount_var, Xcount_tot
 
-
     @staticmethod
-    def sort_sta_corrcoef(CORCOEF, tarStaIndx): #============= Sort Stations ==
+    def sort_sta_corrcoef(CORCOEF, tarStaIndx):  # ============================
 
         # Associated an index to each value of <CORCOEF>.
 
@@ -1088,7 +1095,7 @@ class GapFillWeather(QtCore.QObject):
         return Sta_index
 
     @staticmethod
-    def save_content_to_file(fname, fcontent): #======= Save Content to File ==
+    def save_content_to_file(fname, fcontent):  # =============================
 
         with open(fname, 'w') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
@@ -1141,7 +1148,7 @@ def correlation_worker(WEATHER, tarStaIndx):
             if Nnonan >= Ndata_limit:
                 CORCOEF[i, j] = np.corrcoef(DATA_nonan, rowvar=0)[0,1:]
             else:
-                pass #Do nothing. Value will be nan by default.
+                pass  # Do nothing. Value will be nan by default.
 
     print('Correlation coefficients computation completed.\n')
 
@@ -1663,8 +1670,7 @@ class WeatherData():  # #######################################################
         return table
 
 
-#==============================================================================
-def L1LinearRegression(X, Y):
+def L1LinearRegression(X, Y):  # ==============================================
     """
     L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
     (Iterative reweighted least squares)
@@ -1684,7 +1690,6 @@ def L1LinearRegression(X, Y):
     www.matlabdatamining.blogspot.ca/2007/10/l-1-linear-regression.html
     Last accessed on 21/07/2014
     """
-#==============================================================================
 
     # Determine size of predictor data.
     n, m = np.shape(X)
@@ -1703,9 +1708,9 @@ def L1LinearRegression(X, Y):
 
         # Calculate new observation weights based on residuals from old
         # coefficients.
-        weight =  np.dot(B, X.transpose()) - Y
-        weight =  np.abs(weight)
-        weight[weight < 1e-6] = 1e-6 # to avoid division by zero
+        weight = np.dot(B, X.transpose()) - Y
+        weight = np.abs(weight)
+        weight[weight < 1e-6] = 1e-6  # to avoid division by zero
         weight = weight**-0.5
 
         # Calculate new coefficients.
@@ -1716,7 +1721,8 @@ def L1LinearRegression(X, Y):
 
     return B
 
-if __name__ == '__main__':
+
+if __name__ == '__main__':  # =================================================
 
     # 1 - Create an instance of the class *GapFillWeather* --------------------
 

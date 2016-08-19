@@ -536,9 +536,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
     def set_legend(self):  # ==================================================
 
-        if self.isLegend ==  1:
+        if self.isLegend == 1:
 
-            #------------------------------------------------------- Entry ----
+            # ---- Entry ------------------------------------------------------
 
             labelDB = LabelDatabase(self.language).legend
 
@@ -547,22 +547,22 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
             if self.meteoOn:
 
-                #---- Snow ----
+                # ---- Snow ---- #
 
-                rec1 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[2] ,
+                rec1 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[2],
                                      ec=self.colorsDB.rgb[2])
 
                 lg_handles.append(rec1)
                 lg_labels.append(labelDB[0])
                 # Rain
 
-                rec2 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[1] ,
+                rec2 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[1],
                                      ec=self.colorsDB.rgb[1])
 
                 lg_handles.append(rec2)
                 lg_labels.append(labelDB[1])
 
-                #---- Air Temperature ----
+                # ---- Air Temperature ---- #
 
                 rec3 = plt.Rectangle((0, 0), 1, 1, fc=self.colorsDB.rgb[0],
                                      ec='black')
@@ -570,19 +570,19 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 lg_handles.append(rec3)
                 lg_labels.append(labelDB[2])
 
-                #---- Missing Data Markers ----
+                # ---- Missing Data Markers ---- #
 
                 lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
-                             lw=1., c='red')
+                                 lw=1., c='red')
 
                 lg_handles.append(lin1)
                 lg_labels.append(labelDB[3])
 
-            #---- Water Levels (continuous line) ----
+            # ---- Water Levels (continuous line) ---- #
 
-            #---- Continuous Line Datalogger ----
+            # ---- Continuous Line Datalogger ---- #
 
-            lin2, = plt.plot([], [], '-', zorder = 10, linewidth=1,
+            lin2, = plt.plot([], [], '-', zorder=10, linewidth=1,
                              color=self.colorsDB.rgb[3], ms=15)
             lg_handles.append(lin2)
             if self.trend_line == 1:
@@ -590,7 +590,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             else:
                 lg_labels.append(labelDB[5])
 
-            #---- Water Levels (data points) ----
+            # ---- Water Levels (data points) ----
 
             if self.trend_line == 1:
                 lin3, = self.ax2.plot([], [], '.', ms=10, alpha=0.5,
@@ -598,7 +598,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 lg_handles.append(lin3)
                 lg_labels.append(labelDB[6])
 
-            #---- Manual Measures ----
+            # ---- Manual Measures ----
 
             if len(self.WaterLvlObj.WLmes) > 1:
                 lg_handles.append(self.h_WLmes)
@@ -614,10 +614,10 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 lg_labels.append('GLUE 5/95')
                 lg_handles.append(dum1)
 
-            #---------------------------------------------------- Position ----
+            # ---- Position ---------------------------------------------------
 
+            # ---- Draw -------------------------------------------------------
 
-            #-------------------------------------------------------- Draw ----
 #            LOCS = ['right', 'center left', 'upper right', 'lower right',
 #                    'center', 'lower left', 'center right', 'upper left',
 #                    'upper center', 'lower center']
@@ -706,24 +706,24 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         # ------------------------------------------- Calculate LabelPadding --
 
-        left_margin  = 0.85
+        left_margin = 0.85
         right_margin = 0.85
-        if self.meteoOn == False:
+        if self.meteoOn is False:
             right_margin = 0.35
 
         axwidth = (self.fwidth - left_margin - right_margin)
 
-        labPad = 0.3 / 2.54 # in Inches
+        labPad = 0.3 / 2.54  # in Inches
         labPad /= axwidth   # relative coord.
 
-        #----------------------------------- YLABELS LEFT (Temp. & Waterlvl) --
+        # -------------------------------- YLABELS LEFT (Temp. & Waterlvl) ----
 
         if self.WLdatum == 0:
             lab_ax2 = labelDB.mbgs
         elif self.WLdatum == 1:
             lab_ax2 = labelDB.masl
 
-        #---- Water Level ----
+        # ---- Water Level ---- #
 
         self.ax2.set_ylabel(lab_ax2, rotation=90,
                             fontsize=self.label_font_size,
@@ -745,11 +745,11 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         ylabel2_xpos = bbox2_left[0, 0] - labPad
         ylabel2_ypos = (bbox2_left[1, 1] + bbox2_left[0, 1]) / 2.
 
-        if self.meteoOn == False:
+        if self.meteoOn is False:
             self.ax2.yaxis.set_label_coords(ylabel2_xpos, ylabel2_ypos)
             return
 
-        #---- Temperature ----
+        # ---- Temperature ---- #
 
         self.ax4.set_ylabel(labelDB.temperature, rotation=90, va='bottom',
                             ha='center', fontsize=self.label_font_size)
@@ -771,7 +771,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.ax2.yaxis.set_label_coords(ylabel_xpos, ylabel2_ypos)
         self.ax4.yaxis.set_label_coords(ylabel_xpos, ylabel4_ypos)
 
-        #--------------------------------------------------- Precipitation ----
+        # -------------------------------------------------- Precipitation ----
 
         label = labelDB.precip % labelDB.precip_units[self.bwidth_indx]
         self.ax3.set_ylabel(label, rotation=270, va='bottom',
@@ -789,7 +789,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         self.ax3.yaxis.set_label_coords(ylabel3_xpos, ylabel3_ypos)
 
-        #---------------------------------------------------- Figure Title ----
+        # --------------------------------------------------- Figure Title ----
 
         self.draw_figure_title()
 
@@ -1242,9 +1242,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         self.update_precip_scale()
 
-    def set_time_scale(self): #================================================
+    def set_time_scale(self):  # ==============================================
 
-        #-------------------------------------------------- time min and max --
+        # ------------------------------------------------- time min and max --
 
         if self.datemode.lower() == 'year':
 
@@ -1260,17 +1260,17 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
                 year = xldate_as_tuple(self.TIMEmax, 0)[0] + 1
                 self.TIMEmax = xldate_from_date_tuple((year, 1, 1), 0)
 
-        #------------------------------------------------- xticks and labels --
+        # ---------------------------------------------- xticks and labels ----
 
-        #---- compute parameters ----
+        # ---- compute parameters ---- #
 
         xticks_info = self.make_xticks_info()
 
-        #---- major ----
+        # ---- major ---- #
 
         self.ax1.set_xticks(xticks_info[0])
 
-        #----------------------------------------------------------- xlabels --
+        # -------------------------------------------------------- xlabels ----
 
         # labels are set using the minor ticks.
 
@@ -1282,31 +1282,31 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 #        self.ax1.xaxis.set_ticklabels(xticks_info[2], minor=True, rotation=45,
 #                                      va='top', ha='right', fontsize=10)
 
-        #---- Remove labels ----
+        # ---- Remove labels ---- #
 
         for i in range(len(self.xlabels)):
             self.xlabels[i].remove()
 
-        #---- Redraw labels ----
+        # ---- Redraw labels ---- #
 
         padding = mpl.transforms.ScaledTranslation(0, -5/72.,
                                                    self.dpi_scale_trans)
         transform = self.ax1.transData + padding
 
         self.xlabels = []
-        for i in range(len(xticks_info[1])) :
-            new_label  = self.ax1.text(xticks_info[1][i], 0,
-                                       xticks_info[2][i], rotation=45,
-                                       va='top', ha='right', fontsize=10.,
-                                       transform=transform)
+        for i in range(len(xticks_info[1])):
+            new_label = self.ax1.text(xticks_info[1][i], 0,
+                                      xticks_info[2][i], rotation=45,
+                                      va='top', ha='right', fontsize=10.,
+                                      transform=transform)
 
             self.xlabels.append(new_label)
 
-        #------------------------------------------------------- axis limits --
+        # ---------------------------------------------------- axis limits ----
 
         self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
 
-    def draw_xlabels(self): #==================================================
+    def draw_xlabels(self):  # ================================================
 
         # Called when there is a change in language of the labels
         # of the graph
@@ -1314,17 +1314,17 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         _, _, xticks_labels = self.make_xticks_info()
         self.ax1.xaxis.set_ticklabels([])
 
-        #---- using minor ticks ----
+        # ---- using minor ticks ---- #
 
 #        self.ax1.xaxis.set_ticklabels(xticks_labels, minor=True, rotation=45,
 #                                      va='top', ha='right', fontsize=10)
 
-        #---- ploting manually the xlabels instead ----
+        # ---- ploting manually the xlabels instead ---- #
 
         for i in range(len(self.xlabels)):
             self.xlabels[i].set_text(xticks_labels[i])
 
-    def draw_figure_title(self): #=============================================
+    def draw_figure_title(self):  # ===========================================
 
         labelDB = LabelDatabase(self.language)
 
@@ -1337,8 +1337,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             self.text1.set_text('')
             self.figTitle.set_text('')
 
-
-    def update_waterlvl_scale(self): #==================== Water Level Scale ==
+    def update_waterlvl_scale(self):  # ================== Water Level Scale ==
 
         if self.meteoOn:
             NZGrid = self.NZGrid

@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
 
+from __future__ import division, unicode_literals
+
 # ---- STANDARD LIBRARY IMPORTS ----
 
 import platform
@@ -435,7 +437,7 @@ class MainWindow(QtGui.QMainWindow):
             self.projectfile = filename
             self.load_project(filename)
 
-    def load_project(self, filename):
+    def load_project(self, filename):  # ======================================
         '''
         This method is called either on startup during <initUI> or when a new
         project is chosen with <open_project>.

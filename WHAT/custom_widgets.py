@@ -5,40 +5,46 @@ Created on Sun Jul  5 00:28:27 2015
 @author: jsgosselin
 """
 
-#---- STANDARD LIBRARY IMPORTS ----
-
+# STANDARD LIBRARY IMPORTS :
 import sys
 
-#---- THIRD PARTY IMPORTS ----
-
+# THIRD PARTY IMPORTS :
 from PySide import QtGui, QtCore
 
-#---- PERSONAL IMPORTS ----
-
+# PERSONAL IMPORTS :
 import database as db
 
 
-# =============================================================================
+###############################################################################
+
+
+class VSep(QtGui.QFrame):  # vertical separators
+    def __init__(self, parent=None):
+        super(VSep, self).__init__(parent)
+        self.setFrameStyle(db.styleUI().VLine)
+
+
+###############################################################################
+
 
 class MyQToolButton(QtGui.QToolButton):
 
-# =============================================================================
-
     def __init__(self, Qicon, ToolTip, IconSize=db.styleUI().iconSize,
-                 *args, **kargs):
+                 autoRaise=True, enabled=True, *args, **kargs):
         super(MyQToolButton, self).__init__(*args, **kargs)
 
         self.setIcon(Qicon)
         self.setToolTip(ToolTip)
-        self.setAutoRaise(True)
+        self.setAutoRaise(autoRaise)
         self.setIconSize(IconSize)
+        self.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.setEnabled(enabled)
 
 
-# =============================================================================
+###############################################################################
+
 
 class MyQErrorMessageBox(QtGui.QMessageBox):
-
-# =============================================================================
 
     def __init__(self, parent=None):
         super(MyQErrorMessageBox, self).__init__(parent)
@@ -48,7 +54,8 @@ class MyQErrorMessageBox(QtGui.QMessageBox):
         self.setWindowIcon(db.Icons().WHAT)
 
 
-# =============================================================================
+###############################################################################
+
 
 class QToolPanel(QtGui.QWidget):
 
@@ -64,8 +71,6 @@ class QToolPanel(QtGui.QWidget):
        tool that is currently displayed is marked with a down-arrow icon.
     5. Closed and Expanded arrows can be set from custom icons.
     """
-
-# =============================================================================
 
     def __init__(self, parent=None):
         super(QToolPanel, self).__init__(parent)
@@ -88,7 +93,7 @@ class QToolPanel(QtGui.QWidget):
 
         N = self.layout().rowCount()
 
-        #---- Add Header ----
+        # Add Header :
 
         head = QtGui.QPushButton(text)
         head.setIcon(self.__iclosed)
@@ -97,7 +102,7 @@ class QToolPanel(QtGui.QWidget):
 
         self.layout().addWidget(head, N-1, 0)
 
-        #---- Add Item in a ScrollArea ----
+        # Add Item in a ScrollArea :
 
         scrollarea = QtGui.QScrollArea()
         scrollarea.setFrameStyle(0)
@@ -136,6 +141,9 @@ class QToolPanel(QtGui.QWidget):
                 head.setIcon(self.__iclosed)
                 tool.hide()
 
+
+###############################################################################
+
 class MyHorizHeader(QtGui.QHeaderView):
 
     # https://forum.qt.io/topic/30598/
@@ -167,12 +175,11 @@ class MyHorizHeader(QtGui.QHeaderView):
                            </tr>
                          </table>
                          '''
-        self.heightHint = 20 # Arbitrary init value. This is updated as
-                             # columns are added to the table.
+        # Arbitrary init value. This is updated as columns are added
+        # to the table.
+        self.heightHint = 20
 
-#        self.setSortIndicatorShown(True)
-
-    def paintSection(self, painter, rect, logicalIndex): #----------------------
+    def paintSection(self, painter, rect, logicalIndex):  # ===================
 
         # This is used only if "showSectionSep == True. Otherwise, the header
         # is painted with the method "paintHeader"

@@ -33,63 +33,66 @@ import numpy as np
 from PySide import QtGui, QtCore
 
 import matplotlib as mpl
-mpl.use('Qt4Agg')
-mpl.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 
-from xlrd import xldate_as_tuple
+# from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
-#---- PERSONAL IMPORTS ----
+# PERSONAL IMPORTS :
 
+from custom_widgets import VSep, MyQToolButton
 import database as db
 import meteo
 from waterlvldata import WaterlvlData
 from gwrecharge_calc2 import SynthHydrograph
 
+mpl.use('Qt4Agg')
+mpl.rcParams['backend.qt4'] = 'PySide'
+
+
 class Tooltips():
 
-    def __init__(self, language): #--------------------------------- ENGLISH --
+    def __init__(self, language):  # ------------------------------- ENGLISH --
 
-        #---- Toolbar ----
+        # Toolbar :
 
         self.undo = 'Undo'
         self.clearall = 'Clear all extremum from the graph'
         self.home = 'Reset original view.'
-        self.delPeak = ('Toggle edit mode to manually remove extremums ' +
+        self.delPeak = ('Toggle edit mode to manually remove extremums '
                         'from the graph')
         self.pan = 'Pan axes with left mouse, zoom with right'
-        self.MRCalc = ('Calculate the Master Recession Curve (MRC) for the ' +
+        self.MRCalc = ('Calculate the Master Recession Curve (MRC) for the '
                        'selected time pertiods')
-        self.editPeak = ('Toggle edit mode to manually add extremums ' +
+        self.editPeak = ('Toggle edit mode to manually add extremums '
                          'to the graph')
-        self.toggle_layout_mode = ('Toggle between layout and computation ' +
+        self.toggle_layout_mode = ('Toggle between layout and computation '
                                    'mode (EXPERIMENTAL FEATURE)')
-        self.find_peak = ('Automated search for local ' +
+        self.find_peak = ('Automated search for local '
                           'extremum (EXPERIMENTAL FEATURE)')
-        self.btn_Waterlvl_lineStyle = ('Show water lvl data as dots instead ' +
+        self.btn_Waterlvl_lineStyle = ('Show water lvl data as dots instead '
                                        'of a continuous line')
-        self.btn_strati = ('Toggle on and off the display of the soil' +
+        self.btn_strati = ('Toggle on and off the display of the soil'
                            ' stratigraphic layers')
         self.btn_save_interp = 'Save Calculated MRC to file.'
-        self.mrc2rechg = ('Compute recharge from the water level time series' +
-                          ' using the MRC calculated and the water-table' +
+        self.mrc2rechg = ('Compute recharge from the water level time series'
+                          ' using the MRC calculated and the water-table'
                           ' fluctuation principle')
-        self.btn_dateFormat = ('x axis label time format: ' +
+        self.btn_dateFormat = ('x axis label time format: '
                                'date or MS Excel numeric')
         self.btn_recharge = ('Show window for recharge estimation')
 
-        if language == 'French': #----------------------------------- FRENCH --
+        if language == 'French':  # --------------------------------- FRENCH --
 
             pass
 
-#==============================================================================
+
+###############################################################################
+
 
 class WLCalc(QtGui.QWidget):                                         # WLCalc #
-
-#==============================================================================
 
     """
     This is the interface where are plotted the water level time series. It is
@@ -101,33 +104,35 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
     def __init__(self, parent=None):
         super(WLCalc, self).__init__(parent)
 
-        #---------------------------------------------------- INIT VARIABLES --
+        # --------------------------------------------------- INIT VARIABLES --
 
         self.isGraphExists = False
 
-        #---- Water Level Time series ----
+        # Water Level Time series :
 
         self.waterLvl_data = WaterlvlData()
 
         self.time = []
-        self.txls = [] # time in Excel format
-        self.tmpl = [] # time in matplotlib format
+        self.txls = []  # time in Excel format
+        self.tmpl = []  # time in matplotlib format
         self.water_lvl = []
 
-        #---- Weather Data ----
+        # Weather Data :
 
         self.meteo_data = meteo.MeteoObj()
 
-        #---- Date System ----
+        # Date System :
 
-        t1 = xldate_from_date_tuple((2000, 1, 1), 0) # time in Excel
-        t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1)) # Time in
-        self.dt4xls2mpl = t2-t1 # Delta between the datum of both date system
+        t1 = xldate_from_date_tuple((2000, 1, 1), 0)  # time in Excel
+        t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1))  # Time in
+        self.dt4xls2mpl = t2-t1  # Delta between the datum of both date system
 
-        self.dformat = 1 # Date format: can either be 0 for Excel format or
-                         #              1 for Matplotlib format.
+        # Date format: can either be 0 for Excel format or 1 for Matplotlib
+        # format.
 
-        #---- Recession Curve Parameters ----
+        self.dformat = 1
+
+        # Recession Curve Parameters :
 
         self.A = None
         self.B = None
@@ -138,12 +143,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.peak_memory = [np.array([]).astype(int)]
         print(len(self.peak_memory))
 
-        #---- Soil Profiles ----
+        # Soil Profiles :
 
         self.soilFilename = []
         self.SOILPROFIL = SoilProfil()
 
-        #---- Recharge ----
+        # Recharge :
 
         self.rechg_setup_win = RechgSetupWin()
 
@@ -153,11 +158,11 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.synth_hydrograph = SynthHydrograph()
 
-        #---- INIT UI ----
+        # INIT UI :
 
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self): #============================================= Init UI ==
+    def __initUI__(self):  # ==================================================
 
         iconDB = db.Icons()
         StyleDB = db.styleUI()
@@ -165,13 +170,11 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.setWindowTitle('Master Recession Curve Estimation')
 
-        #----------------------------------------------------- FIGURE CANVAS --
+        # ---------------------------------------------------- FIGURE CANVAS --
 
-        self.fig_MRC = mpl.figure.Figure()
-
-        self.fig_MRC.patch.set_facecolor('white')
-
+        self.fig_MRC = mpl.figure.Figure(facecolor='white')
         self.fig_MRC_widget = FigureCanvasQTAgg(self.fig_MRC)
+
         self.fig_MRC_widget.mpl_connect('button_press_event', self.onclick)
         self.fig_MRC_widget.mpl_connect('resize_event', self.setup_ax_margins)
         self.fig_MRC_widget.mpl_connect('motion_notify_event',
@@ -185,82 +188,77 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         fig_frame_grid.addWidget(self.fig_MRC_widget, 0, 0)
 
         self.fig_frame_widget.setLayout(fig_frame_grid)
-        fig_frame_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
+        fig_frame_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
 
         self.fig_frame_widget.setFrameStyle(StyleDB.frame)
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
 
-        #-------------------------------------------------------------- Axes --
+        # ------------------------------------------------------------- Axes --
 
-        #---- Water Level (Host) ----
-
+        # Water Level (Host) :
         self.ax0 = self.fig_MRC.add_axes([0, 0, 1, 1], zorder=0)
+
+        # Precipitation :
+        self.ax0.twinx()
 
         self.setup_ax_margins(None)
 
-        #----------------------------------------------------------- TOOLBAR --
+        # ---------------------------------------------------------- TOOLBAR --
 
         self.toolbar = NavigationToolbar2QT(self.fig_MRC_widget, self)
         self.toolbar.hide()
 
-        #---- Toolbar Buttons ----
+        # Toolbar Buttons :
 
-        class toolBarBtn(QtGui.QToolButton):
-            def __init__(self, icon, ttip=None, autoRaise=True,
-                         enabled=True, parent=None):
-                super(toolBarBtn, self).__init__(parent)
-                self.setFocusPolicy(QtCore.Qt.NoFocus)
-                self.setIconSize(StyleDB.iconSize)
-                self.setIcon(icon)
-                self.setToolTip(ttip)
-                self.setAutoRaise(autoRaise)
-                self.setEnabled(enabled)
+        self.btn_layout_mode = MyQToolButton(
+            iconDB.toggleMode, ttipDB.toggle_layout_mode, autoRaise=False)
 
-        self.btn_layout_mode = toolBarBtn(
-                 iconDB.toggleMode, ttipDB.toggle_layout_mode, autoRaise=False)
-
-        self.btn_undo = toolBarBtn(iconDB.undo, ttipDB.undo, enabled=False)
+        self.btn_undo = MyQToolButton(iconDB.undo, ttipDB.undo, enabled=False)
         self.btn_undo.clicked.connect(self.undo)
 
-        self.btn_clearPeak = toolBarBtn(iconDB.clear_search, ttipDB.clearall)
+        self.btn_clearPeak = MyQToolButton(
+            iconDB.clear_search, ttipDB.clearall)
         self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
 
-        self.btn_home = toolBarBtn(iconDB.home, ttipDB.home)
+        self.btn_home = MyQToolButton(iconDB.home, ttipDB.home)
         self.btn_home.clicked.connect(self.home)
 
-        self.btn_editPeak = toolBarBtn(iconDB.add_point, ttipDB.editPeak)
+        self.btn_editPeak = MyQToolButton(iconDB.add_point, ttipDB.editPeak)
         self.btn_editPeak.clicked.connect(self.edit_peak)
 
-        self.btn_delPeak = toolBarBtn(iconDB.erase, ttipDB.delPeak)
+        self.btn_delPeak = MyQToolButton(iconDB.erase, ttipDB.delPeak)
         self.btn_delPeak.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_pan = toolBarBtn(iconDB.pan, ttipDB.pan)
+        self.btn_pan = MyQToolButton(iconDB.pan, ttipDB.pan)
         self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_MRCalc = toolBarBtn(iconDB.MRCalc, ttipDB.MRCalc)
+        self.btn_MRCalc = MyQToolButton(iconDB.MRCalc, ttipDB.MRCalc)
         self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_strati = toolBarBtn(iconDB.stratigraphy, ttipDB.btn_strati)
+        self.btn_strati = MyQToolButton(iconDB.stratigraphy, ttipDB.btn_strati)
         self.btn_strati.clicked.connect(self.btn_strati_isClicked)
 
-        self.btn_Waterlvl_lineStyle = toolBarBtn(
-                            iconDB.showDataDots, ttipDB.btn_Waterlvl_lineStyle)
+        self.btn_Waterlvl_lineStyle = MyQToolButton(
+            iconDB.showDataDots, ttipDB.btn_Waterlvl_lineStyle)
         self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_save_interp = toolBarBtn(iconDB.save, ttipDB.btn_save_interp)
+        self.btn_save_interp = MyQToolButton(
+            iconDB.save, ttipDB.btn_save_interp)
         self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_dateFormat = toolBarBtn(
+        self.btn_dateFormat = MyQToolButton(
               iconDB.calendar, ttipDB.btn_dateFormat, autoRaise=1-self.dformat)
         self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
         # dformat: 0 -> Excel Numeric Date Format
         #          1 -> Matplotlib Date Format
 
-        self.btn_recharge = toolBarBtn(iconDB.page_setup, ttipDB.btn_recharge)
+        self.btn_recharge = MyQToolButton(
+            iconDB.page_setup, ttipDB.btn_recharge)
         self.btn_recharge.clicked.connect(self.rechg_setup_win.show)
 
-        self.btn_synthHydro = toolBarBtn(iconDB.page_setup)
+        self.btn_synthHydro = MyQToolButton(
+            iconDB.page_setup, 'Show synthetic hydrograph')
         self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
 
 #        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
@@ -268,14 +266,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 #        self.btn_mrc2rechg = toolBarBtn(iconDB.mrc2rechg, ttipDB.mrc2rechg)
 #        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
 
-        #----- Toolbar Vertical Separators ------
-
-        class VSep(QtGui.QFrame): #
-            def __init__(self, parent=None):
-                super(VSep, self).__init__(parent)
-                self.setFrameStyle(db.styleUI().VLine)
-
-        #---- Grid Layout ----
+        # Grid Layout :
 
         btn_list = [self.btn_layout_mode, VSep(), self.btn_undo,
                     self.btn_clearPeak, self.btn_editPeak, self.btn_delPeak,
@@ -296,7 +287,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         toolbar_widget.setLayout(subgrid_toolbar)
 
-        #---------------------------------------------------- MRC PARAMETERS --
+        # --------------------------------------------------- MRC PARAMETERS --
 
         self.MRC_type = QtGui.QComboBox()
         self.MRC_type.addItems(['Linear', 'Exponential'])
@@ -666,12 +657,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.toolbar.home()
 
-    def undo(self): #================================================== Undo ==
+    def undo(self):  # ========================================================
 
         if self.isGraphExists == False:
             print('Graph is empty')
             self.emit_error_message(
-            '''<b>Please select a valid Water Level Data File first.</b>''')
+                '<b>Please select a valid Water Level Data File first.</b>')
             return
 
         if len(self.peak_memory) > 1:
@@ -703,7 +694,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         fwidth = self.fig_MRC.get_figwidth()
 
         left_margin = 1. / fwidth
-        right_margin = 0.25 / fwidth
+        right_margin = 1. / fwidth
         bottom_margin = 1. / fheight
         top_margin = 0.25 / fheight
 
@@ -712,11 +703,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         w = 1 - (left_margin + right_margin)
         h = 1 - (bottom_margin + top_margin)
 
-        self.ax0.set_position([x0, y0, w, h])
+        for axe in self.fig_MRC.axes:
+            axe.set_position([x0, y0, w, h])
 
     def switch_date_format(self):  # ==========================================
 
-        #---- Change UI and System Variable State ----
+        # Change UI and System Variable State :
 
         if self.dformat == 0:    # 0 for Excel numeric date format
             self.btn_dateFormat.setAutoRaise(False)
@@ -727,7 +719,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.dformat = 0     # 0 for Excel numeric date format
             print('switching to Excel numeric date format')
 
-        #---- Change xtick Labels Date Format ----
+        # Change xtick Labels Date Format :
 
         if self.dformat == 1:
             xloc = mpl.dates.AutoDateLocator()
@@ -739,7 +731,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.ax0.xaxis.set_major_formatter(xfmt)
             self.ax0.get_xaxis().get_major_formatter().set_useOffset(False)
 
-        #---- Adjust Axis Range ----
+        # Adjust Axis Range :
 
         xlim = self.ax0.get_xlim()
         if self.dformat == 1:
@@ -749,7 +741,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.ax0.set_xlim(xlim[0] - self.dt4xls2mpl,
                               xlim[1] - self.dt4xls2mpl)
 
-        #---- Adjust Water Levels, Peak and MRC Time Frame ----
+        # Adjust Water Levels, Peak and MRC Time Frame :
 
         t = self.time + self.dt4xls2mpl * self.dformat
 
@@ -768,32 +760,32 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.ax0.cla()
 
-        #------------------------------------------------------------- RESET --
+        # ------------------------------------------------------------ RESET --
 
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
 
-        #------------------------------------------------------------ XTICKS --
+        # ----------------------------------------------------------- XTICKS --
 
         self.ax0.xaxis.set_ticks_position('bottom')
         self.ax0.tick_params(axis='x', direction='out')
 
-        #------------------------------------------------------------ YTICKS --
+        # ----------------------------------------------------------- YTICKS --
 
         self.ax0.yaxis.set_ticks_position('left')
         self.ax0.tick_params(axis='y', direction='out')
 
-        #------------------------------------------------------------ LABELS --
+        # ----------------------------------------------------------- LABELS --
 
         self.ax0.set_ylabel('Water level (mbgs)', fontsize=14, labelpad=25,
                             verticalalignment='top', color='black')
         self.ax0.set_xlabel('Time (days)', fontsize=14, labelpad=25,
                             verticalalignment='bottom', color='black')
 
-        #---------------------------------------------------------- PLOTTING --
+        # --------------------------------------------------------- PLOTTING --
 
-        #---- Water Levels ----
+        # Water Levels :
 
         y = self.water_lvl
         t = self.time + self.dt4xls2mpl * self.dformat
@@ -804,38 +796,38 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.plt_wlpre, = self.ax0.plot([], [], color='red', clip_on=True,
                                         ls='-', zorder=10, marker='None')
 
-        #---- Peaks ----
+        # Peaks :
 
         self.h2_ax0, = self.ax0.plot([], [], color='red', clip_on=True,
                                      zorder=30, marker='o', linestyle='None')
 
-        #---- Vertical guide line under cursor ----
+        # Vertical guide line under cursor :
 
         self.ly = self.ax0.axvline(1, ymin=0, ymax=1, color='red',
                                    zorder=40)
 
-        #---- Cross Remove Peaks ----
+        # Cross Remove Peaks :
 
         self.xcross, = self.ax0.plot(1, 0, color='red', clip_on=True,
                                      zorder=20, marker='x', linestyle='None',
                                      markersize = 15, markeredgewidth = 3)
 
-        #---- Recession ----
+        # Recession :
 
         self.h3_ax0, = self.ax0.plot([], [], color='red', clip_on=True,
                                      zorder=15, marker='None', linestyle='--')
 
-        #---- Strati ----
+        # Strati :
 
         if not self.btn_strati.autoRaise():
             self.display_soil_layer()
 
-        #---- Setup Gridlines
+        # Setup Gridlines :
 
         self.ax0.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':')
         self.ax0.set_axisbelow(True)
 
-        #---- Setup Axis Range ----
+        # Setup Axis Range :
 
         y = self.water_lvl
         t = self.time + self.dt4xls2mpl * self.dformat
@@ -851,7 +843,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
         self.ax0.invert_yaxis()
 
-        #---- Setup xtick Labels Date Format ----
+        # Setup xtick Labels Date Format :
 
         if self.dformat == 1:
             xloc = mpl.dates.AutoDateLocator()
@@ -863,26 +855,25 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.ax0.xaxis.set_major_formatter(xfmt)
             self.ax0.get_xaxis().get_major_formatter().set_useOffset(False)
 
-        #---- Draw the Graph ----
+        # Draw the Graph :
 
         self.isGraphExists = True
         self.fig_MRC_widget.draw()
 
-    def plot_synth_hydro(self, parameters): # ==== Plot Synthetic Hydrograph ==
+    def plot_synth_hydro(self, parameters):  # ================================
         print(parameters)
         Cro = parameters['Cro']
         RASmax = parameters['RASmax']
         Sy = parameters['Sy']
 #        parameters['jack']
 
-        #---- compute recharge ----
+        # compute recharge :
         rechg, _, _, _, _ = \
             self.synth_hydrograph.surf_water_budget(Cro, RASmax)
 
+        # compute water levels :
 
-        #---- compute water levels ----
-
-        tweatr = self.meteo_data.TIME + 10 # Here we introduce the time lag
+        tweatr = self.meteo_data.TIME + 10  # Here we introduce the time lag
         twlvl = self.time
 
         ts = np.where(twlvl[0] == tweatr)[0][0]
@@ -890,23 +881,23 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         WLpre = self.synth_hydrograph.calc_hydrograph(rechg[ts:te], Sy)
 
-        #---- plot water levels ----
+        # plot water levels :
 
-        self.plt_wlpre.set_data(self.synth_hydrograph.DATE , WLpre/1000.)
+        self.plt_wlpre.set_data(self.synth_hydrograph.DATE, WLpre/1000.)
 
         self.fig_MRC_widget.draw()
 
 
     def btn_strati_isClicked(self): #================ Show/Hide Stratigraphy ==
 
-        #---- Checks ----
+        # Checks :
 
         if self.isGraphExists == False:
             print('Graph is empty.')
             self.btn_strati.setAutoRaise(True)
             return
 
-        #---- Attribute Action ----
+        # Attribute Action :
 
         if self.btn_strati.autoRaise():
             self.btn_strati.setAutoRaise(False)
@@ -915,7 +906,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.btn_strati.setAutoRaise(True)
             self.hide_soil_layer()
 
-    def hide_soil_layer(self): #============================ Hide Soil Layer ==
+    def hide_soil_layer(self):  # =============================================
 
         for i in range(len(self.zlayer)):
             self.layers[i].remove()
@@ -1857,16 +1848,12 @@ class SynthHydroWidg(QtGui.QWidget):            # Synthetic Hydrograph Widget #
             self.newHydroParaSent.emit(self.get_parameters())
 
 
+###############################################################################
 
-#==============================================================================
 
 class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
 
-#==============================================================================
-
-#    newPageSetupSent = QtCore.Signal(bool)
-
-    def __init__(self, parent=None): #================================= Init ==
+    def __init__(self, parent=None):  # =============================== Init ==
         super(RechgSetupWin, self).__init__(parent)
 
         self.setWindowTitle('Recharge Calibration Setup')
@@ -1874,7 +1861,7 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
 
         self.initUI()
 
-    def initUI(self): #============================================= Init UI ==
+    def initUI(self):  # =========================================== Init UI ==
 
         class QRowLayout(QtGui.QWidget):
             def __init__(self, items, parent=None):
@@ -1981,11 +1968,11 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
 
         self.setLayout(mainLayout)
 
-    def closeEvent(self, event): #=============================================
+    def closeEvent(self, event):  # ===========================================
         super(RechgSetupWin, self).closeEvent(event)
         print('Closing Window')
 
-    def btn_calibrate_isClicked(self): # ========================= Calibrate ==
+    def btn_calibrate_isClicked(self):  # ======================== Calibrate ==
         print('Calibration started')
 
     def show(self):  # ========================================================
