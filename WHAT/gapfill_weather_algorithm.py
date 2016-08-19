@@ -551,7 +551,7 @@ class GapFillWeather(QtCore.QObject):
                         RMSE = RMSE[RMSE != 0]      # MAE = MAE[MAE!=0]
                         RMSE = np.mean(RMSE)**0.5   # MAE = np.mean(MAE)
 
-                        #------------------------------------- Add to Memory --
+                        # ------------------------------------ Add to Memory --
 
                         RegCoeff_memory.append(A)
                         RMSE_memory.append(RMSE)
@@ -565,7 +565,7 @@ class GapFillWeather(QtCore.QObject):
                         RMSE = RMSE_memory[index_memory]
                         Ndat = Ndat_memory[index_memory]
 
-                    #------------------------------ MISSING VALUE ESTIMATION --
+                    # ----------------------------- MISSING VALUE ESTIMATION --
 
                     # Calculate missing value of Y at row <row>.
 
@@ -578,7 +578,7 @@ class GapFillWeather(QtCore.QObject):
                     if var in (3, 4, 5):
                         Y_row = max(Y_row, 0)
 
-                    #----------------------------------------- STORE RESULTS --
+                    # ---------------------------------------- STORE RESULTS --
 
                     log_RMSE[row, var] = RMSE
                     log_Ndat[row, var] = Ndat

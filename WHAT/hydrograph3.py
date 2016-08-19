@@ -143,23 +143,23 @@ class LabelDatabase():
 
 #            self.mbgs = u"Niveau d'eau au puits %s (mbgs)"
 #            self.masl = u"Niveau d'eau au puits %s (masl)"
-            self.mbgs = u"Niveau d'eau (m sous la surface)"
+            self.mbgs = "Niveau d'eau (m sous la surface)"
 #            self.mbgs = u"Niveau d'eau (mbgs)"
-            self.masl = u"Niveau d'eau (masl)"
-            self.precip = u'Précipitations (%s)'
+            self.masl = "Niveau d'eau (masl)"
+            self.precip = 'Précipitations (%s)'
             self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
-            self.temperature = u'Température (°C)'
+            self.temperature = 'Température (°C)'
             self.title = 'Puits %s'
-            self.station_meteo = (u'Station météo %s\n' +
-                                  u'(située à %0.1f km du puits)')
-            self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
-                                "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
+            self.station_meteo = ('Station météo %s\n' +
+                                  '(située à %0.1f km du puits)')
+            self.month_names = ["JAN", "FÉV", "MAR", "AVR", "MAI", "JUN",
+                                "JUL", "AOÛ", "SEP", "OCT", "NOV", "DÉC"]
 
-            self.legend = ['Neige', 'Pluie', u"Température de l'air",
-                           u'Données manquantes',
+            self.legend = ['Neige', 'Pluie', "Température de l'air",
+                           'Données manquantes',
                            "Niveau d'eau (tendance)", "Niveau d'eau",
-                           u"Niveau d'eau (données)", 'Mesures manuelles',
-                           u'Récession simulée']
+                           "Niveau d'eau (données)", 'Mesures manuelles',
+                           'Récession simulée']
 
 
 ###############################################################################

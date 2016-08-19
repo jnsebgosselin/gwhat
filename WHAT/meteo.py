@@ -37,13 +37,14 @@ import numpy as np
 from PySide import QtGui, QtCore
 
 import matplotlib as mpl
-mpl.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
 # PERSONAL IMPORTS :
 
 import database as db
 from hydrograph3 import Colors
+
+mpl.rcParams['backend.qt4'] = 'PySide'
 
 class LabelDataBase():
 
@@ -123,7 +124,7 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.setFont(StyleDB.font1)
         self.setWindowIcon(iconDB.WHAT)
 
-        #----------------------------------------------------------- TOOLBAR --
+        # ---------------------------------------------------------- TOOLBAR --
 
         btn_save = QtGui.QToolButton()
         btn_save.setAutoRaise(True)
@@ -180,7 +181,7 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         toolbar_widget.setLayout(subgrid_toolbar)
 
-        #--------------------------------------------------------- MAIN GRID --
+        # -------------------------------------------------------- MAIN GRID --
 
         #---- widgets ----
 
