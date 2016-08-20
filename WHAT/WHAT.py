@@ -54,7 +54,6 @@ from about_WHAT import AboutWhat
 
 freeze_support()
 
-
 # ---- DATABASES ----
 
 labelDB = []

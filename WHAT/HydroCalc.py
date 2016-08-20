@@ -104,10 +104,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
     MRC and ultimately estimate groundwater recharge.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None):  # =======================================
         super(WLCalc, self).__init__(parent)
-
-        # --------------------------------------------------- INIT VARIABLES --
 
         self.isGraphExists = False
         self.__figbckground = None  # figure background
@@ -240,13 +238,16 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         # ---------------------------------------------------------- ARTISTS --
 
+        # Water level :
         self.h1_ax0, = ax0.plot([], [], color='blue', clip_on=True, ls='-',
                                 zorder=10, marker='None')
 
+        # Rain :
         self.h_rain, = ax1.plot([], [])
 
         # Vertical guide line under cursor :
-        self.vguide = ax0.axvline(1, ymin=0, ymax=1, color='red', zorder=40)
+        self.vguide = ax0.axvline(-1, color='red', zorder=40)
+        self.vguide.set_xdata(-1)
 
         # ---------------------------------------------------------- MARGINS --
 
@@ -277,7 +278,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
 
         self.btn_home = MyQToolButton(iconDB.home, ttipDB.home)
-        self.btn_home.clicked.connect(self.home)
+        self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
 
         self.btn_editPeak = MyQToolButton(iconDB.add_point, ttipDB.editPeak)
         self.btn_editPeak.clicked.connect(self.aToolbarBtn_isClicked)
@@ -387,6 +388,18 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.setLayout(mainGrid)
 
+    def __save_figbckground__(self):  # =======================================
+        ax = self.fig.axes[0]
+        if self.vguide.get_xdata() != -1:
+            self.vguide.set_visible(False)
+            self.canvas.draw()
+            self.__figbckground = self.fig.canvas.copy_from_bbox(ax.bbox)
+            self.vguide.set_visible(True)
+            self.canvas.draw()
+        else:
+            self.canvas.draw()
+            self.__figbckground = self.fig.canvas.copy_from_bbox(ax.bbox)
+
     def emit_error_message(self, error_text):  # ==============================
 
         msgError = QtGui.QMessageBox()
@@ -473,10 +486,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.btn_MRCalc_isClicked()
         elif self.sender() == self.btn_Waterlvl_lineStyle:
             self.change_waterlvl_lineStyle()
+        elif self.sender() == self.btn_home:
+            self.home()
         elif self.sender() == self.btn_save_interp:
             self.save_interp()
         elif self.sender() == self.btn_editPeak:
-            self.edit_peak()
+            self.add_peak()
         elif self.sender() == self.btn_delPeak:
             self.delete_peak()
         elif self.sender() == self.btn_pan:
@@ -611,15 +626,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.h2_ax0.set_data(x, y)
 
             # Take a screenshot of the background :
-            self.vguide.set_visible(False)
-            self.canvas.draw()
-
-            fig = self.fig
-            ax = self.fig.axes[0]
-            self.__figbckground = fig.canvas.copy_from_bbox(ax.bbox)
-
-            self.vguide.set_visible(True)
-            self.canvas.draw()
+            self.__save_figbckground__()
 
     def find_peak(self):  # ===================================================
 
@@ -642,7 +649,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.plot_peak()
 
-    def edit_peak(self):  # ===================================================
+    def add_peak(self):  # ===================================================
 
         # slot connected when the button to add new peaks is clicked.
 
@@ -654,7 +661,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         if self.btn_editPeak.autoRaise():
 
-            # Activate <edit_peak> :
+            # Activate <add_peak> :
             self.btn_editPeak.setAutoRaise(False)
 
             # Deactivate <pan_graph> :
@@ -667,43 +674,41 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.btn_delPeak.setAutoRaise(True)
 
             # Save background :
-            ax = self.fig.axes[0]
-            self.__figbckground = self.fig.canvas.copy_from_bbox(ax.bbox)
+            self.__save_figbckground__()
         else:
 
-            # Deactivate <edit_peak> and hide guide line
+            # Deactivate <add_peak> and hide guide line
             self.btn_editPeak.setAutoRaise(True)
             self.vguide.set_xdata(-1)
             self.canvas.draw()
 
-    def delete_peak(self):
+    def delete_peak(self):  # =================================================
 
         if self.btn_delPeak.autoRaise():
 
-            # Activate <delete_peak>
+            # Activate <delete_peak> :
             self.btn_delPeak.setAutoRaise(False)
 
-            # Deactivate <pan_graph>
+            # Deactivate <pan_graph> :
             # http://stackoverflow.com/questions/17711099
             self.btn_pan.setAutoRaise(True)
             if self.toolbar._active == "PAN":
                 self.toolbar.pan()
 
-            # Deactivate <edit_peak> and hide guide line
+            # Deactivate <add_peak> and hide guide line :
             self.btn_editPeak.setAutoRaise(True)
             self.vguide.set_xdata(-1)
             self.canvas.draw()
 
         else:
-
-            # Deactivate <delete_peak>
+            # Deactivate <delete_peak> :
             self.btn_delPeak.setAutoRaise(True)
 
-    def pan_graph(self):
+    def pan_graph(self):  # ===================================================
 
         if self.btn_pan.autoRaise():
 
-            # Deactivate <edit_peak> and hide guide line
+            # Deactivate <add_peak> and hide guide line
             self.btn_editPeak.setAutoRaise(True)
             self.vguide.set_xdata(-1)
             self.canvas.draw()
@@ -723,11 +728,10 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         if self.isGraphExists is False:
             print('Graph is empty')
-            self.emit_error_message(
-                '<b>Please select a valid Water Level Data File first.</b>')
             return
 
         self.toolbar.home()
+        self.__save_figbckground__()
 
     def undo(self):  # ========================================================
 
@@ -780,15 +784,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         for axe in self.fig.axes:
             axe.set_position([x0, y0, w, h])
 
-        self.vguide.set_visible(False)
-        self.fig.canvas.draw()
-
-        # Save background :
-        ax = self.fig.axes[0]
-        self.__figbckground = self.fig.canvas.copy_from_bbox(ax.bbox)
-
-        self.vguide.set_visible(True)
-        self.fig.canvas.draw()
+        self.__save_figbckground__()
 
     def switch_date_format(self):  # ==========================================
 
@@ -948,7 +944,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         # Checks :
 
-        if self.isGraphExists == False:
+        if self.isGraphExists is False:
             print('Graph is empty.')
             self.btn_strati.setAutoRaise(True)
             return
@@ -973,16 +969,16 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
     def display_soil_layer(self):  # ==========================================
 
-        #---- Check ----
+        # Check :
 
         if not os.path.exists(self.soilFilename):
             print('No ".sol" file found for this well.')
             self.btn_strati.setAutoRaise(True)
             return
 
-        #---- load soil column info ----
+        # Load soil column info :
 
-        with open(self.soilFilename,'rb') as f:
+        with open(self.soilFilename, 'r') as f:
             reader = list(csv.reader(f, delimiter="\t"))
 
         NLayer = len(reader)
@@ -1056,7 +1052,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
         if not self.btn_editPeak.autoRaise():
-
             # Trace a red vertical guide (line) that folows the mouse marker.
             x = event.xdata
             if x:
@@ -1064,11 +1059,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.vguide.set_xdata(x)
             else:
                 self.vguide.set_xdata(-1)
-
             fig.canvas.restore_region(self.__figbckground)
             ax0.draw_artist(self.vguide)
             self.fig.canvas.update()
-            self.fig.canvas.flush_events()
 
         elif not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
 
@@ -1097,12 +1090,13 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.xcross.set_ydata(ypeak[indx])
 
                 self.canvas.draw()
+
             else:  # hide the cross outside of the plotting area
 
                 self.xcross.set_xdata(-1)
                 self.canvas.draw()
         else:
-            return
+            pass
 
     def onclick(self, event):  # ==============================================
 
@@ -1338,16 +1332,16 @@ def local_extrema(x, Deltan):  # ==============================================
                 n_j = np.append(n_j, -np.floor((n1[nmin] + n2[nmin]) / 2.))
                 Jest += 1
 
-            else: # No extremum
+            else:  # No extremum
 
                 nc = nc + Deltan
 
-        elif flagante == -1: # ANTERIOR extremum is an MINIMUM
+        elif flagante == -1:  # ANTERIOR extremum is an MINIMUM
 
             tminante = np.abs(n_j[-1])
             xminante = x[tminante]
 
-            if flagmax == 1: # CURRENT extremum is a MAXIMUM
+            if flagmax == 1:  # CURRENT extremum is a MAXIMUM
 
                 if xminante < xmax:
 
@@ -1391,12 +1385,12 @@ def local_extrema(x, Deltan):  # ==============================================
             else:
                 nc = nc + Deltan
 
-        else: # ANTERIOR extremum is a MAXIMUM
+        else:  # ANTERIOR extremum is a MAXIMUM
 
             tmaxante = np.abs(n_j[-1])
             xmaxante = x[tmaxante]
 
-            if flagmin == 1: # CURRENT extremum is a MINIMUM
+            if flagmin == 1:  # CURRENT extremum is a MINIMUM
 
                 if xmaxante > xmin:
 
@@ -1406,8 +1400,9 @@ def local_extrema(x, Deltan):  # ==============================================
                     n_j = np.append(n_j, -np.floor((n1[nmin] + n2[nmin]) / 2.))
                     Jest += 1
 
-                else: # CURRENT MINIMUM is larger than the ANTERIOR MAXIMUM:
-                      # an additional minimum is added ([ATE] p. 82 and 83)
+                else:
+                    # CURRENT MINIMUM is larger than the ANTERIOR MAXIMUM:
+                    # an additional minimum is added ([ATE] p. 82 and 83)
 
                     xminn = np.min(x[tmaxante:nmin+1])
                     nminn = np.where(x[tmaxante:nmin+1] == xminn)[0][0]
