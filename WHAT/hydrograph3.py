@@ -35,10 +35,6 @@ import h5py
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
-#from matplotlib.backends.backend_cairo import FigureCanvasCairo as FigureCanvas
-#from matplotlib.backends.backend_cairo import RendererCairo as Renderer
-#from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 from PySide import QtGui
 
@@ -69,12 +65,12 @@ class Colors():
                     [204, 204, 204],  # Water Level (data dots)
                     [255,   0,   0]]  # Water Level (measures)
 
-        self.rgb = [[255./255, 212./255, 212./255], # Air Temperature
-                    [ 23./255,  52./255,  88./255], # Rain
-                    [165./255, 165./255, 165./255], # Snow
-                    [ 45./255, 100./255, 167./255], # Water Level (solid line)
-                    [0.8, 0.8, 1],                  # Water Level (data dots)
-                    [255./255,   0./255,   0./255]] # Water Level (measures)
+        self.rgb = [[255./255, 212./255, 212./255],  # Air Temperature
+                    [ 23./255,  52./255,  88./255],  # Rain
+                    [165./255, 165./255, 165./255],  # Snow
+                    [ 45./255, 100./255, 167./255],  # Water Level (solid line)
+                    [0.8, 0.8, 1],                   # Water Level (data dots)
+                    [255./255,   0./255,   0./255]]  # Water Level (measures)
 
         self.labels = ['Air Temperature', 'Rain', 'Snow',
                        'Water Level (solid line)',
@@ -122,8 +118,6 @@ class LabelDatabase():
     def __init__(self, language):  # ------------------------------- English --
 
         self.temperature = u'Temperature (°C)'
-#        self.mbgs = 'Water Level at Well %s (mbgs)'
-#        self.masl = 'Water Level at Well %s (masl)'
         self.mbgs = 'Water Level (mbgs)'
         self.masl = 'Water Level (masl)'
         self.precip = 'Precipitation (%s)'
@@ -139,12 +133,9 @@ class LabelDatabase():
                        'Water level (data)', 'Manual measures',
                        'Estimated recession']
 
-        if language == 'French':  # --------------------------------- French --
+        if language.lower() == 'french':  # ------------------------- French --
 
-#            self.mbgs = u"Niveau d'eau au puits %s (mbgs)"
-#            self.masl = u"Niveau d'eau au puits %s (masl)"
             self.mbgs = "Niveau d'eau (m sous la surface)"
-#            self.mbgs = u"Niveau d'eau (mbgs)"
             self.masl = "Niveau d'eau (masl)"
             self.precip = 'Précipitations (%s)'
             self.precip_units = ['mm/jour', 'mm/sem.', 'mm/mois', 'mm/an']
@@ -165,34 +156,62 @@ class LabelDatabase():
 ###############################################################################
 
 
-class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
+class HydrographBase(mpl.figure.Figure):                     # HydrographBase #
+
+    def __init__(self, *args, **kargs):
+        super(HydrographBase, self).__init__(*args, **kargs)
+
+        # set canvas and renderer :
+
+        self.set_canvas(FigureCanvas(self))
+        self.canvas.get_renderer()
+        self.__isHydrographExists = False
+
+    @property
+    def isHydrographExists(self):
+        return self.__isHydrographExists
+
+    @property
+    def language(self):
+        return self.__language
+
+    @language.setter
+    def language(self, x):
+        if x.lower() in ['english', 'french']:
+            self.__language = x
+        else:
+            print('WARNING: Language not supported. '
+                  'Setting language to "english".')
+            self.__language = 'english'
+
+###############################################################################
+
+
+class Hydrograph(HydrographBase):                             # Hydrograph #
 
     def __init__(self, *args, **kargs):
         super(Hydrograph, self).__init__(*args, **kargs)
 
-        self.isHydrographExists = False
+        # Fig Init :
 
-        # --- set canvas and renderer --- #
-
-        self.set_canvas(FigureCanvas(self))
-        self.canvas.get_renderer()
-
-        # --- Fig Init --- #
-
-        self.fwidth, self.fheight = 11.0, 8.5
+        self.fwidth = 11.0
+        self.fheight = 8.5
         self.patch.set_facecolor('white')
         self.NZGrid = 8  # Number of interval in the grid of the bottom part
 
         # Vertical height ratio between the top part  and the bottom part
         self.va_ratio = 0.18
 
-        # --- Database --- #
+        # Graph labels language :
+        self.language = 'english'
+
+        # Database :
 
         self.header = db.FileHeaders().graph_layout
         self.colorsDB = Colors()
         self.colorsDB.load_colors_db()
 
-        # --- Scales --- #
+        # Scales :
 
         self.WLmin = 0
         self.WLscale = 0
@@ -202,16 +221,12 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.TIMEmin = 36526
         self.TIMEmax = 36526
 
-        # ---- Labels ----
-
-        self.language = 'English'
-
-        # --- Legend  and Title --- #
+        # Legend  and Title :
 
         self.isLegend = 1
         self.isGraphTitle = 1
 
-        # --- Layout Options --- #
+        # Layout Options :
 
         self.WLdatum = 0  # 0: mbgs;  1: masl
         self.trend_line = 0
@@ -226,12 +241,12 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.isMRC = False
         self.isGLUE = False
 
-        # --- Waterlvl & Meteo Obj --- #
+        # Waterlvl & Meteo Obj :
 
         self.WaterLvlObj = WaterlvlData()
         self.meteo_obj = meteo.MeteoObj()
 
-        # --- Daily Weather --- #
+        # Daily Weather :
 
         self.fmeteo = []  # path to the weather data file (.out)
         self.finfo = []  # path the the .log file associated with the .out file
@@ -241,7 +256,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.PTOT = np.array([])
         self.RAIN = np.array([])
 
-        # --- Bin Redistributed Weather --- #
+        # Bin Redistributed Weather :
 
         self.bTIME = np.array([])
         self.bTMAX = np.array([])
@@ -283,11 +298,11 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         self.set_size_inches(fwidth, fheight, forward=True)
 
-        #---- Update Variables ----
+        # Update Variables :
 
         WaterLvlObj = self.WaterLvlObj
 
-        #---- Assign Weather Data ----
+        # Assign Weather Data :
 
         self.name_meteo = meteo_obj.STA
 
@@ -309,8 +324,8 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         # multiple-y-scales-but-only-one-enabled-for-pan-and-zoom
 
         # http://matplotlib.1069221.n5.nabble.com/Control-twinx-series-zorder-
-        #        ax2-series-behind-ax1-series-or-place-ax2-on-left-ax1
-        #        -on-right-td12994.html
+        # ax2-series-behind-ax1-series-or-place-ax2-on-left-ax1
+        # -on-right-td12994.html
 
         # --- Time (host) --- #
 
@@ -350,7 +365,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         self.ax4.set_navigate(False)
         self.ax4.set_axisbelow(True)
 
-        if self.meteoOn == False:
+        if self.meteoOn is False:
             self.ax3.set_visible(False)
             self.ax4.set_visible(False)
 
@@ -532,7 +547,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
         # ------------------------------------------------------ UPDATE FLAG --
 
-        self.isHydrographExists = True
+        self.__isHydrographExists = True
 
     def set_legend(self):  # ==================================================
 
@@ -633,7 +648,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
     def update_colors(self):  # ===============================================
         self.colorsDB.load_colors_db()
 
-        if not self.isHydrographExists:
+        if not self.__isHydrographExists:
             return
 
         plt.setp(self.l1_ax2, color=self.colorsDB.rgb[3])
@@ -1337,7 +1352,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             self.text1.set_text('')
             self.figTitle.set_text('')
 
-    def update_waterlvl_scale(self):  # ================== Water Level Scale ==
+    def update_waterlvl_scale(self):  # =======================================
 
         if self.meteoOn:
             NZGrid = self.NZGrid
@@ -1362,7 +1377,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
 
             self.ax2.axis(ymin=WLmin, ymax=WLmax)
 
-        else: # mbgs: Y axis is inverted
+        else:  # mbgs: Y axis is inverted
             WLmax = self.WLmin
             WLscale = self.WLscale
             WLmin = WLmax - (NZGrid * WLscale)
@@ -1377,7 +1392,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             self.ax2.axis(ymin=WLmin, ymax=WLmax)
             self.ax2.invert_yaxis()
 
-    def update_precip_scale(self): #==================== Precipitation Scale ==
+    def update_precip_scale(self):  # =========================================
 
         if self.meteoOn == False:
             return
@@ -1429,9 +1444,9 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
             self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle=':',
                           linewidth=0.5, dashes=[0.5, 5])
 
-    def make_xticks_info(self): #=============================================
+    def make_xticks_info(self):  # ============================================
 
-        #----------------------------------------- horizontal text alignment --
+        # ---------------------------------------- horizontal text alignment --
 
         # The strategy here is to:
         # 1. render some random text ;
@@ -1444,7 +1459,7 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         #    system ;
         # 6. remove the random text from the figure.
 
-        #---- random text bbox height ----
+        # Random text bbox height :
 
         dummytxt = self.ax1.text(0.5, 0.5, 'some_dummy_text', fontsize=10,
                                  ha='right', va='top',
@@ -1455,21 +1470,21 @@ class Hydrograph(mpl.figure.Figure):                             # Hydrograph #
         bbox = dummytxt.get_window_extent(renderer)
         bbox = bbox.transformed(self.ax1.transAxes.inverted())
 
-        #---- horiz. trans. of bbox top-right corner ----
+        # Horiz. trans. of bbox top-right corner :
 
         dx = bbox.height * np.sin(np.radians(45))
 
-        #---- scale dx to axe dimension ----
+        # Scale dx to axe dimension :
 
-        bbox = self.ax1.get_window_extent(renderer) # in pixels
-        bbox = bbox.transformed(self.dpi_scale_trans.inverted()) # in inches
+        bbox = self.ax1.get_window_extent(renderer)  # in pixels
+        bbox = bbox.transformed(self.dpi_scale_trans.inverted())  # in inches
 
         sdx = dx * bbox.height / bbox.width
         sdx *= (self.TIMEmax - self.TIMEmin + 1)
 
         dummytxt.remove()
 
-        #---- transform to data coord ----
+        # Transform to data coord :
 
         n = self.date_labels_display_pattern
         month_names = LabelDatabase(self.language).month_names
@@ -1660,7 +1675,7 @@ def LatLong2Dist(LAT1, LON1, LAT2, LON2):
     return DIST
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # =================================================
 
     import sys
     from mplFigViewer3 import ImageViewer
@@ -1673,23 +1688,23 @@ if __name__ == '__main__':
 #    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
 #    fwaterlvl = 'Files4testing/PO16A.xls'
 
-    #---- Pont Rouge ----
+    # ---- Pont Rouge ----
 
     dirname = '../Projects/Pont-Rouge'
     fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
     finfo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.log'
     fwaterlvl = dirname + '/Water Levels/5080001.xls'
 
-    #---- Valcartier ----
+    # ---- Valcartier ----
 
-    #---- Valcartier ----
+    # ---- Valcartier ----
 
 #    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
 #    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
 #    fwaterlvl = dirname + '/Water Levels/valcartier2.xls'
 #    finfo = (dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.log')
 
-    #---- Dundurn ----
+    # ---- Dundurn ----
 
 #    dirname = '/home/jnsebgosselin/Dropbox/WHAT/Projects/Dundurn'
 #    fmeteo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.out"
@@ -1715,6 +1730,8 @@ if __name__ == '__main__':
 
     # --- Normal plot --- #
 
+    hydrograph.language = 'french'
+
     hydrograph.fwidth = 11.  # Width of the figure in inches
     hydrograph.fheight = 8.5
 
@@ -1724,10 +1741,10 @@ if __name__ == '__main__':
     hydrograph.isGraphTitle = 1  # 1 -> title ; 0 -> no title
     hydrograph.isLegend = 1
 
-    hydrograph.meteoOn = True # 0 -> no meteo ; 1 -> meteo
-    hydrograph.datemode = 'year' # 'month' or 'year'
+    hydrograph.meteoOn = True  # 0 -> no meteo ; 1 -> meteo
+    hydrograph.datemode = 'year'  # 'month' or 'year'
     hydrograph.date_labels_display_pattern = 1
-    hydrograph.bwidth_indx = 2 # Meteo Bin Width
+    hydrograph.bwidth_indx = 2  # Meteo Bin Width
     # 0: daily | 1: weekly | 2: monthly | 3: yearly
     hydrograph.RAINscale = 100
 
@@ -1752,7 +1769,7 @@ if __name__ == '__main__':
 #
 #    hydrograph.isMRC = False
 #
-    #---- GLUE ----
+    # ---- GLUE ----
 
 #    hydrograph.fwidth = 11.
 #    hydrograph.fheight = 5.
@@ -1775,7 +1792,7 @@ if __name__ == '__main__':
 #    hydrograph.draw_recession()
 #    hydrograph.savefig(dirname + '/GLUE_hydrograph.pdf')
 
-    #------------------------------------------------- show figure on-screen --
+    # ------------------------------------------------ show figure on-screen --
 
     imgview = ImageViewer()
     imgview.load_mpl_figure(hydrograph)

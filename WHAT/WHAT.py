@@ -27,22 +27,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# ---- STANDARD LIBRARY IMPORTS ----
+# STANDARD LIBRARY IMPORTS :
 
 import platform
 import csv
-import sys
 import os
 from time import ctime
 from os import makedirs, path
 
 from multiprocessing import freeze_support
 
-# ---- THIRD PARTY IMPORTS ----
+# THIRD PARTY IMPORTS :
 
 from PySide import QtGui, QtCore
 
-# ---- PERSONAL IMPORTS ----
+# PERSONAL IMPORTS :
 
 import database as db
 import custom_widgets as MyQWidget
@@ -54,7 +53,7 @@ from about_WHAT import AboutWhat
 
 freeze_support()
 
-# ---- DATABASES ----
+# DATABASES :
 
 labelDB = []
 iconDB = []
@@ -646,6 +645,7 @@ if __name__ == '__main__':  # #################################################
 #    instance_1 = MainWindow()
 #    sys.exit(app.exec_())
 
+    import sys
     import logging
 
     logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,

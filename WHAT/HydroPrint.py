@@ -46,17 +46,11 @@ import custom_widgets as MyQWidget
 from custom_widgets import VSep, MyQToolButton
 from waterlvldata import WaterlvlData
 
-class VSep(QtGui.QFrame):  # vertical separators for the toolbar
-            def __init__(self, parent=None):
-                super(VSep, self).__init__(parent)
-                self.setFrameStyle(db.styleUI().VLine)
 
+###############################################################################
 
-# =============================================================================
 
 class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
-
-# =============================================================================
 
     ConsoleSignal = QtCore.Signal(str)
 

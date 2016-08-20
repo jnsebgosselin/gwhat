@@ -45,8 +45,6 @@ This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 """
 
-#---- THIRD PARTY IMPORTS ----
-
 from PySide import QtGui, QtCore
 
 
@@ -66,13 +64,13 @@ class MplViewer(QtGui.QFrame):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
         self.qpix_buff = []
 
-        #----------------------------------------------------- figure size ----
+        # ---------------------------------------------------- figure size ----
 
         bbox = mplfig.get_window_extent()
         self.fwidth = bbox.width
         self.fheight = bbox.height
 
-        #------------------------------------------- save figure to buffer ----
+        # ------------------------------------------ save figure to buffer ----
 
         # http://stackoverflow.com/questions/8598673/
         # how-to-save-a-pylab-figure-into-in-memory-file-which-can-be-read
@@ -81,25 +79,30 @@ class MplViewer(QtGui.QFrame):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         # http://stackoverflow.com/questions/1300908/
         # load-blob-image-data-into-qpixmap
 
-        #-- print mpl figure to buffer_rgba --
+        # Scale dpi of figure to view_dpi
 
-        # scale dpi of figure to view_dpi
         orig_fig_dpi = mplfig.get_dpi()
         mplfig.dpi = view_dpi
-        # propagate changes to renderer
+
+        # Propagate changes to renderer :
+
         mplfig.canvas.draw()
         renderer = mplfig.canvas.get_renderer()
         orig_ren_dpi = renderer.dpi
         renderer.dpi = view_dpi
-        # generate img buffer
+
+        # Generate img buffer :
+
         imgbuf = mplfig.canvas.buffer_rgba()
         imgwidth = int(renderer.width)
         imgheight = int(renderer.height)
-        # restore fig and renderer dpi
+
+        # Restore fig and renderer dpi
+
         renderer.dpi = orig_ren_dpi
         mplfig.dpi = orig_fig_dpi
 
-        #-- convert buffer to QPixmap --
+        # Convert buffer to QPixmap :
 
         self.img = QtGui.QImage(imgbuf, imgwidth, imgheight,
                                 QtGui.QImage.Format_ARGB32)
@@ -114,14 +117,14 @@ class MplViewer(QtGui.QFrame):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         qp = QtGui.QPainter()
         qp.begin(self)
 
-        #---- prepare paint rect ----
+        # Prepare paint rect :
 
         fw = self.frameWidth()
         rect = QtCore.QRect(0 + fw, 0 + fw,
                             self.size().width() - 2 * fw,
                             self.size().height() - 2 * fw)
 
-        #----- check/update image buffer ---
+        # Check/update image buffer :
 
         qpix2print = None
         for qpix in self.qpix_buff:
@@ -129,12 +132,12 @@ class MplViewer(QtGui.QFrame):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
                 qpix2print = qpix
                 break
 
-        if qpix2print == None:
+        if qpix2print is None:
             qpix2print = self.img.scaledToWidth(
                 rect.width(), mode=QtCore.Qt.SmoothTransformation)
             self.qpix_buff.append(qpix2print)
 
-        #---- draw pixmap ----
+        # Draw pixmap :
 
 #        qp.setRenderHint(QtGui.QPainter.Antialiasing, True)
         qp.drawPixmap(rect, qpix2print)
@@ -142,7 +145,10 @@ class MplViewer(QtGui.QFrame):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         qp.end()
 
 
-class ImageViewer(QtGui.QScrollArea):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+# #############################################################################
+
+
+class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
 
     """
     This is a PySide widget class to display a matplotlib figure image in a
@@ -156,7 +162,7 @@ class ImageViewer(QtGui.QScrollArea):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         self.setWindowTitle('Image Viewer')
         self.setAlignment(QtCore.Qt.AlignCenter)
 
-        #---- init. variable ----
+        # Init. variable :
 
         self.scaleFactor = 0
         self.scaleStep = 1.2
@@ -276,7 +282,7 @@ class ImageViewer(QtGui.QScrollArea):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         hb = self.horizontalScrollBar()
         hb.setValue(int(f * hb.value() + ((f - 1) * hb.pageStep()/2)))
 
-        #---- Adjust VScrollBar ----
+        # Adjust VScrollBar :
 
         vb = self.verticalScrollBar()
         vb.setValue(int(f * vb.value() + ((f - 1) * vb.pageStep()/2)))
@@ -286,8 +292,8 @@ if __name__ == '__main__':  # =================================================
 
     import sys
     import matplotlib.pyplot as plt
-    plt.ioff()
     import numpy as np
+    plt.ioff()
 
     app = QtGui.QApplication(sys.argv)
 
