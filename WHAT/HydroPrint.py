@@ -561,7 +561,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
 
             with open(fname, 'w') as f:
-                writer = csv.writer(f, delimiter='\t')
+                writer = csv.writer(f, delimiter='\t', lineterminator='\n')
                 writer.writerows(fcontent)
 
 #            # http://stackoverflow.com/questions/13437727

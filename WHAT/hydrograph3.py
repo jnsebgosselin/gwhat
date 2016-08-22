@@ -165,7 +165,22 @@ class HydrographBase(mpl.figure.Figure):                     # HydrographBase #
 
         self.set_canvas(FigureCanvas(self))
         self.canvas.get_renderer()
+
         self.__isHydrographExists = False
+        self.__meteo_on = True
+        self.__language = 'english'
+
+    @property
+    def meteo_on(self):
+        return self.__meteo_on
+
+    @meteo_on.setter
+    def meteo_on(self, x):
+        if type(x) is bool:
+            self.__meteo_on = x
+        else:
+            print('WARNING: "meteo_on" must be either True or False. '
+                  'Previous value of "meteo_on" is kept.')
 
     @property
     def isHydrographExists(self):
@@ -230,7 +245,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         self.WLdatum = 0  # 0: mbgs;  1: masl
         self.trend_line = 0
-        self.meteoOn = True  # controls wether meteo data are plotted or not
+        self.meteo_on = True  # controls wether meteo data are plotted or not
         self.gridLines = 2  # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'Month'  # 'month' or 'year'
         self.label_font_size = 14
@@ -365,7 +380,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         self.ax4.set_navigate(False)
         self.ax4.set_axisbelow(True)
 
-        if self.meteoOn is False:
+        if self.meteo_on is False:
             self.ax3.set_visible(False)
             self.ax4.set_visible(False)
 
@@ -560,7 +575,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
             lg_handles = []
             lg_labels = []
 
-            if self.meteoOn:
+            if self.meteo_on:
 
                 # ---- Snow ---- #
 
@@ -677,7 +692,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         left_margin = 0.85 / self.fwidth
 
-        if self.meteoOn is False:
+        if self.meteo_on is False:
             right_margin = 0.15 / self.fwidth
         else:
             right_margin = 0.85 / self.fwidth
@@ -686,14 +701,14 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         top_margin = 0.25 / self.fheight
         if self.isGraphTitle == 1 or self.isLegend == 1:
-            if self.meteoOn is False:
+            if self.meteo_on is False:
                 top_margin += 0.2 / fheight
             else:
                 top_margin += 0.45 / fheight
 
         # --- MARGINS (% of figure) --- #
 
-        if self.meteoOn:
+        if self.meteo_on:
             va_ratio = self.va_ratio
         else:
             va_ratio = 0
@@ -723,7 +738,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         left_margin = 0.85
         right_margin = 0.85
-        if self.meteoOn is False:
+        if self.meteo_on is False:
             right_margin = 0.35
 
         axwidth = (self.fwidth - left_margin - right_margin)
@@ -760,7 +775,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         ylabel2_xpos = bbox2_left[0, 0] - labPad
         ylabel2_ypos = (bbox2_left[1, 1] + bbox2_left[0, 1]) / 2.
 
-        if self.meteoOn is False:
+        if self.meteo_on is False:
             self.ax2.yaxis.set_label_coords(ylabel2_xpos, ylabel2_ypos)
             return
 
@@ -1170,7 +1185,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         time the time scale is changed.
         """
 
-        if self.meteoOn is False:
+        if self.meteo_on is False:
             return
 
         # --------------------------------------------------- SUBSAMPLE DATA --
@@ -1354,7 +1369,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
     def update_waterlvl_scale(self):  # =======================================
 
-        if self.meteoOn:
+        if self.meteo_on:
             NZGrid = self.NZGrid
         else:
             NZGrid = self.NZGrid - 2
@@ -1368,7 +1383,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
             WLscale = self.WLscale
             WLmax = WLmin + (NZGrid * WLscale)
 
-            if self.meteoOn:
+            if self.meteo_on:
                 self.ax2.set_yticks(np.arange(WLmin, WLmax - 1.9*WLscale,
                                               WLscale))
             else:
@@ -1382,7 +1397,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
             WLscale = self.WLscale
             WLmin = WLmax - (NZGrid * WLscale)
 
-            if self.meteoOn:
+            if self.meteo_on:
                 self.ax2.set_yticks(np.arange(WLmax, WLmin + 1.9*WLscale,
                                               -WLscale))
             else:
@@ -1394,7 +1409,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
     def update_precip_scale(self):  # =========================================
 
-        if self.meteoOn == False:
+        if self.meteo_on == False:
             return
 
         ymax = self.NZGrid * self.RAINscale
@@ -1402,7 +1417,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         try:
             p = self.PTOT_bar.get_paths()[0]
             v = p.vertices
-            y = v[:,1]
+            y = v[:, 1]
 
             ymax = self.NZGrid * self.RAINscale
 
@@ -1420,7 +1435,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         self.ax3.set_yticks(np.arange(0, yticksmax, self.RAINscale))
         self.ax3.invert_yaxis()
 
-    def set_gridLines(self): #=================================== Grid Lines ==
+    def set_gridLines(self):  # ===============================================
 
         # 0 -> None, 1 -> "-" 2 -> ":"
 
@@ -1741,7 +1756,7 @@ if __name__ == '__main__':  # =================================================
     hydrograph.isGraphTitle = 1  # 1 -> title ; 0 -> no title
     hydrograph.isLegend = 1
 
-    hydrograph.meteoOn = True  # 0 -> no meteo ; 1 -> meteo
+    hydrograph.meteo_on = True  # True or False
     hydrograph.datemode = 'year'  # 'month' or 'year'
     hydrograph.date_labels_display_pattern = 1
     hydrograph.bwidth_indx = 2  # Meteo Bin Width
@@ -1781,7 +1796,7 @@ if __name__ == '__main__':  # =================================================
 #
 #    hydrograph.isGraphTitle = 0 # 1 -> title ; 0 -> no title
 #    hydrograph.isLegend = 1
-#    hydrograph.meteoOn = False
+#    hydrograph.meteo_on = False
 #    hydrograph.datemode = 'year' # 'month' or 'year'
 #    hydrograph.date_labels_display_pattern = 1
 #

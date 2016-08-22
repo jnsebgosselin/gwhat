@@ -590,7 +590,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                              '%0.2f' % self.water_lvl[i]])
 
         with open(interpFilename, 'w') as f:
-            writer = csv.writer(f, delimiter='\t')
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
         print('MRC interpretation Saved.')
