@@ -242,8 +242,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.h1_ax0, = ax0.plot([], [], color='blue', clip_on=True, ls='-',
                                 zorder=10, marker='None')
 
+        # Recession :
+        self.h3_ax0, = ax0.plot([], [], color='red', clip_on=True,
+                                zorder=15, marker='None', linestyle='--')
+
         # Rain :
-        self.h_rain, = ax1.plot([], [])
+        self.h_rain, = ax1.plot([], [], color='0.65')
 
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
@@ -388,7 +392,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.setLayout(mainGrid)
 
-    def __save_figbckground__(self):  # =======================================
+    def draw(self):  # ========================================================
         ax = self.fig.axes[0]
         if self.vguide.get_xdata() != -1:
             self.vguide.set_visible(False)
@@ -412,11 +416,11 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
     def load_weather_data(self, filename):  # =================================
         self.meteo_data.load_and_format(filename)
-        x = self.meteo_data.TIME
+        x = self.meteo_data.TIME + self.dt4xls2mpl * self.dformat
         y = self.meteo_data.DATA[:, -1]
 
         self.h_rain.set_data(x, y)
-        self.canvas.draw()
+        self.draw()
 
     def load_waterLvl_data(self, filename):  # ================================
 
@@ -522,7 +526,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.h3_ax0.set_ydata(hp)
         self.h3_ax0.set_xdata(self.time + self.dt4xls2mpl * self.dformat)
-        self.canvas.draw()
+        self.draw()
 
         # Store results in class attributes :
 
@@ -626,7 +630,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.h2_ax0.set_data(x, y)
 
             # Take a screenshot of the background :
-            self.__save_figbckground__()
+            self.draw()
 
     def find_peak(self):  # ===================================================
 
@@ -673,14 +677,17 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             # Deactivate <delete_peak> :
             self.btn_delPeak.setAutoRaise(True)
 
-            # Save background :
-            self.__save_figbckground__()
+            # Draw to save background :
+            self.draw()
+
         else:
 
             # Deactivate <add_peak> and hide guide line
             self.btn_editPeak.setAutoRaise(True)
             self.vguide.set_xdata(-1)
-            self.canvas.draw()
+
+            # Draw to save background :
+            self.draw()
 
     def delete_peak(self):  # =================================================
 
@@ -698,7 +705,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             # Deactivate <add_peak> and hide guide line :
             self.btn_editPeak.setAutoRaise(True)
             self.vguide.set_xdata(-1)
-            self.canvas.draw()
+            self.draw()
 
         else:
             # Deactivate <delete_peak> :
@@ -711,7 +718,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             # Deactivate <add_peak> and hide guide line
             self.btn_editPeak.setAutoRaise(True)
             self.vguide.set_xdata(-1)
-            self.canvas.draw()
+            self.draw()
 
             # Deactivate <delete_peak>
             self.btn_delPeak.setAutoRaise(True)
@@ -731,14 +738,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             return
 
         self.toolbar.home()
-        self.__save_figbckground__()
+        self.draw()
 
     def undo(self):  # ========================================================
 
         if self.isGraphExists is False:
             print('Graph is empty')
-            self.emit_error_message(
-                '<b>Please select a valid Water Level Data File first.</b>')
             return
 
         if len(self.peak_memory) > 1:
@@ -755,12 +760,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         if self.isGraphExists is False:
             print('Graph is empty')
-            msg = '<b>Please select a valid Water Level Data File first.</b>'
-            self.emit_error_message(msg)
             return
 
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory.append(self.peak_indx)
+
+        self.h3_ax0.set_data([], [])
 
         self.plot_peak()
 
@@ -784,7 +789,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         for axe in self.fig.axes:
             axe.set_position([x0, y0, w, h])
 
-        self.__save_figbckground__()
+        self.draw()
 
     def switch_date_format(self):  # ==========================================
 
@@ -821,20 +826,23 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         elif self.dformat == 0:
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
 
-        # Adjust Water Levels, Peak and MRC Time Frame :
+        # Adjust Water Levels, Peak, MRC ant weather time frame :
 
         t = self.time + self.dt4xls2mpl * self.dformat
-
+        # ----
         self.h1_ax0.set_xdata(t)  # Water Levels
-
+        # ----
         if len(self.hrecess) > 0:  # MRC
             self.h3_ax0.set_xdata(t)
-
+        # ----
         if len(self.peak_indx) > 0:  # Peaks
             self.h2_ax0.set_xdata(self.time[self.peak_indx] +
                                   self.dt4xls2mpl * self.dformat)
 
-        self.canvas.draw()
+        self.h_rain.set_xdata(self.meteo_data.TIME +
+                              self.dt4xls2mpl * self.dformat)
+
+        self.draw()
 
     def init_hydrograph(self):  # =============================================
 
@@ -870,11 +878,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                                 zorder=20, marker='x', linestyle='None',
                                 markersize=15, markeredgewidth=3)
 
-        # Recession :
-
-        self.h3_ax0, = ax0.plot([], [], color='red', clip_on=True,
-                                zorder=15, marker='None', linestyle='--')
-
         # Strati :
 
         if not self.btn_strati.autoRaise():
@@ -894,7 +897,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         Ymax0 = np.max(y[indx]) + (np.max(y[indx]) - np.min(y[indx])) * delta
 
         ax0.axis([Xmin0, Xmax0, Ymax0, Ymin0])
-#        ax0.invert_yaxis()
 
         # Setup xtick Labels Date Format :
 
@@ -911,7 +913,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         # Draw the Graph :
 
         self.isGraphExists = True
-        self.canvas.draw()
+        self.draw()
 
     def plot_synth_hydro(self, parameters):  # ================================
         print(parameters)
@@ -938,7 +940,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.plt_wlpre.set_data(self.synth_hydrograph.DATE, WLpre/1000.)
 
-        self.canvas.draw()
+        self.draw()
 
     def btn_strati_isClicked(self):  # ========================================
 
@@ -965,7 +967,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.stratLines[i].remove()
         self.stratLines[i+1].remove()
 
-        self.canvas.draw()
+        self.draw()
 
     def display_soil_layer(self):  # ==========================================
 
@@ -1025,7 +1027,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
             up = down
 
-        self.canvas.draw()
+        self.draw()
 
     def change_waterlvl_lineStyle(self):  # ===================================
 
@@ -1043,7 +1045,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
             plt.setp(self.h1_ax0, marker='None', linestyle='-')
 
-        self.canvas.draw()
+        self.draw()
 
     def mouse_vguide(self, event):  # =========================================
 
@@ -1052,13 +1054,15 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
         if not self.btn_editPeak.autoRaise():
+
             # Trace a red vertical guide (line) that folows the mouse marker.
+
             x = event.xdata
             if x:
-                # update the line positions
                 self.vguide.set_xdata(x)
             else:
                 self.vguide.set_xdata(-1)
+
             fig.canvas.restore_region(self.__figbckground)
             ax0.draw_artist(self.vguide)
             self.fig.canvas.update()
@@ -1089,12 +1093,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.xcross.set_xdata(xpeak[indx])
                 self.xcross.set_ydata(ypeak[indx])
 
-                self.canvas.draw()
+                self.draw()
 
             else:  # hide the cross outside of the plotting area
 
                 self.xcross.set_xdata(-1)
-                self.canvas.draw()
+                self.draw()
         else:
             pass
 
@@ -1256,13 +1260,17 @@ def local_extrema(x, Deltan):  # ==============================================
 
     # the iterative algorithm presented in Appendix E of [ATE]
 
-    nc = 0    # the time step up to which the time series has been
-              # analyzed ([ATE] p. 127)
+    # Time step up to which the time series has been analyzed ([ATE] p. 127)
+    nc = 0
+
     Jest = 0  # number of local extrema of the partition of scale DeltaN
     iadd = 0  # number of additional local extrema
     flagante = 0
-    kadd = []  # order number of the additional local extrema between all the
-               # local extrema
+
+    # order number of the additional local extrema between all the local
+    # extrema
+    kadd = []
+
     n_j = []   # positions of the local extrema of a partition of scale Deltan
 
     while nc < nf:

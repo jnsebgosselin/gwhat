@@ -546,12 +546,13 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         # System project folder organization :
 
-        if not os.path.exists(self.workdir + '/Water Levels'):
-            os.makedirs(self.workdir + '/Water Levels')
+        dirname = os.path.join(self.workdir, 'Water Levels')
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
 
         # waterlvl_manual_measurements.csv :
 
-        fname = self.workdir + '/waterlvl_manual_measurements.csv'
+        fname = os.path.join(self.workdir, 'waterlvl_manual_measurements.csv')
         if not os.path.exists(fname):
 
             msg = ('No "waterlvl_manual_measurements.xls" file found. '
@@ -563,14 +564,6 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             with open(fname, 'w') as f:
                 writer = csv.writer(f, delimiter='\t', lineterminator='\n')
                 writer.writerows(fcontent)
-
-#            # http://stackoverflow.com/questions/13437727
-#            book = xlwt.Workbook(encoding="utf-8")
-#            sheet1 = book.add_sheet("Sheet 1")
-#            sheet1.write(0, 0, 'Well_ID')
-#            sheet1.write(0, 1, 'Time (days)')
-#            sheet1.write(0, 2, 'Obs. (mbgs)')
-#            book.save(fname)
 
         # graph_layout.lst :
 
@@ -640,20 +633,20 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.msgError.exec_()
 
     def select_waterlvl_file(self):  # ========================================
-
         '''
         This method is called by <btn_waterlvl_dir> is clicked. It prompts
         the user to select a valid Water Level Data file.
         '''
 
         filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                  self, 'Select a valid water level data file',
-                                  self.waterlvl_dir, '*.xls')
+            self, 'Select a valid water level data file',
+            self.waterlvl_dir, '*.xls')
 
         for i in range(5):
             QtCore.QCoreApplication.processEvents()
 
-        self.load_waterlvl(filename)
+        if filename:
+            self.load_waterlvl(filename)
 
     def load_waterlvl(self, filename):  # =====================================
 
@@ -677,21 +670,21 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.check_files()
 
-        #----- Update UI Memory Variables -----
+        # Update UI Memory Variables :
 
         self.waterlvl_dir = os.path.dirname(filename)
         self.fwaterlvl = filename
 
-        #----- Load Data -----
+        # Load Data :
 
         self.ConsoleSignal.emit(
-        '''<font color=black>Loading water level data...</font>''')
+            '<font color=black>Loading water level data...</font>')
         for i in range(5):
-             QtCore.QCoreApplication.processEvents()
+            QtCore.QCoreApplication.processEvents()
 
         state = self.waterlvl_data.load(filename)
-        if state == False:
-            msg = ('WARNING: Waterlvl data file "%s" is not formatted ' +
+        if state is False:
+            msg = ('WARNING: Waterlvl data file "%s" is not formatted '
                    ' correctly.') % os.path.basename(filename)
             print(msg)
             self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
@@ -699,16 +692,17 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         name_well = self.waterlvl_data.name_well
 
-        #----- Load Manual Measures -----
+        # Load Manual Measures :
 
-        filename = self.workdir + '/waterlvl_manual_measurements.xls'
+        filename = os.path.join(self.workdir,
+                                'waterlvl_manual_measurements.xls')
         self.waterlvl_data.load_waterlvl_measures(filename, name_well)
 
-        #----- Update Waterlvl Obj -----
+        # Update Waterlvl Obj :
 
         self.hydrograph.set_waterLvlObj(self.waterlvl_data)
 
-        #----- Display Well Info in UI -----
+        # Display Well Info in UI :
 
         self.well_info_widget.setText(self.waterlvl_data.well_info)
 
@@ -717,16 +711,14 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
              well %s.</font>''' % name_well)
 
         # Update Graph of "Compute" Mode :
-
         self.hydrocalc.load_waterLvl_data(self.fwaterlvl)
 
         # Well Layout :
 
-        filename = self.workdir + '/graph_layout.lst'
+        filename = os.path.join(self.workdir, 'graph_layout.lst')
         isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
 
-        if isLayoutExist == True:
-
+        if isLayoutExist is True:
             self.ConsoleSignal.emit(
             '''<font color=black>A graph layout exists for well %s.
                </font>''' % name_well)
@@ -740,7 +732,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 self.load_graph_layout()
                 return
 
-        #---- Fit Water Level in Layout ----
+        # Fit Water Level in Layout :
 
         self.UpdateUI = False
 
@@ -751,26 +743,21 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.select_closest_meteo_file()
 
+    def select_closest_meteo_file(self):  # ===================================
 
-    def select_closest_meteo_file(self): #=====================================
-
-        meteo_folder = self.workdir + '/Meteo/Output'
+        meteo_folder = os.path.join(self.workdir, 'Meteo', 'Output')
 
         if os.path.exists(meteo_folder) and self.fwaterlvl:
 
             LAT1 = self.waterlvl_data.LAT
             LON1 = self.waterlvl_data.LON
 
-            # Generate a list of data file paths.
+            # Generate a list of data file paths :
             fmeteo_paths = []
             for root, directories, filenames in os.walk(meteo_folder):
                 for filename in filenames:
                     if os.path.splitext(filename)[1] == '.out':
                         fmeteo_paths.append(os.path.join(root, filename))
-
-#            for files in os.listdir(meteo_folder):
-#                if files.endswith(".out"):
-#                    fmeteo_paths.append(meteo_folder + '/' + files)
 
             if len(fmeteo_paths) > 0:
 
@@ -793,27 +780,24 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 index = np.where(DIST == np.min(DIST))[0][0]
 
                 self.load_meteo_file(fmeteo_paths[index])
-                for i in range(5): QtCore.QCoreApplication.processEvents()
+                for i in range(5):
+                    QtCore.QCoreApplication.processEvents()
 
-
-    def select_meteo_file(self): #=============================================
-
+    def select_meteo_file(self):  # ===========================================
         '''
         This method is called by <btn_weather_dir.clicked.connect>. It prompts
         the user to select a valid Weather Data file.
         '''
 
-
         filename, _ = QtGui.QFileDialog.getOpenFileName(
-                                      self, 'Select a valid weather data file',
-                                      self.meteo_dir, '*.out')
+            self, 'Select a valid weather data file', self.meteo_dir, '*.out')
 
-        for i in range(5): QtCore.QCoreApplication.processEvents()
+        for i in range(5):
+            QtCore.QCoreApplication.processEvents()
 
         self.load_meteo_file(filename)
 
-
-    def load_meteo_file(self, filename): #=====================================
+    def load_meteo_file(self, filename):  # ===================================
 
         if not filename:
             print('Path is empty. Cannot load weather data file.')
@@ -825,17 +809,19 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.meteo_data.load_and_format(filename)
         self.meteo_info_widget.setText(self.meteo_data.INFO)
-        self.ConsoleSignal.emit(
-        '''<font color=black>Weather data set loaded successfully for
-             station %s.</font>''' % self.meteo_data.STA)
+
+        msg = ('<font color=black>Weather data set loaded successfully for '
+               'station %s.</font>') % self.meteo_data.STA
+        self.ConsoleSignal.emit(msg)
+
+        # Update Graph of "Compute" Mode :
+        self.hydrocalc.load_weather_data(filename)
 
         if self.fwaterlvl:
             QtCore.QCoreApplication.processEvents()
             self.draw_hydrograph()
 
-
-    def update_graph_layout_parameter(self): #================================
-
+    def update_graph_layout_parameter(self):  # ===============================
         '''
         This method is called either by the methods <save_graph_layout>
         or by <draw_hydrograph>. It fetches the values that are currently
@@ -843,58 +829,56 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         <hydrograph> of the class <Hydrograph>.
         '''
 
-        if self.UpdateUI == False:
+        if self.UpdateUI is False:
             return
 
-        #---- dates ----
+        # Dates :
 
         year = self.date_start_widget.date().year()
         month = self.date_start_widget.date().month()
         day = 1
-        date = xldate_from_date_tuple((year, month, day),0)
+        date = xldate_from_date_tuple((year, month, day), 0)
         self.hydrograph.TIMEmin = date
 
         year = self.date_end_widget.date().year()
         month = self.date_end_widget.date().month()
         day = 1
-        date = xldate_from_date_tuple((year, month, day),0)
+        date = xldate_from_date_tuple((year, month, day), 0)
         self.hydrograph.TIMEmax = date
 
-        #---- scales ----
+        # Scales :
 
         self.hydrograph.WLscale = self.waterlvl_scale.value()
         self.hydrograph.WLmin = self.waterlvl_max.value()
         self.hydrograph.RAINscale = self.Ptot_scale.value()
 
-        #---- label language ----
+        # Label language :
 
         self.hydrograph.language = self.language_box.currentText()
 
-        #------------------------------------------------------ Page Setup ----
+        # ----------------------------------------------------- Page Setup ----
 
-        #---- Water Level Trend ----
+        # Water Level Trend :
 
         self.hydrograph.trend_line = int(self.page_setup_win.isTrendLine)
 
-        #---- legend ----
+        # Legend :
 
         self.hydrograph.isLegend = int(self.page_setup_win.isLegend)
 
-        #---- graph title ----
+        # Graph title :
 
         self.hydrograph.isGraphTitle = int(self.page_setup_win.isGraphTitle)
 
-        #---- figure size ----
+        # Figure size :
 
         self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
 
-
-    def load_graph_layout(self): #======================== Load Graoh Layout ==
-
+    def load_graph_layout(self):  # ===========================================
 
         self.check_files()
 
-        #------------------------------------ Check if Waterlvl Data Exist ----
+        # ----------------------------------- Check if Waterlvl Data Exist ----
 
         if not self.fwaterlvl:
 
@@ -907,14 +891,13 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
             return
 
-        #------------------------------------------ Check if Layout Exists ----
+        # ----------------------------------------- Check if Layout Exists ----
 
-        filename = self.workdir + '/graph_layout.lst'
+        filename = os.path.join(self.workdir, 'graph_layout.lst')
         name_well = self.waterlvl_data.name_well
         isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
 
-        if isLayoutExist == False:
-
+        if isLayoutExist is False:
             self.ConsoleSignal.emit(
             '''<font color=red>No graph layout exists for well %s.
                </font>''' % name_well)
@@ -924,15 +907,15 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
             return
 
-        #----------------------------------------------------- Load Layout ----
+        # ---------------------------------------------------- Load Layout ----
 
         self.hydrograph.load_layout(name_well, filename)
 
-        #------------------------------------------------------ Update UI -----
+        # ----------------------------------------------------- Update UI -----
 
         self.UpdateUI = False
 
-        #---- Scales ----
+        # Scales :
 
         date = self.hydrograph.TIMEmin
         date = xldate_as_tuple(date, 0)
@@ -952,11 +935,11 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.Ptot_scale.setValue(self.hydrograph.RAINscale)
 
-        #---- Color Palette ----
+        # Color Palette :
 
         self.color_palette_win.load_colors()
 
-        #---- Page Setup ----
+        # Page Setup :
 
         self.page_setup_win.pageSize = (self.hydrograph.fwidth,
                                         self.hydrograph.fheight)
@@ -984,19 +967,16 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.page_setup_win.fheight.setValue(self.hydrograph.fheight)
         self.page_setup_win.va_ratio_spinBox.setValue(self.hydrograph.va_ratio)
 
-        #----- Check if Weather Data File exists -----
+        # Check if Weather Data File exists :
 
         if os.path.exists(self.hydrograph.fmeteo):
-            self.meteo_data.load_and_format(self.hydrograph.fmeteo)
-            INFO = self.meteo_data.build_HTML_table()
-            self.meteo_info_widget.setText(INFO)
-            self.ConsoleSignal.emit(
-            '''<font color=black>Graph layout loaded successfully for
-               well %s.</font>''' % name_well)
-
+            msg = 'Graph layout loaded successfully for well %s.' % name_well
+            print(msg)
+            self.ConsoleSignal.emit('<font color=black>%s.</font>' % msg)
             QtCore.QCoreApplication.processEvents()
 
-            self.draw_hydrograph()
+            self.load_meteo_file(self.hydrograph.fmeteo)
+
         else:
             self.meteo_info_widget.setText('')
             self.ConsoleSignal.emit(
@@ -1011,7 +991,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.UpdateUI = True
 
-    def save_config_isClicked(self): #=========================================
+    def save_config_isClicked(self):  # =======================================
 
         if not self.fwaterlvl:
 
@@ -1035,13 +1015,13 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                </font>''')
 
             self.msgError.setText(
-                            '''<b>Please select valid weather data file.</b>''')
+                '<b>Please select valid weather data file.</b>')
 
             self.msgError.exec_()
 
             return
 
-        #----------------------------------------- Check if Layout Exists ----
+        # ----------------------------------------- Check if Layout Exists ----
 
         filename = self.workdir + '/graph_layout.lst'
         if not os.path.exists(filename):
@@ -1051,9 +1031,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         name_well = self.waterlvl_data.name_well
         isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
 
-        #---------------------------------------------------- Save Layout ----
+        # ---------------------------------------------------- Save Layout ----
 
-        if isLayoutExist == True:
+        if isLayoutExist is True:
             self.msgBox.setText(
             '''<b>A graph layout already exists for well %s.<br><br> Do
                  you want to replace it?</b>''' % name_well)
@@ -1069,7 +1049,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         else:
             self.save_graph_layout(name_well)
 
-    def save_graph_layout(self, name_well): #=================================
+    def save_graph_layout(self, name_well):  # ================================
 
         self.update_graph_layout_parameter()
         filename = self.workdir + '/graph_layout.lst'
@@ -1078,7 +1058,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         '''<font color=black>Graph layout saved successfully
              for well %s.</font>''' % name_well)
 
-    def best_fit_waterlvl(self): #============================================
+    def best_fit_waterlvl(self):  # ===========================================
 
         if len(self.waterlvl_data.lvl) != 0:
 
@@ -1087,7 +1067,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.waterlvl_scale.setValue(WLscale)
             self.waterlvl_max.setValue(WLmin)
 
-    def best_fit_time(self): #================================================
+    def best_fit_time(self):  # ===============================================
 
         if len(self.waterlvl_data.time) != 0:
 
@@ -1097,7 +1077,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
 
-    def select_save_path(self): #=============================================
+    def select_save_path(self):  # ============================================
 
         name_well = self.waterlvl_data.name_well
         dialog_dir = self.save_fig_dir + '/hydrograph_' + name_well
@@ -1117,21 +1097,19 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             self.save_fig_dir = os.path.dirname(fname)
             self.save_figure(fname)
 
-
-    def save_figure(self, fname): #========================= Save Hydrograph ==
+    def save_figure(self, fname):  # ==========================================
 
         self.hydrograph.generate_hydrograph(self.meteo_data)
         self.hydrograph.savefig(fname)
 
-
-    def draw_hydrograph(self): #============================ Draw Hydrograph ==
+    def draw_hydrograph(self):  # =============================================
 
         if not self.fwaterlvl:
             console_text = ('<font color=red>Please select a valid water ' +
                             'level data file</font>')
             self.ConsoleSignal.emit(console_text)
             self.emit_error_message(
-            '<b>Please select a valid Water Level Data File first.</b>')
+                '<b>Please select a valid Water Level Data File first.</b>')
 
             return
 
@@ -1140,15 +1118,16 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                             'weather data file</font>')
             self.ConsoleSignal.emit(console_text)
             self.emit_error_message(
-            '<b>Please select a valid Weather Data File first.</b>')
+                '<b>Please select a valid Weather Data File first.</b>')
 
             return
 
         self.update_graph_layout_parameter()
 
-        #----- Generate and Display Graph -----
+        # Generate and Display Graph :
 
-        for i in range(5): QtCore.QCoreApplication.processEvents()
+        for i in range(5):
+            QtCore.QCoreApplication.processEvents()
 
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
         self.hydrograph.generate_hydrograph(self.meteo_data)
