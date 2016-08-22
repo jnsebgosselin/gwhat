@@ -1409,7 +1409,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
     def update_precip_scale(self):  # =========================================
 
-        if self.meteo_on == False:
+        if self.meteo_on is False:
             return
 
         ymax = self.NZGrid * self.RAINscale
