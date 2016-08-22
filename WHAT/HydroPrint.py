@@ -54,7 +54,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
     ConsoleSignal = QtCore.Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None):  # =======================================
         super(HydroprintGUI, self).__init__(parent)
 
         self.workdir = os.getcwd()
@@ -63,10 +63,10 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.waterlvl_data = WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
 
-        # memory path variable
+        # memory path variable :
 
-        self.meteo_dir = self.workdir + '/Meteo/Output'
-        self.waterlvl_dir = self.workdir + '/Water Levels'
+        self.meteo_dir = os.path.join(self.workdir, 'Meteo', 'Output')
+        self.waterlvl_dir = os.path.join(self.workdir, 'Water Levels')
         self.save_fig_dir = self.workdir
 
         self.__initUI__()
@@ -646,7 +646,6 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         the user to select a valid Water Level Data file.
         '''
 
-
         filename, _ = QtGui.QFileDialog.getOpenFileName(
                                   self, 'Select a valid water level data file',
                                   self.waterlvl_dir, '*.xls')
@@ -1156,15 +1155,13 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
         QtGui.QApplication.restoreOverrideCursor()
 
-
-    def layout_changed(self): #=========================== layout_changed ====
+    def layout_changed(self):  # ==============================================
         """
         When an element of the graph layout is changed in the UI,
         """
 
         sender = self.sender()
-
-        if self.UpdateUI == False:
+        if self.UpdateUI is False:
             return
 
         if sender == self.language_box:
@@ -1229,7 +1226,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             year = self.date_end_widget.date().year()
             month = self.date_end_widget.date().month()
             day = 1
-            date = xldate_from_date_tuple((year, month, day),0)
+            date = xldate_from_date_tuple((year, month, day), 0)
             self.hydrograph.TIMEmax = date
 
             if self.hydrograph.isHydrographExists:
@@ -1264,16 +1261,16 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
                 self.hydrograph.draw_waterlvl()
                 self.hydrograph.set_legend()
 
-        #------------------------------------------- Weather Data resampling --
+        # ---------------------------------------- Weather Data resampling ----
 
         elif sender == self.qweather_bin:
-            self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex ()
+            self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex()
             if self.hydrograph.isHydrographExists:
                 self.hydrograph.resample_bin()
                 self.hydrograph.draw_weather()
                 self.hydrograph.draw_ylabels()
 
-        #------------------------------------------------- Scale Data Labels --
+        # ---------------------------------------------- Scale Data Labels ----
 
         elif sender == self.time_scale_label:
             self.hydrograph.datemode = self.time_scale_label.currentText()
@@ -1285,7 +1282,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
             year = self.date_end_widget.date().year()
             month = self.date_end_widget.date().month()
-            date = xldate_from_date_tuple((year, month, 1),0)
+            date = xldate_from_date_tuple((year, month, 1), 0)
             self.hydrograph.TIMEmax = date
 
             if self.hydrograph.isHydrographExists:
@@ -1300,11 +1297,13 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 #        sender.blockSignals(True)
         if type(sender) in [QtGui.QDoubleSpinBox, QtGui.QSpinBox]:
             sender.setReadOnly(True)
+
         for i in range(10):
-             QtCore.QCoreApplication.processEvents()
+            QtCore.QCoreApplication.processEvents()
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
         for i in range(10):
-             QtCore.QCoreApplication.processEvents()
+            QtCore.QCoreApplication.processEvents()
+
         if type(sender) in [QtGui.QDoubleSpinBox, QtGui.QSpinBox]:
             sender.setReadOnly(False)
 #        sender.blockSignals(False)

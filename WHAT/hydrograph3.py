@@ -166,7 +166,6 @@ class HydrographBase(mpl.figure.Figure):                     # HydrographBase #
         self.set_canvas(FigureCanvas(self))
         self.canvas.get_renderer()
 
-        self.__isHydrographExists = False
         self.__meteo_on = True
         self.__language = 'english'
 
@@ -183,10 +182,6 @@ class HydrographBase(mpl.figure.Figure):                     # HydrographBase #
                   'Previous value of "meteo_on" is kept.')
 
     @property
-    def isHydrographExists(self):
-        return self.__isHydrographExists
-
-    @property
     def language(self):
         return self.__language
 
@@ -199,6 +194,7 @@ class HydrographBase(mpl.figure.Figure):                     # HydrographBase #
                   'Setting language to "english".')
             self.__language = 'english'
 
+
 ###############################################################################
 
 
@@ -206,6 +202,8 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
     def __init__(self, *args, **kargs):
         super(Hydrograph, self).__init__(*args, **kargs)
+
+        self.__isHydrographExists = False
 
         # Fig Init :
 
@@ -285,6 +283,10 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         #   3: 1 year;
 
         self.NMissPtot = []
+
+    @property
+    def isHydrographExists(self):
+        return self.__isHydrographExists
 
     def set_waterLvlObj(self, WaterLvlObj):  # ================================
         self.WaterLvlObj = WaterLvlObj
@@ -1453,7 +1455,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         else:
             self.ax4.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
-                        linewidth=0.5, dashes=[0.5, 5], which='minor')
+                          linewidth=0.5, dashes=[0.5, 5], which='minor')
             self.axLow.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
                             linewidth=0.5, dashes=[0.5, 5])
             self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle=':',

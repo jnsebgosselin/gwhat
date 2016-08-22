@@ -48,7 +48,10 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 from PySide import QtGui, QtCore
 
 
-class MplViewer(QtGui.QFrame):  # %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+###############################################################################
+
+
+class MplViewer(QtGui.QFrame):
 
     def __init__(self, parent=None):
         super(MplViewer, self).__init__(parent)
@@ -277,7 +280,7 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
 
     def adjust_scrollbar(self, f):  # =========================================
 
-        #---- Adjust HScrollBar ----
+        # Adjust HScrollBar :
 
         hb = self.horizontalScrollBar()
         hb.setValue(int(f * hb.value() + ((f - 1) * hb.pageStep()/2)))
@@ -315,7 +318,7 @@ if __name__ == '__main__':  # =================================================
     # display it in a image viewer --------------------------------------------
 
     imageViewer = ImageViewer()
-    imageViewer.setFixedSize(450, 450)
+    imageViewer.setMinimumSize(450, 450)
     imageViewer.load_mpl_figure(fig)
     imageViewer.show()
 
