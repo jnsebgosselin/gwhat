@@ -1201,7 +1201,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         else:
             istart = istart[0]
             if istart > 0:
-                istart -= 1
+                istart += -1
 
         iend = np.where(self.bTIME < self.TIMEmax)[0]
         if len(iend) == 0:

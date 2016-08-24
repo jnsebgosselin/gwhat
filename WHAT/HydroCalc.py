@@ -55,6 +55,9 @@ mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
 
 
+###############################################################################
+
+
 class Tooltips():
 
     def __init__(self, language):  # ------------------------------- ENGLISH --
@@ -143,7 +146,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
-        print(len(self.peak_memory))
 
         # Soil Profiles :
 
@@ -207,7 +209,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         ax1.set_zorder(50)
         ax1.set_navigate(False)
         ax1.invert_yaxis()
-        ax1.axis(ymin=100, ymax=0)
+        ax1.axis(ymin=250, ymax=0)
 
         # ----------------------------------------------------------- XTICKS --
 
@@ -233,7 +235,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         # -------------------------------------------------- Setup Gridlines --
 
-        ax0.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':')
+        ax0.grid(axis='x', color=[0.35, 0.35, 0.35], ls='--')
         ax0.set_axisbelow(True)
 
         # ---------------------------------------------------------- ARTISTS --
@@ -247,7 +249,10 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                                 zorder=15, marker='None', linestyle='--')
 
         # Rain :
-        self.h_rain, = ax1.plot([], [], color='0.65')
+        self.h_rain, = ax1.plot([], [])
+
+        # Ptot :
+        self.h_ptot, = ax1.plot([], [])
 
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
@@ -416,10 +421,67 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
     def load_weather_data(self, filename):  # =================================
         self.meteo_data.load_and_format(filename)
-        x = self.meteo_data.TIME + self.dt4xls2mpl * self.dformat
-        y = self.meteo_data.DATA[:, -1]
+        self.plot_weather_data()
 
-        self.h_rain.set_data(x, y)
+    def plot_weather_data(self):  # ===========================================
+
+        print(self.meteo_data.varnames)
+
+        time = self.meteo_data.TIME + self.dt4xls2mpl * self.dformat
+        ptot = self.meteo_data.DATA[:, 6]
+        rain = self.meteo_data.DATA[:, -1]
+
+        # --------------------------------------------------- Bin the Data ----
+
+        bw = 7
+        n = bw/2
+        f = 0.65  # Space between individual bar.
+
+        nbin = int(np.floor(len(time)/bw))
+
+        time_bin = time[:nbin*bw].reshape(nbin, bw)
+        time_bin = np.sum(time_bin, axis=1)/bw
+
+        rain_bin = rain[:nbin*bw].reshape(nbin, bw)
+        rain_bin = np.sum(rain_bin, axis=1)
+
+        ptot_bin = ptot[:nbin*bw].reshape(nbin, bw)
+        ptot_bin = np.sum(ptot_bin, axis=1)
+
+        # ------------------------------------------------- Generate Shape ----
+
+        time_bar = np.zeros(len(time_bin) * 4)
+        rain_bar = np.zeros(len(rain_bin) * 4)
+        ptot_bar = np.zeros(len(ptot_bin) * 4)
+
+        time_bar[0::4] = time_bin - (n * f)
+        time_bar[1::4] = time_bin - (n * f)
+        time_bar[2::4] = time_bin + (n * f)
+        time_bar[3::4] = time_bin + (n * f)
+
+        rain_bar[0::4] = 0
+        rain_bar[1::4] = rain_bin
+        rain_bar[2::4] = rain_bin
+        rain_bar[3::4] = 0
+
+        ptot_bar[0::4] = 0
+        ptot_bar[1::4] = ptot_bin
+        ptot_bar[2::4] = ptot_bin
+        ptot_bar[3::4] = 0
+
+        # ------------------------------------------------------ Plot data ----
+
+        ax = self.fig.axes[1]
+
+        self.h_rain.remove()
+        self.h_ptot.remove()
+
+        self.h_rain = ax.fill_between(time_bar, 0., rain_bar,
+                                      color='0.65', lw=0, zorder=100)
+
+        self.h_ptot = ax.fill_between(time_bar, 0., ptot_bar,
+                                      color='0.85', lw=0, zorder=50)
+
         self.draw()
 
     def load_waterLvl_data(self, filename):  # ================================
@@ -778,7 +840,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         left_margin = 1. / fwidth
         right_margin = 1. / fwidth
-        bottom_margin = 1. / fheight
+        bottom_margin = 0.75 / fheight
         top_margin = 0.25 / fheight
 
         x0 = left_margin
@@ -839,8 +901,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.h2_ax0.set_xdata(self.time[self.peak_indx] +
                                   self.dt4xls2mpl * self.dformat)
 
-        self.h_rain.set_xdata(self.meteo_data.TIME +
-                              self.dt4xls2mpl * self.dformat)
+        self.plot_weather_data()
 
         self.draw()
 

@@ -424,19 +424,19 @@ class MeteoObj():
         print('Loading weather data from "%s"...' %
               os.path.basename(filename))
 
-        #---- load data from file ----
+        # Load data from file :
 
         self.load(filename)
         self.build_HTML_table()
 
-        #---- clean data ----
+        # Clean data :
 
         self.clean_endsof_file()
         self.check_time_continuity()
         self.get_TIME(self.DATA[:, :3])
         self.fill_nan()
 
-        #---- add ETP and RAIN ----
+        # Add ETP and RAIN :
 
         self.add_ETP_to_data()
         self.add_rain_to_data()
@@ -457,7 +457,7 @@ class MeteoObj():
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
 
-        #---- get info from header and find row where data starts ----
+        # Get info from header and find row where data starts :
 
         for i in range(len(reader)):
 
@@ -470,10 +470,10 @@ class MeteoObj():
                     break
 
                 if np.any(labels == reader[i][0]):
-                    indx = np.where(labels == reader[i][0])[0]
+                    indx = np.where(labels == reader[i][0])[0][0]
                     self.STADESC[1][indx] = reader[i][1]
 
-        #---- Update class variables ----
+        # Update class variables :
 
         [self.STA, self.LAT, self.LON,
          self.PRO, self.ALT, self.CID] = self.STADESC[1]
@@ -481,7 +481,7 @@ class MeteoObj():
         # DATA = [Year, Month, Day, Tmax, Tmin, Tmean, PTOT, {ETP}, {RAIN}]
         self.DATA = np.array(reader[data_indx:]).astype('float')
 
-        #---- assign a datatype to each variables ----
+        # Assign a datatype to each variables :
 
         datatype0 = ['Max Temp (deg C)', 'Min Temp (deg C)',
                      'Mean Temp (deg C)']
@@ -505,7 +505,7 @@ class MeteoObj():
         not be run before the 'TIME' array is generated.
         """
 
-        #---- Beginning ----
+        # Beginning :
 
         n = len(self.DATA[:, 0])
         for i in range(len(self.DATA[:, 0])):
@@ -612,7 +612,7 @@ class MeteoObj():
             print('Already a Rain time series in the datasets.')
             return
 
-        #---- get PTOT and TAVG from data ----
+        # Get PTOT and TAVG from data :
 
         indx = np.where(varnames == 'Total Precip (mm)')[0][0]
         PTOT = np.copy(self.DATA[:, indx])
@@ -620,27 +620,26 @@ class MeteoObj():
         indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
         TAVG = np.copy(self.DATA[:, indx])
 
-        #---- estimate rain ----
+        # Estimate rain :
 
         RAIN = np.copy(PTOT)
         RAIN[np.where(TAVG < 0)[0]] = 0
         RAIN = RAIN[:, np.newaxis]
 
-        #---- extend data ----
+        # Extend data :
 
         self.DATA = np.hstack([self.DATA, RAIN])
         self.varnames.append('Rain (mm)')
         self.datatypes.append(1)
 
-
-    def add_ETP_to_data(self): #===============================================
+    def add_ETP_to_data(self):  # =============================================
 
         varnames = np.array(self.varnames)
         if np.any(varnames == 'ETP (mm)'):
             print('Already a ETP time series in the datasets.')
             return
 
-        #---- assign local variable ----
+        # Assign local variable :
 
         DATE = np.copy(self.DATA[:, :3])
         LAT = np.copy(float(self.LAT))
