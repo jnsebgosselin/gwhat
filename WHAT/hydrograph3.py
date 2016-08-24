@@ -699,7 +699,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         else:
             right_margin = 0.85 / self.fwidth
 
-        bottom_margin = 0.55 / self.fheight
+        bottom_margin = 0.6 / self.fheight
 
         top_margin = 0.25 / self.fheight
         if self.isGraphTitle == 1 or self.isLegend == 1:
