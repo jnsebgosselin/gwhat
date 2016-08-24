@@ -122,27 +122,58 @@ class GapFillWeather(QtCore.QObject):
 
         # This method scans the input directory for valid weather data files
         # and instruct the "WEATHER" instance to load the data from the file
-        # and to generate a summary.
+        # and to generate a summary. The results are saved in a structured
+        # numpy array in binary format, so that loading time is improved on
+        # subsequent run. Some checks are made to be sure the binary match
+        # with the current data files in the folder.
 
         if not self.inputDir:
             print('Please specify a valid input data file directory.')
-            return []
+            return None
 
         if not os.path.exists(self.inputDir):
             print('Data Directory path does not exists.')
-            return []
+            return None
 
-        # Generate a list of data file paths ----------------------------------
+        binfile = os.path.join(self.inputDir, 'fdata.npy')
+        if not os.path.exists(binfile):
+            return self.reload_data()
 
-        Sta_path = []
-        for files in os.listdir(self.inputDir):
-            if files.endswith(".csv"):
-                Sta_path.append(self.inputDir + '/' + files)
+        # Scan input folder for changes :
 
-        print('%d valid weather data files found in Input folder.' %
-              len(Sta_path))
+        A = np.load(binfile)
+        fnames = A['fnames']
 
-        self.WEATHER.load_and_format_data(Sta_path)
+        bmtime = os.path.getmtime(binfile)
+        for f in os.listdir(self.inputDir):
+            if f.endswith('.csv'):
+                fmtime = os.path.getmtime(os.path.join(self.inputDir, f))
+                if f not in fnames or fmtime > bmtime:
+                    return self.reload_data()
+
+        # Load from binary :
+
+        print('\nLoading data from binary file :\n')
+        self.WEATHER.load_from_binary(self.inputDir)
+        self.WEATHER.generate_summary(self.outputDir)
+        self.TARGET.index = -1
+
+        return self.WEATHER.STANAME
+
+    def reload_data(self):  # =================================================
+        print('\nLoading data from csv files :')
+        paths = []
+        for f in os.listdir(self.inputDir):
+            if f.endswith('.csv'):
+                fname = os.path.join(self.inputDir, f)
+                paths.append(fname)
+
+        n = len(paths)
+        print('%d valid weather data files found in Input folder.\n' % n)
+
+        self.WEATHER.load_and_format_data(paths)
+        self.WEATHER.save_to_binary(self.inputDir)
+
         self.WEATHER.generate_summary(self.outputDir)
         self.TARGET.index = -1
 
@@ -1155,18 +1186,20 @@ def correlation_worker(WEATHER, tarStaIndx):
     return CORCOEF
 
 
-#==============================================================================
-class TargetStationInfo():
+###############################################################################
+
+
+class TargetStationInfo(object):
     """
     Class that contains all the information relative the target station,
     including correlation coefficient 2d matrix, altitude difference and
     horizontal distances arrays.
     """
-#==============================================================================
 
     def __init__(self):
-        self.index = -1  # Target station index in the DATA matrix and STANAME
-                         # array of the class WEATHER.
+        self.index = -1
+        # Target station index in the DATA matrix and STANAME
+        # array of the class WEATHER.
 
         self.name = []  # Target station name
 
@@ -1217,7 +1250,10 @@ def alt_and_dist_calc(WEATHER, index):  # =====================================
     return HORDIST, ALTDIFF
 
 
-class WeatherData():  # #######################################################
+###############################################################################
+
+
+class WeatherData(object):
     """
     This class contains all the weather data and weather station info
     that are needed for the gapfilling algorithm that is defined in the
@@ -1256,12 +1292,82 @@ class WeatherData():  # #######################################################
         self.PROVINCE = []    # Provinces where weater station are located
 
         self.NUMMISS = []     # Number of missing data
+        self.fnames = []
 
-    def load_and_format_data(self, fnames):  # ================================
+    def save_to_binary(self, dirname):  # =====================================
 
-        # fnames = list of paths of weater data files
+        dtype = [('DATA', 'float32', np.shape(self.DATA)),
+                 ('DATE', 'i2', np.shape(self.DATE)),
+                 ('TIME', 'float32', np.shape(self.TIME)),
+                 ('DATE_START', 'i2', np.shape(self.DATE_START)),
+                 ('DATE_END', 'i2', np.shape(self.DATE_END)),
+                 ('STANAME', '|U25', np.shape(self.STANAME)),
+                 ('ALT', 'float16', np.shape(self.ALT)),
+                 ('LAT', 'float16', np.shape(self.LAT)),
+                 ('LON', 'float16', np.shape(self.LON)),
+                 ('ClimateID', '|U25', np.shape(self.ClimateID)),
+                 ('PROVINCE', '|U25', np.shape(self.PROVINCE)),
+                 ('NUMMISS', 'i2', np.shape(self.NUMMISS)),
+                 ('VARNAME', '|U25', np.shape(self.VARNAME)),
+                 ('fnames', '|U80', np.shape(self.fnames))
+                 ]
 
-        nSTA = len(fnames)  # Number of weather data file
+        A = np.zeros((), dtype=dtype)
+        A['DATA'] = self.DATA
+        A['DATE'] = self.DATE
+        A['TIME'] = self.TIME
+
+        A['DATE_START'] = self.DATE_START
+        A['DATE_END'] = self.DATE_END
+
+        A['STANAME'] = self.STANAME
+        A['ALT'] = self.ALT
+        A['LAT'] = self.LAT
+        A['LON'] = self.LON
+        A['ClimateID'] = self.ClimateID
+        A['PROVINCE'] = self.PROVINCE
+        A['NUMMISS'] = self.NUMMISS
+
+        A['VARNAME'] = self.VARNAME
+        A['fnames'] = self.fnames
+
+        fname = os.path.join(dirname, 'fdata.npy')
+        np.save(fname, A)
+
+    def load_from_binary(self, dirname):  # ===================================
+
+        fname = os.path.join(dirname, 'fdata.npy')
+        A = np.load(fname)
+
+        self.DATA = A['DATA']
+        self.DATE = A['DATE']
+        self.TIME = A['TIME']
+
+        self.DATE_START = A['DATE_START']
+        self.DATE_END = A['DATE_END']
+
+        self.STANAME = A['STANAME']
+        self.ALT = A['ALT']
+        self.LAT = A['LAT']
+        self.LON = A['LON']
+        self.ClimateID = A['ClimateID']
+        self.PROVINCE = A['PROVINCE']
+        self.NUMMISS = A['NUMMISS']
+
+        self.VARNAME = A['VARNAME']
+        self.fnames = A['fnames']
+
+        for name in self.STANAME:
+            print(name)
+
+    def load_and_format_data(self, paths):  # ================================
+
+        # paths = list of paths of weater data files
+        nSTA = len(paths)  # Number of weather data file
+
+        self.fnames = np.zeros(nSTA).astype(object)
+        for i, path in enumerate(paths):
+            self.fnames[i] = os.path.basename(path)
 
         if nSTA == 0:  # Reset states of all class variables
             self.STANAME = []
@@ -1286,14 +1392,15 @@ class WeatherData():  # #######################################################
         self.DATE_START = np.zeros((nSTA, 3)).astype('int')
         self.DATE_END = np.zeros((nSTA, 3)).astype('int')
 
-        FLAG_date = False  # If True, a new DATE matrix will be rebuilt at the
-                           # of this routine.
+        FLAG_date = False
+        # If FLAG_date becomes True, a new DATE matrix will be rebuilt at the
+        # end of this routine.
 
         for i in range(nSTA):
 
-            #------------------------------------------- WEATHER DATA IMPORT --
+            # ---------------------------------------- WEATHER DATA IMPORT ----
 
-            with open(fnames[i], 'r') as f:
+            with open(paths[i], 'r', encoding='utf8') as f:
                 reader = list(csv.reader(f, delimiter='\t'))
 
             STADAT = np.array(reader[8:]).astype(float)
@@ -1301,7 +1408,7 @@ class WeatherData():  # #######################################################
             self.DATE_START[i, :] = STADAT[0, :3]
             self.DATE_END[i, :] = STADAT[-1, :3]
 
-            #----------------------------------------- TIME CONTINUITY CHECK --
+            # -------------------------------------- TIME CONTINUITY CHECK ----
 
             # Check if data are continuous over time. If not, the serie will be
             # made continuous and the gaps will be filled with nan values.
@@ -1324,7 +1431,7 @@ class WeatherData():  # #######################################################
 
             time_new = np.arange(time_start, time_end + 1)
 
-            #-------------------------------------------- FIRST TIME ROUTINE --
+            # ----------------------------------------- FIRST TIME ROUTINE ----
 
             if i == 0:
                 self.VARNAME = reader[7][3:]
@@ -1334,7 +1441,7 @@ class WeatherData():  # #######################################################
                 self.DATE = STADAT[:, :3]
                 self.NUMMISS = np.zeros((nSTA, nVAR)).astype('int')
 
-            #------------------------------------- <DATA> & <TIME> RESHAPING --
+            # ---------------------------------- <DATA> & <TIME> RESHAPING ----
 
             # This part of the function fits neighboring data series to the
             # target data serie in the 3D data matrix. Default values in the
@@ -1415,14 +1522,14 @@ class WeatherData():  # #######################################################
             ilast = np.where(self.TIME == time_new[-1])[0][0]
             self.DATA[ifirst:ilast+1, i, :] = STADAT[:, 3:]
 
-            #---------------------------------------------------- Other Info --
+            # --------------------------------------------------- Other Info --
 
-            #-- Nbr. of Missing Data --
+            # Nbr. of Missing Data :
 
             isnan = np.isnan(STADAT[:, 3:])
             self.NUMMISS[i, :] = np.sum(isnan, axis=0)
 
-            #-- station name --
+            # station name :
 
             # Check if a station with this name already exist in the list.
             # If so, a number at the end of the name is added so it is
@@ -1446,7 +1553,7 @@ class WeatherData():  # #######################################################
             else:
                 self.STANAME[i] = reader[0][1]
 
-            #-- other station info --
+            # Other station info :
 
             self.PROVINCE[i] = str(reader[1][1])
             self.LAT[i] = float(reader[2][1])
@@ -1454,7 +1561,7 @@ class WeatherData():  # #######################################################
             self.ALT[i] = float(reader[4][1])
             self.ClimateID[i] = str(reader[5][1])
 
-        #--------------------------------------- SORT STATION ALPHABETICALLY --
+        # ------------------------------------ SORT STATION ALPHABETICALLY ----
 
         sort_index = np.argsort(self.STANAME)
 
@@ -1470,7 +1577,9 @@ class WeatherData():  # #######################################################
         self.DATE_START = self.DATE_START[sort_index]
         self.DATE_END = self.DATE_END[sort_index]
 
-        #----------------------------------------------- GENERATE DATE SERIE --
+        self.fnames = self.fnames[sort_index]
+
+        # -------------------------------------------- GENERATE DATE SERIE ----
 
         # Rebuild a date matrix if <DATA> size changed. Otherwise, do nothing
         # and keep *Date* as is.
@@ -1557,7 +1666,7 @@ class WeatherData():  # #######################################################
         formatted table
         """
 
-        #--------------------------------------------------------- read data --
+        # ------------------------------------------------------ read data ----
 
         filename = project_folder + '/weather_datasets_summary.log'
         with open(filename, 'r') as f:
@@ -1567,7 +1676,7 @@ class WeatherData():  # #######################################################
 #        FIELDS = ['&#916;Alt.<br>(m)', 'Dist.<br>(km)', 'Tmax',
 #                  'Tmin', 'Tmean', 'Ptot']
 
-        #-------------------------------------------- generate table summary --
+        # ----------------------------------------- generate table summary ----
 
         table = '''
                 <table border="0" cellpadding="3" cellspacing="0"

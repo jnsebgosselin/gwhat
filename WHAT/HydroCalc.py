@@ -1498,8 +1498,8 @@ def local_extrema(x, Deltan):  # ==============================================
 #    """
 #    time = mpl.dates.date2num(date)
 
-#==============================================================================
-def mrc_calc(t, h, ipeak, MRCTYPE=1):
+
+def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
     the aquifer from the water level time series using a modified Gauss-Newton
@@ -1517,11 +1517,10 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
              MODE = 1 -> exponential (dh/dt = -a*h + b)
 
     """
-#==============================================================================
 
     A, B, hp, RMSE = None, None, None, None
 
-    #---------------------------------------------------------- Check MinMax --
+    # ------------------------------------------------------- Check MinMax ----
 
     if len(ipeak) == 0:
         print('No extremum selected')
@@ -1530,13 +1529,13 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
     ipeak = np.sort(ipeak)
     maxpeak = ipeak[:-1:2]
     minpeak = ipeak[1::2]
-    dpeak = (h[maxpeak] - h[minpeak]) * -1 # WARNING: Don't forget it is mbgs
+    dpeak = (h[maxpeak] - h[minpeak]) * -1  # WARNING: Don't forget it is mbgs
 
     if np.any(dpeak < 0):
         print('There is a problem with the pair-ditribution of min-max')
         return A, B, hp, RMSE
 
-    #---------------------------------------------------------- Optimization --
+    # ------------------------------------------------------- Optimization ----
 
     print('\n---- MRC calculation started ----\n')
     print('MRCTYPE = %s\n' % (['Linear', 'Exponential'][MRCTYPE]))
@@ -1561,12 +1560,12 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
     # NP: number of parameters
     if MRCTYPE == 0:
         NP = 1
-    elif MRCTYPE ==1:
+    elif MRCTYPE == 1:
         NP = 2
 
     while 1:
 
-        # ---- Calculating Jacobian (X) Numerically ----
+        # Calculating Jacobian (X) Numerically :
 
         hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
         XB = (hdB[tindx] - hp[tindx]) / tolmax
@@ -1575,19 +1574,19 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             hdA = calc_synth_hydrograph(A + tolmax, B, h, dt, ipeak)
             XA = (hdA[tindx] - hp[tindx]) / tolmax
 
-            Xt  = np.vstack((XA, XB))
+            Xt = np.vstack((XA, XB))
         elif MRCTYPE == 0:
             Xt = XB
 
         X = Xt.transpose()
 
-        #---- Solving Linear System ----
+        # Solving Linear System :
 
         dh = h[tindx] - hp[tindx]
         XtX = np.dot(Xt, X)
         Xtdh = np.dot(Xt, dh)
 
-        #---- Scaling ----
+        # Scaling :
 
         C = np.dot(Xt, X) * np.identity(NP)
         for j in range(NP):
@@ -1596,17 +1595,17 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
         Ct = C.transpose()
         Cinv = np.linalg.inv(C)
 
-        #---- Constructing right hand side ----
+        # Constructing right hand side :
 
         CtXtdh = np.dot(Ct, Xtdh)
 
-        #---- Constructing left hand side ----
+        # Constructing left hand side :
 
         CtXtX = np.dot(Ct, XtX)
         CtXtXC = np.dot(CtXtX, C)
 
         m = 0
-        while 1: # loop for the Marquardt parameter (m)
+        while 1:  # loop for the Marquardt parameter (m)
 
             #---- Constructing left hand side (continued) ----
 

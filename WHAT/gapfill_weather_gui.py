@@ -19,21 +19,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#-- STANDARD LIBRARY IMPORTS --
+# STANDARD LIBRARY IMPORTS :
 
-#import csv
+# import csv
 import sys
-from time import sleep #ctime, strftime, sleep
-from os import getcwd, listdir, path
+from time import sleep  # ctime, strftime, sleep
+import os
 
-#-- THIRD PARTY IMPORTS --
+# THIRD PARTY IMPORTS :
 
 from PySide import QtGui, QtCore
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-#-- PERSONAL IMPORTS --
+# PERSONAL IMPORTS :
 
 import meteo
 from custom_widgets import MyQToolButton, QToolPanel
@@ -42,26 +42,26 @@ import database as db
 from gapfill_weather_algorithm import GapFillWeather
 
 
-# =============================================================================
+###############################################################################
+
 
 class GapFillWeatherGUI(QtGui.QWidget):
-
-# =============================================================================
 
     ConsoleSignal = QtCore.Signal(str)
 
     def __init__(self, parent=None):
         super(GapFillWeatherGUI, self).__init__(parent)
 
-        self.workdir = getcwd()
+        self.workdir = os.getcwd()
         self.isFillAll_inProgress = False
 
         self.FILLPARAM = GapFill_Parameters()
 
-        self.CORRFLAG = 'on'  # Correlation calculation won't be triggered by
-                              # events when this is 'off'
+        # Correlation calculation won't be triggered by events when
+        # CORRFLAG is 'off'
+        self.CORRFLAG = 'on'
 
-        #-- setup gap fill worker and thread --
+        # Setup gap fill worker and thread :
 
         self.fillworker = GapFillWeather(self)
 
@@ -69,27 +69,11 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.gap_fill_thread = QtCore.QThread()
         self.gap_fill_worker.moveToThread(self.gap_fill_thread)
 
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self):  # ======================================================
+    def __initUI__(self):  # ==================================================
 
-        """
-        Layout is organized with an ensemble of grids that are assembled
-        together on 3 different levels. First level is the main grid.
-        Second level is where are the LEFT and RIGHT grids. Finally, third
-        level is where are the SubGrids. The Left and Right grids can contain
-        any number of subgrids.
-
-                                  MAIN GRID
-                     ----------------------------------
-                     |               |                |
-                     |   LEFT GRID   |   RIGHT GRID   |
-                     |               |                |
-                     ----------------------------------
-
-        """
-
-        #---------------------------------------------------------- Database --
+        # ------------------------------------------------------- Database ----
 
         #TODO: cleanup the language, tooltips and labels.
 
@@ -98,12 +82,12 @@ class GapFillWeatherGUI(QtGui.QWidget):
         ttipDB = db.Tooltips('English')
         labelDB = db.labels('English')
 
-        #------------------------------------------------------- Main Window --
+        # ---------------------------------------------------- Main Window ----
 
         self.setWindowIcon(iconDB.WHAT)
 #        self.setFont(styleDB.font1)
 
-        #----------------------------------------------------------- TOOLBAR --
+        # -------------------------------------------------------- TOOLBAR ----
 
         self.btn_fill = QtGui.QPushButton(labelDB.btn_fill_weather)
         self.btn_fill.setIcon(iconDB.fill_data)
@@ -131,9 +115,9 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         widget_toolbar.setLayout(grid_toolbar)
 
-        #-------------------------------------------------------- LEFT PANEL --
+        # ----------------------------------------------------- LEFT PANEL ----
 
-        #-- Target Station --
+        # Target Station :
 
         target_station_label = QtGui.QLabel('<b>%s</b>' % labelDB.fill_station)
         self.target_station = QtGui.QComboBox()
@@ -141,10 +125,13 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
 
-        btn_refresh_staList = QtGui.QToolButton()
-        btn_refresh_staList.setIcon(iconDB.refresh)
-        btn_refresh_staList.setAutoRaise(True)
-        btn_refresh_staList.setIconSize(styleDB.iconSize2)
+        self.btn_refresh_staList = QtGui.QToolButton()
+        self.btn_refresh_staList.setIcon(iconDB.refresh)
+        self.btn_refresh_staList.setAutoRaise(True)
+        self.btn_refresh_staList.setIconSize(styleDB.iconSize2)
+        self.btn_refresh_staList.setToolTip(
+            'Force the reloading of the weather data files')
+        self.btn_refresh_staList.clicked.connect(self.load_data_dir_content)
 
         self.tarSta_widg = QtGui.QWidget()
         tarSta_grid = QtGui.QGridLayout()
@@ -153,7 +140,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         tarSta_grid.addWidget(target_station_label, row, 0, 1, 2)
         row = 1
         tarSta_grid.addWidget(self.target_station, row, 0)
-        tarSta_grid.addWidget(btn_refresh_staList, row, 1)
+        tarSta_grid.addWidget(self.btn_refresh_staList, row, 1)
         row = 2
         tarSta_grid.addWidget(self.target_station_info, row, 0, 1, 2)
 
@@ -162,7 +149,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         tarSta_grid.setContentsMargins(0, 0, 0, 10)  # (L,T,R,B)
         self.tarSta_widg.setLayout(tarSta_grid)
 
-        #-- Gapfill Dates --
+        # Gapfill Dates :
 
         label_From = QtGui.QLabel('From :  ')
         self.date_start_widget = QtGui.QDateEdit()
@@ -197,7 +184,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
             labelDB = db.labels('English')
 
-            #-- Widgets --
+            # Widgets :
 
             Nmax_label = QtGui.QLabel(labelDB.NbrSta)
             self.Nmax = QtGui.QSpinBox()
@@ -226,7 +213,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
             self.altlimit.setSuffix(' m')
             self.altlimit.setAlignment(QtCore.Qt.AlignCenter)
 
-            #-- Layout --
+            # Layout :
 
             container = QtGui.QFrame()
             grid = QtGui.QGridLayout()
@@ -311,7 +298,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
             return container
 
-        #-- STACKED WIDGET --
+        # STACKED WIDGET :
 
         cutoff_widg = station_sel_criteria(self)
         MLRM_widg = regression_model(self)
@@ -324,7 +311,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.stack_widget.addItem(MLRM_widg, 'Regression Model :')
         self.stack_widget.addItem(advanced_widg, 'Advanced Settings :')
 
-        #-- SUBGRIDS ASSEMBLY --
+        # SUBGRIDS ASSEMBLY :
 
         grid_leftPanel = QtGui.QGridLayout()
         self.LEFT_widget = QtGui.QFrame()
@@ -375,7 +362,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.sta_display_summary.setFrameStyle(0)
         self.sta_display_summary.document().setDocumentMargin(10)
 
-        self.gafill_display_table = GapFillDisplayTable(self)
+        self.gafill_display_table = GapFillDisplayTable()
 
 #        grid_rightPanel = QtGui.QGridLayout()
 #        new_table = QtGui.QFrame()
@@ -396,10 +383,10 @@ class GapFillWeatherGUI(QtGui.QWidget):
         RIGHT_widget = QtGui.QTabWidget()
         RIGHT_widget.addTab(self.FillTextBox, 'Correlation Coefficients')
         RIGHT_widget.addTab(self.sta_display_summary, 'Missing Data Overview')
-        RIGHT_widget.addTab(self.gafill_display_table,
-                            'New Table (Work-in-Progress)')
+#        RIGHT_widget.addTab(self.gafill_display_table,
+#                            'New Table (Work-in-Progress)')
 
-        #--------------------------------------------------------- Main grid --
+        # ------------------------------------------------------ Main grid ----
 
         grid_MAIN = QtGui.QGridLayout()
 
@@ -410,21 +397,19 @@ class GapFillWeatherGUI(QtGui.QWidget):
         grid_MAIN.setColumnStretch(1, 500)
         grid_MAIN.setRowStretch(0, 500)
         grid_MAIN.setSpacing(15)
-        grid_MAIN.setContentsMargins(15, 15, 15, 15) #Left, Top, Right, Bottom
+        grid_MAIN.setContentsMargins(15, 15, 15, 15)  # L, T, R, B
 
         self.setLayout(grid_MAIN)
 
-        #------------------------------------------------------ Progress Bar --
+        # --------------------------------------------------- Progress Bar ----
 
         self.pbar = QtGui.QProgressBar()
         self.pbar.setValue(0)
         self.pbar.hide()
 
-        #------------------------------------------------------------ Events --
+        # --------------------------------------------------------- Events ----
 
-        btn_refresh_staList.clicked.connect(self.load_data_dir_content)
-
-        #---- correlation ----
+        # CORRELATION :
 
         self.target_station.currentIndexChanged.connect(self.correlation_UI)
         self.distlimit.valueChanged.connect(self.correlation_table_display)
@@ -434,7 +419,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.date_end_widget.dateChanged.connect(
                                                 self.correlation_table_display)
 
-        #---- gapfill ----
+        # GAPFILL :
 
         self.gap_fill_worker.ProgBarSignal.connect(self.pbar.setValue)
         self.gap_fill_worker.GapFillFinished.connect(
@@ -444,7 +429,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.btn_fill.clicked.connect(self.gap_fill_btn_clicked)
         self.btn_fill_all.clicked.connect(self.gap_fill_btn_clicked)
 
-        #------------------------------------------------------- MESSAGE BOX --
+        # ---------------------------------------------------- MESSAGE BOX ----
 
         self.msgBox = MyQWidget.MyQErrorMessageBox()
 
@@ -473,7 +458,10 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.CORRFLAG = 'off'  # Correlation calculation won't
                                # be triggered when this is off
 
-        stanames = self.gap_fill_worker.load_data()
+        if self.sender() == self.btn_refresh_staList:
+            stanames = self.gap_fill_worker.reload_data()
+        else:
+            stanames = self.gap_fill_worker.load_data()
         self.target_station.addItems(stanames)
         self.target_station.setCurrentIndex(-1)
         self.sta_display_summary.setHtml(self.gap_fill_worker.read_summary())
@@ -483,8 +471,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         self.CORRFLAG = 'on'
 
-    def set_fill_and_save_dates(self): #=======================================
-
+    def set_fill_and_save_dates(self):  # =====================================
         """
         Set first and last dates of the data serie in the boxes of the
         *Fill and Save* area.
@@ -508,8 +495,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
             self.date_end_widget.setMinimumDate(DateMin)
             self.date_end_widget.setMaximumDate(DateMax)
 
-
-    def correlation_table_display(self): #=====================================
+    def correlation_table_display(self):  # ===================================
 
         """
         This method plot the table in the display area. It is separated from

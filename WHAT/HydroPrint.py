@@ -881,13 +881,13 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         # ----------------------------------- Check if Waterlvl Data Exist ----
 
         if not self.fwaterlvl:
-
-            self.ConsoleSignal.emit(
-            '''<font color=red>No valid water level data file currently
-                 selected. Cannot load graph layout.</font>''')
+            msg = ('No valid water level data file currently selected '
+                   'Cannot load graph layout.')
+            print(msg)
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
 
             self.emit_error_message(
-            '''<b>Please select a valid water level data file.</b>''')
+                '<b>Please select a valid water level data file.</b>')
 
             return
 
@@ -1359,7 +1359,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         main_layout.addWidget(toolbar_widget, 1, 0)
         self.setLayout(main_layout)
 
-    def load_colors(self): #==================================== Load Colors ==
+    def load_colors(self):  # =================================================
 
         colorsDB = hydrograph.Colors()
         colorsDB.load_colors_db()

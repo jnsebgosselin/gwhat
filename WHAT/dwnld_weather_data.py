@@ -28,6 +28,7 @@ except:
 
 #from datetime import datetime
 import sys
+import os
 from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
@@ -88,11 +89,11 @@ class dwnldWeather(QtGui.QWidget):
         self.staList2dwnld = []
         self.dwnld_indx = 0
 
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self): #=========================================================
+    def __initUI__(self):  # ==================================================
 
-        #---------------------------------------------------------- Database --
+        # ------------------------------------------------------- Database ----
 
         styleDB = db.styleUI()
         iconDB = db.Icons()
@@ -388,8 +389,7 @@ class dwnldWeather(QtGui.QWidget):
 
         self.station_table.populate_table(staList2grow)
 
-
-    def btn_browse_staList_isClicked(self): #===================================
+    def btn_browse_staList_isClicked(self):  # ================================
 
         '''
         Allows the user to select a weather station list with
@@ -510,7 +510,7 @@ class dwnldWeather(QtGui.QWidget):
         self.station_table.populate_table(staList)
         self.staList_fname = filename
 
-    def btn_save_staList_isClicked(self): #=====================================
+    def btn_save_staList_isClicked(self):  # ==================================
 
         filename = self.staList_fname
 
@@ -584,7 +584,7 @@ class dwnldWeather(QtGui.QWidget):
 
                 return
 
-            #------------------------------ Grab stations that are selected ----
+            # ---------------------------- Grab stations that are selected ----
 
             # Grabbing weather stations that are selected and saving them
             # in a list. The structure of "weather_stations.lst" is preserved
@@ -606,12 +606,12 @@ class dwnldWeather(QtGui.QWidget):
                 # [row, StaName, Station ID, startYear, endYear, Climate ID]
 
                 sta2add = (
-                [row,
-                 self.station_table.item(row, 1).text(),
-                 self.station_table.item(row, 7).text(),
-                 self.station_table.cellWidget(row, 3).currentText(),
-                 self.station_table.cellWidget(row, 4).currentText(),
-                 self.station_table.item(row, 6).text()])
+                    [row,
+                     self.station_table.item(row, 1).text(),
+                     self.station_table.item(row, 7).text(),
+                     self.station_table.cellWidget(row, 3).currentText(),
+                     self.station_table.cellWidget(row, 4).currentText(),
+                     self.station_table.item(row, 6).text()])
 
                 self.staList2dwnld.append(sta2add)
 
@@ -622,7 +622,7 @@ class dwnldWeather(QtGui.QWidget):
                 self.msgBox.exec_()
                 return
 
-        else: #-------------------------------- Check if process isFinished ----
+        else:  # ----------------------------- Check if process isFinished ----
 
             if self.dwnld_indx >= (len(self.staList2dwnld)):
 
@@ -637,11 +637,12 @@ class dwnldWeather(QtGui.QWidget):
 
                 return
 
-        #------------------------------------------------- Start the Thread ----
+        # ----------------------------------------------- Start the Thread ----
 
-        #---- Push Thread Info ----
+        # Push Thread Info :
 
-        self.dwnl_raw_datafiles.dirname = self.workdir + '/Meteo/Raw'
+        self.dwnl_raw_datafiles.dirname = os.path.join(
+            self.workdir, 'Meteo', 'Raw')
 
         sta2dwnl = self.staList2dwnld[self.dwnld_indx]
 
@@ -675,18 +676,16 @@ class dwnldWeather(QtGui.QWidget):
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 return
 
-        #----- Start Download -----
+        # Start Download :
 
         self.dwnld_indx += 1
-
         self.dwnl_raw_datafiles.start()
 
         return
 
+    def display_mergeHistory(self):  # ========================================
 
-    def display_mergeHistory(self): #===========================================
-
-        #------------------------------ Respond to UI event (if applicable) ----
+        # ---------------------------- Respond to UI event (if applicable) ----
 
         # http://zetcode.com/gui/pysidetutorial/eventsandsignals/
 
@@ -707,7 +706,7 @@ class dwnldWeather(QtGui.QWidget):
         else:
             pass
 
-        #-------------------------------------------------------- Update UI ----
+        # ------------------------------------------------------ Update UI ----
 
         self.mergeDisplay.setText(self.mergeHistoryLog[self.mergeHistoryIndx])
 
@@ -729,8 +728,7 @@ class dwnldWeather(QtGui.QWidget):
                 self.btn_goFirst.setEnabled(True)
                 self.btn_goPrevious.setEnabled(True)
 
-
-    def btn_selectRaw_isClicked(self): #========================================
+    def btn_selectRaw_isClicked(self):  # =====================================
 
         """
         This method is called by the event <btn_select.clicked.connect>.
@@ -744,9 +742,9 @@ class dwnldWeather(QtGui.QWidget):
         fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files',
                                                       dialog_fir, '*.csv')
         if fname:
-           self.concatenate_and_display(fname)
+            self.concatenate_and_display(fname)
 
-    def concatenate_and_display(self, filenames): #=============================
+    def concatenate_and_display(self, filenames):  # ==========================
 
         """
         Handles the concatenation process of individual yearly raw data files
@@ -1039,7 +1037,7 @@ class DownloadRawDataFiles(QtCore.QThread):
         if not path.exists(dirname):
             makedirs(dirname)
 
-        #------------------------------------------------------- DOWNLOAD -----
+        # ------------------------------------------------------- DOWNLOAD ----
 
         # Data are downloaded on a yearly basis from yStart to yEnd
 
@@ -1051,16 +1049,16 @@ class DownloadRawDataFiles(QtCore.QThread):
             if self.STOP == True : # User stopped the downloading process.
                 break
 
-            #----- File and URL Paths -----
+            # File and URL Paths :
 
             fname = dirname + '/eng-daily-0101%s-1231%s.csv' % (year, year)
 
             url = ('http://climate.weather.gc.ca/climate_data/' +
                    'bulk_data_e.html?format=csv&stationID=' + str(staID) +
-                   '&Year=' + str(year) +'&Month=1&Day=1&timeframe=2' +
+                   '&Year=' + str(year) + '&Month=1&Day=1&timeframe=2' +
                    '&submit=Download+Data')
 
-            #----- Download Data For That Year -----
+            # Download Data For That Year :
 
             if path.exists(fname):
 
@@ -1080,7 +1078,7 @@ class DownloadRawDataFiles(QtCore.QThread):
             else:
                 self.ERRFLAG[i] = self.dwnldfile(url, fname)
 
-            #----- Update UI -----
+            # Update UI :
 
             progress = (year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
             self.ProgBarSignal.emit(int(progress))
@@ -1111,7 +1109,7 @@ class DownloadRawDataFiles(QtCore.QThread):
 
             i += 1
 
-        #---------------------------------------------------- End of Task -----
+        # ---------------------------------------------------- End of Task ----
 
         if self.STOP == True:
 
@@ -1131,7 +1129,7 @@ class DownloadRawDataFiles(QtCore.QThread):
             self.ProgBarSignal.emit(0)
             self.EndSignal.emit(True)
 
-    def dwnldfile(self, url, fname):
+    def dwnldfile(self, url, fname):  # =======================================
 
         # http://stackoverflow.com/questions/4028697
         # https://docs.python.org/3/howto/urllib2.html
