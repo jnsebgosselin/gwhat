@@ -341,15 +341,6 @@ class MainWindow(QtGui.QMainWindow):
 
         self.msgError = MyQWidget.MyQErrorMessageBox()
 
-        # ------------------------------------------------------------- SHOW --
-
-        self.show()
-
-        qr = self.frameGeometry()
-        cp = QtGui.QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
         # ------------------------------------------------- CHECK IF PROJECT --
 
         isProjectExists = self.check_project()
@@ -372,6 +363,24 @@ class MainWindow(QtGui.QMainWindow):
 
             self.msgError.setText(msgtxt)
             self.msgError.exec_()
+
+    def show(self):  # ========================================================
+
+        # Silently show so that the geometry of the Main window is defined :
+
+        self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, True)
+        super(MainWindow, self).show()
+        self.hide()
+        self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, False)
+
+        # Move main window to the center of the screen and show main window :
+
+        qr = self.frameGeometry()
+        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
+
+        super(MainWindow, self).show()
 
     def write2console(self, console_text):  # =================================
 
@@ -653,7 +662,8 @@ if __name__ == '__main__':  # #################################################
     try:
         app = QtGui.QApplication(sys.argv)
         print('Starting WHAT...')
-        instance_1 = MainWindow()
+        main = MainWindow()
+        main.show()
         sys.exit(app.exec_())
     except Exception as e:
         logging.exception(str(e))

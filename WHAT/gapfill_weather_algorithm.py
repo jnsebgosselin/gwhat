@@ -161,7 +161,7 @@ class GapFillWeather(QtCore.QObject):
         return self.WEATHER.STANAME
 
     def reload_data(self):  # =================================================
-        print('\nLoading data from csv files :')
+
         paths = []
         for f in os.listdir(self.inputDir):
             if f.endswith('.csv'):
@@ -169,7 +169,8 @@ class GapFillWeather(QtCore.QObject):
                 paths.append(fname)
 
         n = len(paths)
-        print('%d valid weather data files found in Input folder.\n' % n)
+        print('\n%d valid weather data files found in Input folder.' % n)
+        print('Loading data from csv files :\n')
 
         self.WEATHER.load_and_format_data(paths)
         self.WEATHER.save_to_binary(self.inputDir)
@@ -706,7 +707,7 @@ class GapFillWeather(QtCore.QObject):
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
-        #------------------------------------------------------------ Header --
+        # --------------------------------------------------------- Header ----
 
         HEADER = [['Station Name', target_station_name],
                   ['Province', target_station_prov],
@@ -719,9 +720,9 @@ class GapFillWeather(QtCore.QObject):
                   ['Created on', strftime("%d/%m/%Y")],
                   []]
 
-        #--------------------------------------------------------- .log file --
+        # ------------------------------------------------------ .log file ----
 
-        #---- Info Data Post-Processing ----
+        # Info Data Post-Processing :
 
         XYinfo = self.postprocess_fillinfo(STANAME, YXmFILL, tarStaIndx)
         Yname, Ypre = XYinfo[0], XYinfo[1]

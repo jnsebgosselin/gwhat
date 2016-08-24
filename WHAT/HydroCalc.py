@@ -1607,16 +1607,16 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
         m = 0
         while 1:  # loop for the Marquardt parameter (m)
 
-            #---- Constructing left hand side (continued) ----
+            # Constructing left hand side (continued) :
 
             CtXtXCImr = CtXtXC + np.identity(NP) * m
             CtXtXCImrCinv = np.dot(CtXtXCImr, Cinv)
 
-            #---- Calculating parameter change vector ----
+            # Calculating parameter change vector :
 
             dr = np.linalg.tensorsolve(CtXtXCImrCinv, CtXtdh, axes=None)
 
-            #---- Checking Marquardt condition ----
+            # Checking Marquardt condition :
 
             NUM = np.dot(dr.transpose(), CtXtdh)
             DEN1 = np.dot(dr.transpose(), dr)
@@ -1628,15 +1628,15 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
             else:
                 break
 
-        #---- Storing old parameter values ----
+        # Storing old parameter values :
 
         Aold = np.copy(A)
         Bold = np.copy(B)
         RMSEold = np.copy(RMSE)
 
-        while 1: # Loop for Damping (to prevent overshoot)
+        while 1:  # Loop for Damping (to prevent overshoot)
 
-            #---- Calculating new paramter values ----
+            # Calculating new paramter values :
 
             if MRCTYPE == 1:
                 A = Aold + dr[0]
@@ -1644,16 +1644,16 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
             elif MRCTYPE == 0:
                 B = Bold + dr[0, 0]
 
-            #---- Applying parameter bound-constraints ----
+            # Applying parameter bound-constraints :
 
-            A = np.max((A, 0)) # lower bound
+            A = np.max((A, 0))  # lower bound
 
-            #---- Solving for new parameter values ----
+            # Solving for new parameter values :
 
             hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
             RMSE = (np.mean((h[tindx] - hp[tindx])**2))**0.5
 
-            #---- Checking overshoot ----
+            # Checking overshoot :
 
             if (RMSE - RMSEold) > 0.001:
                 dr = dr * 0.5
@@ -1663,7 +1663,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
 #        print(u'A = %0.3f ; B= %0.3f; RMSE = %f ; Cos_theta = %0.3f'
 #              % (A, B, RMSE, cos))
 
-        #---- Checking tolerance ----
+        # Checking tolerance :
 
         tolA = np.abs(A - Aold)
         tolB = np.abs(B - Bold)
@@ -1680,7 +1680,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
     return A, B, hp, RMSE
 
 
-def calc_synth_hydrograph(A, B, h, dt, ipeak):
+def calc_synth_hydrograph(A, B, h, dt, ipeak):  # =============================
     """
     Compute synthetic hydrograph with a time-forward implicit numerical scheme
     during periods where the water level recedes identified by the "ipeak"

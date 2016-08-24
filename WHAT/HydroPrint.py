@@ -1301,11 +1301,11 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         self.setWindowTitle('Colors Palette Setup')
         self.setWindowFlags(QtCore.Qt.Window)
 
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self):
+    def __initUI__(self):  # ==================================================
 
-        #---- Toolbar ----
+        # Toolbar :
 
         toolbar_widget = QtGui.QWidget()
 
@@ -1329,12 +1329,12 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
         toolbar_widget.setLayout(toolbar_layout)
 
-        #---- Color Grid ----
+        # Color Grid :
 
         colorsDB = hydrograph.Colors()
         colorsDB.load_colors_db()
 
-        colorGrid_widget =  QtGui.QWidget()
+        colorGrid_widget = QtGui.QWidget()
 
         self.colorGrid_layout = QtGui.QGridLayout()
         for i in range(len(colorsDB.rgb)):
@@ -1352,7 +1352,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
         colorGrid_widget.setLayout(self.colorGrid_layout)
 
-        #---- Main Layout ----
+        # Main Layout :
 
         main_layout = QtGui.QGridLayout()
         main_layout.addWidget(colorGrid_widget, 0, 0)
