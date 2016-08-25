@@ -238,7 +238,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         ax0.grid(axis='x', color=[0.35, 0.35, 0.35], ls='--')
         ax0.set_axisbelow(True)
 
-        # ---------------------------------------------------------- ARTISTS --
+        # -------------------------------------------------------- ARTISTS ----
 
         # Water level :
         self.h1_ax0, = ax0.plot([], [], color='blue', clip_on=True, ls='-',
@@ -254,11 +254,14 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         # Ptot :
         self.h_ptot, = ax1.plot([], [])
 
+        # ETP :
+        self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500)
+
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
         self.vguide.set_xdata(-1)
 
-        # ---------------------------------------------------------- MARGINS --
+        # -------------------------------------------------------- MARGINS ----
 
         self.setup_ax_margins(None)
 
@@ -430,6 +433,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         time = self.meteo_data.TIME + self.dt4xls2mpl * self.dformat
         ptot = self.meteo_data.DATA[:, 6]
         rain = self.meteo_data.DATA[:, -1]
+        etp = self.meteo_data.DATA[:, -2]
 
         # --------------------------------------------------- Bin the Data ----
 
@@ -448,11 +452,16 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         ptot_bin = ptot[:nbin*bw].reshape(nbin, bw)
         ptot_bin = np.sum(ptot_bin, axis=1)
 
+        etp_bin = etp[:nbin*bw].reshape(nbin, bw)
+        etp_bin = np.sum(etp_bin, axis=1)
+
         # ------------------------------------------------- Generate Shape ----
 
         time_bar = np.zeros(len(time_bin) * 4)
         rain_bar = np.zeros(len(rain_bin) * 4)
         ptot_bar = np.zeros(len(ptot_bin) * 4)
+        etp_bar = np.zeros(len(ptot_bin) * 3)
+        time_bar2 = np.zeros(len(time_bin) * 3)
 
         time_bar[0::4] = time_bin - (n * f)
         time_bar[1::4] = time_bin - (n * f)
@@ -469,6 +478,14 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         ptot_bar[2::4] = ptot_bin
         ptot_bar[3::4] = 0
 
+        time_bar2[0::3] = time_bin
+        time_bar2[1::3] = time_bin
+        time_bar2[2::3] = np.nan
+
+        etp_bar[0::3] = 0
+        etp_bar[1::3] = etp_bin
+        etp_bar[2::3] = np.nan
+
         # ------------------------------------------------------ Plot data ----
 
         ax = self.fig.axes[1]
@@ -481,6 +498,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.h_ptot = ax.fill_between(time_bar, 0., ptot_bar,
                                       color='0.85', lw=0, zorder=50)
+
+        self.h_etp.set_data(time_bar2, etp_bar)
 
         self.draw()
 
@@ -509,7 +528,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         if isWif is False:  # No .wif file has been created yet for this well
             return
 
-        # ---- Extract Local Extremum Times ----
+        # Extract Local Extremum Times :
 
         tr = self.waterLvl_data.trecess
         hr = self.waterLvl_data.hrecess
@@ -523,7 +542,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 except IndexError:
                     tb.append(tr[i])
 
-        # ---- Convert Time to Indexes ----
+        # Convert Time to Indexes :
+
         time = self.waterLvl_data.time
         self.peak_indx = np.zeros(len(tb)).astype(int)
 
@@ -624,7 +644,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         interpFilename = fileName + '.wif'
 
-        if self.A is not None:
+        if self.A is None:
             print('No MRC interpretation to save.')
             return False
 
