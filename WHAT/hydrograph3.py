@@ -1089,12 +1089,11 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         complete, data are rejected and removed from the reshaped series.
         """
 
-        nbin = np.floor(len(x) / bwidth)
+        bwidth = int(bwidth)
+        nbin = int(np.floor(len(x) / bwidth))
 
         bheight = x[:nbin*bwidth].reshape(nbin, bwidth)
         bheight = np.sum(bheight, axis=1)
-
-        # nres = len(x) - (nbin * bwidth)
 
         return bheight
 

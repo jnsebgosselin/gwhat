@@ -25,7 +25,7 @@ from __future__ import division, unicode_literals
 # STANDARD LIBRARY IMPORTS :
 
 from sys import argv
-from time import clock
+from time import clock, sleep
 import csv
 import os
 import datetime
@@ -166,6 +166,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.__initFig__()
         self.__initUI__()
+        self.setup_ax_margins(None)
 
     def __initFig__(self):  # =================================================
 
@@ -211,12 +212,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         ax1.invert_yaxis()
         ax1.axis(ymin=250, ymax=0)
 
-        # ----------------------------------------------------------- XTICKS --
+        # --------------------------------------------------------- XTICKS ----
 
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out')
 
-        # ----------------------------------------------------------- YTICKS --
+        # --------------------------------------------------------- YTICKS ----
 
         ax0.yaxis.set_ticks_position('left')
         ax0.tick_params(axis='y', direction='out')
@@ -224,7 +225,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         ax1.yaxis.set_ticks_position('right')
         ax1.tick_params(axis='y', direction='out')
 
-        # ----------------------------------------------------------- LABELS --
+        # --------------------------------------------------------- LABELS ----
 
         ax0.set_ylabel('Water level (mbgs)', fontsize=14, labelpad=25,
                        va='top', color='black')
@@ -233,10 +234,10 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         ax1.set_ylabel('Precipitation (mm)', fontsize=14, labelpad=25,
                        va='top', color='black', rotation=270)
 
-        # -------------------------------------------------- Setup Gridlines --
+        # ------------------------------------------------ Setup Gridlines ----
 
-        ax0.grid(axis='x', color=[0.35, 0.35, 0.35], ls='--')
-        ax0.set_axisbelow(True)
+#        ax0.grid(axis='x', color=[0.35, 0.35, 0.35], ls='--')
+#        ax0.set_axisbelow(True)
 
         # -------------------------------------------------------- ARTISTS ----
 
@@ -259,11 +260,23 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
-        self.vguide.set_xdata(-1)
+        self.vguide.set_visible(True)
 
-        # -------------------------------------------------------- MARGINS ----
+        # Add a peak cursor :
 
-        self.setup_ax_margins(None)
+        self.pguide, = ax0.plot([], [], color='white', clip_on=True,
+                                zorder=30, marker='o', linestyle='None',
+                                mec='red', mew=1.5)
+
+        # Peaks :
+        self.h2_ax0, = ax0.plot([], [], color='white', clip_on=True,
+                                zorder=30, marker='o', linestyle='None',
+                                mec='red', mew=1.5)
+
+        # Cross Remove Peaks :
+        self.xcross, = ax0.plot(1, 0, color='red', clip_on=True,
+                                zorder=20, marker='x', linestyle='None',
+                                markersize=15, markeredgewidth=3)
 
     def __initUI__(self):  # ==================================================
 
@@ -402,15 +415,17 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
     def draw(self):  # ========================================================
         ax = self.fig.axes[0]
-        if self.vguide.get_xdata() != -1:
-            self.vguide.set_visible(False)
-            self.canvas.draw()
-            self.__figbckground = self.fig.canvas.copy_from_bbox(ax.bbox)
+        self.vguide.set_visible(False)
+        self.pguide.set_visible(False)
+        self.xcross.set_visible(False)
+
+        self.canvas.draw()
+        self.__figbckground = self.fig.canvas.copy_from_bbox(ax.bbox)
+
+        if self.btn_pan.autoRaise():
             self.vguide.set_visible(True)
-            self.canvas.draw()
-        else:
-            self.canvas.draw()
-            self.__figbckground = self.fig.canvas.copy_from_bbox(ax.bbox)
+            ax.draw_artist(self.vguide)
+            self.fig.canvas.update()
 
     def emit_error_message(self, error_text):  # ==============================
 
@@ -427,8 +442,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.plot_weather_data()
 
     def plot_weather_data(self):  # ===========================================
-
-        print(self.meteo_data.varnames)
 
         time = self.meteo_data.TIME + self.dt4xls2mpl * self.dformat
         ptot = self.meteo_data.DATA[:, 6]
@@ -766,7 +779,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
             # Deactivate <add_peak> and hide guide line
             self.btn_editPeak.setAutoRaise(True)
-            self.vguide.set_xdata(-1)
 
             # Draw to save background :
             self.draw()
@@ -786,7 +798,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
             # Deactivate <add_peak> and hide guide line :
             self.btn_editPeak.setAutoRaise(True)
-            self.vguide.set_xdata(-1)
             self.draw()
 
         else:
@@ -799,8 +810,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
             # Deactivate <add_peak> and hide guide line
             self.btn_editPeak.setAutoRaise(True)
-            self.vguide.set_xdata(-1)
-            self.draw()
 
             # Deactivate <delete_peak>
             self.btn_delPeak.setAutoRaise(True)
@@ -809,9 +818,14 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.btn_pan.setAutoRaise(False)
             self.toolbar.pan()
 
+            self.vguide.set_visible(False)
+            self.draw()
         else:
             self.btn_pan.setAutoRaise(True)
             self.toolbar.pan()
+
+            self.vguide.set_visible(True)
+            self.draw()
 
     def home(self):  # ========================================================
 
@@ -947,17 +961,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
                                    ls='-', zorder=10, marker='None')
-
-        # Peaks :
-
-        self.h2_ax0, = ax0.plot([], [], color='red', clip_on=True,
-                                zorder=30, marker='o', linestyle='None')
-
-        # Cross Remove Peaks :
-
-        self.xcross, = ax0.plot(1, 0, color='red', clip_on=True,
-                                zorder=20, marker='x', linestyle='None',
-                                markersize=15, markeredgewidth=3)
 
         # Strati :
 
@@ -1130,25 +1133,53 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
     def mouse_vguide(self, event):  # =========================================
 
+        if not self.btn_pan.autoRaise():
+            return
+
         ax0 = self.fig.axes[0]
         fig = self.fig
 
-        # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
-        if not self.btn_editPeak.autoRaise():
+        # Restore background:
 
-            # Trace a red vertical guide (line) that folows the mouse marker.
+        fig.canvas.restore_region(self.__figbckground)
 
-            x = event.xdata
-            if x:
-                self.vguide.set_xdata(x)
-            else:
-                self.vguide.set_xdata(-1)
+        # ------------------------------------------------ Vertical Cursor ----
 
-            fig.canvas.restore_region(self.__figbckground)
+        # Trace a red vertical guide (line) that folows the mouse marker :
+
+        x = event.xdata
+        if x:
+            self.vguide.set_visible(True)
+            self.vguide.set_xdata(x)
             ax0.draw_artist(self.vguide)
-            self.fig.canvas.update()
+        else:
+            self.vguide.set_visible(False)
 
-        elif not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
+        # ------------------------------------------------ Add Peak Cursor ----
+
+        if x and not self.btn_editPeak.autoRaise():
+
+            xp = self.time + self.dt4xls2mpl * self.dformat
+            yp = self.water_lvl
+
+            d = np.abs(x - xp)
+            i = np.argmin(d)
+            if i in [0, len(xp)-1]:
+                # Marker is outside the water level time series.
+                self.pguide.set_data(xp[i], yp[i])
+            else:
+                y = np.interp(x, xp, yp)
+                self.pguide.set_data(x, y)
+
+            self.pguide.set_visible(True)
+        else:
+            self.pguide.set_visible(False)
+
+        ax0.draw_artist(self.pguide)
+
+        # --------------------------------------------- Remove Peak Cursor ----
+
+        if not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
 
             # For deleting peak in the graph. Will put a cross on top of the
             # peak to delete if some proximity conditions are met.
@@ -1156,42 +1187,43 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             x = event.x
             y = event.y
 
-            xt = np.empty(len(self.peak_indx))
-            yt = np.empty(len(self.peak_indx))
             xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
             ypeak = self.water_lvl[self.peak_indx]
 
-            for i in range(len(self.peak_indx)):
-                xt[i], yt[i] = ax0.transData.transform(
-                    (xpeak[i], ypeak[i]))
+            xt = np.empty(len(xpeak))
+            yt = np.empty(len(ypeak))
 
-            r = ((xt - x)**2 + (yt - y)**2)**0.5
+            for i, (xp, yp) in enumerate(zip(xpeak, ypeak)):
+                xt[i], yt[i] = ax0.transData.transform((xp, yp))
 
-            if np.min(r) < 15:  # put the cross over the nearest peak
+            d = ((xt - x)**2 + (yt - y)**2)**0.5
+            if np.min(d) < 15:  # put the cross over the nearest peak
 
-                indx = np.where(r == np.min(r))[0][0]
-
+                indx = np.argmin(d)
                 self.xcross.set_xdata(xpeak[indx])
                 self.xcross.set_ydata(ypeak[indx])
 
-                self.draw()
-
-            else:  # hide the cross outside of the plotting area
-
-                self.xcross.set_xdata(-1)
-                self.draw()
+                self.xcross.set_visible(True)
+            else:
+                self.xcross.set_visible(False)
         else:
-            pass
+            self.xcross.set_visible(False)
+
+        ax0.draw_artist(self.xcross)
+
+        # -------------------------------------------------- Update Canvas ----
+
+        self.fig.canvas.update()
 
     def onclick(self, event):  # ==============================================
-
-        ax0 = self.fig.axes[0]
 
         x = event.x
         y = event.y
 
         if x is None or y is None:
             return
+
+        ax0 = self.fig.axes[0]
 
         # ---------------------------------------------------- DELETE A PEAK --
 
@@ -1211,27 +1243,23 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 xt[i], yt[i] = ax0.transData.transform((xpeak[i], ypeak[i]))
 
             r = ((xt - x)**2 + (yt - y)**2)**0.5
-
             if np.min(r) < 15:
+                indx = np.argmin(r)
 
-                indx = np.where(r == np.min(r))[0][0]
-
-                # Update the plot
+                # Update the plot :
                 self.xcross.set_xdata(xpeak[indx])
                 self.xcross.set_ydata(ypeak[indx])
 
-                # Remove peak from peak index sequence
+                # Remove peak from peak index sequence :
                 self.peak_indx = np.delete(self.peak_indx, indx)
                 self.peak_memory.append(self.peak_indx)
 
                 xpeak = np.delete(xpeak, indx)
                 ypeak = np.delete(ypeak, indx)
 
-                # hide the cross outside of the plotting area
-                self.xcross.set_xdata(1)
+                # hide the cross outside of the plotting area :
+                self.xcross.set_visible(False)
                 self.plot_peak()
-            else:
-                pass
 
         # ------------------------------------------------------- ADD A PEAK --
 
@@ -1248,47 +1276,61 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             x = self.time + self.dt4xls2mpl * self.dformat
             y = self.water_lvl
 
-            indxmin = np.where(x < xclic)[0]
-            indxmax = np.where(x > xclic)[0]
-            if len(indxmax) == 0:
+            d = np.abs(xclic - x)
+            indx = np.argmin(d)
 
-                # Marker is outside the water level time series, to the right.
-                # The last data point is added to "peak_indx".
+            if len(self.peak_indx) > 0:
+                if indx in self.peak_indx:
+                    print('There is already a peak at this time.')
+                    return
 
-                self.peak_indx = np.append(self.peak_indx, len(x)-1)
-                self.peak_memory.append(self.peak_indx)
+                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 3:
+                    print('There is a peak at less than 3 days.')
+                    return
 
-            elif len(indxmin) == 0:
-
-                # Marker is outside the water level time series, to the left.
-                # The first data point is added to "peak_indx".
-
-                self.peak_indx = np.append(self.peak_indx, 0)
-                self.peak_memory.append(self.peak_indx)
-
-            else:
-
-                # Marker is between two data point. The closest data point to
-                # the marker is then selected.
-
-                indxmin = indxmin[-1]
-                indxmax = indxmax[0]
-
-                dleft = xclic - x[indxmin]
-                dright = x[indxmax] - xclic
-
-                if dleft < dright:
-
-                    self.peak_indx = np.append(self.peak_indx, indxmin)
-                    self.peak_memory.append(self.peak_indx)
-
-                else:
-
-                    self.peak_indx = np.append(self.peak_indx, indxmax)
-                    self.peak_memory.append(self.peak_indx)
+            self.peak_indx = np.append(self.peak_indx, indx)
+            self.peak_memory.append(self.peak_indx)
 
             self.plot_peak()
 
+#            indxmin = np.where(x < xclic)[0]
+#            indxmax = np.where(x > xclic)[0]
+#            if len(indxmax) == 0:
+#
+#                # Marker is outside the water level time series, to the right.
+#                # The last data point is added to "peak_indx".
+#
+#                self.peak_indx = np.append(self.peak_indx, len(x)-1)
+#                self.peak_memory.append(self.peak_indx)
+#
+#            elif len(indxmin) == 0:
+#
+#                # Marker is outside the water level time series, to the left.
+#                # The first data point is added to "peak_indx".
+#
+#                self.peak_indx = np.append(self.peak_indx, 0)
+#                self.peak_memory.append(self.peak_indx)
+#
+#            else:
+#
+#                # Marker is between two data point. The closest data point to
+#                # the marker is then selected.
+#
+#                indxmin = indxmin[-1]
+#                indxmax = indxmax[0]
+#
+#                dleft = xclic - x[indxmin]
+#                dright = x[indxmax] - xclic
+#
+#                if dleft < dright:
+#
+#                    self.peak_indx = np.append(self.peak_indx, indxmin)
+#                    self.peak_memory.append(self.peak_indx)
+#
+#                else:
+#
+#                    self.peak_indx = np.append(self.peak_indx, indxmax)
+#                    self.peak_memory.append(self.peak_indx)
 
 def local_extrema(x, Deltan):  # ==============================================
     """
