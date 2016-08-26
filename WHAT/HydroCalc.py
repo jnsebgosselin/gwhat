@@ -112,6 +112,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.isGraphExists = False
         self.__figbckground = None  # figure background
+        self.__addPeakVisible = True
 
         # Water Level Time series :
 
@@ -178,6 +179,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.canvas = FigureCanvasQTAgg(self.fig)
 
         self.canvas.mpl_connect('button_press_event', self.onclick)
+        self.canvas.mpl_connect('button_release_event', self.onrelease)
+
         self.canvas.mpl_connect('resize_event', self.setup_ax_margins)
         self.canvas.mpl_connect('motion_notify_event', self.mouse_vguide)
 
@@ -942,7 +945,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
     def init_hydrograph(self):  # =============================================
 
         ax0 = self.fig.axes[0]
-#        ax0.cla()
 
         # --------------------------------------------------------- RESET UI --
 
@@ -1171,7 +1173,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 y = np.interp(x, xp, yp)
                 self.pguide.set_data(x, y)
 
-            self.pguide.set_visible(True)
+            self.pguide.set_visible(self.__addPeakVisible)
         else:
             self.pguide.set_visible(False)
 
@@ -1215,6 +1217,14 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.fig.canvas.update()
 
+    def onrelease(self, event):  # ============================================
+
+        if event.button != 1:
+            return
+
+        self.__addPeakVisible = True
+        self.plot_peak()
+
     def onclick(self, event):  # ==============================================
 
         x = event.x
@@ -1225,7 +1235,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         ax0 = self.fig.axes[0]
 
-        # ---------------------------------------------------- DELETE A PEAK --
+        # -------------------------------------------------- DELETE A PEAK ----
 
         # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
 
@@ -1261,7 +1271,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.xcross.set_visible(False)
                 self.plot_peak()
 
-        # ------------------------------------------------------- ADD A PEAK --
+        # ----------------------------------------------------- ADD A PEAK ----
 
         elif not self.btn_editPeak.autoRaise():
 
@@ -1291,7 +1301,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.peak_indx = np.append(self.peak_indx, indx)
             self.peak_memory.append(self.peak_indx)
 
-            self.plot_peak()
+            self.__addPeakVisible = False
+            self.pguide.set_visible(False)
+            self.draw()
 
 #            indxmin = np.where(x < xclic)[0]
 #            indxmax = np.where(x > xclic)[0]
