@@ -59,7 +59,7 @@ class GapFillWeather(QtCore.QObject):
 
     Parameters
     ----------
-    Nbr_Sta_max : int
+    NSTAmax : int
     limitDist : float
     limitAlt : float
     regression_mode : int
@@ -105,7 +105,7 @@ class GapFillWeather(QtCore.QObject):
         # if *full_error_analysis* is *True*: a complete analysis of the
         # estimation errors is conducted with a cross-validation procedure.
 
-        self.Nbr_Sta_max = 4
+        self.NSTAmax = 4
         self.limitDist = 100
         self.limitAlt = 350
         self.regression_mode = 1
@@ -117,6 +117,25 @@ class GapFillWeather(QtCore.QObject):
         # This is only used if managed from a UI.
 
         self.FillDataSignal.connect(self.fill_data)
+
+    @property  # ==============================================================
+    def NSTAmax(self):
+        return self.__NSTAmax
+
+    @NSTAmax.setter
+    def NSTAmax(self, x):
+        err = 0
+        if type(x) != int:
+            print('!WARNING! NSTAmax must be must be an integer.')
+            err = 1
+        if x < 1:
+            print('!WARNING! NSTAmax must be equal or greater than 1.')
+            err = 1
+
+        self.__NSTAmax = max(1, int(x))
+        if err:
+            print('NSTAmax value was set to %d from %s' %
+                  (self.__NSTAmax, str(x)))
 
     def load_data(self):  # ===================================================
 
@@ -462,7 +481,7 @@ class GapFillWeather(QtCore.QObject):
                     # Determines the number of neighboring stations to
                     # include in the regression model.
 
-                    NSTA = min(len(colm), self.Nbr_Sta_max)
+                    NSTA = min(len(colm), self.NSTAmax)
 
                     # Remove superflux station from <colm>.
 
@@ -673,7 +692,7 @@ class GapFillWeather(QtCore.QObject):
             print('Data completion for variable %d/%d completed.' %
                   (var+1, nVAR))
 
-        #---------------------------------------------------- End of Routine --
+        # --------------------------------------------------- End of Routine --
 
         msg = ('Data completion for station %s completed successfully ' +
                'in %0.2f sec.') % (target_station_name, (clock() - tstart))
@@ -757,7 +776,7 @@ class GapFillWeather(QtCore.QObject):
             fcontent.append(['MLR model', 'Least Absolute Deviations'])
         fcontent.extend([['Precip correction', 'Not Available'],
                          ['Wet days correction', 'Not Available'],
-                         ['Max number of stations', str(self.Nbr_Sta_max)],
+                         ['Max number of stations', str(self.NSTAmax)],
                          ['Cutoff distance (km)', str(limitDist)],
                          ['Cutoff altitude difference (m)', str(limitAlt)],
                          ['Date Start', record_date_start],
@@ -1832,7 +1851,7 @@ def L1LinearRegression(X, Y):  # ==============================================
     return B
 
 
-if __name__ == '__main__':  # =================================================
+def main():
 
     # 1 - Create an instance of the class *GapFillWeather* --------------------
 
@@ -1851,8 +1870,8 @@ if __name__ == '__main__':  # =================================================
     # was produced for the target station will be saved within the output
     # directory, in a sub-folder named after the name of the target station.
 
-    gapfill_weather.inputDir = '../Projects/Example/Meteo/Input'
-    gapfill_weather.outputDir = '../Projects/Example/Meteo/Output'
+    gapfill_weather.inputDir = '../Projects/Article/Meteo/Input'
+    gapfill_weather.outputDir = '../Projects/Article/Meteo/Output'
 
     # 3 - Load weather the data files -----------------------------------------
 
@@ -1860,7 +1879,6 @@ if __name__ == '__main__':  # =================================================
     # step 2.
 
     stanames = gapfill_weather.load_data()
-    print(stanames)
 
     # 4 - Setup target station ------------------------------------------------
 
@@ -1881,12 +1899,14 @@ if __name__ == '__main__':  # =================================================
     # See the help of class *GapFillWeather* for a description of each
     # parameter.
 
-    gapfill_weather.Nbr_Sta_max = 4
+    gapfill_weather.NSTAmax = 0.1
     gapfill_weather.limitDist = 100
     gapfill_weather.limitAlt = 350
     gapfill_weather.regression_mode = 0
     # 0 -> Least Absolute Deviation (LAD)
     # 1 -> Ordinary Least-Square (OLS)
+
+    return
 
     # 7 - Define additional options -------------------------------------------
 
@@ -1906,3 +1926,6 @@ if __name__ == '__main__':  # =================================================
     # iteration as in step 4 and rerun the *fill_data* method each time.
 
 #    gapfill_weather.fill_data()
+
+if __name__ == '__main__':  # =================================================
+    main()
