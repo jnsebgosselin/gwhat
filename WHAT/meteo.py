@@ -1405,11 +1405,11 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
     def plot_precip(self, PNORM, SNORM):  # ===================================
 
-        #-- define vertices manually --
+        # ---- define vertices manually ----
 
         Xmid = np.arange(0.5, 12.5, 1)
-        n = 0.5  # Controls the width of the bins
-        f = 0.65 # Controls the spacing between the bins
+        n = 0.5   # Controls the width of the bins
+        f = 0.65  # Controls the spacing between the bins
 
         Xpos = np.vstack((Xmid - n * f,
                           Xmid - n * f,

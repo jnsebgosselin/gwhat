@@ -158,7 +158,12 @@ class GapFillWeather(QtCore.QObject):
         if not os.path.exists(binfile):
             return self.reload_data()
 
-        # Scan input folder for changes :
+        # ---- Scan input folder for changes ----------------------------------
+
+        # If one of the csv data file contained within the input data directory
+        # has changed since last time the binary file was created, the
+        # data will be reloaded from the csv files and a new binary file
+        # will be generated.
 
         A = np.load(binfile)
         fnames = A['fnames']
@@ -170,7 +175,7 @@ class GapFillWeather(QtCore.QObject):
                 if f not in fnames or fmtime > bmtime:
                     return self.reload_data()
 
-        # Load from binary :
+        # ---- Load data from binary ------------------------------------------
 
         print('\nLoading data from binary file :\n')
         self.WEATHER.load_from_binary(self.inputDir)
@@ -180,6 +185,9 @@ class GapFillWeather(QtCore.QObject):
         return self.WEATHER.STANAME
 
     def reload_data(self):  # =================================================
+
+        # Reads the csv files in the input data directory folder, format
+        # the datasets and save the results in a binary file
 
         paths = []
         for f in os.listdir(self.inputDir):
