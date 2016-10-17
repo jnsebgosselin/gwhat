@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 WHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -100,10 +100,10 @@ headerDB = []
 # state and activities of the main program.
 
 
-class MainWindow(QtGui.QMainWindow):
+class WHAT(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
-        super(MainWindow, self).__init__(parent)
+        super(WHAT, self).__init__(parent)
 
         self.__initUI__()
 
@@ -369,7 +369,7 @@ class MainWindow(QtGui.QMainWindow):
         # Silently show so that the geometry of the Main window is defined :
 
         self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, True)
-        super(MainWindow, self).show()
+        super(WHAT, self).show()
         self.hide()
         self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, False)
 
@@ -380,7 +380,7 @@ class MainWindow(QtGui.QMainWindow):
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
-        super(MainWindow, self).show()
+        super(WHAT, self).show()
 
     def write2console(self, console_text):  # =================================
 
@@ -662,7 +662,7 @@ if __name__ == '__main__':  # #################################################
     try:
         app = QtGui.QApplication(sys.argv)
         print('Starting WHAT...')
-        main = MainWindow()
+        main = WHAT()
         main.show()
         sys.exit(app.exec_())
     except Exception as e:

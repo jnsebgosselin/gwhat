@@ -1,6 +1,6 @@
 """
 Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -38,18 +38,23 @@ from PySide import QtGui, QtCore
 
 import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+mpl.rcParams['backend.qt4'] = 'PySide'
 
 # PERSONAL IMPORTS :
 
 import database as db
-from hydrograph3 import Colors
+from colors import Colors
 
-mpl.rcParams['backend.qt4'] = 'PySide'
+
+# =============================================================================
+
 
 class LabelDataBase():
 
     def __init__(self, language):
-        #---- Legend ----
+
+        # ---- Legend ----
+
         self.Pyrly = 'Annual total precipitation = %0.0f mm'
         self.Tyrly = u'Average annual air temperature = %0.1f °C'
         self.rain = 'Rain'
@@ -57,14 +62,18 @@ class LabelDataBase():
         self.Tmax = 'Temp. max.'
         self.Tmin = 'Temp. min.'
         self.Tavg = 'Temp. mean'
-        #---- Labels ----
+
+        # ---- Labels ----
+
         self.Tlabel = u'Monthly Air Temperature (°C)'
         self.Plabel = 'Monthly Total Precipitation (mm)'
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
 
         if language == 'French':
-            #---- Legend ----
+
+            # ---- Legend ----
+
             self.Pyrly = u'Précipitations totales annuelles = %0.0f mm'
             self.Tyrly = u"Température moyenne annuelle = %0.1f °C"
             self.rain = 'Pluie'
@@ -72,7 +81,9 @@ class LabelDataBase():
             self.Tmax = u'Températures min.'
             self.Tmin = u'Températures max.'
             self.Tavg = u'Températures moy.'
-            #---- Labels ----
+
+            # ---- Labels ----
+
             self.Tlabel = u'Températures moyennes mensuelles (°C)'
             self.Plabel = u'Précipitations totales mensuelles (mm)'
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
@@ -1615,7 +1626,7 @@ if __name__ == '__main__':
     w.show()
     w.set_lang('English')
     w.generate_graph(fmeteo)
-    w.fig_weather_normals.figure.savefig('test.pdf')
+#    w.fig_weather_normals.figure.savefig('test.pdf')
 #    w.save_normal_table('test.csv')
 #    for i in range(250):
 #        w.generate_graph(fmeteo)
