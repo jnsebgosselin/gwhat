@@ -576,7 +576,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
             print(msg)
 
             with open(filename, 'w') as f:
-                writer = csv.writer(f, delimiter='\t', linterminator='\n')
+                writer = csv.writer(f, delimiter='\t', lineterminator='\n')
                 writer.writerows(fcontent)
 
     def toggle_layoutMode(self):  # ===========================================

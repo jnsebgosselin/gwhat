@@ -1047,7 +1047,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
         for row in rows:
 
-            #--------
+            # --------
             # staList structure:
 
             # [staName, stationId, StartYear, EndYear,
@@ -1057,7 +1057,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
             # ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year',
             #  'To \n Year', 'Prov.', 'Climate ID', 'Station ID')
-            #--------
+            # --------
 
             sta2add = [self.item(row, 1).text(),
                        self.item(row, 7).text(),
@@ -1077,7 +1077,6 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         # scanning the rows if any are deleted.
 
         for row in reversed(rows):
-
             print('Removing %s (%s)' % (self.item(row, 1).text(),
                                         self.item(row, 6).text()))
 
@@ -1087,19 +1086,19 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
         headerDB = db.FileHeaders()
 
-        #---- Grab the content of the entire table ----
+        # ---- Grab the content of the entire table ----
 
         rows = range(self.rowCount())
         staList = self.get_content4rows(rows)
 
-        #---- Insert Header----
+        # ---- Insert Header----
 
         staList.insert(0, headerDB.weather_stations[0])
 
-        #---- saving results ----
+        # ---- saving results ----
 
-        with open(filename, 'wb') as f:
-            writer = csv.writer(f, delimiter='\t')
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(staList)
 
 

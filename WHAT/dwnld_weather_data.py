@@ -171,17 +171,17 @@ class dwnldWeather(QtGui.QWidget):
         toolbar_grid.setColumnStretch(col, 100)
 
         toolbar_grid.setSpacing(5)
-        toolbar_grid.setContentsMargins(0, 0, 0, 0) # [L, T, R, B]
+        toolbar_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
 
         toolbar_widg.setLayout(toolbar_grid)
 
-        #----------------------------------------------------- Progress Bar ----
+        # --------------------------------------------------- Progress Bar ----
 
         self.pbar = QtGui.QProgressBar()
         self.pbar.setValue(0)
         self.pbar.hide()
 
-        #------------------------------------------------------ Right Panel ----
+        # ---------------------------------------------------- Right Panel ----
 
         display_label = QtGui.QLabel('<b>Formatted Weather Data Info :</b>')
 
@@ -652,14 +652,14 @@ class dwnldWeather(QtGui.QWidget):
         self.dwnl_raw_datafiles.yr_end = sta2dwnl[4]
         self.dwnl_raw_datafiles.climateID = sta2dwnl[5]
 
-        #---- Update UI ----
+        # ---- Update UI ----
 
 #        self.station_table.setEnabled(False)
         self.pbar.show()
         self.btn_get.setIcon(iconDB.stop)
         self.station_table.selectRow(sta2dwnl[0])
 
-        #----- Wait for the QThread to finish -----
+        # ----- Wait for the QThread to finish -----
 
         # Protection in case the QTread did not had time to close completely
         # before starting the downloading process for the next station.
@@ -729,7 +729,6 @@ class dwnldWeather(QtGui.QWidget):
                 self.btn_goPrevious.setEnabled(True)
 
     def btn_selectRaw_isClicked(self):  # =====================================
-
         """
         This method is called by the event <btn_select.clicked.connect>.
         It allows the user to select a group of raw data files belonging to a
@@ -737,8 +736,7 @@ class dwnldWeather(QtGui.QWidget):
         file with the method <concatenate_and_display>.
         """
 
-        dialog_fir = self.workdir + '/Meteo/Raw'
-
+        dialog_fir = os.path.join(self.workdir, 'Meteo', 'Raw')
         fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files',
                                                       dialog_fir, '*.csv')
         if fname:
@@ -770,7 +768,7 @@ class dwnldWeather(QtGui.QWidget):
         self.ConsoleSignal.emit("""<font color=black>Raw data files concatened
         successfully for station %s.</font>""" % StaName)
 
-        #---- Update history variables and UI ----
+        # ---- Update history variables and UI ----
 
         self.mergeHistoryLog.append(LOG)
         self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
@@ -785,19 +783,17 @@ class dwnldWeather(QtGui.QWidget):
             StaName = StaName.replace('\\', '_')
             StaName = StaName.replace('/', '_')
 
-            save_dir = self.workdir + '/Meteo/Input/'
+            save_dir = os.path.join(self.workdir, 'Meteo', 'Input')
             if not path.exists(save_dir):
                 makedirs(save_dir)
 
             filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
                                               YearStart, YearEnd)
-            fname = save_dir + filename
 
+            fname = os.path.join(save_dir, filename)
             self.save_concatened_data(fname, mergeOutput)
 
-
-    def btn_saveMerge_isClicked(self): #========================================
-
+    def btn_saveMerge_isClicked(self):  # =====================================
         '''
         This method allows the user to select a path for the file in which the
         concatened data are going to be saved.
@@ -829,31 +825,51 @@ class dwnldWeather(QtGui.QWidget):
 
             filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
                                               YearStart, YearEnd)
-            dialog_dir = self.workdir + '/Meteo/Input/' + filename
-
+            dialog_dir = os.path.join(self.workdir, 'Meteo, Input', filename)
             fname, _ = QtGui.QFileDialog.getSaveFileName(
-                                         self, 'Save file', dialog_dir, '*.csv')
+                           self, 'Save file', dialog_dir, '*.csv')
 
             if fname:
                 self.save_concatened_data(fname, mergeOutput)
 
+    def concatenate(self, fname):  # ==========================================
 
-    def concatenate(self, fname): #=============================================
+        fname = np.sort(fname)  # list of the raw data file paths
 
-        fname = np.sort(fname)     # list of the raw data file paths
+        COLN = (1, 2, 3, 5, 7, 9, 19)
+        # columns of the raw data files to extract :
+        # year, month, day, Tmax, Tmin, Tmean, Ptot
 
-        COLN = (1, 2, 3, 5, 7, 9, 19) # columns of the raw data files to extract
-        #year, month, day, Tmax, Tmin, Tmean, Ptot
-
-        ALLDATA = np.zeros((0,len(COLN))) # matrix containing all the data
-        StaName = np.zeros(len(fname)).astype(str)  # station names
-        StaMatch = np.zeros(len(fname)).astype(bool) # station match
+        ALLDATA = np.zeros((0, len(COLN)))  # matrix containing all the data
+        StaName = np.zeros(len(fname)).astype(str)    # station names
+        StaMatch = np.zeros(len(fname)).astype(bool)  # station match
         ClimateID = np.zeros(len(fname)).astype(str)  # climate ID
 
         for i in range(len(fname)):
+            enc = ['utf-8', 'utf-8-sig', 'utf-16', 'iso-8859-1']
+            j = 0
+            while True:
+                # This while loop is in case EnviroCan decides to change the
+                # encoding format of the raw data file like they did in 2016
+                # when they changed it from iso-8859-1 to utf-8-sig.
 
-            with open(fname[i], 'rb') as f:
-                reader = list(csv.reader(f, delimiter=','))
+                if j >= len(enc):
+                    print('There is a compatibility problem with the data.')
+                    print('Please, write at jnsebgosselin@gmail.com')
+                    break
+
+                try:
+                    with open(fname[i], 'r', encoding=enc[j]) as f:
+                        reader = list(csv.reader(f, delimiter=','))
+
+                    if reader[0][0] == 'Station Name':
+                        print(enc[j])
+                        break
+                    else:
+                        f.close()
+                        j = j + 1
+                except:
+                    j = i + 1
 
             StaName[i] = reader[0][1]
             ClimateID[i] = reader[5][1]
@@ -881,14 +897,13 @@ class dwnldWeather(QtGui.QWidget):
 
             ALLDATA = np.vstack((ALLDATA, DATA))
 
-        #------------------------------------------ Produce a Summary Table ----
+        # ---------------------------------------- Produce a Summary Table ----
 
         FIELDS = ['T<sub>max<\sub>', 'T<sub>min<\sub>', 'T<sub>mean<\sub>',
                   'P<sub>tot<\sub>']
 
         ndata = float(len(ALLDATA[:, 0]))
         province = reader[1][1]
-
 
 #        style="border-bottom:1px solid black"
 #        <td align="left" width=15>:</td>
@@ -922,31 +937,31 @@ class dwnldWeather(QtGui.QWidget):
                     </tr>
                     ''' % (FIELDS[i], nonan, nonan/ndata*100)
         LOG += '<tr><td colspan="4"><hr><\td><\tr>'
-        #------------------------------------------------- Restructure Data ----
+
+        # ----------------------------------------------- Restructure Data ----
 
         HEADER = np.zeros((8, len(COLN))).astype('str')
         HEADER[:] = ''
-        HEADER[0:6,0:2] = np.array(reader[0:6])
-        HEADER[7,:] = ['Year','Month', 'Day',
-                       'Max Temp (deg C)', 'Min Temp (deg C)',
-                       'Mean Temp (deg C)', 'Total Precip (mm)']
+        HEADER[0:6, 0:2] = np.array(reader[0:6])
+        HEADER[7, :] = ['Year', 'Month', 'Day',
+                        'Max Temp (deg C)', 'Min Temp (deg C)',
+                        'Mean Temp (deg C)', 'Total Precip (mm)']
 
         MergeOutput = np.vstack((HEADER, ALLDATA.astype('str')))
 
-        #------------------------- Check if files are from the same station ----
+        # ----------------------- Check if files are from the same station ----
 
-        if min(StaMatch) == True:
-            pass # everything is fine
+        if min(StaMatch) == 1:
+            pass  # everything is fine
         else:
             msg = ('WARNING: All the data files do not belong to' +
                    ' station %s') % StaName[0]
             print(msg)
-            self.ConsoleSignal.emit('font color=#C83737>%s</font>' % msg)
+            self.ConsoleSignal.emit('<font color=#C83737>%s</font>' % msg)
 
         return MergeOutput, LOG
 
-
-    def save_concatened_data(self, fname, fcontent): #==========================
+    def save_concatened_data(self, fname, fcontent):  # =======================
 
         """
         This method saves the concatened data into a single csv file.
@@ -957,8 +972,8 @@ class dwnldWeather(QtGui.QWidget):
         (2) Method: concatenate_and_display if self.saveAuto_checkbox.isChecked
         """
 
-        with open(fname, 'wb') as f:
-            writer = csv.writer(f,delimiter='\t')
+        with open(fname, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
         msg = 'Concatened data saved in: %s.' % fname
@@ -966,7 +981,9 @@ class dwnldWeather(QtGui.QWidget):
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
 
-#===============================================================================
+# =============================================================================
+
+
 class DownloadRawDataFiles(QtCore.QThread):
     '''
     This thread is used to download the raw data files from
@@ -987,7 +1004,6 @@ class DownloadRawDataFiles(QtCore.QThread):
                    1 -> Problem downloading the file
                    3 -> File NOT downloaded because it already exists
     '''
-#===============================================================================
 
     EndSignal = QtCore.Signal(bool)
     MergeSignal = QtCore.Signal(list)
@@ -1015,8 +1031,6 @@ class DownloadRawDataFiles(QtCore.QThread):
 
         #----------------------------------------------------------- INIT -----
 
-        dirname = self.dirname
-
         staID = self.stationID
         yr_start = int(self.yr_start)
         yr_end = int(self.yr_end)
@@ -1032,8 +1046,8 @@ class DownloadRawDataFiles(QtCore.QThread):
         self.ProgBarSignal.emit(0)
 
         StaName = StaName.replace('\\', '_')
-        StaName = StaName.replace('\\', '_')
-        dirname += '/%s (%s)' % (StaName, climateID)
+        StaName = StaName.replace('/', '_')
+        dirname = os.path.join(self.dirname, '%s (%s)' % (StaName, climateID))
         if not path.exists(dirname):
             makedirs(dirname)
 
@@ -1041,8 +1055,8 @@ class DownloadRawDataFiles(QtCore.QThread):
 
         # Data are downloaded on a yearly basis from yStart to yEnd
 
-        fname4merge = [] # list of paths of the yearly raw data files that will
-                         # be pass to contatenate and merge function.
+        fname4merge = []  # list of paths of the yearly raw data files that
+                          # will be pass to contatenate and merge function.
         i = 0
         for year in range(yr_start, yr_end+1):
 
@@ -1084,7 +1098,6 @@ class DownloadRawDataFiles(QtCore.QThread):
             self.ProgBarSignal.emit(int(progress))
 
             if self.ERRFLAG[i] == 1:
-
                 self.ConsoleSignal.emit(
                 '''<font color=red>There was a problem downloading the data
                      of station %s for year %d.
@@ -1119,7 +1132,6 @@ class DownloadRawDataFiles(QtCore.QThread):
                                          station %s stopped.
                                        </font>''' % StaName)
         else:
-
             cmt  = "All raw  data files downloaded sucessfully for "
             cmt += "station %s." % StaName
             print(cmt)
@@ -1135,18 +1147,16 @@ class DownloadRawDataFiles(QtCore.QThread):
         # https://docs.python.org/3/howto/urllib2.html
 
         try:
-
             ERRFLAG = 0
 
             f = urlopen(url)
             print('downloading %s' % fname)
 
             # write downloaded content to local file
-            with open(fname, "wb") as local_file:
+            with open(fname, 'wb') as local_file:
                 local_file.write(f.read())
 
         except URLError as e:
-
             ERRFLAG = 1
 
             if hasattr(e, 'reason'):
