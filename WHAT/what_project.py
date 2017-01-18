@@ -257,8 +257,10 @@ class NewProject(QtGui.QDialog):
 
         # If directory already exist, a number is added at the end within ().
 
-        project_dir = self.directory.text() + '/' + project_name
+        project_dir = os.path.join(self.directory.text(), project_name)
         count = 1
+
+        print(self.directory.text())
         while os.path.exists(project_dir):
             project_dir = os.path.join(self.directory.text(),
                                        '/%s (%d)' % (project_name, count))
@@ -288,7 +290,7 @@ class NewProject(QtGui.QDialog):
 
             # ---- project.what ----
 
-            fname = os.path.join(project_dir, '/%s.what' % project_name)
+            fname = os.path.join(project_dir, '%s.what' % project_name)
             if not os.path.exists(fname):
                 filecontent = [['Project name:', project_name],
                                ['Author:', self.author.text()],
