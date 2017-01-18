@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # STANDARD LIBRARY IMPORTS :
 
 # import csv
-import sys
 from time import sleep  # ctime, strftime, sleep
 import os
 
@@ -39,7 +38,7 @@ import meteo
 from custom_widgets import MyQToolButton, QToolPanel
 import custom_widgets as MyQWidget
 import database as db
-from gapfill_weather_algorithm import GapFillWeather
+from gapfill_weather_algorithm2 import GapFillWeather
 
 
 ###############################################################################
@@ -712,7 +711,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 return
 
-        #--------------------------------------------------------- UPDATE UI --
+        # -------------------------------------------------------- UPDATE UI --
 
         self.CORRFLAG = 'off'
         self.target_station.setCurrentIndex(sta_indx2fill)
@@ -724,9 +723,9 @@ class GapFillWeatherGUI(QtGui.QWidget):
         # Calculate correlation coefficient for the next station.
         self.correlation_UI()
 
-        #------------------------------------------------------ START THREAD --
+        # ----------------------------------------------------- START THREAD --
 
-        #-- Pass information to the worker --
+        # -- Pass information to the worker --
 
         self.gap_fill_worker.outputDir = self.workdir + '/Meteo/Output'
 
@@ -735,7 +734,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.gap_fill_worker.time_start = time_start
         self.gap_fill_worker.time_end = time_end
 
-        self.gap_fill_worker.Nbr_Sta_max = self.Nmax.value()
+        self.gap_fill_worker.NSTAmax = self.Nmax.value()
         self.gap_fill_worker.limitDist = self.distlimit.value()
         self.gap_fill_worker.limitAlt = self.altlimit.value()
 
@@ -747,13 +746,12 @@ class GapFillWeatherGUI(QtGui.QWidget):
             self.full_error_analysis.isChecked()
         self.gap_fill_worker.add_ETP = self.add_ETP_ckckbox.isChecked()
 
-        #---- Start the Thread ----
+        # ---- Start the Thread ----
 
         self.gap_fill_thread.start()
         self.gap_fill_worker.FillDataSignal.emit(True)
 
-
-    def btn_add_ETP_isClicked(self): #=========================================
+    def btn_add_ETP_isClicked(self):  # =======================================
 
         dirname = self.workdir + '/Meteo/Output'
         filename, _ = QtGui.QFileDialog.getOpenFileName(
@@ -764,7 +762,10 @@ class GapFillWeatherGUI(QtGui.QWidget):
             meteo.add_ETP_to_weather_data_file(filename)
 
 
-def correlation_table_generation(TARGET, WEATHER, FILLPARAM):  # ==============
+# =============================================================================
+
+
+def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     """
     This fucntion generate an HTML output to be displayed in the
     <Fill Data> tab display area after a target station has been
@@ -782,7 +783,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):  # ==============
     limitDist = FILLPARAM.limitDist
     limitAlt = FILLPARAM.limitAlt
 
-    #--------------------------------------------- TARGET STATION INFO TABLE --
+    # -------------------------------------------- TARGET STATION INFO TABLE --
 
     date_start = xldate_as_tuple(FILLPARAM.time_start, 0)
     date_start = '%02d/%02d/%04d' % (WEATHER.DATE_START[TARGET.index, 2],
@@ -813,9 +814,9 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):  # ==============
         target_info +=   '<td align="left">%s</td>' % HEADER[i]
         target_info += '</tr>'
 
-    target_info +=  '</table>'
+    target_info += '</table>'
 
-    #--------------------------------------------------------- SORT STATIONS --
+    # -------------------------------------------------------- SORT STATIONS --
 
     # Stations best correlated with the target station are displayed toward
     # the top of the table while neighboring stations poorly correlated are
@@ -826,7 +827,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):  # ==============
     DATA = WEATHER.DATA
     TIME = WEATHER.TIME
 
-    SUM_CORCOEF = np.sum(CORCOEF, axis=0) * -1 # Sort in descending order.
+    SUM_CORCOEF = np.sum(CORCOEF, axis=0) * -1  # Sort in descending order.
     index_sort = np.argsort(SUM_CORCOEF)
 
     # Reorganize the data.
@@ -836,12 +837,12 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):  # ==============
 
     HORDIST = TARGET.HORDIST[index_sort]
     ALTDIFF = TARGET.ALTDIFF[index_sort]
-    target_station_index = np.where(TARGET.name==STANAME)[0]
+    target_station_index = np.where(TARGET.name == STANAME)[0]
 
     index_start = np.where(TIME == FILLPARAM.time_start)[0][0]
     index_end = np.where(TIME == FILLPARAM.time_end)[0][0]
 
-    #----------------------------------------------- Determine filling dates --
+    # ---------------------------------------------- Determine filling dates --
 
     fill_date_start = xldate_as_tuple(FILLPARAM.time_start, 0)
     fill_date_start = '%02d/%02d/%04d' % (fill_date_start[2],
@@ -853,7 +854,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):  # ==============
                                         fill_date_end[1],
                                         fill_date_end[0])
 
-    #---------------------------------------------------- missing data table --
+    # --------------------------------------------------- missing data table --
 
     table1 = '''
              <p align=justify>
@@ -970,7 +971,6 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):  # ==============
 
     color = ['transparent', styleDB.lightgray]
     index = list(range(nSTA))
-    TARGET.index
     index.remove(target_station_index)
     counter = 0
     for i in index:
@@ -1070,25 +1070,26 @@ class GapFill_Parameters():
                           # the target and the neighboring stations.
 
 
-#==============================================================================
+# =============================================================================
+
+
 class GapFillDisplayTable(QtGui.QTableWidget):
     """
     Widget for displaying usefull information for the gapfilling of daily
     datasets.
     """
-#==============================================================================
 
     def __init__(self, parent=None):
         super(GapFillDisplayTable, self).__init__(parent)
 
         self.initUI()
 
-    def initUI(self): #========================================================
+    def initUI(self):
 
         styleDB = db.styleUI()
 #        ttipDB  = Tooltips('English')
 
-        #------------------------------------------------------------- Style --
+        # ------------------------------------------------------------ Style --
 
         self.setFrameStyle(styleDB.frame)
         self.setShowGrid(False)
@@ -1507,13 +1508,21 @@ class MyHorizHeader(QtGui.QHeaderView):
 
 if __name__ == '__main__':
 
+    import platform
+    import sys
+
     app = QtGui.QApplication(sys.argv)
+
+    if platform.system() == 'Windows':
+        app.setFont(QtGui.QFont('Segoe UI', 11))
+    elif platform.system() == 'Linux':
+        app.setFont(QtGui.QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
     w.set_workdir("../Projects/Project4Testing")
     w.load_data_dir_content()
 
-    #-- Show and Move Center --
+    # -- Show and Move Center --
 
     w.show()
 
@@ -1523,4 +1532,3 @@ if __name__ == '__main__':
     w.move(qr.topLeft())
 
     sys.exit(app.exec_())
-

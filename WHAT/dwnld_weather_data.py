@@ -863,7 +863,6 @@ class dwnldWeather(QtGui.QWidget):
                         reader = list(csv.reader(f, delimiter=','))
 
                     if reader[0][0] == 'Station Name':
-                        print(enc[j])
                         break
                     else:
                         f.close()

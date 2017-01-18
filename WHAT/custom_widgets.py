@@ -248,7 +248,7 @@ class MyHorizHeader(QtGui.QHeaderView):
             label = str(self.model().headerData(logicalIndex,
                                                 self.orientation()))
 
-            #------------------------------------------ Highlighting Header ----
+            #----------------------------------------- Highlighting Header ----
 
             if self.highlightSections():
                 selectedIndx = self.selectionModel().selectedIndexes()

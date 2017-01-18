@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
+email: jean-sebastien.gosselin@outlook.com
 
 WHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -614,7 +614,10 @@ class WHATPref():  # ##########################################################
                 raise e
 
 
-class MyProject():  # #########################################################
+# =============================================================================
+
+
+class MyProject():
     """
     This class contains all the info and utilities to manage the current
     active project.
@@ -647,7 +650,12 @@ class MyProject():  # #########################################################
         print('Project info loaded.')
         print('-------------------------------')
 
-if __name__ == '__main__':  # #################################################
+
+# =============================================================================
+# =============================================================================
+
+
+if __name__ == '__main__':
 
 #    app = QtGui.QApplication(sys.argv)
 #    print('Starting WHAT...')

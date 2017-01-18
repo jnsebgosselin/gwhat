@@ -24,7 +24,6 @@ from __future__ import division, unicode_literals
 
 # STANDARD LIBRARY IMPORTS :
 
-from sys import argv
 from time import clock, sleep
 import csv
 import os
@@ -2095,7 +2094,7 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
                 super(HSep, self).__init__(parent)
                 self.setFrameStyle(db.styleUI().HLine)
 
-        #----------------------------------------------------------- Toolbar --
+        # ---------------------------------------------------------- Toolbar --
 
         toolbar_widget = QtGui.QWidget()
 
@@ -2111,11 +2110,11 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
         toolbar_layout.addWidget(btn_cancel, 0, 1)
 
         toolbar_layout.setColumnStretch(2, 100)
-        toolbar_layout.setContentsMargins(0, 15, 0, 0) # (L, T, R, B)
+        toolbar_layout.setContentsMargins(0, 15, 0, 0)  # (L, T, R, B)
 
         toolbar_widget.setLayout(toolbar_layout)
 
-        #-------------------------------------------------------- Parameters --
+        # ------------------------------------------------------- Parameters --
 
         self.QSy_max = MyQDSpin(0.005, 0.005, 0.95)
         self.QSy_min = MyQDSpin(0.005, 0.005, 0.95)
@@ -2204,7 +2203,9 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication(argv)
+    import sys
+
+    app = QtGui.QApplication(sys.argv)
 
     # Create and show widgets :
 
@@ -2229,4 +2230,4 @@ if __name__ == '__main__':
 
 #    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
 
-    app.exec_()
+    sys.exit(app.exec_())

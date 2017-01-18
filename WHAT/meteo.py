@@ -194,13 +194,13 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         # -------------------------------------------------------- MAIN GRID --
 
-        #---- widgets ----
+        # ---- widgets ----
 
         self.fig_weather_normals = FigWeatherNormals()
         self.grid_weather_normals = GridWeatherNormals()
         self.grid_weather_normals.hide()
 
-        #---- layout ----
+        # ---- layout ----
 
         mainGrid = QtGui.QGridLayout()
 
@@ -218,7 +218,7 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         self.setLayout(mainGrid)
 
-    def show_monthly_grid(self): #=========== Show Monthly Normals Data Grid ==
+    def show_monthly_grid(self):  # ===========================================
 
         if self.grid_weather_normals.isHidden():
             self.grid_weather_normals.show()
@@ -658,7 +658,7 @@ class MeteoObj():
         indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
         TAVG = np.copy(self.DATA[:, indx])
 
-        #---- compute normals ----
+        # ---- compute normals ----
 
         NORMALS, _ = calculate_normals(self.DATA, self.datatypes)
         Ta = NORMALS[:, 2] # monthly air temperature averages (deg Celcius)
@@ -666,7 +666,7 @@ class MeteoObj():
         ETP = calculate_ETP(DATE, TAVG, LAT, Ta)
         ETP = ETP[:, np.newaxis]
 
-        #---- extend data ----
+        # ---- extend data ----
 
         self.DATA = np.hstack([self.DATA, ETP])
         self.varnames.append('ETP (mm)')
@@ -994,7 +994,7 @@ def calculate_ETP(DATE, TAVG, LAT, Ta):
     return ETP
 
 
-#==============================================================================
+# =============================================================================
 def calculate_daylength(DATE, LAT):
     """
     Calculate the photoperiod for the given latitude at the given time.
@@ -1008,13 +1008,13 @@ def calculate_daylength(DATE, LAT):
 
     {1D array} DAYLEN = photoperiod in hr.
     """
-#==============================================================================
+# =============================================================================
 
     DATE = DATE.astype(int)
     pi = np.pi
-    LAT = np.radians(LAT) # Latitude in rad
+    LAT = np.radians(LAT)  # Latitude in rad
 
-    #----- CONVERT DAY FORMAT -----
+    # ----- CONVERT DAY FORMAT -----
 
     # http://stackoverflow.com/questions/13943062
 
@@ -1024,7 +1024,7 @@ def calculate_daylength(DATE, LAT):
         DAY[i] = int(date(DATE[i, 0], DATE[i, 1],DATE[i, 2]).timetuple().tm_yday)
         DAY[i] = int(DAY[i])
 
-    #------------------------------------------------ DECLINATION OF THE SUN --
+    # ----------------------------------------------- DECLINATION OF THE SUN --
 
     # http://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
 
@@ -1038,13 +1038,13 @@ def calculate_daylength(DATE, LAT):
 
     SUNDEC = np.arcsin(np.sin(D) * np.cos(C + B * np.sin(A)))
 
-    #------------------------------------------------------ SUNRISE EQUATION --
+    # ----------------------------------------------------- SUNRISE EQUATION --
 
     # http:/Omega/en.wikipedia.org/wiki/Sunrise_equation
 
     OMEGA = np.arccos(-np.tan(LAT) * np.tan(SUNDEC))
 
-    #-------------------------------------------------------- HOURS OF LIGHT --
+    # ------------------------------------------------------- HOURS OF LIGHT --
 
     # http://physics.stackexchange.com/questions/28563/
     #        hours-of-light-per-day-based-on-latitude-longitude-formula
@@ -1054,7 +1054,9 @@ def calculate_daylength(DATE, LAT):
     return DAYLEN
 
 
-#==============================================================================
+# =============================================================================
+
+
 class FigWeatherNormals(FigureCanvasQTAgg):
     """
     This is the class that does all the plotting of the weather normals.
@@ -1064,7 +1066,6 @@ class FigWeatherNormals(FigureCanvasQTAgg):
     ax3 is used to plot the legend on top of the graph.
 
     """
-#==============================================================================
 
     def __init__(self, lang='English'):
 
@@ -1079,14 +1080,14 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         labelDB = LabelDataBase(self.lang)
         month_names = labelDB.month_names
 
-        #---------------------------------------------------- Define Margins --
+        # --------------------------------------------------- Define Margins --
 
         left_margin = 1. / fw
         right_margin = 1. / fw
         bottom_margin = 0.35 / fh
         top_margin = 0.1 / fh
 
-        #------------------------------------------------- Yearly Avg Labels --
+        # ------------------------------------------------ Yearly Avg Labels --
 
         # The yearly yearly averages for the mean air temperature and
         # the total precipitation are displayed in <ax3>, which is placed on
@@ -1099,7 +1100,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                         right='off', labelbottom='off', labeltop='off',
                         labelleft='off', labelright='off')
 
-        #---- Mean Annual Air Temperature ----
+        # ---- Mean Annual Air Temperature ----
 
         # Places first label at the top left corner of <ax3> with a horizontal
         # padding of 5 points and downward padding of 3 points.
@@ -1111,7 +1112,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax3.text(0., 1., 'Mean Annual Air Temperature',
                  fontsize=13, va='top', transform=transform)
 
-        #---- Mean Annual Precipitation ----
+        # ---- Mean Annual Precipitation ----
 
         # Get the bounding box of the first label.
 
@@ -1128,7 +1129,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         bbox = ax3.texts[1].get_window_extent(renderer)
         bbox = bbox.transformed(fig.transFigure.inverted())
 
-        #---- update geometry ----
+        # ---- update geometry ----
 
         # Updates the geometry and position of <ax3> to accomodate the text.
 
@@ -1139,24 +1140,24 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         ax3.set_position([x0, y0, axw, axh])
 
-        #--------------------------------------------------------- Data Axes --
+        # -------------------------------------------------------- Data Axes --
 
         axh = y0 - bottom_margin
         y0 = y0 - axh
 
-        #---- Precip ----
+        # ---- Precip ----
 
         ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1)
         ax0.patch.set_visible(False)
         ax0.spines['top'].set_visible(False)
         ax0.set_axisbelow(True)
 
-        #---- Air Temp. ----
+        # ---- Air Temp. ----
 
         ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=5,
                            sharex=ax0)
 
-        #------------------------------------------------------ INIT ARTISTS --
+        # ----------------------------------------------------- INIT ARTISTS --
 
         # This is only to initiates the artists and to set their parameters
         # in advance. The plotting of the data is actually done by calling
@@ -1166,28 +1167,28 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         y = range(len(XPOS))
         colors = ['#990000', '#FF0000', '#FF6666']
 
-        #---- Tmax ----
+        # ---- Tmax ----
 
         htmax, = ax1.plot(XPOS, y, color=colors[0], clip_on=True, ls='--',
                           lw=1.5, zorder=100)
 
-        #---- Tmean ----
+        # ---- Tmean ----
 
         htavg, = ax1.plot(XPOS, y, color=colors[1], clip_on=True, marker='o',
                           ls='--', ms=6, zorder=100, mec=colors[1],
                           mfc='white', mew=1.5, lw=1.5)
 
-        #---- Tmin ----
+        # ---- Tmin ----
 
         htmin, = ax1.plot(XPOS, y, color=colors[2], clip_on=True, ls='--',
                           lw=1.5, zorder=100)
 
-        #-------------------------------------------------- XTICKS FORMATING --
+        # ------------------------------------------------- XTICKS FORMATING --
 
         Xmin0 = 0
         Xmax0 = 12.001
 
-        #---- major ----
+        # ---- major ----
 
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out')
@@ -1197,16 +1198,16 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax1.tick_params(axis='x', which='both', bottom='off', top='off',
                         labelbottom='off')
 
-        #---- minor ----
+        # ---- minor ----
 
         ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
         ax0.tick_params(axis='x', which='minor', direction='out',
                         length=0, labelsize=13)
         ax0.xaxis.set_ticklabels(month_names, minor=True)
 
-        #-------------------------------------------------- Yticks Formating --
+        # ------------------------------------------------- Yticks Formating --
 
-        #---- Precipitation ----
+        # ---- Precipitation ----
 
         ax0.yaxis.set_ticks_position('right')
         ax0.tick_params(axis='y', direction='out', labelsize=13)
@@ -1214,7 +1215,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax0.tick_params(axis='y', which='minor', direction='out')
         ax0.yaxis.set_ticklabels([], minor=True)
 
-        #---- Air Temp. ----
+        # ---- Air Temp. ----
 
         ax1.yaxis.set_ticks_position('left')
         ax1.tick_params(axis='y', direction='out', labelsize=13)
@@ -1237,9 +1238,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         self.plot_legend()
 
-    def set_lang(self, lang): #================================ Set Language ==
+    def set_lang(self, lang):  # ============================== Set Language ==
         self.lang = lang
-        if len(self.NORMALS)==0:
+        if len(self.NORMALS) == 0:
             return
         self.plot_legend()
         self.set_axes_labels()
@@ -1526,7 +1527,7 @@ class GridWeatherNormals(QtGui.QTableWidget):
 
     def populate_table(self, NORMALS):
 
-        #---- Air Temperature ----
+        # ---- Air Temperature ----
 
         for row in range(3):
             # Months
@@ -1543,7 +1544,7 @@ class GridWeatherNormals(QtGui.QTableWidget):
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.setItem(row, 12, item)
 
-        #---- Rain ----
+        # ---- Rain ----
 
         row = 3
         # Months
@@ -1560,7 +1561,7 @@ class GridWeatherNormals(QtGui.QTableWidget):
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         self.setItem(row, 12, item)
 
-        #---- Snow ----
+        # ---- Snow ----
 
         row = 4
         # Months
@@ -1577,7 +1578,7 @@ class GridWeatherNormals(QtGui.QTableWidget):
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         self.setItem(row, 12, item)
 
-        #---- Total Precip ----
+        # ---- Total Precip ----
 
         row = 5
         # Months
@@ -1593,7 +1594,7 @@ class GridWeatherNormals(QtGui.QTableWidget):
         item.setTextAlignment(QtCore.Qt.AlignCenter)
         self.setItem(row, 12, item)
 
-        #---- ETP ----
+        # ---- ETP ----
 
         row = 6
         for col in range(12):
