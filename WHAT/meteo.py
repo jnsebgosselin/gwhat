@@ -455,7 +455,6 @@ class MeteoObj():
         print('Weather data loaded.')
 
     def load(self, filename):  # ==============================================
-
         """
         Load the info related to the weather station, the date and weather
         datasets 'as is' from the file.
@@ -726,15 +725,16 @@ class MeteoObj():
 #        self.RAINwk = RAINbin
 
 
-#==============================================================================
+# =============================================================================
+
+
 def add_ETP_to_weather_data_file(filename):
     """
     Load data from a weather data file, estimate the ETP and add it to
     the file.
     """
-#==============================================================================
 
-    #-- load and stock original data --
+    # -- load and stock original data --
 
     meteoObj = MeteoObj()
     meteoObj.load(filename)
@@ -743,7 +743,7 @@ def add_ETP_to_weather_data_file(filename):
     DATAORIG = np.copy(meteoObj.DATA)
     DATE = DATAORIG[:, :3]
 
-    #-- compute air temperature normals --
+    # -- compute air temperature normals --
 
     meteoObj.clean_endsof_file()
     meteoObj.check_time_continuity()
@@ -755,15 +755,15 @@ def add_ETP_to_weather_data_file(filename):
     varnames = np.array(meteoObj.HEADER[-1])
     indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
 
-    Ta = NORMALS[:, indx-3]   # monthly air temperature averages (deg C)
-    LAT = float(meteoObj.LAT) # Latitude (decimal deg)
+    Ta = NORMALS[:, indx-3]    # monthly air temperature averages (deg C)
+    LAT = float(meteoObj.LAT)  # Latitude (decimal deg)
 
-    #-- estimate ETP from original temperature time series --
+    # -- estimate ETP from original temperature time series --
 
     TAVG = np.copy(DATAORIG[:, indx])
     ETP = calculate_ETP(DATE, TAVG, LAT, Ta)
 
-    #-- extend data --
+    # -- extend data --
 
     filecontent = copy.copy(HEADER)
     if np.any(varnames == 'ETP (mm)'):
@@ -783,19 +783,21 @@ def add_ETP_to_weather_data_file(filename):
 
         DATAORIG.tolist()
 
-    #-- save data --
+    # -- save data --
 
     for i in range(len(DATAORIG[:, 0])):
         filecontent.append(DATAORIG[i, :])
 
-    with open(filename, 'w') as f:
-        writer = csv.writer(f,delimiter='\t')
+    with open(filename, 'w', encoding='utf-8') as f:
+        writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(filecontent)
 
     print('ETP time series added successfully to %s' % filename)
 
 
-#==============================================================================
+# =============================================================================
+
+
 def make_timeserie_continuous(DATA):
     """
     This function is called when a time serie of a daily meteorological record

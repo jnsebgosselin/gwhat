@@ -673,7 +673,7 @@ class GapFillWeather(QtCore.QObject):
             print('Data completion for variable %d/%d completed.' %
                   (var+1, nVAR))
 
-        #---------------------------------------------------- End of Routine --
+        # --------------------------------------------------- End of Routine --
 
         msg = ('Data completion for station %s completed successfully ' +
                'in %0.2f sec.') % (target_station_name, (clock() - tstart))
@@ -688,11 +688,11 @@ class GapFillWeather(QtCore.QObject):
                 'completed because all neighboring station were empty ' +
                 'for that period</font>')
 
-        #======================================================================
+        # =====================================================================
         #                                                 WRITE DATA TO FILE
-        #======================================================================
+        # =====================================================================
 
-        #---- Check dirname ----
+        # ---- Check dirname ----
 
         # Check if the characters "/" or "\" are present in the station
         # name and replace these characters by "-" if applicable.
@@ -738,7 +738,6 @@ class GapFillWeather(QtCore.QObject):
         # Xcount_tot: Number of times each neighboring station was used to
         #             predict Ypre for all variables.
 
-
         # ---- Gap-Fill Info Summary ----
 
         record_date_start = '%04d/%02d/%02d' % (YEAR[index_start],
@@ -750,7 +749,7 @@ class GapFillWeather(QtCore.QObject):
                                               DAY[index_end])
 
         fcontent = copy(HEADER)
-        fcontent.extend([['*** FILL PROCEDURE INFO ***'],[]])
+        fcontent.extend([['*** FILL PROCEDURE INFO ***'], []])
         if self.regression_mode == True:
             fcontent.append(['MLR model', 'Ordinary Least Square'])
         elif self.regression_mode == False:
@@ -770,7 +769,7 @@ class GapFillWeather(QtCore.QObject):
                           '']])
         fcontent[-1].extend(Xnames)
 
-        #---- Missing Data Summary ----
+        # ---- Missing Data Summary ----
 
         total_nbr_data = index_end - index_start + 1
         nbr_fill_total = 0
@@ -817,12 +816,12 @@ class GapFillWeather(QtCore.QObject):
                 fcontent[-1].append('%d (%0.1f %% of filled)' %
                                     (Xcount_var[i, var], pc))
 
-        #---- Total Missing ----
+        # ---- Total Missing ----
 
         pc = nbr_nan_total / (total_nbr_data * nVAR) * 100
         nbr_nan_total = '%d (%0.1f %% of total)' % (nbr_nan_total, pc)
 
-        #---- Total Filled ----
+        # ---- Total Filled ----
 
         try:
             pc = nbr_fill_total / nbr_nan_total * 100
@@ -839,9 +838,9 @@ class GapFillWeather(QtCore.QObject):
             text2add = '%d (%0.1f %% of filled)' % (Xcount_tot[i], pc)
             fcontent[-1].append(text2add)
 
-        #---- Info Detailed ----
+        # ---- Info Detailed ----
 
-        fcontent.extend([[],[],
+        fcontent.extend([[], [],
                          ['*** DETAILED REPORT ***'],
                          [],
                          ['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'NBR STA.',
@@ -871,7 +870,7 @@ class GapFillWeather(QtCore.QObject):
                                      '%0.1f' % yp])
                     fcontent[-1].extend(xm)
 
-        #---- Save File ----
+        # ---- Save File ----
 
         YearStart = str(int(YEAR[index_start]))
         YearEnd = str(int(YEAR[index_end]))
@@ -886,7 +885,7 @@ class GapFillWeather(QtCore.QObject):
         self.ConsoleSignal.emit(
                '<font color=black>Info file saved in %s.</font>' % output_path)
 
-        #--------------------------------------------------------- .out file --
+        # -------------------------------------------------------- .out file --
 
         #---- Prepare Header ----
 
@@ -916,12 +915,12 @@ class GapFillWeather(QtCore.QObject):
         msg = 'Meteo data saved in %s.' % output_path
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
-        #---- Add ETP to File ----
+        # ---- Add ETP to File ----
 
         if self.add_ETP:
             meteo.add_ETP_to_weather_data_file(output_path)
 
-        #---- Produces Weather Normals Graph ----
+        # ---- Produces Weather Normals Graph ----
 
         METEO = meteo.MeteoObj()
         METEO.load_and_format(output_path)
@@ -1129,7 +1128,7 @@ class GapFillWeather(QtCore.QObject):
     @staticmethod
     def save_content_to_file(fname, fcontent):  # =============================
 
-        with open(fname, 'w') as f:
+        with open(fname, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
