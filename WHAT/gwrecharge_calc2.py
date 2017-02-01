@@ -39,13 +39,13 @@ from meteo import MeteoObj
 from waterlvldata import WaterlvlData
 from gwrecharge_post import plot_water_budget_yearly
 
-#==============================================================================
 
-class SynthHydrograph(object):                              # SynthHydrograph #
+# =============================================================================
 
-#==============================================================================
 
-    def __init__(self): #============================================== Init ==
+class SynthHydrograph(object):
+
+    def __init__(self):
 
         self.meteoObj = MeteoObj()
         self.ETP, self.PTOT, self.TAVG = [], [], []
@@ -64,9 +64,11 @@ class SynthHydrograph(object):                              # SynthHydrograph #
 
         self.DATE = []
 
-    def load_data(self, fmeteo, fwaterlvl): #===================== Load Data ==
+    # =========================================================================
 
-        #---- Load Data ----
+    def load_data(self, fmeteo, fwaterlvl):
+
+        # ---- Load Data ----
 
         print('--------')
 
@@ -596,20 +598,28 @@ class SynthHydrograph(object):                              # SynthHydrograph #
 if __name__ == '__main__':
 
     plt.close('all')
+    import os
 
-    #---- Pont-Rouge ----
+    # ---- Pont-Rouge ----
 
-    dirname = '../Projects/Pont-Rouge/'
-    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    fwaterlvl = dirname + 'Water Levels/5080001.xls'
+#    dirname = '../Projects/Pont-Rouge/'
+#    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+#    fwaterlvl = dirname + 'Water Levels/5080001.xls'
 
-    #---- Valcartier ----
+    # ---- Valcartier ----
 
 #    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
 #    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
 #    fwaterlvl = dirname + '/Water Levels/valcartier2.xls'
 
-    #---- Calculations ----
+    # ---- IDM ----
+
+    dirname = '../Projects/IDM/'
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
+                          'IDM (JSG2017)_1960-2016.out')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
+
+    # ---- Calculations ----
 
     synth_hydrograph = SynthHydrograph()
     synth_hydrograph.load_data(fmeteo, fwaterlvl)

@@ -1633,7 +1633,10 @@ def local_extrema(x, Deltan):  # ==============================================
 #    time = mpl.dates.date2num(date)
 
 
-def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
+# =============================================================================
+
+
+def mrc_calc(t, h, ipeak, MRCTYPE=1):
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
     the aquifer from the water level time series using a modified Gauss-Newton
@@ -1646,7 +1649,6 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
     ipeak: sequence of indices where the maxima and minima are located in h
 
     MRCTYPE: MRC equation type
-
              MODE = 0 -> linear (dh/dt = b)
              MODE = 1 -> exponential (dh/dt = -a*h + b)
 
@@ -1683,12 +1685,13 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
     tolmax = 0.001
 
     A = 0.
-    B = np.mean((h[maxpeak] - h[minpeak]) / (t[maxpeak] - t[minpeak]))
+    B = np.mean((h[maxpeak]-h[minpeak]) / (t[maxpeak]-t[minpeak]))
 
     hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
-    tindx = np.where(~np.isnan(hp))
+    tindx = np.where(~np.isnan(hp*h))
+    # indexes where there is a valid data inside a recession period
 
-    RMSE = (np.mean((h[tindx] - hp[tindx])**2))**0.5
+    RMSE = np.sqrt(np.mean((h[tindx]-hp[tindx])**2))
     print('A = %0.3f ; B= %0.3f; RMSE = %f' % (A, B, RMSE))
 
     # NP: number of parameters
@@ -1698,7 +1701,6 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
         NP = 2
 
     while 1:
-
         # Calculating Jacobian (X) Numerically :
 
         hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
@@ -1707,7 +1709,6 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
         if MRCTYPE == 1:
             hdA = calc_synth_hydrograph(A + tolmax, B, h, dt, ipeak)
             XA = (hdA[tindx] - hp[tindx]) / tolmax
-
             Xt = np.vstack((XA, XB))
         elif MRCTYPE == 0:
             Xt = XB
@@ -1770,7 +1771,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
 
         while 1:  # Loop for Damping (to prevent overshoot)
 
-            # Calculating new paramter values :
+            # Calculating new parameter values :
 
             if MRCTYPE == 1:
                 A = Aold + dr[0]
@@ -1785,7 +1786,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
             # Solving for new parameter values :
 
             hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
-            RMSE = (np.mean((h[tindx] - hp[tindx])**2))**0.5
+            RMSE = np.sqrt(np.mean((h[tindx]-hp[tindx])**2))
 
             # Checking overshoot :
 
@@ -1794,16 +1795,11 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
             else:
                 break
 
-#        print(u'A = %0.3f ; B= %0.3f; RMSE = %f ; Cos_theta = %0.3f'
-#              % (A, B, RMSE, cos))
-
         # Checking tolerance :
 
         tolA = np.abs(A - Aold)
         tolB = np.abs(B - Bold)
-
         tol = np.max((tolA, tolB))
-
         if tol < tolmax:
             break
 
@@ -1814,7 +1810,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):  # ======================================
     return A, B, hp, RMSE
 
 
-def calc_synth_hydrograph(A, B, h, dt, ipeak):  # =============================
+def calc_synth_hydrograph(A, B, h, dt, ipeak):
     """
     Compute synthetic hydrograph with a time-forward implicit numerical scheme
     during periods where the water level recedes identified by the "ipeak"
@@ -1831,12 +1827,9 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):  # =============================
                             # recedes.
 
     hp = np.ones(len(h)) * np.nan
-
     for i in range(nsegmnt):
         hp[maxpeak[i]] = h[maxpeak[i]]
-
         for j in range(minpeak[i] - maxpeak[i]):
-
             imax = maxpeak[i]
 
             LUMP1 = (1 - A * dt[imax+j] / 2)
@@ -1847,7 +1840,10 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):  # =============================
 
     return hp
 
-#==============================================================================
+
+# =============================================================================
+
+
 class SoilProfil():
     """
     zlayer = Position of the layer boundaries in mbgs where 0 is the ground
@@ -1858,7 +1854,6 @@ class SoilProfil():
 
     Sy = Soil specific yield.
     """
-#==============================================================================
 
     def __init__(self):
 
@@ -2213,13 +2208,21 @@ if __name__ == '__main__':
     w.show()
     w.widget_MRCparam.show()
 
-    # Define paths :
+    # ---- Pont Rouge ----
 
     dirname = os.path.join(
         os.path.dirname(os.getcwd()), 'Projects', 'Pont-Rouge')
     fmeteo = os.path.join(
         dirname, 'Meteo', 'Output', 'STE CHRISTINE (7017000)_1960-2015.out')
     fwaterlvl = os.path.join(dirname, 'Water Levels', '5080001.xls')
+
+    # ---- IDM ----
+
+    dirname = os.path.dirname(os.getcwd())
+    dirname = os.path.join(dirname, 'Projects', 'IDM')
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
+                          'IDM (JSG2017)_1960-2016.out')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
 
     # Load and plot data :
 
