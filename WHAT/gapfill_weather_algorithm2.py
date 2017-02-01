@@ -49,7 +49,7 @@ from hydrograph3 import LatLong2Dist
 from gapfill_weather_postprocess import PostProcessErr
 
 
-###############################################################################
+# =============================================================================
 
 
 class GapFillWeather(QtCore.QObject):
@@ -118,27 +118,25 @@ class GapFillWeather(QtCore.QObject):
 
         self.FillDataSignal.connect(self.fill_data)
 
-    @property  # ==============================================================
+    # =========================================================================
+
+    # Maximum number of neighboring stations that will be used to fill
+    # the missing data in the target station
+
+    @property
     def NSTAmax(self):
         return self.__NSTAmax
 
     @NSTAmax.setter
     def NSTAmax(self, x):
-        err = 0
-        if type(x) != int:
-            print('!WARNING! NSTAmax must be must be an integer.')
-            err = 1
-        if x < 1:
-            print('!WARNING! NSTAmax must be equal or greater than 1.')
-            err = 1
+        if type(x) != int or x < 1:
+            raise ValueError('!WARNING! NSTAmax must be must be an integer'
+                             ' with a value greater than 0.')
+        self.__NSTAmax = x
 
-        self.__NSTAmax = max(1, int(x))
-        if err:
-            print('NSTAmax value was set to %d from %s' %
-                  (self.__NSTAmax, str(x)))
+    # =========================================================================
 
-    def load_data(self):  # ===================================================
-
+    def load_data(self):
         # This method scans the input directory for valid weather data files
         # and instruct the "WEATHER" instance to load the data from the file
         # and to generate a summary. The results are saved in a structured
@@ -184,8 +182,7 @@ class GapFillWeather(QtCore.QObject):
 
         return self.WEATHER.STANAME
 
-    def reload_data(self):  # =================================================
-
+    def reload_data(self):
         # Reads the csv files in the input data directory folder, format
         # the datasets and save the results in a binary file
 
@@ -207,7 +204,9 @@ class GapFillWeather(QtCore.QObject):
 
         return self.WEATHER.STANAME
 
-    def set_target_station(self, index):  # ===================================
+    # =========================================================================
+
+    def set_target_station(self, index):
 
         # Update information for the target station.
 
@@ -960,7 +959,7 @@ class GapFillWeather(QtCore.QObject):
         print('Generating %s.' % figname)
         w.figure.savefig(figname)
 
-        #--------------------------------------------------------- .err file --
+        # -------------------------------------------------------- .err file --
 
         if self.full_error_analysis == True:
 
@@ -1161,7 +1160,9 @@ class GapFillWeather(QtCore.QObject):
             writer.writerows(fcontent)
 
 
-#==============================================================================
+# =============================================================================
+
+
 def correlation_worker(WEATHER, tarStaIndx):
     """
     This function computes the correlation coefficients between the target
@@ -1171,7 +1172,6 @@ def correlation_worker(WEATHER, tarStaIndx):
         rows :    meteorological variables
         columns : weather stations
     """
-#==============================================================================
 
     DATA = WEATHER.DATA
 
@@ -1182,9 +1182,11 @@ def correlation_worker(WEATHER, tarStaIndx):
 
     CORCOEF = np.zeros((nVAR, nSTA)) * np.nan
 
-    Ndata_limit = int(365 / 2.) # Minimum number of pair of data necessary
-                                # between the target and a neighboring station
-                                # to compute a correlation coefficient.
+    Ndata_limit = int(365 / 2.)
+
+    # Ndata_limit is the minimum number of pair of data necessary
+    # between the target and a neighboring station to compute a correlation
+    # coefficient.
 
     for i in range(nVAR):
         for j in range(nSTA):
@@ -1205,7 +1207,7 @@ def correlation_worker(WEATHER, tarStaIndx):
             # and the neighboring station <j> for the variable <i> if there is
             # enough data.
             if Nnonan >= Ndata_limit:
-                CORCOEF[i, j] = np.corrcoef(DATA_nonan, rowvar=0)[0,1:]
+                CORCOEF[i, j] = np.corrcoef(DATA_nonan, rowvar=0)[0, 1:]
             else:
                 pass  # Do nothing. Value will be nan by default.
 
@@ -1214,12 +1216,12 @@ def correlation_worker(WEATHER, tarStaIndx):
     return CORCOEF
 
 
-###############################################################################
+# =============================================================================
 
 
 class TargetStationInfo(object):
     """
-    Class that contains all the information relative the target station,
+    Class that contains all the information relative to the target station,
     including correlation coefficient 2d matrix, altitude difference and
     horizontal distances arrays.
     """
@@ -1229,29 +1231,37 @@ class TargetStationInfo(object):
         # Target station index in the DATA matrix and STANAME
         # array of the class WEATHER.
 
-        self.name = []  # Target station name
-
+        self.name = []  # Name of the target station
         self.province = []
         self.altitude = []
         self.longitude = []
         self.latitude = []
 
-        self.CORCOEF = []  # 2D matrix containing the correlation coefficients
-                           # betweein the target station and the neighboring
-                           # stations for each meteorological variable.
-                           # row : meteorological variables
-                           # colm: weather stations
+        self.CORCOEF = []
 
-        self.ALTDIFF = []  # Array with altitude difference between the target
-                           # station and every other station. Target station is
-                           # included with a 0 value at index <index>.
+        # CORCOEF is a 2D matrix containing the correlation coefficients
+        # betweein the target station and the neighboring stations for each
+        # meteorological variable.
+        # row : meteorological variables
+        # colm: weather stations
 
-        self.HORDIST = []  # Array with horizontal distance between the target
-                           # station and every other station. Target station is
-                           # included with a 0 value at index <index>
+        self.ALTDIFF = []
+
+        # ALTDIFF is an array with altitude difference between the target
+        # station and every other station. Target station is included with
+        # a 0 value at index <index>.
+
+        self.HORDIST = []
+
+        # HORDIST is an array with horizontal distance between the target
+        # station and every other station. Target station is included with
+        # a 0 value at index <index>
 
 
-def alt_and_dist_calc(WEATHER, index):  # =====================================
+# =============================================================================
+
+
+def alt_and_dist_calc(WEATHER, index):
     """
     Computes the horizontal distance in km and the altitude difference
     in m between the target station and each neighboring stations
@@ -1278,7 +1288,7 @@ def alt_and_dist_calc(WEATHER, index):  # =====================================
     return HORDIST, ALTDIFF
 
 
-###############################################################################
+# =============================================================================
 
 
 class WeatherData(object):
@@ -1302,7 +1312,7 @@ class WeatherData(object):
         the end of the new name.
     """
 
-    def __init__(self):  # ====================================================
+    def __init__(self):
 
         self.DATA = []        # Weather data
         self.DATE = []        # Date in tuple format [YEAR, MONTH, DAY]
@@ -1322,7 +1332,7 @@ class WeatherData(object):
         self.NUMMISS = []     # Number of missing data
         self.fnames = []
 
-    def save_to_binary(self, dirname):  # =====================================
+    def save_to_binary(self, dirname):
 
         dtype = [('DATA', 'float32', np.shape(self.DATA)),
                  ('DATE', 'i2', np.shape(self.DATE)),
@@ -1807,7 +1817,10 @@ class WeatherData(object):
         return table
 
 
-def L1LinearRegression(X, Y):  # ==============================================
+# =============================================================================
+
+
+def L1LinearRegression(X, Y):
     """
     L1LinearRegression: Calculates L-1 multiple linear regression by IRLS
     (Iterative reweighted least squares)
@@ -1887,6 +1900,7 @@ def main():
     # step 2.
 
     stanames = gapfill_weather.load_data()
+    print(stanames)
 
     # 4 - Setup target station ------------------------------------------------
 
@@ -1907,7 +1921,7 @@ def main():
     # See the help of class *GapFillWeather* for a description of each
     # parameter.
 
-    gapfill_weather.NSTAmax = 0.1
+    gapfill_weather.NSTAmax = 0
     gapfill_weather.limitDist = 100
     gapfill_weather.limitAlt = 350
     gapfill_weather.regression_mode = 0
