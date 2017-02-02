@@ -179,9 +179,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.canvas.mpl_connect('button_press_event', self.onclick)
         self.canvas.mpl_connect('button_release_event', self.onrelease)
-
         self.canvas.mpl_connect('resize_event', self.setup_ax_margins)
         self.canvas.mpl_connect('motion_notify_event', self.mouse_vguide)
+        self.canvas.mpl_connect('figure_leave_event', self.on_fig_leave)
 
         # ------------------------------------------------------------ FRAME --
 
@@ -262,7 +262,13 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
-        self.vguide.set_visible(True)
+        self.vguide.set_visible(False)
+
+        offset = mpl.transforms.ScaledTranslation(-5/72, 5/72,
+                                                  self.fig.dpi_scale_trans)
+        self.xcoord = ax0.text(1, 0, '', ha='right',
+                               transform=ax0.transAxes + offset)
+        self.xcoord.set_visible(False)
 
         # Add a peak cursor :
 
@@ -415,19 +421,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.setLayout(mainGrid)
 
-    def draw(self):  # ========================================================
-        ax = self.fig.axes[0]
-        self.vguide.set_visible(False)
-        self.pguide.set_visible(False)
-        self.xcross.set_visible(False)
-
-        self.canvas.draw()
-        self.__figbckground = self.fig.canvas.copy_from_bbox(ax.bbox)
-
-        if self.btn_pan.autoRaise():
-            self.vguide.set_visible(True)
-            ax.draw_artist(self.vguide)
-            self.fig.canvas.update()
 
     def emit_error_message(self, error_text):  # ==============================
 
@@ -820,13 +813,15 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.btn_pan.setAutoRaise(False)
             self.toolbar.pan()
 
-            self.vguide.set_visible(False)
+            # self.vguide.set_visible(False)
+            # self.xcoord.set_visible(False)
             self.draw()
         else:
             self.btn_pan.setAutoRaise(True)
             self.toolbar.pan()
 
-            self.vguide.set_visible(True)
+            # self.vguide.set_visible(True)
+            # self.xcoord.set_visible(True)
             self.draw()
 
     def home(self):  # ========================================================
@@ -941,7 +936,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.draw()
 
-    def init_hydrograph(self):  # =============================================
+    # =========================================================================
+
+    def init_hydrograph(self):
 
         ax0 = self.fig.axes[0]
 
@@ -985,12 +982,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         # Setup xtick Labels Date Format :
 
-        if self.dformat == 1:
+        if self.dformat == 1:  # matplotlib format
             xloc = mpl.dates.AutoDateLocator()
             ax0.xaxis.set_major_locator(xloc)
             xfmt = mpl.dates.AutoDateFormatter(xloc)
             ax0.xaxis.set_major_formatter(xfmt)
-        elif self.dformat == 0:
+        elif self.dformat == 0: # excel format
             xfmt = mpl.ticker.ScalarFormatter()
             ax0.xaxis.set_major_formatter(xfmt)
             ax0.get_xaxis().get_major_formatter().set_useOffset(False)
@@ -1000,20 +997,23 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.isGraphExists = True
         self.draw()
 
-    def plot_synth_hydro(self, parameters):  # ================================
+    # =========================================================================
+
+    def plot_synth_hydro(self, parameters):
         print(parameters)
         Cro = parameters['Cro']
         RASmax = parameters['RASmax']
         Sy = parameters['Sy']
 #        parameters['jack']
 
-        # compute recharge :
+        # ----------------------------------------------- compute recharge ----
+
         rechg, _, _, _, _ = \
             self.synth_hydrograph.surf_water_budget(Cro, RASmax)
 
-        # compute water levels :
+        # ------------------------------------------- compute water levels ----
 
-        tweatr = self.meteo_data.TIME + 10  # Here we introduce the time lag
+        tweatr = self.meteo_data.TIME + 0  # Here we introduce the time lag
         twlvl = self.time
 
         ts = np.where(twlvl[0] == tweatr)[0][0]
@@ -1021,13 +1021,15 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         WLpre = self.synth_hydrograph.calc_hydrograph(rechg[ts:te], Sy)
 
-        # plot water levels :
+        # ---------------------------------------------- plot water levels ----
 
         self.plt_wlpre.set_data(self.synth_hydrograph.DATE, WLpre/1000.)
 
         self.draw()
 
-    def btn_strati_isClicked(self):  # ========================================
+    # =========================================================================
+
+    def btn_strati_isClicked(self):
 
         # Checks :
 
@@ -1045,7 +1047,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.btn_strati.setAutoRaise(True)
             self.hide_soil_layer()
 
-    def hide_soil_layer(self):  # =============================================
+    def hide_soil_layer(self):
 
         for i in range(len(self.zlayer)):
             self.layers[i].remove()
@@ -1054,7 +1056,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.draw()
 
-    def display_soil_layer(self):  # ==========================================
+    def display_soil_layer(self):
 
         # Check :
 
@@ -1114,7 +1116,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.draw()
 
-    def change_waterlvl_lineStyle(self):  # ===================================
+    # ============================================== Water Level Linestyle ====
+
+    def change_waterlvl_lineStyle(self):
 
         if self.btn_Waterlvl_lineStyle.autoRaise():
 
@@ -1132,8 +1136,20 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.draw()
 
-    def mouse_vguide(self, event):  # =========================================
+    # ======================================================== Mouse Event ====
 
+    def draw(self):
+        self.vguide.set_visible(False)
+        self.xcross.set_visible(False)
+        self.pguide.set_visible(False)
+
+        self.canvas.draw()
+        self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
+
+    def on_fig_leave(self, event):
+        self.draw()
+
+    def mouse_vguide(self, event):
         if not self.btn_pan.autoRaise():
             return
 
@@ -1144,19 +1160,28 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         fig.canvas.restore_region(self.__figbckground)
 
-        # ------------------------------------------------ Vertical Cursor ----
+        # ----- Vertical Cursor ----
 
         # Trace a red vertical guide (line) that folows the mouse marker :
 
         x = event.xdata
         if x:
             self.vguide.set_visible(True)
+            self.xcoord.set_visible(True)
             self.vguide.set_xdata(x)
+
+            if self.dformat == 0:
+                self.xcoord.set_text('%d' % x)
+            else:
+                self.xcoord.set_text('%d' % (x - self.dt4xls2mpl))
+
             ax0.draw_artist(self.vguide)
+            ax0.draw_artist(self.xcoord)
         else:
             self.vguide.set_visible(False)
+            self.xcoord.set_visible(False)
 
-        # ------------------------------------------------ Add Peak Cursor ----
+        # ----- Add Peak Cursor ----
 
         if x and not self.btn_editPeak.autoRaise():
 
@@ -1178,7 +1203,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         ax0.draw_artist(self.pguide)
 
-        # --------------------------------------------- Remove Peak Cursor ----
+        # ---- Remove Peak Cursor ----
 
         if not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
 
@@ -1203,7 +1228,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 indx = np.argmin(d)
                 self.xcross.set_xdata(xpeak[indx])
                 self.xcross.set_ydata(ypeak[indx])
-
                 self.xcross.set_visible(True)
             else:
                 self.xcross.set_visible(False)
@@ -1212,29 +1236,25 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         ax0.draw_artist(self.xcross)
 
-        # -------------------------------------------------- Update Canvas ----
+        # ---- Update Canvas ----
 
-        self.fig.canvas.update()
+        self.fig.canvas.blit()
 
-    def onrelease(self, event):  # ============================================
-
+    def onrelease(self, event):
         if event.button != 1:
             return
 
         self.__addPeakVisible = True
         self.plot_peak()
 
-    def onclick(self, event):  # ==============================================
-
-        x = event.x
-        y = event.y
-
+    def onclick(self, event):
+        x, y = event.x, event.y
         if x is None or y is None:
             return
 
         ax0 = self.fig.axes[0]
 
-        # -------------------------------------------------- DELETE A PEAK ----
+        # -------------------------------------------------- delete a peak ----
 
         # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
 
@@ -1270,7 +1290,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.xcross.set_visible(False)
                 self.plot_peak()
 
-        # ----------------------------------------------------- ADD A PEAK ----
+        # ----------------------------------------------------- add a peak ----
 
         elif not self.btn_editPeak.autoRaise():
 
