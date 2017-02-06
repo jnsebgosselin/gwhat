@@ -19,26 +19,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-# STANDARD LIBRARY IMPORTS :
-
 from calendar import monthrange
 import csv
 import os
 from time import clock
 import datetime
 
-#THIRD PARTY IMPORTS :
-
 import numpy as np
 from xlrd import xldate_as_tuple, open_workbook
 
 
-###############################################################################
-
-
-class WaterlvlData():                                          # WaterlvlData #
+class WaterlvlData():
     """
-    Class used to load the water level data files.
+    Class that loads the water level data files.
     """
 
     def __init__(self):
@@ -71,7 +64,9 @@ class WaterlvlData():                                          # WaterlvlData #
         self.hrecess = []
         self.A, self.B = None, None
 
-    def load(self, fname):  # =================================================
+    # =========================================================================
+
+    def load(self, fname):
 
         print('Loading waterlvl time-series...')
 
@@ -82,15 +77,14 @@ class WaterlvlData():                                          # WaterlvlData #
         book = open_workbook(fname, on_demand=True)
         sheet = book.sheet_by_index(0)
 
-        # Search for First Line With Data ----
+        # Search for First Line With Data :
 
         self.time = sheet.col_values(0, start_rowx=0, end_rowx=None)
         self.time = np.array(self.time)
 
         row = 0
         hit = False
-        while hit == False:
-
+        while hit is False:
             if self.time[row] == 'Date':
                 hit = True
             else:
@@ -103,7 +97,7 @@ class WaterlvlData():                                          # WaterlvlData #
 
         start_rowx = row + 1
 
-        #---- Load Data ----
+        # Load Data :
 
         try:
             self.time = self.time[start_rowx:]
@@ -126,13 +120,7 @@ class WaterlvlData():                                          # WaterlvlData #
 
         book.release_resources()
 
-        # Make time series continuous :
-
-        self.time, self.lvl = self.make_waterlvl_continuous(self.time,
-                                                            self.lvl)
-
-        # Other stuff :
-
+        self.make_waterlvl_continuous()  # Make time series continuous :
         self.generate_HTML_table()
         self.load_interpretation_file()
 
@@ -140,7 +128,7 @@ class WaterlvlData():                                          # WaterlvlData #
 
         return True
 
-    def load_waterlvl_measures(self, fname, name_well): #=== Manual Measures ==
+    def load_waterlvl_measures(self, fname, name_well):
 
         print('Loading waterlvl manual measures for well %s' % name_well)
 
@@ -148,7 +136,7 @@ class WaterlvlData():                                          # WaterlvlData #
 
         if os.path.exists(fname):
 
-            #---- Import Data ----
+            # ---- Import Data ----
 
             reader = open_workbook(fname)
             sheet = reader.sheet_by_index(0)
@@ -157,7 +145,7 @@ class WaterlvlData():                                          # WaterlvlData #
             TIME = sheet.col_values(1, start_rowx=1, end_rowx=None)
             OBS = sheet.col_values(2, start_rowx=1, end_rowx=None)
 
-            #---- Convert to Numpy ----
+            # ---- Convert to Numpy ----
 
             NAME = np.array(NAME).astype('str')
             TIME = np.array(TIME).astype('float')
@@ -174,26 +162,26 @@ class WaterlvlData():                                          # WaterlvlData #
 
         return TIMEmes, WLmes
 
-    def load_interpretation_file(self): #=============== Interpretation File ==
+    def load_interpretation_file(self):
 
-        #---- Check if file exists ----
+        # ---- Check if file exists ----
 
         wifname = os.path.splitext(self.wlvlFilename)[0] + '.wif'
         if not os.path.exists(wifname):
             print('%s does not exist' % wifname)
             return False
 
-        #---- Open File ----
+        # ---- Open File ----
 
         with open(wifname, 'r') as f:
             reader = list(csv.reader(f, delimiter='\t'))
 
-        #---- Find Recess Data ----
+        # ---- Find Recess Data ----
 
         row = 0
         while True:
             if row >= len(reader):
-                print('Something is wrong with the .wif file.' )
+                print('Something is wrong with the .wif file.')
                 return False
 
             try:
@@ -209,7 +197,7 @@ class WaterlvlData():                                          # WaterlvlData #
             row += 1
         row += 1
 
-        #---- Save Data in Class Attributes ----
+        # ---- Save Data in Class Attributes ----
 
         dat = np.array(reader[row:]).astype('float')
         self.trecess = dat[:, 0]
@@ -217,34 +205,40 @@ class WaterlvlData():                                          # WaterlvlData #
 
         return True
 
-    @staticmethod
-    def make_waterlvl_continuous(time, wlvl): #================================
+    # =========================================================================
 
-        """
-        This method produce a continuous daily water level time series. Missing
-        data are filled with NaN values.
-        """
+    def make_waterlvl_continuous(self):
+        # This method produce a continuous daily water level time series.
+        # Missing data are filled with NaN values.
 
         print('Making water level continuous...')
+        t = self.time
+        w = self.lvl
 
-        i = 0
-        while i < len(time) - 1:
-
+        i = 1
+        while i < len(t) - 1:
             # If dates 1 and 2 are not consecutive, add a nan row to DATA
             # after date 1.
+#            dt1 = t[i]-t[i-1]
+#            dt2 = t[i+1]-t[i]
+#            if dt1 == dt2:
+#                # sampling frequency is the same. data are continuous
+#            if dt1 > dt2:
+#                # sampling frequency was increased.
+#            if dt1 > dt2:
 
-            if time[i+1] - time[i] > 1:
-                wlvl = np.insert(wlvl, i+1, np.nan, 0)
-                time = np.insert(time, i+1, time[i]+1, 0)
-
+            if t[i+1] - t[i] > 1:
+                w = np.insert(w, i+1, np.nan, 0)
+                t = np.insert(t, i+1, t[i]+1, 0)
             i += 1
-
         print('Making water level continuous done.')
 
-        return time, wlvl
+        self.time = t
+        self.lvl = w
 
+    # =========================================================================
 
-    def generate_HTML_table(self): #============================= HTML Table ==
+    def generate_HTML_table(self):
 
         FIELDS = [['Well Name', self.name_well],
                   ['Latitude', self.LAT],
@@ -281,6 +275,14 @@ class WaterlvlData():                                          # WaterlvlData #
 
 if __name__ == '__main__':
 
+    # ---- Pont-Rouge ----
+
     filename = '../Projects/Pont-Rouge/Water Levels/5080001.xls'
+
+    # ---- IDM ----
+
+    dirname = '../Projects/IDM/'
+    fname = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
+
     waterlvldata = WaterlvlData()
-    waterlvldata.load(filename)
+    waterlvldata.load(fname)

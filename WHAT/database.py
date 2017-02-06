@@ -30,8 +30,8 @@ import platform
 from PySide.QtGui import QIcon, QFont, QFontDatabase
 from PySide.QtCore import QSize
 
-software_version = 'WHAT Beta 4.1.12'
-last_modification = '27/05/2016'
+software_version = 'WHAT Beta 0.5.0'
+last_modification = '31/01/2017'
 
 
 class Icons():
