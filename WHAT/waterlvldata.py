@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2015 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -29,66 +29,129 @@ import numpy as np
 from xlrd import xldate_as_tuple, open_workbook
 
 
-class WaterlvlData():
+# =============================================================================
+
+
+class WaterlvlData(object):
     """
     Class that loads the water level data files.
     """
-
     def __init__(self):
 
-        self.wlvlFilename = []
+        self.wlvlFilename = None
         self.soilFilename = []
 
-        # --- Water Level Time Series --- #
+        # ---- Water Level Time Series ----
 
         self.time = []  # time series in excel numeric format
         self.lvl = []   # water level in mbgs (meters below ground surface)
+        self.BP = []    # Barometric pressure in m
+        self.ET = []    # Earth Tide
 
-        # --- Well Info --- #
+        # ---- Well Info ----
 
-        self.name_well = []
-        self.municipality = []
+        self.name_well = None
+        self.municipality = None
+        self.LAT = None
+        self.LON = None
+        self.ALT = None
+
         self.well_info = []  # html table to display in the UI
-        self.LAT = []
-        self.LON = []
-        self.ALT = []
 
-        # --- Manual Measurements --- #
+        # ---- Manual Measurements ----
 
         self.WLmes = []
         self.TIMEmes = []
 
-        # Recession :
+        # ---- Recession ----
 
         self.trecess = []
         self.hrecess = []
-        self.A, self.B = None, None
+        self.A = None
+        self.B = None
+
+    # =========================================================================
+
+    def save_binary(self, fname):
+        print('Saving data to binary file...')
+        data = {}
+        data['name well'] = self.name_well
+        data['municipality'] = self.municipality
+        data['latitude'] = self.LAT
+        data['longitude'] = self.LON
+        data['altitude'] = self.ALT
+
+        data['TIME'] = self.time
+        data['WL'] = self.lvl
+        data['BP'] = self.BP
+        data['ET'] = self.ET
+
+        name, ext = os.path.splitext(self.wlvlFilename)
+
+        np.save(name+'.npy', data)
+        print('Data saved to binary file successfully...')
+
+    def load_binary(self, fname):
+        print('Loading data from binary file...')
+        name, ext = os.path.splitext(fname)
+        data = np.load(name+'.npy').item()
+
+        self.name_well = data['name well']
+        self.municipality = data['municipality']
+        self.LAT = data['latitude']
+        self.LON = data['longitude']
+        self.ALT = data['altitude']
+
+        self.time = data['TIME']
+        self.lvl = data['WL']
+        self.BP = data['BP']
+        self.ET = data['ET']
+        print('Data loaded from binary file successfully...')
 
     # =========================================================================
 
     def load(self, fname):
-
-        print('Loading waterlvl time-series...')
-
         self.wlvlFilename = fname
         fileName, fileExtension = os.path.splitext(fname)
         self.soilFilename = fileName + '.sol'
 
+        name, ext = os.path.splitext(fname)
+        if os.path.exists(name+'.npy'):
+            print('A binary file exists for this dataset')
+            self.load_binary(fname)
+            self.generate_HTML_table()
+            self.load_interpretation_file()
+        else:
+            self.load_excel(fname)
+            self.save_binary(fname)
+
+    def load_excel(self, fname):
+        print('Loading waterlvl time-series from Excel file...')
+
         book = open_workbook(fname, on_demand=True)
         sheet = book.sheet_by_index(0)
 
-        # Search for First Line With Data :
+        # ------------------------------------------------ Read the header ----
 
         self.time = sheet.col_values(0, start_rowx=0, end_rowx=None)
         self.time = np.array(self.time)
 
         row = 0
-        hit = False
-        while hit is False:
+        while True:
             if self.time[row] == 'Date':
-                hit = True
-            else:
-                row += 1
+                break
+            elif self.time[row] == 'Well Name':
+                self.name_well = sheet.cell(row, 1).value
+            elif self.time[row] == 'Latitude':
+                self.LAT = sheet.cell(row, 1).value
+            elif self.time[row] == 'Longitude':
+                self.LON = sheet.cell(row, 1).value
+            elif self.time[row] == 'Altitude':
+                self.LON = sheet.cell(row, 1).value
+            elif self.time[row] == 'Municipality':
+                self.municipality = sheet.cell(row, 1).value
+
+            row += 1
 
             if row >= len(self.time):
                 print('WARNING: Waterlvl data file is not formatted correctly')
@@ -97,22 +160,26 @@ class WaterlvlData():
 
         start_rowx = row + 1
 
-        # Load Data :
+        # -------------------------------------------------- Load the Data ----
 
         try:
             self.time = self.time[start_rowx:]
             self.time = np.array(self.time).astype(float)
 
-            header = sheet.col_values(1, start_rowx=0, end_rowx=5)
-            self.name_well = header[0]
-            self.LAT = header[1]
-            self.LON = header[2]
-            self.ALT = header[3]
-            self.municipality = header[4]
-
             self.lvl = sheet.col_values(1, start_rowx=start_rowx,
                                         end_rowx=None)
             self.lvl = np.array(self.lvl).astype(float)
+
+            if sheet.cell(start_rowx-1, 2).value == 'BP(m)':
+                self.BP = sheet.col_values(
+                        2, start_rowx=start_rowx, end_rowx=None)
+                self.BP = np.array(self.BP).astype(float)
+
+            if sheet.cell(start_rowx-1, 3).value == 'ET':
+                self.ET = sheet.col_values(
+                        3, start_rowx=start_rowx, end_rowx=None)
+                self.ET = np.array(self.ET).astype(float)
+
         except:
             print('WARNING: Waterlvl data file is not formatted correctly')
             book.release_resources()
@@ -216,7 +283,12 @@ class WaterlvlData():
         w = self.lvl
 
         i = 1
-        while i < len(t) - 1:
+        while i < len(t)-1:
+            if t[i+1]-t[i] > 1:
+                w = np.insert(w, i+1, np.nan, 0)
+                t = np.insert(t, i+1, t[i]+1, 0)
+            i += 1
+
             # If dates 1 and 2 are not consecutive, add a nan row to DATA
             # after date 1.
 #            dt1 = t[i]-t[i-1]
@@ -226,11 +298,6 @@ class WaterlvlData():
 #            if dt1 > dt2:
 #                # sampling frequency was increased.
 #            if dt1 > dt2:
-
-            if t[i+1] - t[i] > 1:
-                w = np.insert(w, i+1, np.nan, 0)
-                t = np.insert(t, i+1, t[i]+1, 0)
-            i += 1
         print('Making water level continuous done.')
 
         self.time = t
@@ -250,22 +317,20 @@ class WaterlvlData():
                     <table border="0" cellpadding="2" cellspacing="0"
                     align="left">
                     '''
+        for row in FIELDS:
+            try:
+                val = '%0.2f' % float(row[1])
+            except:
+                val = row[1]
 
-        for row in range(len(FIELDS)):
-
-             try:
-                 VAL = '%0.2f' % float(FIELDS[row][1])
-             except:
-                 VAL = FIELDS[row][1]
-
-             well_info += '''
-                          <tr>
-                            <td width=10></td>
-                            <td align="left">%s</td>
-                            <td align="left" width=20>:</td>
-                            <td align="left">%s</td>
-                          </tr>
-                          ''' % (FIELDS[row][0], VAL)
+            well_info += '''
+                         <tr>
+                           <td width=10></td>
+                           <td align="left">%s</td>
+                           <td align="left" width=20>:</td>
+                           <td align="left">%s</td>
+                         </tr>
+                         ''' % (row[0], val)
         well_info += '</table>'
 
         self.well_info = well_info
@@ -274,15 +339,8 @@ class WaterlvlData():
 
 
 if __name__ == '__main__':
-
-    # ---- Pont-Rouge ----
-
-    filename = '../Projects/Pont-Rouge/Water Levels/5080001.xls'
-
-    # ---- IDM ----
-
-    dirname = '../Projects/IDM/'
-    fname = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
+    fname = '../Projects/Project4Testing/Water Levels/F1.xlsx'
 
     waterlvldata = WaterlvlData()
     waterlvldata.load(fname)
+    print('Well Name =', waterlvldata.name_well)
