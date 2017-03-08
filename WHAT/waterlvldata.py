@@ -147,7 +147,7 @@ class WaterlvlData(object):
             elif self.time[row] == 'Longitude':
                 self.LON = sheet.cell(row, 1).value
             elif self.time[row] == 'Altitude':
-                self.LON = sheet.cell(row, 1).value
+                self.ALT = sheet.cell(row, 1).value
             elif self.time[row] == 'Municipality':
                 self.municipality = sheet.cell(row, 1).value
 
