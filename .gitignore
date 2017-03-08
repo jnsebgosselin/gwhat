@@ -27,6 +27,7 @@ var/
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
 *.spec
+PyInstaller-3.2.1
 
 # Installer logs
 pip-log.txt
@@ -107,3 +108,5 @@ WHAT/test.pdf
 WHAT/wet_days_0.5mm.csv
 WHAT/err_pooled.h5
 WHAT/GLUE.h5
+WHAT/brf_mod/BRFInput.txt
+WHAT/brf_mod/BRFOutput.txt

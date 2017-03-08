@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -19,21 +19,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# ----- STANDARD LIBRARY IMPORTS -----
+from __future__ import division, unicode_literals
 
-#from datetime import date
+# Standard library imports :
+
+# from datetime import date
 import csv
 import datetime
 
-# ----- THIRD PARTY IMPORTS -----
+# Third party imports :
 
-import h5py
 import numpy as np
-#from xlrd import xldate_as_tuple
-#from xlrd.xldate import xldate_from_date_tuple
+# from xlrd import xldate_as_tuple
+# from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
 
-# ----- PERSONAL LIBRARY IMPORTS -----
+# Local imports :
 
 from meteo import MeteoObj
 from waterlvldata import WaterlvlData
@@ -209,28 +210,28 @@ class SynthHydrograph(object):
 
         ax.invert_yaxis()
 
-        #-------------------------------------------------- Plot Observation --
+        # ----------------------------------------------- Plot Observation ----
 
         wlvl, = ax.plot(self.DATE, self.WLVLobs, color='b', ls='None',
-                        marker='.', ms= 3, zorder=100)
+                        marker='.', ms=3, zorder=100)
 
         self.fig.canvas.draw()
 
-        #-------------------------------------------------- YTICKS FORMATING --
+        # ----------------------------------------------- YTICKS FORMATING ----
 
         ax.yaxis.set_ticks_position('left')
-        ax.tick_params(axis='y',direction='out', gridOn=True, labelsize=12)
+        ax.tick_params(axis='y', direction='out', gridOn=True, labelsize=12)
 
-        #-------------------------------------------------- XTICKS FORMATING --
+        # ----------------------------------------------- XTICKS FORMATING ----
 
         ax.xaxis.set_ticks_position('bottom')
-        ax.tick_params(axis='x',direction='out')
+        ax.tick_params(axis='x', direction='out')
         self.fig.autofmt_xdate()
 
-        #---- Legend ----
+        # ---- Legend ----
 
         dum1 = plt.Rectangle((0, 0), 1, 1, fc='0.5', ec='0.5')
-        dum2, = plt.plot([], [], color='b', ls='None', marker='.', ms= 10)
+        dum2, = plt.plot([], [], color='b', ls='None', marker='.', ms=10)
 
         lg_handles = [dum2, dum1]
         lg_labels = ['Observations', 'GLUE 5/95']
@@ -240,14 +241,9 @@ class SynthHydrograph(object):
 
     def plot_prediction(self):
 
-        fname = 'GLUE.h5'
-        with h5py.File(fname, 'r') as hf:
-            data = hf.get('hydrograph')
-            hydrograph = np.array(data)
-
-            data = hf.get('RMSE')
-            RMSE = np.array(data)
-
+        data = np.load('GLUE.npy').item()
+        hydrograph = np.array(data['hydrograph'])
+        RMSE = np.array(data['RMSE'])
         RMSE = RMSE / np.sum(RMSE)
 
         hGLUE = []
@@ -271,7 +267,7 @@ class SynthHydrograph(object):
         obs_wlvl = self.WLVLobs
         CR = 0
         for i in range(len(obs_wlvl)):
-            if obs_wlvl[i] >= min_wlvl[i] and obs_wlvl[i]<=max_wlvl[i]:
+            if obs_wlvl[i] >= min_wlvl[i] and obs_wlvl[i] <= max_wlvl[i]:
                 CR += 1.
         CR = CR / len(obs_wlvl) * 100
 
@@ -291,13 +287,10 @@ class SynthHydrograph(object):
         return (np.mean((Xobs - Xpre)**2))**0.5
 
     def calc_recharge(self):
-        fname = 'GLUE.h5'
-        with h5py.File(fname, 'r') as hf:
-            data = hf.get('recharge')
-            rechg = np.array(data)
 
-            data = hf.get('RMSE')
-            RMSE = np.array(data)
+        data = np.load('GLUE.npy').item()
+        rechg = np.array(data['recharge'])
+        RMSE = np.array(data['RMSE'])
 
         CPDF = np.cumsum(RMSE / np.sum(RMSE))
         TIME = self.meteoObj.TIME
@@ -318,10 +311,14 @@ class SynthHydrograph(object):
 
     # =============================================================== GLUE ====
 
-    def GLUE(self, Sy, RASmax, Cro):
+    def GLUE(self, Sy, RASmax, Cro, res='rough'):
 
-        U_RAS = np.arange(RASmax[0], RASmax[1]+1, 1)
-        U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.01)
+        if res == 'rough':
+            U_RAS = np.arange(RASmax[0], RASmax[1]+1, 5)
+            U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.1)
+        elif res == 'fine':
+            U_RAS = np.arange(RASmax[0], RASmax[1]+1, 1)
+            U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.01)
 
         # ---- Produce realization ----
 
@@ -332,11 +329,13 @@ class SynthHydrograph(object):
         set_RASmax = []
         set_Cru = []
 
+        set_ru = []
+        set_etr = []
+
         Sy0 = np.mean(Sy)
         for i, cro in enumerate(U_Cro):
             for j, rasmax in enumerate(U_RAS):
-                rechg, _, _, _, _ = self.surf_water_budget(cro, rasmax)
-
+                rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
                 SyOpt, RMSE, wlvlest = self.opt_Sy(cro, rasmax, Sy0, rechg)
                 Sy0 = SyOpt
 
@@ -347,20 +346,28 @@ class SynthHydrograph(object):
                     set_Sy.append(SyOpt)
                     set_RASmax.append(rasmax)
                     set_Cru.append(cro)
+                    set_etr.append(etr)
+                    set_ru.append(ru)
 
                 print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.3f ; ' +
                        'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
 
-        with h5py.File('GLUE.h5', 'w') as hf:
-            hf.create_dataset('RMSE', data=set_RMSE)
-            hf.create_dataset('recharge', data=set_RECHG)
-            hf.create_dataset('hydrograph', data=set_WLVL)
-            hf.create_dataset('Sy', data=set_Sy)
-            hf.create_dataset('RASmax', data=set_RASmax)
-            hf.create_dataset('Cru', data=set_Cru)
-            hf.create_dataset('Time', data=self.meteoObj.TIME)
-            hf.create_dataset('Weather', data=self.meteoObj.DATA)
-            hf.create_dataset('twlvl', data=self.twlvl)
+        dataset = {}
+        dataset['RMSE'] = set_RMSE
+        dataset['recharge'] = set_RECHG
+        dataset['hydrograph'] = set_WLVL
+
+        dataset['Sy'] = set_Sy
+        dataset['RASmax'] = set_RASmax
+        dataset['Cru'] = set_Cru
+
+        dataset['Time'] = self.meteoObj.TIME
+        dataset['Weather'] = self.meteoObj.DATA
+        dataset['twlvl'] = self.twlvl
+        dataset['etr'] = set_etr
+        dataset['ru'] = set_ru
+
+        np.save('GLUE.npy', dataset)
 
     def opt_Sy(self, cro, rasmax, Sy0, rechg):
 
@@ -431,7 +438,6 @@ class SynthHydrograph(object):
             if tol < tolmax:
                 return Sy, RMSE, WLVLpre
 
-
     def surf_water_budget(self, CRU, RASmax, CM=4):
 
         """
@@ -473,19 +479,18 @@ class SynthHydrograph(object):
 
         for i in range(N-1):
 
-            #----- Precipitation, Accumulation, and Melt -----
+            # ----- Precipitation, Accumulation, and Melt -----
 
             if TAVG[i] > TMELT:  # Rain
 
-                if MP[i] >= PACC[i]: # Rain on Bareground (All snow is melted)
+                if MP[i] >= PACC[i]:  # Rain on Bareground (All snow is melted)
                     PAVL[i] = PACC[i] + PTOT[i]
                     PACC[i+1] = 0
-
-                elif MP[i] < PACC[i]: # Rain on Snow
+                elif MP[i] < PACC[i]:  # Rain on Snow
                     PAVL[i] = MP[i]
                     PACC[i+1] = PACC[i] - MP[i] + PTOT[i]
 
-            elif TAVG[i] <= TMELT: # Snow
+            elif TAVG[i] <= TMELT:  # Snow
                 PAVL[i] = 0
                 PACC[i+1] = PACC[i] + PTOT[i]
 
@@ -588,7 +593,6 @@ class SynthHydrograph(object):
 
         return WLpre
 
-
     @staticmethod
     def mrc2rechg(t, hobs, A, B, z, Sy):
 
@@ -654,9 +658,9 @@ class SynthHydrograph(object):
             RECHG[i] -= (z[ilo+1] - hlo) * Sy[ilo]
             RECHG[i] -= (hup - z[iup]) * Sy[iup]
 
-            # RECHG[i] will be positive in most cases. In theory, it should always
-            # be positive, but error in the MRC and noise in the data can cause hp
-            # to be above ho in some cases.
+            # RECHG[i] will be positive in most cases. In theory, it should
+            # always be positive, but error in the MRC and noise in the data
+            # can cause hp to be above ho in some cases.
 
             RECHG[i] *= np.sign(hp - hobs[i+1])
 
@@ -691,9 +695,9 @@ if __name__ == '__main__':
 
     # ---- IDM ----
 
-#    dirname = '../Projects/IDM/'
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
-#                          'IDM (JSG2017)_1960-2016.out')
+    dirname = '../Projects/IDM/'
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
+                          'IDM (JSG2017)_1960-2016.out')
 
 #    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
 #    Sy = [0.05, 0.15]
@@ -701,11 +705,11 @@ if __name__ == '__main__':
 #    Cru = [0.1, 0.3]
 #    sh.TMELT = -2
 
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Cap-aux-Meules.xls')
-#    Sy = [0.2, 0.3]
-#    RASmax = [100, 300]
-#    Cru = [0.1, 0.4]
-#    sh.TMELT = -2
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Cap-aux-Meules.xls')
+    Sy = [0.2, 0.3]
+    RASmax = [100, 200]
+    Cru = [0.2, 0.4]
+    sh.TMELT = -2
 
 #    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Fatima.xls')
 #    Sy = [0.05, 0.15]
@@ -716,11 +720,11 @@ if __name__ == '__main__':
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-    sh.GLUE(Sy, RASmax, Cru)
+    # sh.GLUE(Sy, RASmax, Cru)
 
     sh.calc_recharge()
     sh.initPlot()
     sh.plot_prediction()
-    plot_rechg_GLUE('English')
+    plot_rechg_GLUE('French')
 
     plt.show()
