@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -19,15 +19,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#---- STANDARD LIBRARY IMPORTS ----
+from __future__ import division, unicode_literals
+
+# Standard library imports :
 
 import csv, sys, os
 from copy import copy
 
-#---- THIRD PARTY IMPORTS ----
+# Third party imports :
 
-#from PySide import QtGui
-import h5py
+# from PySide import QtGui
 import matplotlib as mpl
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
