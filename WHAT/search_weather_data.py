@@ -767,7 +767,9 @@ class Search4Stations(QtGui.QWidget):
         return staInfo
 
 
-#==============================================================================
+# =============================================================================
+
+
 class WeatherStationDisplayTable(QtGui.QTableWidget):
     """
     Widget for displaying a weather station list.

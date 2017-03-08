@@ -426,9 +426,9 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         # --- Predicted Recession Curves --- #
 
-        self.plot_recess, = self.ax2.plot([], [], color='red', lw=2,
+        self.plot_recess, = self.ax2.plot([], [], color='red', lw=1.5,
                                           dashes=[5, 3], zorder=100,
-                                          alpha=0.65)
+                                          alpha=0.85)
 
         self.draw_waterlvl()
 
@@ -1667,7 +1667,7 @@ if __name__ == '__main__':  # =================================================
 
     # ---- Valcartier ----
 
-#    dirname = '/home/jnsebgosselin/Dropbox/Valcartier/Valcartier'
+#    dirname = '../Projects/Valcartier'
 #    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
 #    fwaterlvl = dirname + '/Water Levels/valcartier2.xls'
 #    finfo = (dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.log')
@@ -1691,78 +1691,88 @@ if __name__ == '__main__':  # =================================================
 
     # ---------------------------------------------------- set up hydrograph --
 
-    hydrograph = Hydrograph()
-    hydrograph.set_waterLvlObj(waterLvlObj)
-    hydrograph.set_MeteoObj(meteo_obj)
-    hydrograph.finfo = finfo
-    hydrograph.language = 'french'
+    hg = Hydrograph()
+    hg.set_waterLvlObj(waterLvlObj)
+    hg.set_MeteoObj(meteo_obj)
+    hg.finfo = finfo
+    hg.language = 'french'
 
     what = ['normal', 'MRC', 'GLUE'][2]
 
     if what == 'normal':
-        hydrograph.fwidth = 11.  # Width of the figure in inches
-        hydrograph.fheight = 8.5
+        hg.fwidth = 11.  # Width of the figure in inches
+        hg.fheight = 8.5
 
-        hydrograph.WLdatum = 0  # 0 -> mbgs ; 1 -> masl
-        hydrograph.trend_line = False
-        hydrograph.gridLines = 2  # Gridlines Style
-        hydrograph.isGraphTitle = 1  # 1 -> title ; 0 -> no title
-        hydrograph.isLegend = 1
+        hg.WLdatum = 0  # 0 -> mbgs ; 1 -> masl
+        hg.trend_line = False
+        hg.gridLines = 2  # Gridlines Style
+        hg.isGraphTitle = 1  # 1 -> title ; 0 -> no title
+        hg.isLegend = 1
 
-        hydrograph.meteo_on = True  # True or False
-        hydrograph.datemode = 'year'  # 'month' or 'year'
-        hydrograph.date_labels_display_pattern = 1
-        hydrograph.bwidth_indx = 2  # Meteo Bin Width
+        hg.meteo_on = True  # True or False
+        hg.datemode = 'year'  # 'month' or 'year'
+        hg.date_labels_display_pattern = 1
+        hg.bwidth_indx = 2  # Meteo Bin Width
         # 0: daily | 1: weekly | 2: monthly | 3: yearly
-        hydrograph.RAINscale = 100
+        hg.RAINscale = 100
 
-        hydrograph.best_fit_time(waterLvlObj.time)
-        hydrograph.best_fit_waterlvl()
-        hydrograph.generate_hydrograph()
+        hg.best_fit_time(waterLvlObj.time)
+        hg.best_fit_waterlvl()
+        hg.generate_hydrograph()
 
     elif what == 'MRC':
 
-        hydrograph.fheight = 5.
-        hydrograph.isGraphTitle = 0
+        hg.fheight = 5.
+        hg.isGraphTitle = 0
 
-        hydrograph.NZGrid = 11
-        hydrograph.WLmin = 10.75
-        hydrograph.WLscale = 0.25
+        hg.NZGrid = 11
+        hg.WLmin = 10.75
+        hg.WLscale = 0.25
 
-        hydrograph.best_fit_time(waterLvlObj.time)
-        hydrograph.generate_hydrograph(meteo_obj)
+        hg.best_fit_time(waterLvlObj.time)
+        hg.generate_hydrograph(meteo_obj)
 
-        hydrograph.draw_recession()
-        hydrograph.savefig(dirname + '/MRC_hydrograph.pdf')
+        hg.draw_recession()
+        hg.savefig(dirname + '/MRC_hydrograph.pdf')
 
-        hydrograph.isMRC = False
+        hg.isMRC = False
 
     elif what == 'GLUE':
 
-        hydrograph.fwidth = 18.
-        hydrograph.fheight = 5.
+        hg.fwidth = 11
+        hg.fheight = 4
 
-        hydrograph.NZGrid = 11
-        hydrograph.WLmin = 4
-        hydrograph.WLscale = 0.25
+        hg.NZGrid = 8
+        hg.WLmin = 5
+        hg.WLscale = 0.5
 
-        hydrograph.isGraphTitle = 0 # 1 -> title ; 0 -> no title
-        hydrograph.isLegend = 1
-        hydrograph.meteo_on = False
-        hydrograph.datemode = 'year' # 'month' or 'year'
-        hydrograph.date_labels_display_pattern = 1
+        hg.isGraphTitle = 0 # 1 -> title ; 0 -> no title
+        hg.isLegend = 1
+        hg.meteo_on = False
+        hg.datemode = 'year' # 'month' or 'year'
+        hg.date_labels_display_pattern = 3
 
-        hydrograph.best_fit_time(waterLvlObj.time)
-        hydrograph.generate_hydrograph(meteo_obj)
+        hg.best_fit_time(waterLvlObj.time)
+        hg.generate_hydrograph(meteo_obj)
 
-        hydrograph.draw_GLUE()
-        hydrograph.draw_recession()
-        hydrograph.savefig(dirname + '/GLUE_hydrograph.pdf')
+        plt.setp(hg.l1_ax2, zorder=10, linewidth=1, color='blue', ms=2,
+                 linestyle='none', marker='.')
+
+        # plot a hydrograph friend
+#        wl2 = WaterlvlData()
+#        wl2.load(dirname + '/Water Levels/5080001.xls')
+#        ax2 = hydrograph.ax2
+#        ax2.plot(wl2.time, wl2.lvl, color='green')
+
+        hg.draw_GLUE()
+        hg.draw_recession()
+        hg.savefig(dirname + '/GLUE_hydrograph.pdf')
 
     # ------------------------------------------------ show figure on-screen --
 
     imgview = ImageViewer()
-    imgview.load_mpl_figure(hydrograph)
+    imgview.sfmax = 10
+    imgview.load_mpl_figure(hg)
     imgview.show()
 
     sys.exit(app.exec_())

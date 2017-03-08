@@ -1558,11 +1558,16 @@ if __name__ == '__main__':
     lat = w.gap_fill_worker.WEATHER.LAT
     lon = w.gap_fill_worker.WEATHER.LON
     name = w.gap_fill_worker.WEATHER.STANAME
+    alt = w.gap_fill_worker.WEATHER.ALT
 
     stamap = StaLocManager()
     stamap.plot_stations(lat, lon, name)
     stamap.plot_obswells(47.37031, -61.88389, 'Puits Cap-aux-Meules (13007084)')
     stamap.show()
+
+    from hydrograph3 import LatLong2Dist
+    for x, y, n, a in zip(lat, lon, name, alt):
+        print(n, LatLong2Dist(x, y, 47.37031, -61.88389), a-6.83)
 
     # -- Show and Move Center --
 

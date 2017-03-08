@@ -263,7 +263,9 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         self.grid_weather_normals.populate_table(self.NORMALS)
 
-    def save_graph(self):  # ==================================== save_graph ==
+    # =========================================================== save_graph ==
+
+    def save_graph(self):
 
         dialog_dir = self.save_fig_dir
         dialog_dir += '/WeatherAverages_%s' % self.station_name

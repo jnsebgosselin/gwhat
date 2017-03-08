@@ -145,12 +145,12 @@ class WHAT(QtGui.QMainWindow):
 
         family = db.styleUI().fontfamily
 
-        fontSS = ('font-style: %s;'
-                  'font-size: %s;'
-                  'font-family: %s;'
-                  ) % (style, size, family)
-
-        self.setStyleSheet("QWidget{%s}" % fontSS)
+#        fontSS = ('font-style: %s;'
+#                  'font-size: %s;'
+#                  'font-family: %s;'
+#                  ) % (style, size, family)
+#
+#        self.setStyleSheet("QWidget{%s}" % fontSS)
 
         # -------------------------------------------------------- DATABASES --
 
@@ -254,7 +254,6 @@ class WHAT(QtGui.QMainWindow):
         # pyqt4-set-size-of-the-tab-bar-in-qtabwidget
 
         class TabBar(QtGui.QTabBar):
-
             def tabSizeHint(self, index):
                 width = QtGui.QTabBar.tabSizeHint(self, index).width()
                 return QtCore.QSize(width, 32)
