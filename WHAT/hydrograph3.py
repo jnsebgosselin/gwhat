@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# STANDARD LIBRARY IMPORTS :
+# Standard library imports :
 
 from calendar import monthrange
 import csv
@@ -29,9 +29,8 @@ import os
 from math import sin, cos, sqrt, atan2, radians
 from time import clock
 
-# THIRD PARTY IMPORTS :
+# Third party imports :
 
-import h5py
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -41,7 +40,7 @@ from PySide import QtGui
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# PERSONAL IMPORTS :
+# Local imports :
 
 import database as db
 from waterlvldata import WaterlvlData
@@ -1044,19 +1043,11 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
     def draw_GLUE(self):  # ===================================================
 
-        fname = 'GLUE.h5'
-        with h5py.File(fname, 'r') as hf:
-            data = hf.get('hydrograph')
-            hydrograph = np.array(data)
-
-            data = hf.get('Time')
-            tweatr = np.array(data)
-
-            data = hf.get('RMSE')
-            RMSE = np.array(data)
-
-            data = hf.get('twlvl')
-            twlvl = np.array(data)
+        data = np.load('GLUE.npy').item()
+        hydrograph = np.array(data['hydrograph'])
+        tweatr = np.array(data['Time'])
+        RMSE = np.array(data['RMSE'])
+        twlvl = np.array(data['twlvl'])
 
         ts = np.where(twlvl[0] == tweatr)[0]
         te = np.where(twlvl[-1] == tweatr)[0]
