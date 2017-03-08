@@ -632,15 +632,15 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         self.msgError.setText(error_text)
         self.msgError.exec_()
 
-    def select_waterlvl_file(self):  # ========================================
-        '''
-        This method is called by <btn_waterlvl_dir> is clicked. It prompts
-        the user to select a valid Water Level Data file.
-        '''
+    # =========================================================================
+
+    def select_waterlvl_file(self):
+        # This method is called by <btn_waterlvl_dir> is clicked. It prompts
+        # the user to select a valid Water Level Data file.
 
         filename, _ = QtGui.QFileDialog.getOpenFileName(
             self, 'Select a valid water level data file',
-            self.waterlvl_dir, '*.xls')
+            self.waterlvl_dir, '(*.xls *.xlsx)')
 
         for i in range(5):
             QtCore.QCoreApplication.processEvents()
@@ -648,21 +648,18 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
         if filename:
             self.load_waterlvl(filename)
 
-    def load_waterlvl(self, filename):  # =====================================
+    def load_waterlvl(self, filename):
+        # If "filename" exists:
 
-        '''
-        If "filename" exists:
+        # The (1) water level time series, (2) observation well info and the
+        # (3) manual measures are loaded and saved in the class instance
+        # "waterlvl_data".
 
-        The (1) water level time series, (2) observation well info and the
-        (3) manual measures are loaded and saved in the class instance
-        "waterlvl_data".
+        # Then the code check if there is a layout already saved for this well
+        # and if yes, will prompt the user if he wants to load it.
 
-        Then the code check if there is a layout already saved for this well
-        and if yes, will prompt the user if he wants to load it.
-
-        Depending if there is a lyout or not, a Weather Data File will be
-        loaded and the hydrograph will be automatically plotted.
-        '''
+        # Depending if there is a lyout or not, a Weather Data File will be
+        # loaded and the hydrograph will be automatically plotted.
 
         if not os.path.exists(filename):
             print('Path does not exist. Cannot load water level file.')
@@ -706,9 +703,10 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.well_info_widget.setText(self.waterlvl_data.well_info)
 
-        self.ConsoleSignal.emit(
-        '''<font color=black>Water level data set loaded successfully for
-             well %s.</font>''' % name_well)
+        msg = ('Water level data set loaded successfully ' +
+               'for well %s.' % name_well)
+        print(msg)
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
         # Update Graph of "Compute" Mode :
         self.hydrocalc.load_waterLvl_data(self.fwaterlvl)
@@ -743,7 +741,9 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.select_closest_meteo_file()
 
-    def select_closest_meteo_file(self):  # ===================================
+    # =========================================================================
+
+    def select_closest_meteo_file(self):
 
         meteo_folder = os.path.join(self.workdir, 'Meteo', 'Output')
 
@@ -1359,7 +1359,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         main_layout.addWidget(toolbar_widget, 1, 0)
         self.setLayout(main_layout)
 
-    def load_colors(self):  # =================================================
+    def load_colors(self):   # ================================================
 
         colorsDB = hydrograph.Colors()
         colorsDB.load_colors_db()
@@ -1386,7 +1386,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
                                    colorsDB.RGB[row][2])
                               )
 
-    def pick_color(self): #================================= Pick New Colors ==
+    def pick_color(self):  # =============================== Pick New Colors ==
 
         sender = self.sender()
         color = QtGui.QColorDialog.getColor(sender.palette().base().color())
@@ -1445,21 +1445,20 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         self.setFixedSize(self.size())
 
 
-#==============================================================================
+# =============================================================================
 
-class PageSetupWin(QtGui.QWidget):                             # PageSetupWin #
 
-#==============================================================================
+class PageSetupWin(QtGui.QWidget):
 
     newPageSetupSent = QtCore.Signal(bool)
 
-    def __init__(self, parent=None): #================================= Init ==
+    def __init__(self, parent=None):
         super(PageSetupWin, self).__init__(parent)
 
         self.setWindowTitle('Page Setup')
         self.setWindowFlags(QtCore.Qt.Window)
 
-        #---- Default Values ----
+        # ---- Default Values ----
 
         self.pageSize = (11., 8.5)
         self.isLegend = True
