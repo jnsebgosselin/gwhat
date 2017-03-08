@@ -171,7 +171,10 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
         self.scaleStep = 1.2
         self.pan = False
 
-        #---- image container Set Up ----
+        self.sfmax = 3
+        self.sfmin = -3
+
+        # ---- image container Set Up ----
 
         self.imageCanvas = MplViewer()
 
@@ -250,13 +253,13 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
         return QtGui.QWidget.eventFilter(self, widget, event)
 
     def zoomIn(self):  # ======================================================
-        if self.scaleFactor < 3:
+        if self.scaleFactor < self.sfmax:
             self.scaleFactor += 1
             self.scale_image()
             self.adjust_scrollbar(self.scaleStep)
 
     def zoomOut(self):  # =====================================================
-        if self.scaleFactor > -3:
+        if self.scaleFactor > self.sfmin:
             self.scaleFactor -= 1
             self.scale_image()
             self.adjust_scrollbar(1/self.scaleStep)
