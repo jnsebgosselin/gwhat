@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -19,14 +19,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-# STANDARD LIBRARY IMPORTS :
+from __future__ import division, unicode_literals
+
+# Standard library imports :
 
 import csv
 import sys
 import os
 import copy
 
-# THIRD PARTY IMPORTS :
+# Third party imports :
 
 from PySide import QtGui, QtCore
 from PySide.QtCore import QDate
@@ -35,7 +37,7 @@ import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# PERSONAL IMPORTS :
+# Local imports :
 
 import HydroCalc
 import database as db
@@ -47,14 +49,14 @@ from custom_widgets import VSep, MyQToolButton
 from waterlvldata import WaterlvlData
 
 
-###############################################################################
+# =============================================================================
 
 
-class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
+class HydroprintGUI(QtGui.QWidget):
 
     ConsoleSignal = QtCore.Signal(str)
 
-    def __init__(self, parent=None):  # =======================================
+    def __init__(self, parent=None):
         super(HydroprintGUI, self).__init__(parent)
 
         self.workdir = os.getcwd()
@@ -71,7 +73,7 @@ class HydroprintGUI(QtGui.QWidget):                           # HydroprintGUI #
 
         self.__initUI__()
 
-    def __initUI__(self):  # ==================================================
+    def __initUI__(self):
 
         # DATABASE :
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -21,15 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-
-# STANDARD LIBRARY IMPORTS :
+# Standard library imports :
 
 from time import clock, sleep
 import csv
 import os
 import datetime
 
-# THIRD PARTY IMPORTS :
+# Third party imports :
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -39,22 +38,22 @@ from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 
-# from xlrd import xldate_as_tuple
+from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 
-# PERSONAL IMPORTS :
+# Local imports :
 
 from custom_widgets import VSep, MyQToolButton
+import my_widgets as myqt
 import database as db
 import meteo
 from waterlvldata import WaterlvlData
 from gwrecharge_calc2 import SynthHydrograph
+from icons import IconDB
+import brf_mod as bm
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
-
-
-###############################################################################
 
 
 class Tooltips():
@@ -90,15 +89,13 @@ class Tooltips():
         self.btn_recharge = ('Show window for recharge estimation')
 
         if language == 'French':  # --------------------------------- FRENCH --
-
             pass
 
 
-###############################################################################
+# =============================================================================
 
 
-class WLCalc(QtGui.QWidget):                                         # WLCalc #
-
+class WLCalc(QtGui.QWidget):
     """
     This is the interface where are plotted the water level time series. It is
     possible to dynamically zoom and span the data, change the display,
@@ -106,7 +103,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
     MRC and ultimately estimate groundwater recharge.
     """
 
-    def __init__(self, parent=None):  # =======================================
+    def __init__(self, parent=None):
         super(WLCalc, self).__init__(parent)
 
         self.isGraphExists = False
@@ -146,6 +143,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
+
+        # Barometric Response Function :
+
+        self.brfperiod = [None, None]
+        self.__brfcount = 0
+        self.config_brf = ConfigBRF()
 
         # Soil Profiles :
 
@@ -260,6 +263,10 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         # ETP :
         self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500)
 
+        # BRF :
+        self.h_brf1 = ax0.axvline(0, color='orange')
+        self.h_brf2 = ax0.axvline(0, color='orange')
+
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
         self.vguide.set_visible(False)
@@ -345,10 +352,23 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.btn_recharge = MyQToolButton(
             iconDB.page_setup, ttipDB.btn_recharge)
         self.btn_recharge.clicked.connect(self.rechg_setup_win.show)
+        self.btn_recharge.hide()
 
         self.btn_synthHydro = MyQToolButton(
             iconDB.page_setup, 'Show synthetic hydrograph')
         self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
+        self.btn_synthHydro.hide()
+
+        # ---- BRF ----
+
+        self.btn_selBRF = MyQToolButton(iconDB.add_point, '')
+        self.btn_selBRF.clicked.connect(self.aToolbarBtn_isClicked)
+
+        self.btn_calcBRF = MyQToolButton(IconDB().calc_brf, '')
+        self.btn_calcBRF.clicked.connect(self.aToolbarBtn_isClicked)
+
+        self.btn_setBRF = MyQToolButton(IconDB().setup, '')
+        self.btn_setBRF.clicked.connect(self.config_brf.show)
 
 #        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
 #        self.btn_findPeak.clicked.connect(self.find_peak)
@@ -362,7 +382,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                     VSep(), self.btn_home, self.btn_pan, VSep(),
                     self.btn_MRCalc, self.btn_save_interp, VSep(),
                     self.btn_Waterlvl_lineStyle, self.btn_dateFormat,
-                    self.btn_recharge, self.btn_synthHydro]
+                    self.btn_recharge, self.btn_synthHydro, VSep(),
+                    self.btn_selBRF, self.btn_calcBRF, self.btn_setBRF]
 
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -421,9 +442,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.setLayout(mainGrid)
 
+    # =========================================================================
 
-    def emit_error_message(self, error_text):  # ==============================
-
+    def emit_error_message(self, error_text):
         msgError = QtGui.QMessageBox()
         msgError.setIcon(QtGui.QMessageBox.Warning)
         msgError.setWindowTitle('Error Message')
@@ -432,11 +453,15 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         msgError.setText(error_text)
         msgError.exec_()
 
-    def load_weather_data(self, filename):  # =================================
+    # =========================================================================
+
+    def load_weather_data(self, filename):
         self.meteo_data.load_and_format(filename)
         self.plot_weather_data()
 
-    def plot_weather_data(self):  # ===========================================
+    def plot_weather_data(self):
+        if len(self.meteo_data.TIME) == 0:
+            return
 
         time = self.meteo_data.TIME + self.dt4xls2mpl * self.dformat
         ptot = self.meteo_data.DATA[:, 6]
@@ -511,7 +536,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.draw()
 
-    def load_waterLvl_data(self, filename):  # ================================
+    def load_waterLvl_data(self, filename):
 
         # Load Water Level Data :
 
@@ -528,7 +553,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.btn_Waterlvl_lineStyle.setAutoRaise(True)
 
-    def load_MRC_interp(self):  # =============================================
+    def load_MRC_interp(self):
 
         # ---- Load .wif file ----
 
@@ -557,7 +582,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         for i in range(len(tb)):
             close = np.isclose(tb[i], time, rtol=0, atol=10**-6)
-            indx = np.where(close == True)[0][0]
+            indx = np.where(close is True)[0][0]
             self.peak_indx[i] = indx
 
         # ---- Recalculate and Plot Results ----
@@ -566,8 +591,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.plot_peak()
         self.btn_MRCalc_isClicked()
 
-    def aToolbarBtn_isClicked(self):  # =======================================
+    # =========================================================================
 
+    def aToolbarBtn_isClicked(self):
         # slot that redirects all clicked actions from the toolbar buttons
 
         if not self.waterLvl_data.wlvlFilename:
@@ -576,24 +602,29 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.emit_error_message('<b>%s</b>' % msg)
             return
 
-        if self.sender() == self.btn_MRCalc:
+        sender = self.sender()
+        if sender == self.btn_MRCalc:
             self.btn_MRCalc_isClicked()
-        elif self.sender() == self.btn_Waterlvl_lineStyle:
+        elif sender == self.btn_Waterlvl_lineStyle:
             self.change_waterlvl_lineStyle()
-        elif self.sender() == self.btn_home:
+        elif sender == self.btn_home:
             self.home()
-        elif self.sender() == self.btn_save_interp:
+        elif sender == self.btn_save_interp:
             self.save_interp()
-        elif self.sender() == self.btn_editPeak:
+        elif sender == self.btn_editPeak:
             self.add_peak()
-        elif self.sender() == self.btn_delPeak:
+        elif sender == self.btn_delPeak:
             self.delete_peak()
-        elif self.sender() == self.btn_pan:
+        elif sender == self.btn_pan:
             self.pan_graph()
-        elif self.sender() == self.btn_dateFormat:
+        elif sender == self.btn_dateFormat:
             self.switch_date_format()
+        elif sender == self.btn_selBRF:
+            self.select_BRF()
+        elif sender == self.btn_calcBRF:
+            self.calc_brf()
 
-    def btn_MRCalc_isClicked(self):  # ========================================
+    def btn_MRCalc_isClicked(self):
 
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
@@ -643,7 +674,61 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         QtGui.QApplication.restoreOverrideCursor()
 
-    def save_interp(self):  # =================================================
+    def calc_brf(self):
+        if self.brfperiod[0] and self.brfperiod[1]:
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            print('calculating BRF')
+            well = self.waterLvl_data.name_well
+
+            t1 = min(self.brfperiod[0], self.brfperiod[1])
+            i1 = np.where(self.waterLvl_data.time > t1)[0][0]
+
+            t2 = max(self.brfperiod[0], self.brfperiod[1])
+            i2 = np.where(self.waterLvl_data.time < t2)[0][-1]
+
+            time = np.copy(self.waterLvl_data.time[i1:i2+1])
+            wl = np.copy(self.waterLvl_data.lvl[i1:i2+1])
+            bp = np.copy(self.waterLvl_data.BP[i1:i2+1])
+            et = np.copy(self.waterLvl_data.ET[i1:i2+1])
+
+            bm.produce_BRFInputtxt(well, time, wl, bp, et)
+
+            lagBP = self.config_brf.lagBP
+            lagET = self.config_brf.lagET
+            detrend = self.config_brf.detrend
+            correct = self.config_brf.correct_WL
+
+            msg = 'Not enough data. Try enlarging the selected period'
+            msg += ' or reduce the number of BP and ET lags.'
+            if lagBP >= len(time) or lagET >= len(time):
+                QtGui.QApplication.restoreOverrideCursor()
+                self.emit_error_message(msg)
+                return
+
+            bm.produce_par_file(lagBP, lagET, detrend, correct)
+            bm.run_kgsbrf()
+
+            show_ebar = self.config_brf.show_ebar
+            msize = self.config_brf.markersize
+            draw_line = self.config_brf.draw_line
+
+            ymin = self.config_brf.ymin
+            ymax = self.config_brf.ymax
+
+            try:
+                bm.load_BRFOutput(show_ebar, msize, draw_line, [ymin, ymax])
+                QtGui.QApplication.restoreOverrideCursor()
+            except:
+                QtGui.QApplication.restoreOverrideCursor()
+                self.emit_error_message(msg)
+                return
+
+        else:
+            print('Please select a valid period.')
+
+    # =========================================================================
+
+    def save_interp(self):
 
         print('Saving MRC interpretation...')
 
@@ -706,15 +791,32 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         mrc2rechg(self.time, self.water_lvl, self.A, self.B,
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
 
-    def plot_peak(self):  # ===================================================
+    # =========================================================================
 
+    def plot_BRFperiod(self):
+        if self.brfperiod[0]:
+            x = self.brfperiod[0] + self.dt4xls2mpl*self.dformat
+            self.h_brf1.set_xdata(x)
+            self.h_brf1.set_visible(True)
+        else:
+            self.h_brf1.set_visible(False)
+
+        if self.brfperiod[1]:
+            x = self.brfperiod[1] + self.dt4xls2mpl*self.dformat
+            self.h_brf2.set_xdata(x)
+            self.h_brf2.set_visible(True)
+        else:
+            self.h_brf2.set_visible(False)
+
+        self.draw()
+
+    def plot_peak(self):
         if len(self.peak_memory) == 1:
             self.btn_undo.setEnabled(False)
         else:
             self.btn_undo.setEnabled(True)
 
         if self.isGraphExists is True:
-
             x = self.time[self.peak_indx] + (self.dt4xls2mpl * self.dformat)
             y = self.water_lvl[self.peak_indx]
             self.h2_ax0.set_data(x, y)
@@ -722,7 +824,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             # Take a screenshot of the background :
             self.draw()
 
-    def find_peak(self):  # ===================================================
+    def find_peak(self):
 
         n_j, n_add = local_extrema(self.water_lvl, 4 * 5)
 
@@ -743,10 +845,8 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.plot_peak()
 
-    def add_peak(self):  # ===================================================
-
+    def add_peak(self):
         # slot connected when the button to add new peaks is clicked.
-
         if self.isGraphExists is False:
             print('Graph is empty')
             self.emit_error_message(
@@ -754,7 +854,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             return
 
         if self.btn_editPeak.autoRaise():
-
             # Activate <add_peak> :
             self.btn_editPeak.setAutoRaise(False)
 
@@ -766,22 +865,15 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
             # Deactivate <delete_peak> :
             self.btn_delPeak.setAutoRaise(True)
-
-            # Draw to save background :
-            self.draw()
-
         else:
-
             # Deactivate <add_peak> and hide guide line
             self.btn_editPeak.setAutoRaise(True)
 
-            # Draw to save background :
-            self.draw()
+        # Draw to save background :
+        self.draw()
 
-    def delete_peak(self):  # =================================================
-
+    def delete_peak(self):
         if self.btn_delPeak.autoRaise():
-
             # Activate <delete_peak> :
             self.btn_delPeak.setAutoRaise(False)
 
@@ -799,33 +891,43 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             # Deactivate <delete_peak> :
             self.btn_delPeak.setAutoRaise(True)
 
-    def pan_graph(self):  # ===================================================
+    def select_BRF(self):
+        # slot connected when the button to select a period to compute the
+        # BRF is clicked
+        if self.btn_selBRF.autoRaise():
+            self.btn_selBRF.setAutoRaise(False)
+            self.brfperiod = [None, None]
+            self.plot_BRFperiod()
 
-        if self.btn_pan.autoRaise():
+            self.btn_pan.setAutoRaise(True)
+            if self.toolbar._active == "PAN":
+                self.toolbar.pan()
 
-            # Deactivate <add_peak> and hide guide line
             self.btn_editPeak.setAutoRaise(True)
+            self.btn_delPeak.setAutoRaise(True)
+        else:
+            self.btn_selBRF.setAutoRaise(True)
 
+    # =========================================================================
+
+    def pan_graph(self):
+        if self.btn_pan.autoRaise():
+            # Deactivate <add_peak>
+            self.btn_editPeak.setAutoRaise(True)
             # Deactivate <delete_peak>
             self.btn_delPeak.setAutoRaise(True)
+            # Deactivate add BRF period
+            self.btn_selBRF.setAutoRaise(True)
 
             # Activate <pan_graph>
             self.btn_pan.setAutoRaise(False)
-            self.toolbar.pan()
-
-            # self.vguide.set_visible(False)
-            # self.xcoord.set_visible(False)
-            self.draw()
         else:
             self.btn_pan.setAutoRaise(True)
-            self.toolbar.pan()
 
-            # self.vguide.set_visible(True)
-            # self.xcoord.set_visible(True)
-            self.draw()
+        self.toolbar.pan()
+        self.draw()
 
-    def home(self):  # ========================================================
-
+    def home(self):
         if self.isGraphExists is False:
             print('Graph is empty')
             return
@@ -833,8 +935,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         self.toolbar.home()
         self.draw()
 
-    def undo(self):  # ========================================================
-
+    def undo(self):
         if self.isGraphExists is False:
             print('Graph is empty')
             return
@@ -849,8 +950,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         else:
             pass
 
-    def clear_all_peaks(self):  # =============================================
-
+    def clear_all_peaks(self):
         if self.isGraphExists is False:
             print('Graph is empty')
             return
@@ -862,7 +962,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.plot_peak()
 
-    def setup_ax_margins(self, event):  # =====================================
+    # =========================================================================
+
+    def setup_ax_margins(self, event):
 
         # Update axes :
 
@@ -884,7 +986,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         self.draw()
 
-    def switch_date_format(self):  # ==========================================
+    def switch_date_format(self):
 
         ax0 = self.fig.axes[0]
 
@@ -933,7 +1035,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                                   self.dt4xls2mpl * self.dformat)
 
         self.plot_weather_data()
-
         self.draw()
 
     # =========================================================================
@@ -942,13 +1043,13 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         ax0 = self.fig.axes[0]
 
-        # --------------------------------------------------------- RESET UI --
+        # ---- Reset UI ----
 
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
 
-        # --------------------------------------------------------- PLOTTING --
+        # ---- PLot Data ----
 
         # Water Levels :
 
@@ -987,7 +1088,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             ax0.xaxis.set_major_locator(xloc)
             xfmt = mpl.dates.AutoDateFormatter(xloc)
             ax0.xaxis.set_major_formatter(xfmt)
-        elif self.dformat == 0: # excel format
+        elif self.dformat == 0:  # excel format
             xfmt = mpl.ticker.ScalarFormatter()
             ax0.xaxis.set_major_formatter(xfmt)
             ax0.get_xaxis().get_major_formatter().set_useOffset(False)
@@ -1119,19 +1220,12 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
     # ============================================== Water Level Linestyle ====
 
     def change_waterlvl_lineStyle(self):
-
         if self.btn_Waterlvl_lineStyle.autoRaise():
-
             self.btn_Waterlvl_lineStyle.setAutoRaise(False)
-
-            plt.setp(self.h1_ax0, markerfacecolor='blue', markersize=5,
-                     markeredgecolor='blue', markeredgewidth=1.5,
-                     linestyle='none', marker='.')
-
+            plt.setp(self.h1_ax0, markerfacecolor='blue', ms=5, mec='blue',
+                     markeredgewidth=1.5, ls='none', marker='.')
         else:
-
             self.btn_Waterlvl_lineStyle.setAutoRaise(True)
-
             plt.setp(self.h1_ax0, marker='None', linestyle='-')
 
         self.draw()
@@ -1140,6 +1234,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
     def draw(self):
         self.vguide.set_visible(False)
+        self.xcoord.set_visible(False)
         self.xcross.set_visible(False)
         self.pguide.set_visible(False)
 
@@ -1173,7 +1268,11 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             if self.dformat == 0:
                 self.xcoord.set_text('%d' % x)
             else:
-                self.xcoord.set_text('%d' % (x - self.dt4xls2mpl))
+                date = xldate_as_tuple(x-self.dt4xls2mpl, 0)
+                yyyy = date[0]
+                mm = date[1]
+                dd = date[2]
+                self.xcoord.set_text('%02d/%02d/%d' % (dd, mm, yyyy))
 
             ax0.draw_artist(self.vguide)
             ax0.draw_artist(self.xcoord)
@@ -1184,7 +1283,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         # ----- Add Peak Cursor ----
 
         if x and not self.btn_editPeak.autoRaise():
-
             xp = self.time + self.dt4xls2mpl * self.dformat
             yp = self.water_lvl
 
@@ -1224,7 +1322,6 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
             d = ((xt - x)**2 + (yt - y)**2)**0.5
             if np.min(d) < 15:  # put the cross over the nearest peak
-
                 indx = np.argmin(d)
                 self.xcross.set_xdata(xpeak[indx])
                 self.xcross.set_ydata(ypeak[indx])
@@ -1244,6 +1341,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
         if event.button != 1:
             return
 
+        if self.btn_delPeak.autoRaise() and self.btn_editPeak.autoRaise():
+            return
+
         self.__addPeakVisible = True
         self.plot_peak()
 
@@ -1254,11 +1354,9 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
 
         ax0 = self.fig.axes[0]
 
-        # -------------------------------------------------- delete a peak ----
-
         # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
 
-        if not self.btn_delPeak.autoRaise():
+        if not self.btn_delPeak.autoRaise():  # ------------ delete a peak ----
 
             if len(self.peak_indx) == 0:
                 return
@@ -1290,11 +1388,7 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
                 self.xcross.set_visible(False)
                 self.plot_peak()
 
-        # ----------------------------------------------------- add a peak ----
-
-        elif not self.btn_editPeak.autoRaise():
-
-            # print(event.xdata, event.ydata)
+        elif not self.btn_editPeak.autoRaise():  # ------------ add a peak ----
 
             xclic = event.xdata
             if xclic is None:
@@ -1324,46 +1418,202 @@ class WLCalc(QtGui.QWidget):                                         # WLCalc #
             self.pguide.set_visible(False)
             self.draw()
 
-#            indxmin = np.where(x < xclic)[0]
-#            indxmax = np.where(x > xclic)[0]
-#            if len(indxmax) == 0:
-#
-#                # Marker is outside the water level time series, to the right.
-#                # The last data point is added to "peak_indx".
-#
-#                self.peak_indx = np.append(self.peak_indx, len(x)-1)
-#                self.peak_memory.append(self.peak_indx)
-#
-#            elif len(indxmin) == 0:
-#
-#                # Marker is outside the water level time series, to the left.
-#                # The first data point is added to "peak_indx".
-#
-#                self.peak_indx = np.append(self.peak_indx, 0)
-#                self.peak_memory.append(self.peak_indx)
-#
-#            else:
-#
-#                # Marker is between two data point. The closest data point to
-#                # the marker is then selected.
-#
-#                indxmin = indxmin[-1]
-#                indxmax = indxmax[0]
-#
-#                dleft = xclic - x[indxmin]
-#                dright = x[indxmax] - xclic
-#
-#                if dleft < dright:
-#
-#                    self.peak_indx = np.append(self.peak_indx, indxmin)
-#                    self.peak_memory.append(self.peak_indx)
-#
-#                else:
-#
-#                    self.peak_indx = np.append(self.peak_indx, indxmax)
-#                    self.peak_memory.append(self.peak_indx)
+        elif not self.btn_selBRF.autoRaise():  # ------- Select BRF period ----
+            xclic = event.xdata
+            if xclic is None:
+                return
+            x = self.time + self.dt4xls2mpl * self.dformat
+            y = self.water_lvl
 
-def local_extrema(x, Deltan):  # ==============================================
+            d = np.abs(xclic - x)
+            indx = np.argmin(d)
+            if len(self.peak_indx) > 0:
+                if indx in self.peak_indx:
+                    print('There is already a peak at this time.')
+                    return
+
+                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 3:
+                    print('There is a peak at less than 3 days.')
+                    return
+
+            self.brfperiod[self.__brfcount] = self.time[indx]
+            if self.__brfcount == 0:
+                self.__brfcount += 1
+                self.plot_BRFperiod()
+            elif self.__brfcount == 1:
+                self.__brfcount = 0
+                self.select_BRF()
+                self.plot_BRFperiod()
+            else:
+                raise ValueError('Something is wrong in the code')
+
+            print(self.brfperiod)
+
+
+# =============================================================================
+
+
+class ConfigBRF(myqt.DialogWindow):
+    def __init__(self, parent=None):
+        super(ConfigBRF, self).__init__(parent,  resizable=False)
+
+        layout = QtGui.QGridLayout()
+        self.setLayout(layout)
+
+        self._bplag = {}
+        self._bplag['label'] = QtGui.QLabel('Number of BP Lags :')
+        self._bplag['widget'] = myqt.MyQDSpinBox(300, 0, lmin=1)
+
+        self._etlag = {}
+        self._etlag['label'] = QtGui.QLabel('Number of ET Lags :')
+        self._etlag['widget'] = myqt.MyQDSpinBox(300, 0, lmin=1)
+
+        self._detrend = QtGui.QCheckBox('Detrend')
+        self._detrend.setCheckState(QtCore.Qt.Checked)
+
+        self._correct = QtGui.QCheckBox('Correct WL')
+        self._correct.setEnabled(False)
+
+        self._errorbar = QtGui.QCheckBox('Show error bars')
+        self._errorbar.setCheckState(QtCore.Qt.Checked)
+
+        self._drawline = QtGui.QCheckBox('Draw line')
+        self._drawline.setCheckState(QtCore.Qt.Unchecked)
+
+        self._markersize = {}
+        self._markersize['label'] = QtGui.QLabel('Marker size :')
+        self._markersize['widget'] = myqt.MyQDSpinBox(5, 0, lmin=0, lmax=25)
+
+        # ---- axis limits ----
+
+        axlayout = QtGui.QGridLayout()
+        axlayout.addWidget(QtGui.QLabel('y-axis limits:'), 0, 0, 1, 2)
+        axlayout.addWidget(QtGui.QLabel('   Minimum :'), 1, 0)
+        axlayout.addWidget(QtGui.QLabel('   Maximum :'), 2, 0)
+        axlayout.addWidget(QtGui.QLabel('   Auto :'), 3, 0)
+
+        self._ylim = {}
+        self._ylim['min'] = myqt.MyQDSpinBox(0, 1, step=0.2)
+        self._ylim['min'].setEnabled(False)
+        self._ylim['max'] = myqt.MyQDSpinBox(1, 1, step=0.2)
+        self._ylim['max'].setEnabled(False)
+        self._ylim['auto'] = QtGui.QCheckBox('')
+        self._ylim['auto'].setCheckState(QtCore.Qt.Checked)
+        self._ylim['auto'].stateChanged.connect(self.xlimModeChanged)
+
+        axlayout.addWidget(self._ylim['min'], 1, 1)
+        axlayout.addWidget(self._ylim['max'], 2, 1)
+        axlayout.addWidget(self._ylim['auto'], 3, 1)
+
+        axlayout.setColumnStretch(3, 100)
+        axlayout.setContentsMargins(0, 0, 0, 0)
+
+        # ---- Toolbar ----
+
+        btn_ok = QtGui.QPushButton('Ok')
+        btn_ok.clicked.connect(self.close)
+
+        tbar = QtGui.QGridLayout()
+
+        tbar.addWidget(btn_ok, 0, 1)
+
+        tbar.setColumnStretch(0, 100)
+        tbar.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+
+        # ---- Layout ----
+
+        layout.addWidget(self._bplag['label'], 0, 0)
+        layout.addWidget(self._bplag['widget'], 0, 1)
+
+        layout.addWidget(self._etlag['label'], 1, 0)
+        layout.addWidget(self._etlag['widget'], 1, 1)
+
+        layout.addWidget(self._detrend, layout.rowCount(), 0, 1, 2)
+        layout.addWidget(self._correct, layout.rowCount(), 0, 1, 2)
+        layout.addWidget(myqt.HSep(), layout.rowCount(), 0, 1, 2)
+        layout.addWidget(self._errorbar, layout.rowCount(), 0, 1, 2)
+        layout.addWidget(self._drawline, layout.rowCount(), 0, 1, 2)
+
+        row = layout.rowCount()
+        layout.addWidget(self._markersize['label'], row, 0)
+        layout.addWidget(self._markersize['widget'], row, 1)
+
+        layout.addWidget(myqt.HSep(), layout.rowCount(), 0, 1, 2)
+
+        layout.addLayout(axlayout, layout.rowCount(), 0, 1, 2)
+
+        layout.setRowMinimumHeight(layout.rowCount(), 15)
+
+        layout.addLayout(tbar, layout.rowCount(), 0, 1, 2)
+
+    # =========================================================================
+
+    def xlimModeChanged(self, state):
+        if state == 2:
+            self._ylim['min'].setEnabled(False)
+            self._ylim['max'].setEnabled(False)
+        else:
+            self._ylim['min'].setEnabled(True)
+            self._ylim['max'].setEnabled(True)
+
+    # =========================================================================
+
+    @property
+    def ymin(self):
+        if self._ylim['auto'].checkState() == QtCore.Qt.CheckState.Checked:
+            return None
+        else:
+            return self._ylim['min'].value()
+
+    @property
+    def ymax(self):
+        if self._ylim['auto'].checkState() == QtCore.Qt.CheckState.Checked:
+            return None
+        else:
+            return self._ylim['max'].value()
+
+    @property
+    def lagBP(self):
+        return self._bplag['widget'].value()
+
+    @property
+    def lagET(self):
+        return self._etlag['widget'].value()
+
+    @property
+    def detrend(self):
+        if self._detrend.checkState():
+            return 'Yes'
+        else:
+            return 'No'
+
+    @property
+    def correct_WL(self):
+        return 'No'
+
+    @property
+    def show_ebar(self):
+        if self._errorbar.checkState() == QtCore.Qt.CheckState.Checked:
+            return True
+        else:
+            return False
+
+    @property
+    def draw_line(self):
+        if self._drawline.checkState() == QtCore.Qt.CheckState.Checked:
+            return True
+        else:
+            return False
+
+    @property
+    def markersize(self):
+        return self._markersize['widget'].value()
+
+
+# =============================================================================
+
+
+def local_extrema(x, Deltan):
     """
     Code adapted from a MATLAB script at
     www.ictp.acad.ro/vamos/trend/local_extrema.htm
@@ -1523,14 +1773,15 @@ def local_extrema(x, Deltan):  # ==============================================
 
                     nc = n1[nmaxx] + 1
                     flagante = 1
-                    n_j = np.append(n_j, np.floor((n1[nmaxx] + n2[nmaxx]) / 2.))
+                    n_j = np.append(n_j, np.floor((n1[nmaxx] + n2[nmaxx])/2))
                     Jest += 1
 
                     kadd = np.append(kadd, Jest-1)
                     iadd += 1
 
-            elif flagmin == 1: # CURRENT extremum is also a MINIMUM
-                               # an additional maximum is added ([ATE] p. 82)
+            elif flagmin == 1:
+                # CURRENT extremum is also a MINIMUM an additional maximum
+                # is added ([ATE] p. 82)
 
                 nc = n1[nmin]
                 flagante = 1
@@ -1559,7 +1810,7 @@ def local_extrema(x, Deltan):  # ==============================================
                     nc = n1[nmin] + 1
                     flagante = -1
 
-                    n_j = np.append(n_j, -np.floor((n1[nmin] + n2[nmin]) / 2.))
+                    n_j = np.append(n_j, -np.floor((n1[nmin] + n2[nmin])/2))
                     Jest += 1
 
                 else:
@@ -1573,14 +1824,15 @@ def local_extrema(x, Deltan):  # ==============================================
                     nc = n1[nminn] + 1
                     flagante = -1
 
-                    n_j = np.append(n_j, -np.floor((n1[nminn] + n2[nminn]) / 2.))
+                    n_j = np.append(n_j, -np.floor((n1[nminn] + n2[nminn])/2))
                     Jest = Jest + 1
 
                     kadd = np.append(kadd, Jest-1)
                     iadd += 1
 
-            elif flagmax == 1: # CURRENT extremum is also an MAXIMUM:
-                               # an additional minimum is added ([ATE] p. 82)
+            elif flagmax == 1:
+                # CURRENT extremum is also an MAXIMUM:
+                # an additional minimum is added ([ATE] p. 82)
                 nc = n1[nmax]
                 flagante = -1
 
@@ -2219,6 +2471,7 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
 if __name__ == '__main__':
 
     import sys
+    plt.rc('font', family='Arial')
 
     app = QtGui.QApplication(sys.argv)
 
@@ -2244,10 +2497,16 @@ if __name__ == '__main__':
                           'IDM (JSG2017)_1960-2016.out')
     fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
 
+    # ---- Testing ----
+
+    dirname = os.path.dirname(os.getcwd())
+    dirname = os.path.join(dirname, 'Projects', 'Project4Testing')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'F20.xlsx')
+
     # Load and plot data :
 
     w.load_waterLvl_data(fwaterlvl)
-    w.load_weather_data(fmeteo)
+    #w.load_weather_data(fmeteo)
 
     # Calcul recharge :
 

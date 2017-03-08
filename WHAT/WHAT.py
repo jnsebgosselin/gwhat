@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@outlook.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 WHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,12 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # It is often said when developing interfaces that you need to fail fast,
 # and iterate often. When creating a UI, you will make mistakes. Just keep
 # moving forward, and remember to keep your UI out of the way.
-
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
 
 from __future__ import division, unicode_literals
 
-# STANDARD LIBRARY IMPORTS :
+# Standard library imports :
 
 import platform
 import csv
@@ -37,11 +36,11 @@ from os import makedirs, path
 
 from multiprocessing import freeze_support
 
-# THIRD PARTY IMPORTS :
+# Third party imports :
 
 from PySide import QtGui, QtCore
 
-# PERSONAL IMPORTS :
+# Local imports :
 
 import database as db
 import custom_widgets as MyQWidget
@@ -50,6 +49,10 @@ import HydroPrint
 import dwnld_weather_data
 from gapfill_weather_gui import GapFillWeatherGUI
 from about_WHAT import AboutWhat
+
+import tkinter
+import tkinter.filedialog
+import tkinter.messagebox
 
 freeze_support()
 
