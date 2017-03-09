@@ -116,9 +116,10 @@ def produce_par_file(lagBP, lagET, detrend, correct):
 
 def run_kgsbrf():
     dirname = os.path.dirname(os.path.realpath(__file__))
-    exename = os.path.join(dirname, "kgs_brf.exe")
-    parname = os.path.join(dirname, "kgs_brf.par")
-    os.system(exename + " < " + parname)
+    exename = os.path.join(dirname, 'kgs_brf.exe')
+    parname = os.path.join(dirname, 'kgs_brf.par')
+
+    os.system('""%s" < "%s""' % (exename, parname))
 
 #    process = QtCore.QProcess()
 #    process.start(exename+" < "+ parname)
@@ -173,8 +174,9 @@ def load_BRFOutput(show_ebar=True, msize=5, draw_line=False,
 
 
 if __name__ == "__main__":
-    plt.close('all')
+#    plt.close('all')
     # produce_par_file()
+    run_kgsbrf()
     # os.system("kgs_brf.exe" + " < " + "kgs_brf.par")
-    load_BRFOutput(show_ebar=True, msize=5, draw_line=False)
-    plt.show()
+#    load_BRFOutput(show_ebar=True, msize=5, draw_line=False)
+#    plt.show()
