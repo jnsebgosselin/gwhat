@@ -110,3 +110,7 @@ WHAT/err_pooled.h5
 WHAT/GLUE.h5
 WHAT/brf_mod/BRFInput.txt
 WHAT/brf_mod/BRFOutput.txt
+WHAT/GLUE.npy
+WHAT/brf_mod/kgs_brf.par
+WHAT/brf_mod/kgs_brf.par
+WHAT/brf_mod/kgs_brf.par

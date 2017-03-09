@@ -615,13 +615,13 @@ class HydroprintGUI(QtGui.QWidget):
         filemeteo = copy.copy(self.hydrograph.fmeteo)
 
         if not filemeteo:
+            msg = 'No valid Weather Data File currently selected.'
+            print(msg)
+            self.ConsoleSignal.emit('font color=red>%s</font>' % msg)
 
-            self.ConsoleSignal.emit(
-            '''<font color=red>No valid Weather Data File currently
-                 selected.</font>''')
-
-            self.emit_error_message(
-            '''<b>Please select a valid Weather Data File first.</b>''')
+            msg = 'Please select a valid Weather Data File first.'
+            print(msg)
+            self.emit_error_message('<b>s</b>' % msg)
 
             return
 
@@ -662,6 +662,8 @@ class HydroprintGUI(QtGui.QWidget):
 
         # Depending if there is a lyout or not, a Weather Data File will be
         # loaded and the hydrograph will be automatically plotted.
+
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
         if not os.path.exists(filename):
             print('Path does not exist. Cannot load water level file.')
@@ -742,6 +744,8 @@ class HydroprintGUI(QtGui.QWidget):
         self.UpdateUI = True
 
         self.select_closest_meteo_file()
+
+        QtGui.QApplication.restoreOverrideCursor()
 
     # =========================================================================
 
