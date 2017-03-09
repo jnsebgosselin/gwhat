@@ -691,6 +691,21 @@ class WLCalc(QtGui.QWidget):
             bp = np.copy(self.waterLvl_data.BP[i1:i2+1])
             et = np.copy(self.waterLvl_data.ET[i1:i2+1])
 
+            dt = np.min(np.diff(time))
+            tc = np.arange(t1, t2+dt/2, dt)
+            if len(tc) != len(time):
+                print('Filling gaps in data with linear interpolation.')
+                indx = np.where(~np.isnan(wl))[0]
+                wl = np.interp(tc, time[indx], wl[indx])
+
+                indx = np.where(~np.isnan(bp))[0]
+                bp = np.interp(tc, time[indx], bp[indx])
+
+                indx = np.where(~np.isnan(et))[0]
+                et = np.interp(tc, time[indx], et[indx])
+
+                time = tc
+
             bm.produce_BRFInputtxt(well, time, wl, bp, et)
 
             lagBP = self.config_brf.lagBP
@@ -2501,7 +2516,7 @@ if __name__ == '__main__':
 
     dirname = os.path.dirname(os.getcwd())
     dirname = os.path.join(dirname, 'Projects', 'Project4Testing')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'F20.xlsx')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'F1.xlsx')
 
     # Load and plot data :
 
