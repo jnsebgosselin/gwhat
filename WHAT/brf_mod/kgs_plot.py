@@ -81,17 +81,17 @@ def plot_BRF(lag, A, err, date0, date1, well, msize=0, draw_line=True,
 
     if ylim[0] is None:
         if len(err) > 0:
-            ymin = min(np.floor(max(A-err)/0.2)*0.2, 0)
+            ymin = min(np.floor(np.min(A-err)/0.2)*0.2, 0)
         else:
-            ymin = min(np.floor(max(A)/0.2)*0.2, 0)
+            ymin = min(np.floor(np.min(A)/0.2)*0.2, 0)
     else:
         ymin = ylim[0]
 
     if ylim[1] is None:
         if len(err) > 0:
-            ymax = max(np.ceil(max(A+err)/0.2)*0.2, 1)
+            ymax = max(np.ceil(np.max(A+err)/0.2)*0.2, 1)
         else:
-            ymax = max(np.ceil(max(A)/0.2)*0.2, 1)
+            ymax = max(np.ceil(np.max(A)/0.2)*0.2, 1)
     else:
         ymax = ylim[1]
 

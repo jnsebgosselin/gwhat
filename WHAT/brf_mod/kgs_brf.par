@@ -1,7 +1,7 @@
 BRF Option (C[ompute] or R[ead]): Compute
 BRF Input Data File: C:\Users\jnsebgosselin\OneDrive\WHAT\WHAT\brf_mod\BRFInput.txt
-Number of BP Lags:  300
-Number of BP ET:  300
+Number of BP Lags:  500
+Number of BP ET:  500
 BRF Output Data File: C:\Users\jnsebgosselin\OneDrive\WHAT\WHAT\brf_mod\BRFOutput.txt
 Detrend data? (Y[es] or N[o]): Yes
 Correct WL? (Y[es] or N[o]): No
