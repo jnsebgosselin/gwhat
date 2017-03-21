@@ -186,7 +186,7 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=550):
 
     # ---- Define new variables ----
 
-    yr2plot = np.arange(1995, 2016).astype('int')
+    yr2plot = np.arange(1995, 2015).astype('int')
     NYear = len(yr2plot)
 
     # ---- Convert daily to hydrological year ----
