@@ -536,6 +536,8 @@ class WLCalc(QtGui.QWidget):
 
         self.draw()
 
+    # =========================================================================
+
     def load_waterLvl_data(self, filename):
 
         # Load Water Level Data :
@@ -582,7 +584,7 @@ class WLCalc(QtGui.QWidget):
 
         for i in range(len(tb)):
             close = np.isclose(tb[i], time, rtol=0, atol=10**-6)
-            indx = np.where(close is True)[0][0]
+            indx = np.where(close == True)[0][0]
             self.peak_indx[i] = indx
 
         # ---- Recalculate and Plot Results ----
@@ -2517,6 +2519,13 @@ if __name__ == '__main__':
     dirname = os.path.dirname(os.getcwd())
     dirname = os.path.join(dirname, 'Projects', 'Project4Testing')
     fwaterlvl = os.path.join(dirname, 'Water Levels', 'F1.xlsx')
+
+    # ---- Valcartier ----
+
+    dirname = '../Projects/Valcartier'
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'Valcartier (9999999)',
+                          'Valcartier (9999999)_1994-2015.out')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'valcartier2.xls')
 
     # Load and plot data :
 
