@@ -695,9 +695,9 @@ if __name__ == '__main__':
 
     # ---- IDM ----
 
-    dirname = '../Projects/IDM/'
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
-                          'IDM (JSG2017)_1960-2016.out')
+#    dirname = '../Projects/IDM/'
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
+#                          'IDM (JSG2017)_1960-2016.out')
 
 #    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
 #    Sy = [0.05, 0.15]
@@ -705,11 +705,11 @@ if __name__ == '__main__':
 #    Cru = [0.1, 0.3]
 #    sh.TMELT = -2
 
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Cap-aux-Meules.xls')
-    Sy = [0.2, 0.3]
-    RASmax = [100, 200]
-    Cru = [0.2, 0.4]
-    sh.TMELT = -2
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Cap-aux-Meules.xls')
+#    Sy = [0.2, 0.3]
+#    RASmax = [100, 200]
+#    Cru = [0.2, 0.4]
+#    sh.TMELT = -2
 
 #    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Fatima.xls')
 #    Sy = [0.05, 0.15]
@@ -720,7 +720,7 @@ if __name__ == '__main__':
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-    # sh.GLUE(Sy, RASmax, Cru)
+    sh.GLUE(Sy, RASmax, Cru, res='rough')
 
     sh.calc_recharge()
     sh.initPlot()
