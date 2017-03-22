@@ -705,6 +705,7 @@ class HydroprintGUI(QtGui.QWidget):
 
         # Display Well Info in UI :
 
+        print(self.waterlvl_data.well_info)
         self.well_info_widget.setText(self.waterlvl_data.well_info)
 
         msg = ('Water level data set loaded successfully ' +

@@ -389,7 +389,8 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.setFixedSize(self.size())
 
 
-###############################################################################
+# =============================================================================
+# =============================================================================
 
 
 class MeteoObj():
@@ -429,6 +430,7 @@ class MeteoObj():
         self.varnames = []
         self.HEADER = []
         self.DATA = []
+        # [Year, Month, Day, Tmax, Tmin, Tmean, PTOT, ETP, RAIN]
 
         self.TIME = []  # Time in numeric format.
 

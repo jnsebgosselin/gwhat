@@ -345,14 +345,9 @@ class WHAT(QtGui.QMainWindow):
 
         # ------------------------------------------------- CHECK IF PROJECT --
 
-        isProjectExists = self.check_project()
-
-        if isProjectExists:
-
+        if self.check_project():
             self.load_project(self.projectfile)
-
         else:
-
             self.tab_dwnld_data.setEnabled(False)
             self.tab_fill_weather_data.setEnabled(False)
             self.tab_hydrograph.setEnabled(False)
@@ -394,51 +389,18 @@ class WHAT(QtGui.QMainWindow):
         textime = '<font color=black>[%s] </font>' % ctime()[4:-8]
         self.main_console.append(textime + console_text)
 
-    def show_new_project(self):  # ============================================
+    # =========================================================================
 
+    def show_new_project(self):
         new_project_window = what_project.NewProject(self)
         new_project_window.NewProjectSignal.connect(self.load_project)
         new_project_window.show()
 
-    def open_project(self):  # ================================================
+    def open_project(self):
+        # "open_project" is called by the event "self.project_display.clicked".
+        # It allows the user to open an already existing project.
 
-        '''
-        "open_project" is called by the event "self.project_display.clicked".
-        It allows the user to open an already existing project.
-        '''
-
-#        qr = self.open_project_window.frameGeometry()
-#        cp = self.frameGeometry().center()
-#        qr.moveCenter(cp)
-#        self.open_project_window.move(qr.topLeft())
-#
-#        self.open_project_window.setModal(True)
-#        self.open_project_window.show()
-#        self.open_project_window.setFixedSize(self.open_project_window.size())
-
-        # ----------------------------------------- Custom File Dialog (1) ----
-
-#        self.dialog = QtGui.QFileDialog()
-#        print(self.dialog.sidebarUrls())
-#        self.dialog.show()
-
-#        self.dialog.setDirectory(directory)
-#        self.dialog.setNameFilters(['*.what'])
-#        self.dialog.setLabelText(QtGui.QFileDialog.FileName,'Open Project')
-#        self.dialog.setOptions(QtGui.QFileDialog.ReadOnly)
-#        self.dialog.setWindowTitle('Open Project')
-#        self.dialog.setWindowIcon(iconDB.WHAT)
-#        self.dialog.setFont(styleDB.font1)
-#        self.dialog.setViewMode(QtGui.QFileDialog.List)
-#
-#        self.dialog.fileSelected.connect(self.new_project_created)
-#
-#        self.dialog.exec_()
-
-        # ----------------------------------------------------- Stock Dialog --
-
-        directory = os.path.abspath('../Projects')
-
+        directory = os.path.abspath(os.path.join('..', 'Projects'))
         filename, _ = QtGui.QFileDialog.getOpenFileName(
             self, 'Open Project', directory, '*.what')
 
@@ -446,11 +408,9 @@ class WHAT(QtGui.QMainWindow):
             self.projectfile = filename
             self.load_project(filename)
 
-    def load_project(self, filename):  # ======================================
-        '''
-        This method is called either on startup during <initUI> or when a new
-        project is chosen with <open_project>.
-        '''
+    def load_project(self, filename):
+        # This method is called either on startup during <initUI> or when
+        # a new project is chosen with <open_project>.
 
         self.projectfile = filename
         print('\n-------------------------------')
@@ -506,44 +466,48 @@ class WHAT(QtGui.QMainWindow):
         print('---- PROJECT LOADED ----')
         print('')
 
-    def check_project(self):  # ===============================================
-        """
-        Check if all files and folders associated with the .what file are
-        presents in the project folder. If some files or folders are missing,
-        the program will automatically generate new ones.
+    def check_project(self):
+        # Check if all files and folders associated with the .what file are
+        # presents in the project folder. If some files or folders are missing,
+        # the program will automatically generate new ones.
 
-        If the project.what file does not exist anymore, it returns a False
-        answer, which should tell the code on the UI side to deactivate the UI.
+        # If the project.what file does not exist anymore, it returns a False
+        # answer, which should tell the code on the UI side to deactivate
+        # the UI.
 
-        This method should be run at the start of every method that needs to
-        interact with resource file of the current project.
-        """
+        # This method should be run at the start of every method that needs to
+        # interact with resource file of the current project.
 
-        print('Checking project files and folders integrity')
+        print('Checking project files and folders integrity for :')
         print(self.projectfile)
 
         if not path.exists(self.projectfile):
             print('Project file does not exist.')
             return False
 
-        # ------------------------------- System project folder organization --
+        # ---- System project folder organization ----
 
-        if not path.exists(self.projectdir + '/Meteo/Raw'):
-            makedirs(self.projectdir + '/Meteo/Raw')
-        if not path.exists(self.projectdir + '/Meteo/Input'):
-            makedirs(self.projectdir + '/Meteo/Input')
-        if not path.exists(self.projectdir + '/Meteo/Output'):
-            makedirs(self.projectdir + '/Meteo/Output')
-        if not path.exists(self.projectdir + '/Water Levels'):
-            makedirs(self.projectdir + '/Water Levels')
+        folders = [os.path.join(self.projectdir, 'Meteo', 'Raw'),
+                   os.path.join(self.projectdir, 'Meteo', 'Input'),
+                   os.path.join(self.projectdir, 'Meteo', 'Output'),
+                   os.path.join(self.projectdir, 'Water Levels')]
+
+        for f in folders:
+            if not path.exists(f):
+                makedirs(f)
 
         return True
+
+    # =========================================================================
 
     def closeEvent(self, event):
         event.accept()
 
 
-class WHATPref():  # ##########################################################
+# =============================================================================
+
+
+class WHATPref():
     """
     This class contains all the preferences relative to the WHAT interface,
     including:
@@ -671,6 +635,12 @@ if __name__ == '__main__':
         print('Starting WHAT...')
         main = WHAT()
         main.show()
+
+        ft = app.font()
+        ft.setFamily('Segoe UI')
+        ft.setPointSize(11)
+        app.setFont(ft)
+
         sys.exit(app.exec_())
     except Exception as e:
         logging.exception(str(e))

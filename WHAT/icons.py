@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
+Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
@@ -35,3 +35,4 @@ class IconDB():
         self.master = QIcon(dirname + '/Icons/WHAT')
         self.calc_brf = QIcon(dirname + '/Icons/start')
         self.setup = QIcon(dirname + '/Icons/page_setup')
+        self.new_project = QIcon(dirname + '/Icons/new_project.png')
