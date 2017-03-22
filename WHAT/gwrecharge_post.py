@@ -65,10 +65,11 @@ def calcul_glue(p):
     RASmax = np.array(data['RASmax'])
     Cru = np.array(data['Cru'])
 
-    print(np.min(Sy), np.max(Sy))
-    print(np.min(RASmax), np.max(RASmax))
-    print(np.min(Cru), np.max(Cru))
-    print(len(Sy))
+    print('')
+    print('range Sy = %0.3f to %0.3f' % (np.min(Sy), np.max(Sy)))
+    print('range RASmax = %d to %d' % (np.min(RASmax), np.max(RASmax)))
+    print('range Cru = %0.3f to %0.3f' % (np.min(Cru), np.max(Cru)))
+    print('')
 
     # -------------------------------------------------------- Calcul GLUE ----
 
@@ -135,7 +136,7 @@ def calcul_glue(p):
     return years, ptot_yr, glue_rechg_yr, glue_etr_yr, glue_ru_yr
 
 
-def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=550):
+def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=700):
     data = np.load('GLUE.npy').item()
     rechg = np.array(data['recharge'])
     etr = np.array(data['etr'])
@@ -152,9 +153,11 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=550):
     RASmax = np.array(data['RASmax'])
     Cru = np.array(data['Cru'])
 
-    print(np.min(Sy), np.max(Sy))
-    print(np.min(RASmax), np.max(RASmax))
-    print(np.min(Cru), np.max(Cru))
+    print('')
+    print('range Sy = %0.3f to %0.3f' % (np.min(Sy), np.max(Sy)))
+    print('range RASmax = %d to %d' % (np.min(RASmax), np.max(RASmax)))
+    print('range Cru = %0.3f to %0.3f' % (np.min(Cru), np.max(Cru)))
+    print('')
 
     # ---- Resampling ----
 
@@ -186,7 +189,7 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=550):
 
     # ---- Define new variables ----
 
-    yr2plot = np.arange(1995, 2015).astype('int')
+    yr2plot = np.arange(1995, 2016).astype('int')
     NYear = len(yr2plot)
 
     # ---- Convert daily to hydrological year ----
@@ -230,7 +233,7 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=550):
 
     # ----------------------------------------------------- Produce Figure ----
 
-    fig = plt.figure(figsize=(15, 6))
+    fig = plt.figure(figsize=(12.5, 6))
     fig.patch.set_facecolor('white')
 
     fheight = fig.get_figheight()

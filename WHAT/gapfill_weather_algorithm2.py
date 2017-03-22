@@ -567,8 +567,8 @@ class GapFillWeather(QtCore.QObject):
                         YXcolm = YXcolm[~np.isnan(YXcolm[:, 0])]
                         ntot = np.shape(YXcolm)
 
-                        # All rows containing NaN entries for any of the
-                        # neighboring stations are removod are removed.
+                        # All rows containing at least one nan for the
+                        # neighboring stations are removed
 
                         YXcolm = YXcolm[~np.isnan(YXcolm).any(axis=1)]
                         nreg = np.shape(YXcolm)
@@ -589,11 +589,14 @@ class GapFillWeather(QtCore.QObject):
                         # Add a unitary array to X for the intercept term if
                         # variable is a temperature type data.
 
+                        # (though this was questionned by G. Flerchinger)
+
                         if var in (0, 1, 2):
                             X = np.hstack((np.ones((len(Y), 1)), X))
 
                         # ------------------------------- Generate MLR Model --
 
+                        # print(STANAME[Sta_index[colm]], len(X))
                         A = self.build_MLR_model(X, Y)
 
                         # ------------------------------------- Compute RMSE --
@@ -843,12 +846,12 @@ class GapFillWeather(QtCore.QObject):
                 fcontent[-1].append('%d (%0.1f %% of filled)' %
                                     (Xcount_var[i, var], pc))
 
-        #---- Total Missing ----
+        # ---- Total Missing ----
 
         pc = nbr_nan_total / (total_nbr_data * nVAR) * 100
         nbr_nan_total = '%d (%0.1f %% of total)' % (nbr_nan_total, pc)
 
-        #---- Total Filled ----
+        # ---- Total Filled ----
 
         try:
             pc = nbr_fill_total / nbr_nan_total * 100
@@ -865,7 +868,7 @@ class GapFillWeather(QtCore.QObject):
             text2add = '%d (%0.1f %% of filled)' % (Xcount_tot[i], pc)
             fcontent[-1].append(text2add)
 
-        #---- Info Detailed ----
+        # ---- Info Detailed ----
 
         fcontent.extend([[],[],
                          ['*** DETAILED REPORT ***'],
@@ -897,7 +900,7 @@ class GapFillWeather(QtCore.QObject):
                                      '%0.1f' % yp])
                     fcontent[-1].extend(xm)
 
-        #---- Save File ----
+        # ---- Save File ----
 
         YearStart = str(int(YEAR[index_start]))
         YearEnd = str(int(YEAR[index_end]))
@@ -912,15 +915,15 @@ class GapFillWeather(QtCore.QObject):
         self.ConsoleSignal.emit(
                '<font color=black>Info file saved in %s.</font>' % output_path)
 
-        #--------------------------------------------------------- .out file --
+        # -------------------------------------------------------- .out file --
 
-        #---- Prepare Header ----
+        # ---- Prepare Header ----
 
         fcontent = copy(HEADER)
         fcontent.append(['Year', 'Month', 'Day'])
         fcontent[-1].extend(VARNAME)
 
-        #---- Add Data ----
+        # ---- Add Data ----
 
         for row in range(index_start, index_end+1):
             fcontent.append(['%d' % YEAR[row],
@@ -930,7 +933,7 @@ class GapFillWeather(QtCore.QObject):
             y = ['%0.1f' % i for i in Y2fill[row, :]]
             fcontent[-1].extend(y)
 
-        #---- Save Data ----
+        # ---- Save Data ----
 
         fname = '%s (%s)_%s-%s.out' % (clean_tarStaName,
                                        target_station_clim,
@@ -942,12 +945,12 @@ class GapFillWeather(QtCore.QObject):
         msg = 'Meteo data saved in %s.' % output_path
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
-        #---- Add ETP to File ----
+        # ---- Add ETP to File ----
 
         if self.add_ETP:
             meteo.add_ETP_to_weather_data_file(output_path)
 
-        #---- Produces Weather Normals Graph ----
+        # ---- Produces Weather Normals Graph ----
 
         METEO = meteo.MeteoObj()
         METEO.load_and_format(output_path)
@@ -963,13 +966,13 @@ class GapFillWeather(QtCore.QObject):
 
         if self.full_error_analysis == True:
 
-            #---- Info Data Post-Processing ----
+            # ---- Info Data Post-Processing ----
 
             XYinfo = self.postprocess_fillinfo(STANAME, YXmFULL, tarStaIndx)
             Yname, Ym = XYinfo[0], XYinfo[1]
             Xnames, Xmes = XYinfo[2], XYinfo[3]
 
-            #---- Prepare Header ----
+            # ---- Prepare Header ----
 
             fcontent = copy(HEADER)
             fcontent.append(['', '', '', '', '', '',
@@ -980,7 +983,7 @@ class GapFillWeather(QtCore.QObject):
             for i in range(len(Xnames)):
                 fcontent[-1].append('X%d' % i)
 
-            #---- Add Data to fcontent ----
+            # ---- Add Data to fcontent ----
 
             for var in range(nVAR):
                 for row in range(index_start, index_end+1):
@@ -1005,7 +1008,7 @@ class GapFillWeather(QtCore.QObject):
                                         '%0.1f' % ym])
                         fcontent[-1].extend(xm)
 
-            #---- Save File ----
+            # ---- Save File ----
 
             fname = '%s (%s)_%s-%s.err' % (clean_tarStaName,
                                            target_station_clim,
@@ -1015,15 +1018,15 @@ class GapFillWeather(QtCore.QObject):
             self.save_content_to_file(output_path, fcontent)
             print('Generating %s.' % fname)
 
-            #---- Plot some graphs ----
+            # ---- Plot some graphs ----
 
             pperr = PostProcessErr(output_path)
             pperr.generates_graphs()
 
-            #---- SOME CALCULATIONS ----
+            # ---- SOME CALCULATIONS ----
 
             RMSE = np.zeros(nVAR)
-            ERRMAX  = np.zeros(nVAR)
+            ERRMAX = np.zeros(nVAR)
             ERRSUM = np.zeros(nVAR)
             for i in range(nVAR):
 

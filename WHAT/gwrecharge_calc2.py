@@ -31,7 +31,7 @@ import datetime
 
 import numpy as np
 # from xlrd import xldate_as_tuple
-# from xlrd.xldate import xldate_from_date_tuple
+from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
 
 # Local imports :
@@ -186,7 +186,7 @@ class SynthHydrograph(object):
 
         # ---- Prepare Figure and Plot Obs. ----
 
-        fwidth, fheight = 18, 6
+        fwidth, fheight = 12.5, 6
         self.fig = plt.figure(figsize=(fwidth, fheight))
 
         lmarg = 0.85 / fwidth
@@ -438,7 +438,7 @@ class SynthHydrograph(object):
             if tol < tolmax:
                 return Sy, RMSE, WLVLpre
 
-    def surf_water_budget(self, CRU, RASmax, CM=4):
+    def surf_water_budget(self, CRU, RASmax):
 
         """
         Input
@@ -459,7 +459,10 @@ class SynthHydrograph(object):
         ETP = self.ETP
         PTOT = self.PTOT
         TAVG = self.TAVG
+
         TMELT = self.TMELT
+        CM = self.CM
+
         N = len(ETP)
 
         PAVL = np.zeros(N)   # Available Precipitation
@@ -717,10 +720,24 @@ if __name__ == '__main__':
 #    Cru = [0.1, 0.3]
 #    sh.TMELT = -5
 
+    # ---- NB ----
+
+    dirname = '../Projects/Sussex'
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+                          'SUSSEX (8105200_8105210)',
+                          'SUSSEX (8105200_8105210)_1980-2017.out')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
+
+    Sy = [0, 0.06]
+    RASmax = [40, 50]
+    Cru = [0.2, 0.4]
+    sh.TMELT = -2.5
+    sh.CM = 3
+
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-    sh.GLUE(Sy, RASmax, Cru, res='rough')
+    # sh.GLUE(Sy, RASmax, Cru, res='fine')
 
     sh.calc_recharge()
     sh.initPlot()
