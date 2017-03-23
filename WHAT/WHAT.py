@@ -35,6 +35,9 @@ from time import ctime
 from os import makedirs, path
 
 from multiprocessing import freeze_support
+import tkinter
+import tkinter.filedialog
+import tkinter.messagebox
 
 # Third party imports :
 
@@ -44,63 +47,21 @@ from PySide import QtGui, QtCore
 
 import database as db
 import custom_widgets as MyQWidget
-import what_project
 import HydroPrint
 import dwnld_weather_data
 from gapfill_weather_gui import GapFillWeatherGUI
 from about_WHAT import AboutWhat
-
-import tkinter
-import tkinter.filedialog
-import tkinter.messagebox
+from projet import ProjetManager
+from icons import IconDB
 
 freeze_support()
 
 # DATABASES :
 
 labelDB = []
-iconDB = []
 styleDB = []
 ttipDB = []
 headerDB = []
-
-# The code is segmented in two main sections: the GUI section and the
-# WORKER sections.
-#
-# The GUI is written with the toolbox Qt using the PySide binding.
-#
-# The WORKER section handles all the calculations and data manipulations of
-# the program.
-
-###############################################################################
-#
-#                            @SECTION GUI
-#
-###############################################################################
-
-# The GUI is composed of a Tab area, a console terminal, and a
-# progress bar. The Tab area is where the user interacts with the
-# program. It is divided in four tabs:
-#
-#      (1) the "Download Data" tab,
-#      (2) the "Fill Data" tab,
-#      (3) The "Hydrograph" tab
-#      (4) The "About" tab.
-#
-# The "Download Data" tab handles the downloading of raw data files
-# from http://climate.weather.gc.ca/ and the formating and concatenation
-# of these raw data files into a single file.
-#
-# The "Fill Data" tab handles the missing data completion process.
-#
-# The "Hydrograph" tab is where it is possible to plot the well hydrograph
-# along with the meteorological data.
-#
-# The "About" tabs handles Copyright, Licensing and external links information
-#
-# The console terminal and the progress bar are shared by all the tabs of the
-# Tab area and are only used to give information to the user about the
-# state and activities of the main program.
 
 
 class WHAT(QtGui.QMainWindow):
@@ -108,31 +69,12 @@ class WHAT(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(WHAT, self).__init__(parent)
 
+        self.whatPref = WHATPref(self)
+        self.pmanager = ProjetManager(self)
+
         self.__initUI__()
 
     def __initUI__(self):  # ==================================================
-        """
-        A generic widget is first set as the central widget of the
-        MainWindow. Then, a QGridLayout is applied to this central
-        widget. Two widgets are then added to the central widget's grid:
-        (1) a Qsplitter widget on top and (2) a QProgressBar on the
-        bottom.
-
-        Two additional widgets are then added to the Qsplitter widget:
-        (1) a QTabWidget and (2) a QTextEdit widget that is the console
-        terminal that was discussed above.
-
-        The QTabWidget is composed of four tabs. Each
-        tab is defined within its own class that are child classes of the
-        MainWindow class. The layout of each tab is handled with a
-        QGridLayout.
-        """
-
-        # -------------------------------------------------- CLASS INSTANCES --
-
-        self.projectInfo = MyProject(self)
-        self.whatPref = WHATPref(self)
-        # self.open_project_window = what_project.OpenProject()
 
         # ------------------------------------------------------ PREFERENCES --
 
@@ -148,13 +90,6 @@ class WHAT(QtGui.QMainWindow):
 
         family = db.styleUI().fontfamily
 
-#        fontSS = ('font-style: %s;'
-#                  'font-size: %s;'
-#                  'font-family: %s;'
-#                  ) % (style, size, family)
-#
-#        self.setStyleSheet("QWidget{%s}" % fontSS)
-
         # -------------------------------------------------------- DATABASES --
 
         # http://stackoverflow.com/questions/423379/
@@ -163,8 +98,6 @@ class WHAT(QtGui.QMainWindow):
 
         global labelDB
         labelDB = db.labels(language)
-        global iconDB
-        iconDB = db.Icons()
         global styleDB
         styleDB = db.styleUI()
         global ttipDB
@@ -175,7 +108,7 @@ class WHAT(QtGui.QMainWindow):
         # ------------------------------------------------ MAIN WINDOW SETUP --
 
         self.setWindowTitle(db.software_version)
-        self.setWindowIcon(QtGui.QIcon(os.path.join('Icons', 'WHAT.png')))
+        self.setWindowIcon(IconDB().master)
 
 #        self.setMinimumWidth(1250)
 #        self.setFont(styleDB.font1)
@@ -205,47 +138,6 @@ class WHAT(QtGui.QMainWindow):
             Please report any bug or wishful feature to
             Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
             </font>''')
-
-        # ------------------------------------------------- PROJECT MENU BAR --
-
-        project_label = QtGui.QLabel('Project :')
-        project_label.setAlignment(QtCore.Qt.AlignCenter)
-
-        self.project_display = QtGui.QPushButton()
-        self.project_display.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.project_display.setFont(styleDB.font_menubar)
-        self.project_display.setMinimumWidth(100)
-
-        self.btn_new_project = QtGui.QToolButton()
-        self.btn_new_project.setAutoRaise(True)
-        self.btn_new_project.setIcon(iconDB.new_project)
-        self.btn_new_project.setToolTip(ttipDB.new_project)
-        self.btn_new_project.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.btn_new_project.setIconSize(styleDB.iconSize2)
-
-        self.menubar_widget = QtGui.QWidget()
-        subgrid_menubar = QtGui.QGridLayout()
-
-        row, col = 0, 0
-        subgrid_menubar.addWidget(project_label, row, col)
-        col += 1
-        subgrid_menubar.addWidget(self.project_display, row, col)
-        col += 1
-        subgrid_menubar.addWidget(self.btn_new_project, row, col)
-
-        subgrid_menubar.setSpacing(3)
-        subgrid_menubar.setContentsMargins(0, 0, 0, 5)  # (L,T,R,B)
-        subgrid_menubar.setColumnStretch(1, 500)
-        subgrid_menubar.setRowMinimumHeight(0, 28)
-
-        self.menubar_widget.setLayout(subgrid_menubar)
-
-        size = self.whatPref.fontsize_menubar
-        fontSS = ('font-style: %s;'
-                  'font-size: %s;'
-                  'font-family: %s;'
-                  ) % (style, size, family)
-        self.menubar_widget.setStyleSheet("QWidget{%s}" % fontSS)
 
         # ------------------------------------------------------- TAB WIDGET --
 
@@ -290,7 +182,7 @@ class WHAT(QtGui.QMainWindow):
         Tab_widget.addTab(self.tab_hydrograph, labelDB.TAB3)
         Tab_widget.addTab(tab_about, labelDB.TAB4)
 
-        Tab_widget.setCornerWidget(self.menubar_widget)
+        Tab_widget.setCornerWidget(self.pmanager)
 
         # -------------------------------------------------- SPLITTER WIDGET --
 
@@ -313,20 +205,16 @@ class WHAT(QtGui.QMainWindow):
         mainGrid = QtGui.QGridLayout()
 
         row = 0
-        mainGrid.addWidget(splitter, row, 0)
-        row += 1
-        mainGrid.addWidget(self.tab_fill_weather_data.pbar, row, 0)
-        row += 1
-        mainGrid.addWidget(self.tab_dwnld_data.pbar, row, 0)
+        mainGrid.addWidget(splitter, 0, 0)
+        mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
+        mainGrid.addWidget(self.tab_dwnld_data.pbar, 2, 0)
 
         mainGrid.setSpacing(10)
         main_widget.setLayout(mainGrid)
 
         # ----------------------------------------------------------- EVENTS --
 
-        self.btn_new_project.clicked.connect(self.show_new_project)
-        self.project_display.clicked.connect(self.open_project)
-#        self.open_project_window.OpenProjectSignal.connect(self.load_project)
+        self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
 
         # -- Console Signal Piping --
 
@@ -345,9 +233,8 @@ class WHAT(QtGui.QMainWindow):
 
         # ------------------------------------------------- CHECK IF PROJECT --
 
-        if self.check_project():
-            self.load_project(self.projectfile)
-        else:
+        success = self.pmanager.load_project(self.projectfile)
+        if success is False:
             self.tab_dwnld_data.setEnabled(False)
             self.tab_fill_weather_data.setEnabled(False)
             self.tab_hydrograph.setEnabled(False)
@@ -361,77 +248,48 @@ class WHAT(QtGui.QMainWindow):
             self.msgError.setText(msgtxt)
             self.msgError.exec_()
 
-    def show(self):  # ========================================================
+    # =========================================================================
 
-        # Silently show so that the geometry of the Main window is defined :
+    def show(self):
+
+        # Silently show :
 
         self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, True)
         super(WHAT, self).show()
-        self.hide()
-        self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, False)
 
-        # Move main window to the center of the screen and show main window :
+        # place main window when not maximize and hide window :
 
         qr = self.frameGeometry()
         cp = QtGui.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
+        super(WHAT, self).close()
+        self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, False)
+
+        # Show :
+
         super(WHAT, self).show()
-
-    def write2console(self, console_text):  # =================================
-
-        '''
-        This function is the bottle neck through which all messages writen
-        in the console must go through.
-        '''
-
-        textime = '<font color=black>[%s] </font>' % ctime()[4:-8]
-        self.main_console.append(textime + console_text)
 
     # =========================================================================
 
-    def show_new_project(self):
-        new_project_window = what_project.NewProject(self)
-        new_project_window.NewProjectSignal.connect(self.load_project)
-        new_project_window.show()
+    def write2console(self, text):
+        # This function is the bottle neck through which all messages writen
+        # in the console must go through.
+        textime = '<font color=black>[%s] </font>' % ctime()[4:-8]
+        self.main_console.append(textime + text)
 
-    def open_project(self):
-        # "open_project" is called by the event "self.project_display.clicked".
-        # It allows the user to open an already existing project.
+    # =========================================================================
 
-        directory = os.path.abspath(os.path.join('..', 'Projects'))
-        filename, _ = QtGui.QFileDialog.getOpenFileName(
-            self, 'Open Project', directory, '*.what')
+    def new_project_loaded(self):
 
-        if filename:
-            self.projectfile = filename
-            self.load_project(filename)
+        filename = self.pmanager.filename
+        dirname = self.pmanager.dirname
 
-    def load_project(self, filename):
-        # This method is called either on startup during <initUI> or when
-        # a new project is chosen with <open_project>.
+        # ---- Update WHAT.pref file ----
 
-        self.projectfile = filename
-        print('\n-------------------------------')
-        print('LOADING PROJECT...')
-        print('-------------------------------\n')
-        print('Loading "%s"' % os.path.relpath(self.projectfile))
-
-        self.projectdir = os.path.dirname(self.projectfile)
-
-        # ----Update WHAT.pref file ----
-
-        self.whatPref.projectfile = self.projectfile
+        self.whatPref.projectfile = filename
         self.whatPref.save_pref_file()
-
-        # ---- Check Project ----
-
-        self.check_project()
-
-        # ---- Load Project Info ----
-
-        self.projectInfo.load_project_info(self.projectfile)
 
         # ---- Update UI ----
 
@@ -439,64 +297,25 @@ class WHAT(QtGui.QMainWindow):
         self.tab_fill_weather_data.setEnabled(True)
         self.tab_hydrograph.setEnabled(True)
 
-        self.project_display.setText(self.projectInfo.name)
-        self.project_display.adjustSize()
-
         # ------------------------------------------- Update child widgets ----
 
         # ---- dwnld_weather_data ----
 
-        self.tab_dwnld_data.set_workdir(self.projectdir)
-        self.tab_dwnld_data.search4stations.lat_spinBox.setValue(
-            self.projectInfo.lat)
+        lat = self.pmanager.currentProjet().lat
+        lon = self.pmanager.currentProjet().lon
 
-        self.tab_dwnld_data.search4stations.lon_spinBox.setValue(
-            self.projectInfo.lon)
+        self.tab_dwnld_data.set_workdir(dirname)
+        self.tab_dwnld_data.search4stations.lat_spinBox.setValue(lat)
+        self.tab_dwnld_data.search4stations.lon_spinBox.setValue(lon)
 
         # ---- fill_weather_data ----
 
-        self.tab_fill_weather_data.set_workdir(self.projectdir)
+        self.tab_fill_weather_data.set_workdir(dirname)
         self.tab_fill_weather_data.load_data_dir_content()
 
         # ---- hydrograph ----
 
-        self.tab_hydrograph.set_workdir(self.projectdir)
-
-        print('')
-        print('---- PROJECT LOADED ----')
-        print('')
-
-    def check_project(self):
-        # Check if all files and folders associated with the .what file are
-        # presents in the project folder. If some files or folders are missing,
-        # the program will automatically generate new ones.
-
-        # If the project.what file does not exist anymore, it returns a False
-        # answer, which should tell the code on the UI side to deactivate
-        # the UI.
-
-        # This method should be run at the start of every method that needs to
-        # interact with resource file of the current project.
-
-        print('Checking project files and folders integrity for :')
-        print(self.projectfile)
-
-        if not path.exists(self.projectfile):
-            print('Project file does not exist.')
-            return False
-
-        # ---- System project folder organization ----
-
-        folders = [os.path.join(self.projectdir, 'Meteo', 'Raw'),
-                   os.path.join(self.projectdir, 'Meteo', 'Input'),
-                   os.path.join(self.projectdir, 'Meteo', 'Output'),
-                   os.path.join(self.projectdir, 'Water Levels')]
-
-        for f in folders:
-            if not path.exists(f):
-                makedirs(f)
-
-        return True
+        self.tab_hydrograph.set_workdir(dirname)
 
     # =========================================================================
 
@@ -505,15 +324,15 @@ class WHAT(QtGui.QMainWindow):
 
 
 # =============================================================================
+# =============================================================================
 
 
-class WHATPref():
+class WHATPref(object):
     """
     This class contains all the preferences relative to the WHAT interface,
     including:
 
-    projectfile: It is a memory variable. It indicates upon launch to the
-                 program what was the project that was opened when last time
+    projectfile: Path of the project that was opened when last time
                  the program was closed.
 
     language: Language in which the GUI is displayed (not the labels
@@ -581,49 +400,10 @@ class WHATPref():
 
 
 # =============================================================================
-
-
-class MyProject():
-    """
-    This class contains all the info and utilities to manage the current
-    active project.
-    """
-
-    def __init__(self, parent=None):  # =======================================
-
-        self.name = ''
-        self.author = ''
-        self.lat = 0
-        self.lon = 0
-
-    def load_project_info(self, projectfile):  # ==============================
-
-        print('-------------------------------')
-        print('Loading project info :')
-
-        with open(projectfile, 'r', encoding='utf-8') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-
-        self.name = reader[0][1]
-        self.author = reader[1][1]
-        self.lat = float(reader[6][1])
-        self.lon = float(reader[7][1])
-
-        print('  - Project name : %s' % self.name)
-        print('  - Author : %s' % self.author)
-        print('  - Lat. : %0.2f' % self.lat)
-        print('  - Lon. : %0.2f' % self.lon)
-        print('Project info loaded.')
-        print('-------------------------------')
-
 # =============================================================================
 
-if __name__ == '__main__':
 
-#    app = QtGui.QApplication(sys.argv)
-#    print('Starting WHAT...')
-#    instance_1 = MainWindow()
-#    sys.exit(app.exec_())
+if __name__ == '__main__':
 
     import sys
     import logging

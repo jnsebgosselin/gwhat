@@ -36,3 +36,4 @@ class IconDB():
         self.calc_brf = QIcon(dirname + '/Icons/start')
         self.setup = QIcon(dirname + '/Icons/page_setup')
         self.new_project = QIcon(dirname + '/Icons/new_project.png')
+        self.openFolder = QIcon(dirname + '/Icons/folder')
