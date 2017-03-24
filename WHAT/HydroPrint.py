@@ -689,6 +689,7 @@ class HydroprintGUI(QtGui.QWidget):
                    ' correctly.') % os.path.basename(filename)
             print(msg)
             self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+            QtGui.QApplication.restoreOverrideCursor()
             return False
 
         name_well = self.waterlvl_data.name_well
@@ -733,6 +734,7 @@ class HydroprintGUI(QtGui.QWidget):
 
             if override == self.msgBox.Yes:
                 self.load_graph_layout()
+                QtGui.QApplication.restoreOverrideCursor()
                 return
 
         # Fit Water Level in Layout :
