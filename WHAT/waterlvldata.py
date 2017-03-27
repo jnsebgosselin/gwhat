@@ -169,21 +169,22 @@ class WaterlvlData(object):
             self.lvl = sheet.col_values(1, start_rowx=start_rowx,
                                         end_rowx=None)
             self.lvl = np.array(self.lvl).astype(float)
-
-            if sheet.cell(start_rowx-1, 2).value == 'BP(m)':
-                self.BP = sheet.col_values(
-                        2, start_rowx=start_rowx, end_rowx=None)
-                self.BP = np.array(self.BP).astype(float)
-
-            if sheet.cell(start_rowx-1, 3).value == 'ET':
-                self.ET = sheet.col_values(
-                        3, start_rowx=start_rowx, end_rowx=None)
-                self.ET = np.array(self.ET).astype(float)
-
         except:
             print('WARNING: Waterlvl data file is not formatted correctly')
             book.release_resources()
             return False
+
+        try:
+            self.BP = sheet.col_values(2, start_rowx=start_rowx, end_rowx=None)
+            self.BP = np.array(self.BP).astype(float)
+        except:
+            print('No Barometric data.')
+
+        try:
+            self.ET = sheet.col_values(3, start_rowx=start_rowx, end_rowx=None)
+            self.ET = np.array(self.ET).astype(float)
+        except:
+            print('No Earth Tide data.')
 
         book.release_resources()
 
