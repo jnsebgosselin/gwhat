@@ -1492,67 +1492,58 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
                 year += 1
                 i += 1
 
-
         return xticks_position, xticks_labels_position, xticks_labels
 
 
-#==============================================================================
-def  load_weather_log(fname, varname):
-#==============================================================================
+# =============================================================================
 
+
+def load_weather_log(fname, varname):
     print('loading info for missing weather data')
 
-    #---- load Data ----
+    # ---- load Data ----
 
     with open(fname, 'r') as f:
         reader = csv.reader(f, delimiter='\t')
         reader = list(reader)[36:]
 
-    #---- load data and convert time ----
+    # ---- load data and convert time ----
 
-    time = []
-    tseg = [np.nan, np.nan, np.nan]
+    xldates = []
     for i in range(len(reader)):
         if reader[i][0] == varname:
             year = int(float(reader[i][1]))
             month = int(float(reader[i][2]))
             day = int(float(reader[i][3]))
-            xldate = xldate_from_date_tuple((year, month, day), 0)
+            xldates.append(xldate_from_date_tuple((year, month, day), 0))
 
-            if np.isnan(tseg[1]):
-                tseg[1] = xldate
-                tseg[2] = xldate + 1
-            elif tseg[2] == xldate:
-                tseg[2] += 1
-            else:
+    time = []
+    tseg = [np.nan, xldates[0], xldates[0]+1]
+    for xldate in xldates:
+        if tseg[2] == xldate:
+            if xldate == xldates[-1]:  # the last data of the series is missing
                 time.extend(tseg)
-                tseg[1] = xldate
-                tseg[2] = xldate + 1
+            else:
+                tseg[2] += 1
+        else:
+            time.extend(tseg)
+            tseg[1] = xldate
+            tseg[2] = xldate + 1
+
     time.append(np.nan)
     time = np.array(time)
 
-#    time = []
-#    for i in range(len(reader)):
-#        if reader[i][0] == varname:
-#            year = int(float(reader[i][1]))
-#            month = int(float(reader[i][2]))
-#            day = int(float(reader[i][3]))
-#            newt = xldate_from_date_tuple((year, month, day), 0)
-#            time.append(newt)
-#            time.append(newt+1)
-#            time.append(np.nan)
-#    time = np.array(time)
-
     return time
 
-#==============================================================================
+# =============================================================================
+
+
 def filt_data(time, waterlvl, period):
     """
     period is in days
     """
-#==============================================================================
 
-    #------------- RESAMPLING 6H BASIS AND NAN ESTIMATION BY INTERPOLATION ----
+    # ------------ RESAMPLING 6H BASIS AND NAN ESTIMATION BY INTERPOLATION ----
 
     time6h_0 = np.floor(time[0]) + 1/24
     time6h_end = np.floor(time[-1]) + 1/24
