@@ -184,6 +184,9 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         self.WLdatum = 0  # 0: mbgs;  1: masl
         self.trend_line = 0
+        self.trend_MAW = 30
+        # trend_MAW = width of the Moving Average Window used to
+        #             smooth the water level data
         self.meteo_on = True  # controls wether meteo data are plotted or not
         self.gridLines = 2  # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'Month'  # 'month' or 'year'
@@ -285,14 +288,14 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         # ax2-series-behind-ax1-series-or-place-ax2-on-left-ax1
         # -on-right-td12994.html
 
-        # --- Time (host) --- #
+        # ---- Time (host) ----
 
         # Also holds the gridlines.
 
         self.ax1 = self.add_axes([0, 0, 1, 1], frameon=False)
         self.ax1.set_zorder(100)
 
-        # --- Frame --- #
+        # ---- Frame ----
 
         # Only used to display the frame so it is always on top.
 
@@ -302,7 +305,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         self.ax0.tick_params(bottom='off', top='off', left='off', right='off',
                              labelbottom='off', labelleft='off')
 
-        # --- Water Levels --- #
+        # ---- Water Levels ----
 
         self.ax2 = self.ax1.twinx()
         self.ax2.set_zorder(self.ax1.get_zorder() + 100)
@@ -310,13 +313,13 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         self.ax2.yaxis.set_label_position('left')
         self.ax2.tick_params(axis='y', direction='out', labelsize=10)
 
-        # --- Precipitation --- #
+        # ---- Precipitation ----
 
         self.ax3 = self.ax1.twinx()
         self.ax3.set_zorder(self.ax1.get_zorder() + 150)
         self.ax3.set_navigate(False)
 
-        # --- Air Temperature --- #
+        # ---- Air Temperature ----
 
         self.ax4 = self.ax1.twinx()
         self.ax4.set_zorder(self.ax1.get_zorder() + 150)
@@ -327,7 +330,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
             self.ax3.set_visible(False)
             self.ax4.set_visible(False)
 
-        # --- Bottom Graph Grid --- #
+        # ---- Bottom Graph Grid ----
 
         self.axLow = self.ax1.twinx()
         self.axLow.patch.set_visible(False)
@@ -337,18 +340,18 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         self.update_waterlvl_scale()
 
-        # ---------------------------------------------------- Remove Spines --
+        # -------------------------------------------------- Remove Spines ----
 
         for axe in self.axes[2:]:
             for loc in axe.spines:
                 axe.spines[loc].set_visible(False)
 
-        # --------------------------------------------------- Update margins --
+        # ------------------------------------------------- Update margins ----
 
         self.bottom_margin = 0.75
         self.set_margins()  # set margins for all the axes
 
-        # ----------------------------------------------------- FIGURE TITLE --
+        # --------------------------------------------------- FIGURE TITLE ----
 
         # ---- Weather Station ----
 
@@ -375,7 +378,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         # ---- Well Name ----
 
-        offset = mpl.transforms.ScaledTranslation(0., 30/72.,
+        offset = mpl.transforms.ScaledTranslation(0, 30/72,
                                                   self.dpi_scale_trans)
         transform = self.ax0.transAxes + offset
 
@@ -385,7 +388,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         self.draw_figure_title()
 
-        # ------------------------------------------------------------- TIME --
+        # ----------------------------------------------------------- TIME ----
 
         self.xlabels = []  # Initiate variable
         self.set_time_scale()
@@ -399,7 +402,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         self.set_gridLines()
 
-        # ------------------------------------------------------ WATER LEVEL --
+        # ---------------------------------------------------- WATER LEVEL ----
 
         # --- Continuous Line Datalogger --- #
 
@@ -431,7 +434,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         self.draw_waterlvl()
 
-        # ---------------------------------------------------------- WEATHER --
+        # -------------------------------------------------------- WEATHER ----
 
         # ---- PRECIPITATION ----
 
@@ -498,19 +501,21 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
         self.draw_weather()
 
-        # ----------------------------------------------------- DRAW YLABELS --
+        # --------------------------------------------------- DRAW YLABELS ----
 
         self.draw_ylabels()
 
-        # ----------------------------------------------------------- LEGEND --
+        # --------------------------------------------------------- LEGEND ----
 
         self.set_legend()
 
-        # ------------------------------------------------------ UPDATE FLAG --
+        # ---------------------------------------------------- UPDATE FLAG ----
 
         self.__isHydrographExists = True
 
-    def set_legend(self):  # ==================================================
+    # =========================================================================
+
+    def set_legend(self):
 
         if self.isLegend == 1:
 
@@ -1005,7 +1010,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
     def resample_bin(self):  # ================================================
 
         # day; week; month; year
-        self.bwidth = [1., 7., 30., 365.][self.bwidth_indx]
+        self.bwidth = [1, 7, 30, 365][self.bwidth_indx]
         bwidth = self.bwidth
 
         if self.bwidth_indx == 0:  # daily
@@ -1097,8 +1102,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
             water_lvl = self.WaterLvlObj.lvl
 
         if self.trend_line == 1:
-            tfilt, wlfilt = filt_data(time, water_lvl, 7)
-
+            tfilt, wlfilt = filt_data(time, water_lvl, self.trend_MAW)
             self.l1_ax2.set_data(tfilt, wlfilt)
             self.l2_ax2.set_data(time, water_lvl)
 
@@ -1556,7 +1560,7 @@ def filt_data(time, waterlvl, period):
     # Resample data and interpolate missing values
     waterlvl = np.interp(time6h, time[index_nonan], waterlvl[index_nonan])
 
-    #----------------------------------------------------------- FILT DATA ----
+    # ---------------------------------------------------------- FILT DATA ----
 #    cuttoff_freq = 1. / period
 #    samp_rate = 1. / (time[1] - time[0])
 #    Wn = cuttoff_freq / (samp_rate / 2)
