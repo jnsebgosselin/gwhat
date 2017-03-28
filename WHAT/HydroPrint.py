@@ -536,15 +536,17 @@ class HydroprintGUI(QtGui.QWidget):
 
         return qAxeLabelsLanguage
 
-    def set_workdir(self, directory):  # ======================================
+    # =========================================================================
+
+    def set_workdir(self, directory):
 
         self.workdir = directory
 
-        self.meteo_dir = directory + '/Meteo/Output'
-        self.waterlvl_dir = directory + '/Water Levels'
+        self.meteo_dir = os.path.join(directory, 'Meteo', 'Output')
+        self.waterlvl_dir = os.path.join(directory, 'Water Levels')
         self.save_fig_dir = directory
 
-    def check_files(self):  # =================================================
+    def check_files(self):
 
         # System project folder organization :
 
@@ -552,7 +554,7 @@ class HydroprintGUI(QtGui.QWidget):
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
-        # waterlvl_manual_measurements.csv :
+        # water lvl manual measurements :
 
         fname = os.path.join(self.workdir, 'waterlvl_manual_measurements.csv')
         if not os.path.exists(fname):
@@ -562,7 +564,6 @@ class HydroprintGUI(QtGui.QWidget):
             print(msg)
 
             fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
-
             with open(fname, 'w') as f:
                 writer = csv.writer(f, delimiter='\t', lineterminator='\n')
                 writer.writerows(fcontent)
@@ -652,7 +653,6 @@ class HydroprintGUI(QtGui.QWidget):
 
     def load_waterlvl(self, filename):
         # If "filename" exists:
-
         # The (1) water level time series, (2) observation well info and the
         # (3) manual measures are loaded and saved in the class instance
         # "waterlvl_data".
@@ -660,7 +660,7 @@ class HydroprintGUI(QtGui.QWidget):
         # Then the code check if there is a layout already saved for this well
         # and if yes, will prompt the user if he wants to load it.
 
-        # Depending if there is a lyout or not, a Weather Data File will be
+        # Depending if there is a layout or not, a Weather Data File will be
         # loaded and the hydrograph will be automatically plotted.
 
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
@@ -792,7 +792,9 @@ class HydroprintGUI(QtGui.QWidget):
                 for i in range(5):
                     QtCore.QCoreApplication.processEvents()
 
-    def select_meteo_file(self):  # ===========================================
+    # =========================================================================
+
+    def select_meteo_file(self):
         '''
         This method is called by <btn_weather_dir.clicked.connect>. It prompts
         the user to select a valid Weather Data file.
@@ -806,7 +808,7 @@ class HydroprintGUI(QtGui.QWidget):
 
         self.load_meteo_file(filename)
 
-    def load_meteo_file(self, filename):  # ===================================
+    def load_meteo_file(self, filename):
 
         if not filename:
             print('Path is empty. Cannot load weather data file.')
@@ -830,7 +832,9 @@ class HydroprintGUI(QtGui.QWidget):
             QtCore.QCoreApplication.processEvents()
             self.draw_hydrograph()
 
-    def update_graph_layout_parameter(self):  # ===============================
+    # =========================================================================
+
+    def update_graph_layout_parameter(self):
         '''
         This method is called either by the methods <save_graph_layout>
         or by <draw_hydrograph>. It fetches the values that are currently

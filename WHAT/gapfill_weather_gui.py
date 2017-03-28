@@ -652,7 +652,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
             self.isFillAll_inProgress = True
             sta_indx2fill = 0
 
-        #-- Disable UI and continue the process normally --
+        # -- Disable UI and continue the process normally --
 
         button.setIcon(db.Icons().stop)
         self.fillDates_widg.setEnabled(False)
@@ -789,13 +789,14 @@ class StaLocManager(QtGui.QWidget):
 
     def plot_stations(self, lat, lon, name):
         ax = self.figure.axes[0]
-        ax.plot(lat, lon, 'o')
+        ax.plot(lon, lat, 'o')
         for i in range(len(name)):
-            ax.annotate(name[i], xy=(lat[i], lon[i]), textcoords='data')
+            ax.annotate(name[i], xy=(lon[i], lat[i]), textcoords='data')
 
     def plot_obswells(self, lat, lon, name):
         ax = self.figure.axes[0]
-        ax.plot(lat, lon, 'o', color='red')
+        ax.plot(lon, lat, 'o', color='red')
+        ax.annotate(name, xy=(lon, lat), textcoords='data')
 
 
 # =============================================================================
@@ -1444,9 +1445,9 @@ class MyHorizHeader(QtGui.QHeaderView):
             label = str(self.model().headerData(logicalIndex,
                                                 self.orientation()))
 
-            #------------------------------------------- Put Labels in Table --
+            # ------------------------------------------ Put Labels in Table --
 
-            #-- Highlights labels when item is selected in column --
+            # -- Highlights labels when item is selected in column --
 
             if self.highlightSections():
                 selectedIndx = self.selectionModel().selectedIndexes()
@@ -1484,7 +1485,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                            </td>
                            ''' % (sectionWidth, fontfamily, label)
 
-        #----------------------------------------------------- Add Sort Icon --
+        # ---------------------------------------------------- Add Sort Icon --
 
         headerTable += '</tr><tr>'
 
@@ -1552,7 +1553,7 @@ if __name__ == '__main__':
         app.setFont(QtGui.QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
-    w.set_workdir('../Projects/IDM')
+    w.set_workdir('C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\R. Martel - Suffield\\Suffield')
     w.load_data_dir_content()
 
     lat = w.gap_fill_worker.WEATHER.LAT
@@ -1560,16 +1561,47 @@ if __name__ == '__main__':
     name = w.gap_fill_worker.WEATHER.STANAME
     alt = w.gap_fill_worker.WEATHER.ALT
 
-    stamap = StaLocManager()
-    stamap.plot_stations(lat, lon, name)
-    stamap.plot_obswells(47.37031, -61.88389, 'Puits Cap-aux-Meules (13007084)')
-    stamap.show()
+    # ---- Show Map ----
 
-    from hydrograph3 import LatLong2Dist
-    for x, y, n, a in zip(lat, lon, name, alt):
-        print(n, LatLong2Dist(x, y, 47.37031, -61.88389), a-6.83)
+    GWSU16 = [50.525687, -110.64174514]
+    GWSU24 = [50.368081, -111.14447737]
+    GWSU34 = [50.446457, -111.0195349]
 
-    # -- Show and Move Center --
+#    stamap = StaLocManager()
+#    stamap.plot_stations(lat, lon, name)
+#    stamap.plot_obswells(GWSU16[0], GWSU16[1], 'GW-SU-16')
+#    stamap.plot_obswells(GWSU24[0], GWSU24[1], 'GW-SU-24')
+#    stamap.plot_obswells(GWSU34[0], GWSU34[1], 'GW-SU-34')
+#    stamap.show()
+#
+#    print()
+#    from hydrograph3 import LatLong2Dist
+#    for x, y, n, a in zip(lat, lon, name, alt):
+#        print(n, LatLong2Dist(x, y, GWSU16[0], GWSU16[1]))
+
+
+    import matplotlib.pyplot as plt
+    fig, ax = plt.subplots()
+
+    i1 = 9
+    i2 = 22
+
+    n1 = w.gap_fill_worker.WEATHER.STANAME[i1]
+    n2 = w.gap_fill_worker.WEATHER.STANAME[i2]
+
+    set1 = w.gap_fill_worker.WEATHER.DATA[:, i1, 3]
+    set2 = w.gap_fill_worker.WEATHER.DATA[:, i2, 3]
+
+    plt.close('all')
+    ax.plot(set1, set2, 'o')
+    ax.set_xlabel(n1)
+    ax.set_ylabel(n2)
+    fig.show()
+
+    for i, name in enumerate(w.gap_fill_worker.WEATHER.STANAME):
+        print(name, w.gap_fill_worker.WEATHER.ALT[i])
+
+    # ---- Show and Move Center ----
 
     w.show()
 

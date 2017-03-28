@@ -74,7 +74,7 @@ class WHAT(QtGui.QMainWindow):
 
         self.__initUI__()
 
-    def __initUI__(self):  # ==================================================
+    def __initUI__(self):
 
         # ------------------------------------------------------ PREFERENCES --
 
@@ -175,7 +175,7 @@ class WHAT(QtGui.QMainWindow):
 
         tab_about = AboutWhat(self)
 
-        # -- TABS ASSEMBLY --
+        # ---- TABS ASSEMBLY ----
 
         Tab_widget.addTab(self.tab_dwnld_data, labelDB.TAB1)
         Tab_widget.addTab(self.tab_fill_weather_data, labelDB.TAB2)
