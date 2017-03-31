@@ -1553,7 +1553,7 @@ if __name__ == '__main__':
         app.setFont(QtGui.QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
-    w.set_workdir('C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\R. Martel - Suffield\\Suffield')
+    w.set_workdir('C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\R. Martel - Suffield\\Suffield (WHAT)')
     w.load_data_dir_content()
 
     lat = w.gap_fill_worker.WEATHER.LAT
@@ -1583,8 +1583,8 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
     fig, ax = plt.subplots()
 
-    i1 = 9
-    i2 = 22
+    i1 = 23
+    i2 = 19
 
     n1 = w.gap_fill_worker.WEATHER.STANAME[i1]
     n2 = w.gap_fill_worker.WEATHER.STANAME[i2]
@@ -1592,14 +1592,17 @@ if __name__ == '__main__':
     set1 = w.gap_fill_worker.WEATHER.DATA[:, i1, 3]
     set2 = w.gap_fill_worker.WEATHER.DATA[:, i2, 3]
 
+    indx = np.where(~np.isnan(set1) & ~np.isnan(set2))[0]
+
+    print()
+    print(len(indx))
+    print(np.corrcoef(set1[indx], set2[indx]))
+
     plt.close('all')
     ax.plot(set1, set2, 'o')
     ax.set_xlabel(n1)
     ax.set_ylabel(n2)
     fig.show()
-
-    for i, name in enumerate(w.gap_fill_worker.WEATHER.STANAME):
-        print(name, w.gap_fill_worker.WEATHER.ALT[i])
 
     # ---- Show and Move Center ----
 
