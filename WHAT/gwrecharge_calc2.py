@@ -737,7 +737,8 @@ if __name__ == '__main__':
 
     # ---- Suffield ----
 
-    dirname = ('C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\R. Martel - Suffield\\Suffield')
+    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
+    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
     fmeteo = os.path.join(dirname, 'Meteo', 'Output',
                           'MEDICINE HAT RCS (3034485)',
                           'MEDICINE HAT RCS (3034485)_2000-2016.out')
@@ -753,19 +754,19 @@ if __name__ == '__main__':
 #    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
 #                          'ATLEE AGCM (3020405)',
 #                          'ATLEE AGCM (3020405)_2009-2016.out')
-#
+
 #    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
 #                          'SCHULER AGDM (3025768)',
 #                          'SCHULER AGDM (3025768)_2002-2016.out')
 
     fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
 
-    Sy = [0.15, 0.25]
-    RASmax = [10, 55]
+    Sy = [0.1, 0.32]
+    RASmax = [15, 35]
     Cru = [0, 0.05]
     sh.TMELT = -2.5
     sh.CM = 4
-    sh.deltat = 100
+    sh.deltat = 80
 
     # ---- Calculations ----
 
@@ -775,6 +776,6 @@ if __name__ == '__main__':
     sh.calc_recharge()
     sh.initPlot()
     sh.plot_prediction()
-    plot_rechg_GLUE('English')
+    plot_rechg_GLUE('English', deltat=80)
 
     plt.show()

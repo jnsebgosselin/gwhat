@@ -1651,6 +1651,18 @@ if __name__ == '__main__':  # =================================================
                          'IDM (JSG2017)_1960-2016.log')
     fwaterlvl = os.path.join(dirname, 'Water Levels', 'Cap-aux-Meules.xls')
 
+    # ---- Suffield ----
+
+    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
+    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
+
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+                          'MEDICINE HAT RCS (3034485)',
+                          'MEDICINE HAT RCS (3034485)_2000-2016.out')
+
+
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
+
     # ---- Valcartier ----
 
 #    dirname = '../Projects/Valcartier'
@@ -1681,7 +1693,7 @@ if __name__ == '__main__':  # =================================================
     hg.set_waterLvlObj(waterLvlObj)
     hg.set_MeteoObj(meteo_obj)
     hg.finfo = finfo
-    hg.language = 'french'
+    hg.language = 'english'
 
     what = ['normal', 'MRC', 'GLUE'][2]
 
@@ -1725,18 +1737,18 @@ if __name__ == '__main__':  # =================================================
 
     elif what == 'GLUE':
 
-        hg.fwidth = 11
+        hg.fwidth = 6.5
         hg.fheight = 4
 
-        hg.NZGrid = 8
-        hg.WLmin = 5
-        hg.WLscale = 0.5
+        hg.NZGrid = 6
+        hg.WLmin = 6.75
+        hg.WLscale = 0.25
 
         hg.isGraphTitle = 0 # 1 -> title ; 0 -> no title
         hg.isLegend = 1
         hg.meteo_on = False
-        hg.datemode = 'year' # 'month' or 'year'
-        hg.date_labels_display_pattern = 3
+        hg.datemode = 'month' # 'month' or 'year'
+        hg.date_labels_display_pattern = 2
 
         hg.best_fit_time(waterLvlObj.time)
         hg.generate_hydrograph(meteo_obj)
