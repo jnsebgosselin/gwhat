@@ -44,7 +44,7 @@ from xlrd.xldate import xldate_from_date_tuple
 # Local imports :
 
 from custom_widgets import VSep, MyQToolButton
-import my_widgets as myqt
+import widgets as myqt
 import database as db
 import meteo
 from waterlvldata import WaterlvlData
