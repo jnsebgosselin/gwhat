@@ -3,9 +3,9 @@
 copyright (C) 2016-2017 INRS
 contact: jean-sebastien.gosselin@outlook.com
 
-This is part of OpenGLD
+This is part of WHAT
 
-OpenGLD is free software: you can redistribute it and/or modify
+WHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -26,7 +26,6 @@ from copy import copy
 from icons import IconDB
 import os
 
-version = 'OpenGLD v0.3.6-2'
 
 # =============================================================================
 
@@ -204,22 +203,12 @@ class MyQDSpinBox(QtGui.QDoubleSpinBox):
             self.setStyleSheet('QDoubleSpinBox{}')
 
 
-class CostDSpinBox(MyQDSpinBox):
-    def __init__(self, val, dec=0, step=None, lmin=None, lmax=None, units=None,
-                 parent=None, read_only=False):
-        super(CostDSpinBox, self).__init__(
-                val, dec, step, lmin, lmax, units, parent, read_only)
-
-    def textFromValue(self, value):
-        return '{:,.2f}'.format(value).replace(",", " ")
-
-
 # ================================================================ Layout =====
 
 
-class MyGroupWidget(QtGui.QGroupBox):
+class QGroupWidget(QtGui.QGroupBox):
     def __init__(self, parent=None):
-        super(MyGroupWidget, self).__init__(parent)
+        super(QGroupWidget, self).__init__(parent)
 
         col = '#404040'
         self.setStyleSheet('QGroupBox{'
@@ -240,18 +229,24 @@ class MyGroupWidget(QtGui.QGroupBox):
         self.setLayout(QtGui.QGridLayout())
         self.layout().setContentsMargins(10, 25, 10, 10)  # (l, t, r, b)
 
+    def addWidget(self, item, x, y, nx=1, ny=1):
+        self.layout().addWidget(item, x, y, nx, ny)
+
+    def addLayout(self, layout, x, y, nx=1, ny=1):
+        self.layout().addLayout(layout, x, y, nx, ny)
+
 
 class DialogWindow(QtGui.QDialog):
+
     def __init__(self, parent=None, resizable=False):
         super(DialogWindow, self).__init__(parent)
 
-        self.resizable = resizable
+        self.__resizable = resizable
+        self.__firstshow = True
 
         self.setWindowIcon(IconDB().master)
-        self.setWindowFlags(QtCore.Qt.Window |
-                            QtCore.Qt.WindowMinimizeButtonHint)
-#        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
-        self.__firstshow = True
+        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
 
     def show(self):
         if self.__firstshow is True:
@@ -275,7 +270,7 @@ class DialogWindow(QtGui.QDialog):
 
             super(DialogWindow, self).show()
 
-            if self.resizable is False:
+            if self.__resizable is False:
                 self.setFixedSize(self.size())
         else:
             super(DialogWindow, self).show()
