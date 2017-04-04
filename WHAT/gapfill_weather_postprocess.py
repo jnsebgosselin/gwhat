@@ -185,7 +185,7 @@ class PostProcessErr(object):
                 os.mkdir(dirname)
             filename = dirname + self.varNames[i] + '.csv'
 
-            #---- Generate File ----
+            # ---- Generate File ----
 
             if not os.path.exists(filename):
                 header = [['Station', 'RMSE', 'MAE', 'ME',
@@ -194,7 +194,7 @@ class PostProcessErr(object):
                     writer = csv.writer(f,delimiter='\t')
                     writer.writerows(header)
 
-            #---- Write Stats to File ----
+            # ---- Write Stats to File ----
 
             rowcontent = [[self.staName, '%0.1f' % RMSE, '%0.1f' % MAE,
                            '%0.2f' % ME, '%0.3f' % r, '%0.1f' % Emax,

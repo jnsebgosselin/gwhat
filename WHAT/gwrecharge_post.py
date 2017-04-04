@@ -31,7 +31,7 @@ import datetime
 
 import numpy as np
 import matplotlib as mpl
-# from xlrd import xldate_as_tuple
+from xlrd import xldate_as_tuple
 # from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
 
@@ -136,7 +136,7 @@ def calcul_glue(p):
     return years, ptot_yr, glue_rechg_yr, glue_etr_yr, glue_ru_yr
 
 
-def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=700):
+def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=350, deltat=0):
     data = np.load('GLUE.npy').item()
     rechg = np.array(data['recharge'])
     etr = np.array(data['etr'])
@@ -189,7 +189,7 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=700):
 
     # ---- Define new variables ----
 
-    yr2plot = np.arange(1995, 2016).astype('int')
+    yr2plot = np.arange(2005, 2016).astype('int')
     NYear = len(yr2plot)
 
     # ---- Convert daily to hydrological year ----
@@ -207,6 +207,12 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=700):
 
     etr50_yr = []
     ru50_yr = []
+
+    if deltat > 0:
+        for i, t in enumerate(TIME):
+            date = xldate_as_tuple(t+deltat, 0)
+            YEARS[i] = date[0]
+            MONTHS[i] = date[1]
 
     for i in range(NYear):
         yr0 = yr2plot[i]
@@ -233,7 +239,7 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=700):
 
     # ----------------------------------------------------- Produce Figure ----
 
-    fig = plt.figure(figsize=(12.5, 6))
+    fig = plt.figure(figsize=(11.0, 6))
     fig.patch.set_facecolor('white')
 
     fheight = fig.get_figheight()
@@ -303,7 +309,7 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=700):
 
     ax0.set_ylabel(ylabl, fontsize=16,
                    verticalalignment='bottom')
-    ax0.yaxis.set_label_coords(-0.045, 0.5)
+    ax0.yaxis.set_label_coords(-0.065, 0.5)
 
     ax0.set_xlabel(xlabl, fontsize=16, verticalalignment='top')
     ax0.xaxis.set_label_coords(0.5, -0.175)
@@ -319,8 +325,8 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=700):
     yerr = [prob_rechg_yrly-min_rechg_yrly, max_rechg_yrly-prob_rechg_yrly]
     herr = ax0.errorbar(yr2plot, prob_rechg_yrly, yerr=yerr,
                         fmt='o', capthick=1, capsize=4, ecolor='0',
-                        elinewidth=1, mfc='White', mec='0', ms=5, mew=1,
-                        zorder=200)
+                        elinewidth=1, mfc='White', mec='0', ms=5,
+                        markeredgewidth=1, zorder=200)
 
     h25 = ax0.plot(yr2plot, glue25_yr, color='red', dashes=[3, 5], alpha=0.65)
     ax0.plot(yr2plot, glue75_yr, color='red', dashes=[3, 5], alpha=0.65)
@@ -360,13 +366,13 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=700):
         text += '(GLUE 5) %d mm/y ; ' % np.mean(min_rechg_yrly)
         text += '(GLUE 25) %d mm/y ; ' % np.mean(glue25_yr)
         text += '(GLUE 50) %d mm/y ; ' % np.mean(prob_rechg_yrly)
-        text += '(GLUE 75) %d mm/a ; ' % np.mean(glue75_yr)
+        text += '(GLUE 75) %d mm/y ; ' % np.mean(glue75_yr)
         text += '(GLUE 95) %d mm/y' % np.mean(max_rechg_yrly)
 
-    dx, dy = 5/72., 5/72.
+    dx, dy = 16/72., -75/72.
     padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
     transform = ax0.transAxes + padding
-    ax0.text(0, 0, text, va='bottom', ha='left',
+    ax0.text(0, 1, text, va='bottom', ha='left',
              fontsize=12, transform=transform)
 
     # ----- Some Calculation ----

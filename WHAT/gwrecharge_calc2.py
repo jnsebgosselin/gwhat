@@ -67,6 +67,7 @@ class SynthHydrograph(object):
 
         self.TMELT = 0
         self.CM = 4
+        self.deltat = 0
 
         self.language = 'French'
 
@@ -257,7 +258,11 @@ class SynthHydrograph(object):
         min_wlvl = hGLUE[:, 0] / 1000.
         max_wlvl = hGLUE[:, 2] / 1000.
 
-        self.fig.axes[0].fill_between(self.DATE,
+        dates = self.DATE
+        # for i in range(len(dates)):
+        #     dates[i] = dates[i] + datetime.timedelta(days=self.deltat)
+
+        self.fig.axes[0].fill_between(dates,
                                       max_wlvl, min_wlvl,
                                       color='0.5', lw=1.5, alpha=0.65,
                                       zorder=10)
@@ -375,8 +380,8 @@ class SynthHydrograph(object):
         twlvl = self.twlvl  # time water level
         WLVLobs = self.WLVLobs * 1000  # water level observations
 
-        ts = np.where(twlvl[0] == tweatr)[0][0]
-        te = np.where(twlvl[-1] == tweatr)[0][0]
+        ts = np.where(twlvl[0] == tweatr+self.deltat)[0][0]
+        te = np.where(twlvl[-1] == tweatr+self.deltat)[0][0]
 
         # ---- Gauss-Newton ----
 
@@ -570,9 +575,7 @@ class SynthHydrograph(object):
         WLpre = np.zeros(len(RECHG)+1) * np.nan
 
         if nscheme == 'backward':
-
             WLpre[0] = WLobs[-1]
-
             for i in reversed(range(len(RECHG))):
                 RECESS = (B - A * WLpre[i] / 1000.) * 1000
                 RECESS = max(RECESS, 0)
@@ -580,14 +583,12 @@ class SynthHydrograph(object):
                 WLpre[i] = WLpre[i+1] + (RECHG[i] / Sy) - RECESS
 
         elif nscheme == 'forward':
-
             WLpre[0] = WLobs[0]
-
             for i in range(len(RECHG)):
 #                if i%365 == 0:
 #                    WLpre[i+1] = WLobs[i]
 #                else:
-                RECESS = (B - A * WLpre[i] / 1000.) * 1000
+                RECESS = (B - A*WLpre[i]/1000) * 1000
                 RECESS = max(RECESS, 0)
 
                 WLpre[i+1] = WLpre[i] - (RECHG[i] / Sy) + RECESS
@@ -734,14 +735,47 @@ if __name__ == '__main__':
     sh.TMELT = -2.5
     sh.CM = 3
 
+    # ---- Suffield ----
+
+    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
+    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+                          'MEDICINE HAT RCS (3034485)',
+                          'MEDICINE HAT RCS (3034485)_2000-2016.out')
+
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+#                          'SUFFIELD A (3036240)',
+#                          'SUFFIELD A (3036240)_1990-2016.out')
+##
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+#                          'ROLLING HILLS AGCM (3035530)',
+#                          'ROLLING HILLS AGCM (3035530)_2007-2016.out')
+
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+#                          'ATLEE AGCM (3020405)',
+#                          'ATLEE AGCM (3020405)_2009-2016.out')
+
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+#                          'SCHULER AGDM (3025768)',
+#                          'SCHULER AGDM (3025768)_2002-2016.out')
+
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
+
+    Sy = [0.1, 0.32]
+    RASmax = [15, 35]
+    Cru = [0, 0.05]
+    sh.TMELT = -2.5
+    sh.CM = 4
+    sh.deltat = 80
+
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-    # sh.GLUE(Sy, RASmax, Cru, res='fine')
+    sh.GLUE(Sy, RASmax, Cru, res='fine')
 
     sh.calc_recharge()
     sh.initPlot()
     sh.plot_prediction()
-    plot_rechg_GLUE('French')
+    plot_rechg_GLUE('English', deltat=80)
 
     plt.show()

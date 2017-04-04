@@ -116,8 +116,11 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.setWindowFlags(QtCore.Qt.Window)
 #        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
-        self.NORMALS = []  # 2D matrix holding all the weather normals
-                           # [TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}]
+        self.NORMALS = []
+
+        # 2D matrix holding all the weather normals
+        # [TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}]
+
         self.station_name = []
         self.save_fig_dir = os.getcwd()
         self.meteo_dir = os.getcwd()
@@ -238,20 +241,20 @@ class WeatherAvgGraph(QtGui.QWidget):
 
     def generate_graph(self, filename):  # ========= Generate and Draw Graph ==
 
-        #------------------------------------------------------ Prepare Data --
+        # ----------------------------------------------------- Prepare Data --
 
-        #---- load data from data file ----
+        # ---- load data from data file ----
 
         METEO = MeteoObj()
         METEO.load_and_format(filename)
 
-        #---- calulate weather normals ----
+        # ---- calulate weather normals ----
 
         # DATA = [YEAR, MONTH, DAY, TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}]
         self.NORMALS, self.MTHSER = calculate_normals(METEO.DATA,
                                                       METEO.datatypes)
 
-        #------------------------------------------------------ Plot Normals --
+        # ----------------------------------------------------- Plot Normals --
 
         self.station_name = METEO.STA
         self.fig_weather_normals.plot_monthly_normals(self.NORMALS)
@@ -259,7 +262,7 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         self.setWindowTitle('Weather Averages for %s' % self.station_name)
 
-        #----------------------------------------------- Generate Data Table --
+        # ---------------------------------------------- Generate Data Table --
 
         self.grid_weather_normals.populate_table(self.NORMALS)
 
@@ -284,7 +287,7 @@ class WeatherAvgGraph(QtGui.QWidget):
             self.save_fig_dir = os.path.dirname(filename)
             self.fig_weather_normals.figure.savefig(filename)
 
-            #---- Save Companion files ----
+            # ---- Save Companion files ----
 
             filename = self.save_fig_dir
             filename += '/WeatherAverages_%s.csv' % self.station_name
@@ -298,12 +301,12 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         NORMALS = self.NORMALS
 
-        #--------------------------------------------- Generate File Content --
+        # -------------------------------------------- Generate File Content --
 
         fcontent = [['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
                      'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']]
 
-        #---- Air Temperature ----
+        # ---- Air Temperature ----
 
         Tvar = ['Daily Tmax (degC)', 'Daily Tmin (degC)', 'Daily Tavg (degC)']
         for i in range(3):
@@ -314,7 +317,7 @@ class WeatherAvgGraph(QtGui.QWidget):
             # years
             fcontent[-1].extend(['%0.1f' % np.mean(NORMALS[:, i])])
 
-        #---- rain ----
+        # ---- rain ----
 
         fcontent.append(['Rain (mm)'])
         # months
@@ -323,7 +326,7 @@ class WeatherAvgGraph(QtGui.QWidget):
         # year
         fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 5])])
 
-        #---- snow ----
+        # ---- snow ----
 
         fcontent.append(['Snow (mm)'])
         # months
@@ -333,7 +336,7 @@ class WeatherAvgGraph(QtGui.QWidget):
         # year
         fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 3] - NORMALS[:, 5])])
 
-        #---- total precipitation ----
+        # ---- total precipitation ----
 
         fcontent.append(['Total Precip. (mm)'])
         for j in range(12):
@@ -341,7 +344,7 @@ class WeatherAvgGraph(QtGui.QWidget):
         # year
         fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 3])])
 
-        #---- ETP ----
+        # ---- ETP ----
 
         fcontent.append(['ETP (mm)'])
         for j in range(12):
@@ -349,7 +352,7 @@ class WeatherAvgGraph(QtGui.QWidget):
         # year
         fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 4])])
 
-        #------------------------------------------------------ Save to File --
+        # ----------------------------------------------------- Save to File --
 
         with open(filename, 'w')as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
@@ -474,9 +477,7 @@ class MeteoObj():
         # Get info from header and find row where data starts :
 
         for i in range(len(reader)):
-
             if len(reader[i]) > 0:
-
                 if reader[i][0] == 'Year':
                     self.varnames = reader[i]
                     data_indx = i + 1
@@ -1291,7 +1292,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         self.NORMALS = NORMALS
 
-        #-------------------------------------------- assign local variables --
+        # ------------------------------------------- assign local variables --
 
         Tmax_norm = NORMALS[:, 0]
         Tmin_norm = NORMALS[:, 1]
@@ -1305,7 +1306,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         print('Tavg Yearly Avg. = %0.1f' % np.mean(Tavg_norm))
         print('Ptot Yearly Acg. = %0.1f' % np.sum(Ptot_norm))
 
-        #------------------------------------------------- DEFINE AXIS RANGE --
+        # ------------------------------------------------ DEFINE AXIS RANGE --
 
         if np.sum(Ptot_norm) < 500:
             Yscale0 = 10 # Precipitation (mm)
@@ -1317,7 +1318,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         SCA0 = np.arange(0, 10000, Yscale0)
         SCA1 = np.arange(-100, 100, Yscale1)
 
-        #---- Precipitation ----
+        # ---- Precipitation ----
 
         indx = np.where(SCA0 > np.max(Ptot_norm))[0][0]
         Ymax0 = SCA0[indx+1]
@@ -1327,7 +1328,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         NZGrid0 = (Ymax0 - Ymin0) / Yscale0
 
-        #---- Temperature ----
+        # ---- Temperature ----
 
         indx = np.where(SCA1 > np.max(Tmax_norm))[0][0]
         Ymax1 = SCA1[indx]
@@ -1337,7 +1338,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         NZGrid1 = (Ymax1 - Ymin1) / Yscale1
 
-        #---- Uniformization Of The Grids ----
+        # ---- Uniformization Of The Grids ----
 
         if NZGrid0 > NZGrid1:
             Ymin1 = Ymax1 - NZGrid0 * Yscale1
@@ -1346,15 +1347,16 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         elif NZGrid0 == NZGrid1:
             pass
 
-        #---- Adjust Space For Text ----
+        # ---- Adjust Space For Text ----
 
         # In case there is a need to force the value
-        #----
-        #Ymax0 = 200
-        #Ymax1 = 30 ; Ymin1 = -20
-        #----
+        # ----
+        Ymax0 = 100
+        Ymax1 = 30
+        Ymin1 = -20
+        # ----
 
-        #-------------------------------------------------- YTICKS FORMATING --
+        # ------------------------------------------------- YTICKS FORMATING --
 
         ax0 = self.figure.axes[1]
         ax1 = self.figure.axes[2]

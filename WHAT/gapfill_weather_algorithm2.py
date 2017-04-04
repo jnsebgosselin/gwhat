@@ -266,11 +266,8 @@ class GapFillWeather(QtCore.QObject):
         target_station_name = self.TARGET.name
         target_station_prov = self.WEATHER.PROVINCE[tarStaIndx]
         target_station_lat = self.WEATHER.LAT[tarStaIndx]
-        target_station_lat = round(target_station_lat, 2)
         target_station_lon = self.WEATHER.LON[tarStaIndx]
-        target_station_lon = round(target_station_lon, 2)
         target_station_alt = self.WEATHER.ALT[tarStaIndx]
-        target_station_alt = round(target_station_alt, 2)
         target_station_clim = self.WEATHER.ClimateID[tarStaIndx]
 
         # ---------------------------------------------------------------------
@@ -1343,9 +1340,9 @@ class WeatherData(object):
                  ('DATE_START', 'i2', np.shape(self.DATE_START)),
                  ('DATE_END', 'i2', np.shape(self.DATE_END)),
                  ('STANAME', '|U25', np.shape(self.STANAME)),
-                 ('ALT', 'float16', np.shape(self.ALT)),
-                 ('LAT', 'float16', np.shape(self.LAT)),
-                 ('LON', 'float16', np.shape(self.LON)),
+                 ('ALT', 'float32', np.shape(self.ALT)),
+                 ('LAT', 'float32', np.shape(self.LAT)),
+                 ('LON', 'float32', np.shape(self.LON)),
                  ('ClimateID', '|U25', np.shape(self.ClimateID)),
                  ('PROVINCE', '|U25', np.shape(self.PROVINCE)),
                  ('NUMMISS', 'i2', np.shape(self.NUMMISS)),

@@ -44,7 +44,7 @@ from xlrd.xldate import xldate_from_date_tuple
 # Local imports :
 
 from custom_widgets import VSep, MyQToolButton
-import my_widgets as myqt
+import widgets as myqt
 import database as db
 import meteo
 from waterlvldata import WaterlvlData
@@ -692,6 +692,15 @@ class WLCalc(QtGui.QWidget):
             wl = np.copy(self.waterLvl_data.lvl[i1:i2+1])
             bp = np.copy(self.waterLvl_data.BP[i1:i2+1])
             et = np.copy(self.waterLvl_data.ET[i1:i2+1])
+            if len(et) == 0:
+                et = np.zeros(len(wl))
+
+            print(et)
+
+            lagBP = self.config_brf.lagBP
+            lagET = self.config_brf.lagET
+            detrend = self.config_brf.detrend
+            correct = self.config_brf.correct_WL
 
             dt = np.min(np.diff(time))
             tc = np.arange(t1, t2+dt/2, dt)
@@ -709,12 +718,6 @@ class WLCalc(QtGui.QWidget):
                 time = tc
 
             bm.produce_BRFInputtxt(well, time, wl, bp, et)
-
-            lagBP = self.config_brf.lagBP
-            lagET = self.config_brf.lagET
-            detrend = self.config_brf.detrend
-            correct = self.config_brf.correct_WL
-
             msg = 'Not enough data. Try enlarging the selected period'
             msg += ' or reduce the number of BP and ET lags.'
             if lagBP >= len(time) or lagET >= len(time):
@@ -782,8 +785,8 @@ class WLCalc(QtGui.QWidget):
 
         for i in range(len(self.time)):
             fcontent.append([self.time[i],
-                             '%0.2f' % self.hrecess[i],
-                             '%0.2f' % self.water_lvl[i]])
+                             self.hrecess[i],
+                             self.water_lvl[i]])
 
         with open(interpFilename, 'w') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
@@ -1483,7 +1486,7 @@ class ConfigBRF(myqt.DialogWindow):
 
         self._etlag = {}
         self._etlag['label'] = QtGui.QLabel('Number of ET Lags :')
-        self._etlag['widget'] = myqt.MyQDSpinBox(300, 0, lmin=1)
+        self._etlag['widget'] = myqt.MyQDSpinBox(300, 0, lmin=-1)
 
         self._detrend = QtGui.QCheckBox('Detrend')
         self._detrend.setCheckState(QtCore.Qt.Checked)
