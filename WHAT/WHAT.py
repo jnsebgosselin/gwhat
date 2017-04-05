@@ -283,8 +283,8 @@ class WHAT(QtGui.QMainWindow):
 
     def new_project_loaded(self):
 
-        filename = self.pmanager.filename
-        dirname = self.pmanager.dirname
+        filename = self.pmanager.currentProjet().filename
+        dirname = os.path.dirname(filename)
 
         # ---- Update WHAT.pref file ----
 

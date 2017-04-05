@@ -76,11 +76,17 @@ class Projet(h5py.File):
 
         # for backward compatibility :
 
-        keys = list(self.keys())
-        if 'wldsets' not in keys:
-            self.create_group('wldsets')
-        if 'wxdsets' not in keys:
-            self.create_group('wxdsets')
+        for key in ['name', 'author', 'created', 'modified', 'version']:
+            if key not in list(self.attrs.keys()):
+                self.attrs[key] = 'None'
+
+        for key in ['latitude', 'longitude']:
+            if key not in list(self.attrs.keys()):
+                self.attrs[key] = 0
+
+        for key in ['wldsets', 'wxdsets']:
+            if key not in list(self.keys()):
+                self.create_group(key)
 
     # =========================================================================
 
@@ -190,14 +196,14 @@ class ProjetManager(QtGui.QWidget):
     def __init__(self, parent=None, projet=None):
         super(ProjetManager, self).__init__(parent)
 
-        self._projet = projet
-        self.data_manager = DataManager(parent, projet)
+        self.data_manager = DataManager(parent)
+        self.__projet = None
+        if projet:
+            self.load_project(projet)
 
         self.__initGUI__()
 
     def __initGUI__(self):
-        project_label = QtGui.QLabel('Project :')
-        project_label.setAlignment(QtCore.Qt.AlignCenter)
 
         self.project_display = QtGui.QPushButton()
         self.project_display.setFocusPolicy(QtCore.Qt.NoFocus)
@@ -210,12 +216,14 @@ class ProjetManager(QtGui.QWidget):
         new_btn.setIcon(IconDB().new_project)
         new_btn.setToolTip('Create a new project...')
         new_btn.setFocusPolicy(QtCore.Qt.NoFocus)
-        new_btn.setIconSize(styleUI().iconSize2)
+        new_btn.setIconSize(IconDB().iconSize2)
         new_btn.clicked.connect(self.show_newproject_dialog)
+
+        # ---- layout ----
 
         layout = QtGui.QGridLayout(self)
 
-        layout.addWidget(project_label, 0, 1)
+        layout.addWidget(QtGui.QLabel('Project :'), 0, 1)
         layout.addWidget(self.project_display, 0, 2)
         layout.addWidget(new_btn, 0, 3)
 
@@ -226,8 +234,75 @@ class ProjetManager(QtGui.QWidget):
 
     # =========================================================================
 
-    def currentProjet(self):
-        return self._projet
+    @property
+    def projet(self):
+        return self.__projet
+
+    def load_project(self, filename):
+        print('\nLoading "%s"...' % os.path.basename(filename))
+
+        # Read projet from filename :
+
+        try:
+            projet = Projet(filename)
+        except:
+            projet = self.convert_projet_format(filename)
+
+        # Update UI and assign new projet to manager if not None :
+
+        if projet is None:
+            print('Project loading failed!\n')
+            msg = ('Project loading failed. <i>%s</i> is not valid ' +
+                   'WHAT project file.') % os.path.basename(filename)
+            btn = QtGui.QMessageBox.Ok
+            QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
+            return False
+        else:
+            if self.__projet:
+                self.__projet.close()
+            self.__projet = projet
+
+            self.project_display.setText(projet.name)
+            self.project_display.adjustSize()
+
+            self.data_manager.set_projet(projet)
+            self.currentProjetChanged.emit(True)
+
+            print('Project "%s" loaded succesfully\n' % projet.name)
+
+            return True
+
+    def convert_projet_format(self, filename):
+        try:
+            print('Old file format. Converting to the new format...')
+            with open(filename, 'r', encoding='utf-8') as f:
+                reader = list(csv.reader(f, delimiter='\t'))
+
+                name = reader[0][1]
+                author = reader[1][1]
+                created = reader[2][1]
+                modified = reader[3][1]
+                version = reader[4][1]
+                lat = float(reader[6][1])
+                lon = float(reader[7][1])
+        except:
+            print('Project file is not valid!')
+            return None
+        else:
+            os.remove(filename)
+
+            projet = Projet(filename)
+            projet.name = name
+            projet.author = author
+            projet.created = created
+            projet.modified = modified
+            projet.version = version
+            projet.lat = lat
+            projet.lon = lon
+
+            print('Projet converted to the new format successfully.')
+
+            return projet
 
     # =========================================================================
 
@@ -247,69 +322,6 @@ class ProjetManager(QtGui.QWidget):
         if filename:
             self.projectfile = filename
             self.load_project(filename)
-
-    def load_project(self, filename):
-
-        print('\n-------------------------------')
-        print('LOADING PROJECT...')
-        print('-------------------------------\n')
-        print('Loading "%s"' % os.path.relpath(filename))
-
-        try:
-            if self._projet:
-                self._projet.close()
-            self._projet = Projet(filename)
-        except OSError:
-            print('Old file format. Converting to the new format.')
-
-            # ---- reading old project file ----
-
-            with open(filename, 'r', encoding='utf-8') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
-
-            name = reader[0][1]
-            author = reader[1][1]
-            created = reader[2][1]
-            modified = reader[3][1]
-            version = reader[4][1]
-            lat = float(reader[6][1])
-            lon = float(reader[7][1])
-
-            os.remove(filename)
-
-            # ---- creating new project file ----
-
-            if self._projet:
-                self._projet.close()
-
-            self._projet = Projet(filename)
-            self._projet.name = name
-            self._projet.author = author
-            self._projet.created = created
-            self._projet.modified = modified
-            self._projet.version = version
-            self._projet.lat = lat
-            self._projet.lon = lon
-
-            print('Projet converted to the new format successfully.')
-        except:
-            print('!Not working! Project file not valid.')
-            raise
-            return False
-
-        # ---- Update UI ----
-
-        self.project_display.setText(self._projet.name)
-        self.project_display.adjustSize()
-
-        print('')
-        print('---- PROJECT LOADED ----')
-        print('')
-
-        self.currentProjetChanged.emit(True)
-        self.data_manager.set_projet(self._projet)
-
-        return True
 
 
 # =============================================================================
@@ -1034,10 +1046,10 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    p = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
+#    p = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
 
     pm = ProjetManager()
-    pm.load_project(p)
+#    pm.load_project(p)
     pm.show()
     pm.data_manager.show()
 
