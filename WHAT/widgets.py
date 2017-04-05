@@ -141,35 +141,30 @@ class MyQComboBox(QtGui.QComboBox):
         self.blockSignals(False)
 
 
-class MyQDSpinBox(QtGui.QDoubleSpinBox):
-    def __init__(self, val, dec=0, step=None, lmin=None, lmax=None, units=None,
+class QDoubleSpinBox(QtGui.QDoubleSpinBox):
+    def __init__(self, val, dec=0, step=None, units=None,
                  parent=None, read_only=False):
-        super(MyQDSpinBox, self).__init__(parent)
+        super(QDoubleSpinBox, self).__init__(parent)
 
         self.__value = 0
 
         self.setKeyboardTracking(False)
         self.setAccelerated(True)
-#        self.setMinimumWidth(75)
-
-        # self.setWrapping(True)
         self.setCorrectionMode(QtGui.QAbstractSpinBox.CorrectToNearestValue)
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
-        self.setDecimals(dec)
-        self.setRange(-10**6, 10**6)
         self.setAlignment(QtCore.Qt.AlignCenter)
+
+        self.setDecimals(dec)
         self.setValue(val)
 
         if step is not None:
             self.setSingleStep(step)
         else:
             self.setSingleStep(10**-dec)
-        if lmin is not None:
-            self.setMinimum(lmin)
-        if lmax is not None:
-            self.setMaximum(lmax)
+
         if units is not None:
             self.setSuffix(units)
+
         if read_only is True:
             self.setSpecialValueText('\u2014')
             self.setReadOnly(True)
@@ -186,21 +181,11 @@ class MyQDSpinBox(QtGui.QDoubleSpinBox):
         self.blockSignals(False)
 
     def setValue(self, x):
-        super(MyQDSpinBox, self).setValue(x)
+        super(QDoubleSpinBox, self).setValue(x)
         self.__value = x
 
     def value(self):
         return self.__value
-
-    def setWarningState(self, state):
-        if state is True:
-            self.setStyleSheet(
-                "QDoubleSpinBox{background-color:#C83737;}")
-#            self.setStyleSheet('QDoubleSpinBox{'
-#                               'color: rgb(200, 85, 85);'
-#                               '}')
-        else:
-            self.setStyleSheet('QDoubleSpinBox{}')
 
 
 # ================================================================ Layout =====

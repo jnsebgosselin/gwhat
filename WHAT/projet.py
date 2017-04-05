@@ -46,8 +46,41 @@ import data as dtm
 
 
 class Projet(h5py.File):
-    def __init__(self, name, mode='a'):
-        super(Projet, self).__init__(name, mode)
+    def __init__(self, name):
+        if not os.path.exists(name):
+            self.create_projet(name)
+        else:
+            self.load_projet(name)
+
+    def create_projet(self, name):
+        super(Projet, self).__init__(name, mode='w')
+
+        # ---------------------------------------------------------------------
+
+        self.attrs['name'] = 'None'
+        self.attrs['author'] = 'None'
+        self.attrs['created'] = 'None'
+        self.attrs['modified'] = 'None'
+        self.attrs['version'] = 'None'
+        self.attrs['latitude'] = 0
+        self.attrs['longitude'] = 0
+
+        # ---------------------------------------------------------------------
+
+        self.create_group('wldsets')
+        self.create_group('wxdsets')
+        # http://wxbrad.com/why-wx-is-the-abbreviation-for-weather/
+
+    def load_projet(self, name):
+        super(Projet, self).__init__(name, mode='a')
+
+        # for backward compatibility :
+
+        keys = list(self.keys())
+        if 'wldsets' not in keys:
+            self.create_group('wldsets')
+        if 'wxdsets' not in keys:
+            self.create_group('wxdsets')
 
     # =========================================================================
 
@@ -113,16 +146,37 @@ class Projet(h5py.File):
 
     # =========================================================================
 
-    def get_wldataset(self, x):
+    @property
+    def wldsets(self):
+        return list(self['wldsets'].keys())
+
+    def get_wldset(self, label):
         pass
 
-    def create_wldataset(self, label, t, wl, lat, lon, alt, mun):
-        grp = self.require_group['wldataset'].create_group[label]
-        dset = grp.create_dataset('time')
-        dset = grp.create_dataset('wl')
+    def create_wldset(self, name, df):
+        if name in self.wldsets:
+            del self['wldsets/%s' % name]
 
-    def delete_wldataser(self, label):
-        pass
+        grp = self['wldsets'].create_group(name)
+
+        print('created new dataset sucessfully')
+
+        grp.create_dataset('Time', data=df['Time'])
+        grp.create_dataset('WL', data=df['WL'])
+        grp.create_dataset('BP', data=df['BP'])
+        grp.create_dataset('ET', data=df['ET'])
+
+        grp.attrs['well'] = df['well']
+        grp.attrs['latitude'] = df['latitude']
+        grp.attrs['longitude'] = df['longitude']
+        grp.attrs['altitude'] = df['altitude']
+        grp.attrs['municipality'] = df['municipality']
+
+        grp.create_group('brf')
+        grp.create_group('hydrographs')
+
+    def delete_wldataset(self, name):
+        del self['wldsets/%s' % name]
 
 
 # =============================================================================
@@ -133,14 +187,11 @@ class ProjetManager(QtGui.QWidget):
 
     currentProjetChanged = QtCore.Signal(bool)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, projet=None):
         super(ProjetManager, self).__init__(parent)
 
-        self.__projet = None
-        self.filename = None
-        self.dirname = None
-
-        self.data_manager = DataManager()
+        self._projet = projet
+        self.data_manager = DataManager(parent, projet)
 
         self.__initGUI__()
 
@@ -176,7 +227,7 @@ class ProjetManager(QtGui.QWidget):
     # =========================================================================
 
     def currentProjet(self):
-        return self.__projet
+        return self._projet
 
     # =========================================================================
 
@@ -197,8 +248,6 @@ class ProjetManager(QtGui.QWidget):
             self.load_project(filename)
 
     def load_project(self, filename):
-        self.filename = filename
-        self.dirname = os.path.dirname(filename)
 
         print('\n-------------------------------')
         print('LOADING PROJECT...')
@@ -206,9 +255,9 @@ class ProjetManager(QtGui.QWidget):
         print('Loading "%s"' % os.path.relpath(filename))
 
         try:
-            if self.__projet:
-                self.__projet.close()
-            self.__projet = Projet(filename)
+            if self._projet:
+                self._projet.close()
+            self._projet = Projet(filename)
         except OSError:
             print('Old file format. Converting to the new format.')
 
@@ -229,17 +278,17 @@ class ProjetManager(QtGui.QWidget):
 
             # ---- creating new project file ----
 
-            if self.__projet:
-                self.__projet.close()
+            if self._projet:
+                self._projet.close()
 
-            self.__projet = Projet(filename)
-            self.__projet.name = name
-            self.__projet.author = author
-            self.__projet.created = created
-            self.__projet.modified = modified
-            self.__projet.version = version
-            self.__projet.lat = lat
-            self.__projet.lon = lon
+            self._projet = Projet(filename)
+            self._projet.name = name
+            self._projet.author = author
+            self._projet.created = created
+            self._projet.modified = modified
+            self._projet.version = version
+            self._projet.lat = lat
+            self._projet.lon = lon
 
             print('Projet converted to the new format successfully.')
         except:
@@ -249,7 +298,7 @@ class ProjetManager(QtGui.QWidget):
 
         # ---- Update UI ----
 
-        self.project_display.setText(self.__projet.name)
+        self.project_display.setText(self._projet.name)
         self.project_display.adjustSize()
 
         print('')
@@ -257,59 +306,121 @@ class ProjetManager(QtGui.QWidget):
         print('')
 
         self.currentProjetChanged.emit(True)
+        self.data_manager.set_projet(self._projet)
 
         return True
 
 
+# =============================================================================
+# =============================================================================
+
+
 class DataManager(QtGui.QWidget):
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, projet=None):
         super(DataManager, self).__init__(parent)
+        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowIcon(IconDB().master)
 
-        self.workdir = os.getcwd()
-        # self.UpdateUI = True
-        # self.fwaterlvl = []
-        # self.waterlvl_data = WaterlvlData()
-        # self.meteo_data = meteo.MeteoObj()
+        self.new_waterlvl_win = NewWaterLvl(parent, projet)
+        self.new_waterlvl_win.newDatasetCreated.connect(self.update_wldsets)
 
-        self.new_waterlvl = NewWaterLvl()
-
-        # memory path variable :
-
-        self.meteo_dir = os.path.join(self.workdir, 'Meteo', 'Output')
-        self.waterlvl_dir = os.path.join(self.workdir, 'Water Levels')
-        self.save_fig_dir = self.workdir
+        self.set_projet(projet)
+        self.workdir = os.path.dirname(os.getcwd())
 
         self.__initUI__()
 
+    # =========================================================================
+
+    @property
+    def projet(self):
+        return self._projet
+
+    def set_projet(self, projet):
+        if projet is None:
+            self._projet = None
+        else:
+            self._projet = projet
+            self.workdir = os.path.dirname(projet.filename)
+            self.update_wldsets()
+
+        self.new_waterlvl_win.set_projet(projet)
+
+    # =========================================================================
+
+    def import_dataset(self):
+        if self.projet is None:
+            msg = ('Please first select a valid WHAT project or '
+                   'create a new one.')
+            btn = QtGui.QMessageBox.Ok
+            QtGui.QMessageBox.warning(self, 'Create dataset', msg, btn)
+            return
+        else:
+            self.new_waterlvl_win.show()
+
+    def update_wldsets(self, name=None):
+        self.wl_datasets.blockSignals(True)
+        self.wl_datasets.clear()
+        self.wl_datasets.addItems(self.projet.wldsets)
+        if name:
+            self.wl_datasets.setCurrentIndex(self.wl_datasets.findText(name))
+        self.wl_datasets.blockSignals(False)
+
+        self.dataset_changed()
+
+    def dataset_changed(self):
+        if self.wl_datasets.count() > 0:
+            name = self.wl_datasets.currentText()
+            dset = self.projet['wldsets/%s' % self.wl_datasets.currentText()]
+
+            name = dset.attrs['well']
+            lat = dset.attrs['latitude']
+            lon = dset.attrs['longitude']
+            alt = dset.attrs['altitude']
+            mun = dset.attrs['municipality']
+
+            html = dtm.waterlvl.generate_HTML_table(name, lat, lon, alt, mun)
+            self.well_info_widget.clear()
+            self.well_info_widget.setText(html)
+        else:
+            self.well_info_widget.clear()
+
+    def del_current_wldset(self):
+        if self.wl_datasets.count() > 0:
+            name = self.wl_datasets.currentText()
+            msg = ('Do you want to delete dataset <i>%s</i>? ' +
+                   'All data will be lost.') % name
+            reply = QtGui.QMessageBox.question(
+                self, 'Delete current dataset', msg,
+                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+
+            if reply == QtGui.QMessageBox.No:
+                return
+
+            self.projet.delete_wldataset(name)
+            self.update_wldsets()
+
+    # =========================================================================
+
     def __initUI__(self):
-
-        # Main Window :
-
-        self.setWindowIcon(IconDB().master)
-
-        # -------------------------------------------------- MESSAGE BOXES ----
-
-        self.msgBox = QtGui.QMessageBox(self)
-        self.msgBox.setIcon(QtGui.QMessageBox.Question)
-        self.msgBox.setStandardButtons(QtGui.QMessageBox.Yes |
-                                       QtGui.QMessageBox.No)
-        self.msgBox.setDefaultButton(QtGui.QMessageBox.Cancel)
-        self.msgBox.setWindowTitle('Save Graph Layout')
-
-        self.msgError = MyQWidget.MyQErrorMessageBox()
 
         # ----------------------------------------------- data files panel ----
 
-        # ---- Widgets ----
-
         self.wl_datasets = QtGui.QComboBox()
+        self.wl_datasets.currentIndexChanged.connect(self.dataset_changed)
 
         btn_load_wl = QtGui.QToolButton()
         btn_load_wl.setAutoRaise(True)
         btn_load_wl.setToolTip('Import a new WL dataset...')
-        btn_load_wl.setIcon(db.Icons().openFile)
-        btn_load_wl.setIconSize(db.styleUI().iconSize2)
-        btn_load_wl.clicked.connect(self.new_waterlvl.show)
+        btn_load_wl.setIcon(IconDB().importFile)
+        btn_load_wl.setIconSize(IconDB().iconSize2)
+        btn_load_wl.clicked.connect(self.import_dataset)
+
+        btn_del_wldset = QtGui.QToolButton()
+        btn_del_wldset.setAutoRaise(True)
+        btn_del_wldset.setToolTip('Delete current dataset.')
+        btn_del_wldset.setIcon(IconDB().clear)
+        btn_del_wldset.setIconSize(IconDB().iconSize2)
+        btn_del_wldset.clicked.connect(self.del_current_wldset)
 
         self.well_info_widget = QtGui.QTextEdit()
         self.well_info_widget.setReadOnly(True)
@@ -320,8 +431,8 @@ class DataManager(QtGui.QWidget):
         btn_load_meteo = QtGui.QToolButton()
         btn_load_meteo.setAutoRaise(True)
         btn_load_meteo.setToolTip('Import a new weather dataset...')
-        btn_load_meteo.setIcon(db.Icons().openFile)
-        btn_load_meteo.setIconSize(db.styleUI().iconSize2)
+        btn_load_meteo.setIcon(IconDB().importFile)
+        btn_load_meteo.setIconSize(IconDB().iconSize2)
         # btn_weather_dir.clicked.connect(self.select_meteo_file)
 
         self.meteo_info_widget = QtGui.QTextEdit()
@@ -334,11 +445,12 @@ class DataManager(QtGui.QWidget):
 
         layout.addWidget(self.wl_datasets, 0, 0)
         layout.addWidget(btn_load_wl, 0, 1)
-        layout.addWidget(self.well_info_widget, 1, 0, 1, 2)
+        layout.addWidget(btn_del_wldset, 0, 2)
+        layout.addWidget(self.well_info_widget, 1, 0, 1, 3)
 
-        layout.addWidget(self.meteo_datasets, 2, 0)
-        layout.addWidget(btn_load_meteo, 2, 1)
-        layout.addWidget(self.meteo_info_widget, 3, 0, 1, 2)
+        layout.addWidget(self.meteo_datasets, 2, 0, 1, 2)
+        layout.addWidget(btn_load_meteo, 2, 2)
+        layout.addWidget(self.meteo_info_widget, 3, 0, 1, 3)
 
         layout.setSpacing(5)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -353,28 +465,57 @@ class DataManager(QtGui.QWidget):
 class NewWaterLvl(myqt.DialogWindow):
 
     ConsoleSignal = QtCore.Signal(str)
+    newDatasetCreated = QtCore.Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, projet=None):
         super(NewWaterLvl, self).__init__(parent, resizable=False)
         self.setModal(True)
         self.setWindowTitle('New water level dataset')
 
+        self.set_projet(projet)
         self.workdir = os.path.dirname(os.getcwd())
-        self._rnames = ['test']
+        self.__df = None
 
         self.__initUI__()
 
     # =========================================================================
 
-    def reservedNames(self):
-        return self._rnames
+    @property
+    def projet(self):
+        return self._projet
 
-    def setReservedNames(self, x):
-        self._rnames = x
+    def set_projet(self, projet):
+        if projet is None:
+            self._projet = None
+        else:
+            self._projet = projet
+            self.workdir = os.path.dirname(projet.filename)
+
+    # -------------------------------------------------------------------------
 
     @property
     def name(self):
         return self._name.text()
+
+    @property
+    def well(self):
+        return self._well.text()
+
+    @property
+    def municipality(self):
+        return self._mun.text()
+
+    @property
+    def lat(self):
+        return self._lat.value()
+
+    @property
+    def lon(self):
+        return self._lon.value()
+
+    @property
+    def alt(self):
+        return self._alt.value()
 
     # =========================================================================
 
@@ -389,8 +530,8 @@ class NewWaterLvl(myqt.DialogWindow):
         btn_browse = QtGui.QToolButton()
         btn_browse.setAutoRaise(True)
         btn_browse.setToolTip('Open file...')
-        btn_browse.setIcon(db.Icons().openFile)
-        btn_browse.setIconSize(db.styleUI().iconSize2)
+        btn_browse.setIcon(IconDB().openFile)
+        btn_browse.setIconSize(IconDB().iconSize2)
         btn_browse.clicked.connect(self.select_dataset)
 
         msg = ('<font color=red size=2><i>Error : Water level data file is '
@@ -421,28 +562,13 @@ class NewWaterLvl(myqt.DialogWindow):
         self._well = QtGui.QLineEdit()
         self._well.setAlignment(QtCore.Qt.AlignCenter)
 
-        self._lat = QtGui.QDoubleSpinBox()
-        self._lat.setAlignment(QtCore.Qt.AlignCenter)
-        self._lat.setSingleStep(0.1)
-        self._lat.setDecimals(3)
-        self._lat.setValue(0)
+        self._lat = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
         self._lat.setRange(-180, 180)
-        self._lat.setSuffix(' °')
 
-        self._lon = QtGui.QDoubleSpinBox()
-        self._lon.setAlignment(QtCore.Qt.AlignCenter)
-        self._lon.setSingleStep(0.1)
-        self._lon.setDecimals(3)
-        self._lon.setValue(0)
+        self._lon = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
         self._lon.setRange(-180, 180)
-        self._lon.setSuffix(' °')
 
-        self._alt = QtGui.QDoubleSpinBox()
-        self._alt.setAlignment(QtCore.Qt.AlignCenter)
-        self._alt.setSingleStep(0.1)
-        self._alt.setDecimals(3)
-        self._alt.setValue(0)
-        self._alt.setSuffix(' m')
+        self._alt = myqt.QDoubleSpinBox(0, 3, 0.1, ' m')
 
         self._mun = QtGui.QLineEdit()
         self._mun.setAlignment(QtCore.Qt.AlignCenter)
@@ -546,23 +672,23 @@ class NewWaterLvl(myqt.DialogWindow):
         for i in range(5):
             QtCore.QCoreApplication.processEvents()
 
-        df = dtm.waterlvl.load_excel_datafile(filename)
+        self.__df = dtm.waterlvl.load_excel_datafile(filename)
 
         # Update GUI :
 
         QtGui.QApplication.restoreOverrideCursor()
 
         self.directory.setText(filename)
-        if df:
+        if self.__df:
             self.grp_well.setEnabled(True)
             self._msg.setVisible(False)
             self.btn_ok.setEnabled(True)
 
-            self._well.setText(df['well'])
-            self._mun.setText(df['municipality'])
-            self._lat.setValue(df['latitude'])
-            self._lon.setValue(df['longitude'])
-            self._alt.setValue(df['altitude'])
+            self._well.setText(self.__df['well'])
+            self._mun.setText(self.__df['municipality'])
+            self._lat.setValue(self.__df['latitude'])
+            self._lon.setValue(self.__df['longitude'])
+            self._alt.setValue(self.__df['altitude'])
         else:
             self._msg.setVisible(True)
             self.btn_ok.setEnabled(False)
@@ -581,7 +707,7 @@ class NewWaterLvl(myqt.DialogWindow):
             QtGui.QMessageBox.warning(self, 'Save dataset', msg, btn)
             return
 
-        elif self.name in self.reservedNames():
+        elif self.name in self.projet.wldsets:
             msg = ('The dataset <i>%s</i> already exists.'
                    ' Do you want tho replace the existing dataset?'
                    ' All data will be lost.') % self.name
@@ -590,7 +716,34 @@ class NewWaterLvl(myqt.DialogWindow):
             if reply == QtGui.QMessageBox.No:
                 return
 
+        # Update dataset attributes from UI :
+
+        self.__df['well'] = self.well
+        self.__df['municipality'] = self.municipality
+        self.__df['latitude'] = self.lat
+        self.__df['longitude'] = self.lon
+        self.__df['altitude'] = self.alt
+
         print('Saving dataset to project db.')
+        self.projet.create_wldset(self.name, self.__df)
+        self.newDatasetCreated.emit(self.name)
+
+        self.close()
+
+    def close(self):
+        super(NewWaterLvl, self).close()
+        self.clear()
+
+    def clear(self):
+        self.directory.clear()
+        self._name.clear()
+        self._well.clear()
+        self._mun.clear()
+        self._lat.setValue(0)
+        self._lon.setValue(0)
+        self._alt.setValue(0)
+
+        self.__df = None
 
 # =============================================================================
 # =============================================================================
@@ -610,7 +763,6 @@ class NewProject(QtGui.QDialog):
 
         self.setWindowTitle('New Project')
         self.setWindowIcon(IconDB().master)
-        self.setFont(db.styleUI().font1)
 
         self.__initUI__()
 
@@ -714,7 +866,7 @@ class NewProject(QtGui.QDialog):
         btn_browse = QtGui.QToolButton()
         btn_browse.setAutoRaise(True)
         btn_browse.setIcon(IconDB().openFolder)
-        btn_browse.setIconSize(db.styleUI().iconSize2)
+        btn_browse.setIconSize(IconDB().iconSize2)
         btn_browse.setToolTip('Browse...')
         btn_browse.setFocusPolicy(QtCore.Qt.NoFocus)
         btn_browse.clicked.connect(self.browse_saveIn_folder)
@@ -881,7 +1033,10 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
+    p = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
+
     pm = ProjetManager()
+    pm.load_project(p)
     pm.show()
     pm.data_manager.show()
 

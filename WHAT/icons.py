@@ -26,14 +26,22 @@ import os
 # THIRD PARTY IMPORTS :
 
 from PySide.QtGui import QIcon
+from PySide.QtCore import QSize
 
 dirname = os.path.dirname(os.path.realpath(__file__))
 
 
 class IconDB():
     def __init__(self):
+        self.iconSize = QSize(32, 32)
+        self.iconSize2 = QSize(20, 20)
+
         self.master = QIcon(dirname + '/Icons/WHAT')
         self.calc_brf = QIcon(dirname + '/Icons/start')
         self.setup = QIcon(dirname + '/Icons/page_setup')
         self.new_project = QIcon(dirname + '/Icons/new_project.png')
         self.openFolder = QIcon(dirname + '/Icons/folder')
+        self.openFile = QIcon(dirname + '/Icons/open_file')
+        self.clear = QIcon(dirname + '/Icons/clear-search')
+        self.importFile = QIcon(dirname + '/Icons/open_project')
+

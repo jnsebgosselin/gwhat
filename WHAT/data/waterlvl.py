@@ -38,10 +38,10 @@ def load_excel_datafile(fname):
           'longitude': 0,
           'altitude': 0,
           'municipality': '',
-          'time': np.array([]),
-          'wl': np.array([]),
-          'bp': np.array([]),
-          'et': np.array([])}
+          'Time': np.array([]),
+          'WL': np.array([]),
+          'BP': np.array([]),
+          'ET': np.array([])}
 
     # ---------------------------------------------------- Read the header ----
 
@@ -49,15 +49,27 @@ def load_excel_datafile(fname):
 
     for row, item in enumerate(header):
         if item == 'Well Name':
-            df['well'] = sheet.cell(row, 1).value
+            df['well'] = str(sheet.cell(row, 1).value)
         elif item == 'Latitude':
-            df['latitude'] = sheet.cell(row, 1).value
+            try:
+                df['latitude'] = float(sheet.cell(row, 1).value)
+            except:
+                print('Wrong format for entry "Latitude".')
+                df['latitude'] = 0
         elif item == 'Longitude':
-            df['longitude'] = sheet.cell(row, 1).value
+            try:
+                df['longitude'] = float(sheet.cell(row, 1).value)
+            except:
+                print('Wrong format for entry "Longitude".')
+                df['longitude'] = 0
         elif item == 'Altitude':
-            df['altitude'] = sheet.cell(row, 1).value
+            try:
+                df['altitude'] = float(sheet.cell(row, 1).value)
+            except:
+                print('Wrong format for entry "Altitude".')
+                df['altitude'] = 0
         elif item == 'Municipality':
-            df['municipality'] = sheet.cell(row, 1).value
+            df['municipality'] = str(sheet.cell(row, 1).value)
         elif item == 'Date':
             break
 
@@ -70,11 +82,11 @@ def load_excel_datafile(fname):
     try:
         time = sheet.col_values(0, start_rowx=row, end_rowx=None)
         time = np.array(time).astype(float)
-        df['time'] = time
+        df['Time'] = time
 
         wl = sheet.col_values(1, start_rowx=row, end_rowx=None)
         wl = np.array(wl).astype(float)
-        df['wl'] = wl
+        df['WL'] = wl
     except:
         print('WARNING: Waterlvl data file is not formatted correctly')
         book.release_resources()
@@ -90,7 +102,7 @@ def load_excel_datafile(fname):
         if sheet.cell(row-1, 2).value == 'BP(m)':
             bp = sheet.col_values(2, start_rowx=row, end_rowx=None)
             bp = np.array(bp).astype(float)
-            df['bp'] = bp
+            df['BP'] = bp
         else:
             print('No barometric data.')
     except:
@@ -102,13 +114,16 @@ def load_excel_datafile(fname):
         if sheet.cell(row-1, 3).value == 'ET':
             et = sheet.col_values(3, start_rowx=row, end_rowx=None)
             et = np.array(et).astype(float)
-            df['et'] = et
+            df['ET'] = et
         else:
             print('No Earth tide data.')
     except:
         print('No Earth tide data.')
 
     return df
+
+
+# =============================================================================
 
 
 def make_waterlvl_continuous(t, wl):
@@ -124,6 +139,10 @@ def make_waterlvl_continuous(t, wl):
             t = np.insert(t, i+1, t[i]+1, 0)
         i += 1
 
+    print('Making water level continuous done.')
+
+    return t, wl
+
         # If dates 1 and 2 are not consecutive, add a nan row to DATA
         # after date 1.
 #            dt1 = t[i]-t[i-1]
@@ -133,9 +152,7 @@ def make_waterlvl_continuous(t, wl):
 #            if dt1 > dt2:
 #                # sampling frequency was increased.
 #            if dt1 > dt2:
-    print('Making water level continuous done.')
 
-    return t, wl
 
 #def load_waterlvl_measures(self, fname, name_well):
 #
@@ -172,30 +189,19 @@ def make_waterlvl_continuous(t, wl):
 #    return TIMEmes, WLmes
 
 
-# =============================================================================
-
-
-
-
-
 # =========================================================================
 
 
 def generate_HTML_table(name, lat, lon, alt, mun):
 
     FIELDS = [['Well Name', name],
-              ['Latitude', lat],
-              ['Longitude', lon],
-              ['Altitude', alt],
+              ['Latitude', '%0.3f°' % lat],
+              ['Longitude', '%0.3f°' % lon],
+              ['Altitude', '%0.1f m' % alt],
               ['Municipality', mun]]
 
     table = '<table border="0" cellpadding="2" cellspacing="0" align="left">'
     for row in FIELDS:
-        try:
-            val = '%0.2f' % float(row[1])
-        except:
-            val = row[1]
-
         table += '''
                  <tr>
                    <td width=10></td>
@@ -203,7 +209,7 @@ def generate_HTML_table(name, lat, lon, alt, mun):
                    <td align="left" width=20>:</td>
                    <td align="left">%s</td>
                    </tr>
-                 ''' % (row[0], val)
+                 ''' % (row[0], row[1])
     table += '</table>'
 
     return table
