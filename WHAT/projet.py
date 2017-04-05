@@ -237,6 +237,7 @@ class ProjetManager(QtGui.QWidget):
         else:
             new_project_window = NewProject(self)
         new_project_window.show()
+        new_project_window.NewProjectSignal.connect(self.load_project)
 
     def select_project(self):
         directory = os.path.abspath(os.path.join('..', 'Projects'))
@@ -960,7 +961,7 @@ class NewProject(QtGui.QDialog):
             # ---- project.what ----
 
             fname = os.path.join(dirname, '%s.what' % name)
-            projet = Projet(fname, 'w')
+            projet = Projet(fname)
 
             projet.name = self.name.text()
             projet.author = self.author.text()
