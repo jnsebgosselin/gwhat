@@ -723,19 +723,12 @@ class HydroprintGUI(QtGui.QWidget):
         isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
 
         if isLayoutExist is True:
-            self.ConsoleSignal.emit(
-            '''<font color=black>A graph layout exists for well %s.
-               </font>''' % name_well)
-
-            self.msgBox.setText('<b>A graph layout already exists ' +
-                                    'for well ' + name_well + '.<br><br> Do ' +
-                                    'you want to load it?</b>')
-            override = self.msgBox.exec_()
-
-            if override == self.msgBox.Yes:
-                self.load_graph_layout()
-                QtGui.QApplication.restoreOverrideCursor()
-                return
+            msg = 'Loading existing graph layout for well %s.' % name_well
+            print(msg)
+            self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
+            self.load_graph_layout()
+            QtGui.QApplication.restoreOverrideCursor()
+            return
 
         # Fit Water Level in Layout :
 
