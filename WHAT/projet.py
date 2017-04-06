@@ -191,17 +191,16 @@ class Projet(h5py.File):
 
 class ProjetManager(QtGui.QWidget):
 
-    currentProjetChanged = QtCore.Signal(bool)
+    currentProjetChanged = QtCore.Signal(Projet)
 
     def __init__(self, parent=None, projet=None):
         super(ProjetManager, self).__init__(parent)
 
-        self.data_manager = DataManager(parent)
+        self.__initGUI__()
+
         self.__projet = None
         if projet:
             self.load_project(projet)
-
-        self.__initGUI__()
 
     def __initGUI__(self):
 
@@ -265,8 +264,7 @@ class ProjetManager(QtGui.QWidget):
             self.project_display.setText(projet.name)
             self.project_display.adjustSize()
 
-            self.data_manager.set_projet(projet)
-            self.currentProjetChanged.emit(True)
+            self.currentProjetChanged.emit(self.projet)
 
             print('Project "%s" loaded succesfully\n' % projet.name)
 
@@ -329,7 +327,7 @@ class ProjetManager(QtGui.QWidget):
 
 
 class DataManager(QtGui.QWidget):
-    def __init__(self, parent=None, projet=None):
+    def __init__(self, parent=None, projet=None, pm=None):
         super(DataManager, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Window)
         self.setWindowIcon(IconDB().master)
@@ -341,6 +339,10 @@ class DataManager(QtGui.QWidget):
         self.workdir = os.path.dirname(os.getcwd())
 
         self.__initUI__()
+
+        if pm:
+            pm.currentProjetChanged.connect(self.set_projet)
+            self.set_projet(pm.projet)
 
     # =========================================================================
 
@@ -355,7 +357,6 @@ class DataManager(QtGui.QWidget):
             self._projet = projet
             self.workdir = os.path.dirname(projet.filename)
             self.update_wldsets()
-
         self.new_waterlvl_win.set_projet(projet)
 
     # =========================================================================
@@ -1046,11 +1047,12 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-#    p = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
+    p = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
 
-    pm = ProjetManager()
-#    pm.load_project(p)
+    pm = ProjetManager(projet=p)
     pm.show()
-    pm.data_manager.show()
+
+    dm = DataManager(pm=pm)
+    dm.show()
 
     app.exec_()
