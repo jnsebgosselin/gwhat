@@ -213,11 +213,3 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     table += '</table>'
 
     return table
-
-
-if __name__ == '__main__':
-    fname = '../Projects/Project4Testing/Water Levels/F1.xlsx'
-
-    waterlvldata = WaterlvlData()
-    waterlvldata.load(fname)
-    print('Well Name =', waterlvldata.name_well)

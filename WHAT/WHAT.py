@@ -283,7 +283,7 @@ class WHAT(QtGui.QMainWindow):
 
     def new_project_loaded(self):
 
-        filename = self.pmanager.currentProjet().filename
+        filename = self.pmanager.projet.filename
         dirname = os.path.dirname(filename)
 
         # ---- Update WHAT.pref file ----
@@ -301,8 +301,8 @@ class WHAT(QtGui.QMainWindow):
 
         # ---- dwnld_weather_data ----
 
-        lat = self.pmanager.currentProjet().lat
-        lon = self.pmanager.currentProjet().lon
+        lat = self.pmanager.projet.lat
+        lon = self.pmanager.projet.lon
 
         self.tab_dwnld_data.set_workdir(dirname)
         self.tab_dwnld_data.search4stations.lat_spinBox.setValue(lat)

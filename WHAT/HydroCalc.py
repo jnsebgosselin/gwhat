@@ -1482,11 +1482,13 @@ class ConfigBRF(myqt.DialogWindow):
 
         self._bplag = {}
         self._bplag['label'] = QtGui.QLabel('Number of BP Lags :')
-        self._bplag['widget'] = myqt.MyQDSpinBox(300, 0, lmin=1)
+        self._bplag['widget'] = myqt.QDoubleSpinBox(300, 0)
+        self._bplag['widget'].setMinimum(1)
 
         self._etlag = {}
         self._etlag['label'] = QtGui.QLabel('Number of ET Lags :')
-        self._etlag['widget'] = myqt.MyQDSpinBox(300, 0, lmin=-1)
+        self._etlag['widget'] = myqt.QDoubleSpinBox(300, 0)
+        self._etlag['widget'].setMinimum(-1)
 
         self._detrend = QtGui.QCheckBox('Detrend')
         self._detrend.setCheckState(QtCore.Qt.Checked)
@@ -1502,7 +1504,8 @@ class ConfigBRF(myqt.DialogWindow):
 
         self._markersize = {}
         self._markersize['label'] = QtGui.QLabel('Marker size :')
-        self._markersize['widget'] = myqt.MyQDSpinBox(5, 0, lmin=0, lmax=25)
+        self._markersize['widget'] = myqt.QDoubleSpinBox(5, 0)
+        self._markersize['widget'].setRange(0, 25)
 
         # ---- axis limits ----
 
@@ -1513,9 +1516,9 @@ class ConfigBRF(myqt.DialogWindow):
         axlayout.addWidget(QtGui.QLabel('   Auto :'), 3, 0)
 
         self._ylim = {}
-        self._ylim['min'] = myqt.MyQDSpinBox(0, 1, step=0.2)
+        self._ylim['min'] = myqt.QDoubleSpinBox(0, 1, 0.2)
         self._ylim['min'].setEnabled(False)
-        self._ylim['max'] = myqt.MyQDSpinBox(1, 1, step=0.2)
+        self._ylim['max'] = myqt.QDoubleSpinBox(1, 1, 0.2)
         self._ylim['max'].setEnabled(False)
         self._ylim['auto'] = QtGui.QCheckBox('')
         self._ylim['auto'].setCheckState(QtCore.Qt.Checked)

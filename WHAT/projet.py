@@ -37,8 +37,8 @@ import h5py
 # Local imports :
 
 import database as db
-from icons import IconDB
 from database import styleUI
+from icons import IconDB
 import widgets as myqt
 import custom_widgets as MyQWidget
 
