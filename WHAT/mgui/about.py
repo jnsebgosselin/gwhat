@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2015 Jean-Sebastien Gosselin
-
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox)..
 
@@ -20,46 +19,54 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-#---- STANDARD LIBRARY IMPORTS ----
+# Standard library imports :
 
 import sys
 import platform
+import os
 
-#---- THIRD PARTY IMPORTS ----
+# Third party imports :
 
 from PySide import QtGui, QtCore
 
-#---- PERSONAL IMPORTS ----
+# Local imports :
 
-import database as db
+try:
+    import mgui
+    from mgui.icons import IconDB
+except ImportError:  # to run this module standalone
+    print('Running module as a standalone script...')
+    import sys
+    import platform
+    from os.path import dirname, realpath
+    root = dirname(dirname(realpath(__file__)))
+    sys.path.append(root)
 
-#===============================================================================
+    import mgui
+    from mgui.icons import IconDB
+
+
+# ==============================================================================
+
 
 class AboutWhat(QtGui.QWidget):
 
-#===============================================================================
-
-    def __init__(self, parent=None): #=====
+    def __init__(self, parent=None):
         super(AboutWhat, self).__init__(parent)
 
         self.parent = parent
         self.initUI_About()
 
-    def initUI_About(self): #===================================================
+    def initUI_About(self):
 
-        #--------------------------------------------------------- DATABASE ----
-
-        iconDB = db.Icons()
-        styleDB = db.styleUI()
-
-        #------------------------------------------------------ MAIN WINDOW ----
+        # ---------------------------------------------------- MAIN WINDOW ----
 
         self.setWindowTitle('Search for Weather Stations')
-        self.setWindowIcon(iconDB.WHAT)
+        self.setWindowIcon(IconDB().master)
 #        self.setMinimumHeight(700)
 #        self.setFont(styleDB.font1)
 
-        #----------------------------------------------------- AboutTextBox ----
+        # --------------------------------------------------- AboutTextBox ----
 
         self.AboutTextBox = QtGui.QTextBrowser()
         self.AboutTextBox.installEventFilter(self)
@@ -74,8 +81,8 @@ class AboutWhat(QtGui.QWidget):
         # qtextedit-background-color-change-also-the-color-of-scrollbar
         self.AboutTextBox.setStyleSheet('QTextEdit {background-color:"white"}')
 
-        #http://stackoverflow.com/questions/26441999/
-        #how-do-i-remove-the-space-between-qplaintextedit-and-its-contents
+        # http://stackoverflow.com/questions/26441999/
+        # how-do-i-remove-the-space-between-qplaintextedit-and-its-contents
         self.AboutTextBox.document().setDocumentMargin(0)
 
         # self.AboutTextBox.setAlignment(QtCore.Qt.AlignCenter)
@@ -83,7 +90,7 @@ class AboutWhat(QtGui.QWidget):
 
         self.set_html_in_AboutTextBox()
 
-        #------------------------------------------------------- Main Grid ----
+        # ------------------------------------------------------ Main Grid ----
 
         grid = QtGui.QGridLayout()
         grid.setSpacing(10)
@@ -97,21 +104,25 @@ class AboutWhat(QtGui.QWidget):
 
         self.setLayout(grid)
 
-    def set_html_in_AboutTextBox(self): #=======================================
+    # =========================================================================
 
-        #---- Image Logo ----
+    def set_html_in_AboutTextBox(self):
 
-        width = 750 #self.AboutTextBox.size().width()
-        version = db.software_version
-        date = db.last_modification
+        # ---- Image Logo ----
 
-        filename = 'Icons/WHAT_banner_750px.png'
+        width = 750  # self.AboutTextBox.size().width()
+        version = mgui.__version__
+        date = mgui.__date__
+
+        dirname = os.path.dirname(os.path.realpath(__file__))
+        filename = os.path.join(dirname, 'Icons', 'WHAT_banner_750px.png')
 
         # http://doc.qt.io/qt-4.8/richtext-html-subset.html
 
-
-
-        fontfamily =  db.styleUI().fontfamily
+        if platform.system() == 'Windows':
+            fontfamily = "Segoe UI"  # "Cambria" #"Calibri" #"Segoe UI""
+        elif platform.system() == 'Linux':
+            fontfamily = "Ubuntu"
 
         about_text = '''
                      <style>
@@ -133,8 +144,8 @@ class AboutWhat(QtGui.QWidget):
                       </p>
                       ''' % (filename, width)
 
-#        #---- Header ----
-#
+#        # ---- Header ----
+
         about_text += '''
                       <p1 align=center>
                         <br><br>
@@ -155,7 +166,7 @@ class AboutWhat(QtGui.QWidget):
                       </p2>
                       ''' % (version[5:])
 
-        #---- License ----
+        # ---- License ----
 
         about_text += '''
                       <p align = "justify">

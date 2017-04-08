@@ -818,9 +818,9 @@ def make_timeserie_continuous(DATA):
            meteorological data of a given weather station arranged in
            chronological order.
     """
-#==============================================================================
+# =============================================================================
 
-    nVAR = len(DATA[0,:]) - 3 # nVAR = number of meteorological variables
+    nVAR = len(DATA[0, :]) - 3  # nVAR = number of meteorological variables
     nan2insert = np.zeros(nVAR) * np.nan
 
     i = 0
@@ -828,9 +828,7 @@ def make_timeserie_continuous(DATA):
                                     DATA[i, 1].astype('int'),
                                     DATA[i, 2].astype('int')), 0)
 
-
     while i < len(DATA[:, 0]) - 1:
-
         date2 = xldate_from_date_tuple((DATA[i+1, 0].astype('int'),
                                         DATA[i+1, 1].astype('int'),
                                         DATA[i+1, 2].astype('int')), 0)
@@ -848,7 +846,7 @@ def make_timeserie_continuous(DATA):
     return DATA
 
 
-#==============================================================================
+# =============================================================================
 def calculate_normals(DATA, datatypes):
     """
     Calculates monthly normals from daily average air temperature and
@@ -876,11 +874,11 @@ def calculate_normals(DATA, datatypes):
                          1 -> need to be summed over a month
                               (e.g. Precipitation, ETP)
     """
-#==============================================================================
+# =============================================================================
 
     print('---- calculating normals ----')
 
-    #---- assign new variables from input ----
+    # ---- assign new variables from input ----
 
     nvar = len(DATA[0, 3:]) # number of weather variables
 
@@ -893,7 +891,7 @@ def calculate_normals(DATA, datatypes):
     MONTH = DATA[:, 1].astype(int)
     X = DATA[:, 3:]
 
-    #--------------------------------------- Do each month, for every year ----
+    # -------------------------------------- Do each month, for every year ----
 
     # Calculate the average value for each months of each year
 
@@ -935,7 +933,7 @@ def calculate_normals(DATA, datatypes):
             MTHSER.append([i+YEAR[0], j+1])
             MTHSER[-1].extend(XMONTH[i, j, :-1])
 
-    #----------------------------------------------- compute monthly normals --
+    # ---------------------------------------------- compute monthly normals --
 
     # Calculate the normals for each month. This is done by calculating the
     # mean of the monthly value computed in the above section.
@@ -1006,12 +1004,12 @@ def calculate_daylength(DATE, LAT):
     """
     Calculate the photoperiod for the given latitude at the given time.
 
-    #----- INPUT -----
+    # INPUT :
 
     {1D array} TIME = Numeric time in days.
     {float}     LAT = latitude in decimal degrees.
 
-    #----- OUTPUT -----
+    # OUTPUT :
 
     {1D array} DAYLEN = photoperiod in hr.
     """

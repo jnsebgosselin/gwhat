@@ -50,9 +50,11 @@ import custom_widgets as MyQWidget
 import HydroPrint
 import dwnld_weather_data
 from gapfill_weather_gui import GapFillWeatherGUI
-from about_WHAT import AboutWhat
-from projet import ProjetManager
-from icons import IconDB
+
+from mgui.about import AboutWhat
+from mgui.projet import ProjetManager
+from mgui.icons import IconDB
+
 
 freeze_support()
 
@@ -84,11 +86,6 @@ class WHAT(QtGui.QMainWindow):
 
         self.projectfile = self.whatPref.projectfile
         self.projectdir = path.dirname(self.projectfile)
-
-        style = 'Regular'
-        size = self.whatPref.fontsize_general
-
-        family = db.styleUI().fontfamily
 
         # -------------------------------------------------------- DATABASES --
 
@@ -125,6 +122,8 @@ class WHAT(QtGui.QMainWindow):
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
 
+        style = 'Regular'
+        family = db.styleUI().fontfamily
         size = self.whatPref.fontsize_console
         fontSS = ('font-style: %s;'
                   'font-size: %s;'

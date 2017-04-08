@@ -42,7 +42,7 @@ except ImportError:  # to run this module standalone
     root = dirname(dirname(realpath(__file__)))
     sys.path.append(root)
 
-    from brf_mod.kgs_plot import plot_BRF
+    from mbrf.kgs_plot import plot_BRF
 
 
 def produce_BRFInputtxt(well, time, wl, bp, et):

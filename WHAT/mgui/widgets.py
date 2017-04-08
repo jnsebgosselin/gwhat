@@ -21,10 +21,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
+# Standard library imports :
+
 from PySide import QtGui, QtCore
 from copy import copy
-from icons import IconDB
 import os
+
+try:
+    from mgui.icons import IconDB
+except ImportError:  # to run this module standalone
+    print('Running module as a standalone script...')
+    import sys
+    import platform
+    from os.path import dirname, realpath
+    root = dirname(dirname(realpath(__file__)))
+    sys.path.append(root)
+
+    from mgui.icons import IconDB
 
 
 # =============================================================================
@@ -394,7 +407,6 @@ class MyQToolButton(QtGui.QToolButton):
 
     def __init__(self, parent=None):
         super(MyQToolButton, self).__init__(parent)
-
         self.setIconSize(QtCore.QSize(24, 24))
         self.setAutoRaise(True)
 

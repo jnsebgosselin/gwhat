@@ -44,13 +44,14 @@ from xlrd.xldate import xldate_from_date_tuple
 # Local imports :
 
 from custom_widgets import VSep, MyQToolButton
-import widgets as myqt
 import database as db
 import meteo
 from waterlvldata import WaterlvlData
 from gwrecharge_calc2 import SynthHydrograph
-from icons import IconDB
-import brf_mod as bm
+
+import mgui.widgets as myqt
+from mgui.icons import IconDB
+import mbrf as bm
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'

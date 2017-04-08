@@ -60,7 +60,7 @@ class HydroprintGUI(QtGui.QWidget):
         super(HydroprintGUI, self).__init__(parent)
 
         self.workdir = os.getcwd()
-        self.UpdateUI = True
+        self.__updateUI = True
         self.fwaterlvl = []
         self.waterlvl_data = WaterlvlData()
         self.meteo_data = meteo.MeteoObj()
@@ -539,9 +539,7 @@ class HydroprintGUI(QtGui.QWidget):
     # =========================================================================
 
     def set_workdir(self, directory):
-
         self.workdir = directory
-
         self.meteo_dir = os.path.join(directory, 'Meteo', 'Output')
         self.waterlvl_dir = os.path.join(directory, 'Water Levels')
         self.save_fig_dir = directory
@@ -677,9 +675,8 @@ class HydroprintGUI(QtGui.QWidget):
         self.fwaterlvl = filename
 
         # Load Data :
-
-        self.ConsoleSignal.emit(
-            '<font color=black>Loading water level data...</font>')
+        msg = 'Loading water level data...'
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         for i in range(5):
             QtCore.QCoreApplication.processEvents()
 
@@ -732,12 +729,12 @@ class HydroprintGUI(QtGui.QWidget):
 
         # Fit Water Level in Layout :
 
-        self.UpdateUI = False
+        self.__updateUI = False
 
         self.best_fit_waterlvl()
         self.best_fit_time()
 
-        self.UpdateUI = True
+        self.__updateUI = True
 
         self.select_closest_meteo_file()
 
@@ -835,7 +832,7 @@ class HydroprintGUI(QtGui.QWidget):
         <hydrograph> of the class <Hydrograph>.
         '''
 
-        if self.UpdateUI is False:
+        if self.__updateUI is False:
             return
 
         # Dates :
@@ -880,7 +877,9 @@ class HydroprintGUI(QtGui.QWidget):
 
         self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
 
-    def load_graph_layout(self):  # ===========================================
+    # ======================================================= Graph layout ====
+
+    def load_graph_layout(self):
 
         self.check_files()
 
@@ -904,13 +903,10 @@ class HydroprintGUI(QtGui.QWidget):
         isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
 
         if isLayoutExist is False:
-            self.ConsoleSignal.emit(
-            '''<font color=red>No graph layout exists for well %s.
-               </font>''' % name_well)
-
-            self.emit_error_message('''<b>No graph layout exists
-                                         for well %s.</b>''' % name_well)
-
+            msg = 'No graph layout exists for well %s.' % name_well
+            print(msg)
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+            self.emit_error_message('<b>%s</b>' % msg)
             return
 
         # ---------------------------------------------------- Load Layout ----
@@ -919,7 +915,7 @@ class HydroprintGUI(QtGui.QWidget):
 
         # ----------------------------------------------------- Update UI -----
 
-        self.UpdateUI = False
+        self.__updateUI = False
 
         # Scales :
 
@@ -995,9 +991,9 @@ class HydroprintGUI(QtGui.QWidget):
             self.hydrograph.fmeteo = []
             self.hydrograph.finfo = []
 
-        self.UpdateUI = True
+        self.__updateUI = True
 
-    def save_config_isClicked(self):  # =======================================
+    def save_config_isClicked(self):
 
         if not self.fwaterlvl:
 
@@ -1055,35 +1051,31 @@ class HydroprintGUI(QtGui.QWidget):
         else:
             self.save_graph_layout(name_well)
 
-    def save_graph_layout(self, name_well):  # ================================
-
+    def save_graph_layout(self, name_well):
         self.update_graph_layout_parameter()
-        filename = self.workdir + '/graph_layout.lst'
+        filename = os.path.join(self.workdir, 'graph_layout.lst')
         self.hydrograph.save_layout(name_well, filename)
-        self.ConsoleSignal.emit(
-        '''<font color=black>Graph layout saved successfully
-             for well %s.</font>''' % name_well)
+        msg = 'Graph layout saved successfully for well %s.' % name_well
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
-    def best_fit_waterlvl(self):  # ===========================================
+    # =========================================================================
 
+    def best_fit_waterlvl(self):
         if len(self.waterlvl_data.lvl) != 0:
-
             WLscale, WLmin = self.hydrograph.best_fit_waterlvl()
-
             self.waterlvl_scale.setValue(WLscale)
             self.waterlvl_max.setValue(WLmin)
 
-    def best_fit_time(self):  # ===============================================
-
+    def best_fit_time(self):
         if len(self.waterlvl_data.time) != 0:
-
             TIME = self.waterlvl_data.time
             date0, date1 = self.hydrograph.best_fit_time(TIME)
-
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
 
-    def select_save_path(self):  # ============================================
+    # =========================================================================
+
+    def select_save_path(self):
 
         name_well = self.waterlvl_data.name_well
         dialog_dir = self.save_fig_dir + '/hydrograph_' + name_well
@@ -1146,7 +1138,7 @@ class HydroprintGUI(QtGui.QWidget):
         """
 
         sender = self.sender()
-        if self.UpdateUI is False:
+        if self.__updateUI is False:
             return
 
         if sender == self.language_box:
@@ -1182,19 +1174,19 @@ class HydroprintGUI(QtGui.QWidget):
 
             self.hydrograph.WLdatum = self.datum_widget.currentIndex()
 
-            #---- compute new WLmin ----
+            # ---- compute new WLmin ----
 
             # This is calculated so that trailing zeros in the altitude of the
             # well is not carried to the y axis labels, so that they remain a
             # int multiple of *WLscale*.
 
-            yoffset = int(self.waterlvl_data.ALT / self.hydrograph.WLscale)
+            yoffset = int(self.waterlvl_data.ALT/self.hydrograph.WLscale)
             yoffset *= self.hydrograph.WLscale
 
             self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)
             self.waterlvl_max.setValue(self.hydrograph.WLmin)
 
-            #---- Update graph and draw ----
+            # ---- Update graph and draw ----
 
             if self.hydrograph.isHydrographExists:
                 self.hydrograph.update_waterlvl_scale()

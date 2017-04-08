@@ -3,4 +3,5 @@
 >>> import data as dtm
 """
 
-import data.waterlvl
+import mdat.waterlvl
+import mdat.reader

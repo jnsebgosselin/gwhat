@@ -38,83 +38,83 @@ class Icons():
 
     def __init__(self):
 
-        self.WHAT = QIcon('Icons/WHAT.png')
+        self.WHAT = QIcon('mgui/Icons/WHAT.png')
 
-        self.play = QIcon('Icons/start.png')
-        self.forward = QIcon('Icons/start_all.png')
-        self.refresh = QIcon('Icons/refresh.png')
-        self.openFile = QIcon('Icons/open_file.png')
-        self.openFolder = QIcon('Icons/folder')
-        self.download = QIcon('Icons/download.png')
-        self.stop = QIcon('Icons/process-stop.png')
-        self.search = QIcon('Icons/search.png')
-        self.settings = QIcon('Icons/settings.png')
+        self.play = QIcon('mgui/Icons/start.png')
+        self.forward = QIcon('mgui/Icons/start_all.png')
+        self.refresh = QIcon('mgui/Icons/refresh.png')
+        self.openFile = QIcon('mgui/Icons/open_file.png')
+        self.openFolder = QIcon('mgui/Icons/folder')
+        self.download = QIcon('mgui/Icons/download.png')
+        self.stop = QIcon('mgui/Icons/process-stop.png')
+        self.search = QIcon('mgui/Icons/search.png')
+        self.settings = QIcon('mgui/Icons/settings.png')
 
-        self.go_previous = QIcon('Icons/go-previous.png')
-        self.go_next = QIcon('Icons/go-next.png')
-        self.go_last = QIcon('Icons/go-last.png')
-        self.go_first = QIcon('Icons/go-first.png')
-        self.go_up = QIcon('Icons/go-up.png')
+        self.go_previous = QIcon('mgui/Icons/go-previous.png')
+        self.go_next = QIcon('mgui/Icons/go-next.png')
+        self.go_last = QIcon('mgui/Icons/go-last.png')
+        self.go_first = QIcon('mgui/Icons/go-first.png')
+        self.go_up = QIcon('mgui/Icons/go-up.png')
 
-        self.staList = QIcon('Icons/note.png')
+        self.staList = QIcon('mgui/Icons/note.png')
 
         #---- Menu TOOLBAR ----
 
-        self.new_project = QIcon('Icons/new_project.png')
-        self.open_project = QIcon('Icons/open_project.png')
+        self.new_project = QIcon('mgui/Icons/new_project.png')
+        self.open_project = QIcon('mgui/Icons/open_project.png')
 
         #----- Download Weather Data -----
 
-        self.plus_sign = QIcon('Icons/plus_sign.png')
-        self.add2list = QIcon('Icons/add2list.png')
+        self.plus_sign = QIcon('mgui/Icons/plus_sign.png')
+        self.add2list = QIcon('mgui/Icons/add2list.png')
 
         #---- Weather Averages ----
 
-        self.showGrid = QIcon('Icons/grid.png')
+        self.showGrid = QIcon('mgui/Icons/grid.png')
 
         #---- Fill Weather Data ----
 
-        self.fill_data = QIcon('Icons/fill_data.png')
-        self.fill_all_data = QIcon('Icons/fill_all_data.png')
+        self.fill_data = QIcon('mgui/Icons/fill_data.png')
+        self.fill_all_data = QIcon('mgui/Icons/fill_all_data.png')
 
-        self.triangle_right = QIcon('Icons/triangle_right.png')
-        self.triangle_down = QIcon('Icons/triangle_down.png')
+        self.triangle_right = QIcon('mgui/Icons/triangle_right.png')
+        self.triangle_down = QIcon('mgui/Icons/triangle_down.png')
 
         #----- HYDROGRAPH TOOLBAR -----
 
-        self.page_setup = QIcon('Icons/page_setup.png')
-        self.fit_y = QIcon('Icons/fit_y.png')
-        self.fit_x = QIcon('Icons/fit_x.png')
-        self.save_graph_config = QIcon('Icons/save_config.png')
-        self.load_graph_config = QIcon('Icons/load_config.png')
-        self.closest_meteo = QIcon('Icons/closest_meteo.png')
-        self.draw_hydrograph = QIcon('Icons/stock_image.png')
-        self.save = QIcon('Icons/save.png')
-        self.meteo = QIcon('Icons/meteo.png')
-        self.work = QIcon('Icons/work.png')
-        self.toggleMode = QIcon('Icons/toggleMode2.png')
-        self.color_picker = QIcon('Icons/color_picker.png')
+        self.page_setup = QIcon('mgui/Icons/page_setup.png')
+        self.fit_y = QIcon('mgui/Icons/fit_y.png')
+        self.fit_x = QIcon('mgui/Icons/fit_x.png')
+        self.save_graph_config = QIcon('mgui/Icons/save_config.png')
+        self.load_graph_config = QIcon('mgui/Icons/load_config.png')
+        self.closest_meteo = QIcon('mgui/Icons/closest_meteo.png')
+        self.draw_hydrograph = QIcon('mgui/Icons/stock_image.png')
+        self.save = QIcon('mgui/Icons/save.png')
+        self.meteo = QIcon('mgui/Icons/meteo.png')
+        self.work = QIcon('mgui/Icons/work.png')
+        self.toggleMode = QIcon('mgui/Icons/toggleMode2.png')
+        self.color_picker = QIcon('mgui/Icons/color_picker.png')
 
         #----- MRC TOOLBAR -----
 
-        self.undo = QIcon('Icons/undo.png')
-        self.clear_search = QIcon('Icons/clear-search.png')
-        self.MRCalc = QIcon('Icons/MRCalc.png')
-        self.edit = QIcon('Icons/edit.png')
-        self.pan = QIcon('Icons/pan.png')
-        self.home = QIcon('Icons/home.png')
-        self.add_point = QIcon('Icons/add_point.png')
-        self.erase = QIcon('Icons/erase.png')
-        self.erase2 = QIcon('Icons/erase2.png')
-        self.findPeak = QIcon('Icons/find_peak.png')
-        self.findPeak2 = QIcon('Icons/find_peak2.png')
-        self.showDataDots = QIcon('Icons/show_datadots.png')
+        self.undo = QIcon('mgui/Icons/undo.png')
+        self.clear_search = QIcon('mgui/Icons/clear-search.png')
+        self.MRCalc = QIcon('mgui/Icons/MRCalc.png')
+        self.edit = QIcon('mgui/Icons/edit.png')
+        self.pan = QIcon('mgui/Icons/pan.png')
+        self.home = QIcon('mgui/Icons/home.png')
+        self.add_point = QIcon('mgui/Icons/add_point.png')
+        self.erase = QIcon('mgui/Icons/erase.png')
+        self.erase2 = QIcon('mgui/Icons/erase2.png')
+        self.findPeak = QIcon('mgui/Icons/find_peak.png')
+        self.findPeak2 = QIcon('mgui/Icons/find_peak2.png')
+        self.showDataDots = QIcon('mgui/Icons/show_datadots.png')
 
         #---- HydroCalc ----
 
-        self.stratigraphy = QIcon('Icons/stratigraphy.png')
-        self.mrc2rechg = QIcon('Icons/recharge.png')
-        self.calendar = QIcon('Icons/calendar.png')
+        self.stratigraphy = QIcon('mgui/Icons/stratigraphy.png')
+        self.mrc2rechg = QIcon('mgui/Icons/recharge.png')
+        self.calendar = QIcon('mgui/Icons/calendar.png')
 
 
 class Tooltips():
