@@ -19,13 +19,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# STANDARD LIBRARY IMPORTS :
+from __future__ import division, unicode_literals
+
+# Standard library imports :
 
 # import csv
 from time import sleep  # ctime, strftime, sleep
 import os
 
-# THIRD PARTY IMPORTS :
+# Third party imports :
 
 from PySide import QtGui, QtCore
 import numpy as np
@@ -35,13 +37,25 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 
-# PERSONAL IMPORTS :
+# Local imports :
 
-import meteo
-from custom_widgets import MyQToolButton, QToolPanel
-import custom_widgets as MyQWidget
-import database as db
-from gapfill_weather_algorithm2 import GapFillWeather
+try:
+    import meteo.meteo_utils as meteo_utils
+    from custom_widgets import QToolPanel
+    from meteo.gapfill_weather_algorithm2 import GapFillWeather
+    from common import IconDB, StyleDB, QToolButtonSmall
+    import common.widgets as myqt
+except ImportError:  # to run this module standalone
+    import sys
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
+    sys.path.append(dirname(dirname(realpath(__file__))))
+
+    import meteo.meteo_utils as meteo_utils
+    from custom_widgets import QToolPanel
+    from meteo.gapfill_weather_algorithm2 import GapFillWeather
+    from common import IconDB, StyleDB, QToolButtonSmall
+    import common.widgets as myqt
 
 
 class GapFillWeatherGUI(QtGui.QWidget):
@@ -70,28 +84,26 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # ---- Database ----
 
-        #TODO: cleanup the language, tooltips and labels.
-
-        styleDB = db.styleUI()
-        iconDB = db.Icons()
-        ttipDB = db.Tooltips('English')
-        labelDB = db.labels('English')
+        # TODO: cleanup the language, tooltips and labels.
 
         # ---- Main Window ----
 
-        self.setWindowIcon(iconDB.WHAT)
+        self.setWindowIcon(IconDB().master)
 
         # ---- TOOLBAR ----
 
-        self.btn_fill = QtGui.QPushButton(labelDB.btn_fill_weather)
-        self.btn_fill.setIcon(iconDB.fill_data)
-        self.btn_fill.setToolTip(ttipDB.btn_fill)
-        self.btn_fill.setIconSize(styleDB.iconSize2)
+        self.btn_fill = QtGui.QPushButton('Fill Station')
+        self.btn_fill.setIcon(IconDB().fill_data)
+        self.btn_fill.setIconSize(IconDB().iconSize2)
+        self.btn_fill.setToolTip('<p>Fill the gaps in the daily weather data '
+                                 ' for the selected weather station.</p>')
 
-        self.btn_fill_all = QtGui.QPushButton(labelDB.btn_fill_all_weather)
-        self.btn_fill_all.setToolTip(ttipDB.btn_fill_all)
-        self.btn_fill_all.setIcon(iconDB.fill_all_data)
-        self.btn_fill_all.setIconSize(styleDB.iconSize2)
+        self.btn_fill_all = QtGui.QPushButton('Fill All Stations')
+        self.btn_fill_all.setIconSize(IconDB().iconSize2)
+        self.btn_fill_all.setIcon(IconDB().fill_all_data)
+        self.btn_fill_all.setToolTip('<p>Fill the gaps in the daily weather '
+                                     ' data for all the weather stations' +
+                                     ' displayed in the list.</p>')
 
         grid_toolbar = QtGui.QGridLayout()
         widget_toolbar = QtGui.QFrame()
@@ -113,16 +125,14 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # Target Station :
 
-        target_station_label = QtGui.QLabel('<b>%s</b>' % labelDB.fill_station)
+        target_station_label = QtGui.QLabel(
+                '<b>Fill data for weather station :</b>')
         self.target_station = QtGui.QComboBox()
         self.target_station_info = QtGui.QTextEdit()
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
 
-        self.btn_refresh_staList = QtGui.QToolButton()
-        self.btn_refresh_staList.setIcon(iconDB.refresh)
-        self.btn_refresh_staList.setAutoRaise(True)
-        self.btn_refresh_staList.setIconSize(styleDB.iconSize2)
+        self.btn_refresh_staList = QToolButtonSmall(IconDB().refresh)
         self.btn_refresh_staList.setToolTip(
             'Force the reloading of the weather data files')
         self.btn_refresh_staList.clicked.connect(self.load_data_dir_content)
@@ -175,34 +185,38 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.fillDates_widg.setLayout(fillDates_grid)
 
         def station_sel_criteria(self):
-            labelDB = db.labels('English')
-
             # Widgets :
 
-            Nmax_label = QtGui.QLabel(labelDB.NbrSta)
+            Nmax_label = QtGui.QLabel('Nbr. of stations :')
             self.Nmax = QtGui.QSpinBox()
             self.Nmax.setRange(0, 99)
             self.Nmax.setSingleStep(1)
             self.Nmax.setValue(4)
             self.Nmax.setAlignment(QtCore.Qt.AlignCenter)
 
-            distlimit_label = QtGui.QLabel(labelDB.distlimit)
-            distlimit_label.setToolTip(ttipDB.distlimit)
+            ttip = ('<p>Distance limit beyond which neighboring stations'
+                    ' are excluded from the gapfilling procedure.</p>'
+                    '<p>This condition is ignored if set to -1.</p>')
+            distlimit_label = QtGui.QLabel('Max. Distance :')
+            distlimit_label.setToolTip(ttip)
             self.distlimit = QtGui.QSpinBox()
             self.distlimit.setRange(-1, 9999)
             self.distlimit.setSingleStep(1)
             self.distlimit.setValue(100)
-            self.distlimit.setToolTip(ttipDB.distlimit)
+            self.distlimit.setToolTip(ttip)
             self.distlimit.setSuffix(' km')
             self.distlimit.setAlignment(QtCore.Qt.AlignCenter)
 
-            altlimit_label = QtGui.QLabel(labelDB.altlimit)
-            altlimit_label.setToolTip(ttipDB.altlimit)
+            ttip = ('<p>Altitude difference limit over which neighboring '
+                    ' stations are excluded from the gapfilling procedure.</p>'
+                    '<p>This condition is ignored if set to -1.</p>')
+            altlimit_label = QtGui.QLabel('Max. Elevation Diff. :')
+            altlimit_label.setToolTip(ttip)
             self.altlimit = QtGui.QSpinBox()
             self.altlimit.setRange(-1, 9999)
             self.altlimit.setSingleStep(1)
             self.altlimit.setValue(350)
-            self.altlimit.setToolTip(ttipDB.altlimit)
+            self.altlimit.setToolTip(ttip)
             self.altlimit.setSuffix(' m')
             self.altlimit.setAlignment(QtCore.Qt.AlignCenter)
 
@@ -259,17 +273,16 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
             # ---- Row Full Error ----
 
-            self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis')
+            self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis.')
             self.full_error_analysis.setCheckState(chckstate)
 
             # ---- Row ETP ----
 
-            self.add_ETP_ckckbox = QtGui.QCheckBox('Add ETP to data file')
+            self.add_ETP_ckckbox = QtGui.QCheckBox('Add ETP to data file.')
             self.add_ETP_ckckbox.setCheckState(chckstate)
 
-            btn_add_ETP = MyQToolButton(db.Icons().openFile,
-                                        'Add ETP to data file',
-                                        db.styleUI().iconSize2)
+            btn_add_ETP = QToolButtonSmall(IconDB().openFile)
+            btn_add_ETP.setToolTip('Add ETP to data file.')
             btn_add_ETP.clicked.connect(self.btn_add_ETP_isClicked)
 
             # ---- Row Layout Assembly ----
@@ -298,8 +311,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         advanced_widg = advanced_settings(self)
 
         self.stack_widget = QToolPanel()
-        self.stack_widget.setIcons(QtGui.QIcon('Icons/triangle_right.png'),
-                                   QtGui.QIcon('Icons/triangle_down.png'))
+        self.stack_widget.setIcons(IconDB().triright, IconDB().tridown)
         self.stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
         self.stack_widget.addItem(MLRM_widg, 'Regression Model :')
         self.stack_widget.addItem(advanced_widg, 'Advanced Settings :')
@@ -310,23 +322,16 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.LEFT_widget = QtGui.QFrame()
         self.LEFT_widget.setFrameStyle(0)  # styleDB.frame
 
-        seprator1 = QtGui.QFrame()
-        seprator1.setFrameStyle(styleDB.HLine)
-        seprator2 = QtGui.QFrame()
-        seprator2.setFrameStyle(styleDB.HLine)
-        seprator3 = QtGui.QFrame()
-        seprator3.setFrameStyle(styleDB.HLine)
-
         row = 0
         grid_leftPanel.addWidget(self.tarSta_widg, row, 0)
         row += 1
         grid_leftPanel.addWidget(self.fillDates_widg, row, 0)
         row += 1
-        grid_leftPanel.addWidget(seprator1, row, 0)
+        grid_leftPanel.addWidget(myqt.HSep(), row, 0)
         row += 1
         grid_leftPanel.addWidget(self.stack_widget, row, 0)
         row += 2
-        grid_leftPanel.addWidget(seprator2, row, 0)
+        grid_leftPanel.addWidget(myqt.HSep(), row, 0)
         row += 1
         grid_leftPanel.addWidget(widget_toolbar, row, 0)
 
@@ -421,10 +426,6 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         self.btn_fill.clicked.connect(self.gap_fill_btn_clicked)
         self.btn_fill_all.clicked.connect(self.gap_fill_btn_clicked)
-
-        # ---------------------------------------------------- MESSAGE BOX ----
-
-        self.msgBox = MyQWidget.MyQErrorMessageBox()
 
     # =========================================================================
 
@@ -558,8 +559,6 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
     def restoreUI(self): #=====================================================
 
-        iconDB = db.Icons()
-
         self.btn_fill.setIcon(iconDB.fill_data)
         self.btn_fill.setEnabled(True)
 
@@ -601,19 +600,19 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
             return
 
-        #----------------------------------------------------- Data is Empty --
+        # ---------------------------------------------------- Data is Empty --
 
-        #-- Check if Station List is Empty --
+        # Check if Station List is Empty :
 
         nSTA = len(self.gap_fill_worker.WEATHER.STANAME)
         if nSTA == 0:
-            self.msgBox.setText('There is no data to fill.')
-            self.msgBox.exec_()
-            print('There is no data to fill.')
+            msg = ('There is no data to fill.')
+            btn = QtGui.QMessageBox.Ok
+            QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
 
             return
 
-        #-------------------------------------------- CHECK FOR DATES ERRORS --
+        # ------------------------------------------- CHECK FOR DATES ERRORS --
 
         time_start = self.get_time_from_qdatedit(self.date_start_widget)
         time_end = self.get_time_from_qdatedit(self.date_end_widget)
@@ -654,7 +653,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # -- Disable UI and continue the process normally --
 
-        button.setIcon(db.Icons().stop)
+        button.setIcon(IconsDB().stop)
         self.fillDates_widg.setEnabled(False)
         self.tarSta_widg.setEnabled(False)
         self.stack_widget.setEnabled(False)
@@ -809,8 +808,6 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
     selected by the user.
     """
 
-    styleDB = db.styleUI()
-
     STANAME = WEATHER.STANAME
 
     nSTA = len(STANAME)
@@ -928,8 +925,8 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
 
     total_nbr_data = index_end - index_start + 1
     for var in range(nVAR):
-        nbr_nan = np.isnan(
-                       DATA[index_start:index_end+1, target_station_index, var])
+        nbr_nan = np.isnan(DATA[index_start:index_end+1,
+                                target_station_index, var])
         nbr_nan = float(np.sum(nbr_nan))
 
         nan_percent = round(nbr_nan / total_nbr_data * 100, 1)
@@ -946,7 +943,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                </table>
                <br><br>'''
 
-    #---------------------------------------------------- corr. coeff. table --
+    # --------------------------------------------------- corr. coeff. table --
     table2 = table1
     table2 += '''
               <p align="justify">
@@ -959,7 +956,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
               </p>
               ''' % TARGET.name
 
-    #---- HEADER ----
+    # ---- HEADER ----
 
     table2 += '''
               <table border="0" cellpadding="3" cellspacing="0"
@@ -1006,13 +1003,13 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                 </tr>
               '''
 
-    color = ['transparent', styleDB.lightgray]
+    color = ['transparent', StyleDB().lightgray]
     index = list(range(nSTA))
     index.remove(target_station_index)
     counter = 0
     for i in index:
 
-        #---- Counter and Neighboring station names ----
+        # ---- Counter and Neighboring station names ----
 
         table2 += '''
                    <tr bgcolor="%s">
@@ -1020,9 +1017,9 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                      <td valign="top">
                        %s
                      </td>
-                  ''' % (color[counter%2], counter+1, STANAME[i])
+                  ''' % (color[counter % 2], counter+1, STANAME[i])
 
-        #---- Altitude diff. ----
+        # ---- Altitude diff. ----
 
         if abs(ALTDIFF[i]) >= limitAlt and limitAlt >= 0:
             fontcolor = styleDB.red
@@ -1035,11 +1032,11 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                      </td>
                   ''' % (fontcolor, ALTDIFF[i])
 
-        #---- Horiz. distance ----
+        # ---- Horiz. distance ----
 
         if HORDIST[i] >= limitDist and limitDist >= 0:
-            fontcolor = styleDB.red
-        else :
+            fontcolor = StyleDB().red
+        else:
             fontcolor = ''
 
         table2 += '''
@@ -1048,13 +1045,13 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                      </td>
                   ''' % (fontcolor, HORDIST[i])
 
-        #---- correlation coefficients ----
+        # ---- correlation coefficients ----
 
         for value in CORCOEF[:, i]:
             if value > 0.7:
                 fontcolor = ''
             else:
-                fontcolor = styleDB.red
+                fontcolor = StyleDB().red
 
             table2 += '''
                       <td align="center" valign="top">
@@ -1124,17 +1121,14 @@ class GapFillDisplayTable(QtGui.QTableWidget):
 
     def initUI(self):
 
-        styleDB = db.styleUI()
-#        ttipDB  = Tooltips('English')
-
         # ------------------------------------------------------------ Style --
 
-        self.setFrameStyle(styleDB.frame)
+        self.setFrameStyle(StyleDB().frame)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
         self.setMinimumWidth(650)
 
-        #------------------------------------------------------------ Header --
+        # ----------------------------------------------------------- Header --
 
 #        HEADER = ['Weather Stations', '&#916;Alt.<br>(m)', 'Dist.\n(km)']
         HEADER = ['Neighboring Stations', '&#916;Alt.<br>(m)', 'Dist.<br>(km)',
@@ -1188,14 +1182,13 @@ class GapFillDisplayTable(QtGui.QTableWidget):
             else:
                 return abs(self.sortKey) < abs(other.sortKey)
 
+    # =========================================================================
 
-    def populate_table(self, TARGET, WEATHER, FILLPARAM): #====================
+    def populate_table(self, TARGET, WEATHER, FILLPARAM):
 
-        #----------------------------------------------------- Organize Info --
+        red = StyleDB().red
 
-        styleDB = db.styleUI()
-
-        #----------------------------------------------------- Organize Info --
+        # ---------------------------------------------------- Organize Info --
 
         STANAME = WEATHER.STANAME
         CLIMATEID = WEATHER.ClimateID
@@ -1210,7 +1203,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
 
         nVAR = len(WEATHER.VARNAME)
 
-        #-------------------------------------------------------- Fill Table --
+        # ------------------------------------------------------- Fill Table --
 
         nSTA = len(STANAME)
         self.setRowCount(nSTA - 1)
@@ -1221,7 +1214,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         self.setSortingEnabled(False)
         for indx in indxs:
 
-            #-- Weather Station --
+            # -- Weather Station --
 
             col = 0
 
@@ -1231,7 +1224,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
             item.setToolTip('%s (%s)' % (STANAME[indx], CLIMATEID[indx]))
             self.setItem(row, col, item)
 
-            #-- Alt. Diff. --
+            # -- Alt. Diff. --
 
             col += 1
 
@@ -1240,10 +1233,10 @@ class GapFillDisplayTable(QtGui.QTableWidget):
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             if abs(ALTDIFF[indx]) >= limitAlt and limitAlt >= 0:
-                item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
+                item.setForeground(QtGui.QBrush(QtGui.QColor(red)))
             self.setItem(row, col, item)
 
-            #-- Horiz. Dist. --
+            # -- Horiz. Dist. --
 
             col += 1
 
@@ -1252,7 +1245,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
             item.setFlags(~QtCore.Qt.ItemIsEditable)
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             if HORDIST[indx] >= limitDist and limitDist >= 0:
-                item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
+                item.setForeground(QtGui.QBrush(QtGui.QColor(red)))
             self.setItem(row, col, item)
 
             #-- Correlation Coefficients. --
@@ -1266,7 +1259,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
                 item.setFlags(~QtCore.Qt.ItemIsEditable)
                 item.setTextAlignment(QtCore.Qt.AlignCenter)
                 if CORCOEF[var, indx] < 0.7 or np.isnan(CORCOEF[var, indx]):
-                    item.setForeground(QtGui.QBrush(QtGui.QColor(styleDB.red)))
+                    item.setForeground(QtGui.QBrush(QtGui.QColor(red)))
                 self.setItem(row, col, item)
 
             row += 1
@@ -1391,14 +1384,14 @@ class MyHorizHeader(QtGui.QHeaderView):
         else:
             pass
 
-        #----------------------------------------------------- paint section --
+        # ---------------------------------------------------- paint section --
 
         self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter, self)
 
 
     def paintLabels(self, qp): #=============================== Paint Labels ==
 
-        fontfamily = db.styleUI().fontfamily
+        fontfamily = StyleDB().fontfamily
 
         if self.multirow:
             headerTable  = '''
@@ -1427,7 +1420,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                            '''
 #        shownSectionCount = self.count() - self.hiddenSectionCount ()
 
-        #----------------------------------- prepare a list of logical index --
+        # ---------------------------------- prepare a list of logical index --
 
         LogicalIndex_shown_and_ordered = []
         for visualIndex in range(self.count()):
@@ -1440,14 +1433,14 @@ class MyHorizHeader(QtGui.QHeaderView):
         x0 = 0
         for logicalIndex in LogicalIndex_shown_and_ordered:
 
-            #----------------------------------------------- Grab label text --
+            # ---------------------------------------------- Grab label text --
 
             label = str(self.model().headerData(logicalIndex,
                                                 self.orientation()))
 
             # ------------------------------------------ Put Labels in Table --
 
-            # -- Highlights labels when item is selected in column --
+            # Highlights labels when item is selected in column :
 
             if self.highlightSections():
                 selectedIndx = self.selectionModel().selectedIndexes()
@@ -1455,12 +1448,10 @@ class MyHorizHeader(QtGui.QHeaderView):
                     if (logicalIndex == index.column()) is True:
                         label = '<b>%s<b>' % label
                         break
-                    else:
-                        pass
 
-                                     # OR
+            # OR
 
-            #-- Highlights labels when mouse it over section --
+            # Highlights labels when mouse it over section :
 
             sectionHeight = self.size().height()
             sectionWidth = self.sectionSize(logicalIndex)
@@ -1471,10 +1462,6 @@ class MyHorizHeader(QtGui.QHeaderView):
                 mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())
                 if rect.contains(mouse_pos):
                     label = '<b>%s<b>' % label
-                else:
-                    pass
-            else:
-                pass
 
             headerTable += '''
                            <td valign=middle align=center width=%d
@@ -1578,31 +1565,6 @@ if __name__ == '__main__':
 #    from hydrograph3 import LatLong2Dist
 #    for x, y, n, a in zip(lat, lon, name, alt):
 #        print(n, LatLong2Dist(x, y, GWSU16[0], GWSU16[1]))
-
-
-    import matplotlib.pyplot as plt
-    fig, ax = plt.subplots()
-
-    i1 = 23
-    i2 = 19
-
-    n1 = w.gap_fill_worker.WEATHER.STANAME[i1]
-    n2 = w.gap_fill_worker.WEATHER.STANAME[i2]
-
-    set1 = w.gap_fill_worker.WEATHER.DATA[:, i1, 3]
-    set2 = w.gap_fill_worker.WEATHER.DATA[:, i2, 3]
-
-    indx = np.where(~np.isnan(set1) & ~np.isnan(set2))[0]
-
-    print()
-    print(len(indx))
-    print(np.corrcoef(set1[indx], set2[indx]))
-
-    plt.close('all')
-    ax.plot(set1, set2, 'o')
-    ax.set_xlabel(n1)
-    ax.set_ylabel(n2)
-    fig.show()
 
     # ---- Show and Move Center ----
 

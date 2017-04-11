@@ -28,16 +28,16 @@ from copy import copy
 import os
 
 try:
-    from mgui.icons import IconDB
+    from common import IconDB
 except ImportError:  # to run this module standalone
-    print('Running module as a standalone script...')
     import sys
     import platform
-    from os.path import dirname, realpath
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
     root = dirname(dirname(realpath(__file__)))
     sys.path.append(root)
 
-    from mgui.icons import IconDB
+    from common import IconDB
 
 
 # =============================================================================

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# STANDARD LIBRARY IMPORTS :
+# Standard library imports :
 
 import csv
 import os
@@ -29,7 +29,7 @@ from time import strftime, sleep
 from copy import copy
 from time import clock
 
-# THIRD PARTY IMPORTS :
+# Third party imports :
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
@@ -43,10 +43,21 @@ from PySide import QtCore
 
 # PERSONAL IMPORTS :
 
-import meteo
-import database as db
-from hydrograph3 import LatLong2Dist
-from gapfill_weather_postprocess import PostProcessErr
+try:
+    import meteo.meteo_utils as meteo_utils
+    import common.database as db
+    from hydrograph3 import LatLong2Dist
+    from meteo.gapfill_weather_postprocess import PostProcessErr
+except ImportError:  # to run this module standalone
+    print('Running module as a standalone script...')
+    import sys
+    from os.path import dirname, realpath
+    sys.path.append(dirname(dirname(realpath(__file__))))
+
+    import meteo.meteo_utils as meteo_utils
+    import common.database as db
+    from hydrograph3 import LatLong2Dist
+    from meteo.gapfill_weather_postprocess import PostProcessErr
 
 
 # =============================================================================

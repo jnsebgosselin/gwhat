@@ -19,7 +19,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-#----- STANDARD LIBRARY IMPORTS -----
+from __future__ import division, unicode_literals
+
+# Standard library imports :
 
 try:
     from urllib2 import urlopen, URLError
@@ -29,30 +31,43 @@ from datetime import datetime
 import sys
 import csv
 
-#----- THIRD PARTY IMPORTS -----
+# Third party imports :
 
 import numpy as np
 from PySide import QtGui, QtCore
 
-#---- PERSONAL IMPORTS ----
+# Local imports :
 
-import database as db
+try:
+    import common.database as db
+    from common import IconDB, StyleDB
+    import common.widgets as myqt
+except ImportError:  # to run this module standalone
+    import sys
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
+    sys.path.append(dirname(dirname(realpath(__file__))))
+
+    from common import IconDB, StyleDB
+    import common.database as db
+    import common.widgets as myqt
 
 
 # =============================================================================
+
+
 class Tooltips():
-# =============================================================================
 
     def __init__(self, language):  # ---------------------------- ENGLISH -----
 
-        #---- Search4Stations ----
+        # ---- Search4Stations ----
 
         self.btn_addSta = ('Add selected found weather stations to the '
                            'current list of weather stations.')
         self.btn_search = ('Search for weather stations in the online CDCD ' +
                            'with the criteria given above.')
 
-        #---- WeatherStationDisplayTable ----
+        # ---- WeatherStationDisplayTable ----
 
         self.chkbox_header = ('Check of uncheck all the weather stations ' +
                               'in the table.')
@@ -80,16 +95,14 @@ class Search4Stations(QtGui.QWidget):
 
     def initUI(self):  # ======================================================
 
-        #-------------------------------------------------------- DATABASE ----
+        # ------------------------------------------------------- DATABASE ----
 
-        iconDB = db.Icons()
-        styleDB = db.styleUI()
         ttipDB = Tooltips('English')
 
         #----------------------------------------------------- MAIN WINDOW ----
 
         self.setWindowTitle('Search for Weather Stations')
-        self.setWindowIcon(iconDB.WHAT)
+        self.setWindowIcon(IconDB().master)
         self.setWindowFlags(QtCore.Qt.Window)
 
         #-------------------------------------------------- INIT VARIABLES ----
@@ -276,16 +289,16 @@ class Search4Stations(QtGui.QWidget):
 
         year_widg.setLayout(year_grid)
 
-        #--------------------------------------------------------- TOOLBAR ----
+        # -------------------------------------------------------- TOOLBAR ----
 
         self.btn_search = QtGui.QPushButton('Search Stations')
-        self.btn_search.setIcon(iconDB.search)
-        self.btn_search.setIconSize(styleDB.iconSize2)
+        self.btn_search.setIcon(IconDB().search)
+        self.btn_search.setIconSize(IconDB().iconSize2)
         self.btn_search.setToolTip(ttipDB.btn_search)
 
         btn_addSta = QtGui.QPushButton('Add Stations')
-        btn_addSta.setIcon(iconDB.add2list)
-        btn_addSta.setIconSize(styleDB.iconSize2)
+        btn_addSta.setIcon(IconDB().add2list)
+        btn_addSta.setIconSize(IconDB().iconSize2)
         btn_addSta.setToolTip(ttipDB.btn_addSta)
 
         toolbar_grid = QtGui.QGridLayout()
@@ -304,7 +317,7 @@ class Search4Stations(QtGui.QWidget):
 
         toolbar_widg.setLayout(toolbar_grid)
 
-        #----------------------------------------------------- Left Panel ----
+        # ---------------------------------------------------- Left Panel ----
 
         panel_title = QtGui.QLabel('<b>Weather Station Search Criteria :</b>')
 
@@ -330,14 +343,14 @@ class Search4Stations(QtGui.QWidget):
         left_panel_grid.setContentsMargins(0, 0, 0, 0)   # (L, T, R, B)
         left_panel.setLayout(left_panel_grid)
 
-        #------------------------------------------------------- MAIN GRID ----
+        # ------------------------------------------------------ MAIN GRID ----
 
-        #---- Widgets ----
+        # ---- Widgets ----
 
         vLine1 = QtGui.QFrame()
-        vLine1.setFrameStyle(styleDB.VLine)
+        vLine1.setFrameStyle(StyleDB().VLine)
 
-        #---- GRID ----
+        # ---- GRID ----
 
         grid_search4stations = QtGui.QGridLayout()
 
@@ -354,16 +367,17 @@ class Search4Stations(QtGui.QWidget):
         grid_search4stations.setColumnStretch(col, 100)
 
         self.setLayout(grid_search4stations)
-        self.setFont(styleDB.font1)
 
-        #---------------------------------------------------------- EVENTS ----
+        # --------------------------------------------------------- EVENTS ----
 
         self.minYear.valueChanged.connect(self.minYear_changed)
         self.maxYear.valueChanged.connect(self.maxYear_changed)
         self.btn_search.clicked.connect(self.btn_search_isClicked)
         btn_addSta.clicked.connect(self.btn_addSta_isClicked)
 
-    def show(self):  # ========================================================
+    # =========================================================================
+
+    def show(self):
         super(Search4Stations, self).show()
         # self.activateWindow()
         # self.raise_()
@@ -382,7 +396,9 @@ class Search4Stations(QtGui.QWidget):
         self.move(qr.topLeft())
         self.setFixedSize(self.size())
 
-    def minYear_changed(self):  # =============================================
+    # =========================================================================
+
+    def minYear_changed(self):
 
         min_yr = min_yr = max(self.minYear.value(), 1840)
 
@@ -417,7 +433,7 @@ class Search4Stations(QtGui.QWidget):
         interface and send it to the method "search_envirocan".
         """
 
-        #---- Generate New List ----
+        # ---- Generate New List ----
 
         # http://doc.qt.io/qt-5/qt.html#CursorShape-enum
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
@@ -789,18 +805,17 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
     def initUI(self):  # ======================================================
 
-        StyleDB = db.styleUI()
         ttipDB = Tooltips('English')
 
-        #----------------------------------------------------------- Style ----
+        # ----------------------------------------------------------- Style ----
 
-        self.setFont(StyleDB.font1)
-        self.setFrameStyle(StyleDB.frame)
+        self.setFont(StyleDB().font1)
+        self.setFrameStyle(StyleDB().frame)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
         self.setMinimumWidth(650)
 
-        #---------------------------------------------------------- Header ----
+        # --------------------------------------------------------- Header ----
 
         # http://stackoverflow.com/questions/9744975/
         # pyside-pyqt4-adding-a-checkbox-to-qtablewidget-
@@ -900,7 +915,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             # item.setTextAlignment(QtCore.Qt.AlignLeft |
             #                       QtCore.Qt.AlignVCenter)
 
-            #---- Checkbox ----
+            # ---- Checkbox ----
 
             col = 0
 
@@ -921,7 +936,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             self.setCellWidget(row, col, chckbox_center)
 #            self.setCellWidget(row, col, center_widg)
 
-            #---- Weather Station ----
+            # ---- Weather Station ----
 
             col += 1
 
@@ -931,7 +946,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             item.setToolTip(staList[row][0])
             self.setItem(row, col, item)
 
-            #---- Proximity ----
+            # ---- Proximity ----
 
             col += 1
 
@@ -941,13 +956,13 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.setItem(row, col, item)
 
-            #---- From Year ----
+            # ---- From Year ----
 
-            #----
+            # ----
             min_year = int(staList[row][2])
             max_year = int(staList[row][3])
             yearspan = np.arange(min_year, max_year+1).astype(str)
-            #----
+            # ----
 
             col += 1
 
@@ -970,7 +985,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
                 self.setCellWidget(row, col, self.fromYear)
 
-            #---- To Year ----
+            #c---- To Year ----
 
             col += 1
 
@@ -996,7 +1011,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
                 self.setCellWidget(row, col, self.toYear)
 
-            #---- Province ----
+            # ---- Province ----
 
             col += 1
 
@@ -1005,7 +1020,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.setItem(row, col, item)
 
-            #---- Climate ID (hidden) ----
+            # ---- Climate ID (hidden) ----
 
             col += 1
 
@@ -1014,7 +1029,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             item.setTextAlignment(QtCore.Qt.AlignCenter)
             self.setItem(row, col, item)
 
-            #---- Station ID ----
+            # ---- Station ID ----
 
             col += 1
 
@@ -1086,7 +1101,9 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
     def save_staList(self, filename):  # ======================================
 
-        headerDB = db.FileHeaders()
+        headerDB = [['staName', 'stationId', 'StartYear',
+                     'EndYear', 'Province', 'ClimateID',
+                     'Proximity (km)']]
 
         # ---- Grab the content of the entire table ----
 
@@ -1130,6 +1147,11 @@ def dms2decdeg(deg, mnt, sec):
 if __name__ == '__main__':
 
     app = QtGui.QApplication(sys.argv)
+
+    ft = app.font()
+    ft.setFamily('Segoe UI')
+    ft.setPointSize(10)
+    app.setFont(ft)
 
     search4sta = Search4Stations()
 

@@ -180,7 +180,7 @@ class ProjetReader(object):
 
     def get_wldset(self, name):
         if name in self.wldsets:
-            return WLDataReader(self.db['wldsets/%s' % name])
+            return WLDataFrame(self.db['wldsets/%s' % name])
         else:
             return None
 
@@ -204,7 +204,7 @@ class ProjetReader(object):
 
         print('created new dataset sucessfully')
 
-        return WLDataReader(grp)
+        return WLDataFrame(grp)
 
     def del_wldset(self, name):
         del self.db['wldsets/%s' % name]
@@ -228,7 +228,7 @@ class ProjetReader(object):
         del self.db['wxdsets/%s' % name]
 
 
-class WLDataReader(object):
+class WLDataFrame(object):
     # This is a wrapper around the h5py group that is used to store
     # water level datasets.
     def __init__(self, dset):
@@ -285,7 +285,7 @@ class WLDataReader(object):
             return self.dset['ET'].value
 
 
-class WXDataReader(object):
+class WXDataFrame(object):
     # This is a wrapper around the h5py group that is used to store
     # weather datasets.
     def __init__(self, dset):

@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 
 # Local imports :
 
-from meteo import MeteoObj
+from meteo.meteo_utils import MeteoObj
 from waterlvldata import WaterlvlData
 from gwrecharge_post import plot_water_budget_yearly
 

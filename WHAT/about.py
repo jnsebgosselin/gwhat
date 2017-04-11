@@ -32,18 +32,19 @@ from PySide import QtGui, QtCore
 # Local imports :
 
 try:
-    import mgui
-    from mgui.icons import IconDB
+    from _version import __version__, __date__
+    from common import IconDB
 except ImportError:  # to run this module standalone
     print('Running module as a standalone script...')
     import sys
     import platform
-    from os.path import dirname, realpath
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
     root = dirname(dirname(realpath(__file__)))
     sys.path.append(root)
 
-    import mgui
-    from mgui.icons import IconDB
+    from _version import __version__, __date__
+    from common import IconDB
 
 
 # ==============================================================================
@@ -111,11 +112,11 @@ class AboutWhat(QtGui.QWidget):
         # ---- Image Logo ----
 
         width = 750  # self.AboutTextBox.size().width()
-        version = mgui.__version__
-        date = mgui.__date__
+        version = __version__
+        date = __date__
 
         dirname = os.path.dirname(os.path.realpath(__file__))
-        filename = os.path.join(dirname, 'Icons', 'WHAT_banner_750px.png')
+        filename = IconDB().banner
 
         # http://doc.qt.io/qt-4.8/richtext-html-subset.html
 
@@ -210,7 +211,7 @@ class AboutWhat(QtGui.QWidget):
 #                                            # same width as the QTextEdit box
 
         if event.type() == QtCore.QEvent.Type.FontChange:
-            return True # Eat the event to disable zooming
+            return True  # Eat the event to disable zooming
 
         return QtGui.QWidget.eventFilter(self, obj, event)
 
@@ -219,9 +220,6 @@ if __name__ == '__main__':
     app = QtGui.QApplication(sys.argv)
 
     instance1 = AboutWhat()
-
-    #---- SHOW ----
-
     instance1.show()
 
     qr = instance1.frameGeometry()

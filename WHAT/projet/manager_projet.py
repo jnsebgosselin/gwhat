@@ -33,24 +33,21 @@ from PySide import QtGui, QtCore
 # Local imports :
 
 try:
-    from mdat.reader import ProjetReader
-    import mgui
-    from mgui.icons import IconDB, QToolButtonSmall
-    from mgui.data import DataManager
-    import mgui.widgets as myqt
-
+    from projet.reader_projet import ProjetReader
+    from common import IconDB, QToolButtonSmall
+    from projet.manager_data import DataManager
+    import common.widgets as myqt
 except ImportError:  # to run this module standalone
-    print('Running module as a standalone script...')
     import sys
     import platform
-    from os.path import dirname, realpath
-    root = dirname(dirname(realpath(__file__)))
-    sys.path.append(root)
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
+    sys.path.append(dirname(dirname(realpath(__file__))))
 
-    from mdat.reader import ProjetReader
-    from mgui.icons import IconDB, QToolButtonSmall
-    from mgui.data import DataManager
-    import mgui.widgets as myqt
+    from projet.reader_projet import ProjetReader
+    from common import IconDB, QToolButtonSmall
+    from projet.manager_data import DataManager
+    import common.widgets as myqt
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -139,8 +136,7 @@ class ProjetManager(QtGui.QWidget):
             self.load_project(filename)
 
 
-# =============================================================================
-# =============================================================================
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 class NewProject(QtGui.QDialog):
@@ -404,8 +400,7 @@ class NewProject(QtGui.QDialog):
         self.setFixedSize(self.size())
 
 
-# =============================================================================
-# =============================================================================
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 if __name__ == '__main__':

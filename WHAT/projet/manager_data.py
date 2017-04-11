@@ -33,24 +33,24 @@ from PySide import QtGui, QtCore
 # Local imports :
 
 try:
-    import mdat
-    import mgui
-    from mgui.icons import IconDB, QToolButtonSmall
-    import mgui.widgets as myqt
+    from common import IconDB, QToolButtonSmall
+    import common.widgets as myqt
+    from projet.reader_waterlvl import generate_HTML_table
+    from projet.reader_waterlvl import load_excel_datafile
 except ImportError:  # to run this module standalone
-    print('Running module as a standalone script...')
     import sys
     import platform
-    from os.path import dirname, realpath
-    root = dirname(dirname(realpath(__file__)))
-    sys.path.append(root)
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
+    sys.path.append(dirname(dirname(realpath(__file__))))
 
-    import mdat as mdat
-    from mgui.icons import IconDB, QToolButtonSmall
-    import mgui.widgets as myqt
+    from common import IconDB, QToolButtonSmall
+    import common.widgets as myqt
+    from projet.reader_waterlvl import generate_HTML_table
+    from projet.reader_waterlvl import load_excel_datafile
 
 
-# =============================================================================
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 class DataManager(QtGui.QWidget):
@@ -118,7 +118,7 @@ class DataManager(QtGui.QWidget):
             alt = wldset.alt
             mun = wldset.mun
 
-            html = mdat.waterlvl.generate_HTML_table(name, lat, lon, alt, mun)
+            html = generate_HTML_table(name, lat, lon, alt, mun)
             self.well_info_widget.clear()
             self.well_info_widget.setText(html)
         else:
@@ -200,8 +200,7 @@ class DataManager(QtGui.QWidget):
         self.setLayout(layout)
 
 
-# =============================================================================
-# =============================================================================
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 class NewWaterLvl(myqt.DialogWindow):
@@ -410,7 +409,7 @@ class NewWaterLvl(myqt.DialogWindow):
         for i in range(5):
             QtCore.QCoreApplication.processEvents()
 
-        self._dset = mdata.waterlvl.load_excel_datafile(filename)
+        self._dset = load_excel_datafile(filename)
 
         # Update GUI :
 
@@ -489,20 +488,19 @@ class NewWaterLvl(myqt.DialogWindow):
 
         self._dset = None
 
-# =============================================================================
-# =============================================================================
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 # class NewWXDataDialog(myqt.DialogWindow):
 
 
-# =============================================================================
-# =============================================================================
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 if __name__ == '__main__':
+    from reader_projet import ProjetReader
     f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
-    p = mdat.reader.ProjetReader(f)
+    p = ProjetReader(f)
 
     app = QtGui.QApplication(sys.argv)
 

@@ -18,7 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# STANDARD LIBRARY IMPORTS :
+from __future__ import division, unicode_literals
+
+# Standard library imports :
 
 from calendar import monthrange
 import os
@@ -28,7 +30,7 @@ import sys
 from datetime import date
 # import time
 
-# THIRD PARTY IMPORTS :
+# Third party imports :
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -40,10 +42,21 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 mpl.rcParams['backend.qt4'] = 'PySide'
 
-# PERSONAL IMPORTS :
+# Local imports :
 
-import database as db
-from colors import Colors
+try:
+    import common.database as db
+    from colors import Colors
+    from common import IconDB, StyleDB, QToolButtonNormal
+except:
+    import sys
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
+    sys.path.append(dirname(dirname(realpath(__file__))))
+
+    import common.database as db
+    from colors import Colors
+    from common import IconDB, StyleDB, QToolButtonNormal
 
 
 # =============================================================================
@@ -56,7 +69,7 @@ class LabelDataBase():
         # ---- Legend ----
 
         self.Pyrly = 'Annual total precipitation = %0.0f mm'
-        self.Tyrly = u'Average annual air temperature = %0.1f °C'
+        self.Tyrly = 'Average annual air temperature = %0.1f °C'
         self.rain = 'Rain'
         self.snow = 'Snow'
         self.Tmax = 'Temp. max.'
@@ -65,7 +78,7 @@ class LabelDataBase():
 
         # ---- Labels ----
 
-        self.Tlabel = u'Monthly Air Temperature (°C)'
+        self.Tlabel = 'Monthly Air Temperature (°C)'
         self.Plabel = 'Monthly Total Precipitation (mm)'
         self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
                             "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
@@ -74,13 +87,13 @@ class LabelDataBase():
 
             # ---- Legend ----
 
-            self.Pyrly = u'Précipitations totales annuelles = %0.0f mm'
-            self.Tyrly = u"Température moyenne annuelle = %0.1f °C"
+            self.Pyrly = 'Précipitations totales annuelles = %0.0f mm'
+            self.Tyrly = 'Température moyenne annuelle = %0.1f °C'
             self.rain = 'Pluie'
             self.snow = 'Neige'
-            self.Tmax = u'Températures min.'
-            self.Tmin = u'Températures max.'
-            self.Tavg = u'Températures moy.'
+            self.Tmax = 'Températures min.'
+            self.Tmin = 'Températures max.'
+            self.Tavg = 'Températures moy.'
 
             # ---- Labels ----
 
@@ -88,20 +101,6 @@ class LabelDataBase():
             self.Plabel = u'Précipitations totales mensuelles (mm)'
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
-
-
-class Tooltips():
-
-    def __init__(self, language):  # ------------------------------- ENGLISH --
-
-        self.save = 'Save graph'
-        self.open = "Open a valid '.out' weather data file"
-        self.addTitle = 'Add a Title to the Figure Here.'
-        self.btn_showStats = 'Show monthly weather normals data table.'
-
-        if language == 'French':  # --------------------------------- FRENCH --
-
-            pass
 
 
 class WeatherAvgGraph(QtGui.QWidget):
@@ -130,38 +129,21 @@ class WeatherAvgGraph(QtGui.QWidget):
 
     def initUI(self):  # ======================================================
 
-        iconDB = db.Icons()
-        StyleDB = db.styleUI()
-        ttipDB = Tooltips('English')
-
         self.setWindowTitle('Weather Averages')
-        self.setFont(StyleDB.font1)
-        self.setWindowIcon(iconDB.WHAT)
+        self.setWindowIcon(IconDB().master)
 
         # ---------------------------------------------------------- TOOLBAR --
 
-        btn_save = QtGui.QToolButton()
-        btn_save.setAutoRaise(True)
-        btn_save.setIcon(iconDB.save)
-        btn_save.setToolTip(ttipDB.save)
-        btn_save.setFocusPolicy(QtCore.Qt.NoFocus)
-        btn_save.setIconSize(StyleDB.iconSize)
+        btn_save = QToolButtonNormal(IconDB().save)
+        btn_save.setToolTip('Save graph')
         btn_save.clicked.connect(self.save_graph)
 
-        btn_open = QtGui.QToolButton()
-        btn_open.setAutoRaise(True)
-        btn_open.setIcon(iconDB.openFile)
-        btn_open.setToolTip(ttipDB.open)
-        btn_open.setFocusPolicy(QtCore.Qt.NoFocus)
-        btn_open.setIconSize(StyleDB.iconSize)
+        btn_open = QToolButtonNormal(IconDB().openFile)
+        btn_open.setToolTip("Open a valid '.out' weather data file")
         btn_open.clicked.connect(self.select_meteo_file)
 
-        btn_showStats = QtGui.QToolButton()
-        btn_showStats.setAutoRaise(True)
-        btn_showStats.setIcon(iconDB.showGrid)
-        btn_showStats.setToolTip(ttipDB.btn_showStats)
-        btn_showStats.setFocusPolicy(QtCore.Qt.NoFocus)
-        btn_showStats.setIconSize(StyleDB.iconSize)
+        btn_showStats = QToolButtonNormal(IconDB().showGrid)
+        btn_showStats.setToolTip('Show monthly weather normals data table.')
         btn_showStats.clicked.connect(self.show_monthly_grid)
 
 #        self.graph_title = QtGui.QLineEdit()
@@ -266,18 +248,17 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         self.grid_weather_normals.populate_table(self.NORMALS)
 
-    # =========================================================== save_graph ==
+    # ========================================================= Save Graph ====
 
     def save_graph(self):
 
-        dialog_dir = self.save_fig_dir
-        dialog_dir += '/WeatherAverages_%s' % self.station_name
+        ddir = os.path.join(self.save_fig_dir,
+                            'WeatherAverages_%s' % self.station_name)
 
         dialog = QtGui.QFileDialog()
         dialog.setConfirmOverwrite(True)
-        filename, ftype = dialog.getSaveFileName(caption="Save Figure",
-                                                 dir=dialog_dir,
-                                                 filter=('*.pdf'))
+        filename, ftype = dialog.getSaveFileName(
+                caption='Save Figure', dir=ddir, filter='*.pdf;;*.svg')
 
         if filename:
             if filename[-4:] != ftype[1:]:
@@ -289,15 +270,13 @@ class WeatherAvgGraph(QtGui.QWidget):
 
             # ---- Save Companion files ----
 
-            filename = self.save_fig_dir
-            filename += '/WeatherAverages_%s.csv' % self.station_name
-            self.save_normal_table(filename)
+            f = 'WeatherAverages_%s.csv' % self.station_name
+            self.save_normal_table(os.path.join(self.save_fig_dir, f))
 
-            filename = self.save_fig_dir
-            filename += '/MonthlySeries_%s.csv' % self.station_name
-            self.save_monthly_series(filename)
+            f = 'MonthlySeries_%s.csv' % self.station_name
+            self.save_monthly_series(os.path.join(self.save_fig_dir, f))
 
-    def save_normal_table(self, filename):  # ========= Save Normals to File ==
+    def save_normal_table(self, filename):
 
         NORMALS = self.NORMALS
 
@@ -374,7 +353,9 @@ class WeatherAvgGraph(QtGui.QWidget):
             self.generate_graph(filename)
             self.meteo_dir = os.path.dirname(filename)
 
-    def show(self):  # ========================================================
+    # =========================================================================
+
+    def show(self):
         super(WeatherAvgGraph, self).show()
         self.raise_()
         # self.activateWindow()
@@ -1285,8 +1266,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                         bbox_to_anchor=(0, 1), bbox_transform=transform)
         leg.draw_frame(False)
 
+    # =========================================================================
 
-    def plot_monthly_normals(self, NORMALS): #=================================
+    def plot_monthly_normals(self, NORMALS):
 
         self.NORMALS = NORMALS
 
@@ -1307,11 +1289,11 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # ------------------------------------------------ DEFINE AXIS RANGE --
 
         if np.sum(Ptot_norm) < 500:
-            Yscale0 = 10 # Precipitation (mm)
+            Yscale0 = 10  # Precipitation (mm)
         else:
             Yscale0 = 20
 
-        Yscale1 = 5 # Temperature (deg C)
+        Yscale1 = 5  # Temperature (deg C)
 
         SCA0 = np.arange(0, 10000, Yscale0)
         SCA1 = np.arange(-100, 100, Yscale1)
@@ -1349,9 +1331,10 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # In case there is a need to force the value
         # ----
-        Ymax0 = 100
-        Ymax1 = 30
-        Ymin1 = -20
+        if False:
+            Ymax0 = 100
+            Ymax1 = 30
+            Ymin1 = -20
         # ----
 
         # ------------------------------------------------- YTICKS FORMATING --
@@ -1360,7 +1343,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax1 = self.figure.axes[2]
         ax3 = self.figure.axes[0]
 
-        #---- Precip (host) ----
+        # ---- Precip (host) ----
 
         yticks = np.arange(Ymin0, Ymax0 + Yscale0/10., Yscale0)
         ax0.set_yticks(yticks)
@@ -1368,7 +1351,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         yticks_minor = np.arange(yticks[0], yticks[-1], 5)
         ax0.set_yticks(yticks_minor, minor=True)
 
-        #---- Air Temp ----
+        # ---- Air Temp ----
 
         yticks1 = np.arange(Ymin1, Ymax1 + Yscale1/10., Yscale1)
         ax1.set_yticks(yticks1)
@@ -1376,22 +1359,22 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1/5.)
         ax1.set_yticks(yticks1_minor, minor=True)
 
-        #---------------------------------------------------- SET AXIS RANGE --
+        # --------------------------------------------------- SET AXIS RANGE --
 
         ax0.set_ylim(Ymin0, Ymax0)
         ax1.set_ylim(Ymin1, Ymax1)
 
-        #------------------------------------------------------------ LABELS --
+        # ----------------------------------------------------------- LABELS --
 
         self.set_axes_labels()
 
-        #---------------------------------------------------------- PLOTTING --
+        # --------------------------------------------------------- PLOTTING --
 
         self.plot_precip(Ptot_norm, Snow_norm)
         self.plot_air_temp(Tmax_norm, Tmin_norm, Tavg_norm)
         self.update_yearly_avg()
 
-        #---------------------------------------------------------- Clipping --
+        # --------------------------------------------------------- Clipping --
 
         # There is currently a bug regarding this. So we need to do a
         # workaround
@@ -1469,21 +1452,21 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             self.figure.axes[2].lines[i].set_ydata(Tnorm)
 
 
-    def update_yearly_avg(self): #======================= Update Yearly Avg. ==
+    def update_yearly_avg(self):  # ===================== Update Yearly Avg. ==
 
         Tavg_norm = self.NORMALS[:, 2]
         Ptot_norm = self.NORMALS[:, 3]
 
         ax = self.figure.axes[0]
 
-        #---- update position ----
+        # ---- update position ----
 
         bbox = ax.texts[0].get_window_extent(self.get_renderer())
         bbox = bbox.transformed(ax.transAxes.inverted())
 
         ax.texts[1].set_position((0, bbox.y0))
 
-        #---- update labels ----
+        # ---- update labels ----
         labelDB = LabelDataBase(self.lang)
 
         ax.texts[0].set_text(labelDB.Tyrly % np.mean(Tavg_norm))
@@ -1501,22 +1484,14 @@ class GridWeatherNormals(QtGui.QTableWidget):
 
         self.initUI()
 
-    def initUI(self): #====================================================
+    def initUI(self):
 
-        StyleDB = db.styleUI()
-
-        #--------------------------------------------------------- Style --
-
-        fnt = StyleDB.font1
-        fnt.setPointSize(10)
-        self.setFont(StyleDB.font1)
-
-        self.setFrameStyle(StyleDB.frame)
+        self.setFrameStyle(StyleDB().frame)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
 #        self.setMinimumWidth(650)
 
-        #-------------------------------------------------------- Header --
+        # ------------------------------------------------------- Header --
 
 
         HEADER = ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
@@ -1618,21 +1593,27 @@ class GridWeatherNormals(QtGui.QTableWidget):
         self.resizeColumnsToContents()
 
 if __name__ == '__main__':
-#    plt.rc('font',family='Arial')
+    import matplotlib.pyplot as plt
+    plt.rc('font', family='Arial')
 
     app = QtGui.QApplication(sys.argv)
 
-#    fmeteo = "Files4testing/Daily - SASKATOON DIEFENBAKER & RCS_1980-2014.out"
-    fmeteo = "Files4testing/TORONTO LESTER B. PEARSON INT'L _1980-2010.out"
-#    fmeteo = "Files4testing/BONSECOURS (7020828)_1980-2009.out"
-#   fmeteo = "Files4testing/FORTIERVILLE (7022494)_2013-2015.out"
+    ft = app.font()
+    ft.setFamily('Segoe UI')
+    ft.setPointSize(11)
+    app.setFont(ft)
+
+    fmeteo = ('C:/Users/jnsebgosselin/OneDrive/WHAT/Projects/'
+              'Project4Testing/Meteo/Output/IBERVILLE (7023270)/'
+              'IBERVILLE (7023270)_1980-2015.out')
 
     w = WeatherAvgGraph()
-    w.save_fig_dir =  '../Projects/Monteregie Est'
-    w.meteo_dir = '../Projects/Monteregie Est/Meteo/Output'
+    w.save_fig_dir = os.getcwd()
+    w.meteo_dir = os.getcwd()
     w.show()
     w.set_lang('English')
     w.generate_graph(fmeteo)
+
 #    w.fig_weather_normals.figure.savefig('test.pdf')
 #    w.save_normal_table('test.csv')
 #    for i in range(250):

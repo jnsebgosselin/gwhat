@@ -19,51 +19,45 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-#----- STANDARD LIBRARY IMPORTS -----
+from __future__ import division, unicode_literals
+
+# Standard library imports :
 
 try:
     from urllib2 import urlopen, URLError
 except:
     from urllib.request import URLError, urlopen
 
-#from datetime import datetime
 import sys
 import os
 from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
 
-#----- THIRD PARTY IMPORTS -----
+# Third party imports :
 
 import numpy as np
 from PySide import QtGui, QtCore
 
-#---- PERSONAL IMPORTS ----
+# Local imports :
 
-import database as db
-from search_weather_data import WeatherStationDisplayTable, Search4Stations
-import custom_widgets as MyQWidget
+try:
+    import common.database as db
+    from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+    import common.widgets as myqt
+    from meteo.search_weather_data import WeatherStationDisplayTable
+    from meteo.search_weather_data import Search4Stations
+except ImportError:  # to run this module standalone
+    import sys
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
+    sys.path.append(dirname(dirname(realpath(__file__))))
 
-
-class Tooltips():
-
-    def __init__(self, language):  # ---------------------------- ENGLISH -----
-
-        self.search4stations = ('Search for weather stations in the ' +
-                                'Canadian Daily Climate Database (CDCD)')
-        self.refresh_staList = 'Refresh the current weather station list'
-        self.btn_browse_staList = 'Load an existing weather station list'
-        self.btn_save_staList = 'Save current station list.'
-        self.btn_delSta = 'Remove selected weather stations from the list'
-
-        self.btn_GetData = 'Download data for the selected weather stations'
-
-        self.btn_select_rawData = 'Select and format raw weather data files'
-        self.btn_save_concatenate = 'Save formated weather data in a csv file'
-
-        if language == 'French':  # ------------------------------ FRENCH -----
-
-            pass
+    import common.database as db
+    from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+    import common.widgets as myqt
+    from meteo.search_weather_data import WeatherStationDisplayTable
+    from meteo.search_weather_data import Search4Stations
 
 
 # =============================================================================
@@ -96,17 +90,9 @@ class dwnldWeather(QtGui.QWidget):
 
     def __initUI__(self):
 
-        # ---- Database ----
-
-        styleDB = db.styleUI()
-        iconDB = db.Icons()
-        ttipDB = Tooltips('English')
-        labelDB = db.labels('English')
-
         # ---- Main Window ----
 
-        self.setWindowIcon(iconDB.WHAT)
-        self.setFont(styleDB.font1)
+        self.setWindowIcon(IconDB().master)
 
         # ---- Instances init ----
 
@@ -120,40 +106,24 @@ class dwnldWeather(QtGui.QWidget):
         btn_save_menu.addAction('Save As...',
                                 self.btn_saveAs_staList_isClicked)
 
-        self.btn_save_staList = QtGui.QToolButton()
-        self.btn_save_staList.setIcon(iconDB.save)
-        self.btn_save_staList.setAutoRaise(True)
-        self.btn_save_staList.setToolTip(ttipDB.btn_save_staList)
-        self.btn_save_staList.setIconSize(styleDB.iconSize)
+        self.btn_save_staList = QToolButtonNormal(IconDB().save)
+        self.btn_save_staList.setToolTip('Save current station list.')
         self.btn_save_staList.setMenu(btn_save_menu)
         self.btn_save_staList.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
 
-        btn_search4station = QtGui.QToolButton()
-        btn_search4station.setAutoRaise(True)
-        btn_search4station.setIcon(iconDB.search)
-        btn_search4station.setToolTip(ttipDB.search4stations)
-        btn_search4station.setIconSize(styleDB.iconSize)
+        btn_search4station = QToolButtonNormal(IconDB().search)
+        btn_search4station.setToolTip('Search for weather stations in the ' +
+                                      'Canadian Daily Climate Database (CDCD)')
 
-        btn_browse_staList = QtGui.QToolButton()
-        btn_browse_staList.setIcon(iconDB.openFile)
-        btn_browse_staList.setAutoRaise(True)
-        btn_browse_staList.setToolTip(ttipDB.btn_browse_staList)
-        btn_browse_staList.setIconSize(styleDB.iconSize)
+        btn_browse_staList = QToolButtonNormal(IconDB().openFile)
+        btn_browse_staList.setToolTip('Load an existing weather station list')
 
-        btn_delSta = QtGui.QToolButton()
-        btn_delSta.setIcon(iconDB.erase)
-        btn_delSta.setAutoRaise(True)
-        btn_delSta.setToolTip(ttipDB.btn_delSta)
-        btn_delSta.setIconSize(styleDB.iconSize)
+        btn_delSta = QToolButtonNormal(IconDB().erase)
+        btn_delSta.setToolTip('Remove selected weather stations from the list')
 
-        self.btn_get = QtGui.QToolButton()
-        self.btn_get.setIcon(iconDB.download)
-        self.btn_get.setAutoRaise(True)
-        self.btn_get.setToolTip(ttipDB.btn_GetData)
-        self.btn_get.setIconSize(styleDB.iconSize)
-
-        separator1 = QtGui.QFrame()
-        separator1.setFrameStyle(styleDB.VLine)
+        self.btn_get = QToolButtonNormal(IconDB().download)
+        self.btn_get.setToolTip(
+                'Download data for the selected weather stations')
 
         tb = QtGui.QGridLayout()
         col = 0
@@ -177,40 +147,24 @@ class dwnldWeather(QtGui.QWidget):
 
         display_label = QtGui.QLabel('<b>Formatted Weather Data Info :</b>')
 
-        self.saveAuto_checkbox = QtGui.QCheckBox(labelDB.saveMeteoAuto)
+        self.saveAuto_checkbox = QtGui.QCheckBox(
+            'Automatically save formatted\nweather data')
         self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
-
         self.saveAuto_checkbox.setStyleSheet(
                           'QCheckBox::indicator{subcontrol-position:top left}')
 
         # ---- Go Toolbar ----
 
-        self.btn_goNext = QtGui.QToolButton()
-        self.btn_goNext.setIcon(iconDB.go_next)
-        self.btn_goNext.setAutoRaise(True)
-#        btn_goNext.setToolTip(ttipDB.btn_delSta)
-        self.btn_goNext.setIconSize(styleDB.iconSize2)
+        self.btn_goNext = QToolButtonSmall(IconDB().go_next)
         self.btn_goNext.setEnabled(False)
 
-        self.btn_goPrevious = QtGui.QToolButton()
-        self.btn_goPrevious.setIcon(iconDB.go_previous)
-        self.btn_goPrevious.setAutoRaise(True)
-#        btn_goNext.setToolTip(ttipDB.btn_delSta)
-        self.btn_goPrevious.setIconSize(styleDB.iconSize2)
+        self.btn_goPrevious = QToolButtonSmall(IconDB().go_previous)
         self.btn_goPrevious.setEnabled(False)
 
-        self.btn_goLast = QtGui.QToolButton()
-        self.btn_goLast.setIcon(iconDB.go_last)
-        self.btn_goLast.setAutoRaise(True)
-#        btn_goLast.setToolTip(ttipDB.btn_delSta)
-        self.btn_goLast.setIconSize(styleDB.iconSize2)
+        self.btn_goLast = QToolButtonSmall(IconDB().go_last)
         self.btn_goLast.setEnabled(False)
 
-        self.btn_goFirst = QtGui.QToolButton()
-        self.btn_goFirst.setIcon(iconDB.go_first)
-        self.btn_goFirst.setAutoRaise(True)
-#        btn_goNext.setToolTip(ttipDB.btn_delSta)
-        self.btn_goFirst.setIconSize(styleDB.iconSize2)
+        self.btn_goFirst = QToolButtonSmall(IconDB().go_first)
         self.btn_goFirst.setEnabled(False)
 
         goToolbar_grid = QtGui.QGridLayout()
@@ -236,15 +190,15 @@ class dwnldWeather(QtGui.QWidget):
         self.mergeDisplay.setReadOnly(True)
         self.mergeDisplay.setMinimumHeight(250)
 
-        btn_selectRaw = QtGui.QPushButton(labelDB.btn_select_rawData)
-        btn_selectRaw.setIcon(iconDB.openFile)
-        btn_selectRaw.setToolTip(ttipDB.btn_select_rawData)
-        btn_selectRaw.setIconSize(styleDB.iconSize2)
+        btn_selectRaw = QtGui.QPushButton('Select')
+        btn_selectRaw.setIcon(IconDB().openFile)
+        btn_selectRaw.setToolTip('Select and format raw weather data files')
+        btn_selectRaw.setIconSize(IconDB().iconSize2)
 
-        btn_saveMerge = QtGui.QPushButton(labelDB.btn_save_concatenate)
-        btn_saveMerge.setToolTip(ttipDB.btn_save_concatenate)
-        btn_saveMerge.setIcon(iconDB.save)
-        btn_saveMerge.setIconSize(styleDB.iconSize2)
+        btn_saveMerge = QtGui.QPushButton('Save')
+        btn_saveMerge.setToolTip('Save formated weather data in a csv file')
+        btn_saveMerge.setIcon(IconDB().save)
+        btn_saveMerge.setIconSize(IconDB().iconSize2)
 
         rightPanel_grid = QtGui.QGridLayout()
         rightPanel_widg = QtGui.QFrame()
@@ -270,14 +224,11 @@ class dwnldWeather(QtGui.QWidget):
 
         # ------------------------------------------------------ Main Grid ----
 
-        vLine1 = QtGui.QFrame()
-        vLine1.setFrameStyle(styleDB.VLine)
-
         main_grid = QtGui.QGridLayout()
 
         main_grid.addLayout(tb, 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
-        main_grid.addWidget(vLine1, 0, 1, 2, 1)
+        main_grid.addWidget(myqt.VSep(), 0, 1, 2, 1)
 
         main_grid.addWidget(display_label, 0, 2)
         main_grid.addWidget(rightPanel_widg, 1, 2)
@@ -289,10 +240,6 @@ class dwnldWeather(QtGui.QWidget):
         main_grid.setHorizontalSpacing(15)
 
         self.setLayout(main_grid)
-
-        # ---------------------------------------------------- MESSAGE BOX ----
-
-        self.msgBox = MyQWidget.MyQErrorMessageBox()
 
         # --------------------------------------------------------- EVENTS ----
 
@@ -596,9 +543,9 @@ class dwnldWeather(QtGui.QWidget):
                 self.staList2dwnld.append(sta2add)
 
             if len(self.staList2dwnld) == 0:
-                print('No weather station currently selected.')
-                self.msgBox.setText('No weather station currently selected.')
-                self.msgBox.exec_()
+                msg = ('No weather station currently selected.')
+                btn = QtGui.QMessageBox.Ok
+                QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
                 return
 
         else:  # ----------------------------- Check if process isFinished ----
@@ -1150,6 +1097,11 @@ class DownloadRawDataFiles(QtCore.QThread):
 if __name__ == '__main__':
 
     app = QtGui.QApplication(sys.argv)
+
+    ft = app.font()
+    ft.setFamily('Segoe UI')
+    ft.setPointSize(10)
+    app.setFont(ft)
 
     w = dwnldWeather()
 

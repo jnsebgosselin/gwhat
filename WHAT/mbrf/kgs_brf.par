@@ -1,9 +1,0 @@
-BRF Option (C[ompute] or R[ead]): Compute
-BRF Input Data File: C:\Users\jnsebgosselin\OneDrive\WHAT\WHAT\brf_mod\BRFInput.txt
-Number of BP Lags:  6
-Number of BP ET:  -1
-BRF Output Data File: C:\Users\jnsebgosselin\OneDrive\WHAT\WHAT\brf_mod\BRFOutput.txt
-Detrend data? (Y[es] or N[o]): Yes
-Correct WL? (Y[es] or N[o]): No
-WLC Input Data File: C:\Users\jnsebgosselin\OneDrive\WHAT\WHAT\brf_mod\WLCInput.txt
-WLC Output Data File: C:\Users\jnsebgosselin\OneDrive\WHAT\WHAT\brf_mod\WLCOutput.txt

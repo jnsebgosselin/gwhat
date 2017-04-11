@@ -43,54 +43,17 @@ from xlrd.xldate import xldate_from_date_tuple
 
 # Local imports :
 
-from custom_widgets import VSep, MyQToolButton
-import database as db
-import meteo
+from meteo.meteo_utils import MeteoObj
 from waterlvldata import WaterlvlData
 from gwrecharge_calc2 import SynthHydrograph
 
-import mgui.widgets as myqt
-from mgui.icons import IconDB
-import mbrf as bm
+import common.database as db
+import common.widgets as myqt
+from common import IconDB, StyleDB, QToolButtonNormal
+import kgs_brf as bm
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
-
-
-class Tooltips():
-
-    def __init__(self, language):  # ------------------------------- ENGLISH --
-
-        # Toolbar :
-
-        self.undo = 'Undo'
-        self.clearall = 'Clear all extremum from the graph'
-        self.home = 'Reset original view.'
-        self.delPeak = ('Toggle edit mode to manually remove extremums '
-                        'from the graph')
-        self.pan = 'Pan axes with left mouse, zoom with right'
-        self.MRCalc = ('Calculate the Master Recession Curve (MRC) for the '
-                       'selected time pertiods')
-        self.editPeak = ('Toggle edit mode to manually add extremums '
-                         'to the graph')
-        self.toggle_layout_mode = ('Toggle between layout and computation '
-                                   'mode (EXPERIMENTAL FEATURE)')
-        self.find_peak = ('Automated search for local '
-                          'extremum (EXPERIMENTAL FEATURE)')
-        self.btn_Waterlvl_lineStyle = ('Show water lvl data as dots instead '
-                                       'of a continuous line')
-        self.btn_strati = ('Toggle on and off the display of the soil'
-                           ' stratigraphic layers')
-        self.btn_save_interp = 'Save Calculated MRC to file.'
-        self.mrc2rechg = ('Compute recharge from the water level time series'
-                          ' using the MRC calculated and the water-table'
-                          ' fluctuation principle')
-        self.btn_dateFormat = ('x axis label time format: '
-                               'date or MS Excel numeric')
-        self.btn_recharge = ('Show window for recharge estimation')
-
-        if language == 'French':  # --------------------------------- FRENCH --
-            pass
 
 
 # =============================================================================
@@ -122,7 +85,7 @@ class WLCalc(QtGui.QWidget):
 
         # Weather Data :
 
-        self.meteo_data = meteo.MeteoObj()
+        self.meteo_data = MeteoObj()
 
         # Date System :
 
@@ -199,7 +162,7 @@ class WLCalc(QtGui.QWidget):
         self.fig_frame_widget.setLayout(fig_frame_grid)
         fig_frame_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
 
-        self.fig_frame_widget.setFrameStyle(db.styleUI().frame)
+        self.fig_frame_widget.setFrameStyle(StyleDB().frame)
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
 
@@ -296,9 +259,6 @@ class WLCalc(QtGui.QWidget):
 
     def __initUI__(self):  # ==================================================
 
-        iconDB = db.Icons()
-        ttipDB = Tooltips('English')
-
         self.setWindowTitle('Master Recession Curve Estimation')
 
         # ---------------------------------------------------------- TOOLBAR --
@@ -308,67 +268,84 @@ class WLCalc(QtGui.QWidget):
 
         # Toolbar Buttons :
 
-        self.btn_layout_mode = MyQToolButton(
-            iconDB.toggleMode, ttipDB.toggle_layout_mode, autoRaise=False)
+        self.btn_layout_mode = QToolButtonNormal(IconDB().toggleMode)
+        self.btn_layout_mode.setAutoRaise(False)
+        ttip = '<p>Toggle between layout and computation mode</p>'
+        self.btn_layout_mode.setToolTip(ttip)
 
-        self.btn_undo = MyQToolButton(iconDB.undo, ttipDB.undo, enabled=False)
+        self.btn_undo = QToolButtonNormal(IconDB().undo)
+        self.btn_undo.setToolTip('Undo')
+        self.btn_undo.setEnabled(False)
         self.btn_undo.clicked.connect(self.undo)
 
-        self.btn_clearPeak = MyQToolButton(
-            iconDB.clear_search, ttipDB.clearall)
+        self.btn_clearPeak = QToolButtonNormal(IconDB().clear_search)
+        self.btn_clearPeak.setToolTip('Clear all extremum from the graph')
         self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
 
-        self.btn_home = MyQToolButton(iconDB.home, ttipDB.home)
+        self.btn_home = QToolButtonNormal(IconDB().home)
+        self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_editPeak = MyQToolButton(iconDB.add_point, ttipDB.editPeak)
+        self.btn_editPeak = QToolButtonNormal(IconDB().add_point)
         self.btn_editPeak.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_editPeak.setToolTip('<p>Toggle edit mode to manually'
+                                     ' add extremums to the graph</p>')
 
-        self.btn_delPeak = MyQToolButton(iconDB.erase, ttipDB.delPeak)
+        self.btn_delPeak = QToolButtonNormal(IconDB().erase)
         self.btn_delPeak.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_delPeak.setToolTip('<p>Toggle edit mode to manually remove '
+                                    'extremums from the graph</p>')
 
-        self.btn_pan = MyQToolButton(iconDB.pan, ttipDB.pan)
+        self.btn_pan = QToolButtonNormal(IconDB().pan)
+        self.btn_pan.setToolTip('Pan axes with left mouse, zoom with right')
         self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_MRCalc = MyQToolButton(iconDB.MRCalc, ttipDB.MRCalc)
+        self.btn_MRCalc = QToolButtonNormal(IconDB().MRCalc)
         self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_MRCalc.setToolTip('<p>Calculate the Master Recession Curve'
+                                   ' (MRC) for the selected time periods.</p>')
 
-        self.btn_strati = MyQToolButton(iconDB.stratigraphy, ttipDB.btn_strati)
+        self.btn_strati = QToolButtonNormal(IconDB().stratigraphy)
+        self.btn_strati.setToolTip('Toggle on and off the display of the soil'
+                                   ' stratigraphic layers')
         self.btn_strati.clicked.connect(self.btn_strati_isClicked)
 
-        self.btn_Waterlvl_lineStyle = MyQToolButton(
-            iconDB.showDataDots, ttipDB.btn_Waterlvl_lineStyle)
+        self.btn_Waterlvl_lineStyle = QToolButtonNormal(IconDB().showDataDots)
+        self.btn_Waterlvl_lineStyle.setToolTip(
+            '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_save_interp = MyQToolButton(
-            iconDB.save, ttipDB.btn_save_interp)
+        self.btn_save_interp = QToolButtonNormal(IconDB().save)
+        self.btn_save_interp.setToolTip('Save Calculated MRC to file.')
         self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_dateFormat = MyQToolButton(
-              iconDB.calendar, ttipDB.btn_dateFormat, autoRaise=1-self.dformat)
+        self.btn_dateFormat = QToolButtonNormal(IconDB().calendar)
+        self.btn_dateFormat.setAutoRaise(1-self.dformat)
+        self.btn_dateFormat.setToolTip('x axis label time format: '
+                                       'date or MS Excel numeric')
         self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
         # dformat: 0 -> Excel Numeric Date Format
         #          1 -> Matplotlib Date Format
 
-        self.btn_recharge = MyQToolButton(
-            iconDB.page_setup, ttipDB.btn_recharge)
+        self.btn_recharge = QToolButtonNormal(IconDB().page_setup)
+        self.btn_recharge.setToolTip('Show window for recharge estimation')
         self.btn_recharge.clicked.connect(self.rechg_setup_win.show)
         self.btn_recharge.hide()
 
-        self.btn_synthHydro = MyQToolButton(
-            iconDB.page_setup, 'Show synthetic hydrograph')
+        self.btn_synthHydro = QToolButtonNormal(IconDB().page_setup)
+        self.btn_synthHydro.setToolTip('Show synthetic hydrograph')
         self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
         self.btn_synthHydro.hide()
 
         # ---- BRF ----
 
-        self.btn_selBRF = MyQToolButton(iconDB.add_point, '')
+        self.btn_selBRF = QToolButtonNormal(IconDB().add_point)
         self.btn_selBRF.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_calcBRF = MyQToolButton(IconDB().calc_brf, '')
+        self.btn_calcBRF = QToolButtonNormal(IconDB().calc_brf)
         self.btn_calcBRF.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_setBRF = MyQToolButton(IconDB().setup, '')
+        self.btn_setBRF = QToolButtonNormal(IconDB().setup)
         self.btn_setBRF.clicked.connect(self.config_brf.show)
 
 #        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
@@ -378,12 +355,12 @@ class WLCalc(QtGui.QWidget):
 
         # Grid Layout :
 
-        btn_list = [self.btn_layout_mode, VSep(), self.btn_undo,
+        btn_list = [self.btn_layout_mode, myqt.VSep(), self.btn_undo,
                     self.btn_clearPeak, self.btn_editPeak, self.btn_delPeak,
-                    VSep(), self.btn_home, self.btn_pan, VSep(),
-                    self.btn_MRCalc, self.btn_save_interp, VSep(),
+                    myqt.VSep(), self.btn_home, self.btn_pan, myqt.VSep(),
+                    self.btn_MRCalc, self.btn_save_interp, myqt.VSep(),
                     self.btn_Waterlvl_lineStyle, self.btn_dateFormat,
-                    self.btn_recharge, self.btn_synthHydro, VSep(),
+                    self.btn_recharge, self.btn_synthHydro, myqt.VSep(),
                     self.btn_selBRF, self.btn_calcBRF, self.btn_setBRF]
 
         subgrid_toolbar = QtGui.QGridLayout()
@@ -1266,6 +1243,9 @@ class WLCalc(QtGui.QWidget):
         self.draw()
 
     def mouse_vguide(self, event):
+        if self.isGraphExists is False:
+            return
+
         if not self.btn_pan.autoRaise():
             return
 
@@ -2380,11 +2360,6 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
                 if suffix:
                     self.setSuffix(' %s' % suffix)
 
-        class HSep(QtGui.QFrame): # vertical separators for the toolbar
-            def __init__(self, parent=None):
-                super(HSep, self).__init__(parent)
-                self.setFrameStyle(db.styleUI().HLine)
-
         # ---------------------------------------------------------- Toolbar --
 
         toolbar_widget = QtGui.QWidget()
@@ -2431,7 +2406,7 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
         mainLayout.addWidget(QtGui.QLabel('Parameter'), row, 0)
         mainLayout.addWidget(QTitle, row, 2, 1, 3)
         row += 1
-        mainLayout.addWidget(HSep(), row, 0, 1, 5)
+        mainLayout.addWidget(myqt.HSep(), row, 0, 1, 5)
         row += 1
         mainLayout.addWidget(QtGui.QLabel('Sy :'), row, 0)
         mainLayout.addWidget(self.QSy_min, row, 2)
@@ -2448,7 +2423,7 @@ class RechgSetupWin(QtGui.QWidget):                   # Recharge Setup Window #
         mainLayout.addWidget(QtGui.QLabel('to'), row, 3)
         mainLayout.addWidget(self.CRO_max, row, 4)
         row += 1
-        mainLayout.addWidget(HSep(), row, 0, 1, 5)
+        mainLayout.addWidget(myqt.HSep(), row, 0, 1, 5)
         row += 1
         mainLayout.addWidget(QtGui.QLabel('Tcrit :'), row, 0)
         mainLayout.addWidget(self.Tcrit, row, 2)

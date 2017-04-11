@@ -45,16 +45,15 @@ from PySide import QtGui, QtCore
 
 # Local imports :
 
-import database as db
+import common.database as db
 import custom_widgets as MyQWidget
 import HydroPrint
-import dwnld_weather_data
-from gapfill_weather_gui import GapFillWeatherGUI
+from meteo import dwnld_weather_data
+from meteo.gapfill_weather_gui import GapFillWeatherGUI
 
-from mgui.about import AboutWhat
-from mgui.projet import ProjetManager
-from mgui.icons import IconDB
-
+from about import AboutWhat
+from projet.manager_projet import ProjetManager
+from common import IconDB, StyleDB
 
 freeze_support()
 
@@ -93,12 +92,6 @@ class WHAT(QtGui.QMainWindow):
         # using-global-variables-in-a-function-other-
         # than-the-one-that-created-them
 
-        global labelDB
-        labelDB = db.labels(language)
-        global styleDB
-        styleDB = db.styleUI()
-        global ttipDB
-        ttipDB = db.Tooltips(language)
         global headerDB
         headerDB = db.FileHeaders()
 
@@ -123,7 +116,7 @@ class WHAT(QtGui.QMainWindow):
         self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
 
         style = 'Regular'
-        family = db.styleUI().fontfamily
+        family = StyleDB().fontfamily
         size = self.whatPref.fontsize_console
         fontSS = ('font-style: %s;'
                   'font-size: %s;'
@@ -176,10 +169,10 @@ class WHAT(QtGui.QMainWindow):
 
         # ---- TABS ASSEMBLY ----
 
-        Tab_widget.addTab(self.tab_dwnld_data, labelDB.TAB1)
-        Tab_widget.addTab(self.tab_fill_weather_data, labelDB.TAB2)
-        Tab_widget.addTab(self.tab_hydrograph, labelDB.TAB3)
-        Tab_widget.addTab(tab_about, labelDB.TAB4)
+        Tab_widget.addTab(self.tab_dwnld_data, 'Download Data')
+        Tab_widget.addTab(self.tab_fill_weather_data, 'Fill Data')
+        Tab_widget.addTab(self.tab_hydrograph, 'Hydrograph')
+        Tab_widget.addTab(tab_about, 'About')
 
         Tab_widget.setCornerWidget(self.pmanager)
 
@@ -226,10 +219,6 @@ class WHAT(QtGui.QMainWindow):
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)
 
-        # ---------------------------------------------------- MESSAGE BOXES --
-
-        self.msgError = MyQWidget.MyQErrorMessageBox()
-
         # ------------------------------------------------- CHECK IF PROJECT --
 
         success = self.pmanager.load_project(self.projectfile)
@@ -244,8 +233,8 @@ class WHAT(QtGui.QMainWindow):
                      project or create a new one.<b>
                      ''' % self.projectfile
 
-            self.msgError.setText(msgtxt)
-            self.msgError.exec_()
+            btn = QtGui.QMessageBox.Ok
+            QtGui.QMessageBox.warning(self, 'Warning', msgtxt, btn)
 
     # =========================================================================
 
