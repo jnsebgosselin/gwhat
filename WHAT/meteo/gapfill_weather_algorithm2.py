@@ -44,10 +44,10 @@ from PySide import QtCore
 # PERSONAL IMPORTS :
 
 try:
-    import meteo.meteo_utils as meteo_utils
-    import common.database as db
     from hydrograph3 import LatLong2Dist
+    import meteo.meteo_utils as meteo_utils
     from meteo.gapfill_weather_postprocess import PostProcessErr
+    from _version import __version__
 except ImportError:  # to run this module standalone
     print('Running module as a standalone script...')
     import sys
@@ -55,9 +55,9 @@ except ImportError:  # to run this module standalone
     sys.path.append(dirname(dirname(realpath(__file__))))
 
     import meteo.meteo_utils as meteo_utils
-    import common.database as db
     from hydrograph3 import LatLong2Dist
     from meteo.gapfill_weather_postprocess import PostProcessErr
+    from _version import __version__
 
 
 # =============================================================================
@@ -121,7 +121,12 @@ class GapFillWeather(QtCore.QObject):
         self.limitAlt = 350
         self.regression_mode = 1
         self.add_ETP = False
+
         self.full_error_analysis = False
+        self.leave_one_out = False
+
+        # leave_one_out: flag to control if data are removed from the
+        #                dataset in the cross-validation procedure.
 
         # ------------------------------------------------ Signals and Slots --
 
@@ -457,7 +462,6 @@ class GapFillWeather(QtCore.QObject):
                 # *True*.
 
                 if self.STOP == True:
-
                     msg = ('Completion process for station %s stopped.' %
                            target_station_name)
                     print(msg)
@@ -478,7 +482,6 @@ class GapFillWeather(QtCore.QObject):
                 colm = np.where(~np.isnan(YX[row, 1:]))[0]
 
                 if np.size(colm) == 0:
-
                     # Impossible to fill variable because all neighboring
                     # stations are empty.
 
@@ -490,9 +493,7 @@ class GapFillWeather(QtCore.QObject):
                         FLAG_nan = True
                         # A warning comment will be issued at the end of the
                         # the completion process.
-
                 else:
-
                     # Determines the number of neighboring stations to
                     # include in the regression model.
 
@@ -547,7 +548,7 @@ class GapFillWeather(QtCore.QObject):
                         # memory remains empty and a new MLR model is built
                         # for each value of the data series.
 
-                        if self.full_error_analysis == False:
+                        if self.leave_one_out is False:
                             colm_memory = np.append(colm_memory, colm_seq)
 
                         # Columns of DATA for the variable VAR are sorted
@@ -565,7 +566,8 @@ class GapFillWeather(QtCore.QObject):
                         # the dataset like it should properly be done in a
                         # cross-validation procedure.
 
-                        YXcolm[row, 0] = np.nan
+                        if self.leave_one_out is False:
+                            YXcolm[row, 0] = np.nan
 
                         # ---- Removes Rows with NaN ----
 
@@ -753,7 +755,7 @@ class GapFillWeather(QtCore.QObject):
                   ['Elevation', target_station_alt],
                   ['Climate Identifier', target_station_clim],
                   [],
-                  ['Created by', db.software_version],
+                  ['Created by', __version__],
                   ['Created on', strftime("%d/%m/%Y")],
                   []]
 
@@ -774,7 +776,6 @@ class GapFillWeather(QtCore.QObject):
         #             predict Ypre, weather variable wise.
         # Xcount_tot: Number of times each neighboring station was used to
         #             predict Ypre for all variables.
-
 
         # ---- Gap-Fill Info Summary ----
 
@@ -807,7 +808,7 @@ class GapFillWeather(QtCore.QObject):
                           '']])
         fcontent[-1].extend(Xnames)
 
-        #---- Missing Data Summary ----
+        # ---- Missing Data Summary ----
 
         total_nbr_data = index_end - index_start + 1
         nbr_fill_total = 0
@@ -956,15 +957,15 @@ class GapFillWeather(QtCore.QObject):
         # ---- Add ETP to File ----
 
         if self.add_ETP:
-            meteo.add_ETP_to_weather_data_file(output_path)
+            meteo_utils.add_ETP_to_weather_data_file(output_path)
 
         # ---- Produces Weather Normals Graph ----
 
-        METEO = meteo.MeteoObj()
+        METEO = meteo_utils.MeteoObj()
         METEO.load_and_format(output_path)
-        NORMALS, _ = meteo.calculate_normals(METEO.DATA, METEO.datatypes)
+        NORMALS, _ = meteo_utils.calculate_normals(METEO.DATA, METEO.datatypes)
 
-        w = meteo.FigWeatherNormals()
+        w = meteo_utils.FigWeatherNormals()
         w.plot_monthly_normals(NORMALS)
         figname = dirname + 'weather_normals.pdf'
         print('Generating %s.' % figname)
@@ -1475,7 +1476,7 @@ class WeatherData(object):
 
             if (time_end - time_start + 1) != len(STADAT[:, 0]):
                 print('\n%s is not continuous, correcting...' % reader[0][1])
-                STADAT = meteo.make_timeserie_continuous(STADAT)
+                STADAT = meteo_utils.make_timeserie_continuous(STADAT)
                 print('%s is now continuous.' % reader[0][1])
 
             time_new = np.arange(time_start, time_end + 1)
