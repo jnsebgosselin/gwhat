@@ -686,16 +686,16 @@ if __name__ == '__main__':
 
     # ---- Valcartier ----
 
-    dirname = '../Projects/Valcartier'
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'Valcartier (9999999)',
-                          'Valcartier (9999999)_1994-2015.out')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'valcartier2.xls')
-
-    Sy = [0.2, 0.3]
-    RASmax = [40, 100]
-    Cru = [0.22, 0.39]
-    sh.TMELT = 0
-    sh.CM = 4
+#    dirname = '../Projects/Valcartier'
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'Valcartier (9999999)',
+#                          'Valcartier (9999999)_1994-2015.out')
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'valcartier2.xls')
+#
+#    Sy = [0.2, 0.3]
+#    RASmax = [40, 100]
+#    Cru = [0.22, 0.39]
+#    sh.TMELT = 0
+#    sh.CM = 4
 
     # ---- IDM ----
 
@@ -723,25 +723,25 @@ if __name__ == '__main__':
 
     # ---- NB ----
 
-    dirname = '../Projects/Sussex'
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-                          'SUSSEX (8105200_8105210)',
-                          'SUSSEX (8105200_8105210)_1980-2017.out')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
-
-    Sy = [0, 0.06]
-    RASmax = [40, 50]
-    Cru = [0.2, 0.4]
-    sh.TMELT = -2.5
-    sh.CM = 3
+#    dirname = '../Projects/Sussex'
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+#                          'SUSSEX (8105200_8105210)',
+#                          'SUSSEX (8105200_8105210)_1980-2017.out')
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
+#
+#    Sy = [0, 0.06]
+#    RASmax = [40, 50]
+#    Cru = [0.2, 0.4]
+#    sh.TMELT = -2.5
+#    sh.CM = 3
 
     # ---- Suffield ----
 
-    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
-    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-                          'MEDICINE HAT RCS (3034485)',
-                          'MEDICINE HAT RCS (3034485)_2000-2016.out')
+#    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
+#    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+#                          'MEDICINE HAT RCS (3034485)',
+#                          'MEDICINE HAT RCS (3034485)_2000-2016.out')
 
 #    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
 #                          'SUFFIELD A (3036240)',
@@ -759,19 +759,39 @@ if __name__ == '__main__':
 #                          'SCHULER AGDM (3025768)',
 #                          'SCHULER AGDM (3025768)_2002-2016.out')
 
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
+#
+#    Sy = [0.1, 0.32]
+#    RASmax = [15, 35]
+#    Cru = [0, 0.05]
+#    sh.TMELT = -2.5
+#    sh.CM = 4
+#    sh.deltat = 80
 
-    Sy = [0.1, 0.32]
-    RASmax = [15, 35]
-    Cru = [0, 0.05]
-    sh.TMELT = -2.5
-    sh.CM = 4
-    sh.deltat = 80
+    # ---- Pont-Rouge ----
+
+#    dirname = '../Projects/Pont-Rouge/'
+#    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+#    fwaterlvl = dirname + 'Water Levels/5080001.xls'
+
+    # ---- Example ----
+
+    fmeteo = ('C:/Users/jnsebgosselin/Desktop/Example/Meteo/Output/'
+              'STE CHRISTINE (7017000)/'
+              'STE CHRISTINE (7017000)_1990-2015.out')
+    fwaterlvl = ('C:/Users/jnsebgosselin/Desktop/Example/'
+                 'Water Levels/5080001.xls')
+
+    Sy = [0.2, 0.3]
+    RASmax = [40, 120]
+    Cru = [0.2, 0.4]
+    sh.TMELT = 0
+    sh.CM = 2.75
 
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-    sh.GLUE(Sy, RASmax, Cru, res='fine')
+#    sh.GLUE(Sy, RASmax, Cru, res='fine')
 
     sh.calc_recharge()
     sh.initPlot()

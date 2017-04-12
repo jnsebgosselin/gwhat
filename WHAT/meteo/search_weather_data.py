@@ -985,7 +985,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
                 self.setCellWidget(row, col, self.fromYear)
 
-            #c---- To Year ----
+            # ---- To Year ----
 
             col += 1
 
@@ -1101,10 +1101,6 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
     def save_staList(self, filename):  # ======================================
 
-        headerDB = [['staName', 'stationId', 'StartYear',
-                     'EndYear', 'Province', 'ClimateID',
-                     'Proximity (km)']]
-
         # ---- Grab the content of the entire table ----
 
         rows = range(self.rowCount())
@@ -1112,7 +1108,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
         # ---- Insert Header----
 
-        staList.insert(0, headerDB.weather_stations[0])
+        staList.insert(0, db.FileHeaders().weather_stations[0])
 
         # ---- saving results ----
 

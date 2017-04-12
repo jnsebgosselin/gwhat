@@ -37,6 +37,7 @@ try:
     from common import IconDB, QToolButtonSmall
     from projet.manager_data import DataManager
     import common.widgets as myqt
+    from _version import __version__
 except ImportError:  # to run this module standalone
     import sys
     import platform
@@ -48,6 +49,7 @@ except ImportError:  # to run this module standalone
     from common import IconDB, QToolButtonSmall
     from projet.manager_data import DataManager
     import common.widgets as myqt
+    from _version import __version__
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -170,7 +172,7 @@ class NewProject(QtGui.QDialog):
         self.name = QtGui.QLineEdit()
         self.author = QtGui.QLineEdit()
         self.date = QtGui.QLabel('%02d/%02d/%d %02d:%02d' % now)
-        self.createdby = QtGui.QLabel(mgui.__version__)
+        self.createdby = QtGui.QLabel(__version__)
 
         # ---- Layout ----
 

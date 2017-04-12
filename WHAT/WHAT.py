@@ -59,9 +59,6 @@ freeze_support()
 
 # DATABASES :
 
-labelDB = []
-styleDB = []
-ttipDB = []
 headerDB = []
 
 
@@ -101,7 +98,6 @@ class WHAT(QtGui.QMainWindow):
         self.setWindowIcon(IconDB().master)
 
 #        self.setMinimumWidth(1250)
-#        self.setFont(styleDB.font1)
 
         if platform.system() == 'Windows':
             import ctypes

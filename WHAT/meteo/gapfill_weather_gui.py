@@ -535,8 +535,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
             self.FillTextBox.setText(table)
             self.target_station_info.setText(target_info)
 
-
-    def correlation_UI(self): #================================================
+    def correlation_UI(self):  # ==============================================
 
         """
         Calculate automatically the correlation coefficients when a target
@@ -551,18 +550,17 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
             msg = ('Correlation coefficients calculation for ' +
                    'station %s completed') % self.gap_fill_worker.TARGET.name
-            self.ConsoleSignal.emit('<font color=black>%s</font>' % msg )
+            self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
             print(msg)
 
             self.correlation_table_display()
 
+    def restoreUI(self):  # ===================================================
 
-    def restoreUI(self): #=====================================================
-
-        self.btn_fill.setIcon(iconDB.fill_data)
+        self.btn_fill.setIcon(IconDB().fill_data)
         self.btn_fill.setEnabled(True)
 
-        self.btn_fill_all.setIcon(iconDB.fill_all_data)
+        self.btn_fill_all.setIcon(IconDB().fill_all_data)
         self.btn_fill_all.setEnabled(True)
 
         self.tarSta_widg.setEnabled(True)
@@ -653,7 +651,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # -- Disable UI and continue the process normally --
 
-        button.setIcon(IconsDB().stop)
+        button.setIcon(IconDB().stop)
         self.fillDates_widg.setEnabled(False)
         self.tarSta_widg.setEnabled(False)
         self.stack_widget.setEnabled(False)

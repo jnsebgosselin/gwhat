@@ -23,7 +23,9 @@ from __future__ import division, unicode_literals
 
 # Standard library imports :
 
-import csv, sys, os
+import csv
+import sys
+import os
 from copy import copy
 
 # Third party imports :
@@ -93,7 +95,7 @@ class PostProcessErr(object):
             row += 1
         row += 1
 
-        #------------------------------------------------- Re-Organizes Data --
+        # ------------------------------------------------ Re-Organizes Data --
 
         # Get unique weather variable names
 
@@ -114,7 +116,7 @@ class PostProcessErr(object):
             m = DATA[indx, 2].astype(int)
             d = DATA[indx, 3].astype(int)
 
-            #---- Time ----
+            # ---- Time ----
 
             t = np.zeros(len(y))
             for date in range(len(y)):
@@ -126,7 +128,7 @@ class PostProcessErr(object):
             self.Time.append(t)
             self.Date.append([y, m, d])
 
-            #---- Weather Variable Type ----
+            # ---- Weather Variable Type ----
 
             # If the proportion of zeros in the data series is higher
             # than 25%, the data type is set as an event-based weather
@@ -200,23 +202,25 @@ class PostProcessErr(object):
                            '%0.2f' % ME, '%0.3f' % r, '%0.1f' % Emax,
                            '%0.1f' % Emin]]
             with open(filename, 'a') as f:
-                writer = csv.writer(f,delimiter='\t')
+                writer = csv.writer(f, delimiter='\t')
                 writer.writerows(rowcontent)
 
+    # ======================================================== Est. Errors ====
+
     @staticmethod
-    def plot_est_err(Ymes, Ypre, varName, fname, #============== Est. Errors ==
+    def plot_est_err(Ymes, Ypre, varName, fname,
                      language='English'):
 
-        Ymax = np.ceil(np.max(Ymes) / 10) * 10
-        Ymin = np.floor(np.min(Ymes) / 10) * 10
+        Ymax = np.ceil(np.max(Ymes)/10)*10
+        Ymin = np.floor(np.min(Ymes)/10)*10
 
         fw, fh = 6, 6
         fig = mpl.figure.Figure(figsize=(fw, fh))
         canvas = FigureCanvas(fig)
 
-        #------------------------------------------------------- Create Axes --
+        # ------------------------------------------------------ Create Axes --
 
-        leftMargin  = 1. / fw
+        leftMargin = 1. / fw
         rightMargin = 0.25 / fw
         bottomMargin = 0.8 / fh
         topMargin = 0.25 / fh
@@ -231,14 +235,14 @@ class PostProcessErr(object):
         ax0.grid(axis='both', color='0.', linestyle='--', linewidth=0.5,
                  dashes=[0.5, 3])
 
-        #-------------------------------------------------------------- Plot --
+        # ------------------------------------------------------------- Plot --
 
-        #---- Estimation Error ----
+        # ---- Estimation Error ----
 
         hscat, = ax0.plot(Ymes, Ypre, '.', mec='k', mfc='k', ms=12, alpha=0.35)
         hscat.set_rasterized(True)
 
-        #---- 1:1 Line ----
+        # ---- 1:1 Line ----
 
         dl = 12    # dashes length
         ds = 6     # spacing between dashes
@@ -248,13 +252,13 @@ class PostProcessErr(object):
         # Plot a white contour line
         ax0.plot([Ymin, Ymax], [Ymin, Ymax], '-w', lw=dlw + 2 * dew, alpha = 1)
 
-        # Plot a black dahsed line
+        # Plot a black dashed line
         hbl, = ax0.plot([Ymin, Ymax], [Ymin, Ymax], 'k', lw=dlw,
                         dashes=[dl, ds], dash_capstyle='butt')
 
-        #-------------------------------------------------------------- Text --
+        # ----------------------------------------------------------- Text ----
 
-        #---- Calculate Statistics ----
+        # ---- Calculate Statistics ----
 
         RMSE = (np.mean((Ypre - Ymes) ** 2)) ** 0.5
         MAE = np.mean(np.abs(Ypre - Ymes))
@@ -268,7 +272,7 @@ class PostProcessErr(object):
 
         print('Emax=%0.1f ; Emin=%0.1f' % (Emax, Emin))
 
-        #---- Generate and Plot Labels ----
+        # ---- Generate and Plot Labels ----
 
         if varName in ['Max Temp (deg C)', 'Mean Temp (deg C)',
                        'Min Temp (deg C)']:
@@ -284,7 +288,7 @@ class PostProcessErr(object):
                     u'r = %0.3f' % (r)]
         tcontent = list(reversed(tcontent))
 
-        #---- Plot Labels ----
+        # ---- Plot Labels ----
 
         for i in range(len(tcontent)):
             dx, dy = -10 / 72., 10 * (i+1) / 72.
@@ -294,7 +298,7 @@ class PostProcessErr(object):
             ax0.text(0, 0, tcontent[i], ha='left', va='bottom', fontsize=16,
                      transform=transform)
 
-        #---- Get Labels Win. Extents ----
+        # ---- Get Labels Win. Extents ----
 
         hext, vext = np.array([]), np.array([])
         renderer = canvas.get_renderer()
@@ -304,7 +308,7 @@ class PostProcessErr(object):
             hext = np.append(hext, bbox.width)
             vext = np.append(vext, bbox.height)
 
-        #---- Position Labels in Axes ----
+        # ---- Position Labels in Axes ----
 
         x0 = 1 - np.max(hext)
         y0 = 0
@@ -312,16 +316,15 @@ class PostProcessErr(object):
             text.set_position((x0, y0))
             y0 += vext[i]
 
-        #------------------------------------------------------------ Labels --
+        # ----------------------------------------------------------- Labels --
 
-        #---- Ticks ----
+        # ---- Ticks ----
 
         ax0.xaxis.set_ticks_position('bottom')
         ax0.yaxis.set_ticks_position('left')
         ax0.tick_params(axis='both', direction='out', labelsize=14)
 
-        #---- Axis ----
-
+        # ---- Axis ----
 
         if varName == 'Max Temp (deg C)':
             if language == 'French':
@@ -347,17 +350,17 @@ class PostProcessErr(object):
             var = ''
 
         if language == 'French':
-            ax0.set_ylabel(var % u'mesurées', fontsize=16, labelpad=15)
-            ax0.set_xlabel(var % u'prédites', fontsize=16, labelpad=15)
+            ax0.set_xlabel(var % u'mesurées', fontsize=16, labelpad=15)
+            ax0.set_ylabel(var % u'prédites', fontsize=16, labelpad=15)
         else:
-            ax0.set_ylabel(var % 'Measured', fontsize=16, labelpad=15)
-            ax0.set_xlabel(var % 'Predicted', fontsize=16, labelpad=15)
+            ax0.set_xlabel(var % 'Measured', fontsize=16, labelpad=15)
+            ax0.set_ylabel(var % 'Predicted', fontsize=16, labelpad=15)
 
-        #-------------------------------------------------------------- Axis --
+        # ----------------------------------------------------------- Axis ----
 
         ax0.axis([Ymin, Ymax, Ymin, Ymax])
 
-        #------------------------------------------------------------ Legend --
+        # --------------------------------------------------------- Legend ----
 
         if language == 'French':
             lglabels = ['Données journalières', '1:1']
@@ -367,7 +370,7 @@ class PostProcessErr(object):
         ax0.legend([hscat, hbl], lglabels,
                    loc='upper left', numpoints=1, frameon=False, fontsize=16)
 
-        #-------------------------------------------------------------- Draw --
+        # ----------------------------------------------------------- Draw ----
 
         fig.savefig(fname, dpi=300)
 

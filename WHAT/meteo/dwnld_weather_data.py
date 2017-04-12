@@ -495,7 +495,6 @@ class dwnldWeather(QtGui.QWidget):
         download Thread to stop the downloading process.
         """
 
-        iconDB = db.Icons()
         sender = self.sender()
 
         if sender == self.btn_get:
@@ -504,7 +503,7 @@ class dwnldWeather(QtGui.QWidget):
                 # Stop the Download process and reset UI
 
                 self.dwnl_raw_datafiles.STOP = True
-                self.btn_get.setIcon(iconDB.download)
+                self.btn_get.setIcon(IconDB().download)
                 self.dwnld_indx = 0
 
 #                self.station_table.setEnabled(True)
@@ -558,7 +557,7 @@ class dwnldWeather(QtGui.QWidget):
                 self.dwnld_indx = 0
 #                self.station_table.setEnabled(True)
                 self.pbar.hide()
-                self.btn_get.setIcon(iconDB.download)
+                self.btn_get.setIcon(IconDB().download)
 
                 return
 
@@ -581,7 +580,7 @@ class dwnldWeather(QtGui.QWidget):
 
 #        self.station_table.setEnabled(False)
         self.pbar.show()
-        self.btn_get.setIcon(iconDB.stop)
+        self.btn_get.setIcon(IconDB().stop)
         self.station_table.selectRow(sta2dwnl[0])
 
         # ----- Wait for the QThread to finish -----
