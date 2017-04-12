@@ -93,7 +93,7 @@ class IconDB(object):
         self.showDataDots = QIcon(os.path.join(dirname, 'show_datadots'))
 
         self.stratigraphy = QIcon(os.path.join(dirname, 'stratigraphy'))
-        self.mrc2rechg = QIcon(os.path.join(dirname, 'recharge'))
+        self.recharge = QIcon(os.path.join(dirname, 'recharge'))
         self.calendar = QIcon(os.path.join(dirname, 'Calendar'))
 
         self.page_setup = QIcon(os.path.join(dirname, 'page_setup'))
