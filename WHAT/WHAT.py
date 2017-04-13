@@ -53,7 +53,8 @@ from meteo.gapfill_weather_gui import GapFillWeatherGUI
 
 from about import AboutWhat
 from projet.manager_projet import ProjetManager
-from common import IconDB, StyleDB
+from common import IconDB, StyleDB, QToolButtonBase
+from _version import __version__
 
 freeze_support()
 
@@ -120,29 +121,14 @@ class WHAT(QtGui.QMainWindow):
                   ) % (style, size, family)
         self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
 
-        self.write2console('''<font color=black>Thanks for using %s.
-            </font>''' % db.software_version)
-        self.write2console('''<font color=black>
-            Please report any bug or wishful feature to
-            Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
-            </font>''')
+        msg = '<font color=black>Thanks for using %s.</font>' % __version__
+        self.write2console(msg)
+        self.write2console('<font color=black>'
+                           'Please report any bug or wishful feature at'
+                           ' jean-sebastien.gosselin@ete.inrs.ca.'
+                           '</font>')
 
         # ------------------------------------------------------- TAB WIDGET --
-
-        Tab_widget = QtGui.QTabWidget()
-
-        # ---- Custom TabBar Height ----
-
-        # http://stackoverflow.com/questions/12428917/
-        # pyqt4-set-size-of-the-tab-bar-in-qtabwidget
-
-        class TabBar(QtGui.QTabBar):
-            def tabSizeHint(self, index):
-                width = QtGui.QTabBar.tabSizeHint(self, index).width()
-                return QtCore.QSize(width, 32)
-
-        tab_bar = TabBar()
-        Tab_widget.setTabBar(tab_bar)
 
         # ---- download weather data ----
 
@@ -159,16 +145,15 @@ class WHAT(QtGui.QMainWindow):
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self)
         self.tab_hydrograph.set_workdir(self.projectdir)
 
-        # ---- about ----
-
-        tab_about = AboutWhat(self)
-
         # ---- TABS ASSEMBLY ----
+
+        Tab_widget = QtGui.QTabWidget()
+        Tab_widget.setTabBar(TabBar(self))
 
         Tab_widget.addTab(self.tab_dwnld_data, 'Download Data')
         Tab_widget.addTab(self.tab_fill_weather_data, 'Fill Data')
         Tab_widget.addTab(self.tab_hydrograph, 'Hydrograph')
-        Tab_widget.addTab(tab_about, 'About')
+        # Tab_widget.addTab(tab_about, 'About')
 
         Tab_widget.setCornerWidget(self.pmanager)
 
@@ -382,6 +367,54 @@ class WHATPref(object):
             else:
                 raise e
 
+
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# http://stackoverflow.com/a/20098415/4481445
+# http://stackoverflow.com/a/12429054/4481445
+
+class TabBar(QtGui.QTabBar):
+    def __init__(self, parent=None):
+        super(TabBar, self).__init__(parent=None)
+
+        self.aboutwhat = AboutWhat(parent)
+
+        self.about_btn = QToolButtonBase(IconDB().info)
+        self.about_btn.setIconSize(QtCore.QSize(20, 20))
+        self.about_btn.setFixedSize(32, 32)
+        self.about_btn.setToolTip('About WHAT...')
+        self.about_btn.setParent(self)
+
+        self.about_btn.clicked.connect(self.aboutwhat.show)
+
+        self.movePlusButton()  # Move to the correct location
+
+    def tabSizeHint(self, index):
+        width = QtGui.QTabBar.tabSizeHint(self, index).width()
+        return QtCore.QSize(width, 32)
+
+    def sizeHint(self):
+        sizeHint = QtGui.QTabBar.sizeHint(self)
+        w = sizeHint.width() + self.about_btn.size().width()
+        h = sizeHint.height()
+        return QtCore.QSize(w, 32)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.movePlusButton()
+
+    def tabLayoutChange(self):
+        super().tabLayoutChange()
+        self.movePlusButton()
+
+    def movePlusButton(self):
+        x = 0
+        for i in range(self.count()):
+            x += self.tabRect(i).width()
+
+        # Set the plus button location in a visible area
+        y = self.geometry().top()
+        self.about_btn.move(x, y)
 
 # =============================================================================
 # =============================================================================

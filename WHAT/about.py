@@ -34,6 +34,7 @@ from PySide import QtGui, QtCore
 try:
     from _version import __version__, __date__
     from common import IconDB
+    from common.widgets import DialogWindow
 except ImportError:  # to run this module standalone
     print('Running module as a standalone script...')
     import sys
@@ -45,27 +46,26 @@ except ImportError:  # to run this module standalone
 
     from _version import __version__, __date__
     from common import IconDB
+    from common.widgets import DialogWindow
 
 
 # ==============================================================================
 
 
-class AboutWhat(QtGui.QWidget):
+class AboutWhat(DialogWindow):
 
     def __init__(self, parent=None):
         super(AboutWhat, self).__init__(parent)
 
-        self.parent = parent
-        self.initUI_About()
+        self.__initUI__()
 
-    def initUI_About(self):
+    def __initUI__(self):
 
         # ---------------------------------------------------- MAIN WINDOW ----
 
-        self.setWindowTitle('Search for Weather Stations')
+        self.setWindowTitle('About WHAT')
         self.setWindowIcon(IconDB().master)
-#        self.setMinimumHeight(700)
-#        self.setFont(styleDB.font1)
+        self.setMinimumHeight(700)
 
         # --------------------------------------------------- AboutTextBox ----
 
@@ -194,10 +194,11 @@ class AboutWhat(QtGui.QWidget):
                       <p align="right">%s</p>
                       ''' % (version, date)
 
-
         self.AboutTextBox.setHtml(about_text)
 
-    def eventFilter(self, obj, event): #========================================
+    # =========================================================================
+
+    def eventFilter(self, obj, event):
 
         # http://stackoverflow.com/questions/13788452/
         # pyqt-how-to-handle-event-without-inheritance

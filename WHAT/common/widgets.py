@@ -243,8 +243,8 @@ class DialogWindow(QtGui.QDialog):
         self.__firstshow = True
 
         self.setWindowIcon(IconDB().master)
-        self.setWindowFlags(QtCore.Qt.Window)
-        self.setWindowFlags(QtCore.Qt.WindowMinimizeButtonHint)
+        self.setWindowFlags(QtCore.Qt.Window |
+                            QtCore.Qt.WindowMinimizeButtonHint)
 
     def show(self):
         if self.__firstshow is True:

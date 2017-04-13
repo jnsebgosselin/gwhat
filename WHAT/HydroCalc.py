@@ -2078,9 +2078,9 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
     maxpeak = ipeak[:-1:2]  # Time indexes delimiting period where water level
     minpeak = ipeak[1::2]   # recedes.
 
-    nsegmnt = len(minpeak)  # Number of segments of the time series that were
-                            # identified as period where the water level
-                            # recedes.
+    nsegmnt = len(minpeak)
+    # nsegmnt: Number of segments of the time series that were
+    #          identified as period where the water level recedes.
 
     hp = np.ones(len(h)) * np.nan
     for i in range(nsegmnt):

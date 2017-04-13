@@ -40,8 +40,9 @@ class IconDB(object):
         self.iconSize2 = QSize(20, 20)
 
         self.banner = os.path.join(dirname, 'WHAT_banner_750px.png')
-
         self.master = QIcon(os.path.join(dirname, 'WHAT'))
+        self.info = QIcon(os.path.join(dirname, 'info'))
+
         self.calc_brf = QIcon(os.path.join(dirname, 'start'))
         self.setup = QIcon(os.path.join(dirname, 'page_setup'))
         self.new_project = QIcon(os.path.join(dirname, 'new_project'))
@@ -121,19 +122,36 @@ class IconDB(object):
         self.showGrid = QIcon(os.path.join(dirname, 'grid'))
 
 
-class QToolButtonNormal(QtGui.QToolButton):
+class QToolButtonBase(QtGui.QToolButton):
     def __init__(self, Qicon, *args, **kargs):
-        super(QToolButtonNormal, self).__init__(*args, **kargs)
+        super(QToolButtonBase, self).__init__(*args, **kargs)
+
         self.setIcon(Qicon)
         self.setAutoRaise(True)
         self.setFocusPolicy(QtCore.Qt.NoFocus)
+
+#        name = str(id(self))
+#        self.setObjectName(name)
+#        ss = ("#%s {"
+#              "background-color: transparent;"
+#              "}"
+#              "#%s:hover {"
+#              "background-color: rgba(0, 0, 0, 35);"
+#              "}"
+#              "#%s:pressed {"
+#              "background-color: rgba(0, 0, 0, 85);"
+#              "}") % (name, name, name)
+#
+#        self.setStyleSheet(ss)
+
+
+class QToolButtonNormal(QToolButtonBase):
+    def __init__(self, Qicon, *args, **kargs):
+        super(QToolButtonNormal, self).__init__(Qicon, *args, **kargs)
         self.setIconSize(QSize(28, 28))
 
 
-class QToolButtonSmall(QtGui.QToolButton):
+class QToolButtonSmall(QToolButtonBase):
     def __init__(self, Qicon, *args, **kargs):
-        super(QToolButtonSmall, self).__init__(*args, **kargs)
-        self.setIcon(Qicon)
-        self.setAutoRaise(True)
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
+        super(QToolButtonSmall, self).__init__(Qicon, *args, **kargs)
         self.setIconSize(QSize(20, 20))
