@@ -136,7 +136,8 @@ def calcul_glue(p):
     return years, ptot_yr, glue_rechg_yr, glue_etr_yr, glue_ru_yr
 
 
-def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0):
+def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0,
+                    yrs_range=None):
     data = np.load('GLUE.npy').item()
     rechg = np.array(data['recharge'])
     etr = np.array(data['etr'])
@@ -189,7 +190,10 @@ def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0):
 
     # ---- Define new variables ----
 
-    yr2plot = np.arange(1980, 2016).astype('int')
+    if yrs_range is None:
+        yr2plot = np.arange(np.min(YEARS), np.max(YEARS)).astype('int')
+    else:
+        yr2plot = np.arange(yrs_range[0], yrs_range[1]).astype('int')
     NYear = len(yr2plot)
 
     # ---- Convert daily to hydrological year ----

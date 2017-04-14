@@ -581,7 +581,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 
             # ---- Manual Measures ----
 
-            if len(self.WaterLvlObj.WLmes) > 1:
+            if len(self.WaterLvlObj.WLmes) > 0:
                 lg_handles.append(self.h_WLmes)
                 lg_labels.append(labelDB[7])
 
@@ -1115,7 +1115,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         TIMEmes = self.WaterLvlObj.TIMEmes
         WLmes = self.WaterLvlObj.WLmes
 
-        if len(WLmes) > 1:
+        if len(WLmes) > 0:
             if self.WLdatum == 1:   # masl
                 WLmes = self.WaterLvlObj.ALT - WLmes
 
