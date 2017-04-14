@@ -70,6 +70,7 @@ Once the content of the Zip archive has been extracted, the program can be start
 # LICENSE
 
 Copyright 2014-2017 Jean-Sébastien Gosselin. All Rights Reserved.
+
 email: jean-sebastien.gosselin@ete.inrs.ca
 
 WHAT is free software: you can redistribute it and/or modify
