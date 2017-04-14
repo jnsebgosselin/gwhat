@@ -1020,7 +1020,7 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
         # ---- Altitude diff. ----
 
         if abs(ALTDIFF[i]) >= limitAlt and limitAlt >= 0:
-            fontcolor = styleDB.red
+            fontcolor = StyleDB().red
         else:
             fontcolor = ''
 

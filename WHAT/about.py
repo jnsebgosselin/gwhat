@@ -153,7 +153,7 @@ class AboutWhat(DialogWindow):
                         Version %s<br>
                       </p1>
                       <p2 align=center>
-                        Copyright 2014-2015 Jean-S&eacute;bastien Gosselin<br>
+                        Copyright 2014-2017 Jean-S&eacute;bastien Gosselin<br>
                         jean-sebastien.gosselin@ete.inrs.ca
                       <br>
                       <br>

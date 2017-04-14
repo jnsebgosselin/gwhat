@@ -68,6 +68,15 @@ class WHAT(QtGui.QMainWindow):
     def __init__(self, parent=None):
         super(WHAT, self).__init__(parent)
 
+        self.setWindowTitle(__version__)
+        self.setWindowIcon(IconDB().master)
+
+        if platform.system() == 'Windows':
+            import ctypes
+            myappid = 'what_application'  # arbitrary string
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                myappid)
+
         self.whatPref = WHATPref(self)
         self.pmanager = ProjetManager(self)
 
@@ -78,7 +87,6 @@ class WHAT(QtGui.QMainWindow):
         # ------------------------------------------------------ PREFERENCES --
 
         self.whatPref.load_pref_file()
-
         language = self.whatPref.language
 
         self.projectfile = self.whatPref.projectfile
@@ -95,16 +103,7 @@ class WHAT(QtGui.QMainWindow):
 
         # ------------------------------------------------ MAIN WINDOW SETUP --
 
-        self.setWindowTitle(db.software_version)
-        self.setWindowIcon(IconDB().master)
 
-#        self.setMinimumWidth(1250)
-
-        if platform.system() == 'Windows':
-            import ctypes
-            myappid = 'what_application'  # arbitrary string
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-                myappid)
 
         # ----------------------------------------------------- MAIN CONSOLE --
 
