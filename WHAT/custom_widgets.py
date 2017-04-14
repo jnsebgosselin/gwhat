@@ -12,46 +12,8 @@ import sys
 from PySide import QtGui, QtCore
 
 # PERSONAL IMPORTS :
-import database as db
-
-
-###############################################################################
-
-
-class VSep(QtGui.QFrame):  # vertical separators
-    def __init__(self, parent=None):
-        super(VSep, self).__init__(parent)
-        self.setFrameStyle(db.styleUI().VLine)
-
-
-###############################################################################
-
-
-class MyQToolButton(QtGui.QToolButton):
-
-    def __init__(self, Qicon, ToolTip, IconSize=db.styleUI().iconSize,
-                 autoRaise=True, enabled=True, *args, **kargs):
-        super(MyQToolButton, self).__init__(*args, **kargs)
-
-        self.setIcon(Qicon)
-        self.setToolTip(ToolTip)
-        self.setAutoRaise(autoRaise)
-        self.setIconSize(IconSize)
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
-        self.setEnabled(enabled)
-
-
-###############################################################################
-
-
-class MyQErrorMessageBox(QtGui.QMessageBox):
-
-    def __init__(self, parent=None):
-        super(MyQErrorMessageBox, self).__init__(parent)
-
-        self.setIcon(QtGui.QMessageBox.Warning)
-        self.setWindowTitle('Error Message')
-        self.setWindowIcon(db.Icons().WHAT)
+import common.database as db
+from common import IconDB, StyleDB, QToolButtonNormal
 
 
 ###############################################################################

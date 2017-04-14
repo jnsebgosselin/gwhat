@@ -37,7 +37,7 @@ import matplotlib.pyplot as plt
 
 # ----- PERSONAL LIBRARY IMPORTS -----
 
-from meteo import MeteoObj
+from meteo.meteo_utils import MeteoObj
 from waterlvldata import WaterlvlData
 import mplJS
 
@@ -136,7 +136,7 @@ def calcul_glue(p):
     return years, ptot_yr, glue_rechg_yr, glue_etr_yr, glue_ru_yr
 
 
-def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=350, deltat=0):
+def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0):
     data = np.load('GLUE.npy').item()
     rechg = np.array(data['recharge'])
     etr = np.array(data['etr'])
@@ -189,7 +189,7 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=350, deltat=0):
 
     # ---- Define new variables ----
 
-    yr2plot = np.arange(2005, 2016).astype('int')
+    yr2plot = np.arange(1980, 2016).astype('int')
     NYear = len(yr2plot)
 
     # ---- Convert daily to hydrological year ----
@@ -267,6 +267,11 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=350, deltat=0):
 
     Xmin0 = min(yr2plot)-1
     Xmax0 = max(yr2plot)+1
+
+    if Ymax0 is None:
+        Ymax0 = np.max(max_rechg_yrly) + 50
+    if Ymin0 is None:
+        Ymin0 = 0
 
     # --------------------------------------------------- XTICKS FORMATING ----
 
@@ -369,10 +374,10 @@ def plot_rechg_GLUE(language='English', Ymin0=0, Ymax0=350, deltat=0):
         text += '(GLUE 75) %d mm/y ; ' % np.mean(glue75_yr)
         text += '(GLUE 95) %d mm/y' % np.mean(max_rechg_yrly)
 
-    dx, dy = 16/72., -75/72.
+    dx, dy = 5/72, 5/72
     padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
     transform = ax0.transAxes + padding
-    ax0.text(0, 1, text, va='bottom', ha='left',
+    ax0.text(0, 0, text, va='bottom', ha='left',
              fontsize=12, transform=transform)
 
     # ----- Some Calculation ----

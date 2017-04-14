@@ -45,22 +45,21 @@ from PySide import QtGui, QtCore
 
 # Local imports :
 
-import database as db
+import common.database as db
 import custom_widgets as MyQWidget
 import HydroPrint
-import dwnld_weather_data
-from gapfill_weather_gui import GapFillWeatherGUI
-from about_WHAT import AboutWhat
-from projet import ProjetManager
-from icons import IconDB
+from meteo import dwnld_weather_data
+from meteo.gapfill_weather_gui import GapFillWeatherGUI
+
+from about import AboutWhat
+from projet.manager_projet import ProjetManager
+from common import IconDB, StyleDB, QToolButtonBase
+from _version import __version__
 
 freeze_support()
 
 # DATABASES :
 
-labelDB = []
-styleDB = []
-ttipDB = []
 headerDB = []
 
 
@@ -68,6 +67,15 @@ class WHAT(QtGui.QMainWindow):
 
     def __init__(self, parent=None):
         super(WHAT, self).__init__(parent)
+
+        self.setWindowTitle(__version__)
+        self.setWindowIcon(IconDB().master)
+
+        if platform.system() == 'Windows':
+            import ctypes
+            myappid = 'what_application'  # arbitrary string
+            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
+                myappid)
 
         self.whatPref = WHATPref(self)
         self.pmanager = ProjetManager(self)
@@ -79,16 +87,10 @@ class WHAT(QtGui.QMainWindow):
         # ------------------------------------------------------ PREFERENCES --
 
         self.whatPref.load_pref_file()
-
         language = self.whatPref.language
 
         self.projectfile = self.whatPref.projectfile
         self.projectdir = path.dirname(self.projectfile)
-
-        style = 'Regular'
-        size = self.whatPref.fontsize_general
-
-        family = db.styleUI().fontfamily
 
         # -------------------------------------------------------- DATABASES --
 
@@ -96,28 +98,12 @@ class WHAT(QtGui.QMainWindow):
         # using-global-variables-in-a-function-other-
         # than-the-one-that-created-them
 
-        global labelDB
-        labelDB = db.labels(language)
-        global styleDB
-        styleDB = db.styleUI()
-        global ttipDB
-        ttipDB = db.Tooltips(language)
         global headerDB
         headerDB = db.FileHeaders()
 
         # ------------------------------------------------ MAIN WINDOW SETUP --
 
-        self.setWindowTitle(db.software_version)
-        self.setWindowIcon(IconDB().master)
 
-#        self.setMinimumWidth(1250)
-#        self.setFont(styleDB.font1)
-
-        if platform.system() == 'Windows':
-            import ctypes
-            myappid = 'what_application'  # arbitrary string
-            ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-                myappid)
 
         # ----------------------------------------------------- MAIN CONSOLE --
 
@@ -125,6 +111,8 @@ class WHAT(QtGui.QMainWindow):
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
 
+        style = 'Regular'
+        family = StyleDB().fontfamily
         size = self.whatPref.fontsize_console
         fontSS = ('font-style: %s;'
                   'font-size: %s;'
@@ -132,29 +120,14 @@ class WHAT(QtGui.QMainWindow):
                   ) % (style, size, family)
         self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
 
-        self.write2console('''<font color=black>Thanks for using %s.
-            </font>''' % db.software_version)
-        self.write2console('''<font color=black>
-            Please report any bug or wishful feature to
-            Jean-S&eacute;bastien Gosselin at jnsebgosselin@gmail.com.
-            </font>''')
+        msg = '<font color=black>Thanks for using %s.</font>' % __version__
+        self.write2console(msg)
+        self.write2console('<font color=black>'
+                           'Please report any bug or wishful feature at'
+                           ' jean-sebastien.gosselin@ete.inrs.ca.'
+                           '</font>')
 
         # ------------------------------------------------------- TAB WIDGET --
-
-        Tab_widget = QtGui.QTabWidget()
-
-        # ---- Custom TabBar Height ----
-
-        # http://stackoverflow.com/questions/12428917/
-        # pyqt4-set-size-of-the-tab-bar-in-qtabwidget
-
-        class TabBar(QtGui.QTabBar):
-            def tabSizeHint(self, index):
-                width = QtGui.QTabBar.tabSizeHint(self, index).width()
-                return QtCore.QSize(width, 32)
-
-        tab_bar = TabBar()
-        Tab_widget.setTabBar(tab_bar)
 
         # ---- download weather data ----
 
@@ -171,16 +144,15 @@ class WHAT(QtGui.QMainWindow):
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self)
         self.tab_hydrograph.set_workdir(self.projectdir)
 
-        # ---- about ----
-
-        tab_about = AboutWhat(self)
-
         # ---- TABS ASSEMBLY ----
 
-        Tab_widget.addTab(self.tab_dwnld_data, labelDB.TAB1)
-        Tab_widget.addTab(self.tab_fill_weather_data, labelDB.TAB2)
-        Tab_widget.addTab(self.tab_hydrograph, labelDB.TAB3)
-        Tab_widget.addTab(tab_about, labelDB.TAB4)
+        Tab_widget = QtGui.QTabWidget()
+        Tab_widget.setTabBar(TabBar(self))
+
+        Tab_widget.addTab(self.tab_dwnld_data, 'Download Data')
+        Tab_widget.addTab(self.tab_fill_weather_data, 'Fill Data')
+        Tab_widget.addTab(self.tab_hydrograph, 'Hydrograph')
+        # Tab_widget.addTab(tab_about, 'About')
 
         Tab_widget.setCornerWidget(self.pmanager)
 
@@ -227,10 +199,6 @@ class WHAT(QtGui.QMainWindow):
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)
 
-        # ---------------------------------------------------- MESSAGE BOXES --
-
-        self.msgError = MyQWidget.MyQErrorMessageBox()
-
         # ------------------------------------------------- CHECK IF PROJECT --
 
         success = self.pmanager.load_project(self.projectfile)
@@ -245,8 +213,8 @@ class WHAT(QtGui.QMainWindow):
                      project or create a new one.<b>
                      ''' % self.projectfile
 
-            self.msgError.setText(msgtxt)
-            self.msgError.exec_()
+            btn = QtGui.QMessageBox.Ok
+            QtGui.QMessageBox.warning(self, 'Warning', msgtxt, btn)
 
     # =========================================================================
 
@@ -283,8 +251,8 @@ class WHAT(QtGui.QMainWindow):
 
     def new_project_loaded(self):
 
-        filename = self.pmanager.filename
-        dirname = self.pmanager.dirname
+        filename = self.pmanager.projet.filename
+        dirname = os.path.dirname(filename)
 
         # ---- Update WHAT.pref file ----
 
@@ -301,8 +269,8 @@ class WHAT(QtGui.QMainWindow):
 
         # ---- dwnld_weather_data ----
 
-        lat = self.pmanager.currentProjet().lat
-        lon = self.pmanager.currentProjet().lon
+        lat = self.pmanager.projet.lat
+        lon = self.pmanager.projet.lon
 
         self.tab_dwnld_data.set_workdir(dirname)
         self.tab_dwnld_data.search4stations.lat_spinBox.setValue(lat)
@@ -398,6 +366,54 @@ class WHATPref(object):
             else:
                 raise e
 
+
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+# http://stackoverflow.com/a/20098415/4481445
+# http://stackoverflow.com/a/12429054/4481445
+
+class TabBar(QtGui.QTabBar):
+    def __init__(self, parent=None):
+        super(TabBar, self).__init__(parent=None)
+
+        self.aboutwhat = AboutWhat(parent)
+
+        self.about_btn = QToolButtonBase(IconDB().info)
+        self.about_btn.setIconSize(QtCore.QSize(20, 20))
+        self.about_btn.setFixedSize(32, 32)
+        self.about_btn.setToolTip('About WHAT...')
+        self.about_btn.setParent(self)
+
+        self.about_btn.clicked.connect(self.aboutwhat.show)
+
+        self.movePlusButton()  # Move to the correct location
+
+    def tabSizeHint(self, index):
+        width = QtGui.QTabBar.tabSizeHint(self, index).width()
+        return QtCore.QSize(width, 32)
+
+    def sizeHint(self):
+        sizeHint = QtGui.QTabBar.sizeHint(self)
+        w = sizeHint.width() + self.about_btn.size().width()
+        h = sizeHint.height()
+        return QtCore.QSize(w, 32)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.movePlusButton()
+
+    def tabLayoutChange(self):
+        super().tabLayoutChange()
+        self.movePlusButton()
+
+    def movePlusButton(self):
+        x = 0
+        for i in range(self.count()):
+            x += self.tabRect(i).width()
+
+        # Set the plus button location in a visible area
+        y = self.geometry().top()
+        self.about_btn.move(x, y)
 
 # =============================================================================
 # =============================================================================

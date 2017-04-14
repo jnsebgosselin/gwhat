@@ -42,9 +42,9 @@ from xlrd import xldate_as_tuple
 
 # Local imports :
 
-import database as db
+import common.database as db
 from waterlvldata import WaterlvlData
-import meteo
+from meteo.meteo_utils import MeteoObj
 from colors import Colors
 
 mpl.use('Qt4Agg')
@@ -201,7 +201,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
         # Waterlvl & Meteo Obj :
 
         self.WaterLvlObj = WaterlvlData()
-        self.meteo_obj = meteo.MeteoObj()
+        self.meteo_obj = MeteoObj()
 
         # Daily Weather :
 
@@ -1684,7 +1684,7 @@ if __name__ == '__main__':  # =================================================
 #    fname = 'Files4testing/waterlvl_manual_measurements.xls'
 #    waterLvlObj.load_waterlvl_measures(fname, 'PO16A')
 
-    meteo_obj = meteo.MeteoObj()
+    meteo_obj = MeteoObj()
     meteo_obj.load_and_format(fmeteo)
 
     # ---------------------------------------------------- set up hydrograph --

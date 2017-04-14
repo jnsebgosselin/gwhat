@@ -40,13 +40,15 @@ from xlrd import xldate_as_tuple
 # Local imports :
 
 import HydroCalc
-import database as db
 import hydrograph3 as hydrograph
 import mplFigViewer3 as mplFigViewer
-import meteo
+from meteo.meteo_utils import MeteoObj, WeatherAvgGraph
 import custom_widgets as MyQWidget
-from custom_widgets import VSep, MyQToolButton
 from waterlvldata import WaterlvlData
+
+from common import IconDB, StyleDB, QToolButtonNormal
+import common.widgets as myqt
+import common.database as db
 
 
 # =============================================================================
@@ -60,10 +62,10 @@ class HydroprintGUI(QtGui.QWidget):
         super(HydroprintGUI, self).__init__(parent)
 
         self.workdir = os.getcwd()
-        self.UpdateUI = True
+        self.__updateUI = True
         self.fwaterlvl = []
         self.waterlvl_data = WaterlvlData()
-        self.meteo_data = meteo.MeteoObj()
+        self.meteo_data = MeteoObj()
 
         # memory path variable :
 
@@ -75,20 +77,13 @@ class HydroprintGUI(QtGui.QWidget):
 
     def __initUI__(self):
 
-        # DATABASE :
-
-        styleDB = db.styleUI()
-        iconDB = db.Icons()
-        styleDB = db.styleUI()
-        ttipDB = db.Tooltips('English')
-
         # Main Window :
 
-        self.setWindowIcon(iconDB.WHAT)
+        self.setWindowIcon(IconDB().master)
 
         # Weather Normals Widget :
 
-        self.weather_avg_graph = meteo.WeatherAvgGraph(self)
+        self.weather_avg_graph = WeatherAvgGraph(self)
 
         # HydroCalc Widget :
 
@@ -109,74 +104,54 @@ class HydroprintGUI(QtGui.QWidget):
 
         # BUTTONS :
 
-        btn_loadConfig = MyQToolButton(iconDB.load_graph_config,
-                                       ttipDB.loadConfig)
+        btn_loadConfig = QToolButtonNormal(IconDB().load_graph_config)
+        btn_loadConfig.setToolTip('<p>Load graph layout for the current'
+                                  ' Water Level Data File if it exists</p>')
 
-        btn_saveConfig = MyQToolButton(iconDB.save_graph_config,
-                                       ttipDB.saveConfig)
+        btn_saveConfig = QToolButtonNormal(IconDB().save_graph_config)
+        btn_saveConfig.setToolTip('Save current graph layout')
 
-        btn_bestfit_waterlvl = QtGui.QToolButton()
-        btn_bestfit_waterlvl.setAutoRaise(True)
-        btn_bestfit_waterlvl.setIcon(iconDB.fit_y)
-        btn_bestfit_waterlvl.setToolTip(ttipDB.fit_y)
-        btn_bestfit_waterlvl.setIconSize(styleDB.iconSize)
+        btn_bestfit_waterlvl = QToolButtonNormal(IconDB().fit_y)
+        btn_bestfit_waterlvl.setToolTip('Best fit the water level scale')
 
-        btn_bestfit_time = QtGui.QToolButton()
-        btn_bestfit_time.setAutoRaise(True)
-        btn_bestfit_time.setIcon(iconDB.fit_x)
-        btn_bestfit_time.setToolTip(ttipDB.fit_x)
-        btn_bestfit_time.setIconSize(styleDB.iconSize)
+        btn_bestfit_time = QToolButtonNormal(IconDB().fit_x)
+        btn_bestfit_time.setToolTip('Best fit the time scale')
 
-        btn_closest_meteo = QtGui.QToolButton()
-        btn_closest_meteo.setAutoRaise(True)
-        btn_closest_meteo.setIcon(iconDB.closest_meteo)
-        btn_closest_meteo.setToolTip(ttipDB.closest_meteo)
-        btn_closest_meteo.setIconSize(styleDB.iconSize)
+        btn_closest_meteo = QToolButtonNormal(IconDB().closest_meteo)
+        btn_closest_meteo.setToolTip('<p>Search and Load the Weather Data File'
+                                     ' of the station located the closest from'
+                                     ' the well</p>')
 
-        btn_draw = QtGui.QToolButton()
-        btn_draw.setAutoRaise(True)
-        btn_draw.setIcon(iconDB.refresh)
-        btn_draw.setToolTip(ttipDB.draw_hydrograph)
-        btn_draw.setIconSize(styleDB.iconSize)
+        btn_draw = QToolButtonNormal(IconDB().refresh)
+        btn_draw.setToolTip('Force a refresh of the well hydrograph')
 
-        btn_weather_normals = QtGui.QToolButton()
-        btn_weather_normals.setAutoRaise(True)
-        btn_weather_normals.setIcon(iconDB.meteo)
-        btn_weather_normals.setToolTip(ttipDB.weather_normals)
-        btn_weather_normals.setIconSize(styleDB.iconSize)
+        btn_weather_normals = QToolButtonNormal(IconDB().meteo)
+        btn_weather_normals.setToolTip('<p>Plot the yearly and monthly'
+                                       ' averages for the Weather Data File'
+                                       ' currently selected.</p>')
 
-        self.btn_work_waterlvl = QtGui.QToolButton()
-        self.btn_work_waterlvl.setAutoRaise(True)
-        self.btn_work_waterlvl.setIcon(iconDB.toggleMode)
-        self.btn_work_waterlvl.setToolTip(ttipDB.work_waterlvl)
-        self.btn_work_waterlvl.setIconSize(styleDB.iconSize)
+        self.btn_work_waterlvl = QToolButtonNormal(IconDB().toggleMode)
+        self.btn_work_waterlvl.setToolTip('Toggle between layout and '
+                                          ' computation mode')
 
-        btn_save = QtGui.QToolButton()
-        btn_save.setAutoRaise(True)
-        btn_save.setIcon(iconDB.save)
-        btn_save.setToolTip(ttipDB.save_hydrograph)
-        btn_save.setIconSize(styleDB.iconSize)
+        btn_save = QToolButtonNormal(IconDB().save)
+        btn_save.setToolTip('Save the well hydrograph')
 
-        btn_page_setup = QtGui.QToolButton()
-        btn_page_setup.setAutoRaise(True)
-        btn_page_setup.setIcon(iconDB.page_setup)
-        btn_page_setup.setToolTip(ttipDB.btn_page_setup)
-        btn_page_setup.setIconSize(styleDB.iconSize)
+        btn_page_setup = QToolButtonNormal(IconDB().page_setup)
+        btn_page_setup.setToolTip('Show the page setup window')
         btn_page_setup.clicked.connect(self.page_setup_win.show)
 
-        btn_color_pick = QtGui.QToolButton()
-        btn_color_pick.setAutoRaise(True)
-        btn_color_pick.setIcon(iconDB.color_picker)
-        btn_color_pick.setToolTip(ttipDB.color_palette)
-        btn_color_pick.setIconSize(styleDB.iconSize)
+        btn_color_pick = QToolButtonNormal(IconDB().color_picker)
+        btn_color_pick.setToolTip('<p>Show a window to setup the color palette'
+                                  ' used to draw the hydrograph</p.')
         btn_color_pick.clicked.connect(self.color_palette_win.show)
 
         # LAYOUT :
 
-        btn_list = [self.btn_work_waterlvl, VSep(), btn_save, btn_draw,
-                    btn_loadConfig, btn_saveConfig, VSep(),
+        btn_list = [self.btn_work_waterlvl, myqt.VSep(), btn_save, btn_draw,
+                    btn_loadConfig, btn_saveConfig, myqt.VSep(),
                     btn_bestfit_waterlvl, btn_bestfit_time, btn_closest_meteo,
-                    VSep(), btn_weather_normals, btn_page_setup,
+                    myqt.VSep(), btn_weather_normals, btn_page_setup,
                     btn_color_pick]
 
         subgrid_toolbar = QtGui.QGridLayout()
@@ -254,14 +229,11 @@ class HydroprintGUI(QtGui.QWidget):
 
         # ------------------------------------------------------ MAIN GRID ----
 
-        vSep = QtGui.QFrame()
-        vSep.setFrameStyle(styleDB.VLine)
-
         mainGrid = QtGui.QGridLayout()
 
         mainGrid.addWidget(self.grid_layout_widget, 0, 0)
         mainGrid.addWidget(self.hydrocalc, 0, 0)
-        mainGrid.addWidget(vSep, 0, 1)
+        mainGrid.addWidget(myqt.VSep(), 0, 1)
         mainGrid.addWidget(RightPanel, 0, 2)
 
         mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
@@ -279,9 +251,7 @@ class HydroprintGUI(QtGui.QWidget):
                                        QtGui.QMessageBox.No)
         self.msgBox.setDefaultButton(QtGui.QMessageBox.Cancel)
         self.msgBox.setWindowTitle('Save Graph Layout')
-        self.msgBox.setWindowIcon(iconDB.WHAT)
-
-        self.msgError = MyQWidget.MyQErrorMessageBox()
+        self.msgBox.setWindowIcon(IconDB().master)
 
         # --------------------------------------------------------- EVENTS ----
 
@@ -316,8 +286,8 @@ class HydroprintGUI(QtGui.QWidget):
         # Widgets :
 
         btn_waterlvl_dir = QtGui.QPushButton(' Water Level Data File')
-        btn_waterlvl_dir.setIcon(db.Icons().openFile)
-        btn_waterlvl_dir.setIconSize(db.styleUI().iconSize2)
+        btn_waterlvl_dir.setIcon(IconDB().openFile)
+        btn_waterlvl_dir.setIconSize(StyleDB().iconSize2)
         btn_waterlvl_dir.clicked.connect(self.select_waterlvl_file)
 
         self.well_info_widget = QtGui.QTextEdit()
@@ -325,8 +295,8 @@ class HydroprintGUI(QtGui.QWidget):
         self.well_info_widget.setFixedHeight(150)
 
         btn_weather_dir = QtGui.QPushButton(' Weather Data File')
-        btn_weather_dir.setIcon(db.Icons().openFile)
-        btn_weather_dir.setIconSize(db.styleUI().iconSize2)
+        btn_weather_dir.setIcon(IconDB().openFile)
+        btn_weather_dir.setIconSize(StyleDB().iconSize2)
         btn_weather_dir.clicked.connect(self.select_meteo_file)
 
         self.meteo_info_widget = QtGui.QTextEdit()
@@ -539,9 +509,7 @@ class HydroprintGUI(QtGui.QWidget):
     # =========================================================================
 
     def set_workdir(self, directory):
-
         self.workdir = directory
-
         self.meteo_dir = os.path.join(directory, 'Meteo', 'Output')
         self.waterlvl_dir = os.path.join(directory, 'Water Levels')
         self.save_fig_dir = directory
@@ -582,8 +550,9 @@ class HydroprintGUI(QtGui.QWidget):
                 writer = csv.writer(f, delimiter='\t', lineterminator='\n')
                 writer.writerows(fcontent)
 
-    def toggle_layoutMode(self):  # ===========================================
+    # =========================================================================
 
+    def toggle_layoutMode(self):
         self.hydrocalc.hide()
         self.grid_layout_widget.show()
 
@@ -594,8 +563,7 @@ class HydroprintGUI(QtGui.QWidget):
         self.tabscales.show()
         self.qAxeLabelsLanguage.show()
 
-    def toggle_computeMode(self):  # ==========================================
-
+    def toggle_computeMode(self):
         self.grid_layout_widget.hide()
         self.hydrocalc.show()
 
@@ -606,15 +574,16 @@ class HydroprintGUI(QtGui.QWidget):
         self.tabscales.hide()
         self.qAxeLabelsLanguage.hide()
 
-    def update_colors(self):  # ===============================================
+    # =========================================================================
 
+    def update_colors(self):
         self.hydrograph.update_colors()
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
-    def show_weather_averages(self):  # =======================================
+    # =========================================================================
 
+    def show_weather_averages(self):
         filemeteo = copy.copy(self.hydrograph.fmeteo)
-
         if not filemeteo:
             msg = 'No valid Weather Data File currently selected.'
             print(msg)
@@ -622,7 +591,7 @@ class HydroprintGUI(QtGui.QWidget):
 
             msg = 'Please select a valid Weather Data File first.'
             print(msg)
-            self.emit_error_message('<b>s</b>' % msg)
+            self.emit_error_message('<b>%s</b>' % msg)
 
             return
 
@@ -630,10 +599,9 @@ class HydroprintGUI(QtGui.QWidget):
         self.weather_avg_graph.generate_graph(filemeteo)
         self.weather_avg_graph.show()
 
-    def emit_error_message(self, error_text):  # ==============================
-
-        self.msgError.setText(error_text)
-        self.msgError.exec_()
+    def emit_error_message(self, msg):
+        btn = QtGui.QMessageBox.Ok
+        QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
 
     # =========================================================================
 
@@ -677,9 +645,8 @@ class HydroprintGUI(QtGui.QWidget):
         self.fwaterlvl = filename
 
         # Load Data :
-
-        self.ConsoleSignal.emit(
-            '<font color=black>Loading water level data...</font>')
+        msg = 'Loading water level data...'
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         for i in range(5):
             QtCore.QCoreApplication.processEvents()
 
@@ -732,12 +699,12 @@ class HydroprintGUI(QtGui.QWidget):
 
         # Fit Water Level in Layout :
 
-        self.UpdateUI = False
+        self.__updateUI = False
 
         self.best_fit_waterlvl()
         self.best_fit_time()
 
-        self.UpdateUI = True
+        self.__updateUI = True
 
         self.select_closest_meteo_file()
 
@@ -835,7 +802,7 @@ class HydroprintGUI(QtGui.QWidget):
         <hydrograph> of the class <Hydrograph>.
         '''
 
-        if self.UpdateUI is False:
+        if self.__updateUI is False:
             return
 
         # Dates :
@@ -880,7 +847,9 @@ class HydroprintGUI(QtGui.QWidget):
 
         self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
 
-    def load_graph_layout(self):  # ===========================================
+    # ======================================================= Graph layout ====
+
+    def load_graph_layout(self):
 
         self.check_files()
 
@@ -904,13 +873,10 @@ class HydroprintGUI(QtGui.QWidget):
         isLayoutExist = self.hydrograph.checkLayout(name_well, filename)
 
         if isLayoutExist is False:
-            self.ConsoleSignal.emit(
-            '''<font color=red>No graph layout exists for well %s.
-               </font>''' % name_well)
-
-            self.emit_error_message('''<b>No graph layout exists
-                                         for well %s.</b>''' % name_well)
-
+            msg = 'No graph layout exists for well %s.' % name_well
+            print(msg)
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+            self.emit_error_message('<b>%s</b>' % msg)
             return
 
         # ---------------------------------------------------- Load Layout ----
@@ -919,7 +885,7 @@ class HydroprintGUI(QtGui.QWidget):
 
         # ----------------------------------------------------- Update UI -----
 
-        self.UpdateUI = False
+        self.__updateUI = False
 
         # Scales :
 
@@ -995,9 +961,9 @@ class HydroprintGUI(QtGui.QWidget):
             self.hydrograph.fmeteo = []
             self.hydrograph.finfo = []
 
-        self.UpdateUI = True
+        self.__updateUI = True
 
-    def save_config_isClicked(self):  # =======================================
+    def save_config_isClicked(self):
 
         if not self.fwaterlvl:
 
@@ -1055,35 +1021,31 @@ class HydroprintGUI(QtGui.QWidget):
         else:
             self.save_graph_layout(name_well)
 
-    def save_graph_layout(self, name_well):  # ================================
-
+    def save_graph_layout(self, name_well):
         self.update_graph_layout_parameter()
-        filename = self.workdir + '/graph_layout.lst'
+        filename = os.path.join(self.workdir, 'graph_layout.lst')
         self.hydrograph.save_layout(name_well, filename)
-        self.ConsoleSignal.emit(
-        '''<font color=black>Graph layout saved successfully
-             for well %s.</font>''' % name_well)
+        msg = 'Graph layout saved successfully for well %s.' % name_well
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
-    def best_fit_waterlvl(self):  # ===========================================
+    # =========================================================================
 
+    def best_fit_waterlvl(self):
         if len(self.waterlvl_data.lvl) != 0:
-
             WLscale, WLmin = self.hydrograph.best_fit_waterlvl()
-
             self.waterlvl_scale.setValue(WLscale)
             self.waterlvl_max.setValue(WLmin)
 
-    def best_fit_time(self):  # ===============================================
-
+    def best_fit_time(self):
         if len(self.waterlvl_data.time) != 0:
-
             TIME = self.waterlvl_data.time
             date0, date1 = self.hydrograph.best_fit_time(TIME)
-
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
 
-    def select_save_path(self):  # ============================================
+    # =========================================================================
+
+    def select_save_path(self):
 
         name_well = self.waterlvl_data.name_well
         dialog_dir = self.save_fig_dir + '/hydrograph_' + name_well
@@ -1146,7 +1108,7 @@ class HydroprintGUI(QtGui.QWidget):
         """
 
         sender = self.sender()
-        if self.UpdateUI is False:
+        if self.__updateUI is False:
             return
 
         if sender == self.language_box:
@@ -1182,19 +1144,19 @@ class HydroprintGUI(QtGui.QWidget):
 
             self.hydrograph.WLdatum = self.datum_widget.currentIndex()
 
-            #---- compute new WLmin ----
+            # ---- compute new WLmin ----
 
             # This is calculated so that trailing zeros in the altitude of the
             # well is not carried to the y axis labels, so that they remain a
             # int multiple of *WLscale*.
 
-            yoffset = int(self.waterlvl_data.ALT / self.hydrograph.WLscale)
+            yoffset = int(self.waterlvl_data.ALT/self.hydrograph.WLscale)
             yoffset *= self.hydrograph.WLscale
 
             self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)
             self.waterlvl_max.setValue(self.hydrograph.WLmin)
 
-            #---- Update graph and draw ----
+            # ---- Update graph and draw ----
 
             if self.hydrograph.isHydrographExists:
                 self.hydrograph.update_waterlvl_scale()
@@ -1521,12 +1483,7 @@ class PageSetupWin(QtGui.QWidget):
         self.va_ratio_spinBox.setValue(self.va_ratio)
         self.va_ratio_spinBox.setAlignment(QtCore.Qt.AlignCenter)
 
-        class HSep(QtGui.QFrame): # vertical separators for the toolbar
-            def __init__(self, parent=None):
-                super(HSep, self).__init__(parent)
-                self.setFrameStyle(db.styleUI().HLine)
-
-        class QTitle(QtGui.QLabel): # vertical separators for the toolbar
+        class QTitle(QtGui.QLabel):
             def __init__(self, label, parent=None):
                 super(QTitle, self).__init__(label, parent)
                 self.setAlignment(QtCore.Qt.AlignCenter)
@@ -1545,7 +1502,7 @@ class PageSetupWin(QtGui.QWidget):
             QtGui.QLabel('Top/Bottom Axes Ratio :'), row, 0)
         figSize_layout.addWidget(self.va_ratio_spinBox, row, 2)
         row += 1
-        figSize_layout.addWidget(HSep(), row, 0, 1, 3)
+        figSize_layout.addWidget(myqt.HSep(), row, 0, 1, 3)
         row += 1
         figSize_layout.addWidget(
             QTitle('GRAPH ELEMENTS VISIBILITY\n'), row, 0, 1, 3)
