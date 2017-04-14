@@ -2499,7 +2499,7 @@ class RechgSetupWin(myqt.DialogWindow):
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
         sh.load_data(fmeteo, fwaterlvl)
-        sh.GLUE(Sy, RASmax, Cro, res='rough')
+        sh.GLUE(Sy, RASmax, Cro, res='fine')
 
         QtGui.QApplication.restoreOverrideCursor()
 

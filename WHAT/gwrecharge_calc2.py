@@ -723,17 +723,17 @@ if __name__ == '__main__':
 
     # ---- NB ----
 
-#    dirname = '../Projects/Sussex'
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-#                          'SUSSEX (8105200_8105210)',
-#                          'SUSSEX (8105200_8105210)_1980-2017.out')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
-#
-#    Sy = [0, 0.06]
-#    RASmax = [40, 50]
-#    Cru = [0.2, 0.4]
-#    sh.TMELT = -2.5
-#    sh.CM = 3
+    dirname = '../Projects/Sussex'
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+                          'SUSSEX (8105200_8105210)',
+                          'SUSSEX (8105200_8105210)_1980-2017.out')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
+
+    Sy = [0.005, 0.025]
+    RASmax = [40, 100]
+    Cru = [0.3, 0.5]
+    sh.TMELT = -2.5
+    sh.CM = 3
 
     # ---- Suffield ----
 
@@ -776,26 +776,26 @@ if __name__ == '__main__':
 
     # ---- Example ----
 
-    fmeteo = ('C:/Users/jnsebgosselin/Desktop/Example/Meteo/Output/'
-              'STE CHRISTINE (7017000)/'
-              'STE CHRISTINE (7017000)_1990-2015.out')
-    fwaterlvl = ('C:/Users/jnsebgosselin/Desktop/Example/'
-                 'Water Levels/5080001.xls')
-
-    Sy = [0.2, 0.3]
-    RASmax = [40, 120]
-    Cru = [0.2, 0.4]
-    sh.TMELT = 0
-    sh.CM = 2.75
+#    fmeteo = ('C:/Users/jnsebgosselin/Desktop/Example/Meteo/Output/'
+#              'STE CHRISTINE (7017000)/'
+#              'STE CHRISTINE (7017000)_1990-2015.out')
+#    fwaterlvl = ('C:/Users/jnsebgosselin/Desktop/Example/'
+#                 'Water Levels/5080001.xls')
+#
+#    Sy = [0.2, 0.3]
+#    RASmax = [40, 120]
+#    Cru = [0.2, 0.4]
+#    sh.TMELT = 0
+#    sh.CM = 2.75
 
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-#    sh.GLUE(Sy, RASmax, Cru, res='fine')
+    sh.GLUE(Sy, RASmax, Cru, res='rough')
 
     sh.calc_recharge()
     sh.initPlot()
     sh.plot_prediction()
-    plot_rechg_GLUE('English', deltat=80)
+    plot_rechg_GLUE('English', deltat=0)
 
     plt.show()
