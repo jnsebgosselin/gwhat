@@ -219,7 +219,7 @@ class WaterlvlData(object):
             TIME = np.array(TIME).astype('float')
             OBS = np.array(OBS).astype('float')
 
-            if len(NAME) > 1:
+            if len(NAME) > 0:
                 rowx = np.where(NAME == name_well)[0]
                 if len(rowx) > 0:
                     WLmes = OBS[rowx]
