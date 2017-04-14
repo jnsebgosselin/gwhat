@@ -673,7 +673,6 @@ class HydroprintGUI(QtGui.QWidget):
 
         # Display Well Info in UI :
 
-        print(self.waterlvl_data.well_info)
         self.well_info_widget.setText(self.waterlvl_data.well_info)
 
         msg = ('Water level data set loaded successfully ' +
@@ -964,31 +963,22 @@ class HydroprintGUI(QtGui.QWidget):
         self.__updateUI = True
 
     def save_config_isClicked(self):
-
         if not self.fwaterlvl:
+            msg = ('No valid water level file file currently selected.'
+                   ' Cannot save graph layout.')
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
 
-            self.ConsoleSignal.emit(
-            '''<font color=red>No valid water level file currently selected.
-                 Cannot save graph layout.
-               </font>''')
-
-            self.msgError.setText(
-            '''<b>Please select valid water level data file.</b>''')
-
+            self.msgError.setText('Please select valid water level data file.')
             self.msgError.exec_()
 
             return
 
         if not self.hydrograph.fmeteo:
+            msg = ('No valid weather data file currently selected.'
+                   ' Cannot save graph layout.')
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
 
-            self.ConsoleSignal.emit(
-            '''<font color=red>No valid weather data file currently selected.
-                 Cannot save graph layout.
-               </font>''')
-
-            self.msgError.setText(
-                '<b>Please select valid weather data file.</b>')
-
+            self.msgError.setText('Please select valid weather data file.')
             self.msgError.exec_()
 
             return
@@ -1006,11 +996,10 @@ class HydroprintGUI(QtGui.QWidget):
         # ---------------------------------------------------- Save Layout ----
 
         if isLayoutExist is True:
-            self.msgBox.setText(
-            '''<b>A graph layout already exists for well %s.<br><br> Do
-                 you want to replace it?</b>''' % name_well)
+            msg = ('A graph layout already exists for well %s.Do you want to'
+                   ' you want to replace it?') % name_well
+            self.msgBox.setText(msg)
             override = self.msgBox.exec_()
-
             if override == self.msgBox.Yes:
                 self.save_graph_layout(name_well)
 

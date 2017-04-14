@@ -2498,15 +2498,15 @@ class RechgSetupWin(myqt.DialogWindow):
 
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
-        sh.load_data(fmeteo, fwaterlvl)
-        sh.GLUE(Sy, RASmax, Cro, res='fine')
+        # sh.load_data(fmeteo, fwaterlvl)
+        # sh.GLUE(Sy, RASmax, Cro, res='fine')
 
         QtGui.QApplication.restoreOverrideCursor()
 
         sh.calc_recharge()
         sh.initPlot()
         sh.plot_prediction()
-        plot_rechg_GLUE('English', deltat=self.deltaT)
+        plot_rechg_GLUE('English', deltat=self.deltaT, yrs_range=[1995, 2015])
 
         plt.show()
 
