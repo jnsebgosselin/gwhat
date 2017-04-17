@@ -923,23 +923,18 @@ def calculate_normals(DATA, datatypes):
 
     for k in range(nvar):
         for i in range(12):
-
             indx = np.where(~np.isnan(XMONTH[:, i, k]))[0]
-
             if len(indx) > 0:
-
                 XNORM[i, k] = np.mean(XMONTH[indx, i, k])
-
             else:
-
                 # Default nan value is kept in the array.
-
                 print('WARNING, some months are empty with no data.')
 
     return XNORM, MTHSER
 
 
-#==============================================================================
+# =============================================================================
+
 def calculate_ETP(DATE, TAVG, LAT, Ta):
     """
     Daily potential evapotranspiration (mm) is calculated with a method adapted
@@ -1068,10 +1063,10 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # --------------------------------------------------- Define Margins --
 
-        left_margin = 1. / fw
-        right_margin = 1. / fw
-        bottom_margin = 0.35 / fh
-        top_margin = 0.1 / fh
+        left_margin = 1/fw
+        right_margin = 1/fw
+        bottom_margin = 0.35/fh
+        top_margin = 0.1/fh
 
         # ------------------------------------------------ Yearly Avg Labels --
 
@@ -1150,24 +1145,20 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # the <plot_monthly_normals> method.
 
         XPOS = np.arange(-0.5, 12.51, 1)
+        XPOS[0] = 0
+        XPOS[-1] = 12
         y = range(len(XPOS))
         colors = ['#990000', '#FF0000', '#FF6666']
 
-        # ---- Tmax ----
+        # dashed lines for Tmax, Tavg, and Tmin :
 
-        htmax, = ax1.plot(XPOS, y, color=colors[0], clip_on=True, ls='--',
-                          lw=1.5, zorder=100)
+        for i in range(3):
+            ax1.plot(XPOS, y, color=colors[i], ls='--', lw=1.5, zorder=100)
 
-        # ---- Tmean ----
+        # markers for Tavg :
 
-        htavg, = ax1.plot(XPOS, y, color=colors[1], clip_on=True, marker='o',
-                          ls='--', ms=6, zorder=100, mec=colors[1],
-                          mfc='white', mew=1.5, lw=1.5)
-
-        # ---- Tmin ----
-
-        htmin, = ax1.plot(XPOS, y, color=colors[2], clip_on=True, ls='--',
-                          lw=1.5, zorder=100)
+        ax1.plot(XPOS[1:-1], y[1:-1], color=colors[1], marker='o', ls='none',
+                 ms=6, zorder=100, mec=colors[1], mfc='white', mew=1.5)
 
         # ------------------------------------------------- XTICKS FORMATING --
 
@@ -1224,7 +1215,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         self.plot_legend()
 
-    def set_lang(self, lang):  # ============================== Set Language ==
+    # =========================================================== Language ====
+
+    def set_lang(self, lang):
         self.lang = lang
         if len(self.NORMALS) == 0:
             return
@@ -1234,13 +1227,15 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         month_names = LabelDataBase(self.lang).month_names
         self.figure.axes[1].xaxis.set_ticklabels(month_names, minor=True)
 
-    def plot_legend(self):  # =================================================
+    # ============================================================ Legend =====
+
+    def plot_legend(self):
 
         ax = self.figure.axes[2]  # Axe on which the legend is hosted
 
         # --- bbox transform --- #
 
-        padding = mpl.transforms.ScaledTranslation(5/72., -5/72.,
+        padding = mpl.transforms.ScaledTranslation(5/72, -5/72,
                                                    self.figure.dpi_scale_trans)
         transform = ax.transAxes + padding
 
@@ -1266,7 +1261,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                         bbox_to_anchor=(0, 1), bbox_transform=transform)
         leg.draw_frame(False)
 
-    # =========================================================================
+    # ========================================================= Plot data =====
 
     def plot_monthly_normals(self, NORMALS):
 
@@ -1345,7 +1340,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # ---- Precip (host) ----
 
-        yticks = np.arange(Ymin0, Ymax0 + Yscale0/10., Yscale0)
+        yticks = np.arange(Ymin0, Ymax0 + Yscale0/10, Yscale0)
         ax0.set_yticks(yticks)
 
         yticks_minor = np.arange(yticks[0], yticks[-1], 5)
@@ -1371,7 +1366,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # --------------------------------------------------------- PLOTTING --
 
         self.plot_precip(Ptot_norm, Snow_norm)
-        self.plot_air_temp(Tmax_norm, Tmin_norm, Tavg_norm)
+        self.plot_air_temp(Tmax_norm, Tavg_norm, Tmin_norm)
         self.update_yearly_avg()
 
         # --------------------------------------------------------- Clipping --
@@ -1404,7 +1399,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax1.set_ylabel(labelDB.Tlabel, va='bottom', fontsize=16)
         ax1.yaxis.set_label_coords(-0.09, 0.5)
 
-    def plot_precip(self, PNORM, SNORM):  # ===================================
+    # =========================================================================
+
+    def plot_precip(self, PNORM, SNORM):
 
         # ---- define vertices manually ----
 
@@ -1427,7 +1424,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                           SNORM,
                           SNORM * 0)).transpose().flatten()
 
-        #-- plot data --
+        # -- plot data --
 
         ax = self.figure.axes[1]
 
@@ -1442,17 +1439,16 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax.fill_between(Xpos, 0., Snow, edgecolor='none',
                         color=colors.rgb[2])
 
-    def plot_air_temp(self, Tmax_norm, Tmin_norm, Tavg_norm): #=== Air Temp. ==
-
-        Tavg_norm = np.hstack((Tavg_norm[-1], Tavg_norm, Tavg_norm[0]))
-        Tmin_norm = np.hstack((Tmin_norm[-1], Tmin_norm, Tmin_norm[0]))
-        Tmax_norm = np.hstack((Tmax_norm[-1], Tmax_norm, Tmax_norm[0]))
-
+    def plot_air_temp(self, Tmax_norm, Tavg_norm, Tmin_norm):
         for i, Tnorm in enumerate([Tmax_norm, Tavg_norm, Tmin_norm]):
-            self.figure.axes[2].lines[i].set_ydata(Tnorm)
+            T0 = (Tnorm[-1]+Tnorm[0])/2
+            T = np.hstack((T0, Tnorm, T0))
+            self.figure.axes[2].lines[i].set_ydata(T)
+        self.figure.axes[2].lines[3].set_ydata(Tavg_norm)
 
+    # =========================================================================
 
-    def update_yearly_avg(self):  # ===================== Update Yearly Avg. ==
+    def update_yearly_avg(self):
 
         Tavg_norm = self.NORMALS[:, 2]
         Ptot_norm = self.NORMALS[:, 3]
