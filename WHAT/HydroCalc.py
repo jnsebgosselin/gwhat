@@ -621,8 +621,11 @@ class WLCalc(QtGui.QWidget):
 
         # Display result :
 
-        txt = u'∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
+        txt = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
         self.MRC_results.setText(txt)
+        self.MRC_results.append('\nwhere h is the depth to water '
+                                'table in mbgs and ∂h/∂t is the recession '
+                                'rate in mm/d.')
         txt = '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
         self.MRC_results.append(txt)
 
@@ -1076,7 +1079,7 @@ class WLCalc(QtGui.QWidget):
         Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
         Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
 
-        indx = np.where(~np.isnan(y))
+        indx = np.where(~np.isnan(y))[0]
         Ymin0 = np.min(y[indx]) - (np.max(y[indx]) - np.min(y[indx])) * delta
         Ymax0 = np.max(y[indx]) + (np.max(y[indx]) - np.min(y[indx])) * delta
 
@@ -1930,7 +1933,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
     # ------------------------------------------------------- Optimization ----
 
     print('\n---- MRC calculation started ----\n')
-    print('MRCTYPE = %s\n' % (['Linear', 'Exponential'][MRCTYPE]))
+    print('MRCTYPE = %s' % (['Linear', 'Exponential'][MRCTYPE]))
 
     tstart = clock()
 
@@ -2060,7 +2063,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             break
 
     tend = clock()
-    print('\nTIME = %0.3f sec' % (tend-tstart))
+    print('TIME = %0.3f sec' % (tend-tstart))
     print('\n---- FIN ----\n')
 
     return A, B, hp, RMSE
@@ -2075,12 +2078,11 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
     This is documented in logbook#10 p.79-80, 106.
     """
 
-    maxpeak = ipeak[:-1:2]  # Time indexes delimiting period where water level
-    minpeak = ipeak[1::2]   # recedes.
+    # Time indexes delimiting periods where water level recedes :
 
+    maxpeak = ipeak[:-1:2]
+    minpeak = ipeak[1::2]
     nsegmnt = len(minpeak)
-    # nsegmnt: Number of segments of the time series that were
-    #          identified as period where the water level recedes.
 
     hp = np.ones(len(h)) * np.nan
     for i in range(nsegmnt):
@@ -2088,9 +2090,9 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
         for j in range(minpeak[i] - maxpeak[i]):
             imax = maxpeak[i]
 
-            LUMP1 = (1 - A * dt[imax+j] / 2)
-            LUMP2 = B * dt[imax+j]
-            LUMP3 = (1 + A * dt[imax+j] / 2) ** -1
+            LUMP1 = (1 - A*dt[imax+j]/2)
+            LUMP2 = B*dt[imax+j]
+            LUMP3 = (1 + A*dt[imax+j]/2)**-1
 
             hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
 
@@ -2260,9 +2262,9 @@ class SynthHydroWidg(QtGui.QWidget):
         self.QRAS = MyQDSpin(1, 0, 1000, 0, 100, 'mm', parent=self)
         self.CRO = MyQDSpin(0.001, 0, 1, 3, 0.3, parent=self)
 
-        self.Tcrit = MyQDSpin(0.1, -25, 25, 1, 0, u'°C', parent=self)
-        self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, u'°C', parent=self)
-        self.CM = MyQDSpin(0.1, 0, 100, 1, 2.7,u'mm/°C', parent=self)
+        self.Tcrit = MyQDSpin(0.1, -25, 25, 1, 0, '°C', parent=self)
+        self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, '°C', parent=self)
+        self.CM = MyQDSpin(0.1, 0, 100, 1, 2.7, 'mm/°C', parent=self)
 
         main_grid = QtGui.QGridLayout()
 
