@@ -58,8 +58,10 @@ class HydroprintGUI(QtGui.QWidget):
 
     ConsoleSignal = QtCore.Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, datamanager, parent=None):
         super(HydroprintGUI, self).__init__(parent)
+
+        self.datamanager = datamanager
 
         self.workdir = os.getcwd()
         self.__updateUI = True
@@ -213,6 +215,7 @@ class HydroprintGUI(QtGui.QWidget):
         layout = QtGui.QGridLayout()
         # ----
         row = 0
+        # layout.addWidget(self.datamanager, row, 0)
         layout.addLayout(data_files_panel, row, 0)
         row += 1
         layout.addWidget(self.tabscales, row, 0)
@@ -672,6 +675,7 @@ class HydroprintGUI(QtGui.QWidget):
         self.hydrograph.set_waterLvlObj(self.waterlvl_data)
 
         # Display Well Info in UI :
+        print(self.waterlvl_data.well_info)
 
         self.well_info_widget.setText(self.waterlvl_data.well_info)
 
@@ -1260,7 +1264,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
         self.__initUI__()
 
-    def __initUI__(self):  # ==================================================
+    def __initUI__(self):
 
         # Toolbar :
 
@@ -1316,7 +1320,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         main_layout.addWidget(toolbar_widget, 1, 0)
         self.setLayout(main_layout)
 
-    def load_colors(self):   # ================================================
+    def load_colors(self):
 
         colorsDB = hydrograph.Colors()
         colorsDB.load_colors_db()
@@ -1330,10 +1334,8 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
                                     colorsDB.RGB[row][2])
                                )
 
-    def reset_defaults(self): #============================= Reset Deafaults ==
-
+    def reset_defaults(self):
         colorsDB = hydrograph.Colors()
-
         nrow = self.colorGrid_layout.rowCount()
         for row in range(nrow):
             btn = self.colorGrid_layout.itemAtPosition(row, 3).widget()
@@ -1343,7 +1345,7 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
                                    colorsDB.RGB[row][2])
                               )
 
-    def pick_color(self):  # =============================== Pick New Colors ==
+    def pick_color(self):
 
         sender = self.sender()
         color = QtGui.QColorDialog.getColor(sender.palette().base().color())
@@ -1351,11 +1353,13 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
             rgb = color.getRgb()[:-1]
             sender.setStyleSheet("background-color: rgb(%i,%i,%i)" % rgb)
 
-    def btn_OK_isClicked(self): #======================================== OK ==
+    # =========================================================================
+
+    def btn_OK_isClicked(self):
         self.btn_apply_isClicked()
         self.close()
 
-    def btn_apply_isClicked(self): #================================== Apply ==
+    def btn_apply_isClicked(self):
 
         colorsDB = hydrograph.Colors()
         colorsDB.load_colors_db()
@@ -1371,10 +1375,12 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         colorsDB.save_colors_db()
         self.newColorSetupSent.emit(True)
 
-    def closeEvent(self, event): #==================================== Close ==
+    # =========================================================================
+
+    def closeEvent(self, event):
         super(ColorsSetupWin, self).closeEvent(event)
 
-        #---- Refresh UI ----
+        # ---- Refresh UI ----
 
         # If cancel or X is clicked, the parameters will be reset to
         # the values they had the last time "Accept" button was
@@ -1382,7 +1388,9 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
         self.load_colors()
 
-    def show(self): #================================================== Show ==
+    # =========================================================================
+
+    def show(self):
         super(ColorsSetupWin, self).show()
         self.activateWindow()
         self.raise_()
@@ -1518,7 +1526,7 @@ class PageSetupWin(QtGui.QWidget):
 
         legend_widget.setLayout(legend_layout)
 
-        #----- Graph title -----
+        # ----- Graph title -----
 
         title_widget = QtGui.QWidget()
 
@@ -1535,7 +1543,7 @@ class PageSetupWin(QtGui.QWidget):
 
         title_widget.setLayout(title_layout)
 
-        #---- Trend Line ----
+        # ---- Trend Line ----
 
         trend_widget = QtGui.QWidget()
 
@@ -1625,10 +1633,12 @@ class PageSetupWin(QtGui.QWidget):
         self.setFixedSize(self.size())
 
 if __name__ == '__main__':
-
+    from projet.manager_data import DataManager
     app = QtGui.QApplication(sys.argv)
 
-    Hydroprint = HydroprintGUI()
+    dm = DataManager()
+
+    Hydroprint = HydroprintGUI(dm)
     Hydroprint.set_workdir("../Projects/Project4Testing")
     Hydroprint.show()
 

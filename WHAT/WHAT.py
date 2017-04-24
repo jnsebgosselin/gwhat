@@ -101,10 +101,6 @@ class WHAT(QtGui.QMainWindow):
         global headerDB
         headerDB = db.FileHeaders()
 
-        # ------------------------------------------------ MAIN WINDOW SETUP --
-
-
-
         # ----------------------------------------------------- MAIN CONSOLE --
 
         self.main_console = QtGui.QTextEdit()
@@ -254,18 +250,18 @@ class WHAT(QtGui.QMainWindow):
         filename = self.pmanager.projet.filename
         dirname = os.path.dirname(filename)
 
-        # ---- Update WHAT.pref file ----
+        # Update WHAT.pref file :
 
         self.whatPref.projectfile = filename
         self.whatPref.save_pref_file()
 
-        # ---- Update UI ----
+        # Update UI :
 
         self.tab_dwnld_data.setEnabled(True)
         self.tab_fill_weather_data.setEnabled(True)
         self.tab_hydrograph.setEnabled(True)
 
-        # ------------------------------------------- Update child widgets ----
+        # Update child widgets :
 
         # ---- dwnld_weather_data ----
 

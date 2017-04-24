@@ -118,3 +118,5 @@ WHAT/brf_mod/kgs_brf.par
 projet_structure.svg
 WHAT/kgs_brf/BRFInput.txt
 WHAT/glue50_results.csv
+WHAT/kgs_brf/kgs_brf.par
+*.par
