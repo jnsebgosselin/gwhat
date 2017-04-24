@@ -45,7 +45,7 @@ import mplJS
 # =============================================================================
 
 
-def calcul_glue(p):
+def calcul_glue(p, yrs_range=None):
 
     # --------------------------------------------------------- Fetch Data ----
 
@@ -60,6 +60,7 @@ def calcul_glue(p):
     YEARS = WEATHER[:, 0].astype(int)
     MONTHS = WEATHER[:, 1].astype(int)
     PTOT = WEATHER[:, 6].astype(float)
+    deltat = data['deltat']
 
     Sy = np.array(data['Sy'])
     RASmax = np.array(data['RASmax'])
@@ -97,24 +98,30 @@ def calcul_glue(p):
 
     # ------------------------------------------------------ Calcul Yearly ----
 
-    yr2plot = np.arange(1995, 2016).astype('int')
+    # Convert daily to hydrological year. An hydrological year is defined from
+    # October 1 to September 30 of the next year.
+    if yrs_range:
+        yr2plot = np.arange(yrs_range[0], yrs_range[1]).astype('int')
+    else:
+        yr2plot = np.arange(np.min(YEAR), np.max(YEAR)).astype('int')
+
     NYear = len(yr2plot)
-
-    # ---- Convert daily to hydrological year ----
-
-    # the hydrological year is defined from October 1 to September 30 of the
-    # next year.
-
     glue_rechg_yr = np.zeros((NYear, N))
     glue_etr_yr = np.zeros((NYear, N))
     glue_ru_yr = np.zeros((NYear, N))
     ptot_yr = np.zeros(NYear)
     years = []
 
+    # if deltat > 0:
+    #     for i, t in enumerate(TIME):
+    #         date = xldate_as_tuple(t+deltat, 0)
+    #         YEARS[i] = date[0]
+    #         MONTHS[i] = date[1]
+
     for i in range(NYear):
         yr0 = yr2plot[i]
         yr1 = yr0 + 1
-        years.append("'%s - '%s" % (str(yr0)[-2:], str(yr1)[-2:]))
+        years.append("'%s-'%s" % (str(yr0)[-2:], str(yr1)[-2:]))
 
         indx0 = np.where((YEARS == yr0) & (MONTHS == 10))[0][0]
         indx1 = np.where((YEARS == yr1) & (MONTHS == 9))[0][-1]
@@ -125,19 +132,26 @@ def calcul_glue(p):
 
         ptot_yr[i] = np.sum(PTOT[indx0:indx1+1])
 
-#        print('%d - %d  rechg = %d mm/y  etr = %d mm/y  ru = %d mm/y  ptot = %d mm/y' %
-#              (yr0, yr1, glue_rechg_yr[i, 2], glue_etr_yr[i, 2], glue_ru_yr[i, 2], ptot_yr[i]))
-
-#        print('%s %d %d %d %d' %
-#              (years[i], glue_rechg_yr[i, 2], glue_etr_yr[i, 2],
-#               glue_ru_yr[i, 2], ptot_yr[i])
-#              )
-
     return years, ptot_yr, glue_rechg_yr, glue_etr_yr, glue_ru_yr
 
 
-def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0,
-                    yrs_range=None):
+def write_GLUE50_budget(yrs_range=None):
+    years, ptot, rechg, etr, ru = calcul_glue([0.5], yrs_range)
+
+    filecontent = [['hydrological year', 'Ptot (mm)', 'Rechg (mm)', 'ETR (mm)',
+                   'Ru']]
+    for i in range(len(years)):
+        filecontent.append([years[i], ptot[i], rechg[i][0], etr[i][0],
+                            ru[i][0]])
+        with open('glue50_results.csv', 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer.writerows(filecontent)
+
+
+# =============================================================================
+
+
+def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
     data = np.load('GLUE.npy').item()
     rechg = np.array(data['recharge'])
     etr = np.array(data['etr'])
@@ -149,6 +163,7 @@ def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0,
     YEARS = WEATHER[:, 0].astype(int)
     MONTHS = WEATHER[:, 1].astype(int)
     PTOT = WEATHER[:, 6].astype(float)
+    deltat = data['deltat']
 
     Sy = np.array(data['Sy'])
     RASmax = np.array(data['RASmax'])
@@ -160,13 +175,7 @@ def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0,
     print('range Cru = %0.3f to %0.3f' % (np.min(Cru), np.max(Cru)))
     print('')
 
-    # ---- Resampling ----
-
-#    indx = np.where((Sy >= 0.225) & (Sy <= 0.275))[0]
-#    RMSE = RMSE[indx]
-#    rechg = rechg[indx, :]
-
-    # ---- Calculation GLUE ----
+    # --------------------------------------------------- Calculation GLUE ----
 
     RMSE = RMSE/np.sum(RMSE)  # Rescaling
 
@@ -292,8 +301,13 @@ def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0,
 
     # --------------------------------------------------- YTICKS FORMATING ----
 
+    if np.max(max_rechg_yrly) < 250:
+        yticks = np.arange(0, Ymax0+1, 25)
+    else:
+        yticks = np.arange(0, Ymax0+1, 100)
+
     ax0.yaxis.set_ticks_position('left')
-    ax0.set_yticks(np.arange(0, Ymax0+1, 100))
+    ax0.set_yticks(yticks)
     ax0.tick_params(axis='y', direction='out', gridOn=True, labelsize=12)
     ax0.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
              linewidth=0.5, dashes=[0.5, 5])
@@ -309,7 +323,7 @@ def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0,
     ylabl = 'Annual Recharge (mm/y)'
     xlabl = ('Hydrological Years (October 1st of one ' +
              'year to September 30th of the next)')
-    if language == 'French':
+    if lang == 'French':
         ylabl = "Recharge annuelle (mm/a)"
         xlabl = ("Années Hydrologiques (1er octobre d'une année "
                  "au 30 septembre de la suivante)")
@@ -363,7 +377,7 @@ def plot_rechg_GLUE(language='English', Ymin0=None, Ymax0=None, deltat=0,
     print('Mean annual Recharge (GLUE 5) = %0.f mm/y' %
           np.mean(min_rechg_yrly))
 
-    if language == 'French':
+    if lang == 'French':
         text = 'Recharge annuelle moyenne :\n'
         text += '(GLUE 5) %d mm/a ; ' % np.mean(min_rechg_yrly)
         text += '(GLUE 25) %d mm/a ; ' % np.mean(glue25_yr)
@@ -546,7 +560,7 @@ def plot_water_budget_yearly2(years, PRECIP, RECHG, ETR, RU,
     NYear = len(years)
 
     Ymin0 = 0
-    Ymax0 = 1400
+    Ymax0 = 1600
 
     Xmin0 = 0
     Xmax0 = NYear * 3
@@ -593,10 +607,10 @@ def plot_water_budget_yearly2(years, PRECIP, RECHG, ETR, RU,
 
     # ------------------------------------------------------------- PLOTTING --
 #
-    COLOR = [[0./255, 25./255, 51./255],
-             [0./255, 76./255, 153./255],
-             [0./255, 128./255, 255./255],
-             [102./255, 178./255, 255./255]]
+    COLOR = [[0/255, 25/255, 51/255],
+             [0/255, 76/255, 153/255],
+             [0/255, 128/255, 255/255],
+             [102/255, 178/255, 255/255]]
 
     labels = ['Total Precipitation', 'Recharge', 'Runoff',
               'Real Evapotranspiration']
@@ -661,12 +675,16 @@ def plot_water_budget_yearly2(years, PRECIP, RECHG, ETR, RU,
 
 def main():
 
-#    years, ptot, rechg, etr, ru = calcul_glue([0.05, 0.25, 0.5, 0.75, 0.95])
+    years, ptot, rechg, etr, ru = calcul_glue([0.05, 0.25, 0.5, 0.75, 0.95],
+                                              [2000, 2016])
+
+#    write_GLUE50_budget(yrs_range=[2000, 2016])
+
 #    plot_water_budget_yearly(years, ptot, rechg[:, 2], etr[:, 2], ru[:, 2],
 #                             language='French')
-#    plot_water_budget_yearly2(years, ptot, rechg[:, 2], etr[:, 2], ru[:, 2],
-#                              language='French')
-    plot_rechg_GLUE('French')
+    plot_water_budget_yearly2(years, ptot, rechg[:, 2], etr[:, 2], ru[:, 2],
+                              language='English')
+#    plot_rechg_GLUE('French', yrs_range=[2000, 2016])
 
 if __name__ == '__main__':
     plt.rc('font', family='Arial')

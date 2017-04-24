@@ -58,7 +58,7 @@ class LabelDatabase():
 
     def __init__(self, language):  # ------------------------------- English --
 
-        self.temperature = u'Temperature (°C)'
+        self.temperature = 'Temperature (°C)'
         self.mbgs = 'Water Level (mbgs)'
         self.masl = 'Water Level (masl)'
         self.precip = 'Precipitation (%s)'
@@ -518,14 +518,9 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
     def set_legend(self):
 
         if self.isLegend == 1:
-
-            # ---- Entry ------------------------------------------------------
-
             labelDB = LabelDatabase(self.language).legend
-
             lg_handles = []
             lg_labels = []
-
             if self.meteo_on:
 
                 # ---- Snow ---- #
@@ -603,7 +598,7 @@ class Hydrograph(HydrographBase):                             # Hydrograph #
 #                    'center', 'lower left', 'center right', 'upper left',
 #                    'upper center', 'lower center']
             # ncol = int(np.ceil(len(lg_handles)/2.))
-            self.ax0.legend(lg_handles, lg_labels, bbox_to_anchor=[1., 1.],
+            self.ax0.legend(lg_handles, lg_labels, bbox_to_anchor=[1, 1],
                             loc='lower right', ncol=3,
                             numpoints=1, fontsize=10, frameon=False)
             self.ax0.get_legend().set_zorder(100)
@@ -1653,15 +1648,23 @@ if __name__ == '__main__':  # =================================================
 
     # ---- Suffield ----
 
-    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
-    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
+#    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
+#    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
+#
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+#                          'MEDICINE HAT RCS (3034485)',
+#                          'MEDICINE HAT RCS (3034485)_2000-2016.out')
+#
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
 
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-                          'MEDICINE HAT RCS (3034485)',
-                          'MEDICINE HAT RCS (3034485)_2000-2016.out')
+    # ---- Wainwright ----
 
+#    dirname = '../Projects/Wainwright/'
+#    fmeteo = (dirname + 'Meteo/Output/WAINWRIGHT CFB AIRFIELD 21 (301S001)' +
+#              '/WAINWRIGHT CFB AIRFIELD 21 (301S001)_2000-2016.out')
+#
+#    fwaterlvl = dirname + 'Water Levels/area3-GW-07.xlsx'
 
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
 
     # ---- Valcartier ----
 
@@ -1677,6 +1680,17 @@ if __name__ == '__main__':  # =================================================
 #    fwaterlvl = dirname + '/Water Levels/P19 2013-2014.xls'
 #    fwaterlvl = dirname + '/Water Levels/P22 2014-2015.xls'
 #    finfo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.log"
+
+    # ---- NB ----
+
+    dirname = '../Projects/Sussex'
+    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
+                          'SUSSEX (8105200_8105210)',
+                          'SUSSEX (8105200_8105210)_1980-2017.out')
+    finfo = os.path.join(dirname, 'Meteo', 'Output',
+                         'SUSSEX (8105200_8105210)',
+                         'SUSSEX (8105200_8105210)_1980-2017.log')
+    fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
 
     waterLvlObj = WaterlvlData()
     waterLvlObj.load(fwaterlvl)
@@ -1737,24 +1751,26 @@ if __name__ == '__main__':  # =================================================
 
     elif what == 'GLUE':
 
-        hg.fwidth = 6.5
-        hg.fheight = 4
+        hg.fwidth = 11
+        hg.fheight = 6
 
-        hg.NZGrid = 6
-        hg.WLmin = 6.75
-        hg.WLscale = 0.25
+        hg.NZGrid = 10
+        hg.WLmin = 9
+        hg.WLscale = 1
 
-        hg.isGraphTitle = 0 # 1 -> title ; 0 -> no title
+        hg.isGraphTitle = 1  # 1 -> title ; 0 -> no title
         hg.isLegend = 1
-        hg.meteo_on = False
-        hg.datemode = 'month' # 'month' or 'year'
-        hg.date_labels_display_pattern = 2
+        hg.meteo_on = True
+        hg.datemode = 'month'  # 'month' or 'year'
+        hg.date_labels_display_pattern = 1
 
         hg.best_fit_time(waterLvlObj.time)
         hg.generate_hydrograph(meteo_obj)
 
         plt.setp(hg.l1_ax2, zorder=10, linewidth=1, color='blue', ms=2,
                  linestyle='none', marker='.')
+
+        # hg.l1_ax2.set_rasterized(True)
 
         # plot a hydrograph friend
 #        wl2 = WaterlvlData()
@@ -1764,7 +1780,7 @@ if __name__ == '__main__':  # =================================================
 
         hg.draw_GLUE()
         hg.draw_recession()
-        hg.savefig(dirname + '/GLUE_hydrograph.pdf')
+        hg.savefig(dirname + '/GLUE_hydrograph.pdf', dpi=300)
 
     # ------------------------------------------------ show figure on-screen --
 

@@ -190,10 +190,10 @@ class SynthHydrograph(object):
         fwidth, fheight = 12.5, 6
         self.fig = plt.figure(figsize=(fwidth, fheight))
 
-        lmarg = 0.85 / fwidth
-        rmarg = 0.25 / fwidth
-        tmarg = 0.5 / fheight
-        bmarg = 0.65 / fheight
+        lmarg = 0.85/fwidth
+        rmarg = 0.25/fwidth
+        tmarg = 0.5/fheight
+        bmarg = 0.65/fheight
 
         axwidth = 1 - (lmarg + rmarg)
         axheight = 1 - (bmarg + tmarg)
@@ -258,14 +258,9 @@ class SynthHydrograph(object):
         min_wlvl = hGLUE[:, 0] / 1000.
         max_wlvl = hGLUE[:, 2] / 1000.
 
-        dates = self.DATE
-        # for i in range(len(dates)):
-        #     dates[i] = dates[i] + datetime.timedelta(days=self.deltat)
-
-        self.fig.axes[0].fill_between(dates,
-                                      max_wlvl, min_wlvl,
-                                      color='0.5', lw=1.5, alpha=0.65,
-                                      zorder=10)
+        self.fig.axes[0].fill_between(
+                self.DATE, max_wlvl, min_wlvl, color='0.5', lw=1.5,
+                alpha=0.65, zorder=10)
 
         # ---- Calculate Containement Ratio ----
 
@@ -274,7 +269,6 @@ class SynthHydrograph(object):
         for i in range(len(obs_wlvl)):
             if obs_wlvl[i] >= min_wlvl[i] and obs_wlvl[i] <= max_wlvl[i]:
                 CR += 1.
-        CR = CR / len(obs_wlvl) * 100
 
         print('Containement Ratio = %0.1f' % CR)
 
@@ -317,10 +311,9 @@ class SynthHydrograph(object):
     # =============================================================== GLUE ====
 
     def GLUE(self, Sy, RASmax, Cro, res='rough'):
-
         if res == 'rough':
             U_RAS = np.arange(RASmax[0], RASmax[1]+1, 5)
-            U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.1)
+            U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.05)
         elif res == 'fine':
             U_RAS = np.arange(RASmax[0], RASmax[1]+1, 1)
             U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.01)
@@ -341,7 +334,7 @@ class SynthHydrograph(object):
         for i, cro in enumerate(U_Cro):
             for j, rasmax in enumerate(U_RAS):
                 rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
-                SyOpt, RMSE, wlvlest = self.opt_Sy(cro, rasmax, Sy0, rechg)
+                SyOpt, RMSE, wlvlest = self.opt_Sy(Sy0, rechg)
                 Sy0 = SyOpt
 
                 if SyOpt >= Sy[0] and SyOpt <= Sy[1]:
@@ -354,7 +347,7 @@ class SynthHydrograph(object):
                     set_etr.append(etr)
                     set_ru.append(ru)
 
-                print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.3f ; ' +
+                print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.4f ; ' +
                        'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
 
         dataset = {}
@@ -372,13 +365,16 @@ class SynthHydrograph(object):
         dataset['etr'] = set_etr
         dataset['ru'] = set_ru
 
+        dataset['deltat'] = self.deltat
+
         np.save('GLUE.npy', dataset)
 
-    def opt_Sy(self, cro, rasmax, Sy0, rechg):
+    # =========================================================================
 
-        tweatr = self.meteoObj.TIME + 0  # Here we introduce the time lag
-        twlvl = self.twlvl  # time water level
-        WLVLobs = self.WLVLobs * 1000  # water level observations
+    def opt_Sy(self, Sy0, rechg):
+        tweatr = self.meteoObj.TIME      # Here we introduce the time lag
+        twlvl = self.twlvl               # time water level
+        WLVLobs = self.WLVLobs * 1000    # water level observations
 
         ts = np.where(twlvl[0] == tweatr+self.deltat)[0][0]
         te = np.where(twlvl[-1] == tweatr+self.deltat)[0][0]
@@ -399,12 +395,12 @@ class SynthHydrograph(object):
                 print('Not converging.')
                 break
 
-            # ---- Calculating Jacobian (X) Numerically ----
+            # Calculating Jacobian (X) Numerically :
 
             wlvl = self.calc_hydrograph(rechg[ts:te], Sy * (1+dSy))
-            X = Xt = (wlvl[self.NaNindx] - WLVLpre[self.NaNindx]) / (Sy * dSy)
+            X = Xt = (wlvl[self.NaNindx] - WLVLpre[self.NaNindx])/(Sy*dSy)
 
-            # ---- Solving Linear System ----
+            # Solving Linear System :
 
             dh = WLVLobs[self.NaNindx] - WLVLpre[self.NaNindx]
             XtX = np.dot(Xt, X)
@@ -412,31 +408,31 @@ class SynthHydrograph(object):
 
             dr = np.linalg.tensorsolve(XtX, Xtdh, axes=None)
 
-            # ---- Storing old parameter values ----
+            # Storing old parameter values :
 
             Syold = np.copy(Sy)
             RMSEold = np.copy(RMSE)
 
             while 1:  # Loop for Damping (to prevent overshoot)
 
-                # ---- Calculating new paramter values ----
+                # Calculating new paramter values :
 
                 Sy = Syold + dr
 
-                # ---- Solving for new parameter values ----
+                # Solving for new parameter values :
 
                 WLVLpre = self.calc_hydrograph(rechg[ts:te], Sy)
                 RMSE = self.calc_RMSE(WLVLobs[self.NaNindx],
                                       WLVLpre[self.NaNindx])
 
-                # ---- Checking overshoot ----
+                # Checking overshoot :
 
                 if (RMSE - RMSEold) > 0.1:
                     dr = dr * 0.5
                 else:
                     break
 
-            # ---- Checking tolerance ----
+            # Checking tolerance :
 
             tol = np.abs(Sy - Syold)
 
@@ -444,7 +440,6 @@ class SynthHydrograph(object):
                 return Sy, RMSE, WLVLpre
 
     def surf_water_budget(self, CRU, RASmax):
-
         """
         Input
         -----
@@ -490,18 +485,15 @@ class SynthHydrograph(object):
             # ----- Precipitation, Accumulation, and Melt -----
 
             if TAVG[i] > TMELT:  # Rain
-
                 if MP[i] >= PACC[i]:  # Rain on Bareground (All snow is melted)
                     PAVL[i] = PACC[i] + PTOT[i]
                     PACC[i+1] = 0
                 elif MP[i] < PACC[i]:  # Rain on Snow
                     PAVL[i] = MP[i]
                     PACC[i+1] = PACC[i] - MP[i] + PTOT[i]
-
             elif TAVG[i] <= TMELT:  # Snow
                 PAVL[i] = 0
                 PACC[i+1] = PACC[i] + PTOT[i]
-
 
 #            if TAVG[i] > TMELT:  # Rain
 #
@@ -519,7 +511,15 @@ class SynthHydrograph(object):
 
             # ----- Infiltration and Runoff -----
 
+            # runoff coefficient
             RU[i] = CRU * PAVL[i]
+
+            # curve number
+            # CN = CRU
+            # num = (PAVL[i] - 0.2*(1000/CN-10))**2
+            # den = PAVL[i] + 0.8*(1000/CN-10)
+            # RU[i] = max(num/den, 0)
+
             I[i] = PAVL[i] - RU[i]
 
             # ----- ETR, Recharge and Storage change -----
@@ -585,9 +585,9 @@ class SynthHydrograph(object):
         elif nscheme == 'forward':
             WLpre[0] = WLobs[0]
             for i in range(len(RECHG)):
-#                if i%365 == 0:
-#                    WLpre[i+1] = WLobs[i]
-#                else:
+                # if i%365 == 0:
+                #     WLpre[i+1] = WLobs[i]
+                # else:
                 RECESS = (B - A*WLpre[i]/1000) * 1000
                 RECESS = max(RECESS, 0)
 
@@ -729,11 +729,12 @@ if __name__ == '__main__':
                           'SUSSEX (8105200_8105210)_1980-2017.out')
     fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
 
-    Sy = [0.005, 0.025]
-    RASmax = [40, 100]
-    Cru = [0.3, 0.5]
-    sh.TMELT = -2.5
-    sh.CM = 3
+    Sy = [0.001, 0.05]
+    RASmax = [40, 60]
+    Cru = [0.35, 0.45]
+#    Cru = [60, 70]
+    sh.TMELT = -2
+    sh.CM = 4
 
     # ---- Suffield ----
 
@@ -774,6 +775,21 @@ if __name__ == '__main__':
 #    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
 #    fwaterlvl = dirname + 'Water Levels/5080001.xls'
 
+    # ---- Wainwright ----
+
+#    dirname = '../Projects/Wainwright/'
+#    fmeteo = (dirname + 'Meteo/Output/WAINWRIGHT CFB AIRFIELD 21 (301S001)' +
+#              '/WAINWRIGHT CFB AIRFIELD 21 (301S001)_2000-2016.out')
+#
+#    fwaterlvl = dirname + 'Water Levels/area3-GW-07.xlsx'
+#
+#    Sy = [0.2*0.9, 0.2*1.1]
+#    RASmax = [15, 55]
+#    Cru = [0, 0.15]
+#    sh.TMELT = 0
+#    sh.CM = 4
+#    sh.deltat = delta = 25
+
     # ---- Example ----
 
 #    fmeteo = ('C:/Users/jnsebgosselin/Desktop/Example/Meteo/Output/'
@@ -791,11 +807,11 @@ if __name__ == '__main__':
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-    sh.GLUE(Sy, RASmax, Cru, res='rough')
+    # sh.GLUE(Sy, RASmax, Cru, res='fine')
 
-    sh.calc_recharge()
+    # sh.calc_recharge()
     sh.initPlot()
     sh.plot_prediction()
-    plot_rechg_GLUE('English', deltat=0)
+    plot_rechg_GLUE('English', Ymin0=-20, yrs_range=[2000, 2016])
 
     plt.show()
