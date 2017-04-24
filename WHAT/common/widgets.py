@@ -233,6 +233,9 @@ class QGroupWidget(QtGui.QGroupBox):
     def addLayout(self, layout, x, y, nx=1, ny=1):
         self.layout().addLayout(layout, x, y, nx, ny)
 
+    def rowCount(self):
+        return self.layout().rowCount()
+
 
 class DialogWindow(QtGui.QDialog):
 
