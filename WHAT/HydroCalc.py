@@ -243,12 +243,6 @@ class WLCalc(QtGui.QWidget):
                                transform=ax0.transAxes + offset)
         self.xcoord.set_visible(False)
 
-        # Add a peak cursor :
-
-        self.pguide, = ax0.plot([], [], color='white', clip_on=True,
-                                zorder=30, marker='o', linestyle='None',
-                                mec='red', mew=1.5)
-
         # Peaks :
         self.h2_ax0, = ax0.plot([], [], color='white', clip_on=True,
                                 zorder=30, marker='o', linestyle='None',
@@ -449,7 +443,7 @@ class WLCalc(QtGui.QWidget):
         rain = self.meteo_data.DATA[:, -1]
         etp = self.meteo_data.DATA[:, -2]
 
-        # --------------------------------------------------- Bin the Data ----
+        # ----------------------------------------------- Bin the Data ----
 
         bw = 7
         n = bw/2
@@ -469,7 +463,7 @@ class WLCalc(QtGui.QWidget):
         etp_bin = etp[:nbin*bw].reshape(nbin, bw)
         etp_bin = np.sum(etp_bin, axis=1)
 
-        # ------------------------------------------------- Generate Shape ----
+        # --------------------------------------------- Generate Shape ----
 
         time_bar = np.zeros(len(time_bin) * 4)
         rain_bar = np.zeros(len(rain_bin) * 4)
@@ -500,7 +494,7 @@ class WLCalc(QtGui.QWidget):
         etp_bar[1::3] = etp_bin
         etp_bar[2::3] = np.nan
 
-        # ------------------------------------------------------ Plot data ----
+        # -------------------------------------------------- Plot data ----
 
         ax = self.fig.axes[1]
 
@@ -623,11 +617,11 @@ class WLCalc(QtGui.QWidget):
 
         txt = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
         self.MRC_results.setText(txt)
+        txt = '%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
+        self.MRC_results.append(txt)
         self.MRC_results.append('\nwhere h is the depth to water '
                                 'table in mbgs and ∂h/∂t is the recession '
                                 'rate in mm/d.')
-        txt = '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
-        self.MRC_results.append(txt)
 
         # Plot result :
 
@@ -667,10 +661,10 @@ class WLCalc(QtGui.QWidget):
             well = self.waterLvl_data.name_well
 
             t1 = min(self.brfperiod[0], self.brfperiod[1])
-            i1 = np.where(self.waterLvl_data.time > t1)[0][0]
+            i1 = np.where(self.waterLvl_data.time >= t1)[0][0]
 
             t2 = max(self.brfperiod[0], self.brfperiod[1])
-            i2 = np.where(self.waterLvl_data.time < t2)[0][-1]
+            i2 = np.where(self.waterLvl_data.time <= t2)[0][-1]
 
             time = np.copy(self.waterLvl_data.time[i1:i2+1])
             wl = np.copy(self.waterLvl_data.lvl[i1:i2+1])
@@ -678,8 +672,6 @@ class WLCalc(QtGui.QWidget):
             et = np.copy(self.waterLvl_data.ET[i1:i2+1])
             if len(et) == 0:
                 et = np.zeros(len(wl))
-
-            print(et)
 
             lagBP = self.config_brf.lagBP
             lagET = self.config_brf.lagET
@@ -1028,12 +1020,11 @@ class WLCalc(QtGui.QWidget):
         # Adjust Water Levels, Peak, MRC ant weather time frame :
 
         t = self.time + self.dt4xls2mpl * self.dformat
-        # ----
         self.h1_ax0.set_xdata(t)  # Water Levels
-        # ----
+
         if len(self.hrecess) > 0:  # MRC
             self.h3_ax0.set_xdata(t)
-        # ----
+
         if len(self.peak_indx) > 0:  # Peaks
             self.h2_ax0.set_xdata(self.time[self.peak_indx] +
                                   self.dt4xls2mpl * self.dformat)
@@ -1240,13 +1231,16 @@ class WLCalc(QtGui.QWidget):
         self.vguide.set_visible(False)
         self.xcoord.set_visible(False)
         self.xcross.set_visible(False)
-        self.pguide.set_visible(False)
 
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
+    # -------------------------------------------------------------------------
+
     def on_fig_leave(self, event):
         self.draw()
+
+    # -------------------------------------------------------------------------
 
     def mouse_vguide(self, event):
         if self.isGraphExists is False:
@@ -1262,16 +1256,17 @@ class WLCalc(QtGui.QWidget):
 
         fig.canvas.restore_region(self.__figbckground)
 
-        # ----- Vertical Cursor ----
+        # ----- Draw vertical guide ----
 
         # Trace a red vertical guide (line) that folows the mouse marker :
 
         x = event.xdata
         if x:
             self.vguide.set_visible(True)
-            self.xcoord.set_visible(True)
             self.vguide.set_xdata(x)
+            ax0.draw_artist(self.vguide)
 
+            self.xcoord.set_visible(True)
             if self.dformat == 0:
                 self.xcoord.set_text('%d' % x)
             else:
@@ -1280,33 +1275,10 @@ class WLCalc(QtGui.QWidget):
                 mm = date[1]
                 dd = date[2]
                 self.xcoord.set_text('%02d/%02d/%d' % (dd, mm, yyyy))
-
-            ax0.draw_artist(self.vguide)
             ax0.draw_artist(self.xcoord)
         else:
             self.vguide.set_visible(False)
             self.xcoord.set_visible(False)
-
-        # ----- Add Peak Cursor ----
-
-        if x and not self.btn_editPeak.autoRaise():
-            xp = self.time + self.dt4xls2mpl * self.dformat
-            yp = self.water_lvl
-
-            d = np.abs(x - xp)
-            i = np.argmin(d)
-            if i in [0, len(xp)-1]:
-                # Marker is outside the water level time series.
-                self.pguide.set_data(xp[i], yp[i])
-            else:
-                y = np.interp(x, xp, yp)
-                self.pguide.set_data(x, y)
-
-            self.pguide.set_visible(self.__addPeakVisible)
-        else:
-            self.pguide.set_visible(False)
-
-        ax0.draw_artist(self.pguide)
 
         # ---- Remove Peak Cursor ----
 
@@ -1344,6 +1316,8 @@ class WLCalc(QtGui.QWidget):
 
         self.fig.canvas.blit()
 
+    # -------------------------------------------------------------------------
+
     def onrelease(self, event):
         if event.button != 1:
             return
@@ -1353,6 +1327,8 @@ class WLCalc(QtGui.QWidget):
 
         self.__addPeakVisible = True
         self.plot_peak()
+
+    # -------------------------------------------------------------------------
 
     def onclick(self, event):
         x, y = event.x, event.y
@@ -1422,7 +1398,6 @@ class WLCalc(QtGui.QWidget):
             self.peak_memory.append(self.peak_indx)
 
             self.__addPeakVisible = False
-            self.pguide.set_visible(False)
             self.draw()
 
         elif not self.btn_selBRF.autoRaise():  # ------- Select BRF period ----
