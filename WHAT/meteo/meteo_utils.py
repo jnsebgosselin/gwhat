@@ -378,14 +378,12 @@ class WeatherAvgGraph(QtGui.QWidget):
 
 
 class MeteoObj():
-
     """
     This is a class to load and manipulate weather data.
 
     nan are assigned a value of 0 for Ptot and for air Temp, the value is
     calculated with an in-station interpolation.
     """
-
     def __init__(self):
 
         self.filename = ''
@@ -429,7 +427,6 @@ class MeteoObj():
         self.build_HTML_table()
 
         # Clean data :
-
         self.clean_endsof_file()
         self.check_time_continuity()
         self.get_TIME(self.DATA[:, :3])
@@ -514,7 +511,7 @@ class MeteoObj():
             print('%d empty' % (n - len(self.DATA[:, 0])) +
                   ' rows of data removed at the beginning of the dataset.')
 
-        #---- End ----
+        # ---- End ----
 
         n = len(self.DATA[:, 0])
         for i in (n - np.arange(n) - 1):
@@ -529,7 +526,7 @@ class MeteoObj():
 
     def check_time_continuity(self):  # =======================================
 
-        #------------------------------------------ check time continuity ----
+        # -------------------------------------- check time continuity ----
 
         # Check if the data series is continuous over time and
         # correct it if not
@@ -573,7 +570,7 @@ class MeteoObj():
         # there is no missing value in both of these estimated time series.
         # However, it needs to be ran after but after 'check_time_continuity'.
 
-        #---- Fill Temperature based variables ----
+        # ---- Fill Temperature based variables ----
 
         for var in range(nvar):
 
@@ -587,7 +584,7 @@ class MeteoObj():
                                           X[:, var][nonanindx])
 
                     print('There was %d nan values' % len(nanindx) +
-                          ' in %s series.' % varnames[var]  +
+                          ' in %s series.' % varnames[var] +
                           ' Missing values estimated with a' +
                           ' linear interpolation.')
 
@@ -601,7 +598,9 @@ class MeteoObj():
 
         self.DATA[:, 3:] = X
 
-    def add_rain_to_data(self):  # ============================================
+    # =========================================================================
+
+    def add_rain_to_data(self):
 
         varnames = np.array(self.varnames)
         if np.any(varnames == 'Rain (mm)'):
@@ -628,7 +627,7 @@ class MeteoObj():
         self.varnames.append('Rain (mm)')
         self.datatypes.append(1)
 
-    def add_ETP_to_data(self):  # =============================================
+    def add_ETP_to_data(self):
 
         varnames = np.array(self.varnames)
         if np.any(varnames == 'ETP (mm)'):
@@ -639,14 +638,13 @@ class MeteoObj():
 
         DATE = np.copy(self.DATA[:, :3])
         LAT = np.copy(float(self.LAT))
-
         indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
         TAVG = np.copy(self.DATA[:, indx])
 
         # ---- compute normals ----
 
         NORMALS, _ = calculate_normals(self.DATA, self.datatypes)
-        Ta = NORMALS[:, 2] # monthly air temperature averages (deg Celcius)
+        Ta = NORMALS[:, 2]  # monthly air temperature averages (deg Celcius)
 
         ETP = calculate_ETP(DATE, TAVG, LAT, Ta)
         ETP = ETP[:, np.newaxis]
@@ -657,7 +655,9 @@ class MeteoObj():
         self.varnames.append('ETP (mm)')
         self.datatypes.append(1)
 
-    def build_HTML_table(self): #==============================================
+    # =========================================================================
+
+    def build_HTML_table(self):
 
         # HTML table with the info related to the weather station.
 
@@ -861,7 +861,7 @@ def calculate_normals(DATA, datatypes):
 
     # ---- assign new variables from input ----
 
-    nvar = len(DATA[0, 3:]) # number of weather variables
+    nvar = len(DATA[0, 3:])  # number of weather variables
 
     if datatypes == None or len(datatypes) < nvar:
         print('datatype incorrect or non existent. Assuming all variables ' +
@@ -876,7 +876,7 @@ def calculate_normals(DATA, datatypes):
 
     # Calculate the average value for each months of each year
 
-    nyear = np.ptp(YEAR) + 1 # Range of values (max - min) along an axis
+    nyear = np.ptp(YEAR) + 1  # Range of values (max - min) along an axis
     flagIncomplete = False
 
     XMONTH = np.zeros((nyear, 12, nvar)) * np.nan
@@ -937,8 +937,8 @@ def calculate_normals(DATA, datatypes):
 
 def calculate_ETP(DATE, TAVG, LAT, Ta):
     """
-    Daily potential evapotranspiration (mm) is calculated with a method adapted
-    from Thornwaite (1948).
+    Daily potential evapotranspiration (mm) is calculated with a method
+    adapted from Thornwaite (1948).
 
     Requires at least a year of data.
 
@@ -959,7 +959,7 @@ def calculate_ETP(DATE, TAVG, LAT, Ta):
         for estimating daily reference evapotranspiration. Agricultural Water
         Management, 66, 251-257.
     """
-#==============================================================================
+# =============================================================================
 
     Ta[Ta < 0] = 0
 
@@ -977,32 +977,33 @@ def calculate_ETP(DATE, TAVG, LAT, Ta):
 
 # =============================================================================
 def calculate_daylength(DATE, LAT):
-    """
-    Calculate the photoperiod for the given latitude at the given time.
+    """Calculate the photoperiod for the given latitude and time
 
-    # INPUT :
+    Keyword arguments:
 
-    {1D array} TIME = Numeric time in days.
-    {float}     LAT = latitude in decimal degrees.
+    {1D array} time -- Excel numeric time in days
+    {float}     lat -- latitude in decimal degrees
 
-    # OUTPUT :
+    Return :
 
-    {1D array} DAYLEN = photoperiod in hr.
+    {1D array} DAYLEN -- photoperiod in hr.
     """
 # =============================================================================
 
+    print(DATE)
+
     DATE = DATE.astype(int)
     pi = np.pi
-    LAT = np.radians(LAT)  # Latitude in rad
+    LAT = np.radians(LAT)
 
-    # ----- CONVERT DAY FORMAT -----
+    # ----- Convert dat in day format -----
 
     # http://stackoverflow.com/questions/13943062
 
     N = len(DATE[:, 0])
     DAY = np.zeros(N)
     for i in range(N):
-        DAY[i] = int(date(DATE[i, 0], DATE[i, 1],DATE[i, 2]).timetuple().tm_yday)
+        DAY[i] = date(DATE[i, 0], DATE[i, 1],DATE[i, 2]).timetuple().tm_yday
         DAY[i] = int(DAY[i])
 
     # ----------------------------------------------- DECLINATION OF THE SUN --
@@ -1489,7 +1490,6 @@ class GridWeatherNormals(QtGui.QTableWidget):
 
         # ------------------------------------------------------- Header --
 
-
         HEADER = ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
                   'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR')
 
@@ -1606,6 +1606,7 @@ if __name__ == '__main__':
     w = WeatherAvgGraph()
     w.save_fig_dir = os.getcwd()
     w.meteo_dir = os.getcwd()
+
     w.show()
     w.set_lang('English')
     w.generate_graph(fmeteo)

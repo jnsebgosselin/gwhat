@@ -202,7 +202,7 @@ class ProjetReader(object):
         grp.create_group('brf')
         grp.create_group('hydrographs')
 
-        print('created new dataset sucessfully')
+        print('New dataset created sucessfully')
 
         return WLDataFrame(grp)
 
@@ -217,15 +217,55 @@ class ProjetReader(object):
 
     def get_wxdset(self, name):
         if name in self.wxdsets:
-            return WXDataReader(self.db['wxdsets/%s' % name])
+            return WXDataFrame(self.db['wxdsets/%s' % name])
         else:
             return None
 
     def add_wxdset(self, name, df):
         grp = self.db['wxdsets'].create_group(name)
 
+        grp.attrs['filename'] = df['filename']
+        grp.attrs['station name'] = df['Station Name']
+        grp.attrs['latitude'] = df['Latitude']
+        grp.attrs['longitude'] = df['Longitude']
+        grp.attrs['altitude'] = df['Elevation']
+        grp.attrs['province'] = df['Province']
+        grp.attrs['climate identifier'] = df['Climate Identifier']
+
+        grp.create_dataset('Time', data=df['Time'])
+        grp.create_dataset('Year', data=df['Year'])
+        grp.create_dataset('Month', data=df['Month'])
+        grp.create_dataset('Day', data=df['Day'])
+        grp.create_dataset('Tmax', data=df['Tmax'])
+        grp.create_dataset('Tavg', data=df['Tavg'])
+        grp.create_dataset('Tmin', data=df['Tmin'])
+        grp.create_dataset('Ptot', data=df['Ptot'])
+        grp.create_dataset('Rain', data=df['Rain'])
+        grp.create_dataset('PET', data=df['PET'])
+
+        grp.create_dataset('Monthly Year', data=df['Monthly Year'])
+        grp.create_dataset('Monthly Month', data=df['Monthly Month'])
+        grp.create_dataset('Monthly Tmax', data=df['Monthly Tmax'])
+        grp.create_dataset('Monthly Tmin', data=df['Monthly Tmin'])
+        grp.create_dataset('Monthly Tavg', data=df['Monthly Tavg'])
+        grp.create_dataset('Monthly Ptot', data=df['Monthly Ptot'])
+        grp.create_dataset('Monthly Rain', data=df['Monthly Rain'])
+        grp.create_dataset('Monthly PET', data=df['Monthly PET'])
+
+        grp.create_dataset('Normals Tmax', data=df['Normals Tmax'])
+        grp.create_dataset('Normals Tmin', data=df['Normals Tmin'])
+        grp.create_dataset('Normals Tavg', data=df['Normals Tavg'])
+        grp.create_dataset('Normals Ptot', data=df['Normals Ptot'])
+        grp.create_dataset('Normals Rain', data=df['Normals Rain'])
+        grp.create_dataset('Normals PET', data=df['Normals PET'])
+
+        print('New dataset created sucessfully')
+
     def del_wxdset(self, name):
         del self.db['wxdsets/%s' % name]
+
+
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 class WLDataFrame(object):
@@ -238,7 +278,7 @@ class WLDataFrame(object):
     def filename(self):
         return self.dset.attrs['filename']
 
-    # -------------------------------------------------------------------------
+    # ---------------------------------------------------------------------
 
     @property
     def well(self):
@@ -260,7 +300,7 @@ class WLDataFrame(object):
     def alt(self):
         return self.dset.attrs['altitude']
 
-    # -------------------------------------------------------------------------
+    # ---------------------------------------------------------------------
 
     @property
     def Time(self):
@@ -285,12 +325,65 @@ class WLDataFrame(object):
             return self.dset['ET'].value
 
 
-class WXDataFrame(object):
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+class WXDataFrame(dict):
     # This is a wrapper around the h5py group that is used to store
     # weather datasets.
-    def __init__(self, dset):
+    def __init__(self, dset, *args, **kwargs):
+        super(WXDataFrame, self).__init__(*args, **kwargs)
         self.dset = dset
+
+    def __getitem__(self, key):
+        if key in list(self.dset.attrs.keys()):
+            return self.dset.attrs[key]
+
+
+#        val = dict.__getitem__(self, key)
+#        return val
+
+    def __setitem__(self, key, val):
+        dict.__setitem__(self, key, val)
+
+    @property
+    def filename(self):
+        return self.dset.attrs['filename']
+
+    # ---------------------------------------------------------------------
 
     @property
     def station(self):
-        return self.dset.attrs['station']
+        return self.dset.attrs['station name']
+
+    @property
+    def prov(self):
+        return self.dset.attrs['province']
+
+    @property
+    def climID(self):
+        return self.dset.attrs['climate identifier']
+
+    @property
+    def lat(self):
+        return self.dset.attrs['latitude']
+
+    @property
+    def lon(self):
+        return self.dset.attrs['longitude']
+
+    @property
+    def alt(self):
+        return self.dset.attrs['altitude']
+
+    # ---------------------------------------------------------------------
+
+    @property
+    def Time(self):
+        return self.dset['Time'].value
+
+
+
+if __name__ == '__main__':
+    f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
+    pr = ProjetReader(f)

@@ -730,7 +730,9 @@ if __name__ == '__main__':
     fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
 
     Sy = [0.001, 0.05]
-    RASmax = [40, 60]
+    # RASmax = [40, 110]
+    # Cru = [0.35, 0.45]
+    RASmax = [40, 110]
     Cru = [0.35, 0.45]
 #    Cru = [60, 70]
     sh.TMELT = -2
@@ -807,7 +809,7 @@ if __name__ == '__main__':
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-    # sh.GLUE(Sy, RASmax, Cru, res='fine')
+    sh.GLUE(Sy, RASmax, Cru, res='rough')
 
     # sh.calc_recharge()
     sh.initPlot()

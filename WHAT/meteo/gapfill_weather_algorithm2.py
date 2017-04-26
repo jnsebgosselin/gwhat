@@ -727,11 +727,11 @@ class GapFillWeather(QtCore.QObject):
                 'completed because all neighboring station were empty ' +
                 'for that period</font>')
 
-        #======================================================================
+        # =====================================================================
         #                                                 WRITE DATA TO FILE
-        #======================================================================
+        # =====================================================================
 
-        #---- Check dirname ----
+        # ---- Check dirname ----
 
         # Check if the characters "/" or "\" are present in the station
         # name and replace these characters by "-" if applicable.
@@ -788,7 +788,7 @@ class GapFillWeather(QtCore.QObject):
                                               DAY[index_end])
 
         fcontent = copy(HEADER)
-        fcontent.extend([['*** FILL PROCEDURE INFO ***'],[]])
+        fcontent.extend([['*** FILL PROCEDURE INFO ***'], []])
         if self.regression_mode == True:
             fcontent.append(['MLR model', 'Ordinary Least Square'])
         elif self.regression_mode == False:
