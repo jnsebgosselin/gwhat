@@ -221,7 +221,6 @@ class WeatherAvgGraph(QtGui.QWidget):
         self.language = lang
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
-        print('coucou')
 
     # =========================================================================
 
@@ -349,7 +348,6 @@ class WeatherAvgGraph(QtGui.QWidget):
 
         qr = self.frameGeometry()
         if self.parentWidget():
-            print('coucou')
             wp = self.parentWidget().frameGeometry().width()
             hp = self.parentWidget().frameGeometry().height()
             cp = self.parentWidget().mapToGlobal(QtCore.QPoint(wp/2., hp/2.))

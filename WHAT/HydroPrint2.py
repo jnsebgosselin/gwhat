@@ -42,9 +42,8 @@ from xlrd import xldate_as_tuple
 import HydroCalc
 import hydrograph4 as hydrograph
 import mplFigViewer3 as mplFigViewer
-from meteo.meteo_utils import MeteoObj, WeatherAvgGraph
+from meteo.meteo_utils import WeatherAvgGraph
 import custom_widgets as MyQWidget
-from waterlvldata import WaterlvlData
 from colors2 import ColorsReader, ColorsSetupWin
 
 from common import IconDB, StyleDB, QToolButtonNormal

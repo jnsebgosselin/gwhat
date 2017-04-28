@@ -43,9 +43,6 @@ from xlrd.xldate import xldate_from_date_tuple
 
 # Local imports :
 
-from meteo.meteo_utils import MeteoObj
-from waterlvldata import WaterlvlData
-
 from gwrecharge_calc2 import SynthHydrograph
 from gwrecharge_post import plot_rechg_GLUE
 
