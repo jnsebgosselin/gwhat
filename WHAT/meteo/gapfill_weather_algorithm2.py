@@ -55,7 +55,7 @@ except ImportError:  # to run this module standalone
     sys.path.append(dirname(dirname(realpath(__file__))))
 
     import meteo.meteo_utils as meteo_utils
-    from hydrograph3 import LatLong2Dist
+    from hydrograph4 import LatLong2Dist
     from meteo.gapfill_weather_postprocess import PostProcessErr
     from _version import __version__
 

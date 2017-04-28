@@ -628,19 +628,19 @@ class WLCalc(myqt.DialogWindow):
 
         # Compute Recharge :
 
-        if os.path.exists(self.soilFilename):
-
-            self.SOILPROFIL.load_info(self.soilFilename)
-
-            rechg = mrc2rechg(self.time, self.water_lvl, self.A, self.B,
-                              self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
-
-            rechg_tot = np.sum(rechg) * 1000
-            dt = self.time[-1] - self.time[0]
-            rechg_yrly = rechg_tot / dt * 365
-
-            txt = '\nRecharge = %0.0f mm / y' % (rechg_yrly)
-            self.MRC_results.append(txt)
+#        if os.path.exists(self.soilFilename):
+#
+#            self.SOILPROFIL.load_info(self.soilFilename)
+#
+#            rechg = mrc2rechg(self.time, self.water_lvl, self.A, self.B,
+#                              self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
+#
+#            rechg_tot = np.sum(rechg) * 1000
+#            dt = self.time[-1] - self.time[0]
+#            rechg_yrly = rechg_tot / dt * 365
+#
+#            txt = '\nRecharge = %0.0f mm / y' % (rechg_yrly)
+#            self.MRC_results.append(txt)
 
         QtGui.QApplication.restoreOverrideCursor()
 

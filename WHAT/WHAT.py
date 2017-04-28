@@ -47,12 +47,13 @@ from PySide import QtGui, QtCore
 
 import common.database as db
 import custom_widgets as MyQWidget
-import HydroPrint
+import HydroPrint2 as HydroPrint
 from meteo import dwnld_weather_data
 from meteo.gapfill_weather_gui import GapFillWeatherGUI
 
 from about import AboutWhat
 from projet.manager_projet import ProjetManager
+from projet.manager_data import DataManager
 from common import IconDB, StyleDB, QToolButtonBase
 from _version import __version__
 
@@ -79,6 +80,7 @@ class WHAT(QtGui.QMainWindow):
 
         self.whatPref = WHATPref(self)
         self.pmanager = ProjetManager(self)
+        self.dmanager = DataManager(pm=self.pmanager)
 
         self.__initUI__()
 
@@ -137,8 +139,7 @@ class WHAT(QtGui.QMainWindow):
 
         # ---- hydrograph ----
 
-        self.tab_hydrograph = HydroPrint.HydroprintGUI(self)
-        self.tab_hydrograph.set_workdir(self.projectdir)
+        self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
 
         # ---- TABS ASSEMBLY ----
 
@@ -276,10 +277,6 @@ class WHAT(QtGui.QMainWindow):
 
         self.tab_fill_weather_data.set_workdir(dirname)
         self.tab_fill_weather_data.load_data_dir_content()
-
-        # ---- hydrograph ----
-
-        self.tab_hydrograph.set_workdir(dirname)
 
     # =========================================================================
 
