@@ -34,11 +34,11 @@ def load_excel_datafile(fname):
         sheet = wb.sheet_by_index(0)
 
         df = {'filename': fname,
-              'well': '',
-              'latitude': 0,
-              'longitude': 0,
-              'altitude': 0,
-              'municipality': '',
+              'Well': '',
+              'Latitude': 0,
+              'Longitude': 0,
+              'Elevation': 0,
+              'Municipality': '',
               'Time': np.array([]),
               'WL': np.array([]),
               'BP': np.array([]),
@@ -50,27 +50,27 @@ def load_excel_datafile(fname):
 
         for row, item in enumerate(header):
             if item == 'Well Name':
-                df['well'] = str(sheet.cell(row, 1).value)
+                df['Well'] = str(sheet.cell(row, 1).value)
             elif item == 'Latitude':
                 try:
-                    df['latitude'] = float(sheet.cell(row, 1).value)
+                    df['Latitude'] = float(sheet.cell(row, 1).value)
                 except:
                     print('Wrong format for entry "Latitude".')
-                    df['latitude'] = 0
+                    df['Latitude'] = 0
             elif item == 'Longitude':
                 try:
-                    df['longitude'] = float(sheet.cell(row, 1).value)
+                    df['Longitude'] = float(sheet.cell(row, 1).value)
                 except:
                     print('Wrong format for entry "Longitude".')
-                    df['longitude'] = 0
+                    df['Longitude'] = 0
             elif item == 'Altitude':
                 try:
-                    df['altitude'] = float(sheet.cell(row, 1).value)
+                    df['Elevation'] = float(sheet.cell(row, 1).value)
                 except:
                     print('Wrong format for entry "Altitude".')
-                    df['altitude'] = 0
+                    df['Elevation'] = 0
             elif item == 'Municipality':
-                df['municipality'] = str(sheet.cell(row, 1).value)
+                df['Municipality'] = str(sheet.cell(row, 1).value)
             elif item == 'Date':
                 break
 
@@ -93,7 +93,7 @@ def load_excel_datafile(fname):
             return None
 
         print('Waterlvl time-series for well %s loaded successfully.' %
-              df['well'])
+              df['Well'])
 
         # ---- Barometric data ----
 
@@ -145,12 +145,11 @@ def make_waterlvl_continuous(t, wl):
 # =============================================================================
 
 
-def load_waterlvl_measures(fname, name_well):
+def load_waterlvl_measures(fname, well):
 
-    print('Loading waterlvl manual measures for well %s' % name_well)
+    print('Loading waterlvl manual measures for well %s' % well)
 
     WLmes, TIMEmes = [], []
-
     if not os.path.exists(fname):
         return WLmes, TIMEmes
 
@@ -167,13 +166,13 @@ def load_waterlvl_measures(fname, name_well):
         TIME = np.array(TIME).astype('float')
         OBS = np.array(OBS).astype('float')
 
-        if len(NAME) > 1:
-            rowx = np.where(NAME == name_well)[0]
+        if len(NAME) > 0:
+            rowx = np.where(NAME == well)[0]
             if len(rowx) > 0:
                 WLmes = OBS[rowx]
                 TIMEmes = TIME[rowx]
 
-    return TIMEmes, WLmes
+    return np.array(TIMEmes), np.array(WLmes)
 
 
 # =========================================================================

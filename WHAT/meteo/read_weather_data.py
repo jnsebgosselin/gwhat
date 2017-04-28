@@ -87,7 +87,7 @@ def load_weather_datafile(filename):
           'Normals PET': None,
           }
 
-    # ---------------------------------------------------- import data ----
+    # -------------------------------------------------------- import data ----
 
     # Get info from header and grab data from file :
 
@@ -144,13 +144,27 @@ def load_weather_datafile(filename):
     except ValueError:
         print('Rain estimated from Ptot.')
 
-    # ---------------------------------------------------- format data ----
+    # ----------------------------------------------------- Import missing ----
+
+    finfo = filename[:-3] + 'log'
+    if os.path.exists(finfo):
+        df['Missing Tmax'] = load_weather_log(finfo, 'Max Temp (deg C)')
+        df['Missing Tmin'] = load_weather_log(finfo, 'Min Temp (deg C)')
+        df['Missing Tavg'] = load_weather_log(finfo, 'Mean Temp (deg C)')
+        df['Missing Ptot'] = load_weather_log(finfo, 'Total Precip (mm)')
+    else:
+        df['Missing Tmax'] = []
+        df['Missing Tmin'] = []
+        df['Missing Tavg'] = []
+        df['Missing Ptot'] = []
+
+    # -------------------------------------------------------- format data ----
 
     print()
     df = make_timeserie_continuous(df)
     df = fill_nan(df)
 
-    # ---------------------------------------------- monthly & normals ----
+    # -------------------------------------------------- monthly & normals ----
 
     for vrb in ['Tmax', 'Tmin', 'Tavg']:
         key = 'Monthly %s' % vrb
@@ -166,7 +180,7 @@ def load_weather_datafile(filename):
     df['Monthly Month'] = x[1]
     df['Normals Ptot'] = calcul_normals_from_monthly(x[1], x[2])
 
-    # ------------------------------------------------ secondary vrbs ----
+    # ----------------------------------------------------- secondary vrbs ----
 
     # ---- Rain ----
 
@@ -193,6 +207,47 @@ def load_weather_datafile(filename):
     print('-'*78)
 
     return df
+
+
+# =============================================================================
+
+
+def load_weather_log(fname, varname):
+    print('loading info for missing %s' % varname)
+
+    # ---- load Data ----
+
+    with open(fname, 'r') as f:
+        reader = csv.reader(f, delimiter='\t')
+        reader = list(reader)[36:]
+
+    # ---- load data and convert time ----
+
+    xldates = []
+    for i in range(len(reader)):
+        if reader[i][0] == varname:
+            year = int(float(reader[i][1]))
+            month = int(float(reader[i][2]))
+            day = int(float(reader[i][3]))
+            xldates.append(xldate_from_date_tuple((year, month, day), 0))
+
+    time = []
+    tseg = [np.nan, xldates[0], xldates[0]+1]
+    for xldate in xldates:
+        if tseg[2] == xldate:
+            if xldate == xldates[-1]:  # the last data of the series is missing
+                time.extend(tseg)
+            else:
+                tseg[2] += 1
+        else:
+            time.extend(tseg)
+            tseg[1] = xldate
+            tseg[2] = xldate + 1
+
+    time.append(np.nan)
+    time = np.array(time)
+
+    return time
 
 
 # =============================================================================
@@ -365,12 +420,12 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
     # HTML table with the info related to the weather station.
 
-    FIELDS = [['Station Name', staname],
-              ['Climate Identifier', climID],
-              ['Province', prov],
+    FIELDS = [['Station', staname],
               ['Latitude', '%0.3f°' % lat],
               ['Longitude', '%0.3f°' % lon],
-              ['Altitude', '%0.1f m' % alt]
+              ['Altitude', '%0.1f m' % alt],
+              ['Clim. ID', climID],
+              ['Province', prov]
               ]
 
     table = '<table border="0" cellpadding="2" cellspacing="0" align="left">'

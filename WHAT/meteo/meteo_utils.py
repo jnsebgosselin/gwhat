@@ -44,19 +44,17 @@ mpl.rcParams['backend.qt4'] = 'PySide'
 
 # Local imports :
 
-try:
-    import common.database as db
-    from colors import Colors
-    from common import IconDB, StyleDB, QToolButtonNormal
-except:
-    import sys
-    from os.path import dirname, realpath, basename
-    print('Running module %s as a standalone script...' % basename(__file__))
-    sys.path.append(dirname(dirname(realpath(__file__))))
-
-    import common.database as db
-    from colors import Colors
-    from common import IconDB, StyleDB, QToolButtonNormal
+for i in range(2):
+    try:
+        import common.database as db
+        from colors2 import ColorsReader
+        from common import IconDB, StyleDB, QToolButtonNormal
+        break
+    except:
+        import sys
+        from os.path import dirname, realpath, basename
+        print('Running module %s as a script...' % basename(__file__))
+        sys.path.append(dirname(dirname(realpath(__file__))))
 
 
 # =============================================================================
@@ -1242,11 +1240,13 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # --- proxy artists --- #
 
-        colors = Colors()
+        colors = ColorsReader()
         colors.load_colors_db()
 
-        rec1 = mpl.patches.Rectangle((0, 0), 1, 1, fc=colors.rgb[2], ec='none')
-        rec2 = mpl.patches.Rectangle((0, 0), 1, 1, fc=colors.rgb[1], ec='none')
+        rec1 = mpl.patches.Rectangle((0, 0), 1, 1,
+                                     fc=colors.rgb['Snow'], ec='none')
+        rec2 = mpl.patches.Rectangle((0, 0), 1, 1,
+                                     fc=colors.rgb['Rain'], ec='none')
 
         # --- legend entry --- #
 
@@ -1432,13 +1432,13 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         for collection in reversed(ax.collections):
             collection.remove()
 
-        colors = Colors()
+        colors = ColorsReader()
         colors.load_colors_db()
 
         ax.fill_between(Xpos, 0., Ptot, edgecolor='none',
-                        color=colors.rgb[1])
+                        color=colors.rgb['Rain'])
         ax.fill_between(Xpos, 0., Snow, edgecolor='none',
-                        color=colors.rgb[2])
+                        color=colors.rgb['snow'])
 
     def plot_air_temp(self, Tmax_norm, Tavg_norm, Tmin_norm):
         for i, Tnorm in enumerate([Tmax_norm, Tavg_norm, Tmin_norm]):

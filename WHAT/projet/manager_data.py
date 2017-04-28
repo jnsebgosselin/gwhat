@@ -36,6 +36,7 @@ for i in range(2):
     try:
         from common import IconDB, QToolButtonSmall
         import common.widgets as myqt
+        from hydrograph4 import LatLong2Dist
         from projet.reader_waterlvl import (load_excel_datafile,
                                             generate_HTML_table)
         from meteo.read_weather_data import (load_weather_datafile,
@@ -53,6 +54,10 @@ for i in range(2):
 
 
 class DataManager(QtGui.QWidget):
+
+    wldsetChanged = QtCore.Signal(dict)
+    wxdsetChanged = QtCore.Signal(dict)
+
     def __init__(self, parent=None, projet=None, pm=None):
         super(DataManager, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Window)
@@ -62,18 +67,23 @@ class DataManager(QtGui.QWidget):
         self.new_waterlvl_win.newDatasetCreated.connect(self.update_wldsets)
 
         self.new_weather_win = NewWXDataDialog(parent, projet)
-        self.new_weather_win.newDatasetCreated.connect(self.update_wxdatasets)
+        self.new_weather_win.newDatasetCreated.connect(self.update_wxdsets)
 
         self.__initUI__()
 
         self.set_projet(projet)
-        self.workdir = os.path.dirname(os.getcwd())
-
         if pm:
             pm.currentProjetChanged.connect(self.set_projet)
             self.set_projet(pm.projet)
 
     # =========================================================================
+
+    @property
+    def workdir(self):
+        if self.projet is None:
+            return os.path.dirname(os.getcwd())
+        else:
+            return os.path.dirname(self.projet.filename)
 
     @property
     def projet(self):
@@ -84,14 +94,26 @@ class DataManager(QtGui.QWidget):
             self._projet = None
         else:
             self._projet = projet
-            self.workdir = os.path.dirname(projet.filename)
             self.update_wldsets()
-            self.update_wxdatasets()
+            self.update_wxdsets()
 
         self.new_waterlvl_win.set_projet(projet)
         self.new_weather_win.set_projet(projet)
 
+    # ========================================================== utilities ====
+
+    def emit_warning(self, msg):
+        btn = QtGui.QMessageBox.Ok
+        QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
+
     # ========================================================= WL Dataset ====
+
+    @property
+    def wldsets(self):
+        return self.projet.wldsets
+
+    def wldataset_count(self):
+        return len(self.projet.wldsets)
 
     def import_wldataset(self):
         if self.projet is None:
@@ -111,23 +133,25 @@ class DataManager(QtGui.QWidget):
             self.wldsets_cbox.setCurrentIndex(self.wldsets_cbox.findText(name))
         self.wldsets_cbox.blockSignals(False)
 
-        self.dataset_changed()
+        self.wldset_changed()
 
-    def dataset_changed(self):
+    def wldset_changed(self):
         if self.wldsets_cbox.count() > 0:
             wldset = self.get_current_wldset()
 
-            name = wldset.well
-            lat = wldset.lat
-            lon = wldset.lon
-            alt = wldset.alt
-            mun = wldset.mun
+            name = wldset['Well']
+            lat = wldset['Latitude']
+            lon = wldset['Longitude']
+            alt = wldset['Elevation']
+            mun = wldset['Municipality']
 
             html = generate_HTML_table(name, lat, lon, alt, mun)
             self.well_info_widget.clear()
             self.well_info_widget.setText(html)
+            self.wldsetChanged.emit(wldset)
         else:
             self.well_info_widget.clear()
+            self.wldsetChanged.emit(None)
 
     def get_current_wldset(self):
         if self.wldsets_cbox.currentIndex() == -1:
@@ -153,6 +177,13 @@ class DataManager(QtGui.QWidget):
 
     # ========================================================= WX Dataset ====
 
+    @property
+    def wxdsets(self):
+        return self.projet.wxdsets
+
+    def wxdataset_count(self):
+        return len(self.projet.wxdsets)
+
     def import_wxdataset(self):
         if self.projet is None:
             msg = ('Please first select a valid WHAT project or '
@@ -163,7 +194,7 @@ class DataManager(QtGui.QWidget):
         else:
             self.new_weather_win.show()
 
-    def update_wxdatasets(self, name=None):
+    def update_wxdsets(self, name=None):
         self.wxdsets_cbox.blockSignals(True)
         self.wxdsets_cbox.clear()
         self.wxdsets_cbox.addItems(self.projet.wxdsets)
@@ -171,32 +202,39 @@ class DataManager(QtGui.QWidget):
             self.wxdsets_cbox.setCurrentIndex(self.wxdsets_cbox.findText(name))
         self.wxdsets_cbox.blockSignals(False)
 
-        self.wxdataset_changed()
+        self.wxdset_changed()
 
-    def wxdataset_changed(self):
+    def wxdset_changed(self):
         if self.wxdsets_cbox.count() > 0:
-            wxdset = self.get_current_wxdataset()
+            wxdset = self.get_current_wxdset()
 
-            staname = wxdset['station name']
-            lat = wxdset['latitude']
-            lon = wxdset['longitude']
-            alt = wxdset['altitude']
-            prov = wxdset['province']
-            climID = wxdset['climate identifier']
+            staname = wxdset['Station Name']
+            lat = wxdset['Latitude']
+            lon = wxdset['Longitude']
+            alt = wxdset['Elevation']
+            prov = wxdset['Province']
+            climID = wxdset['Climate Identifier']
 
             html = generate_weather_HTML(staname, prov, lat, climID, lon, alt)
             self.meteo_info_widget.clear()
             self.meteo_info_widget.setText(html)
+            self.wxdsetChanged.emit(wxdset)
         else:
-            self.well_info_widget.clear()
+            self.wxdsetChanged.emit(None)
+            self.meteo_info_widget.clear()
 
-    def get_current_wxdataset(self):
+    def set_current_wxdset(self, name):
+        self.wxdsets_cbox.blockSignals(True)
+        self.wxdsets_cbox.setCurrentIndex(self.wxdsets_cbox.findText(name))
+        self.wxdsets_cbox.blockSignals(False)
+
+    def get_current_wxdset(self):
         if self.wxdsets_cbox.currentIndex() == -1:
             return None
         else:
             return self.projet.get_wxdset(self.wxdsets_cbox.currentText())
 
-    def del_current_wxdataset(self):
+    def del_current_wxdset(self):
         if self.wxdsets_cbox.count() > 0:
             name = self.wxdsets_cbox.currentText()
             msg = ('Do you want to delete weather dataset <i>%s</i>? ' +
@@ -210,18 +248,40 @@ class DataManager(QtGui.QWidget):
                 return
 
             self.projet.del_wxdset(name)
-            self.update_wxdatasets()
+            self.update_wxdsets()
+
+    def set_closest_wxdset(self):
+        if self.wldataset_count() == 0:
+            return None
+        elif self.wxdataset_count == 0:
+            return None
+        else:
+            wldset = self.get_current_wldset()
+            lat1 = wldset['Latitude']
+            lon1 = wldset['Longitude']
+
+            mindist = 10**16
+            closest = None
+            for name in self.wxdsets:
+                wxdset = self.projet.get_wxdset(name)
+                lat2 = wxdset['Latitude']
+                lon2 = wxdset['Longitude']
+                newdist = LatLong2Dist(lat1, lon1, lat2, lon2)
+
+                if newdist < mindist:
+                    closest = wxdset.name
+                    mindist = newdist
+
+            self.set_current_wxdset(closest)
 
     # =========================================================================
 
     def __initUI__(self):
 
-        # ------------------------------------------- data files panel ----
-
-        # ---- water level dataset ----
+        # ---------------------------------------- water level dataset ----
 
         self.wldsets_cbox = QtGui.QComboBox()
-        self.wldsets_cbox.currentIndexChanged.connect(self.dataset_changed)
+        self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
         btn_load_wl = QToolButtonSmall(IconDB().importFile)
         btn_load_wl.setToolTip('Import a new WL dataset...')
@@ -231,14 +291,26 @@ class DataManager(QtGui.QWidget):
         btn_del_wldset.setToolTip('Delete current dataset.')
         btn_del_wldset.clicked.connect(self.del_current_wldset)
 
+        # ---- toolbar ----
+
+        wltb = QtGui.QGridLayout()
+        wltb.setContentsMargins(0, 0, 0, 0)
+
+        widgets = [self.wldsets_cbox, btn_load_wl, btn_del_wldset]
+
+        for col, widg in enumerate(widgets):
+            wltb.addWidget(widg, 0, col)
+
+        # ---- info box -----
+
         self.well_info_widget = QtGui.QTextEdit()
         self.well_info_widget.setReadOnly(True)
         self.well_info_widget.setFixedHeight(150)
 
-        # ---- weather dataset ----
+        # -------------------------------------------- weather dataset ----
 
         self.wxdsets_cbox = QtGui.QComboBox()
-        self.wxdsets_cbox.currentIndexChanged.connect(self.wxdataset_changed)
+        self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
 
         btn_load_meteo = QToolButtonSmall(IconDB().importFile)
         btn_load_meteo.setToolTip('Import a new weather dataset...')
@@ -248,25 +320,39 @@ class DataManager(QtGui.QWidget):
 
         btn_del_wxdset = QToolButtonSmall(IconDB().clear)
         btn_del_wxdset.setToolTip('Delete current dataset.')
-        btn_del_wxdset.clicked.connect(self.del_current_wxdataset)
+        btn_del_wxdset.clicked.connect(self.del_current_wxdset)
+
+        btn_closest_meteo = QToolButtonSmall(IconDB().closest_meteo)
+        btn_closest_meteo.setToolTip('<p>Select the weather station closest'
+                                     ' from the observation well.</p>')
+        btn_closest_meteo.clicked.connect(self.set_closest_wxdset)
+
+        # ---- toolbar ----
+
+        wxtb = QtGui.QGridLayout()
+        wxtb.setContentsMargins(0, 0, 0, 0)
+
+        widgets = [self.wxdsets_cbox, btn_load_meteo, btn_del_wxdset,
+                   btn_closest_meteo]
+
+        for col, widg in enumerate(widgets):
+            wxtb.addWidget(widg, 0, col)
+
+        # ---- info box -----
 
         self.meteo_info_widget = QtGui.QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
         self.meteo_info_widget.setFixedHeight(150)
 
-        # ---- Layout ----
+        # ------------------------------------------- Main Right Panel ----
 
         layout = QtGui.QGridLayout()
 
-        layout.addWidget(self.wldsets_cbox, 0, 0)
-        layout.addWidget(btn_load_wl, 0, 1)
-        layout.addWidget(btn_del_wldset, 0, 2)
-        layout.addWidget(self.well_info_widget, 1, 0, 1, 3)
+        layout.addLayout(wltb, 0, 0)
+        layout.addWidget(self.well_info_widget, 1, 0)
 
-        layout.addWidget(self.wxdsets_cbox, 2, 0)
-        layout.addWidget(btn_load_meteo, 2, 1)
-        layout.addWidget(btn_del_wxdset, 2, 2)
-        layout.addWidget(self.meteo_info_widget, 3, 0, 1, 3)
+        layout.addLayout(wxtb, 2, 0)
+        layout.addWidget(self.meteo_info_widget, 3, 0)
 
         layout.setSpacing(5)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -538,11 +624,11 @@ class NewWaterLvl(NewDataset):
             self._msg.setVisible(False)
             self.btn_ok.setEnabled(True)
 
-            self._well.setText(self._dataset['well'])
-            self._mun.setText(self._dataset['municipality'])
-            self._lat.setValue(self._dataset['latitude'])
-            self._lon.setValue(self._dataset['longitude'])
-            self._alt.setValue(self._dataset['altitude'])
+            self._well.setText(self._dataset['Well'])
+            self._mun.setText(self._dataset['Municipality'])
+            self._lat.setValue(self._dataset['Latitude'])
+            self._lon.setValue(self._dataset['Longitude'])
+            self._alt.setValue(self._dataset['Elevation'])
         else:
             self._msg.setVisible(True)
             self.btn_ok.setEnabled(False)
@@ -576,11 +662,11 @@ class NewWaterLvl(NewDataset):
 
         # Update dataset attributes from UI :
 
-        self._dataset['well'] = self.well
-        self._dataset['municipality'] = self.municipality
-        self._dataset['latitude'] = self.lat
-        self._dataset['longitude'] = self.lon
-        self._dataset['altitude'] = self.alt
+        self._dataset['Well'] = self.well
+        self._dataset['Municipality'] = self.municipality
+        self._dataset['Latitude'] = self.lat
+        self._dataset['Longitude'] = self.lon
+        self._dataset['Elevation'] = self.alt
 
         print('Saving dataset to project db.')
         self.projet.add_wldset(self.name, self._dataset)

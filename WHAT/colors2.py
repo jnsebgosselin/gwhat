@@ -21,34 +21,52 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
+# Standard library imports :
+
 import os
 import csv
+from collections import OrderedDict
+
+# Third party imports :
+
 from PySide import QtCore, QtGui
+import numpy as np
+
+# Local imports :
+
+import common.widgets as myqt
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class Colors(object):
+class ColorsReader(object):
     def __init__(self):
-        self.RGB = [[255, 212, 212],  # Air Temperature
-                    [ 23,  52,  88],  # Rain
-                    [165, 165, 165],  # Snow
-                    [ 45, 100, 167],  # Water Level (solid line)
-                    [204, 204, 204],  # Water Level (data dots)
-                    [255,   0,   0]]  # Water Level (measures)
+        self.RGB = OrderedDict()
+        self.RGB['Tair'] = [255, 212, 212]
+        self.RGB['Rain'] = [23, 52, 88]
+        self.RGB['Snow'] = [165, 165, 165]
+        self.RGB['WL solid'] = [45, 100, 167]
+        self.RGB['WL data'] = [204, 204, 204]
+        self.RGB['WL obs'] = [255, 0, 0]
 
-        self.rgb = [[255/255, 212/255, 212/255],  # Air Temperature
-                    [ 23/255,  52/255,  88/255],  # Rain
-                    [165/255, 165/255, 165/255],  # Snow
-                    [ 45/255, 100/255, 167/255],  # Water Level (solid line)
-                    [0.8, 0.8, 1],                # Water Level (data dots)
-                    [255/255, 0/255, 0/255]]      # Water Level (measures)
+        self.labels = OrderedDict()
+        self.labels['Tair'] = 'Air Temperature'
+        self.labels['Rain'] = 'Rain'
+        self.labels['Snow'] = 'Snow'
+        self.labels['WL solid'] = 'Water Level (solid line)'
+        self.labels['WL data'] = 'Water Level (data dots)'
+        self.labels['WL obs'] = 'Water Level (man. obs.)'
 
-        self.labels = ['Air Temperature', 'Rain', 'Snow',
-                       'Water Level (solid line)',
-                       'Water Level (data dots)',
-                       'Water Level (man. obs.)']
+    @property
+    def rgb(self):
+        rgb = OrderedDict()
+        for key in self.RGB.keys():
+            rgb[key] = [x/255 for x in self.RGB[key]]
+        return rgb
+
+    def keys(self):
+        return list(self.RGB.keys())
 
     # =========================================================================
 
@@ -61,11 +79,10 @@ class Colors(object):
         else:
             print('Loading colors database...')
             with open(fname, 'r') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
+                reader = list(csv.reader(f, delimiter=','))
 
-            for row in range(len(reader)):
-                self.RGB[row] = [int(i) for i in reader[row][1:]]
-                self.rgb[row] = [(int(i)/255.) for i in reader[row][1:]]
+            for row in reader:
+                self.RGB[row[0]] = [int(x) for x in row[1:]]
 
         print('Colors database loaded sucessfully.')
 
@@ -74,12 +91,12 @@ class Colors(object):
     def save_colors_db(self):
         fname = 'Colors.db'
         fcontent = []
-        for i in range(len(self.labels)):
-            fcontent.append([self.labels[i]])
-            fcontent[-1].extend(self.RGB[i])
+        for key in self.RGB.keys():
+            fcontent.append([key])
+            fcontent[-1].extend(self.RGB[key].tolist())
 
         with open(fname, 'w') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer = csv.writer(f, delimiter=',', lineterminator='\n')
             writer.writerows(fcontent)
 
         print('Color database saved successfully')
@@ -88,7 +105,7 @@ class Colors(object):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
+class ColorsSetupWin(myqt.DialogWindow):
 
     newColorSetupSent = QtCore.Signal(bool)
 
@@ -128,15 +145,15 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
 
         # ---- Color Grid ----
 
-        colorsDB = Colors()
+        colorsDB = ColorsReader()
         colorsDB.load_colors_db()
 
         colorGrid_widget = QtGui.QWidget()
 
         self.colorGrid_layout = QtGui.QGridLayout()
-        for i in range(len(colorsDB.rgb)):
+        for i, key in enumerate(colorsDB.keys()):
             self.colorGrid_layout.addWidget(
-                QtGui.QLabel('%s :' % colorsDB.labels[i]), i, 0)
+                QtGui.QLabel('%s :' % colorsDB.labels[key]), i, 0)
 
             btn = QtGui.QToolButton()
             btn.setAutoRaise(True)
@@ -156,92 +173,72 @@ class ColorsSetupWin(QtGui.QWidget):                         # ColorsSetupWin #
         main_layout.addWidget(toolbar_widget, 1, 0)
         self.setLayout(main_layout)
 
-    def load_colors(self):  # =================================================
+    # =========================================================================
 
-        colorsDB = Colors()
+    def load_colors(self):
+
+        colorsDB = ColorsReader()
         colorsDB.load_colors_db()
 
         nrow = self.colorGrid_layout.rowCount()
-        for row in range(nrow):
+        for row, key in enumerate(colorsDB.keys()):
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             item.setStyleSheet("background-color: rgb(%i,%i,%i)" %
-                               (colorsDB.RGB[row][0],
-                                colorsDB.RGB[row][1],
-                                colorsDB.RGB[row][2])
+                               (colorsDB.RGB[key][0],
+                                colorsDB.RGB[key][1],
+                                colorsDB.RGB[key][2])
                                )
 
-    def reset_defaults(self):  # =========================== Reset Deafaults ==
+    def reset_defaults(self):
 
-        colorsDB = Colors()
+        colorsDB = ColorsReader()
 
         nrow = self.colorGrid_layout.rowCount()
-        for row in range(nrow):
+        for row, key in enumerate(colorsDB.keys()):
             btn = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             btn.setStyleSheet("background-color: rgb(%i,%i,%i)" %
-                              (colorsDB.RGB[row][0],
-                               colorsDB.RGB[row][1],
-                               colorsDB.RGB[row][2])
+                              (colorsDB.RGB[key][0],
+                               colorsDB.RGB[key][1],
+                               colorsDB.RGB[key][2])
                               )
 
-    def pick_color(self):  # =============================== Pick New Colors ==
-
+    def pick_color(self):
         sender = self.sender()
         color = QtGui.QColorDialog.getColor(sender.palette().base().color())
         if color.isValid():
             rgb = color.getRgb()[:-1]
             sender.setStyleSheet("background-color: rgb(%i,%i,%i)" % rgb)
 
-    def btn_OK_isClicked(self):  # ====================================== OK ==
+    # =========================================================================
+
+    def btn_OK_isClicked(self):
         self.btn_apply_isClicked()
         self.close()
 
-    def btn_apply_isClicked(self):  # ================================ Apply ==
+    def btn_apply_isClicked(self):
 
-        colorsDB = Colors()
-        colorsDB.load_colors_db()
+        colorsDB = ColorsReader()
 
         nrow = self.colorGrid_layout.rowCount()
-        for row in range(nrow):
+        for row, key in enumerate(colorsDB.keys()):
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             rgb = item.palette().base().color().getRgb()[:-1]
 
-            colorsDB.RGB[row] = [rgb[0], rgb[1], rgb[2]]
-            colorsDB.rgb[row] = [rgb[0]/255., rgb[1]/255., rgb[2]/255.]
+            colorsDB.RGB[key] = np.array([rgb[0], rgb[1], rgb[2]])
 
         colorsDB.save_colors_db()
         self.newColorSetupSent.emit(True)
 
-    def closeEvent(self, event):  # ================================== Close ==
-        super(ColorsSetupWin, self).closeEvent(event)
+    # =========================================================================
 
-        # ---- Refresh UI ----
+    def closeEvent(self, event):
+        super(ColorsSetupWin, self).closeEvent(event)
+        self.load_colors()
 
         # If cancel or X is clicked, the parameters will be reset to
         # the values they had the last time "Accept" button was
         # clicked.
 
-        self.load_colors()
-
-    def show(self):  # ================================================ Show ==
-
-        self.activateWindow()
-        self.raise_()
-
-        qr = self.frameGeometry()
-        if self.parentWidget():
-            parent = self.parentWidget()
-
-            wp = parent.frameGeometry().width()
-            hp = parent.frameGeometry().height()
-            cp = parent.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
-        else:
-            cp = QtGui.QDesktopWidget().availableGeometry().center()
-
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
-        super(ColorsSetupWin, self).show()
-        self.setFixedSize(self.size())
 
 if __name__ == '__main__':
     import sys

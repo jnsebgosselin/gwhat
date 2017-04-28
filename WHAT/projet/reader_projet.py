@@ -29,6 +29,7 @@ import csv
 # Third party imports :
 
 import h5py
+import numpy as np
 
 
 class ProjetReader(object):
@@ -172,7 +173,7 @@ class ProjetReader(object):
     def lon(self, x):
         self.db.attrs['longitude'] = x
 
-    # =========================================================================
+    # ======================================================== water level ====
 
     @property
     def wldsets(self):
@@ -193,14 +194,18 @@ class ProjetReader(object):
         grp.create_dataset('ET', data=df['ET'])
 
         grp.attrs['filename'] = df['filename']
-        grp.attrs['well'] = df['well']
-        grp.attrs['latitude'] = df['latitude']
-        grp.attrs['longitude'] = df['longitude']
-        grp.attrs['altitude'] = df['altitude']
-        grp.attrs['municipality'] = df['municipality']
+        grp.attrs['Well'] = df['Well']
+        grp.attrs['Latitude'] = df['Latitude']
+        grp.attrs['Longitude'] = df['Longitude']
+        grp.attrs['Elevation'] = df['Elevation']
+        grp.attrs['Municipality'] = df['Municipality']
 
         grp.create_group('brf')
-        grp.create_group('hydrographs')
+        grp.create_group('layout')
+
+        mmeas = grp.create_group('manual')
+        mmeas.create_dataset('Time', data=np.array([]), maxshape=None)
+        mmeas.create_dataset('WL', data=np.array([]), maxshape=None)
 
         print('New dataset created sucessfully')
 
@@ -209,7 +214,7 @@ class ProjetReader(object):
     def del_wldset(self, name):
         del self.db['wldsets/%s' % name]
 
-    # =========================================================================
+    # =========================================================== weather =====
 
     @property
     def wxdsets(self):
@@ -225,12 +230,12 @@ class ProjetReader(object):
         grp = self.db['wxdsets'].create_group(name)
 
         grp.attrs['filename'] = df['filename']
-        grp.attrs['station name'] = df['Station Name']
-        grp.attrs['latitude'] = df['Latitude']
-        grp.attrs['longitude'] = df['Longitude']
-        grp.attrs['altitude'] = df['Elevation']
-        grp.attrs['province'] = df['Province']
-        grp.attrs['climate identifier'] = df['Climate Identifier']
+        grp.attrs['Station Name'] = df['Station Name']
+        grp.attrs['Latitude'] = df['Latitude']
+        grp.attrs['Longitude'] = df['Longitude']
+        grp.attrs['Elevation'] = df['Elevation']
+        grp.attrs['Province'] = df['Province']
+        grp.attrs['Climate Identifier'] = df['Climate Identifier']
 
         grp.create_dataset('Time', data=df['Time'])
         grp.create_dataset('Year', data=df['Year'])
@@ -259,6 +264,11 @@ class ProjetReader(object):
         grp.create_dataset('Normals Rain', data=df['Normals Rain'])
         grp.create_dataset('Normals PET', data=df['Normals PET'])
 
+        grp.create_dataset('Missing Tmax', data=df['Missing Tmax'])
+        grp.create_dataset('Missing Tmin', data=df['Missing Tmin'])
+        grp.create_dataset('Missing Tavg', data=df['Missing Tavg'])
+        grp.create_dataset('Missing Ptot', data=df['Missing Ptot'])
+
         print('New dataset created sucessfully')
 
     def del_wxdset(self, name):
@@ -268,61 +278,62 @@ class ProjetReader(object):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class WLDataFrame(object):
+class WLDataFrame(dict):
     # This is a wrapper around the h5py group that is used to store
     # water level datasets.
-    def __init__(self, dset):
+    def __init__(self, dset, *args, **kwargs):
+        super(WLDataFrame, self).__init__(*args, **kwargs)
         self.dset = dset
 
-    @property
-    def filename(self):
-        return self.dset.attrs['filename']
-
-    # ---------------------------------------------------------------------
-
-    @property
-    def well(self):
-        return self.dset.attrs['well']
-
-    @property
-    def mun(self):
-        return self.dset.attrs['municipality']
-
-    @property
-    def lat(self):
-        return self.dset.attrs['latitude']
-
-    @property
-    def lon(self):
-        return self.dset.attrs['longitude']
-
-    @property
-    def alt(self):
-        return self.dset.attrs['altitude']
-
-    # ---------------------------------------------------------------------
-
-    @property
-    def Time(self):
-        return self.dset['Time'].value
-
-    @property
-    def WL(self):
-        return self.dset['WL'].value
-
-    @property
-    def BP(self):
-        if len(self.dset['BP']) == 0:
-            return None
+    def __getitem__(self, key):
+        if key in list(self.dset.attrs.keys()):
+            return self.dset.attrs[key]
         else:
-            return self.dset['BP'].value
+            return self.dset[key].value
 
     @property
-    def ET(self):
-        if len(self.dset['ET']) == 0:
+    def name(self):
+        return self.dset.name
+
+    # =========================================================================
+
+    def write_wlmeas(self, time, wl):
+        self.dset['manual/Time'][:] = time
+        self.dset['manual/WL'][:] = wl
+
+    def get_write_wlmeas(self):
+        grp = self.dset.require_group('manual')
+        return grp['Time'].value, grp['WL'].value
+
+    # =========================================================================
+
+    def save_layout(self, layout):
+        grp = self.dset['layout']
+        for key in list(layout.keys()):
+            if key == 'colors':
+                grp_colors = grp.require_group(key)
+                for color in layout['colors'].keys():
+                    grp_colors.attrs[color] = layout['colors'][color]
+            else:
+                grp.attrs[key] = layout[key]
+
+    def get_layout(self):
+        if 'TIMEmin' not in self.dset['layout'].attrs.keys():
             return None
-        else:
-            return self.dset['ET'].value
+
+        layout = {}
+        for key in list(self.dset['layout'].attrs.keys()):
+            if key in ['legend_on', 'title_on', 'trend_line']:
+                layout[key] = (self.dset['layout'].attrs[key] == 'True')
+            else:
+                layout[key] = self.dset['layout'].attrs[key]
+
+        layout['colors'] = {}
+        grp_colors = self.dset['layout'].require_group('colors')
+        for key in list(grp_colors.attrs.keys()):
+            layout['colors'][key] = grp_colors.attrs[key].tolist()
+
+        return layout
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -338,50 +349,15 @@ class WXDataFrame(dict):
     def __getitem__(self, key):
         if key in list(self.dset.attrs.keys()):
             return self.dset.attrs[key]
-
-
-#        val = dict.__getitem__(self, key)
-#        return val
-
-    def __setitem__(self, key, val):
-        dict.__setitem__(self, key, val)
+        else:
+            return self.dset[key].value
 
     @property
-    def filename(self):
-        return self.dset.attrs['filename']
+    def name(self):
+        return os.path.basename(self.dset.name)
 
-    # ---------------------------------------------------------------------
-
-    @property
-    def station(self):
-        return self.dset.attrs['station name']
-
-    @property
-    def prov(self):
-        return self.dset.attrs['province']
-
-    @property
-    def climID(self):
-        return self.dset.attrs['climate identifier']
-
-    @property
-    def lat(self):
-        return self.dset.attrs['latitude']
-
-    @property
-    def lon(self):
-        return self.dset.attrs['longitude']
-
-    @property
-    def alt(self):
-        return self.dset.attrs['altitude']
-
-    # ---------------------------------------------------------------------
-
-    @property
-    def Time(self):
-        return self.dset['Time'].value
-
+    # def __setitem__(self, key, val):
+    #    dict.__setitem__(self, key, val)
 
 
 if __name__ == '__main__':
