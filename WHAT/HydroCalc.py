@@ -53,6 +53,7 @@ import common.database as db
 import common.widgets as myqt
 from common import IconDB, StyleDB, QToolButtonNormal
 import kgs_brf as bm
+from projet.reader_waterlvl import load_interpretation_file
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
@@ -61,7 +62,7 @@ mpl.rcParams['backend.qt4'] = 'PySide'
 # =============================================================================
 
 
-class WLCalc(QtGui.QWidget):
+class WLCalc(myqt.DialogWindow):
     """
     This is the interface where are plotted the water level time series. It is
     possible to dynamically zoom and span the data, change the display,
@@ -70,7 +71,7 @@ class WLCalc(QtGui.QWidget):
     """
 
     def __init__(self, parent=None):
-        super(WLCalc, self).__init__(parent)
+        super(WLCalc, self).__init__(parent, maximize=True)
 
         self.isGraphExists = False
         self.__figbckground = None  # figure background
@@ -78,16 +79,15 @@ class WLCalc(QtGui.QWidget):
 
         # Water Level Time series :
 
-        self.waterLvl_data = WaterlvlData()
-
         self.time = []
         self.txls = []  # time in Excel format
         self.tmpl = []  # time in matplotlib format
         self.water_lvl = []
 
-        # Weather Data :
+        # Weather and Waterlevel Datasets :
 
-        self.meteo_data = MeteoObj()
+        self.wxdset = None
+        self.wldset = None
 
         # Date System :
 
@@ -424,24 +424,18 @@ class WLCalc(QtGui.QWidget):
 
     # =========================================================================
 
-    def emit_error_message(self, msg):
-        btn = QtGui.QMessageBox.Ok
-        QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
-
-    # =========================================================================
-
-    def load_weather_data(self, filename):
-        self.meteo_data.load_and_format(filename)
+    def set_wxdset(self, wxdset):
+        self.wxdset = wxdset
         self.plot_weather_data()
 
     def plot_weather_data(self):
-        if len(self.meteo_data.TIME) == 0:
+        if self.wxdset is None:
             return
 
-        time = self.meteo_data.TIME + self.dt4xls2mpl * self.dformat
-        ptot = self.meteo_data.DATA[:, 6]
-        rain = self.meteo_data.DATA[:, -1]
-        etp = self.meteo_data.DATA[:, -2]
+        time = self.wxdset['Time'] + self.dt4xls2mpl*self.dformat
+        ptot = self.wxdset['Ptot']
+        rain = self.wxdset['Rain']
+        etp = self.wxdset['PET']
 
         # ----------------------------------------------- Bin the Data ----
 
@@ -513,15 +507,14 @@ class WLCalc(QtGui.QWidget):
 
     # =========================================================================
 
-    def load_waterLvl_data(self, filename):
+    def set_wldset(self, wldset):
+        self.wldset = wldset
 
         # Load Water Level Data :
 
-        self.waterLvl_data.load(filename)
-
-        self.water_lvl = self.waterLvl_data.lvl
-        self.time = self.waterLvl_data.time
-        self.soilFilename = self.waterLvl_data.soilFilename
+        self.water_lvl = wldset['WL']
+        self.time = wldset['Time']
+        # self.soilFilename = self.waterLvl_data.soilFilename
 
         self.init_hydrograph()
         self.load_MRC_interp()
@@ -534,14 +527,15 @@ class WLCalc(QtGui.QWidget):
 
         # ---- Load .wif file ----
 
-        isWif = self.waterLvl_data.load_interpretation_file()
-        if isWif is False:  # No .wif file has been created yet for this well
+        fname = self.wldset['Well'] + '.wif'
+        MRC = load_interpretation_file(fname)
+        if MRC is None:
             return
 
         # Extract Local Extremum Times :
 
-        tr = self.waterLvl_data.trecess
-        hr = self.waterLvl_data.hrecess
+        tr = MRC['Time']
+        hr = MRC['WL']
 
         tb = []  # Time boundary for recession segments
         for i in range(len(tr)):
@@ -554,7 +548,7 @@ class WLCalc(QtGui.QWidget):
 
         # Convert Time to Indexes :
 
-        time = self.waterLvl_data.time
+        time = self.wldset['Time']
         self.peak_indx = np.zeros(len(tb)).astype(int)
 
         for i in range(len(tb)):
@@ -573,10 +567,9 @@ class WLCalc(QtGui.QWidget):
     def aToolbarBtn_isClicked(self):
         # slot that redirects all clicked actions from the toolbar buttons
 
-        if not self.waterLvl_data.wlvlFilename:
-            msg = 'Please select a valid Water Level Data File first.'
-            print(msg)
-            self.emit_error_message('<b>%s</b>' % msg)
+        if self.wldset is None:
+            msg = 'Please import a valid water level dataset first.'
+            self.emit_warning(msg)
             return
 
         sender = self.sender()
@@ -658,18 +651,18 @@ class WLCalc(QtGui.QWidget):
         if self.brfperiod[0] and self.brfperiod[1]:
             QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
             print('calculating BRF')
-            well = self.waterLvl_data.name_well
+            well = self.wldset['Well']
 
             t1 = min(self.brfperiod[0], self.brfperiod[1])
-            i1 = np.where(self.waterLvl_data.time >= t1)[0][0]
+            i1 = np.where(self.wldset['Time'] >= t1)[0][0]
 
             t2 = max(self.brfperiod[0], self.brfperiod[1])
-            i2 = np.where(self.waterLvl_data.time <= t2)[0][-1]
+            i2 = np.where(self.wldset['Time'] <= t2)[0][-1]
 
-            time = np.copy(self.waterLvl_data.time[i1:i2+1])
-            wl = np.copy(self.waterLvl_data.lvl[i1:i2+1])
-            bp = np.copy(self.waterLvl_data.BP[i1:i2+1])
-            et = np.copy(self.waterLvl_data.ET[i1:i2+1])
+            time = np.copy(self.wldset['Time'][i1:i2+1])
+            wl = np.copy(self.wldset['WL'][i1:i2+1])
+            bp = np.copy(self.wldset['BP'][i1:i2+1])
+            et = np.copy(self.wldset['ET'][i1:i2+1])
             if len(et) == 0:
                 et = np.zeros(len(wl))
 
@@ -698,7 +691,7 @@ class WLCalc(QtGui.QWidget):
             msg += ' or reduce the number of BP and ET lags.'
             if lagBP >= len(time) or lagET >= len(time):
                 QtGui.QApplication.restoreOverrideCursor()
-                self.emit_error_message(msg)
+                self.emit_warning(msg)
                 return
 
             bm.produce_par_file(lagBP, lagET, detrend, correct)
@@ -716,7 +709,7 @@ class WLCalc(QtGui.QWidget):
                 QtGui.QApplication.restoreOverrideCursor()
             except:
                 QtGui.QApplication.restoreOverrideCursor()
-                self.emit_error_message(msg)
+                self.emit_warning(msg)
                 return
 
         else:
@@ -728,20 +721,17 @@ class WLCalc(QtGui.QWidget):
 
         print('Saving MRC interpretation...')
 
-        wlvlFilename = self.waterLvl_data.wlvlFilename
-        fileName, fileExtension = os.path.splitext(wlvlFilename)
-
-        interpFilename = fileName + '.wif'
+        interpFilename = self.wldset['Well'] + '.wif'
 
         if self.A is None:
             print('No MRC interpretation to save.')
             return False
 
-        fcontent = [['Well Name :', self.waterLvl_data.name_well],
-                    ['Latitude :', self.waterLvl_data.LAT],
-                    ['Longitude :', self.waterLvl_data.LON],
-                    ['Altitude :', self.waterLvl_data.ALT],
-                    ['Municipality :', self.waterLvl_data.municipality],
+        fcontent = [['Well Name :', self.wldset['Well']],
+                    ['Latitude :', self.wldset['Latitude']],
+                    ['Longitude :', self.wldset['Longitude']],
+                    ['Altitude :', self.wldset['Elevation']],
+                    ['Municipality :', self.wldset['Municipality']],
                     [],
                     ['*** MRC Parameters => dh/dt(m/d) = -A * h + B ***'],
                     [],
@@ -845,8 +835,8 @@ class WLCalc(QtGui.QWidget):
         # slot connected when the button to add new peaks is clicked.
         if self.isGraphExists is False:
             print('Graph is empty')
-            self.emit_error_message(
-              '<b>Please select a valid Water Level Data File first.</b>')
+            self.emit_warning(
+              'Please select a valid Water Level Data File first.')
             return
 
         if self.btn_editPeak.autoRaise():
@@ -1109,7 +1099,7 @@ class WLCalc(QtGui.QWidget):
 
         # ------------------------------------------- compute water levels ----
 
-        tweatr = self.meteo_data.TIME + 0  # Here we introduce the time lag
+        tweatr = self.wxdset['Time'] + 0  # Here we introduce the time lag
         twlvl = self.time
 
         ts = np.where(twlvl[0] == tweatr)[0][0]

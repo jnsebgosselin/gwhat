@@ -61,7 +61,7 @@ class HydroprintGUI(myqt.DialogWindow):
     ConsoleSignal = QtCore.Signal(str)
 
     def __init__(self, datamanager, parent=None):
-        super(HydroprintGUI, self).__init__(parent, resizable=True)
+        super(HydroprintGUI, self).__init__(parent, maximize=True)
 
         self.__updateUI = True
 
@@ -545,7 +545,8 @@ class HydroprintGUI(myqt.DialogWindow):
             return
         else:
             wldset = self.wldset
-            self.hydrograph.set_wldset(wldset)
+
+        self.hydrograph.set_wldset(wldset)
 
         # Load Manual Measures :
 
@@ -554,7 +555,7 @@ class HydroprintGUI(myqt.DialogWindow):
         wldset.write_wlmeas(tmeas, wlmeas)
 
         # Update Graph of "Compute" Mode :
-        # self.hydrocalc.load_waterLvl_data(self.fwaterlvl)
+        self.hydrocalc.set_wldset(wldset)
 
         # Well Layout :
 
@@ -584,7 +585,7 @@ class HydroprintGUI(myqt.DialogWindow):
             self.hydrograph.set_wxdset(self.wxdset)
 
         # Update Graph of "Compute" Mode :
-        # self.hydrocalc.load_weather_data(filename)
+        self.hydrocalc.set_wxdset(self.wxdset)
 
         QtCore.QCoreApplication.processEvents()
         self.draw_hydrograph()
@@ -996,7 +997,7 @@ class PageSetupWin(QtGui.QWidget):
 
         self.__initUI__()
 
-    def __initUI__()(self):
+    def __initUI__(self):
 
         # ---- Toolbar ----
 

@@ -239,15 +239,19 @@ class QGroupWidget(QtGui.QGroupBox):
 
 class DialogWindow(QtGui.QDialog):
 
-    def __init__(self, parent=None, resizable=False):
+    def __init__(self, parent=None, resizable=False, maximize=True):
         super(DialogWindow, self).__init__(parent)
 
-        self.__resizable = resizable
         self.__firstshow = True
+        if maximize is True:
+            self.__resizable = True
+            self.setWindowFlags(QtCore.Qt.Window)
+        else:
+            self.__resizable = resizable
+            self.setWindowFlags(QtCore.Qt.Window |
+                                QtCore.Qt.WindowMinimizeButtonHint)
 
         self.setWindowIcon(IconDB().master)
-        self.setWindowFlags(QtCore.Qt.Window |
-                            QtCore.Qt.WindowMinimizeButtonHint)
 
     def emit_warning(self, msg, title='Warning'):
         btn = QtGui.QMessageBox.Ok
