@@ -27,17 +27,17 @@ from PySide import QtGui, QtCore
 from copy import copy
 import os
 
-try:
-    from common import IconDB
-except ImportError:  # to run this module standalone
-    import sys
-    import platform
-    from os.path import dirname, realpath, basename
-    print('Running module %s as a standalone script...' % basename(__file__))
-    root = dirname(dirname(realpath(__file__)))
-    sys.path.append(root)
-
-    from common import IconDB
+for i in range(2):
+    try:
+        from common import IconDB
+        break
+    except ImportError:  # to run this module standalone
+        import sys
+        import platform
+        from os.path import dirname, realpath, basename
+        print('Running module %s as a script...' % basename(__file__))
+        root = dirname(dirname(realpath(__file__)))
+        sys.path.append(root)
 
 
 # =============================================================================
@@ -248,6 +248,10 @@ class DialogWindow(QtGui.QDialog):
         self.setWindowIcon(IconDB().master)
         self.setWindowFlags(QtCore.Qt.Window |
                             QtCore.Qt.WindowMinimizeButtonHint)
+
+    def emit_warning(self, msg, title='Warning'):
+        btn = QtGui.QMessageBox.Ok
+        QtGui.QMessageBox.warning(self, title, msg, btn)
 
     def show(self):
         if self.__firstshow is True:

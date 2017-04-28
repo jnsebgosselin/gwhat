@@ -112,13 +112,13 @@ class Hydrograph(mpl.figure.Figure):
 
         # Fig Init :
 
-        self.fwidth = 11.0
-        self.fheight = 8.5
+        self.fwidth = 11
+        self.fheight = 7
         self.patch.set_facecolor('white')
         self.NZGrid = 8  # Number of interval in the grid of the bottom part
 
         # Vertical height ratio between the top part  and the bottom part
-        self.va_ratio = 0.18
+        self.va_ratio = 0.2
 
         # Graph labels language :
         self.language = 'english'

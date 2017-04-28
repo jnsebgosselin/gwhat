@@ -349,6 +349,14 @@ class WXDataFrame(dict):
     def __getitem__(self, key):
         if key in list(self.dset.attrs.keys()):
             return self.dset.attrs[key]
+        elif key == 'normals':
+            x = {'Tmax': self.dset['Normals Tmax'].value,
+                 'Tmin': self.dset['Normals Tmin'].value,
+                 'Tavg': self.dset['Normals Tavg'].value,
+                 'Ptot': self.dset['Normals Ptot'].value,
+                 'Rain': self.dset['Normals Rain'].value,
+                 'PET': self.dset['Normals PET'].value}
+            return x
         else:
             return self.dset[key].value
 

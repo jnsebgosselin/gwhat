@@ -56,13 +56,12 @@ from projet.reader_waterlvl import load_waterlvl_measures
 # =============================================================================
 
 
-class HydroprintGUI(QtGui.QWidget):
+class HydroprintGUI(myqt.DialogWindow):
 
     ConsoleSignal = QtCore.Signal(str)
 
     def __init__(self, datamanager, parent=None):
-        super(HydroprintGUI, self).__init__(parent)
-        self.setWindowIcon(IconDB().master)
+        super(HydroprintGUI, self).__init__(parent, resizable=True)
 
         self.__updateUI = True
 
@@ -460,7 +459,7 @@ class HydroprintGUI(QtGui.QWidget):
     def workdir(self):
         return self.dmngr.workdir
 
-    # =========================================================================
+    # ========================================================= Utilities =====
 
     def check_files(self):
 
@@ -522,27 +521,14 @@ class HydroprintGUI(QtGui.QWidget):
     # =========================================================================
 
     def show_weather_averages(self):
-        # TODO: reparer ceci
-        return
-        filemeteo = copy.copy(self.hydrograph.fmeteo)
-        if not filemeteo:
-            msg = 'No valid Weather Data File currently selected.'
-            print(msg)
-            self.ConsoleSignal.emit('font color=red>%s</font>' % msg)
-
-            msg = 'Please select a valid Weather Data File first.'
-            print(msg)
-            self.emit_error_msg('%s' % msg)
-
+        if self.wxdset is None:
+            msg = 'Please import a valid weather data file first.'
+            self.emit_warning(msg)
             return
 
         self.weather_avg_graph.save_fig_dir = self.workdir
-        self.weather_avg_graph.generate_graph(filemeteo)
+        self.weather_avg_graph.generate_graph(self.wxdset)
         self.weather_avg_graph.show()
-
-    def emit_error_msg(self, msg):
-        btn = QtGui.QMessageBox.Ok
-        QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
 
     # =========================================================================
 
@@ -555,17 +541,6 @@ class HydroprintGUI(QtGui.QWidget):
         return self.dmngr.get_current_wxdset()
 
     def wldset_changed(self):
-        # If "filename" exists:
-        # The (1) water level time series, (2) observation well info and the
-        # (3) manual measures are loaded and saved in the class instance
-        # "waterlvl_data".
-
-        # Then the code check if there is a layout already saved for this well
-        # and if yes, will prompt the user if he wants to load it.
-
-        # Depending if there is a layout or not, a Weather Data File will be
-        # loaded and the hydrograph will be automatically plotted.
-
         if self.wldset is None:
             return
         else:
@@ -597,9 +572,10 @@ class HydroprintGUI(QtGui.QWidget):
             self.best_fit_time()
             self.dmngr.set_closest_wxdset()
             self.__updateUI = True
+
             self.wxdset_changed()
 
-            # self.select_closest_meteo_file()
+    # ---------------------------------------------------------------------
 
     def wxdset_changed(self):
         if self.wxdset is None:
@@ -616,20 +592,19 @@ class HydroprintGUI(QtGui.QWidget):
     # ======================================================== Load Layout ====
 
     def load_layout_isClicked(self):
-        wldset = self.wldset
-        if wldset is None:
+        if self.wldset is None:
             msg = 'Please import a valid water level data file first.'
-            self.emit_error_msg(msg)
+            self.emit_warning(msg)
             return
 
-        layout = wldset.get_layout()
+        layout = self.wldset.get_layout()
         if layout is None:
-            msg = 'No graph layout exists for well %s.' % wldset['Well']
-            self.emit_error_msg(msg)
+            msg = 'No graph layout exists for well %s.' % self.wldset['Well']
+            self.emit_warning(msg)
         else:
             self.load_graph_layout(layout)
 
-    # -------------------------------------------------------------------------
+    # ---------------------------------------------------------------------
 
     def load_graph_layout(self, layout):
 
@@ -690,15 +665,14 @@ class HydroprintGUI(QtGui.QWidget):
 
         if layout['wxdset'] in self.dmngr.wxdsets:
             self.dmngr.set_current_wxdset(layout['wxdset'])
-            self.wxdset_changed()
         else:
             msg = ('Weather dataset %s does not exist. The dataset'
                    ' from the station closest to the well has been'
                    ' selected instead.') % layout['wxdset']
-            self.emit_error_msg(msg)
-
+            self.emit_warning(msg)
             self.dmngr.set_closest_wxdset()
-            self.wxdset_changed()
+
+        self.wxdset_changed()
 
         self.__updateUI = True
 
@@ -710,7 +684,7 @@ class HydroprintGUI(QtGui.QWidget):
         wldset = self.wldset
         if wldset is None:
             msg = 'Please import a valid water level data file first.'
-            self.emit_error_msg(msg)
+            self.emit_warning(msg)
             return
 
         layout = wldset.get_layout()
@@ -727,7 +701,7 @@ class HydroprintGUI(QtGui.QWidget):
         else:
             self.save_graph_layout()
 
-    # -------------------------------------------------------------------------
+    # ---------------------------------------------------------------------
 
     def save_graph_layout(self):
         print('Saving graph layout...')
@@ -823,13 +797,13 @@ class HydroprintGUI(QtGui.QWidget):
         if self.dmngr.wldataset_count() == 0:
             msg = 'Please import a valid water level data file first.'
             self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-            self.emit_error_msg(msg)
+            self.emit_warning(msg)
             return
 
         if self.dmngr.wxdataset_count() == 0:
             msg = 'Please import a valid weather data file first.'
             self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-            self.emit_error_msg(msg)
+            self.emit_warning(msg)
             return
 
         self.update_graph_layout_parameter()
@@ -1013,16 +987,16 @@ class PageSetupWin(QtGui.QWidget):
 
         # ---- Default Values ----
 
-        self.pageSize = (11., 8.5)
+        self.pageSize = (11, 7)
         self.isLegend = True
         self.isGraphTitle = True
         self.isTrendLine = False
-        self.va_ratio = 0.18
+        self.va_ratio = 0.2
         self.NZGrid = 8
 
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self): #============================================= Init UI ==
+    def __initUI__()(self):
 
         # ---- Toolbar ----
 
@@ -1045,7 +1019,7 @@ class PageSetupWin(QtGui.QWidget):
 
         # ---- Figure Size ----
 
-        figSize_widget =  QtGui.QWidget()
+        figSize_widget = QtGui.QWidget()
 
         self.fwidth = QtGui.QDoubleSpinBox()
         self.fwidth.setSingleStep(0.05)
@@ -1093,13 +1067,13 @@ class PageSetupWin(QtGui.QWidget):
             QTitle('GRAPH ELEMENTS VISIBILITY\n'), row, 0, 1, 3)
 
         figSize_layout.setColumnStretch(1, 100)
-        figSize_layout.setContentsMargins(0, 0, 0, 0) # (L, T, R, B)
+        figSize_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
         figSize_widget.setLayout(figSize_layout)
 
-        #---- Legend ----
+        # ---- Legend ----
 
-        legend_widget =  QtGui.QWidget()
+        legend_widget = QtGui.QWidget()
 
         self.legend_on = QtGui.QRadioButton('On')
         self.legend_on.toggle()
@@ -1148,7 +1122,7 @@ class PageSetupWin(QtGui.QWidget):
 
         trend_widget.setLayout(trend_layout)
 
-        #---- Main Layout ----
+        # ---- Main Layout ----
 
         main_layout = QtGui.QGridLayout()
         main_layout.addWidget(figSize_widget, 0, 0)
@@ -1175,7 +1149,7 @@ class PageSetupWin(QtGui.QWidget):
     def closeEvent(self, event):  # ===========================================
         super(PageSetupWin, self).closeEvent(event)
 
-        #---- Refresh UI ----
+        # ---- Refresh UI ----
 
         # If cancel or X is clicked, the parameters will be reset to
         # the values they had the last time "Accept" button was

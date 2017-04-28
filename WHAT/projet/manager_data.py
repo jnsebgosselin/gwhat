@@ -205,6 +205,11 @@ class DataManager(QtGui.QWidget):
         self.wxdset_changed()
 
     def wxdset_changed(self):
+        self.update_wxdset_info()
+        self.wxdsetChanged.emit(self.get_current_wxdset())
+
+    def update_wxdset_info(self):
+        self.meteo_info_widget.clear()
         if self.wxdsets_cbox.count() > 0:
             wxdset = self.get_current_wxdset()
 
@@ -216,17 +221,13 @@ class DataManager(QtGui.QWidget):
             climID = wxdset['Climate Identifier']
 
             html = generate_weather_HTML(staname, prov, lat, climID, lon, alt)
-            self.meteo_info_widget.clear()
             self.meteo_info_widget.setText(html)
-            self.wxdsetChanged.emit(wxdset)
-        else:
-            self.wxdsetChanged.emit(None)
-            self.meteo_info_widget.clear()
 
     def set_current_wxdset(self, name):
         self.wxdsets_cbox.blockSignals(True)
         self.wxdsets_cbox.setCurrentIndex(self.wxdsets_cbox.findText(name))
         self.wxdsets_cbox.blockSignals(False)
+        self.update_wxdset_info()
 
     def get_current_wxdset(self):
         if self.wxdsets_cbox.currentIndex() == -1:
