@@ -209,6 +209,10 @@ class ProjetReader(object):
 
         print('New dataset created sucessfully')
 
+        filename = self.filename
+        self.close_projet()
+        self.load_projet(filename)
+
         return WLDataFrame(grp)
 
     def del_wldset(self, name):
@@ -257,12 +261,13 @@ class ProjetReader(object):
         grp.create_dataset('Monthly Rain', data=df['Monthly Rain'])
         grp.create_dataset('Monthly PET', data=df['Monthly PET'])
 
-        grp.create_dataset('Normals Tmax', data=df['Normals Tmax'])
-        grp.create_dataset('Normals Tmin', data=df['Normals Tmin'])
-        grp.create_dataset('Normals Tavg', data=df['Normals Tavg'])
-        grp.create_dataset('Normals Ptot', data=df['Normals Ptot'])
-        grp.create_dataset('Normals Rain', data=df['Normals Rain'])
-        grp.create_dataset('Normals PET', data=df['Normals PET'])
+        grp_norm = grp.create_group('normals')
+        grp_norm.create_dataset('Tmax', data=df['normals']['Tmax'])
+        grp_norm.create_dataset('Tmin', data=df['normals']['Tmin'])
+        grp_norm.create_dataset('Tavg', data=df['normals']['Tavg'])
+        grp_norm.create_dataset('Ptot', data=df['normals']['Ptot'])
+        grp_norm.create_dataset('Rain', data=df['normals']['Rain'])
+        grp_norm.create_dataset('PET', data=df['normals']['PET'])
 
         grp.create_dataset('Missing Tmax', data=df['Missing Tmax'])
         grp.create_dataset('Missing Tmin', data=df['Missing Tmin'])
@@ -350,12 +355,13 @@ class WXDataFrame(dict):
         if key in list(self.dset.attrs.keys()):
             return self.dset.attrs[key]
         elif key == 'normals':
-            x = {'Tmax': self.dset['Normals Tmax'].value,
-                 'Tmin': self.dset['Normals Tmin'].value,
-                 'Tavg': self.dset['Normals Tavg'].value,
-                 'Ptot': self.dset['Normals Ptot'].value,
-                 'Rain': self.dset['Normals Rain'].value,
-                 'PET': self.dset['Normals PET'].value}
+            grp = self.dset['normals']
+            x = {'Tmax': grp['Tmax'].value,
+                 'Tmin': grp['Tmin'].value,
+                 'Tavg': grp['Tavg'].value,
+                 'Ptot': grp['Ptot'].value,
+                 'Rain': grp['Rain'].value,
+                 'PET': grp['PET'].value}
             return x
         else:
             return self.dset[key].value
