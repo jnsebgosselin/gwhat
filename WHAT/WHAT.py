@@ -103,7 +103,7 @@ class WHAT(QtGui.QMainWindow):
         global headerDB
         headerDB = db.FileHeaders()
 
-        # ----------------------------------------------------- MAIN CONSOLE --
+        # --------------------------------------------------- MAIN CONSOLE ----
 
         self.main_console = QtGui.QTextEdit()
         self.main_console.setReadOnly(True)
@@ -125,7 +125,7 @@ class WHAT(QtGui.QMainWindow):
                            ' jean-sebastien.gosselin@ete.inrs.ca.'
                            '</font>')
 
-        # ------------------------------------------------------- TAB WIDGET --
+        # ----------------------------------------------------- TAB WIDGET ----
 
         # ---- download weather data ----
 
@@ -153,7 +153,7 @@ class WHAT(QtGui.QMainWindow):
 
         Tab_widget.setCornerWidget(self.pmanager)
 
-        # -------------------------------------------------- SPLITTER WIDGET --
+        # ------------------------------------------------ SPLITTER WIDGET ----
 
         splitter = QtGui.QSplitter(self)
         splitter.setOrientation(QtCore.Qt.Vertical)
@@ -166,7 +166,7 @@ class WHAT(QtGui.QMainWindow):
         # Forces initially the main_console to its minimal height:
         splitter.setSizes([100, 1])
 
-        # -------------------------------------------------------- MAIN GRID --
+        # ------------------------------------------------------ MAIN GRID ----
 
         main_widget = QtGui.QWidget()
         self.setCentralWidget(main_widget)
@@ -181,7 +181,7 @@ class WHAT(QtGui.QMainWindow):
         mainGrid.setSpacing(10)
         main_widget.setLayout(mainGrid)
 
-        # ----------------------------------------------------------- EVENTS --
+        # --------------------------------------------------------- EVENTS ----
 
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
 
@@ -196,7 +196,7 @@ class WHAT(QtGui.QMainWindow):
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)
 
-        # ------------------------------------------------- CHECK IF PROJECT --
+        # ----------------------------------------------- CHECK IF PROJECT ----
 
         success = self.pmanager.load_project(self.projectfile)
         if success is False:
@@ -205,9 +205,9 @@ class WHAT(QtGui.QMainWindow):
             self.tab_hydrograph.setEnabled(False)
 
             msgtxt = '''
-                     <b>Unable to read the project file.<br><br>
+                     Unable to read the project file.<br><br>
                      "%s" does not exist.<br><br> Please open an existing
-                     project or create a new one.<b>
+                     project or create a new one.
                      ''' % self.projectfile
 
             btn = QtGui.QMessageBox.Ok
