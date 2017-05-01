@@ -33,8 +33,10 @@ from time import clock
 
 import numpy as np
 import matplotlib as mpl
+# import matplotlib.patches
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-import matplotlib.pyplot as plt
+#from matplotlib import rc
+
 from PySide import QtGui
 
 from xlrd.xldate import xldate_from_date_tuple
@@ -43,13 +45,11 @@ from xlrd import xldate_as_tuple
 # Local imports :
 
 import common.database as db
-from waterlvldata import WaterlvlData
-from meteo.meteo_utils import MeteoObj
 from colors2 import ColorsReader
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
-
+mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 # =============================================================================
 
@@ -395,17 +395,16 @@ class Hydrograph(mpl.figure.Figure):
 
         # --- Manual Mesures --- #
 
-        self.h_WLmes, = self.ax2.plot([], [], 'o', zorder=15,
-                                      label='Manual measures')
-
-        plt.setp(self.h_WLmes, markerfacecolor='none', markersize=5,
-                 mec=self.colorsDB.rgb['WL obs'], markeredgewidth=1.5)
+        self.h_WLmes, = self.ax2.plot(
+                [], [], 'o', zorder=15, label='Manual measures',
+                markerfacecolor='none', markersize=5, markeredgewidth=1.5,
+                mec=self.colorsDB.rgb['WL obs'])
 
         # --- Predicted Recession Curves --- #
 
-        self.plot_recess, = self.ax2.plot([], [], color='red', lw=1.5,
-                                          dashes=[5, 3], zorder=100,
-                                          alpha=0.85)
+        self.plot_recess, = self.ax2.plot(
+                [], [], color='red', lw=1.5, dashes=[5, 3], zorder=100,
+                alpha=0.85)
 
         self.draw_waterlvl()
 
@@ -449,7 +448,6 @@ class Hydrograph(mpl.figure.Figure):
 
         # Precipitation (v2):
 
-
         vshift = 5/72
         offset = mpl.transforms.ScaledTranslation(
                 0, vshift, self.dpi_scale_trans)
@@ -457,8 +455,9 @@ class Hydrograph(mpl.figure.Figure):
 
         t = self.wxdset['Missing Ptot']
         y = np.ones(len(t)) * self.ax4.get_ylim()[0]
-        self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
-                      lw=1., c='red', transform=transform)
+        self.lmiss_ax4, = self.ax4.plot(
+                t, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
+                transform=transform)
 
         # ---- Air Temperature (v2) ----
 
@@ -489,7 +488,6 @@ class Hydrograph(mpl.figure.Figure):
     # =========================================================================
 
     def set_legend(self):
-
         if self.isLegend == 1:
             labelDB = LabelDatabase(self.language).legend
             lg_handles = []
@@ -498,44 +496,39 @@ class Hydrograph(mpl.figure.Figure):
 
                 # ---- Snow ---- #
 
-                rec1 = plt.Rectangle((0, 0), 1, 1,
-                                     fc=self.colorsDB.rgb['Snow'],
-                                     ec=self.colorsDB.rgb['Snow'])
+                rec1 = mpl.patches.Rectangle((0, 0), 1, 1,
+                                             fc=self.colorsDB.rgb['Snow'],
+                                             ec=self.colorsDB.rgb['Snow'])
 
                 lg_handles.append(rec1)
                 lg_labels.append(labelDB[0])
                 # Rain
 
-                rec2 = plt.Rectangle((0, 0), 1, 1,
-                                     fc=self.colorsDB.rgb['Rain'],
-                                     ec=self.colorsDB.rgb['Rain'])
+                rec2 = mpl.patches.Rectangle((0, 0), 1, 1,
+                                             fc=self.colorsDB.rgb['Rain'],
+                                             ec=self.colorsDB.rgb['Rain'])
 
                 lg_handles.append(rec2)
                 lg_labels.append(labelDB[1])
 
                 # ---- Air Temperature ---- #
 
-                rec3 = plt.Rectangle((0, 0), 1, 1,
-                                     fc=self.colorsDB.rgb['Tair'],
-                                     ec='black')
+                rec3 = mpl.patches.Rectangle((0, 0), 1, 1,
+                                             fc=self.colorsDB.rgb['Tair'],
+                                             ec='black')
 
                 lg_handles.append(rec3)
                 lg_labels.append(labelDB[2])
 
                 # ---- Missing Data Markers ---- #
 
-                lin1, = plt.plot([], [], ls='-', solid_capstyle='projecting',
-                                 lw=1., c='red')
-
-                lg_handles.append(lin1)
+                lg_handles.append(self.lmiss_ax4)
                 lg_labels.append(labelDB[3])
 
             # ---- Water Levels (continuous line) ---- #
 
             # ---- Continuous Line Datalogger ---- #
 
-            lin2, = plt.plot([], [], '-', zorder=10, linewidth=1,
-                             color=self.colorsDB.rgb['WL solid'], ms=15)
             lg_handles.append(self.l1_ax2)
             if self.trend_line == 1:
                 lg_labels.append(labelDB[4])
@@ -545,9 +538,7 @@ class Hydrograph(mpl.figure.Figure):
             # ---- Water Levels (data points) ----
 
             if self.trend_line == 1:
-                lin3, = self.ax2.plot([], [], '.', ms=10, alpha=0.5,
-                                      color=self.colorsDB.rgb['WL data'])
-                lg_handles.append(lin3)
+                lg_handles.append(self.l2_ax2)
                 lg_labels.append(labelDB[6])
 
             # ---- Manual Measures ----
@@ -562,7 +553,8 @@ class Hydrograph(mpl.figure.Figure):
                 lg_handles.append(self.plot_recess)
 
             if self.isGLUE:
-                dum1 = plt.Rectangle((0, 0), 1, 1, fc='0.65', ec='0.65')
+                dum1 = mpl.patches.Rectangle((0, 0), 1, 1,
+                                             fc='0.65', ec='0.65')
 
                 lg_labels.append('GLUE 5/95')
                 lg_handles.append(dum1)
@@ -589,9 +581,9 @@ class Hydrograph(mpl.figure.Figure):
         if not self.__isHydrographExists:
             return
 
-        plt.setp(self.l1_ax2, color=self.colorsDB.rgb['WL solid'])
-        plt.setp(self.l2_ax2, color=self.colorsDB.rgb['WL data'])
-        plt.setp(self.h_WLmes, mec=self.colorsDB.rgb['WL obs'])
+        self.l1_ax2.set_color(self.colorsDB.rgb['WL solid'])
+        self.l2_ax2.set_color(self.colorsDB.rgb['WL data'])
+        self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])
         self.draw_weather()
 
         self.set_legend()
@@ -1526,8 +1518,8 @@ if __name__ == '__main__':  # =================================================
         hg.best_fit_time(waterLvlObj.time)
         hg.generate_hydrograph(meteo_obj)
 
-        plt.setp(hg.l1_ax2, zorder=10, linewidth=1, color='blue', ms=2,
-                 linestyle='none', marker='.')
+        # hg.l1_ax2.setp(zorder=10, linewidth=1, color='blue', ms=2,
+        #                linestyle='none', marker='.')
 
         # hg.l1_ax2.set_rasterized(True)
 
