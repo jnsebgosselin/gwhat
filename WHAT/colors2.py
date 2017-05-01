@@ -93,7 +93,7 @@ class ColorsReader(object):
         fcontent = []
         for key in self.RGB.keys():
             fcontent.append([key])
-            fcontent[-1].extend(self.RGB[key].tolist())
+            fcontent[-1].extend(self.RGB[key])
 
         with open(fname, 'w') as f:
             writer = csv.writer(f, delimiter=',', lineterminator='\n')
