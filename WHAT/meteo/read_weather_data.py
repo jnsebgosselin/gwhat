@@ -78,14 +78,15 @@ def load_weather_datafile(filename):
           'Monthly Tavg': np.array([]),
           'Monthly Ptot': np.array([]),
           'Monthly Rain': None,
-          'Monthly PET': None,
-          'Normals Tmax': np.array([]),
-          'Normals Tmin': np.array([]),
-          'Normals Tavg': np.array([]),
-          'Normals Ptot': np.array([]),
-          'Normals Rain': None,
-          'Normals PET': None,
+          'Monthly PET': None
           }
+
+    df['normals'] = {'Tmax': np.array([]),
+                     'Tmin': np.array([]),
+                     'Tavg': np.array([]),
+                     'Ptot': np.array([]),
+                     'Rain': None,
+                     'PET': None}
 
     # -------------------------------------------------------- import data ----
 
@@ -170,15 +171,13 @@ def load_weather_datafile(filename):
         key = 'Monthly %s' % vrb
         x = calc_monthly_mean(df['Year'], df['Month'], df[vrb])
         df[key] = x[2]
-
-        key = 'Normals %s' % vrb
-        df[key] = calcul_normals_from_monthly(x[1], x[2])
+        df['normals'][vrb] = calcul_normals_from_monthly(x[1], x[2])
 
     x = calc_monthly_sum(df['Year'], df['Month'], df['Ptot'])
     df['Monthly Ptot'] = x[2]
     df['Monthly Year'] = x[0]
     df['Monthly Month'] = x[1]
-    df['Normals Ptot'] = calcul_normals_from_monthly(x[1], x[2])
+    df['normals']['Ptot'] = calcul_normals_from_monthly(x[1], x[2])
 
     # ----------------------------------------------------- secondary vrbs ----
 
@@ -189,7 +188,7 @@ def load_weather_datafile(filename):
 
     x = calc_monthly_sum(df['Year'], df['Month'], df['Rain'])
     df['Monthly Rain'] = x[2]
-    df['Normals Rain'] = calcul_normals_from_monthly(x[1], x[2])
+    df['normals']['Rain'] = calcul_normals_from_monthly(x[1], x[2])
 
     # ---- Potential Evapotranspiration ----
 
@@ -197,12 +196,12 @@ def load_weather_datafile(filename):
         dates = [df['Year'], df['Month'], df['Day']]
         Tavg = df['Tavg']
         lat = df['Latitude']
-        Ta = df['Normals Tavg']
+        Ta = df['normals']['Tavg']
         df['PET'] = calcul_Thornthwaite(dates, Tavg, lat, Ta)
 
     x = calc_monthly_sum(df['Year'], df['Month'], df['PET'])
     df['Monthly PET'] = x[2]
-    df['Normals PET'] = calcul_normals_from_monthly(x[1], x[2])
+    df['normals']['PET'] = calcul_normals_from_monthly(x[1], x[2])
 
     print('-'*78)
 
@@ -359,6 +358,73 @@ def fill_nan(df):
             print('Missing values were assigned a 0 value.')
 
     return df
+
+
+#  ============================================================================
+
+
+def add_ETP_to_weather_data_file(filename):
+    """ Add PET to weather data file."""
+
+    # load and stock original data :
+
+    meteoObj = MeteoObj()
+    meteoObj.load(filename)
+
+    HEADER = copy.copy(meteoObj.HEADER)
+    DATAORIG = np.copy(meteoObj.DATA)
+    DATE = DATAORIG[:, :3]
+
+    # -- compute air temperature normals --
+
+    meteoObj.clean_endsof_file()
+    meteoObj.check_time_continuity()
+    meteoObj.get_TIME(meteoObj.DATA[:, :3])
+    meteoObj.fill_nan()
+
+    NORMALS, _ = calculate_normals(meteoObj.DATA, meteoObj.datatypes)
+
+    varnames = np.array(meteoObj.HEADER[-1])
+    indx = np.where(varnames == 'Mean Temp (deg C)')[0][0]
+
+    Ta = NORMALS[:, indx-3]    # monthly air temperature averages (deg C)
+    LAT = float(meteoObj.LAT)  # Latitude (decimal deg)
+
+    # -- estimate ETP from original temperature time series --
+
+    TAVG = np.copy(DATAORIG[:, indx])
+    ETP = calculate_ETP(DATE, TAVG, LAT, Ta)
+
+    # -- extend data --
+
+    filecontent = copy.copy(HEADER)
+    if np.any(varnames == 'ETP (mm)'):
+        print('Already a ETP time series in the datasets. Overriding data.')
+
+        # Override ETP in DATA:
+        indx = np.where(varnames == 'ETP (mm)')[0][0]
+        DATAORIG[:, indx] = ETP
+
+    else:
+        # Add new variable name to header:
+        filecontent[-1].append('ETP (mm)')
+
+        # Add ETP to DATA matrix:
+        ETP = ETP[:, np.newaxis]
+        DATAORIG = np.hstack([DATAORIG, ETP])
+
+        DATAORIG.tolist()
+
+    # -- save data --
+
+    for i in range(len(DATAORIG[:, 0])):
+        filecontent.append(DATAORIG[i, :])
+
+    with open(filename, 'w', encoding='utf-8') as f:
+        writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+        writer.writerows(filecontent)
+
+    print('ETP time series added successfully to %s' % filename)
 
 # =========================================================================
 
