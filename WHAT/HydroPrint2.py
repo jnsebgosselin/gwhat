@@ -39,8 +39,8 @@ from xlrd import xldate_as_tuple
 
 # Local imports :
 
-import HydroCalc
 import hydrograph4 as hydrograph
+import HydroCalc
 import mplFigViewer3 as mplFigViewer
 from meteo.meteo_utils import WeatherAvgGraph
 import custom_widgets as MyQWidget
@@ -788,7 +788,7 @@ class HydroprintGUI(myqt.DialogWindow):
             self.save_figure(fname)
 
     def save_figure(self, fname):
-        self.hydrograph.generate_hydrograph(self.meteo_data)
+        self.hydrograph.generate_hydrograph()
         self.hydrograph.savefig(fname)
 
     # =========================================================================
