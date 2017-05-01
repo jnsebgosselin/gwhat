@@ -40,7 +40,9 @@ from PySide import QtGui, QtCore
 
 import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+
 mpl.rcParams['backend.qt4'] = 'PySide'
+mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 # Local imports :
 
@@ -95,19 +97,17 @@ class LabelDataBase():
 
             # ---- Labels ----
 
-            self.Tlabel = u'Températures moyennes mensuelles (°C)'
-            self.Plabel = u'Précipitations totales mensuelles (mm)'
+            self.Tlabel = 'Températures moyennes mensuelles (°C)'
+            self.Plabel = 'Précipitations totales mensuelles (mm)'
             self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 
 
 class WeatherAvgGraph(QtGui.QWidget):
-
     """
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
-
     def __init__(self, parent=None):
         super(WeatherAvgGraph, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Window)
@@ -1465,7 +1465,6 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
 class GridWeatherNormals(QtGui.QTableWidget):
 
-
     def __init__(self, parent=None):
         super(GridWeatherNormals, self).__init__(parent)
 
@@ -1580,9 +1579,7 @@ class GridWeatherNormals(QtGui.QTableWidget):
         self.resizeColumnsToContents()
 
 if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    plt.rc('font', family='Arial')
-
+    from meteo.read_weather_data import load_weather_datafile
     app = QtGui.QApplication(sys.argv)
 
     ft = app.font()
@@ -1594,13 +1591,14 @@ if __name__ == '__main__':
               'Project4Testing/Meteo/Output/IBERVILLE (7023270)/'
               'IBERVILLE (7023270)_1980-2015.out')
 
+    wxdset = load_weather_datafile(fmeteo)
+
     w = WeatherAvgGraph()
     w.save_fig_dir = os.getcwd()
-    w.meteo_dir = os.getcwd()
 
-    w.show()
     w.set_lang('English')
-    w.generate_graph(fmeteo)
+    w.generate_graph(wxdset)
+    w.show()
 
 #    w.fig_weather_normals.figure.savefig('test.pdf')
 #    w.save_normal_table('test.csv')
