@@ -1204,11 +1204,17 @@ class WLCalc(myqt.DialogWindow):
     def change_waterlvl_lineStyle(self):
         if self.btn_Waterlvl_lineStyle.autoRaise():
             self.btn_Waterlvl_lineStyle.setAutoRaise(False)
-            plt.setp(self.h1_ax0, markerfacecolor='blue', ms=5, mec='blue',
-                     markeredgewidth=1.5, ls='none', marker='.')
+
+            self.h1_ax0.set_linestyle('None')
+            self.h1_ax0.set_marker('.')
+            self.h1_ax0.set_markerfacecolor('blue')
+            self.h1_ax0.set_markeredgewidth(1.5)
+            self.h1_ax0.set_markeredgecolor('blue')
+            self.h1_ax0.set_markersize(5)
         else:
             self.btn_Waterlvl_lineStyle.setAutoRaise(True)
-            plt.setp(self.h1_ax0, marker='None', linestyle='-')
+            self.h1_ax0.set_linestyle('-')
+            self.h1_ax0.set_marker('None')
 
         self.draw()
 
@@ -2084,9 +2090,9 @@ class SoilProfil():
 
     def load_info(self, filename):
 
-        #---- load soil column info ----
+        # ---- load soil column info ----
 
-        with open(filename,'r') as f:
+        with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter="\t"))
 
         NLayer = len(reader)
@@ -2107,7 +2113,9 @@ class SoilProfil():
                 self.color[i] = '#FFFFFF'
 
 
-#===============================================================================
+# =============================================================================
+
+
 def mrc2rechg(t, ho, A, B, z, Sy):
     """
     Calculate groundwater recharge from the Master Recession Curve (MRC)
@@ -2138,7 +2146,7 @@ def mrc2rechg(t, ho, A, B, z, Sy):
     print(z)
     print(Sy)
 
-    #---- Check Data Integrity ----
+    # ---- Check Data Integrity ----
 
     if np.min(ho) < 0:
         print('Water level rise above ground surface. Please check your data.')
