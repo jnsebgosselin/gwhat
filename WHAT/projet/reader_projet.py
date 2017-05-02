@@ -209,9 +209,7 @@ class ProjetReader(object):
 
         print('New dataset created sucessfully')
 
-        filename = self.filename
-        self.close_projet()
-        self.load_projet(filename)
+        self.db.flush()
 
         return WLDataFrame(grp)
 
@@ -275,6 +273,8 @@ class ProjetReader(object):
         grp.create_dataset('Missing Ptot', data=df['Missing Ptot'])
 
         print('New dataset created sucessfully')
+
+        self.db.flush()
 
     def del_wxdset(self, name):
         del self.db['wxdsets/%s' % name]
