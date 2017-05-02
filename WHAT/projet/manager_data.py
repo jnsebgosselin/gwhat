@@ -207,8 +207,6 @@ class DataManager(QtGui.QWidget):
         else:
             self.new_weather_win.show()
 
-    # =========================================================================
-
     def new_wxdset_added(self):
         self.update_wxdsets()
         self.update_wxdset_info()
@@ -240,7 +238,7 @@ class DataManager(QtGui.QWidget):
     def wxdset_changed(self):
         self.wxdsetChanged.emit(self.get_current_wxdset())
 
-    # =========================================================================
+    # ---------------------------------------------------------------------
 
     def del_current_wxdset(self):
         if self.wxdsets_cbox.count() > 0:
@@ -267,16 +265,17 @@ class DataManager(QtGui.QWidget):
             return self.projet.get_wxdset(self.wxdsets_cbox.currentText())
 
     def set_current_wxdset(self, name):
-        self.wxdsets_cbox.blockSignals(True)
-        index = self.wxdsets_cbox.findText(name)
-        self.wxdsets_cbox.setCurrentIndex(index)
-        self.wxdsets_cbox.blockSignals(False)
+        current = self.wxdsets_cbox.currentIndex()
+        new = self.wxdsets_cbox.findText(name)
+        if current != new:
+            self.wxdsets_cbox.blockSignals(True)
+            self.wxdsets_cbox.setCurrentIndex(new)
+            self.wxdsets_cbox.blockSignals(False)
 
-        self.update_wxdset_info()
-        self.wxdset_changed()
+            self.update_wxdset_info()
+            self.wxdset_changed()
 
     def set_closest_wxdset(self):
-        print('set_closest_wxdset')
         if self.wldataset_count() == 0:
             return None
         elif self.wxdataset_count() == 0:
@@ -298,7 +297,6 @@ class DataManager(QtGui.QWidget):
                     closest = wxdset.name
                     mindist = newdist
 
-            print(closest, mindist)
             self.set_current_wxdset(closest)
 
     # =========================================================================
