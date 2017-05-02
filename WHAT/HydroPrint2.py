@@ -88,7 +88,6 @@ class HydroprintGUI(myqt.DialogWindow):
         # Generate UI:
 
         self.__initUI__()
-        self.wldset_changed()
 
     # =========================================================================
 
@@ -573,8 +572,6 @@ class HydroprintGUI(myqt.DialogWindow):
             self.dmngr.set_closest_wxdset()
             self.__updateUI = True
 
-            self.wxdset_changed()
-
     # ---------------------------------------------------------------------
 
     def wxdset_changed(self):
@@ -671,8 +668,6 @@ class HydroprintGUI(myqt.DialogWindow):
                    ' selected instead.') % layout['wxdset']
             self.emit_warning(msg)
             self.dmngr.set_closest_wxdset()
-
-        self.wxdset_changed()
 
         self.__updateUI = True
 
