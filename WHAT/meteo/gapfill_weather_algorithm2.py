@@ -43,21 +43,19 @@ from PySide import QtCore
 
 # PERSONAL IMPORTS :
 
-try:
-    from hydrograph3 import LatLong2Dist
-    import meteo.meteo_utils as meteo_utils
-    from meteo.gapfill_weather_postprocess import PostProcessErr
-    from _version import __version__
-except ImportError:  # to run this module standalone
-    print('Running module as a standalone script...')
-    import sys
-    from os.path import dirname, realpath
-    sys.path.append(dirname(dirname(realpath(__file__))))
-
-    import meteo.meteo_utils as meteo_utils
-    from hydrograph4 import LatLong2Dist
-    from meteo.gapfill_weather_postprocess import PostProcessErr
-    from _version import __version__
+for i in range(2):
+    try:
+        from hydrograph4 import LatLong2Dist
+        import meteo.meteo_utils as meteo_utils
+        from meteo.gapfill_weather_postprocess import PostProcessErr
+        import meteo.weather_reader as wxrd
+        from _version import __version__
+        break
+    except ImportError:  # to run this module standalone
+        print('Running module as a standalone script...')
+        import sys
+        from os.path import dirname, realpath
+        sys.path.append(dirname(dirname(realpath(__file__))))
 
 
 # =============================================================================
@@ -241,10 +239,12 @@ class GapFillWeather(QtCore.QObject):
         self.TARGET.HORDIST, self.TARGET.ALTDIFF = \
             alt_and_dist_calc(self.WEATHER, index)
 
-    def read_summary(self):  # ================================================
+    def read_summary(self):
         return self.WEATHER.read_summary(self.outputDir)
 
-    def fill_data(self):  # ===================================================
+    # =========================================================================
+
+    def fill_data(self):
 
         # This is the main routine that fills the missing data for the target
         # station
@@ -924,15 +924,15 @@ class GapFillWeather(QtCore.QObject):
         self.ConsoleSignal.emit(
                '<font color=black>Info file saved in %s.</font>' % output_path)
 
-        # -------------------------------------------------------- .out file --
+        # ------------------------------------------------------ .out file ----
 
-        # ---- Prepare Header ----
+        # Prepare Header :
 
         fcontent = copy(HEADER)
         fcontent.append(['Year', 'Month', 'Day'])
         fcontent[-1].extend(VARNAME)
 
-        # ---- Add Data ----
+        # Add Data :
 
         for row in range(index_start, index_end+1):
             fcontent.append(['%d' % YEAR[row],
@@ -942,7 +942,7 @@ class GapFillWeather(QtCore.QObject):
             y = ['%0.1f' % i for i in Y2fill[row, :]]
             fcontent[-1].extend(y)
 
-        # ---- Save Data ----
+        # Save Data :
 
         fname = '%s (%s)_%s-%s.out' % (clean_tarStaName,
                                        target_station_clim,
@@ -954,24 +954,22 @@ class GapFillWeather(QtCore.QObject):
         msg = 'Meteo data saved in %s.' % output_path
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
-        # ---- Add ETP to File ----
+        # Add ETP to file :
 
         if self.add_ETP:
-            meteo_utils.add_ETP_to_weather_data_file(output_path)
+            PET = wxrd.add_ETP_to_weather_data_file(output_path)
 
-        # ---- Produces Weather Normals Graph ----
+        # Produces Weather Normals Graph :
 
-        METEO = meteo_utils.MeteoObj()
-        METEO.load_and_format(output_path)
-        NORMALS, _ = meteo_utils.calculate_normals(METEO.DATA, METEO.datatypes)
+        wxdset = wxrd.WXDataFrame(fmeteo)
 
-        w = meteo_utils.FigWeatherNormals()
-        w.plot_monthly_normals(NORMALS)
+        fig = meteo_utils.FigWeatherNormals()
+        fig.plot_monthly_normals(wxdset['normals'])
         figname = dirname + 'weather_normals.pdf'
         print('Generating %s.' % figname)
-        w.figure.savefig(figname)
+        fig.figure.savefig(figname)
 
-        # -------------------------------------------------------- .err file --
+        # ------------------------------------------------------ .err file ----
 
         if self.full_error_analysis == True:
 
@@ -1344,6 +1342,8 @@ class WeatherData(object):
         self.NUMMISS = []     # Number of missing data
         self.fnames = []
 
+    # =========================================================================
+
     def save_to_binary(self, dirname):
 
         dtype = [('DATA', 'float32', np.shape(self.DATA)),
@@ -1384,7 +1384,9 @@ class WeatherData(object):
         fname = os.path.join(dirname, 'fdata.npy')
         np.save(fname, A)
 
-    def load_from_binary(self, dirname):  # ===================================
+    # -------------------------------------------------------------------------
+
+    def load_from_binary(self, dirname):
 
         fname = os.path.join(dirname, 'fdata.npy')
         A = np.load(fname)

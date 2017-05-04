@@ -181,7 +181,7 @@ class ProjetReader(object):
 
     def get_wldset(self, name):
         if name in self.wldsets:
-            return WLDataFrame(self.db['wldsets/%s' % name])
+            return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
             return None
 
@@ -211,7 +211,7 @@ class ProjetReader(object):
 
         self.db.flush()
 
-        return WLDataFrame(grp)
+        return WLDataFrameHDF5(grp)
 
     def del_wldset(self, name):
         del self.db['wldsets/%s' % name]
@@ -224,7 +224,7 @@ class ProjetReader(object):
 
     def get_wxdset(self, name):
         if name in self.wxdsets:
-            return WXDataFrame(self.db['wxdsets/%s' % name])
+            return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
             return None
 
@@ -283,11 +283,11 @@ class ProjetReader(object):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class WLDataFrame(dict):
+class WLDataFrameHDF5(dict):
     # This is a wrapper around the h5py group that is used to store
     # water level datasets.
     def __init__(self, dset, *args, **kwargs):
-        super(WLDataFrame, self).__init__(*args, **kwargs)
+        super(WLDataFrameHDF5, self).__init__(*args, **kwargs)
         self.dset = dset
 
     def __getitem__(self, key):
@@ -344,11 +344,11 @@ class WLDataFrame(dict):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class WXDataFrame(dict):
-    # This is a wrapper around the h5py group that is used to store
-    # weather datasets.
+class WXDataFrameHDF5(dict):
+    # This is a wrapper around the h5py group that is used to mimick the
+    # structure of WXDataFrame in meteo_utils.
     def __init__(self, dset, *args, **kwargs):
-        super(WXDataFrame, self).__init__(*args, **kwargs)
+        super(WXDataFrameHDF5, self).__init__(*args, **kwargs)
         self.dset = dset
 
     def __getitem__(self, key):

@@ -86,7 +86,7 @@ class WHAT(QtGui.QMainWindow):
 
     def __initUI__(self):
 
-        # ------------------------------------------------------ PREFERENCES --
+        # ---------------------------------------------------- PREFERENCES ----
 
         self.whatPref.load_pref_file()
         language = self.whatPref.language
@@ -94,7 +94,7 @@ class WHAT(QtGui.QMainWindow):
         self.projectfile = self.whatPref.projectfile
         self.projectdir = path.dirname(self.projectfile)
 
-        # -------------------------------------------------------- DATABASES --
+        # ------------------------------------------------------ DATABASES ----
 
         # http://stackoverflow.com/questions/423379/
         # using-global-variables-in-a-function-other-

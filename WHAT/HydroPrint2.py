@@ -42,7 +42,7 @@ from xlrd import xldate_as_tuple
 import hydrograph4 as hydrograph
 import HydroCalc
 import mplFigViewer3 as mplFigViewer
-from meteo.meteo_utils import WeatherAvgGraph
+from meteo.weather_viewer import WeatherAvgGraph
 import custom_widgets as MyQWidget
 from colors2 import ColorsReader, ColorsSetupWin
 

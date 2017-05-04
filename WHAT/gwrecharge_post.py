@@ -37,7 +37,6 @@ import matplotlib.pyplot as plt
 
 # ----- PERSONAL LIBRARY IMPORTS -----
 
-from meteo.meteo_utils import MeteoObj
 from waterlvldata import WaterlvlData
 import mplJS
 

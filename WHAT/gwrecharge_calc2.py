@@ -36,7 +36,7 @@ import matplotlib.pyplot as plt
 
 # Local imports :
 
-from meteo.meteo_utils import MeteoObj
+import meteo.weather_reader as wxrd
 from waterlvldata import WaterlvlData
 from gwrecharge_post import plot_water_budget_yearly
 
@@ -48,7 +48,7 @@ class SynthHydrograph(object):
 
     def __init__(self):
 
-        self.meteoObj = MeteoObj()
+        self.wxdset = None
         self.ETP, self.PTOT, self.TAVG = [], [], []
 
         self.waterlvlObj = WaterlvlData()
@@ -111,12 +111,13 @@ class SynthHydrograph(object):
 
         print('--------')
 
-        self.meteoObj.load_and_format(fmeteo)
+        self.wxdset = wxrd.WXDataFrame(fmeteo)
+
         # Includes the estimation of ETP if not already present in file.
 
-        self.ETP = self.meteoObj.DATA[:, 7]
-        self.PTOT = self.meteoObj.DATA[:, 6]
-        self.TAVG = self.meteoObj.DATA[:, 5]
+        self.ETP = self.wxdset['PET']
+        self.PTOT = self.wxdset['Ptot']
+        self.TAVG = self.wxdset['Tavg']
 
         print('--------')
 
@@ -134,18 +135,17 @@ class SynthHydrograph(object):
         # Converting time in a date format readable by matplotlib and also make
         # the weather and water level time series synchroneous.
 
-        tweatr = self.meteoObj.TIME
+        tweatr = self.wxdset['Time']
 
         ts = self.ts = np.where(self.twlvl[0] == tweatr)[0][0]
         te = self.te = np.where(self.twlvl[-1] == tweatr)[0][0]
 
-        self.YEAR = self.meteoObj.DATA[ts:te+1, 0]
-        self.MONTH = self.meteoObj.DATA[ts:te+1, 1]
-        DAY = self.meteoObj.DATA[ts:te+1, 2]
-        self.TIME = self.meteoObj.TIME[ts:te+1]
-        self.PRECIP = self.meteoObj.DATA[:, 6][ts:te+1]
-
+        self.YEAR = self.wxdset['Year'][ts:te+1]
+        self.MONTH = self.wxdset['Month'][ts:te+1]
+        DAY = self.wxdset['Day'][ts:te+1]
+        self.TIME = self.wxdset['Time'][ts:te+1]
         self.DATE = self.convert_time_to_date(self.YEAR, self.MONTH, DAY)
+        self.PRECIP = self.wxdset['Ptot'][ts:te+1]
 
     # =========================================================================
 
@@ -292,7 +292,7 @@ class SynthHydrograph(object):
         RMSE = np.array(data['RMSE'])
 
         CPDF = np.cumsum(RMSE / np.sum(RMSE))
-        TIME = self.meteoObj.TIME
+        TIME = self.wxdset['Time']
         Rbound = []
         for i in range(len(TIME)):
             isort = np.argsort(rechg[:, i])
@@ -359,8 +359,14 @@ class SynthHydrograph(object):
         dataset['RASmax'] = set_RASmax
         dataset['Cru'] = set_Cru
 
-        dataset['Time'] = self.meteoObj.TIME
-        dataset['Weather'] = self.meteoObj.DATA
+        dataset['Time'] = self.wxdset['Time']
+        dataset['Weather'] = {'Tmax': self.wxdset['Tmax'],
+                              'Tmin': self.wxdset['Tmin'],
+                              'Tavg': self.wxdset['Tavg'],
+                              'Ptot': self.wxdset['Ptot'],
+                              'Rain': self.wxdset['Rain'],
+                              'PET': self.wxdset['PET']
+                              }
         dataset['twlvl'] = self.twlvl
         dataset['etr'] = set_etr
         dataset['ru'] = set_ru
@@ -372,7 +378,7 @@ class SynthHydrograph(object):
     # =========================================================================
 
     def opt_Sy(self, Sy0, rechg):
-        tweatr = self.meteoObj.TIME      # Here we introduce the time lag
+        tweatr = self.wxdset['Time']     # Here we introduce the time lag
         twlvl = self.twlvl               # time water level
         WLVLobs = self.WLVLobs * 1000    # water level observations
 

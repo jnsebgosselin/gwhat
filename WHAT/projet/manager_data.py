@@ -37,10 +37,8 @@ for i in range(2):
         from common import IconDB, QToolButtonSmall
         import common.widgets as myqt
         from hydrograph4 import LatLong2Dist
-        from projet.reader_waterlvl import (load_excel_datafile,
-                                            generate_HTML_table)
-        from meteo.read_weather_data import (load_weather_datafile,
-                                             generate_weather_HTML)
+        import projet.reader_waterlvl as wlrd
+        import meteo.weather_reader as wxrd
         break
     except ImportError:  # to run this module standalone
         import sys
@@ -156,7 +154,7 @@ class DataManager(QtGui.QWidget):
             alt = wldset['Elevation']
             mun = wldset['Municipality']
 
-            html = generate_HTML_table(name, lat, lon, alt, mun)
+            html = wlrd.generate_HTML_table(name, lat, lon, alt, mun)
             self.well_info_widget.setText(html)
 
     def wldset_changed(self):
@@ -232,7 +230,8 @@ class DataManager(QtGui.QWidget):
             prov = wxdset['Province']
             climID = wxdset['Climate Identifier']
 
-            html = generate_weather_HTML(staname, prov, lat, climID, lon, alt)
+            html = wxrd.generate_weather_HTML(staname, prov, lat,
+                                              climID, lon, alt)
             self.meteo_info_widget.setText(html)
 
     def wxdset_changed(self):
@@ -639,7 +638,7 @@ class NewWaterLvl(NewDataset):
         for i in range(5):
             QtCore.QCoreApplication.processEvents()
 
-        self._dataset = load_excel_datafile(filename)
+        self._dataset = wlrd.load_excel_datafile(filename)
 
         # Update GUI :
 
@@ -823,7 +822,7 @@ class NewWXDataDialog(NewDataset):
         for i in range(5):
             QtCore.QCoreApplication.processEvents()
 
-        self._dataset = load_weather_datafile(filename)
+        self._dataset = wxrd.WXDataFrame(filename)
 
         # Update GUI :
 
