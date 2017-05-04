@@ -77,6 +77,7 @@ def calcul_Thornthwaite(Date, Tavg, lat, Ta):
     a = (6.75e-7*I**3) - (7.71e-5*I**2) + (1.7912e-2*I) + 0.49239
 
     inan = np.where(~np.isnan(Tavg))[0]
+    N = len(Tavg)
     Tavg = copy.copy(Tavg)
     Tavg = Tavg[inan]
     Tavg[Tavg < 0] = 0
@@ -87,7 +88,7 @@ def calcul_Thornthwaite(Date, Tavg, lat, Ta):
 
     # Calcul reference evapotranspiration :
 
-    PET0 = np.zeros(np.shape(Tavg)) * np.nan
+    PET0 = np.zeros(N) * np.nan
     PET0[inan] = 16*(10*Tavg/I)**a * (DAYLEN[inan]/(12*30))
 
     return PET0
