@@ -264,15 +264,12 @@ class DataManager(QtGui.QWidget):
             return self.projet.get_wxdset(self.wxdsets_cbox.currentText())
 
     def set_current_wxdset(self, name):
-        current = self.wxdsets_cbox.currentIndex()
-        new = self.wxdsets_cbox.findText(name)
-        if current != new:
-            self.wxdsets_cbox.blockSignals(True)
-            self.wxdsets_cbox.setCurrentIndex(new)
-            self.wxdsets_cbox.blockSignals(False)
+        self.wxdsets_cbox.blockSignals(True)
+        self.wxdsets_cbox.setCurrentIndex(self.wxdsets_cbox.findText(name))
+        self.wxdsets_cbox.blockSignals(False)
 
-            self.update_wxdset_info()
-            self.wxdset_changed()
+        self.update_wxdset_info()
+        self.wxdset_changed()
 
     def set_closest_wxdset(self):
         if self.wldataset_count() == 0:

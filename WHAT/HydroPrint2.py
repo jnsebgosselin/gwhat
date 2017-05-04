@@ -663,10 +663,6 @@ class HydroprintGUI(myqt.DialogWindow):
         if layout['wxdset'] in self.dmngr.wxdsets:
             self.dmngr.set_current_wxdset(layout['wxdset'])
         else:
-            msg = ('Weather dataset %s does not exist. The dataset'
-                   ' from the station closest to the well has been'
-                   ' selected instead.') % layout['wxdset']
-            self.emit_warning(msg)
             self.dmngr.set_closest_wxdset()
 
         self.__updateUI = True
