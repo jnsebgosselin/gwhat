@@ -46,7 +46,7 @@ from PySide import QtCore
 for i in range(2):
     try:
         from hydrograph4 import LatLong2Dist
-        import meteo.meteo_utils as meteo_utils
+        from meteo.weather_viewer import FigWeatherNormals
         from meteo.gapfill_weather_postprocess import PostProcessErr
         import meteo.weather_reader as wxrd
         from _version import __version__
@@ -961,9 +961,8 @@ class GapFillWeather(QtCore.QObject):
 
         # Produces Weather Normals Graph :
 
-        wxdset = wxrd.WXDataFrame(fmeteo)
-
-        fig = meteo_utils.FigWeatherNormals()
+        wxdset = wxrd.WXDataFrame(output_path)
+        fig = FigWeatherNormals()
         fig.plot_monthly_normals(wxdset['normals'])
         figname = dirname + 'weather_normals.pdf'
         print('Generating %s.' % figname)
@@ -1478,7 +1477,7 @@ class WeatherData(object):
 
             if (time_end - time_start + 1) != len(STADAT[:, 0]):
                 print('\n%s is not continuous, correcting...' % reader[0][1])
-                STADAT = meteo_utils.make_timeserie_continuous(STADAT)
+                STADAT = self.make_timeserie_continuous(STADAT)
                 print('%s is now continuous.' % reader[0][1])
 
             time_new = np.arange(time_start, time_end + 1)
@@ -1645,6 +1644,44 @@ class WeatherData(object):
                 self.DATE[i, 2] = date_tuple[2]
 
         return True
+
+    # =========================================================================
+
+    def make_timeserie_continuous(self, DATA):
+        # scan the entire time serie and will insert a row with nan values
+        # whenever there is a gap in the data and will return the continuous
+        # data set.
+        #
+        # DATA = [YEAR, MONTH, DAY, VAR1, VAR2 ... VARn]
+        #
+        # 2D matrix containing the dates and the corresponding daily
+        # meteorological data of a given weather station arranged in
+        # chronological order.
+
+        nVAR = len(DATA[0, :]) - 3  # number of meteorological variables
+        nan2insert = np.zeros(nVAR) * np.nan
+
+        i = 0
+        date1 = xldate_from_date_tuple((DATA[i, 0].astype('int'),
+                                        DATA[i, 1].astype('int'),
+                                        DATA[i, 2].astype('int')), 0)
+
+        while i < len(DATA[:, 0]) - 1:
+            date2 = xldate_from_date_tuple((DATA[i+1, 0].astype('int'),
+                                            DATA[i+1, 1].astype('int'),
+                                            DATA[i+1, 2].astype('int')), 0)
+
+            # If dates 1 and 2 are not consecutive, add a nan row to DATA
+            # after date 1.
+            if date2 - date1 > 1:
+                date2insert = np.array(xldate_as_tuple(date1 + 1, 0))[:3]
+                row2insert = np.append(date2insert, nan2insert)
+                DATA = np.insert(DATA, i + 1, row2insert, 0)
+
+            date1 += 1
+            i += 1
+
+        return DATA
 
     def generate_summary(self, project_folder):  # ============================
 

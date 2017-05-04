@@ -39,23 +39,18 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 
 # Local imports :
 
-try:
-    import meteo.meteo_utils as meteo_utils
-    from custom_widgets import QToolPanel
-    from meteo.gapfill_weather_algorithm2 import GapFillWeather
-    from common import IconDB, StyleDB, QToolButtonSmall
-    import common.widgets as myqt
-except ImportError:  # to run this module standalone
-    import sys
-    from os.path import dirname, realpath, basename
-    print('Running module %s as a standalone script...' % basename(__file__))
-    sys.path.append(dirname(dirname(realpath(__file__))))
-
-    import meteo.meteo_utils as meteo_utils
-    from custom_widgets import QToolPanel
-    from meteo.gapfill_weather_algorithm2 import GapFillWeather
-    from common import IconDB, StyleDB, QToolButtonSmall
-    import common.widgets as myqt
+for i in range(2):
+    try:
+        from custom_widgets import QToolPanel
+        from meteo.gapfill_weather_algorithm2 import GapFillWeather
+        from common import IconDB, StyleDB, QToolButtonSmall
+        import common.widgets as myqt
+        break
+    except ImportError:  # to run this module standalone
+        import sys
+        from os.path import dirname, realpath, basename
+        print('Running module %s as a script...' % basename(__file__))
+        sys.path.append(dirname(dirname(realpath(__file__))))
 
 
 class GapFillWeatherGUI(QtGui.QWidget):
