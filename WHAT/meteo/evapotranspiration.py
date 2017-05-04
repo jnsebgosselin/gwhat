@@ -72,18 +72,23 @@ def calcul_Thornthwaite(Date, Tavg, lat, Ta):
     """
 
     Ta = copy.copy(Ta)
-    Tavg = copy.copy(Tavg)
-
     Ta[Ta < 0] = 0
-    I = np.sum((0.2 * Ta) ** 1.514)  # Heat index
-    a = (6.75e-7 * I**3) - (7.71e-5 * I**2) + (1.7912e-2 * I) + 0.49239
+    I = np.sum((0.2*Ta)**1.514)  # Heat index
+    a = (6.75e-7*I**3) - (7.71e-5*I**2) + (1.7912e-2*I) + 0.49239
+
+    inan = np.where(~np.isnan(Tavg))[0]
+    Tavg = copy.copy(Tavg)
+    Tavg = Tavg[inan]
     Tavg[Tavg < 0] = 0
 
-    # Calcul photoperiod in hour/day:
+    # Calcul photoperiod in hour/day :
 
     DAYLEN = calcul_daylength(Date, lat)
 
-    PET0 = 16*(10*Tavg/I)**a * (DAYLEN/(12*30))
+    # Calcul reference evapotranspiration :
+
+    PET0 = np.zeros(np.shape(Tavg)) * np.nan
+    PET0[inan] = 16*(10*Tavg/I)**a * (DAYLEN[inan]/(12*30))
 
     return PET0
 
