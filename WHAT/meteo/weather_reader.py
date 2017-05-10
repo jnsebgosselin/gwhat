@@ -38,7 +38,6 @@ from xlrd import xldate_as_tuple
 
 for i in range(2):
     try:
-        from _version import __version__
         from meteo.evapotranspiration import calcul_Thornthwaite
         break
     except ImportError:  # to run this module standalone
@@ -288,11 +287,10 @@ def read_weather_datafile(filename):
                     df[row[0]] = float(row[1])
                 except:
                     print('Wrong format for entry "%s".' % row[0])
-                    df[item[0]] = 0
+                    df[row[0]] = 0
             elif row[0] == 'Year':
                 istart = i+1
                 var = row
-                header = reader[:istart]
                 data = np.array(reader[istart:]).astype('float')
                 break
 
@@ -509,7 +507,6 @@ def add_ETP_to_weather_data_file(filename):
             elif row[0] == 'Year':
                 istart = i+1
                 vrbs = row
-                header = reader[:istart]
                 data = np.array(reader[istart:]).astype('float')
                 break
 

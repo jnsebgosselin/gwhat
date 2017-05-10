@@ -22,23 +22,15 @@ from __future__ import division, unicode_literals
 
 # Standard library imports :
 
-from calendar import monthrange
 import os
 import csv
-import copy
-import sys
-from datetime import date
 from time import strftime
 
 # Third party imports :
 
-from xlrd.xldate import xldate_from_date_tuple
-from xlrd import xldate_as_tuple
 import xlsxwriter
-
 import numpy as np
 from PySide import QtGui, QtCore
-
 import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 
