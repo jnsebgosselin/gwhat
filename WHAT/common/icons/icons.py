@@ -120,6 +120,7 @@ class IconDB(object):
         # ----------------------------------------------- Weather Averages ----
 
         self.showGrid = QIcon(os.path.join(dirname, 'grid'))
+        self.export_data = QIcon(os.path.join(dirname, 'export-data'))
 
 
 class QToolButtonBase(QtGui.QToolButton):

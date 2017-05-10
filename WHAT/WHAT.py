@@ -422,6 +422,7 @@ if __name__ == '__main__':
     try:
         app = QtGui.QApplication(sys.argv)
         print('Starting WHAT...')
+
         main = WHAT()
         main.show()
 

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -41,23 +41,17 @@ from PySide import QtGui, QtCore
 
 # Local imports :
 
-try:
-    import common.database as db
-    from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
-    import common.widgets as myqt
-    from meteo.search_weather_data import WeatherStationDisplayTable
-    from meteo.search_weather_data import Search4Stations
-except ImportError:  # to run this module standalone
+if __name__ == '__main__':
     import sys
     from os.path import dirname, realpath, basename
     print('Running module %s as a standalone script...' % basename(__file__))
     sys.path.append(dirname(dirname(realpath(__file__))))
 
-    import common.database as db
-    from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
-    import common.widgets as myqt
-    from meteo.search_weather_data import WeatherStationDisplayTable
-    from meteo.search_weather_data import Search4Stations
+import common.database as db
+from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+import common.widgets as myqt
+from meteo.search_weather_data import WeatherStationDisplayTable
+from meteo.search_weather_data import Search4Stations
 
 
 # =============================================================================

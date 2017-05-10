@@ -28,12 +28,13 @@ import csv
 import copy
 import sys
 from datetime import date
-# import time
+from time import strftime
 
 # Third party imports :
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
+import xlsxwriter
 
 import numpy as np
 from PySide import QtGui, QtCore
@@ -46,24 +47,23 @@ mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 # Local imports :
 
-for i in range(2):
-    try:
-        import common.database as db
-        from colors2 import ColorsReader
-        from common import IconDB, StyleDB, QToolButtonNormal
-        from common.widgets import DialogWindow
-        break
-    except:
-        import sys
-        from os.path import dirname, realpath, basename
-        print('Running module %s as a script...' % basename(__file__))
-        sys.path.append(dirname(dirname(realpath(__file__))))
+if __name__ == '__main__':
+    import sys
+    from os.path import dirname, realpath, basename
+    print('Running module %s as a standalone script...' % basename(__file__))
+    sys.path.append(dirname(dirname(realpath(__file__))))
+
+import common.database as db
+from colors2 import ColorsReader
+from common import IconDB, StyleDB, QToolButtonNormal
+from common.widgets import DialogWindow
+from _version import __version__
 
 
 # =============================================================================
 
 
-class LabelDataBase(object):
+class LabelDB(object):
 
     def __init__(self, language):
 
@@ -111,60 +111,65 @@ class WeatherAvgGraph(DialogWindow):
     """
     def __init__(self, parent=None):
         super(WeatherAvgGraph, self).__init__(parent)
-        # self.setWindowFlags(QtCore.Qt.Window)
-#        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
 
         self.wxdset = None
-
-        # 2D matrix holding all the weather normals
-        # [TMAX, TMIN, TMEAN, PTOT, {ETP}, {RAIN}]
 
         self.save_fig_dir = os.getcwd()
         self.meteo_dir = os.getcwd()
         self.language = 'English'
 
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self):  # ======================================================
+    # =========================================================================
+
+    def __initUI__(self):
 
         self.setWindowTitle('Weather Averages')
         self.setWindowIcon(IconDB().master)
 
-        # ---------------------------------------------------------- TOOLBAR --
+        # ---------------------------------------------------- TOOLBAR ----
+
+        # Widgets :
+
+        menu_save = QtGui.QMenu()
+        menu_save.addAction('Save normals graph as...', self.save_graph)
+        menu_save.addAction('Save normals table as...', self.save_normals)
 
         btn_save = QToolButtonNormal(IconDB().save)
-        btn_save.setToolTip('Save graph')
-        btn_save.clicked.connect(self.save_graph)
+        btn_save.setToolTip('Save normals')
+        btn_save.setMenu(menu_save)
+        btn_save.setPopupMode(QtGui.QToolButton.InstantPopup)
+        btn_save.setStyleSheet("QToolButton::menu-indicator {image: none;}")
 
-        btn_open = QToolButtonNormal(IconDB().openFile)
-        btn_open.setToolTip("Open a valid '.out' weather data file")
-        btn_open.clicked.connect(self.select_meteo_file)
+        menu_export = QtGui.QMenu()
+        menu_export.addAction('Export daily time series as...',
+                              self.select_export_file)
+        menu_export.addAction('Export monthly time series as...',
+                              self.select_export_file)
+        menu_export.addAction('Export yearly time series as...',
+                              self.select_export_file)
+
+        self.btn_export = QToolButtonNormal(IconDB().export_data)
+        self.btn_export.setToolTip('Export time series')
+        self.btn_export.setPopupMode(QtGui.QToolButton.InstantPopup)
+        self.btn_export.setMenu(menu_export)
+        self.btn_export.setStyleSheet(
+                "QToolButton::menu-indicator {image: none;}")
 
         btn_showStats = QToolButtonNormal(IconDB().showGrid)
         btn_showStats.setToolTip('Show monthly weather normals data table.')
         btn_showStats.clicked.connect(self.show_monthly_grid)
 
-#        self.graph_title = QtGui.QLineEdit()
-#        self.graph_title.setMaxLength(65)
-#        self.graph_title.setEnabled(False)
-#        self.graph_title.setText('Add A Title To The Figure Here')
-#        self.graph_title.setToolTip(ttipDB.addTitle)
-#        self.graph_title.setFixedHeight(StyleDB.size1)
-#
-#        self.graph_status = QtGui.QCheckBox()
-#        self.graph_status.setEnabled(False)
-
-#        separator1 = QtGui.QFrame()
-#        separator1.setFrameStyle(StyleDB.VLine)
+        # Layout :
 
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
 
-        row = 0
         col = 0
+        row = 0
         subgrid_toolbar.addWidget(btn_save, row, col)
         col += 1
-        subgrid_toolbar.addWidget(btn_open, row, col)
+        subgrid_toolbar.addWidget(self.btn_export, row, col)
         col += 1
         subgrid_toolbar.addWidget(btn_showStats, row, col)
         col += 1
@@ -175,7 +180,7 @@ class WeatherAvgGraph(DialogWindow):
 
         toolbar_widget.setLayout(subgrid_toolbar)
 
-        # -------------------------------------------------------- MAIN GRID --
+        # -------------------------------------------------- MAIN GRID ----
 
         # ---- widgets ----
 
@@ -204,7 +209,6 @@ class WeatherAvgGraph(DialogWindow):
     # =========================================================================
 
     def show_monthly_grid(self):
-
         if self.grid_weather_normals.isHidden():
             self.grid_weather_normals.show()
             self.setFixedHeight(self.size().height()+250)
@@ -234,17 +238,20 @@ class WeatherAvgGraph(DialogWindow):
 
         self.grid_weather_normals.populate_table(wxdset['normals'])
 
-    # =========================================================================
+    # ---------------------------------------------------------------------
 
     def save_graph(self):
+        yrmin = np.min(self.wxdset['Year'])
+        yrmax = np.max(self.wxdset['Year'])
+        staname = self.wxdset['Station Name']
 
-        ddir = os.path.join(self.save_fig_dir,
-                            'WeatherAverages_%s' % wxdset['Station Name'])
+        defaultname = 'WeatherAverages_%s (%d-%d)' % (staname, yrmin, yrmax)
+        ddir = os.path.join(self.save_fig_dir, defaultname)
 
         dialog = QtGui.QFileDialog()
         dialog.setConfirmOverwrite(True)
         filename, ftype = dialog.getSaveFileName(
-                caption='Save Figure', dir=ddir, filter='*.pdf;;*.svg')
+                caption='Save graph', dir=ddir, filter='*.pdf;;*.svg')
 
         if filename:
             if filename[-4:] != ftype[1:]:
@@ -254,110 +261,168 @@ class WeatherAvgGraph(DialogWindow):
             self.save_fig_dir = os.path.dirname(filename)
             self.fig_weather_normals.figure.savefig(filename)
 
-            # ---- Save Companion files ----
+    # =========================================================================
 
-            f = 'WeatherAverages_%s.csv' % self.wxdset['Station Name']
-            self.save_normal_table(os.path.join(self.save_fig_dir, f))
+    def save_normals(self):
+        yrmin = np.min(self.wxdset['Year'])
+        yrmax = np.max(self.wxdset['Year'])
+        staname = self.wxdset['Station Name']
 
-            f = 'MonthlySeries_%s.csv' % self.wxdset['Station Name']
-            self.save_monthly_series(os.path.join(self.save_fig_dir, f))
+        defaultname = 'WeatherNormals_%s (%d-%d)' % (staname, yrmin, yrmax)
+        ddir = os.path.join(self.save_fig_dir, defaultname)
 
-    def save_normal_table(self, filename):
+        dialog = QtGui.QFileDialog()
+        dialog.setConfirmOverwrite(True)
+        filename, ftype = dialog.getSaveFileName(caption='Save normals',
+                                                 dir=ddir,
+                                                 filter='*.xlsx;;*.xls;;*.csv')
 
-        NORMALS = self.NORMALS
+        hheader = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
+                   'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']
 
-        # -------------------------------------------- Generate File Content --
+        vrbs = ['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET']
 
-        fcontent = [['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
-                     'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']]
+        lbls = ['Daily Tmin (\u00B0C)', 'Daily Tavg (\u00B0C)',
+                'Daily Tmax (\u00B0C)', 'Rain (mm)', 'Snow (mm)',
+                'Total Precip. (mm)', 'ETP (mm)']
 
-        # ---- Air Temperature ----
+        if ftype in ['*.xlsx', '*.xls']:
+            wb = xlsxwriter.Workbook(filename)
+            ws = wb.add_worksheet()
 
-        Tvar = ['Daily Tmax (degC)', 'Daily Tmin (degC)', 'Daily Tavg (degC)']
-        for i in range(3):
-            fcontent.append([Tvar[i]])
-            # months
-            for j in range(12):
-                fcontent[-1].extend(['%0.1f' % NORMALS[j, i]])
-            # years
-            fcontent[-1].extend(['%0.1f' % np.mean(NORMALS[:, i])])
+            ws.write_row(0, 0, hheader)
+            for i, (vrb, lbl) in enumerate(zip(vrbs, lbls)):
+                ws.write(i+1, 0, lbl)
+                ws.write_row(i+1, 1, self.wxdset['normals'][vrb])
+                if vrb in ['Tmin', 'Tavg', 'Tmax']:
+                    ws.write(i+1, 13, np.mean(self.wxdset['normals'][vrb]))
+                else:
+                    ws.write(i+1, 13, np.sum(self.wxdset['normals'][vrb]))
+        elif ftype == '*.csv':
+            fcontent = [hheader]
+            for i, (vrb, lbl) in enumerate(zip(vrbs, lbls)):
+                fcontent.append([lbl])
+                fcontent[-1].extend(self.wxdset['normals'][vrb].tolist())
+                if vrb in ['Tmin', 'Tavg', 'Tmax']:
+                    fcontent[-1].append(np.mean(self.wxdset['normals'][vrb]))
+                else:
+                    fcontent[-1].append(np.sum(self.wxdset['normals'][vrb]))
 
-        # ---- rain ----
+            with open(filename, 'w', encoding='utf8')as f:
+                writer = csv.writer(f, delimiter=',', lineterminator='\n')
+                writer.writerows(fcontent)
 
-        fcontent.append(['Rain (mm)'])
-        # months
-        for j in range(12):
-            fcontent[-1].extend(['%0.1f' % NORMALS[j, 5]])
-        # year
-        fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 5])])
+    # ================================================= Export Time Series ====
 
-        # ---- snow ----
+    def select_export_file(self):
+        if self.sender() == self.btn_export.menu().actions()[0]:
+            time_frame = 'daily'
+        elif self.sender() == self.btn_export.menu().actions()[1]:
+            time_frame = 'monthly'
+        elif self.sender() == self.btn_export.menu().actions()[2]:
+            time_frame = 'yearly'
+        else:
+            return
 
-        fcontent.append(['Snow (mm)'])
-        # months
-        for j in range(12):
-            snowval = NORMALS[j, 3] - NORMALS[j, 5]
-            fcontent[5].extend(['%0.1f' % snowval])
-        # year
-        fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 3] - NORMALS[:, 5])])
+        staname = self.wxdset['Station Name']
+        defaultname = 'Weather%s_%s' % (time_frame.capitalize(), staname)
 
-        # ---- total precipitation ----
+        ddir = os.path.join(self.save_fig_dir, defaultname)
+        dialog = QtGui.QFileDialog()
+        dialog.setConfirmOverwrite(True)
 
-        fcontent.append(['Total Precip. (mm)'])
-        for j in range(12):
-            fcontent[-1].extend(['%0.1f' % NORMALS[j, 3]])
-        # year
-        fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 3])])
+        filename, ftype = dialog.getSaveFileName(
+                caption='Export %s' % time_frame, dir=ddir,
+                filter='*.xlsx;;*.xls;;*.csv')
 
-        # ---- ETP ----
-
-        fcontent.append(['ETP (mm)'])
-        for j in range(12):
-            fcontent[-1].extend(['%0.1f' % NORMALS[j, 4]])
-        # year
-        fcontent[-1].extend(['%0.1f' % np.sum(NORMALS[:, 4])])
-
-        # ----------------------------------------------------- Save to File --
-
-        with open(filename, 'w')as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(fcontent)
+        if filename:
+            self.export_series_tofile(filename, time_frame)
 
     # ---------------------------------------------------------------------
 
-    def save_monthly_series(self, filename):
-        with open(filename, 'w')as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(self.MTHSER)
-
-    # =========================================================================
-
-    def select_meteo_file(self):
-        filename, _ = QtGui.QFileDialog.getOpenFileName(
-                self, 'Select a valid weather data file', self.meteo_dir,
-                '*.out')
-
-        if filename:
-            self.generate_graph(filename)
-            self.meteo_dir = os.path.dirname(filename)
-
-    # =========================================================================
-
-    def show(self):
-        super(WeatherAvgGraph, self).show()
-        self.raise_()
-        # self.activateWindow()
-
-        qr = self.frameGeometry()
-        if self.parentWidget():
-            wp = self.parentWidget().frameGeometry().width()
-            hp = self.parentWidget().frameGeometry().height()
-            cp = self.parentWidget().mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+    def export_series_tofile(self, filename, time_frame):
+        if time_frame == 'daily':
+            vrbs = ['Year', 'Month', 'Day']
+            lbls = ['Year', 'Month', 'Day']
+        elif time_frame == 'monthly':
+            vrbs = ['Year', 'Month']
+            lbls = ['Year', 'Month']
+        elif time_frame == 'yearly':
+            vrbs = ['Year']
+            lbls = ['Year']
         else:
-            cp = QtGui.QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-        self.setFixedSize(self.size())
+            raise ValueError('"time_frame" must be either "yearly", "monthly" '
+                             ' or "daily".')
+
+        vrbs.extend(['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET'])
+        lbls.extend(['Tmin (\u00B0C)', 'Tavg (\u00B0C)', 'Tmax (\u00B0C)',
+                     'Rain (mm)', 'Snow (mm)', 'Ptot (mm)',
+                     'PET (mm)'])
+
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+
+        startdate = '%02d/%02d/%d' % (self.wxdset['Day'][0],
+                                      self.wxdset['Month'][0],
+                                      self.wxdset['Year'][0])
+        enddate = '%02d/%02d/%d' % (self.wxdset['Day'][-1],
+                                    self.wxdset['Month'][-1],
+                                    self.wxdset['Year'][-1])
+
+        header = [['Station Name', self.wxdset['Station Name']],
+                  ['Province', self.wxdset['Province']],
+                  ['Latitude', self.wxdset['Longitude']],
+                  ['Longitude', self.wxdset['Longitude']],
+                  ['Elevation', self.wxdset['Elevation']],
+                  ['Climate Identifier', self.wxdset['Climate Identifier']],
+                  ['', ''],
+                  ['Start Date ', startdate],
+                  ['End Date ', enddate],
+                  ['', ''],
+                  ['Created by', __version__],
+                  ['Created on', strftime("%d/%m/%Y")],
+                  ['', '']
+                  ]
+
+        root, ext = os.path.splitext(filename)
+        if ext in ['.xlsx', '.xls']:
+            wb = xlsxwriter.Workbook(filename)
+            ws = wb.add_worksheet()
+
+            # ---- header ----
+
+            line = 0
+            for row in header:
+                ws.write_row(line, 0, row)
+                line += 1
+
+            # ---- content ----
+
+            ws.write_row(line, 0, lbls)
+            line += 1
+            for j, vrb in enumerate(vrbs):
+                for i, val in enumerate(self.wxdset[time_frame][vrb]):
+                    if np.isnan(val):
+                        ws.write_string(i+line, j, 'nan')
+                    else:
+                        ws.write_number(i+line, j, val)
+            wb.close()
+        elif ext == '.csv':
+            N = len(self.wxdset[time_frame]['Year'])
+            M = len(vrbs)
+            data = np.zeros((N+1, M)).astype('str')
+
+            data[0, :] = lbls
+            for j, vrb in enumerate(vrbs):
+                data[1:, j] = self.wxdset[time_frame][vrb]
+
+            fcontent = header
+            fcontent.extend(data.tolist())
+            with open(filename, 'w', encoding='utf8')as f:
+                writer = csv.writer(f, delimiter=',', lineterminator='\n')
+                writer.writerows(fcontent)
+            f.close()
+
+        QtGui.QApplication.restoreOverrideCursor()
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -383,7 +448,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.lang = lang
         self.normals = None
 
-        labelDB = LabelDataBase(self.lang)
+        labelDB = LabelDB(self.lang)
         month_names = labelDB.month_names
 
         # --------------------------------------------------- Define Margins --
@@ -550,7 +615,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.plot_legend()
         self.set_axes_labels()
         self.update_yearly_avg()
-        month_names = LabelDataBase(self.lang).month_names
+        month_names = LabelDB(self.lang).month_names
         self.figure.axes[1].xaxis.set_ticklabels(month_names, minor=True)
 
     # ============================================================ Legend =====
@@ -578,7 +643,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # --- legend entry --- #
 
         lines = [ax.lines[0], ax.lines[1], ax.lines[2], rec2, rec1]
-        labelDB = LabelDataBase(self.lang)
+        labelDB = LabelDB(self.lang)
         labels = [labelDB.Tmax, labelDB.Tavg, labelDB.Tmin,
                   labelDB.rain, labelDB.snow]
 
@@ -717,7 +782,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             line.set_clip_box(clip_bbox)
 
     def set_axes_labels(self):
-        labelDB = LabelDataBase(self.lang)
+        labelDB = LabelDB(self.lang)
 
         ax0 = self.figure.axes[1]
         ax0.set_ylabel(labelDB.Plabel, va='bottom', fontsize=16, rotation=270)
@@ -793,7 +858,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax.texts[1].set_position((0, bbox.y0))
 
         # ---- update labels ----
-        labelDB = LabelDataBase(self.lang)
+
+        labelDB = LabelDB(self.lang)
 
         ax.texts[0].set_text(labelDB.Tyrly % np.mean(Tavg_norm))
         ax.texts[1].set_text(labelDB.Pyrly % np.sum(Ptot_norm))
@@ -918,7 +984,7 @@ class GridWeatherNormals(QtGui.QTableWidget):
         self.resizeColumnsToContents()
 
 if __name__ == '__main__':
-    from meteo.read_weather_data import WXDataFrame
+    from meteo.weather_reader import WXDataFrame
     app = QtGui.QApplication(sys.argv)
 
     ft = app.font()

@@ -78,22 +78,34 @@ class WXDataFrame(dict):
         self['Tmin'] = np.array([])
         self['Ptot'] = np.array([])
         self['Rain'] = None
+        self['Snow'] = None
         self['PET'] = None
 
-        self['Monthly Year'] = np.array([])
-        self['Monthly Month'] = np.array([])
-        self['Monthly Tmax'] = np.array([])
-        self['Monthly Tmin'] = np.array([])
-        self['Monthly Tavg'] = np.array([])
-        self['Monthly Ptot'] = np.array([])
-        self['Monthly Rain'] = None
-        self['Monthly PET'] = None
+        self['monthly'] = {'Year': np.array([]),
+                           'Month': np.array([]),
+                           'Tmax': np.array([]),
+                           'Tmin': np.array([]),
+                           'Tavg': np.array([]),
+                           'Ptot': np.array([]),
+                           'Rain': None,
+                           'Snow': None,
+                           'PET': None}
+
+        self['yearly'] = {'Year': np.array([]),
+                          'Tmax': np.array([]),
+                          'Tmin': np.array([]),
+                          'Tavg': np.array([]),
+                          'Ptot': np.array([]),
+                          'Rain': None,
+                          'Snow': None,
+                          'PET': None}
 
         self['normals'] = {'Tmax': np.array([]),
                            'Tmin': np.array([]),
                            'Tavg': np.array([]),
                            'Ptot': np.array([]),
                            'Rain': None,
+                           'Snow': None,
                            'PET': None}
 
         # -------------------------------------------- Import primary data ----
@@ -131,22 +143,34 @@ class WXDataFrame(dict):
         for vbr in ['Tmax', 'Tavg', 'Tmin', 'PET']:
             self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'interp')
 
-        for vbr in ['Ptot', 'Rain']:
+        for vbr in ['Ptot', 'Rain', 'Snow']:
             self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'zeros')
 
         # ---------------------------------------------- monthly & normals ----
 
+        # Temperature based variables:
+
         for vrb in ['Tmax', 'Tmin', 'Tavg']:
-            key = 'Monthly %s' % vrb
+            x = calc_yearly_mean(self['Year'], self[vrb])
+            self['yearly'][vrb] = x[1]
+
             x = calc_monthly_mean(self['Year'], self['Month'], self[vrb])
-            self[key] = x[2]
-            self['normals'][vrb] = calcul_normals_from_monthly(x[1], x[2])
+            self['monthly'][vrb] = x[2]
+
+            self['normals'][vrb] = calcul_monthly_normals(x[1], x[2])
+
+        # Precipitation :
+
+        x = calc_yearly_sum(self['Year'], self['Ptot'])
+        self['yearly']['Ptot'] = x[1]
+        self['yearly']['Year'] = x[0]
 
         x = calc_monthly_sum(self['Year'], self['Month'], self['Ptot'])
-        self['Monthly Ptot'] = x[2]
-        self['Monthly Year'] = x[0]
-        self['Monthly Month'] = x[1]
-        self['normals']['Ptot'] = calcul_normals_from_monthly(x[1], x[2])
+        self['monthly']['Ptot'] = x[2]
+        self['monthly']['Year'] = x[0]
+        self['monthly']['Month'] = x[1]
+
+        self['normals']['Ptot'] = calcul_monthly_normals(x[1], x[2])
 
         # ------------------------------------------------- secondary vrbs ----
 
@@ -157,9 +181,27 @@ class WXDataFrame(dict):
                     self['Tavg'], self['Ptot'], Tcrit=0)
             print('Rain estimated from Ptot.')
 
+        x = calc_yearly_sum(self['Year'], self['Rain'])
+        self['yearly']['Rain'] = x[1]
+
         x = calc_monthly_sum(self['Year'], self['Month'], self['Rain'])
-        self['Monthly Rain'] = x[2]
-        self['normals']['Rain'] = calcul_normals_from_monthly(x[1], x[2])
+        self['monthly']['Rain'] = x[2]
+
+        self['normals']['Rain'] = calcul_monthly_normals(x[1], x[2])
+
+        # ---- Snow ----
+
+        if self['Snow'] is None:
+            self['Snow'] = self['Ptot'] - self['Rain']
+            print('Snow estimated from Ptot.')
+
+        x = calc_yearly_sum(self['Year'], self['Snow'])
+        self['yearly']['Snow'] = x[1]
+
+        x = calc_monthly_sum(self['Year'], self['Month'], self['Snow'])
+        self['monthly']['Snow'] = x[2]
+
+        self['normals']['Snow'] = calcul_monthly_normals(x[1], x[2])
 
         # ---- Potential Evapotranspiration ----
 
@@ -171,11 +213,28 @@ class WXDataFrame(dict):
             self['PET'] = calcul_Thornthwaite(dates, Tavg, lat, Ta)
             print('Potential evapotranspiration evaluated with Thornthwaite.')
 
+        x = calc_yearly_sum(self['Year'], self['PET'])
+        self['yearly']['PET'] = x[1]
+
         x = calc_monthly_sum(self['Year'], self['Month'], self['PET'])
-        self['Monthly PET'] = x[2]
-        self['normals']['PET'] = calcul_normals_from_monthly(x[1], x[2])
+        self['monthly']['PET'] = x[2]
+
+        self['normals']['PET'] = calcul_monthly_normals(x[1], x[2])
 
         print('-'*78)
+
+    # =========================================================================
+
+    def __getitem__(self, key):
+        if key == 'daily':
+            vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
+                    'Rain', 'Snow', 'Ptot', 'PET']
+            x = {}
+            for vrb in vrbs:
+                x[vrb] = self[vrb]
+            return x
+        else:
+            return super(WXDataFrame, self).__getitem__(key)
 
 
 # =============================================================================
@@ -201,6 +260,7 @@ def read_weather_datafile(filename):
           'Tmin': np.array([]),
           'Ptot': np.array([]),
           'Rain': None,
+          'Snow': None,
           'PET': None,
           'Monthly Year': np.array([]),
           'Monthly Month': np.array([]),
@@ -209,6 +269,7 @@ def read_weather_datafile(filename):
           'Monthly Tavg': np.array([]),
           'Monthly Ptot': np.array([]),
           'Monthly Rain': None,
+          'Monthly Snow': None,
           'Monthly PET': None
           }
 
@@ -266,6 +327,12 @@ def read_weather_datafile(filename):
         print('Rain data imported from datafile.')
     except ValueError:
         print('No rain in datafile.')
+
+    try:
+        df['Snow'] = data[:, var.index('Snow (mm)')]
+        print('Snow data imported from datafile.')
+    except ValueError:
+        print('No snow in datafile.')
 
     return df
 
@@ -453,7 +520,7 @@ def add_ETP_to_weather_data_file(filename):
 
     Tavg = data[:, vrbs.index('Mean Temp (deg C)')]
     x = calc_monthly_mean(Year, Month, Tavg)
-    Ta = calcul_normals_from_monthly(x[1], x[2])
+    Ta = calcul_monthly_normals(x[1], x[2])
 
     PET = calcul_Thornthwaite(Dates, Tavg, lat, Ta)
 
@@ -482,7 +549,7 @@ def add_ETP_to_weather_data_file(filename):
     print('ETP time series added successfully to %s' % filename)
 
 
-# =========================================================================
+# =============================================================================
 
 
 def calcul_rain_from_ptot(Tavg, Ptot, Tcrit=0):
@@ -519,11 +586,31 @@ def calc_monthly(yy_dly, mm_dly, x_dly, func):
 
     return yy_mly, mm_mly, x_mly
 
+# -------------------------------------------------------------------------
+
+
+def calc_yearly_sum(yy_dly, x_dly):
+    return calc_yearly(yy_dly, x_dly, np.sum)
+
+
+def calc_yearly_mean(yy_dly, x_dly):
+    return calc_yearly(yy_dly, x_dly, np.mean)
+
+
+def calc_yearly(yy_dly, x_dly, func):
+    yy_yrly = np.unique(yy_dly)
+    x_yrly = np.zeros(len(yy_yrly))
+    for i in range(len(yy_yrly)):
+        indx = np.where(yy_dly == yy_yrly[i])[0]
+        x_yrly[i] = func(x_dly[indx])
+
+    return yy_yrly, x_yrly
+
 
 # =============================================================================
 
 
-def calcul_normals_from_monthly(mm_mly, x_mly):
+def calcul_monthly_normals(mm_mly, x_mly):
     x_norm = np.zeros(12)
     for i, mm in enumerate(range(1, 13)):
         indx = np.where((mm_mly == mm) & (~np.isnan(x_mly)))[0]

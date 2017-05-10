@@ -114,9 +114,8 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_draw.setToolTip('Force a refresh of the well hydrograph')
 
         btn_weather_normals = QToolButtonNormal(IconDB().meteo)
-        btn_weather_normals.setToolTip('<p>Plot the yearly and monthly'
-                                       ' averages for the Weather Data File'
-                                       ' currently selected.</p>')
+        btn_weather_normals.setToolTip(
+                'Show current weather dataset normals...')
 
         self.btn_work_waterlvl = QToolButtonNormal(IconDB().toggleMode)
         self.btn_work_waterlvl.setToolTip('Toggle between layout and '
@@ -1124,11 +1123,13 @@ class PageSetupWin(QtGui.QWidget):
 
         self.setLayout(main_layout)
 
-    def btn_OK_isClicked(self):  # ============================================
+    # =========================================================================
+
+    def btn_OK_isClicked(self):
         self.btn_apply_isClicked()
         self.close()
 
-    def btn_apply_isClicked(self):  # =========================================
+    def btn_apply_isClicked(self):
         self.pageSize = (self.fwidth.value(), self.fheight.value())
         self.isLegend = self.legend_on.isChecked()
         self.isGraphTitle = self.title_on.isChecked()
@@ -1137,7 +1138,9 @@ class PageSetupWin(QtGui.QWidget):
 
         self.newPageSetupSent.emit(True)
 
-    def closeEvent(self, event):  # ===========================================
+    # =========================================================================
+
+    def closeEvent(self, event):
         super(PageSetupWin, self).closeEvent(event)
 
         # ---- Refresh UI ----
@@ -1165,7 +1168,9 @@ class PageSetupWin(QtGui.QWidget):
         else:
             self.trend_off.toggle()
 
-    def show(self):  # ========================================================
+    # =========================================================================
+
+    def show(self):
         super(PageSetupWin, self).show()
         self.activateWindow()
         self.raise_()
@@ -1176,13 +1181,17 @@ class PageSetupWin(QtGui.QWidget):
 
             wp = parent.frameGeometry().width()
             hp = parent.frameGeometry().height()
-            cp = parent.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+            cp = parent.mapToGlobal(QtCore.QPoint(wp/2, hp/2))
         else:
             cp = QtGui.QDesktopWidget().availableGeometry().center()
 
         qr.moveCenter(cp)
         self.move(qr.topLeft())
         self.setFixedSize(self.size())
+
+
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
 
 if __name__ == '__main__':
     from projet.manager_data import DataManager
@@ -1196,9 +1205,11 @@ if __name__ == '__main__':
 
     pf = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
     pr = ProjetReader(pf)
-    dm = DataManager(projet=pr)
+    dm = DataManager()
 
     Hydroprint = HydroprintGUI(dm)
     Hydroprint.show()
+
+    dm.set_projet(pr)
 
     sys.exit(app.exec_())

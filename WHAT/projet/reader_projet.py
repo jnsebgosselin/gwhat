@@ -248,29 +248,25 @@ class ProjetReader(object):
         grp.create_dataset('Tmin', data=df['Tmin'])
         grp.create_dataset('Ptot', data=df['Ptot'])
         grp.create_dataset('Rain', data=df['Rain'])
+        grp.create_dataset('Snow', data=df['Snow'])
         grp.create_dataset('PET', data=df['PET'])
-
-        grp.create_dataset('Monthly Year', data=df['Monthly Year'])
-        grp.create_dataset('Monthly Month', data=df['Monthly Month'])
-        grp.create_dataset('Monthly Tmax', data=df['Monthly Tmax'])
-        grp.create_dataset('Monthly Tmin', data=df['Monthly Tmin'])
-        grp.create_dataset('Monthly Tavg', data=df['Monthly Tavg'])
-        grp.create_dataset('Monthly Ptot', data=df['Monthly Ptot'])
-        grp.create_dataset('Monthly Rain', data=df['Monthly Rain'])
-        grp.create_dataset('Monthly PET', data=df['Monthly PET'])
-
-        grp_norm = grp.create_group('normals')
-        grp_norm.create_dataset('Tmax', data=df['normals']['Tmax'])
-        grp_norm.create_dataset('Tmin', data=df['normals']['Tmin'])
-        grp_norm.create_dataset('Tavg', data=df['normals']['Tavg'])
-        grp_norm.create_dataset('Ptot', data=df['normals']['Ptot'])
-        grp_norm.create_dataset('Rain', data=df['normals']['Rain'])
-        grp_norm.create_dataset('PET', data=df['normals']['PET'])
 
         grp.create_dataset('Missing Tmax', data=df['Missing Tmax'])
         grp.create_dataset('Missing Tmin', data=df['Missing Tmin'])
         grp.create_dataset('Missing Tavg', data=df['Missing Tavg'])
         grp.create_dataset('Missing Ptot', data=df['Missing Ptot'])
+
+        grp_yrly = grp.create_group('yearly')
+        for vbr in df['yearly'].keys():
+            grp_yrly.create_dataset(vbr, data=df['yearly'][vbr])
+
+        grp_mtly = grp.create_group('monthly')
+        for vbr in df['monthly'].keys():
+            grp_mtly.create_dataset(vbr, data=df['monthly'][vbr])
+
+        grp_norm = grp.create_group('normals')
+        for vbr in df['normals'].keys():
+            grp_norm.create_dataset(vbr, data=df['normals'][vbr])
 
         print('New dataset created sucessfully')
 
@@ -354,14 +350,17 @@ class WXDataFrameHDF5(dict):
     def __getitem__(self, key):
         if key in list(self.dset.attrs.keys()):
             return self.dset.attrs[key]
-        elif key == 'normals':
-            grp = self.dset['normals']
-            x = {'Tmax': grp['Tmax'].value,
-                 'Tmin': grp['Tmin'].value,
-                 'Tavg': grp['Tavg'].value,
-                 'Ptot': grp['Ptot'].value,
-                 'Rain': grp['Rain'].value,
-                 'PET': grp['PET'].value}
+        elif key in ['normals', 'yearly', 'monthly']:
+            x = {}
+            for vrb in self.dset[key].keys():
+                x[vrb] = self.dset[key][vrb].value
+            return x
+        elif key == 'daily':
+            vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
+                    'Rain', 'Snow', 'Ptot', 'PET']
+            x = {}
+            for vrb in vrbs:
+                x[vrb] = self.dset[vrb].value
             return x
         else:
             return self.dset[key].value
@@ -370,10 +369,10 @@ class WXDataFrameHDF5(dict):
     def name(self):
         return os.path.basename(self.dset.name)
 
-    # def __setitem__(self, key, val):
-    #    dict.__setitem__(self, key, val)
-
 
 if __name__ == '__main__':
     f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
     pr = ProjetReader(f)
+    wxdset = pr.get_wxdset('FARNHAM')
+    print(wxdset['normals'].keys())
+
