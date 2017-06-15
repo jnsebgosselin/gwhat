@@ -26,11 +26,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+print('Starting WHAT...')
+
+from PySide import QtGui, QtCore
+import sys
+
+app = QtGui.QApplication(sys.argv)
+
+splash = QtGui.QSplashScreen(
+        QtGui.QPixmap('ressources/splash.png'),
+        QtCore.Qt.WindowStaysOnTopHint)
+splash.show()
 
 import platform
-import csv
 import os
+import numpy as np
+
+ft = app.font()
+ft.setPointSize(11)
+if platform.system() == 'Windows':
+    ft.setFamily('Segoe UI')
+app.setFont(ft)
+
+splash.showMessage("Starting WHAT, please wait ...",
+                   QtCore.Qt.AlignBottom | QtCore.Qt.AlignCenter)
+
+# Standard library imports :
+
+import csv
 from time import ctime
 from os import makedirs, path
 
@@ -38,10 +61,6 @@ from multiprocessing import freeze_support
 import tkinter
 import tkinter.filedialog
 import tkinter.messagebox
-
-# Third party imports :
-
-from PySide import QtGui, QtCore
 
 # Local imports :
 
@@ -216,25 +235,11 @@ class WHAT(QtGui.QMainWindow):
     # =========================================================================
 
     def show(self):
-
-        # Silently show :
-
-        self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, True)
         super(WHAT, self).show()
-
-        # place main window when not maximize and hide window :
-
         qr = self.frameGeometry()
         cp = QtGui.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-
-        super(WHAT, self).close()
-        self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, False)
-
-        # Show :
-
-        super(WHAT, self).show()
 
     # =========================================================================
 
@@ -413,24 +418,14 @@ class TabBar(QtGui.QTabBar):
 
 
 if __name__ == '__main__':
-
-    import sys
     import logging
 
     logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s:%(message)s')
     try:
-        app = QtGui.QApplication(sys.argv)
-        print('Starting WHAT...')
-
         main = WHAT()
         main.show()
-
-        ft = app.font()
-        ft.setFamily('Segoe UI')
-        ft.setPointSize(11)
-        app.setFont(ft)
-
+        splash.finish(main)
         sys.exit(app.exec_())
     except Exception as e:
         logging.exception(str(e))
