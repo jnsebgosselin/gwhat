@@ -201,8 +201,6 @@ class NewProject(QtGui.QDialog):
         locaCoord_title = QtGui.QLabel('<b>Project Location Coordinates:</b>')
         locaCoord_title.setAlignment(QtCore.Qt.AlignLeft)
 
-        label_Lon2 = QtGui.QLabel('West')
-
         self.Lat_SpinBox = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
         self.Lat_SpinBox.setRange(0, 180)
 
@@ -325,42 +323,39 @@ class NewProject(QtGui.QDialog):
 
         # ---- Create Files and Folders ----
 
-        try:
-            os.makedirs(dirname)
+        os.makedirs(dirname)
 
-            # ---- folder architecture ----
+        # ---- folder architecture ----
 
-            folders = [os.path.join(dirname, 'Meteo', 'Raw'),
-                       os.path.join(dirname, 'Meteo', 'Input'),
-                       os.path.join(dirname, 'Meteo', 'Output'),
-                       os.path.join(dirname, 'Water Levels')]
+        folders = [os.path.join(dirname, 'Meteo', 'Raw'),
+                   os.path.join(dirname, 'Meteo', 'Input'),
+                   os.path.join(dirname, 'Meteo', 'Output'),
+                   os.path.join(dirname, 'Water Levels')]
 
-            for f in folders:
-                if not os.path.exists(f):
-                    os.makedirs(f)
+        for f in folders:
+            if not os.path.exists(f):
+                os.makedirs(f)
 
-            # ---- project.what ----
+        # ---- project.what ----
 
-            fname = os.path.join(dirname, '%s.what' % name)
-            projet = ProjetReader(fname)
+        fname = os.path.join(dirname, '%s.what' % name)
 
-            projet.name = self.name.text()
-            projet.author = self.author.text()
-            projet.created = self.date.text()
-            projet.modified = self.date.text()
-            projet.version = self.createdby.text()
-            projet.lat = self.Lat_SpinBox.value()
-            projet.lon = self.Lon_SpinBox.value()
+        projet = ProjetReader(fname)
+        projet.name = self.name.text()
+        projet.author = self.author.text()
+        projet.created = self.date.text()
+        projet.modified = self.date.text()
+        projet.version = self.createdby.text()
+        projet.lat = self.Lat_SpinBox.value()
+        projet.lon = self.Lon_SpinBox.value()
 
-            del projet
+        del projet
 
-            print('Creating file %s.what' % name)
-            print('---------------')
+        print('Creating file %s.what' % name)
+        print('---------------')
 
-            self.close()
-            self.NewProjectSignal.emit(fname)
-        except:
-            raise
+        self.close()
+        # self.NewProjectSignal.emit(fname)
 
     def browse_saveIn_folder(self):
         folder = QtGui.QFileDialog.getExistingDirectory(
@@ -418,7 +413,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pm = ProjetManager(projet=f)
+    pm = ProjetManager(projet=None)
     pm.show()
 
     dm = DataManager(pm=pm)
