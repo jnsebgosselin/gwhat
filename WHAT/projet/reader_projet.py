@@ -56,12 +56,7 @@ class ProjetReader(object):
         print('\nLoading "%s"...' % os.path.basename(filename))
 
         try:
-            # The condition below is required to circumvent a bug of h5py
-            # https://github.com/h5py/h5py/issues/896
-            if os.path.exists(filename):
-                self.__db = h5py.File(filename, mode='a')
-            else:
-                self.__db = h5py.File(filename, mode='w')
+            self.__db = h5py.File(filename, mode='a')
         except:
             self.convert_projet_format(filename)
 
@@ -376,5 +371,8 @@ class WXDataFrameHDF5(dict):
 
 
 if __name__ == '__main__':
-    f = 'C:/Users/jnsebgosselin/Desktop/testé/testé.what'
+    f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
     pr = ProjetReader(f)
+    wxdset = pr.get_wxdset('FARNHAM')
+    print(wxdset['normals'].keys())
+
