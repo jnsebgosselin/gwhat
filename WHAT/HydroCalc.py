@@ -1438,12 +1438,12 @@ class ConfigBRF(myqt.DialogWindow):
         self._bplag = {}
         self._bplag['label'] = QtGui.QLabel('Number of BP Lags :')
         self._bplag['widget'] = myqt.QDoubleSpinBox(300, 0)
-        self._bplag['widget'].setMinimum(1)
+        self._bplag['widget'].setRange(1, 9999)
 
         self._etlag = {}
         self._etlag['label'] = QtGui.QLabel('Number of ET Lags :')
         self._etlag['widget'] = myqt.QDoubleSpinBox(300, 0)
-        self._etlag['widget'].setMinimum(-1)
+        self._etlag['widget'].setRange(-1, 9999)
 
         self._detrend = QtGui.QCheckBox('Detrend')
         self._detrend.setCheckState(QtCore.Qt.Checked)

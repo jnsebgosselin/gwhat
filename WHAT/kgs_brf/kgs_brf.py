@@ -29,7 +29,6 @@ import csv
 import numpy as np
 import matplotlib.pyplot as plt
 from xlrd import xldate_as_tuple
-from PySide import QtGui, QtCore
 
 # Local imports :
 try:
