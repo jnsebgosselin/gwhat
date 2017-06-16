@@ -548,6 +548,7 @@ class NewWaterLvl(NewDataset):
         self._lon.setRange(-180, 180)
 
         self._alt = myqt.QDoubleSpinBox(0, 3, 0.1, ' m')
+        self._alt.setRange(-9999, 9999)
 
         self._mun = QtGui.QLineEdit()
         self._mun.setAlignment(QtCore.Qt.AlignCenter)
