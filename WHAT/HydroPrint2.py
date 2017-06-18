@@ -549,7 +549,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         fname = os.path.join(self.workdir, 'waterlvl_manual_measurements.xls')
         tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
-        wldset.write_wlmeas(tmeas, wlmeas)
+        wldset.set_wlmeas(tmeas, wlmeas)
 
         # Update Graph of "Compute" Mode :
         self.hydrocalc.set_wldset(wldset)

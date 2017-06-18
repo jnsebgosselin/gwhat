@@ -51,7 +51,7 @@ class SynthHydrograph(object):
         self.wxdset = None
         self.ETP, self.PTOT, self.TAVG = [], [], []
 
-        self.waterlvlObj = WaterlvlData()
+        self.wldset = None
         self.A, self.B = None, None
 
         self.twlvl = []
@@ -105,13 +105,13 @@ class SynthHydrograph(object):
 
     # =========================================================================
 
-    def load_data(self, fmeteo, fwaterlvl):
+    def load_data(self, wxdset, wldset):
 
         # ---- Load Data ----
 
         print('--------')
 
-        self.wxdset = wxrd.WXDataFrame(fmeteo)
+        self.wxdset = wxdset
 
         # Includes the estimation of ETP if not already present in file.
 
@@ -121,11 +121,11 @@ class SynthHydrograph(object):
 
         print('--------')
 
-        self.waterlvlObj.load(fwaterlvl)
+        self.wldset = wldset
 
-        self.A, self.B = self.waterlvlObj.A, self.waterlvlObj.B
-        self.twlvl, self.WLVLobs = self.make_data_daily(self.waterlvlObj.time,
-                                                        self.waterlvlObj.lvl)
+        self.A, self.B = wldset['mrc']
+        self.twlvl, self.WLVLobs = self.make_data_daily(wldset['Time'],
+                                                        wldset['WL'])
         self.NaNindx = np.where(~np.isnan(self.WLVLobs))
 
         print('--------')
@@ -286,7 +286,6 @@ class SynthHydrograph(object):
         return (np.mean((Xobs - Xpre)**2))**0.5
 
     def calc_recharge(self):
-
         data = np.load('GLUE.npy').item()
         rechg = np.array(data['recharge'])
         RMSE = np.array(data['RMSE'])
@@ -353,13 +352,20 @@ class SynthHydrograph(object):
         dataset = {}
         dataset['RMSE'] = set_RMSE
         dataset['recharge'] = set_RECHG
+        dataset['etr'] = set_etr
+        dataset['ru'] = set_ru
+
+        dataset['twlvl'] = self.twlvl
         dataset['hydrograph'] = set_WLVL
 
         dataset['Sy'] = set_Sy
         dataset['RASmax'] = set_RASmax
         dataset['Cru'] = set_Cru
+        dataset['deltat'] = self.deltat
 
         dataset['Time'] = self.wxdset['Time']
+        dataset['Year'] = self.wxdset['Year']
+        dataset['Month'] = self.wxdset['Month']
         dataset['Weather'] = {'Tmax': self.wxdset['Tmax'],
                               'Tmin': self.wxdset['Tmin'],
                               'Tavg': self.wxdset['Tavg'],
@@ -367,11 +373,6 @@ class SynthHydrograph(object):
                               'Rain': self.wxdset['Rain'],
                               'PET': self.wxdset['PET']
                               }
-        dataset['twlvl'] = self.twlvl
-        dataset['etr'] = set_etr
-        dataset['ru'] = set_ru
-
-        dataset['deltat'] = self.deltat
 
         np.save('GLUE.npy', dataset)
 

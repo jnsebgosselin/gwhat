@@ -543,7 +543,7 @@ class Hydrograph(mpl.figure.Figure):
 
             # ---- Manual Measures ----
 
-            TIMEmes, WLmes = self.wldset.get_write_wlmeas()
+            TIMEmes, WLmes = self.wldset.get_wlmeas()
             if len(TIMEmes) > 0:
                 lg_handles.append(self.h_WLmes)
                 lg_labels.append(labelDB[7])
@@ -901,7 +901,7 @@ class Hydrograph(mpl.figure.Figure):
 
         # -------------------------------------------------- Manual Measures --
 
-        TIMEmes, WLmes = self.wldset.get_write_wlmeas()
+        TIMEmes, WLmes = self.wldset.get_wlmeas()
         if len(WLmes) > 0:
             if self.WLdatum == 1:   # masl
                 WLmes = self.wldset['Elevation']-WLmes

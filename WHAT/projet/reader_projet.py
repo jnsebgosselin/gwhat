@@ -191,30 +191,45 @@ class ProjetReader(object):
             return None
 
     def add_wldset(self, name, df):
-        grp = self.db['wldsets'].create_group(name)
+        try:
+            grp = self.db['wldsets'].create_group(name)
 
-        grp.create_dataset('Time', data=df['Time'])
-        grp.create_dataset('WL', data=df['WL'])
-        grp.create_dataset('BP', data=df['BP'])
-        grp.create_dataset('ET', data=df['ET'])
+            # ---- Data ----
 
-        grp.attrs['filename'] = df['filename']
-        grp.attrs['Well'] = df['Well']
-        grp.attrs['Latitude'] = df['Latitude']
-        grp.attrs['Longitude'] = df['Longitude']
-        grp.attrs['Elevation'] = df['Elevation']
-        grp.attrs['Municipality'] = df['Municipality']
+            grp.create_dataset('Time', data=df['Time'])
+            grp.create_dataset('WL', data=df['WL'])
+            grp.create_dataset('BP', data=df['BP'])
+            grp.create_dataset('ET', data=df['ET'])
 
-        grp.create_group('brf')
-        grp.create_group('layout')
+            # ---- Well info ----
 
-        mmeas = grp.create_group('manual')
-        mmeas.create_dataset('Time', data=np.array([]), maxshape=None)
-        mmeas.create_dataset('WL', data=np.array([]), maxshape=None)
+            grp.attrs['filename'] = df['filename']
+            grp.attrs['Well'] = df['Well']
+            grp.attrs['Latitude'] = df['Latitude']
+            grp.attrs['Longitude'] = df['Longitude']
+            grp.attrs['Elevation'] = df['Elevation']
+            grp.attrs['Municipality'] = df['Municipality']
 
-        print('New dataset created sucessfully')
+            # ---- MRC ----
 
-        self.db.flush()
+            grp.attrs['mrc'] = (0, 0)
+
+            # ---- BRF ----
+
+            grp.create_group('brf')
+            grp.create_group('layout')
+
+            # ---- Manual measurements ----
+
+            mmeas = grp.create_group('manual')
+            mmeas.create_dataset('Time', data=np.array([]), maxshape=None)
+            mmeas.create_dataset('WL', data=np.array([]), maxshape=None)
+
+            self.db.flush()
+
+            print('New dataset created sucessfully')
+        except:
+            del self.db['wldsets'][name]
 
         return WLDataFrameHDF5(grp)
 
@@ -286,7 +301,9 @@ class ProjetReader(object):
 
 class WLDataFrameHDF5(dict):
     # This is a wrapper around the h5py group that is used to store
-    # water level datasets.
+    # water level datasets. It mimick the structure of the DataFrame that
+    # is returned when loading water level dataset from an Excel file in
+    # reader_waterlvl module.
     def __init__(self, dset, *args, **kwargs):
         super(WLDataFrameHDF5, self).__init__(*args, **kwargs)
         self.dset = dset
@@ -303,13 +320,20 @@ class WLDataFrameHDF5(dict):
 
     # =========================================================================
 
-    def write_wlmeas(self, time, wl):
+    # manual measure get/set functions
+
+    def set_wlmeas(self, time, wl):
         self.dset['manual/Time'][:] = time
         self.dset['manual/WL'][:] = wl
 
-    def get_write_wlmeas(self):
+    def get_wlmeas(self):
         grp = self.dset.require_group('manual')
         return grp['Time'].value, grp['WL'].value
+
+    # =========================================================================
+
+    def set_mrc(self, B, A=0):
+        self.dset['mrc'][:] = (A, B)
 
     # =========================================================================
 

@@ -550,7 +550,7 @@ class WLCalc(myqt.DialogWindow):
 
         for i in range(len(tb)):
             close = np.isclose(tb[i], time, rtol=0, atol=10**-6)
-            indx = np.where(close == True)[0][0]
+            indx = np.where(close == True)[0][0]  #analysis:ignore
             self.peak_indx[i] = indx
 
         # ---- Recalculate and Plot Results ----
@@ -598,7 +598,7 @@ class WLCalc(myqt.DialogWindow):
         A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx,
                                   self.MRC_type.currentIndex())
 
-        print(A, B)
+        print('MRC Parameters: A=%f, B=%f' % (A, B))
         if A is None:
             QtGui.QApplication.restoreOverrideCursor()
             return
@@ -620,6 +620,8 @@ class WLCalc(myqt.DialogWindow):
         self.draw()
 
         # Store results in class attributes :
+
+        self.wldset.set_mrc(B, A)
 
         self.A = A
         self.B = B
@@ -1830,9 +1832,10 @@ def local_extrema(x, Deltan):
 #    # x(ni) is not included in the partition of scale Deltan
 #    nj1 = np.abs(n_j[0])
 #    if nj1 > ni:
-#        if n1[nj1] > ni: # the boundary ni is not included in the plateau
-#                         # containing the first local extremum at n_j[1] and it
-#                         # is added as an additional local extremum ([ATE] p. 83)
+#        if n1[nj1] > ni:
+    # the boundary ni is not included in the plateau
+    # containing the first local extremum at n_j[1] and it
+    # is added as an additional local extremum ([ATE] p. 83)
 #            n_j = np.hstack((-np.sign(n_j[0]) * ni, n_j))
 #            Jest += 1
 #
@@ -2448,14 +2451,9 @@ class RechgSetupWin(myqt.DialogWindow):
 
         plt.close('all')
 
-        fmeteo = self.parent().meteo_data.filename
-        fwaterlvl = self.parent().waterLvl_data.wlvlFilename
-
-        print(fmeteo)
-        print(fwaterlvl)
-
         sh = SynthHydrograph()
-        sh.load_data(fmeteo, fwaterlvl)
+
+        # ---- Parameter ranges ----
 
         Sy = self.get_Range('Sy')
         RASmax = self.get_Range('RASmax')
@@ -2463,22 +2461,23 @@ class RechgSetupWin(myqt.DialogWindow):
 
         sh.TMELT = self.Tmelt
         sh.CM = self.CM
-
         sh.deltat = self.deltaT
+
+        print(self.parent().A, self.parent().B)
 
         # ---- Calculations ----
 
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
-        # sh.load_data(fmeteo, fwaterlvl)
-        # sh.GLUE(Sy, RASmax, Cro, res='fine')
+        sh.load_data(self.parent().wxdset, self.parent().wldset)
+        sh.GLUE(Sy, RASmax, Cro, res='rough')
 
         QtGui.QApplication.restoreOverrideCursor()
 
         sh.calc_recharge()
         sh.initPlot()
         sh.plot_prediction()
-        plot_rechg_GLUE('English', deltat=self.deltaT, yrs_range=[1995, 2015])
+        plot_rechg_GLUE('English')
 
         plt.show()
 

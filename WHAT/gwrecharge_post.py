@@ -49,18 +49,21 @@ def calcul_glue(p, yrs_range=None):
     # --------------------------------------------------------- Fetch Data ----
 
     data = np.load('GLUE.npy').item()
+
+
+
     rechg = np.array(data['recharge'])
     etr = np.array(data['etr'])
     ru = np.array(data['ru'])
     hydro = np.array(data['hydrograph'])
     RMSE = np.array(data['RMSE'])
-    TIME = np.array(data['Time'])
-    WEATHER = np.array(data['Weather'])
-    YEARS = WEATHER[:, 0].astype(int)
-    MONTHS = WEATHER[:, 1].astype(int)
-    PTOT = WEATHER[:, 6].astype(float)
-    deltat = data['deltat']
 
+    TIME = np.array(data['Time'])
+    YEARS = np.array(data['Year']).astype(int)
+    MONTHS = np.array(data['Month']).astype(int)
+    PTOT = np.array(data['Weather']['Ptot']).astype(int)
+
+    deltat = data['deltat']
     Sy = np.array(data['Sy'])
     RASmax = np.array(data['RASmax'])
     Cru = np.array(data['Cru'])
@@ -152,18 +155,20 @@ def write_GLUE50_budget(yrs_range=None):
 
 def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
     data = np.load('GLUE.npy').item()
-    rechg = np.array(data['recharge'])
+
+    rechg =  np.array(data['recharge'])
     etr = np.array(data['etr'])
     ru = np.array(data['ru'])
     hydro = np.array(data['hydrograph'])
+
     RMSE = np.array(data['RMSE'])
     TIME = np.array(data['Time'])
-    WEATHER = np.array(data['Weather'])
-    YEARS = WEATHER[:, 0].astype(int)
-    MONTHS = WEATHER[:, 1].astype(int)
-    PTOT = WEATHER[:, 6].astype(float)
-    deltat = data['deltat']
 
+    YEARS = np.array(data['Year']).astype(int)
+    MONTHS = np.array(data['Month']).astype(int)
+    PTOT = np.array(data['Weather']['Ptot']).astype(float)
+
+    deltat = data['deltat']
     Sy = np.array(data['Sy'])
     RASmax = np.array(data['RASmax'])
     Cru = np.array(data['Cru'])
@@ -681,9 +686,9 @@ def main():
 
 #    plot_water_budget_yearly(years, ptot, rechg[:, 2], etr[:, 2], ru[:, 2],
 #                             language='French')
-    plot_water_budget_yearly2(years, ptot, rechg[:, 2], etr[:, 2], ru[:, 2],
-                              language='English')
-#    plot_rechg_GLUE('French', yrs_range=[2000, 2016])
+#    plot_water_budget_yearly2(years, ptot, rechg[:, 2], etr[:, 2], ru[:, 2],
+#                              language='English')
+    plot_rechg_GLUE('French', yrs_range=[2000, 2016])
 
 if __name__ == '__main__':
     plt.rc('font', family='Arial')

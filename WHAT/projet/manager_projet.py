@@ -355,7 +355,7 @@ class NewProject(QtGui.QDialog):
         print('---------------')
 
         self.close()
-        # self.NewProjectSignal.emit(fname)
+        self.NewProjectSignal.emit(fname)
 
     def browse_saveIn_folder(self):
         folder = QtGui.QFileDialog.getExistingDirectory(

@@ -532,7 +532,7 @@ class Search4Stations(QtGui.QWidget):
                 with open('url.txt', 'w') as local_file:
                     local_file.write(stnresults)
 
-            #-- Number of Stations Found --
+            # ---- Number of Stations Found ----
 
             if self.tab_widg.currentIndex() == 0:
                 txt2find = 'stations found within a search radius'
