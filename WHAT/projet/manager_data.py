@@ -653,6 +653,7 @@ class NewWaterLvl(NewDataset):
             self._lat.setValue(self._dataset['Latitude'])
             self._lon.setValue(self._dataset['Longitude'])
             self._alt.setValue(self._dataset['Elevation'])
+            self._name.setText(self._dataset['Well'])
         else:
             self._msg.setVisible(True)
             self.btn_ok.setEnabled(False)
@@ -838,6 +839,7 @@ class NewWXDataDialog(NewDataset):
             self._lat.setValue(self._dataset['Latitude'])
             self._lon.setValue(self._dataset['Longitude'])
             self._alt.setValue(self._dataset['Elevation'])
+            self._name.setText(self._dataset['Station Name'])
         else:
             self.btn_ok.setEnabled(False)
             self._msg.setVisible(True)
