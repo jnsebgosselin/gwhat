@@ -441,8 +441,9 @@ class Hydrograph(mpl.figure.Figure):
         self.ax4.tick_params(axis='y', which='minor', length=0)
         self.ax4.xaxis.set_ticklabels([], minor=True)
 
-        self.l1_ax4, = self.ax4.plot([], [])                 # fill shape
-        self.l2_ax4, = self.ax4.plot([], [], color='black')  # contour line
+        self.l1_ax4, = self.ax4.plot([], [])  # fill shape
+        self.l2_ax4, = self.ax4.plot([], [],  # contour line
+                                     color='black', lw=1)
 
         # ---- MISSING VALUES MARKERS ----
 
