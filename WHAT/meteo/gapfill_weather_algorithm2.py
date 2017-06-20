@@ -412,7 +412,7 @@ class GapFillWeather(QtCore.QObject):
 
             # ---- Memory Variables ---- #
 
-            colm_memory = np.array([])  # Column sequence memory matrix
+            colm_memory = []  # Column sequence memory matrix
             RegCoeff_memory = []  # Regression coefficient memory matrix
             RMSE_memory = []  # RMSE memory matrix
             Ndat_memory = []  # Nbr. of data used for the regression
@@ -536,9 +536,7 @@ class GapFillWeather(QtCore.QObject):
                     # are calculated only once for a given neighboring
                     # station combination.
 
-                    index_memory = np.where(colm_memory == colm_seq)[0]
-
-                    if len(index_memory) == 0:
+                    if colm_seq not in colm_memory:
                         # First time this neighboring station combination
                         # is encountered in the routine, regression
                         # coefficients are then calculated.
@@ -549,7 +547,7 @@ class GapFillWeather(QtCore.QObject):
                         # for each value of the data series.
 
                         if self.leave_one_out is False:
-                            colm_memory = np.append(colm_memory, colm_seq)
+                            colm_memory.append(colm_seq)
 
                         # Columns of DATA for the variable VAR are sorted
                         # in descending correlation coefficient and the
@@ -631,6 +629,8 @@ class GapFillWeather(QtCore.QObject):
                     else:
                         # Regression coefficients and RSME are recalled
                         # from the memory matrices.
+
+                        index_memory = colm_memory.index(colm_seq)
 
                         A = RegCoeff_memory[index_memory]
                         RMSE = RMSE_memory[index_memory]
