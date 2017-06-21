@@ -91,15 +91,20 @@ class AboutWhat(DialogWindow):
 
         self.set_html_in_AboutTextBox()
 
+        # --------------------------------------------------------- Ok btn ----
+
+        ok_btn = QtGui.QPushButton('OK')
+        ok_btn.clicked.connect(self.close)
+
         # ------------------------------------------------------ Main Grid ----
 
         grid = QtGui.QGridLayout()
         grid.setSpacing(10)
 
-        grid.addWidget(self.AboutTextBox, 0, 1)
+        grid.addWidget(self.AboutTextBox, 0, 1, 1, 2)
+        grid.addWidget(ok_btn, 1, 2)
 
-#        grid.setColumnStretch(1, 500)
-#        grid.setColumnStretch(2, 500)
+        grid.setColumnStretch(1, 500)
         grid.setContentsMargins(10, 10, 10, 10)
 #        grid.setColumnMinimumWidth(1, 850)
 
@@ -115,7 +120,6 @@ class AboutWhat(DialogWindow):
         version = __version__
         date = __date__
 
-        dirname = os.path.dirname(os.path.realpath(__file__))
         filename = IconDB().banner
 
         # http://doc.qt.io/qt-4.8/richtext-html-subset.html
