@@ -379,7 +379,7 @@ class Hydrograph(mpl.figure.Figure):
 
         # ---------------------------------------------------- WATER LEVEL ----
 
-        # --- Continuous Line Datalogger --- #
+        # ---- Continuous Line Datalogger ---- #
 
 #        self.l1_ax2, = self.ax2.plot([], [], '.', zorder=10, linewidth=1,
 #                                     color='blue', ms=3)
@@ -387,20 +387,20 @@ class Hydrograph(mpl.figure.Figure):
         self.l1_ax2, = self.ax2.plot([], [], '-', zorder=10, linewidth=1,
                                      color=self.colorsDB.rgb['WL solid'])
 
-        # --- Data Point Datalogger --- #
+        # ---- Data Point Datalogger ---- #
 
         self.l2_ax2, = self.ax2.plot([], [], '.',
                                      color=self.colorsDB.rgb['WL data'],
                                      markersize=5)
 
-        # --- Manual Mesures --- #
+        # ---- Manual Mesures ---- #
 
         self.h_WLmes, = self.ax2.plot(
                 [], [], 'o', zorder=15, label='Manual measures',
                 markerfacecolor='none', markersize=5, markeredgewidth=1.5,
                 mec=self.colorsDB.rgb['WL obs'])
 
-        # --- Predicted Recession Curves --- #
+        # ---- Predicted Recession Curves ---- #
 
         self.plot_recess, = self.ax2.plot(
                 [], [], color='red', lw=1.5, dashes=[5, 3], zorder=100,
@@ -410,7 +410,7 @@ class Hydrograph(mpl.figure.Figure):
 
         # -------------------------------------------------------- WEATHER ----
 
-        # ---- PRECIPITATION ----
+        # ---- PRECIPITATION -----
 
         self.ax3.yaxis.set_ticks_position('right')
         self.ax3.yaxis.set_label_position('right')
@@ -421,7 +421,7 @@ class Hydrograph(mpl.figure.Figure):
         self.baseline, = self.ax3.plot([self.TIMEmin, self.TIMEmax],
                                        [0, 0], 'k')
 
-        # ---- AIR TEMPERATURE ----
+        # ---- AIR TEMPERATURE -----
 
         TEMPmin = -40
         TEMPscale = 20
