@@ -520,45 +520,6 @@ class WLCalc(myqt.DialogWindow):
 
         self.btn_Waterlvl_lineStyle.setAutoRaise(True)
 
-    def load_MRC_interp(self):
-
-        # ---- Load .wif file ----
-
-        fname = self.wldset['Well'] + '.wif'
-        MRC = load_interpretation_file(fname)
-        if MRC is None:
-            return
-
-        # Extract Local Extremum Times :
-
-        tr = MRC['Time']
-        hr = MRC['WL']
-
-        tb = []  # Time boundary for recession segments
-        for i in range(len(tr)):
-            if not np.isnan(hr[i]):
-                try:
-                    if np.isnan(hr[i-1]) or np.isnan(hr[i+1]):
-                        tb.append(tr[i])
-                except IndexError:
-                    tb.append(tr[i])
-
-        # Convert Time to Indexes :
-
-        time = self.wldset['Time']
-        self.peak_indx = np.zeros(len(tb)).astype(int)
-
-        for i in range(len(tb)):
-            close = np.isclose(tb[i], time, rtol=0, atol=10**-6)
-            indx = np.where(close == True)[0][0]  #analysis:ignore
-            self.peak_indx[i] = indx
-
-        # ---- Recalculate and Plot Results ----
-
-        self.peak_memory[0] = self.peak_indx
-        self.plot_peak()
-        self.btn_MRCalc_isClicked()
-
     # =========================================================================
 
     def aToolbarBtn_isClicked(self):
@@ -577,7 +538,7 @@ class WLCalc(myqt.DialogWindow):
         elif sender == self.btn_home:
             self.home()
         elif sender == self.btn_save_interp:
-            self.save_interp()
+            self.save_mrc_tofile()
         elif sender == self.btn_editPeak:
             self.add_peak()
         elif sender == self.btn_delPeak:
@@ -591,60 +552,7 @@ class WLCalc(myqt.DialogWindow):
         elif sender == self.btn_calcBRF:
             self.calc_brf()
 
-    def btn_MRCalc_isClicked(self):
-
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-
-        A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx,
-                                  self.MRC_type.currentIndex())
-
-        print('MRC Parameters: A=%f, B=%f' % (A, B))
-        if A is None:
-            QtGui.QApplication.restoreOverrideCursor()
-            return
-
-        # Display result :
-
-        txt = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
-        self.MRC_results.setText(txt)
-        txt = '%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
-        self.MRC_results.append(txt)
-        self.MRC_results.append('\nwhere h is the depth to water '
-                                'table in mbgs and ∂h/∂t is the recession '
-                                'rate in mm/d.')
-
-        # Plot result :
-
-        self.h3_ax0.set_ydata(hp)
-        self.h3_ax0.set_xdata(self.time + self.dt4xls2mpl * self.dformat)
-        self.draw()
-
-        # Store results in class attributes :
-
-        self.wldset.set_mrc(B, A)
-
-        self.A = A
-        self.B = B
-        self.RMSE = RMSE
-        self.hrecess = hp
-
-        # Compute Recharge :
-
-#        if os.path.exists(self.soilFilename):
-#
-#            self.SOILPROFIL.load_info(self.soilFilename)
-#
-#            rechg = mrc2rechg(self.time, self.water_lvl, self.A, self.B,
-#                              self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
-#
-#            rechg_tot = np.sum(rechg) * 1000
-#            dt = self.time[-1] - self.time[0]
-#            rechg_yrly = rechg_tot / dt * 365
-#
-#            txt = '\nRecharge = %0.0f mm / y' % (rechg_yrly)
-#            self.MRC_results.append(txt)
-
-        QtGui.QApplication.restoreOverrideCursor()
+    # ================================================================ BRF ====
 
     def calc_brf(self):
         if self.brfperiod[0] and self.brfperiod[1]:
@@ -714,55 +622,119 @@ class WLCalc(myqt.DialogWindow):
         else:
             print('Please select a valid period.')
 
-    # =========================================================================
+    # ================================================================ MRC ====
 
-    def save_interp(self):
+    def btn_MRCalc_isClicked(self):
 
-        print('Saving MRC interpretation...')
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
-        interpFilename = self.wldset['Well'] + '.wif'
+        A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx,
+                                  self.MRC_type.currentIndex())
 
-        if self.A is None:
-            print('No MRC interpretation to save.')
-            return False
+        print('MRC Parameters: A=%f, B=%f' % (A, B))
+        if A is None:
+            QtGui.QApplication.restoreOverrideCursor()
+            return
 
-        fcontent = [['Well Name :', self.wldset['Well']],
-                    ['Latitude :', self.wldset['Latitude']],
-                    ['Longitude :', self.wldset['Longitude']],
-                    ['Altitude :', self.wldset['Elevation']],
-                    ['Municipality :', self.wldset['Municipality']],
-                    [],
-                    ['*** MRC Parameters => dh/dt(m/d) = -A * h + B ***'],
-                    [],
-                    ['A (1/d) :', self.A],
-                    ['B (m/d) :', self.B],
-                    ['RMSE (m):', '%0.4f' % self.RMSE],
-                    [],
-                    ['*** Model Parameters ***'],
-                    [],
-                    ['Sy :', ''],
-                    ['RASmax :', ''],
-                    ['Cru :', ''],
-                    [],
-                    ['*** Observed and Predicted Water Level ***'],
-                    [],
-                    ['Time', 'hrcs(mbgs)', 'hobs(mbgs)', 'hpre(mbgs)']]
+        # Display result :
 
-        for i in range(len(self.time)):
-            fcontent.append([self.time[i],
-                             self.hrecess[i],
-                             self.water_lvl[i]])
+        txt = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
+        self.MRC_results.setText(txt)
+        txt = '%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
+        self.MRC_results.append(txt)
+        self.MRC_results.append('\nwhere h is the depth to water '
+                                'table in mbgs and ∂h/∂t is the recession '
+                                'rate in mm/d.')
 
-        with open(interpFilename, 'w') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(fcontent)
+        # Store results in class attributes :
 
-        print('MRC interpretation Saved.')
+        self.A = A
+        self.B = B
+        self.RMSE = RMSE
+        self.hrecess = hp
 
-        return True
+        # Store results in wldset :
 
-    def btn_mrc2rechg_isClicked(self):  # =====================================
+        print('Saving MRC interpretation in dataset...')
+        self.wldset.set_mrc(A, B, self.peak_indx, self.time, hp)
 
+        # Plot result :
+
+        self.draw_MRC()
+
+        QtGui.QApplication.restoreOverrideCursor()
+
+    # -------------------------------------------------------------------------
+
+    def draw_MRC(self):
+        tr = self.wldset['mrc/time']
+        hr = self.wldset['mrc/recess']
+
+        self.h3_ax0.set_ydata(hr)
+        self.h3_ax0.set_xdata(tr + self.dt4xls2mpl * self.dformat)
+        self.draw()
+
+    # -------------------------------------------------------------------------
+
+    def load_MRC_interp(self):
+        if self.wldset.mrc_exists() is False:
+            return
+
+        self.peak_indx = self.wldset['mrc/peak_indx'].astype(int)
+        self.peak_memory[0] = self.wldset['mrc/peak_indx'].astype(int)
+
+        # ---- Recalculate and Plot Results ----
+
+        self.peak_memory[0] = self.peak_indx
+        self.plot_peak()
+        self.draw_MRC()
+
+    # -------------------------------------------------------------------------
+
+    def save_mrc_tofile(self):
+        pass
+
+#        fname = self.wldset['Well'] + '.xlsx'
+#        if self.A is None:
+#            print('No MRC interpretation to save.')
+#            return False
+#
+#        fcontent = [['Well Name :', self.wldset['Well']],
+#                    ['Latitude :', self.wldset['Latitude']],
+#                    ['Longitude :', self.wldset['Longitude']],
+#                    ['Altitude :', self.wldset['Elevation']],
+#                    ['Municipality :', self.wldset['Municipality']],
+#                    [],
+#                    ['*** MRC Parameters => dh/dt(m/d) = -A * h + B ***'],
+#                    [],
+#                    ['A (1/d) :', self.A],
+#                    ['B (m/d) :', self.B],
+#                    ['RMSE (m):', '%0.4f' % self.RMSE],
+#                    [],
+#                    ['*** Model Parameters ***'],
+#                    [],
+#                    ['Sy :', ''],
+#                    ['RASmax :', ''],
+#                    ['Cru :', ''],
+#                    [],
+#                    ['*** Observed and Predicted Water Level ***'],
+#                    [],
+#                    ['Time', 'hrcs(mbgs)', 'hobs(mbgs)', 'hpre(mbgs)']]
+#
+#        for i in range(len(self.time)):
+#            fcontent.append([self.time[i],
+#                             self.hrecess[i],
+#                             self.water_lvl[i]])
+#
+#        with open(interpFilename, 'w') as f:
+#            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+#            writer.writerows(fcontent)
+#
+#        print('MRC interpretation Saved.')
+#
+#        return True
+
+    def btn_mrc2rechg_isClicked(self):
         if not self.A and not self.B:
             print('Need to calculate MRC equation first.')
             return
@@ -1217,7 +1189,6 @@ class WLCalc(myqt.DialogWindow):
             self.btn_Waterlvl_lineStyle.setAutoRaise(True)
             self.h1_ax0.set_linestyle('-')
             self.h1_ax0.set_marker('None')
-
         self.draw()
 
     # ======================================================== Mouse Event ====

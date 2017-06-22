@@ -212,11 +212,22 @@ class ProjetReader(object):
 
             # ---- MRC ----
 
-            grp.attrs['mrc'] = (0, 0)
+            mrc = grp.create_group('mrc')
+            mrc.attrs['exists'] = 0
+            mrc.create_dataset('params', data=(0, 0), dtype='float64')
+            mrc.create_dataset('peak_indx', data=np.array([]),
+                               dtype='int16', maxshape=(None,))
+            mrc.create_dataset('recess', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('time', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
 
             # ---- BRF ----
 
             grp.create_group('brf')
+
+            # ---- Layout ----
+
             grp.create_group('layout')
 
             # ---- Manual measurements ----
@@ -229,6 +240,7 @@ class ProjetReader(object):
 
             print('New dataset created sucessfully')
         except:
+            print('Unable to save dataset to project db')
             del self.db['wldsets'][name]
 
         return WLDataFrameHDF5(grp)
@@ -332,8 +344,26 @@ class WLDataFrameHDF5(dict):
 
     # =========================================================================
 
-    def set_mrc(self, B, A=0):
-        self.dset['mrc'][:] = (A, B)
+    def set_mrc(self, A, B, peak_indx, time, recess):
+        self.dset['mrc/params'][:] = (A, B)
+
+        self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
+        self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
+
+        self.dset['mrc/time'].resize(np.shape(time))
+        self.dset['mrc/time'][:] = time
+
+        self.dset['mrc/recess'].resize(np.shape(recess))
+        self.dset['mrc/recess'][:] = recess
+
+        self.dset['mrc'].attrs['exists'] = 1
+
+        self.dset.file.flush()
+
+        print(peak_indx)
+
+    def mrc_exists(self):
+        return bool(self.dset['mrc'].attrs['exists'])
 
     # =========================================================================
 
