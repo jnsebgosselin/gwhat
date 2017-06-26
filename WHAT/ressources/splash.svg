@@ -29,8 +29,8 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1680"
-     inkscape:window-height="1028"
+     inkscape:window-width="1600"
+     inkscape:window-height="838"
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
@@ -170,7 +170,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -371,5 +371,5 @@
        x="1611.7224"
        y="472.38263"
        style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:33.33333206px;line-height:1.25;font-family:Sans;-inkscape-font-specification:'Sans Bold';text-align:end;text-anchor:end;stroke-width:1.06666672"
-       id="tspan962-0">4.2.0-Beta</tspan></text>
+       id="tspan962-0">4.2.0-Beta2</tspan></text>
 </svg>

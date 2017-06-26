@@ -121,3 +121,4 @@ WHAT/glue50_results.csv
 WHAT/kgs_brf/kgs_brf.par
 *.par
 *.wif
+WHAT/kgs_brf/BRFOutput.txt
