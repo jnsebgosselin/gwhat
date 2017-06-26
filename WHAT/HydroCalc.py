@@ -40,6 +40,7 @@ import matplotlib.pyplot as plt
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
+import xlsxwriter
 
 # Local imports :
 
@@ -50,7 +51,6 @@ import common.database as db
 import common.widgets as myqt
 from common import IconDB, StyleDB, QToolButtonNormal
 import kgs_brf as bm
-from projet.reader_waterlvl import load_interpretation_file
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
@@ -352,10 +352,13 @@ class WLCalc(myqt.DialogWindow):
 
         # Grid Layout :
 
-        btn_list = [self.btn_layout_mode, myqt.VSep(), self.btn_undo,
-                    self.btn_clearPeak, self.btn_editPeak, self.btn_delPeak,
-                    myqt.VSep(), self.btn_home, self.btn_pan, myqt.VSep(),
-                    self.btn_MRCalc, self.btn_save_interp, myqt.VSep(),
+        btn_list = [self.btn_layout_mode,
+                    myqt.VSep(),
+                    self.btn_home, self.btn_pan,
+                    myqt.VSep(),
+                    self.btn_undo, self.btn_clearPeak, self.btn_editPeak,
+                    self.btn_delPeak, self.btn_MRCalc, self.btn_save_interp,
+                    myqt.VSep(),
                     self.btn_Waterlvl_lineStyle, self.btn_dateFormat,
                     myqt.VSep(),
                     self.btn_selBRF, self.btn_calcBRF, self.btn_setBRF,
@@ -683,6 +686,12 @@ class WLCalc(myqt.DialogWindow):
         self.peak_indx = self.wldset['mrc/peak_indx'].astype(int)
         self.peak_memory[0] = self.wldset['mrc/peak_indx'].astype(int)
 
+        self.A, self.B = self.wldset['mrc/params']
+        self.hrecess = self.wldset['mrc/recess']
+
+        err = (self.wldset['mrc/recess']-self.water_lvl)**2
+        self.RMSE = np.mean(err[~np.isnan(err)])**0.5
+
         # ---- Recalculate and Plot Results ----
 
         self.peak_memory[0] = self.peak_indx
@@ -692,47 +701,58 @@ class WLCalc(myqt.DialogWindow):
     # -------------------------------------------------------------------------
 
     def save_mrc_tofile(self):
-        pass
+        filename = self.wldset['Well'] + '.xlsx'
 
-#        fname = self.wldset['Well'] + '.xlsx'
-#        if self.A is None:
-#            print('No MRC interpretation to save.')
-#            return False
-#
-#        fcontent = [['Well Name :', self.wldset['Well']],
-#                    ['Latitude :', self.wldset['Latitude']],
-#                    ['Longitude :', self.wldset['Longitude']],
-#                    ['Altitude :', self.wldset['Elevation']],
-#                    ['Municipality :', self.wldset['Municipality']],
-#                    [],
-#                    ['*** MRC Parameters => dh/dt(m/d) = -A * h + B ***'],
-#                    [],
-#                    ['A (1/d) :', self.A],
-#                    ['B (m/d) :', self.B],
-#                    ['RMSE (m):', '%0.4f' % self.RMSE],
-#                    [],
-#                    ['*** Model Parameters ***'],
-#                    [],
-#                    ['Sy :', ''],
-#                    ['RASmax :', ''],
-#                    ['Cru :', ''],
-#                    [],
-#                    ['*** Observed and Predicted Water Level ***'],
-#                    [],
-#                    ['Time', 'hrcs(mbgs)', 'hobs(mbgs)', 'hpre(mbgs)']]
-#
-#        for i in range(len(self.time)):
-#            fcontent.append([self.time[i],
-#                             self.hrecess[i],
-#                             self.water_lvl[i]])
-#
-#        with open(interpFilename, 'w') as f:
-#            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-#            writer.writerows(fcontent)
-#
-#        print('MRC interpretation Saved.')
-#
-#        return True
+        # ---- get filename ----
+
+        dialog = QtGui.QFileDialog()
+        dialog.setConfirmOverwrite(True)
+        filename, ftype = dialog.getSaveFileName(
+            caption="Save Results Summary", dir=filename, filter=('*.xlsx'))
+
+        if not filename:
+            return
+
+        root, ext = os.path.splitext(filename)
+        if ext not in ['.xlsx', '.xls']:
+            filename += '.xlsx'
+
+        # ---- save MRC to file ----
+
+        with xlsxwriter.Workbook(filename) as wb:
+            ws = wb.add_worksheet()
+
+            ws.set_column('A:A', 35)
+            ws.set_column('B:B', 35)
+            ws.set_column('C:C', 35)
+
+            ws.write(0, 0, 'Well Name : %s' % self.wldset['Well'])
+            ws.write(1, 0, 'Latitude : %f' % self.wldset['Latitude'])
+            ws.write(2, 0, 'Longitude : %f' % self.wldset['Longitude'])
+            ws.write(3, 0, 'Altitude : %f' % self.wldset['Elevation'])
+            ws.write(4, 0, 'Municipality : %s' % self.wldset['Municipality'])
+
+            A, B = self.wldset['mrc/params']
+
+            ws.write(6, 0, 'dh/dt(mm/d) = -%f*h(mbgs) + %f' % (self.A, self.B))
+            ws.write(7, 0, 'A (1/d)')
+            ws.write(7, 1, self.A)
+            ws.write(8, 0, 'B (m/d)')
+            ws.write(8, 1, self.B)
+            ws.write(9, 0, 'RMSE (m)')
+            ws.write(9, 1, self.RMSE)
+
+            ws.write(11, 0, 'Observed and Predicted Water Level')
+            ws.write_row(12, 0, ['Time', 'hrecess(mbgs)', 'hobs(mbgs)'])
+            print(len(self.time), len(self.hrecess), len(self.water_lvl))
+            for i in range(len(self.time)):
+                if np.isnan(self.hrecess[i]):
+                    row = [self.time[i], 'nan', self.water_lvl[i]]
+                else:
+                    row = [self.time[i], self.hrecess[i], self.water_lvl[i]]
+                ws.write_row(i+13, 0, row)
+
+        print('MRC info saved sucessfully to file.')
 
     def btn_mrc2rechg_isClicked(self):
         if not self.A and not self.B:
