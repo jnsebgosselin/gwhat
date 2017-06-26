@@ -123,7 +123,7 @@ class SynthHydrograph(object):
 
         self.wldset = wldset
 
-        self.A, self.B = wldset['mrc']
+        self.A, self.B = wldset['mrc/params']
         self.twlvl, self.WLVLobs = self.make_data_daily(wldset['Time'],
                                                         wldset['WL'])
         self.NaNindx = np.where(~np.isnan(self.WLVLobs))
