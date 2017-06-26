@@ -176,50 +176,6 @@ def load_waterlvl_measures(fname, well):
     return np.array(TIMEmes), np.array(WLmes)
 
 
-# =============================================================================
-
-
-def load_interpretation_file(wifname):
-
-        # ---- Check if file exists ----
-
-        if not os.path.exists(wifname):
-            print('%s does not exist' % wifname)
-            return None
-
-        # ---- Open File ----
-
-        with open(wifname, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-
-            # ---- Find Recess Data ----
-
-            row = 0
-            while True:
-                if row >= len(reader):
-                    print('Something is wrong with the .wif file.')
-                    return False
-
-                try:
-                    if reader[row][0] == 'Time':
-                        break
-                    elif reader[row][0] == 'A (1/d) :':
-                        A = float(reader[row][1])
-                    elif reader[row][0] == 'B (m/d) :':
-                        B = float(reader[row][1])
-                except IndexError:
-                    pass
-
-                row += 1
-            row += 1
-
-            # ---- Save Data in Class Attributes ----
-
-            dat = np.array(reader[row:]).astype('float')
-            MRC = {'A': A, 'B': B, 'Time': dat[:, 0], 'WL': dat[:, 1]}
-
-            return MRC
-
 # =========================================================================
 
 
