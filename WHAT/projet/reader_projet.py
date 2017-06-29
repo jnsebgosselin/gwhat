@@ -365,6 +365,58 @@ class WLDataFrameHDF5(dict):
     def mrc_exists(self):
         return bool(self.dset['mrc'].attrs['exists'])
 
+    # ================================================================ BRF ====
+
+    def saved_brf(self):
+        grp = self.dset.require_group('brf')
+        return list(grp.keys())
+
+    def brf_count(self):
+        return len(list(self.dset['brf'].keys()))
+
+    # -------------------------------------------------------------------------
+
+    def get_brfAt(self, index):
+        if index < self.brf_count():
+            names = list(self.dset['brf'].keys())
+            names = np.array(names).astype(int)
+            names.sort()
+            return str(names[index])
+        else:
+            return None
+
+    def get_brf(self, name):
+        grp = self.dset['brf'][name]
+        return (grp['lag'].value, grp['A'].value, grp['err'].value,
+                grp['date start'].value, grp['date end'].value)
+
+    # -------------------------------------------------------------------------
+
+    def save_brf(self, lag, A, err, date_start, date_end):
+        if list(self.dset['brf'].keys()):
+            idnum = np.array(list(self.dset['brf'].keys())).astype(int)
+            idnum = np.max(idnum) + 1
+        else:
+            idnum = 1
+        idnum = str(idnum)
+
+        grp = self.dset['brf'].require_group(idnum)
+        grp.create_dataset('lag', data=lag, dtype='float64')
+        grp.create_dataset('A', data=A, dtype='float64')
+        grp.create_dataset('err', data=err, dtype='float64')
+        grp.create_dataset('date start', data=date_start, dtype='int16')
+        grp.create_dataset('date end', data=date_end, dtype='int16')
+        self.dset.file.flush()
+        print('BRF results saved successfully')
+
+    def del_brf(self, name):
+        if name in list(self.dset['brf'].keys()):
+            del self.dset['brf'][name]
+            self.dset.file.flush()
+            print('BRF %s deleted successfully' % name)
+        else:
+            print('BRF does not exist')
+
     # =========================================================================
 
     def save_layout(self, layout):
