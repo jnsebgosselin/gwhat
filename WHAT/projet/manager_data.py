@@ -74,6 +74,92 @@ class DataManager(QtGui.QWidget):
             pm.currentProjetChanged.connect(self.set_projet)
             self.set_projet(pm.projet)
 
+    def __initUI__(self):
+
+        # ---------------------------------------- water level dataset ----
+
+        self.wldsets_cbox = QtGui.QComboBox()
+        self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
+        self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
+
+        btn_load_wl = QToolButtonSmall(IconDB().importFile)
+        btn_load_wl.setToolTip('Import a new WL dataset...')
+        btn_load_wl.clicked.connect(self.import_wldataset)
+
+        btn_del_wldset = QToolButtonSmall(IconDB().clear)
+        btn_del_wldset.setToolTip('Delete current dataset.')
+        btn_del_wldset.clicked.connect(self.del_current_wldset)
+
+        # ---- toolbar ----
+
+        wltb = QtGui.QGridLayout()
+        wltb.setContentsMargins(0, 0, 0, 0)
+
+        widgets = [self.wldsets_cbox, btn_load_wl, btn_del_wldset]
+        for col, widg in enumerate(widgets):
+            wltb.addWidget(widg, 0, col)
+
+        # ---- info box -----
+
+        self.well_info_widget = QtGui.QTextEdit()
+        self.well_info_widget.setReadOnly(True)
+        self.well_info_widget.setFixedHeight(150)
+
+        # -------------------------------------------- weather dataset ----
+
+        self.wxdsets_cbox = QtGui.QComboBox()
+        self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
+        self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
+
+        btn_load_meteo = QToolButtonSmall(IconDB().importFile)
+        btn_load_meteo.setToolTip('Import a new weather dataset...')
+        btn_load_meteo.clicked.connect(self.import_wxdataset)
+
+        # btn_weather_dir.clicked.connect(self.select_meteo_file)
+
+        btn_del_wxdset = QToolButtonSmall(IconDB().clear)
+        btn_del_wxdset.setToolTip('Delete current dataset.')
+        btn_del_wxdset.clicked.connect(self.del_current_wxdset)
+
+        btn_closest_meteo = QToolButtonSmall(IconDB().closest_meteo)
+        btn_closest_meteo.setToolTip('<p>Select the weather station closest'
+                                     ' from the observation well.</p>')
+        btn_closest_meteo.clicked.connect(self.set_closest_wxdset)
+
+        # ---- toolbar ----
+
+        wxtb = QtGui.QGridLayout()
+        wxtb.setContentsMargins(0, 0, 0, 0)
+
+        widgets = [self.wxdsets_cbox, btn_load_meteo, btn_del_wxdset,
+                   btn_closest_meteo]
+
+        for col, widg in enumerate(widgets):
+            wxtb.addWidget(widg, 0, col)
+
+        # ---- info box -----
+
+        self.meteo_info_widget = QtGui.QTextEdit()
+        self.meteo_info_widget.setReadOnly(True)
+        self.meteo_info_widget.setFixedHeight(150)
+
+        # ------------------------------------------- Main Right Panel ----
+
+        layout = QtGui.QGridLayout()
+
+        layout.addWidget(QtGui.QLabel('Water Level Dataset :'), 1, 0)
+        layout.addLayout(wltb, 2, 0)
+        layout.addWidget(self.well_info_widget, 3, 0)
+
+        layout.addWidget(QtGui.QLabel('Weather Dataset :'), 4, 0)
+        layout.addLayout(wxtb, 5, 0)
+        layout.addWidget(self.meteo_info_widget, 6, 0)
+
+        layout.setSpacing(5)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        self.setLayout(layout)
+
     # =========================================================================
 
     @property
@@ -294,93 +380,6 @@ class DataManager(QtGui.QWidget):
                     mindist = newdist
 
             self.set_current_wxdset(closest)
-
-    # =========================================================================
-
-    def __initUI__(self):
-
-        # ---------------------------------------- water level dataset ----
-
-        self.wldsets_cbox = QtGui.QComboBox()
-        self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
-        self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
-
-        btn_load_wl = QToolButtonSmall(IconDB().importFile)
-        btn_load_wl.setToolTip('Import a new WL dataset...')
-        btn_load_wl.clicked.connect(self.import_wldataset)
-
-        btn_del_wldset = QToolButtonSmall(IconDB().clear)
-        btn_del_wldset.setToolTip('Delete current dataset.')
-        btn_del_wldset.clicked.connect(self.del_current_wldset)
-
-        # ---- toolbar ----
-
-        wltb = QtGui.QGridLayout()
-        wltb.setContentsMargins(0, 0, 0, 0)
-
-        widgets = [self.wldsets_cbox, btn_load_wl, btn_del_wldset]
-
-        for col, widg in enumerate(widgets):
-            wltb.addWidget(widg, 0, col)
-
-        # ---- info box -----
-
-        self.well_info_widget = QtGui.QTextEdit()
-        self.well_info_widget.setReadOnly(True)
-        self.well_info_widget.setFixedHeight(150)
-
-        # -------------------------------------------- weather dataset ----
-
-        self.wxdsets_cbox = QtGui.QComboBox()
-        self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
-        self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
-
-        btn_load_meteo = QToolButtonSmall(IconDB().importFile)
-        btn_load_meteo.setToolTip('Import a new weather dataset...')
-        btn_load_meteo.clicked.connect(self.import_wxdataset)
-
-        # btn_weather_dir.clicked.connect(self.select_meteo_file)
-
-        btn_del_wxdset = QToolButtonSmall(IconDB().clear)
-        btn_del_wxdset.setToolTip('Delete current dataset.')
-        btn_del_wxdset.clicked.connect(self.del_current_wxdset)
-
-        btn_closest_meteo = QToolButtonSmall(IconDB().closest_meteo)
-        btn_closest_meteo.setToolTip('<p>Select the weather station closest'
-                                     ' from the observation well.</p>')
-        btn_closest_meteo.clicked.connect(self.set_closest_wxdset)
-
-        # ---- toolbar ----
-
-        wxtb = QtGui.QGridLayout()
-        wxtb.setContentsMargins(0, 0, 0, 0)
-
-        widgets = [self.wxdsets_cbox, btn_load_meteo, btn_del_wxdset,
-                   btn_closest_meteo]
-
-        for col, widg in enumerate(widgets):
-            wxtb.addWidget(widg, 0, col)
-
-        # ---- info box -----
-
-        self.meteo_info_widget = QtGui.QTextEdit()
-        self.meteo_info_widget.setReadOnly(True)
-        self.meteo_info_widget.setFixedHeight(150)
-
-        # ------------------------------------------- Main Right Panel ----
-
-        layout = QtGui.QGridLayout()
-
-        layout.addLayout(wltb, 0, 0)
-        layout.addWidget(self.well_info_widget, 1, 0)
-
-        layout.addLayout(wxtb, 2, 0)
-        layout.addWidget(self.meteo_info_widget, 3, 0)
-
-        layout.setSpacing(5)
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        self.setLayout(layout)
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
