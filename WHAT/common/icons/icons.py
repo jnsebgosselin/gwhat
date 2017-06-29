@@ -76,6 +76,10 @@ class IconDB(object):
         self.plus_sign = QIcon(os.path.join(dirname, 'plus_sign'))
         self.add2list = QIcon(os.path.join(dirname, 'add2list'))
 
+        # ----------------------------------------------------------- BRF -----
+
+        self.select_range = QIcon(os.path.join(dirname, 'select_range'))
+
         # -------------------------------------------- Hydrograph Toolbar -----
 
         self.toggleMode = QIcon(os.path.join(dirname, 'toggleMode2'))
