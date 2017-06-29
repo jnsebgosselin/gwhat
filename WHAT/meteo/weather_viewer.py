@@ -984,7 +984,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    fmeteo = ('C:/Users/jnsebgosselin/OneDrive/WHAT/Projects/'
+    fmeteo = ('C:/Users/jsgosselin/OneDrive/WHAT/Projects/'
               'Project4Testing/Meteo/Output/IBERVILLE (7023270)/'
               'IBERVILLE (7023270)_1980-2015.out')
 
