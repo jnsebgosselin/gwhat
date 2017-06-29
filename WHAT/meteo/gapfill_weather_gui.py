@@ -41,7 +41,6 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 
 for i in range(2):
     try:
-        from custom_widgets import QToolPanel
         from meteo.gapfill_weather_algorithm2 import GapFillWeather
         from common import IconDB, StyleDB, QToolButtonSmall
         import common.widgets as myqt
@@ -305,7 +304,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         MLRM_widg = regression_model(self)
         advanced_widg = advanced_settings(self)
 
-        self.stack_widget = QToolPanel()
+        self.stack_widget = myqt.QToolPanel()
         self.stack_widget.setIcons(IconDB().triright, IconDB().tridown)
         self.stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
         self.stack_widget.addItem(MLRM_widg, 'Regression Model :')

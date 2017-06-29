@@ -28,6 +28,7 @@ var/
 *.manifest
 *.spec
 PyInstaller-3.2.1
+PyInstaller 3.2.1-dev
 
 # Installer logs
 pip-log.txt

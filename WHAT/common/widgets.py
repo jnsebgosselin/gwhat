@@ -203,6 +203,45 @@ class QDoubleSpinBox(QtGui.QDoubleSpinBox):
 
 # ================================================================ Layout =====
 
+class QFrameLayout(QtGui.QFrame):
+    def __init__(self, parent=None):
+        super(QFrameLayout, self).__init__(parent)
+
+        self.setLayout(QtGui.QGridLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+    def addWidget(self, widget, x, y, w=1, h=1):
+        self.layout().addWidget(widget, x, y, w, h)
+
+    def addLayout(self, layout, x, y, w=1, h=1):
+        self.layout().addLayout(layout, x, y, w, h)
+
+    # -------------------------------------------------------------------------
+
+    def setRowMinimumHeight(self, row, height):
+        self.layout().setRowMinimumHeight(row, height)
+
+    # -------------------------------------------------------------------------
+
+    def setRowStretch(self, row, stretch):
+        self.layout().setRowStretch(row, stretch)
+
+    def setColumnStretch(self, column, stretch):
+        self.layout().setColumnStretch(column, stretch)
+
+    # -------------------------------------------------------------------------
+
+    def setContentsMargins(self, left, top, right, bottom):
+        self.layout().setContentsMargins(left, top, right, bottom)
+
+    # -------------------------------------------------------------------------
+
+    def rowCount(self):
+        return self.layout().rowCount()
+
+    def columnCount(self):
+        return self.layout().columnCount()
+
 
 class QGroupWidget(QtGui.QGroupBox):
     def __init__(self, parent=None):
@@ -235,6 +274,51 @@ class QGroupWidget(QtGui.QGroupBox):
 
     def rowCount(self):
         return self.layout().rowCount()
+
+
+class QChildWindowWidget(QtGui.QWidget):
+    def __init__(self, parent=None):
+        super(QChildWindowWidget, self).__init__()
+        self.parent = parent
+        self.setWindowFlags(QtCore.Qt.Window |
+                            QtCore.Qt.WindowCloseButtonHint)
+
+#        if parent is not None:
+#            parent.closeEvent.connect(self.close)
+
+    def emit_warning(self, msg, title='Warning'):
+        btn = QtGui.QMessageBox.Ok
+        QtGui.QMessageBox.warning(self, title, msg, btn)
+
+    def show(self):
+        super(QChildWindowWidget, self).show()
+        self.setFixedSize(self.size())
+        self.raise_()
+#        if self.__firstshow is True:
+#            self.__firstshow = False
+#
+#            self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, True)
+#            super(QChildWindowWidget, self).show()
+#            super(QChildWindowWidget, self).close()
+#            self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, False)
+#
+#            qr = self.frameGeometry()
+#            if self.parentWidget():
+#                parent = self.parentWidget()
+#                wp = parent.frameGeometry().width()
+#                hp = parent.frameGeometry().height()
+#                cp = parent.mapToGlobal(QtCore.QPoint(wp/2, hp/2))
+#            else:
+#                cp = QtGui.QDesktopWidget().availableGeometry().center()
+#            qr.moveCenter(cp)
+#            self.move(qr.topLeft())
+#
+#            super(QChildWindowWidget, self).show()
+#            self.setFixedSize(self.size())
+#        else:
+#            super(QChildWindowWidget, self).show()
+
+        self.raise_()
 
 
 class DialogWindow(QtGui.QDialog):
@@ -283,6 +367,7 @@ class DialogWindow(QtGui.QDialog):
                 self.setFixedSize(self.size())
         else:
             super(DialogWindow, self).show()
+
         self.raise_()
 
 
@@ -319,6 +404,93 @@ class AboutWindow(DialogWindow):
         dirname = os.path.join(dirname, 'doc')
         filename = os.path.join(dirname, filename)
         self.tb.setSource(QtCore.QUrl.fromLocalFile(filename))
+
+
+# -----------------------------------------------------------------------------
+
+
+class QToolPanel(QtGui.QWidget):
+    """
+    A custom widget that mimicks the behavior of the "Tools" sidepanel in
+    Adobe Acrobat. It is derived from a QToolBox with the following variants:
+
+    1. Only one tool can be displayed at a time.
+    2. Unlike the stock QToolBox widget, it is possible to hide all the tools.
+    3. It is also possible to hide the current displayed tool by clicking on
+       its header.
+    4. The tools that are hidden are marked by a right-arrow icon, while the
+       tool that is currently displayed is marked with a down-arrow icon.
+    5. Closed and Expanded arrows can be set from custom icons.
+    """
+
+    def __init__(self, parent=None):
+        super(QToolPanel, self).__init__(parent)
+
+        self.__iclosed = QtGui.QWidget().style().standardIcon(
+            QtGui.QStyle.SP_ToolBarHorizontalExtensionButton)
+        self.__iexpand = QtGui.QWidget().style().standardIcon(
+            QtGui.QStyle.SP_ToolBarVerticalExtensionButton)
+
+        self.setLayout(QtGui.QGridLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
+
+        self.__currentIndex = -1
+
+    def setIcons(self, ar_right, ar_down):  # =================================
+        self.__iclosed = ar_right
+        self.__iexpand = ar_down
+
+    def addItem(self, tool, text):  # =========================================
+
+        N = self.layout().rowCount()
+
+        # Add Header :
+
+        head = QtGui.QPushButton(text)
+        head.setIcon(self.__iclosed)
+        head.clicked.connect(self.__isClicked__)
+        head.setStyleSheet("QPushButton {text-align:left;}")
+
+        self.layout().addWidget(head, N-1, 0)
+
+        # Add Item in a ScrollArea :
+
+        scrollarea = QtGui.QScrollArea()
+        scrollarea.setFrameStyle(0)
+        scrollarea.hide()
+        scrollarea.setStyleSheet("QScrollArea {background-color:transparent;}")
+        scrollarea.setWidgetResizable(True)
+
+        tool.setObjectName("myViewport")
+        tool.setStyleSheet("#myViewport {background-color:transparent;}")
+        scrollarea.setWidget(tool)
+
+        self.layout().addWidget(scrollarea, N, 0)
+        self.layout().setRowStretch(N+1, 100)
+
+    def __isClicked__(self):  # ===============================================
+
+        for row in range(0, self.layout().rowCount()-1, 2):
+
+            head = self.layout().itemAtPosition(row, 0).widget()
+            tool = self.layout().itemAtPosition(row+1, 0).widget()
+
+            if head == self.sender():
+                if self.__currentIndex == row:
+                    # if clicked tool is open, close it
+                    head.setIcon(self.__iclosed)
+                    tool.hide()
+                    self.__currentIndex = -1
+                else:
+                    # if clicked tool is closed, expand it
+                    head.setIcon(self.__iexpand)
+                    tool.show()
+                    self.__currentIndex = row
+            else:
+                # close all the other tools so that only one tool can be
+                # expanded at a time.
+                head.setIcon(self.__iclosed)
+                tool.hide()
 
 
 # =============================================================== Buttons =====
@@ -420,5 +592,3 @@ class MyQToolButton(QtGui.QToolButton):
         super(MyQToolButton, self).__init__(parent)
         self.setIconSize(QtCore.QSize(24, 24))
         self.setAutoRaise(True)
-
-
