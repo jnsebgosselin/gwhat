@@ -44,7 +44,7 @@ import mplFigViewer3 as mplFigViewer
 from meteo.weather_viewer import WeatherAvgGraph
 from colors2 import ColorsReader, ColorsSetupWin
 
-from common import IconDB, StyleDB, QToolButtonNormal
+from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
 import common.widgets as myqt
 import common.database as db
 from projet.reader_waterlvl import load_waterlvl_measures
@@ -90,7 +90,13 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # ---------------------------------------------------------- Toolbar --
 
-        # BUTTONS :
+        btn_save = QToolButtonNormal(IconDB().save)
+        btn_save.setToolTip('Save the well hydrograph')
+
+        # btn_draw is usefull for debugging purposes
+        btn_draw = QToolButtonNormal(IconDB().refresh)
+        btn_draw.setToolTip('Force a refresh of the well hydrograph')
+        btn_draw.hide()
 
         btn_loadConfig = QToolButtonNormal(IconDB().load_graph_config)
         btn_loadConfig.setToolTip('<p>Load graph layout for the current'
@@ -105,15 +111,9 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_bestfit_time = QToolButtonNormal(IconDB().fit_x)
         btn_bestfit_time.setToolTip('Best fit the time scale')
 
-        btn_draw = QToolButtonNormal(IconDB().refresh)
-        btn_draw.setToolTip('Force a refresh of the well hydrograph')
-
         btn_weather_normals = QToolButtonNormal(IconDB().meteo)
         btn_weather_normals.setToolTip(
                 'Show current weather dataset normals...')
-
-        btn_save = QToolButtonNormal(IconDB().save)
-        btn_save.setToolTip('Save the well hydrograph')
 
         btn_page_setup = QToolButtonNormal(IconDB().page_setup)
         btn_page_setup.setToolTip('Show the page setup window')
@@ -124,13 +124,39 @@ class HydroprintGUI(myqt.DialogWindow):
                                   ' used to draw the hydrograph</p.')
         btn_color_pick.clicked.connect(self.color_palette_win.show)
 
+        # ---- Zoom Panel ----
+
+        btn_zoom_out = QToolButtonNormal(IconDB().zoom_out)
+        btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
+        btn_zoom_out.clicked.connect(self.zoom_out)
+
+        btn_zoom_in = QToolButtonNormal(IconDB().zoom_in)
+        btn_zoom_out.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
+        btn_zoom_in.clicked.connect(self.zoom_in)
+
+        self.zoom_disp = QtGui.QSpinBox()
+        self.zoom_disp.setAlignment(QtCore.Qt.AlignCenter)
+        self.zoom_disp.setButtonSymbols(QtGui.QAbstractSpinBox.NoButtons)
+        self.zoom_disp.setReadOnly(True)
+        self.zoom_disp.setSuffix(' %')
+        self.zoom_disp.setRange(0, 9999)
+        self.zoom_disp.setValue(100)
+
+        zoom_pan = myqt.QFrameLayout()
+        zoom_pan.setSpacing(3)
+        zoom_pan.addWidget(btn_zoom_out, 0, 0)
+        zoom_pan.addWidget(btn_zoom_in, 0, 1)
+        zoom_pan.addWidget(self.zoom_disp, 0, 2)
+
         # LAYOUT :
 
         btn_list = [btn_save, btn_draw, btn_loadConfig, btn_saveConfig,
                     myqt.VSep(),
                     btn_bestfit_waterlvl, btn_bestfit_time,
                     myqt.VSep(), btn_weather_normals, btn_page_setup,
-                    btn_color_pick]
+                    btn_color_pick,
+                    myqt.VSep(),
+                    zoom_pan]
 
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -151,6 +177,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.hydrograph = hydrograph.Hydrograph()
         self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
+        self.hydrograph_scrollarea.zoomChanged.connect(self.zoom_disp.setValue)
 
         grid_hydrograph = QtGui.QGridLayout()
         grid_hydrograph.addWidget(self.hydrograph_scrollarea, 0, 0)
@@ -470,27 +497,11 @@ class HydroprintGUI(myqt.DialogWindow):
 
     # =========================================================================
 
-    def toggle_layoutMode(self):
-        self.hydrocalc.hide()
-        self.grid_layout_widget.show()
+    def zoom_in(self):
+        self.hydrograph_scrollarea.zoomIn()
 
-        # Update Right Panel :
-
-        self.hydrocalc.widget_MRCparam.hide()
-
-        self.tabscales.show()
-        self.qAxeLabelsLanguage.show()
-
-    def toggle_computeMode(self):
-        self.grid_layout_widget.hide()
-        self.hydrocalc.show()
-
-        # Update Right Panel Update :
-
-        self.hydrocalc.widget_MRCparam.show()
-
-        self.tabscales.hide()
-        self.qAxeLabelsLanguage.hide()
+    def zoom_out(self):
+        self.hydrograph_scrollarea.zoomOut()
 
     # =========================================================================
 

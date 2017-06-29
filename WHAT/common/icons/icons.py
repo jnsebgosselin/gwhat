@@ -80,6 +80,11 @@ class IconDB(object):
 
         self.select_range = QIcon(os.path.join(dirname, 'select_range'))
 
+        # ------------------------------------------------------------ HydroCalc ----
+
+        self.zoom_out = QIcon(os.path.join(dirname, 'zoom_out'))
+        self.zoom_in = QIcon(os.path.join(dirname, 'zoom_in'))
+
         # -------------------------------------------- Hydrograph Toolbar -----
 
         self.toggleMode = QIcon(os.path.join(dirname, 'toggleMode2'))

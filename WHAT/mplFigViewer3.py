@@ -152,12 +152,13 @@ class MplViewer(QtGui.QFrame):
 
 
 class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
-
     """
     This is a PySide widget class to display a matplotlib figure image in a
     QScrollArea with zooming and panning capability with CTRL + Mouse_wheel
     and Left-click event.
     """
+
+    zoomChanged = QtCore.Signal(float)
 
     def __init__(self, parent=None):
         super(ImageViewer, self).__init__(parent)
@@ -216,9 +217,7 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
         # Set ClosedHandCursor:
 
         elif event.type() == QtCore.QEvent.Type.MouseButtonPress:
-
             if event.button() == QtCore.Qt.MouseButton.LeftButton:
-
                 QtGui.QApplication.setOverrideCursor(
                     QtCore.Qt.ClosedHandCursor)
                 self.pan = True
@@ -228,16 +227,13 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
         # Reset Cursor:
 
         elif event.type() == QtCore.QEvent.Type.MouseButtonRelease:
-
             QtGui.QApplication.restoreOverrideCursor()
             self.pan = False
 
         # Move  ScrollBar:
 
         elif event.type() == QtCore.QEvent.Type.MouseMove:
-
             if self.pan == True:
-
                 dx = self.xclick - event.globalX()
                 self.xclick = event.globalX()
 
@@ -252,20 +248,30 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
 
         return QtGui.QWidget.eventFilter(self, widget, event)
 
-    def zoomIn(self):  # ======================================================
+    # =========================================================================
+
+    def zoomIn(self):
         if self.scaleFactor < self.sfmax:
             self.scaleFactor += 1
             self.scale_image()
             self.adjust_scrollbar(self.scaleStep)
 
-    def zoomOut(self):  # =====================================================
+        self.zoomChanged.emit(self.get_scaling())
+
+    def zoomOut(self):
         if self.scaleFactor > self.sfmin:
             self.scaleFactor -= 1
             self.scale_image()
             self.adjust_scrollbar(1/self.scaleStep)
 
-    def scale_image(self):  # =================================================
+        self.zoomChanged.emit(self.get_scaling())
 
+    def get_scaling(self):
+        return self.scaleStep**self.scaleFactor*100
+
+    # =========================================================================
+
+    def scale_image(self):  # =================================================
         new_width = int(self.imageCanvas.fwidth *
                         self.scaleStep ** self.scaleFactor)
         new_height = int(self.imageCanvas.fheight *
