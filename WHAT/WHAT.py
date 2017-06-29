@@ -67,6 +67,7 @@ import tkinter.messagebox
 import common.database as db
 import custom_widgets as MyQWidget
 import HydroPrint2 as HydroPrint
+import HydroCalc
 from meteo import dwnld_weather_data
 from meteo.gapfill_weather_gui import GapFillWeatherGUI
 
@@ -98,8 +99,10 @@ class WHAT(QtGui.QMainWindow):
                 myappid)
 
         self.whatPref = WHATPref(self)
+
         self.pmanager = ProjetManager(self)
         self.dmanager = DataManager(pm=self.pmanager)
+        self.dmanager2 = DataManager(pm=self.pmanager)
 
         self.__initUI__()
 
@@ -108,7 +111,6 @@ class WHAT(QtGui.QMainWindow):
         # ---------------------------------------------------- PREFERENCES ----
 
         self.whatPref.load_pref_file()
-        language = self.whatPref.language
 
         self.projectfile = self.whatPref.projectfile
         self.projectdir = path.dirname(self.projectfile)
@@ -159,15 +161,17 @@ class WHAT(QtGui.QMainWindow):
         # ---- hydrograph ----
 
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
+        self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager2)
 
         # ---- TABS ASSEMBLY ----
 
         Tab_widget = QtGui.QTabWidget()
         Tab_widget.setTabBar(TabBar(self))
 
-        Tab_widget.addTab(self.tab_dwnld_data, 'Download Data')
-        Tab_widget.addTab(self.tab_fill_weather_data, 'Fill Data')
-        Tab_widget.addTab(self.tab_hydrograph, 'Hydrograph')
+        Tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
+        Tab_widget.addTab(self.tab_fill_weather_data, 'Gap-Fill Weather')
+        Tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
+        Tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         # Tab_widget.addTab(tab_about, 'About')
 
         Tab_widget.setCornerWidget(self.pmanager)
@@ -192,7 +196,6 @@ class WHAT(QtGui.QMainWindow):
 
         mainGrid = QtGui.QGridLayout()
 
-        row = 0
         mainGrid.addWidget(splitter, 0, 0)
         mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
         mainGrid.addWidget(self.tab_dwnld_data.pbar, 2, 0)
@@ -222,6 +225,7 @@ class WHAT(QtGui.QMainWindow):
             self.tab_dwnld_data.setEnabled(False)
             self.tab_fill_weather_data.setEnabled(False)
             self.tab_hydrograph.setEnabled(False)
+            self.tab_hydrocalc.setEnabled(False)
 
             msgtxt = '''
                      Unable to read the project file.<br><br>
@@ -264,8 +268,8 @@ class WHAT(QtGui.QMainWindow):
         # Update UI :
 
         self.tab_dwnld_data.setEnabled(True)
-        self.tab_fill_weather_data.setEnabled(True)
         self.tab_hydrograph.setEnabled(True)
+        self.tab_hydrocalc.setEnabled(True)
 
         # Update child widgets :
 
@@ -286,6 +290,10 @@ class WHAT(QtGui.QMainWindow):
     # =========================================================================
 
     def closeEvent(self, event):
+        print(event)
+        print('Closing projet')
+        self.pmanager.close_projet()
+        print('Closing WHAT')
         event.accept()
 
 
@@ -374,7 +382,7 @@ class TabBar(QtGui.QTabBar):
     def __init__(self, parent=None):
         super(TabBar, self).__init__(parent=None)
 
-        self.aboutwhat = AboutWhat(parent)
+        self.aboutwhat = AboutWhat(parent=parent)
 
         self.about_btn = QToolButtonBase(IconDB().info)
         self.about_btn.setIconSize(QtCore.QSize(20, 20))

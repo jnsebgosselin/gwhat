@@ -40,10 +40,8 @@ from xlrd import xldate_as_tuple
 # Local imports :
 
 import hydrograph4 as hydrograph
-import HydroCalc
 import mplFigViewer3 as mplFigViewer
 from meteo.weather_viewer import WeatherAvgGraph
-import custom_widgets as MyQWidget
 from colors2 import ColorsReader, ColorsSetupWin
 
 from common import IconDB, StyleDB, QToolButtonNormal
@@ -71,9 +69,6 @@ class HydroprintGUI(myqt.DialogWindow):
         self.dmngr.wxdsetChanged.connect(self.wxdset_changed)
 
         self.weather_avg_graph = WeatherAvgGraph(self)
-
-        self.hydrocalc = HydroCalc.WLCalc()
-        self.hydrocalc.hide()
 
         self.page_setup_win = PageSetupWin(self)
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
@@ -117,10 +112,6 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_weather_normals.setToolTip(
                 'Show current weather dataset normals...')
 
-        self.btn_work_waterlvl = QToolButtonNormal(IconDB().toggleMode)
-        self.btn_work_waterlvl.setToolTip('Toggle between layout and '
-                                          ' computation mode')
-
         btn_save = QToolButtonNormal(IconDB().save)
         btn_save.setToolTip('Save the well hydrograph')
 
@@ -135,8 +126,8 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # LAYOUT :
 
-        btn_list = [self.btn_work_waterlvl, myqt.VSep(), btn_save, btn_draw,
-                    btn_loadConfig, btn_saveConfig, myqt.VSep(),
+        btn_list = [btn_save, btn_draw, btn_loadConfig, btn_saveConfig,
+                    myqt.VSep(),
                     btn_bestfit_waterlvl, btn_bestfit_time,
                     myqt.VSep(), btn_weather_normals, btn_page_setup,
                     btn_color_pick]
@@ -154,7 +145,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         toolbar_widget.setLayout(subgrid_toolbar)
 
-        # ------------------------------------------------------- LEFT PANEL --
+        # ----------------------------------------------------- LEFT PANEL ----
 
         # SubGrid Hydrograph Frame :
 
@@ -188,7 +179,6 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.tabscales = self.__init_scalesTabWidget__()
         self.qAxeLabelsLanguage = self.__init_labelLangWidget__()
-        self.hydrocalc.widget_MRCparam.hide()
 
         RightPanel = QtGui.QFrame()
         layout = QtGui.QGridLayout()
@@ -197,7 +187,6 @@ class HydroprintGUI(myqt.DialogWindow):
         layout.addWidget(self.dmngr, row, 0)
         row += 1
         layout.addWidget(self.tabscales, row, 0)
-        layout.addWidget(self.hydrocalc.widget_MRCparam, row, 0)
         row += 1
         layout.addWidget(self.qAxeLabelsLanguage, 2, 0)
         row += 1
@@ -213,7 +202,6 @@ class HydroprintGUI(myqt.DialogWindow):
         mainGrid = QtGui.QGridLayout()
 
         mainGrid.addWidget(self.grid_layout_widget, 0, 0)
-        mainGrid.addWidget(self.hydrocalc, 0, 0)
         mainGrid.addWidget(myqt.VSep(), 0, 1)
         mainGrid.addWidget(RightPanel, 0, 2)
 
@@ -245,11 +233,6 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_draw.clicked.connect(self.draw_hydrograph)
         btn_save.clicked.connect(self.select_save_path)
         btn_weather_normals.clicked.connect(self.show_weather_averages)
-
-        # Toggle Mode :
-
-        self.btn_work_waterlvl.clicked.connect(self.toggle_computeMode)
-        self.hydrocalc.btn_layout_mode.clicked.connect(self.toggle_layoutMode)
 
         # Hydrograph Layout :
 
@@ -551,9 +534,6 @@ class HydroprintGUI(myqt.DialogWindow):
         tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
         wldset.set_wlmeas(tmeas, wlmeas)
 
-        # Update Graph of "Compute" Mode :
-        self.hydrocalc.set_wldset(wldset)
-
         # Well Layout :
 
         layout = wldset.get_layout()
@@ -578,9 +558,6 @@ class HydroprintGUI(myqt.DialogWindow):
             return
         else:
             self.hydrograph.set_wxdset(self.wxdset)
-
-        # Update Graph of "Compute" Mode :
-        self.hydrocalc.set_wxdset(self.wxdset)
 
         QtCore.QCoreApplication.processEvents()
         self.draw_hydrograph()
@@ -1203,7 +1180,9 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
+    pf = ('C:/Users/jsgosselin/OneDrive/Research/'
+          'PostDoc - MDDELCC/Outils/BRF MontEst/'
+          'BRF MontEst.what')
     pr = ProjetReader(pf)
     dm = DataManager()
 

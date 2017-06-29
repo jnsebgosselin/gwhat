@@ -50,10 +50,11 @@ from gwrecharge_post import plot_rechg_GLUE
 import common.database as db
 import common.widgets as myqt
 from common import IconDB, StyleDB, QToolButtonNormal
-import kgs_brf as bm
+import brf_mod as bm
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
+mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
 # =============================================================================
@@ -67,8 +68,12 @@ class WLCalc(myqt.DialogWindow):
     MRC and ultimately estimate groundwater recharge.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, datamanager, parent=None):
         super(WLCalc, self).__init__(parent, maximize=True)
+
+        self.dmngr = datamanager
+        self.dmngr.wldsetChanged.connect(self.set_wldset)
+        self.dmngr.wxdsetChanged.connect(self.set_wxdset)
 
         self.isGraphExists = False
         self.__figbckground = None  # figure background
@@ -80,11 +85,6 @@ class WLCalc(myqt.DialogWindow):
         self.txls = []  # time in Excel format
         self.tmpl = []  # time in matplotlib format
         self.water_lvl = []
-
-        # Weather and Waterlevel Datasets :
-
-        self.wxdset = None
-        self.wldset = None
 
         # Date System :
 
@@ -111,7 +111,8 @@ class WLCalc(myqt.DialogWindow):
 
         self.brfperiod = [None, None]
         self.__brfcount = 0
-        self.config_brf = ConfigBRF()
+        # self.config_brf = ConfigBRF()
+        self.config_brf = bm.BRFMainWindow(parent=self)
 
         # Soil Profiles :
 
@@ -254,7 +255,7 @@ class WLCalc(myqt.DialogWindow):
 
     def __initUI__(self):
 
-        self.setWindowTitle('Master Recession Curve Estimation')
+        self.setWindowTitle('Hydrograph Analysis')
 
         # ---------------------------------------------------------- TOOLBAR --
 
@@ -262,11 +263,6 @@ class WLCalc(myqt.DialogWindow):
         self.toolbar.hide()
 
         # Toolbar Buttons :
-
-        self.btn_layout_mode = QToolButtonNormal(IconDB().toggleMode)
-        self.btn_layout_mode.setAutoRaise(False)
-        ttip = '<p>Toggle between layout and computation mode</p>'
-        self.btn_layout_mode.setToolTip(ttip)
 
         self.btn_undo = QToolButtonNormal(IconDB().undo)
         self.btn_undo.setToolTip('Undo')
@@ -352,14 +348,11 @@ class WLCalc(myqt.DialogWindow):
 
         # Grid Layout :
 
-        btn_list = [self.btn_layout_mode,
-                    myqt.VSep(),
-                    self.btn_home, self.btn_pan,
+        btn_list = [self.btn_home, self.btn_pan,
+                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat,
                     myqt.VSep(),
                     self.btn_undo, self.btn_clearPeak, self.btn_editPeak,
                     self.btn_delPeak, self.btn_MRCalc, self.btn_save_interp,
-                    myqt.VSep(),
-                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat,
                     myqt.VSep(),
                     self.btn_selBRF, self.btn_calcBRF, self.btn_setBRF,
                     myqt.VSep(),
@@ -391,42 +384,85 @@ class WLCalc(myqt.DialogWindow):
         self.MRC_results.setReadOnly(True)
         self.MRC_results.setFixedHeight(100)
 
-        grid_MRCparam = QtGui.QGridLayout()
-        self.widget_MRCparam = QtGui.QFrame()
-#        self.widget_MRCparam.setFrameStyle(StyleDB.frame)
+        # ---- Layout ----
+
+        self.widget_MRCparam = myqt.QFrameLayout()
 
         row = 0
-        grid_MRCparam.addWidget(QtGui.QLabel('MRC Type :'), row, 0)
-        grid_MRCparam.addWidget(self.MRC_type, row, 1)
+        self.widget_MRCparam.addWidget(QtGui.QLabel('MRC Type :'), row, 0)
+        self.widget_MRCparam.addWidget(self.MRC_type, row, 1)
 #        row += 1
 #        grid_MRCparam.addWidget(self.MRC_ObjFnType, row, col)
         row += 1
-        grid_MRCparam.addWidget(self.MRC_results, row, 0, 1, 2)
+        self.widget_MRCparam.addWidget(self.MRC_results, row, 0, 1, 2)
 
-        grid_MRCparam.setSpacing(5)
-        grid_MRCparam.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-        grid_MRCparam.setColumnStretch(1, 500)
+        self.widget_MRCparam.setSpacing(5)
+        self.widget_MRCparam.setColumnStretch(1, 500)
 
-        self.widget_MRCparam.setLayout(grid_MRCparam)
+        # ---------------------------------------------------- Right Panel ----
+
+        right_pan = myqt.QFrameLayout()
+
+        row = 0
+        right_pan.addWidget(self.dmngr, row, 0)
+        row += 1
+        right_pan.addWidget(self.widget_MRCparam, row, 0)
+        row += 1
+        right_pan.setRowStretch(row, 100)
+
+        right_pan.setSpacing(15)
 
         # -------------------------------------------------------- MAIN GRID --
 
-        mainGrid = QtGui.QGridLayout()
+        mainGrid = QtGui.QGridLayout(self)
 
-        items = [toolbar_widget, self.fig_frame_widget, self.synth_hydro_widg]
-        for row, item in enumerate(items):
-            mainGrid.addWidget(item, row, 0)
+        mainGrid.addWidget(toolbar_widget, 0, 0)
+        mainGrid.addWidget(self.fig_frame_widget, 1, 0)
 
-        mainGrid.setContentsMargins(0, 0, 0, 0)  # Left, Top, Right, Bottom
+        mainGrid.addWidget(myqt.VSep(), 0, 1, 2, 1)
+
+        mainGrid.addWidget(right_pan, 0, 2, 2, 1)
+
+        # items = [toolbar_widget, self.fig_frame_widget, self.synth_hydro_widg]
+        # for row, item in enumerate(items):
+        #     mainGrid.addWidget(item, row, 0)
+
+        mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+        mainGrid.setHorizontalSpacing(15)
         mainGrid.setRowStretch(1, 500)
-
-        self.setLayout(mainGrid)
+        mainGrid.setColumnStretch(0, 500)
+        mainGrid.setColumnMinimumWidth(2, 250)
 
     # =========================================================================
 
+    @property
+    def wldset(self):
+        return self.dmngr.get_current_wldset()
+
+    @property
+    def wxdset(self):
+        return self.dmngr.get_current_wxdset()
+
+    def set_wldset(self, wldset):
+        self.config_brf.set_wldset(wldset)
+
+        # Load Water Level Data :
+
+        self.water_lvl = wldset['WL']
+        self.time = wldset['Time']
+        # self.soilFilename = self.waterLvl_data.soilFilename
+
+        self.init_hydrograph()
+        self.load_MRC_interp()
+
+        # Reset UI :
+
+        self.btn_Waterlvl_lineStyle.setAutoRaise(True)
+
     def set_wxdset(self, wxdset):
-        self.wxdset = wxdset
         self.plot_weather_data()
+
+    # =========================================================================
 
     def plot_weather_data(self):
         if self.wxdset is None:
@@ -504,24 +540,6 @@ class WLCalc(myqt.DialogWindow):
         self.h_etp.set_data(time_bar2, etp_bar)
 
         self.draw()
-
-    # =========================================================================
-
-    def set_wldset(self, wldset):
-        self.wldset = wldset
-
-        # Load Water Level Data :
-
-        self.water_lvl = wldset['WL']
-        self.time = wldset['Time']
-        # self.soilFilename = self.waterLvl_data.soilFilename
-
-        self.init_hydrograph()
-        self.load_MRC_interp()
-
-        # Reset UI :
-
-        self.btn_Waterlvl_lineStyle.setAutoRaise(True)
 
     # =========================================================================
 
@@ -2474,10 +2492,9 @@ class RechgSetupWin(myqt.DialogWindow):
 
 
 if __name__ == '__main__':
-
     import sys
-    plt.rc('font', family='Arial')
-
+    from projet.manager_data import DataManager
+    from projet.reader_projet import ProjetReader
     app = QtGui.QApplication(sys.argv)
 
     ft = app.font()
@@ -2485,48 +2502,71 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    # Create and show widgets :
+    pf = ('C:/Users/jsgosselin/OneDrive/Research/'
+          'PostDoc - MDDELCC/Outils/BRF MontEst/'
+          'BRF MontEst.what')
+    pr = ProjetReader(pf)
+    dm = DataManager()
 
-    w = WLCalc()
-    w.show()
-    w.widget_MRCparam.show()
+    hydrocalc = WLCalc(dm)
+    hydrocalc.show()
 
-    # ---- Pont Rouge ----
-
-    dirname = os.path.join(
-        os.path.dirname(os.getcwd()), 'Projects', 'Pont-Rouge')
-    fmeteo = os.path.join(
-        dirname, 'Meteo', 'Output', 'STE CHRISTINE (7017000)_1960-2015.out')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', '5080001.xls')
-
-    # ---- IDM ----
-
-    dirname = os.path.dirname(os.getcwd())
-    dirname = os.path.join(dirname, 'Projects', 'IDM')
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
-                          'IDM (JSG2017)_1960-2016.out')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
-
-    # ---- Testing ----
-
-    dirname = os.path.dirname(os.getcwd())
-    dirname = os.path.join(dirname, 'Projects', 'Project4Testing')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'F1.xlsx')
-
-    # ---- Valcartier ----
-
-    dirname = '../Projects/Valcartier'
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'Valcartier (9999999)',
-                          'Valcartier (9999999)_1994-2015.out')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'valcartier2.xls')
-
-    # Load and plot data :
-
-    w.load_waterLvl_data(fwaterlvl)
-    w.load_weather_data(fmeteo)
-
-    # Calcul recharge :
-
-#    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
+    dm.set_projet(pr)
 
     sys.exit(app.exec_())
+
+#    import sys
+#    plt.rc('font', family='Arial')
+#
+#    app = QtGui.QApplication(sys.argv)
+#
+#    ft = app.font()
+#    ft.setFamily('Segoe UI')
+#    ft.setPointSize(11)
+#    app.setFont(ft)
+#
+#    # Create and show widgets :
+#
+#    w = WLCalc()
+#    w.show()
+#    w.widget_MRCparam.show()
+#
+#    # ---- Pont Rouge ----
+#
+#    dirname = os.path.join(
+#        os.path.dirname(os.getcwd()), 'Projects', 'Pont-Rouge')
+#    fmeteo = os.path.join(
+#        dirname, 'Meteo', 'Output', 'STE CHRISTINE (7017000)_1960-2015.out')
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', '5080001.xls')
+#
+#    # ---- IDM ----
+#
+#    dirname = os.path.dirname(os.getcwd())
+#    dirname = os.path.join(dirname, 'Projects', 'IDM')
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
+#                          'IDM (JSG2017)_1960-2016.out')
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
+#
+#    # ---- Testing ----
+#
+#    dirname = os.path.dirname(os.getcwd())
+#    dirname = os.path.join(dirname, 'Projects', 'Project4Testing')
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'F1.xlsx')
+#
+#    # ---- Valcartier ----
+#
+#    dirname = '../Projects/Valcartier'
+#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'Valcartier (9999999)',
+#                          'Valcartier (9999999)_1994-2015.out')
+#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'valcartier2.xls')
+#
+#    # Load and plot data :
+#
+#    w.load_waterLvl_data(fwaterlvl)
+#    w.load_weather_data(fmeteo)
+#
+#    # Calcul recharge :
+#
+##    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
+#
+#    sys.exit(app.exec_())

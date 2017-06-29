@@ -234,6 +234,9 @@ class QFrameLayout(QtGui.QFrame):
     def setContentsMargins(self, left, top, right, bottom):
         self.layout().setContentsMargins(left, top, right, bottom)
 
+    def setSpacing(self, spacing):
+        self.layout().setSpacing(spacing)
+
     # -------------------------------------------------------------------------
 
     def rowCount(self):

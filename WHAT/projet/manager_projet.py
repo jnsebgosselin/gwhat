@@ -118,6 +118,9 @@ class ProjetManager(QtGui.QWidget):
 
             return True
 
+    def close_projet(self):
+        self.__projet.close_projet()
+
     # =========================================================================
 
     def show_newproject_dialog(self):
