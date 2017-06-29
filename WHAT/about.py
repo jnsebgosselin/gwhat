@@ -21,9 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Standard library imports :
 
-import sys
 import platform
-import os
 
 # Third party imports :
 
@@ -31,28 +29,22 @@ from PySide import QtGui, QtCore
 
 # Local imports :
 
-try:
-    from _version import __version__, __date__
-    from common import IconDB
-    from common.widgets import DialogWindow
-except ImportError:  # to run this module standalone
-    print('Running module as a standalone script...')
+if __name__ == '__main__':
     import sys
-    import platform
     from os.path import dirname, realpath, basename
     print('Running module %s as a standalone script...' % basename(__file__))
     root = dirname(dirname(realpath(__file__)))
     sys.path.append(root)
 
-    from _version import __version__, __date__
-    from common import IconDB
-    from common.widgets import DialogWindow
+from _version import __version__, __date__
+from common import IconDB
+import common.widgets as myqt
 
 
 # ==============================================================================
 
 
-class AboutWhat(DialogWindow):
+class AboutWhat(QtGui.QDialog):
 
     def __init__(self, parent=None):
         super(AboutWhat, self).__init__(parent)
@@ -66,6 +58,9 @@ class AboutWhat(DialogWindow):
         self.setWindowTitle('About WHAT')
         self.setWindowIcon(IconDB().master)
         self.setMinimumHeight(700)
+        self.setModal(True)
+        self.setWindowFlags(QtCore.Qt.Window |
+                            QtCore.Qt.WindowCloseButtonHint)
 
         # --------------------------------------------------- AboutTextBox ----
 
@@ -78,17 +73,8 @@ class AboutWhat(DialogWindow):
             QtCore.Qt.ScrollBarAlwaysOff)
         self.AboutTextBox.setOpenExternalLinks(True)
 
-        # http://stackoverflow.com/questions/9554435/
-        # qtextedit-background-color-change-also-the-color-of-scrollbar
         self.AboutTextBox.setStyleSheet('QTextEdit {background-color:"white"}')
-
-        # http://stackoverflow.com/questions/26441999/
-        # how-do-i-remove-the-space-between-qplaintextedit-and-its-contents
         self.AboutTextBox.document().setDocumentMargin(0)
-
-        # self.AboutTextBox.setAlignment(QtCore.Qt.AlignCenter)
-        # self.AboutTextBox.setTextInteractionFlags(QtCore.Qt.NoTextInteraction)
-
         self.set_html_in_AboutTextBox()
 
         # --------------------------------------------------------- Ok btn ----
@@ -106,7 +92,6 @@ class AboutWhat(DialogWindow):
 
         grid.setColumnStretch(1, 500)
         grid.setContentsMargins(10, 10, 10, 10)
-#        grid.setColumnMinimumWidth(1, 850)
 
         self.setLayout(grid)
 
@@ -116,7 +101,7 @@ class AboutWhat(DialogWindow):
 
         # ---- Image Logo ----
 
-        width = 750  # self.AboutTextBox.size().width()
+        width = 750
         version = __version__
         date = __date__
 
@@ -149,7 +134,7 @@ class AboutWhat(DialogWindow):
                       </p>
                       ''' % (filename, width)
 
-#        # ---- Header ----
+        # ---- Header ----
 
         about_text += '''
                       <p1 align=center>
@@ -203,22 +188,22 @@ class AboutWhat(DialogWindow):
     # =========================================================================
 
     def eventFilter(self, obj, event):
-
         # http://stackoverflow.com/questions/13788452/
         # pyqt-how-to-handle-event-without-inheritance
 
         # https://srinikom.github.io/pyside-docs/PySide/QtCore/QObject.
         # html#PySide.QtCore.PySide.QtCore.QObject.installEventFilter
 
-#        if event.type() == QtCore.QEvent.Type.Resize:
-#
-#            self.set_html_in_AboutTextBox() # To Keep the image logo to the
-#                                            # same width as the QTextEdit box
-
         if event.type() == QtCore.QEvent.Type.FontChange:
             return True  # Eat the event to disable zooming
+        else:
+            return QtGui.QWidget.eventFilter(self, obj, event)
 
-        return QtGui.QWidget.eventFilter(self, obj, event)
+    def show(self):
+        super(AboutWhat, self).show()
+        self.setFixedSize(self.size())
+
+# =============================================================================
 
 if __name__ == '__main__':
 
