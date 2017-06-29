@@ -76,7 +76,7 @@ class DataManager(QtGui.QWidget):
 
     def __initUI__(self):
 
-        # ---------------------------------------- water level dataset ----
+        # -------------------------------------------- water level dataset ----
 
         self.wldsets_cbox = QtGui.QComboBox()
         self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
@@ -105,7 +105,7 @@ class DataManager(QtGui.QWidget):
         self.well_info_widget.setReadOnly(True)
         self.well_info_widget.setFixedHeight(150)
 
-        # -------------------------------------------- weather dataset ----
+        # ------------------------------------------------ weather dataset ----
 
         self.wxdsets_cbox = QtGui.QComboBox()
         self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
@@ -143,7 +143,7 @@ class DataManager(QtGui.QWidget):
         self.meteo_info_widget.setReadOnly(True)
         self.meteo_info_widget.setFixedHeight(150)
 
-        # ------------------------------------------- Main Right Panel ----
+        # ---------------------------------------------------- Main Layout ----
 
         layout = QtGui.QGridLayout()
 
@@ -151,9 +151,11 @@ class DataManager(QtGui.QWidget):
         layout.addLayout(wltb, 2, 0)
         layout.addWidget(self.well_info_widget, 3, 0)
 
-        layout.addWidget(QtGui.QLabel('Weather Dataset :'), 4, 0)
-        layout.addLayout(wxtb, 5, 0)
-        layout.addWidget(self.meteo_info_widget, 6, 0)
+        layout.setRowMinimumHeight(4, 10)
+
+        layout.addWidget(QtGui.QLabel('Weather Dataset :'), 5, 0)
+        layout.addLayout(wxtb, 6, 0)
+        layout.addWidget(self.meteo_info_widget, 7, 0)
 
         layout.setSpacing(5)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -903,7 +905,9 @@ class NewWXDataDialog(NewDataset):
 
 if __name__ == '__main__':
     from reader_projet import ProjetReader
-    f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
+    f = ('C:/Users/jsgosselin/OneDrive/Research/'
+         'PostDoc - MDDELCC/Outils/BRF MontEst/'
+         'BRF MontEst.what')
     p = ProjetReader(f)
 
     app = QtGui.QApplication(sys.argv)
