@@ -154,13 +154,8 @@ class WLCalc(myqt.DialogWindow):
 
         # Put figure canvas in a QFrame widget.
 
-        fig_frame_grid = QtGui.QGridLayout()
-        self.fig_frame_widget = QtGui.QFrame()
-
-        fig_frame_grid.addWidget(self.canvas, 0, 0)
-
-        self.fig_frame_widget.setLayout(fig_frame_grid)
-        fig_frame_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
+        self.fig_frame_widget = myqt.QFrameLayout()
+        self.fig_frame_widget.addWidget(self.canvas, 0, 0)
 
         self.fig_frame_widget.setFrameStyle(StyleDB().frame)
         self.fig_frame_widget.setLineWidth(2)
@@ -272,9 +267,9 @@ class WLCalc(myqt.DialogWindow):
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_pan = QToolButtonNormal(IconDB().pan)
-        self.btn_pan.setToolTip('Pan axes with left mouse, zoom with right')
-        self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
+        # self.btn_pan = QToolButtonNormal(IconDB().pan)
+        # self.btn_pan.setToolTip('Pan axes with left mouse, zoom with right')
+        # self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
 
         self.btn_strati = QToolButtonNormal(IconDB().stratigraphy)
         self.btn_strati.setToolTip('Toggle on and off the display of the soil'
@@ -321,8 +316,9 @@ class WLCalc(myqt.DialogWindow):
 
         # Grid Layout :
 
-        btn_list = [self.btn_home, self.btn_pan,
-                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat]
+        btn_list = [self.btn_home,
+                    self.btn_Waterlvl_lineStyle,
+                    self.btn_dateFormat]
 
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -417,9 +413,9 @@ class WLCalc(myqt.DialogWindow):
         tooltab.setIconSize(QtCore.QSize(28, 28))
         tooltab.setTabPosition(tooltab.North)
 
-        tooltab.addTab (self.widget_MRCparam, IconDB().MRCalc, '')
-        tooltab.addTab (self.rechg_setup_win, IconDB().recharge, '')
-        tooltab.addTab (self.config_brf, IconDB().setup, '')
+        tooltab.addTab(self.widget_MRCparam, IconDB().MRCalc, '')
+        tooltab.addTab(self.rechg_setup_win, IconDB().recharge, '')
+        tooltab.addTab(self.config_brf, IconDB().setup, '')
 
         # ---------------------------------------------------- Right Panel ----
 
@@ -445,7 +441,8 @@ class WLCalc(myqt.DialogWindow):
 
         mainGrid.addWidget(right_pan, 0, 2, 2, 1)
 
-        # items = [toolbar_widget, self.fig_frame_widget, self.synth_hydro_widg]
+        # items = [toolbar_widget, self.fig_frame_widget,
+        #          self.synth_hydro_widg]
         # for row, item in enumerate(items):
         #     mainGrid.addWidget(item, row, 0)
 
@@ -586,8 +583,6 @@ class WLCalc(myqt.DialogWindow):
             self.add_peak()
         elif sender == self.btn_delPeak:
             self.delete_peak()
-        elif sender == self.btn_pan:
-            self.pan_graph()
         elif sender == self.btn_dateFormat:
             self.switch_date_format()
         elif sender == self.btn_selBRF:
@@ -640,7 +635,6 @@ class WLCalc(myqt.DialogWindow):
     def draw_MRC(self):
         tr = self.wldset['mrc/time']
         hr = self.wldset['mrc/recess']
-
         self.h3_ax0.set_ydata(hr)
         self.h3_ax0.set_xdata(tr + self.dt4xls2mpl * self.dformat)
         self.draw()
@@ -755,6 +749,25 @@ class WLCalc(myqt.DialogWindow):
 
         self.draw()
 
+    def select_BRF(self):
+        # slot connected when the button to select a period to compute the
+        # BRF is clicked
+        if self.btn_selBRF.autoRaise():
+            self.btn_selBRF.setAutoRaise(False)
+            self.brfperiod = [None, None]
+            self.plot_BRFperiod()
+
+            self.btn_pan.setAutoRaise(True)
+            if self.toolbar._active == "PAN":
+                self.toolbar.pan()
+
+            self.btn_editPeak.setAutoRaise(True)
+            self.btn_delPeak.setAutoRaise(True)
+        else:
+            self.btn_selBRF.setAutoRaise(True)
+
+    # =========================================================================
+
     def plot_peak(self):
         if len(self.peak_memory) == 1:
             self.btn_undo.setEnabled(False)
@@ -799,19 +812,13 @@ class WLCalc(myqt.DialogWindow):
             return
 
         if self.btn_editPeak.autoRaise():
-            # Activate <add_peak> :
+            # Activate <add_peak>
             self.btn_editPeak.setAutoRaise(False)
 
-            # Deactivate <pan_graph> :
-            # http://stackoverflow.com/questions/17711099
-            self.btn_pan.setAutoRaise(True)
-            if self.toolbar._active == "PAN":
-                self.toolbar.pan()
-
-            # Deactivate <delete_peak> :
+            # Deactivate <delete_peak>
             self.btn_delPeak.setAutoRaise(True)
         else:
-            # Deactivate <add_peak> and hide guide line
+            # Deactivate <add_peak>
             self.btn_editPeak.setAutoRaise(True)
 
         # Draw to save background :
@@ -819,58 +826,31 @@ class WLCalc(myqt.DialogWindow):
 
     def delete_peak(self):
         if self.btn_delPeak.autoRaise():
-            # Activate <delete_peak> :
+            # Activate <delete_peak>
             self.btn_delPeak.setAutoRaise(False)
 
-            # Deactivate <pan_graph> :
-            # http://stackoverflow.com/questions/17711099
-            self.btn_pan.setAutoRaise(True)
-            if self.toolbar._active == "PAN":
-                self.toolbar.pan()
-
-            # Deactivate <add_peak> and hide guide line :
-            self.btn_editPeak.setAutoRaise(True)
-            self.draw()
-
-        else:
-            # Deactivate <delete_peak> :
-            self.btn_delPeak.setAutoRaise(True)
-
-    def select_BRF(self):
-        # slot connected when the button to select a period to compute the
-        # BRF is clicked
-        if self.btn_selBRF.autoRaise():
-            self.btn_selBRF.setAutoRaise(False)
-            self.brfperiod = [None, None]
-            self.plot_BRFperiod()
-
-            self.btn_pan.setAutoRaise(True)
-            if self.toolbar._active == "PAN":
-                self.toolbar.pan()
-
-            self.btn_editPeak.setAutoRaise(True)
-            self.btn_delPeak.setAutoRaise(True)
-        else:
-            self.btn_selBRF.setAutoRaise(True)
-
-    # =========================================================================
-
-    def pan_graph(self):
-        if self.btn_pan.autoRaise():
             # Deactivate <add_peak>
             self.btn_editPeak.setAutoRaise(True)
+        else:
             # Deactivate <delete_peak>
             self.btn_delPeak.setAutoRaise(True)
-            # Deactivate add BRF period
-            # self.btn_selBRF.setAutoRaise(True)
 
-            # Activate <pan_graph>
-            self.btn_pan.setAutoRaise(False)
-        else:
-            self.btn_pan.setAutoRaise(True)
-
-        self.toolbar.pan()
+        # Draw to save background :
         self.draw()
+
+    def clear_all_peaks(self):
+        if self.isGraphExists is False:
+            print('Graph is empty')
+            return
+
+        self.peak_indx = np.array([]).astype(int)
+        self.peak_memory.append(self.peak_indx)
+
+        self.h3_ax0.set_data([], [])
+
+        self.plot_peak()
+
+    # =========================================================================
 
     def home(self):
         if self.isGraphExists is False:
@@ -894,18 +874,6 @@ class WLCalc(myqt.DialogWindow):
             print('undo')
         else:
             pass
-
-    def clear_all_peaks(self):
-        if self.isGraphExists is False:
-            print('Graph is empty')
-            return
-
-        self.peak_indx = np.array([]).astype(int)
-        self.peak_memory.append(self.peak_indx)
-
-        self.h3_ax0.set_data([], [])
-
-        self.plot_peak()
 
     # =========================================================================
 
@@ -1200,7 +1168,10 @@ class WLCalc(myqt.DialogWindow):
         if self.isGraphExists is False:
             return
 
-        if not self.btn_pan.autoRaise():
+        # if not self.btn_pan.autoRaise():
+        #    return
+
+        if self.toolbar._active == "PAN":
             return
 
         ax0 = self.fig.axes[0]
@@ -1273,10 +1244,15 @@ class WLCalc(myqt.DialogWindow):
     # -------------------------------------------------------------------------
 
     def onrelease(self, event):
-        if event.button != 1:
+        if self.btn_delPeak.autoRaise() and self.btn_editPeak.autoRaise():
+            if self.toolbar._active == 'PAN':
+                self.toolbar.pan()
+                self.draw()
+                QtGui.QApplication.restoreOverrideCursor()
+                self.mouse_vguide(event)
             return
 
-        if self.btn_delPeak.autoRaise() and self.btn_editPeak.autoRaise():
+        if event.button != 1:
             return
 
         self.__addPeakVisible = True
@@ -1293,8 +1269,7 @@ class WLCalc(myqt.DialogWindow):
 
         # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
 
-        if not self.btn_delPeak.autoRaise():  # ------------ delete a peak ----
-
+        if not self.btn_delPeak.autoRaise():
             if len(self.peak_indx) == 0:
                 return
 
@@ -1325,8 +1300,7 @@ class WLCalc(myqt.DialogWindow):
                 self.xcross.set_visible(False)
                 self.plot_peak()
 
-        elif not self.btn_editPeak.autoRaise():  # ------------ add a peak ----
-
+        elif not self.btn_editPeak.autoRaise():
             xclic = event.xdata
             if xclic is None:
                 return
@@ -1353,8 +1327,16 @@ class WLCalc(myqt.DialogWindow):
 
             self.__addPeakVisible = False
             self.draw()
+        else:
+            if self.toolbar._active is None:
+                self.toolbar.pan()
+                self.draw()
+                QtGui.QApplication.setOverrideCursor(QtCore.Qt.SizeAllCursor)
+                self.toolbar.press_pan(event)
 
-#        elif not self.btn_selBRF.autoRaise():  # ------- Select BRF period ----
+            # ------- Select BRF period ----
+
+#        elif not self.btn_selBRF.autoRaise():
 #            xclic = event.xdata
 #            if xclic is None:
 #                return
