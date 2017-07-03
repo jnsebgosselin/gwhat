@@ -44,28 +44,25 @@ import brf_mod as bm
 
 # =============================================================================
 
-
-class BRFMainWindow(myqt.DialogWindow):
-
+class BRFManager(myqt.QFrameLayout):
     def __init__(self, wldset=None, parent=None):
-        super(BRFMainWindow, self).__init__(parent, resizable=False,
-                                            maximize=False)
+        super(BRFManager, self).__init__(parent)
+
+        self.viewer = BRFViewer(wldset, self)
         self.__initGUI__()
-        self.set_wldset(wldset)
 
     def __initGUI__(self):
-
-        # ----------------------------------------------------- BRF Params ----
+        self.setContentsMargins(10, 10, 10, 10)
 
         self._bplag = {}
-        self._bplag['label'] = QtGui.QLabel('Nbr of BP Lags :')
+        self._bplag['label'] = QtGui.QLabel('BP Lags Nbr:')
         self._bplag['widget'] = myqt.QDoubleSpinBox(100, 0)
         self._bplag['widget'].setRange(1, 9999)
         self._bplag['widget'].setValue(300)
         self._bplag['widget'].setKeyboardTracking(True)
 
         self._etlag = {}
-        self._etlag['label'] = QtGui.QLabel('Nbr of ET Lags :')
+        self._etlag['label'] = QtGui.QLabel('ET Lags Nbr:')
         self._etlag['widget'] = myqt.QDoubleSpinBox(300, 0)
         self._etlag['widget'].setRange(-1, 9999)
         self._etlag['widget'].setValue(300)
@@ -92,41 +89,204 @@ class BRFMainWindow(myqt.DialogWindow):
         self._correct = QtGui.QCheckBox('Correct WL')
         self._correct.setEnabled(False)
 
-        btn_comp = QtGui.QPushButton('Compute New BRF')
+        # -------------------------------------------------------- Toolbar ----
+
+        btn_comp = QtGui.QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(QtCore.Qt.NoFocus)
 
+        btn_show = QToolButtonSmall(IconDB().search)
+        btn_show.clicked.connect(self.viewer.show)
+
+        tbar = myqt.QFrameLayout()
+        tbar.addWidget(btn_show, 0, 0)
+        tbar.setColumnStretch(tbar.columnCount(), 100)
+
+        # ---------------------------------------------------- Main Layout ----
+
         # ---- Layout ----
 
-        brf_pan = myqt.QFrameLayout()
-
         row = 0
-        brf_pan.addWidget(self._bplag['label'], row, 0)
-        brf_pan.addWidget(self._bplag['widget'], row, 1)
+        self.addWidget(self._bplag['label'], row, 0)
+        self.addWidget(self._bplag['widget'], row, 1)
         row += 1
-        brf_pan.addWidget(self._etlag['label'], row, 0)
-        brf_pan.addWidget(self._etlag['widget'], row, 1)
+        self.addWidget(self._etlag['label'], row, 0)
+        self.addWidget(self._etlag['widget'], row, 1)
         row += 1
-        brf_pan.setRowMinimumHeight(row, 15)
+        self.setRowMinimumHeight(row, 15)
         row += 1
-        brf_pan.addWidget(QtGui.QLabel('BRF Data Start :'), row, 0)
-        brf_pan.addWidget(self._datastart, row, 1)
-        brf_pan.addWidget(btn_seldata, row, 2)
+        self.addWidget(QtGui.QLabel('BRF Start :'), row, 0)
+        self.addWidget(self._datastart, row, 1)
+        self.addWidget(btn_seldata, row, 2)
         row += 1
-        brf_pan.addWidget(QtGui.QLabel('BRF Data End :'), row, 0)
-        brf_pan.addWidget(self._dataend, row, 1)
+        self.addWidget(QtGui.QLabel('BRF End :'), row, 0)
+        self.addWidget(self._dataend, row, 1)
         row += 1
-        brf_pan.setRowMinimumHeight(row, 15)
+        self.setRowMinimumHeight(row, 15)
         row += 1
-        brf_pan.addWidget(self._detrend, row, 0, 1, 2)
+        self.addWidget(self._detrend, row, 0, 1, 2)
         row += 1
-        brf_pan.addWidget(self._correct, row, 0, 1, 2)
+        self.addWidget(self._correct, row, 0, 1, 2)
         row += 1
-        brf_pan.setRowMinimumHeight(row, 25)
+        self.setRowMinimumHeight(row, 25)
         row += 1
-        brf_pan.addWidget(btn_comp, row, 0, 1, 3)
+        self.addWidget(tbar, row, 0, 1, 3)
         row += 1
-        brf_pan.setRowStretch(row, 100)
+        self.setRowStretch(row, 100)
+        row += 1
+        self.addWidget(btn_comp, row, 0, 1, 2)
+        self.addWidget(tbar, row, 2)
+
+        self.setColumnStretch(self.columnCount(), 100)
+
+    # =========================================================================
+
+    @property
+    def lagBP(self):
+        return self._bplag['widget'].value()
+
+    @property
+    def lagET(self):
+        return self._etlag['widget'].value()
+
+    @property
+    def detrend(self):
+        if self._detrend.checkState():
+            return 'Yes'
+        else:
+            return 'No'
+
+    @property
+    def correct_WL(self):
+        return 'No'
+
+    @property
+    def brfperiod(self):
+        y, m, d = self._datastart.date().getDate()
+        dstart = xldate_from_date_tuple((y, m, d), 0)
+
+        y, m, d = self._dataend.date().getDate()
+        dend = xldate_from_date_tuple((y, m, d), 0)
+
+        return (dstart, dend)
+
+    # =========================================================================
+
+    def set_wldset(self, wldset):
+        self.wldset = wldset
+        self.viewer.set_wldset(wldset)
+        if wldset is None:
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)
+
+            date_start, date_end = self.set_datarange(
+                    self.wldset['Time'][[0, -1]])
+            self._datastart.setMinimumDate(date_start)
+            self._dataend.setMaximumDate(date_end)
+
+    # =========================================================================
+
+    def get_datarange(self):
+        child = self
+        while True:
+            try:
+                child.parent().raise_()
+            except:
+                break
+            else:
+                child = child.parent()
+
+    def set_datarange(self, times):
+        date_start = xldate_as_tuple(times[0], 0)
+        date_start = QtCore.QDate(date_start[0], date_start[1], date_start[2])
+        self._datastart.setDate(date_start)
+
+        date_end = xldate_as_tuple(times[1], 0)
+        date_end = QtCore.QDate(date_end[0], date_end[1], date_end[2])
+        self._dataend.setDate(date_end)
+
+        return date_start, date_end
+
+    # =========================================================================
+
+    def calc_brf(self):
+        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        print('calculating BRF')
+        well = self.wldset['Well']
+
+        t1 = min(self.brfperiod)
+        i1 = np.where(self.wldset['Time'] >= t1)[0][0]
+
+        t2 = max(self.brfperiod)
+        i2 = np.where(self.wldset['Time'] <= t2)[0][-1]
+
+        time = np.copy(self.wldset['Time'][i1:i2+1])
+        wl = np.copy(self.wldset['WL'][i1:i2+1])
+        bp = np.copy(self.wldset['BP'][i1:i2+1])
+        et = np.copy(self.wldset['ET'][i1:i2+1])
+        if len(et) == 0:
+            et = np.zeros(len(wl))
+
+        lagBP = self.lagBP
+        lagET = self.lagET
+        detrend = self.detrend
+        correct = self.correct_WL
+
+        dt = np.min(np.diff(time))
+        tc = np.arange(t1, t2+dt/2, dt)
+        if len(tc) != len(time):
+            print('Filling gaps in data with linear interpolation.')
+            indx = np.where(~np.isnan(wl))[0]
+            wl = np.interp(tc, time[indx], wl[indx])
+
+            indx = np.where(~np.isnan(bp))[0]
+            bp = np.interp(tc, time[indx], bp[indx])
+
+            indx = np.where(~np.isnan(et))[0]
+            et = np.interp(tc, time[indx], et[indx])
+
+            time = tc
+
+        bm.produce_BRFInputtxt(well, time, wl, bp, et)
+        msg = 'Not enough data. Try enlarging the selected period'
+        msg += ' or reduce the number of BP and ET lags.'
+        if lagBP >= len(time) or lagET >= len(time):
+            QtGui.QApplication.restoreOverrideCursor()
+            self.emit_warning(msg)
+            return
+
+        bm.produce_par_file(lagBP, lagET, detrend, correct)
+        bm.run_kgsbrf()
+
+        # ---- Save BRF results ----
+
+        try:
+            lag, A, err = bm.read_BRFOutput()
+            date_start = self._datastart.date().getDate()
+            date_end = self._dataend.date().getDate()
+            self.wldset.save_brf(lag, A, err, date_start, date_end)
+            self.viewer.new_brf_added()
+
+            QtGui.QApplication.restoreOverrideCursor()
+        except:
+            QtGui.QApplication.restoreOverrideCursor()
+            self.emit_warning(msg)
+            return
+
+
+# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+
+
+class BRFViewer(myqt.DialogWindow):
+
+    def __init__(self, wldset=None, parent=None):
+        super(BRFViewer, self).__init__(parent, resizable=False,
+                                        maximize=False)
+        self.__initGUI__()
+        self.set_wldset(wldset)
+
+    def __initGUI__(self):
 
         # -------------------------------------------------------- Toolbar ----
 
@@ -257,9 +417,6 @@ class BRFMainWindow(myqt.DialogWindow):
 
         ml = QtGui.QGridLayout(self)
 
-        ml.addWidget(brf_pan, 0, 0)
-        ml.setColumnMinimumWidth(1, 25)
-        ml.addWidget(myqt.VSep(), 0, 1)
         ml.addWidget(self.fig_frame, 0, 2)
         ml.addWidget(self.graph_pan, 0, 3)
 
@@ -271,15 +428,9 @@ class BRFMainWindow(myqt.DialogWindow):
         self.wldset = wldset
         if wldset is None:
             self.setEnabled(False)
-            return
-
-        self.setEnabled(True)
-
-        date_start, date_end = self.set_datarange(self.wldset['Time'][[0, -1]])
-        self._datastart.setMinimumDate(date_start)
-        self._dataend.setMaximumDate(date_end)
-
-        self.update_brfnavigate_state()
+        else:
+            self.setEnabled(True)
+            self.update_brfnavigate_state()
 
     # ======================================================= Graph Panel  ====
 
@@ -301,29 +452,6 @@ class BRFMainWindow(myqt.DialogWindow):
 
     # =========================================================================
 
-    def get_datarange(self):
-        child = self
-        while True:
-            try:
-                child.parent().raise_()
-            except:
-                break
-            else:
-                child = child.parent()
-
-    def set_datarange(self, times):
-        date_start = xldate_as_tuple(times[0], 0)
-        date_start = QtCore.QDate(date_start[0], date_start[1], date_start[2])
-        self._datastart.setDate(date_start)
-
-        date_end = xldate_as_tuple(times[1], 0)
-        date_end = QtCore.QDate(date_end[0], date_end[1], date_end[2])
-        self._dataend.setDate(date_end)
-
-        return date_start, date_end
-
-    # =========================================================================
-
     def navigate_brf(self):
         if self.sender() == self.btn_prev:
             cur_num = self.current_brf.value() - 1
@@ -339,6 +467,11 @@ class BRFMainWindow(myqt.DialogWindow):
         index = self.current_brf.value()-1
         name = self.wldset.get_brfAt(index)
         self.wldset.del_brf(name)
+        self.update_brfnavigate_state()
+
+    def new_brf_added(self):
+        self.current_brf.setMaximum(self.wldset.brf_count())
+        self.current_brf.setValue(self.wldset.brf_count())
         self.update_brfnavigate_state()
 
     def update_brfnavigate_state(self):
@@ -384,25 +517,6 @@ class BRFMainWindow(myqt.DialogWindow):
             return self._ylim['max'].value()
 
     @property
-    def lagBP(self):
-        return self._bplag['widget'].value()
-
-    @property
-    def lagET(self):
-        return self._etlag['widget'].value()
-
-    @property
-    def detrend(self):
-        if self._detrend.checkState():
-            return 'Yes'
-        else:
-            return 'No'
-
-    @property
-    def correct_WL(self):
-        return 'No'
-
-    @property
     def show_ebar(self):
         if self._errorbar.checkState() == QtCore.Qt.CheckState.Checked:
             return True
@@ -419,85 +533,6 @@ class BRFMainWindow(myqt.DialogWindow):
     @property
     def markersize(self):
         return self._markersize['widget'].value()
-
-    @property
-    def brfperiod(self):
-        y, m, d = self._datastart.date().getDate()
-        dstart = xldate_from_date_tuple((y, m, d), 0)
-
-        y, m, d = self._dataend.date().getDate()
-        dend = xldate_from_date_tuple((y, m, d), 0)
-
-        return (dstart, dend)
-
-    # =========================================================================
-
-    def calc_brf(self):
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
-        print('calculating BRF')
-        well = self.wldset['Well']
-
-        t1 = min(self.brfperiod)
-        i1 = np.where(self.wldset['Time'] >= t1)[0][0]
-
-        t2 = max(self.brfperiod)
-        i2 = np.where(self.wldset['Time'] <= t2)[0][-1]
-
-        time = np.copy(self.wldset['Time'][i1:i2+1])
-        wl = np.copy(self.wldset['WL'][i1:i2+1])
-        bp = np.copy(self.wldset['BP'][i1:i2+1])
-        et = np.copy(self.wldset['ET'][i1:i2+1])
-        if len(et) == 0:
-            et = np.zeros(len(wl))
-
-        lagBP = self.lagBP
-        lagET = self.lagET
-        detrend = self.detrend
-        correct = self.correct_WL
-
-        dt = np.min(np.diff(time))
-        tc = np.arange(t1, t2+dt/2, dt)
-        if len(tc) != len(time):
-            print('Filling gaps in data with linear interpolation.')
-            indx = np.where(~np.isnan(wl))[0]
-            wl = np.interp(tc, time[indx], wl[indx])
-
-            indx = np.where(~np.isnan(bp))[0]
-            bp = np.interp(tc, time[indx], bp[indx])
-
-            indx = np.where(~np.isnan(et))[0]
-            et = np.interp(tc, time[indx], et[indx])
-
-            time = tc
-
-        bm.produce_BRFInputtxt(well, time, wl, bp, et)
-        msg = 'Not enough data. Try enlarging the selected period'
-        msg += ' or reduce the number of BP and ET lags.'
-        if lagBP >= len(time) or lagET >= len(time):
-            QtGui.QApplication.restoreOverrideCursor()
-            self.emit_warning(msg)
-            return
-
-        bm.produce_par_file(lagBP, lagET, detrend, correct)
-        bm.run_kgsbrf()
-
-        # ---- Save BRF results ----
-
-        try:
-            lag, A, err = bm.read_BRFOutput()
-            date_start = self._datastart.date().getDate()
-            date_end = self._dataend.date().getDate()
-            self.wldset.save_brf(lag, A, err, date_start, date_end)
-
-            self.current_brf.setMaximum(self.wldset.brf_count())
-            self.current_brf.setValue(self.wldset.brf_count())
-            self.update_brfnavigate_state()
-
-            QtGui.QApplication.restoreOverrideCursor()
-        except:
-            QtGui.QApplication.restoreOverrideCursor()
-            self.emit_warning(msg)
-            return
 
     # -------------------------------------------------------------------------
 
@@ -533,7 +568,7 @@ class BRFMainWindow(myqt.DialogWindow):
     # =========================================================================
 
     def show(self):
-        super(BRFMainWindow, self).show()
+        super(BRFViewer, self).show()
         self.fig_frame.setFixedSize(self.fig_frame.size())
 
 if __name__ == "__main__":
@@ -550,7 +585,7 @@ if __name__ == "__main__":
     ft.setFamily('Segoe UI')
     app.setFont(ft)
 
-    brfwin = BRFMainWindow(None)
+    brfwin = BRFManager(None)
     brfwin.show()
     brfwin.set_wldset(wldset)
 
