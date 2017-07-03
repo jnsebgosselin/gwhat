@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="1.5916158"
-     inkscape:cx="84.205175"
-     inkscape:cy="181.09682"
+     inkscape:zoom="1.09375"
+     inkscape:cx="-122.38997"
+     inkscape:cy="130.16552"
      inkscape:document-units="px"
      inkscape:current-layer="g3698"
      showgrid="true"
@@ -104,25 +104,25 @@
        id="g3698"
        transform="translate(72.516709,-72.63072)">
       <ellipse
-         ry="98.361816"
-         rx="98.360489"
+         ry="114.50153"
+         rx="114.5"
          cy="50.50507"
          cx="56.142853"
          style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:none;stroke:#4d4d4d;stroke-width:25;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker:none;enable-background:accumulate"
          id="path2995" />
       <g
-         transform="matrix(0.66044641,-0.66045531,0.66044641,0.66045531,-14.292346,54.228617)"
+         transform="matrix(0.76881596,-0.76882616,0.76881596,0.76882616,-25.849727,54.839596)"
          id="g3691"
-         style="stroke-width:1.07064259">
+         style="stroke-width:0.91972876">
         <g
            id="g3686"
-           style="stroke-width:1.07064259">
+           style="stroke-width:0.91972876">
           <path
              sodipodi:nodetypes="ccccc"
              inkscape:connector-curvature="0"
              id="path825"
              d="M 92.060752,105.87434 0.65956258,14.660888 20.22496,-4.8642686 111.62615,86.349127 Z"
-             style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:2.14128518;marker:none;enable-background:accumulate" />
+             style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:1.83945751;marker:none;enable-background:accumulate" />
         </g>
       </g>
     </g>
