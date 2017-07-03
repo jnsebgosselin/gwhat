@@ -807,12 +807,14 @@ class WLCalc(myqt.DialogWindow):
         if self.btn_editPeak.autoRaise():
             # Activate <add_peak>
             self.btn_editPeak.setAutoRaise(False)
+            QtGui.QApplication.setOverrideCursor(QtCore.Qt.PointingHandCursor)
 
             # Deactivate <delete_peak>
             self.btn_delPeak.setAutoRaise(True)
         else:
             # Deactivate <add_peak>
             self.btn_editPeak.setAutoRaise(True)
+            QtGui.QApplication.restoreOverrideCursor()
 
         # Draw to save background :
         self.draw()
@@ -851,6 +853,15 @@ class WLCalc(myqt.DialogWindow):
             return
 
         self.toolbar.home()
+        if self.dformat == 0:
+            ax0 = self.fig.axes[0]
+            xfmt = mpl.ticker.ScalarFormatter()
+            ax0.xaxis.set_major_formatter(xfmt)
+            ax0.get_xaxis().get_major_formatter().set_useOffset(False)
+
+            xlim = ax0.get_xlim()
+            ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
+
         self.draw()
 
     def undo(self):
@@ -893,7 +904,6 @@ class WLCalc(myqt.DialogWindow):
         self.draw()
 
     def switch_date_format(self):
-
         ax0 = self.fig.axes[0]
 
         # Change UI and System Variable State :
