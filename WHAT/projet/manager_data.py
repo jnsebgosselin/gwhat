@@ -103,7 +103,7 @@ class DataManager(QtGui.QWidget):
 
         self.well_info_widget = QtGui.QTextEdit()
         self.well_info_widget.setReadOnly(True)
-        self.well_info_widget.setFixedHeight(150)
+        self.well_info_widget.setFixedHeight(100)
 
         # ------------------------------------------------ weather dataset ----
 
@@ -141,7 +141,7 @@ class DataManager(QtGui.QWidget):
 
         self.meteo_info_widget = QtGui.QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
-        self.meteo_info_widget.setFixedHeight(150)
+        self.meteo_info_widget.setFixedHeight(100)
 
         # ---------------------------------------------------- Main Layout ----
 
