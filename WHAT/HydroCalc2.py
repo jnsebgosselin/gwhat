@@ -112,7 +112,7 @@ class WLCalc(myqt.DialogWindow):
         self.brfperiod = [None, None]
         self.__brfcount = 0
         # self.config_brf = ConfigBRF()
-        self.config_brf = bm.BRFMainWindow(parent=self)
+        self.config_brf = bm.BRFManager(parent=self)
 
         # Soil Profiles :
 
@@ -296,23 +296,23 @@ class WLCalc(myqt.DialogWindow):
 
         # ---- recharge ----
 
-        self.btn_recharge = QToolButtonNormal(IconDB().recharge)
-        self.btn_recharge.setToolTip('Show window for recharge estimation')
-        self.btn_recharge.clicked.connect(self.rechg_setup_win.show)
+        # self.btn_recharge = QToolButtonNormal(IconDB().recharge)
+        # self.btn_recharge.setToolTip('Show window for recharge estimation')
+        # self.btn_recharge.clicked.connect(self.rechg_setup_win.show)
         # self.btn_recharge.hide()
 
-        self.btn_synthHydro = QToolButtonNormal(IconDB().page_setup)
-        self.btn_synthHydro.setToolTip('Show synthetic hydrograph')
-        self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
-        self.btn_synthHydro.hide()
+#        self.btn_synthHydro = QToolButtonNormal(IconDB().page_setup)
+#        self.btn_synthHydro.setToolTip('Show synthetic hydrograph')
+#        self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
+#        self.btn_synthHydro.hide()
 
         # ---- BRF ----
 
-        self.btn_selBRF = QToolButtonNormal(IconDB().add_point)
-        self.btn_selBRF.clicked.connect(self.aToolbarBtn_isClicked)
-
-        self.btn_setBRF = QToolButtonNormal(IconDB().setup)
-        self.btn_setBRF.clicked.connect(self.config_brf.show)
+#        self.btn_selBRF = QToolButtonNormal(IconDB().add_point)
+#        self.btn_selBRF.clicked.connect(self.aToolbarBtn_isClicked)
+#
+#        self.btn_setBRF = QToolButtonNormal(IconDB().setup)
+#        self.btn_setBRF.clicked.connect(self.config_brf.show)
 
 #        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
 #        self.btn_findPeak.clicked.connect(self.find_peak)
@@ -322,11 +322,7 @@ class WLCalc(myqt.DialogWindow):
         # Grid Layout :
 
         btn_list = [self.btn_home, self.btn_pan,
-                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat,
-                    myqt.VSep(),
-                    self.btn_selBRF, self.btn_setBRF,
-                    myqt.VSep(),
-                    self.btn_recharge, self.btn_synthHydro]
+                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat]
 
         subgrid_toolbar = QtGui.QGridLayout()
         toolbar_widget = QtGui.QWidget()
@@ -352,9 +348,15 @@ class WLCalc(myqt.DialogWindow):
 
         self.MRC_results = QtGui.QTextEdit()
         self.MRC_results.setReadOnly(True)
-        self.MRC_results.setFixedHeight(100)
+        self.MRC_results.setMinimumHeight(100)
+        self.MRC_results.setMinimumWidth(100)
 
-        # ---- Toolbar ----
+        sp = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored,
+                               QtGui.QSizePolicy.MinimumExpanding)
+
+        self.MRC_results.setSizePolicy(sp)
+
+        # ---- MRC Toolbar ----
 
         self.btn_undo = QToolButtonNormal(IconDB().undo)
         self.btn_undo.setToolTip('Undo')
@@ -375,7 +377,7 @@ class WLCalc(myqt.DialogWindow):
         self.btn_save_interp.setToolTip('Save Calculated MRC to file.')
         self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_MRCalc = QToolButtonNormal(IconDB().MRCalc)
+        self.btn_MRCalc = QtGui.QPushButton('Compute MRC')
         self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
         self.btn_MRCalc.setToolTip('<p>Calculate the Master Recession Curve'
                                    ' (MRC) for the selected time periods.</p>')
@@ -386,25 +388,38 @@ class WLCalc(myqt.DialogWindow):
         mrc_tb.addWidget(self.btn_editPeak, 0, 2)
         mrc_tb.addWidget(self.btn_delPeak, 0, 3)
         mrc_tb.addWidget(self.btn_save_interp, 0, 4)
-        mrc_tb.addWidget(self.btn_MRCalc, 0, 5)
         mrc_tb.setColumnStretch(mrc_tb.columnCount(), 100)
 
-        # ---- Layout ----
+        # ---- MRC Layout ----
 
         self.widget_MRCparam = myqt.QFrameLayout()
+        self.widget_MRCparam.setContentsMargins(10, 10, 10, 10)
 
         row = 0
         self.widget_MRCparam.addWidget(QtGui.QLabel('MRC Type :'), row, 0)
         self.widget_MRCparam.addWidget(self.MRC_type, row, 1)
         row += 1
-        self.widget_MRCparam.addWidget(self.MRC_results, row, 0, 1, 2)
+        self.widget_MRCparam.addWidget(self.MRC_results, row, 0, 1, 3)
         row += 1
-        self.widget_MRCparam.addWidget(mrc_tb, row, 0, 1, 2)
+        self.widget_MRCparam.addWidget(mrc_tb, row, 0, 1, 3)
+        row += 1
+        self.widget_MRCparam.setRowMinimumHeight(row, 15)
+        self.widget_MRCparam.setRowStretch(row, 500)
+        row += 1
+        self.widget_MRCparam.addWidget(self.btn_MRCalc, row, 0, 1, 3)
 
         self.widget_MRCparam.setSpacing(5)
-        self.widget_MRCparam.setColumnStretch(1, 500)
+        self.widget_MRCparam.setColumnStretch(2, 500)
 
-        # ----------------------------------------------------- Toolwidget ----
+        # -------------------------------------------------- Tool Tab Area ----
+
+        tooltab = QtGui.QTabWidget()
+        tooltab.setIconSize(QtCore.QSize(28, 28))
+        tooltab.setTabPosition(tooltab.North)
+
+        tooltab.addTab (self.widget_MRCparam, IconDB().MRCalc, '')
+        tooltab.addTab (self.rechg_setup_win, IconDB().recharge, '')
+        tooltab.addTab (self.config_brf, IconDB().setup, '')
 
         # ---------------------------------------------------- Right Panel ----
 
@@ -413,7 +428,7 @@ class WLCalc(myqt.DialogWindow):
         row = 0
         right_pan.addWidget(self.dmngr, row, 0)
         row += 1
-        right_pan.addWidget(self.widget_MRCparam, row, 0)
+        right_pan.addWidget(tooltab, row, 0)
         row += 1
         right_pan.setRowStretch(row, 100)
 
@@ -847,7 +862,7 @@ class WLCalc(myqt.DialogWindow):
             # Deactivate <delete_peak>
             self.btn_delPeak.setAutoRaise(True)
             # Deactivate add BRF period
-            self.btn_selBRF.setAutoRaise(True)
+            # self.btn_selBRF.setAutoRaise(True)
 
             # Activate <pan_graph>
             self.btn_pan.setAutoRaise(False)
@@ -1329,8 +1344,8 @@ class WLCalc(myqt.DialogWindow):
                     print('There is already a peak at this time.')
                     return
 
-                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 3:
-                    print('There is a peak at less than 3 days.')
+                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 1:
+                    print('There is a peak at less than 1 days.')
                     return
 
             self.peak_indx = np.append(self.peak_indx, indx)
@@ -1339,200 +1354,36 @@ class WLCalc(myqt.DialogWindow):
             self.__addPeakVisible = False
             self.draw()
 
-        elif not self.btn_selBRF.autoRaise():  # ------- Select BRF period ----
-            xclic = event.xdata
-            if xclic is None:
-                return
-            x = self.time + self.dt4xls2mpl * self.dformat
-            y = self.water_lvl
-
-            d = np.abs(xclic - x)
-            indx = np.argmin(d)
-            if len(self.peak_indx) > 0:
-                if indx in self.peak_indx:
-                    print('There is already a peak at this time.')
-                    return
-
-                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 3:
-                    print('There is a peak at less than 3 days.')
-                    return
-
-            self.brfperiod[self.__brfcount] = self.time[indx]
-            if self.__brfcount == 0:
-                self.__brfcount += 1
-                self.plot_BRFperiod()
-            elif self.__brfcount == 1:
-                self.__brfcount = 0
-                self.select_BRF()
-                self.plot_BRFperiod()
-            else:
-                raise ValueError('Something is wrong in the code')
-
-            print(self.brfperiod)
-
-
-# =============================================================================
-
-
-class ConfigBRF(myqt.DialogWindow):
-    def __init__(self, parent=None):
-        super(ConfigBRF, self).__init__(parent,  resizable=False)
-
-        layout = QtGui.QGridLayout()
-        self.setLayout(layout)
-
-        self._bplag = {}
-        self._bplag['label'] = QtGui.QLabel('Number of BP Lags :')
-        self._bplag['widget'] = myqt.QDoubleSpinBox(300, 0)
-        self._bplag['widget'].setRange(1, 9999)
-
-        self._etlag = {}
-        self._etlag['label'] = QtGui.QLabel('Number of ET Lags :')
-        self._etlag['widget'] = myqt.QDoubleSpinBox(300, 0)
-        self._etlag['widget'].setRange(-1, 9999)
-
-        self._detrend = QtGui.QCheckBox('Detrend')
-        self._detrend.setCheckState(QtCore.Qt.Checked)
-
-        self._correct = QtGui.QCheckBox('Correct WL')
-        self._correct.setEnabled(False)
-
-        self._errorbar = QtGui.QCheckBox('Show error bars')
-        self._errorbar.setCheckState(QtCore.Qt.Checked)
-
-        self._drawline = QtGui.QCheckBox('Draw line')
-        self._drawline.setCheckState(QtCore.Qt.Unchecked)
-
-        self._markersize = {}
-        self._markersize['label'] = QtGui.QLabel('Marker size :')
-        self._markersize['widget'] = myqt.QDoubleSpinBox(5, 0)
-        self._markersize['widget'].setRange(0, 25)
-
-        # ---- axis limits ----
-
-        axlayout = QtGui.QGridLayout()
-        axlayout.addWidget(QtGui.QLabel('y-axis limits:'), 0, 0, 1, 2)
-        axlayout.addWidget(QtGui.QLabel('   Minimum :'), 1, 0)
-        axlayout.addWidget(QtGui.QLabel('   Maximum :'), 2, 0)
-        axlayout.addWidget(QtGui.QLabel('   Auto :'), 3, 0)
-
-        self._ylim = {}
-        self._ylim['min'] = myqt.QDoubleSpinBox(0, 1, 0.2)
-        self._ylim['min'].setEnabled(False)
-        self._ylim['max'] = myqt.QDoubleSpinBox(1, 1, 0.2)
-        self._ylim['max'].setEnabled(False)
-        self._ylim['auto'] = QtGui.QCheckBox('')
-        self._ylim['auto'].setCheckState(QtCore.Qt.Checked)
-        self._ylim['auto'].stateChanged.connect(self.xlimModeChanged)
-
-        axlayout.addWidget(self._ylim['min'], 1, 1)
-        axlayout.addWidget(self._ylim['max'], 2, 1)
-        axlayout.addWidget(self._ylim['auto'], 3, 1)
-
-        axlayout.setColumnStretch(3, 100)
-        axlayout.setContentsMargins(0, 0, 0, 0)
-
-        # ---- Toolbar ----
-
-        btn_ok = QtGui.QPushButton('Ok')
-        btn_ok.clicked.connect(self.close)
-
-        tbar = QtGui.QGridLayout()
-
-        tbar.addWidget(btn_ok, 0, 1)
-
-        tbar.setColumnStretch(0, 100)
-        tbar.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-
-        # ---- Layout ----
-
-        layout.addWidget(self._bplag['label'], 0, 0)
-        layout.addWidget(self._bplag['widget'], 0, 1)
-
-        layout.addWidget(self._etlag['label'], 1, 0)
-        layout.addWidget(self._etlag['widget'], 1, 1)
-
-        layout.addWidget(self._detrend, layout.rowCount(), 0, 1, 2)
-        layout.addWidget(self._correct, layout.rowCount(), 0, 1, 2)
-        layout.addWidget(myqt.HSep(), layout.rowCount(), 0, 1, 2)
-        layout.addWidget(self._errorbar, layout.rowCount(), 0, 1, 2)
-        layout.addWidget(self._drawline, layout.rowCount(), 0, 1, 2)
-
-        row = layout.rowCount()
-        layout.addWidget(self._markersize['label'], row, 0)
-        layout.addWidget(self._markersize['widget'], row, 1)
-
-        layout.addWidget(myqt.HSep(), layout.rowCount(), 0, 1, 2)
-
-        layout.addLayout(axlayout, layout.rowCount(), 0, 1, 2)
-
-        layout.setRowMinimumHeight(layout.rowCount(), 15)
-
-        layout.addLayout(tbar, layout.rowCount(), 0, 1, 2)
-
-    # =========================================================================
-
-    def xlimModeChanged(self, state):
-        if state == 2:
-            self._ylim['min'].setEnabled(False)
-            self._ylim['max'].setEnabled(False)
-        else:
-            self._ylim['min'].setEnabled(True)
-            self._ylim['max'].setEnabled(True)
-
-    # =========================================================================
-
-    @property
-    def ymin(self):
-        if self._ylim['auto'].checkState() == QtCore.Qt.CheckState.Checked:
-            return None
-        else:
-            return self._ylim['min'].value()
-
-    @property
-    def ymax(self):
-        if self._ylim['auto'].checkState() == QtCore.Qt.CheckState.Checked:
-            return None
-        else:
-            return self._ylim['max'].value()
-
-    @property
-    def lagBP(self):
-        return self._bplag['widget'].value()
-
-    @property
-    def lagET(self):
-        return self._etlag['widget'].value()
-
-    @property
-    def detrend(self):
-        if self._detrend.checkState():
-            return 'Yes'
-        else:
-            return 'No'
-
-    @property
-    def correct_WL(self):
-        return 'No'
-
-    @property
-    def show_ebar(self):
-        if self._errorbar.checkState() == QtCore.Qt.CheckState.Checked:
-            return True
-        else:
-            return False
-
-    @property
-    def draw_line(self):
-        if self._drawline.checkState() == QtCore.Qt.CheckState.Checked:
-            return True
-        else:
-            return False
-
-    @property
-    def markersize(self):
-        return self._markersize['widget'].value()
-
+#        elif not self.btn_selBRF.autoRaise():  # ------- Select BRF period ----
+#            xclic = event.xdata
+#            if xclic is None:
+#                return
+#            x = self.time + self.dt4xls2mpl * self.dformat
+#            y = self.water_lvl
+#
+#            d = np.abs(xclic - x)
+#            indx = np.argmin(d)
+#            if len(self.peak_indx) > 0:
+#                if indx in self.peak_indx:
+#                    print('There is already a peak at this time.')
+#                    return
+#
+#                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 3:
+#                    print('There is a peak at less than 3 days.')
+#                    return
+#
+#            self.brfperiod[self.__brfcount] = self.time[indx]
+#            if self.__brfcount == 0:
+#                self.__brfcount += 1
+#                self.plot_BRFperiod()
+#            elif self.__brfcount == 1:
+#                self.__brfcount = 0
+#                self.select_BRF()
+#                self.plot_BRFperiod()
+#            else:
+#                raise ValueError('Something is wrong in the code')
+#
+#            print(self.brfperiod)
 
 # =============================================================================
 
@@ -2253,19 +2104,18 @@ class RechgSetupWin(myqt.DialogWindow):
 
         toolbar_widget = QtGui.QWidget()
 
-        btn_calib = QtGui.QPushButton('Calibrate')
+        btn_calib = QtGui.QPushButton('Compute Recharge')
         btn_calib.clicked.connect(self.btn_calibrate_isClicked)
 
-        btn_cancel = QtGui.QPushButton('Cancel')
-        btn_cancel.clicked.connect(self.close)
+        # btn_cancel = QtGui.QPushButton('Cancel')
+        # btn_cancel.clicked.connect(self.close)
 
         toolbar_layout = QtGui.QGridLayout()
 
         toolbar_layout.addWidget(btn_calib, 0, 0)
-        toolbar_layout.addWidget(btn_cancel, 0, 1)
 
-        toolbar_layout.setColumnStretch(2, 100)
-        toolbar_layout.setContentsMargins(0, 15, 0, 0)  # (L, T, R, B)
+        # toolbar_layout.setColumnStretch(2, 100)
+        toolbar_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
         toolbar_widget.setLayout(toolbar_layout)
 
@@ -2281,10 +2131,12 @@ class RechgSetupWin(myqt.DialogWindow):
 
         # Maximum readily available water (RASmax) :
 
-        self.QRAS_min = myqt.QDoubleSpinBox(40, units=' mm')
+        # units=' mm'
+
+        self.QRAS_min = myqt.QDoubleSpinBox(40)
         self.QRAS_min.setRange(0, 999)
 
-        self.QRAS_max = myqt.QDoubleSpinBox(120, 1, units=' mm')
+        self.QRAS_max = myqt.QDoubleSpinBox(120)
         self.QRAS_max.setRange(0, 999)
         self.QRAS_max.setValue(120)
 
@@ -2298,63 +2150,80 @@ class RechgSetupWin(myqt.DialogWindow):
 
         # Snowmelt parameters :
 
-        self._Tcrit = myqt.QDoubleSpinBox(0, 1, units=' °C')
+        # units=' °C'
+
+        self._Tcrit = myqt.QDoubleSpinBox(0, 1, )
         self._Tcrit.setRange(-25, 25)
 
-        self._Tmelt = myqt.QDoubleSpinBox(0, 1, units=' °C')
+        self._Tmelt = myqt.QDoubleSpinBox(0, 1)
         self._Tmelt.setRange(-25, 25)
 
-        self._CM = myqt.QDoubleSpinBox(4, 1, 0.1, units=' mm/°C')
+        # units=' mm/°C'
+
+        self._CM = myqt.QDoubleSpinBox(4, 1, 0.1, )
         self._CM.setRange(0.1, 100)
 
-        self._deltaT = myqt.QDoubleSpinBox(0, 0, units=' days')
+        # units=' days'
+
+        self._deltaT = myqt.QDoubleSpinBox(0, 0, )
         self._deltaT.setRange(0, 999)
 
-        QTitle = QtGui.QLabel('Calibration Range')
-        QTitle.setAlignment(QtCore.Qt.AlignCenter)
+        qtitle = QtGui.QLabel('Range')
+        qtitle.setAlignment(QtCore.Qt.AlignCenter)
+
+        class QLabelCentered(QtGui.QLabel):
+            def __init__(self, text):
+                super(QLabelCentered, self).__init__(text)
+                self.setAlignment(QtCore.Qt.AlignCenter)
 
         # ---- Layout ----
 
         mainLayout = QtGui.QGridLayout(self)
 
         row = 0
-        mainLayout.addWidget(QtGui.QLabel('Parameter'), row, 0)
-        mainLayout.addWidget(QTitle, row, 2, 1, 3)
+        mainLayout.addWidget(qtitle, row, 1, 1, 3)
         row += 1
         mainLayout.addWidget(myqt.HSep(), row, 0, 1, 5)
         row += 1
         mainLayout.addWidget(QtGui.QLabel('Sy :'), row, 0)
-        mainLayout.addWidget(self.QSy_min, row, 2)
-        mainLayout.addWidget(QtGui.QLabel('to'), row, 3)
-        mainLayout.addWidget(self.QSy_max, row, 4)
+        mainLayout.addWidget(self.QSy_min, row, 1)
+        mainLayout.addWidget(QLabelCentered('to'), row, 2)
+        mainLayout.addWidget(self.QSy_max, row, 3)
         row += 1
-        mainLayout.addWidget(QtGui.QLabel('RASmax :'), row, 0)
-        mainLayout.addWidget(self.QRAS_min, row, 2)
-        mainLayout.addWidget(QtGui.QLabel('to'), row, 3)
-        mainLayout.addWidget(self.QRAS_max, row, 4)
+        mainLayout.addWidget(QtGui.QLabel('RAS<sub>max</sub> :'), row, 0)
+        mainLayout.addWidget(self.QRAS_min, row, 1)
+        mainLayout.addWidget(QLabelCentered('to'), row, 2)
+        mainLayout.addWidget(self.QRAS_max, row, 3)
+        mainLayout.addWidget(QtGui.QLabel('mm'), row, 4)
         row += 1
         mainLayout.addWidget(QtGui.QLabel('Cro :'), row, 0)
-        mainLayout.addWidget(self.CRO_min, row, 2)
-        mainLayout.addWidget(QtGui.QLabel('to'), row, 3)
-        mainLayout.addWidget(self.CRO_max, row, 4)
+        mainLayout.addWidget(self.CRO_min, row, 1)
+        mainLayout.addWidget(QLabelCentered('to'), row, 2)
+        mainLayout.addWidget(self.CRO_max, row, 3)
         row += 1
         mainLayout.addWidget(myqt.HSep(), row, 0, 1, 5)
         row += 1
         mainLayout.addWidget(QtGui.QLabel('Tcrit :'), row, 0)
-        mainLayout.addWidget(self._Tcrit, row, 2)
+        mainLayout.addWidget(self._Tcrit, row, 1)
+        mainLayout.addWidget(QtGui.QLabel('°C'), row, 2, 1, 3)
         row += 1
         mainLayout.addWidget(QtGui.QLabel('Tmelt :'), row, 0)
-        mainLayout.addWidget(self._Tmelt, row, 2)
+        mainLayout.addWidget(self._Tmelt, row, 1)
+        mainLayout.addWidget(QtGui.QLabel('°C'), row, 2, 1, 3)
         row += 1
         mainLayout.addWidget(QtGui.QLabel('CM :'), row, 0)
-        mainLayout.addWidget(self._CM, row, 2)
+        mainLayout.addWidget(self._CM, row, 1)
+        mainLayout.addWidget(QtGui.QLabel('mm/°C'), row, 2, 1, 3)
         row += 1
         mainLayout.addWidget(QtGui.QLabel('deltaT :'), row, 0)
-        mainLayout.addWidget(self._deltaT, row, 2)
+        mainLayout.addWidget(self._deltaT, row, 1)
+        mainLayout.addWidget(QtGui.QLabel('days'), row, 2, 1, 3)
+        row += 1
+        mainLayout.setRowStretch(row, 100)
         row += 1
         mainLayout.addWidget(toolbar_widget, row, 0, 1, 5)
 
-        mainLayout.setColumnMinimumWidth(1, 50)
+        mainLayout.setColumnStretch(5, 100)
 
     # =========================================================================
 

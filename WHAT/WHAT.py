@@ -67,7 +67,7 @@ import tkinter.messagebox
 import common.database as db
 import custom_widgets as MyQWidget
 import HydroPrint2 as HydroPrint
-import HydroCalc
+import HydroCalc2 as HydroCalc
 from meteo import dwnld_weather_data
 from meteo.gapfill_weather_gui import GapFillWeatherGUI
 
@@ -235,6 +235,11 @@ class WHAT(QtGui.QMainWindow):
 
             btn = QtGui.QMessageBox.Ok
             QtGui.QMessageBox.warning(self, 'Warning', msgtxt, btn)
+
+    # ======
+
+    def sync_dmanager(self, tab):
+
 
     # =========================================================================
 
