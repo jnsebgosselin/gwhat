@@ -188,6 +188,7 @@ class DataManager(QtGui.QWidget):
             self.update_wxdset_info()
 
             self.wldset_changed()
+            self.wxdset_changed()
 
         self.new_waterlvl_win.set_projet(projet)
         self.new_weather_win.set_projet(projet)

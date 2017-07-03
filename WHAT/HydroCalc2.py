@@ -129,13 +129,17 @@ class WLCalc(myqt.DialogWindow):
 
         self.synth_hydrograph = SynthHydrograph()
 
+        # =====================================================================
+
         # INIT UI :
 
         self.__initFig__()
         self.__initUI__()
         self.setup_ax_margins(None)
+        self.set_wldset(self.dmngr.get_current_wldset())
+        self.set_wxdset(self.dmngr.get_current_wxdset())
 
-    def __initFig__(self):  # =================================================
+    def __initFig__(self):
 
         # ----------------------------------------------------------- CANVAS --
 
@@ -291,23 +295,12 @@ class WLCalc(myqt.DialogWindow):
 
         # ---- recharge ----
 
-        # self.btn_recharge = QToolButtonNormal(IconDB().recharge)
-        # self.btn_recharge.setToolTip('Show window for recharge estimation')
-        # self.btn_recharge.clicked.connect(self.rechg_setup_win.show)
-        # self.btn_recharge.hide()
-
 #        self.btn_synthHydro = QToolButtonNormal(IconDB().page_setup)
 #        self.btn_synthHydro.setToolTip('Show synthetic hydrograph')
 #        self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
 #        self.btn_synthHydro.hide()
 
         # ---- BRF ----
-
-#        self.btn_selBRF = QToolButtonNormal(IconDB().add_point)
-#        self.btn_selBRF.clicked.connect(self.aToolbarBtn_isClicked)
-#
-#        self.btn_setBRF = QToolButtonNormal(IconDB().setup)
-#        self.btn_setBRF.clicked.connect(self.config_brf.show)
 
 #        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
 #        self.btn_findPeak.clicked.connect(self.find_peak)
@@ -2293,11 +2286,10 @@ if __name__ == '__main__':
           'BRF MontEst.what')
     pr = ProjetReader(pf)
     dm = DataManager()
+    dm.set_projet(pr)
 
     hydrocalc = WLCalc(dm)
     hydrocalc.show()
-
-    dm.set_projet(pr)
 
     sys.exit(app.exec_())
 
