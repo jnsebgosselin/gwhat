@@ -178,10 +178,10 @@ class QDoubleSpinBox(QtGui.QDoubleSpinBox):
         if units is not None:
             self.setSuffix(units)
 
+        self.setButtonSymbols(QtGui.QAbstractSpinBox.NoButtons)
         if read_only is True:
             self.setSpecialValueText('\u2014')
             self.setReadOnly(True)
-            self.setButtonSymbols(QtGui.QAbstractSpinBox.NoButtons)
 
         self.valueChanged.connect(self.saveNewValue)
 
@@ -277,51 +277,6 @@ class QGroupWidget(QtGui.QGroupBox):
 
     def rowCount(self):
         return self.layout().rowCount()
-
-
-class QChildWindowWidget(QtGui.QWidget):
-    def __init__(self, parent=None):
-        super(QChildWindowWidget, self).__init__()
-        self.parent = parent
-        self.setWindowFlags(QtCore.Qt.Window |
-                            QtCore.Qt.WindowCloseButtonHint)
-
-#        if parent is not None:
-#            parent.closeEvent.connect(self.close)
-
-    def emit_warning(self, msg, title='Warning'):
-        btn = QtGui.QMessageBox.Ok
-        QtGui.QMessageBox.warning(self, title, msg, btn)
-
-    def show(self):
-        super(QChildWindowWidget, self).show()
-        self.setFixedSize(self.size())
-        self.raise_()
-#        if self.__firstshow is True:
-#            self.__firstshow = False
-#
-#            self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, True)
-#            super(QChildWindowWidget, self).show()
-#            super(QChildWindowWidget, self).close()
-#            self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, False)
-#
-#            qr = self.frameGeometry()
-#            if self.parentWidget():
-#                parent = self.parentWidget()
-#                wp = parent.frameGeometry().width()
-#                hp = parent.frameGeometry().height()
-#                cp = parent.mapToGlobal(QtCore.QPoint(wp/2, hp/2))
-#            else:
-#                cp = QtGui.QDesktopWidget().availableGeometry().center()
-#            qr.moveCenter(cp)
-#            self.move(qr.topLeft())
-#
-#            super(QChildWindowWidget, self).show()
-#            self.setFixedSize(self.size())
-#        else:
-#            super(QChildWindowWidget, self).show()
-
-        self.raise_()
 
 
 class DialogWindow(QtGui.QDialog):
