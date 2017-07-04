@@ -60,6 +60,7 @@ class DataManager(QtGui.QWidget):
         super(DataManager, self).__init__(parent)
         self.setWindowFlags(QtCore.Qt.Window)
         self.setWindowIcon(IconDB().master)
+        self.setMinimumWidth(250)
 
         self.new_waterlvl_win = NewWaterLvl(parent, projet)
         self.new_waterlvl_win.newDatasetCreated.connect(self.new_wldset_added)

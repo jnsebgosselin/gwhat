@@ -258,7 +258,7 @@ class WLCalc(myqt.DialogWindow):
 
         # -------------------------------------------------------- TOOLBAR ----
 
-        self.toolbar = NavigationToolbar2QT(self.canvas, self)
+        self.toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self.toolbar.hide()
 
         # Toolbar Buttons :
@@ -337,11 +337,11 @@ class WLCalc(myqt.DialogWindow):
 
         self.MRC_results = QtGui.QTextEdit()
         self.MRC_results.setReadOnly(True)
-        self.MRC_results.setMinimumHeight(100)
+        self.MRC_results.setMinimumHeight(25)
         self.MRC_results.setMinimumWidth(100)
 
         sp = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored,
-                               QtGui.QSizePolicy.MinimumExpanding)
+                               QtGui.QSizePolicy.Preferred)
 
         self.MRC_results.setSizePolicy(sp)
 
@@ -392,8 +392,8 @@ class WLCalc(myqt.DialogWindow):
         row += 1
         self.widget_MRCparam.addWidget(mrc_tb, row, 0, 1, 3)
         row += 1
-        self.widget_MRCparam.setRowMinimumHeight(row, 15)
-        self.widget_MRCparam.setRowStretch(row, 500)
+        self.widget_MRCparam.setRowMinimumHeight(row, 10)
+        self.widget_MRCparam.setRowStretch(row, 100)
         row += 1
         self.widget_MRCparam.addWidget(self.btn_MRCalc, row, 0, 1, 3)
 
@@ -428,21 +428,15 @@ class WLCalc(myqt.DialogWindow):
         mainGrid = QtGui.QGridLayout(self)
 
         mainGrid.addWidget(toolbar_widget, 0, 0)
-        mainGrid.addWidget(self.fig_frame_widget, 1, 0)
-
-        mainGrid.addWidget(myqt.VSep(), 0, 1, 2, 1)
-
+        mainGrid.addWidget(self.fig_frame_widget, 1, 0, 2, 1)
+        mainGrid.addWidget(myqt.VSep(), 0, 1, 3, 1)
         mainGrid.addWidget(right_pan, 0, 2, 2, 1)
-
-        # items = [toolbar_widget, self.fig_frame_widget,
-        #          self.synth_hydro_widg]
-        # for row, item in enumerate(items):
-        #     mainGrid.addWidget(item, row, 0)
 
         mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
         mainGrid.setHorizontalSpacing(15)
-        mainGrid.setRowStretch(1, 500)
-        mainGrid.setColumnStretch(0, 500)
+        mainGrid.setRowStretch(1, 100)
+        mainGrid.setRowStretch(2, 100)
+        mainGrid.setColumnStretch(0, 100)
         mainGrid.setColumnMinimumWidth(2, 250)
 
     # =========================================================================
@@ -458,20 +452,23 @@ class WLCalc(myqt.DialogWindow):
     def set_wldset(self, wldset):
         self.config_brf.set_wldset(wldset)
 
-        # Load Water Level Data :
+        if wldset is None:
+            self.water_lvl = None
+            self.time = None
+        else:
+            self.water_lvl = wldset['WL']
+            self.time = wldset['Time']
 
-        self.water_lvl = wldset['WL']
-        self.time = wldset['Time']
-        # self.soilFilename = self.waterLvl_data.soilFilename
+            self.init_hydrograph()
+            self.load_MRC_interp()
 
-        self.init_hydrograph()
-        self.load_MRC_interp()
+            # Reset UI :
 
-        # Reset UI :
-
-        self.btn_Waterlvl_lineStyle.setAutoRaise(True)
+            self.btn_Waterlvl_lineStyle.setAutoRaise(True)
 
     def set_wxdset(self, wxdset):
+        if wxdset is None:
+            return
         self.plot_weather_data()
 
     # =========================================================================
@@ -2092,15 +2089,9 @@ class RechgSetupWin(myqt.DialogWindow):
         btn_calib = QtGui.QPushButton('Compute Recharge')
         btn_calib.clicked.connect(self.btn_calibrate_isClicked)
 
-        # btn_cancel = QtGui.QPushButton('Cancel')
-        # btn_cancel.clicked.connect(self.close)
-
         toolbar_layout = QtGui.QGridLayout()
-
         toolbar_layout.addWidget(btn_calib, 0, 0)
-
-        # toolbar_layout.setColumnStretch(2, 100)
-        toolbar_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        toolbar_layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
 
         toolbar_widget.setLayout(toolbar_layout)
 
@@ -2161,54 +2152,71 @@ class RechgSetupWin(myqt.DialogWindow):
                 super(QLabelCentered, self).__init__(text)
                 self.setAlignment(QtCore.Qt.AlignCenter)
 
-        # ---- Layout ----
+        # ---- Parameters ----
 
-        mainLayout = QtGui.QGridLayout(self)
+        params_group = myqt.QFrameLayout()
+        params_group.setContentsMargins(10, 10, 10, 0)
+        params_group.setObjectName("viewport")
+        params_group.setStyleSheet("#viewport {background-color:transparent;}")
 
         row = 0
-        mainLayout.addWidget(qtitle, row, 1, 1, 3)
+        params_group.addWidget(qtitle, row, 1, 1, 3)
         row += 1
-        mainLayout.addWidget(myqt.HSep(), row, 0, 1, 5)
+        params_group.addWidget(myqt.HSep(), row, 0, 1, 5)
         row += 1
-        mainLayout.addWidget(QtGui.QLabel('Sy :'), row, 0)
-        mainLayout.addWidget(self.QSy_min, row, 1)
-        mainLayout.addWidget(QLabelCentered('to'), row, 2)
-        mainLayout.addWidget(self.QSy_max, row, 3)
+        params_group.addWidget(QtGui.QLabel('Sy :'), row, 0)
+        params_group.addWidget(self.QSy_min, row, 1)
+        params_group.addWidget(QLabelCentered('to'), row, 2)
+        params_group.addWidget(self.QSy_max, row, 3)
         row += 1
-        mainLayout.addWidget(QtGui.QLabel('RAS<sub>max</sub> :'), row, 0)
-        mainLayout.addWidget(self.QRAS_min, row, 1)
-        mainLayout.addWidget(QLabelCentered('to'), row, 2)
-        mainLayout.addWidget(self.QRAS_max, row, 3)
-        mainLayout.addWidget(QtGui.QLabel('mm'), row, 4)
+        params_group.addWidget(QtGui.QLabel('RAS<sub>max</sub> :'), row, 0)
+        params_group.addWidget(self.QRAS_min, row, 1)
+        params_group.addWidget(QLabelCentered('to'), row, 2)
+        params_group.addWidget(self.QRAS_max, row, 3)
+        params_group.addWidget(QtGui.QLabel('mm'), row, 4)
         row += 1
-        mainLayout.addWidget(QtGui.QLabel('Cro :'), row, 0)
-        mainLayout.addWidget(self.CRO_min, row, 1)
-        mainLayout.addWidget(QLabelCentered('to'), row, 2)
-        mainLayout.addWidget(self.CRO_max, row, 3)
+        params_group.addWidget(QtGui.QLabel('Cro :'), row, 0)
+        params_group.addWidget(self.CRO_min, row, 1)
+        params_group.addWidget(QLabelCentered('to'), row, 2)
+        params_group.addWidget(self.CRO_max, row, 3)
         row += 1
-        mainLayout.addWidget(myqt.HSep(), row, 0, 1, 5)
+        params_group.addWidget(myqt.HSep(), row, 0, 1, 5)
         row += 1
-        mainLayout.addWidget(QtGui.QLabel('Tcrit :'), row, 0)
-        mainLayout.addWidget(self._Tcrit, row, 1)
-        mainLayout.addWidget(QtGui.QLabel('°C'), row, 2, 1, 3)
+        params_group.addWidget(QtGui.QLabel('Tcrit :'), row, 0)
+        params_group.addWidget(self._Tcrit, row, 1)
+        params_group.addWidget(QtGui.QLabel('°C'), row, 2, 1, 3)
         row += 1
-        mainLayout.addWidget(QtGui.QLabel('Tmelt :'), row, 0)
-        mainLayout.addWidget(self._Tmelt, row, 1)
-        mainLayout.addWidget(QtGui.QLabel('°C'), row, 2, 1, 3)
+        params_group.addWidget(QtGui.QLabel('Tmelt :'), row, 0)
+        params_group.addWidget(self._Tmelt, row, 1)
+        params_group.addWidget(QtGui.QLabel('°C'), row, 2, 1, 3)
         row += 1
-        mainLayout.addWidget(QtGui.QLabel('CM :'), row, 0)
-        mainLayout.addWidget(self._CM, row, 1)
-        mainLayout.addWidget(QtGui.QLabel('mm/°C'), row, 2, 1, 3)
+        params_group.addWidget(QtGui.QLabel('CM :'), row, 0)
+        params_group.addWidget(self._CM, row, 1)
+        params_group.addWidget(QtGui.QLabel('mm/°C'), row, 2, 1, 3)
         row += 1
-        mainLayout.addWidget(QtGui.QLabel('deltaT :'), row, 0)
-        mainLayout.addWidget(self._deltaT, row, 1)
-        mainLayout.addWidget(QtGui.QLabel('days'), row, 2, 1, 3)
+        params_group.addWidget(QtGui.QLabel('deltaT :'), row, 0)
+        params_group.addWidget(self._deltaT, row, 1)
+        params_group.addWidget(QtGui.QLabel('days'), row, 2, 1, 3)
         row += 1
-        mainLayout.setRowStretch(row, 100)
-        row += 1
-        mainLayout.addWidget(toolbar_widget, row, 0, 1, 5)
+        params_group.setRowStretch(row, 100)
+        params_group.setColumnStretch(5, 100)
 
-        mainLayout.setColumnStretch(5, 100)
+        # ---- Layout ----
+
+        sa = QtGui.QScrollArea()
+        sa.setWidget(params_group)
+        sa.setWidgetResizable(True)
+        sa.setFrameStyle(0)
+        sa.setStyleSheet("QScrollArea {background-color:transparent;}")
+
+        main_layout = QtGui.QGridLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 10)
+
+        main_layout.addWidget(sa, 0, 0)
+        main_layout.setRowMinimumHeight(1, 10)
+        main_layout.addWidget(toolbar_widget, 2, 0)
+
+        main_layout.setRowStretch(0, 100)
 
     # =========================================================================
 
@@ -2296,10 +2304,11 @@ if __name__ == '__main__':
           'BRF MontEst.what')
     pr = ProjetReader(pf)
     dm = DataManager()
-    dm.set_projet(pr)
 
     hydrocalc = WLCalc(dm)
     hydrocalc.show()
+
+    dm.set_projet(pr)
 
     sys.exit(app.exec_())
 

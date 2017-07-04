@@ -98,9 +98,12 @@ class BRFManager(myqt.QFrameLayout):
         btn_show = QToolButtonSmall(IconDB().search)
         btn_show.clicked.connect(self.viewer.show)
 
+        # ---- Layout ----
+
         tbar = myqt.QFrameLayout()
-        tbar.addWidget(btn_show, 0, 0)
-        tbar.setColumnStretch(tbar.columnCount(), 100)
+        tbar.addWidget(btn_comp, 0, 0)
+        tbar.addWidget(btn_show, 0, 1)
+        tbar.setColumnStretch(0, 100)
 
         # ---------------------------------------------------- Main Layout ----
 
@@ -128,14 +131,10 @@ class BRFManager(myqt.QFrameLayout):
         row += 1
         self.addWidget(self._correct, row, 0, 1, 2)
         row += 1
-        self.setRowMinimumHeight(row, 25)
-        row += 1
-        self.addWidget(tbar, row, 0, 1, 3)
-        row += 1
+        self.setRowMinimumHeight(row, 10)
         self.setRowStretch(row, 100)
         row += 1
-        self.addWidget(btn_comp, row, 0, 1, 2)
-        self.addWidget(tbar, row, 2)
+        self.addWidget(tbar, row, 0, 1, 3)
 
         self.setColumnStretch(self.columnCount(), 100)
 
