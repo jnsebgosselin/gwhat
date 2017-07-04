@@ -632,22 +632,26 @@ class WLCalc(myqt.DialogWindow):
 
     def load_MRC_interp(self):
         if self.wldset.mrc_exists() is False:
-            return
+            self.peak_indx = np.array([]).astype(int)
+            self.peak_memory = []
 
-        self.peak_indx = self.wldset['mrc/peak_indx'].astype(int)
-        self.peak_memory[0] = self.wldset['mrc/peak_indx'].astype(int)
+            self.A, self.B = None, None
+            self.hrecess = []
 
-        self.A, self.B = self.wldset['mrc/params']
-        self.hrecess = self.wldset['mrc/recess']
+            self.h3_ax0.set_data([], [])
+            self.plot_peak()
+        else:
+            self.peak_indx = self.wldset['mrc/peak_indx'].astype(int)
+            self.peak_memory[0] = self.wldset['mrc/peak_indx'].astype(int)
 
-        err = (self.wldset['mrc/recess']-self.water_lvl)**2
-        self.RMSE = np.mean(err[~np.isnan(err)])**0.5
+            self.A, self.B = self.wldset['mrc/params']
+            self.hrecess = self.wldset['mrc/recess']
 
-        # ---- Recalculate and Plot Results ----
+            err = (self.wldset['mrc/recess']-self.water_lvl)**2
+            self.RMSE = np.mean(err[~np.isnan(err)])**0.5
 
-        self.peak_memory[0] = self.peak_indx
-        self.plot_peak()
-        self.draw_MRC()
+            self.plot_peak()
+            self.draw_MRC()
 
     # -------------------------------------------------------------------------
 
