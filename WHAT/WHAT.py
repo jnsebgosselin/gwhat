@@ -98,22 +98,41 @@ class WHAT(QtGui.QMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 myappid)
 
+        # ---------------------------------------------------- Preferences ----
+
         self.whatPref = WHATPref(self)
+        self.projectfile = self.whatPref.projectfile
+        self.projectdir = path.dirname(self.projectfile)
+
+        # ------------------------------------------------- Projet Manager ----
 
         self.pmanager = ProjetManager(self)
+        self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
+
         self.dmanager = DataManager(pm=self.pmanager)
         self.dmanager2 = DataManager(pm=self.pmanager)
 
+        # ----------------------------------------------------------- Init ----
+
         self.__initUI__()
 
+        result = self.pmanager.load_project(self.projectfile)
+        if result is False:
+            self.tab_dwnld_data.setEnabled(False)
+            self.tab_fill_weather_data.setEnabled(False)
+            self.tab_hydrograph.setEnabled(False)
+            self.tab_hydrocalc.setEnabled(False)
+
+            msgtxt = '''
+                     Unable to read the project file.<br><br>
+                     "%s" does not exist.<br><br> Please open an existing
+                     project or create a new one.
+                     ''' % self.projectfile
+
+            btn = QtGui.QMessageBox.Ok
+            QtGui.QMessageBox.warning(self, 'Warning', msgtxt, btn)
+
     def __initUI__(self):
-
-        # ---------------------------------------------------- PREFERENCES ----
-
-        self.whatPref.load_pref_file()
-
-        self.projectfile = self.whatPref.projectfile
-        self.projectdir = path.dirname(self.projectfile)
 
         # ------------------------------------------------------ DATABASES ----
 
@@ -123,28 +142,6 @@ class WHAT(QtGui.QMainWindow):
 
         global headerDB
         headerDB = db.FileHeaders()
-
-        # --------------------------------------------------- MAIN CONSOLE ----
-
-        self.main_console = QtGui.QTextEdit()
-        self.main_console.setReadOnly(True)
-        self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
-
-        style = 'Regular'
-        family = StyleDB().fontfamily
-        size = self.whatPref.fontsize_console
-        fontSS = ('font-style: %s;'
-                  'font-size: %s;'
-                  'font-family: %s;'
-                  ) % (style, size, family)
-        self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
-
-        msg = '<font color=black>Thanks for using %s.</font>' % __version__
-        self.write2console(msg)
-        self.write2console('<font color=black>'
-                           'Please report any bug or wishful feature at'
-                           ' jean-sebastien.gosselin@ete.inrs.ca.'
-                           '</font>')
 
         # ----------------------------------------------------- TAB WIDGET ----
 
@@ -176,7 +173,40 @@ class WHAT(QtGui.QMainWindow):
 
         Tab_widget.setCornerWidget(self.pmanager)
 
-        # ------------------------------------------------ SPLITTER WIDGET ----
+        # --------------------------------------------------- Main Console ----
+
+        self.main_console = QtGui.QTextEdit()
+        self.main_console.setReadOnly(True)
+        self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
+
+        style = 'Regular'
+        family = StyleDB().fontfamily
+        size = self.whatPref.fontsize_console
+        fontSS = ('font-style: %s;'
+                  'font-size: %s;'
+                  'font-family: %s;'
+                  ) % (style, size, family)
+        self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
+
+        msg = '<font color=black>Thanks for using %s.</font>' % __version__
+        self.write2console(msg)
+        self.write2console('<font color=black>'
+                           'Please report any bug or wishful feature at'
+                           ' jean-sebastien.gosselin@ete.inrs.ca.'
+                           '</font>')
+
+        # ---- Signal Piping ----
+
+        issuer = self.tab_dwnld_data
+        issuer.ConsoleSignal.connect(self.write2console)
+
+        issuer = self.tab_fill_weather_data
+        issuer.ConsoleSignal.connect(self.write2console)
+
+        issuer = self.tab_hydrograph
+        issuer.ConsoleSignal.connect(self.write2console)
+
+        # ------------------------------------------------ Splitter Widget ----
 
         splitter = QtGui.QSplitter(self)
         splitter.setOrientation(QtCore.Qt.Vertical)
@@ -189,57 +219,16 @@ class WHAT(QtGui.QMainWindow):
         # Forces initially the main_console to its minimal height:
         splitter.setSizes([100, 1])
 
-        # ------------------------------------------------------ MAIN GRID ----
+        # ------------------------------------------------------ Main Grid ----
 
         main_widget = QtGui.QWidget()
         self.setCentralWidget(main_widget)
 
-        mainGrid = QtGui.QGridLayout()
+        mainGrid = QtGui.QGridLayout(main_widget)
 
         mainGrid.addWidget(splitter, 0, 0)
         mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
         mainGrid.addWidget(self.tab_dwnld_data.pbar, 2, 0)
-
-        mainGrid.setSpacing(10)
-        main_widget.setLayout(mainGrid)
-
-        # --------------------------------------------------------- EVENTS ----
-
-        self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
-
-        # -- Console Signal Piping --
-
-        issuer = self.tab_dwnld_data
-        issuer.ConsoleSignal.connect(self.write2console)
-
-        issuer = self.tab_fill_weather_data
-        issuer.ConsoleSignal.connect(self.write2console)
-
-        issuer = self.tab_hydrograph
-        issuer.ConsoleSignal.connect(self.write2console)
-
-        # ----------------------------------------------- CHECK IF PROJECT ----
-
-        success = self.pmanager.load_project(self.projectfile)
-        if success is False:
-            self.tab_dwnld_data.setEnabled(False)
-            self.tab_fill_weather_data.setEnabled(False)
-            self.tab_hydrograph.setEnabled(False)
-            self.tab_hydrocalc.setEnabled(False)
-
-            msgtxt = '''
-                     Unable to read the project file.<br><br>
-                     "%s" does not exist.<br><br> Please open an existing
-                     project or create a new one.
-                     ''' % self.projectfile
-
-            btn = QtGui.QMessageBox.Ok
-            QtGui.QMessageBox.warning(self, 'Warning', msgtxt, btn)
-
-    # ======
-
-    def sync_dmanager(self, tab):
-
 
     # =========================================================================
 
@@ -326,6 +315,8 @@ class WHATPref(object):
         self.fontsize_general = '14px'
         self.fontsize_console = '12px'
         self.fontsize_menubar = '12px'
+
+        self.load_pref_file()
 
     def save_pref_file(self):  # ==============================================
 
