@@ -1475,10 +1475,17 @@ class WeatherData(object):
                                                STADAT[-1, 2].astype('int')),
                                               0)
 
+            print(time_start, time_end, len(STADAT[:, 0]))
+            print(time_end - time_start + 1)
+
             if (time_end - time_start + 1) != len(STADAT[:, 0]):
                 print('\n%s is not continuous, correcting...' % reader[0][1])
                 STADAT = self.make_timeserie_continuous(STADAT)
                 print('%s is now continuous.' % reader[0][1])
+
+            # TODO: ajouter un check permettant de reconnaitre quand les
+            # donnees ne sont pas exclusivement croissante dans le temps.
+            # Ajouter des alertes lorsque il y a un problème.
 
             time_new = np.arange(time_start, time_end + 1)
 
@@ -1499,7 +1506,6 @@ class WeatherData(object):
             # 3D data matrix are nan.
 
             if self.TIME[0] <= time_new[0]:
-
                 if self.TIME[-1] >= time_new[-1]:
 
                     #    [---------------]    self.TIME
@@ -1521,15 +1527,14 @@ class WeatherData(object):
 
                     # Expand <DATA> and <TIME> to fit the new data serie
 
-                    EXPND = np.zeros((time_new[-1] - self.TIME[-1],
-                                      nSTA, nVAR)) * np.nan
+                    EXPND = np.zeros((int(time_new[-1]-self.TIME[-1]),
+                                      nSTA,
+                                      nVAR)) * np.nan
 
                     self.DATA = np.vstack((self.DATA, EXPND))
-
                     self.TIME = np.arange(self.TIME[0], time_new[-1] + 1)
 
             elif self.TIME[0] > time_new[0]:
-
                 if self.TIME[-1] >= time_new[-1]:
 
                     #        [----------]    self.TIME
@@ -1543,13 +1548,12 @@ class WeatherData(object):
 
                     # Expand <DATA> and <TIME> to fit the new data serie
 
-                    EXPND = np.zeros((self.TIME[0]-time_new[0], nSTA, nVAR))
-                    EXPND[:] = np.nan
+                    EXPND = np.zeros((int(self.TIME[0]-time_new[0]),
+                                      nSTA,
+                                      nVAR)) * np.nan
 
                     self.DATA = np.vstack((EXPND, self.DATA))
-
                     self.TIME = np.arange(time_new[0], self.TIME[-1] + 1)
-
                 else:
 
                     #        [----------]        self.TIME
@@ -1559,11 +1563,13 @@ class WeatherData(object):
 
                     # Expand <DATA> and <TIME> to fit the new data serie
 
-                    EXPNDbeg = np.zeros((self.TIME[0] - time_new[0],
-                                         nSTA, nVAR)) * np.nan
+                    EXPNDbeg = np.zeros((int(self.TIME[0]-time_new[0]),
+                                         nSTA,
+                                         nVAR)) * np.nan
 
-                    EXPNDend = np.zeros((time_new[-1] - self.TIME[-1],
-                                         nSTA, nVAR)) * np.nan
+                    EXPNDend = np.zeros((int(time_new[-1]-self.TIME[-1]),
+                                         nSTA,
+                                         nVAR)) * np.nan
 
                     self.DATA = np.vstack((EXPNDbeg, self.DATA, EXPNDend))
 
@@ -1942,8 +1948,11 @@ def main():
     # was produced for the target station will be saved within the output
     # directory, in a sub-folder named after the name of the target station.
 
-    gapfill_weather.inputDir = '../Projects/Article/Meteo/Input'
-    gapfill_weather.outputDir = '../Projects/Article/Meteo/Output'
+    gapfill_weather.inputDir = '../../Projects/Project4Testing/Meteo/Input'
+    gapfill_weather.outputDir = '../../Projects/Project4Testing/Meteo/Output'
+
+#    gapfill_weather.inputDir = '../Projects/Article/Meteo/Input'
+#    gapfill_weather.outputDir = '../Projects/Article/Meteo/Output'
 
     # 3 - Load weather the data files -----------------------------------------
 
@@ -1952,6 +1961,8 @@ def main():
 
     stanames = gapfill_weather.load_data()
     print(stanames)
+
+    return
 
     # 4 - Setup target station ------------------------------------------------
 
