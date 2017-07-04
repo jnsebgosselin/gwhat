@@ -48,7 +48,7 @@ class BRFManager(myqt.QFrameLayout):
     def __init__(self, wldset=None, parent=None):
         super(BRFManager, self).__init__(parent)
 
-        self.viewer = BRFViewer(wldset, self)
+        self.viewer = BRFViewer(wldset, parent)
         self.__initGUI__()
 
     def __initGUI__(self):
@@ -131,7 +131,7 @@ class BRFManager(myqt.QFrameLayout):
         row += 1
         self.addWidget(self._correct, row, 0, 1, 2)
         row += 1
-        self.setRowMinimumHeight(row, 10)
+        self.setRowMinimumHeight(row, 5)
         self.setRowStretch(row, 100)
         row += 1
         self.addWidget(tbar, row, 0, 1, 3)
@@ -266,6 +266,7 @@ class BRFManager(myqt.QFrameLayout):
             date_end = self._dataend.date().getDate()
             self.wldset.save_brf(lag, A, err, date_start, date_end)
             self.viewer.new_brf_added()
+            self.viewer.show()
 
             QtGui.QApplication.restoreOverrideCursor()
         except:
@@ -277,11 +278,16 @@ class BRFManager(myqt.QFrameLayout):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class BRFViewer(myqt.DialogWindow):
+class BRFViewer(QtGui.QDialog):
 
     def __init__(self, wldset=None, parent=None):
-        super(BRFViewer, self).__init__(parent, resizable=False,
-                                        maximize=False)
+        super(BRFViewer, self).__init__(parent)
+
+        self.setWindowTitle('BRF Viewer')
+        self.setWindowIcon(IconDB().master)
+        self.setWindowFlags(QtCore.Qt.Window |
+                            QtCore.Qt.WindowCloseButtonHint)
+
         self.__initGUI__()
         self.set_wldset(wldset)
 
@@ -347,7 +353,8 @@ class BRFViewer(myqt.DialogWindow):
 
         self._markersize = {}
         self._markersize['label'] = QtGui.QLabel('Marker size :')
-        self._markersize['widget'] = myqt.QDoubleSpinBox(5, 0)
+        self._markersize['widget'] = QtGui.QSpinBox()
+        self._markersize['widget'].setValue(5)
         self._markersize['widget'].setRange(0, 25)
         self._markersize['widget'].valueChanged.connect(self.plot_brf)
 
@@ -569,6 +576,12 @@ class BRFViewer(myqt.DialogWindow):
     def show(self):
         super(BRFViewer, self).show()
         self.fig_frame.setFixedSize(self.fig_frame.size())
+        self.setFixedSize(self.size())
+
+        self.raise_()
+        if self.windowState() == QtCore.Qt.WindowMinimized:
+            # Window is minimised. Restore it.
+            self.setWindowState(QtCore.Qt.WindowNoState)
 
 if __name__ == "__main__":
     import projet.reader_projet as prd
