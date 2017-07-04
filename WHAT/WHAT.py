@@ -233,7 +233,7 @@ class WHAT(QtGui.QMainWindow):
     # =========================================================================
 
     def show(self):
-        super(WHAT, self).show()
+        super(WHAT, self).showMaximized()
         qr = self.frameGeometry()
         cp = QtGui.QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
