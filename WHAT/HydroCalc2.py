@@ -464,6 +464,7 @@ class WLCalc(myqt.DialogWindow):
             # Reset UI :
 
             self.btn_Waterlvl_lineStyle.setAutoRaise(True)
+            self.toolbar.update()
 
     def set_wxdset(self, wxdset):
         if wxdset is None:
