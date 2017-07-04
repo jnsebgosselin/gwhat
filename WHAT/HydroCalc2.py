@@ -342,7 +342,6 @@ class WLCalc(myqt.DialogWindow):
 
         sp = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored,
                                QtGui.QSizePolicy.Preferred)
-
         self.MRC_results.setSizePolicy(sp)
 
         # ---- MRC Toolbar ----
@@ -392,7 +391,7 @@ class WLCalc(myqt.DialogWindow):
         row += 1
         self.widget_MRCparam.addWidget(mrc_tb, row, 0, 1, 3)
         row += 1
-        self.widget_MRCparam.setRowMinimumHeight(row, 10)
+        self.widget_MRCparam.setRowMinimumHeight(row, 5)
         self.widget_MRCparam.setRowStretch(row, 100)
         row += 1
         self.widget_MRCparam.addWidget(self.btn_MRCalc, row, 0, 1, 3)
@@ -435,7 +434,7 @@ class WLCalc(myqt.DialogWindow):
         mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
         mainGrid.setHorizontalSpacing(15)
         mainGrid.setRowStretch(1, 100)
-        mainGrid.setRowStretch(2, 100)
+        # mainGrid.setRowStretch(2, 100)
         mainGrid.setColumnStretch(0, 100)
         mainGrid.setColumnMinimumWidth(2, 250)
 
@@ -2144,9 +2143,6 @@ class RechgSetupWin(myqt.DialogWindow):
         self._deltaT = myqt.QDoubleSpinBox(0, 0, )
         self._deltaT.setRange(0, 999)
 
-        qtitle = QtGui.QLabel('Range')
-        qtitle.setAlignment(QtCore.Qt.AlignCenter)
-
         class QLabelCentered(QtGui.QLabel):
             def __init__(self, text):
                 super(QLabelCentered, self).__init__(text)
@@ -2155,15 +2151,11 @@ class RechgSetupWin(myqt.DialogWindow):
         # ---- Parameters ----
 
         params_group = myqt.QFrameLayout()
-        params_group.setContentsMargins(10, 10, 10, 0)
+        params_group.setContentsMargins(10, 5, 10, 0)  # (L, T, R, B)
         params_group.setObjectName("viewport")
         params_group.setStyleSheet("#viewport {background-color:transparent;}")
 
         row = 0
-        params_group.addWidget(qtitle, row, 1, 1, 3)
-        row += 1
-        params_group.addWidget(myqt.HSep(), row, 0, 1, 5)
-        row += 1
         params_group.addWidget(QtGui.QLabel('Sy :'), row, 0)
         params_group.addWidget(self.QSy_min, row, 1)
         params_group.addWidget(QLabelCentered('to'), row, 2)
@@ -2180,7 +2172,7 @@ class RechgSetupWin(myqt.DialogWindow):
         params_group.addWidget(QLabelCentered('to'), row, 2)
         params_group.addWidget(self.CRO_max, row, 3)
         row += 1
-        params_group.addWidget(myqt.HSep(), row, 0, 1, 5)
+        params_group.setRowMinimumHeight(row, 10)
         row += 1
         params_group.addWidget(QtGui.QLabel('Tcrit :'), row, 0)
         params_group.addWidget(self._Tcrit, row, 1)
@@ -2203,20 +2195,29 @@ class RechgSetupWin(myqt.DialogWindow):
 
         # ---- Layout ----
 
+        qtitle = QtGui.QLabel('Parameter Range')
+        qtitle.setAlignment(QtCore.Qt.AlignCenter)
+
         sa = QtGui.QScrollArea()
         sa.setWidget(params_group)
         sa.setWidgetResizable(True)
         sa.setFrameStyle(0)
         sa.setStyleSheet("QScrollArea {background-color:transparent;}")
+        sa.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored,
+                                           QtGui.QSizePolicy.Preferred))
 
         main_layout = QtGui.QGridLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 10)
+        main_layout.setContentsMargins(0, 0, 0, 10)   # (L, T, R, B)
 
-        main_layout.addWidget(sa, 0, 0)
-        main_layout.setRowMinimumHeight(1, 10)
-        main_layout.addWidget(toolbar_widget, 2, 0)
+        main_layout.addWidget(qtitle, 0, 0)
+        main_layout.addWidget(myqt.HSep(), 1, 0)
+        main_layout.addWidget(sa, 2, 0)
+        main_layout.addWidget(myqt.HSep(), 3, 0)
+        main_layout.setRowMinimumHeight(4, 5)
+        main_layout.addWidget(toolbar_widget, 5, 0)
 
-        main_layout.setRowStretch(0, 100)
+        main_layout.setRowStretch(2, 100)
+        main_layout.setVerticalSpacing(5)
 
     # =========================================================================
 
