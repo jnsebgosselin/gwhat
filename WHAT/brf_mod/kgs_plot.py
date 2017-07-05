@@ -123,7 +123,7 @@ class BRFFigure(mpl.figure.Figure):
         TCKPOS = np.arange(0, max(lag_max+1, 10), 1)
         ax.set_xticks(TCKPOS)
 
-        TCKPOS = np.arange(-5, 5, 0.2)
+        TCKPOS = np.arange(-10, 10, 0.2)
         ax.set_yticks(TCKPOS)
 
         # ---------------------------------------------------------- AXIS -----
