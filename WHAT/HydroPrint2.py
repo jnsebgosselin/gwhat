@@ -207,22 +207,17 @@ class HydroprintGUI(myqt.DialogWindow):
         self.tabscales = self.__init_scalesTabWidget__()
         self.qAxeLabelsLanguage = self.__init_labelLangWidget__()
 
-        RightPanel = QtGui.QFrame()
-        layout = QtGui.QGridLayout()
-
+        self.right_panel = myqt.QFrameLayout()
         row = 0
-        layout.addWidget(self.dmngr, row, 0)
+        self.right_panel.addWidget(self.dmngr, row, 0)
         row += 1
-        layout.addWidget(self.tabscales, row, 0)
+        self.right_panel.addWidget(self.tabscales, row, 0)
         row += 1
-        layout.addWidget(self.qAxeLabelsLanguage, 2, 0)
+        self.right_panel.addWidget(self.qAxeLabelsLanguage, 2, 0)
         row += 1
-        layout.setRowStretch(row, 100)
+        self.right_panel.setRowStretch(row, 100)
 
-        layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-        layout.setSpacing(15)
-
-        RightPanel.setLayout(layout)
+        self.right_panel.setSpacing(15)
 
         # ------------------------------------------------------ MAIN GRID ----
 
@@ -230,7 +225,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         mainGrid.addWidget(self.grid_layout_widget, 0, 0)
         mainGrid.addWidget(myqt.VSep(), 0, 1)
-        mainGrid.addWidget(RightPanel, 0, 2)
+        mainGrid.addWidget(self.right_panel, 0, 2)
 
         mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
         mainGrid.setSpacing(15)

@@ -56,6 +56,7 @@ splash.showMessage("Starting WHAT, please wait ...",
 import csv
 from time import ctime
 from os import makedirs, path
+import copy
 
 from multiprocessing import freeze_support
 import tkinter
@@ -158,20 +159,22 @@ class WHAT(QtGui.QMainWindow):
         # ---- hydrograph ----
 
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
-        self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager2)
+        self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
 
         # ---- TABS ASSEMBLY ----
 
+        self.tab_bar = TabBar(self)
+
         Tab_widget = QtGui.QTabWidget()
-        Tab_widget.setTabBar(TabBar(self))
+        Tab_widget.setTabBar(self.tab_bar)
 
         Tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
         Tab_widget.addTab(self.tab_fill_weather_data, 'Gap-Fill Weather')
         Tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
         Tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
-        # Tab_widget.addTab(tab_about, 'About')
-
         Tab_widget.setCornerWidget(self.pmanager)
+
+        Tab_widget.currentChanged.connect(self.sync_datamanagers)
 
         # --------------------------------------------------- Main Console ----
 
@@ -248,6 +251,13 @@ class WHAT(QtGui.QMainWindow):
         self.main_console.append(textime + text)
 
     # =========================================================================
+
+    def sync_datamanagers(self):
+        current = self.tab_bar.currentIndex()
+        if current == 3:
+            self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
+        elif current == 2:
+            self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
 
     def new_project_loaded(self):
 
@@ -380,15 +390,18 @@ class TabBar(QtGui.QTabBar):
 
         self.aboutwhat = AboutWhat(parent=parent)
 
+        self.__oldIndex = -1
+        self.__newIndex = -1
+        self.currentChanged.connect(self.storeIndex)
+
         self.about_btn = QToolButtonBase(IconDB().info)
         self.about_btn.setIconSize(QtCore.QSize(20, 20))
         self.about_btn.setFixedSize(32, 32)
         self.about_btn.setToolTip('About WHAT...')
         self.about_btn.setParent(self)
+        self.movePlusButton()  # Move to the correct location
 
         self.about_btn.clicked.connect(self.aboutwhat.show)
-
-        self.movePlusButton()  # Move to the correct location
 
     def tabSizeHint(self, index):
         width = QtGui.QTabBar.tabSizeHint(self, index).width()
@@ -397,7 +410,7 @@ class TabBar(QtGui.QTabBar):
     def sizeHint(self):
         sizeHint = QtGui.QTabBar.sizeHint(self)
         w = sizeHint.width() + self.about_btn.size().width()
-        h = sizeHint.height()
+        # h = sizeHint.height()
         return QtCore.QSize(w, 32)
 
     def resizeEvent(self, event):
@@ -416,6 +429,16 @@ class TabBar(QtGui.QTabBar):
         # Set the plus button location in a visible area
         y = self.geometry().top()
         self.about_btn.move(x, y)
+
+    # =========================================================================
+
+    def storeIndex(self, index):
+        self.__oldIndex = copy.copy(self.__newIndex)
+        self.__newIndex = index
+
+    def previousIndex(self):
+        return self.__oldIndex
+
 
 # =============================================================================
 # =============================================================================

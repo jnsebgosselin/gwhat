@@ -411,16 +411,16 @@ class WLCalc(myqt.DialogWindow):
 
         # ---------------------------------------------------- Right Panel ----
 
-        right_pan = myqt.QFrameLayout()
+        self.right_panel = myqt.QFrameLayout()
 
         row = 0
-        right_pan.addWidget(self.dmngr, row, 0)
+        self.right_panel.addWidget(self.dmngr, row, 0)
         row += 1
-        right_pan.addWidget(tooltab, row, 0)
+        self.right_panel.addWidget(tooltab, row, 0)
         row += 1
-        right_pan.setRowStretch(row, 100)
+        self.right_panel.setRowStretch(row, 100)
 
-        right_pan.setSpacing(15)
+        self.right_panel.setSpacing(15)
 
         # -------------------------------------------------------- MAIN GRID --
 
@@ -429,7 +429,7 @@ class WLCalc(myqt.DialogWindow):
         mainGrid.addWidget(toolbar_widget, 0, 0)
         mainGrid.addWidget(self.fig_frame_widget, 1, 0, 2, 1)
         mainGrid.addWidget(myqt.VSep(), 0, 1, 3, 1)
-        mainGrid.addWidget(right_pan, 0, 2, 2, 1)
+        mainGrid.addWidget(self.right_panel, 0, 2, 2, 1)
 
         mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
         mainGrid.setHorizontalSpacing(15)
