@@ -367,12 +367,22 @@ class BRFViewer(QtGui.QDialog):
         axlayout.addWidget(QtGui.QLabel('   Auto :'), 3, 0)
 
         self._ylim = {}
-        self._ylim['min'] = myqt.QDoubleSpinBox(0, 1, 0.2)
+        self._ylim['min'] = QtGui.QDoubleSpinBox()
+        self._ylim['min'].setValue(0)
+        self._ylim['min'].setDecimals(1)
+        self._ylim['min'].setSingleStep(0.1)
+        self._ylim['min'].setRange(-10, 10)
         self._ylim['min'].setEnabled(True)
         self._ylim['min'].valueChanged.connect(self.plot_brf)
-        self._ylim['max'] = myqt.QDoubleSpinBox(1, 1, 0.2)
+
+        self._ylim['max'] = QtGui.QDoubleSpinBox()
+        self._ylim['max'].setValue(1)
+        self._ylim['max'].setDecimals(1)
+        self._ylim['max'].setSingleStep(0.1)
+        self._ylim['max'].setRange(-10, 10)
         self._ylim['max'].setEnabled(True)
         self._ylim['max'].valueChanged.connect(self.plot_brf)
+
         self._ylim['auto'] = QtGui.QCheckBox('')
         self._ylim['auto'].setCheckState(QtCore.Qt.Unchecked)
         self._ylim['auto'].stateChanged.connect(self.xlimModeChanged)
