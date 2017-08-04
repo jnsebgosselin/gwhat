@@ -1,6 +1,4 @@
-h5py
 matplotlib
 numpy
 xlrd
 xlsxwriter
-h5py
