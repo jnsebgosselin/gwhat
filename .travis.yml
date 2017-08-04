@@ -1,6 +1,10 @@
-language: python
-sudo: false
+# https://travis-ci.org/jnsebgosselin/WHAT
 
-matrix:
-  include:
-    - python: "3.4"
+language: python
+python:
+  - "3.4"
+
+install:
+    - sudo apt-get install python3-pyside
+
+script: pytest

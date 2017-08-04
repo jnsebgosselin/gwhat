@@ -1,4 +1,3 @@
-pyside
 h5py
 matplotlib
 numpy
