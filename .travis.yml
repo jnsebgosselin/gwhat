@@ -8,3 +8,5 @@ install:
     - sudo apt-get install python3-pyside
 
 script: pytest
+
+after_success: coveralls
