@@ -6,6 +6,10 @@ Created on Fri Aug  4 01:50:50 2017
 
 import pytest
 
+import sys
+from os.path import dirname, realpath
+sys.path.append(dirname(dirname(realpath(__file__))))
+    
 # Local imports
 from projet.reader_projet import ProjetReader
 
