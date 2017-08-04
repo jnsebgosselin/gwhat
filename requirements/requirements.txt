@@ -3,3 +3,4 @@ matplotlib
 numpy
 xlrd
 xlsxwriter
+h5py
