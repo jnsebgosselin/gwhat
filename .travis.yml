@@ -10,7 +10,6 @@ install:
   - sudo pip install cython
   - sudo apt-get install python3-dev
   - sudo apt-get install libhdf5-dev  
-  - sudo apt-get install libhdf5
   - sudo apt-get install python3-h5py
   - sudo pip install h5py
 
