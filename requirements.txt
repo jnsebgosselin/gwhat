@@ -1,0 +1,6 @@
+pyside
+h5py
+matplotlib
+numpy
+xlrd
+xlsxwriter

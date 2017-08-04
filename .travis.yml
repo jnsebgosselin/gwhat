@@ -1,2 +1,6 @@
 language: python
 sudo: false
+
+matrix:
+  include:
+    - python: "3.4"
