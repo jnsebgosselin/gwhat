@@ -9,7 +9,7 @@ install:
   - pip install coveralls
 
 script: 
-  - vpytest
+  - pytest
 
 after_success: 
   - coveralls
