@@ -5,8 +5,11 @@ python:
   - "3.4"
 
 install:
-    - sudo apt-get install python3-pyside
+  - sudo apt-get install python3-pyside
+  - pip install coveralls
 
-script: pytest
+script: 
+  - vpytest
 
-after_success: coveralls
+after_success: 
+  - coveralls
