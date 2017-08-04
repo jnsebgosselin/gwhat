@@ -8,7 +8,7 @@ install:
   - sudo apt-get install python3
   - sudo apt-get install python3-pyside
   - pip install coveralls
-  - pip install cython3
+  - sudo apt-get install cython3
   - sudo apt-get install libhdf5-dev
   - pip install h5py
 
