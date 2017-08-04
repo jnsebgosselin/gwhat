@@ -7,8 +7,8 @@ Created on Fri Aug  4 01:50:50 2017
 import pytest
 
 import sys
-from os.path import dirname, realpath
-sys.path.append(dirname(dirname(realpath(__file__))))
+import os.path
+sys.path.append(os.pathdirname(os.pathdirname(os.pathrealpath(__file__))))
     
 # Local imports
 from projet.reader_projet import ProjetReader
@@ -16,7 +16,8 @@ from projet.reader_projet import ProjetReader
 
 
 def test_projet_load_correctly():
-    fname = "Example.what"
+    dirname = os.pathdirname(os.pathrealpath(__file__))
+    fname = os.path.join(dirname, "Example.what")
     pr = ProjetReader(fname)
     
     assert pr.name == 'Example'    
