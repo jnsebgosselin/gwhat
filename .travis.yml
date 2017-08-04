@@ -8,9 +8,9 @@ install:
   - sudo apt-get install python3
   - sudo apt-get install python3-pyside
   - pip install coveralls
-  - sudo apt-get install cython3
+  - pip install cython3
   - sudo apt-get install libhdf5-dev
-  - sudo apt-get install python3-h5py
+  - pip install h5py
 
 script: 
   - pytest
