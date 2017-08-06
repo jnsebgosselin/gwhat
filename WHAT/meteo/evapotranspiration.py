@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of Pygwead (Python program for Gapfilling WEAther Data)
 
-WHAT is free software: you can redistribute it and/or modify
+Pygwead is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -34,19 +34,6 @@ import datetime
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
-
-# Local imports :
-
-for i in range(2):
-    try:
-        from _version import __version__
-        break
-    except ImportError:  # to run this module standalone
-        print('Running module as a standalone script...')
-        import sys
-        from os.path import dirname, realpath
-        sys.path.append(dirname(dirname(realpath(__file__))))
-
 
 # =============================================================================
 
@@ -95,6 +82,8 @@ def calcul_Thornthwaite(Date, Tavg, lat, Ta):
 
 
 # =============================================================================
+    
+
 def calcul_daylength(DATE, LAT):
     """Calculate the photoperiod for the given latitude and dates
 
@@ -123,10 +112,9 @@ def calcul_daylength(DATE, LAT):
     DAY365 = np.zeros(N)
     for i in range(N):
         date = datetime.date(Year[i], Month[i], Day[i])
-        DAY365[i] = date.timetuple().tm_yday
-        DAY365[i] = int(DAY365[i])
+        DAY365[i] = int(date.timetuple().tm_yday)
 
-    # ----------------------------------------- DECLINATION OF THE SUN ----
+    # --------------------------------------------- DECLINATION OF THE SUN ----
 
     # http://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
 
@@ -140,16 +128,16 @@ def calcul_daylength(DATE, LAT):
 
     SUNDEC = np.arcsin(np.sin(D) * np.cos(C + B * np.sin(A)))
 
-    # ----------------------------------------------- SUNRISE EQUATION ----
+    # --------------------------------------------------- SUNRISE EQUATION ----
 
     # http:/Omega/en.wikipedia.org/wiki/Sunrise_equation
 
     OMEGA = np.arccos(-np.tan(LAT) * np.tan(SUNDEC))
 
-    # ------------------------------------------------- HOURS OF LIGHT ----
+    # ----------------------------------------------------- HOURS OF LIGHT ----
 
     # http://physics.stackexchange.com/questions/28563/
-    #        hours-of-light-per-day-based-on-latitude-longitude-formula
+    # hours-of-light-per-day-based-on-latitude-longitude-formula
 
     DAYLEN = OMEGA * 2 * 24 / (2 * np.pi)  # Day length in hours
 
