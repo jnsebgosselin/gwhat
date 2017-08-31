@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -25,7 +25,7 @@ from __future__ import division, unicode_literals
 
 try:
     from urllib2 import urlopen, URLError
-except:
+except ImportError:
     from urllib.request import URLError, urlopen
 from datetime import datetime
 import sys
@@ -54,32 +54,7 @@ except ImportError:  # to run this module standalone
 
 
 # =============================================================================
-
-
-class Tooltips():
-
-    def __init__(self, language):  # ---------------------------- ENGLISH -----
-
-        # ---- Search4Stations ----
-
-        self.btn_addSta = ('Add selected found weather stations to the '
-                           'current list of weather stations.')
-        self.btn_search = ('Search for weather stations in the online CDCD ' +
-                           'with the criteria given above.')
-
-        # ---- WeatherStationDisplayTable ----
-
-        self.chkbox_header = ('Check of uncheck all the weather stations ' +
-                              'in the table.')
-
-        if language == 'French':  # ------------------------------ FRENCH -----
-            pass
-
-
-# =============================================================================
 class Search4Stations(QtGui.QWidget):
-# =============================================================================
-
     '''
     Widget that allows the user to search for weather stations on the
     Government of Canada website.
@@ -93,14 +68,7 @@ class Search4Stations(QtGui.QWidget):
 
         self.initUI()
 
-    def initUI(self):  # ======================================================
-
-        # ------------------------------------------------------- DATABASE ----
-
-        ttipDB = Tooltips('English')
-
-        #----------------------------------------------------- MAIN WINDOW ----
-
+    def initUI(self):
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(IconDB().master)
         self.setWindowFlags(QtCore.Qt.Window)
@@ -294,12 +262,14 @@ class Search4Stations(QtGui.QWidget):
         self.btn_search = QtGui.QPushButton('Search Stations')
         self.btn_search.setIcon(IconDB().search)
         self.btn_search.setIconSize(IconDB().iconSize2)
-        self.btn_search.setToolTip(ttipDB.btn_search)
+        self.btn_search.setToolTip('Search for weather stations in the online '
+                                   'CDCD with the criteria given above.')
 
         btn_addSta = QtGui.QPushButton('Add Stations')
         btn_addSta.setIcon(IconDB().add2list)
         btn_addSta.setIconSize(IconDB().iconSize2)
-        btn_addSta.setToolTip(ttipDB.btn_addSta)
+        btn_addSta.setToolTip('Add selected found weather stations to the '
+                              'current list of weather stations.')
 
         toolbar_grid = QtGui.QGridLayout()
         toolbar_widg = QtGui.QWidget()
@@ -479,7 +449,7 @@ class Search4Stations(QtGui.QWidget):
         YearMax = self.maxYear.value()
         nbrYear = self.nbrYear.value()
 
-        Nmax = 100.  # Number of results per page (maximum possible is 100)
+        Nmax = 100 # Number of results per page (maximum possible is 100)
 
         staList = []  # [station_name, station_id, start_year,
                       #  end_year, province, climate_id, station_proxim]
@@ -490,7 +460,7 @@ class Search4Stations(QtGui.QWidget):
 
         url = ('http://climate.weather.gc.ca/historical_data/'
                'search_historic_data_stations_e.html?')
-
+        
         if self.tab_widg.currentIndex() == 0:
             url += 'searchType=stnProx&timeframe=1&txtRadius=%d' % RADIUS
             url += '&selCity=&selPark=&optProxType=custom'
@@ -517,7 +487,7 @@ class Search4Stations(QtGui.QWidget):
             url += '&cmdProxSubmit=Search'
         elif self.tab_widg.currentIndex() == 1:
             url += '&cmdProvSubmit=Search'
-
+            
         #------------------------------------------------------ fetch data ----
 
         try:
@@ -537,7 +507,7 @@ class Search4Stations(QtGui.QWidget):
             if self.tab_widg.currentIndex() == 0:
                 txt2find = 'stations found within a search radius'
             if self.tab_widg.currentIndex() == 1:
-                txt2find = 'locations match'
+                txt2find = 'stations found in'
 
             indx_e = stnresults.find(txt2find, 0)
             if indx_e == -1:
@@ -690,7 +660,6 @@ class Search4Stations(QtGui.QWidget):
             QtCore.QCoreApplication.processEvents()
 
         except URLError as e:
-
             if hasattr(e, 'reason'):
                 msg = 'Failed to reach a server.'
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
@@ -801,14 +770,9 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         super(WeatherStationDisplayTable, self).__init__(parent)
 
         self.year_display_mode = year_display_mode
-        self.initUI()
+        self.__initUI__()
 
-    def initUI(self):  # ======================================================
-
-        ttipDB = Tooltips('English')
-
-        # ----------------------------------------------------------- Style ----
-
+    def __initUI__(self):
         self.setFont(StyleDB().font1)
         self.setFrameStyle(StyleDB().frame)
         self.setShowGrid(False)
@@ -822,7 +786,8 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         # horizontal-column-header
 
         self.chkbox_header = QtGui.QCheckBox(self.horizontalHeader())
-        self.chkbox_header.setToolTip(ttipDB.chkbox_header)
+        self.chkbox_header.setToolTip('Check or uncheck all the weather '
+                                      'stations in the table.')
         self.horizontalHeader().installEventFilter(self)
 
         HEADER = ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year',

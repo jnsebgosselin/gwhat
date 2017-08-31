@@ -483,4 +483,5 @@ class WXDataFrameHDF5(dict):
 
 if __name__ == '__main__':
     f = 'C:/Users/jnsebgosselin/Desktop/testé/testé.what'
+    f = 'C:/Users/jsgosselin/OneDrive/WHAT/WHAT/tests/Example.what'
     pr = ProjetReader(f)

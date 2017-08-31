@@ -121,7 +121,7 @@ class WLCalc(myqt.DialogWindow):
 
         # Recharge :
 
-        self.rechg_setup_win = RechgSetupWin(self)
+        self.rechg_setup_win = RechgSetupWin(parent=self)
 
         self.synth_hydro_widg = SynthHydroWidg()
         self.synth_hydro_widg.hide()
@@ -450,6 +450,7 @@ class WLCalc(myqt.DialogWindow):
 
     def set_wldset(self, wldset):
         self.config_brf.set_wldset(wldset)
+        self.rechg_setup_win.wldset = wldset
 
         if wldset is None:
             self.water_lvl = None
@@ -467,6 +468,7 @@ class WLCalc(myqt.DialogWindow):
             self.toolbar.update()
 
     def set_wxdset(self, wxdset):
+        self.rechg_setup_win.wxdset = wxdset
         if wxdset is None:
             return
         self.plot_weather_data()
@@ -2064,9 +2066,11 @@ class SynthHydroWidg(QtGui.QWidget):
 
 
 class RechgSetupWin(myqt.DialogWindow):
-
     def __init__(self, parent):
         super(RechgSetupWin, self).__init__(parent)
+
+        self.wxdset = None
+        self.wldset = None
 
         self.setWindowTitle('Recharge Calibration Setup')
         self.setWindowFlags(QtCore.Qt.Window)
@@ -2275,13 +2279,13 @@ class RechgSetupWin(myqt.DialogWindow):
         sh.CM = self.CM
         sh.deltat = self.deltaT
 
-        print(self.parent().A, self.parent().B)
+        print(self.wldset['mrc/params'])
 
         # ---- Calculations ----
 
         QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
 
-        sh.load_data(self.parent().wxdset, self.parent().wldset)
+        sh.load_data(self.wxdset, self.wldset)
         sh.GLUE(Sy, RASmax, Cro, res='rough')
 
         QtGui.QApplication.restoreOverrideCursor()
