@@ -1,0 +1,991 @@
+<!DOCTYPE html><!--[if lt IE 9]><html class="no-js lt-ie9" lang="en" dir="ltr"><![endif]--><!--[if gt IE 8]><!-->
+<html class="no-js" lang="en" dir="ltr">
+<!--<![endif]-->
+<head>
+<meta charset="utf-8">
+<!-- Web Experience Toolkit (WET) / Boîte à outils de l'expérience Web (BOEW)
+wet-boew.github.io/wet-boew/License-en.html / wet-boew.github.io/wet-boew/Licence-fr.html -->
+<title>Daily Data Report for March 1976 - Climate - Environment and Climate Change Canada</title>
+<meta content="width=device-width,initial-scale=1" name="viewport">
+<!-- Meta data -->
+<meta name="dcterms.title" content="Daily Data Report for March 1976 - Climate - Environment and Climate Change Canada"/>
+<meta name="description" content="climate, past weather"/>
+<meta name="dcterms.subject" title="scheme" content="climate; past weather"/>
+<meta name="dcterms.issued" title="W3CDTF" content="2011-10-31"/>
+<meta name="dcterms.modified" title="W3CDTF" content="2016-08-09"/>
+<meta name="dcterms.creator" content="Environment and Climate Change Canada"/>
+<!-- Meta data-->
+<!--[if gte IE 9 | !IE ]><!-->
+<link href="/vendor/wet/GCWeb/assets/favicon.ico" rel="icon" type="image/x-icon">
+<link rel="stylesheet" href="/vendor/wet/GCWeb/css/theme.min.css">
+<!--<![endif]-->
+<!--[if lt IE 9]>
+<link href="/vendor/wet/GCWeb/assets/favicon.ico" rel="shortcut icon" />
+<link rel="stylesheet" href="/vendor/wet/GCWeb/css/ie8-theme.min.css" />
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="/vendor/wet/wet-boew/js/ie8-wet-boew.min.js"></script>
+<![endif]-->
+<!--[if lte IE 9]>
+<![endif]-->
+<noscript><link rel="stylesheet" href="/vendor/wet/wet-boew/css/noscript.min.css" /></noscript>
+<link rel="stylesheet" href="/vendor/css/font-awesome-4.4.0/css/font-awesome.min.css">
+<!-- Google Tag Manager DO NOT REMOVE OR MODIFY - NE PAS SUPPRIMER OU MODIFIER -->
+<script>dataLayer1 = [];</script>
+<!-- End Google Tag Manager -->
+<link href="/assets/css/Application.css" rel="stylesheet"/>
+<link href="/assets/css/print.css" rel="stylesheet"/>
+<link href="/assets/css/expand_collapse.css" media="screen" rel="stylesheet"/>
+<link href="/assets/css/date_navigation.css" rel="stylesheet"/>
+</head>
+<body  vocab="http://schema.org/" typeof="WebPage">
+<!-- Google Tag Manager DO NOT REMOVE OR MODIFY - NE PAS SUPPRIMER OU MODIFIER -->
+<noscript><iframe title="Google Tag Manager" src="//www.googletagmanager.com/ns.html?id=GTM-TLGQ9K" height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+<script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start': new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0], j=d.createElement(s),dl=l!='dataLayer1'?'&l='+l:'';j.async=true;j.src='//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer1','GTM-TLGQ9K');</script>
+<!-- End Google Tag Manager -->
+<ul id="wb-tphp">
+<li class="wb-slc">
+<a class="wb-sl" href="#wb-cont">Skip to main content</a>
+</li>
+<li class="wb-slc visible-sm visible-md visible-lg">
+<a class="wb-sl" href="#wb-info">Skip to "About this site"</a>
+</li>
+</ul>
+<header role="banner">
+<div id="wb-bnr" class="container">
+<section id="wb-lng" class="visible-md visible-lg text-right">
+<h2 class="wb-inv">Language selection</h2>
+<div class="row">
+<div class="col-md-12">
+<ul class="list-inline mrgn-bttm-0">
+<li><a lang="fr" href="/lib/lang.php?url=/climate_data/daily_data_e.html?timeframe%3D2%26Prov%3DQC%26StationID%3D5400">Français</a></li>
+</ul>
+</div>
+</div>
+</section>
+<div class="row">
+<div class="brand col-xs-8 col-sm-9 col-md-6">
+<a href="http://www.canada.ca/en/index.html"><object type="image/svg+xml" tabindex="-1" data="/vendor/wet/GCWeb/assets/sig-blk-en.svg"></object><span class="wb-inv"> Government of Canada</span></a>
+</div>
+<section class="wb-mb-links col-xs-4 col-sm-3 visible-sm visible-xs" id="wb-glb-mn">
+<h2>Search and menus</h2>
+<ul class="list-inline text-right chvrn">
+<li><a href="#mb-pnl" title="Search and menus" aria-controls="mb-pnl" class="overlay-lnk" role="button"><span class="glyphicon glyphicon-search"><span class="glyphicon glyphicon-th-list"><span class="wb-inv">Search and menus</span></span></span></a></li>
+</ul>
+<div id="mb-pnl"></div>
+</section>
+<section id="wb-srch" class="col-xs-6 text-right visible-md visible-lg">
+<h2 class="wb-inv">Search</h2>
+<form action="http://recherche-search.gc.ca/rGs/s_r?#wb-land" method="get" name="cse-search-box" role="search" class="form-inline">
+<div class="form-group">
+<label for="wb-srch-q" class="wb-inv">Search website</label>
+<input name="cdn" value="canada" type="hidden"/>
+<input name="st" value="s" type="hidden"/>
+<input name="num" value="10" type="hidden"/>
+<input name="langs" value="eng" type="hidden"/>
+<input name="st1rt" value="0" type="hidden">
+<input name="s5bm3ts21rch" value="x" type="hidden"/>
+<input id="wb-srch-q" list="wb-srch-q-ac" class="wb-srch-q form-control" name="q" type="search" value="" size="27" maxlength="150" placeholder="Search Canada.ca">
+<datalist id="wb-srch-q-ac">
+<!--[if lte IE 9]><select><![endif]-->
+<!--[if lte IE 9]></select><![endif]-->
+</datalist>
+</div>
+<div class="form-group submit">
+<button type="submit" id="wb-srch-sub" class="btn btn-primary btn-small" name="wb-srch-sub"><span class="glyphicon-search glyphicon"></span><span class="wb-inv">Search</span></button>
+</div>
+</form>
+</section>
+</div>
+</div>
+<nav role="navigation" id="wb-sm" class="wb-menu visible-md visible-lg" data-trgt="mb-pnl" data-ajax-fetch="/data/pco-fetch/sitemenu-en.html" typeof="SiteNavigationElement">
+<!-- <nav role="navigation" id="wb-sm" class="wb-menu visible-md visible-lg" data-trgt="mb-pnl" data-ajax-fetch="//travel.gc.ca/gcweb-cdn-host/sitemenu/sitemenu-en.html" typeof="SiteNavigationElement"> -->
+<h2 class="wb-inv">Topics menu</h2>
+<div class="container nvbar">
+<div class="row">
+<ul class="list-inline menu">
+<li><a href="http://www.esdc.gc.ca/en/jobs/index.page">Jobs</a></li>
+<li><a href="http://www.cic.gc.ca/english/index.asp">Immigration</a></li>
+<li><a href="http://travel.gc.ca">Travel</a></li>
+<li><a href="http://www.canada.ca/en/services/business/index.html">Business</a></li>
+<li><a href="http://www.canada.ca/en/services/benefits/index.html">Benefits</a></li>
+<li><a href="http://healthycanadians.gc.ca/index-eng.php">Health</a></li>
+<li><a href="http://www.canada.ca/en/services/taxes/index.html">Taxes</a></li>
+<li><a href="http://www.canada.ca/en/services/index.html">More services</a></li>
+</ul>
+</div>
+</div>
+</nav>
+<nav role="navigation" id="wb-bc" class="" property="breadcrumb">
+<h2 class="wb-inv">You are here:</h2><div class="container">
+<div class="row">
+<ol class="breadcrumb">
+<li><a href="http://www.canada.ca/en/index.html">Home</a></li>
+<li><a href="http://www.canada.ca/en/services/environment/index.html">Environment and natural resources</a></li>
+<li><a href="http://www.canada.ca/en/services/environment/weather/index.html">Weather, Climate and Hazard</a></li>
+ <li><a href="/index_e.html">Past weather and climate</a></li><li><a href="/historical_data/search_historic_data_e.html">Historical Data</a></li></ol>
+</div>
+</div>
+</nav>
+</header>
+<main role="main" property="mainContentOfPage" class="container">
+<h1 property="name" id="wb-cont">Daily Data Report for March 1976</h1>
+<!-- Page content -->
+    <p class="text-center table-header pdng-md mrgn-bttm-0">MACDONALD COLLEGE<br/>QUEBEC</p>
+
+    <div class="metadata regular mrgn-lft-md mrgn-rght-md">
+      <div class="row">
+        <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+          <div class="row">
+            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-6" id="latitude"><a href="/glossary_e.html#latitude">Latitude</a>:</div>
+            <div class="col-lg-6 col-md-7 col-sm-7 col-xs-6" aria-labelledby="latitude"> 45<abbr title="degrees">&deg;</abbr>25<abbr title="minute">'</abbr>00.000<abbr title="second">&quot;</abbr> <abbr title="North">N</abbr></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+          <div class="row">
+            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-6" id="longitude"><a href="/glossary_e.html#longitude">Longitude</a>:</div>
+            <div class="col-lg-6 col-md-7 col-sm-7 col-xs-6" aria-labelledby="longitude"> 73<abbr title="degrees">&deg;</abbr>56<abbr title="minute">'</abbr>00.000<abbr title="second">&quot;</abbr> <abbr title="West">W</abbr></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+          <div class="row">
+            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-6" id="elevation"><a href="/glossary_e.html#elevation">Elevation</a>:</div>
+            <div class="col-lg-6 col-md-7 col-sm-7 col-xs-6" aria-labelledby="elevation">27.40 <abbr title="metre">m</abbr></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+          <div class="row">
+            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-6" id="climateid"><a href="/glossary_e.html#climate_ID">Climate ID</a>:</div>
+            <div class="col-lg-6 col-md-7 col-sm-7 col-xs-6" aria-labelledby="climateid">7024400             </div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+          <div class="row">
+            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-6" id="wmoid"><a href="/glossary_e.html#wmo_id"><abbr title="World Meteorological Organization">WMO</abbr> ID</a>:</div>
+            <div class="col-lg-6 col-md-7 col-sm-7 col-xs-6" aria-labelledby="wmoid"></div>
+          </div>
+        </div>
+        <div class="col-lg-4 col-md-4 col-sm-6 col-xs-12">
+          <div class="row">
+            <div class="col-lg-6 col-md-5 col-sm-5 col-xs-6" id="tcid"><a href="/glossary_e.html#tc_ID"><abbr title="Transport Canada">TC</abbr> ID</a>:</div>
+            <div class="col-lg-6 col-md-7 col-sm-7 col-xs-6" aria-labelledby="tcid"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="metadata-border mrgn-bttm-md"></div>
+<div id="climateNav" class="row hidden-print">
+  		<div class="col-md-4 col-sm-4 mrgn-tp-md">
+			<section class="panel panel-primary text-center">
+				<header class="panel-heading">
+					<h2 class="panel-title">Related Data</h2>
+				</header>
+				<div class="list-group"><a class="list-group-item" id="monthlyLink" href="http://climate.weather.gc.ca/climate_data/monthly_data_e.html?timeframe=3&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017">Monthly Data (1976)</a>
+	      </div>
+	    </section>
+	  </div>
+	  <div class="col-md-4 col-sm-4 mrgn-tp-md"><section class="panel panel-primary text-center">
+	    <header class="panel-heading"><h2 class="panel-title">Additional Search Options</h2></header>
+	      <div class="list-group">              <a class="list-group-item" href="http://climate.weather.gc.ca/historical_data/search_historic_data_stations_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;searchType=stnProx&amp;txtRadius=25&amp;optProxType=navLink&amp;txtLatDecDeg=45.416666666667&amp;txtLongDecDeg=73.933333333333&amp;optLimit=specDate&amp;selRowPerPage=25&amp;station=MACDONALD+COLLEGE">Nearby Stations with Data</a>              <a class="list-group-item" href="http://climate.weather.gc.ca/historical_data/search_historic_data_e.html?timeframe=2&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017">Historical Data Search <span class="wb-inv">for March 1976</span> </a>        </div>
+      </section>
+    </div>		<div class="col-md-4 col-sm-4 mrgn-tp-md"><section class="panel panel-primary mrgn-bttm-0 text-center">
+			<header class="panel-heading"><h2 class="panel-title">Download Data</h2></header>
+			<div class="mrgn-bttm-0">
+				<form method="get" action="http://climate.weather.gc.ca/climate_data/bulk_data_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017">
+					<fieldset class="mrgn-bttm-md">					<legend class="download">Daily Data (1976)</legend>
+					<div>
+						<label for="bulkCsvLink" class="radio-inline"><input class="deselect-off" checked="checked" type="radio" id="bulkCsvLink" value="csv" name="format" /> <abbr title="Comma Separated Values">CSV</abbr></label>
+						<label for="bulkXmlLink" class="radio-inline"><input class="deselect-off" type="radio" id="bulkXmlLink" name="format" value="xml" /><abbr title="Extensible Markup Language">&nbsp;XML</abbr></label>
+					</div>
+				</fieldset>
+				<input class="wb-inv position-top" type="hidden" name="stationID" value="5400" />
+				<input class="wb-inv position-top" type="hidden" name="Year" value="1976" />
+				<input class="wb-inv position-top" type="hidden" name="Month" value="3" />
+				<input class="wb-inv position-top" type="hidden" name="Day" value="1" />
+				<input class="wb-inv position-top" type="hidden" name="timeframe" value="2" />				<input class="btn btn-default text-center mrgn-bttm-md" type="submit" name="submit" value="Download Data" /></form>
+			</div>
+			<div class="mrgn-bttm-md">
+			  <a href="ftp://client_climate@ftp.tor.ec.gc.ca/Pub/Get_More_Data_Plus_de_donnees/">Get More Data</a>
+      </div>
+		</section>
+	</div></div>
+<div class="mrgn-bttm-lg mrgn-tp-lg hidden-print row">
+  					<form id="frmDateNav1" class="form-inline" action="#">
+            <script type="text/javascript">
+              var maxMin = ["1906","05","01","1976","03","01"];
+              var maxDates = ["1976","03","01"];
+              var hideNav = ["1976","03","01",2];var navBars = new Array();
+              navBars.push(document.forms.namedItem('frmDateNav1'));
+            </script>                <input type="hidden" value="2" name="timeframe" />
+                <input type="hidden" value="QC" name="Prov" />
+                <input type="hidden" value="5400" name="StationID" />
+                <input type="hidden" value="1840" name="StartYear" />
+                <input type="hidden" value="2017" name="EndYear" />
+    <input type="hidden" value="31" name="Day"/>
+        <div class="col-md-3 col-sm-3 col-xs-3 mrgn-tp-md mrgn-bttm-md">
+          <ul class="pager pagination-sm mrgn-tp-0 mrgn-bttm-0">
+            <li id="nav-prev1" class="previous">
+              <a rel="prev" href="/climate_data/daily_data_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=2&amp;Day=1&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017"><span class="wb-inv">Previous Month</span><span class="mrgn-lft-sm visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">Previous Month</span></a>
+            </li>
+          </ul>
+        </div><div class="col-md-6 col-sm-6 col-xs-6 text-center mrgn-tp-md mrgn-bttm-md"><label for="Year1" class="wb-inv position-top">Year</label><select name="Year" id="Year1" size="1" class="form-control center-block mrgn-bttm-sm" onchange="yearChange(document.forms.namedItem('frmDateNav1'));">
+<option value="1906">1906</option>
+<option value="1907">1907</option>
+<option value="1908">1908</option>
+<option value="1909">1909</option>
+<option value="1910">1910</option>
+<option value="1911">1911</option>
+<option value="1912">1912</option>
+<option value="1913">1913</option>
+<option value="1914">1914</option>
+<option value="1915">1915</option>
+<option value="1916">1916</option>
+<option value="1917">1917</option>
+<option value="1918">1918</option>
+<option value="1919">1919</option>
+<option value="1920">1920</option>
+<option value="1921">1921</option>
+<option value="1922">1922</option>
+<option value="1923">1923</option>
+<option value="1924">1924</option>
+<option value="1925">1925</option>
+<option value="1926">1926</option>
+<option value="1927">1927</option>
+<option value="1928">1928</option>
+<option value="1929">1929</option>
+<option value="1930">1930</option>
+<option value="1931">1931</option>
+<option value="1932">1932</option>
+<option value="1933">1933</option>
+<option value="1934">1934</option>
+<option value="1935">1935</option>
+<option value="1936">1936</option>
+<option value="1937">1937</option>
+<option value="1938">1938</option>
+<option value="1939">1939</option>
+<option value="1940">1940</option>
+<option value="1941">1941</option>
+<option value="1942">1942</option>
+<option value="1943">1943</option>
+<option value="1944">1944</option>
+<option value="1945">1945</option>
+<option value="1946">1946</option>
+<option value="1947">1947</option>
+<option value="1948">1948</option>
+<option value="1949">1949</option>
+<option value="1950">1950</option>
+<option value="1951">1951</option>
+<option value="1952">1952</option>
+<option value="1953">1953</option>
+<option value="1954">1954</option>
+<option value="1955">1955</option>
+<option value="1956">1956</option>
+<option value="1957">1957</option>
+<option value="1958">1958</option>
+<option value="1959">1959</option>
+<option value="1960">1960</option>
+<option value="1961">1961</option>
+<option value="1962">1962</option>
+<option value="1963">1963</option>
+<option value="1964">1964</option>
+<option value="1965">1965</option>
+<option value="1966">1966</option>
+<option value="1967">1967</option>
+<option value="1968">1968</option>
+<option value="1969">1969</option>
+<option value="1970">1970</option>
+<option value="1971">1971</option>
+<option value="1972">1972</option>
+<option value="1973">1973</option>
+<option value="1974">1974</option>
+<option value="1975">1975</option>
+<option value="1976" selected="selected">1976</option>
+</select>
+<label for="Month1" class="wb-inv position-top">Month</label><select name="Month" id="Month1" size="1" class="form-control center-block mrgn-bttm-sm" onchange="javascript:yearChange(document.forms.namedItem('frmDateNav1'));">                      <option value="1">January</option>
+                      <option value="2">February</option>
+                      <option value="3" selected="selected">March</option>
+</select>
+<input value="Go" class="btn btn-primary mrgn-bttm-sm" type="submit" />
+</div>        <div class="col-md-3 col-sm-3 col-xs-3 mrgn-tp-md mrgn-bttm-md">
+          <ul class="pager pagination-sm mrgn-tp-0 mrgn-bttm-0">
+            <li id="nav-next1" class="next disabled">
+              <a href="/climate_data/daily_data_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=4&amp;Day=1&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017" rel="next"><span class="mrgn-rght-sm visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">Next Month</span><span class="wb-inv">Next Month</span></a>
+
+            </li>
+          </ul>
+        </div>
+      </form>
+      <div class="clearfix"> </div></div>
+
+<div id="dynamicDataTable" class="table-responsive">
+  <table class="table table-striped table-hover data-table" >
+  <caption class="hidden-print">Daily Data Report for March 1976</caption>
+  <thead>
+    <tr>
+<th></th>
+<th><a href="/glossary_e.html#maxTemp"><abbr title="Maximum Temperature">Max Temp</abbr><span class="wb-inv"> Definition</span></a><br /><abbr title="degrees Celsius">°C</abbr><br /><a href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=line&amp;MeasTypeID=maxtemp"><span class="fa fa-line-chart" title="Daily Maximum Temperature Chart"></span></a></th>
+<th><a href="/glossary_e.html#minTemp"><abbr title="Minimum Temperature">Min Temp</abbr><span class="wb-inv"> Definition</span></a><br /><abbr title="degrees Celsius">°C</abbr><br /><a href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=line&amp;MeasTypeID=mintemp"><span class="fa fa-line-chart" title="Daily Minimum Temperature Chart"></span></a></th>
+<th><a href="/glossary_e.html#meanTemp"><abbr title="Mean Temperature">Mean Temp</abbr><span class="wb-inv"> Definition</span></a><br /><abbr title="degrees Celsius">°C</abbr><br /><a href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=line&amp;MeasTypeID=meantemp"><span class="fa fa-line-chart" title="Daily Mean Temperature Chart"></span></a></th>
+<th><a href="/glossary_e.html#hdd"><abbr title="Heating Degree Days">Heat Deg Days</abbr><span class="wb-inv"> Definition</span></a><br /><br /><a  href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=bar&amp;MeasTypeID=heatingdegreedays"><span class="fa fa-bar-chart"  title="Daily Heating Degree Days Chart"></span></a></th>
+<th><a href="/glossary_e.html#cooling"><abbr title="Cooling Degree Days">Cool Deg Days</abbr><span class="wb-inv"> Definition</span></a><br /><br /><a  href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=bar&amp;MeasTypeID=coolingdegreedays"><span class="fa fa-bar-chart"  title="Daily Cooling Degree Days Chart"></span></a></th>
+<th><a href="/glossary_e.html#totalRain">Total Rain</a><span class="wb-inv"> Definition</span><br /><abbr title="millimetres">mm</abbr><br /><a  href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=bar&amp;MeasTypeID=totrain"><span class="fa fa-bar-chart"  title="Daily Total Rain Chart"></span></a></th>
+<th><a href="/glossary_e.html#totalSnow">Total Snow</a><span class="wb-inv"> Definition</span><br /><abbr title="centimetres">cm</abbr><br /><a  href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=bar&amp;MeasTypeID=totsnow"><span class="fa fa-bar-chart"  title="Daily Total Snow Chart"></span></a></th>
+<th><a href="/glossary_e.html#totalPrec"><abbr title="Total Precipitation">Total Precip</abbr><span class="wb-inv"> Definition</span></a><br /><abbr title="millimetres">mm</abbr><br /><a  href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=bar&amp;MeasTypeID=totprecip"><span class="fa fa-bar-chart"  title="Daily Total Precipitation Chart"></span></a></th>
+<th><a href="/glossary_e.html#s_onGround"><abbr title="Snow on Ground">Snow on Grnd</abbr><span class="wb-inv"> Definition</span></a><br /><abbr title="centimetres">cm</abbr><br /><a  href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=bar&amp;MeasTypeID=snow"><span class="fa fa-bar-chart"  title="Daily Snow on Ground Chart"></span></a></th>
+<th><a href="/glossary_e.html#d_maxGust"><abbr title="Direction of Maximum Gust">Dir of Max Gust</abbr><span class="wb-inv"> Definition</span></a><br /><abbr title="tens of degrees">10's deg</abbr><br><br /></th>
+<th><a href="/glossary_e.html#s_maxGust"><abbr title="Speed of Maximum Gust">Spd of Max Gust</abbr><span class="wb-inv"> Definition</span></a><br /><abbr title="kilometres per hour">km/h</abbr><br /><a  href="generate_chart_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=3&amp;Day=31&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017&amp;type=bar&amp;MeasTypeID=speedmaxgust"><span class="fa fa-bar-chart"  title="Daily Speed of Maximum Gust Chart"></span></a></th>
+    </tr>
+  </thead>
+  <tbody>
+  <tr>  <th>DAY  </th>  <th colspan="11">   </th>  </tr>    <tr>
+      <td ><abbr title="March 1, 1976">01</abbr></td>
+      <td >-5.6</td>
+      <td >-9.4</td>
+      <td >-7.5</td>
+      <td >25.5</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 2, 1976">02</abbr></td>
+      <td >-10.6</td>
+      <td >-15.6</td>
+      <td >-13.1</td>
+      <td >31.1</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 3, 1976">03</abbr></td>
+      <td >-1.1</td>
+      <td >-13.3</td>
+      <td >-7.2</td>
+      <td >25.2</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >2.5</td>
+      <td >2.5</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 4, 1976">04</abbr></td>
+      <td >2.2</td>
+      <td >-8.3</td>
+      <td >-3.1</td>
+      <td >21.1</td>
+      <td >0.0</td>
+      <td >22.9</td>
+      <td >0.0</td>
+      <td >22.9</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 5, 1976">05</abbr></td>
+      <td >10.6</td>
+      <td >-1.7</td>
+      <td >4.5</td>
+      <td >13.5</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 6, 1976">06</abbr></td>
+      <td >-1.1</td>
+      <td >-6.1</td>
+      <td >-3.6</td>
+      <td >21.6</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >2.5</td>
+      <td >2.5</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 7, 1976">07</abbr></td>
+      <td >-1.7</td>
+      <td >-6.7</td>
+      <td >-4.2</td>
+      <td >22.2</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 8, 1976">08</abbr></td>
+      <td >-3.3</td>
+      <td >-12.2</td>
+      <td >-7.8</td>
+      <td >25.8</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 9, 1976">09</abbr></td>
+      <td >-1.1</td>
+      <td >-17.8</td>
+      <td >-9.5</td>
+      <td >27.5</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 10, 1976">10</abbr></td>
+      <td >0.0</td>
+      <td >-10.6</td>
+      <td >-5.3</td>
+      <td >23.3</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >10.2</td>
+      <td >10.2</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 11, 1976">11</abbr></td>
+      <td >-1.1</td>
+      <td >-5.6</td>
+      <td >-3.4</td>
+      <td >21.4</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 12, 1976">12</abbr></td>
+      <td >3.9</td>
+      <td >-21.1</td>
+      <td >-8.6</td>
+      <td >26.6</td>
+      <td >0.0</td>
+      <td >14.0</td>
+      <td >0.0</td>
+      <td >14.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 13, 1976">13</abbr></td>
+      <td >3.3</td>
+      <td >-4.4</td>
+      <td >-0.6</td>
+      <td >18.6</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >5.1</td>
+      <td >5.1</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 14, 1976">14</abbr></td>
+      <td >0.6</td>
+      <td >-9.4</td>
+      <td >-4.4</td>
+      <td >22.4</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 15, 1976">15</abbr></td>
+      <td >0.0</td>
+      <td >-3.9</td>
+      <td >-2.0</td>
+      <td >20.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 16, 1976">16</abbr></td>
+      <td >-3.3</td>
+      <td >-15.0</td>
+      <td >-9.2</td>
+      <td >27.2</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >5.1</td>
+      <td >5.1</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 17, 1976">17</abbr></td>
+      <td >-5.6</td>
+      <td >-12.2</td>
+      <td >-8.9</td>
+      <td >26.9</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 18, 1976">18</abbr></td>
+      <td >-5.0</td>
+      <td >-17.8</td>
+      <td >-11.4</td>
+      <td >29.4</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 19, 1976">19</abbr></td>
+      <td >6.7</td>
+      <td >-11.1</td>
+      <td >-2.2</td>
+      <td >20.2</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >5.1</td>
+      <td >5.1</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 20, 1976">20</abbr></td>
+      <td >12.8</td>
+      <td >-6.1</td>
+      <td >3.4</td>
+      <td >14.6</td>
+      <td >0.0</td>
+      <td >7.1</td>
+      <td >0.0</td>
+      <td >7.1</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 21, 1976">21</abbr></td>
+      <td >7.8</td>
+      <td >4.4</td>
+      <td >6.1</td>
+      <td >11.9</td>
+      <td >0.0</td>
+      <td >7.6</td>
+      <td >0.0</td>
+      <td >7.6</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 22, 1976">22</abbr></td>
+      <td >6.1</td>
+      <td >-16.7</td>
+      <td >-5.3</td>
+      <td >23.3</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 23, 1976">23</abbr></td>
+      <td >9.4</td>
+      <td >-15.0</td>
+      <td >-2.8</td>
+      <td >20.8</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 24, 1976">24</abbr></td>
+      <td >13.3</td>
+      <td >-1.1</td>
+      <td >6.1</td>
+      <td >11.9</td>
+      <td >0.0</td>
+      <td >2.5</td>
+      <td >0.0</td>
+      <td >2.5</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 25, 1976">25</abbr></td>
+      <td >9.4</td>
+      <td >3.3</td>
+      <td >6.4</td>
+      <td >11.6</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 26, 1976">26</abbr></td>
+      <td >13.9</td>
+      <td >0.0</td>
+      <td >7.0</td>
+      <td >11.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 27, 1976">27</abbr></td>
+      <td >15.0</td>
+      <td >1.7</td>
+      <td >8.4</td>
+      <td >9.6</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 28, 1976">28</abbr></td>
+      <td >4.4</td>
+      <td >0.0</td>
+      <td >2.2</td>
+      <td >15.8</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 29, 1976">29</abbr></td>
+      <td >6.7</td>
+      <td >-3.9</td>
+      <td >1.4</td>
+      <td >16.6</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 30, 1976">30</abbr></td>
+      <td >6.7</td>
+      <td >-0.6</td>
+      <td >3.1</td>
+      <td >14.9</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >0.0</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+      <td ><abbr title="March 31, 1976">31</abbr></td>
+      <td >11.1</td>
+      <td >1.1</td>
+      <td >6.1</td>
+      <td >11.9</td>
+      <td >0.0</td>
+      <td >25.4</td>
+      <td >0.0</td>
+      <td >25.4</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+      <td >&nbsp;</td>
+    </tr>
+    <tr>
+<th scope="row">Sum</th><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>623.4</td><td>0.0</td><td>79.5</td><td>30.5</td><td>110.0</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>    </tr>
+    <tr>
+<th scope="row"><abbr title="Average">Avg</abbr></th><td>3.4</td><td>-7.6</td><td>-2.1</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>    </tr>
+    <tr>
+<th scope="row"><abbr title="Extreme">Xtrm</abbr></th><td>15.0</td><td>-21.1</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td>    </tr>
+<tr><th colspan='12'>Summary, average and extreme values are based on the data above.</th></tr>  </tbody>
+</table>
+</div>
+
+<div class="mrgn-bttm-0 hidden-print row">
+  					<form id="frmDateNav2" class="form-inline" action="#">
+            <script type="text/javascript">
+              var maxMin = ["1906","05","01","1976","03","01"];
+              var maxDates = ["1976","03","01"];
+              var hideNav = ["1976","03","01",2];              navBars.push(document.forms.namedItem('frmDateNav2'));
+            </script>                <input type="hidden" value="2" name="timeframe" />
+                <input type="hidden" value="QC" name="Prov" />
+                <input type="hidden" value="5400" name="StationID" />
+                <input type="hidden" value="1840" name="StartYear" />
+                <input type="hidden" value="2017" name="EndYear" />
+    <input type="hidden" value="31" name="Day"/>
+        <div class="col-md-3 col-sm-3 col-xs-3 mrgn-tp-md mrgn-bttm-md">
+          <ul class="pager pagination-sm mrgn-tp-0 mrgn-bttm-0">
+            <li id="nav-prev2" class="previous">
+              <a rel="prev" href="/climate_data/daily_data_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=2&amp;Day=1&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017"><span class="wb-inv">Previous Month</span><span class="mrgn-lft-sm visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">Previous Month</span></a>
+            </li>
+          </ul>
+        </div><div class="col-md-6 col-sm-6 col-xs-6 text-center mrgn-tp-md mrgn-bttm-md"><label for="Year2" class="wb-inv position-top">Year</label><select name="Year" id="Year2" size="1" class="form-control center-block mrgn-bttm-sm" onchange="yearChange(document.forms.namedItem('frmDateNav2'));">
+<option value="1906">1906</option>
+<option value="1907">1907</option>
+<option value="1908">1908</option>
+<option value="1909">1909</option>
+<option value="1910">1910</option>
+<option value="1911">1911</option>
+<option value="1912">1912</option>
+<option value="1913">1913</option>
+<option value="1914">1914</option>
+<option value="1915">1915</option>
+<option value="1916">1916</option>
+<option value="1917">1917</option>
+<option value="1918">1918</option>
+<option value="1919">1919</option>
+<option value="1920">1920</option>
+<option value="1921">1921</option>
+<option value="1922">1922</option>
+<option value="1923">1923</option>
+<option value="1924">1924</option>
+<option value="1925">1925</option>
+<option value="1926">1926</option>
+<option value="1927">1927</option>
+<option value="1928">1928</option>
+<option value="1929">1929</option>
+<option value="1930">1930</option>
+<option value="1931">1931</option>
+<option value="1932">1932</option>
+<option value="1933">1933</option>
+<option value="1934">1934</option>
+<option value="1935">1935</option>
+<option value="1936">1936</option>
+<option value="1937">1937</option>
+<option value="1938">1938</option>
+<option value="1939">1939</option>
+<option value="1940">1940</option>
+<option value="1941">1941</option>
+<option value="1942">1942</option>
+<option value="1943">1943</option>
+<option value="1944">1944</option>
+<option value="1945">1945</option>
+<option value="1946">1946</option>
+<option value="1947">1947</option>
+<option value="1948">1948</option>
+<option value="1949">1949</option>
+<option value="1950">1950</option>
+<option value="1951">1951</option>
+<option value="1952">1952</option>
+<option value="1953">1953</option>
+<option value="1954">1954</option>
+<option value="1955">1955</option>
+<option value="1956">1956</option>
+<option value="1957">1957</option>
+<option value="1958">1958</option>
+<option value="1959">1959</option>
+<option value="1960">1960</option>
+<option value="1961">1961</option>
+<option value="1962">1962</option>
+<option value="1963">1963</option>
+<option value="1964">1964</option>
+<option value="1965">1965</option>
+<option value="1966">1966</option>
+<option value="1967">1967</option>
+<option value="1968">1968</option>
+<option value="1969">1969</option>
+<option value="1970">1970</option>
+<option value="1971">1971</option>
+<option value="1972">1972</option>
+<option value="1973">1973</option>
+<option value="1974">1974</option>
+<option value="1975">1975</option>
+<option value="1976" selected="selected">1976</option>
+</select>
+<label for="Month2" class="wb-inv position-top">Month</label><select name="Month" id="Month2" size="1" class="form-control center-block mrgn-bttm-sm" onchange="javascript:yearChange(document.forms.namedItem('frmDateNav2'));">                      <option value="1">January</option>
+                      <option value="2">February</option>
+                      <option value="3" selected="selected">March</option>
+</select>
+<input value="Go" class="btn btn-primary mrgn-bttm-sm" type="submit" />
+</div>        <div class="col-md-3 col-sm-3 col-xs-3 mrgn-tp-md mrgn-bttm-md">
+          <ul class="pager pagination-sm mrgn-tp-0 mrgn-bttm-0">
+            <li id="nav-next2" class="next disabled">
+              <a href="/climate_data/daily_data_e.html?timeframe=2&amp;Prov=QC&amp;StationID=5400&amp;Month=4&amp;Day=1&amp;Year=1976&amp;StartYear=1840&amp;EndYear=2017" rel="next"><span class="mrgn-rght-sm visible-sm-inline-block visible-md-inline-block visible-lg-inline-block">Next Month</span><span class="wb-inv">Next Month</span></a>
+
+            </li>
+          </ul>
+        </div>
+      </form>
+      <div class="clearfix"> </div></div>
+<p class="hidden-print"><em><b>Notes on <a href="data_quality_e.html">Data Quality</a>.</b></em></p>
+<div class="row">
+  <div class="col-md-10 col-md-offset-1">
+      	<section class="panel panel-info">
+			<header class="panel-heading mrgn-bttm-0 text-center"><h3 class="panel-title">Legend</h3></header>
+				<div class="col-md-6 col-sm-6 mrgn-tp-md">
+					<ul>              <li id="legendA">A = Accumulated</li>
+              <li id="legendC">C = Precipitation occurred, amount uncertain</li>
+              <li id="legendE">E = Estimated</li>
+              <li id="legendF">F = Accumulated and estimated</li>
+              <li id="legendL">L = Precipitation may or may not have occurred</li>
+              <li id="legendM">M = Missing</li>
+              <li id="legendN">N = Temperature missing but known to be &gt; 0</li>
+						</ul>
+					</div>
+					<div class="col-md-6 col-sm-6 mrgn-tp-md">
+						<ul>              <li id="legendS">S = More than one occurrence</li>
+              <li id="legendT">T = Trace</li>
+              <li id="legendY">Y = Temperature missing but known to be &nbsp; &lt; 0</li>
+              <li id="legend[empty]">[empty] = No data available</li>
+              <li id="legend^">^ = The value displayed is based on incomplete data</li>
+              <li id="legend&dagger;">&dagger; = Data for this day has undergone only basic quality checking</li>
+              <li id="legend&Dagger;">&Dagger; = Partner data that is not subject to review by the National Climate Archives</li>
+						</ul>
+					</div>
+					<div class="clearfix"></div>
+				</section>  </div>
+</div>
+<!-- Page content -->
+<div class="row pagedetails">
+<div class="col-sm-5 col-xs-12 datemod">
+  <dl id="wb-dtmd">
+    <dt>Date modified:&#32;</dt>
+    <dd><time property="dateModified">2016-08-09</time></dd>
+  </dl>
+</div>
+<div class="clear visible-xs"></div>
+<div class="col-sm-4 col-xs-6">
+  <a href="/contactus/contact_us_e.html" class="btn btn-default"><span class="glyphicon glyphicon-comment mrgn-rght-sm"></span>Feedback<span class="wb-inv"> about this web site</span></a>
+</div>
+<div class="col-sm-3 col-xs-6 text-right">
+<div class="wb-share" data-wb-share='{"lnkClass": "btn btn-default"}'></div>
+</div>
+<div class="clear visible-xs"></div>
+</div>
+</main>
+<aside class="gc-nttvs container hidden-print">
+  <h2>Government of Canada activities and initiatives</h2>
+  <!-- <div id="gcwb_prts" class="wb-eqht row" data-ajax-append="//travel.gc.ca/gcweb-cdn-host/features/features-en.html"></div> -->
+  <div id="gcwb_prts" class="wb-eqht row" data-ajax-replace="/data/pco-fetch/features-en.html">
+    <p class="mrgn-lft-md"><a href="http://www.canada.ca/activities.html">http://www.canada.ca/activities.html</a></p>
+  </div>
+</aside>
+<footer role="contentinfo" id="wb-info">
+<nav role="navigation" class="container wb-navcurr">
+<h2 class="wb-inv">About government</h2>
+<ul class="list-unstyled colcount-sm-2 colcount-md-3">
+<li><a href="/contactus/contact_us_e.html">Contact us</a></li>
+<li><a href="https://www.canada.ca/en/government/dept.html">Departments and agencies</a></li>
+<li><a href="https://www.canada.ca/en/government/publicservice.html">Public service and military</a></li>
+<li><a href="http://news.gc.ca/">News</a></li>
+<li><a href="https://www.canada.ca/en/government/system/laws.html">Treaties, laws and regulations</a></li>
+<li><a href="https://www.canada.ca/en/transparency/reporting.html">Government-wide reporting</a></li>
+<li><a href="http://pm.gc.ca/eng">Prime Minister</a></li>
+<li><a href="https://www.canada.ca/en/government/system.html">How government works</a></li>
+<li><a href="http://open.canada.ca/en/">Open government</a></li>
+</ul>
+</nav>
+<div class="brand">
+<div class="container">
+<div class="row">
+<nav class="col-md-10 ftr-urlt-lnk">
+<h2 class="wb-inv">About this site</h2>
+<ul>
+<li><a href="https://www.canada.ca/en/social.html">Social media</a></li>
+<li><a href="https://www.canada.ca/en/mobile.html">Mobile applications</a></li>
+<li><a href="http://www1.canada.ca/en/newsite.html">About Canada.ca</a></li>
+<li><a href="https://www.canada.ca/en/transparency/terms.html">Terms and conditions</a></li>
+<li><a href="https://www.canada.ca/en/transparency/privacy.html">Privacy</a></li>
+</ul>
+</nav>
+<div class="col-xs-6 visible-sm visible-xs tofpg">
+<a href="#wb-cont">Top of Page <span class="glyphicon glyphicon-chevron-up"></span></a>
+</div>
+<div class="col-xs-6 col-md-2 text-right">
+<object type="image/svg+xml" tabindex="-1" role="img" data="/vendor/wet/GCWeb/assets/wmms-blk.svg" aria-label="Symbol of the Government of Canada"></object>
+</div>
+</div>
+</div>
+</div>
+</footer><!--[if gte IE 9 | !IE ]><!-->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.js"></script>
+<script src="/vendor/wet/wet-boew/js/wet-boew.min.js"></script>
+<!--<![endif]-->
+<!--[if lt IE 9]>
+<script src="/vendor/wet/wet-boew/js/ie8-wet-boew2.min.js"></script>
+<![endif]-->
+<script src="/assets/min/js/application.min.js"></script>
+<script src="/assets/min/js/expandAllDetailsElements.min.js"></script>
+<script src="/assets/min/js/dateNavigation.min.js"></script>
+<script src="/assets/min/js/climateDateNavigation.min.js"></script>
+</body>
+</html>
