@@ -13,7 +13,7 @@ install:
   - pip install h5py
 
 script: 
-  - coverage run --source=WHAT -m py.test
+  - coverage run --source WHAT -m py.test
 
 after_success: 
   - coveralls

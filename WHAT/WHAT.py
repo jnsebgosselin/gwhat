@@ -10,7 +10,7 @@ the Free Software Foundation, either version 3 of the License, or
 
 This program is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE5.  See the
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # moving forward, and remember to keep your UI out of the way.
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
 
-from __future__ import division, unicode_literals, print_function
+from __future__ import division, unicode_literals
 
 print('Starting WHAT...')
 
@@ -33,8 +33,9 @@ import sys
 
 app = QtGui.QApplication(sys.argv)
 
-splash = QtGui.QSplashScreen(QtGui.QPixmap('ressources/splash.png'),
-                             QtCore.Qt.WindowStaysOnTopHint)
+splash = QtGui.QSplashScreen(
+        QtGui.QPixmap('ressources/splash.png'),
+        QtCore.Qt.WindowStaysOnTopHint)
 splash.show()
 
 import platform
