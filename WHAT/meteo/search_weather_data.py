@@ -53,11 +53,9 @@ from common import IconDB, StyleDB
 
 class StationFinder(QObject):
 
-    start_search = pyqtSignal(bool)
-    search_finished = pyqtSignal(bool)
-    new_station_found = pyqtSignal(list)
+    searchFinished = pyqtSignal(bool)
+    newStationFound = pyqtSignal(list)
     ConsoleSignal = pyqtSignal(str)
-
 
     def __init__(self, parent=None):
         super(StationFinder, self).__init__(parent)
@@ -73,8 +71,6 @@ class StationFinder(QObject):
         # options are: 'proximity' or 'province'
 
         self.isOffline = False
-
-        self.start_search.connect(self.print_coucou)
 
     def print_coucou(self, list):
         import time
@@ -288,7 +284,7 @@ class StationFinder(QObject):
                                             start_year, end_year, province,
                                             climate_id, station_proxim])
 
-                            self.new_station_found.emit(staList)
+                            self.newStationFound.emit(staList)
                         else:
                             print("Not adding %s (not enough data)"
                                   % station_name)
@@ -418,8 +414,8 @@ class Search4Stations(QWidget):
         self.finder = StationFinder()
         self.thread = QThread()
         self.finder.moveToThread(self.thread)
-        self.finder.new_station_found.connect(
-                self.station_table.populate_table)
+        self.finder.newStationFound.connect(self.station_table.populate_table)
+        self.finder.searchFinished.connect(self.end_search)
 
     @property
     def search_by(self):
@@ -780,7 +776,7 @@ class Search4Stations(QWidget):
         msg = 'Searching for weather stations. Please wait...'
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
-        print('Searching weather station on www.http://climate.weather.gc.ca')
+        print('Searching weather station on www.http://climate.weather.gc.ca.')
 
         self.finder.prov = self.prov
         self.finder.lat = self.lat
@@ -794,6 +790,9 @@ class Search4Stations(QWidget):
         self.thread.started.connect(self.finder.search_envirocan)
         self.thread.start()
 
+    def search_is_finished(self):
+        print('Searching for weather station is finished.')
+        self.thread.quit()
 
 # =============================================================================
 
