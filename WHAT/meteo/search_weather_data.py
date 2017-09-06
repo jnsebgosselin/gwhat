@@ -45,7 +45,273 @@ from common import IconDB, StyleDB
 # =============================================================================
 
 
-class Search4Stations(QtGui.QWidget):
+class StationFinder(object):
+    def __init__(self):    # attributes that are linked with the UI
+        self.__initAttr__()
+
+        self.prov = None
+        self.lat = None
+        self.lon = None
+        self.rad = 25
+        self.year_min = 1960
+        self.year_max = 2015
+        self.nbr_of_years = 5
+        self.search_by = 'proximity'
+        # options are: 'proximity' or 'province'
+
+    def __initAttr__(self):  # attributes that are not linked with the UI
+        pass
+
+    def search_envirocan(self):
+        """
+        Search on the Government of Canada website for weather stations with
+        daily meteo data around a decimal degree Lat & Lon coordinate with a
+        radius given in km.
+
+        The results are returned in a list formatted ready to be
+        read by WHAT UI. A signal is emitted with the list if the process is
+        completed successfully.
+
+        If no results are found, only the header is return with an empty
+        list of station.
+
+        If an error is raised, an empty list is returned.
+        """
+
+        Nmax = 100  # Number of results per page (maximum possible is 100)
+
+        staList = []
+        # [station_name, station_id, start_year,
+        #  end_year, province, climate_id, station_proxim]
+
+        # ----------------------------------------------------- define url ----
+
+        # Last updated: May 25th, 2016
+
+        url = ('http://climate.weather.gc.ca/historical_data/'
+               'search_historic_data_stations_e.html?')
+
+        if self.search_by == 'proximity':
+            url += 'searchType=stnProx&timeframe=1&txtRadius=%d' % self.rad
+            url += '&selCity=&selPark=&optProxType=custom'
+
+            deg, mnt, sec = decdeg2dms(np.abs(self.lat))
+            url += '&txtCentralLatDeg=%d' % deg
+            url += '&txtCentralLatMin=%d' % mnt
+            url += '&txtCentralLatSec=%d' % sec
+
+            deg, mnt, sec = decdeg2dms(np.abs(self.lon))
+            url += '&txtCentralLongDeg=%d' % deg
+            url += '&txtCentralLongMin=%d' % mnt
+            url += '&txtCentralLongSec=%d' % sec
+        elif self.search_by == 'province':
+            url += 'searchType=stnProv&timeframe=1&lstProvince=%s' % self.prov
+
+        url += '&optLimit=yearRange'
+        url += '&StartYear=%d' % self.year_min
+        url += '&EndYear=%d' % self.year_max
+        url += '&Year=2013&Month=6&Day=4'
+        url += '&selRowPerPage=%d' % Nmax
+
+        if self.tab_widg.currentIndex() == 0:
+            url += '&cmdProxSubmit=Search'
+        elif self.tab_widg.currentIndex() == 1:
+            url += '&cmdProvSubmit=Search'
+
+        # ----------------------------------------------------- fetch data ----
+
+        try:
+            if self.isOffline:
+                with open('url.txt', 'r') as f:
+                    stnresults = f.read()
+            else:
+                f = urlopen(url)
+                stnresults = f.read().decode('utf-8', 'replace')
+
+                # write downloaded content to local file for debugging purpose:
+                with open('url.txt', 'w') as local_file:
+                    local_file.write(stnresults)
+
+            # ---- Number of Stations Found ----
+
+            if self.tab_widg.currentIndex() == 0:
+                txt2find = 'stations found within a search radius'
+            if self.tab_widg.currentIndex() == 1:
+                txt2find = 'stations found in'
+
+            indx_e = stnresults.find(txt2find, 0)
+            if indx_e == -1:
+                msg = 'No weather station found.'
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                print(msg)
+
+                return staList
+
+            # Go backward from indx_e and find where the number starts to
+            # fetch the total number of weather station found :
+
+            indx_0 = np.copy(indx_e)
+            while 1:
+                indx_0 += -1
+                if stnresults[indx_0] == '>':
+                    indx_0 += 1
+                    break
+            Nsta = int(stnresults[indx_0:indx_e])
+            print('%d weather stations found.' % Nsta)
+
+            # Fetch stations page per page :
+
+            Npage = int(np.ceil(Nsta / float(Nmax)))
+            print('Total number of page = % d' % Npage)
+
+            staCount = 0  # global station counter
+            for page in range(Npage):
+                print('Page :', page)
+
+                startRow = (Nmax * page) + 1
+                url4page = url + '&startRow=%d' % startRow
+                if self.isOffline:
+                    with open('url.txt') as f:
+                        stnresults = f.read()
+                else:
+                    f = urlopen(url4page)
+                    stnresults = f.read().decode('utf-8')
+
+                    # Write result in a local file for debugging purposes:
+
+                    filename = 'url4page%d.txt' % page
+                    with open(filename, 'w') as local_file:
+                        local_file.write(stnresults)
+
+                # Scan each row of the current page :
+                while 1:
+
+                    # ---- Location of station information block ----
+
+                    indx_e = 0
+                    txt2find = ('<form action="/climate_data/'
+                                'interform_e.html" method="post" '
+                                'id="stnRequest%d">') % staCount
+
+                    n = len(txt2find)
+                    indx_0 = stnresults.find(txt2find, indx_e)
+                    if indx_0 == -1:
+                        # No result left on this page. Break the loop and
+                        # iterate to the next page if it exists
+                        break
+                    else:
+                        indx_e = indx_0 + n
+
+                    # ---- StartDate and EndDate ----
+
+                    txt2find = 'name="dlyRange" value="'
+                    n = len(txt2find)
+                    indx_0 = stnresults.find(txt2find, indx_e)
+                    indx_e = stnresults.find('|', indx_0)
+
+                    start_year = stnresults[indx_0+n:indx_0+n+4]
+                    end_year = stnresults[indx_e+1:indx_e+1+4]
+
+                    # ---- StationID ----
+
+                    txt2find = 'name="StationID" value="'
+                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
+                    indx_e = stnresults.find('"', indx_0)
+
+                    station_id = stnresults[indx_0:indx_e].strip()
+
+                    # ---- Province ----
+
+                    txt2find = 'name="Prov" value="'
+                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
+                    indx_e = stnresults.find('"', indx_0)
+
+                    province = stnresults[indx_0:indx_e].strip()
+
+                    # ---- Station Name ----
+
+                    txt2find = ('<div class="col-lg-3 col-md-3'
+                                ' col-sm-3 col-xs-3">')
+                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
+                    indx_e = stnresults.find('</div>', indx_0)
+
+                    station_name = stnresults[indx_0:indx_e].strip()
+
+                    # ---- Proximity ----
+
+                    if self.tab_widg.currentIndex() == 0:
+                        txt2find = ('<div class="col-lg-2 col-md-2'
+                                    ' col-sm-2 col-xs-2">')
+                        indx_0 = (stnresults.find(txt2find, indx_e) +
+                                  len(txt2find))
+                        indx_e = stnresults.find('</div>', indx_0)
+
+                        station_proxim = stnresults[indx_0:indx_e].strip()
+                    elif self.tab_widg.currentIndex() == 1:
+                        station_proxim = 0
+
+                    if start_year.isdigit():  # daily data exist
+                        year_range = int(end_year)-int(start_year)+1
+                        if year_range >= self.nbr_of_years:
+
+                            print("Adding %s to list..." % station_name)
+
+                            # ---- Climate ID ----
+
+                            staInfo = self.get_staInfo(province,
+                                                       station_id)
+                            climate_id = staInfo[5]
+
+                            # ---- Send Signal to UI ----
+
+                            staList.append([station_name, station_id,
+                                            start_year, end_year, province,
+                                            climate_id, station_proxim])
+
+                            self.station_table.populate_table(staList)
+                            QtCore.QCoreApplication.processEvents()
+                            QtCore.QCoreApplication.processEvents()
+
+                        else:
+                            print("Not adding %s (not enough data)"
+                                  % station_name)
+                    else:
+                        print("Not adding %s (no daily data)"
+                              % station_name)
+
+                    staCount += 1
+
+            msg = ('%d weather stations with daily data for at least %d years'
+                   ' between %d and %d'
+                   ) % (len(staList), self.nbr_of_years,
+                        self.year_min, self.year_max)
+            self.ConsoleSignal.emit('<font color=green>%s</font>' % msg)
+            print(msg)
+
+            QtCore.QCoreApplication.processEvents()
+            QtCore.QCoreApplication.processEvents()
+
+        except URLError as e:
+            if hasattr(e, 'reason'):
+                msg = 'Failed to reach a server.'
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                print(msg)
+
+                print('Reason: ', e.reason)
+                print()
+
+            elif hasattr(e, 'code'):
+                msg = 'The server couldn\'t fulfill the request.'
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                print(msg)
+
+                print('Error code: ', e.code)
+                print()
+
+        return staList
+
+
+class Search4Stations(QtGui.QWidget, StationFinder):
     '''
     Widget that allows the user to search for weather stations on the
     Government of Canada website.
@@ -54,12 +320,44 @@ class Search4Stations(QtGui.QWidget):
     ConsoleSignal = QtCore.Signal(str)
     staListSignal = QtCore.Signal(list)
 
-    def __init__(self, parent=None):  # =======================================
-        super(Search4Stations, self).__init__(parent)
+    def __init__(self, parent=None):
+        super(Search4Stations, self).__init__()
+        super(Search4Stations, self).__initAttr__()
+        self.__initUI__()
 
-        self.initUI()
+    @property
+    def search_by(self):
+        return ['proximity', 'province'][self.tab_widg.currentIndex()]
 
-    def initUI(self):
+    @property
+    def prov(self):
+        return self.prov_widg.currentText()
+
+    @property
+    def lat(self):
+        return self.lat_spinBox.value()
+
+    @property
+    def lon(self):
+        return self.lon_spinBox.value()
+
+    @property
+    def rad(self):
+        return int(self.radius_SpinBox.currentText()[:-3])
+
+    @property
+    def year_min(self):
+        return int(self.minYear.value())
+
+    @property
+    def year_max(self):
+        return int(self.maxYear.value())
+
+    @property
+    def nbr_of_years(self):
+        return int(self.nbrYear.value())
+
+    def __initUI__(self):
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(IconDB().master)
         self.setWindowFlags(QtCore.Qt.Window)
@@ -413,261 +711,7 @@ class Search4Stations(QtGui.QWidget):
 
         print('\n--------------------------------\n')
 
-    def search_envirocan(self):  # ============================================
-        """
-        Search on the Government of Canada website for weather stations with
-        daily meteo data around a decimal degree Lat & Lon coordinate with a
-        radius given in km.
-
-        The results are returned in a list formatted ready to be
-        read by WHAT UI. A signal is emitted with the list if the process is
-        completed successfully.
-
-        If no results are found, only the header is return with an empty
-        list of station.
-
-        If an error is raised, an empty list is returned.
-        """
-
-        PROV = self.prov_widg.currentText()
-        LAT = self.lat_spinBox.value()
-        LON = self.lon_spinBox.value()
-        RADIUS = self.radius_SpinBox.currentText()
-        RADIUS = int(RADIUS[:-3])
-        YearMin = self.minYear.value()
-        YearMax = self.maxYear.value()
-        nbrYear = self.nbrYear.value()
-
-        Nmax = 100 # Number of results per page (maximum possible is 100)
-
-        staList = []  # [station_name, station_id, start_year,
-                      #  end_year, province, climate_id, station_proxim]
-
-        #------------------------------------------------------ define url ----
-
-        # Last updated: May 25th, 2016
-
-        url = ('http://climate.weather.gc.ca/historical_data/'
-               'search_historic_data_stations_e.html?')
-        
-        if self.tab_widg.currentIndex() == 0:
-            url += 'searchType=stnProx&timeframe=1&txtRadius=%d' % RADIUS
-            url += '&selCity=&selPark=&optProxType=custom'
-
-            deg, mnt, sec = decdeg2dms(np.abs(LAT))
-            url += '&txtCentralLatDeg=%d' % deg
-            url += '&txtCentralLatMin=%d' % mnt
-            url += '&txtCentralLatSec=%d' % sec
-
-            deg, mnt, sec = decdeg2dms(np.abs(LON))
-            url += '&txtCentralLongDeg=%d' % deg
-            url += '&txtCentralLongMin=%d' % mnt
-            url += '&txtCentralLongSec=%d' % sec
-        elif self.tab_widg.currentIndex() == 1:
-            url += 'searchType=stnProv&timeframe=1&lstProvince=%s' % PROV
-
-        url += '&optLimit=yearRange'
-        url += '&StartYear=%d' % YearMin
-        url += '&EndYear=%d' % YearMax
-        url += '&Year=2013&Month=6&Day=4'
-        url += '&selRowPerPage=%d' % Nmax
-
-        if self.tab_widg.currentIndex() == 0:
-            url += '&cmdProxSubmit=Search'
-        elif self.tab_widg.currentIndex() == 1:
-            url += '&cmdProvSubmit=Search'
-            
-        #------------------------------------------------------ fetch data ----
-
-        try:
-            if self.isOffline:
-                with open('url.txt', 'r') as f:
-                    stnresults = f.read()
-            else:
-                f = urlopen(url)
-                stnresults = f.read().decode('utf-8', 'replace')
-
-                # write downloaded content to local file for debugging purpose:
-                with open('url.txt', 'w') as local_file:
-                    local_file.write(stnresults)
-
-            # ---- Number of Stations Found ----
-
-            if self.tab_widg.currentIndex() == 0:
-                txt2find = 'stations found within a search radius'
-            if self.tab_widg.currentIndex() == 1:
-                txt2find = 'stations found in'
-
-            indx_e = stnresults.find(txt2find, 0)
-            if indx_e == -1:
-                msg = 'No weather station found.'
-                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-                print(msg)
-
-                return staList
-
-            # Go backward from indx_e and find where the number starts to
-            # fetch the total number of weather station found :
-
-            indx_0 = np.copy(indx_e)
-            while 1:
-                indx_0 += -1
-                if stnresults[indx_0] == '>':
-                    indx_0 += 1
-                    break
-            Nsta = int(stnresults[indx_0:indx_e])
-            print('%d weather stations found.' % Nsta)
-
-            # Fetch stations page per page :
-
-            Npage = int(np.ceil(Nsta / float(Nmax)))
-            print('Total number of page = % d' % Npage)
-
-            staCount = 0  # global station counter
-            for page in range(Npage):
-                print('Page :', page)
-
-                startRow = (Nmax * page) + 1
-                url4page = url + '&startRow=%d' % startRow
-                if self.isOffline:
-                    with open('url.txt') as f:
-                        stnresults = f.read()
-                else:
-                    f = urlopen(url4page)
-                    stnresults = f.read().decode('utf-8')
-
-                    # Write result in a local file for debugging purposes:
-
-                    filename = 'url4page%d.txt' % page
-                    with open(filename, 'w') as local_file:
-                        local_file.write(stnresults)
-
-                # Scan each row of the current page :
-                while 1:
-
-                    #---- Location of station information block ----
-
-                    indx_e = 0
-                    txt2find = ('<form action="/climate_data/'
-                                'interform_e.html" method="post" '
-                                'id="stnRequest%d">') % staCount
-
-                    n = len(txt2find)
-                    indx_0 = stnresults.find(txt2find, indx_e)
-                    if indx_0 == -1:
-                       # No result left on this page. Break the loop and
-                       # iterate to the next page if it exists
-                        break
-                    else:
-                        indx_e = indx_0 + n
-
-                    #---- StartDate and EndDate ----
-
-                    txt2find = 'name="dlyRange" value="'
-                    n = len(txt2find)
-                    indx_0 = stnresults.find(txt2find, indx_e)
-                    indx_e = stnresults.find('|', indx_0)
-
-                    start_year = stnresults[indx_0+n:indx_0+n+4]
-                    end_year = stnresults[indx_e+1:indx_e+1+4]
-
-                    #---- StationID ----
-
-                    txt2find = 'name="StationID" value="'
-                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
-                    indx_e = stnresults.find('"', indx_0)
-
-                    station_id = stnresults[indx_0:indx_e].strip()
-
-                    #---- Province ----
-
-                    txt2find = 'name="Prov" value="'
-                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
-                    indx_e = stnresults.find('"', indx_0)
-
-                    province = stnresults[indx_0:indx_e].strip()
-
-                    #---- Station Name ----
-
-                    txt2find = ('<div class="col-lg-3 col-md-3'
-                                ' col-sm-3 col-xs-3">')
-                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
-                    indx_e = stnresults.find('</div>', indx_0)
-
-                    station_name = stnresults[indx_0:indx_e].strip()
-
-                    #---- Proximity ----
-
-                    if self.tab_widg.currentIndex() == 0:
-                        txt2find = ('<div class="col-lg-2 col-md-2'
-                                    ' col-sm-2 col-xs-2">')
-                        indx_0 = (stnresults.find(txt2find, indx_e) +
-                                  len(txt2find))
-                        indx_e = stnresults.find('</div>', indx_0)
-
-                        station_proxim = stnresults[indx_0:indx_e].strip()
-                    elif self.tab_widg.currentIndex() == 1:
-                        station_proxim = 0
-
-                    if start_year.isdigit():  # daily data exist
-                        if (int(end_year)-int(start_year)+1) >= nbrYear:
-
-                            print("Adding %s to list..." % station_name)
-
-                            #---- Climate ID ----
-
-                            staInfo = self.get_staInfo(province,
-                                                       station_id)
-                            climate_id = staInfo[5]
-
-                            #---- Send Signal to UI ----
-
-                            staList.append([station_name, station_id,
-                                            start_year, end_year, province,
-                                            climate_id, station_proxim])
-
-                            self.station_table.populate_table(staList)
-                            QtCore.QCoreApplication.processEvents()
-                            QtCore.QCoreApplication.processEvents()
-
-                        else:
-                            print("Not adding %s (not enough data)"
-                                  % station_name)
-                    else:
-                        print("Not adding %s (no daily data)"
-                              % station_name)
-
-                    staCount += 1
-
-            msg = ('%d weather stations with daily data for at least %d years'
-                   ' between %d and %d'
-                   ) % (len(staList), nbrYear, YearMin, YearMax)
-            self.ConsoleSignal.emit('<font color=green>%s</font>' % msg)
-            print(msg)
-
-            QtCore.QCoreApplication.processEvents()
-            QtCore.QCoreApplication.processEvents()
-
-        except URLError as e:
-            if hasattr(e, 'reason'):
-                msg = 'Failed to reach a server.'
-                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-                print(msg)
-
-                print('Reason: ', e.reason)
-                print()
-
-            elif hasattr(e, 'code'):
-                msg = 'The server couldn\'t fulfill the request.'
-                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-                print(msg)
-
-                print('Error code: ', e.code)
-                print()
-
-        return staList
-
-    def get_staInfo(self, Prov, StationID):  # ================================
+    def get_staInfo(self, Prov, StationID):
         """
         Fetch the Climate Id for a given station. This ID is used to identify
         the station in the CDCD, but not for downloading the data from
@@ -693,7 +737,7 @@ class Search4Stations(QtGui.QWidget):
             with open('urlsinglestation.txt', 'w') as local_file:
                 local_file.write(urlread)
 
-        #---- Station Name ----
+        # ---- Station Name ----
 
         txt2find = '<p class="text-center table-header pdng-md mrgn-bttm-0">'
         n = len(txt2find)
@@ -703,7 +747,7 @@ class Search4Stations(QtGui.QWidget):
         staName = urlread[indx_0:indx_e]
         staName = staName.strip()
 
-        #---- Climate ID ----
+        # ---- Climate ID ----
 
         txt2find = ('aria-labelledby="climateid">')
         n = len(txt2find)
@@ -714,7 +758,7 @@ class Search4Stations(QtGui.QWidget):
         climate_id = urlread[indx_0:indx_e]
         climate_id = climate_id.strip()
 
-        #---- Start Year ----
+        # ---- Start Year ----
 
         txt2find = '<option value="'
         n = len(txt2find)
@@ -722,14 +766,14 @@ class Search4Stations(QtGui.QWidget):
 
         startYear = urlread[indx_0:indx_0+4]
 
-        #---- End Year ----
+        # ---- End Year ----
 
         txt2find = '" selected="'
         indx_e = urlread.find(txt2find, indx_0)
 
         endYear = urlread[indx_e-4:indx_e]
 
-        #---- Proximity ----
+        # ---- Proximity ----
 
         proximity = np.nan
 
@@ -786,7 +830,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         self.setHorizontalHeaderLabels(HEADER)
         self.verticalHeader().hide()
 
-        #---------------------------------------------- Column Size Policy ----
+        # --------------------------------------------- Column Size Policy ----
 
 #        self.setColumnHidden(6, True)
         self.setColumnHidden(7, True)
@@ -799,7 +843,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
         self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
 
-        #---------------------------------------------------------- Events ----
+        # --------------------------------------------------------- Events ----
 
         self.chkbox_header.stateChanged.connect(self.chkbox_header_isClicked)
 
