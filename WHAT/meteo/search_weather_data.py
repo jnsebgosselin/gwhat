@@ -53,7 +53,7 @@ from common import IconDB, StyleDB
 
 class StationFinder(QObject):
 
-    searchFinished = pyqtSignal(bool)
+    searchFinished = pyqtSignal(list)
     newStationFound = pyqtSignal(list)
     ConsoleSignal = pyqtSignal(str)
 
@@ -93,6 +93,8 @@ class StationFinder(QObject):
 
         If an error is raised, an empty list is returned.
         """
+
+        print('Searching weather station on www.http://climate.weather.gc.ca.')
 
         Nmax = 100  # Number of results per page (maximum possible is 100)
 
@@ -318,6 +320,9 @@ class StationFinder(QObject):
                 print('Error code: ', e.code)
                 print()
 
+        print('Searching for weather station is finished.')
+        self.searchFinished.emit(staList)
+
         return staList
 
     def get_staInfo(self, Prov, StationID):
@@ -415,7 +420,7 @@ class Search4Stations(QWidget):
         self.thread = QThread()
         self.finder.moveToThread(self.thread)
         self.finder.newStationFound.connect(self.station_table.populate_table)
-        self.finder.searchFinished.connect(self.end_search)
+        self.finder.searchFinished.connect(self.search_is_finished)
 
     @property
     def search_by(self):
@@ -773,10 +778,12 @@ class Search4Stations(QWidget):
         interface and send it to the method "search_envirocan".
         """
 
+        if self.thread.isRunning():
+            print('Thread is already running men, calm down.')
+            return
+
         msg = 'Searching for weather stations. Please wait...'
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-
-        print('Searching weather station on www.http://climate.weather.gc.ca.')
 
         self.finder.prov = self.prov
         self.finder.lat = self.lat
@@ -787,11 +794,11 @@ class Search4Stations(QWidget):
         self.finder.nbr_of_years = self.nbr_of_years
         self.finder.search_by = self.search_by
 
+        self.station_table.clearContents()
         self.thread.started.connect(self.finder.search_envirocan)
         self.thread.start()
 
-    def search_is_finished(self):
-        print('Searching for weather station is finished.')
+    def search_is_finished(self, station_list):
         self.thread.quit()
 
 # =============================================================================
