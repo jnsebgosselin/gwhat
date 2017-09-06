@@ -143,8 +143,8 @@ class StationFinder(QObject):
                 with open('url.txt', 'r') as f:
                     stnresults = f.read()
             else:
-                f = urlopen(url)
-                stnresults = f.read().decode('utf-8', 'replace')
+                with urlopen(url) as f:
+                    stnresults = f.read().decode('utf-8', 'replace')
 
                 # write downloaded content to local file for debugging purpose:
                 with open('url.txt', 'w') as local_file:
