@@ -75,7 +75,8 @@ WHAT 4.1.6/
 WHAT 4.1.7/
 WHAT 4.1.9/
 WHAT/url.txt
-WHAT/urlsingle.txt
+WHAT/url4page0.txt
+WHAT/urlsinglestation.txt
 Organigram.svg
 WHATMANUAL/Local_Optimum.odt
 WHATMANUAL/Note_Recharge_article.odt
@@ -123,3 +124,4 @@ WHAT/kgs_brf/kgs_brf.par
 *.par
 *.wif
 WHAT/kgs_brf/BRFOutput.txt
+WHAT/meteo/url.txt
