@@ -34,8 +34,7 @@ import csv
 # Third party imports :
 
 import numpy as np
-from PyQt5.QtCore import (QObject, pyqtSignal, QCoreApplication, Qt, QPoint,
-                          QEvent, QThread)
+from PyQt5.QtCore import QObject, pyqtSignal, Qt, QPoint, QEvent, QThread
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QTableWidget, QCheckBox,
                              QTabWidget, QSpinBox, QPushButton, QDesktopWidget,
@@ -71,12 +70,6 @@ class StationFinder(QObject):
         # options are: 'proximity' or 'province'
 
         self.isOffline = False
-
-    def print_coucou(self, list):
-        import time
-        for i in range(20):
-            print(i)
-            time.sleep(1)
 
     def search_envirocan(self):
         """
