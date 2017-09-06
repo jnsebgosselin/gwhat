@@ -38,22 +38,13 @@ from PySide import QtGui, QtCore
 
 # Local imports :
 
-try:
-    import common.database as db
-    from common import IconDB, StyleDB
-    import common.widgets as myqt
-except ImportError:  # to run this module standalone
-    import sys
-    from os.path import dirname, realpath, basename
-    print('Running module %s as a standalone script...' % basename(__file__))
-    sys.path.append(dirname(dirname(realpath(__file__))))
-
-    from common import IconDB, StyleDB
-    import common.database as db
-    import common.widgets as myqt
+import common.database as db
+from common import IconDB, StyleDB
 
 
 # =============================================================================
+
+
 class Search4Stations(QtGui.QWidget):
     '''
     Widget that allows the user to search for weather stations on the
@@ -73,16 +64,16 @@ class Search4Stations(QtGui.QWidget):
         self.setWindowIcon(IconDB().master)
         self.setWindowFlags(QtCore.Qt.Window)
 
-        #-------------------------------------------------- INIT VARIABLES ----
+        # ------------------------------------------------- INIT VARIABLES ----
 
         now = datetime.now()
 
         self.station_table = WeatherStationDisplayTable(0, self)
         self.isOffline = False  # For testing and debugging purpose
 
-        #---------------------------------------------- Tab Widget Search ----
+        # ---------------------------------------------- Tab Widget Search ----
 
-        #---- Search by Proximity ----
+        # ---- Search by Proximity ----
 
         label_Lat = QtGui.QLabel('Latitude :')
         label_Lat2 = QtGui.QLabel('North')
@@ -140,7 +131,7 @@ class Search4Stations(QtGui.QWidget):
 
         prox_search_widg.setLayout(prox_search_grid)
 
-        #---- Search by Province ----
+        # ---- Search by Province ----
 
         self.prov_widg = QtGui.QComboBox()
         self.prov_widg.addItems(['QC', 'AB'])
@@ -158,18 +149,18 @@ class Search4Stations(QtGui.QWidget):
 
         prov_search_widg.setLayout(prov_search_grid)
 
-        #---- Assemble TabWidget ----
+        # ---- Assemble TabWidget ----
 
         self.tab_widg = QtGui.QTabWidget()
 
         self.tab_widg.addTab(prox_search_widg, 'Proximity')
         self.tab_widg.addTab(prov_search_widg, 'Province')
 
-        #--------------------------------------------------- Year Criteria ----
+        # -------------------------------------------------- Year Criteria ----
 
         label_date = QtGui.QLabel('Search for stations with data available')
 
-        #---- subgrid year boundary ----
+        # ---- subgrid year boundary ----
 
         label_between = QtGui.QLabel('between')
         label_between.setAlignment(QtCore.Qt.AlignCenter)
@@ -210,7 +201,7 @@ class Search4Stations(QtGui.QWidget):
 
         yearbound_widget.setLayout(yearbound_grid)
 
-        #---- subgrid min. nbr. of years ----
+        # ---- subgrid min. nbr. of years ----
 
         label_4atleast = QtGui.QLabel('for at least')
         label_years = QtGui.QLabel('years')
@@ -237,7 +228,7 @@ class Search4Stations(QtGui.QWidget):
 
         subwidg1.setLayout(subgrid1)
 
-        #---- maingrid ----
+        # ---- maingrid ----
 
         year_widg = QtGui.QFrame()
         year_widg.setFrameStyle(0)  # styleDB.frame
@@ -369,7 +360,6 @@ class Search4Stations(QtGui.QWidget):
     # =========================================================================
 
     def minYear_changed(self):
-
         min_yr = min_yr = max(self.minYear.value(), 1840)
 
         now = datetime.now()
@@ -378,7 +368,6 @@ class Search4Stations(QtGui.QWidget):
         self.maxYear.setRange(min_yr, max_yr)
 
     def maxYear_changed(self):  # =============================================
-
         min_yr = 1840
 
         now = datetime.now()
