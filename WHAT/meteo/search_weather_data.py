@@ -34,7 +34,13 @@ import csv
 # Third party imports :
 
 import numpy as np
-from PySide import QtGui, QtCore
+from PyQt5.QtCore import (QObject, pyqtSignal, QCoreApplication, Qt, QPoint,
+                          QEvent)
+from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
+                             QFrame, QGridLayout, QTableWidget, QCheckBox,
+                             QTabWidget, QSpinBox, QPushButton, QDesktopWidget,
+                             QApplication, QHeaderView, QTableWidgetItem,
+                             QStyle)
 
 # Local imports :
 
@@ -45,10 +51,8 @@ from common import IconDB, StyleDB
 # =============================================================================
 
 
-class StationFinder(object):
+class StationFinder(QObject):
     def __init__(self):    # attributes that are linked with the UI
-        self.__initAttr__()
-
         self.prov = None
         self.lat = None
         self.lon = None
@@ -58,9 +62,6 @@ class StationFinder(object):
         self.nbr_of_years = 5
         self.search_by = 'proximity'
         # options are: 'proximity' or 'province'
-
-    def __initAttr__(self):  # attributes that are not linked with the UI
-        pass
 
     def search_envirocan(self):
         """
@@ -269,8 +270,8 @@ class StationFinder(object):
                                             climate_id, station_proxim])
 
                             self.station_table.populate_table(staList)
-                            QtCore.QCoreApplication.processEvents()
-                            QtCore.QCoreApplication.processEvents()
+                            QCoreApplication.processEvents()
+                            QCoreApplication.processEvents()
 
                         else:
                             print("Not adding %s (not enough data)"
@@ -288,8 +289,8 @@ class StationFinder(object):
             self.ConsoleSignal.emit('<font color=green>%s</font>' % msg)
             print(msg)
 
-            QtCore.QCoreApplication.processEvents()
-            QtCore.QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
 
         except URLError as e:
             if hasattr(e, 'reason'):
@@ -311,18 +312,18 @@ class StationFinder(object):
         return staList
 
 
-class Search4Stations(QtGui.QWidget, StationFinder):
+class Search4Stations(QWidget):
     '''
     Widget that allows the user to search for weather stations on the
     Government of Canada website.
     '''
 
-    ConsoleSignal = QtCore.Signal(str)
-    staListSignal = QtCore.Signal(list)
+    ConsoleSignal = pyqtSignal(str)
+    staListSignal = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super(Search4Stations, self).__init__()
-        super(Search4Stations, self).__initAttr__()
+        self.finder = StationFinder()
         self.__initUI__()
 
     @property
@@ -360,7 +361,7 @@ class Search4Stations(QtGui.QWidget, StationFinder):
     def __initUI__(self):
         self.setWindowTitle('Search for Weather Stations')
         self.setWindowIcon(IconDB().master)
-        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(Qt.Window)
 
         # ------------------------------------------------- INIT VARIABLES ----
 
@@ -373,32 +374,32 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
         # ---- Search by Proximity ----
 
-        label_Lat = QtGui.QLabel('Latitude :')
-        label_Lat2 = QtGui.QLabel('North')
+        label_Lat = QLabel('Latitude :')
+        label_Lat2 = QLabel('North')
 
-        self.lat_spinBox = QtGui.QDoubleSpinBox()
-        self.lat_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+        self.lat_spinBox = QDoubleSpinBox()
+        self.lat_spinBox.setAlignment(Qt.AlignCenter)
         self.lat_spinBox.setSingleStep(0.1)
         self.lat_spinBox.setValue(0)
         self.lat_spinBox.setMinimum(0)
         self.lat_spinBox.setMaximum(180)
         self.lat_spinBox.setSuffix(u' °')
 
-        label_Lon = QtGui.QLabel('Longitude :')
-        label_Lon2 = QtGui.QLabel('West')
+        label_Lon = QLabel('Longitude :')
+        label_Lon2 = QLabel('West')
 
-        self.lon_spinBox = QtGui.QDoubleSpinBox()
-        self.lon_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+        self.lon_spinBox = QDoubleSpinBox()
+        self.lon_spinBox.setAlignment(Qt.AlignCenter)
         self.lon_spinBox.setSingleStep(0.1)
         self.lon_spinBox.setValue(0)
         self.lon_spinBox.setMinimum(0)
         self.lon_spinBox.setMaximum(180)
         self.lon_spinBox.setSuffix(u' °')
 
-        self.radius_SpinBox = QtGui.QComboBox()
+        self.radius_SpinBox = QComboBox()
         self.radius_SpinBox.addItems(['25 km', '50 km', '100 km', '200 km'])
 
-#        self.radius_SpinBox = QtGui.QSpinBox()
+#        self.radius_SpinBox = QSpinBox()
 #        self.radius_SpinBox.setAlignment(QtCore.Qt.AlignCenter)
 #        self.radius_SpinBox.setSingleStep(5)
 #        self.radius_SpinBox.setValue(25)
@@ -406,8 +407,8 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 #        self.radius_SpinBox.setMaximum(500)
 #        self.radius_SpinBox.setSuffix(' km')
 
-        prox_search_widg = QtGui.QWidget()
-        prox_search_grid = QtGui.QGridLayout()
+        prox_search_widg = QWidget()
+        prox_search_grid = QGridLayout()
 
         row, col = 0, 1
         prox_search_grid.addWidget(label_Lat, row, col)
@@ -418,7 +419,7 @@ class Search4Stations(QtGui.QWidget, StationFinder):
         prox_search_grid.addWidget(self.lon_spinBox, row, col+1)
         prox_search_grid.addWidget(label_Lon2, row, col+2)
         row += 1
-        prox_search_grid.addWidget(QtGui.QLabel('Search Radius :'), row, col)
+        prox_search_grid.addWidget(QLabel('Search Radius :'), row, col)
         prox_search_grid.addWidget(self.radius_SpinBox, row, col+1)
 
         prox_search_grid.setColumnStretch(0, 100)
@@ -431,13 +432,13 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
         # ---- Search by Province ----
 
-        self.prov_widg = QtGui.QComboBox()
+        self.prov_widg = QComboBox()
         self.prov_widg.addItems(['QC', 'AB'])
 
-        prov_search_widg = QtGui.QFrame()
-        prov_search_grid = QtGui.QGridLayout()
+        prov_search_widg = QFrame()
+        prov_search_grid = QGridLayout()
 
-        prov_search_grid.addWidget(QtGui.QLabel('Province :'), 1, 1)
+        prov_search_grid.addWidget(QLabel('Province :'), 1, 1)
         prov_search_grid.addWidget(self.prov_widg, 1, 2)
 
 #        prov_search_grid.setColumnStretch(0, 100)
@@ -449,39 +450,39 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
         # ---- Assemble TabWidget ----
 
-        self.tab_widg = QtGui.QTabWidget()
+        self.tab_widg = QTabWidget()
 
         self.tab_widg.addTab(prox_search_widg, 'Proximity')
         self.tab_widg.addTab(prov_search_widg, 'Province')
 
         # -------------------------------------------------- Year Criteria ----
 
-        label_date = QtGui.QLabel('Search for stations with data available')
+        label_date = QLabel('Search for stations with data available')
 
         # ---- subgrid year boundary ----
 
-        label_between = QtGui.QLabel('between')
-        label_between.setAlignment(QtCore.Qt.AlignCenter)
+        label_between = QLabel('between')
+        label_between.setAlignment(Qt.AlignCenter)
 
-        self.minYear = QtGui.QSpinBox()
-        self.minYear.setAlignment(QtCore.Qt.AlignCenter)
+        self.minYear = QSpinBox()
+        self.minYear.setAlignment(Qt.AlignCenter)
         self.minYear.setSingleStep(1)
         self.minYear.setMinimum(1840)
         self.minYear.setMaximum(now.year)
         self.minYear.setValue(1840)
 
-        label_and = QtGui.QLabel('and')
-        label_and.setAlignment(QtCore.Qt.AlignCenter)
+        label_and = QLabel('and')
+        label_and.setAlignment(Qt.AlignCenter)
 
-        self.maxYear = QtGui.QSpinBox()
-        self.maxYear.setAlignment(QtCore.Qt.AlignCenter)
+        self.maxYear = QSpinBox()
+        self.maxYear.setAlignment(Qt.AlignCenter)
         self.maxYear.setSingleStep(1)
         self.maxYear.setMinimum(1840)
         self.maxYear.setMaximum(now.year)
         self.maxYear.setValue(now.year)
 
-        yearbound_widget = QtGui.QFrame()
-        yearbound_grid = QtGui.QGridLayout()
+        yearbound_widget = QFrame()
+        yearbound_grid = QGridLayout()
 
         col = 0
         yearbound_grid.addWidget(label_between, 0, col)
@@ -501,17 +502,17 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
         # ---- subgrid min. nbr. of years ----
 
-        label_4atleast = QtGui.QLabel('for at least')
-        label_years = QtGui.QLabel('years')
+        label_4atleast = QLabel('for at least')
+        label_years = QLabel('years')
 
-        self.nbrYear = QtGui.QSpinBox()
-        self.nbrYear.setAlignment(QtCore.Qt.AlignCenter)
+        self.nbrYear = QSpinBox()
+        self.nbrYear.setAlignment(Qt.AlignCenter)
         self.nbrYear.setSingleStep(1)
         self.nbrYear.setMinimum(0)
         self.nbrYear.setValue(3)
 
-        subwidg1 = QtGui.QWidget()
-        subgrid1 = QtGui.QGridLayout()
+        subwidg1 = QWidget()
+        subgrid1 = QGridLayout()
 
         col = 0
         subgrid1.addWidget(label_4atleast, 0, col)
@@ -528,10 +529,10 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
         # ---- maingrid ----
 
-        year_widg = QtGui.QFrame()
+        year_widg = QFrame()
         year_widg.setFrameStyle(0)  # styleDB.frame
 
-        year_grid = QtGui.QGridLayout()
+        year_grid = QGridLayout()
 
         row = 1
         year_grid.addWidget(label_date, row, 0)
@@ -548,20 +549,20 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
         # -------------------------------------------------------- TOOLBAR ----
 
-        self.btn_search = QtGui.QPushButton('Search Stations')
+        self.btn_search = QPushButton('Search Stations')
         self.btn_search.setIcon(IconDB().search)
         self.btn_search.setIconSize(IconDB().iconSize2)
         self.btn_search.setToolTip('Search for weather stations in the online '
                                    'CDCD with the criteria given above.')
 
-        btn_addSta = QtGui.QPushButton('Add Stations')
+        btn_addSta = QPushButton('Add Stations')
         btn_addSta.setIcon(IconDB().add2list)
         btn_addSta.setIconSize(IconDB().iconSize2)
         btn_addSta.setToolTip('Add selected found weather stations to the '
                               'current list of weather stations.')
 
-        toolbar_grid = QtGui.QGridLayout()
-        toolbar_widg = QtGui.QWidget()
+        toolbar_grid = QGridLayout()
+        toolbar_widg = QWidget()
 
         row = 0
         col = 1
@@ -578,12 +579,12 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
         # ---------------------------------------------------- Left Panel ----
 
-        panel_title = QtGui.QLabel('<b>Weather Station Search Criteria :</b>')
+        panel_title = QLabel('<b>Weather Station Search Criteria :</b>')
 
-        left_panel = QtGui.QFrame()
-        left_panel_grid = QtGui.QGridLayout()
+        left_panel = QFrame()
+        left_panel_grid = QGridLayout()
 
-#        self.statusBar = QtGui.QStatusBar()
+#        self.statusBar = QStatusBar()
 #        self.statusBar.setSizeGripEnabled(False)
 
         row = 0
@@ -606,12 +607,12 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
         # ---- Widgets ----
 
-        vLine1 = QtGui.QFrame()
+        vLine1 = QFrame()
         vLine1.setFrameStyle(StyleDB().VLine)
 
         # ---- GRID ----
 
-        grid_search4stations = QtGui.QGridLayout()
+        grid_search4stations = QGridLayout()
 
         row = 0
         col = 0
@@ -647,9 +648,9 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 
             wp = parent.frameGeometry().width()
             hp = parent.frameGeometry().height()
-            cp = parent.mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+            cp = parent.mapToGlobal(QPoint(wp/2., hp/2.))
         else:
-            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            cp = QDesktopWidget().availableGeometry().center()
 
         qr.moveCenter(cp)
         self.move(qr.topLeft())
@@ -693,7 +694,7 @@ class Search4Stations(QtGui.QWidget, StationFinder):
         # ---- Generate New List ----
 
         # http://doc.qt.io/qt-5/qt.html#CursorShape-enum
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
         msg = 'Searching for weather stations. Please wait...'
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
@@ -702,12 +703,12 @@ class Search4Stations(QtGui.QWidget, StationFinder):
         print('SEARCHING FOR STATIONS')
         print('--------------------------------\n')
 
-        QtCore.QCoreApplication.processEvents()
-        QtCore.QCoreApplication.processEvents()
+        QCoreApplication.processEvents()
+        QCoreApplication.processEvents()
 
         self.search_envirocan()
 
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
         print('\n--------------------------------\n')
 
@@ -788,7 +789,7 @@ class Search4Stations(QtGui.QWidget, StationFinder):
 # =============================================================================
 
 
-class WeatherStationDisplayTable(QtGui.QTableWidget):
+class WeatherStationDisplayTable(QTableWidget):
     """
     Widget for displaying a weather station list.
 
@@ -818,7 +819,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         # pyside-pyqt4-adding-a-checkbox-to-qtablewidget-
         # horizontal-column-header
 
-        self.chkbox_header = QtGui.QCheckBox(self.horizontalHeader())
+        self.chkbox_header = QCheckBox(self.horizontalHeader())
         self.chkbox_header.setToolTip('Check or uncheck all the weather '
                                       'stations in the table.')
         self.horizontalHeader().installEventFilter(self)
@@ -840,14 +841,14 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         self.setColumnWidth(4, 75)
         self.setColumnWidth(5, 75)
 
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
-        self.horizontalHeader().setResizeMode(1, QtGui.QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
 
         # --------------------------------------------------------- Events ----
 
         self.chkbox_header.stateChanged.connect(self.chkbox_header_isClicked)
 
-    class NumTableWidgetItem(QtGui.QTableWidgetItem):  # ======================
+    class NumTableWidgetItem(QTableWidgetItem):
 
         # To be able to sort numerical item within a given column.
 
@@ -855,8 +856,8 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
         # python-numerical-sorting-in-qtablewidget
 
             def __init__(self, text, sortKey):
-                QtGui.QTableWidgetItem.__init__(
-                    self, text, QtGui.QTableWidgetItem.UserType)
+                QTableWidgetItem.__init__(
+                    self, text, QTableWidgetItem.UserType)
                 self.sortKey = sortKey
 
             # Qt uses a simple < check for sorting items, override this to use
@@ -864,20 +865,16 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             def __lt__(self, other):
                 return self.sortKey < other.sortKey
 
-    def eventFilter(self, source, event):  # ==================================
-
-        # http://stackoverflow.com/questions/13788452/
-        # pyqt-how-to-handle-event-without-inheritance
-
-        if (event.type() == QtCore.QEvent.Type.Resize):
+    def eventFilter(self, source, event):
+        if (event.type() == QEvent.Resize):
             self.resize_chkbox_header()
 
-        return QtGui.QWidget.eventFilter(self, source, event)
+        return QWidget.eventFilter(self, source, event)
 
-    def resize_chkbox_header(self):  # ========================================
+    def resize_chkbox_header(self):
 
-        h = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorHeight)
-        w = self.style().pixelMetric(QtGui.QStyle.PM_IndicatorWidth)
+        h = self.style().pixelMetric(QStyle.PM_IndicatorHeight)
+        w = self.style().pixelMetric(QStyle.PM_IndicatorWidth)
 
         W = self.horizontalHeader().sectionSize(0)
         H = self.horizontalHeader().height()
@@ -887,7 +884,7 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
         self.chkbox_header.setGeometry(x0, y0, w, h)
 
-    def chkbox_header_isClicked(self):  # =====================================
+    def chkbox_header_isClicked(self):
 
         nrow = self.rowCount()
 
@@ -896,9 +893,9 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
             widget = item.widget()
             widget.setCheckState(self.chkbox_header.checkState())
 
-    def populate_table(self, staList):  # =====================================
+    def populate_table(self, staList):
 
-        self.chkbox_header.setCheckState(QtCore.Qt.CheckState(False))
+        self.chkbox_header.setCheckState(Qt.CheckState(False))
 
         nrow = len(staList)
         self.setRowCount(nrow)
@@ -917,13 +914,13 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
             col = 0
 
-            item = QtGui.QTableWidgetItem('')
-            item.setFlags(~QtCore.Qt.ItemIsEditable & QtCore.Qt.ItemIsEnabled)
+            item = QTableWidgetItem('')
+            item.setFlags(~Qt.ItemIsEditable & Qt.ItemIsEnabled)
             self.setItem(row, col, item)
 
-            chckbox_center = QtGui.QWidget()
-            chckbox_grid = QtGui.QGridLayout()
-            chckbox_grid.addWidget(QtGui.QCheckBox(), 1, 1)
+            chckbox_center = QWidget()
+            chckbox_grid = QGridLayout()
+            chckbox_grid.addWidget(QCheckBox(), 1, 1)
             chckbox_grid.setColumnStretch(0, 100)
             chckbox_grid.setColumnStretch(2, 100)
             chckbox_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
@@ -938,9 +935,9 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
             col += 1
 
-            item = QtGui.QTableWidgetItem(staList[row][0])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            item = QTableWidgetItem(staList[row][0])
+            item.setFlags(~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             item.setToolTip(staList[row][0])
             self.setItem(row, col, item)
 
@@ -950,8 +947,8 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
             item = self.NumTableWidgetItem('%0.2f' % float(staList[row][6]),
                                            float(staList[row][6]))
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setFlags(~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
 
             # ---- From Year ----
@@ -964,22 +961,22 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
             col += 1
 
-            item = QtGui.QTableWidgetItem(staList[row][2])
-            item.setFlags(QtCore.Qt.ItemIsEnabled)
+            item = QTableWidgetItem(staList[row][2])
+            item.setFlags(Qt.ItemIsEnabled)
             self.setItem(row, col, item)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setTextAlignment(Qt.AlignCenter)
 
             if self.year_display_mode == 1:
 
-                item.setFlags(QtCore.Qt.ItemIsEnabled)
+                item.setFlags(Qt.ItemIsEnabled)
 
-                self.fromYear = QtGui.QComboBox()
+                self.fromYear = QComboBox()
                 self.fromYear.setFixedWidth(75)
-                self.fromYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
+                self.fromYear.setInsertPolicy(QComboBox.NoInsert)
                 self.fromYear.addItems(yearspan)
                 self.fromYear.setMinimumContentsLength(4)
                 self.fromYear.setSizeAdjustPolicy(
-                    QtGui.QComboBox.AdjustToMinimumContentsLength)
+                    QComboBox.AdjustToMinimumContentsLength)
 
                 self.setCellWidget(row, col, self.fromYear)
 
@@ -987,25 +984,25 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
             col += 1
 
-            item = QtGui.QTableWidgetItem(staList[row][3])
+            item = QTableWidgetItem(staList[row][3])
 
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setFlags(~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
 
             self.setItem(row, col, item)
 
             if self.year_display_mode == 1:
 
-                item.setFlags(QtCore.Qt.ItemIsEnabled)
+                item.setFlags(Qt.ItemIsEnabled)
 
-                self.toYear = QtGui.QComboBox()
+                self.toYear = QComboBox()
                 self.toYear.setFixedWidth(75)
-                self.toYear.setInsertPolicy(QtGui.QComboBox.NoInsert)
+                self.toYear.setInsertPolicy(QComboBox.NoInsert)
                 self.toYear.addItems(yearspan)
                 self.toYear.setCurrentIndex(len(yearspan)-1)
                 self.toYear.setMinimumContentsLength(4)
                 self.toYear.setSizeAdjustPolicy(
-                    QtGui.QComboBox.AdjustToMinimumContentsLength)
+                    QComboBox.AdjustToMinimumContentsLength)
 
                 self.setCellWidget(row, col, self.toYear)
 
@@ -1013,25 +1010,25 @@ class WeatherStationDisplayTable(QtGui.QTableWidget):
 
             col += 1
 
-            item = QtGui.QTableWidgetItem(staList[row][4])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item = QTableWidgetItem(staList[row][4])
+            item.setFlags(~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
 
             # ---- Climate ID (hidden) ----
 
             col += 1
 
-            item = QtGui.QTableWidgetItem(staList[row][5])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item = QTableWidgetItem(staList[row][5])
+            item.setFlags(~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
 
             # ---- Station ID ----
 
             col += 1
 
-            item = QtGui.QTableWidgetItem(staList[row][1])
+            item = QTableWidgetItem(staList[row][1])
             self.setItem(row, col, item)
 
         self.setSortingEnabled(True)
@@ -1140,7 +1137,7 @@ def dms2decdeg(deg, mnt, sec):
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     ft = app.font()
     ft.setFamily('Segoe UI')

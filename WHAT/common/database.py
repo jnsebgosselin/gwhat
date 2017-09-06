@@ -25,8 +25,8 @@ import platform
 
 # Third party imports :
 
-from PySide.QtGui import QIcon, QFont, QFontDatabase
-from PySide.QtCore import QSize
+from PyQt5.QtGui import QIcon, QFont, QFontDatabase
+from PyQt5.QtCore import QSize
 
 software_version = 'WHAT Beta 0.5.6'
 last_modification = '31/01/2017'
