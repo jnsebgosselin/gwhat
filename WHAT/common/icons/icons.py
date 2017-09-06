@@ -27,9 +27,9 @@ import os
 
 # Third party imports
 
-from PySide import QtGui, QtCore
-from PySide.QtGui import QIcon
-from PySide.QtCore import QSize
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import QToolButton
 
 dirname = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Icons')
 
@@ -132,13 +132,13 @@ class IconDB(object):
         self.export_data = QIcon(os.path.join(dirname, 'export-data'))
 
 
-class QToolButtonBase(QtGui.QToolButton):
+class QToolButtonBase(QToolButton):
     def __init__(self, Qicon, *args, **kargs):
         super(QToolButtonBase, self).__init__(*args, **kargs)
 
         self.setIcon(Qicon)
         self.setAutoRaise(True)
-        self.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.setFocusPolicy(Qt.NoFocus)
 
 #        name = str(id(self))
 #        self.setObjectName(name)
