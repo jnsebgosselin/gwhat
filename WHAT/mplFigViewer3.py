@@ -45,13 +45,14 @@ This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
 WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 """
 
-from PySide import QtGui, QtCore
-
+from PyQt5.QtCore import Qt, pyqtSignal, QEvent, QRect
+from PyQt5.QtGui import QImage, QPixmap, QPainter
+from PyQt5.QtWidgets import QFrame, QScrollArea, QApplication, QWidget
 
 ###############################################################################
 
 
-class MplViewer(QtGui.QFrame):
+class MplViewer(QFrame):
 
     def __init__(self, parent=None):
         super(MplViewer, self).__init__(parent)
@@ -107,25 +108,24 @@ class MplViewer(QtGui.QFrame):
 
         # Convert buffer to QPixmap :
 
-        self.img = QtGui.QImage(imgbuf, imgwidth, imgheight,
-                                QtGui.QImage.Format_ARGB32)
-        self.img = QtGui.QImage.rgbSwapped(self.img)
-        self.img = QtGui.QPixmap(self.img)
+        self.img = QImage(imgbuf, imgwidth, imgheight, QImage.Format_ARGB32)
+        self.img = QImage.rgbSwapped(self.img)
+        self.img = QPixmap(self.img)
 
         self.repaint()
 
     def paintEvent(self, event):  # ===========================================
         super(MplViewer, self).paintEvent(event)
 
-        qp = QtGui.QPainter()
+        qp = QPainter()
         qp.begin(self)
 
         # Prepare paint rect :
 
         fw = self.frameWidth()
-        rect = QtCore.QRect(0 + fw, 0 + fw,
-                            self.size().width() - 2 * fw,
-                            self.size().height() - 2 * fw)
+        rect = QRect(0 + fw, 0 + fw,
+                     self.size().width() - 2 * fw,
+                     self.size().height() - 2 * fw)
 
         # Check/update image buffer :
 
@@ -137,12 +137,12 @@ class MplViewer(QtGui.QFrame):
 
         if qpix2print is None:
             qpix2print = self.img.scaledToWidth(
-                rect.width(), mode=QtCore.Qt.SmoothTransformation)
+                rect.width(), mode=Qt.SmoothTransformation)
             self.qpix_buff.append(qpix2print)
 
         # Draw pixmap :
 
-#        qp.setRenderHint(QtGui.QPainter.Antialiasing, True)
+#        qp.setRenderHint(QPainter.Antialiasing, True)
         qp.drawPixmap(rect, qpix2print)
 
         qp.end()
@@ -151,20 +151,20 @@ class MplViewer(QtGui.QFrame):
 # #############################################################################
 
 
-class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
+class ImageViewer(QScrollArea):                           # ImageViewer #
     """
     This is a PySide widget class to display a matplotlib figure image in a
     QScrollArea with zooming and panning capability with CTRL + Mouse_wheel
     and Left-click event.
     """
 
-    zoomChanged = QtCore.Signal(float)
+    zoomChanged = pyqtSignal(float)
 
     def __init__(self, parent=None):
         super(ImageViewer, self).__init__(parent)
 
         self.setWindowTitle('Image Viewer')
-        self.setAlignment(QtCore.Qt.AlignCenter)
+        self.setAlignment(Qt.AlignCenter)
 
         # Init. variable :
 
@@ -196,15 +196,15 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
 
         # ZOOM ----------------------------------------------------------------
 
-        if event.type() == QtCore.QEvent.Type.Wheel:
+        if event.type() == QEvent.Wheel:
 
             # http://stackoverflow.com/questions/8772595/
             # how-to-check-if-a-key-modifier-is-pressed-shift-ctrl-alt
 
-            modifiers = QtGui.QApplication.keyboardModifiers()
+            modifiers = QApplication.keyboardModifiers()
 
-            if modifiers == QtCore.Qt.ControlModifier:
-                if event.delta() > 0:
+            if modifiers == Qt.ControlModifier:
+                if event.angleDelta().y() > 0:
                     self.zoomIn()
                 else:
                     self.zoomOut()
@@ -216,23 +216,22 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
 
         # Set ClosedHandCursor:
 
-        elif event.type() == QtCore.QEvent.Type.MouseButtonPress:
-            if event.button() == QtCore.Qt.MouseButton.LeftButton:
-                QtGui.QApplication.setOverrideCursor(
-                    QtCore.Qt.ClosedHandCursor)
+        elif event.type() == QEvent.MouseButtonPress:
+            if event.button() == Qt.LeftButton:
+                QApplication.setOverrideCursor(Qt.ClosedHandCursor)
                 self.pan = True
                 self.xclick = event.globalX()
                 self.yclick = event.globalY()
 
         # Reset Cursor:
 
-        elif event.type() == QtCore.QEvent.Type.MouseButtonRelease:
-            QtGui.QApplication.restoreOverrideCursor()
+        elif event.type() == QEvent.MouseButtonRelease:
+            QApplication.restoreOverrideCursor()
             self.pan = False
 
         # Move  ScrollBar:
 
-        elif event.type() == QtCore.QEvent.Type.MouseMove:
+        elif event.type() == QEvent.MouseMove:
             if self.pan == True:
                 dx = self.xclick - event.globalX()
                 self.xclick = event.globalX()
@@ -246,7 +245,7 @@ class ImageViewer(QtGui.QScrollArea):                           # ImageViewer #
                 scrollBarV = self.verticalScrollBar()
                 scrollBarV.setValue(scrollBarV.value() + dy)
 
-        return QtGui.QWidget.eventFilter(self, widget, event)
+        return QWidget.eventFilter(self, widget, event)
 
     # =========================================================================
 
@@ -307,7 +306,7 @@ if __name__ == '__main__':  # =================================================
     import numpy as np
     plt.ioff()
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     # generate a mpl figure ---------------------------------------------------
 

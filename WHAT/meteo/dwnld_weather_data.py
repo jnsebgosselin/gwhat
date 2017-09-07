@@ -37,18 +37,19 @@ import csv
 # Third party imports :
 
 import numpy as np
-from PySide import QtGui, QtCore
+
+from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtCore import pyqtSignal as QSignal
+#from PyQt5.QtGui import QMenu
+from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
+                             QToolButton, QGridLayout, QLabel, QCheckBox,
+                             QFrame, QTextEdit, QPushButton, QFileDialog,
+                             QMessageBox, QProgressBar)
 
 # Local imports :
 
-if __name__ == '__main__':
-    import sys
-    from os.path import dirname, realpath, basename
-    print('Running module %s as a standalone script...' % basename(__file__))
-    sys.path.append(dirname(dirname(realpath(__file__))))
-
 import common.database as db
-from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+from common import IconDB, QToolButtonNormal, QToolButtonSmall
 import common.widgets as myqt
 from meteo.search_weather_data import WeatherStationDisplayTable
 from meteo.search_weather_data import Search4Stations
@@ -57,13 +58,13 @@ from meteo.search_weather_data import Search4Stations
 # =============================================================================
 
 
-class dwnldWeather(QtGui.QWidget):
+class dwnldWeather(QWidget):
     """
     Interface that allow to download daily weather data from the governement
     of Canada website.
     """
 
-    ConsoleSignal = QtCore.Signal(str)
+    ConsoleSignal = QSignal(str)
 
     def __init__(self, parent=None):
         super(dwnldWeather, self).__init__(parent)
@@ -96,14 +97,14 @@ class dwnldWeather(QtGui.QWidget):
 
         # ---- TOOLBAR ----
 
-        btn_save_menu = QtGui.QMenu()
+        btn_save_menu = QMenu()
         btn_save_menu.addAction('Save As...',
                                 self.btn_saveAs_staList_isClicked)
 
         self.btn_save_staList = QToolButtonNormal(IconDB().save)
         self.btn_save_staList.setToolTip('Save current station list.')
         self.btn_save_staList.setMenu(btn_save_menu)
-        self.btn_save_staList.setPopupMode(QtGui.QToolButton.MenuButtonPopup)
+        self.btn_save_staList.setPopupMode(QToolButton.MenuButtonPopup)
 
         btn_search4station = QToolButtonNormal(IconDB().search)
         btn_search4station.setToolTip('Search for weather stations in the ' +
@@ -119,7 +120,7 @@ class dwnldWeather(QtGui.QWidget):
         self.btn_get.setToolTip(
                 'Download data for the selected weather stations')
 
-        tb = QtGui.QGridLayout()
+        tb = QGridLayout()
         col = 0
         buttons = [btn_search4station, btn_browse_staList,
                    self.btn_save_staList, btn_delSta, self.btn_get]
@@ -133,17 +134,17 @@ class dwnldWeather(QtGui.QWidget):
 
         # ---- Progress Bar ----
 
-        self.pbar = QtGui.QProgressBar()
+        self.pbar = QProgressBar()
         self.pbar.setValue(0)
         self.pbar.hide()
 
         # ---- Right Panel ----
 
-        display_label = QtGui.QLabel('<b>Formatted Weather Data Info :</b>')
+        display_label = QLabel('<b>Formatted Weather Data Info :</b>')
 
-        self.saveAuto_checkbox = QtGui.QCheckBox(
+        self.saveAuto_checkbox = QCheckBox(
             'Automatically save formatted\nweather data')
-        self.saveAuto_checkbox.setCheckState(QtCore.Qt.Checked)
+        self.saveAuto_checkbox.setCheckState(Qt.Checked)
         self.saveAuto_checkbox.setStyleSheet(
                           'QCheckBox::indicator{subcontrol-position:top left}')
 
@@ -161,8 +162,8 @@ class dwnldWeather(QtGui.QWidget):
         self.btn_goFirst = QToolButtonSmall(IconDB().go_first)
         self.btn_goFirst.setEnabled(False)
 
-        goToolbar_grid = QtGui.QGridLayout()
-        goToolbar_widg = QtGui.QFrame()
+        goToolbar_grid = QGridLayout()
+        goToolbar_widg = QFrame()
 
         col = 0
         goToolbar_grid.addWidget(self.btn_goFirst, 0, col)
@@ -180,22 +181,22 @@ class dwnldWeather(QtGui.QWidget):
 
         # ---- Right Panel Assembly ----
 
-        self.mergeDisplay = QtGui.QTextEdit()
+        self.mergeDisplay = QTextEdit()
         self.mergeDisplay.setReadOnly(True)
         self.mergeDisplay.setMinimumHeight(250)
 
-        btn_selectRaw = QtGui.QPushButton('Select')
+        btn_selectRaw = QPushButton('Select')
         btn_selectRaw.setIcon(IconDB().openFile)
         btn_selectRaw.setToolTip('Select and format raw weather data files')
         btn_selectRaw.setIconSize(IconDB().iconSize2)
 
-        btn_saveMerge = QtGui.QPushButton('Save')
+        btn_saveMerge = QPushButton('Save')
         btn_saveMerge.setToolTip('Save formated weather data in a csv file')
         btn_saveMerge.setIcon(IconDB().save)
         btn_saveMerge.setIconSize(IconDB().iconSize2)
 
-        rightPanel_grid = QtGui.QGridLayout()
-        rightPanel_widg = QtGui.QFrame()
+        rightPanel_grid = QGridLayout()
+        rightPanel_widg = QFrame()
 
         row = 0
 
@@ -206,7 +207,7 @@ class dwnldWeather(QtGui.QWidget):
         row += 1
         rightPanel_grid.addWidget(goToolbar_widg, row, 0, 1, 3)
         row += 1
-        rightPanel_grid.addWidget(QtGui.QLabel(''), row, 0, 1, 3)
+        rightPanel_grid.addWidget(QLabel(''), row, 0, 1, 3)
         row += 1
         rightPanel_grid.addWidget(self.saveAuto_checkbox, row, 0, 1, 3)
 
@@ -218,7 +219,7 @@ class dwnldWeather(QtGui.QWidget):
 
         # ------------------------------------------------------ Main Grid ----
 
-        main_grid = QtGui.QGridLayout()
+        main_grid = QGridLayout()
 
         main_grid.addLayout(tb, 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
@@ -292,7 +293,7 @@ class dwnldWeather(QtGui.QWidget):
         nrow = self.station_table.rowCount()
         if nrow == 0:
             self.station_table.chkbox_header.setCheckState(
-                QtCore.Qt.CheckState(False))
+                Qt.CheckState(False))
 
     def add_stations2list(self, staList2add):
 
@@ -329,12 +330,12 @@ class dwnldWeather(QtGui.QWidget):
         a 'lst' extension.
         '''
 
-        filename, _ = QtGui.QFileDialog.getOpenFileName(
+        filename, _ = QFileDialog.getOpenFileName(
                           self, 'Select a valid station list',
                           self.workdir, '*.lst')
 
         if filename:
-            QtGui.QApplication.processEvents()
+            QApplication.processEvents()
             self.load_stationList(filename)
 
     def load_stationList(self, filename):
@@ -403,10 +404,10 @@ class dwnldWeather(QtGui.QWidget):
             self.ConsoleSignal.emit('''<font color=#C83737>Converting weather
             station list to a more recent format. Please wait...</font>''')
 
-            QtGui.QApplication.processEvents()
-            QtGui.QApplication.processEvents()
+            QApplication.processEvents()
+            QApplication.processEvents()
 
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+            QApplication.setOverrideCursor(Qt.WaitCursor)
 
             reader[0] = headerDB.weather_stations[0]
             for i in range(nCONFG-1):
@@ -420,7 +421,7 @@ class dwnldWeather(QtGui.QWidget):
                 writer = csv.writer(f, delimiter='\t')
                 writer.writerows(reader)
 
-            QtGui.QApplication.restoreOverrideCursor()
+            QApplication.restoreOverrideCursor()
 
         # ---- Load list in UI ----
 
@@ -451,7 +452,7 @@ class dwnldWeather(QtGui.QWidget):
 
     def btn_saveAs_staList_isClicked(self):
         fname = os.path.join(self.workdir, 'weather_stations.lst')
-        dialog = QtGui.QFileDialog()
+        dialog = QFileDialog()
         dialog.setConfirmOverwrite(True)
         fname, ftype = dialog.getSaveFileName(
                            caption="Save Weather Stations List",
@@ -537,8 +538,8 @@ class dwnldWeather(QtGui.QWidget):
 
             if len(self.staList2dwnld) == 0:
                 msg = ('No weather station currently selected.')
-                btn = QtGui.QMessageBox.Ok
-                QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
+                btn = QMessageBox.Ok
+                QMessageBox.warning(self, 'Warning', msg, btn)
                 return
 
         else:  # ----------------------------- Check if process isFinished ----
@@ -655,8 +656,8 @@ class dwnldWeather(QtGui.QWidget):
         """
 
         dialog_fir = os.path.join(self.workdir, 'Meteo', 'Raw')
-        fname, _ = QtGui.QFileDialog.getOpenFileNames(self, 'Open files',
-                                                      dialog_fir, '*.csv')
+        fname, _ = QFileDialog.getOpenFileNames(
+                self, 'Open files', dialog_fir, '*.csv')
         if fname:
             self.concatenate_and_display(fname)
 
@@ -744,7 +745,7 @@ class dwnldWeather(QtGui.QWidget):
             filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
                                               YearStart, YearEnd)
             dialog_dir = os.path.join(self.workdir, 'Meteo, Input', filename)
-            fname, _ = QtGui.QFileDialog.getSaveFileName(
+            fname, _ = QFileDialog.getSaveFileName(
                            self, 'Save file', dialog_dir, '*.csv')
 
             if fname:
@@ -901,7 +902,7 @@ class dwnldWeather(QtGui.QWidget):
 # =============================================================================
 
 
-class DownloadRawDataFiles(QtCore.QThread):
+class DownloadRawDataFiles(QThread):
     '''
     This thread is used to download the raw data files from
     www.climate.weather.gc.ca and saves them automatically in
@@ -922,10 +923,10 @@ class DownloadRawDataFiles(QtCore.QThread):
                    3 -> File NOT downloaded because it already exists
     '''
 
-    EndSignal = QtCore.Signal(bool)
-    MergeSignal = QtCore.Signal(list)
-    ProgBarSignal = QtCore.Signal(int)
-    ConsoleSignal = QtCore.Signal(str)
+    EndSignal = QSignal(bool)
+    MergeSignal = QSignal(list)
+    ProgBarSignal = QSignal(int)
+    ConsoleSignal = QSignal(str)
 
     def __init__(self, parent=None):
         super(DownloadRawDataFiles, self).__init__(parent)
@@ -1089,7 +1090,7 @@ class DownloadRawDataFiles(QtCore.QThread):
 
 if __name__ == '__main__':
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     ft = app.font()
     ft.setFamily('Segoe UI')
@@ -1109,7 +1110,7 @@ if __name__ == '__main__':
     w.show()
 
     qr = w.frameGeometry()
-    cp = QtGui.QDesktopWidget().availableGeometry().center()
+    cp = QDesktopWidget().availableGeometry().center()
     qr.moveCenter(cp)
     w.move(qr.topLeft())
 

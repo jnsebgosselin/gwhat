@@ -30,8 +30,13 @@ import copy
 
 # Third party imports :
 
-from PySide import QtGui, QtCore
-from PySide.QtCore import QDate
+from PyQt5.QtCore import Qt, QDate, QCoreApplication, QPoint
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtWidgets import (QSpinBox, QDoubleSpinBox, QWidget, QDateEdit,
+                             QAbstractSpinBox, QGridLayout, QFrame,
+                             QMessageBox, QComboBox, QLabel, QTabWidget,
+                             QFileDialog, QApplication, QPushButton,
+                             QRadioButton, QDesktopWidget)
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
@@ -55,7 +60,7 @@ from projet.reader_waterlvl import load_waterlvl_measures
 
 class HydroprintGUI(myqt.DialogWindow):
 
-    ConsoleSignal = QtCore.Signal(str)
+    ConsoleSignal = QSignal(str)
 
     def __init__(self, datamanager, parent=None):
         super(HydroprintGUI, self).__init__(parent, maximize=True)
@@ -134,9 +139,9 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_zoom_out.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
         btn_zoom_in.clicked.connect(self.zoom_in)
 
-        self.zoom_disp = QtGui.QSpinBox()
-        self.zoom_disp.setAlignment(QtCore.Qt.AlignCenter)
-        self.zoom_disp.setButtonSymbols(QtGui.QAbstractSpinBox.NoButtons)
+        self.zoom_disp = QSpinBox()
+        self.zoom_disp.setAlignment(Qt.AlignCenter)
+        self.zoom_disp.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.zoom_disp.setReadOnly(True)
         self.zoom_disp.setSuffix(' %')
         self.zoom_disp.setRange(0, 9999)
@@ -158,8 +163,8 @@ class HydroprintGUI(myqt.DialogWindow):
                     myqt.VSep(),
                     zoom_pan]
 
-        subgrid_toolbar = QtGui.QGridLayout()
-        toolbar_widget = QtGui.QWidget()
+        subgrid_toolbar = QGridLayout()
+        toolbar_widget = QWidget()
 
         row = 0
         for col, btn in enumerate(btn_list):
@@ -179,7 +184,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
         self.hydrograph_scrollarea.zoomChanged.connect(self.zoom_disp.setValue)
 
-        grid_hydrograph = QtGui.QGridLayout()
+        grid_hydrograph = QGridLayout()
         grid_hydrograph.addWidget(self.hydrograph_scrollarea, 0, 0)
         grid_hydrograph.setRowStretch(0, 500)
         grid_hydrograph.setColumnStretch(0, 500)
@@ -187,8 +192,8 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # ASSEMBLING SubGrids :
 
-        grid_layout = QtGui.QGridLayout()
-        self.grid_layout_widget = QtGui.QFrame()
+        grid_layout = QGridLayout()
+        self.grid_layout_widget = QFrame()
 
         row = 0
         grid_layout.addWidget(toolbar_widget, row, 0)
@@ -221,7 +226,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # ------------------------------------------------------ MAIN GRID ----
 
-        mainGrid = QtGui.QGridLayout()
+        mainGrid = QGridLayout()
 
         mainGrid.addWidget(self.grid_layout_widget, 0, 0)
         mainGrid.addWidget(myqt.VSep(), 0, 1)
@@ -236,11 +241,10 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # -------------------------------------------------- MESSAGE BOXES ----
 
-        self.msgBox = QtGui.QMessageBox()
-        self.msgBox.setIcon(QtGui.QMessageBox.Question)
-        self.msgBox.setStandardButtons(QtGui.QMessageBox.Yes |
-                                       QtGui.QMessageBox.No)
-        self.msgBox.setDefaultButton(QtGui.QMessageBox.Cancel)
+        self.msgBox = QMessageBox()
+        self.msgBox.setIcon(QMessageBox.Question)
+        self.msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
+        self.msgBox.setDefaultButton(QMessageBox.Cancel)
         self.msgBox.setWindowTitle('Save Graph Layout')
         self.msgBox.setWindowIcon(IconDB().master)
 
@@ -270,7 +274,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def __init_scalesTabWidget__(self):
 
-        class QRowLayout(QtGui.QGridLayout):
+        class QRowLayout(QGridLayout):
             def __init__(self, items, parent=None):
                 super(QRowLayout, self).__init__(parent)
 
@@ -284,43 +288,43 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Widget :
 
-        self.date_start_widget = QtGui.QDateEdit()
+        self.date_start_widget = QDateEdit()
         self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
-        self.date_start_widget.setAlignment(QtCore.Qt.AlignCenter)
+        self.date_start_widget.setAlignment(Qt.AlignCenter)
         self.date_start_widget.dateChanged.connect(self.layout_changed)
 
-        self.date_end_widget = QtGui.QDateEdit()
+        self.date_end_widget = QDateEdit()
         self.date_end_widget.setDisplayFormat('01 / MM / yyyy')
-        self.date_end_widget.setAlignment(QtCore.Qt.AlignCenter)
+        self.date_end_widget.setAlignment(Qt.AlignCenter)
         self.date_end_widget.dateChanged.connect(self.layout_changed)
 
-        self.time_scale_label = QtGui.QComboBox()
+        self.time_scale_label = QComboBox()
         self.time_scale_label.setEditable(False)
-        self.time_scale_label.setInsertPolicy(QtGui.QComboBox.NoInsert)
+        self.time_scale_label.setInsertPolicy(QComboBox.NoInsert)
         self.time_scale_label.addItems(['Month', 'Year'])
         self.time_scale_label.setCurrentIndex(0)
         self.time_scale_label.currentIndexChanged.connect(self.layout_changed)
 
-        self.dateDispFreq_spinBox = QtGui.QSpinBox()
+        self.dateDispFreq_spinBox = QSpinBox()
         self.dateDispFreq_spinBox.setSingleStep(1)
         self.dateDispFreq_spinBox.setMinimum(1)
         self.dateDispFreq_spinBox.setMaximum(100)
         self.dateDispFreq_spinBox.setValue(
             self.hydrograph.date_labels_pattern)
-        self.dateDispFreq_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+        self.dateDispFreq_spinBox.setAlignment(Qt.AlignCenter)
         self.dateDispFreq_spinBox.setKeyboardTracking(False)
         self.dateDispFreq_spinBox.valueChanged.connect(self.layout_changed)
 
         # Layout :
 
-        widget_time_scale = QtGui.QFrame()
+        widget_time_scale = QFrame()
         widget_time_scale.setFrameStyle(0)
-        grid_time_scale = QtGui.QGridLayout()
+        grid_time_scale = QGridLayout()
 
-        GRID = [[QtGui.QLabel('From :'), self.date_start_widget],
-                [QtGui.QLabel('To :'), self.date_end_widget],
-                [QtGui.QLabel('Scale :'), self.time_scale_label],
-                [QtGui.QLabel('Date Disp. Pattern:'),
+        GRID = [[QLabel('From :'), self.date_start_widget],
+                [QLabel('To :'), self.date_end_widget],
+                [QLabel('Scale :'), self.time_scale_label],
+                [QLabel('Date Disp. Pattern:'),
                  self.dateDispFreq_spinBox]]
 
         for i, ROW in enumerate(GRID):
@@ -335,47 +339,47 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Widget :
 
-        self.waterlvl_scale = QtGui.QDoubleSpinBox()
+        self.waterlvl_scale = QDoubleSpinBox()
         self.waterlvl_scale.setSingleStep(0.05)
         self.waterlvl_scale.setMinimum(0.05)
         self.waterlvl_scale.setSuffix('  m')
-        self.waterlvl_scale.setAlignment(QtCore.Qt.AlignCenter)
+        self.waterlvl_scale.setAlignment(Qt.AlignCenter)
         self.waterlvl_scale.setKeyboardTracking(False)
         self.waterlvl_scale.valueChanged.connect(self.layout_changed)
         self.waterlvl_scale.setFixedWidth(100)
 
-        self.waterlvl_max = QtGui.QDoubleSpinBox()
+        self.waterlvl_max = QDoubleSpinBox()
         self.waterlvl_max.setSingleStep(0.1)
         self.waterlvl_max.setSuffix('  m')
-        self.waterlvl_max.setAlignment(QtCore.Qt.AlignCenter)
+        self.waterlvl_max.setAlignment(Qt.AlignCenter)
         self.waterlvl_max.setMinimum(-1000)
         self.waterlvl_max.setMaximum(1000)
         self.waterlvl_max.setKeyboardTracking(False)
         self.waterlvl_max.valueChanged.connect(self.layout_changed)
         self.waterlvl_max.setFixedWidth(100)
 
-        self.NZGridWL_spinBox = QtGui.QSpinBox()
+        self.NZGridWL_spinBox = QSpinBox()
         self.NZGridWL_spinBox.setSingleStep(1)
         self.NZGridWL_spinBox.setMinimum(1)
         self.NZGridWL_spinBox.setMaximum(50)
         self.NZGridWL_spinBox.setValue(self.hydrograph.NZGrid)
-        self.NZGridWL_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+        self.NZGridWL_spinBox.setAlignment(Qt.AlignCenter)
         self.NZGridWL_spinBox.setKeyboardTracking(False)
         self.NZGridWL_spinBox.valueChanged.connect(self.layout_changed)
         self.NZGridWL_spinBox.setFixedWidth(100)
 
-        self.datum_widget = QtGui.QComboBox()
+        self.datum_widget = QComboBox()
         self.datum_widget.addItems(['Ground Surface', 'See Level'])
         self.datum_widget.currentIndexChanged.connect(self.layout_changed)
 
         # Layout :
 
-        subgrid_WLScale = QtGui.QGridLayout()
+        subgrid_WLScale = QGridLayout()
 
-        GRID = [[QtGui.QLabel('Minimum :'), self.waterlvl_max],
-                [QtGui.QLabel('Scale :'), self.waterlvl_scale],
-                [QtGui.QLabel('Grid Divisions :'), self.NZGridWL_spinBox],
-                [QtGui.QLabel('Datum :'), self.datum_widget]]
+        GRID = [[QLabel('Minimum :'), self.waterlvl_max],
+                [QLabel('Scale :'), self.waterlvl_scale],
+                [QLabel('Grid Divisions :'), self.NZGridWL_spinBox],
+                [QLabel('Datum :'), self.datum_widget]]
 
         for i, ROW in enumerate(GRID):
             subgrid_WLScale.addLayout(QRowLayout(ROW), i, 1)
@@ -383,7 +387,7 @@ class HydroprintGUI(myqt.DialogWindow):
         subgrid_WLScale.setVerticalSpacing(5)
         subgrid_WLScale.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
-        WLScale_widget = QtGui.QFrame()
+        WLScale_widget = QFrame()
         WLScale_widget.setFrameStyle(0)
         WLScale_widget.setLayout(subgrid_WLScale)
 
@@ -391,26 +395,26 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Widgets :
 
-        self.Ptot_scale = QtGui.QSpinBox()
+        self.Ptot_scale = QSpinBox()
         self.Ptot_scale.setSingleStep(5)
         self.Ptot_scale.setMinimum(5)
         self.Ptot_scale.setMaximum(500)
         self.Ptot_scale.setValue(20)
         self.Ptot_scale.setSuffix('  mm')
-        self.Ptot_scale.setAlignment(QtCore.Qt.AlignCenter)
+        self.Ptot_scale.setAlignment(Qt.AlignCenter)
 
-        self.qweather_bin = QtGui.QComboBox()
+        self.qweather_bin = QComboBox()
         self.qweather_bin.setEditable(False)
-        self.qweather_bin.setInsertPolicy(QtGui.QComboBox.NoInsert)
+        self.qweather_bin.setInsertPolicy(QComboBox.NoInsert)
         self.qweather_bin.addItems(['day', 'week', 'month'])
         self.qweather_bin.setCurrentIndex(1)
 
         # Layout :
 
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
 
-        GRID = [[QtGui.QLabel('Precip. Scale :'), self.Ptot_scale],
-                [QtGui.QLabel('Resampling :'), self.qweather_bin]]
+        GRID = [[QLabel('Precip. Scale :'), self.Ptot_scale],
+                [QLabel('Resampling :'), self.qweather_bin]]
 
         for i, row in enumerate(GRID):
             layout.addLayout(QRowLayout(row), i, 1)
@@ -419,13 +423,13 @@ class HydroprintGUI(myqt.DialogWindow):
         layout.setContentsMargins(10, 10, 10, 10)  # (L,T,R,B)
         layout.setRowStretch(i+1, 100)
 
-        widget_weather_scale = QtGui.QFrame()
+        widget_weather_scale = QFrame()
         widget_weather_scale.setFrameStyle(0)
         widget_weather_scale.setLayout(layout)
 
         # ------------------------------------------------ ASSEMBLING TABS ----
 
-        tabscales = QtGui.QTabWidget()
+        tabscales = QTabWidget()
         tabscales.addTab(widget_time_scale, 'Time')
         tabscales.addTab(WLScale_widget, 'Water Level')
         tabscales.addTab(widget_weather_scale, 'Weather')
@@ -436,21 +440,21 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Widgets :
 
-        self.language_box = QtGui.QComboBox()
+        self.language_box = QComboBox()
         self.language_box.setEditable(False)
-        self.language_box.setInsertPolicy(QtGui.QComboBox.NoInsert)
+        self.language_box.setInsertPolicy(QComboBox.NoInsert)
         self.language_box.addItems(['French', 'English'])
         self.language_box.setCurrentIndex(1)
 
         # Layout :
 
-        layout = QtGui.QGridLayout()
-        layout.addWidget(QtGui.QLabel('Label Language:'), 0, 0)
+        layout = QGridLayout()
+        layout.addWidget(QLabel('Label Language:'), 0, 0)
         layout.addWidget(self.language_box, 0, 1)
         layout.setSpacing(5)
         layout.setContentsMargins(5, 5, 5, 5)  # (L, T, R, B)
 
-        qAxeLabelsLanguage = QtGui.QFrame()
+        qAxeLabelsLanguage = QFrame()
         qAxeLabelsLanguage.setLayout(layout)
 
         return qAxeLabelsLanguage
@@ -565,7 +569,7 @@ class HydroprintGUI(myqt.DialogWindow):
         else:
             self.hydrograph.set_wxdset(self.wxdset)
 
-        QtCore.QCoreApplication.processEvents()
+        QCoreApplication.processEvents()
         self.draw_hydrograph()
 
     # ======================================================== Load Layout ====
@@ -746,7 +750,7 @@ class HydroprintGUI(myqt.DialogWindow):
         dialog_dir = os.path.join(self.save_fig_dir,
                                   'hydrograph_%s' % self.wldset['Well'])
 
-        dialog = QtGui.QFileDialog()
+        dialog = QFileDialog()
         dialog.setConfirmOverwrite(True)
         fname, ftype = dialog.getSaveFileName(
                                     caption="Save Figure", dir=dialog_dir,
@@ -784,9 +788,9 @@ class HydroprintGUI(myqt.DialogWindow):
         # Generate and Display Graph :
 
         for i in range(5):
-            QtCore.QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
 
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
         self.hydrograph.set_wldset(self.dmngr.get_current_wldset())
         self.hydrograph.set_wxdset(self.dmngr.get_current_wxdset())
@@ -794,7 +798,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
     # =========================================================================
 
@@ -931,16 +935,16 @@ class HydroprintGUI(myqt.DialogWindow):
         # !!!! temporary fix until I can find a better solution !!!!
 
 #        sender.blockSignals(True)
-        if type(sender) in [QtGui.QDoubleSpinBox, QtGui.QSpinBox]:
+        if type(sender) in [QDoubleSpinBox, QSpinBox]:
             sender.setReadOnly(True)
 
         for i in range(10):
-            QtCore.QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
         for i in range(10):
-            QtCore.QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
 
-        if type(sender) in [QtGui.QDoubleSpinBox, QtGui.QSpinBox]:
+        if type(sender) in [QDoubleSpinBox, QSpinBox]:
             sender.setReadOnly(False)
 #        sender.blockSignals(False)
 
@@ -948,15 +952,15 @@ class HydroprintGUI(myqt.DialogWindow):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class PageSetupWin(QtGui.QWidget):
+class PageSetupWin(QWidget):
 
-    newPageSetupSent = QtCore.Signal(bool)
+    newPageSetupSent = QSignal(bool)
 
     def __init__(self, parent=None):
         super(PageSetupWin, self).__init__(parent)
 
         self.setWindowTitle('Page Setup')
-        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(Qt.Window)
 
         # ---- Default Values ----
 
@@ -973,16 +977,16 @@ class PageSetupWin(QtGui.QWidget):
 
         # ---- Toolbar ----
 
-        toolbar_widget = QtGui.QWidget()
+        toolbar_widget = QWidget()
 
-        btn_apply = QtGui.QPushButton('Apply')
+        btn_apply = QPushButton('Apply')
         btn_apply.clicked.connect(self.btn_apply_isClicked)
-        btn_cancel = QtGui.QPushButton('Cancel')
+        btn_cancel = QPushButton('Cancel')
         btn_cancel.clicked.connect(self.close)
-        btn_OK = QtGui.QPushButton('OK')
+        btn_OK = QPushButton('OK')
         btn_OK.clicked.connect(self.btn_OK_isClicked)
 
-        toolbar_layout = QtGui.QGridLayout()
+        toolbar_layout = QGridLayout()
         toolbar_layout.addWidget(btn_OK, 0, 1)
         toolbar_layout.addWidget(btn_cancel, 0, 2)
         toolbar_layout.addWidget(btn_apply, 0, 3)
@@ -992,46 +996,46 @@ class PageSetupWin(QtGui.QWidget):
 
         # ---- Figure Size ----
 
-        figSize_widget = QtGui.QWidget()
+        figSize_widget = QWidget()
 
-        self.fwidth = QtGui.QDoubleSpinBox()
+        self.fwidth = QDoubleSpinBox()
         self.fwidth.setSingleStep(0.05)
         self.fwidth.setMinimum(5.)
         self.fwidth.setValue(self.pageSize[0])
         self.fwidth.setSuffix('  in')
-        self.fwidth.setAlignment(QtCore.Qt.AlignCenter)
+        self.fwidth.setAlignment(Qt.AlignCenter)
 
-        self.fheight = QtGui.QDoubleSpinBox()
+        self.fheight = QDoubleSpinBox()
         self.fheight.setSingleStep(0.05)
         self.fheight.setMinimum(5.)
         self.fheight.setValue(self.pageSize[1])
         self.fheight.setSuffix('  in')
-        self.fheight.setAlignment(QtCore.Qt.AlignCenter)
+        self.fheight.setAlignment(Qt.AlignCenter)
 
-        self.va_ratio_spinBox = QtGui.QDoubleSpinBox()
+        self.va_ratio_spinBox = QDoubleSpinBox()
         self.va_ratio_spinBox.setSingleStep(0.01)
         self.va_ratio_spinBox.setMinimum(0.1)
         self.va_ratio_spinBox.setMaximum(0.95)
         self.va_ratio_spinBox.setValue(self.va_ratio)
-        self.va_ratio_spinBox.setAlignment(QtCore.Qt.AlignCenter)
+        self.va_ratio_spinBox.setAlignment(Qt.AlignCenter)
 
-        class QTitle(QtGui.QLabel):
+        class QTitle(QLabel):
             def __init__(self, label, parent=None):
                 super(QTitle, self).__init__(label, parent)
-                self.setAlignment(QtCore.Qt.AlignCenter)
+                self.setAlignment(Qt.AlignCenter)
 
-        figSize_layout = QtGui.QGridLayout()
+        figSize_layout = QGridLayout()
         row = 0
         figSize_layout.addWidget(QTitle('FIGURE SIZE\n'), row, 0, 1, 3)
         row += 1
-        figSize_layout.addWidget(QtGui.QLabel('Figure Width :'), row, 0)
+        figSize_layout.addWidget(QLabel('Figure Width :'), row, 0)
         figSize_layout.addWidget(self.fwidth, row, 2)
         row += 1
-        figSize_layout.addWidget(QtGui.QLabel('Figure Height :'), row, 0)
+        figSize_layout.addWidget(QLabel('Figure Height :'), row, 0)
         figSize_layout.addWidget(self.fheight, row, 2)
         row += 1
         figSize_layout.addWidget(
-            QtGui.QLabel('Top/Bottom Axes Ratio :'), row, 0)
+            QLabel('Top/Bottom Axes Ratio :'), row, 0)
         figSize_layout.addWidget(self.va_ratio_spinBox, row, 2)
         row += 1
         figSize_layout.addWidget(myqt.HSep(), row, 0, 1, 3)
@@ -1046,14 +1050,14 @@ class PageSetupWin(QtGui.QWidget):
 
         # ---- Legend ----
 
-        legend_widget = QtGui.QWidget()
+        legend_widget = QWidget()
 
-        self.legend_on = QtGui.QRadioButton('On')
+        self.legend_on = QRadioButton('On')
         self.legend_on.toggle()
-        self.legend_off = QtGui.QRadioButton('Off')
+        self.legend_off = QRadioButton('Off')
 
-        legend_layout = QtGui.QGridLayout()
-        legend_layout.addWidget(QtGui.QLabel('Legend :'), 0, 0)
+        legend_layout = QGridLayout()
+        legend_layout.addWidget(QLabel('Legend :'), 0, 0)
         legend_layout.addWidget(self.legend_on, 0, 2)
         legend_layout.addWidget(self.legend_off, 0, 3)
         legend_layout.setColumnStretch(1, 100)
@@ -1063,14 +1067,14 @@ class PageSetupWin(QtGui.QWidget):
 
         # ----- Graph title -----
 
-        title_widget = QtGui.QWidget()
+        title_widget = QWidget()
 
-        self.title_on = QtGui.QRadioButton('On')
+        self.title_on = QRadioButton('On')
         self.title_on.toggle()
-        self.title_off = QtGui.QRadioButton('Off')
+        self.title_off = QRadioButton('Off')
 
-        title_layout = QtGui.QGridLayout()
-        title_layout.addWidget(QtGui.QLabel('Graph Title :'), 0, 0)
+        title_layout = QGridLayout()
+        title_layout.addWidget(QLabel('Graph Title :'), 0, 0)
         title_layout.addWidget(self.title_on, 0, 2)
         title_layout.addWidget(self.title_off, 0, 3)
         title_layout.setColumnStretch(1, 100)
@@ -1080,14 +1084,14 @@ class PageSetupWin(QtGui.QWidget):
 
         # ---- Trend Line ----
 
-        trend_widget = QtGui.QWidget()
+        trend_widget = QWidget()
 
-        self.trend_on = QtGui.QRadioButton('On')
-        self.trend_off = QtGui.QRadioButton('Off')
+        self.trend_on = QRadioButton('On')
+        self.trend_off = QRadioButton('Off')
         self.trend_off.toggle()
 
-        trend_layout = QtGui.QGridLayout()
-        trend_layout.addWidget(QtGui.QLabel('Water Level Trend :'), 0, 0)
+        trend_layout = QGridLayout()
+        trend_layout.addWidget(QLabel('Water Level Trend :'), 0, 0)
         trend_layout.addWidget(self.trend_on, 0, 2)
         trend_layout.addWidget(self.trend_off, 0, 3)
         trend_layout.setColumnStretch(1, 100)
@@ -1097,7 +1101,7 @@ class PageSetupWin(QtGui.QWidget):
 
         # ---- Main Layout ----
 
-        main_layout = QtGui.QGridLayout()
+        main_layout = QGridLayout()
         main_layout.addWidget(figSize_widget, 0, 0)
         main_layout.addWidget(legend_widget, 2, 0)
         main_layout.addWidget(title_widget, 3, 0)
@@ -1164,9 +1168,9 @@ class PageSetupWin(QtGui.QWidget):
 
             wp = parent.frameGeometry().width()
             hp = parent.frameGeometry().height()
-            cp = parent.mapToGlobal(QtCore.QPoint(wp/2, hp/2))
+            cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
         else:
-            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            cp = QDesktopWidget().availableGeometry().center()
 
         qr.moveCenter(cp)
         self.move(qr.topLeft())
@@ -1179,7 +1183,7 @@ class PageSetupWin(QtGui.QWidget):
 if __name__ == '__main__':
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     ft = app.font()
     ft.setFamily('Segoe UI')

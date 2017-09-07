@@ -23,27 +23,25 @@ from __future__ import division, unicode_literals
 
 # Standard library imports :
 
-from PySide import QtGui, QtCore
 from copy import copy
 import os
 
-for i in range(2):
-    try:
-        from common import IconDB
-        break
-    except ImportError:  # to run this module standalone
-        import sys
-        import platform
-        from os.path import dirname, realpath, basename
-        print('Running module %s as a script...' % basename(__file__))
-        root = dirname(dirname(realpath(__file__)))
-        sys.path.append(root)
+from common import IconDB
+
+from PyQt5.QtCore import Qt, QSize, QPoint, QUrl
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtGui import QIcon
+from PyQt5.QtWidgets import (QGridLayout, QLabel, QFrame, QMessageBox,
+                             QComboBox, QDoubleSpinBox, QAbstractSpinBox,
+                             QGroupBox, QWidget, QDialog, QDesktopWidget,
+                             QTextBrowser, QPushButton, QStyle, QScrollArea,
+                             QToolButton)
 
 
 # =============================================================================
 
 
-class MyQLineLayout(QtGui.QGridLayout):
+class MyQLineLayout(QGridLayout):
 
     def __init__(self, widgets, parent=None):
         super(MyQLineLayout, self).__init__(parent)
@@ -58,7 +56,7 @@ class MyQLineLayout(QtGui.QGridLayout):
 # ================================================================ Labels =====
 
 
-class QTitle(QtGui.QLabel):
+class QTitle(QLabel):
 
     def __init__(self, text, parent=None):
         super(QTitle, self).__init__(parent)
@@ -71,20 +69,20 @@ class QTitle(QtGui.QLabel):
         ft.setPointSize(12)
         ft.setBold(True)
         self.setFont(ft)
-        self.setAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignBottom)
+        self.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
 
 
-class QWarningLabel(QtGui.QLabel):
+class QWarningLabel(QLabel):
     def __init__(self, text, parent=None):
         super(QWarningLabel, self).__init__(text, parent)
         ft = self.font()
         ft.setPointSize(8)
         ft.setItalic(True)
         self.setFont(ft)
-        self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
 
-class ModeLabel(QtGui.QLabel):
+class ModeLabel(QLabel):
     def __init__(self, label, color):
         super(ModeLabel, self).__init__()
         self.setText('<font color=%s>%s</font>' % (color, label))
@@ -92,26 +90,26 @@ class ModeLabel(QtGui.QLabel):
         ft.setPointSize(10)
         ft.setItalic(True)
         self.setFont(ft)
-        self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
+        self.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
 
 
-class AlignHCenterLabel(QtGui.QLabel):
+class AlignHCenterLabel(QLabel):
     def __init__(self, *args, **kargs):
         super(AlignHCenterLabel, self).__init__(*args, **kargs)
-        self.setAlignment(QtCore.Qt.AlignHCenter |
-                          QtCore.Qt.AlignVCenter)
+        self.setAlignment(Qt.AlignHCenter |
+                          Qt.AlignVCenter)
 
 
 # ============================================================ Separators =====
 
 
-class HSep(QtGui.QFrame):                               # horizontal separators
+class HSep(QFrame):                               # horizontal separators
     def __init__(self, parent=None):
         super(HSep, self).__init__(parent)
         self.setFrameStyle(52)
 
 
-class VSep(QtGui.QFrame):                                 # vertical separators
+class VSep(QFrame):                                 # vertical separators
     def __init__(self, parent=None):
         super(VSep, self).__init__(parent)
         self.setFrameStyle(53)
@@ -120,19 +118,19 @@ class VSep(QtGui.QFrame):                                 # vertical separators
 # ========================================================= Messsage Box ======
 
 
-class MyQErrorMessageBox(QtGui.QMessageBox):
+class MyQErrorMessageBox(QMessageBox):
     def __init__(self, parent=None):
         super(MyQErrorMessageBox, self).__init__(parent)
 
-#        self.setIcon(QtGui.QMessageBox.Warning)
+#        self.setIcon(QMessageBox.Warning)
         self.setWindowTitle('Error Message')
-        self.setWindowIcon(QtGui.QIcon('Icons/versalogo.png'))
+        self.setWindowIcon(QIcon('Icons/versalogo.png'))
 
 
 # ================================================================== Boxes ====
 
 
-class MyQComboBox(QtGui.QComboBox):
+class MyQComboBox(QComboBox):
     def __init__(self, parent=None):
         super(MyQComboBox, self).__init__(parent)
 
@@ -154,7 +152,7 @@ class MyQComboBox(QtGui.QComboBox):
         self.blockSignals(False)
 
 
-class QDoubleSpinBox(QtGui.QDoubleSpinBox):
+class QDoubleSpinBox(QDoubleSpinBox):
     def __init__(self, val, dec=0, step=None, units=None,
                  parent=None, read_only=False):
         super(QDoubleSpinBox, self).__init__(parent)
@@ -163,9 +161,9 @@ class QDoubleSpinBox(QtGui.QDoubleSpinBox):
 
         self.setKeyboardTracking(False)
         self.setAccelerated(True)
-        self.setCorrectionMode(QtGui.QAbstractSpinBox.CorrectToNearestValue)
-        self.setFocusPolicy(QtCore.Qt.ClickFocus)
-        self.setAlignment(QtCore.Qt.AlignCenter)
+        self.setCorrectionMode(QAbstractSpinBox.CorrectToNearestValue)
+        self.setFocusPolicy(Qt.ClickFocus)
+        self.setAlignment(Qt.AlignCenter)
 
         self.setDecimals(dec)
         self.setValue(val)
@@ -178,7 +176,7 @@ class QDoubleSpinBox(QtGui.QDoubleSpinBox):
         if units is not None:
             self.setSuffix(units)
 
-        self.setButtonSymbols(QtGui.QAbstractSpinBox.NoButtons)
+        self.setButtonSymbols(QAbstractSpinBox.NoButtons)
         if read_only is True:
             self.setSpecialValueText('\u2014')
             self.setReadOnly(True)
@@ -203,11 +201,11 @@ class QDoubleSpinBox(QtGui.QDoubleSpinBox):
 
 # ================================================================ Layout =====
 
-class QFrameLayout(QtGui.QFrame):
+class QFrameLayout(QFrame):
     def __init__(self, parent=None):
         super(QFrameLayout, self).__init__(parent)
 
-        self.setLayout(QtGui.QGridLayout())
+        self.setLayout(QGridLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
 
     def addWidget(self, widget, x, y, w=1, h=1):
@@ -246,7 +244,7 @@ class QFrameLayout(QtGui.QFrame):
         return self.layout().columnCount()
 
 
-class QGroupWidget(QtGui.QGroupBox):
+class QGroupWidget(QGroupBox):
     def __init__(self, parent=None):
         super(QGroupWidget, self).__init__(parent)
 
@@ -266,7 +264,7 @@ class QGroupWidget(QtGui.QGroupBox):
                            'padding: 0 3px 0 3px;'
                            '}' % (col, col))
 
-        self.setLayout(QtGui.QGridLayout())
+        self.setLayout(QGridLayout())
         self.layout().setContentsMargins(10, 25, 10, 10)  # (l, t, r, b)
 
     def addWidget(self, item, x, y, nx=1, ny=1):
@@ -279,7 +277,7 @@ class QGroupWidget(QtGui.QGroupBox):
         return self.layout().rowCount()
 
 
-class DialogWindow(QtGui.QDialog):
+class DialogWindow(QDialog):
 
     def __init__(self, parent=None, resizable=False, maximize=True):
         super(DialogWindow, self).__init__(parent)
@@ -287,35 +285,35 @@ class DialogWindow(QtGui.QDialog):
         self.__firstshow = True
         if maximize is True:
             self.__resizable = True
-            self.setWindowFlags(QtCore.Qt.Window)
+            self.setWindowFlags(Qt.Window)
         else:
             self.__resizable = resizable
-            self.setWindowFlags(QtCore.Qt.Window |
-                                QtCore.Qt.WindowMinimizeButtonHint)
+            self.setWindowFlags(Qt.Window |
+                                Qt.WindowMinimizeButtonHint)
 
         self.setWindowIcon(IconDB().master)
 
     def emit_warning(self, msg, title='Warning'):
-        btn = QtGui.QMessageBox.Ok
-        QtGui.QMessageBox.warning(self, title, msg, btn)
+        btn = QMessageBox.Ok
+        QMessageBox.warning(self, title, msg, btn)
 
     def show(self):
         if self.__firstshow is True:
             self.__firstshow = False
 
-            self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, True)
+            self.setAttribute(Qt.WA_DontShowOnScreen, True)
             super(DialogWindow, self).show()
             super(DialogWindow, self).close()
-            self.setAttribute(QtCore.Qt.WA_DontShowOnScreen, False)
+            self.setAttribute(Qt.WA_DontShowOnScreen, False)
 
             qr = self.frameGeometry()
             if self.parentWidget():
                 parent = self.parentWidget()
                 wp = parent.frameGeometry().width()
                 hp = parent.frameGeometry().height()
-                cp = parent.mapToGlobal(QtCore.QPoint(wp/2, hp/2))
+                cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
             else:
-                cp = QtGui.QDesktopWidget().availableGeometry().center()
+                cp = QDesktopWidget().availableGeometry().center()
             qr.moveCenter(cp)
             self.move(qr.topLeft())
 
@@ -333,17 +331,17 @@ class AboutWindow(DialogWindow):
     def __init__(self, parent=None):
         super(AboutWindow, self).__init__(parent, resizable=False)
         self.setWindowTitle('About')
-        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(Qt.Window)
         self.setWindowIcon(IconDB().master)
 
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
         self.setLayout(grid)
 
-        self.tb = QtGui.QTextBrowser()
+        self.tb = QTextBrowser()
         self.tb.setOpenExternalLinks(True)
         self.tb.setMinimumSize(750, 550)
 
-        ok = QtGui.QPushButton('Ok')
+        ok = QPushButton('Ok')
         ok.clicked.connect(self.close)
 
         grid.addWidget(self.tb, 0, 0, 1, 2)
@@ -361,13 +359,13 @@ class AboutWindow(DialogWindow):
         dirname = os.path.dirname(os.path.realpath(__file__))
         dirname = os.path.join(dirname, 'doc')
         filename = os.path.join(dirname, filename)
-        self.tb.setSource(QtCore.QUrl.fromLocalFile(filename))
+        self.tb.setSource(QUrl.fromLocalFile(filename))
 
 
 # -----------------------------------------------------------------------------
 
 
-class QToolPanel(QtGui.QWidget):
+class QToolPanel(QWidget):
     """
     A custom widget that mimicks the behavior of the "Tools" sidepanel in
     Adobe Acrobat. It is derived from a QToolBox with the following variants:
@@ -384,12 +382,12 @@ class QToolPanel(QtGui.QWidget):
     def __init__(self, parent=None):
         super(QToolPanel, self).__init__(parent)
 
-        self.__iclosed = QtGui.QWidget().style().standardIcon(
-            QtGui.QStyle.SP_ToolBarHorizontalExtensionButton)
-        self.__iexpand = QtGui.QWidget().style().standardIcon(
-            QtGui.QStyle.SP_ToolBarVerticalExtensionButton)
+        self.__iclosed = QWidget().style().standardIcon(
+            QStyle.SP_ToolBarHorizontalExtensionButton)
+        self.__iexpand = QWidget().style().standardIcon(
+            QStyle.SP_ToolBarVerticalExtensionButton)
 
-        self.setLayout(QtGui.QGridLayout())
+        self.setLayout(QGridLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
 
         self.__currentIndex = -1
@@ -404,7 +402,7 @@ class QToolPanel(QtGui.QWidget):
 
         # Add Header :
 
-        head = QtGui.QPushButton(text)
+        head = QPushButton(text)
         head.setIcon(self.__iclosed)
         head.clicked.connect(self.__isClicked__)
         head.setStyleSheet("QPushButton {text-align:left;}")
@@ -413,7 +411,7 @@ class QToolPanel(QtGui.QWidget):
 
         # Add Item in a ScrollArea :
 
-        scrollarea = QtGui.QScrollArea()
+        scrollarea = QScrollArea()
         scrollarea.setFrameStyle(0)
         scrollarea.hide()
         scrollarea.setStyleSheet("QScrollArea {background-color:transparent;}")
@@ -454,19 +452,19 @@ class QToolPanel(QtGui.QWidget):
 # =============================================================== Buttons =====
 
 
-class BtnBase(QtGui.QWidget):
+class BtnBase(QWidget):
 
-    clicked = QtCore.Signal(bool)
+    clicked = QSignal(bool)
 
     def __init__(self, parent=None):
         super(BtnBase, self).__init__(parent)
 
-        self._btn = QtGui.QToolButton()
-        self._btn.setIconSize(QtCore.QSize(16, 16))
+        self._btn = QToolButton()
+        self._btn.setIconSize(QSize(16, 16))
         self._btn.setAutoRaise(True)
         self._btn.clicked.connect(self.btn_isClicked)
 
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
         self.setLayout(layout)
         layout.setContentsMargins(10, 0, 0, 0)  # (l, t, r, b)
         layout.addWidget(self._btn)
@@ -484,22 +482,22 @@ class BtnBase(QtGui.QWidget):
 class GetBtn(BtnBase):
     def __init__(self, parent=None):
         super(GetBtn, self).__init__(parent)
-        self.setIcon(QtGui.QIcon(IconDB().getfrom))
+        self.setIcon(QIcon(IconDB().getfrom))
 
 
 class GuessBtn(BtnBase):
     def __init__(self, parent=None):
         super(GuessBtn, self).__init__(parent)
-        self.setIcon(QtGui.QIcon(IconDB().calcul))
+        self.setIcon(QIcon(IconDB().calcul))
         self.setToolTip('Guesstimate values')
 
 
-class InfoBtn(QtGui.QToolButton):
+class InfoBtn(QToolButton):
     def __init__(self, parent=None):
         super(InfoBtn, self).__init__(parent)
-        self.setIconSize(QtCore.QSize(16, 16))
+        self.setIconSize(QSize(16, 16))
         self.setAutoRaise(True)
-        self.setIcon(QtGui.QIcon(IconDB().about))
+        self.setIcon(QIcon(IconDB().about))
 
         self.infopg = AboutWindow()
 
@@ -515,10 +513,10 @@ class InfoBtn(QtGui.QToolButton):
         self.infopg.setWindowTitle(title)
 
 
-class LinkBtn(QtGui.QToolButton):
+class LinkBtn(QToolButton):
     def __init__(self, parent=None):
         super(LinkBtn, self).__init__(parent)
-        self.setIconSize(QtCore.QSize(16, 16))
+        self.setIconSize(QSize(16, 16))
         self.setAutoRaise(True)
         self.set_linked_state(True)
 
@@ -537,16 +535,16 @@ class LinkBtn(QtGui.QToolButton):
     def set_linked_state(self, state):
         self.__state = state
         if state is True:
-            self.setIcon(QtGui.QIcon(IconDB().link))
+            self.setIcon(QIcon(IconDB().link))
             self.setToolTip('Link values')
         else:
-            self.setIcon(QtGui.QIcon(IconDB().notlink))
+            self.setIcon(QIcon(IconDB().notlink))
             self.setToolTip('Unlink values')
 
 
-class MyQToolButton(QtGui.QToolButton):
+class MyQToolButton(QToolButton):
 
     def __init__(self, parent=None):
         super(MyQToolButton, self).__init__(parent)
-        self.setIconSize(QtCore.QSize(24, 24))
+        self.setIconSize(QSize(24, 24))
         self.setAutoRaise(True)

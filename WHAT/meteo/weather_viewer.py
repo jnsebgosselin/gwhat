@@ -30,11 +30,16 @@ from time import strftime
 
 import xlsxwriter
 import numpy as np
-from PySide import QtGui, QtCore
 import matplotlib as mpl
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-mpl.rcParams['backend.qt4'] = 'PySide'
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
+                             QFileDialog, QApplication, QTableWidget,
+                             QTableWidgetItem)
+
+# mpl.rcParams['backend.qt4'] = 'PySide'
+mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 # Local imports :
@@ -123,17 +128,17 @@ class WeatherAvgGraph(DialogWindow):
 
         # Widgets :
 
-        menu_save = QtGui.QMenu()
+        menu_save = QMenu()
         menu_save.addAction('Save normals graph as...', self.save_graph)
         menu_save.addAction('Save normals table as...', self.save_normals)
 
         btn_save = QToolButtonNormal(IconDB().save)
         btn_save.setToolTip('Save normals')
         btn_save.setMenu(menu_save)
-        btn_save.setPopupMode(QtGui.QToolButton.InstantPopup)
+        btn_save.setPopupMode(QToolButton.InstantPopup)
         btn_save.setStyleSheet("QToolButton::menu-indicator {image: none;}")
 
-        menu_export = QtGui.QMenu()
+        menu_export = QMenu()
         menu_export.addAction('Export daily time series as...',
                               self.select_export_file)
         menu_export.addAction('Export monthly time series as...',
@@ -143,7 +148,7 @@ class WeatherAvgGraph(DialogWindow):
 
         self.btn_export = QToolButtonNormal(IconDB().export_data)
         self.btn_export.setToolTip('Export time series')
-        self.btn_export.setPopupMode(QtGui.QToolButton.InstantPopup)
+        self.btn_export.setPopupMode(QToolButton.InstantPopup)
         self.btn_export.setMenu(menu_export)
         self.btn_export.setStyleSheet(
                 "QToolButton::menu-indicator {image: none;}")
@@ -154,8 +159,8 @@ class WeatherAvgGraph(DialogWindow):
 
         # Layout :
 
-        subgrid_toolbar = QtGui.QGridLayout()
-        toolbar_widget = QtGui.QWidget()
+        subgrid_toolbar = QGridLayout()
+        toolbar_widget = QWidget()
 
         col = 0
         row = 0
@@ -182,7 +187,7 @@ class WeatherAvgGraph(DialogWindow):
 
         # ---- layout ----
 
-        mainGrid = QtGui.QGridLayout()
+        mainGrid = QGridLayout()
 
         row = 0
         mainGrid.addWidget(toolbar_widget, row, 0)
@@ -240,7 +245,7 @@ class WeatherAvgGraph(DialogWindow):
         defaultname = 'WeatherAverages_%s (%d-%d)' % (staname, yrmin, yrmax)
         ddir = os.path.join(self.save_fig_dir, defaultname)
 
-        dialog = QtGui.QFileDialog()
+        dialog = QFileDialog()
         dialog.setConfirmOverwrite(True)
         filename, ftype = dialog.getSaveFileName(
                 caption='Save graph', dir=ddir, filter='*.pdf;;*.svg')
@@ -263,7 +268,7 @@ class WeatherAvgGraph(DialogWindow):
         defaultname = 'WeatherNormals_%s (%d-%d)' % (staname, yrmin, yrmax)
         ddir = os.path.join(self.save_fig_dir, defaultname)
 
-        dialog = QtGui.QFileDialog()
+        dialog = QFileDialog()
         dialog.setConfirmOverwrite(True)
         filename, ftype = dialog.getSaveFileName(caption='Save normals',
                                                  dir=ddir,
@@ -320,7 +325,7 @@ class WeatherAvgGraph(DialogWindow):
         defaultname = 'Weather%s_%s' % (time_frame.capitalize(), staname)
 
         ddir = os.path.join(self.save_fig_dir, defaultname)
-        dialog = QtGui.QFileDialog()
+        dialog = QFileDialog()
         dialog.setConfirmOverwrite(True)
 
         filename, ftype = dialog.getSaveFileName(
@@ -351,7 +356,7 @@ class WeatherAvgGraph(DialogWindow):
                      'Rain (mm)', 'Snow (mm)', 'Ptot (mm)',
                      'PET (mm)'])
 
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
         startdate = '%02d/%02d/%d' % (self.wxdset['Day'][0],
                                       self.wxdset['Month'][0],
@@ -414,7 +419,7 @@ class WeatherAvgGraph(DialogWindow):
                 writer.writerows(fcontent)
             f.close()
 
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -860,7 +865,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class GridWeatherNormals(QtGui.QTableWidget):
+class GridWeatherNormals(QTableWidget):
 
     def __init__(self, parent=None):
         super(GridWeatherNormals, self).__init__(parent)
@@ -895,16 +900,16 @@ class GridWeatherNormals(QtGui.QTableWidget):
         for row, key in enumerate(['Tmax', 'Tmin', 'Tavg']):
             # Months
             for col in range(12):
-                item = QtGui.QTableWidgetItem('%0.1f' % NORMALS[key][col])
-                item.setFlags(~QtCore.Qt.ItemIsEditable)
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                item = QTableWidgetItem('%0.1f' % NORMALS[key][col])
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                item.setTextAlignment(item.flags() & Qt.AlignCenter)
                 self.setItem(row, col, item)
 
             # Year
             yearVal = np.mean(NORMALS[key])
-            item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item = QTableWidgetItem('%0.1f' % yearVal)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, 12, item)
 
         # ---- Rain ----
@@ -912,16 +917,16 @@ class GridWeatherNormals(QtGui.QTableWidget):
         row = 3
         # Months
         for col in range(12):
-            item = QtGui.QTableWidgetItem('%0.1f' % NORMALS['Rain'][col])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item = QTableWidgetItem('%0.1f' % NORMALS['Rain'][col])
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
 
         # Year
         yearVal = np.sum(NORMALS['Rain'])
-        item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
-        item.setFlags(~QtCore.Qt.ItemIsEditable)
-        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        item = QTableWidgetItem('%0.1f' % yearVal)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
         # ---- Snow ----
@@ -930,16 +935,16 @@ class GridWeatherNormals(QtGui.QTableWidget):
         # Months
         for col in range(12):
             snow4cell = NORMALS['Ptot'][col] - NORMALS['Rain'][col]
-            item = QtGui.QTableWidgetItem('%0.1f' % snow4cell)
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item = QTableWidgetItem('%0.1f' % snow4cell)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
 
         # Year
         yearVal = np.sum(NORMALS['Ptot'] - NORMALS['Rain'])
-        item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
-        item.setFlags(~QtCore.Qt.ItemIsEditable)
-        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        item = QTableWidgetItem('%0.1f' % yearVal)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
         # ---- Total Precip ----
@@ -947,37 +952,37 @@ class GridWeatherNormals(QtGui.QTableWidget):
         row = 5
         # Months
         for col in range(12):
-            item = QtGui.QTableWidgetItem('%0.1f' % NORMALS['Ptot'][col])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item = QTableWidgetItem('%0.1f' % NORMALS['Ptot'][col])
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
         # Year
         yearVal = np.sum(NORMALS['Ptot'])
-        item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
-        item.setFlags(~QtCore.Qt.ItemIsEditable)
-        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        item = QTableWidgetItem('%0.1f' % yearVal)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
         # ---- ETP ----
 
         row = 6
         for col in range(12):
-            item = QtGui.QTableWidgetItem('%0.1f' % NORMALS['PET'][col])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item = QTableWidgetItem('%0.1f' % NORMALS['PET'][col])
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
         # Year
         yearVal = np.sum(NORMALS['PET'])
-        item = QtGui.QTableWidgetItem('%0.1f' % yearVal)
-        item.setFlags(~QtCore.Qt.ItemIsEditable)
-        item.setTextAlignment(QtCore.Qt.AlignCenter)
+        item = QTableWidgetItem('%0.1f' % yearVal)
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
         self.resizeColumnsToContents()
 
 if __name__ == '__main__':
     from meteo.weather_reader import WXDataFrame
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     ft = app.font()
     ft.setFamily('Segoe UI')

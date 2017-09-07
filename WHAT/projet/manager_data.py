@@ -28,37 +28,31 @@ from datetime import datetime
 
 # Third party imports :
 
-from PySide import QtGui, QtCore
+from PyQt5.QtCore import Qt, QCoreApplication
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
+                             QLabel, QMessageBox, QLineEdit, QPushButton,
+                             QFileDialog, QApplication)
 
 # Local imports :
 
-for i in range(2):
-    try:
-        from common import IconDB, QToolButtonSmall
-        import common.widgets as myqt
-        from hydrograph4 import LatLong2Dist
-        import projet.reader_waterlvl as wlrd
-        import meteo.weather_reader as wxrd
-        break
-    except ImportError:  # to run this module standalone
-        import sys
-        import platform
-        from os.path import dirname, realpath, basename
-        print('Running module %s as a script...' % basename(__file__))
-        sys.path.append(dirname(dirname(realpath(__file__))))
-
+from common import IconDB, QToolButtonSmall
+import common.widgets as myqt
+from hydrograph4 import LatLong2Dist
+import projet.reader_waterlvl as wlrd
+import meteo.weather_reader as wxrd
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class DataManager(QtGui.QWidget):
+class DataManager(QWidget):
 
-    wldsetChanged = QtCore.Signal(dict)
-    wxdsetChanged = QtCore.Signal(dict)
+    wldsetChanged = QSignal(dict)
+    wxdsetChanged = QSignal(dict)
 
     def __init__(self, parent=None, projet=None, pm=None):
         super(DataManager, self).__init__(parent)
-        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(Qt.Window)
         self.setWindowIcon(IconDB().master)
         self.setMinimumWidth(250)
 
@@ -79,7 +73,7 @@ class DataManager(QtGui.QWidget):
 
         # -------------------------------------------- water level dataset ----
 
-        self.wldsets_cbox = QtGui.QComboBox()
+        self.wldsets_cbox = QComboBox()
         self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
@@ -93,7 +87,7 @@ class DataManager(QtGui.QWidget):
 
         # ---- toolbar ----
 
-        wltb = QtGui.QGridLayout()
+        wltb = QGridLayout()
         wltb.setContentsMargins(0, 0, 0, 0)
 
         widgets = [self.wldsets_cbox, btn_load_wl, btn_del_wldset]
@@ -102,13 +96,13 @@ class DataManager(QtGui.QWidget):
 
         # ---- info box -----
 
-        self.well_info_widget = QtGui.QTextEdit()
+        self.well_info_widget = QTextEdit()
         self.well_info_widget.setReadOnly(True)
         self.well_info_widget.setFixedHeight(100)
 
         # ------------------------------------------------ weather dataset ----
 
-        self.wxdsets_cbox = QtGui.QComboBox()
+        self.wxdsets_cbox = QComboBox()
         self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
         self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
 
@@ -129,7 +123,7 @@ class DataManager(QtGui.QWidget):
 
         # ---- toolbar ----
 
-        wxtb = QtGui.QGridLayout()
+        wxtb = QGridLayout()
         wxtb.setContentsMargins(0, 0, 0, 0)
 
         widgets = [self.wxdsets_cbox, btn_load_meteo, btn_del_wxdset,
@@ -140,21 +134,21 @@ class DataManager(QtGui.QWidget):
 
         # ---- info box -----
 
-        self.meteo_info_widget = QtGui.QTextEdit()
+        self.meteo_info_widget = QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
         self.meteo_info_widget.setFixedHeight(100)
 
         # ---------------------------------------------------- Main Layout ----
 
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
 
-        layout.addWidget(QtGui.QLabel('Water Level Dataset :'), 1, 0)
+        layout.addWidget(QLabel('Water Level Dataset :'), 1, 0)
         layout.addLayout(wltb, 2, 0)
         layout.addWidget(self.well_info_widget, 3, 0)
 
         layout.setRowMinimumHeight(4, 10)
 
-        layout.addWidget(QtGui.QLabel('Weather Dataset :'), 5, 0)
+        layout.addWidget(QLabel('Weather Dataset :'), 5, 0)
         layout.addLayout(wxtb, 6, 0)
         layout.addWidget(self.meteo_info_widget, 7, 0)
 
@@ -197,8 +191,8 @@ class DataManager(QtGui.QWidget):
     # ========================================================== utilities ====
 
     def emit_warning(self, msg):
-        btn = QtGui.QMessageBox.Ok
-        QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
+        btn = QMessageBox.Ok
+        QMessageBox.warning(self, 'Warning', msg, btn)
 
     # ========================================================= WL Dataset ====
 
@@ -213,8 +207,8 @@ class DataManager(QtGui.QWidget):
         if self.projet is None:
             msg = ('Please first select a valid WHAT project or '
                    'create a new one.')
-            btn = QtGui.QMessageBox.Ok
-            QtGui.QMessageBox.warning(self, 'Create dataset', msg, btn)
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
         else:
             self.new_waterlvl_win.show()
@@ -264,11 +258,11 @@ class DataManager(QtGui.QWidget):
             msg = ('Do you want to delete dataset <i>%s</i>? ' +
                    'All data will be deleted from the project database, ' +
                    'but the original data files will be preserved') % name
-            reply = QtGui.QMessageBox.question(
+            reply = QMessageBox.question(
                 self, 'Delete current dataset', msg,
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+                QMessageBox.Yes | QMessageBox.No)
 
-            if reply == QtGui.QMessageBox.No:
+            if reply == QMessageBox.No:
                 return
 
             self.projet.del_wldset(name)
@@ -289,8 +283,8 @@ class DataManager(QtGui.QWidget):
         if self.projet is None:
             msg = ('Please first select a valid WHAT project or '
                    'create a new one.')
-            btn = QtGui.QMessageBox.Ok
-            QtGui.QMessageBox.warning(self, 'Create dataset', msg, btn)
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
         else:
             self.new_weather_win.show()
@@ -335,11 +329,11 @@ class DataManager(QtGui.QWidget):
             msg = ('Do you want to delete weather dataset <i>%s</i>? ' +
                    'All data will be deleted from the project database, ' +
                    'but the original data files will be preserved') % name
-            reply = QtGui.QMessageBox.question(
+            reply = QMessageBox.question(
                 self, 'Delete current dataset', msg,
-                QtGui.QMessageBox.Yes | QtGui.QMessageBox.No)
+                QMessageBox.Yes | QMessageBox.No)
 
-            if reply == QtGui.QMessageBox.No:
+            if reply == QMessageBox.No:
                 return
 
             self.projet.del_wxdset(name)
@@ -390,8 +384,8 @@ class DataManager(QtGui.QWidget):
 
 
 class NewDataset(myqt.DialogWindow):
-    ConsoleSignal = QtCore.Signal(str)
-    newDatasetCreated = QtCore.Signal(str)
+    ConsoleSignal = QSignal(str)
+    newDatasetCreated = QSignal(str)
 
     def __init__(self, dsetname, parent=None, projet=None):
         super(NewDataset, self).__init__(parent, resizable=False)
@@ -430,7 +424,7 @@ class NewDataset(myqt.DialogWindow):
 
         # ------------------------------------------------- Dataset  ------
 
-        self.directory = QtGui.QLineEdit()
+        self.directory = QLineEdit()
         self.directory.setReadOnly(True)
         self.directory.setMinimumWidth(400)
 
@@ -441,18 +435,18 @@ class NewDataset(myqt.DialogWindow):
         msg = ('<font color=red size=2><i>Error : %s data file is '
                'not formatted correctly.</i></font>'
                ) % self._dsetname.capitalize()
-        self._msg = QtGui.QLabel(msg)
+        self._msg = QLabel(msg)
         self._msg.setVisible(False)
 
         # ---- layout ----
 
-        grp_dset = QtGui.QGridLayout()
+        grp_dset = QGridLayout()
 
         row = 0
         text = 'Select a valid %s dataset file :' % self._dsetname.lower()
-        grp_dset.addWidget(QtGui.QLabel(text), row, 0, 1, 3)
+        grp_dset.addWidget(QLabel(text), row, 0, 1, 3)
         row += 1
-        grp_dset.addWidget(QtGui.QLabel('File name :'), row, 0)
+        grp_dset.addWidget(QLabel('File name :'), row, 0)
         grp_dset.addWidget(self.directory, row, 1, 1, 2)
         grp_dset.addWidget(btn_browse, row, 3)
         row += 1
@@ -468,22 +462,22 @@ class NewDataset(myqt.DialogWindow):
 
         # --------------------------------------------------- Toolbar ----
 
-        self._name = QtGui.QLineEdit()
+        self._name = QLineEdit()
 
-        self.btn_ok = QtGui.QPushButton(' Ok')
+        self.btn_ok = QPushButton(' Ok')
         self.btn_ok.setMinimumWidth(100)
         self.btn_ok.setEnabled(False)
         self.btn_ok.clicked.connect(self.accept_dataset)
 
-        btn_cancel = QtGui.QPushButton(' Cancel')
+        btn_cancel = QPushButton(' Cancel')
         btn_cancel.setMinimumWidth(100)
         btn_cancel.clicked.connect(self.close)
 
         # ---- layout ----
 
-        toolbar = QtGui.QGridLayout()
+        toolbar = QGridLayout()
 
-        toolbar.addWidget(QtGui.QLabel('Dataset name :'), 0, 0)
+        toolbar.addWidget(QLabel('Dataset name :'), 0, 0)
         toolbar.addWidget(self._name, 0, 1)
 
         toolbar.addWidget(self.btn_ok, 0, 3)
@@ -495,7 +489,7 @@ class NewDataset(myqt.DialogWindow):
 
     # ----------------------------------------------------------- Main ----
 
-        layout = QtGui.QGridLayout(self)
+        layout = QGridLayout(self)
 
         layout.addLayout(grp_dset, 0, 0)
         layout.addWidget(infogrp, 1, 0)
@@ -538,11 +532,11 @@ class NewWaterLvl(NewDataset):
 
         warning = ('<i>Warning : Water levels must be in meter below '
                    'ground surface (mbgs)</i>')
-        self.layout().addWidget(QtGui.QLabel(warning), 4, 0)
+        self.layout().addWidget(QLabel(warning), 4, 0)
 
     def __initInfoGroup__(self):
-        self._well = QtGui.QLineEdit()
-        self._well.setAlignment(QtCore.Qt.AlignCenter)
+        self._well = QLineEdit()
+        self._well.setAlignment(Qt.AlignCenter)
 
         self._lat = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
         self._lat.setRange(-180, 180)
@@ -553,8 +547,8 @@ class NewWaterLvl(NewDataset):
         self._alt = myqt.QDoubleSpinBox(0, 3, 0.1, ' m')
         self._alt.setRange(-9999, 9999)
 
-        self._mun = QtGui.QLineEdit()
-        self._mun.setAlignment(QtCore.Qt.AlignCenter)
+        self._mun = QLineEdit()
+        self._mun.setAlignment(Qt.AlignCenter)
 
         # ---- layout ----
 
@@ -563,19 +557,19 @@ class NewWaterLvl(NewDataset):
         self.grp_well.setEnabled(False)
 
         row = 0
-        self.grp_well.addWidget(QtGui.QLabel('Well ID :'), row, 0)
+        self.grp_well.addWidget(QLabel('Well ID :'), row, 0)
         self.grp_well.addWidget(self._well, row, 1)
         row += 1
-        self.grp_well.addWidget(QtGui.QLabel('Latitude :'), row, 0)
+        self.grp_well.addWidget(QLabel('Latitude :'), row, 0)
         self.grp_well.addWidget(self._lat, row, 1)
         row += 1
-        self.grp_well.addWidget(QtGui.QLabel('Longitude :'), row, 0)
+        self.grp_well.addWidget(QLabel('Longitude :'), row, 0)
         self.grp_well.addWidget(self._lon, row, 1)
         row += 1
-        self.grp_well.addWidget(QtGui.QLabel('Altitude :'), row, 0)
+        self.grp_well.addWidget(QLabel('Altitude :'), row, 0)
         self.grp_well.addWidget(self._alt, row, 1)
         row += 1
-        self.grp_well.addWidget(QtGui.QLabel('Municipality :'), row, 0)
+        self.grp_well.addWidget(QLabel('Municipality :'), row, 0)
         self.grp_well.addWidget(self._mun, row, 1)
 
         self.grp_well.layout().setColumnStretch(2, 100)
@@ -608,12 +602,12 @@ class NewWaterLvl(NewDataset):
     # =========================================================================
 
     def select_dataset(self):
-        filename, _ = QtGui.QFileDialog.getOpenFileName(
+        filename, _ = QFileDialog.getOpenFileName(
             self, 'Select a valid water level data file',
             self.workdir, '(*.xls *.xlsx)')
 
         for i in range(5):
-            QtCore.QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
 
         if filename:
             self.load_dataset(filename)
@@ -631,19 +625,19 @@ class NewWaterLvl(NewDataset):
 
         # Load Data :
 
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
         msg = 'Loading water level data...'
         print(msg)
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         for i in range(5):
-            QtCore.QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
 
         self._dataset = wlrd.load_excel_datafile(filename)
 
         # Update GUI :
 
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
         self.directory.setText(filename)
         if self._dataset is not None:
@@ -673,17 +667,17 @@ class NewWaterLvl(NewDataset):
     def accept_dataset(self):
         if self.name == '':
             msg = 'Please enter a valid name for the dataset.'
-            btn = QtGui.QMessageBox.Ok
-            QtGui.QMessageBox.warning(self, 'Save dataset', msg, btn)
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Save dataset', msg, btn)
             return
 
         if self.name in self.projet.wldsets:
             msg = ('The dataset <i>%s</i> already exists.'
                    ' Do you want tho replace the existing dataset?'
                    ' All data will be lost.') % self.name
-            btn = QtGui.QMessageBox.Yes | QtGui.QMessageBox.No
-            reply = QtGui.QMessageBox.question(self, 'Save dataset', msg, btn)
-            if reply == QtGui.QMessageBox.No:
+            btn = QMessageBox.Yes | QMessageBox.No
+            reply = QMessageBox.question(self, 'Save dataset', msg, btn)
+            if reply == QMessageBox.No:
                 return
             else:
                 self.projet.del_wldset(self.name)
@@ -718,19 +712,19 @@ class NewWaterLvl(NewDataset):
 
 class NewWXDataDialog(NewDataset):
 
-    ConsoleSignal = QtCore.Signal(str)
-    newDatasetCreated = QtCore.Signal(str)
+    ConsoleSignal = QSignal(str)
+    newDatasetCreated = QSignal(str)
 
     def __init__(self, parent=None, projet=None):
         super(NewWXDataDialog, self).__init__('daily weather', parent, projet)
 
     def __initInfoGroup__(self):
 
-        self._staname = QtGui.QLineEdit()
-        self._staname.setAlignment(QtCore.Qt.AlignCenter)
+        self._staname = QLineEdit()
+        self._staname.setAlignment(Qt.AlignCenter)
 
-        self._staID = QtGui.QLineEdit()
-        self._staID.setAlignment(QtCore.Qt.AlignCenter)
+        self._staID = QLineEdit()
+        self._staID.setAlignment(Qt.AlignCenter)
 
         self._lat = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
         self._lat.setRange(-180, 180)
@@ -740,8 +734,8 @@ class NewWXDataDialog(NewDataset):
 
         self._alt = myqt.QDoubleSpinBox(0, 3, 0.1, ' m')
 
-        self._prov = QtGui.QLineEdit()
-        self._prov.setAlignment(QtCore.Qt.AlignCenter)
+        self._prov = QLineEdit()
+        self._prov.setAlignment(Qt.AlignCenter)
 
         # ---- layout ----
 
@@ -756,7 +750,7 @@ class NewWXDataDialog(NewDataset):
 
         for label, widget in zip(labels, widgets):
             row = self.grp_sta.rowCount()
-            self.grp_sta.addWidget(QtGui.QLabel(label), row, 0)
+            self.grp_sta.addWidget(QLabel(label), row, 0)
             self.grp_sta.addWidget(widget, row, 1)
 
         self.grp_sta.layout().setColumnStretch(2, 100)
@@ -793,12 +787,12 @@ class NewWXDataDialog(NewDataset):
     # =========================================================================
 
     def select_dataset(self):
-        filename, _ = QtGui.QFileDialog.getOpenFileName(
+        filename, _ = QFileDialog.getOpenFileName(
             self, 'Select a valid weather level data file',
             self.workdir, '(*.out)')
 
         for i in range(5):
-            QtCore.QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
 
         if filename:
             self.load_dataset(filename)
@@ -816,19 +810,19 @@ class NewWXDataDialog(NewDataset):
 
         # Load Data :
 
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
         msg = 'Loading water level data...'
         print(msg)
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         for i in range(5):
-            QtCore.QCoreApplication.processEvents()
+            QCoreApplication.processEvents()
 
         self._dataset = wxrd.WXDataFrame(filename)
 
         # Update GUI :
 
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
         self.directory.setText(filename)
         if self._dataset is not None:
@@ -859,17 +853,17 @@ class NewWXDataDialog(NewDataset):
     def accept_dataset(self):
         if self.name == '':
             msg = 'Please enter a valid name for the dataset.'
-            btn = QtGui.QMessageBox.Ok
-            QtGui.QMessageBox.warning(self, 'Save dataset', msg, btn)
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Save dataset', msg, btn)
             return
 
         if self.name in self.projet.wxdsets:
             msg = ('The dataset <i>%s</i> already exists.'
                    ' Do you want tho replace the existing dataset?'
                    ' All data will be lost.') % self.name
-            btn = QtGui.QMessageBox.Yes | QtGui.QMessageBox.No
-            reply = QtGui.QMessageBox.question(self, 'Save dataset', msg, btn)
-            if reply == QtGui.QMessageBox.No:
+            btn = QMessageBox.Yes | QMessageBox.No
+            reply = QMessageBox.question(self, 'Save dataset', msg, btn)
+            if reply == QMessageBox.No:
                 return
             else:
                 self.projet.del_wxdset(self.name)
@@ -912,7 +906,7 @@ if __name__ == '__main__':
          'BRF MontEst.what')
     p = ProjetReader(f)
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     ft = app.font()
     ft.setFamily('Segoe UI')

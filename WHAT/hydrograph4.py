@@ -37,8 +37,6 @@ import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 #from matplotlib import rc
 
-from PySide import QtGui
-
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
@@ -1372,11 +1370,13 @@ def LatLong2Dist(LAT1, LON1, LAT2, LON2):
 
 if __name__ == '__main__':  # =================================================
 
+    from PyQt5.QtWidgets import QApplication
     import sys
     from mplFigViewer3 import ImageViewer
+    import matplotlib.pyplot as plt
     plt.ioff()
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     # ------------------------------------------------------------ load data --
 

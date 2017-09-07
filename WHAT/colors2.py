@@ -29,7 +29,11 @@ from collections import OrderedDict
 
 # Third party imports :
 
-from PySide import QtCore, QtGui
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QWidget, QPushButton, QGridLayout, QLabel,
+                             QToolButton)
+
 import numpy as np
 
 # Local imports :
@@ -107,13 +111,13 @@ class ColorsReader(object):
 
 class ColorsSetupWin(myqt.DialogWindow):
 
-    newColorSetupSent = QtCore.Signal(bool)
+    newColorSetupSent = QSignal(bool)
 
     def __init__(self, parent=None):
         super(ColorsSetupWin, self).__init__(parent)
 
         self.setWindowTitle('Colors Palette Setup')
-        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(Qt.Window)
 
         self.__initUI__()
 
@@ -121,18 +125,18 @@ class ColorsSetupWin(myqt.DialogWindow):
 
         # ---- Toolbar ----
 
-        toolbar_widget = QtGui.QWidget()
+        toolbar_widget = QWidget()
 
-        btn_apply = QtGui.QPushButton('Apply')
+        btn_apply = QPushButton('Apply')
         btn_apply.clicked.connect(self.btn_apply_isClicked)
-        btn_cancel = QtGui.QPushButton('Cancel')
+        btn_cancel = QPushButton('Cancel')
         btn_cancel.clicked.connect(self.close)
-        btn_OK = QtGui.QPushButton('OK')
+        btn_OK = QPushButton('OK')
         btn_OK.clicked.connect(self.btn_OK_isClicked)
-        btn_reset = QtGui.QPushButton('Reset Defaults')
+        btn_reset = QPushButton('Reset Defaults')
         btn_reset.clicked.connect(self.reset_defaults)
 
-        toolbar_layout = QtGui.QGridLayout()
+        toolbar_layout = QGridLayout()
         toolbar_layout.addWidget(btn_reset, 1, 0, 1, 3)
         toolbar_layout.addWidget(btn_OK, 2, 0)
         toolbar_layout.addWidget(btn_cancel, 2, 1)
@@ -148,16 +152,16 @@ class ColorsSetupWin(myqt.DialogWindow):
         colorsDB = ColorsReader()
         colorsDB.load_colors_db()
 
-        colorGrid_widget = QtGui.QWidget()
+        colorGrid_widget = QWidget()
 
-        self.colorGrid_layout = QtGui.QGridLayout()
+        self.colorGrid_layout = QGridLayout()
         for i, key in enumerate(colorsDB.keys()):
             self.colorGrid_layout.addWidget(
-                QtGui.QLabel('%s :' % colorsDB.labels[key]), i, 0)
+                QLabel('%s :' % colorsDB.labels[key]), i, 0)
 
-            btn = QtGui.QToolButton()
+            btn = QToolButton()
             btn.setAutoRaise(True)
-            btn.setFocusPolicy(QtCore.Qt.FocusPolicy.NoFocus)
+            btn.setFocusPolicy(Qt.NoFocus)
             btn.clicked.connect(self.pick_color)
 
             self.colorGrid_layout.addWidget(btn, i, 3)
@@ -168,7 +172,7 @@ class ColorsSetupWin(myqt.DialogWindow):
 
         # ---- Main Layout ----
 
-        main_layout = QtGui.QGridLayout()
+        main_layout = QGridLayout()
         main_layout.addWidget(colorGrid_widget, 0, 0)
         main_layout.addWidget(toolbar_widget, 1, 0)
         self.setLayout(main_layout)
