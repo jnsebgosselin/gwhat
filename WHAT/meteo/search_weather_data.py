@@ -31,16 +31,18 @@ from datetime import datetime
 import sys
 import csv
 import time
+import os
 
 # Third party imports :
 
+import xlsxwriter
 import numpy as np
 from PyQt5.QtCore import QObject, pyqtSignal, Qt, QPoint, QEvent, QThread
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QTableWidget, QCheckBox,
                              QTabWidget, QSpinBox, QPushButton, QDesktopWidget,
                              QApplication, QHeaderView, QTableWidgetItem,
-                             QStyle)
+                             QStyle, QFileDialog)
 
 # Local imports :
 
@@ -161,7 +163,7 @@ class StationFinder(QObject):
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 print(msg)
                 self.searchFinished.emit(staList)
-                return staList
+                return
 
             # Go backward from indx_e and find where the number starts to
             # fetch the total number of weather station found :
@@ -649,31 +651,33 @@ class Search4Stations(QWidget):
 
         # -------------------------------------------------------- TOOLBAR ----
 
-        self.btn_search = QPushButton('Search Stations')
+        self.btn_search = QPushButton('Search')
         self.btn_search.setIcon(IconDB().search)
         self.btn_search.setIconSize(IconDB().iconSize2)
         self.btn_search.setToolTip('Search for weather stations in the online '
                                    'CDCD with the criteria given above.')
         self.btn_search.clicked.connect(self.btn_search_isClicked)
 
-        btn_addSta = QPushButton('Add Stations')
+        btn_addSta = QPushButton('Add')
         btn_addSta.setIcon(IconDB().add2list)
         btn_addSta.setIconSize(IconDB().iconSize2)
         btn_addSta.setToolTip('Add selected found weather stations to the '
                               'current list of weather stations.')
         btn_addSta.clicked.connect(self.btn_addSta_isClicked)
 
+        btn_save = QPushButton('Save')
+        btn_save.setIcon(IconDB().save)
+        btn_save.setIconSize(IconDB().iconSize2)
+        btn_save.setToolTip('Save current found stations info in a csv file.')
+        btn_save.clicked.connect(self.btn_save_isClicked)
+
         toolbar_grid = QGridLayout()
         toolbar_widg = QWidget()
 
-        row = 0
-        col = 1
-        toolbar_grid.addWidget(self.btn_search, row, col)
-        col += 1
-        toolbar_grid.addWidget(btn_addSta, row, col)
+        for col, btn in enumerate([self.btn_search, btn_addSta, btn_save]):
+            toolbar_grid.addWidget(btn, 0, col+1)
 
-        toolbar_grid.setColumnStretch(col+1, 100)
-        toolbar_grid.setColumnStretch(0, 100)
+        toolbar_grid.setColumnStretch(toolbar_grid.columnCount(), 100)
         toolbar_grid.setSpacing(5)
         toolbar_grid.setContentsMargins(0, 30, 0, 0)  # (L, T, R, B)
 
@@ -769,6 +773,25 @@ class Search4Stations(QWidget):
 
     # -------------------------------------------------------------------------
 
+    def btn_save_isClicked(self):
+        dialog = QFileDialog()
+        ddir = os.getcwd()
+        filename, ftype = dialog.getSaveFileName(
+                self, 'Save normals', ddir, '*.xlsx;;*.xls;;*.csv')
+
+        station_list = self.station_table.get_staList()
+        station_list.insert(0, db.FileHeaders().weather_stations[0])
+
+        if ftype in ['*.xlsx', '*.xls']:
+            wb = xlsxwriter.Workbook(filename)
+            ws = wb.add_worksheet()
+            for i, row in enumerate(station_list):
+                ws.write_row(i, 0, row)
+        elif ftype == '*.csv':
+            with open(filename, 'w', encoding='utf8')as f:
+                writer = csv.writer(f, delimiter=',', lineterminator='\n')
+                writer.writerows(station_list)
+
     def btn_addSta_isClicked(self):
 
         rows = self.station_table.get_checked_rows()
@@ -824,16 +847,20 @@ class Search4Stations(QWidget):
         waittime = 0
         while self.thread.isRunning():
             print('Waiting for the finder thread to close.')
-            time.sleep(1)
-            waittime += 1
+            time.sleep(0.1)
+            waittime += 0.1
             if waittime > 15:
                 msg = ('This function is not working as intended. '
                        'Please report a bug.')
                 print(msg)
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 return
+
+        # ---- Reset the UI ----
+
         self.finder.stop_searching = False
         self.btn_search.setEnabled(True)
+        self.btn_search.setIcon(IconDB().search)
         self.year_widg.setEnabled(True)
         self.tab_widg.setEnabled(True)
 
@@ -1159,6 +1186,11 @@ class WeatherStationDisplayTable(QTableWidget):
         with open(filename, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(staList)
+
+    def get_staList(self):
+        rows = range(self.rowCount())
+        station_list = self.get_content4rows(rows)
+        return station_list
 
 
 def decdeg2dms(dd):
