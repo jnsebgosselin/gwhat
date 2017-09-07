@@ -19,30 +19,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from PySide import QtGui, QtCore
+from PyQt5.QtCore import pyqtProperty
+from PyQt5.QtCore import Qt, QDate
+from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
+                             QApplication, QDialog, QSpinBox, QAbstractSpinBox,
+                             QGridLayout, QDoubleSpinBox, QFrame, QWidget)
+
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 import numpy as np
 import matplotlib as mpl
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-mpl.rcParams['backend.qt4'] = 'PySide'
-mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
-
-
-if __name__ == '__main__':
-    print('Running module as a standalone script...')
-    import sys
-    from os.path import dirname, realpath
-    root = dirname(dirname(realpath(__file__)))
-    sys.path.append(root)
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 import common.widgets as myqt
 from brf_mod.kgs_plot import BRFFigure
 from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
 import brf_mod as bm
 
+mpl.use('Qt5Agg')
+mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
+
 
 # =============================================================================
+
 
 class BRFManager(myqt.QFrameLayout):
     def __init__(self, wldset=None, parent=None):
@@ -55,14 +54,14 @@ class BRFManager(myqt.QFrameLayout):
         self.setContentsMargins(10, 10, 10, 10)
 
         self._bplag = {}
-        self._bplag['label'] = QtGui.QLabel('BP Lags Nbr:')
+        self._bplag['label'] = QLabel('BP Lags Nbr:')
         self._bplag['widget'] = myqt.QDoubleSpinBox(100, 0)
         self._bplag['widget'].setRange(1, 9999)
         self._bplag['widget'].setValue(300)
         self._bplag['widget'].setKeyboardTracking(True)
 
         self._etlag = {}
-        self._etlag['label'] = QtGui.QLabel('ET Lags Nbr:')
+        self._etlag['label'] = QLabel('ET Lags Nbr:')
         self._etlag['widget'] = myqt.QDoubleSpinBox(300, 0)
         self._etlag['widget'].setRange(-1, 9999)
         self._etlag['widget'].setValue(300)
@@ -70,11 +69,11 @@ class BRFManager(myqt.QFrameLayout):
 
         # ---- BRF Data Range ----
 
-        self._datastart = QtGui.QDateTimeEdit()
+        self._datastart = QDateTimeEdit()
         self._datastart.setCalendarPopup(True)
         self._datastart.setDisplayFormat('dd/MM/yyyy')
 
-        self._dataend = QtGui.QDateTimeEdit()
+        self._dataend = QDateTimeEdit()
         self._dataend.setCalendarPopup(True)
         self._dataend.setDisplayFormat('dd/MM/yyyy')
 
@@ -83,17 +82,17 @@ class BRFManager(myqt.QFrameLayout):
 
         # ---- Detrend and Correct Options ----
 
-        self._detrend = QtGui.QCheckBox('Detrend')
-        self._detrend.setCheckState(QtCore.Qt.Checked)
+        self._detrend = QCheckBox('Detrend')
+        self._detrend.setCheckState(Qt.Checked)
 
-        self._correct = QtGui.QCheckBox('Correct WL')
+        self._correct = QCheckBox('Correct WL')
         self._correct.setEnabled(False)
 
         # -------------------------------------------------------- Toolbar ----
 
-        btn_comp = QtGui.QPushButton('Compute BRF')
+        btn_comp = QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
-        btn_comp.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_comp.setFocusPolicy(Qt.NoFocus)
 
         btn_show = QToolButtonSmall(IconDB().search)
         btn_show.clicked.connect(self.viewer.show)
@@ -118,11 +117,11 @@ class BRFManager(myqt.QFrameLayout):
         row += 1
         self.setRowMinimumHeight(row, 15)
         row += 1
-        self.addWidget(QtGui.QLabel('BRF Start :'), row, 0)
+        self.addWidget(QLabel('BRF Start :'), row, 0)
         self.addWidget(self._datastart, row, 1)
         self.addWidget(btn_seldata, row, 2)
         row += 1
-        self.addWidget(QtGui.QLabel('BRF End :'), row, 0)
+        self.addWidget(QLabel('BRF End :'), row, 0)
         self.addWidget(self._dataend, row, 1)
         row += 1
         self.setRowMinimumHeight(row, 15)
@@ -198,11 +197,11 @@ class BRFManager(myqt.QFrameLayout):
 
     def set_datarange(self, times):
         date_start = xldate_as_tuple(times[0], 0)
-        date_start = QtCore.QDate(date_start[0], date_start[1], date_start[2])
+        date_start = QDate(date_start[0], date_start[1], date_start[2])
         self._datastart.setDate(date_start)
 
         date_end = xldate_as_tuple(times[1], 0)
-        date_end = QtCore.QDate(date_end[0], date_end[1], date_end[2])
+        date_end = QDate(date_end[0], date_end[1], date_end[2])
         self._dataend.setDate(date_end)
 
         return date_start, date_end
@@ -210,7 +209,7 @@ class BRFManager(myqt.QFrameLayout):
     # =========================================================================
 
     def calc_brf(self):
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         print('calculating BRF')
         well = self.wldset['Well']
 
@@ -251,7 +250,7 @@ class BRFManager(myqt.QFrameLayout):
         msg = 'Not enough data. Try enlarging the selected period'
         msg += ' or reduce the number of BP and ET lags.'
         if lagBP >= len(time) or lagET >= len(time):
-            QtGui.QApplication.restoreOverrideCursor()
+            QApplication.restoreOverrideCursor()
             self.emit_warning(msg)
             return
 
@@ -268,9 +267,9 @@ class BRFManager(myqt.QFrameLayout):
             self.viewer.new_brf_added()
             self.viewer.show()
 
-            QtGui.QApplication.restoreOverrideCursor()
+            QApplication.restoreOverrideCursor()
         except:
-            QtGui.QApplication.restoreOverrideCursor()
+            QApplication.restoreOverrideCursor()
             self.emit_warning(msg)
             return
 
@@ -278,15 +277,15 @@ class BRFManager(myqt.QFrameLayout):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class BRFViewer(QtGui.QDialog):
+class BRFViewer(QWidget):
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
 
         self.setWindowTitle('BRF Viewer')
         self.setWindowIcon(IconDB().master)
-        self.setWindowFlags(QtCore.Qt.Window |
-                            QtCore.Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.Window |
+                            Qt.WindowCloseButtonHint)
 
         self.__initGUI__()
         self.set_wldset(wldset)
@@ -314,16 +313,16 @@ class BRFViewer(QtGui.QDialog):
         self.btn_next = QToolButtonNormal(IconDB().go_next)
         self.btn_next.clicked.connect(self.navigate_brf)
 
-        self.current_brf = QtGui.QSpinBox()
+        self.current_brf = QSpinBox()
         self.current_brf.setRange(0, 99)
-        self.current_brf.setAlignment(QtCore.Qt.AlignCenter)
-        self.current_brf.setButtonSymbols(QtGui.QAbstractSpinBox.NoButtons)
+        self.current_brf.setAlignment(Qt.AlignCenter)
+        self.current_brf.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.current_brf.setCorrectionMode(
-                QtGui.QAbstractSpinBox.CorrectToNearestValue)
+                QAbstractSpinBox.CorrectToNearestValue)
         self.current_brf.valueChanged.connect(self.navigate_brf)
         self.current_brf.setValue(0)
 
-        self.total_brf = QtGui.QLabel('/ 0')
+        self.total_brf = QLabel('/ 0')
 
         # ---- Layout ----
 
@@ -343,31 +342,31 @@ class BRFViewer(QtGui.QDialog):
 
         # -------------------------------------------------- Graph Options ----
 
-        self._errorbar = QtGui.QCheckBox('Show error bars')
-        self._errorbar.setCheckState(QtCore.Qt.Checked)
+        self._errorbar = QCheckBox('Show error bars')
+        self._errorbar.setCheckState(Qt.Checked)
         self._errorbar.stateChanged.connect(self.plot_brf)
 
-        self._drawline = QtGui.QCheckBox('Draw line')
-        self._drawline.setCheckState(QtCore.Qt.Unchecked)
+        self._drawline = QCheckBox('Draw line')
+        self._drawline.setCheckState(Qt.Unchecked)
         self._drawline.stateChanged.connect(self.plot_brf)
 
         self._markersize = {}
-        self._markersize['label'] = QtGui.QLabel('Marker size :')
-        self._markersize['widget'] = QtGui.QSpinBox()
+        self._markersize['label'] = QLabel('Marker size :')
+        self._markersize['widget'] = QSpinBox()
         self._markersize['widget'].setValue(5)
         self._markersize['widget'].setRange(0, 25)
         self._markersize['widget'].valueChanged.connect(self.plot_brf)
 
         # ---- axis limits ----
 
-        axlayout = QtGui.QGridLayout()
-        axlayout.addWidget(QtGui.QLabel('y-axis limits:'), 0, 0, 1, 2)
-        axlayout.addWidget(QtGui.QLabel('   Minimum :'), 1, 0)
-        axlayout.addWidget(QtGui.QLabel('   Maximum :'), 2, 0)
-        axlayout.addWidget(QtGui.QLabel('   Auto :'), 3, 0)
+        axlayout = QGridLayout()
+        axlayout.addWidget(QLabel('y-axis limits:'), 0, 0, 1, 2)
+        axlayout.addWidget(QLabel('   Minimum :'), 1, 0)
+        axlayout.addWidget(QLabel('   Maximum :'), 2, 0)
+        axlayout.addWidget(QLabel('   Auto :'), 3, 0)
 
         self._ylim = {}
-        self._ylim['min'] = QtGui.QDoubleSpinBox()
+        self._ylim['min'] = QDoubleSpinBox()
         self._ylim['min'].setValue(0)
         self._ylim['min'].setDecimals(1)
         self._ylim['min'].setSingleStep(0.1)
@@ -375,7 +374,7 @@ class BRFViewer(QtGui.QDialog):
         self._ylim['min'].setEnabled(True)
         self._ylim['min'].valueChanged.connect(self.plot_brf)
 
-        self._ylim['max'] = QtGui.QDoubleSpinBox()
+        self._ylim['max'] = QDoubleSpinBox()
         self._ylim['max'].setValue(1)
         self._ylim['max'].setDecimals(1)
         self._ylim['max'].setSingleStep(0.1)
@@ -383,8 +382,8 @@ class BRFViewer(QtGui.QDialog):
         self._ylim['max'].setEnabled(True)
         self._ylim['max'].valueChanged.connect(self.plot_brf)
 
-        self._ylim['auto'] = QtGui.QCheckBox('')
-        self._ylim['auto'].setCheckState(QtCore.Qt.Unchecked)
+        self._ylim['auto'] = QCheckBox('')
+        self._ylim['auto'].setCheckState(Qt.Unchecked)
         self._ylim['auto'].stateChanged.connect(self.xlimModeChanged)
 
         axlayout.addWidget(self._ylim['min'], 1, 1)
@@ -417,21 +416,21 @@ class BRFViewer(QtGui.QDialog):
 
         # ---------------------------------------------------------- Graph ----
 
-        self.fig_frame = QtGui.QFrame()
+        self.fig_frame = QFrame()
         self.fig_frame.setFrameStyle(StyleDB().frame)
         self.fig_frame.setObjectName("figframe")
         self.fig_frame.setStyleSheet("#figframe {background-color:white;}")
 
         self.brf_canvas = FigureCanvasQTAgg(BRFFigure())
 
-        fflay = QtGui.QGridLayout(self.fig_frame)
+        fflay = QGridLayout(self.fig_frame)
         fflay.setContentsMargins(0, 0, 0, 0)   # (left, top, right, bottom)
         fflay.addWidget(self.tbar, 1, 0)
         fflay.addWidget(self.brf_canvas, 0, 0)
 
         # ---------------------------------------------------- Main Layout ----
 
-        ml = QtGui.QGridLayout(self)
+        ml = QGridLayout(self)
 
         ml.addWidget(self.fig_frame, 0, 2)
         ml.addWidget(self.graph_pan, 0, 3)
@@ -520,28 +519,28 @@ class BRFViewer(QtGui.QDialog):
 
     @property
     def ymin(self):
-        if self._ylim['auto'].checkState() == QtCore.Qt.CheckState.Checked:
+        if self._ylim['auto'].checkState() == Qt.Checked:
             return None
         else:
             return self._ylim['min'].value()
 
     @property
     def ymax(self):
-        if self._ylim['auto'].checkState() == QtCore.Qt.CheckState.Checked:
+        if self._ylim['auto'].checkState() == Qt.Checked:
             return None
         else:
             return self._ylim['max'].value()
 
     @property
     def show_ebar(self):
-        if self._errorbar.checkState() == QtCore.Qt.CheckState.Checked:
+        if self._errorbar.checkState() == Qt.Checked:
             return True
         else:
             return False
 
     @property
     def draw_line(self):
-        if self._drawline.checkState() == QtCore.Qt.CheckState.Checked:
+        if self._drawline.checkState() == Qt.Checked:
             return True
         else:
             return False
@@ -589,18 +588,19 @@ class BRFViewer(QtGui.QDialog):
         self.setFixedSize(self.size())
 
         self.raise_()
-        if self.windowState() == QtCore.Qt.WindowMinimized:
+        if self.windowState() == Qt.WindowMinimized:
             # Window is minimised. Restore it.
-            self.setWindowState(QtCore.Qt.WindowNoState)
+            self.setWindowState(Qt.WindowNoState)
 
 if __name__ == "__main__":
     import projet.reader_projet as prd
+    import sys
     projet = prd.ProjetReader('C:/Users/jsgosselin/OneDrive/Research/'
                               'PostDoc - MDDELCC/Outils/BRF MontEst/'
                               'BRF MontEst.what')
-    wldset = projet.get_wldset('3030017')
+    wldset = projet.get_wldset(projet.wldsets[0])
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     ft = app.font()
     ft.setPointSize(11)

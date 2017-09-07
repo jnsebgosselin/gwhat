@@ -901,6 +901,7 @@ class NewWXDataDialog(NewDataset):
 
 if __name__ == '__main__':
     from reader_projet import ProjetReader
+    import sys
     f = ('C:/Users/jsgosselin/OneDrive/Research/'
          'PostDoc - MDDELCC/Outils/BRF MontEst/'
          'BRF MontEst.what')
