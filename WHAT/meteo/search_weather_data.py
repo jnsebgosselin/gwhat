@@ -30,6 +30,7 @@ except ImportError:
 from datetime import datetime
 import sys
 import csv
+import time
 
 # Third party imports :
 
@@ -69,7 +70,9 @@ class StationFinder(QObject):
         self.search_by = 'proximity'
         # options are: 'proximity' or 'province'
 
+        self.stop_searching = False
         self.isOffline = False
+        self.debug_mode = False
 
     def search_envirocan(self):
         """
@@ -89,7 +92,7 @@ class StationFinder(QObject):
 
         print('Searching weather station on www.http://climate.weather.gc.ca.')
 
-        Nmax = 100  # Number of results per page (maximum possible is 100)
+        Nmax = 100  # Number of results per page (maximu m possible is 100)
 
         staList = []
         # [station_name, station_id, start_year,
@@ -139,9 +142,11 @@ class StationFinder(QObject):
                 with urlopen(url) as f:
                     stnresults = f.read().decode('utf-8', 'replace')
 
-                # write downloaded content to local file for debugging purpose:
-                with open('url.txt', 'w') as local_file:
-                    local_file.write(stnresults)
+                if self.debug_mode:
+                    # write downloaded content to local file for
+                    # debugging purpose:
+                    with open('url.txt', 'w') as local_file:
+                        local_file.write(stnresults)
 
             # ---- Number of Stations Found ----
 
@@ -155,7 +160,7 @@ class StationFinder(QObject):
                 msg = 'No weather station found.'
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 print(msg)
-
+                self.searchFinished.emit(staList)
                 return staList
 
             # Go backward from indx_e and find where the number starts to
@@ -177,8 +182,11 @@ class StationFinder(QObject):
 
             staCount = 0  # global station counter
             for page in range(Npage):
-                print('Page :', page)
+                if self.stop_searching:
+                    self.searchFinished.emit(staList)
+                    return
 
+                print('Page :', page)
                 startRow = (Nmax * page) + 1
                 url4page = url + '&startRow=%d' % startRow
                 if self.isOffline:
@@ -269,8 +277,11 @@ class StationFinder(QObject):
 
                             # ---- Climate ID ----
 
-                            staInfo = self.get_staInfo(province,
-                                                       station_id)
+                            if self.stop_searching:
+                                self.searchFinished.emit(staList)
+                                return
+
+                            staInfo = self.get_staInfo(province, station_id)
                             climate_id = staInfo[5]
 
                             # ---- Send Signal to UI ----
@@ -279,7 +290,11 @@ class StationFinder(QObject):
                                             start_year, end_year, province,
                                             climate_id, station_proxim])
 
-                            self.newStationFound.emit(staList)
+                            if self.stop_searching:
+                                self.searchFinished.emit(staList)
+                                return staList
+                            else:
+                                self.newStationFound.emit(staList)
                         else:
                             print("Not adding %s (not enough data)"
                                   % station_name)
@@ -333,16 +348,18 @@ class StationFinder(QObject):
                "timeframe=2&Prov=%s&StationID=%s") % (Prov, StationID)
 
         if self.isOffline:
-            with open('urlsingle.txt', 'r') as f:
+            with open('urlsinglestation.txt', 'r') as f:
                 urlread = f.read()
+                time.sleep(1)
         else:
             f = urlopen(url)
             urlread = f.read().decode('utf-8')
 
-            # Write result in a local file for debugging purposes:
-
-            with open('urlsinglestation.txt', 'w') as local_file:
-                local_file.write(urlread)
+            if self.debug_mode:
+                # write downloaded content to local file for
+                # debugging purpose:
+                with open('urlsinglestation.txt', 'w') as local_file:
+                    local_file.write(urlread)
 
         # ---- Station Name ----
 
@@ -612,8 +629,8 @@ class Search4Stations(QWidget):
 
         # ---- maingrid ----
 
-        year_widg = QFrame()
-        year_widg.setFrameStyle(0)  # styleDB.frame
+        self.year_widg = QFrame()
+        self.year_widg.setFrameStyle(0)  # styleDB.frame
 
         year_grid = QGridLayout()
 
@@ -628,7 +645,7 @@ class Search4Stations(QWidget):
         year_grid.setRowStretch(0, 100)
         year_grid.setContentsMargins(15, 0, 15, 0)  # (L, T, R, B)
 
-        year_widg.setLayout(year_grid)
+        self.year_widg.setLayout(year_grid)
 
         # -------------------------------------------------------- TOOLBAR ----
 
@@ -677,7 +694,7 @@ class Search4Stations(QWidget):
         row += 1
         left_panel_grid.addWidget(self.tab_widg, row, 0)
         row += 1
-        left_panel_grid.addWidget(year_widg, row, 0)
+        left_panel_grid.addWidget(self.year_widg, row, 0)
         row += 1
         left_panel_grid.addWidget(toolbar_widg, row, 0)
 #        row += 1
@@ -770,10 +787,19 @@ class Search4Stations(QWidget):
         Initiate the seach for weather stations. It grabs the info from the
         interface and send it to the method "search_envirocan".
         """
+        if self.finder.stop_searching:
+            print("The thread is in the process of being stopped: do nothing.")
+            return
 
         if self.thread.isRunning():
-            print('Thread is already running men, calm down.')
+            print('Telling the thread to stop searching.')
+            self.finder.stop_searching = True
+            self.btn_search.setIcon(IconDB().search)
+            self.btn_search.setEnabled(False)
             return
+
+        self.year_widg.setEnabled(False)
+        self.tab_widg.setEnabled(False)
 
         msg = 'Searching for weather stations. Please wait...'
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
@@ -787,12 +813,30 @@ class Search4Stations(QWidget):
         self.finder.nbr_of_years = self.nbr_of_years
         self.finder.search_by = self.search_by
 
+        self.btn_search.setIcon(IconDB().stop)
+
         self.station_table.clearContents()
         self.thread.started.connect(self.finder.search_envirocan)
         self.thread.start()
 
     def search_is_finished(self, station_list):
         self.thread.quit()
+        waittime = 0
+        while self.thread.isRunning():
+            print('Waiting for the finder thread to close.')
+            time.sleep(1)
+            waittime += 1
+            if waittime > 15:
+                msg = ('This function is not working as intended. '
+                       'Please report a bug.')
+                print(msg)
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                return
+        self.finder.stop_searching = False
+        self.btn_search.setEnabled(True)
+        self.year_widg.setEnabled(True)
+        self.tab_widg.setEnabled(True)
+
 
 # =============================================================================
 
@@ -808,7 +852,7 @@ class WeatherStationDisplayTable(QTableWidget):
                         1 -> Years are displayed in a QComboBox
     """
 
-    def __init__(self, year_display_mode=0, parent=None):  # ==================
+    def __init__(self, year_display_mode=0, parent=None):
         super(WeatherStationDisplayTable, self).__init__(parent)
 
         self.year_display_mode = year_display_mode
@@ -1153,7 +1197,7 @@ if __name__ == '__main__':
 
     search4sta.lat_spinBox.setValue(45.4)
     search4sta.lon_spinBox.setValue(73.13)
-    search4sta.isOffline = False
+    search4sta.finder.isOffline = True
 
     search4sta.show()
 
