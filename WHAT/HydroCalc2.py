@@ -31,11 +31,16 @@ import datetime
 # Third party imports :
 
 import numpy as np
-from PySide import QtGui, QtCore
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtWidgets import (QGridLayout, QWidget, QComboBox, QTextEdit,
+                             QSizePolicy, QPushButton, QLabel, QTabWidget,
+                             QApplication, QFileDialog, QFrame, QDoubleSpinBox,
+                             QScrollArea)
 
 import matplotlib as mpl
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 import matplotlib.pyplot as plt
 
 from xlrd import xldate_as_tuple
@@ -52,8 +57,7 @@ import common.widgets as myqt
 from common import IconDB, StyleDB, QToolButtonNormal
 import brf_mod as bm
 
-mpl.use('Qt4Agg')
-mpl.rcParams['backend.qt4'] = 'PySide'
+mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
@@ -313,8 +317,8 @@ class WLCalc(myqt.DialogWindow):
                     self.btn_Waterlvl_lineStyle,
                     self.btn_dateFormat]
 
-        subgrid_toolbar = QtGui.QGridLayout()
-        toolbar_widget = QtGui.QWidget()
+        subgrid_toolbar = QGridLayout()
+        toolbar_widget = QWidget()
 
         for col, btn in enumerate(btn_list):
             subgrid_toolbar.addWidget(btn, 0, col)
@@ -327,21 +331,20 @@ class WLCalc(myqt.DialogWindow):
 
         # ------------------------------------------------- MRC PARAMETERS ----
 
-        self.MRC_type = QtGui.QComboBox()
+        self.MRC_type = QComboBox()
         self.MRC_type.addItems(['Linear', 'Exponential'])
         self.MRC_type.setCurrentIndex(1)
 
-        self.MRC_ObjFnType = QtGui.QComboBox()
+        self.MRC_ObjFnType = QComboBox()
         self.MRC_ObjFnType.addItems(['RMSE', 'MAE'])
         self.MRC_ObjFnType.setCurrentIndex(0)
 
-        self.MRC_results = QtGui.QTextEdit()
+        self.MRC_results = QTextEdit()
         self.MRC_results.setReadOnly(True)
         self.MRC_results.setMinimumHeight(25)
         self.MRC_results.setMinimumWidth(100)
 
-        sp = QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored,
-                               QtGui.QSizePolicy.Preferred)
+        sp = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.MRC_results.setSizePolicy(sp)
 
         # ---- MRC Toolbar ----
@@ -365,7 +368,7 @@ class WLCalc(myqt.DialogWindow):
         self.btn_save_interp.setToolTip('Save Calculated MRC to file.')
         self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_MRCalc = QtGui.QPushButton('Compute MRC')
+        self.btn_MRCalc = QPushButton('Compute MRC')
         self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
         self.btn_MRCalc.setToolTip('<p>Calculate the Master Recession Curve'
                                    ' (MRC) for the selected time periods.</p>')
@@ -384,7 +387,7 @@ class WLCalc(myqt.DialogWindow):
         self.widget_MRCparam.setContentsMargins(10, 10, 10, 10)
 
         row = 0
-        self.widget_MRCparam.addWidget(QtGui.QLabel('MRC Type :'), row, 0)
+        self.widget_MRCparam.addWidget(QLabel('MRC Type :'), row, 0)
         self.widget_MRCparam.addWidget(self.MRC_type, row, 1)
         row += 1
         self.widget_MRCparam.addWidget(self.MRC_results, row, 0, 1, 3)
@@ -401,8 +404,8 @@ class WLCalc(myqt.DialogWindow):
 
         # -------------------------------------------------- Tool Tab Area ----
 
-        tooltab = QtGui.QTabWidget()
-        tooltab.setIconSize(QtCore.QSize(28, 28))
+        tooltab = QTabWidget()
+        tooltab.setIconSize(QSize(28, 28))
         tooltab.setTabPosition(tooltab.North)
 
         tooltab.addTab(self.widget_MRCparam, IconDB().MRCalc, '')
@@ -424,7 +427,7 @@ class WLCalc(myqt.DialogWindow):
 
         # -------------------------------------------------------- MAIN GRID --
 
-        mainGrid = QtGui.QGridLayout(self)
+        mainGrid = QGridLayout(self)
 
         mainGrid.addWidget(toolbar_widget, 0, 0)
         mainGrid.addWidget(self.fig_frame_widget, 1, 0, 2, 1)
@@ -584,14 +587,14 @@ class WLCalc(myqt.DialogWindow):
 
     def btn_MRCalc_isClicked(self):
 
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
         A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx,
                                   self.MRC_type.currentIndex())
 
         print('MRC Parameters: A=%f, B=%f' % (A, B))
         if A is None:
-            QtGui.QApplication.restoreOverrideCursor()
+            QApplication.restoreOverrideCursor()
             return
 
         # Display result :
@@ -620,7 +623,7 @@ class WLCalc(myqt.DialogWindow):
 
         self.draw_MRC()
 
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
     # -------------------------------------------------------------------------
 
@@ -663,7 +666,7 @@ class WLCalc(myqt.DialogWindow):
 
         # ---- get filename ----
 
-        dialog = QtGui.QFileDialog()
+        dialog = QFileDialog()
         dialog.setConfirmOverwrite(True)
         filename, ftype = dialog.getSaveFileName(
             caption="Save Results Summary", dir=filename, filter=('*.xlsx'))
@@ -810,14 +813,14 @@ class WLCalc(myqt.DialogWindow):
         if self.btn_editPeak.autoRaise():
             # Activate <add_peak>
             self.btn_editPeak.setAutoRaise(False)
-            QtGui.QApplication.setOverrideCursor(QtCore.Qt.PointingHandCursor)
+            QApplication.setOverrideCursor(Qt.PointingHandCursor)
 
             # Deactivate <delete_peak>
             self.btn_delPeak.setAutoRaise(True)
         else:
             # Deactivate <add_peak>
             self.btn_editPeak.setAutoRaise(True)
-            QtGui.QApplication.restoreOverrideCursor()
+            QApplication.restoreOverrideCursor()
 
         # Draw to save background :
         self.draw()
@@ -1254,7 +1257,7 @@ class WLCalc(myqt.DialogWindow):
             if self.toolbar._active == 'PAN':
                 self.toolbar.pan()
                 self.draw()
-                QtGui.QApplication.restoreOverrideCursor()
+                QApplication.restoreOverrideCursor()
                 self.mouse_vguide(event)
             return
 
@@ -1337,7 +1340,7 @@ class WLCalc(myqt.DialogWindow):
             if self.toolbar._active is None:
                 self.toolbar.pan()
                 self.draw()
-                QtGui.QApplication.setOverrideCursor(QtCore.Qt.SizeAllCursor)
+                QApplication.setOverrideCursor(Qt.SizeAllCursor)
                 self.toolbar.press_pan(event)
 
             # ------- Select BRF period ----
@@ -1982,9 +1985,9 @@ def mrc2rechg(t, ho, A, B, z, Sy):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class SynthHydroWidg(QtGui.QWidget):
+class SynthHydroWidg(QWidget):
 
-    newHydroParaSent = QtCore.Signal(dict)
+    newHydroParaSent = QSignal(dict)
 
     def __init__(self, parent=None):
         super(SynthHydroWidg, self).__init__(parent)
@@ -1993,12 +1996,12 @@ class SynthHydroWidg(QtGui.QWidget):
 
     def __initUI__(self):
 
-        class HSep(QtGui.QFrame):  # horizontal separators for the toolbar
+        class HSep(QFrame):  # horizontal separators for the toolbar
             def __init__(self, parent=None):
                 super(HSep, self).__init__(parent)
                 self.setFrameStyle(db.styleUI().HLine)
 
-        class MyQDSpin(QtGui.QDoubleSpinBox):
+        class MyQDSpin(QDoubleSpinBox):
             def __init__(self, step, min, max, dec, val,
                          suffix=None, parent=None):
                 super(MyQDSpin, self).__init__(parent)
@@ -2008,7 +2011,7 @@ class SynthHydroWidg(QtGui.QWidget):
                 self.setMaximum(max)
                 self.setDecimals(dec)
                 self.setValue(val)
-                self.setAlignment(QtCore.Qt.AlignCenter)
+                self.setAlignment(Qt.AlignCenter)
                 if suffix:
                     self.setSuffix(' %s' % suffix)
                 if parent:
@@ -2022,14 +2025,14 @@ class SynthHydroWidg(QtGui.QWidget):
         self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, '°C', parent=self)
         self.CM = MyQDSpin(0.1, 0, 100, 1, 2.7, 'mm/°C', parent=self)
 
-        main_grid = QtGui.QGridLayout()
+        main_grid = QGridLayout()
 
-        items = [QtGui.QLabel('Sy:'), self.QSy,
-                 QtGui.QLabel('Rasmax:'), self.QRAS,
-                 QtGui.QLabel('Cro:'), self.CRO,
-                 QtGui.QLabel('Tcrit:'), self.Tcrit,
-                 QtGui.QLabel('Tmelt:'), self.Tmelt,
-                 QtGui.QLabel('CM:'), self.CM]
+        items = [QLabel('Sy:'), self.QSy,
+                 QLabel('Rasmax:'), self.QRAS,
+                 QLabel('Cro:'), self.CRO,
+                 QLabel('Tcrit:'), self.Tcrit,
+                 QLabel('Tmelt:'), self.Tmelt,
+                 QLabel('CM:'), self.CM]
 
         for col, item in enumerate(items):
             main_grid.addWidget(item, 1, col)
@@ -2073,17 +2076,17 @@ class RechgSetupWin(myqt.DialogWindow):
         self.wldset = None
 
         self.setWindowTitle('Recharge Calibration Setup')
-        self.setWindowFlags(QtCore.Qt.Window)
+        self.setWindowFlags(Qt.Window)
 
         self.__initUI__()
 
     def __initUI__(self):
 
-        class QRowLayout(QtGui.QWidget):
+        class QRowLayout(QWidget):
             def __init__(self, items, parent=None):
                 super(QRowLayout, self).__init__(parent)
 
-                layout = QtGui.QGridLayout()
+                layout = QGridLayout()
                 for col, item in enumerate(items):
                     layout.addWidget(item, 0, col)
                 layout.setContentsMargins(0, 0, 0, 0)
@@ -2092,12 +2095,12 @@ class RechgSetupWin(myqt.DialogWindow):
 
         # ---------------------------------------------------------- Toolbar --
 
-        toolbar_widget = QtGui.QWidget()
+        toolbar_widget = QWidget()
 
-        btn_calib = QtGui.QPushButton('Compute Recharge')
+        btn_calib = QPushButton('Compute Recharge')
         btn_calib.clicked.connect(self.btn_calibrate_isClicked)
 
-        toolbar_layout = QtGui.QGridLayout()
+        toolbar_layout = QGridLayout()
         toolbar_layout.addWidget(btn_calib, 0, 0)
         toolbar_layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
 
@@ -2152,10 +2155,10 @@ class RechgSetupWin(myqt.DialogWindow):
         self._deltaT = myqt.QDoubleSpinBox(0, 0, )
         self._deltaT.setRange(0, 999)
 
-        class QLabelCentered(QtGui.QLabel):
+        class QLabelCentered(QLabel):
             def __init__(self, text):
                 super(QLabelCentered, self).__init__(text)
-                self.setAlignment(QtCore.Qt.AlignCenter)
+                self.setAlignment(Qt.AlignCenter)
 
         # ---- Parameters ----
 
@@ -2165,57 +2168,57 @@ class RechgSetupWin(myqt.DialogWindow):
         params_group.setStyleSheet("#viewport {background-color:transparent;}")
 
         row = 0
-        params_group.addWidget(QtGui.QLabel('Sy :'), row, 0)
+        params_group.addWidget(QLabel('Sy :'), row, 0)
         params_group.addWidget(self.QSy_min, row, 1)
         params_group.addWidget(QLabelCentered('to'), row, 2)
         params_group.addWidget(self.QSy_max, row, 3)
         row += 1
-        params_group.addWidget(QtGui.QLabel('RAS<sub>max</sub> :'), row, 0)
+        params_group.addWidget(QLabel('RAS<sub>max</sub> :'), row, 0)
         params_group.addWidget(self.QRAS_min, row, 1)
         params_group.addWidget(QLabelCentered('to'), row, 2)
         params_group.addWidget(self.QRAS_max, row, 3)
-        params_group.addWidget(QtGui.QLabel('mm'), row, 4)
+        params_group.addWidget(QLabel('mm'), row, 4)
         row += 1
-        params_group.addWidget(QtGui.QLabel('Cro :'), row, 0)
+        params_group.addWidget(QLabel('Cro :'), row, 0)
         params_group.addWidget(self.CRO_min, row, 1)
         params_group.addWidget(QLabelCentered('to'), row, 2)
         params_group.addWidget(self.CRO_max, row, 3)
         row += 1
         params_group.setRowMinimumHeight(row, 10)
         row += 1
-        params_group.addWidget(QtGui.QLabel('Tcrit :'), row, 0)
+        params_group.addWidget(QLabel('Tcrit :'), row, 0)
         params_group.addWidget(self._Tcrit, row, 1)
-        params_group.addWidget(QtGui.QLabel('°C'), row, 2, 1, 3)
+        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
         row += 1
-        params_group.addWidget(QtGui.QLabel('Tmelt :'), row, 0)
+        params_group.addWidget(QLabel('Tmelt :'), row, 0)
         params_group.addWidget(self._Tmelt, row, 1)
-        params_group.addWidget(QtGui.QLabel('°C'), row, 2, 1, 3)
+        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
         row += 1
-        params_group.addWidget(QtGui.QLabel('CM :'), row, 0)
+        params_group.addWidget(QLabel('CM :'), row, 0)
         params_group.addWidget(self._CM, row, 1)
-        params_group.addWidget(QtGui.QLabel('mm/°C'), row, 2, 1, 3)
+        params_group.addWidget(QLabel('mm/°C'), row, 2, 1, 3)
         row += 1
-        params_group.addWidget(QtGui.QLabel('deltaT :'), row, 0)
+        params_group.addWidget(QLabel('deltaT :'), row, 0)
         params_group.addWidget(self._deltaT, row, 1)
-        params_group.addWidget(QtGui.QLabel('days'), row, 2, 1, 3)
+        params_group.addWidget(QLabel('days'), row, 2, 1, 3)
         row += 1
         params_group.setRowStretch(row, 100)
         params_group.setColumnStretch(5, 100)
 
         # ---- Layout ----
 
-        qtitle = QtGui.QLabel('Parameter Range')
-        qtitle.setAlignment(QtCore.Qt.AlignCenter)
+        qtitle = QLabel('Parameter Range')
+        qtitle.setAlignment(Qt.AlignCenter)
 
-        sa = QtGui.QScrollArea()
+        sa = QScrollArea()
         sa.setWidget(params_group)
         sa.setWidgetResizable(True)
         sa.setFrameStyle(0)
         sa.setStyleSheet("QScrollArea {background-color:transparent;}")
-        sa.setSizePolicy(QtGui.QSizePolicy(QtGui.QSizePolicy.Ignored,
-                                           QtGui.QSizePolicy.Preferred))
+        sa.setSizePolicy(QSizePolicy(QSizePolicy.Ignored,
+                                     QSizePolicy.Preferred))
 
-        main_layout = QtGui.QGridLayout(self)
+        main_layout = QGridLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 10)   # (L, T, R, B)
 
         main_layout.addWidget(qtitle, 0, 0)
@@ -2283,12 +2286,12 @@ class RechgSetupWin(myqt.DialogWindow):
 
         # ---- Calculations ----
 
-        QtGui.QApplication.setOverrideCursor(QtCore.Qt.WaitCursor)
+        QApplication.setOverrideCursor(Qt.WaitCursor)
 
         sh.load_data(self.wxdset, self.wldset)
         sh.GLUE(Sy, RASmax, Cro, res='rough')
 
-        QtGui.QApplication.restoreOverrideCursor()
+        QApplication.restoreOverrideCursor()
 
         sh.calc_recharge()
         sh.initPlot()
@@ -2302,7 +2305,7 @@ if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     ft = app.font()
     ft.setFamily('Segoe UI')
@@ -2325,7 +2328,7 @@ if __name__ == '__main__':
 #    import sys
 #    plt.rc('font', family='Arial')
 #
-#    app = QtGui.QApplication(sys.argv)
+#    app = QApplication(sys.argv)
 #
 #    ft = app.font()
 #    ft.setFamily('Segoe UI')
