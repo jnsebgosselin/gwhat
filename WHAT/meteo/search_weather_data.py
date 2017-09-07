@@ -198,11 +198,11 @@ class StationFinder(QObject):
                     f = urlopen(url4page)
                     stnresults = f.read().decode('utf-8')
 
-                    # Write result in a local file for debugging purposes:
-
-                    filename = 'url4page%d.txt' % page
-                    with open(filename, 'w') as local_file:
-                        local_file.write(stnresults)
+                    if self.debug_mode:
+                        # Write result in a local file for debugging purposes:
+                        filename = 'url4page%d.txt' % page
+                        with open(filename, 'w') as local_file:
+                            local_file.write(stnresults)
 
                 # Scan each row of the current page :
                 while 1:
@@ -1229,7 +1229,7 @@ if __name__ == '__main__':
 
     search4sta.lat_spinBox.setValue(45.4)
     search4sta.lon_spinBox.setValue(73.13)
-    search4sta.finder.isOffline = True
+    search4sta.finder.isOffline = False
 
     search4sta.show()
 
