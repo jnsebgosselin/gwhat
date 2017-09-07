@@ -28,36 +28,27 @@ from datetime import datetime
 
 # Third party imports :
 
-from PySide import QtGui, QtCore
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
+                             QApplication, QGridLayout, QMessageBox, QDialog,
+                             QLineEdit, QToolButton, QFileDialog)
 
 # Local imports :
 
-try:
-    from projet.reader_projet import ProjetReader
-    from common import IconDB, QToolButtonSmall
-    from projet.manager_data import DataManager
-    import common.widgets as myqt
-    from _version import __version__
-except ImportError:  # to run this module standalone
-    import sys
-    import platform
-    from os.path import dirname, realpath, basename
-    print('Running module %s as a standalone script...' % basename(__file__))
-    sys.path.append(dirname(dirname(realpath(__file__))))
-
-    from projet.reader_projet import ProjetReader
-    from common import IconDB, QToolButtonSmall
-    from projet.manager_data import DataManager
-    import common.widgets as myqt
-    from _version import __version__
+from projet.reader_projet import ProjetReader
+from common import IconDB, QToolButtonSmall
+from projet.manager_data import DataManager
+import common.widgets as myqt
+from _version import __version__
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class ProjetManager(QtGui.QWidget):
+class ProjetManager(QWidget):
 
-    currentProjetChanged = QtCore.Signal(ProjetReader)
+    currentProjetChanged = QSignal(ProjetReader)
 
     def __init__(self, parent=None, projet=None):
         super(ProjetManager, self).__init__(parent)
@@ -69,12 +60,12 @@ class ProjetManager(QtGui.QWidget):
             self.load_project(projet)
 
     def __initGUI__(self):
-        self.project_display = QtGui.QPushButton()
-        self.project_display.setFocusPolicy(QtCore.Qt.NoFocus)
+        self.project_display = QPushButton()
+        self.project_display.setFocusPolicy(Qt.NoFocus)
         self.project_display.setMinimumWidth(100)
         self.project_display.clicked.connect(self.select_project)
 
-        ft = QtGui.QApplication.instance().font()
+        ft = QApplication.instance().font()
         ft.setPointSize(10)
         self.project_display.setFont(ft)
 
@@ -84,9 +75,9 @@ class ProjetManager(QtGui.QWidget):
 
         # ---- layout ----
 
-        layout = QtGui.QGridLayout(self)
+        layout = QGridLayout(self)
 
-        layout.addWidget(QtGui.QLabel('Project :'), 0, 1)
+        layout.addWidget(QLabel('Project :'), 0, 1)
         layout.addWidget(self.project_display, 0, 2)
         layout.addWidget(new_btn, 0, 3)
 
@@ -108,8 +99,8 @@ class ProjetManager(QtGui.QWidget):
             self.__projet = None
             msg = ('Project loading failed. <i>%s</i> is not a valid ' +
                    'WHAT project file.') % os.path.basename(filename)
-            btn = QtGui.QMessageBox.Ok
-            QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Warning', msg, btn)
             return False
         else:
             self.project_display.setText(projet.name)
@@ -133,7 +124,7 @@ class ProjetManager(QtGui.QWidget):
 
     def select_project(self):
         directory = os.path.abspath(os.path.join('..', 'Projects'))
-        filename, _ = QtGui.QFileDialog.getOpenFileName(
+        filename, _ = QFileDialog.getOpenFileName(
             self, 'Open Project', directory, '*.what')
 
         if filename:
@@ -144,16 +135,16 @@ class ProjetManager(QtGui.QWidget):
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
-class NewProject(QtGui.QDialog):
+class NewProject(QDialog):
     # Dialog window to create a new WHAT project.
 
-    NewProjectSignal = QtCore.Signal(str)
+    NewProjectSignal = QSignal(str)
 
     def __init__(self, parent=None):
         super(NewProject, self).__init__(parent)
 
-        self.setWindowFlags(QtCore.Qt.Window)
-        self.setAttribute(QtCore.Qt.WA_DeleteOnClose)
+        self.setWindowFlags(Qt.Window)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(True)
 
         self.setWindowTitle('New Project')
@@ -172,26 +163,26 @@ class NewProject(QtGui.QDialog):
 
         # ---- Widgets ----
 
-        self.name = QtGui.QLineEdit()
-        self.author = QtGui.QLineEdit()
-        self.date = QtGui.QLabel('%02d/%02d/%d %02d:%02d' % now)
-        self.createdby = QtGui.QLabel(__version__)
+        self.name = QLineEdit()
+        self.author = QLineEdit()
+        self.date = QLabel('%02d/%02d/%d %02d:%02d' % now)
+        self.createdby = QLabel(__version__)
 
         # ---- Layout ----
 
-        projet_info = QtGui.QGridLayout()
+        projet_info = QGridLayout()
 
         row = 0
-        projet_info.addWidget(QtGui.QLabel('Project Title :'), row, 0)
+        projet_info.addWidget(QLabel('Project Title :'), row, 0)
         projet_info.addWidget(self.name, row, 1)
         row += 1
-        projet_info.addWidget(QtGui.QLabel('Author :'), row, 0)
+        projet_info.addWidget(QLabel('Author :'), row, 0)
         projet_info.addWidget(self.author, row, 1)
         row += 1
-        projet_info.addWidget(QtGui.QLabel('Created :'), row, 0)
+        projet_info.addWidget(QLabel('Created :'), row, 0)
         projet_info.addWidget(self.date, row, 1)
         row += 1
-        projet_info.addWidget(QtGui.QLabel('Software :'), row, 0)
+        projet_info.addWidget(QLabel('Software :'), row, 0)
         projet_info.addWidget(self.createdby, row, 1)
 
         projet_info.setSpacing(10)
@@ -201,8 +192,8 @@ class NewProject(QtGui.QDialog):
 
         # --------------------------------------------- LOCATION COORDINATES --
 
-        locaCoord_title = QtGui.QLabel('<b>Project Location Coordinates:</b>')
-        locaCoord_title.setAlignment(QtCore.Qt.AlignLeft)
+        locaCoord_title = QLabel('<b>Project Location Coordinates:</b>')
+        locaCoord_title.setAlignment(Qt.AlignLeft)
 
         self.Lat_SpinBox = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
         self.Lat_SpinBox.setRange(0, 180)
@@ -212,23 +203,23 @@ class NewProject(QtGui.QDialog):
 
         # ----- layout ----
 
-        loc_coord = QtGui.QGridLayout()
+        loc_coord = QGridLayout()
 
         row = 0
         loc_coord.addWidget(locaCoord_title, row, 0, 1, 11)
         row += 1
         loc_coord.setColumnStretch(0, 100)
-        loc_coord.addWidget(QtGui.QLabel('Latitude :'), row, 1)
+        loc_coord.addWidget(QLabel('Latitude :'), row, 1)
         loc_coord.addWidget(self.Lat_SpinBox, row, 2)
-        loc_coord.addWidget(QtGui.QLabel('North'), row, 3)
+        loc_coord.addWidget(QLabel('North'), row, 3)
         loc_coord.setColumnStretch(4, 100)
 
         loc_coord.addWidget(myqt.VSep(), row, 5)
         loc_coord.setColumnStretch(6, 100)
 
-        loc_coord.addWidget(QtGui.QLabel('Longitude :'), row, 7)
+        loc_coord.addWidget(QLabel('Longitude :'), row, 7)
         loc_coord.addWidget(self.Lon_SpinBox, row, 8)
-        loc_coord.addWidget(QtGui.QLabel('West'), row, 9)
+        loc_coord.addWidget(QLabel('West'), row, 9)
         loc_coord.setColumnStretch(10, 100)
 
         loc_coord.setSpacing(10)
@@ -240,21 +231,21 @@ class NewProject(QtGui.QDialog):
 
         save_in_folder = os.path.abspath(os.path.join('..', 'Projects'))
 
-        directory_label = QtGui.QLabel('Save in Folder:')
-        self.directory = QtGui.QLineEdit()
+        directory_label = QLabel('Save in Folder:')
+        self.directory = QLineEdit()
         self.directory.setReadOnly(True)
         self.directory.setText(save_in_folder)
         self.directory.setMinimumWidth(350)
 
-        btn_browse = QtGui.QToolButton()
+        btn_browse = QToolButton()
         btn_browse.setAutoRaise(True)
         btn_browse.setIcon(IconDB().openFolder)
         btn_browse.setIconSize(IconDB().iconSize2)
         btn_browse.setToolTip('Browse...')
-        btn_browse.setFocusPolicy(QtCore.Qt.NoFocus)
+        btn_browse.setFocusPolicy(Qt.NoFocus)
         btn_browse.clicked.connect(self.browse_saveIn_folder)
 
-        browse = QtGui.QGridLayout()
+        browse = QGridLayout()
 
         browse.addWidget(directory_label, 0, 0)
         browse.addWidget(self.directory, 0, 1)
@@ -268,17 +259,17 @@ class NewProject(QtGui.QDialog):
 
         # ---- widgets ----
 
-        btn_save = QtGui.QPushButton(' Save')
+        btn_save = QPushButton(' Save')
         btn_save.setMinimumWidth(100)
         btn_save.clicked.connect(self.save_project)
 
-        btn_cancel = QtGui.QPushButton(' Cancel')
+        btn_cancel = QPushButton(' Cancel')
         btn_cancel.setMinimumWidth(100)
         btn_cancel.clicked.connect(self.close)
 
         # ---- layout ----
 
-        toolbar = QtGui.QGridLayout()
+        toolbar = QGridLayout()
 
         toolbar.addWidget(btn_save, 0, 1)
         toolbar.addWidget(btn_cancel, 0, 2)
@@ -289,7 +280,7 @@ class NewProject(QtGui.QDialog):
 
         # ------------------------------------------------------------- MAIN --
 
-        main_layout = QtGui.QGridLayout(self)
+        main_layout = QGridLayout(self)
 
         main_layout.addLayout(projet_info, 0, 0)
         main_layout.addWidget(myqt.HSep(), 1, 0)
@@ -361,7 +352,7 @@ class NewProject(QtGui.QDialog):
         self.NewProjectSignal.emit(fname)
 
     def browse_saveIn_folder(self):
-        folder = QtGui.QFileDialog.getExistingDirectory(
+        folder = QFileDialog.getExistingDirectory(
                 self, 'Save in Folder', '../Projects')
 
         if folder:
@@ -379,7 +370,7 @@ class NewProject(QtGui.QDialog):
 
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
-        self.date = QtGui.QLabel('%02d/%02d/%d %02d:%02d' % now)
+        self.date = QLabel('%02d/%02d/%d %02d:%02d' % now)
 
         self.Lat_SpinBox.setValue(0)
         self.Lon_SpinBox.setValue(0)
@@ -394,7 +385,7 @@ class NewProject(QtGui.QDialog):
             hp = self.parentWidget().frameGeometry().height()
             cp = self.parentWidget().mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
         else:
-            cp = QtGui.QDesktopWidget().availableGeometry().center()
+            cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
         self.setFixedSize(self.size())
@@ -409,7 +400,7 @@ if __name__ == '__main__':
 
     f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     ft = app.font()
     ft.setFamily('Segoe UI')
