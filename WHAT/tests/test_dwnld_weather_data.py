@@ -11,8 +11,8 @@ import os.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # Local imports
-#from meteo.dwnld_weather_data import dwnldWeather
-from meteo.dwnld_travis_test import dwnldWeather
+from meteo.dwnld_weather_data import dwnldWeather
+from meteo.search_weather_data import Search4Stations
 
 # Qt Test Fixtures
 # --------------------------------
@@ -20,7 +20,7 @@ from meteo.dwnld_travis_test import dwnldWeather
 
 @pytest.fixture
 def downloader_bot(qtbot):
-    wxdata_downloader = dwnldWeather()
+    wxdata_downloader = Search4Stations()
     qtbot.addWidget(wxdata_downloader)
     return wxdata_downloader, qtbot
 
