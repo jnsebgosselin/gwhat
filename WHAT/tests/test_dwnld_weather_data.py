@@ -32,17 +32,17 @@ def test_downloader(downloader_bot):
     assert downloader_bot
 
 
-def test_load_stationlist(downloader_bot):
-    downloader_bot, qtbot = downloader_bot
-#    dirname = os.path.dirname(os.path.realpath(__file__))
-    expected_result = [["ABERCORN", "5308", "1950", "1985",
-                        "QC", "7020040", "1.25"],
-                       ["AIGREMONT", "5886", "1973", "1982",
-                        "QC", "7060070", "3.45"],
-                       ["ALBANEL", "5887", "1922", "1991",
-                        "QC", "7060080", "2.23"]]
-
-    assert True == True
+#def test_load_stationlist(downloader_bot):
+#    downloader_bot, qtbot = downloader_bot
+##    dirname = os.path.dirname(os.path.realpath(__file__))
+#    expected_result = [["ABERCORN", "5308", "1950", "1985",
+#                        "QC", "7020040", "1.25"],
+#                       ["AIGREMONT", "5886", "1973", "1982",
+#                        "QC", "7060070", "3.45"],
+#                       ["ALBANEL", "5887", "1922", "1991",
+#                        "QC", "7060080", "2.23"]]
+#
+#    assert True == True
 #
 #    # Assert that coma-separated-value station list loads correctly
 #    fname = os.path.join(dirname, "stationlist_coma.lst")

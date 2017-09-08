@@ -40,6 +40,7 @@ install:
   - "activate test"
   - pip install xlrd
   - pip install xlsxwriter
+  - pip install h5py
 
 build: false
 
