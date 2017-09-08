@@ -29,7 +29,18 @@ import os
 
 # Third party imports :
 
-from PySide import QtGui, QtCore
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import Qt, QThread, QDate, QRect
+from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QCursor, QTextDocument
+from PyQt5.QtWidgets import (QWidget, QPushButton, QGridLayout, QFrame,
+                             QTabWidget, QLabel, QComboBox, QTextEdit,
+                             QDateEdit, QSpinBox, QRadioButton, QCheckBox,
+                             QProgressBar, QApplication, QMessageBox,
+                             QFileDialog, QTableWidget, QHeaderView,
+                             QStyleOptionHeader, QStyle, QDesktopWidget,
+                             QTableWidgetItem)
+
+
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -39,22 +50,14 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 
 # Local imports :
 
-for i in range(2):
-    try:
-        from meteo.gapfill_weather_algorithm2 import GapFillWeather
-        from common import IconDB, StyleDB, QToolButtonSmall
-        import common.widgets as myqt
-        break
-    except ImportError:  # to run this module standalone
-        import sys
-        from os.path import dirname, realpath, basename
-        print('Running module %s as a script...' % basename(__file__))
-        sys.path.append(dirname(dirname(realpath(__file__))))
+from meteo.gapfill_weather_algorithm2 import GapFillWeather
+from common import IconDB, StyleDB, QToolButtonSmall
+import common.widgets as myqt
 
 
-class GapFillWeatherGUI(QtGui.QWidget):
+class GapFillWeatherGUI(QWidget):
 
-    ConsoleSignal = QtCore.Signal(str)
+    ConsoleSignal = QSignal(str)
 
     def __init__(self, parent=None):
         super(GapFillWeatherGUI, self).__init__(parent)
@@ -68,7 +71,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # Setup gap fill worker and thread :
         self.gap_fill_worker = GapFillWeather()
-        self.gap_fill_thread = QtCore.QThread()
+        self.gap_fill_thread = QThread()
         self.gap_fill_worker.moveToThread(self.gap_fill_thread)
         self.set_workdir(os.getcwd())
 
@@ -86,21 +89,21 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # ---- TOOLBAR ----
 
-        self.btn_fill = QtGui.QPushButton('Fill Station')
+        self.btn_fill = QPushButton('Fill Station')
         self.btn_fill.setIcon(IconDB().fill_data)
         self.btn_fill.setIconSize(IconDB().iconSize2)
         self.btn_fill.setToolTip('<p>Fill the gaps in the daily weather data '
                                  ' for the selected weather station.</p>')
 
-        self.btn_fill_all = QtGui.QPushButton('Fill All Stations')
+        self.btn_fill_all = QPushButton('Fill All Stations')
         self.btn_fill_all.setIconSize(IconDB().iconSize2)
         self.btn_fill_all.setIcon(IconDB().fill_all_data)
         self.btn_fill_all.setToolTip('<p>Fill the gaps in the daily weather '
                                      ' data for all the weather stations' +
                                      ' displayed in the list.</p>')
 
-        grid_toolbar = QtGui.QGridLayout()
-        widget_toolbar = QtGui.QFrame()
+        grid_toolbar = QGridLayout()
+        widget_toolbar = QFrame()
 
         row = 0
         col = 1
@@ -119,10 +122,10 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # Target Station :
 
-        target_station_label = QtGui.QLabel(
+        target_station_label = QLabel(
                 '<b>Fill data for weather station :</b>')
-        self.target_station = QtGui.QComboBox()
-        self.target_station_info = QtGui.QTextEdit()
+        self.target_station = QComboBox()
+        self.target_station_info = QTextEdit()
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
 
@@ -131,8 +134,8 @@ class GapFillWeatherGUI(QtGui.QWidget):
             'Force the reloading of the weather data files')
         self.btn_refresh_staList.clicked.connect(self.load_data_dir_content)
 
-        self.tarSta_widg = QtGui.QWidget()
-        tarSta_grid = QtGui.QGridLayout()
+        self.tarSta_widg = QWidget()
+        tarSta_grid = QGridLayout()
 
         row = 0
         tarSta_grid.addWidget(target_station_label, row, 0, 1, 2)
@@ -149,17 +152,17 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # Gapfill Dates :
 
-        label_From = QtGui.QLabel('From :  ')
-        self.date_start_widget = QtGui.QDateEdit()
+        label_From = QLabel('From :  ')
+        self.date_start_widget = QDateEdit()
         self.date_start_widget.setDisplayFormat('dd / MM / yyyy')
         self.date_start_widget.setEnabled(False)
-        label_To = QtGui.QLabel('To :  ')
-        self.date_end_widget = QtGui.QDateEdit()
+        label_To = QLabel('To :  ')
+        self.date_end_widget = QDateEdit()
         self.date_end_widget.setEnabled(False)
         self.date_end_widget.setDisplayFormat('dd / MM / yyyy')
 
-        self.fillDates_widg = QtGui.QWidget()
-        fillDates_grid = QtGui.QGridLayout()
+        self.fillDates_widg = QWidget()
+        fillDates_grid = QGridLayout()
 
         row = 0
         col = 0
@@ -181,43 +184,43 @@ class GapFillWeatherGUI(QtGui.QWidget):
         def station_sel_criteria(self):
             # Widgets :
 
-            Nmax_label = QtGui.QLabel('Nbr. of stations :')
-            self.Nmax = QtGui.QSpinBox()
+            Nmax_label = QLabel('Nbr. of stations :')
+            self.Nmax = QSpinBox()
             self.Nmax.setRange(0, 99)
             self.Nmax.setSingleStep(1)
             self.Nmax.setValue(4)
-            self.Nmax.setAlignment(QtCore.Qt.AlignCenter)
+            self.Nmax.setAlignment(Qt.AlignCenter)
 
             ttip = ('<p>Distance limit beyond which neighboring stations'
                     ' are excluded from the gapfilling procedure.</p>'
                     '<p>This condition is ignored if set to -1.</p>')
-            distlimit_label = QtGui.QLabel('Max. Distance :')
+            distlimit_label = QLabel('Max. Distance :')
             distlimit_label.setToolTip(ttip)
-            self.distlimit = QtGui.QSpinBox()
+            self.distlimit = QSpinBox()
             self.distlimit.setRange(-1, 9999)
             self.distlimit.setSingleStep(1)
             self.distlimit.setValue(100)
             self.distlimit.setToolTip(ttip)
             self.distlimit.setSuffix(' km')
-            self.distlimit.setAlignment(QtCore.Qt.AlignCenter)
+            self.distlimit.setAlignment(Qt.AlignCenter)
 
             ttip = ('<p>Altitude difference limit over which neighboring '
                     ' stations are excluded from the gapfilling procedure.</p>'
                     '<p>This condition is ignored if set to -1.</p>')
-            altlimit_label = QtGui.QLabel('Max. Elevation Diff. :')
+            altlimit_label = QLabel('Max. Elevation Diff. :')
             altlimit_label.setToolTip(ttip)
-            self.altlimit = QtGui.QSpinBox()
+            self.altlimit = QSpinBox()
             self.altlimit.setRange(-1, 9999)
             self.altlimit.setSingleStep(1)
             self.altlimit.setValue(350)
             self.altlimit.setToolTip(ttip)
             self.altlimit.setSuffix(' m')
-            self.altlimit.setAlignment(QtCore.Qt.AlignCenter)
+            self.altlimit.setAlignment(Qt.AlignCenter)
 
             # Layout :
 
-            container = QtGui.QFrame()
-            grid = QtGui.QGridLayout()
+            container = QFrame()
+            grid = QGridLayout()
 
             row = 0
             grid.addWidget(self.Nmax, row, 1)
@@ -240,15 +243,14 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
             # ---- Widgets ----
 
-            self.RMSE_regression = QtGui.QRadioButton('Ordinary Least Squares')
+            self.RMSE_regression = QRadioButton('Ordinary Least Squares')
             self.RMSE_regression.setChecked(True)
-            self.ABS_regression = QtGui.QRadioButton(
-                                      'Least Absolute Deviations')
+            self.ABS_regression = QRadioButton('Least Absolute Deviations')
 
             # ---- Layout ----
 
-            container = QtGui.QFrame()
-            grid = QtGui.QGridLayout()
+            container = QFrame()
+            grid = QGridLayout()
 
             row = 0
             grid.addWidget(self.RMSE_regression, row, 0)
@@ -263,16 +265,16 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         def advanced_settings(self):
 
-            chckstate = QtCore.Qt.CheckState.Unchecked
+            chckstate = Qt.Unchecked
 
             # ---- Row Full Error ----
 
-            self.full_error_analysis = QtGui.QCheckBox('Full Error Analysis.')
+            self.full_error_analysis = QCheckBox('Full Error Analysis.')
             self.full_error_analysis.setCheckState(chckstate)
 
             # ---- Row ETP ----
 
-            self.add_ETP_ckckbox = QtGui.QCheckBox('Add ETP to data file.')
+            self.add_ETP_ckckbox = QCheckBox('Add ETP to data file.')
             self.add_ETP_ckckbox.setCheckState(chckstate)
 
             btn_add_ETP = QToolButtonSmall(IconDB().openFile)
@@ -281,8 +283,8 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
             # ---- Row Layout Assembly ----
 
-            container = QtGui.QFrame()
-            grid = QtGui.QGridLayout()
+            container = QFrame()
+            grid = QGridLayout()
 
             row = 0
             grid.addWidget(self.full_error_analysis, row, 0)
@@ -312,8 +314,8 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # SUBGRIDS ASSEMBLY :
 
-        grid_leftPanel = QtGui.QGridLayout()
-        self.LEFT_widget = QtGui.QFrame()
+        grid_leftPanel = QGridLayout()
+        self.LEFT_widget = QFrame()
         self.LEFT_widget.setFrameStyle(0)  # styleDB.frame
 
         row = 0
@@ -338,7 +340,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # ---- Right Panel ----
 
-        self.FillTextBox = QtGui.QTextEdit()
+        self.FillTextBox = QTextEdit()
         self.FillTextBox.setReadOnly(True)
 #        self.FillTextBox.setFrameStyle(styleDB.frame)
         self.FillTextBox.setMinimumWidth(700)
@@ -347,7 +349,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.FillTextBox.setFrameStyle(0)
         self.FillTextBox.document().setDocumentMargin(10)
 
-        self.sta_display_summary = QtGui.QTextEdit()
+        self.sta_display_summary = QTextEdit()
         self.sta_display_summary.setReadOnly(True)
 #        self.sta_display_summary.setStyleSheet(
 #                                  "QTextEdit {background-color:transparent;}")
@@ -356,8 +358,8 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         self.gafill_display_table = GapFillDisplayTable()
 
-#        grid_rightPanel = QtGui.QGridLayout()
-#        new_table = QtGui.QFrame()
+#        grid_rightPanel = QGridLayout()
+#        new_table = QFrame()
 #        new_table.setFrameStyle(0)
 
 #        row = 0
@@ -372,7 +374,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 #
 #        new_table.setLayout(grid_rightPanel)
 
-        RIGHT_widget = QtGui.QTabWidget()
+        RIGHT_widget = QTabWidget()
         RIGHT_widget.addTab(self.FillTextBox, 'Correlation Coefficients')
         RIGHT_widget.addTab(self.sta_display_summary, 'Missing Data Overview')
 #        RIGHT_widget.addTab(self.gafill_display_table,
@@ -380,7 +382,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # ---- Main grid ----
 
-        grid_MAIN = QtGui.QGridLayout()
+        grid_MAIN = QGridLayout()
 
         row = 0
         grid_MAIN.addWidget(self.LEFT_widget, row, 0)
@@ -395,7 +397,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         # ---- Progress Bar ----
 
-        self.pbar = QtGui.QProgressBar()
+        self.pbar = QProgressBar()
         self.pbar.setValue(0)
         self.pbar.hide()
 
@@ -447,7 +449,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.FillTextBox.setText('')
         self.target_station_info.setText('')
         self.target_station.clear()
-        QtGui.QApplication.processEvents()
+        QApplication.processEvents()
 
         # Load data and fill UI with info :
 
@@ -480,8 +482,8 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
             DATE = self.gap_fill_worker.WEATHER.DATE
 
-            DateMin = QtCore.QDate(DATE[0, 0], DATE[0, 1], DATE[0, 2])
-            DateMax = QtCore.QDate(DATE[-1, 0], DATE[-1, 1], DATE[-1, 2])
+            DateMin = QDate(DATE[0, 0], DATE[0, 1], DATE[0, 2])
+            DateMax = QDate(DATE[-1, 0], DATE[-1, 1], DATE[-1, 2])
 
             self.date_start_widget.setDate(DateMin)
             self.date_start_widget.setMinimumDate(DateMin)
@@ -563,7 +565,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 
         self.pbar.setValue(0)
 
-        QtGui.QApplication.processEvents()
+        QApplication.processEvents()
 
         self.pbar.hide()
 
@@ -599,8 +601,8 @@ class GapFillWeatherGUI(QtGui.QWidget):
         nSTA = len(self.gap_fill_worker.WEATHER.STANAME)
         if nSTA == 0:
             msg = ('There is no data to fill.')
-            btn = QtGui.QMessageBox.Ok
-            QtGui.QMessageBox.warning(self, 'Warning', msg, btn)
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Warning', msg, btn)
 
             return
 
@@ -651,7 +653,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
         self.stack_widget.setEnabled(False)
         self.pbar.show()
 
-        QtGui.QApplication.processEvents()
+        QApplication.processEvents()
 
         self.gap_fill_start(sta_indx2fill)
 
@@ -747,7 +749,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
     def btn_add_ETP_isClicked(self):  # =======================================
 
         dirname = self.workdir + '/Meteo/Output'
-        filename, _ = QtGui.QFileDialog.getOpenFileName(
+        filename, _ = QFileDialog.getOpenFileName(
                                   self, 'Select a valid water level data file',
                                   dirname, '*.out')
 
@@ -758,7 +760,7 @@ class GapFillWeatherGUI(QtGui.QWidget):
 # =============================================================================
 
 
-class StaLocManager(QtGui.QWidget):
+class StaLocManager(QWidget):
     def __init__(self, *args, **kwargs):
         super(StaLocManager, self).__init__(*args, **kwargs)
 
@@ -766,7 +768,7 @@ class StaLocManager(QtGui.QWidget):
         self.canvas = FigureCanvasQTAgg(self.figure)
         toolbar = NavigationToolbar2QT(self.canvas, self)
 
-        layout = QtGui.QGridLayout()
+        layout = QGridLayout()
         self.setLayout(layout)
 
         layout.addWidget(toolbar, 0, 0)
@@ -1100,7 +1102,7 @@ class GapFill_Parameters():
 # =============================================================================
 
 
-class GapFillDisplayTable(QtGui.QTableWidget):
+class GapFillDisplayTable(QTableWidget):
     """
     Widget for displaying usefull information for the gapfilling of daily
     datasets.
@@ -1147,12 +1149,12 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         self.setColumnWidth(6, w2)
 
 
-        self.horizontalHeader().setResizeMode(QtGui.QHeaderView.Fixed)
-        self.horizontalHeader().setResizeMode(0, QtGui.QHeaderView.Stretch)
+        self.horizontalHeader().setSectionResizeMode (QHeaderView.Fixed)
+        self.horizontalHeader().setSectionResizeMode (0, QHeaderView.Stretch)
 
         #------------------------------------------------------------ Events --
 
-    class NumTableWidgetItem(QtGui.QTableWidgetItem): #========================
+    class NumTableWidgetItem(QTableWidgetItem): #========================
 
         # To be able to sort numerical float item within a given column.
 
@@ -1160,8 +1162,8 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         # python-numerical-sorting-in-qtablewidget
 
         def __init__(self, text, sortKey):
-            QtGui.QTableWidgetItem.__init__(self, text,
-                                            QtGui.QTableWidgetItem.UserType)
+            QTableWidgetItem.__init__(self, text,
+                                            QTableWidgetItem.UserType)
             self.sortKey = sortKey
 
         # Qt uses a simple < check for sorting items, override this to use
@@ -1210,9 +1212,9 @@ class GapFillDisplayTable(QtGui.QTableWidget):
 
             col = 0
 
-            item = QtGui.QTableWidgetItem(STANAME[indx])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignLeft | QtCore.Qt.AlignVCenter)
+            item = QTableWidgetItem(STANAME[indx])
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
             item.setToolTip('%s (%s)' % (STANAME[indx], CLIMATEID[indx]))
             self.setItem(row, col, item)
 
@@ -1222,10 +1224,10 @@ class GapFillDisplayTable(QtGui.QTableWidget):
 
             item = self.NumTableWidgetItem('%0.1f' % ALTDIFF[indx],
                                            ALTDIFF[indx])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             if abs(ALTDIFF[indx]) >= limitAlt and limitAlt >= 0:
-                item.setForeground(QtGui.QBrush(QtGui.QColor(red)))
+                item.setForeground(QBrush(QColor(red)))
             self.setItem(row, col, item)
 
             # -- Horiz. Dist. --
@@ -1234,10 +1236,10 @@ class GapFillDisplayTable(QtGui.QTableWidget):
 
             item = self.NumTableWidgetItem('%0.1f' % HORDIST[indx],
                                            HORDIST[indx])
-            item.setFlags(~QtCore.Qt.ItemIsEditable)
-            item.setTextAlignment(QtCore.Qt.AlignCenter)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
             if HORDIST[indx] >= limitDist and limitDist >= 0:
-                item.setForeground(QtGui.QBrush(QtGui.QColor(red)))
+                item.setForeground(QBrush(QColor(red)))
             self.setItem(row, col, item)
 
             #-- Correlation Coefficients. --
@@ -1248,10 +1250,10 @@ class GapFillDisplayTable(QtGui.QTableWidget):
 
                 item = self.NumTableWidgetItem('%0.3f' % CORCOEF[var, indx],
                                                CORCOEF[var, indx])
-                item.setFlags(~QtCore.Qt.ItemIsEditable)
-                item.setTextAlignment(QtCore.Qt.AlignCenter)
+                item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+                item.setTextAlignment(Qt.AlignCenter)
                 if CORCOEF[var, indx] < 0.7 or np.isnan(CORCOEF[var, indx]):
-                    item.setForeground(QtGui.QBrush(QtGui.QColor(red)))
+                    item.setForeground(QBrush(QColor(red)))
                 self.setItem(row, col, item)
 
             row += 1
@@ -1259,7 +1261,7 @@ class GapFillDisplayTable(QtGui.QTableWidget):
         self.setSortingEnabled(True)
 
 
-class MyHorizHeader(QtGui.QHeaderView):
+class MyHorizHeader(QHeaderView):
     # https://forum.qt.io/topic/30598/
     # solved-how-to-display-subscript-text-in-header-of-qtableview/5
 
@@ -1270,14 +1272,14 @@ class MyHorizHeader(QtGui.QHeaderView):
     # can-i-have-more-than-one-line-in-a-table-header-in-qt
 
     def __init__(self, parent=None):
-        super(MyHorizHeader, self).__init__(QtCore.Qt.Horizontal, parent)
+        super(MyHorizHeader, self).__init__(Qt.Horizontal, parent)
 
         self.parent = parent
 
         # http://stackoverflow.com/questions/18777554/
         # why-wont-my-custom-qheaderview-allow-sorting/18777555#18777555
 
-        self.setClickable(True)
+        self.setSectionsClickable(True)
 
         self.setHighlightSections(True)
         self.showMouseOverLabel = True
@@ -1293,14 +1295,14 @@ class MyHorizHeader(QtGui.QHeaderView):
 
     def paintEvent(self, event): #=============================================
 
-        qp = QtGui.QPainter()
+        qp = QPainter()
         qp.begin(self.viewport())
 
 #        print self.sender()
         print(event.region)
 
         if self.showSectionSep:
-            QtGui.QHeaderView.paintEvent(self, event)
+            QHeaderView.paintEvent(self, event)
         else:
             qp.save()
             self.paintHeader(qp)
@@ -1318,10 +1320,10 @@ class MyHorizHeader(QtGui.QHeaderView):
         # Paint the header box for the entire width of the table.
         # This eliminates the separators between each individual section.
 
-        opt = QtGui.QStyleOptionHeader()
-        opt.rect = QtCore.QRect(0, 0, self.size().width(), self.size().height())
+        opt = QStyleOptionHeader()
+        opt.rect = QRect(0, 0, self.size().width(), self.size().height())
 
-        self.style().drawControl(QtGui.QStyle.CE_Header, opt, qp, self)
+        self.style().drawControl(QStyle.CE_Header, opt, qp, self)
 
 
     def paintSection(self, painter, rect, logicalIndex):
@@ -1335,7 +1337,7 @@ class MyHorizHeader(QtGui.QHeaderView):
 
         #---------------------------------------------  draw header sections --
 
-        opt = QtGui.QStyleOptionHeader()
+        opt = QStyleOptionHeader()
         self.initStyleOption(opt) #
 #        opt.initFrom(self) #
 #
@@ -1347,28 +1349,28 @@ class MyHorizHeader(QtGui.QHeaderView):
 #        print dir(opt)
 #        print opt.SO_TabWidgetFrame
 
-#        print int(QtGui.QStyle.State_MouseOver)
+#        print int(QStyle.State_MouseOver)
 
         #-------------------------------------------------- section position --
 
 #        visual = self.visualIndex(logicalIndex)
 #        if self.count() == 1:
-#            opt.position = QtGui.QStyleOptionHeader.OnlyOneSection
+#            opt.position = QStyleOptionHeader.OnlyOneSection
 #        elif visual == 0:
-#            opt.position = QtGui.QStyleOptionHeader.Beginning
+#            opt.position = QStyleOptionHeader.Beginning
 #        elif visual == self.count() - 1:
-#            opt.position = QtGui.QStyleOptionHeader.End
+#            opt.position = QStyleOptionHeader.End
 #        else:
-#            opt.position = QtGui.QStyleOptionHeader.Middle
+#            opt.position = QStyleOptionHeader.Middle
 #
 #        sortIndicatorSection = self.sortIndicatorSection()
 #        if sortIndicatorSection==logicalIndex:
-#            opt.state = int(opt.state) + int(QtGui.QStyle.State_Sunken)
+#            opt.state = int(opt.state) + int(QStyle.State_Sunken)
 
         #---------------------------------------------- mouse over highlight --
 
         if self.showMouseOverSection:
-            mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())
+            mouse_pos = self.mapFromGlobal(QCursor.pos())
             if rect.contains(mouse_pos):
                 opt.state = int(opt.state) + 8192
             else:
@@ -1378,7 +1380,7 @@ class MyHorizHeader(QtGui.QHeaderView):
 
         # ---------------------------------------------------- paint section --
 
-        self.style().drawControl(QtGui.QStyle.CE_Header, opt, painter, self)
+        self.style().drawControl(QStyle.CE_Header, opt, painter, self)
 
 
     def paintLabels(self, qp): #=============================== Paint Labels ==
@@ -1447,11 +1449,11 @@ class MyHorizHeader(QtGui.QHeaderView):
 
             sectionHeight = self.size().height()
             sectionWidth = self.sectionSize(logicalIndex)
-            rect = QtCore.QRect(x0, 0, sectionWidth, sectionHeight)
+            rect = QRect(x0, 0, sectionWidth, sectionHeight)
             x0 += sectionWidth
 
             if self.showMouseOverLabel:
-                mouse_pos = self.mapFromGlobal(QtGui.QCursor.pos())
+                mouse_pos = self.mapFromGlobal(QCursor.pos())
                 if rect.contains(mouse_pos):
                     label = '<b>%s<b>' % label
 
@@ -1470,7 +1472,7 @@ class MyHorizHeader(QtGui.QHeaderView):
 
         sortIndicatorSection = self.sortIndicatorSection()
 
-        if self.sortIndicatorOrder() == QtCore.Qt.SortOrder.DescendingOrder:
+        if self.sortIndicatorOrder() == Qt.SortOrder.DescendingOrder:
             filename = 'Icons/triangle_up_center.png'
         else:
             filename = 'Icons/triangle_down_center.png'
@@ -1496,7 +1498,7 @@ class MyHorizHeader(QtGui.QHeaderView):
                        </table>
                        '''
 
-        TextDoc = QtGui.QTextDocument()
+        TextDoc = QTextDocument()
         TextDoc.setTextWidth(self.size().width())
         TextDoc.setDocumentMargin(0)
         TextDoc.setHtml(headerTable)
@@ -1506,12 +1508,12 @@ class MyHorizHeader(QtGui.QHeaderView):
 
         # ---- Draw html ----
 
-        rec = QtCore.QRect(0, 0, self.size().width(), self.size().height())
+        rec = QRect(0, 0, self.size().width(), self.size().height())
         TextDoc.drawContents(qp, rec)
 
     def sizeHint(self):
 
-        baseSize = QtGui.QHeaderView.sizeHint(self)
+        baseSize = QHeaderView.sizeHint(self)
         baseSize.setHeight(self.heightHint)
 
         self.parent.repaint()
@@ -1524,15 +1526,15 @@ if __name__ == '__main__':
     import platform
     import sys
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     if platform.system() == 'Windows':
-        app.setFont(QtGui.QFont('Segoe UI', 11))
+        app.setFont(QFont('Segoe UI', 11))
     elif platform.system() == 'Linux':
-        app.setFont(QtGui.QFont('Ubuntu', 11))
+        app.setFont(QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
-    w.set_workdir('C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\R. Martel - Suffield\\Suffield (WHAT)')
+    w.set_workdir('C:\\Users\\jsgosselin\\OneDrive\\WHAT\\Projects\\Monteregie Est')
     w.load_data_dir_content()
 
     lat = w.gap_fill_worker.WEATHER.LAT
@@ -1563,7 +1565,7 @@ if __name__ == '__main__':
     w.show()
 
     qr = w.frameGeometry()
-    cp = QtGui.QDesktopWidget().availableGeometry().center()
+    cp = QDesktopWidget().availableGeometry().center()
     qr.moveCenter(cp)
     w.move(qr.topLeft())
 

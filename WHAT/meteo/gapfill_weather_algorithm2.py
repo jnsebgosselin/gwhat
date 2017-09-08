@@ -34,7 +34,9 @@ from time import clock
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
-from PySide import QtCore
+
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import QObject
 
 # import statsmodels.api as sm
 # import statsmodels.regression as sm_reg
@@ -43,25 +45,17 @@ from PySide import QtCore
 
 # PERSONAL IMPORTS :
 
-for i in range(2):
-    try:
-        from hydrograph4 import LatLong2Dist
-        from meteo.weather_viewer import FigWeatherNormals
-        from meteo.gapfill_weather_postprocess import PostProcessErr
-        import meteo.weather_reader as wxrd
-        from _version import __version__
-        break
-    except ImportError:  # to run this module standalone
-        print('Running module as a standalone script...')
-        import sys
-        from os.path import dirname, realpath
-        sys.path.append(dirname(dirname(realpath(__file__))))
+from hydrograph4 import LatLong2Dist
+from meteo.weather_viewer import FigWeatherNormals
+from meteo.gapfill_weather_postprocess import PostProcessErr
+import meteo.weather_reader as wxrd
+from _version import __version__
 
 
 # =============================================================================
 
 
-class GapFillWeather(QtCore.QObject):
+class GapFillWeather(QObject):
     """
     This class manage all that is related to the gap-filling of weather data
     records, including reading the data file on the disk.
@@ -80,10 +74,10 @@ class GapFillWeather(QtCore.QObject):
     # Interface with Qt on top of this algorithm and to start some of the
     # method from an independent thread.
 
-    ProgBarSignal = QtCore.Signal(int)
-    ConsoleSignal = QtCore.Signal(str)
-    GapFillFinished = QtCore.Signal(bool)
-    FillDataSignal = QtCore.Signal(bool)
+    ProgBarSignal = QSignal(int)
+    ConsoleSignal = QSignal(str)
+    GapFillFinished = QSignal(bool)
+    FillDataSignal = QSignal(bool)
 
     def __init__(self, parent=None):
         super(GapFillWeather, self).__init__(parent)
