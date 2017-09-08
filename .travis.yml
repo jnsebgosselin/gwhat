@@ -2,10 +2,15 @@
 
 language: python
 python:
-  - "3.4"
+  - python: "3.7"
+    env: USE_PYQT=pyqt5
+    os: linux
+
+virtualenv:
+  system_site_packages: true
 
 install:
-  - sudo apt-get install python3
+  - sudo apt-get update
   - sudo apt-get install python3-pyqt5
   - pip install coveralls
   - sudo apt-get install cython3
