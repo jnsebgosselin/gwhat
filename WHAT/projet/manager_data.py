@@ -47,8 +47,8 @@ import meteo.weather_reader as wxrd
 
 class DataManager(QWidget):
 
-    wldsetChanged = QSignal(dict)
-    wxdsetChanged = QSignal(dict)
+    wldsetChanged = QSignal(object)
+    wxdsetChanged = QSignal(object)
 
     def __init__(self, parent=None, projet=None, pm=None):
         super(DataManager, self).__init__(parent)
