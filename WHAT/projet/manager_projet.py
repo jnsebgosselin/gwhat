@@ -29,7 +29,7 @@ from datetime import datetime
 # Third party imports :
 
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
                              QApplication, QGridLayout, QMessageBox, QDialog,
                              QLineEdit, QToolButton, QFileDialog)
@@ -383,7 +383,7 @@ class NewProject(QDialog):
         if self.parentWidget():
             wp = self.parentWidget().frameGeometry().width()
             hp = self.parentWidget().frameGeometry().height()
-            cp = self.parentWidget().mapToGlobal(QtCore.QPoint(wp/2., hp/2.))
+            cp = self.parentWidget().mapToGlobal(QPoint(wp/2., hp/2.))
         else:
             cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
