@@ -1,14 +1,11 @@
 # https://travis-ci.org/jnsebgosselin/WHAT
 
 language: python
-python:
-  "3.6"
-
-virtualenv:
-  system_site_packages: true
+python: "3.6"
 
 install:
   - sudo apt-get update
+  - sudo apt-get install qt-latest
   - sudo apt-get install python3-pyqt5
   - pip install coveralls
   - sudo apt-get install cython3
