@@ -25,26 +25,20 @@ import platform
 
 # Third party imports :
 
-from PySide import QtGui, QtCore
+from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
+                             QWidget, QApplication, QDesktopWidget)
 
 # Local imports :
 
-if __name__ == '__main__':
-    import sys
-    from os.path import dirname, realpath, basename
-    print('Running module %s as a standalone script...' % basename(__file__))
-    root = dirname(dirname(realpath(__file__)))
-    sys.path.append(root)
-
 from _version import __version__, __date__
 from common import IconDB
-import common.widgets as myqt
 
 
 # =============================================================================
 
 
-class AboutWhat(QtGui.QDialog):
+class AboutWhat(QDialog):
 
     def __init__(self, parent=None):
         super(AboutWhat, self).__init__(parent)
@@ -59,18 +53,16 @@ class AboutWhat(QtGui.QDialog):
         self.setWindowIcon(IconDB().master)
         self.setMinimumHeight(700)
         self.setModal(True)
-        self.setWindowFlags(QtCore.Qt.Window |
-                            QtCore.Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
 
         # --------------------------------------------------- AboutTextBox ----
 
-        self.AboutTextBox = QtGui.QTextBrowser()
+        self.AboutTextBox = QTextBrowser()
         self.AboutTextBox.installEventFilter(self)
         self.AboutTextBox.setReadOnly(True)
         self.AboutTextBox.setFixedWidth(850)
         self.AboutTextBox.setFrameStyle(0)
-        self.AboutTextBox.setHorizontalScrollBarPolicy(
-            QtCore.Qt.ScrollBarAlwaysOff)
+        self.AboutTextBox.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.AboutTextBox.setOpenExternalLinks(True)
 
         self.AboutTextBox.setStyleSheet('QTextEdit {background-color:"white"}')
@@ -79,12 +71,12 @@ class AboutWhat(QtGui.QDialog):
 
         # --------------------------------------------------------- Ok btn ----
 
-        ok_btn = QtGui.QPushButton('OK')
+        ok_btn = QPushButton('OK')
         ok_btn.clicked.connect(self.close)
 
         # ------------------------------------------------------ Main Grid ----
 
-        grid = QtGui.QGridLayout()
+        grid = QGridLayout()
         grid.setSpacing(10)
 
         grid.addWidget(self.AboutTextBox, 0, 1, 1, 2)
@@ -194,10 +186,10 @@ class AboutWhat(QtGui.QDialog):
         # https://srinikom.github.io/pyside-docs/PySide/QtCore/QObject.
         # html#PySide.QtCore.PySide.QtCore.QObject.installEventFilter
 
-        if event.type() == QtCore.QEvent.Type.FontChange:
+        if event.type() == QEvent.FontChange:
             return True  # Eat the event to disable zooming
         else:
-            return QtGui.QWidget.eventFilter(self, obj, event)
+            return QWidget.eventFilter(self, obj, event)
 
     def show(self):
         super(AboutWhat, self).show()
@@ -206,14 +198,15 @@ class AboutWhat(QtGui.QDialog):
 # =============================================================================
 
 if __name__ == '__main__':
+    import sys
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     instance1 = AboutWhat()
     instance1.show()
 
     qr = instance1.frameGeometry()
-    cp = QtGui.QDesktopWidget().availableGeometry().center()
+    cp = QDesktopWidget().availableGeometry().center()
     qr.moveCenter(cp)
     instance1.move(qr.topLeft())
 
