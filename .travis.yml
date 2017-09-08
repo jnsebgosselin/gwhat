@@ -2,9 +2,7 @@
 
 language: python
 python:
-  - python: "3.7"
-    env: USE_PYQT=pyqt5
-    os: linux
+  "3.6"
 
 virtualenv:
   system_site_packages: true
