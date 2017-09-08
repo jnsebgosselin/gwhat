@@ -11,6 +11,11 @@ install:
   - sudo apt-get install libhdf5-dev
   - pip install h5py
   - pip install xlsxwriter
+  - pip install pytest
+  - pip install pytest
+  - pip install pytest-qt
+  - pip install pytest-cov
+ 
 
 script:
   - coverage run --source=WHAT -m py.test
