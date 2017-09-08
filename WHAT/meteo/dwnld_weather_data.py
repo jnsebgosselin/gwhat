@@ -339,7 +339,6 @@ class dwnldWeather(QWidget):
             self.load_stationList(filename)
 
     def load_stationList(self, filename):
-
         '''
         It loads the informations in the weather stations list file (.lst) that
         is located in "filename". The content is then displayed in a
@@ -347,12 +346,11 @@ class dwnldWeather(QWidget):
 
         ----- weather_stations.lst -----
 
-        The weather_station.lst is a tabulation separated csv file that
-        contains the following information:  station names, station ID ,
-        date at which the data records begin and date at which the data
-        records end, the provinces to which each station belongs, the
-        climate ID and the Proximity value in km for the original search
-        location.
+        The weather_station.lst is a csv file that contains the following
+        information:  station names, station ID , date at which the data
+        records begin and date at which the data records end, the provinces
+        to which each station belongs, the climate ID and the Proximity
+        value in km for the original search location.
 
         All these information can be found on the Government of Canada
         website in the address bar of the web browser when a station is
@@ -373,7 +371,6 @@ class dwnldWeather(QWidget):
         self.staList_isNotSaved = False
 
         if not path.exists(filename):
-
             msg = ('"%s" not found. Please select an existing weather station'
                    ' list or search for new stations on the CDCD.'
                    ) % filename
@@ -388,7 +385,11 @@ class dwnldWeather(QWidget):
         # ------------------------------------------------------ Open file ----
 
         with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
+            reader = list(csv.reader(f, delimiter=','))
+
+        if reader[0] != db.FileHeaders().weather_stations[0]:
+            with open(filename, 'r') as f:
+                reader = list(csv.reader(f, delimiter='\t'))
 
         # -------------------------------------------------- Check version ----
 
@@ -418,7 +419,7 @@ class dwnldWeather(QWidget):
             # ---- Save Updated List ----
 
             with open(filename, 'w') as f:
-                writer = csv.writer(f, delimiter='\t')
+                writer = csv.writer(f, delimiter=',')
                 writer.writerows(reader)
 
             QApplication.restoreOverrideCursor()
@@ -438,6 +439,8 @@ class dwnldWeather(QWidget):
 
         self.station_table.populate_table(staList)
         self.staList_fname = filename
+
+        return staList
 
     def btn_save_staList_isClicked(self):
         filename = self.staList_fname
