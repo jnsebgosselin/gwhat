@@ -28,13 +28,17 @@ from __future__ import division, unicode_literals, print_function
 
 print('Starting WHAT...')
 
-from PySide import QtGui, QtCore
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import (QApplication, QSplashScreen, QMainWindow,
+                             QMessageBox, QTabWidget, QTextEdit, QSplitter,
+                             QWidget, QGridLayout, QDesktopWidget, QTabBar)
 import sys
 
-app = QtGui.QApplication(sys.argv)
+app = QApplication(sys.argv)
 
-splash = QtGui.QSplashScreen(QtGui.QPixmap('ressources/splash.png'),
-                             QtCore.Qt.WindowStaysOnTopHint)
+splash = QSplashScreen(QPixmap('ressources/splash.png'),
+                       Qt.WindowStaysOnTopHint)
 splash.show()
 
 import platform
@@ -48,7 +52,7 @@ if platform.system() == 'Windows':
 app.setFont(ft)
 
 splash.showMessage("Starting WHAT, please wait ...",
-                   QtCore.Qt.AlignBottom | QtCore.Qt.AlignCenter)
+                   Qt.AlignBottom | Qt.AlignCenter)
 
 # Standard library imports :
 
@@ -84,7 +88,7 @@ freeze_support()
 headerDB = []
 
 
-class WHAT(QtGui.QMainWindow):
+class WHAT(QMainWindow):
 
     def __init__(self, parent=None):
         super(WHAT, self).__init__(parent)
@@ -129,8 +133,8 @@ class WHAT(QtGui.QMainWindow):
                      project or create a new one.
                      ''' % self.projectfile
 
-            btn = QtGui.QMessageBox.Ok
-            QtGui.QMessageBox.warning(self, 'Warning', msgtxt, btn)
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Warning', msgtxt, btn)
 
     def __initUI__(self):
 
@@ -164,7 +168,7 @@ class WHAT(QtGui.QMainWindow):
 
         self.tab_bar = TabBar(self)
 
-        Tab_widget = QtGui.QTabWidget()
+        Tab_widget = QTabWidget()
         Tab_widget.setTabBar(self.tab_bar)
 
         Tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
@@ -177,9 +181,9 @@ class WHAT(QtGui.QMainWindow):
 
         # --------------------------------------------------- Main Console ----
 
-        self.main_console = QtGui.QTextEdit()
+        self.main_console = QTextEdit()
         self.main_console.setReadOnly(True)
-        self.main_console.setLineWrapMode(QtGui.QTextEdit.LineWrapMode.NoWrap)
+        self.main_console.setLineWrapMode(QTextEdit.NoWrap)
 
         style = 'Regular'
         family = StyleDB().fontfamily
@@ -210,8 +214,8 @@ class WHAT(QtGui.QMainWindow):
 
         # ------------------------------------------------ Splitter Widget ----
 
-        splitter = QtGui.QSplitter(self)
-        splitter.setOrientation(QtCore.Qt.Vertical)
+        splitter = QSplitter(self)
+        splitter.setOrientation(Qt.Vertical)
 
         splitter.addWidget(Tab_widget)
         splitter.addWidget(self.main_console)
@@ -223,10 +227,10 @@ class WHAT(QtGui.QMainWindow):
 
         # ------------------------------------------------------ Main Grid ----
 
-        main_widget = QtGui.QWidget()
+        main_widget = QWidget()
         self.setCentralWidget(main_widget)
 
-        mainGrid = QtGui.QGridLayout(main_widget)
+        mainGrid = QGridLayout(main_widget)
 
         mainGrid.addWidget(splitter, 0, 0)
         mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
@@ -237,7 +241,7 @@ class WHAT(QtGui.QMainWindow):
     def show(self):
         super(WHAT, self).showMaximized()
         qr = self.frameGeometry()
-        cp = QtGui.QDesktopWidget().availableGeometry().center()
+        cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
         self.move(qr.topLeft())
 
@@ -383,7 +387,7 @@ class WHATPref(object):
 # http://stackoverflow.com/a/20098415/4481445
 # http://stackoverflow.com/a/12429054/4481445
 
-class TabBar(QtGui.QTabBar):
+class TabBar(QTabBar):
     def __init__(self, parent=None):
         super(TabBar, self).__init__(parent=None)
 
@@ -394,7 +398,7 @@ class TabBar(QtGui.QTabBar):
         self.currentChanged.connect(self.storeIndex)
 
         self.about_btn = QToolButtonBase(IconDB().info)
-        self.about_btn.setIconSize(QtCore.QSize(20, 20))
+        self.about_btn.setIconSize(QSize(20, 20))
         self.about_btn.setFixedSize(32, 32)
         self.about_btn.setToolTip('About WHAT...')
         self.about_btn.setParent(self)
@@ -403,14 +407,14 @@ class TabBar(QtGui.QTabBar):
         self.about_btn.clicked.connect(self.aboutwhat.show)
 
     def tabSizeHint(self, index):
-        width = QtGui.QTabBar.tabSizeHint(self, index).width()
-        return QtCore.QSize(width, 32)
+        width = QTabBar.tabSizeHint(self, index).width()
+        return QSize(width, 32)
 
     def sizeHint(self):
-        sizeHint = QtGui.QTabBar.sizeHint(self)
+        sizeHint = QTabBar.sizeHint(self)
         w = sizeHint.width() + self.about_btn.size().width()
         # h = sizeHint.height()
-        return QtCore.QSize(w, 32)
+        return QSize(w, 32)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
