@@ -40,7 +40,6 @@ import numpy as np
 
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtCore import pyqtSignal as QSignal
-#from PyQt5.QtGui import QMenu
 from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QToolButton, QGridLayout, QLabel, QCheckBox,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
