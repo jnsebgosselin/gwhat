@@ -2,7 +2,9 @@
 
 language: python
 python:
-  - "3.4"
+  - python: "3.6"
+    env: USE_PYQT=pyqt5
+    os: linux
 
 install:
   - sudo apt-get install python3
