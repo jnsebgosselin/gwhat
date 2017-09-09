@@ -40,7 +40,6 @@ import numpy as np
 
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtCore import pyqtSignal as QSignal
-#from PyQt5.QtGui import QMenu
 from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QToolButton, QGridLayout, QLabel, QCheckBox,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
@@ -339,7 +338,6 @@ class dwnldWeather(QWidget):
             self.load_stationList(filename)
 
     def load_stationList(self, filename):
-
         '''
         It loads the informations in the weather stations list file (.lst) that
         is located in "filename". The content is then displayed in a
@@ -347,12 +345,11 @@ class dwnldWeather(QWidget):
 
         ----- weather_stations.lst -----
 
-        The weather_station.lst is a tabulation separated csv file that
-        contains the following information:  station names, station ID ,
-        date at which the data records begin and date at which the data
-        records end, the provinces to which each station belongs, the
-        climate ID and the Proximity value in km for the original search
-        location.
+        The weather_station.lst is a csv file that contains the following
+        information:  station names, station ID , date at which the data
+        records begin and date at which the data records end, the provinces
+        to which each station belongs, the climate ID and the Proximity
+        value in km for the original search location.
 
         All these information can be found on the Government of Canada
         website in the address bar of the web browser when a station is
@@ -373,7 +370,6 @@ class dwnldWeather(QWidget):
         self.staList_isNotSaved = False
 
         if not path.exists(filename):
-
             msg = ('"%s" not found. Please select an existing weather station'
                    ' list or search for new stations on the CDCD.'
                    ) % filename
@@ -388,7 +384,11 @@ class dwnldWeather(QWidget):
         # ------------------------------------------------------ Open file ----
 
         with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
+            reader = list(csv.reader(f, delimiter=','))
+
+        if reader[0] != db.FileHeaders().weather_stations[0]:
+            with open(filename, 'r') as f:
+                reader = list(csv.reader(f, delimiter='\t'))
 
         # -------------------------------------------------- Check version ----
 
@@ -418,7 +418,7 @@ class dwnldWeather(QWidget):
             # ---- Save Updated List ----
 
             with open(filename, 'w') as f:
-                writer = csv.writer(f, delimiter='\t')
+                writer = csv.writer(f, delimiter=',')
                 writer.writerows(reader)
 
             QApplication.restoreOverrideCursor()
@@ -438,6 +438,8 @@ class dwnldWeather(QWidget):
 
         self.station_table.populate_table(staList)
         self.staList_fname = filename
+
+        return staList
 
     def btn_save_staList_isClicked(self):
         filename = self.staList_fname
@@ -843,17 +845,17 @@ class dwnldWeather(QWidget):
               <\tr>
               <tr><td colspan="4"><hr><\td><\tr>
               ''' % (StaName[0], province,
-                     np.min(ALLDATA[:,0]), np.max(ALLDATA[:,0]))
+                     np.min(ALLDATA[:, 0]), np.max(ALLDATA[:, 0]))
         for i in range(0, len(FIELDS)):
-             nonan = sum(np.isnan(ALLDATA[:, i+3]))
-             LOG += '''
-                    <tr>
-                      <td align="left">%s</td>
-                      <td align="left" width=25></td>
-                      <td align="right">%d</td>
-                      <td align="right">&nbsp;(%d%%)</td>
-                    </tr>
-                    ''' % (FIELDS[i], nonan, nonan/ndata*100)
+            nonan = sum(np.isnan(ALLDATA[:, i+3]))
+            LOG += '''
+                   <tr>
+                     <td align="left">%s</td>
+                     <td align="left" width=25></td>
+                     <td align="right">%d</td>
+                     <td align="right">&nbsp;(%d%%)</td>
+                   </tr>
+                   ''' % (FIELDS[i], nonan, nonan/ndata*100)
         LOG += '<tr><td colspan="4"><hr><\td><\tr>'
 
         # ----------------------------------------------- Restructure Data ----
@@ -937,17 +939,18 @@ class DownloadRawDataFiles(QThread):
 
         # These values need to be pushed from the parent.
 
-        self.dirname = []   # Directory where the downloaded files are saved
-        self.stationID = [] # Unique identifier for the station used for
-                            # downloading the data from the server
-        self.climateID = [] # Unique identifier for the station
+        self.dirname = []    # Directory where the downloaded files are saved
+        self.stationID = []
+        # Unique identifier for the station used for downloading the
+        # data from the server
+        self.climateID = []  # Unique identifier for the station
         self.yr_start = []
         self.yr_end = []
-        self.StaName = [] # Common name given to the station (not unique)
+        self.StaName = []  # Common name given to the station (not unique)
 
     def run(self):
 
-        #----------------------------------------------------------- INIT -----
+        # ---------------------------------------------------------- INIT -----
 
         staID = self.stationID
         yr_start = int(self.yr_start)
@@ -958,9 +961,9 @@ class DownloadRawDataFiles(QThread):
         self.ERRFLAG = np.ones(yr_end - yr_start + 1)
 
         self.ConsoleSignal.emit(
-        '''<font color=black>Downloading data from </font>
-           <font color=blue>www.climate.weather.gc.ca</font>
-           <font color=black> for station %s</font>''' % StaName)
+            '''<font color=black>Downloading data from </font>
+               <font color=blue>www.climate.weather.gc.ca</font>
+               <font color=black> for station %s</font>''' % StaName)
         self.ProgBarSignal.emit(0)
 
         StaName = StaName.replace('\\', '_')
@@ -973,12 +976,14 @@ class DownloadRawDataFiles(QThread):
 
         # Data are downloaded on a yearly basis from yStart to yEnd
 
-        fname4merge = []  # list of paths of the yearly raw data files that
-                          # will be pass to contatenate and merge function.
+        # list of paths of the yearly raw data files that will be pass to
+        # contatenate and merge function.
+        fname4merge = []
+
         i = 0
         for year in range(yr_start, yr_end+1):
-
-            if self.STOP == True : # User stopped the downloading process.
+            if self.STOP:
+                # The user stopped the downloading process.
                 break
 
             # File and URL Paths :
@@ -993,7 +998,6 @@ class DownloadRawDataFiles(QThread):
             # Download Data For That Year :
 
             if path.exists(fname):
-
                 # If the file was downloaded in the same year that of the data
                 # record, data will be downloaded again in case the data series
                 # was not complete.
@@ -1017,15 +1021,16 @@ class DownloadRawDataFiles(QThread):
 
             if self.ERRFLAG[i] == 1:
                 self.ConsoleSignal.emit(
-                '''<font color=red>There was a problem downloading the data
-                     of station %s for year %d.
-                   </font>''' % (StaName, year))
+                    '''<font color=red>There was a problem downloading the
+                         data of station %s for year %d.
+                       </font>''' % (StaName, year))
 
             elif self.ERRFLAG[i] == 0:
 
                 self.ConsoleSignal.emit(
-                '''<font color=black>Weather data for station %s downloaded
-                     successfully for year %d.</font>''' % (StaName, year))
+                    '''<font color=black>Weather data for station %s
+                         downloaded successfully for year %d.
+                       </font>''' % (StaName, year))
                 fname4merge.append(fname)
 
             elif self.ERRFLAG[i] == 3:
@@ -1033,24 +1038,23 @@ class DownloadRawDataFiles(QThread):
                 sleep(0.1)
 
                 self.ConsoleSignal.emit(
-                '''<font color=green>A weather data file already existed for
-                     station %s for year %d. Downloading is skipped.
-                   </font>''' % (StaName, year))
+                    '''<font color=green>A weather data file already existed
+                         for station %s for year %d. Downloading is skipped.
+                       </font>''' % (StaName, year))
                 fname4merge.append(fname)
 
             i += 1
 
         # ---------------------------------------------------- End of Task ----
 
-        if self.STOP == True:
-
+        if self.STOP:
             self.STOP = False
             print("Downloading process for station %s stopped." % StaName)
             self.ConsoleSignal.emit('''<font color=red>Downloading process for
                                          station %s stopped.
                                        </font>''' % StaName)
         else:
-            cmt  = "All raw  data files downloaded sucessfully for "
+            cmt = "All raw  data files downloaded sucessfully for "
             cmt += "station %s." % StaName
             print(cmt)
             self.ConsoleSignal.emit('<font color=black>%s</font>' % cmt)
