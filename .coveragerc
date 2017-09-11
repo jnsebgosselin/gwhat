@@ -1,0 +1,14 @@
+[run]
+omit = 
+    */Backup/*
+    */Benchmark/*
+    */Images/*  
+    */Projects/*
+    */PyInstaller 3.2.1-dev/*
+    */PyInstaller-3.2.1/*
+    */Reference/*
+    */Releases/*
+    */User_Manual/*
+
+[report]
+fail_under=0
