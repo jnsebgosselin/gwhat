@@ -36,12 +36,12 @@ def station_finder_bot(qtbot):
 
 def test_station_finder(station_finder_bot):
     station_finder_widget, qtbot = station_finder_bot
-    station_finder_widget.show()
     assert station_finder_widget
 
 
 def test_search_weather_station(station_finder_bot):
     station_finder_widget, qtbot = station_finder_bot
+    station_finder_widget.show()
 
     expected_results = [
         ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
@@ -57,6 +57,7 @@ def test_search_weather_station(station_finder_bot):
          "24.85"]
         ]
 
+    # Search for stations and assert the results.
     searchFinished = station_finder_widget.finder.searchFinished
     with qtbot.waitSignal(searchFinished, raising=True, timeout=60000):
         station_finder_widget.btn_search_isClicked()
@@ -64,9 +65,14 @@ def test_search_weather_station(station_finder_bot):
 
     assert results == expected_results
 
+    # Assert that the results are displayed correctly in the UI
+    assert (station_finder_widget.station_table.get_staList() ==
+            station_finder_widget.finder.stationlist)
 
-def test_stop_searching(station_finder_bot):
+
+def test_stop_search(station_finder_bot):
     station_finder_widget, qtbot = station_finder_bot
+    station_finder_widget.show()
 
     expected_results = [
         ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
@@ -82,10 +88,12 @@ def test_stop_searching(station_finder_bot):
          "24.85"]
         ]
 
+    # Start the search.
     newStationFound = station_finder_widget.finder.newStationFound
     with qtbot.waitSignal(newStationFound, raising=True, timeout=60000):
         station_finder_widget.btn_search_isClicked()
 
+    # Stop the search as soon as we received a result and assert the results.
     searchFinished = station_finder_widget.finder.searchFinished
     with qtbot.waitSignal(searchFinished, raising=True, timeout=60000):
         station_finder_widget.btn_search_isClicked()
@@ -93,6 +101,22 @@ def test_stop_searching(station_finder_bot):
 
     assert len(results) < len(expected_results)
     assert results == expected_results[:len(results)]
+
+    # Assert that the results are displayed correctly in the UI
+    assert (station_finder_widget.station_table.get_staList() ==
+            station_finder_widget.finder.stationlist)
+
+    # Restart the search and let it fihish completely and assert the results.
+    searchFinished = station_finder_widget.finder.searchFinished
+    with qtbot.waitSignal(searchFinished, raising=True, timeout=60000):
+        station_finder_widget.btn_search_isClicked()
+    results = station_finder_widget.finder.stationlist
+
+    assert results == expected_results
+
+    # Assert that the results are displayed correctly in the UI
+    assert (station_finder_widget.station_table.get_staList() ==
+            station_finder_widget.finder.stationlist)
 
 
 if __name__ == "__main__":

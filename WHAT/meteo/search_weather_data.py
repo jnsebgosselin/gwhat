@@ -293,12 +293,11 @@ class StationFinder(QObject):
                                            start_year, end_year, province,
                                            climate_id, station_proxim]
 
-                            self.stationlist.append(new_station)
-
                             if self.stop_searching:
                                 self.searchFinished.emit(self.stationlist)
                                 return self.stationlist
                             else:
+                                self.stationlist.append(new_station)
                                 self.newStationFound.emit(new_station)
                         else:
                             print("Not adding %s (not enough data)"
@@ -355,7 +354,7 @@ class StationFinder(QObject):
         if self.isOffline:
             with open('urlsinglestation.txt', 'r') as f:
                 urlread = f.read()
-                time.sleep(1)
+                time.sleep(0.25)
         else:
             f = urlopen(url)
             urlread = f.read().decode('utf-8')
