@@ -845,7 +845,6 @@ class Search4Stations(QWidget):
         self.thread.start()
 
     def search_is_finished(self, station_list):
-        print(self.finder.stationlist)
         self.thread.quit()
         waittime = 0
         while self.thread.isRunning():
