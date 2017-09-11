@@ -37,7 +37,8 @@ import os
 
 import xlsxwriter
 import numpy as np
-from PyQt5.QtCore import QObject, pyqtSignal, Qt, QPoint, QEvent, QThread
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import QObject, Qt, QPoint, QEvent, QThread
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QTableWidget, QCheckBox,
                              QTabWidget, QSpinBox, QPushButton, QDesktopWidget,
@@ -55,22 +56,23 @@ from common import IconDB, StyleDB
 
 class StationFinder(QObject):
 
-    searchFinished = pyqtSignal(list)
-    newStationFound = pyqtSignal(list)
-    ConsoleSignal = pyqtSignal(str)
+    searchFinished = QSignal(list)
+    newStationFound = QSignal(list)
+    ConsoleSignal = QSignal(str)
 
     def __init__(self, parent=None):
         super(StationFinder, self).__init__(parent)
 
         self.prov = None
-        self.lat = None
-        self.lon = None
+        self.lat = 45.40
+        self.lon = 73.15
         self.rad = 25
         self.year_min = 1960
         self.year_max = 2015
         self.nbr_of_years = 5
         self.search_by = 'proximity'
         # options are: 'proximity' or 'province'
+        self.stationlist = []
 
         self.stop_searching = False
         self.isOffline = False
@@ -96,7 +98,7 @@ class StationFinder(QObject):
 
         Nmax = 100  # Number of results per page (maximu m possible is 100)
 
-        staList = []
+        self.stationlist = []
         # [station_name, station_id, start_year,
         #  end_year, province, climate_id, station_proxim]
 
@@ -162,7 +164,7 @@ class StationFinder(QObject):
                 msg = 'No weather station found.'
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 print(msg)
-                self.searchFinished.emit(staList)
+                self.searchFinished.emit(self.stationlist)
                 return
 
             # Go backward from indx_e and find where the number starts to
@@ -185,7 +187,7 @@ class StationFinder(QObject):
             staCount = 0  # global station counter
             for page in range(Npage):
                 if self.stop_searching:
-                    self.searchFinished.emit(staList)
+                    self.searchFinished.emit(self.stationlist)
                     return
 
                 print('Page :', page)
@@ -280,7 +282,7 @@ class StationFinder(QObject):
                             # ---- Climate ID ----
 
                             if self.stop_searching:
-                                self.searchFinished.emit(staList)
+                                self.searchFinished.emit(self.stationlist)
                                 return
 
                             staInfo = self.get_staInfo(province, station_id)
@@ -291,12 +293,11 @@ class StationFinder(QObject):
                                            start_year, end_year, province,
                                            climate_id, station_proxim]
 
-                            staList.append(new_station)
-
                             if self.stop_searching:
-                                self.searchFinished.emit(staList)
-                                return staList
+                                self.searchFinished.emit(self.stationlist)
+                                return self.stationlist
                             else:
+                                self.stationlist.append(new_station)
                                 self.newStationFound.emit(new_station)
                         else:
                             print("Not adding %s (not enough data)"
@@ -309,7 +310,7 @@ class StationFinder(QObject):
 
             msg = ('%d weather stations with daily data for at least %d years'
                    ' between %d and %d'
-                   ) % (len(staList), self.nbr_of_years,
+                   ) % (len(self.stationlist), self.nbr_of_years,
                         self.year_min, self.year_max)
             self.ConsoleSignal.emit('<font color=green>%s</font>' % msg)
             print(msg)
@@ -332,9 +333,9 @@ class StationFinder(QObject):
                 print()
 
         print('Searching for weather station is finished.')
-        self.searchFinished.emit(staList)
+        self.searchFinished.emit(self.stationlist)
 
-        return staList
+        return self.stationlist
 
     def get_staInfo(self, Prov, StationID):
         """
@@ -353,7 +354,7 @@ class StationFinder(QObject):
         if self.isOffline:
             with open('urlsinglestation.txt', 'r') as f:
                 urlread = f.read()
-                time.sleep(1)
+                time.sleep(0.25)
         else:
             f = urlopen(url)
             urlread = f.read().decode('utf-8')
@@ -421,8 +422,8 @@ class Search4Stations(QWidget):
     Government of Canada website.
     '''
 
-    ConsoleSignal = pyqtSignal(str)
-    staListSignal = pyqtSignal(list)
+    ConsoleSignal = QSignal(str)
+    staListSignal = QSignal(list)
 
     def __init__(self, parent=None):
         super(Search4Stations, self).__init__()
@@ -805,8 +806,6 @@ class Search4Stations(QWidget):
             msg = 'No station currently selected'
             print(msg)
 
-    # -------------------------------------------------------------------------
-
     def btn_search_isClicked(self):
         """
         Initiate the seach for weather stations. It grabs the info from the
@@ -823,12 +822,13 @@ class Search4Stations(QWidget):
             self.btn_search.setEnabled(False)
             return
 
+        # Update UI state :
         self.year_widg.setEnabled(False)
         self.tab_widg.setEnabled(False)
+        self.btn_search.setIcon(IconDB().stop)
+        self.station_table.clearContents()
 
-        msg = 'Searching for weather stations. Please wait...'
-        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-
+        # Set the attributes of the finder:
         self.finder.prov = self.prov
         self.finder.lat = self.lat
         self.finder.lon = self.lon
@@ -838,11 +838,12 @@ class Search4Stations(QWidget):
         self.finder.nbr_of_years = self.nbr_of_years
         self.finder.search_by = self.search_by
 
-        self.btn_search.setIcon(IconDB().stop)
-
-        self.station_table.clearContents()
+        # Start searching for weather station :
         self.thread.started.connect(self.finder.search_envirocan)
         self.thread.start()
+
+        msg = 'Searching for weather stations. Please wait...'
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
     def search_is_finished(self, station_list):
         self.thread.quit()
@@ -857,6 +858,7 @@ class Search4Stations(QWidget):
                 print(msg)
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 return
+        self.thread.started.disconnect(self.finder.search_envirocan)
 
         # ---- Reset the UI ----
 
@@ -1226,8 +1228,11 @@ if __name__ == '__main__':
 
     search4sta = Search4Stations()
 
-    search4sta.lat_spinBox.setValue(45.4)
-    search4sta.lon_spinBox.setValue(73.13)
+    search4sta.lat_spinBox.setValue(45.40)
+    search4sta.lon_spinBox.setValue(73.15)
+    search4sta.minYear.setValue(1980)
+    search4sta.maxYear.setValue(2015)
+    search4sta.nbrYear.setValue(20)
     search4sta.finder.isOffline = False
 
     search4sta.show()
