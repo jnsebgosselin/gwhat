@@ -287,16 +287,17 @@ class StationFinder(QObject):
                             climate_id = staInfo[5]
 
                             # ---- Send Signal to UI ----
+                            new_station = [station_name, station_id,
+                                           start_year, end_year, province,
+                                           climate_id, station_proxim]
 
-                            staList.append([station_name, station_id,
-                                            start_year, end_year, province,
-                                            climate_id, station_proxim])
+                            staList.append(new_station)
 
                             if self.stop_searching:
                                 self.searchFinished.emit(staList)
                                 return staList
                             else:
-                                self.newStationFound.emit(staList)
+                                self.newStationFound.emit(new_station)
                         else:
                             print("Not adding %s (not enough data)"
                                   % station_name)
@@ -431,7 +432,8 @@ class Search4Stations(QWidget):
         self.finder = StationFinder()
         self.thread = QThread()
         self.finder.moveToThread(self.thread)
-        self.finder.newStationFound.connect(self.station_table.populate_table)
+        self.finder.newStationFound.connect(
+                self.station_table.insert_row_at_end)
         self.finder.searchFinished.connect(self.search_is_finished)
 
     @property
@@ -972,141 +974,149 @@ class WeatherStationDisplayTable(QTableWidget):
             widget = item.widget()
             widget.setCheckState(self.chkbox_header.checkState())
 
-    def populate_table(self, staList):
+    def clearContents(self):
+        "Qt method override"
+        super(WeatherStationDisplayTable, self).clearContents()
+        self.setRowCount(0)
 
-        self.chkbox_header.setCheckState(Qt.CheckState(False))
+    def insert_row_at_end(self, row_data):
+        row = self.rowCount()
+        self.insertRow(row)
 
-        nrow = len(staList)
-        self.setRowCount(nrow)
-        self.setSortingEnabled(False)
+        # ---- Checkbox ----
 
-        for row in range(nrow):
+        col = 0
 
-            # More Options:
+        item = QTableWidgetItem('')
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable & Qt.ItemIsEnabled)
+        self.setItem(row, col, item)
 
-            # item.setFlags(QtCore.Qt.ItemIsEnabled &
-            #               ~QtCore.Qt.ItemIsEditable)
-            # item.setTextAlignment(QtCore.Qt.AlignLeft |
-            #                       QtCore.Qt.AlignVCenter)
+        chckbox = QCheckBox()
+        chckbox.setCheckState(self.chkbox_header.checkState())
 
-            # ---- Checkbox ----
+        chckbox_center = QWidget()
+        chckbox_grid = QGridLayout(chckbox_center)
+        chckbox_grid.addWidget(chckbox, 1, 1)
+        chckbox_grid.setColumnStretch(0, 100)
+        chckbox_grid.setColumnStretch(2, 100)
+        chckbox_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
 
-            col = 0
+        self.setCellWidget(row, col, chckbox_center)
 
-            item = QTableWidgetItem('')
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable & Qt.ItemIsEnabled)
-            self.setItem(row, col, item)
+        # ---- Weather Station ----
 
-            chckbox_center = QWidget()
-            chckbox_grid = QGridLayout()
-            chckbox_grid.addWidget(QCheckBox(), 1, 1)
-            chckbox_grid.setColumnStretch(0, 100)
-            chckbox_grid.setColumnStretch(2, 100)
-            chckbox_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
-            chckbox_center.setLayout(chckbox_grid)
+        col += 1
 
-            self.setCellWidget(row, col, chckbox_center)
+        item = QTableWidgetItem(row_data[0])
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        item.setToolTip(row_data[0])
+        self.setItem(row, col, item)
 
-            # ---- Weather Station ----
+        # ---- Proximity ----
 
-            col += 1
+        col += 1
 
-            item = QTableWidgetItem(staList[row][0])
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            item.setTextAlignment(Qt.AlignLeft | Qt.AlignVCenter)
-            item.setToolTip(staList[row][0])
-            self.setItem(row, col, item)
+        item = self.NumTableWidgetItem('%0.2f' % float(row_data[6]),
+                                       float(row_data[6]))
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
+        self.setItem(row, col, item)
 
-            # ---- Proximity ----
+        # ---- From Year ----
 
-            col += 1
+        # ----
+        min_year = int(row_data[2])
+        max_year = int(row_data[3])
+        yearspan = np.arange(min_year, max_year+1).astype(str)
+        # ----
 
-            item = self.NumTableWidgetItem('%0.2f' % float(staList[row][6]),
-                                           float(staList[row][6]))
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            item.setTextAlignment(Qt.AlignCenter)
-            self.setItem(row, col, item)
+        col += 1
 
-            # ---- From Year ----
+        item = QTableWidgetItem(row_data[2])
+        item.setFlags(item.flags() & Qt.ItemIsEnabled)
+        self.setItem(row, col, item)
+        item.setTextAlignment(Qt.AlignCenter)
 
-            # ----
-            min_year = int(staList[row][2])
-            max_year = int(staList[row][3])
-            yearspan = np.arange(min_year, max_year+1).astype(str)
-            # ----
+        if self.year_display_mode == 1:
 
-            col += 1
-
-            item = QTableWidgetItem(staList[row][2])
             item.setFlags(item.flags() & Qt.ItemIsEnabled)
-            self.setItem(row, col, item)
-            item.setTextAlignment(Qt.AlignCenter)
 
-            if self.year_display_mode == 1:
+            self.fromYear = QComboBox()
+            self.fromYear.setFixedWidth(75)
+            self.fromYear.setInsertPolicy(QComboBox.NoInsert)
+            self.fromYear.addItems(yearspan)
+            self.fromYear.setMinimumContentsLength(4)
+            self.fromYear.setSizeAdjustPolicy(
+                QComboBox.AdjustToMinimumContentsLength)
 
-                item.setFlags(item.flags() & Qt.ItemIsEnabled)
+            self.setCellWidget(row, col, self.fromYear)
 
-                self.fromYear = QComboBox()
-                self.fromYear.setFixedWidth(75)
-                self.fromYear.setInsertPolicy(QComboBox.NoInsert)
-                self.fromYear.addItems(yearspan)
-                self.fromYear.setMinimumContentsLength(4)
-                self.fromYear.setSizeAdjustPolicy(
-                    QComboBox.AdjustToMinimumContentsLength)
+        # ---- To Year ----
 
-                self.setCellWidget(row, col, self.fromYear)
+        col += 1
 
-            # ---- To Year ----
+        item = QTableWidgetItem(row_data[3])
 
-            col += 1
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
 
-            item = QTableWidgetItem(staList[row][3])
+        self.setItem(row, col, item)
 
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            item.setTextAlignment(Qt.AlignCenter)
+        if self.year_display_mode == 1:
+            item.setFlags(item.flags() & Qt.ItemIsEnabled)
 
-            self.setItem(row, col, item)
+            self.toYear = QComboBox()
+            self.toYear.setFixedWidth(75)
+            self.toYear.setInsertPolicy(QComboBox.NoInsert)
+            self.toYear.addItems(yearspan)
+            self.toYear.setCurrentIndex(len(yearspan)-1)
+            self.toYear.setMinimumContentsLength(4)
+            self.toYear.setSizeAdjustPolicy(
+                QComboBox.AdjustToMinimumContentsLength)
 
-            if self.year_display_mode == 1:
+            self.setCellWidget(row, col, self.toYear)
 
-                item.setFlags(item.flags() & Qt.ItemIsEnabled)
+        # ---- Province ----
 
-                self.toYear = QComboBox()
-                self.toYear.setFixedWidth(75)
-                self.toYear.setInsertPolicy(QComboBox.NoInsert)
-                self.toYear.addItems(yearspan)
-                self.toYear.setCurrentIndex(len(yearspan)-1)
-                self.toYear.setMinimumContentsLength(4)
-                self.toYear.setSizeAdjustPolicy(
-                    QComboBox.AdjustToMinimumContentsLength)
+        col += 1
 
-                self.setCellWidget(row, col, self.toYear)
+        item = QTableWidgetItem(row_data[4])
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
+        self.setItem(row, col, item)
 
-            # ---- Province ----
+        # ---- Climate ID (hidden) ----
 
-            col += 1
+        col += 1
 
-            item = QTableWidgetItem(staList[row][4])
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            item.setTextAlignment(Qt.AlignCenter)
-            self.setItem(row, col, item)
+        item = QTableWidgetItem(row_data[5])
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
+        self.setItem(row, col, item)
 
-            # ---- Climate ID (hidden) ----
+        # ---- Station ID ----
 
-            col += 1
+        col += 1
 
-            item = QTableWidgetItem(staList[row][5])
-            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-            item.setTextAlignment(Qt.AlignCenter)
-            self.setItem(row, col, item)
+        item = QTableWidgetItem(row_data[1])
+        self.setItem(row, col, item)
 
-            # ---- Station ID ----
+    def delete_rows(self, rows):
 
-            col += 1
+        # Going in reverse order to preserve indexes while
+        # scanning the rows if any are deleted.
+        for row in reversed(rows):
+            self.removeRow(row)
+            print('Removing %s (%s)' % (self.item(row, 1).text(),
+                                        self.item(row, 6).text()))
 
-            item = QTableWidgetItem(staList[row][1])
-            self.setItem(row, col, item)
-
+    def populate_table(self, staList):
+        self.clearContents()
+        self.chkbox_header.setCheckState(Qt.CheckState(False))
+        self.setSortingEnabled(False)
+        for row_data in staList:
+            self.insert_row_at_end(row_data)
         self.setSortingEnabled(True)
 
     def get_checked_rows(self):
@@ -1158,17 +1168,6 @@ class WeatherStationDisplayTable(QTableWidget):
             staList.append(sta2add)
 
         return staList
-
-    def delete_rows(self, rows):  # ===========================================
-
-        # Going in reverse order to preserve indexes while
-        # scanning the rows if any are deleted.
-
-        for row in reversed(rows):
-            print('Removing %s (%s)' % (self.item(row, 1).text(),
-                                        self.item(row, 6).text()))
-
-            self.removeRow(row)
 
     def save_staList(self, filename):  # ======================================
 
