@@ -822,12 +822,13 @@ class Search4Stations(QWidget):
             self.btn_search.setEnabled(False)
             return
 
+        # Update UI state :
         self.year_widg.setEnabled(False)
         self.tab_widg.setEnabled(False)
+        self.btn_search.setIcon(IconDB().stop)
+        self.station_table.clearContents()
 
-        msg = 'Searching for weather stations. Please wait...'
-        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-
+        # Set the attributes of the finder:
         self.finder.prov = self.prov
         self.finder.lat = self.lat
         self.finder.lon = self.lon
@@ -837,11 +838,12 @@ class Search4Stations(QWidget):
         self.finder.nbr_of_years = self.nbr_of_years
         self.finder.search_by = self.search_by
 
-        self.btn_search.setIcon(IconDB().stop)
-
-        self.station_table.clearContents()
+        # Start searching for weather station :
         self.thread.started.connect(self.finder.search_envirocan)
         self.thread.start()
+
+        msg = 'Searching for weather stations. Please wait...'
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
     def search_is_finished(self, station_list):
         self.thread.quit()
@@ -856,6 +858,7 @@ class Search4Stations(QWidget):
                 print(msg)
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 return
+        self.thread.started.disconnect(self.finder.search_envirocan)
 
         # ---- Reset the UI ----
 
