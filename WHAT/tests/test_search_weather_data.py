@@ -7,11 +7,12 @@ Created on Fri Aug  4 01:50:50 2017
 import pytest
 
 import sys
-import os.path
+import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # Local imports
 from meteo.search_weather_data import Search4Stations
+from meteo.search_weather_data import QFileDialog
 
 # Qt Test Fixtures
 # --------------------------------
@@ -39,7 +40,7 @@ def test_station_finder(station_finder_bot):
     assert station_finder_widget
 
 
-def test_search_weather_station(station_finder_bot):
+def test_search_weather_station(station_finder_bot, mocker):
     station_finder_widget, qtbot = station_finder_bot
     station_finder_widget.show()
 
@@ -68,6 +69,19 @@ def test_search_weather_station(station_finder_bot):
     # Assert that the results are displayed correctly in the UI
     assert (station_finder_widget.station_table.get_staList() ==
             station_finder_widget.finder.stationlist)
+
+    # Mock the dialog window and answer to specify the file name and type
+    fname = os.path.join(os.getcwd(), 'weather_station_list.lst')
+    ftype = '*.csv'
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
+                        return_value=(fname, ftype))
+
+    # Delete file if it exists
+    if os.path.exists(fname):
+        os.remove(fname)
+
+    # Save the file
+    station_finder_widget.btn_save_isClicked()
 
 
 def test_stop_search(station_finder_bot):
@@ -120,5 +134,4 @@ def test_stop_search(station_finder_bot):
 
 
 if __name__ == "__main__":
-    import os
     pytest.main([os.path.basename(__file__)])

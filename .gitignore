@@ -126,3 +126,4 @@ WHAT/kgs_brf/kgs_brf.par
 WHAT/kgs_brf/BRFOutput.txt
 WHAT/meteo/url.txt
 WHAT/meteo/urlsinglestation.txt
+WHAT/tests/weather_station_list.lst

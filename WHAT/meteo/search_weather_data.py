@@ -777,10 +777,9 @@ class Search4Stations(QWidget):
     # -------------------------------------------------------------------------
 
     def btn_save_isClicked(self):
-        dialog = QFileDialog()
-        ddir = os.getcwd()
-        filename, ftype = dialog.getSaveFileName(
-                self, 'Save normals', ddir, '*.xlsx;;*.xls;;*.csv')
+        ddir = os.path.join(os.getcwd(), 'weather_station_list.csv')
+        filename, ftype = QFileDialog().getSaveFileName(
+                self, 'Save normals', ddir, '*.csv;;*.xlsx;;*.xls')
 
         station_list = self.station_table.get_staList()
         station_list.insert(0, db.FileHeaders().weather_stations[0])

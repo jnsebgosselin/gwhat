@@ -10,10 +10,8 @@ environment:
     PIP_DEPENDENCIES_FLAGS: "-q"
     CONDA_DEPENDENCIES_FLAGS: "--quiet"
     CONDA_DEPENDENCIES: >
-      rope pyflakes sphinx pygments pylint pycodestyle psutil nbconvert
-      qtawesome pickleshare pyzmq chardet mock pandas pytest
-      pytest-cov numpydoc scipy pillow qtconsole matplotlib jedi
-    PIP_DEPENDENCIES: "pytest-qt pytest-mock pytest-timeout flaky"
+      mock pytest pytest-cov scipy matplotlib
+    PIP_DEPENDENCIES: "pytest-qt pytest-mock pytest-timeout flaky pytest-ordering"
 
   matrix:
     #- PYTHON_VERSION: "2.7"
