@@ -11,8 +11,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # Local imports
-from meteo.search_weather_data import Search4Stations
-from meteo.search_weather_data import QFileDialog
+from meteo.search_weather_data import Search4Stations                  # nopep8
+from meteo.search_weather_data import QFileDialog                      # nopep8
 
 # Qt Test Fixtures
 # --------------------------------
@@ -133,5 +133,5 @@ def test_stop_search(station_finder_bot):
 
 
 if __name__ == "__main__":
-#    pytest.main([os.path.basename(__file__)])
+    # pytest.main([os.path.basename(__file__)])
     pytest.main()

@@ -11,7 +11,7 @@ import os.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # Local imports
-from meteo.dwnld_weather_data import dwnldWeather
+from meteo.dwnld_weather_data import dwnldWeather                      # nopep8
 
 # Qt Test Fixtures
 # --------------------------------
