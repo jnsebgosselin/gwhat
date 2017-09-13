@@ -13,6 +13,8 @@ install:
   - pip install pytest
   - pip install pytest-qt
   - pip install pytest-xvfb
+  - pip install pytest-mock
+  - pip install pytest-ordering
   - pip install coveralls
 
 script:
