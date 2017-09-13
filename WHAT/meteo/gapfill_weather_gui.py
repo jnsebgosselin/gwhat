@@ -657,8 +657,7 @@ class GapFillWeatherGUI(QWidget):
 
         self.gap_fill_start(sta_indx2fill)
 
-
-    def gapfill_worker_return(self, event): #============== Gap-Fill Return ==
+    def gapfill_worker_return(self, event):
 
         # Method initiated from an automatic return from the gapfilling
         # process in batch mode. Iterate over the station list and continue
@@ -685,10 +684,9 @@ class GapFillWeatherGUI(QWidget):
             self.isFillAll_inProgress = False
             self.restoreUI()
 
+    def gap_fill_start(self, sta_indx2fill):
 
-    def gap_fill_start(self, sta_indx2fill): #=============== Gap-Fill Start ==
-
-        #----- Wait for the QThread to finish -----
+        # ----- Wait for the QThread to finish -----
 
         # Protection in case the QTread did not had time to close completely
         # before starting the downloading process for the next station.
@@ -710,9 +708,6 @@ class GapFillWeatherGUI(QWidget):
 
         self.CORRFLAG = 'off'
         self.target_station.setCurrentIndex(sta_indx2fill)
-#        self.TARGET.index = self.target_station.currentIndex()
-#        self.TARGET.name = \
-#            self.gapfill_worker.WEATHER.STANAME[self.TARGET.index]
         self.CORRFLAG = 'on'
 
         # Calculate correlation coefficient for the next station.
