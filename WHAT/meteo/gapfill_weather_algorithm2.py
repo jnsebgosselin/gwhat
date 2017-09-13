@@ -77,7 +77,6 @@ class GapFillWeather(QObject):
     ProgBarSignal = QSignal(int)
     ConsoleSignal = QSignal(str)
     GapFillFinished = QSignal(bool)
-    FillDataSignal = QSignal(bool)
 
     def __init__(self, parent=None):
         super(GapFillWeather, self).__init__(parent)
@@ -116,15 +115,8 @@ class GapFillWeather(QObject):
 
         self.full_error_analysis = False
         self.leave_one_out = False
-
         # leave_one_out: flag to control if data are removed from the
         #                dataset in the cross-validation procedure.
-
-        # ------------------------------------------------ Signals and Slots --
-
-        # This is only used if managed from a UI.
-
-        self.FillDataSignal.connect(self.fill_data)
 
     # =========================================================================
 

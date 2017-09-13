@@ -743,8 +743,15 @@ class GapFillWeatherGUI(QWidget):
 
         # ---- Start the Thread ----
 
-        self.gapfill_thread.start()
-        self.gapfill_worker.FillDataSignal.emit(True)
+        try:
+            self.gapfill_thread.started.disconnect(
+                    self.gapfill_worker.fill_data)
+        except TypeError:
+            # self.gapfill_worker.fill_data is not connected
+            pass
+        finally:
+            self.gapfill_thread.started.connect(self.gapfill_worker.fill_data)
+            self.gapfill_thread.start()
 
     def btn_add_ETP_isClicked(self):  # =======================================
 
