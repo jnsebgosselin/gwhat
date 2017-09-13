@@ -35,14 +35,11 @@ def station_finder_bot(qtbot):
 # -------------------------------
 
 
-def test_station_finder(station_finder_bot):
-    station_finder_widget, qtbot = station_finder_bot
-    assert station_finder_widget
-
-
+@pytest.mark.run(order=1)
 def test_search_weather_station(station_finder_bot, mocker):
     station_finder_widget, qtbot = station_finder_bot
     station_finder_widget.show()
+    assert station_finder_widget
 
     expected_results = [
         ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
@@ -84,9 +81,11 @@ def test_search_weather_station(station_finder_bot, mocker):
     station_finder_widget.btn_save_isClicked()
 
 
+@pytest.mark.run(order=1)
 def test_stop_search(station_finder_bot):
     station_finder_widget, qtbot = station_finder_bot
     station_finder_widget.show()
+    assert station_finder_widget
 
     expected_results = [
         ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
@@ -134,4 +133,5 @@ def test_stop_search(station_finder_bot):
 
 
 if __name__ == "__main__":
-    pytest.main([os.path.basename(__file__)])
+#    pytest.main([os.path.basename(__file__)])
+    pytest.main()
