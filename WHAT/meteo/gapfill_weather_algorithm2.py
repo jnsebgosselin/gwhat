@@ -850,7 +850,7 @@ class GapFillWeather(QObject):
 
         try:
             pc = nbr_fill_total/nbr_nan_total * 100
-        except ZeroDivisionError:
+        except TypeError:
             pc = 0
         nbr_fill_total_txt = '%d (%0.1f %% of missing)' % (nbr_fill_total, pc)
 
