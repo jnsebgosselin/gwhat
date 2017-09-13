@@ -77,7 +77,6 @@ class GapFillWeather(QObject):
     ProgBarSignal = QSignal(int)
     ConsoleSignal = QSignal(str)
     GapFillFinished = QSignal(bool)
-    FillDataSignal = QSignal(bool)
 
     def __init__(self, parent=None):
         super(GapFillWeather, self).__init__(parent)
@@ -116,15 +115,8 @@ class GapFillWeather(QObject):
 
         self.full_error_analysis = False
         self.leave_one_out = False
-
         # leave_one_out: flag to control if data are removed from the
         #                dataset in the cross-validation procedure.
-
-        # ------------------------------------------------ Signals and Slots --
-
-        # This is only used if managed from a UI.
-
-        self.FillDataSignal.connect(self.fill_data)
 
     # =========================================================================
 
@@ -305,7 +297,7 @@ class GapFillWeather(QObject):
         log_Ndat = np.zeros(np.shape(Y2fill)).astype(str)
         log_Ndat[:] = 'nan'
 
-        if self.full_error_analysis is True:
+        if self.full_error_analysis:
             print('\n!A full error analysis will be performed!\n')
             YpFULL = np.copy(Y2fill) * np.nan
             YXmFULL = np.zeros(np.shape(DATA)) * np.nan
@@ -333,7 +325,7 @@ class GapFillWeather(QObject):
             check_ALTDIFF = np.zeros(len(ALTDIFF)) == 0
 
         check_ALL = check_HORDIST * check_ALTDIFF
-        index_ALL = np.where(check_ALL == True)[0]
+        index_ALL = np.where(check_ALL == True)[0]                     # nopep8
 
         # Keeps only the stations that respect all the treshold values
 
@@ -382,7 +374,7 @@ class GapFillWeather(QObject):
         # *progress_total* and *fill_progress* are used to display the
         # progression of the gap-filling procedure on a UI progression bar.
 
-        if self.full_error_analysis == True:
+        if self.full_error_analysis:
             progress_total = np.size(Y2fill[:, var2fill])
         else:
             progress_total = np.copy(nbr_nan_total)
@@ -437,7 +429,7 @@ class GapFillWeather(QObject):
             # counter used in the calculation of average RMSE and NSTA values.
             it_avg = 0
 
-            if self.full_error_analysis == True :
+            if self.full_error_analysis:
                 # All the data of the time series between the specified
                 # time indexes will be estimated.
                 row2fill = range(index_start, index_end+1)
@@ -455,7 +447,7 @@ class GapFillWeather(QObject):
                 # routine from a UI by setting the <STOP> flag attributes to
                 # *True*.
 
-                if self.STOP == True:
+                if self.STOP is True:
                     msg = ('Completion process for station %s stopped.' %
                            target_station_name)
                     print(msg)
@@ -479,7 +471,7 @@ class GapFillWeather(QObject):
                     # Impossible to fill variable because all neighboring
                     # stations are empty.
 
-                    if self.full_error_analysis == True:
+                    if self.full_error_analysis:
                         YpFULL[row, var] = np.nan
 
                     if row in row_nan:
@@ -648,7 +640,7 @@ class GapFillWeather(QObject):
                     log_RMSE[row, var] = RMSE
                     log_Ndat[row, var] = Ndat
 
-                    if self.full_error_analysis == True:
+                    if self.full_error_analysis:
                         YpFULL[row, var] = Y_row
 
                         # Gets the indexes of the stations that were used for
@@ -715,7 +707,7 @@ class GapFillWeather(QObject):
         print('Saving data to files...')
         print('--------------------------------------------------')
 
-        if FLAG_nan == True:
+        if FLAG_nan:
             self.ConsoleSignal.emit(
                 '<font color=red>WARNING: Some missing data were not ' +
                 'completed because all neighboring station were empty ' +
@@ -857,8 +849,8 @@ class GapFillWeather(QObject):
         # ---- Total Filled ----
 
         try:
-            pc = nbr_fill_total / nbr_nan_total * 100
-        except:
+            pc = nbr_fill_total/nbr_nan_total * 100
+        except ZeroDivisionError:
             pc = 0
         nbr_fill_total_txt = '%d (%0.1f %% of missing)' % (nbr_fill_total, pc)
 
@@ -873,7 +865,7 @@ class GapFillWeather(QObject):
 
         # ---- Info Detailed ----
 
-        fcontent.extend([[],[],
+        fcontent.extend([[], [],
                          ['*** DETAILED REPORT ***'],
                          [],
                          ['VARIABLE', 'YEAR', 'MONTH', 'DAY', 'NBR STA.',
@@ -951,7 +943,7 @@ class GapFillWeather(QObject):
         # Add ETP to file :
 
         if self.add_ETP:
-            PET = wxrd.add_ETP_to_weather_data_file(output_path)
+            wxrd.add_ETP_to_weather_data_file(output_path)
 
         # Produces Weather Normals Graph :
 
@@ -964,7 +956,7 @@ class GapFillWeather(QObject):
 
         # ------------------------------------------------------ .err file ----
 
-        if self.full_error_analysis == True:
+        if self.full_error_analysis:
 
             # ---- Info Data Post-Processing ----
 
@@ -998,14 +990,14 @@ class GapFillWeather(QObject):
 
                     if not np.isnan(ym):
                         fcontent.append([VARNAME[var],
-                                        '%d' % YEAR[row],
-                                        '%d' % MONTH[row],
-                                        '%d' % DAY[row],
-                                        '%s' % log_Ndat[row, var],
-                                        '%0.2f' % log_RMSE[row, var],
-                                        '%0.1f' % (yp - ym),
-                                        '%0.1f' % yp,
-                                        '%0.1f' % ym])
+                                         '%d' % YEAR[row],
+                                         '%d' % MONTH[row],
+                                         '%d' % DAY[row],
+                                         '%s' % log_Ndat[row, var],
+                                         '%0.2f' % log_RMSE[row, var],
+                                         '%0.1f' % (yp - ym),
+                                         '%0.1f' % yp,
+                                         '%0.1f' % ym])
                         fcontent[-1].extend(xm)
 
             # ---- Save File ----
@@ -1067,9 +1059,9 @@ class GapFillWeather(QObject):
             # http://statsmodels.sourceforge.net/devel/generated/
             # statsmodels.regression.linear_model.OLS.html
 
-#            model = OLS(Y, X)
-#            results = model.fit()
-#            A = results.params
+            # model = OLS(Y, X)
+            # results = model.fit()
+            # A = results.params
 
             # Using Numpy function:
             A = np.linalg.lstsq(X, Y)[0]
@@ -1082,9 +1074,9 @@ class GapFillWeather(QObject):
             # http://statsmodels.sourceforge.net/devel/examples/
             # notebooks/generated/quantile_regression.html
 
-#            model = QuantReg(Y, X)
-#            results = model.fit(q=0.5)
-#            A = results.params
+            # model = QuantReg(Y, X)
+            # results = model.fit(q=0.5)
+            # A = results.params
 
             # Using Homemade function:
             A = L1LinearRegression(X, Y)
@@ -2005,5 +1997,6 @@ def main():
 
 #    gapfill_weather.fill_data()
 
-if __name__ == '__main__':  # =================================================
+
+if __name__ == '__main__':
     main()

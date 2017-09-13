@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2015 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
@@ -70,21 +70,14 @@ class GapFillWeatherGUI(QWidget):
         self.CORRFLAG = 'on'
 
         # Setup gap fill worker and thread :
-        self.gap_fill_worker = GapFillWeather()
-        self.gap_fill_thread = QThread()
-        self.gap_fill_worker.moveToThread(self.gap_fill_thread)
+        self.gapfill_worker = GapFillWeather()
+        self.gapfill_thread = QThread()
+        self.gapfill_worker.moveToThread(self.gapfill_thread)
         self.set_workdir(os.getcwd())
 
         self.__initUI__()
 
     def __initUI__(self):
-
-        # ---- Database ----
-
-        # TODO: cleanup the language, tooltips and labels.
-
-        # ---- Main Window ----
-
         self.setWindowIcon(IconDB().master)
 
         # ---- TOOLBAR ----
@@ -232,7 +225,7 @@ class GapFillWeatherGUI(QWidget):
             grid.addWidget(altlimit_label, row, 0)
             grid.addWidget(self.altlimit, row, 1)
 
-            grid.setContentsMargins(10, 0, 10, 0) # [L, T, R, B]
+            grid.setContentsMargins(10, 0, 10, 0)  # [L, T, R, B]
             grid.setColumnStretch(2, 500)
             grid.setSpacing(10)
             container.setLayout(grid)
@@ -368,7 +361,7 @@ class GapFillWeatherGUI(QWidget):
 #        grid_rightPanel.addWidget(self.gafill_display_table , row, 0)
 #
 #        grid_rightPanel.setRowStretch(row, 500)
-##        grid_rightPanel.setColumnStretch(0, 500)
+#        grid_rightPanel.setColumnStretch(0, 500)
 #        grid_rightPanel.setSpacing(0)
 #        grid_rightPanel.setContentsMargins(0, 0, 0, 0) #(L, T, R, B)
 #
@@ -415,10 +408,10 @@ class GapFillWeatherGUI(QWidget):
 
         # GAPFILL :
 
-        self.gap_fill_worker.ProgBarSignal.connect(self.pbar.setValue)
-        self.gap_fill_worker.GapFillFinished.connect(
-                                                   self.gap_fill_worker_return)
-        self.gap_fill_worker.ConsoleSignal.connect(self.ConsoleSignal.emit)
+        self.gapfill_worker.ProgBarSignal.connect(self.pbar.setValue)
+        self.gapfill_worker.GapFillFinished.connect(
+                                                   self.gapfill_worker_return)
+        self.gapfill_worker.ConsoleSignal.connect(self.ConsoleSignal.emit)
 
         self.btn_fill.clicked.connect(self.gap_fill_btn_clicked)
         self.btn_fill_all.clicked.connect(self.gap_fill_btn_clicked)
@@ -431,8 +424,8 @@ class GapFillWeatherGUI(QWidget):
 
     def set_workdir(self, dirname):
         self.__workdir = dirname
-        self.gap_fill_worker.inputDir = os.path.join(dirname, 'Meteo', 'Input')
-        self.gap_fill_worker.outputDir = os.path.join(
+        self.gapfill_worker.inputDir = os.path.join(dirname, 'Meteo', 'Input')
+        self.gapfill_worker.outputDir = os.path.join(
                                              dirname, 'Meteo', 'Output')
 
     # =========================================================================
@@ -457,12 +450,12 @@ class GapFillWeatherGUI(QWidget):
         # Correlation calculation won't be triggered when this is off
 
         if self.sender() == self.btn_refresh_staList:
-            stanames = self.gap_fill_worker.reload_data()
+            stanames = self.gapfill_worker.reload_data()
         else:
-            stanames = self.gap_fill_worker.load_data()
+            stanames = self.gapfill_worker.load_data()
         self.target_station.addItems(stanames)
         self.target_station.setCurrentIndex(-1)
-        self.sta_display_summary.setHtml(self.gap_fill_worker.read_summary())
+        self.sta_display_summary.setHtml(self.gapfill_worker.read_summary())
 
         if len(stanames) > 0:
             self.set_fill_and_save_dates()
@@ -475,12 +468,12 @@ class GapFillWeatherGUI(QWidget):
         *Fill and Save* area.
         """
 
-        if len(self.gap_fill_worker.WEATHER.DATE) > 0:
+        if len(self.gapfill_worker.WEATHER.DATE) > 0:
 
             self.date_start_widget.setEnabled(True)
             self.date_end_widget.setEnabled(True)
 
-            DATE = self.gap_fill_worker.WEATHER.DATE
+            DATE = self.gapfill_worker.WEATHER.DATE
 
             DateMin = QDate(DATE[0, 0], DATE[0, 1], DATE[0, 2])
             DateMax = QDate(DATE[-1, 0], DATE[-1, 1], DATE[-1, 2])
@@ -519,13 +512,13 @@ class GapFillWeatherGUI(QWidget):
             self.FILLPARAM.time_end = xldate_from_date_tuple((y, m, d), 0)
 
             self.gafill_display_table.populate_table(
-                self.gap_fill_worker.TARGET,
-                self.gap_fill_worker.WEATHER,
+                self.gapfill_worker.TARGET,
+                self.gapfill_worker.WEATHER,
                 self.FILLPARAM)
 
             table, target_info = correlation_table_generation(
-                self.gap_fill_worker.TARGET,
-                self.gap_fill_worker.WEATHER,
+                self.gapfill_worker.TARGET,
+                self.gapfill_worker.WEATHER,
                 self.FILLPARAM)
 
             self.FillTextBox.setText(table)
@@ -542,10 +535,10 @@ class GapFillWeatherGUI(QWidget):
         if self.CORRFLAG == 'on' and self.target_station.currentIndex() != -1:
 
             index = self.target_station.currentIndex()
-            self.gap_fill_worker.set_target_station(index)
+            self.gapfill_worker.set_target_station(index)
 
             msg = ('Correlation coefficients calculation for ' +
-                   'station %s completed') % self.gap_fill_worker.TARGET.name
+                   'station %s completed') % self.gapfill_worker.TARGET.name
             self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
             print(msg)
 
@@ -577,20 +570,19 @@ class GapFillWeatherGUI(QWidget):
 
         return xldate_from_date_tuple((y, m, d), 0)
 
+    def gap_fill_btn_clicked(self):
 
-    def gap_fill_btn_clicked(self): #=============== Gap-Fill Button Clicked ==
+        # ----------------------------------------- Stop Thread if Running ----
 
-        #-------------------------------------------- Stop Thread if Running --
-
-        if self.gap_fill_thread.isRunning():
+        if self.gapfill_thread.isRunning():
 
             print('!Stopping the gap-filling routine!')
 
-            #-- Pass a flag to the worker to tell him to stop --
+            # ---- Pass a flag to the worker to tell him to stop ----
 
-            self.gap_fill_worker.STOP = True
+            self.gapfill_worker.STOP = True
             self.isFillAll_inProgress = False
-            # UI will be restored in *gap_fill_worker_return* method
+            # UI will be restored in *gapfill_worker_return* method
 
             return
 
@@ -598,7 +590,7 @@ class GapFillWeatherGUI(QWidget):
 
         # Check if Station List is Empty :
 
-        nSTA = len(self.gap_fill_worker.WEATHER.STANAME)
+        nSTA = len(self.gapfill_worker.WEATHER.STANAME)
         if nSTA == 0:
             msg = ('There is no data to fill.')
             btn = QMessageBox.Ok
@@ -620,12 +612,12 @@ class GapFillWeatherGUI(QWidget):
 
             return
 
-        #------------------------------------------------ Check Which Button --
+        # --------------------------------------------- Check Which Button ----
 
         button = self.sender()
-        if button == self.btn_fill: #---------------------- Fill One Station --
+        if button == self.btn_fill:
 
-            #-- Check if Station is Selected --
+            # ---- Check if Station is Selected ----
 
             if self.target_station.currentIndex() == -1:
                 self.msgBox.setText('No <b>weather station</b> is currently ' +
@@ -639,8 +631,8 @@ class GapFillWeatherGUI(QWidget):
             self.isFillAll_inProgress = False
             sta_indx2fill = self.target_station.currentIndex()
 
-        elif button == self.btn_fill_all: #--------------- Fill All Stations --
-
+        elif button == self.btn_fill_all:
+            # Fill All Stations
             self.btn_fill.setEnabled(False)
             self.isFillAll_inProgress = True
             sta_indx2fill = 0
@@ -657,19 +649,18 @@ class GapFillWeatherGUI(QWidget):
 
         self.gap_fill_start(sta_indx2fill)
 
-
-    def gap_fill_worker_return(self, event): #============== Gap-Fill Return ==
+    def gapfill_worker_return(self, event):
 
         # Method initiated from an automatic return from the gapfilling
         # process in batch mode. Iterate over the station list and continue
         # process normally.
 
-        self.gap_fill_thread.quit()
+        self.gapfill_thread.quit()
 
-        nSTA = len(self.gap_fill_worker.WEATHER.STANAME)
-        if event == True:
+        nSTA = len(self.gapfill_worker.WEATHER.STANAME)
+        if event:
             sta_indx2fill = self.target_station.currentIndex() + 1
-            if self.isFillAll_inProgress == False or sta_indx2fill == nSTA:
+            if self.isFillAll_inProgress is False or sta_indx2fill == nSTA:
 
                 # Single fill process completed sucessfully for the current
                 # selected weather station OR Fill All process completed
@@ -678,27 +669,25 @@ class GapFillWeatherGUI(QWidget):
                 self.restoreUI()
             else:
                 self.gap_fill_start(sta_indx2fill)
-
-        elif event == False:
+        else:
             print('Gap-filling routine stopped... restoring UI.')
-            self.gap_fill_worker.STOP = False
+            self.gapfill_worker.STOP = False
             self.isFillAll_inProgress = False
             self.restoreUI()
 
+    def gap_fill_start(self, sta_indx2fill):
 
-    def gap_fill_start(self, sta_indx2fill): #=============== Gap-Fill Start ==
-
-        #----- Wait for the QThread to finish -----
+        # ----- Wait for the QThread to finish -----
 
         # Protection in case the QTread did not had time to close completely
         # before starting the downloading process for the next station.
 
         waittime = 0
-        while self.gap_fill_thread.isRunning():
+        while self.gapfill_thread.isRunning():
             print('Waiting for the fill weather data thread to close ' +
                   'before processing with the next station.')
-            sleep(1)
-            waittime += 1
+            sleep(0.1)
+            waittime += 0.1
             if waittime > 15:
                 msg = ('This function is not working as intended.' +
                        ' Please report a bug.')
@@ -710,9 +699,6 @@ class GapFillWeatherGUI(QWidget):
 
         self.CORRFLAG = 'off'
         self.target_station.setCurrentIndex(sta_indx2fill)
-#        self.TARGET.index = self.target_station.currentIndex()
-#        self.TARGET.name = \
-#            self.gap_fill_worker.WEATHER.STANAME[self.TARGET.index]
         self.CORRFLAG = 'on'
 
         # Calculate correlation coefficient for the next station.
@@ -722,29 +708,36 @@ class GapFillWeatherGUI(QWidget):
 
         # -- Pass information to the worker --
 
-        self.gap_fill_worker.outputDir = self.workdir + '/Meteo/Output'
+        self.gapfill_worker.outputDir = self.workdir + '/Meteo/Output'
 
         time_start = self.get_time_from_qdatedit(self.date_start_widget)
         time_end = self.get_time_from_qdatedit(self.date_end_widget)
-        self.gap_fill_worker.time_start = time_start
-        self.gap_fill_worker.time_end = time_end
+        self.gapfill_worker.time_start = time_start
+        self.gapfill_worker.time_end = time_end
 
-        self.gap_fill_worker.NSTAmax = self.Nmax.value()
-        self.gap_fill_worker.limitDist = self.distlimit.value()
-        self.gap_fill_worker.limitAlt = self.altlimit.value()
+        self.gapfill_worker.NSTAmax = self.Nmax.value()
+        self.gapfill_worker.limitDist = self.distlimit.value()
+        self.gapfill_worker.limitAlt = self.altlimit.value()
 
-#        self.gap_fill_worker.TARGET = self.TARGET
+#        self.gapfill_worker.TARGET = self.TARGET
 
-        self.gap_fill_worker.regression_mode = self.RMSE_regression.isChecked()
+        self.gapfill_worker.regression_mode = self.RMSE_regression.isChecked()
 
-        self.gap_fill_worker.full_error_analysis = \
+        self.gapfill_worker.full_error_analysis = \
             self.full_error_analysis.isChecked()
-        self.gap_fill_worker.add_ETP = self.add_ETP_ckckbox.isChecked()
+        self.gapfill_worker.add_ETP = self.add_ETP_ckckbox.isChecked()
 
         # ---- Start the Thread ----
 
-        self.gap_fill_thread.start()
-        self.gap_fill_worker.FillDataSignal.emit(True)
+        try:
+            self.gapfill_thread.started.disconnect(
+                    self.gapfill_worker.fill_data)
+        except TypeError:
+            # self.gapfill_worker.fill_data is not connected
+            pass
+        finally:
+            self.gapfill_thread.started.connect(self.gapfill_worker.fill_data)
+            self.gapfill_thread.start()
 
     def btn_add_ETP_isClicked(self):  # =======================================
 
@@ -836,10 +829,10 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                      align="left">'''
 
     for i in range(len(HEADER)):
-        target_info += '<tr>' # + <td width=10></td>'
-        target_info +=   '<td align="left">%s</td>' % FIELDS[i]
-        target_info +=   '<td align="left">&nbsp;:&nbsp;</td>'
-        target_info +=   '<td align="left">%s</td>' % HEADER[i]
+        target_info += '<tr>'
+        target_info += '<td align="left">%s</td>' % FIELDS[i]
+        target_info += '<td align="left">&nbsp;:&nbsp;</td>'
+        target_info += '<td align="left">%s</td>' % HEADER[i]
         target_info += '</tr>'
 
     target_info += '</table>'
@@ -899,23 +892,22 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                 <tr>
               '''
 
-    table1 +=  '''
-               <td width=135 align="left">Weather Variable</td>
-               <td align="center">T<sub>max</sub></td>
-               <td align="center">T<sub>min</sub></sub></td>
-               <td align="center">T<sub>mean</sub></td>
-               <td align="center">P<sub>tot</sub></td>
-               '''
+    table1 += '''
+              <td width=135 align="left">Weather Variable</td>
+              <td align="center">T<sub>max</sub></td>
+              <td align="center">T<sub>min</sub></sub></td>
+              <td align="center">T<sub>mean</sub></td>
+              <td align="center">P<sub>tot</sub></td>
+              '''
 
-
-    table1 +=  '''
+    table1 += '''
                </tr>
                <tr>
                  <td colspan="5"><hr></td>
                </tr>
                <tr>
                  <td width=135 align="left">Days with<br>missing data</td>
-               '''
+              '''
 
     total_nbr_data = index_end - index_start + 1
     for var in range(nVAR):
@@ -929,13 +921,14 @@ def correlation_table_generation(TARGET, WEATHER, FILLPARAM):
                       %d<br>(%0.1f %%)
                      </td>''' % (nbr_nan, nan_percent)
 
-    table1 +=  '''
-                 </tr>
-                 <tr>
-                   <td colspan="5"><hr></td>
-                 </tr>
-               </table>
-               <br><br>'''
+    table1 += '''
+              </tr>
+              <tr>
+              <td colspan="5"><hr></td>
+              </tr>
+              </table>
+              <br><br>
+              '''
 
     # --------------------------------------------------- corr. coeff. table --
     table2 = table1
@@ -1082,22 +1075,23 @@ class GapFill_Parameters():
     # Class that contains all the relevant parameters for the gapfilling
     # procedure. Main instance of this class in the code is <FILLPARAM>.
 
-   def __init__(self):
+    def __init__(self):
 
-        self.time_start = 0  # Fill and Save start date.
-        self.time_end = 0    # Fill and Save end date.
-        self.index_start = 0 # Time index for start date
-        self.index_end = 0   # Time index for end date
+        self.time_start = 0   # Fill and Save start date.
+        self.time_end = 0     # Fill and Save end date.
+        self.index_start = 0  # Time index for start date
+        self.index_end = 0    # Time index for end date
 
         self.regression_mode = True
 
-        self.NSTAmax = 0 # Max number of neighboring station to use in the
-                         # regression model.
-        self.limitDist = 0 # Cutoff limit for the horizontal distance between
-                           # the target and the neighboring stations.
-        self.limitAlt = 0 # Cutoff limit for the altitude difference between
-                          # the target and the neighboring stations.
-
+        # Max number of neighboring station to use in the regression model.
+        self.NSTAmax = 0
+        # Cutoff limit for the horizontal distance between the target and the
+        # neighboring stations.
+        self.limitDist = 0
+        # Cutoff limit for the altitude difference between the target and the
+        # neighboring stations.
+        self.limitAlt = 0
 
 # =============================================================================
 
@@ -1124,10 +1118,9 @@ class GapFillDisplayTable(QTableWidget):
 
         # ----------------------------------------------------------- Header --
 
-#        HEADER = ['Weather Stations', '&#916;Alt.<br>(m)', 'Dist.\n(km)']
         HEADER = ['Neighboring Stations', '&#916;Alt.<br>(m)', 'Dist.<br>(km)',
                   'T<sub>max</sub>', 'T<sub>min</sub>', 'T<sub>mean</sub>',
-                  'P<sub>tot</sub>' ]
+                  'P<sub>tot</sub>']
 
         myHeader = MyHorizHeader(self)
         self.setHorizontalHeader(myHeader)
@@ -1136,7 +1129,7 @@ class GapFillDisplayTable(QTableWidget):
         self.setHorizontalHeaderLabels(HEADER)
         self.verticalHeader().hide()
 
-        #------------------------------------------------ Column Size Policy --
+        # ----------------------------------------------- Column Size Policy --
 
         w1 = 65
         w2 = 50
@@ -1148,13 +1141,10 @@ class GapFillDisplayTable(QTableWidget):
         self.setColumnWidth(5, w2)
         self.setColumnWidth(6, w2)
 
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.horizontalHeader().setSectionResizeMode(0, QHeaderView.Stretch)
 
-        self.horizontalHeader().setSectionResizeMode (QHeaderView.Fixed)
-        self.horizontalHeader().setSectionResizeMode (0, QHeaderView.Stretch)
-
-        #------------------------------------------------------------ Events --
-
-    class NumTableWidgetItem(QTableWidgetItem): #========================
+    class NumTableWidgetItem(QTableWidgetItem):
 
         # To be able to sort numerical float item within a given column.
 
@@ -1162,8 +1152,7 @@ class GapFillDisplayTable(QTableWidget):
         # python-numerical-sorting-in-qtablewidget
 
         def __init__(self, text, sortKey):
-            QTableWidgetItem.__init__(self, text,
-                                            QTableWidgetItem.UserType)
+            QTableWidgetItem.__init__(self, text, QTableWidgetItem.UserType)
             self.sortKey = sortKey
 
         # Qt uses a simple < check for sorting items, override this to use
@@ -1242,7 +1231,7 @@ class GapFillDisplayTable(QTableWidget):
                 item.setForeground(QBrush(QColor(red)))
             self.setItem(row, col, item)
 
-            #-- Correlation Coefficients. --
+            # ---- Correlation Coefficients ----
 
             for var in range(nVAR):
 
@@ -1292,8 +1281,7 @@ class MyHorizHeader(QHeaderView):
         self.setSortIndicatorShown(False)
         self.heightHint = 20
 
-
-    def paintEvent(self, event): #=============================================
+    def paintEvent(self, event):
 
         qp = QPainter()
         qp.begin(self.viewport())
@@ -1314,8 +1302,7 @@ class MyHorizHeader(QHeaderView):
 
         qp.end()
 
-
-    def paintHeader(self, qp): #===============================================
+    def paintHeader(self, qp):
 
         # Paint the header box for the entire width of the table.
         # This eliminates the separators between each individual section.
@@ -1324,7 +1311,6 @@ class MyHorizHeader(QHeaderView):
         opt.rect = QRect(0, 0, self.size().width(), self.size().height())
 
         self.style().drawControl(QStyle.CE_Header, opt, qp, self)
-
 
     def paintSection(self, painter, rect, logicalIndex):
 
@@ -1335,11 +1321,10 @@ class MyHorizHeader(QHeaderView):
         if not rect.isValid():
             return
 
-        #---------------------------------------------  draw header sections --
+        # ------------------------------------------  draw header sections ----
 
         opt = QStyleOptionHeader()
-        self.initStyleOption(opt) #
-#        opt.initFrom(self) #
+        self.initStyleOption(opt)
 #
 #        print(self.model().headerData(logicalIndex, self.orientation()))
 #
@@ -1351,7 +1336,7 @@ class MyHorizHeader(QHeaderView):
 
 #        print int(QStyle.State_MouseOver)
 
-        #-------------------------------------------------- section position --
+        # ----------------------------------------------- section position ----
 
 #        visual = self.visualIndex(logicalIndex)
 #        if self.count() == 1:
@@ -1367,7 +1352,7 @@ class MyHorizHeader(QHeaderView):
 #        if sortIndicatorSection==logicalIndex:
 #            opt.state = int(opt.state) + int(QStyle.State_Sunken)
 
-        #---------------------------------------------- mouse over highlight --
+        # ------------------------------------------- mouse over highlight ----
 
         if self.showMouseOverSection:
             mouse_pos = self.mapFromGlobal(QCursor.pos())
@@ -1378,40 +1363,39 @@ class MyHorizHeader(QHeaderView):
         else:
             pass
 
-        # ---------------------------------------------------- paint section --
+        # -------------------------------------------------- paint section ----
 
         self.style().drawControl(QStyle.CE_Header, opt, painter, self)
 
-
-    def paintLabels(self, qp): #=============================== Paint Labels ==
+    def paintLabels(self, qp):
 
         fontfamily = StyleDB().fontfamily
 
         if self.multirow:
-            headerTable  = '''
-                           <table border="0" cellpadding="0" cellspacing="0"
-                                  align="center" width="100%%">
-                             <tr>
-                               <td colspan="3"></td>
-                               <td colspan="4" align=center
-                                   style="padding-top:8px;
-                                          font-size:14px;
-                                          font-family: "%s";">
-                                 Correlation Coefficients
-                               </td>
-                             </tr>
-                             <tr>
-                               <td colspan="3"></td>
-                               <td colspan="4"><hr width=100%%></td>
-                             </tr>
-                             <tr>
-                           ''' % fontfamily
+            headerTable = '''
+                          <table border="0" cellpadding="0" cellspacing="0"
+                                 align="center" width="100%%">
+                            <tr>
+                              <td colspan="3"></td>
+                              <td colspan="4" align=center
+                                  style="padding-top:8px;
+                                         font-size:14px;
+                                         font-family: "%s";">
+                                Correlation Coefficients
+                              </td>
+                            </tr>
+                            <tr>
+                              <td colspan="3"></td>
+                              <td colspan="4"><hr width=100%%></td>
+                            </tr>
+                            <tr>
+                          ''' % fontfamily
         else:
-            headerTable =  '''
-                           <table border="0" cellpadding="0" cellspacing="0"
-                                  align="center" width="100%%">
-                             <tr>
-                           '''
+            headerTable = '''
+                          <table border="0" cellpadding="0" cellspacing="0"
+                                 align="center" width="100%%">
+                            <tr>
+                          '''
 #        shownSectionCount = self.count() - self.hiddenSectionCount ()
 
         # ---------------------------------- prepare a list of logical index --
@@ -1534,13 +1518,14 @@ if __name__ == '__main__':
         app.setFont(QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
-    w.set_workdir('C:\\Users\\jsgosselin\\OneDrive\\WHAT\\Projects\\Monteregie Est')
+    w.set_workdir('C:\\Users\\jsgosselin\\OneDrive\\WHAT\\'
+                  'Projects\\Monteregie Est')
     w.load_data_dir_content()
 
-    lat = w.gap_fill_worker.WEATHER.LAT
-    lon = w.gap_fill_worker.WEATHER.LON
-    name = w.gap_fill_worker.WEATHER.STANAME
-    alt = w.gap_fill_worker.WEATHER.ALT
+    lat = w.gapfill_worker.WEATHER.LAT
+    lon = w.gapfill_worker.WEATHER.LON
+    name = w.gapfill_worker.WEATHER.STANAME
+    alt = w.gapfill_worker.WEATHER.ALT
 
     # ---- Show Map ----
 
