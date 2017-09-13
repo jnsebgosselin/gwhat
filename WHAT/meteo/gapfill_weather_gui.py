@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-Copyright 2014-2015 Jean-Sebastien Gosselin
-email: jnsebgosselin@gmail.com
+Copyright 2014-2017 Jean-Sebastien Gosselin
+email: jean-sebastien.gosselin@ete.inrs.ca
 
 This file is part of WHAT (Well Hydrograph Analysis Toolbox).
 
