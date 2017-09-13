@@ -697,8 +697,8 @@ class GapFillWeatherGUI(QWidget):
         while self.gap_fill_thread.isRunning():
             print('Waiting for the fill weather data thread to close ' +
                   'before processing with the next station.')
-            sleep(1)
-            waittime += 1
+            sleep(0.1)
+            waittime += 0.1
             if waittime > 15:
                 msg = ('This function is not working as intended.' +
                        ' Please report a bug.')
