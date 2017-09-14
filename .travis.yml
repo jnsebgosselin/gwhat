@@ -16,6 +16,7 @@ install:
   - pip install pytest-mock
   - pip install pytest-ordering
   - pip install coveralls
+  - pip install matplotlib
 
 script:
   - coverage run --source=WHAT -m py.test

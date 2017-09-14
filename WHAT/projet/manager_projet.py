@@ -293,6 +293,7 @@ class NewProject(QDialog):
                 self, 'Save in Folder', '../Projects')
         if folder:
             self.directory.setText(folder)
+
     def save_project(self):
         name = self.name.text()
         if name == '':
@@ -349,7 +350,6 @@ class NewProject(QDialog):
 
         self.close()
         self.sig_new_project.emit(fname)
-
 
     # =========================================================================
 
