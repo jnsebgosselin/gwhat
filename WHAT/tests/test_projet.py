@@ -28,11 +28,7 @@ def projet_manager_bot(qtbot):
     manager.new_projet_dialog.setModal(False)
     qtbot.addWidget(manager)
     qtbot.addWidget(manager.new_projet_dialog)
-
-    data = {}
-    data['name'] = 'New_Projet'  # "Ñew­prÔ'jÈt!"
-    data['latitude'] = 45.40
-    data['longitude'] = 73.15
+    data = {'name': "@ new-prô'jèt!", 'latitude': 45.40, 'longitude': 73.15}
 
     return manager, data, qtbot
 
@@ -56,12 +52,8 @@ def test_create_new_projet(projet_manager_bot, mocker):
 
     # Show new project dialog windows and fill the fields.
     manager.show_newproject_dialog()
-    keys = [Qt.Key_Ntilde, Qt.Key_E, Qt.Key_W, Qt.Key_hyphen, Qt.Key_P,
-            Qt.Key_R, Qt.Key_Ocircumflex, Qt.Key_Apostrophe, Qt.Key_J,
-            Qt.Key_Egrave, Qt.Key_T, Qt.Key_Exclam]
-    for key in keys:
-        qtbot.keyClick(manager.new_projet_dialog.name, key)
-        qtbot.keyClick(manager.new_projet_dialog.author, key)
+    manager.new_projet_dialog.name.setText(data['name'])
+    manager.new_projet_dialog.author.setText(data['name'])
     manager.new_projet_dialog.lat_spinbox.setValue(data['latitude'])
     manager.new_projet_dialog.lon_spinbox.setValue(data['longitude'])
 
