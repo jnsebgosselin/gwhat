@@ -10,9 +10,6 @@ import sys
 import os.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
-# Third party imports
-from PyQt5.QtCore import Qt                                            # nopep8
-
 # Local imports
 from projet.reader_projet import ProjetReader                          # nopep8
 from projet.manager_projet import (ProjetManager, QFileDialog)         # nopep8
@@ -28,9 +25,11 @@ def projet_manager_bot(qtbot):
     manager.new_projet_dialog.setModal(False)
     qtbot.addWidget(manager)
     qtbot.addWidget(manager.new_projet_dialog)
-    data = {'name': "@ new-prô'jèt!", 'latitude': 45.40, 'longitude': 73.15}
+    data_input = {'name': "@ new-prô'jèt!",
+                  'latitude': 45.40,
+                  'longitude': 73.15}
 
-    return manager, data, qtbot
+    return manager, data_input, qtbot
 
 # Tests
 # -------------------------------
@@ -38,24 +37,23 @@ def projet_manager_bot(qtbot):
 
 @pytest.mark.run(order=1)
 def test_create_new_projet(projet_manager_bot, mocker):
-    manager, data, qtbot = projet_manager_bot
+    manager, data_input, qtbot = projet_manager_bot
     manager.show()
 
-    expected_name = data['name']
-    expected_path = os.path.join(
-            os.getcwd(), expected_name, expected_name+'.what')
+    projetpath = os.path.join(
+            os.getcwd(), data_input['name'], data_input['name']+'.what')
 
     # Delete project folder and its content if it already exist.
-    if os.path.exists(os.path.join(os.getcwd(), expected_name)):
+    if os.path.exists(os.path.join(os.getcwd(), data_input['name'])):
         import shutil
-        shutil.rmtree(os.path.join(os.getcwd(), expected_name))
+        shutil.rmtree(os.path.join(os.getcwd(), data_input['name']))
 
     # Show new project dialog windows and fill the fields.
     manager.show_newproject_dialog()
-    manager.new_projet_dialog.name.setText(data['name'])
-    manager.new_projet_dialog.author.setText(data['name'])
-    manager.new_projet_dialog.lat_spinbox.setValue(data['latitude'])
-    manager.new_projet_dialog.lon_spinbox.setValue(data['longitude'])
+    manager.new_projet_dialog.name.setText(data_input['name'])
+    manager.new_projet_dialog.author.setText(data_input['name'])
+    manager.new_projet_dialog.lat_spinbox.setValue(data_input['latitude'])
+    manager.new_projet_dialog.lon_spinbox.setValue(data_input['longitude'])
 
     # Mock the file dialog window so that we can specify programmatically
     # the path where the project will be saved.
@@ -69,26 +67,23 @@ def test_create_new_projet(projet_manager_bot, mocker):
     # displayed in the UI and that the project file has been created.
     manager.new_projet_dialog.save_project()
 
-    assert manager.project_display.text() == expected_name
-    assert os.path.exists(expected_path)
+    assert manager.project_display.text() == data_input['name']
+    assert os.path.exists(projetpath)
 
 
 @pytest.mark.run(order=1)
 def test_load_projet(projet_manager_bot, mocker):
-    manager, data, qtbot = projet_manager_bot
+    manager, data_input, qtbot = projet_manager_bot
     manager.show()
     manager.show_newproject_dialog()
 
-    expected_name = data['name']
-    expected_lat = data['latitude']
-    expected_lon = data['longitude']
-    expected_path = os.path.join(
-            os.getcwd(), expected_name, expected_name+'.what')
+    projetpath = os.path.join(
+            os.getcwd(), data_input['name'], data_input['name']+'.what')
 
     # Mock the file dialog window so that we can specify programmatically
     # the path of the project.
     mocker.patch.object(QFileDialog, 'getOpenFileName',
-                        return_value=(expected_path, '*.what'))
+                        return_value=(projetpath, '*.what'))
 
     # Select and load the project.
     manager.select_project()
@@ -96,12 +91,12 @@ def test_load_projet(projet_manager_bot, mocker):
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
 
-    assert manager.project_display.text() == expected_name
+    assert manager.project_display.text() == data_input['name']
     assert type(manager.projet) is ProjetReader
-    assert manager.projet.name == expected_name
-    assert manager.projet.author == expected_name
-    assert manager.projet.lat == expected_lat
-    assert manager.projet.lon == expected_lon
+    assert manager.projet.name == data_input['name']
+    assert manager.projet.author == data_input['name']
+    assert manager.projet.lat == data_input['latitude']
+    assert manager.projet.lon == data_input['longitude']
 
 
 if __name__ == "__main__":
