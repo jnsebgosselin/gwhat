@@ -28,7 +28,13 @@ def projet_manager_bot(qtbot):
     manager.new_projet_dialog.setModal(False)
     qtbot.addWidget(manager)
     qtbot.addWidget(manager.new_projet_dialog)
-    return manager, qtbot
+
+    data = {}
+    data['name'] = 'New_Projet'  # "Ñew­prÔ'jÈt!"
+    data['latitude'] = 45.40
+    data['longitude'] = 73.15
+
+    return manager, data, qtbot
 
 # Tests
 # -------------------------------
@@ -36,10 +42,10 @@ def projet_manager_bot(qtbot):
 
 @pytest.mark.run(order=1)
 def test_create_new_projet(projet_manager_bot, mocker):
-    manager, qtbot = projet_manager_bot
+    manager, data, qtbot = projet_manager_bot
     manager.show()
 
-    expected_name = "Ñew­prÔ'jÈt!"
+    expected_name = data['name']
     expected_path = os.path.join(
             os.getcwd(), expected_name, expected_name+'.what')
 
@@ -56,8 +62,8 @@ def test_create_new_projet(projet_manager_bot, mocker):
     for key in keys:
         qtbot.keyClick(manager.new_projet_dialog.name, key)
         qtbot.keyClick(manager.new_projet_dialog.author, key)
-    manager.new_projet_dialog.lat_spinbox.setValue(45.40)
-    manager.new_projet_dialog.lon_spinbox.setValue(73.15)
+    manager.new_projet_dialog.lat_spinbox.setValue(data['latitude'])
+    manager.new_projet_dialog.lon_spinbox.setValue(data['longitude'])
 
     # Mock the file dialog window so that we can specify programmatically
     # the path where the project will be saved.
@@ -77,13 +83,13 @@ def test_create_new_projet(projet_manager_bot, mocker):
 
 @pytest.mark.run(order=1)
 def test_load_projet(projet_manager_bot, mocker):
-    manager, qtbot = projet_manager_bot
+    manager, data, qtbot = projet_manager_bot
     manager.show()
     manager.show_newproject_dialog()
 
-    expected_name = "Ñew­prÔ'jÈt!"
-    expected_lat = 45.40
-    expected_lon = 73.15
+    expected_name = data['name']
+    expected_lat = data['latitude']
+    expected_lon = data['longitude']
     expected_path = os.path.join(
             os.getcwd(), expected_name, expected_name+'.what')
 
