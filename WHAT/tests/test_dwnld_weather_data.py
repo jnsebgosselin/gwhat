@@ -27,7 +27,7 @@ def downloader_bot(qtbot):
 # -------------------------------
 
 
-@pytest.mark.run(order=2)
+@pytest.mark.run(order=3)
 def test_load_old_stationlist(downloader_bot):
     downloader_bot, qtbot = downloader_bot
     assert downloader_bot
@@ -40,17 +40,17 @@ def test_load_old_stationlist(downloader_bot):
                        ["ALBANEL", "5887", "1922", "1991",
                         "QC", "7060080", "2.23"]]
 
-    # Assert that tab-separated-value station list loads correctly
+    # Assert that tab-separated-value station list loads correctly.
     fname = os.path.join(dirname, "stationlist_tab.lst")
     station_list = downloader_bot.load_stationList(fname)
     assert station_list == expected_result
 
-    # Assert that the data are stored correctly in the widget table
+    # Assert that the data are stored correctly in the widget table.
     list_from_table = downloader_bot.station_table.get_staList()
     assert list_from_table == expected_result
 
 
-@pytest.mark.run(order=2)
+@pytest.mark.run(order=3)
 def test_load_stationlist(downloader_bot):
     downloader_bot, qtbot = downloader_bot
     assert downloader_bot
@@ -69,12 +69,12 @@ def test_load_stationlist(downloader_bot):
          "24.85"]
         ]
 
-    # Assert that coma-separated-value station list loads correctly
+    # Assert that coma-separated-value station list loads correctly.
     fname = os.path.join(os.getcwd(), 'weather_station_list.lst')
     station_list = downloader_bot.load_stationList(fname)
     assert station_list == expected_result
 
-    # Assert that the data are stored correctly in the widget table
+    # Assert that the data are stored correctly in the widget table.
     list_from_table = downloader_bot.station_table.get_staList()
     assert list_from_table == expected_result
 

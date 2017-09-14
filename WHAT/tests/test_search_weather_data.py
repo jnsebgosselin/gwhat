@@ -35,7 +35,7 @@ def station_finder_bot(qtbot):
 # -------------------------------
 
 
-@pytest.mark.run(order=1)
+@pytest.mark.run(order=2)
 def test_search_weather_station(station_finder_bot, mocker):
     station_finder_widget, qtbot = station_finder_bot
     station_finder_widget.show()
@@ -63,25 +63,25 @@ def test_search_weather_station(station_finder_bot, mocker):
 
     assert results == expected_results
 
-    # Assert that the results are displayed correctly in the UI
+    # Assert that the results are displayed correctly in the UI.
     assert (station_finder_widget.station_table.get_staList() ==
             station_finder_widget.finder.stationlist)
 
-    # Mock the dialog window and answer to specify the file name and type
+    # Mock the dialog window and answer to specify the file name and type.
     fname = os.path.join(os.getcwd(), 'weather_station_list.lst')
     ftype = '*.csv'
     mocker.patch.object(QFileDialog, 'getSaveFileName',
                         return_value=(fname, ftype))
 
-    # Delete file if it exists
+    # Delete file if it exists.
     if os.path.exists(fname):
         os.remove(fname)
 
-    # Save the file
+    # Save the file.
     station_finder_widget.btn_save_isClicked()
 
 
-@pytest.mark.run(order=1)
+@pytest.mark.run(order=2)
 def test_stop_search(station_finder_bot):
     station_finder_widget, qtbot = station_finder_bot
     station_finder_widget.show()

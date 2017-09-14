@@ -10,12 +10,14 @@ install:
   - sudo apt-get install libhdf5-dev
   - pip install h5py
   - pip install xlsxwriter
+  - pip install xlrd
   - pip install pytest
   - pip install pytest-qt
   - pip install pytest-xvfb
   - pip install pytest-mock
   - pip install pytest-ordering
   - pip install coveralls
+  - pip install matplotlib
 
 script:
   - coverage run --source=WHAT -m py.test

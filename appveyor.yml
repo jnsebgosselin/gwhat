@@ -1,5 +1,9 @@
 # https://ci.appveyor.com/project/jnsebgosselin/WHAT
 
+# scripts that are called at very beginning, before repo cloning
+init:
+  - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
+
 environment:
 
   global:
@@ -45,3 +49,6 @@ build: false
 test_script:
   # - coverage run --source=WHAT -m py.test
   - "%CMD_IN_ENV% python runtests.py"
+
+# on_finish:
+#   - ps: $blockRdp = $false; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

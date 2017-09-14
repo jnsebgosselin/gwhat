@@ -52,10 +52,11 @@ class ProjetManager(QWidget):
 
     def __init__(self, parent=None, projet=None):
         super(ProjetManager, self).__init__(parent)
+        self.new_projet_dialog = NewProject(parent)
+        self.new_projet_dialog.sig_new_project.connect(self.load_project)
 
         self.__projet = None
         self.__initGUI__()
-
         if projet:
             self.load_project(projet)
 
@@ -66,7 +67,7 @@ class ProjetManager(QWidget):
         self.project_display.clicked.connect(self.select_project)
 
         ft = QApplication.instance().font()
-        ft.setPointSize(10)
+        ft.setPointSize(ft.pointSize()-1)
         self.project_display.setFont(ft)
 
         new_btn = QToolButtonSmall(IconDB().new_project)
@@ -92,6 +93,15 @@ class ProjetManager(QWidget):
     def projet(self):
         return self.__projet
 
+    def select_project(self):
+        directory = os.path.abspath(os.path.join('..', 'Projects'))
+        filename, _ = QFileDialog.getOpenFileName(
+            self, 'Open Project', directory, '*.what')
+
+        if filename:
+            self.projectfile = filename
+            self.load_project(filename)
+
     def load_project(self, filename):
         try:
             self.__projet = projet = ProjetReader(filename)
@@ -112,24 +122,9 @@ class ProjetManager(QWidget):
     def close_projet(self):
         self.__projet.close_projet()
 
-    # =========================================================================
-
     def show_newproject_dialog(self):
-        if self.parent():
-            new_project_window = NewProject(self.parent())
-        else:
-            new_project_window = NewProject(self)
-        new_project_window.show()
-        new_project_window.NewProjectSignal.connect(self.load_project)
-
-    def select_project(self):
-        directory = os.path.abspath(os.path.join('..', 'Projects'))
-        filename, _ = QFileDialog.getOpenFileName(
-            self, 'Open Project', directory, '*.what')
-
-        if filename:
-            self.projectfile = filename
-            self.load_project(filename)
+        self.new_projet_dialog.reset_UI()
+        self.new_projet_dialog.show()
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
@@ -138,13 +133,12 @@ class ProjetManager(QWidget):
 class NewProject(QDialog):
     # Dialog window to create a new WHAT project.
 
-    NewProjectSignal = QSignal(str)
+    sig_new_project = QSignal(str)
 
     def __init__(self, parent=None):
         super(NewProject, self).__init__(parent)
 
         self.setWindowFlags(Qt.Window)
-        self.setAttribute(Qt.WA_DeleteOnClose)
         self.setModal(True)
 
         self.setWindowTitle('New Project')
@@ -195,11 +189,11 @@ class NewProject(QDialog):
         locaCoord_title = QLabel('<b>Project Location Coordinates:</b>')
         locaCoord_title.setAlignment(Qt.AlignLeft)
 
-        self.Lat_SpinBox = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
-        self.Lat_SpinBox.setRange(0, 180)
+        self.lat_spinbox = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
+        self.lat_spinbox.setRange(0, 180)
 
-        self.Lon_SpinBox = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
-        self.Lon_SpinBox.setRange(0, 180)
+        self.lon_spinbox = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
+        self.lon_spinbox.setRange(0, 180)
 
         # ----- layout ----
 
@@ -210,7 +204,7 @@ class NewProject(QDialog):
         row += 1
         loc_coord.setColumnStretch(0, 100)
         loc_coord.addWidget(QLabel('Latitude :'), row, 1)
-        loc_coord.addWidget(self.Lat_SpinBox, row, 2)
+        loc_coord.addWidget(self.lat_spinbox, row, 2)
         loc_coord.addWidget(QLabel('North'), row, 3)
         loc_coord.setColumnStretch(4, 100)
 
@@ -218,7 +212,7 @@ class NewProject(QDialog):
         loc_coord.setColumnStretch(6, 100)
 
         loc_coord.addWidget(QLabel('Longitude :'), row, 7)
-        loc_coord.addWidget(self.Lon_SpinBox, row, 8)
+        loc_coord.addWidget(self.lon_spinbox, row, 8)
         loc_coord.addWidget(QLabel('West'), row, 9)
         loc_coord.setColumnStretch(10, 100)
 
@@ -294,6 +288,12 @@ class NewProject(QDialog):
 
     # =========================================================================
 
+    def browse_saveIn_folder(self):
+        folder = QFileDialog.getExistingDirectory(
+                self, 'Save in Folder', '../Projects')
+        if folder:
+            self.directory.setText(folder)
+
     def save_project(self):
         name = self.name.text()
         if name == '':
@@ -340,8 +340,8 @@ class NewProject(QDialog):
         projet.created = self.date.text()
         projet.modified = self.date.text()
         projet.version = self.createdby.text()
-        projet.lat = self.Lat_SpinBox.value()
-        projet.lon = self.Lon_SpinBox.value()
+        projet.lat = self.lat_spinbox.value()
+        projet.lon = self.lon_spinbox.value()
 
         del projet
 
@@ -349,14 +349,7 @@ class NewProject(QDialog):
         print('---------------')
 
         self.close()
-        self.NewProjectSignal.emit(fname)
-
-    def browse_saveIn_folder(self):
-        folder = QFileDialog.getExistingDirectory(
-                self, 'Save in Folder', '../Projects')
-
-        if folder:
-            self.directory.setText(folder)
+        self.sig_new_project.emit(fname)
 
     # =========================================================================
 
@@ -372,8 +365,8 @@ class NewProject(QDialog):
         now = (now.day, now.month, now.year, now.hour, now.minute)
         self.date = QLabel('%02d/%02d/%d %02d:%02d' % now)
 
-        self.Lat_SpinBox.setValue(0)
-        self.Lon_SpinBox.setValue(0)
+        self.lat_spinbox.setValue(0)
+        self.lon_spinbox.setValue(0)
 
     def show(self):
         super(NewProject, self).show()
