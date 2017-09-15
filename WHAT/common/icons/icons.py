@@ -80,7 +80,7 @@ class IconDB(object):
 
         self.select_range = QIcon(os.path.join(dirname, 'select_range'))
 
-        # ------------------------------------------------------------ HydroCalc ----
+        # ------------------------------------------------------ HydroCalc ----
 
         self.zoom_out = QIcon(os.path.join(dirname, 'zoom_out'))
         self.zoom_in = QIcon(os.path.join(dirname, 'zoom_in'))
@@ -123,6 +123,7 @@ class IconDB(object):
 
         # ---------------------------------------------- Fill Weather Data ----
 
+        self.merge_data = QIcon(os.path.join(dirname, 'merge_data'))
         self.fill_data = QIcon(os.path.join(dirname, 'fill_data'))
         self.fill_all_data = QIcon(os.path.join(dirname, 'fill_all_data'))
 

@@ -111,9 +111,9 @@ class GapFillWeatherGUI(QWidget):
 
         widget_toolbar.setLayout(grid_toolbar)
 
-        # ---- LEFT PANEL ----
+        # ----------------------------------------------------- LEFT PANEL ----
 
-        # Target Station :
+        # ---- Target Station ----
 
         target_station_label = QLabel(
                 '<b>Fill data for weather station :</b>')
@@ -127,21 +127,27 @@ class GapFillWeatherGUI(QWidget):
             'Force the reloading of the weather data files')
         self.btn_refresh_staList.clicked.connect(self.load_data_dir_content)
 
+        btn_merge_data = QToolButtonSmall(IconDB().merge_data)
+        btn_merge_data.setToolTip(
+                'Tool for merging two ore more datasets together.')
+
+        # Generate the layout for the target station group widget.
+
         self.tarSta_widg = QWidget()
-        tarSta_grid = QGridLayout()
+        tarSta_grid = QGridLayout(self.tarSta_widg)
 
         row = 0
-        tarSta_grid.addWidget(target_station_label, row, 0, 1, 2)
+        tarSta_grid.addWidget(target_station_label, row, 0, 1, 3)
         row = 1
         tarSta_grid.addWidget(self.target_station, row, 0)
         tarSta_grid.addWidget(self.btn_refresh_staList, row, 1)
+        tarSta_grid.addWidget(btn_merge_data, row, 2)
         row = 2
-        tarSta_grid.addWidget(self.target_station_info, row, 0, 1, 2)
+        tarSta_grid.addWidget(self.target_station_info, row, 0, 1, 3)
 
         tarSta_grid.setSpacing(5)
         tarSta_grid.setColumnStretch(0, 500)
         tarSta_grid.setContentsMargins(0, 0, 0, 10)  # (L,T,R,B)
-        self.tarSta_widg.setLayout(tarSta_grid)
 
         # Gapfill Dates :
 
