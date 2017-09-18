@@ -11,7 +11,7 @@ import os.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # Local imports
-from meteo.dwnld_weather_data import dwnldWeather                      # nopep8
+from meteo.dwnld_weather_data import DwnldWeatherWidget                # nopep8
 
 # Qt Test Fixtures
 # --------------------------------
@@ -19,7 +19,7 @@ from meteo.dwnld_weather_data import dwnldWeather                      # nopep8
 
 @pytest.fixture
 def downloader_bot(qtbot):
-    wxdata_downloader = dwnldWeather()
+    wxdata_downloader = DwnldWeatherWidget()
     qtbot.addWidget(wxdata_downloader)
     return wxdata_downloader, qtbot
 
