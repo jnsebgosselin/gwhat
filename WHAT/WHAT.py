@@ -74,7 +74,7 @@ import HydroPrint2 as HydroPrint
 import HydroCalc2 as HydroCalc
 from meteo import dwnld_weather_data
 from meteo.gapfill_weather_gui import GapFillWeatherGUI
-from dwnld_weather_data import DwnldWeatherWidget
+from meteo.dwnld_weather_data import DwnldWeatherWidget
 
 from about import AboutWhat
 from projet.manager_projet import ProjetManager
