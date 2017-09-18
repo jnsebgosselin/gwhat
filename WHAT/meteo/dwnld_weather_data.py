@@ -117,7 +117,8 @@ class dwnldWeather(QWidget):
 
         self.btn_get = QToolButtonNormal(IconDB().download)
         self.btn_get.setToolTip(
-                'Download data for the selected weather stations')
+                "Download data for the selected weather stations.")
+        self.btn_get.clicked.connect(self.manage_raw_data_dwnld)
 
         tb = QGridLayout()
         col = 0
@@ -239,7 +240,6 @@ class dwnldWeather(QWidget):
 
         # ---- download raw data ----
 
-        self.btn_get.clicked.connect(self.manage_raw_data_dwnld)
         self.dwnl_raw_datafiles.EndSignal.connect(self.manage_raw_data_dwnld)
         self.dwnl_raw_datafiles.MergeSignal.connect(
             self.concatenate_and_display)

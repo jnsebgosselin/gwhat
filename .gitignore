@@ -54,10 +54,11 @@ target/
 
 # Personal Ignore
 WHAT/url*
+WHAT/backup
+WHAT/tests/@ new-prô'jèt!
 /Backup
 User_Manual/Backup
 User_Manual/Revision
-WHAT/backup
 Redaction/
 Reference/
 Projects/
