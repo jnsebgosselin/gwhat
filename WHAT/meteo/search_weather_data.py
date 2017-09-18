@@ -1216,7 +1216,7 @@ def dms2decdeg(deg, mnt, sec):
     return dd
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':                                   # pragma: no cover
 
     app = QApplication(sys.argv)
 
