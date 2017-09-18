@@ -74,6 +74,7 @@ import HydroPrint2 as HydroPrint
 import HydroCalc2 as HydroCalc
 from meteo import dwnld_weather_data
 from meteo.gapfill_weather_gui import GapFillWeatherGUI
+from meteo.dwnld_weather_data import DwnldWeatherWidget
 
 from about import AboutWhat
 from projet.manager_projet import ProjetManager
@@ -151,7 +152,7 @@ class WHAT(QMainWindow):
 
         # ---- download weather data ----
 
-        self.tab_dwnld_data = dwnld_weather_data.dwnldWeather(self)
+        self.tab_dwnld_data = DwnldWeatherWidget(self)
         self.tab_dwnld_data.set_workdir(self.projectdir)
 
         # ---- gapfill weather data ----

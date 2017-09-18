@@ -25,7 +25,7 @@ from __future__ import division, unicode_literals
 
 try:
     from urllib2 import urlopen, URLError
-except:
+except ImportError:
     from urllib.request import URLError, urlopen
 
 import sys
@@ -38,7 +38,7 @@ import csv
 
 import numpy as np
 
-from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtCore import Qt, QThread, QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QToolButton, QGridLayout, QLabel, QCheckBox,
@@ -57,16 +57,17 @@ from meteo.search_weather_data import Search4Stations
 # =============================================================================
 
 
-class dwnldWeather(QWidget):
+class DwnldWeatherWidget(QWidget):
     """
-    Interface that allow to download daily weather data from the governement
-    of Canada website.
+    Interface that allows to download daily weather data from the governement
+    of Canada website (http://climate.weather.gc.ca/historical_data/
+    search_historic_data_e.html).
     """
 
     ConsoleSignal = QSignal(str)
 
     def __init__(self, parent=None):
-        super(dwnldWeather, self).__init__(parent)
+        super(DwnldWeatherWidget, self).__init__(parent)
 
         self.set_workdir(getcwd())
 
@@ -80,19 +81,30 @@ class dwnldWeather(QWidget):
         self.staList2dwnld = []
         self.dwnld_indx = 0
 
+        # Setup child widgets and UI.
+
+        self.search4stations = Search4Stations(self)
+        self.station_table = WeatherStationDisplayTable(1, self)
         self.__initUI__()
+
+        # Setup downloader worker and thread.
+
+        self.dwnld_worker = RawDataDownloader(self)
+        self.dwnld_thread = QThread()
+        self.dwnld_worker.moveToThread(self.dwnld_thread)
+
+        self.dwnld_worker.sig_finished_download.connect(
+                self.manage_raw_data_dwnld)
+        self.dwnld_worker.sig_merge_rawdata.connect(
+                self.concatenate_and_display)
+        self.dwnld_worker.sig_update_pbar.connect(self.pbar.setValue)
+        self.dwnld_worker.ConsoleSignal.connect(self.ConsoleSignal.emit)
 
     def __initUI__(self):
 
         # ---- Main Window ----
 
         self.setWindowIcon(IconDB().master)
-
-        # ---- Instances init ----
-
-        self.search4stations = Search4Stations(self)
-        self.station_table = WeatherStationDisplayTable(1, self)
-        self.dwnl_raw_datafiles = DownloadRawDataFiles(self)
 
         # ---- TOOLBAR ----
 
@@ -240,11 +252,6 @@ class dwnldWeather(QWidget):
         # ---- download raw data ----
 
         self.btn_get.clicked.connect(self.manage_raw_data_dwnld)
-        self.dwnl_raw_datafiles.EndSignal.connect(self.manage_raw_data_dwnld)
-        self.dwnl_raw_datafiles.MergeSignal.connect(
-            self.concatenate_and_display)
-        self.dwnl_raw_datafiles.ProgBarSignal.connect(self.pbar.setValue)
-        self.dwnl_raw_datafiles.ConsoleSignal.connect(self.ConsoleSignal.emit)
 
         # ---- concatenate raw data ----
 
@@ -476,36 +483,24 @@ class dwnldWeather(QWidget):
     # =========================================================================
 
     def manage_raw_data_dwnld(self):
-
         """
         This method starts the downloading process of the raw weather
-        data files.
-
-        Also, this method manages the stopping of the downloading process
-        and the state of the "btn_get". Before the downloading
-        process is started, the text and the icon of "btn_get" is changed to
-        look like a stop button.
-
-        If "btn_get" is clicked again by the user during the downloading
-        process, the state of the button reverts back to its original display.
-        In addition the value of the "STOP" flag is forced to True in the
-        download Thread to stop the downloading process.
+        data files. This method also manages the stopping of the
+        downloading process and the state of the "btn_get". Before the
+        downloading process is started, the text and the icon of "btn_get" is
+        changed to look like a stop button. If "btn_get" is clicked again
+        during the downloading process, the state of the button reverts back
+        to its original display and the downloading process is stopped.
         """
 
         sender = self.sender()
-
         if sender == self.btn_get:
-            if self.dwnl_raw_datafiles.isRunning():
-
+            if self.dwnld_thread.isRunning():
                 # Stop the Download process and reset UI
-
-                self.dwnl_raw_datafiles.STOP = True
+                self.dwnld_worker.stop_download()
                 self.btn_get.setIcon(IconDB().download)
                 self.dwnld_indx = 0
-
-#                self.station_table.setEnabled(True)
                 self.pbar.hide()
-
                 return
 
             # ---------------------------- Grab stations that are selected ----
@@ -543,96 +538,84 @@ class dwnldWeather(QWidget):
                 btn = QMessageBox.Ok
                 QMessageBox.warning(self, 'Warning', msg, btn)
                 return
-
-        else:  # ----------------------------- Check if process isFinished ----
-
+        else:
+            # Check if process is finished.
             if self.dwnld_indx >= (len(self.staList2dwnld)):
                 print('Raw weather data downloaded for all selected stations.')
-
                 # Reset UI and variables
-
                 self.dwnld_indx = 0
-#                self.station_table.setEnabled(True)
                 self.pbar.hide()
                 self.btn_get.setIcon(IconDB().download)
-
                 return
 
         # ----------------------------------------------- Start the Thread ----
 
         # Push Thread Info :
 
-        self.dwnl_raw_datafiles.dirname = os.path.join(
+        self.dwnld_worker.dirname = os.path.join(
             self.workdir, 'Meteo', 'Raw')
 
         sta2dwnl = self.staList2dwnld[self.dwnld_indx]
 
-        self.dwnl_raw_datafiles.StaName = sta2dwnl[1]
-        self.dwnl_raw_datafiles.stationID = sta2dwnl[2]
-        self.dwnl_raw_datafiles.yr_start = sta2dwnl[3]
-        self.dwnl_raw_datafiles.yr_end = sta2dwnl[4]
-        self.dwnl_raw_datafiles.climateID = sta2dwnl[5]
+        self.dwnld_worker.StaName = sta2dwnl[1]
+        self.dwnld_worker.stationID = sta2dwnl[2]
+        self.dwnld_worker.yr_start = sta2dwnl[3]
+        self.dwnld_worker.yr_end = sta2dwnl[4]
+        self.dwnld_worker.climateID = sta2dwnl[5]
 
         # ---- Update UI ----
 
-#        self.station_table.setEnabled(False)
         self.pbar.show()
         self.btn_get.setIcon(IconDB().stop)
         self.station_table.selectRow(sta2dwnl[0])
 
         # ----- Wait for the QThread to finish -----
 
-        # Protection in case the QTread did not had time to close completely
-        # before starting the downloading process for the next station.
-
+        # Wait for the QTread to close completely before starting the
+        # downloading process for the next station.
+        self.dwnld_thread.quit()
         waittime = 0
-        while self.dwnl_raw_datafiles.isRunning():
+        while self.dwnld_thread.isRunning():
             print('Waiting for the downloading thread to close')
-            sleep(1)
-            waittime += 1
+            sleep(0.1)
+            waittime += 0.1
             if waittime > 15:
-                msg = ('This function is not working as intended.' +
+                msg = ('This function is not working as intended.'
                        ' Please report a bug.')
                 print(msg)
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 return
 
-        # Start Download :
-
+        # Start the downloading process.
         self.dwnld_indx += 1
-        self.dwnl_raw_datafiles.start()
+        try:
+            self.dwnld_thread.started.disconnect(
+                    self.dwnld_worker.download_data)
+        except TypeError:
+            # The method self.dwnld_worker.download_data is not connected.
+            pass
+        finally:
+            self.dwnld_thread.started.connect(self.dwnld_worker.download_data)
+            self.dwnld_thread.start()
 
-        return
-
-    def display_mergeHistory(self):  # ========================================
+    def display_mergeHistory(self):
 
         # ---------------------------- Respond to UI event (if applicable) ----
 
-        # http://zetcode.com/gui/pysidetutorial/eventsandsignals/
-
         button = self.sender()
-
         if button == self.btn_goFirst:
             self.mergeHistoryIndx = 0
-
         elif button == self.btn_goLast:
             self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
-
         elif button == self.btn_goPrevious:
             self.mergeHistoryIndx += -1
-
         elif button == self.btn_goNext:
             self.mergeHistoryIndx += 1
-
-        else:
-            pass
 
         # ------------------------------------------------------ Update UI ----
 
         self.mergeDisplay.setText(self.mergeHistoryLog[self.mergeHistoryIndx])
-
         if len(self.mergeHistoryLog) > 1:
-
             if self.mergeHistoryIndx == (len(self.mergeHistoryLog) - 1):
                 self.btn_goLast.setEnabled(False)
                 self.btn_goNext.setEnabled(False)
@@ -672,7 +655,7 @@ class dwnldWeather(QWidget):
         ---- CALLED BY----
 
         (1) Method: select_raw_files
-        (2) Event:  self.dwnl_rawfiles.MergeSignal.connect
+        (2) Event:  self.dwnl_rawfiles.sig_merge_rawdata.connect
         """
 
         if len(filenames) == 0:
@@ -788,7 +771,7 @@ class dwnldWeather(QWidget):
                     else:
                         f.close()
                         j = j + 1
-                except:
+                except IndexError:
                     j = i + 1
 
             StaName[i] = reader[0][1]
@@ -904,7 +887,7 @@ class dwnldWeather(QWidget):
 # =============================================================================
 
 
-class DownloadRawDataFiles(QThread):
+class RawDataDownloader(QObject):
     '''
     This thread is used to download the raw data files from
     www.climate.weather.gc.ca and saves them automatically in
@@ -915,7 +898,7 @@ class DownloadRawDataFiles(QThread):
 
     ---- Input ----
 
-    self.STOP = Flag that is used to stop the thread from the UI side.
+    self.__stop_dwnld = Flag that is used to stop the thread from the UI side.
 
     ---- Output ----
 
@@ -925,15 +908,15 @@ class DownloadRawDataFiles(QThread):
                    3 -> File NOT downloaded because it already exists
     '''
 
-    EndSignal = QSignal(bool)
-    MergeSignal = QSignal(list)
-    ProgBarSignal = QSignal(int)
+    sig_finished_download = QSignal(bool)
+    sig_merge_rawdata = QSignal(list)
+    sig_update_pbar = QSignal(int)
     ConsoleSignal = QSignal(str)
 
     def __init__(self, parent=None):
-        super(DownloadRawDataFiles, self).__init__(parent)
+        super(RawDataDownloader, self).__init__(parent)
 
-        self.STOP = False
+        self.__stop_dwnld = False
 
         self.ERRFLAG = []
 
@@ -948,7 +931,10 @@ class DownloadRawDataFiles(QThread):
         self.yr_end = []
         self.StaName = []  # Common name given to the station (not unique)
 
-    def run(self):
+    def stop_download(self):
+        self.__stop_dwnld = True
+
+    def download_data(self):
 
         # ---------------------------------------------------------- INIT -----
 
@@ -964,7 +950,7 @@ class DownloadRawDataFiles(QThread):
             '''<font color=black>Downloading data from </font>
                <font color=blue>www.climate.weather.gc.ca</font>
                <font color=black> for station %s</font>''' % StaName)
-        self.ProgBarSignal.emit(0)
+        self.sig_update_pbar.emit(0)
 
         StaName = StaName.replace('\\', '_')
         StaName = StaName.replace('/', '_')
@@ -982,8 +968,8 @@ class DownloadRawDataFiles(QThread):
 
         i = 0
         for year in range(yr_start, yr_end+1):
-            if self.STOP:
-                # The user stopped the downloading process.
+            if self.__stop_dwnld:
+                # Stop the downloading process.
                 break
 
             # File and URL Paths :
@@ -1017,7 +1003,7 @@ class DownloadRawDataFiles(QThread):
             # Update UI :
 
             progress = (year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
-            self.ProgBarSignal.emit(int(progress))
+            self.sig_update_pbar.emit(int(progress))
 
             if self.ERRFLAG[i] == 1:
                 self.ConsoleSignal.emit(
@@ -1047,8 +1033,8 @@ class DownloadRawDataFiles(QThread):
 
         # ---------------------------------------------------- End of Task ----
 
-        if self.STOP:
-            self.STOP = False
+        if self.__stop_dwnld:
+            self.__stop_dwnld = False
             print("Downloading process for station %s stopped." % StaName)
             self.ConsoleSignal.emit('''<font color=red>Downloading process for
                                          station %s stopped.
@@ -1059,9 +1045,9 @@ class DownloadRawDataFiles(QThread):
             print(cmt)
             self.ConsoleSignal.emit('<font color=black>%s</font>' % cmt)
 
-            self.MergeSignal.emit(fname4merge)
-            self.ProgBarSignal.emit(0)
-            self.EndSignal.emit(True)
+            self.sig_merge_rawdata.emit(fname4merge)
+            self.sig_update_pbar.emit(0)
+            self.sig_finished_download.emit(True)
 
     def dwnldfile(self, url, fname):  # =======================================
 
@@ -1092,7 +1078,7 @@ class DownloadRawDataFiles(QThread):
         return ERRFLAG
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':                                   # pragma: no cover
 
     app = QApplication(sys.argv)
 
@@ -1101,13 +1087,14 @@ if __name__ == '__main__':
     ft.setPointSize(10)
     app.setFont(ft)
 
-    w = dwnldWeather()
+    w = DwnldWeatherWidget()
 
-    w.set_workdir("../Projects/Project4Testing")
+    testpath = "../tests/@ new-prô'jèt!"
+    w.set_workdir(testpath)
     w.search4stations.lat_spinBox.setValue(45.4)
     w.search4stations.lon_spinBox.setValue(73.13)
     w.search4stations.isOffline = True
-    w.load_stationList("../Projects/Project4Testing/weather_stations.lst")
+    w.load_stationList(os.path.join(testpath, "weather_station_list.lst"))
 
     # ---- SHOW ----
 
