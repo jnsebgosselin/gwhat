@@ -108,7 +108,7 @@ def test_download_data(downloader_bot):
         qtbot.mouseClick(widget, Qt.LeftButton)
         
     # Download the data for the selected stations.
-    qtbot.mouseClick(wxdata_downloader.btn_get, Qt.LeftButton)
+    # qtbot.mouseClick(wxdata_downloader.btn_get, Qt.LeftButton)
 
 if __name__ == "__main__":
     pytest.main([os.path.basename(__file__)])
