@@ -25,7 +25,7 @@ from __future__ import division, unicode_literals
 
 try:
     from urllib2 import urlopen, URLError
-except:
+except ImportError:
     from urllib.request import URLError, urlopen
 
 import sys
@@ -63,7 +63,7 @@ class DwnldWeatherWidget(QWidget):
     of Canada website (http://climate.weather.gc.ca/historical_data/
     search_historic_data_e.html).
     """
-    
+
     ConsoleSignal = QSignal(str)
 
     def __init__(self, parent=None):
@@ -82,20 +82,21 @@ class DwnldWeatherWidget(QWidget):
         self.dwnld_indx = 0
 
         # Setup child widgets and UI.
-        
+
         self.search4stations = Search4Stations(self)
         self.station_table = WeatherStationDisplayTable(1, self)
         self.__initUI__()
-        
+
         # Setup downloader worker and thread.
-        
+
         self.dwnld_worker = RawDataDownloader(self)
         self.dwnld_thread = QThread()
         self.dwnld_worker.moveToThread(self.dwnld_thread)
-        
+
         self.dwnld_worker.sig_finished_download.connect(
                 self.manage_raw_data_dwnld)
-        self.dwnld_worker.sig_merge_rawdata.connect(self.concatenate_and_display)
+        self.dwnld_worker.sig_merge_rawdata.connect(
+                self.concatenate_and_display)
         self.dwnld_worker.sig_update_pbar.connect(self.pbar.setValue)
         self.dwnld_worker.ConsoleSignal.connect(self.ConsoleSignal.emit)
 
@@ -484,11 +485,11 @@ class DwnldWeatherWidget(QWidget):
     def manage_raw_data_dwnld(self):
         """
         This method starts the downloading process of the raw weather
-        data files. This method also manages the stopping of the 
-        downloading process and the state of the "btn_get". Before the 
-        downloading process is started, the text and the icon of "btn_get" is 
-        changed to look like a stop button. If "btn_get" is clicked again 
-        during the downloading process, the state of the button reverts back 
+        data files. This method also manages the stopping of the
+        downloading process and the state of the "btn_get". Before the
+        downloading process is started, the text and the icon of "btn_get" is
+        changed to look like a stop button. If "btn_get" is clicked again
+        during the downloading process, the state of the button reverts back
         to its original display and the downloading process is stopped.
         """
 
@@ -537,7 +538,7 @@ class DwnldWeatherWidget(QWidget):
                 btn = QMessageBox.Ok
                 QMessageBox.warning(self, 'Warning', msg, btn)
                 return
-        else:  
+        else:
             # Check if process is finished.
             if self.dwnld_indx >= (len(self.staList2dwnld)):
                 print('Raw weather data downloaded for all selected stations.')
@@ -570,7 +571,7 @@ class DwnldWeatherWidget(QWidget):
 
         # ----- Wait for the QThread to finish -----
 
-        # Wait for the QTread to close completely before starting the 
+        # Wait for the QTread to close completely before starting the
         # downloading process for the next station.
         self.dwnld_thread.quit()
         waittime = 0
@@ -594,8 +595,8 @@ class DwnldWeatherWidget(QWidget):
             # The method self.dwnld_worker.download_data is not connected.
             pass
         finally:
-             self.dwnld_thread.started.connect(self.dwnld_worker.download_data)
-             self.dwnld_thread.start()
+            self.dwnld_thread.started.connect(self.dwnld_worker.download_data)
+            self.dwnld_thread.start()
 
     def display_mergeHistory(self):
 
@@ -770,7 +771,7 @@ class DwnldWeatherWidget(QWidget):
                     else:
                         f.close()
                         j = j + 1
-                except:
+                except IndexError:
                     j = i + 1
 
             StaName[i] = reader[0][1]
@@ -931,8 +932,8 @@ class RawDataDownloader(QObject):
         self.StaName = []  # Common name given to the station (not unique)
 
     def stop_download(self):
-        self.__stop_dwnld  = True
-        
+        self.__stop_dwnld = True
+
     def download_data(self):
 
         # ---------------------------------------------------------- INIT -----
