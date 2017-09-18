@@ -38,12 +38,12 @@ import csv
 
 import numpy as np
 
-from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtCore import Qt, QThread, QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QToolButton, QGridLayout, QLabel, QCheckBox,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
-                             QMessageBox, QProgressBar, QObject)
+                             QMessageBox, QProgressBar)
 
 # Local imports :
 
@@ -81,20 +81,14 @@ class DwnldWeatherWidget(QWidget):
         self.staList2dwnld = []
         self.dwnld_indx = 0
 
-        self.__initUI__()
-
-    def __initUI__(self):
-
-        # ---- Main Window ----
-
-        self.setWindowIcon(IconDB().master)
-
-        # Setup widgets.
-
+        # Setup child widgets and UI.
+        
         self.search4stations = Search4Stations(self)
         self.station_table = WeatherStationDisplayTable(1, self)
+        self.__initUI__()
         
         # Setup downloader worker and thread.
+        
         self.dwnld_worker = RawDataDownloader(self)
         self.dwnld_thread = QThread()
         self.dwnld_worker.moveToThread(self.dwnld_thread)
@@ -104,6 +98,12 @@ class DwnldWeatherWidget(QWidget):
         self.dwnld_worker.sig_merge_rawdata.connect(self.concatenate_and_display)
         self.dwnld_worker.sig_update_pbar.connect(self.pbar.setValue)
         self.dwnld_worker.ConsoleSignal.connect(self.ConsoleSignal.emit)
+
+    def __initUI__(self):
+
+        # ---- Main Window ----
+
+        self.setWindowIcon(IconDB().master)
 
         # ---- TOOLBAR ----
 
@@ -494,7 +494,7 @@ class DwnldWeatherWidget(QWidget):
 
         sender = self.sender()
         if sender == self.btn_get:
-            if self.dwnld_worker.isRunning():
+            if self.dwnld_thread.isRunning():
                 # Stop the Download process and reset UI
                 self.dwnld_worker.stop_download()
                 self.btn_get.setIcon(IconDB().download)
@@ -1088,11 +1088,12 @@ if __name__ == '__main__':
 
     w = DwnldWeatherWidget()
 
-    w.set_workdir("../Projects/Project4Testing")
+    testpath = "../tests/@ new-prô'jèt!"
+    w.set_workdir(testpath)
     w.search4stations.lat_spinBox.setValue(45.4)
     w.search4stations.lon_spinBox.setValue(73.13)
     w.search4stations.isOffline = True
-    w.load_stationList("../Projects/Project4Testing/weather_stations.lst")
+    w.load_stationList(os.path.join(testpath, "weather_station_list.lst"))
 
     # ---- SHOW ----
 
