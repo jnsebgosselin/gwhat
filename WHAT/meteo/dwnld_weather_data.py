@@ -646,8 +646,7 @@ class DwnldWeatherWidget(QWidget):
         if fname:
             self.concatenate_and_display(fname)
 
-    def concatenate_and_display(self, filenames):  # ==========================
-
+    def concatenate_and_display(self, filenames):
         """
         Handles the concatenation process of individual yearly raw data files
         and display the results in the <mergeDisplay> widget.
@@ -693,7 +692,6 @@ class DwnldWeatherWidget(QWidget):
 
             filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
                                               YearStart, YearEnd)
-
             fname = os.path.join(save_dir, filename)
             self.save_concatened_data(fname, mergeOutput)
 
@@ -715,7 +713,6 @@ class DwnldWeatherWidget(QWidget):
         mergeOutput, _ = self.concatenate(filenames)
 
         if np.size(mergeOutput) != 0:
-
             StaName = mergeOutput[0, 1]
             YearStart = mergeOutput[8, 0][:4]
             YearEnd = mergeOutput[-1, 0][:4]
@@ -736,8 +733,7 @@ class DwnldWeatherWidget(QWidget):
             if fname:
                 self.save_concatened_data(fname, mergeOutput)
 
-    def concatenate(self, fname):  # ==========================================
-
+    def concatenate(self, fname):
         fname = np.sort(fname)  # list of the raw data file paths
 
         COLN = (1, 2, 3, 5, 7, 9, 19)
@@ -783,11 +779,10 @@ class DwnldWeatherWidget(QWidget):
             while fieldSearch != 'Date/Time':
                 try:
                     fieldSearch = reader[row_data_start][0]
-                except:
+                except IndexError:
                     pass
 
                 row_data_start += 1
-
                 if row_data_start > 50:
                     print('There is a compatibility problem with the data.')
                     print('Please, write at jnsebgosselin@gmail.com')
@@ -864,7 +859,7 @@ class DwnldWeatherWidget(QWidget):
 
         return MergeOutput, LOG
 
-    def save_concatened_data(self, fname, fcontent):  # =======================
+    def save_concatened_data(self, fname, fcontent):
 
         """
         This method saves the concatened data into a single csv file.
@@ -965,44 +960,43 @@ class RawDataDownloader(QObject):
         # list of paths of the yearly raw data files that will be pass to
         # contatenate and merge function.
         fname4merge = []
-
-        i = 0
-        for year in range(yr_start, yr_end+1):
+        for i, year in enumerate(range(yr_start, yr_end+1)):
             if self.__stop_dwnld:
                 # Stop the downloading process.
-                break
+                self.__stop_dwnld = False
+                msg = "Downloading process for station %s stopped." % StaName
+                print(msg)
+                self.ConsoleSignal.emit("<font color=red>%s</font>" % msg)
+                return
 
-            # File and URL Paths :
-
-            fname = dirname + '/eng-daily-0101%s-1231%s.csv' % (year, year)
-
+            # Define file and URL paths.
+            fname = os.path.join(
+                    dirname, "eng-daily-0101%s-1231%s.csv" % (year, year))
             url = ('http://climate.weather.gc.ca/climate_data/' +
                    'bulk_data_e.html?format=csv&stationID=' + str(staID) +
                    '&Year=' + str(year) + '&Month=1&Day=1&timeframe=2' +
                    '&submit=Download+Data')
 
-            # Download Data For That Year :
-
+            # Download data for that year.
             if path.exists(fname):
                 # If the file was downloaded in the same year that of the data
                 # record, data will be downloaded again in case the data series
                 # was not complete.
 
-                myear = path.getmtime(fname)  # Year of file last modification
+                # Get year of file last modification
+                myear = path.getmtime(fname)
                 myear = gmtime(myear)[0]
-
                 if myear == year:
                     self.ERRFLAG[i] = self.dwnldfile(url, fname)
                 else:
                     self.ERRFLAG[i] = 3
                     print('Not downloading: Raw Data File already exists.')
-
             else:
                 self.ERRFLAG[i] = self.dwnldfile(url, fname)
 
             # Update UI :
 
-            progress = (year - yr_start + 1.) / (yr_end + 1 - yr_start) * 100
+            progress = (year - yr_start+1) / (yr_end+1 - yr_start) * 100
             self.sig_update_pbar.emit(int(progress))
 
             if self.ERRFLAG[i] == 1:
@@ -1010,67 +1004,46 @@ class RawDataDownloader(QObject):
                     '''<font color=red>There was a problem downloading the
                          data of station %s for year %d.
                        </font>''' % (StaName, year))
-
             elif self.ERRFLAG[i] == 0:
-
                 self.ConsoleSignal.emit(
                     '''<font color=black>Weather data for station %s
                          downloaded successfully for year %d.
                        </font>''' % (StaName, year))
                 fname4merge.append(fname)
-
             elif self.ERRFLAG[i] == 3:
-
                 sleep(0.1)
-
                 self.ConsoleSignal.emit(
                     '''<font color=green>A weather data file already existed
                          for station %s for year %d. Downloading is skipped.
                        </font>''' % (StaName, year))
                 fname4merge.append(fname)
 
-            i += 1
-
         # ---------------------------------------------------- End of Task ----
 
-        if self.__stop_dwnld:
-            self.__stop_dwnld = False
-            print("Downloading process for station %s stopped." % StaName)
-            self.ConsoleSignal.emit('''<font color=red>Downloading process for
-                                         station %s stopped.
-                                       </font>''' % StaName)
-        else:
-            cmt = "All raw  data files downloaded sucessfully for "
-            cmt += "station %s." % StaName
-            print(cmt)
-            self.ConsoleSignal.emit('<font color=black>%s</font>' % cmt)
+        cmt = ("All raw  data files downloaded sucessfully for "
+               "station %s.") % StaName
+        print(cmt)
+        self.ConsoleSignal.emit('<font color=black>%s</font>' % cmt)
 
-            self.sig_merge_rawdata.emit(fname4merge)
-            self.sig_update_pbar.emit(0)
-            self.sig_finished_download.emit(True)
+        self.sig_merge_rawdata.emit(fname4merge)
+        self.sig_update_pbar.emit(0)
+        self.sig_finished_download.emit(True)
 
-    def dwnldfile(self, url, fname):  # =======================================
-
-        # http://stackoverflow.com/questions/4028697
-        # https://docs.python.org/3/howto/urllib2.html
-
+    def dwnldfile(self, url, fname):
         try:
             ERRFLAG = 0
-
             f = urlopen(url)
             print('downloading %s' % fname)
 
-            # write downloaded content to local file
+            # Write downloaded content to local file.
             with open(fname, 'wb') as local_file:
                 local_file.write(f.read())
-
         except URLError as e:
             ERRFLAG = 1
 
             if hasattr(e, 'reason'):
                 print('Failed to reach a server.')
                 print('Reason: ', e.reason)
-
             elif hasattr(e, 'code'):
                 print('The server couldn\'t fulfill the request.')
                 print('Error code: ', e.code)
