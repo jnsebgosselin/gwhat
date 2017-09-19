@@ -16,7 +16,7 @@ from PyQt5.QtCore import Qt
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from meteo.dwnld_weather_data import (DwnldWeatherWidget, RawDataDownloader,
-                                      QFileDialog)
+                                      QFileDialog, QMessageBox)
 
 
 # Qt Test Fixtures
@@ -184,11 +184,10 @@ def test_delete_add_stations(downloader_bot, mocker):
 
 
 @pytest.mark.run(order=3)
-def test_download_data(downloader_bot):
+def test_download_data(downloader_bot, mocker):
     wxdata_downloader, qtbot = downloader_bot
     station_table = wxdata_downloader.station_table
     wxdata_downloader.show()
-    assert wxdata_downloader
 
     # Set the path of the working directory.
     projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
@@ -200,12 +199,16 @@ def test_download_data(downloader_bot):
 
     # Set "to year" and "from year" for all stations.
     station_table.set_fromyear(2000)
-    station_table.set_toyear(2017)
+    station_table.set_toyear(2010)
+
+    # Try starting the downloading process before selecting any station.
+    mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
+    qtbot.mouseClick(wxdata_downloader.btn_get, Qt.LeftButton)
 
     # Check stations "Marieville", "IBERVILLE", "L'ACADIE", "SABREVOIS",
     # "LAPRAIRIE", "FARNHAM", "STE MADELEINE".
 
-    rows = [0, 2]  # [0, 2, 4, 5, 6, 7, 8]
+    rows = [0, 2, 4]  # [0, 2, 4, 5, 6, 7, 8]
     for row in rows:
         item = station_table.cellWidget(row, 0).layout().itemAtPosition(1, 1)
         widget = item.widget()
