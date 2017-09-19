@@ -68,7 +68,8 @@ def test_search_weather_station(station_finder_bot, mocker):
             station_finder_widget.finder.stationlist)
 
     # Mock the dialog window and answer to specify the file name and type.
-    fname = os.path.join(os.getcwd(), 'weather_station_list.lst')
+    fname = os.path.join(os.getcwd(), "@ new-prô'jèt!",
+                         "weather_station_list.lst")
     ftype = '*.csv'
     mocker.patch.object(QFileDialog, 'getSaveFileName',
                         return_value=(fname, ftype))
@@ -132,6 +133,6 @@ def test_stop_search(station_finder_bot):
             station_finder_widget.finder.stationlist)
 
 
-if __name__ == "__main__":
-    # pytest.main([os.path.basename(__file__)])
-    pytest.main()
+if __name__ == "__main__":                                   # pragma: no cover
+    pytest.main([os.path.basename(__file__)])
+#    pytest.main()
