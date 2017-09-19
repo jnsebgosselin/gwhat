@@ -15,7 +15,8 @@ from PyQt5.QtCore import Qt
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from meteo.dwnld_weather_data import DwnldWeatherWidget, RawDataDownloader
+from meteo.dwnld_weather_data import (DwnldWeatherWidget, RawDataDownloader,
+                                      QFileDialog)
 
 
 # Qt Test Fixtures
@@ -88,7 +89,7 @@ def test_load_old_stationlist(downloader_bot):
 
 
 @pytest.mark.run(order=3)
-def test_load_stationlist(downloader_bot):
+def test_load_stationlist(downloader_bot, mocker):
     wxdata_downloader, qtbot = downloader_bot
     assert wxdata_downloader
 
@@ -106,12 +107,15 @@ def test_load_stationlist(downloader_bot):
          "24.85"]
         ]
 
+    # Mock the dialog window and answer to specify the file name and type.
+    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!")
+    fname = os.path.join(dirname, "weather_station_list.lst")
+    mocker.patch.object(QFileDialog, 'getOpenFileName',
+                        return_value=(fname, '*.lst'))
+
     # Assert that coma-separated-value station list loads correctly. The
     # weather station list was created during "test_dwnld_weather_data.py".
-    fname = os.path.join(os.getcwd(), "@ new-prô'jèt!",
-                         "weather_station_list.lst")
-    station_list = wxdata_downloader.load_stationList(fname)
-    assert station_list == expected_result
+    wxdata_downloader.btn_browse_staList_isClicked()
 
     # Assert that the data are stored correctly in the widget table.
     list_from_table = wxdata_downloader.station_table.get_staList()
@@ -121,7 +125,7 @@ def test_load_stationlist(downloader_bot):
 @pytest.mark.run(order=3)
 def test_download_data(downloader_bot):
     wxdata_downloader, qtbot = downloader_bot
-    table_widget = wxdata_downloader.station_table
+    station_table = wxdata_downloader.station_table
     wxdata_downloader.show()
     assert wxdata_downloader
 
@@ -134,15 +138,15 @@ def test_download_data(downloader_bot):
             os.path.join(projetpath, "weather_station_list.lst"))
 
     # Set "to year" and "from year" for all stations.
-    table_widget.set_fromyear(2000)
-    table_widget.set_toyear(2017)
+    station_table.set_fromyear(2000)
+    station_table.set_toyear(2017)
 
     # Check stations "Marieville", "IBERVILLE", "L'ACADIE", "SABREVOIS",
     # "LAPRAIRIE", "FARNHAM", "STE MADELEINE".
 
     rows = [0, 2]  # [0, 2, 4, 5, 6, 7, 8]
     for row in rows:
-        item = table_widget.cellWidget(row, 0).layout().itemAtPosition(1, 1)
+        item = station_table.cellWidget(row, 0).layout().itemAtPosition(1, 1)
         widget = item.widget()
         qtbot.mouseClick(widget, Qt.LeftButton)
 

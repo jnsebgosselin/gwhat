@@ -1104,7 +1104,6 @@ class WeatherStationDisplayTable(QTableWidget):
         self.setItem(row, col, item)
 
     def delete_rows(self, rows):
-
         # Going in reverse order to preserve indexes while
         # scanning the rows if any are deleted.
         for row in reversed(rows):
@@ -1120,6 +1119,7 @@ class WeatherStationDisplayTable(QTableWidget):
             self.insert_row_at_end(row_data)
         self.setSortingEnabled(True)
 
+    # -------------------------------------------------------------------------
 
     def set_fromyear(self, year):
         for row in range(self.rowCount()):
@@ -1153,6 +1153,8 @@ class WeatherStationDisplayTable(QTableWidget):
             finally:
                 widget.setCurrentIndex(index)
 
+    # -------------------------------------------------------------------------
+
     def get_row_from_climateid(self, climateid):
         for row in range(self.rowCount()):
             if self.item(row, 6).text() == str(climateid):
@@ -1167,6 +1169,8 @@ class WeatherStationDisplayTable(QTableWidget):
                 rows.append(row)
 
         return rows
+
+    # -------------------------------------------------------------------------
 
     def get_content4rows(self, rows):
         ''' Grabs weather station info save them in a list.'''
