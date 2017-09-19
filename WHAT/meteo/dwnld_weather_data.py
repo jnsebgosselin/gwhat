@@ -718,7 +718,7 @@ class DwnldWeatherWidget(QWidget):
                 # encoding format of the raw data file like they did in 2016
                 # when they changed it from iso-8859-1 to utf-8-sig.
 
-                if j >= len(enc):
+                if j >= len(enc):                            # pragma: no cover
                     print('There is a compatibility problem with the data.')
                     print('Please, write at jnsebgosselin@gmail.com')
                     break
@@ -732,7 +732,7 @@ class DwnldWeatherWidget(QWidget):
                     else:
                         f.close()
                         j = j + 1
-                except IndexError:
+                except IndexError:                           # pragma: no cover
                     j = i + 1
 
             StaName[i] = reader[0][1]
@@ -748,7 +748,7 @@ class DwnldWeatherWidget(QWidget):
                     pass
 
                 row_data_start += 1
-                if row_data_start > 50:
+                if row_data_start > 50:                      # pragma: no cover
                     print('There is a compatibility problem with the data.')
                     print('Please, write at jnsebgosselin@gmail.com')
                     break
