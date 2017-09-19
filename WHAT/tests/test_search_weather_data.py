@@ -134,5 +134,5 @@ def test_stop_search(station_finder_bot):
 
 
 if __name__ == "__main__":
-    # pytest.main([os.path.basename(__file__)])
-    pytest.main()
+    pytest.main([os.path.basename(__file__)])
+#    pytest.main()

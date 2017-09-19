@@ -6,7 +6,8 @@ Created on Fri Aug  4 01:50:50 2017
 
 # Standard library imports
 import sys
-import os.path
+import os
+from datetime import datetime
 
 # Third party imports
 import pytest
@@ -32,21 +33,22 @@ def downloader_bot(qtbot):
     qtbot.addWidget(wxdata_downloader)
     return wxdata_downloader, qtbot
 
+
 # Test RawDataDownloader
 # -------------------------------
-
 
 @pytest.mark.run(order=3)
 def test_download_raw_data(raw_downloader_bot):
     dwnld_worker, qtbot = raw_downloader_bot
+    now = datetime.now()
 
     # Download data for station Marieville
     projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
     dwnld_worker.dirname = os.path.join(projetpath, 'Meteo', 'Raw')
     dwnld_worker.StaName = "MARIEVILLE"
     dwnld_worker.stationID = "5406"
-    dwnld_worker.yr_start = "2000"
-    dwnld_worker.yr_end = "2005"
+    dwnld_worker.yr_start = str(now.year-5)
+    dwnld_worker.yr_end = str(now.year)
     dwnld_worker.climateID = "7024627"
 
     dwnld_worker.download_data()
@@ -56,11 +58,11 @@ def test_download_raw_data(raw_downloader_bot):
 
     # Assert the stopping of the downloading process
     dwnld_worker.stop_download()
+    dwnld_worker.download_data()
 
 
 # Test DwnldWeatherWidget
 # -------------------------------
-
 
 @pytest.mark.run(order=3)
 def test_load_old_stationlist(downloader_bot):
@@ -119,6 +121,7 @@ def test_load_stationlist(downloader_bot):
 @pytest.mark.run(order=3)
 def test_download_data(downloader_bot):
     wxdata_downloader, qtbot = downloader_bot
+    table_widget = wxdata_downloader.station_table
     wxdata_downloader.show()
     assert wxdata_downloader
 
@@ -130,9 +133,12 @@ def test_download_data(downloader_bot):
     wxdata_downloader.load_stationList(
             os.path.join(projetpath, "weather_station_list.lst"))
 
+    # Set "to year" and "from year" for all stations.
+    table_widget.set_fromyear(2000)
+    table_widget.set_toyear(2017)
+
     # Check stations "Marieville", "IBERVILLE", "L'ACADIE", "SABREVOIS",
     # "LAPRAIRIE", "FARNHAM", "STE MADELEINE".
-    table_widget = wxdata_downloader.station_table
 
     rows = [0, 2]  # [0, 2, 4, 5, 6, 7, 8]
     for row in rows:

@@ -1038,6 +1038,9 @@ if __name__ == '__main__':                                   # pragma: no cover
     w.search4stations.isOffline = True
     w.load_stationList(os.path.join(testpath, "weather_station_list.lst"))
 
+    w.station_table.set_fromyear(2000)
+    w.station_table.set_toyear(2017)
+
     # ---- SHOW ----
 
     w.show()
