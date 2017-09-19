@@ -970,7 +970,7 @@ class RawDataDownloader(QObject):
             progress = (year - yr_start+1) / (yr_end+1 - yr_start) * 100
             self.sig_update_pbar.emit(int(progress))
 
-            if self.ERRFLAG[i] == 1:
+            if self.ERRFLAG[i] == 1:                         # pragma: no cover
                 self.ConsoleSignal.emit(
                     '''<font color=red>There was a problem downloading the
                          data of station %s for year %d.
@@ -1008,9 +1008,8 @@ class RawDataDownloader(QObject):
             # Write downloaded content to local file.
             with open(fname, 'wb') as local_file:
                 local_file.write(f.read())
-        except URLError as e:
+        except URLError as e:                                # pragma: no cover
             ERRFLAG = 1
-
             if hasattr(e, 'reason'):
                 print('Failed to reach a server.')
                 print('Reason: ', e.reason)

@@ -32,7 +32,33 @@ def downloader_bot(qtbot):
     qtbot.addWidget(wxdata_downloader)
     return wxdata_downloader, qtbot
 
-# Tests
+# Test RawDataDownloader
+# -------------------------------
+
+
+@pytest.mark.run(order=3)
+def test_download_raw_data(raw_downloader_bot):
+    dwnld_worker, qtbot = raw_downloader_bot
+
+    # Download data for station Marieville
+    projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
+    dwnld_worker.dirname = os.path.join(projetpath, 'Meteo', 'Raw')
+    dwnld_worker.StaName = "MARIEVILLE"
+    dwnld_worker.stationID = "5406"
+    dwnld_worker.yr_start = "2000"
+    dwnld_worker.yr_end = "2005"
+    dwnld_worker.climateID = "7024627"
+
+    dwnld_worker.download_data()
+
+    # Download data again to test when raw data files are already present
+    dwnld_worker.download_data()
+
+    # Assert the stopping of the downloading process
+    dwnld_worker.stop_download()
+
+
+# Test DwnldWeatherWidget
 # -------------------------------
 
 
@@ -88,22 +114,6 @@ def test_load_stationlist(downloader_bot):
     # Assert that the data are stored correctly in the widget table.
     list_from_table = wxdata_downloader.station_table.get_staList()
     assert list_from_table == expected_result
-
-
-@pytest.mark.run(order=3)
-def test_download_raw_data(raw_downloader_bot):
-    dwnld_worker, qtbot = raw_downloader_bot
-
-    # Download data for station Marieville
-    projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
-    dwnld_worker.dirname = os.path.join(projetpath, 'Meteo', 'Raw')
-    dwnld_worker.StaName = "MARIEVILLE"
-    dwnld_worker.stationID = "5406"
-    dwnld_worker.yr_start = "2000"
-    dwnld_worker.yr_end = "2005"
-    dwnld_worker.climateID = "7024627"
-
-    dwnld_worker.download_data()
 
 
 @pytest.mark.run(order=3)
