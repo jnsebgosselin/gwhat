@@ -967,9 +967,7 @@ class WeatherStationDisplayTable(QTableWidget):
         self.chkbox_header.setGeometry(x0, y0, w, h)
 
     def chkbox_header_isClicked(self):
-
         nrow = self.rowCount()
-
         for row in range(nrow):
             item = self.cellWidget(row, 0).layout().itemAtPosition(1, 1)
             widget = item.widget()
@@ -1107,9 +1105,9 @@ class WeatherStationDisplayTable(QTableWidget):
         # Going in reverse order to preserve indexes while
         # scanning the rows if any are deleted.
         for row in reversed(rows):
-            self.removeRow(row)
             print('Removing %s (%s)' % (self.item(row, 1).text(),
                                         self.item(row, 6).text()))
+            self.removeRow(row)
 
     def populate_table(self, staList):
         self.clearContents()

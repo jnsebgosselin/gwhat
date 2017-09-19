@@ -298,19 +298,12 @@ class DwnldWeatherWidget(QWidget):
                 Qt.CheckState(False))
 
     def add_stations2list(self, staList2add):
-
-        nrow = self.station_table.rowCount()
-        rows = range(nrow)
-
-        staList2grow = self.station_table.get_content4rows(rows)
+        staList2grow = self.station_table.get_staList()
 
         if len(staList2grow) == 0:
             staList2grow = staList2add
-
         else:
-
             StationID = np.array(staList2grow)[:, 1].astype(str)
-
             for row in range(len(staList2add)):
                 sta2add = staList2add[row]
                 indx = np.where(StationID == sta2add[1])[0]

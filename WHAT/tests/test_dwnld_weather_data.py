@@ -8,6 +8,7 @@ Created on Fri Aug  4 01:50:50 2017
 import sys
 import os
 from datetime import datetime
+import time
 
 # Third party imports
 import pytest
@@ -104,8 +105,7 @@ def test_load_stationlist(downloader_bot, mocker):
         ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"],
         ["MONTREAL/ST-HUBERT A", "5490", "1928", "2015", "QC", "7027320",
-         "24.85"]
-        ]
+         "24.85"]]
 
     # Mock the dialog window and answer to specify the file name and type.
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!")
@@ -120,6 +120,65 @@ def test_load_stationlist(downloader_bot, mocker):
     # Assert that the data are stored correctly in the widget table.
     list_from_table = wxdata_downloader.station_table.get_staList()
     assert list_from_table == expected_result
+
+
+@pytest.mark.run(order=3)
+def test_delete_add_stations(downloader_bot, mocker):
+    wxdata_downloader, qtbot = downloader_bot
+    station_table = wxdata_downloader.station_table
+
+    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!")
+    fname = os.path.join(dirname, "weather_station_list.lst")
+
+    # Load a station list from file.
+    original_list = wxdata_downloader.load_stationList(fname)
+
+    # Try to delete stations when no station are selected.
+    wxdata_downloader.btn_delSta_isClicked()
+
+    # Select some stations in the list and delete them.
+    expected_result = [
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
+        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
+        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
+        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
+        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
+        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"]]
+
+    for row in [1, 3, 9]:
+        item = station_table.cellWidget(row, 0).layout().itemAtPosition(1, 1)
+        widget = item.widget()
+        qtbot.mouseClick(widget, Qt.LeftButton)
+    wxdata_downloader.btn_delSta_isClicked()
+    assert expected_result == station_table.get_staList()
+
+    # Add back the stations that were deleted.
+    expected_result = [
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
+        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
+        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
+        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
+        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
+        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"],
+        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700", "5.43"],
+        ["MONT ST HILAIRE", "5423", "1960", "1969", "QC", "7025330", "17.49"],
+        ["MONTREAL/ST-HUBERT A", "5490", "1928", "2015", "QC", "7027320",
+         "24.85"]]
+    wxdata_downloader.add_stations2list(original_list)
+    assert expected_result == station_table.get_staList()
+
+    # Clear completely the station list.
+    station_table.chkbox_header.setCheckState(Qt.CheckState(True))
+    assert len(station_table.get_checked_rows()) == len(expected_result)
+
+    wxdata_downloader.btn_delSta_isClicked()
+    assert [] == station_table.get_staList()
+
+    # Add back the stations that were deleted.
+    wxdata_downloader.add_stations2list(original_list)
+    assert original_list == station_table.get_staList()
 
 
 @pytest.mark.run(order=3)
