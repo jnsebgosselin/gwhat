@@ -155,6 +155,13 @@ def test_delete_add_stations(downloader_bot, mocker):
     wxdata_downloader.btn_delSta_isClicked()
     assert expected_result == station_table.get_staList()
 
+    # Save station list.
+    fname = os.path.join(dirname, "cleaned_station_list.lst")
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
+                        return_value=(fname, "*.lst"))
+    wxdata_downloader.btn_saveAs_staList_isClicked()
+    wxdata_downloader.btn_save_staList_isClicked()
+
     # Add back the stations that were deleted.
     expected_result = [
         ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
@@ -194,8 +201,18 @@ def test_download_data(downloader_bot, mocker):
     wxdata_downloader.set_workdir(projetpath)
 
     # Load the weather station list.
-    wxdata_downloader.load_stationList(
-            os.path.join(projetpath, "weather_station_list.lst"))
+    expected_result = [
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
+        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
+        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
+        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
+        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
+        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"]]
+
+    station_list = wxdata_downloader.load_stationList(
+            os.path.join(projetpath, "cleaned_station_list.lst"))
+    assert station_list == expected_result
 
     # Set "to year" and "from year" for all stations.
     station_table.set_fromyear(2000)
@@ -208,7 +225,7 @@ def test_download_data(downloader_bot, mocker):
     # Check stations "Marieville", "IBERVILLE", "L'ACADIE", "SABREVOIS",
     # "LAPRAIRIE", "FARNHAM", "STE MADELEINE".
 
-    rows = [0, 2, 4]  # [0, 2, 4, 5, 6, 7, 8]
+    rows = [0, 1, 2]
     for row in rows:
         item = station_table.cellWidget(row, 0).layout().itemAtPosition(1, 1)
         widget = item.widget()
