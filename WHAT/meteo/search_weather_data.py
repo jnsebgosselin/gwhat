@@ -1203,6 +1203,14 @@ class WeatherStationDisplayTable(QTableWidget):
 
         return station_list
 
+    def save_staList(self, filename):
+        station_list = self.get_staList()
+        station_list.insert(0, db.FileHeaders().weather_stations[0])
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter=',', lineterminator='\n')
+            writer.writerows(station_list)
+
 
 def decdeg2dms(dd):
     '''
