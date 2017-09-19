@@ -20,16 +20,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
 # Standard library imports :
+import os
 
 # Third party imports :
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import (QDialog, QApplication, QGridLayout, QComboBox,
-                             QLabel, QPushButton, QCheckBox, QLineEdit)
+from PyQt5.QtWidgets import (QDialog, QApplication, QGridLayout,
+                             QLabel, QPushButton, QCheckBox, QLineEdit,
+                             QFileDialog)
 
 # Local imports :
 
 from common import IconDB, QToolButtonSmall
+from meteo.weather_reader import WXDataFrame
 
 
 class WXDataMerger(QDialog):
@@ -43,6 +46,8 @@ class WXDataMerger(QDialog):
 
         self.setWindowTitle('Merge dataset')
         self.setWindowIcon(IconDB().master)
+        self._workdir = os.getcwd()
+        self.wxdsets = {}
 
         self.__initUI__()
 
@@ -63,15 +68,17 @@ class WXDataMerger(QDialog):
 
         # ---- Central Widget ----
 
-        wxdset1 = QLineEdit()
-        wxdset1.setReadOnly(True)
-        lbl_wxdset1 = QLabel("Select a first dataset :")
         btn_wxdset1 = QToolButtonSmall(IconDB().openFile)
+        btn_wxdset1.line_edit = QLineEdit()
+        btn_wxdset1.line_edit.setReadOnly(True)
+        btn_wxdset1.label = QLabel("Select a first dataset :")
+        btn_wxdset1.clicked.connect(self.btn_get_file_isClicked)
 
-        wxdset2 = QLineEdit()
-        wxdset1.setReadOnly(True)
-        lbl_wxdset2 = QLabel("Select a second dataset :")
         btn_wxdset2 = QToolButtonSmall(IconDB().openFile)
+        btn_wxdset2.line_edit = QLineEdit()
+        btn_wxdset2.line_edit.setReadOnly(True)
+        btn_wxdset2.label = QLabel("Select a second dataset :")
+        btn_wxdset2.clicked.connect(self.btn_get_file_isClicked)
 
         lbl_wxdset3 = QLabel("Enter a name for the resulting dataset :")
         wxdset3 = QLineEdit()
@@ -82,20 +89,14 @@ class WXDataMerger(QDialog):
 
         central_layout = QGridLayout()
         row = 0
-        central_layout.addWidget(lbl_wxdset1, row, 0, 1, 2)
-        row += 1
-        central_layout.addWidget(wxdset1, row, 0)
-        central_layout.addWidget(btn_wxdset1, row, 1)
-        row += 1
-        central_layout.setRowMinimumHeight(row, 15)
-        row += 1
-        central_layout.addWidget(lbl_wxdset2, row, 0, 1, 2)
-        row += 1
-        central_layout.addWidget(wxdset2, row, 0)
-        central_layout.addWidget(btn_wxdset2, row, 1)
-        row += 1
-        central_layout.setRowMinimumHeight(row, 15)
-        row += 1
+        for btn in [btn_wxdset1, btn_wxdset2]:
+            central_layout.addWidget(btn.label, row, 0, 1, 2)
+            row += 1
+            central_layout.addWidget(btn.line_edit, row, 0)
+            central_layout.addWidget(btn, row, 1)
+            row += 1
+            central_layout.setRowMinimumHeight(row, 15)
+            row += 1
         central_layout.addWidget(lbl_wxdset3, row, 0, 1, 2)
         row += 1
         central_layout.addWidget(wxdset3, row, 0, 1, 2)
@@ -111,11 +112,21 @@ class WXDataMerger(QDialog):
         layout.addLayout(central_layout, 0, 0)
         layout.addLayout(toolbar, 1, 0)
 
+    def set_workdir(self, dirname):
+        if os.path.exists(dirname):
+            self._workdir = dirname
+
     def btn_merge_isClicked(self):
+        print(len(self.wxdsets))
         self.close()
-        
+
     def btn_get_file_isClicked(self):
-        print('coucou')
+        fname, ftype = QFileDialog.getOpenFileName(
+                self, 'Select a valid weather data file', self._workdir,
+                '*.csv')
+        if fname:
+            self.sender().line_edit.setText(fname)
+            self.wxdsets[self.sender()] = WXDataFrame(fname)
 
     def show(self):
         super(WXDataMerger, self).show()
@@ -133,7 +144,10 @@ if __name__ == '__main__':                                   # pragma: no cover
     elif platform.system() == 'Linux':
         app.setFont(QFont('Ubuntu', 11))
 
-    window = WXDataMerger()
-    window.show()
+    wxdata_merger = WXDataMerger()
+    wxdata_merger.show()
+
+    workdir = os.path.join("..", "tests", "@ new-prô'jèt!", "Meteo", "Input")
+    wxdata_merger.set_workdir(workdir)
 
     sys.exit(app.exec_())
