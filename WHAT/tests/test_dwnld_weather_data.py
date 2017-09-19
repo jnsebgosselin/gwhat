@@ -43,7 +43,7 @@ def test_download_raw_data(raw_downloader_bot):
     dwnld_worker, qtbot = raw_downloader_bot
     now = datetime.now()
 
-    # Download data for station Marieville
+    # Set attributes of the data downloader.
     projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
     dwnld_worker.dirname = os.path.join(projetpath, 'Meteo', 'Raw')
     dwnld_worker.StaName = "MARIEVILLE"
@@ -52,6 +52,7 @@ def test_download_raw_data(raw_downloader_bot):
     dwnld_worker.yr_end = str(now.year)
     dwnld_worker.climateID = "7024627"
 
+    # Download data for station Marieville
     dwnld_worker.download_data()
 
     # Download data again to test when raw data files are already present
