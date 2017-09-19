@@ -224,7 +224,6 @@ def test_download_data(downloader_bot, mocker):
 
     # Check stations "Marieville", "IBERVILLE", "L'ACADIE", "SABREVOIS",
     # "LAPRAIRIE", "FARNHAM", "STE MADELEINE".
-
     rows = [0, 1, 2]
     for row in rows:
         item = station_table.cellWidget(row, 0).layout().itemAtPosition(1, 1)
@@ -235,6 +234,46 @@ def test_download_data(downloader_bot, mocker):
     process_finished = wxdata_downloader.sig_download_process_ended
     with qtbot.waitSignal(process_finished, raising=True, timeout=100000):
         qtbot.mouseClick(wxdata_downloader.btn_get, Qt.LeftButton)
+
+
+@pytest.mark.run(order=3)
+def test_merge_widget(downloader_bot, mocker):
+    wxdata_downloader, qtbot = downloader_bot
+    wxdata_downloader.show()
+
+    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Raw")
+    filenames = ["eng-daily-01012000-12312000.csv",
+                 "eng-daily-01012001-12312001.csv",
+                 "eng-daily-01012002-12312002.csv"]
+    staname = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
+               "L'ACADIE (702LED4)"]
+
+    # Disable äuto save merged data" option.
+    qtbot.mouseClick(wxdata_downloader.saveAuto_checkbox, Qt.LeftButton)
+
+    # Opens raw data files for each station.
+    for station in staname:
+        paths = []
+        for file in filenames:
+            paths.append(os.path.join(dirname, station, file))
+        mocker.patch.object(QFileDialog, 'getOpenFileNames',
+                            return_value=(paths, '*.csv'))
+
+        wxdata_downloader.btn_selectRaw_isClicked()
+
+    # Assert that the concatenated files were not saved.
+    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
+    filenames = ["MARIEVILLE (7024627)_2000-2002.csv",
+                 "IBERVILLE (7023270)_2000-2002.csv"]
+
+    for file in filenames:
+        assert not os.path.exists(os.path.join(dirname, file))
+
+    # Navigate through with the merge widget.
+    qtbot.mouseClick(wxdata_downloader.btn_goFirst, Qt.LeftButton)
+    qtbot.mouseClick(wxdata_downloader.btn_goLast, Qt.LeftButton)
+    qtbot.mouseClick(wxdata_downloader.btn_goPrevious, Qt.LeftButton)
+    qtbot.mouseClick(wxdata_downloader.btn_goNext, Qt.LeftButton)
 
 
 if __name__ == "__main__":                                   # pragma: no cover
