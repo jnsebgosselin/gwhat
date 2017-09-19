@@ -1184,8 +1184,8 @@ class WeatherStationDisplayTable(QTableWidget):
                      self.item(row, 6).text(),   # 5: climate ID
                      self.item(row, 2).text()])  # 6: proximity
             if self.year_display_mode == 1:
-                station_list[0][2] = self.cellWidget(row, 3).currentText()
-                station_list[0][3] = self.cellWidget(row, 4).currentText()
+                station_list[-1][2] = self.cellWidget(row, 3).currentText()
+                station_list[-1][3] = self.cellWidget(row, 4).currentText()
 
         return station_list
 

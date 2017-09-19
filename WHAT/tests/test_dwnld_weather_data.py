@@ -235,6 +235,15 @@ def test_download_data(downloader_bot, mocker):
     with qtbot.waitSignal(process_finished, raising=True, timeout=100000):
         qtbot.mouseClick(wxdata_downloader.btn_get, Qt.LeftButton)
 
+    # Assert that data before 2000 were not downloaded
+    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Raw")
+    stanames = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
+                "L'ACADIE (702LED4)"]
+    filename = "eng-daily-01011999-12311999.csv"
+    for station in stanames:
+        path = os.path.join(dirname, station, filename)
+        assert not os.path.exists(path)
+
 
 @pytest.mark.run(order=3)
 def test_merge_widget(downloader_bot, mocker):

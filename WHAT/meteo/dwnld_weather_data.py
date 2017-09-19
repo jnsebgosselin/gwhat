@@ -1030,7 +1030,10 @@ if __name__ == '__main__':                                   # pragma: no cover
     w.load_stationList(os.path.join(testpath, "weather_station_list.lst"))
 
     w.station_table.set_fromyear(2000)
-    w.station_table.set_toyear(2017)
+    w.station_table.set_toyear(2015)
+
+    rows = range(w.station_table.rowCount())
+    print(w.station_table.get_content4rows(rows))
 
     # ---- SHOW ----
 
