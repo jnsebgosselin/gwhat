@@ -115,6 +115,6 @@ def test_download_data(downloader_bot):
         qtbot.mouseClick(wxdata_downloader.btn_get, Qt.LeftButton)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":                                   # pragma: no cover
     pytest.main([os.path.basename(__file__)])
     # pytest.main()

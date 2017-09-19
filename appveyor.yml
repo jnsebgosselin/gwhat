@@ -18,7 +18,6 @@ environment:
     PIP_DEPENDENCIES: "pytest-qt pytest-mock pytest-timeout flaky pytest-ordering"
 
   matrix:
-    #- PYTHON_VERSION: "2.7"
     - PYTHON_VERSION: "3.6"
 
 platform:
@@ -43,12 +42,13 @@ install:
   - pip install xlrd
   - pip install xlsxwriter
   - pip install h5py
+  - pip install coveralls
 
 build: false
 
 test_script:
-  # - coverage run --source=WHAT -m py.test
-  - "%CMD_IN_ENV% python runtests.py"
+  - "%CMD_IN_ENV% coverage run --source=WHAT --concurrency=thread --timid -m py.test"
+  # - "%CMD_IN_ENV% python runtests.py"
 
 # on_finish:
 #   - ps: $blockRdp = $false; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
