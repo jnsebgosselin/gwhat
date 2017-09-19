@@ -967,9 +967,7 @@ class WeatherStationDisplayTable(QTableWidget):
         self.chkbox_header.setGeometry(x0, y0, w, h)
 
     def chkbox_header_isClicked(self):
-
         nrow = self.rowCount()
-
         for row in range(nrow):
             item = self.cellWidget(row, 0).layout().itemAtPosition(1, 1)
             widget = item.widget()
@@ -1104,13 +1102,12 @@ class WeatherStationDisplayTable(QTableWidget):
         self.setItem(row, col, item)
 
     def delete_rows(self, rows):
-
         # Going in reverse order to preserve indexes while
         # scanning the rows if any are deleted.
         for row in reversed(rows):
-            self.removeRow(row)
             print('Removing %s (%s)' % (self.item(row, 1).text(),
                                         self.item(row, 6).text()))
+            self.removeRow(row)
 
     def populate_table(self, staList):
         self.clearContents()
@@ -1120,14 +1117,50 @@ class WeatherStationDisplayTable(QTableWidget):
             self.insert_row_at_end(row_data)
         self.setSortingEnabled(True)
 
+    # -------------------------------------------------------------------------
+
+    def set_fromyear(self, year):
+        for row in range(self.rowCount()):
+            self.set_row_fromyear(row, year)
+
+    def set_row_fromyear(self, row, year):
+        if self.year_display_mode == 1:
+            widget = self.cellWidget(row, 3)
+            years = [widget.itemText(i) for i in range(widget.count())]
+
+            try:
+                index = years.index(str(year))
+            except ValueError:
+                index = 0
+            finally:
+                widget.setCurrentIndex(index)
+
+    def set_toyear(self, year):
+        for row in range(self.rowCount()):
+            self.set_row_toyear(row, year)
+
+    def set_row_toyear(self, row, year):
+        if self.year_display_mode == 1:
+            widget = self.cellWidget(row, 4)
+            years = [widget.itemText(i) for i in range(widget.count())]
+
+            try:
+                index = years.index(str(year))
+            except ValueError:
+                index = len(years)-1
+            finally:
+                widget.setCurrentIndex(index)
+
+    # -------------------------------------------------------------------------
+
+    def get_row_from_climateid(self, climateid):
+        for row in range(self.rowCount()):
+            if self.item(row, 6).text() == str(climateid):
+                return row
+
     def get_checked_rows(self):
-
-        nrow = self.rowCount()
         rows = []
-
-        # http://www.qtfr.org/viewtopic.php?id=16337
-
-        for row in range(nrow):
+        for row in range(self.rowCount()):
             item = self.cellWidget(row, 0).layout().itemAtPosition(1, 1)
             widget = item.widget()
             if widget.isChecked():
@@ -1135,62 +1168,48 @@ class WeatherStationDisplayTable(QTableWidget):
 
         return rows
 
-    def get_content4rows(self, rows):  # ======================================
-        '''
-        grabs weather station info that are selected and saving them
-        in a list. The structure of "weather_stations.lst" is preserved
-        in the process.
-        '''
+    # -------------------------------------------------------------------------
 
-        staList = []
+    def get_content4rows(self, rows):
+        ''' Grabs weather station info save them in a list.'''
 
+        station_list = []
         for row in rows:
+            station_list.append(
+                    [self.item(row, 1).text(),   # 0: name
+                     self.item(row, 7).text(),   # 1: database ID
+                     self.item(row, 3).text(),   # 2: from year
+                     self.item(row, 4).text(),   # 3: to year
+                     self.item(row, 5).text(),   # 4: province
+                     self.item(row, 6).text(),   # 5: climate ID
+                     self.item(row, 2).text()])  # 6: proximity
+            if self.year_display_mode == 1:
+                station_list[-1][2] = self.cellWidget(row, 3).currentText()
+                station_list[-1][3] = self.cellWidget(row, 4).currentText()
 
-            # --------
-            # staList structure:
-
-            # [staName, stationId, StartYear, EndYear,
-            #  Province, ClimateID, Proximity (km)]
-
-            # staTable structure:
-
-            # ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year',
-            #  'To \n Year', 'Prov.', 'Climate ID', 'Station ID')
-            # --------
-
-            sta2add = [self.item(row, 1).text(),
-                       self.item(row, 7).text(),
-                       self.item(row, 3).text(),
-                       self.item(row, 4).text(),
-                       self.item(row, 5).text(),
-                       self.item(row, 6).text(),
-                       self.item(row, 2).text()]
-
-            staList.append(sta2add)
-
-        return staList
-
-    def save_staList(self, filename):  # ======================================
-
-        # ---- Grab the content of the entire table ----
-
-        rows = range(self.rowCount())
-        staList = self.get_content4rows(rows)
-
-        # ---- Insert Header----
-
-        staList.insert(0, db.FileHeaders().weather_stations[0])
-
-        # ---- saving results ----
-
-        with open(filename, 'w', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(staList)
+        return station_list
 
     def get_staList(self):
-        rows = range(self.rowCount())
-        station_list = self.get_content4rows(rows)
+        station_list = []
+        for row in range(self.rowCount()):
+            station_list.append(
+                    [self.item(row, 1).text(),   # 0: name
+                     self.item(row, 7).text(),   # 1: database ID
+                     self.item(row, 3).text(),   # 2: from year
+                     self.item(row, 4).text(),   # 3: to year
+                     self.item(row, 5).text(),   # 4: province
+                     self.item(row, 6).text(),   # 5: climate ID
+                     self.item(row, 2).text()])  # 6: proximity
+
         return station_list
+
+    def save_staList(self, filename):
+        station_list = self.get_staList()
+        station_list.insert(0, db.FileHeaders().weather_stations[0])
+
+        with open(filename, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter=',', lineterminator='\n')
+            writer.writerows(station_list)
 
 
 def decdeg2dms(dd):

@@ -23,10 +23,10 @@ def main():
     """
     Run pygwead tests.
     """
-    pytest.main()
+    # pytest.main()
 
-#    errno = pytest.main(['-x', 'pygwead',  '-v', '-rw', '--durations=10',
-#                         '--cov=pygwead', '--cov-report=term-missing'])
+    pytest.main(['-x', 'WHAT',  '-v', '-rw', '--durations=10',
+                 '--cov=WHAT', '--cov-report=term-missing'])
 #
 #    # sys.exit doesn't work here because some things could be running
 #    # in the background (e.g. closing the main window) when this point
