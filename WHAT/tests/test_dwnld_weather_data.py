@@ -8,7 +8,6 @@ Created on Fri Aug  4 01:50:50 2017
 import sys
 import os
 from datetime import datetime
-import time
 
 # Third party imports
 import pytest
@@ -118,8 +117,11 @@ def test_load_stationlist(downloader_bot, mocker):
     wxdata_downloader.btn_browse_staList_isClicked()
 
     # Assert that the data are stored correctly in the widget table.
-    list_from_table = wxdata_downloader.station_table.get_staList()
-    assert list_from_table == expected_result
+    assert expected_result == wxdata_downloader.station_table.get_staList()
+
+    # Try to open a station list when the file does not exist.
+    wxdata_downloader.load_stationList("dummy.lst")
+    assert [] == wxdata_downloader.station_table.get_staList()
 
 
 @pytest.mark.run(order=3)

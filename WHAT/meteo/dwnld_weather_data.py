@@ -375,7 +375,7 @@ class DwnldWeatherWidget(QWidget):
             self.station_table.populate_table(staList=[])
             self.staList_fname = []
 
-            return
+            return []
 
         # ------------------------------------------------------ Open file ----
 
@@ -556,7 +556,7 @@ class DwnldWeatherWidget(QWidget):
             print('Waiting for the downloading thread to close')
             sleep(0.1)
             waittime += 0.1
-            if waittime > 15:
+            if waittime > 15:                                # pragma: no cover
                 msg = ('This function is not working as intended.'
                        ' Please report a bug.')
                 print(msg)
