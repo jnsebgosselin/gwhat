@@ -1135,6 +1135,11 @@ class WeatherStationDisplayTable(QTableWidget):
 
         return rows
 
+    def get_row_from_climateid(self, climateid):
+        for row in range(self.rowCount()):
+            if self.item(row, 6).text() == str(climateid):
+                return row
+
     def get_content4rows(self, rows):  # ======================================
         '''
         grabs weather station info that are selected and saving them
@@ -1158,13 +1163,13 @@ class WeatherStationDisplayTable(QTableWidget):
             #  'To \n Year', 'Prov.', 'Climate ID', 'Station ID')
             # --------
 
-            sta2add = [self.item(row, 1).text(),
-                       self.item(row, 7).text(),
-                       self.item(row, 3).text(),
-                       self.item(row, 4).text(),
-                       self.item(row, 5).text(),
-                       self.item(row, 6).text(),
-                       self.item(row, 2).text()]
+            sta2add = [self.item(row, 1).text(),  # 0: name
+                       self.item(row, 7).text(),  # 1: database ID
+                       self.item(row, 3).text(),  # 2: from year
+                       self.item(row, 4).text(),  # 3: to year
+                       self.item(row, 5).text(),  # 4: province
+                       self.item(row, 6).text(),  # 5: climate ID
+                       self.item(row, 2).text()]  # 6: proximity
 
             staList.append(sta2add)
 
