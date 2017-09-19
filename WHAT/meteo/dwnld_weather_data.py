@@ -386,39 +386,6 @@ class DwnldWeatherWidget(QWidget):
             with open(filename, 'r') as f:
                 reader = list(csv.reader(f, delimiter='\t'))
 
-        # -------------------------------------------------- Check version ----
-
-        # Check if the list is from an older version, and update it if yes
-
-        header = headerDB.weather_stations[0]
-
-        nCONFG, nPARA = np.shape(reader)
-        if nPARA < len(header):
-
-            print('This list is from an older version of WHAT.')
-            print('Converting to new format.')
-            self.ConsoleSignal.emit('''<font color=#C83737>Converting weather
-            station list to a more recent format. Please wait...</font>''')
-
-            QApplication.processEvents()
-            QApplication.processEvents()
-
-            QApplication.setOverrideCursor(Qt.WaitCursor)
-
-            reader[0] = headerDB.weather_stations[0]
-            for i in range(nCONFG-1):
-                Prov = reader[i+1][4]
-                stationId = reader[i+1][1]
-                reader[i+1] = self.search4stations.get_staInfo(Prov, stationId)
-
-            # ---- Save Updated List ----
-
-            with open(filename, 'w') as f:
-                writer = csv.writer(f, delimiter=',')
-                writer.writerows(reader)
-
-            QApplication.restoreOverrideCursor()
-
         # ---- Load list in UI ----
 
         if len(reader) > 1:
