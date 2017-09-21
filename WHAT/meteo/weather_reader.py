@@ -285,7 +285,7 @@ def read_weather_datafile(filename):
             elif row[0] in ['Latitude', 'Longitude', 'Elevation']:
                 try:
                     df[row[0]] = float(row[1])
-                except:
+                except ValueError:
                     print('Wrong format for entry "%s".' % row[0])
                     df[row[0]] = 0
             elif row[0] == 'Year':
