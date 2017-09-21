@@ -418,8 +418,7 @@ class DwnldWeatherWidget(QWidget):
     def btn_saveAs_staList_isClicked(self):
         fname = os.path.join(self.workdir, 'weather_stations.lst')
         fname, ftype = QFileDialog().getSaveFileName(
-                           caption="Save Weather Stations List",
-                           dir=fname, filter=('*.lst'))
+                           self, "Save Weather Stations List", fname, '*.lst')
 
         if fname:
             if fname[-4:] != ftype[1:]:
