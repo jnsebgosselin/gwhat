@@ -21,8 +21,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 # Standard library imports :
 import os
+import csv
 
 # Third party imports :
+from xlrd.xldate import xldate_from_date_tuple
+from xlrd import xldate_as_tuple
 import pandas as pd
 import numpy as np
 from PyQt5.QtCore import Qt
@@ -79,13 +82,10 @@ class WXDataMerger(object):
         self.fnames = []
 
     def load_and_format_data(self, pathlist):
-
-        nSTA = len(pathlist)  # Number of weather data file
-        self.fnames = np.zeros(nSTA).astype(object)
-        for i, path in enumerate(pathlist):
-            self.fnames[i] = os.path.basename(path)
-
-        if nSTA == 0:  # Reset states of all class variables
+        self.fnames = [os.path.basename(p) for p in pathlist]
+        nSTA = len(pathlist)
+        if nSTA == 0:
+            # Reset the states of all class variables and return.
             self.STANAME = []
             self.ALT = []
             self.LAT = []
@@ -96,27 +96,22 @@ class WXDataMerger(object):
             self.DATE_END = []
 
             return False
-
-        # Variable Initialization ---------------------------------------------
-
-        self.STANAME = np.zeros(nSTA).astype('str')
-        self.ALT = np.zeros(nSTA)
-        self.LAT = np.zeros(nSTA)
-        self.LON = np.zeros(nSTA)
-        self.PROVINCE = np.zeros(nSTA).astype('str')
-        self.ClimateID = np.zeros(nSTA).astype('str')
-        self.DATE_START = np.zeros((nSTA, 3)).astype('int')
-        self.DATE_END = np.zeros((nSTA, 3)).astype('int')
+        else:
+            self.STANAME = np.zeros(nSTA).astype('str')
+            self.ALT = np.zeros(nSTA)
+            self.LAT = np.zeros(nSTA)
+            self.LON = np.zeros(nSTA)
+            self.PROVINCE = np.zeros(nSTA).astype('str')
+            self.ClimateID = np.zeros(nSTA).astype('str')
+            self.DATE_START = np.zeros((nSTA, 3)).astype('int')
+            self.DATE_END = np.zeros((nSTA, 3)).astype('int')
 
         FLAG_date = False
         # If FLAG_date becomes True, a new DATE matrix will be rebuilt at the
         # end of this routine.
 
         for i in range(nSTA):
-
-            # ---------------------------------------- WEATHER DATA IMPORT ----
-
-            with open(paths[i], 'r', encoding='utf8') as f:
+            with open(pathlist[i], 'r', encoding='utf8') as f:
                 reader = list(csv.reader(f, delimiter='\t'))
 
             STADAT = np.array(reader[8:]).astype(float)
@@ -158,7 +153,7 @@ class WXDataMerger(object):
 
             if i == 0:
                 self.VARNAME = reader[7][3:]
-                nVAR = len(self.VARNAME)  # number of meteorological variable
+                nVAR = len(self.VARNAME)
                 self.TIME = np.copy(time_new)
                 self.DATA = np.zeros((len(STADAT[:, 0]), nSTA, nVAR)) * np.nan
                 self.DATE = STADAT[:, :3]
@@ -166,9 +161,7 @@ class WXDataMerger(object):
 
             # ---------------------------------- <DATA> & <TIME> RESHAPING ----
 
-            # This part of the function fits neighboring data series to the
-            # target data serie in the 3D data matrix. Default values in the
-            # 3D data matrix are nan.
+            # Merge the data time series using time as index.
 
             if self.TIME[0] <= time_new[0]:
                 if self.TIME[-1] >= time_new[-1]:
@@ -283,7 +276,7 @@ class WXDataMerger(object):
             self.ALT[i] = float(reader[4][1])
             self.ClimateID[i] = str(reader[5][1])
 
-        # ------------------------------------ SORT STATION ALPHABETICALLY ----
+        # ------------------------------------ Sort Station Alphabetically ----
 
         sort_index = np.argsort(self.STANAME)
 
@@ -301,7 +294,7 @@ class WXDataMerger(object):
 
         self.fnames = self.fnames[sort_index]
 
-        # -------------------------------------------- GENERATE DATE SERIE ----
+        # -------------------------------------------- Generate Date serie ----
 
         # Rebuild a date matrix if <DATA> size changed. Otherwise, do nothing
         # and keep *Date* as is.
@@ -353,191 +346,6 @@ class WXDataMerger(object):
             i += 1
 
         return DATA
-
-    def generate_summary(self, project_folder):  # ============================
-
-        """
-        This method generates a summary of the weather records including
-        all the data files contained in */<project_folder>/Meteo/Input*,
-        including dates when the records begin and end, total number of data,
-        and total number of data missing for each meteorological variable, and
-        more.
-        """
-
-        fcontent = [['#', 'STATION NAMES', 'ClimateID',
-                     'Lat. (dd)', 'Lon. (dd)', 'Alt. (m)',
-                     'DATE START', 'DATE END', 'Nbr YEARS', 'TOTAL DATA',
-                     'MISSING Tmax', 'MISSING Tmin', 'MISSING Tmean',
-                     'Missing Precip']]
-
-        for i in range(len(self.STANAME)):
-            record_date_start = '%04d/%02d/%02d' % (self.DATE_START[i, 0],
-                                                    self.DATE_START[i, 1],
-                                                    self.DATE_START[i, 2])
-
-            record_date_end = '%04d/%02d/%02d' % (self.DATE_END[i, 0],
-                                                  self.DATE_END[i, 1],
-                                                  self.DATE_END[i, 2])
-
-            time_start = xldate_from_date_tuple((self.DATE_START[i, 0],
-                                                 self.DATE_START[i, 1],
-                                                 self.DATE_START[i, 2]), 0)
-
-            time_end = xldate_from_date_tuple((self.DATE_END[i, 0],
-                                               self.DATE_END[i, 1],
-                                               self.DATE_END[i, 2]), 0)
-
-            number_data = float(time_end - time_start + 1)
-
-            fcontent.append([i+1, self.STANAME[i],
-                             self.ClimateID[i],
-                             '%0.2f' % self.LAT[i],
-                             '%0.2f' % self.LON[i],
-                             '%0.2f' % self.ALT[i],
-                             record_date_start,
-                             record_date_end,
-                             '%0.1f' % (number_data / 365.25),
-                             number_data])
-
-            # Missing data information for each meteorological variables
-            for var in range(len(self.VARNAME)):
-                fcontent[-1].extend(['%d' % (self.NUMMISS[i, var])])
-
-#                txt1 = self.NUMMISS[i, var]
-#                txt2 = self.NUMMISS[i, var] / number_data * 100
-#                CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
-
-#            # Total missing data information.
-#            txt1 = np.sum(self.NUMMISS[i, :])
-#            txt2 = txt1 / (number_data * nVAR) * 100
-#            CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
-
-        output_path = project_folder + '/weather_datasets_summary.log'
-
-        with open(output_path, 'w') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(fcontent)
-
-    def read_summary(self, project_folder):  # ================================
-
-        """
-        This method read the content of the file generated by the method
-        <generate_summary> and will return the content of the file in a HTML
-        formatted table
-        """
-
-        # ------------------------------------------------------ read data ----
-
-        filename = project_folder + '/weather_datasets_summary.log'
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-            reader = reader[1:]
-
-#        FIELDS = ['&#916;Alt.<br>(m)', 'Dist.<br>(km)', 'Tmax',
-#                  'Tmin', 'Tmean', 'Ptot']
-
-        # ----------------------------------------- generate table summary ----
-
-        table = '''
-                <table border="0" cellpadding="3" cellspacing="0"
-                 align="center">
-                  <tr>
-                    <td colspan="10"><hr></td>
-                  </tr>
-                  <tr>
-                    <td align="center" valign="bottom"  width=30 rowspan="3">
-                      #
-                    </td>
-                    <td align="left" valign="bottom" rowspan="3">
-                      Station
-                    </td>
-                    <td align="center" valign="bottom" rowspan="3">
-                      Climate<br>ID
-                    </td>
-                    <td align="center" valign="bottom" rowspan="3">
-                      From<br>year
-                    </td>
-                    <td align="center" valign="bottom" rowspan="3">
-                      To<br>year
-                    </td>
-                    <td align="center" valign="bottom" rowspan="3">
-                      Nbr.<br>of<br>years
-                    <td align="center" valign="middle" colspan="4">
-                      % of missing data for
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="4"><hr></td>
-                  </tr>
-                  <tr>
-                    <td align="center" valign="middle">
-                      T<sub>max</sub>
-                    </td>
-                    <td align="center" valign="middle">
-                      T<sub>min</sub>
-                    </td>
-                    <td align="center" valign="middle">
-                      T<sub>mean</sub>
-                    </td>
-                    <td align="center" valign="middle">
-                      P<sub>tot</sub>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td colspan="10"><hr></td>
-                  </tr>
-                '''
-        for i in range(len(reader)):
-
-            color = ['transparent', '#E6E6E6']
-
-            Ntotal = float(reader[i][9])
-            TMAX = float(reader[i][10]) / Ntotal * 100
-            TMIN = float(reader[i][11]) / Ntotal * 100
-            TMEAN = float(reader[i][12]) / Ntotal * 100
-            PTOT = float(reader[i][13]) / Ntotal * 100
-            firstyear = reader[i][6][:4]
-            lastyear = reader[i][7][:4]
-            nyears = float(lastyear) - float(firstyear)
-
-            table += '''
-                     <tr bgcolor="%s">
-                       <td align="center" valign="middle">
-                         %02d
-                       </td>
-                       <td align="left" valign="middle">
-                         <font size="3">%s</font>
-                       </td>
-                       <td align="center" valign="middle">
-                         <font size="3">%s</font>
-                       </td>
-                       <td align="center" valign="middle">
-                         <font size="3">%s</font>
-                       </td>
-                       <td align="center" valign="middle">
-                         <font size="3">%s</font>
-                       </td>
-                       <td align="center" valign="middle">
-                         <font size="3">%0.0f</font>
-                       </td>
-                       <td align="center" valign="middle">%0.0f</td>
-                       <td align="center" valign="middle">%0.0f</td>
-                       <td align="center" valign="middle">%0.0f</td>
-                       <td align="center" valign="middle">%0.0f</td>
-                     </tr>
-                     ''' % (color[i % 2], i+1, reader[i][1], reader[i][2],
-                            firstyear, lastyear, nyears,
-                            TMAX, TMIN, TMEAN, PTOT)
-
-        table += """
-                   <tr>
-                     <td colspan="10"><hr></td>
-                   </tr>
-                 </table>
-                 """
-
-        return table
-
 
 
 class WXDataMergerWidget(QDialog):
