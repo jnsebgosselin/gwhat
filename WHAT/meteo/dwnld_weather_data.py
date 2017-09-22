@@ -272,7 +272,7 @@ class DwnldWeatherWidget(QWidget):
         self.search4stations.staListSignal.connect(self.add_stations2list)
         self.search4stations.ConsoleSignal.connect(self.ConsoleSignal.emit)
 
-    # =========================================================================
+    # ---- Workdir
 
     @property
     def workdir(self):
@@ -281,7 +281,7 @@ class DwnldWeatherWidget(QWidget):
     def set_workdir(self, directory):
         self.__workdir = directory
 
-    # =========================================================================
+    # ---- Station list
 
     def btn_delSta_isClicked(self):
         rows = self.station_table.get_checked_rows()
@@ -376,7 +376,7 @@ class DwnldWeatherWidget(QWidget):
 
             return []
 
-        # ------------------------------------------------------ Open file ----
+        # ----- Open file ----
 
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter=','))
@@ -432,7 +432,7 @@ class DwnldWeatherWidget(QWidget):
             print(msg)
             self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
-    # =========================================================================
+    # ---- Download process
 
     def btn_get_isClicked(self):
         """
@@ -465,13 +465,14 @@ class DwnldWeatherWidget(QWidget):
         self.download_next_station()
 
     def stop_download_process(self):
-        print('Stopping the download process.')
+        print('Stopping the download process...')
         self.btn_get.setIcon(IconDB().download)
         self.btn_get.setEnabled(False)
         self.dwnld_worker.stop_download()
         self.wait_for_thread_to_quit()
         self.btn_get.setEnabled(True)
         self.sig_download_process_ended.emit()
+        print('Download process stopped.')
 
     def download_next_station(self):
         self.wait_for_thread_to_quit()
@@ -507,11 +508,6 @@ class DwnldWeatherWidget(QWidget):
             self.dwnld_thread.started.connect(self.dwnld_worker.download_data)
             self.dwnld_thread.start()
 
-    def process_station_data(self, file_list=None):
-        if file_list:
-            self.concatenate_and_display(file_list)
-        self.download_next_station()
-
     def wait_for_thread_to_quit(self):
         self.dwnld_thread.quit()
         waittime = 0
@@ -526,12 +522,17 @@ class DwnldWeatherWidget(QWidget):
                 self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
                 return
 
-    # =========================================================================
+    def process_station_data(self, file_list=None):
+        if file_list:
+            self.concatenate_and_display(file_list)
+        self.download_next_station()
+
+    # ---- Merge and display data
 
     def display_mergeHistory(self):
 
-        # ---- Respond to UI event (if applicable) ----
-
+        # Check if sender is one of the button of the merger widget and update
+        # the UI accordingly.
         button = self.sender()
         if button == self.btn_goFirst:
             self.mergeHistoryIndx = 0
@@ -541,8 +542,6 @@ class DwnldWeatherWidget(QWidget):
             self.mergeHistoryIndx += -1
         elif button == self.btn_goNext:
             self.mergeHistoryIndx += 1
-
-        # ------------------------------------------------------ Update UI ----
 
         self.mergeDisplay.setText(self.mergeHistoryLog[self.mergeHistoryIndx])
         if len(self.mergeHistoryLog) > 1:
@@ -576,101 +575,53 @@ class DwnldWeatherWidget(QWidget):
         if fname:
             self.concatenate_and_display(fname)
 
-    def concatenate_and_display(self, filenames):
+    def concatenate_and_display(self, filepaths):
         """
         Handles the concatenation process of individual yearly raw data files
         and display the results in the <mergeDisplay> widget.
         """
-
-        if len(filenames) == 0:
+        if len(filepaths) == 0:
             print('No raw data file selected.')
             return
 
-        mergeOutput, LOG = self.concatenate(filenames)
-
-        StaName = mergeOutput[0, 1]
-        YearStart = mergeOutput[8, 0][:4]
-        YearEnd = mergeOutput[-1, 0][:4]
-        climateID = mergeOutput[5, 1]
+        cdf = self.concatenate(filepaths)
+        html = generate_html_table(cdf)
 
         self.ConsoleSignal.emit("""<font color=black>Raw data files concatened
-        successfully for station %s.</font>""" % StaName)
+        successfully for station %s.</font>""" % cdf['Station Name'])
 
         # ---- Update history variables and UI ----
 
-        self.mergeHistoryLog.append(LOG)
+        self.mergeHistoryLog.append(html)
         self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
         self.display_mergeHistory()
-        self.mergeHistoryFnames.append(filenames)
+        self.mergeHistoryFnames.append(filepaths)
 
         if self.saveAuto_checkbox.isChecked():
+            dirname = os.path.join(self.workdir, 'Meteo', 'Input')
+            filename = cdf.get_proposed_saved_filename()
+            cdf.save_to_csv(os.path.join(dirname, filename))
 
-            # Check if the characters "/" or "\" are present in the station
-            # name and replace these characters by "_" if applicable.
-
-            StaName = StaName.replace('\\', '_')
-            StaName = StaName.replace('/', '_')
-
-            save_dir = os.path.join(self.workdir, 'Meteo', 'Input')
-            if not path.exists(save_dir):
-                makedirs(save_dir)
-
-            filename = '%s (%s)_%s-%s.csv' % (StaName, climateID,
-                                              YearStart, YearEnd)
-            fname = os.path.join(save_dir, filename)
-            self.save_concatened_data(fname, mergeOutput)
-
-    def btn_saveMerge_isClicked(self):
-        """
-        This method allows the user to select a path for the file in which the
-        concatened data are going to be saved.
-        """
-
-        if len(self.mergeHistoryLog) == 0:
-            print('There is no concatenated data file to save yet.')
-            return
-
-        filenames = self.mergeHistoryFnames[self.mergeHistoryIndx]
-        concat_df, _ = self.concatenate(filenames)
-
-        data = concat_df['Station Data']
-        if np.size(data) != 0:
-            filename = self.dwnld_worker.get_proposed_saved_filename(concat_df)
-            station_name = concat_df['Station Name']
-            min_year = np.min(data[:, 0])
-            max_year = np.max(data[:, 0])
-            climate_id = concat_df['Climate Identifier']
-
-            # Check if the characters "/" or "\" are present in the station
-            # name and replace these characters by "_" if applicable.
-
-            station_name = station_name.replace('\\', '_')
-            station_name = station_name.replace('/', '_')
-
-            filename = '%s (%s)_%s-%s.csv' % (station_name, climate_id,
-                                              min_year, max_year)
-            dialog_dir = os.path.join(self.workdir, 'Meteo, Input', filename)
-            fname, _ = QFileDialog.getSaveFileName(
-                           self, 'Save file', dialog_dir, '*.csv')
-
-            if fname:
-                self.dwnld_worker.save_concatenate_rawdata_tofile(
-                        fname)
-                self.save_concatened_data(fname, concat_df)
-
-    def concatenate(self, fname):
+    def concatenate(self, filepaths):
         """
         This method call the raw data worker to concatenate data from the
         raw datafile and produces a summary of the concatenated dataset
         to display in the UI.
         """
+        cdf = ConcatenatedDataFrame(filepaths)
+        if not cdf.is_from_the_same_station():
+            msg = ("WARNING: All the raw data files do not belong to "
+                   "the same weather station.")
+            self.ConsoleSignal.emit('<font color=#C83737>%s</font>' % msg)
 
-        concat_df = self.dwnld_worker.concatenate_rawdata(fname)
-
-        data = concat_df['Station Data']
+    def generate_html_table(cdf):
+        """
+        Produces a summary of the concatenated dataset to display in the UI.
+        """
+        data = cdf['Concatenated Dataset']
         ndata = len(data[:, 0])
-        province = concat_df['Province']
-        station_name = concat_df['Station Name']
+        province = cdf['Province']
+        station_name = cdf['Station Name']
         min_year = np.min(data[:, 0])
         max_year = np.max(data[:, 0])
 
@@ -709,36 +660,45 @@ class DwnldWeatherWidget(QWidget):
                     ''' % (fields[i], nonan, nonan/ndata*100)
         html += '<tr><td colspan="4"><hr><\td><\tr>'
 
-        return concat_df, html
+        return html
 
-    def save_concatened_data(self, fname, fcontent):
-        # not iplemented yet.
-        pass
+    def btn_saveMerge_isClicked(self):
+        """
+        This method allows the user to select a path for the file in which the
+        concatened data are going to be saved.
+        """
 
+        if len(self.mergeHistoryLog) == 0:
+            print('There is no concatenated data file to save yet.')
+            return
 
-# =============================================================================
+        cdf = self.concatenate(self.mergeHistoryFnames[self.mergeHistoryIndx])
+
+        data = cdf['Concatenated Dataset']
+        if np.size(data) != 0:
+            dialog_dir = os.path.join(self.workdir, 'Meteo, Input',
+                                      cdf.get_proposed_saved_filename())
+            filepath, _ = QFileDialog.getSaveFileName(
+                           self, 'Save file', dialog_dir, '*.csv')
+
+            if filepath:
+                cdf.save_to_csv(filepath)
 
 
 class RawDataDownloader(QObject):
-    '''
-    This thread is used to download the raw data files from
+    """
+    This class is used to download the raw data files from
     www.climate.weather.gc.ca and saves them automatically in
     <Project_directory>/Meteo/Raw/<station_name (Climate ID)>.
 
     New in 4.0.6: Raw data files that already exists in the Raw directory
                   won't be downloaded again from the server.
 
-    ---- Input ----
-
-    self.__stop_dwnld = Flag that is used to stop the thread from the UI side.
-
-    ---- Output ----
-
-    self.ERRFLAG = Flag for the download of files - np.arrays
-                   0 -> File downloaded successfully
-                   1 -> Problem downloading the file
-                   3 -> File NOT downloaded because it already exists
-    '''
+    ERRFLAG = Flag for the download of files - np.arrays
+                  0 -> File downloaded successfully
+                  1 -> Problem downloading the file
+                  3 -> File NOT downloaded because it already exists
+    """
 
     sig_download_finished = QSignal(list)
     sig_update_pbar = QSignal(int)
@@ -1029,7 +989,8 @@ class ConcatenatedDataFrame(dict):
         if filename is None:
             filename = self.get_proposed_saved_filename()
 
-        with open(filename, 'w', encoding='utf-8') as f:
+        filepath = os.path.join(os.getcwd, filename)
+        with open(filepath, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
@@ -1068,16 +1029,3 @@ if __name__ == '__main__':                                   # pragma: no cover
     w.move(qr.topLeft())
 
     sys.exit(app.exec_())
-    
-    
-        # TODO: MOve that code to the Widget level
-
-        # Check that all the files are from the same station. Emit a warning
-        # if it is not the case.
-#        if np.min(station_match) == 1:
-#            pass
-#        else:
-#            msg = ("WARNING: All the data files do not belong to station %s" %
-#                   self['Station Name'])
-#            print(msg)
-#            self.ConsoleSignal.emit('<font color=#C83737>%s</font>' % msg)
