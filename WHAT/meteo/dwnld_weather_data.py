@@ -289,7 +289,7 @@ class DwnldWeatherWidget(QWidget):
             self.station_table.delete_rows(rows)
             self.staList_isNotSaved = True
         else:
-            print('No weather station selected')
+            print('No weather station selected.')
 
         # Unckeck header ckbox if list is cleared :
         nrow = self.station_table.rowCount()
@@ -585,7 +585,7 @@ class DwnldWeatherWidget(QWidget):
             return
 
         cdf = self.concatenate(filepaths)
-        html = generate_html_table(cdf)
+        html = self.generate_html_table(cdf)
 
         self.ConsoleSignal.emit("""<font color=black>Raw data files concatened
         successfully for station %s.</font>""" % cdf['Station Name'])
@@ -614,7 +614,9 @@ class DwnldWeatherWidget(QWidget):
                    "the same weather station.")
             self.ConsoleSignal.emit('<font color=#C83737>%s</font>' % msg)
 
-    def generate_html_table(cdf):
+        return cdf
+
+    def generate_html_table(self, cdf):
         """
         Produces a summary of the concatenated dataset to display in the UI.
         """
@@ -622,8 +624,8 @@ class DwnldWeatherWidget(QWidget):
         ndata = len(data[:, 0])
         province = cdf['Province']
         station_name = cdf['Station Name']
-        min_year = np.min(data[:, 0])
-        max_year = np.max(data[:, 0])
+        min_year = cdf['Minimum Year']
+        max_year = cdf['Maximum Year']
 
         fields = ['T<sub>max<\sub>', 'T<sub>min<\sub>', 'T<sub>mean<\sub>',
                   'P<sub>tot<\sub>']
@@ -678,6 +680,8 @@ class DwnldWeatherWidget(QWidget):
         if np.size(data) != 0:
             dialog_dir = os.path.join(self.workdir, 'Meteo, Input',
                                       cdf.get_proposed_saved_filename())
+
+            print(cdf.get_proposed_saved_filename())
             filepath, _ = QFileDialog.getSaveFileName(
                            self, 'Save file', dialog_dir, '*.csv')
 
@@ -845,7 +849,8 @@ class ConcatenatedDataFrame(dict):
     COLS = (1, 2, 3, 5, 7, 9, 19)
 
     def __init__(self, filepaths=None):
-        self.__init_attrs__
+        super(ConcatenatedDataFrame, self).__init__()
+        self.__init_attrs__()
         if filepaths:
             self.concatenate_rawdata(filepaths)
 
@@ -859,13 +864,15 @@ class ConcatenatedDataFrame(dict):
         self._climate_ids = []
         self._datastack = []
 
-        self['Station name'] = None
+        self['Station Name'] = None
         self['Province'] = None
         self['Latitude'] = None
         self['Longitude'] = None
         self['Elevation'] = None
         self['Climate Identifier'] = None
         self['Concatenated Dataset'] = None
+        self['Minimum Year'] = None
+        self['Maximum Year'] = None
 
     def open_raw_datafile(self, file):
         """
@@ -940,27 +947,30 @@ class ConcatenatedDataFrame(dict):
 
         # Header info of the concatenated dataframe are those of the
         # first raw datafile that was opened.
-        self['Station name'] = self.station_names[0]
-        self['Province'] = self.provinces[0]
-        self['Latitude'] = self.latitudes[0]
-        self['Longitude'] = self.longitudes[0]
-        self['Elevation'] = self.elevations[0]
-        self['Climate Identifier'] = self.climate_ids[0]
-        self['Concatenated Dataset'] = np.hstack(self._datastack)
+        self['Station Name'] = self._station_names[0]
+        self['Province'] = self._provinces[0]
+        self['Latitude'] = self._latitudes[0]
+        self['Longitude'] = self._longitudes[0]
+        self['Elevation'] = self._elevations[0]
+        self['Climate Identifier'] = self._climate_ids[0]
+
+        concatenated_data = np.vstack(self._datastack)
+        self['Concatenated Dataset'] = concatenated_data
+        self['Minimum Year'] = int(np.min(concatenated_data[:, 0]))
+        self['Maximum Year'] = int(np.max(concatenated_data[:, 0]))
 
     def is_from_the_same_station(self):
         """
         Return whether the concatenated raw datafiles are from the same
         station or not.
         """
-        return len(np.unique(self.station_names)) == 1
+        return len(np.unique(self._station_names)) == 1
 
     def get_proposed_saved_filename(self):
         station_name = self['Station Name']
         climate_id = self['Climate Identifier']
-        data = self['Concatenated Dataset']
-        min_year = np.min(data[:, 0])
-        max_year = np.max(data[:, 0])
+        min_year = self['Minimum Year']
+        max_year = self['Maximum Year']
 
         # Check if the characters "/" or "\" are present in the station
         # name and replace these characters by "_" if applicable.
@@ -968,14 +978,14 @@ class ConcatenatedDataFrame(dict):
         station_name = station_name.replace('\\', '_')
         station_name = station_name.replace('/', '_')
 
-        return "%s (%s)_%s-%s.cs" % (station_name, climate_id,
-                                     min_year, max_year)
+        return "%s (%s)_%s-%s.csv" % (station_name, climate_id,
+                                      min_year, max_year)
 
-    def save_to_csv(self, filename=None):
+    def save_to_csv(self, filepath=None):
         """
         This method saves the concatened data into a single csv file.
         """
-        keys = ['Station name', 'Province', 'Latitude', 'Longitude',
+        keys = ['Station Name', 'Province', 'Latitude', 'Longitude',
                 'Elevation', 'Climate Identifier']
         fcontent = []
         for key in keys:
@@ -986,17 +996,16 @@ class ConcatenatedDataFrame(dict):
                          'Total Precip (mm)'])
         fcontent = fcontent + self['Concatenated Dataset'].tolist()
 
-        if filename is None:
+        if filepath is None:
             filename = self.get_proposed_saved_filename()
+            filepath = os.path.join(os.getcwd(), filename)
 
-        filepath = os.path.join(os.getcwd, filename)
         with open(filepath, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')
             writer.writerows(fcontent)
 
 
 if __name__ == '__main__':                                   # pragma: no cover
-
     app = QApplication(sys.argv)
 
     ft = app.font()
@@ -1017,7 +1026,6 @@ if __name__ == '__main__':                                   # pragma: no cover
     w.station_table.set_toyear(2015)
 
     rows = range(w.station_table.rowCount())
-    print(w.station_table.get_content4rows(rows))
 
     # ---- SHOW ----
 
