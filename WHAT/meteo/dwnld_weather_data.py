@@ -881,13 +881,16 @@ class ConcatenatedDataFrame(dict):
         in 2016, when they changed it from iso-8859-1 to utf-8-sig. Return
         None in cases where it is impossible to open the file.
         """
-        enc = ['utf-8', 'utf-8-sig', 'utf-16', 'iso-8859-1']
+        enc = ['utf-8-sig', 'iso-8859-1', 'utf-8', 'utf-16']
         for e in enc:
-            with open(file, 'r', encoding=e) as f:
-                reader = list(csv.reader(f, delimiter=','))
-
-            if reader[0][0] == "Station Name":
-                return reader
+            try:
+                with open(file, 'r', encoding=e) as f:
+                    reader = list(csv.reader(f, delimiter=','))
+            except (UnicodeDecodeError, UnicodeError):                 # nopep8
+                continue
+            else:
+                if reader[0][0] == "Station Name":
+                    return reader
         else:                                                # pragma: no cover
             print("Failed to open file %s."
                   % os.path.basename(file))
