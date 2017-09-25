@@ -164,7 +164,7 @@ class WXDataMerger(dict):
         return "%s (%s)_%s-%s.csv" % (station_name, climate_id,
                                       min_year, max_year)
 
-    def save_to_csv(self, filepath=None):
+    def save_to_csv(self, filepath):
         """
         This method saves the combined data into a single csv file.
         """
@@ -180,10 +180,6 @@ class WXDataMerger(dict):
 
         keys = ['Year', 'Month', 'Day', 'Tmax', 'Tmin', 'Tavg', 'Ptot']
         fcontent = fcontent + self['Combined Dataset'].astype(str).tolist()
-
-        if filepath is None:
-            filename = self.get_proposed_saved_filename()
-            filepath = os.path.join(os.getcwd(), filename)
 
         with open(filepath, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter='\t', lineterminator='\n')

@@ -129,8 +129,11 @@ def test_merge_data():
 
 @pytest.mark.run(order=4)
 def test_merge_data_widget(wxdata_merger_bot, mocker):
-    wxdata_merger, qtbot = wxdata_merger_bot
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
+
+    wxdata_merger, qtbot = wxdata_merger_bot
+    wxdata_merger.show()
+    wxdata_merger.set_workdir(dirname)
 
     # Select and load the first input file.
     fname1 = os.path.join(dirname, "Station 1 (7020561)_1960-1974.csv")
@@ -159,7 +162,18 @@ def test_merge_data_widget(wxdata_merger_bot, mocker):
     # Assert that the original input weather datafile were deleted and that
     # the file for the combined dataset was created.
     assert not os.path.exists(fname1)
-    assert not os.path.exists(fname1)
+    assert not os.path.exists(fname2)
+    assert os.path.exists(fname12)
+
+    # Recreate file2, set file1 for file12 and save combined results.
+    file2.save_to_csv(fname2)
+    wxdata_merger.set_first_filepath(fname12)
+    qtbot.mouseClick(wxdata_merger.btn_saveas, Qt.LeftButton)
+
+    # Assert that file2 has been deleted, but not file12. This is to test that
+    # if the output file has the same name as one of the input file, it is
+    # not aftward deleted in the process.
+    assert not os.path.exists(fname2)
     assert os.path.exists(fname12)
 
 
