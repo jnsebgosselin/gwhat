@@ -193,7 +193,7 @@ class WXDataMerger(dict):
             for file in self._filepaths:
                 try:
                     os.remove(file)
-                except PermissionError:
+                except PermissionError:                      # pragma: no cover
                     pass
 
 
@@ -206,10 +206,9 @@ class WXDataMergerWidget(QDialog):
         self.setWindowFlags(Qt.CustomizeWindowHint |
                             Qt.WindowCloseButtonHint)
 
-        self.setWindowTitle('Merge dataset')
+        self.setWindowTitle('Combine two weather datasets')
         self.setWindowIcon(IconDB().master)
         self._workdir = os.getcwd()
-        self.wxdsets = {}
 
         self.__initUI__()
 
@@ -217,13 +216,13 @@ class WXDataMergerWidget(QDialog):
 
         # ---- Toolbar ----
 
-        btn_merge = QPushButton('Merge')
-        btn_merge.clicked.connect(self.btn_merge_isClicked)
+        self.btn_saveas = QPushButton('Save As...')
+        self.btn_saveas.clicked.connect(self.btn_saveas_isClicked)
         btn_cancel = QPushButton('Close')
         btn_cancel.clicked.connect(self.close)
 
         toolbar = QGridLayout()
-        toolbar.addWidget(btn_merge, 0, 1)
+        toolbar.addWidget(self.btn_saveas, 0, 1)
         toolbar.addWidget(btn_cancel, 0, 2)
         toolbar.setColumnStretch(0, 100)
         toolbar.setContentsMargins(0, 25, 0, 0)  # (L, T, R, B)
@@ -232,24 +231,21 @@ class WXDataMergerWidget(QDialog):
 
         self._file_path1 = QLineEdit()
         self._file_path1.setReadOnly(True)
-        lbl_get_file1 = QLabel("Select a first dataset :")
-        btn_get_file1 = QToolButtonSmall(IconDB().openFile)
-        btn_get_file1.file_path = self._file_path1
-        btn_get_file1.clicked.connect(self.set_first_filepath)
+        lbl_get_file1 = QLabel("Select a first weather data file :")
+        self.btn_get_file1 = QToolButtonSmall(IconDB().openFile)
+        self.btn_get_file1.file_path = self._file_path1
+        self.btn_get_file1.clicked.connect(self.set_first_filepath)
 
         self._file_path2 = QLineEdit()
         self._file_path2.setReadOnly(True)
-        lbl_get_file2 = QLabel("Select a second dataset :")
-        btn_get_file2 = QToolButtonSmall(IconDB().openFile)
-        btn_get_file2.file_path = self._file_path2
-        btn_get_file2.clicked.connect(self.set_second_filepath)
+        lbl_get_file2 = QLabel("Select a second weather data file :")
+        self.btn_get_file2 = QToolButtonSmall(IconDB().openFile)
+        self.btn_get_file2.file_path = self._file_path2
+        self.btn_get_file2.clicked.connect(self.set_second_filepath)
 
-        lbl_wxdset3 = QLabel("Enter a name for the resulting dataset :")
-        wxdset3 = QLineEdit()
-
-        qchckbox = QCheckBox(
+        self._del_input_files_ckbox = QCheckBox(
                 "Delete both original input datafiles after merging.")
-        qchckbox.setCheckState(Qt.Checked)
+        self._del_input_files_ckbox.setCheckState(Qt.Unchecked)
 
         # ---- Setup Layout ----
 
@@ -259,7 +255,7 @@ class WXDataMergerWidget(QDialog):
         central_layout.addWidget(lbl_get_file1, row, 0, 1, 2)
         row += 1
         central_layout.addWidget(self._file_path1, row, 0)
-        central_layout.addWidget(btn_get_file1, row, 1)
+        central_layout.addWidget(self.btn_get_file1, row, 1)
         row += 1
         central_layout.setRowMinimumHeight(row, 15)
         row += 1
@@ -267,18 +263,13 @@ class WXDataMergerWidget(QDialog):
         central_layout.addWidget(lbl_get_file2, row, 0, 1, 2)
         row += 1
         central_layout.addWidget(self._file_path2, row, 0)
-        central_layout.addWidget(btn_get_file2, row, 1)
+        central_layout.addWidget(self.btn_get_file2, row, 1)
         row += 1
         central_layout.setRowMinimumHeight(row, 15)
         row += 1
-        # Place widgets for concatenated file.
-        central_layout.addWidget(lbl_wxdset3, row, 0, 1, 2)
-        row += 1
-        central_layout.addWidget(wxdset3, row, 0, 1, 2)
-        row += 1
         central_layout.setRowMinimumHeight(row, 15)
         row += 1
-        central_layout.addWidget(qchckbox, row, 0, 1, 2)
+        central_layout.addWidget(self._del_input_files_ckbox, row, 0, 1, 2)
         central_layout.setColumnStretch(1, 100)
 
         # ---- Self Layout ----
@@ -288,33 +279,45 @@ class WXDataMergerWidget(QDialog):
         layout.addLayout(toolbar, 1, 0)
 
     def set_first_filepath(self, fpath=None):
-        if fpath is None:
+        if fpath in [None, False]:
             fpath = self.get_filepath()
         if fpath:
             self._file_path1.setText(fpath)
-            self.wxdsets['file1'] = read_weather_datafile(fpath)
 
     def set_second_filepath(self, fpath=None):
-        if fpath is None:
+        if fpath in [None, False]:
             fpath = self.get_filepath()
         if fpath:
             self._file_path2.setText(fpath)
-            self.wxdsets['file2'] = read_weather_datafile(fpath)
 
     def get_filepath(self):
         fpath, ftype = QFileDialog.getOpenFileName(
                 self, 'Select a valid weather data file', self._workdir,
                 '*.csv')
+        if fpath:
+            self._workdir = os.path.dirname(fpath)
         return fpath
 
     def set_workdir(self, dirname):
         if os.path.exists(dirname):
             self._workdir = dirname
 
-    def btn_merge_isClicked(self):
-        if len(self.wxdsets) >= 2:
-            merge_datafiles(list(self.wxdsets.values()))
-        self.close()
+    def btn_saveas_isClicked(self):
+        data_merger = WXDataMerger(
+                [self._file_path1.text(), self._file_path2.text()])
+
+        fpath = os.path.join(self._workdir,
+                             data_merger.get_proposed_saved_filename())
+
+        fpath, ftype = QFileDialog.getSaveFileName(
+                self, 'Save the combine dataset to file', fpath, '*.csv')
+
+        if fpath:
+            self._workdir = os.path.dirname(fpath)
+            data_merger.setDeleteInputFiles(
+                    self._del_input_files_ckbox.isChecked())
+            data_merger.save_to_csv(fpath)
+            self.close()
 
     def show(self):
         super(WXDataMergerWidget, self).show()
@@ -322,29 +325,17 @@ class WXDataMergerWidget(QDialog):
 
 
 if __name__ == '__main__':                                   # pragma: no cover
-    workdir = os.path.join("..", "tests", "@ new-prô'jèt!", "Meteo", "Input")
-    file1 = os.path.join(workdir, "Station 1 (7020560)_1960-1974.csv")
-    file2 = os.path.join(workdir, "Station 2 (7020560)_1990-1974.csv")
+    import platform
+    import sys
 
-    wxdata_merger = WXDataMerger([file1, file2], True)
-    wxdata_merger.save_to_csv(
-            os.path.join(workdir, wxdata_merger.get_proposed_saved_filename()))
+    app = QApplication(sys.argv)
 
+    if platform.system() == 'Windows':
+        app.setFont(QFont('Segoe UI', 11))
+    elif platform.system() == 'Linux':
+        app.setFont(QFont('Ubuntu', 11))
 
-#    import platform
-#    import sys
+    merger_widget = WXDataMergerWidget()
+    merger_widget.show()
 
-#    app = QApplication(sys.argv)
-
-#    if platform.system() == 'Windows':
-#        app.setFont(QFont('Segoe UI', 11))
-#    elif platform.system() == 'Linux':
-#        app.setFont(QFont('Ubuntu', 11))
-
-
-    # wxdata_merger.set_workdir(workdir)
-#    wxdata_merger.set_first_filepath(file1)
-#    wxdata_merger.set_second_filepath(file1)
-#    wxdata_merger.show()
-
-#    sys.exit(app.exec_())
+    sys.exit(app.exec_())

@@ -17,20 +17,21 @@ from PyQt5.QtCore import Qt
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from meteo.dwnld_weather_data import ConcatenatedDataFrame
-from meteo.merge_weather_data import WXDataMerger
 from meteo.weather_reader import read_weather_datafile
+from meteo.merge_weather_data import (WXDataMerger, WXDataMergerWidget,
+                                      QFileDialog)
 
 
 # Qt Test Fixtures
 # --------------------------------
 
 
-#@pytest.fixture
-#def downloader_bot(qtbot):
-#    wxdata_downloader = RawDataDownloader()
-#    wxdata_merger = WXDataMerger()
-#
-#    return wxdata_downloader, wxdata_merger, qtbot
+@pytest.fixture
+def wxdata_combiner_bot(qtbot):
+    wxdata_combiner = WXDataMergerWidget()
+    qtbot.addWidget(wxdata_combiner)
+
+    return wxdata_combiner, qtbot
 
 
 # Test RawDataDownloader
@@ -112,18 +113,54 @@ def test_merge_data():
 
     # Save the resulting combined dataset to file.
     file12_path = os.path.join(working_dir, file12_expected_name)
-    wxdata_merger.setDeleteInputFiles(True)
+    wxdata_merger.setDeleteInputFiles(False)
     wxdata_merger.save_to_csv(file12_path)
 
-    # Assert that the original input weather datafile were deleted.
+    # Assert that the original input weather datafile were not deleted.
     for file in files:
-        assert not os.path.exists(file)
+        assert os.path.exists(file)
 
     # Assert that the content of the combined dataset file is as expected.
     df12 = read_weather_datafile(file12_path)
     keys = ['Time', 'Year', 'Month', 'Day', 'Tmax', 'Tmin', 'Tavg', 'Ptot']
     for key in keys:
         np.testing.assert_equal(wxdata_merger[key], df12[key])
+
+
+@pytest.mark.run(order=4)
+def test_merge_data_widget(wxdata_combiner_bot, mocker):
+    wxdata_combiner, qtbot = wxdata_combiner_bot
+    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
+
+    # Select and load the first input file.
+    fname1 = os.path.join(dirname, "Station 1 (7020561)_1960-1974.csv")
+    mocker.patch.object(QFileDialog, 'getOpenFileName',
+                        return_value=(fname1, '*.csv'))
+
+    qtbot.mouseClick(wxdata_combiner.btn_get_file1, Qt.LeftButton)
+
+    # Select and load the second input file.
+    fname2 = os.path.join(dirname, "Station 2 (7020562)_1974-1990.csv")
+    mocker.patch.object(QFileDialog, 'getOpenFileName',
+                        return_value=(fname2, '*.csv'))
+
+    qtbot.mouseClick(wxdata_combiner.btn_get_file2, Qt.LeftButton)
+
+    # Check the "Delete both original input datafiles after merging" option.
+    wxdata_combiner._del_input_files_ckbox.setChecked(True)
+
+    # Save the combined dataset to file.
+    fname12 = os.path.join(dirname, "Station 12 (7020562)_1960-1990.csv")
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
+                        return_value=(fname12, '*.csv'))
+
+    qtbot.mouseClick(wxdata_combiner.btn_saveas, Qt.LeftButton)
+
+    # Assert that the original input weather datafile were deleted and that
+    # the file for the combined dataset was created.
+    assert os.path.exists(fname1)
+    assert os.path.exists(fname1)
+    assert os.path.exists(fname12)
 
 
 if __name__ == "__main__":                                   # pragma: no cover
