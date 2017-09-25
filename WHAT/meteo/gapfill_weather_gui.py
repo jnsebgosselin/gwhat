@@ -51,6 +51,7 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 # Local imports :
 
 from meteo.gapfill_weather_algorithm2 import GapFillWeather
+from meteo.merge_weather_data import WXDataMergerWidget
 from common import IconDB, StyleDB, QToolButtonSmall
 import common.widgets as myqt
 
@@ -68,6 +69,7 @@ class GapFillWeatherGUI(QWidget):
         # Correlation calculation won't be triggered by events when
         # CORRFLAG is 'off'
         self.CORRFLAG = 'on'
+        self.wxdata_merger = WXDataMergerWidget()
 
         # Setup gap fill worker and thread :
         self.gapfill_worker = GapFillWeather()
@@ -130,6 +132,7 @@ class GapFillWeatherGUI(QWidget):
         btn_merge_data = QToolButtonSmall(IconDB().merge_data)
         btn_merge_data.setToolTip(
                 'Tool for merging two ore more datasets together.')
+        btn_merge_data.clicked.connect(self.wxdata_merger.show)
 
         # Generate the layout for the target station group widget.
 
@@ -433,6 +436,8 @@ class GapFillWeatherGUI(QWidget):
         self.gapfill_worker.inputDir = os.path.join(dirname, 'Meteo', 'Input')
         self.gapfill_worker.outputDir = os.path.join(
                                              dirname, 'Meteo', 'Output')
+
+        self.wxdata_merger.set_workdir(os.path.join(dirname, 'Meteo', 'Input'))
 
     # =========================================================================
 
