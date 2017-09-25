@@ -289,10 +289,10 @@ def read_weather_datafile(filename):
     df['Month'] = data[:, var.index('Month')].astype(int)
     df['Day'] = data[:, var.index('Day')].astype(int)
 
-    df['Tmax'] = data[:, var.index('Max Temp (deg C)')]
-    df['Tmin'] = data[:, var.index('Min Temp (deg C)')]
-    df['Tavg'] = data[:, var.index('Mean Temp (deg C)')]
-    df['Ptot'] = data[:, var.index('Total Precip (mm)')]
+    df['Tmax'] = data[:, var.index('Max Temp (deg C)')].astype(float)
+    df['Tmin'] = data[:, var.index('Min Temp (deg C)')].astype(float)
+    df['Tavg'] = data[:, var.index('Mean Temp (deg C)')].astype(float)
+    df['Ptot'] = data[:, var.index('Total Precip (mm)')].astype(float)
 
     try:
         df['Time'] = data[:, var.index('Time')]

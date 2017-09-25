@@ -90,6 +90,7 @@ class WXDataMerger(dict):
         self['Tavg'] = np.array([])
         self['Tmin'] = np.array([])
         self['Ptot'] = np.array([])
+        self['Combined Dataset'] = None
 
     def load_and_format_data(self, filepaths):
         wxdsets = []
@@ -129,6 +130,10 @@ class WXDataMerger(dict):
                     indexes = np.digitize(wxdset['Time'], time, right=True)
                     data_stack[indexes, i] = wxdset[key]
             self[key] = self.combine_first(data_stack)
+
+        keys = ['Year', 'Month', 'Day', 'Tmax', 'Tmin', 'Tavg', 'Ptot']
+        self['Combined Dataset'] = \
+            np.vstack([self[key] for key in keys]).transpose()
 
         self['Minimum Year'] = int(np.min(self['Year']))
         self['Maximum Year'] = int(np.max(self['Year']))
@@ -174,9 +179,7 @@ class WXDataMerger(dict):
                          'Total Precip (mm)'])
 
         keys = ['Year', 'Month', 'Day', 'Tmax', 'Tmin', 'Tavg', 'Ptot']
-        data_stack = np.vstack([self[key] for key in keys]).transpose()
-        data_stack = data_stack.astype(str)
-        fcontent = fcontent + data_stack.tolist()
+        fcontent = fcontent + self['Combined Dataset'].astype(str).tolist()
 
         if filepath is None:
             filename = self.get_proposed_saved_filename()
