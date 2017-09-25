@@ -191,10 +191,13 @@ class WXDataMerger(dict):
 
         if self.deleteInpuFiles():
             for file in self._filepaths:
-                try:
-                    os.remove(file)
-                except PermissionError:                      # pragma: no cover
-                    pass
+                if file == filepath:
+                    continue
+                else:
+                    try:
+                        os.remove(file)
+                    except PermissionError:                  # pragma: no cover
+                        pass
 
 
 class WXDataMergerWidget(QDialog):

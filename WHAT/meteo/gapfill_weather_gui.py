@@ -1529,8 +1529,8 @@ if __name__ == '__main__':                                   # pragma: no cover
         app.setFont(QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
-    w.set_workdir('C:\\Users\\jsgosselin\\OneDrive\\WHAT\\'
-                  'Projects\\Monteregie Est')
+    w.set_workdir("C:\\Users\\jsgosselin\\OneDrive\\WHAT"
+                  "\\WHAT\\tests\\@ new-prô'jèt!")
     w.load_data_dir_content()
 
     lat = w.gapfill_worker.WEATHER.LAT
