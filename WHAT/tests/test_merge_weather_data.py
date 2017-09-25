@@ -27,11 +27,11 @@ from meteo.merge_weather_data import (WXDataMerger, WXDataMergerWidget,
 
 
 @pytest.fixture
-def wxdata_combiner_bot(qtbot):
-    wxdata_combiner = WXDataMergerWidget()
-    qtbot.addWidget(wxdata_combiner)
+def wxdata_merger_bot(qtbot):
+    wxdata_merger = WXDataMergerWidget()
+    qtbot.addWidget(wxdata_merger)
 
-    return wxdata_combiner, qtbot
+    return wxdata_merger, qtbot
 
 
 # Test RawDataDownloader
@@ -128,8 +128,8 @@ def test_merge_data():
 
 
 @pytest.mark.run(order=4)
-def test_merge_data_widget(wxdata_combiner_bot, mocker):
-    wxdata_combiner, qtbot = wxdata_combiner_bot
+def test_merge_data_widget(wxdata_merger_bot, mocker):
+    wxdata_merger, qtbot = wxdata_merger_bot
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
 
     # Select and load the first input file.
@@ -137,29 +137,29 @@ def test_merge_data_widget(wxdata_combiner_bot, mocker):
     mocker.patch.object(QFileDialog, 'getOpenFileName',
                         return_value=(fname1, '*.csv'))
 
-    qtbot.mouseClick(wxdata_combiner.btn_get_file1, Qt.LeftButton)
+    qtbot.mouseClick(wxdata_merger.btn_get_file1, Qt.LeftButton)
 
     # Select and load the second input file.
     fname2 = os.path.join(dirname, "Station 2 (7020562)_1974-1990.csv")
     mocker.patch.object(QFileDialog, 'getOpenFileName',
                         return_value=(fname2, '*.csv'))
 
-    qtbot.mouseClick(wxdata_combiner.btn_get_file2, Qt.LeftButton)
+    qtbot.mouseClick(wxdata_merger.btn_get_file2, Qt.LeftButton)
 
     # Check the "Delete both original input datafiles after merging" option.
-    wxdata_combiner._del_input_files_ckbox.setChecked(True)
+    wxdata_merger._del_input_files_ckbox.setChecked(True)
 
     # Save the combined dataset to file.
     fname12 = os.path.join(dirname, "Station 12 (7020562)_1960-1990.csv")
     mocker.patch.object(QFileDialog, 'getSaveFileName',
                         return_value=(fname12, '*.csv'))
 
-    qtbot.mouseClick(wxdata_combiner.btn_saveas, Qt.LeftButton)
+    qtbot.mouseClick(wxdata_merger.btn_saveas, Qt.LeftButton)
 
     # Assert that the original input weather datafile were deleted and that
     # the file for the combined dataset was created.
-    assert os.path.exists(fname1)
-    assert os.path.exists(fname1)
+    assert not os.path.exists(fname1)
+    assert not os.path.exists(fname1)
     assert os.path.exists(fname12)
 
 
