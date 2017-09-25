@@ -218,6 +218,7 @@ class WXDataMergerWidget(QDialog):
 
         self.btn_saveas = QPushButton('Save As...')
         self.btn_saveas.clicked.connect(self.btn_saveas_isClicked)
+        self.btn_saveas.setEnabled(False)
         btn_cancel = QPushButton('Close')
         btn_cancel.clicked.connect(self.close)
 
@@ -278,17 +279,25 @@ class WXDataMergerWidget(QDialog):
         layout.addLayout(central_layout, 0, 0)
         layout.addLayout(toolbar, 1, 0)
 
-    def set_first_filepath(self, fpath=None):
-        if fpath in [None, False]:
-            fpath = self.get_filepath()
-        if fpath:
-            self._file_path1.setText(fpath)
+    def set_first_filepath(self, file1=None):
+        if file1 in [None, False]:
+            file1 = self.get_filepath()
+        if file1:
+            self._file_path1.setText(file1)
 
-    def set_second_filepath(self, fpath=None):
-        if fpath in [None, False]:
-            fpath = self.get_filepath()
-        if fpath:
-            self._file_path2.setText(fpath)
+        file2 = self._file_path2.text()
+        if os.path.exists(file1) and os.path.exists(file2):
+            self.btn_saveas.setEnabled(True)
+
+    def set_second_filepath(self, file2=None):
+        if file2 in [None, False]:
+            file2 = self.get_filepath()
+        if file2:
+            self._file_path2.setText(file2)
+
+        file1 = self._file_path2.text()
+        if os.path.exists(file1) and os.path.exists(file2):
+            self.btn_saveas.setEnabled(True)
 
     def get_filepath(self):
         fpath, ftype = QFileDialog.getOpenFileName(
