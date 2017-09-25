@@ -26,7 +26,6 @@ import csv
 # Third party imports :
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
-import pandas as pd
 import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
@@ -40,277 +39,159 @@ from common import IconDB, QToolButtonSmall
 from meteo.weather_reader import read_weather_datafile
 
 
-def merge_datafiles(datafiles, mode='overwrite'):
-    # mode can be either 'overwrite' or 'average'
-    global dset1, dset2, dset12
-
-    dset1 = pd.DataFrame.from_dict(datafiles[0])
-    dset1.index = dset1.Time
-
-    dset2 = pd.DataFrame.from_dict(datafiles[1])
-    dset2.index = dset2.Time
-
-    dset12 = dset1.combine_first(dset2)
-
-#    df['Tmax'] = data[:, var.index('Max Temp (deg C)')]
-#    df['Tmin'] = data[:, var.index('Min Temp (deg C)')]
-#    df['Tavg'] = data[:, var.index('Mean Temp (deg C)')]
-#    df['Ptot'] = data[:, var.index('Total Precip (mm)')]
-
-
 class WXDataMerger(dict):
     """Base class to read and merge input weather datafiles."""
 
-    def __init__(self):
-        pass
+    def __init__(self, filepaths=None, delete_files=False):
+        super(WXDataMerger, self).__init__()
+        self.__init_attrs__()
+        self.setDeleteInputFiles(delete_files)
+        if filepaths:
+            self.load_and_format_data(filepaths)
 
-    def load_and_format_data(self, pathlist):
+    def deleteInpuFiles(self):
+        """
+        Return whether the input weather data files are deleted after saving
+        the combined weather dataset to a file. This option is False by
+        default.
+        """
+        return self.__delete_input_files
+
+    def setDeleteInputFiles(self, state):
+        """
+        Set whether the input weather data file are deleted after saving the
+        combined weather dataset to a file.
+        """
+        self.__delete_input_files = bool(state)
+
+    def __init_attrs__(self):
+        self._filepaths = []
+        self._station_names = []
+        self._provinces = []
+        self._latitudes = []
+        self._longitudes = []
+        self._elevations = []
+        self._climate_ids = []
+
+        self['Station Name'] = None
+        self['Province'] = None
+        self['Latitude'] = None
+        self['Longitude'] = None
+        self['Elevation'] = None
+        self['Climate Identifier'] = None
+        self['Minimum Year'] = None
+        self['Maximum Year'] = None
+
+        self['Time'] = np.array([])
+        self['Year'] = np.array([])
+        self['Month'] = np.array([])
+        self['Day'] = np.array([])
+        self['Tmax'] = np.array([])
+        self['Tavg'] = np.array([])
+        self['Tmin'] = np.array([])
+        self['Ptot'] = np.array([])
+
+    def load_and_format_data(self, filepaths):
         wxdsets = []
-        for i, path in enumerate(pathlist):
-            wxdsets.append(read_weather_datafile(path))
+        for i, file in enumerate(filepaths):
+            wxdsets.append(read_weather_datafile(file))
 
+            self._filepaths.append(file)
+            self._station_names.append(wxdsets[-1]['Station Name'])
+            self._provinces.append(wxdsets[-1]['Province'])
+            self._latitudes.append(wxdsets[-1]['Latitude'])
+            self._longitudes.append(wxdsets[-1]['Longitude'])
+            self._elevations.append(wxdsets[-1]['Elevation'])
+            self._climate_ids.append(wxdsets[-1]['Climate Identifier'])
+
+        # Header info of the combined dataframe are automatically set to
+        # those of the first datafile that was opened.
+        self['Station Name'] = self._station_names[0]
+        self['Province'] = self._provinces[0]
+        self['Latitude'] = self._latitudes[0]
+        self['Longitude'] = self._longitudes[0]
+        self['Elevation'] = self._elevations[0]
+        self['Climate Identifier'] = self._climate_ids[0]
+
+        # Combine the time arrays from all datasets.
         time = np.hstack([df['Time'] for df in wxdsets])
         time = np.unique(time)
         time = np.sort(time)
+        self['Time'] = time
 
-        keys = ['Tmin', 'Tavg', 'Tmax', 'Ptot', 'Rain', 'Snow', 'PET']
+        # Using time as the index, combine the datasets for all
+        # relevant weather variables.
+        keys = ['Tmin', 'Tavg', 'Tmax', 'Ptot', 'Year', 'Month', 'Day']
         for key in keys:
-            self[key] = np.zeros((len(time), len(wxdsets))) * np.nan
+            data_stack = np.zeros((len(time), len(wxdsets))) * np.nan
             for i, wxdset in enumerate(wxdsets):
                 if wxdset[key] is not None:
                     indexes = np.digitize(wxdset['Time'], time, right=True)
-                    self[key][indexes, i] = wxdset[key]
+                    data_stack[indexes, i] = wxdset[key]
+            self[key] = self.combine_first(data_stack)
 
-        self['Time'] = time
+        self['Minimum Year'] = int(np.min(self['Year']))
+        self['Maximum Year'] = int(np.max(self['Year']))
 
-        return self['Tmin']
-    
-#        'filename': filename,
-#          'Station Name': '',
-#          'Latitude': 0,
-#          'Longitude': 0,
-#          'Province': '',
-#          'Elevation': 0,
-#          'Climate Identifier': '',
-#          'Year': np.array([]),
-#          'Month': np.array([]),
-#          'Day': np.array([]),
-#          'Time': np.array([]),
-#          'Tmax': np.array([]),
-#          'Tavg': np.array([]),
-#          'Tmin': np.array([]),
-#          'Ptot': np.array([]),
-#          'Rain': None,
-#          'Snow': None,
-#          'PET': None,
-#          }
+    @staticmethod
+    def combine_first(data_stack):
+        m, n = np.shape(data_stack)
+        host = data_stack[:, 0]
+        guests = [data_stack[:, i] for i in range(1, n)]
+        for guest in guests:
+            nan_indexes = np.where(np.isnan(host))[0]
+            host[nan_indexes] = guest[nan_indexes]
 
-#            # -------------------------------------- Time continuity check ----
-#
-#            # Check if data are continuous over time. If not, the serie will be
-#            # made continuous and the gaps will be filled with nan values.
-#
-#            time = wxdset['Time']
-#            
-#            # Sort time ascending
-#
-#            # ----------------------------------------- FIRST TIME ROUTINE ----
-#
-#            if i == 0:
-#                self.VARNAME = reader[7][3:]
-#                nVAR = len(self.VARNAME)
-#                self.time = np.copy(time_new)
-#                self.data = np.zeros((len(STADAT[:, 0]), nSTA, nVAR)) * np.nan
-#                self.DATE = STADAT[:, :3]
-#                self.NUMMISS = np.zeros((nSTA, nVAR)).astype('int')
-#
-#            # ---------------------------------- <DATA> & <TIME> RESHAPING ----
-#
-#            # Merge the data time series using time as index.
-#
-#            if self.time[0] <= time_new[0]:
-#                if self.time[-1] >= time_new[-1]:
-#
-#                    #    [---------------]    self.time
-#                    #         [-----]         time_new
-#
-#                    pass
-#
-#                else:
-#
-#                    #    [--------------]         self.time
-#                    #         [--------------]    time_new
-#                    #
-#                    #           OR
-#                    #
-#                    #    [--------------]           self.time
-#                    #                     [----]    time_new
-#
-#                    date_flag = True
-#
-#                    # Expand <DATA> and <TIME> to fit the new data serie
-#
-#                    EXPND = np.zeros((int(time_new[-1]-self.time[-1]),
-#                                      nSTA,
-#                                      nVAR)) * np.nan
-#
-#                    self.data = np.vstack((self.data, EXPND))
-#                    self.time = np.arange(self.time[0], time_new[-1] + 1)
-#
-#            elif self.time[0] > time_new[0]:
-#                if self.time[-1] >= time_new[-1]:
-#
-#                    #        [----------]    self.time
-#                    #    [----------]        time_new
-#                    #
-#                    #            OR
-#                    #           [----------]    self.time
-#                    #    [----]                 time_new
-#
-#                    date_flag = True
-#
-#                    # Expand <DATA> and <TIME> to fit the new data serie
-#
-#                    EXPND = np.zeros((int(self.time[0]-time_new[0]),
-#                                      nSTA,
-#                                      nVAR)) * np.nan
-#
-#                    self.data = np.vstack((EXPND, self.data))
-#                    self.time = np.arange(time_new[0], self.time[-1] + 1)
-#                else:
-#
-#                    #        [----------]        self.time
-#                    #    [------------------]    time_new
-#
-#                    date_flag = True
-#
-#                    # Expand <DATA> and <TIME> to fit the new data serie
-#
-#                    EXPNDbeg = np.zeros((int(self.time[0]-time_new[0]),
-#                                         nSTA,
-#                                         nVAR)) * np.nan
-#
-#                    EXPNDend = np.zeros((int(time_new[-1]-self.time[-1]),
-#                                         nSTA,
-#                                         nVAR)) * np.nan
-#
-#                    self.data = np.vstack((EXPNDbeg, self.data, EXPNDend))
-#
-#                    self.time = np.copy(time_new)
-#
-#            ifirst = np.where(self.time == time_new[0])[0][0]
-#            ilast = np.where(self.time == time_new[-1])[0][0]
-#            self.data[ifirst:ilast+1, i, :] = STADAT[:, 3:]
-#
-#            # --------------------------------------------------- Other Info --
-#
-#            # Nbr. of Missing Data :
-#
-#            isnan = np.isnan(STADAT[:, 3:])
-#            self.NUMMISS[i, :] = np.sum(isnan, axis=0)
-#
-#            # station name :
-#
-#            # Check if a station with this name already exist in the list.
-#            # If so, a number at the end of the name is added so it is
-#            # possible to differentiate them in the list.
-#
-#            isNameExist = np.where(reader[0][1] == self.names)[0]
-#            if len(isNameExist) > 0:
-#
-#                msg = ('Station name %s already exists. '
-#                       'Added a number at the end.') % reader[0][1]
-#                print(msg)
-#
-#                count = 1
-#                while len(isNameExist) > 0:
-#                    newname = '%s (%d)' % (reader[0][1], count)
-#                    isNameExist = np.where(newname == self.names)[0]
-#                    count += 1
-#
-#                self.names[i] = newname
-#
-#            else:
-#                self.names[i] = reader[0][1]
-#
-#            # Other station info :
-#
-#            self.provinces[i] = str(reader[1][1])
-#            self.LAT[i] = float(reader[2][1])
-#            self.LON[i] = float(reader[3][1])
-#            self.ALT[i] = float(reader[4][1])
-#            self.ClimateID[i] = str(reader[5][1])
-#
-#        # ------------------------------------ Sort Station Alphabetically ----
-#
-#        sort_index = np.argsort(self.names)
-#
-#        self.data = self.data[:, sort_index, :]
-#        self.names = self.names[sort_index]
-#        self.provinces = self.provinces[sort_index]
-#        self.LAT = self.LAT[sort_index]
-#        self.LON = self.LON[sort_index]
-#        self.ALT = self.ALT[sort_index]
-#        self.ClimateID = self.ClimateID[sort_index]
-#
-#        self.NUMMISS = self.NUMMISS[sort_index, :]
-#        self.DATE_START = self.DATE_START[sort_index]
-#        self.DATE_END = self.DATE_END[sort_index]
-#
-#        self.fnames = self.fnames[sort_index]
-#
-#        # -------------------------------------------- Generate Date serie ----
-#
-#        # Rebuild a date matrix if <DATA> size changed. Otherwise, do nothing
-#        # and keep *Date* as is.
-#
-#        if date_flag is True:
-#            self.DATE = np.zeros((len(self.time), 3))
-#            for i in range(len(self.time)):
-#                date_tuple = xldate_as_tuple(self.time[i], 0)
-#                self.DATE[i, 0] = date_tuple[0]
-#                self.DATE[i, 1] = date_tuple[1]
-#                self.DATE[i, 2] = date_tuple[2]
-#
-#        return True
-#
-#    # =========================================================================
-#
-#    def make_timeserie_continuous(self, DATA):
-#        # scan the entire time serie and will insert a row with nan values
-#        # whenever there is a gap in the data and will return the continuous
-#        # data set.
-#        #
-#        # DATA = [YEAR, MONTH, DAY, VAR1, VAR2 ... VARn]
-#        #
-#        # 2D matrix containing the dates and the corresponding daily
-#        # meteorological data of a given weather station arranged in
-#        # chronological order.
-#
-#        nVAR = len(DATA[0, :]) - 3  # number of meteorological variables
-#        nan2insert = np.zeros(nVAR) * np.nan
-#
-#        i = 0
-#        date1 = xldate_from_date_tuple((DATA[i, 0].astype('int'),
-#                                        DATA[i, 1].astype('int'),
-#                                        DATA[i, 2].astype('int')), 0)
-#
-#        while i < len(DATA[:, 0]) - 1:
-#            date2 = xldate_from_date_tuple((DATA[i+1, 0].astype('int'),
-#                                            DATA[i+1, 1].astype('int'),
-#                                            DATA[i+1, 2].astype('int')), 0)
-#
-#            # If dates 1 and 2 are not consecutive, add a nan row to DATA
-#            # after date 1.
-#            if date2 - date1 > 1:
-#                date2insert = np.array(xldate_as_tuple(date1 + 1, 0))[:3]
-#                row2insert = np.append(date2insert, nan2insert)
-#                DATA = np.insert(DATA, i + 1, row2insert, 0)
-#
-#            date1 += 1
-#            i += 1
-#
-#        return DATA
+        return host
+
+    def get_proposed_saved_filename(self):
+        station_name = self['Station Name']
+        climate_id = self['Climate Identifier']
+        min_year = self['Minimum Year']
+        max_year = self['Maximum Year']
+
+        # Check if the characters "/" or "\" are present in the station
+        # name and replace these characters by "_" if applicable.
+
+        station_name = station_name.replace('\\', '_')
+        station_name = station_name.replace('/', '_')
+
+        return "%s (%s)_%s-%s.csv" % (station_name, climate_id,
+                                      min_year, max_year)
+
+    def save_to_csv(self, filepath=None):
+        """
+        This method saves the combined data into a single csv file.
+        """
+        keys = ['Station Name', 'Province', 'Latitude', 'Longitude',
+                'Elevation', 'Climate Identifier']
+        fcontent = []
+        for key in keys:
+            fcontent.append([key, self[key]])
+        fcontent.append([])
+        fcontent.append(['Year', 'Month', 'Day', 'Max Temp (deg C)',
+                         'Min Temp (deg C)', 'Mean Temp (deg C)',
+                         'Total Precip (mm)'])
+
+        keys = ['Year', 'Month', 'Day', 'Tmax', 'Tmin', 'Tavg', 'Ptot']
+        data_stack = np.vstack([self[key] for key in keys]).transpose()
+        data_stack = data_stack.astype(str)
+        fcontent = fcontent + data_stack.tolist()
+
+        if filepath is None:
+            filename = self.get_proposed_saved_filename()
+            filepath = os.path.join(os.getcwd(), filename)
+
+        with open(filepath, 'w', encoding='utf-8') as f:
+            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer.writerows(fcontent)
+
+        if self.deleteInpuFiles():
+            for file in self._filepaths:
+                try:
+                    os.remove(file)
+                except PermissionError:
+                    pass
 
 
 class WXDataMergerWidget(QDialog):
@@ -438,13 +319,13 @@ class WXDataMergerWidget(QDialog):
 
 
 if __name__ == '__main__':                                   # pragma: no cover
-    wxdata_merger = WXDataMerger()
-
     workdir = os.path.join("..", "tests", "@ new-prô'jèt!", "Meteo", "Input")
     file1 = os.path.join(workdir, "Station 1 (7020560)_1960-1974.csv")
     file2 = os.path.join(workdir, "Station 2 (7020560)_1990-1974.csv")
 
-    time = wxdata_merger.load_and_format_data([file1, file2])
+    wxdata_merger = WXDataMerger([file1, file2], True)
+    wxdata_merger.save_to_csv(
+            os.path.join(workdir, wxdata_merger.get_proposed_saved_filename()))
 
 
 #    import platform
