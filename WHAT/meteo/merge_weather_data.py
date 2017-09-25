@@ -58,71 +58,53 @@ def merge_datafiles(datafiles, mode='overwrite'):
 #    df['Ptot'] = data[:, var.index('Total Precip (mm)')]
 
 
-class WXDataMerger(object):
+class WXDataMerger(dict):
     """Base class to read and merge input weather datafiles."""
 
     def __init__(self):
-
-        self.data = []        # Weather data
-        self.DATE = []        # Date in tuple format [YEAR, MONTH, DAY]
-
-        self.time = []        # Date in numeric format
-        self.time_start = []
-        self.time_end = []
-
-        self.DATE_START = []  # Date on which the data record begins
-        self.DATE_END = []    # Date on which data record ends
-
-        self.names = []     # Station names
-        self.ALT = []         # Station elevation in m
-        self.LAT = []         # Station latitude in decimal degree
-        self.LON = []         # Station longitude in decimal degree
-        self.VARNAME = []     # Names of the meteorological variables
-        self.ClimateID = []   # Climate Identifiers of weather station
-        self.provinces = []    # Provinces where weater station are located
-
-        self.NUMMISS = []     # Number of missing data
-        self.fnames = []
+        pass
 
     def load_and_format_data(self, pathlist):
-        self.fnames = [os.path.basename(p) for p in pathlist]
-        nSTA = len(pathlist)
-        if nSTA == 0:
-            # Reset the states of all class variables and return.
-            self.names = []
-            self.ALT = []
-            self.LAT = []
-            self.LON = []
-            self.provinces = []
-            self.ClimateID = []
-            self.DATE_START = []
-            self.DATE_END = []
-
-            return False
-        else:
-            self.names = np.zeros(nSTA).astype('str')
-            self.ALT = np.zeros(nSTA)
-            self.LAT = np.zeros(nSTA)
-            self.LON = np.zeros(nSTA)
-            self.provinces = np.zeros(nSTA).astype('str')
-            self.ClimateID = np.zeros(nSTA).astype('str')
-            self.DATE_START = np.zeros((nSTA, 3)).astype('int')
-            self.DATE_END = np.zeros((nSTA, 3)).astype('int')
-
-        date_flag = False
-        # If date_flag becomes True, a new DATE matrix will be rebuilt at the
-        # end of this routine.
-
         wxdsets = []
         for i, path in enumerate(pathlist):
             wxdsets.append(read_weather_datafile(path))
 
-            time = np.hstack([df['Time'] for df in wxdsets])
-            time = np.unique(time)
-            time = np.sort(time)
-            
-        return time
-            
+        time = np.hstack([df['Time'] for df in wxdsets])
+        time = np.unique(time)
+        time = np.sort(time)
+
+        keys = ['Tmin', 'Tavg', 'Tmax', 'Ptot', 'Rain', 'Snow', 'PET']
+        for key in keys:
+            self[key] = np.zeros((len(time), len(wxdsets))) * np.nan
+            for i, wxdset in enumerate(wxdsets):
+                if wxdset[key] is not None:
+                    indexes = np.digitize(wxdset['Time'], time, right=True)
+                    self[key][indexes, i] = wxdset[key]
+
+        self['Time'] = time
+
+        return self['Tmin']
+    
+#        'filename': filename,
+#          'Station Name': '',
+#          'Latitude': 0,
+#          'Longitude': 0,
+#          'Province': '',
+#          'Elevation': 0,
+#          'Climate Identifier': '',
+#          'Year': np.array([]),
+#          'Month': np.array([]),
+#          'Day': np.array([]),
+#          'Time': np.array([]),
+#          'Tmax': np.array([]),
+#          'Tavg': np.array([]),
+#          'Tmin': np.array([]),
+#          'Ptot': np.array([]),
+#          'Rain': None,
+#          'Snow': None,
+#          'PET': None,
+#          }
+
 #            # -------------------------------------- Time continuity check ----
 #
 #            # Check if data are continuous over time. If not, the serie will be
@@ -459,14 +441,12 @@ if __name__ == '__main__':                                   # pragma: no cover
     wxdata_merger = WXDataMerger()
 
     workdir = os.path.join("..", "tests", "@ new-prô'jèt!", "Meteo", "Input")
-    file1 = os.path.join(workdir, "IBERVILLE (7023270)_2000-2010.csv")
-    file2 = os.path.join(workdir, "L'ACADIE (702LED4)_2000-2010.csv")
+    file1 = os.path.join(workdir, "Station 1 (7020560)_1960-1974.csv")
+    file2 = os.path.join(workdir, "Station 2 (7020560)_1990-1974.csv")
 
     time = wxdata_merger.load_and_format_data([file1, file2])
-    
-    
-    
-    
+
+
 #    import platform
 #    import sys
 
@@ -476,9 +456,6 @@ if __name__ == '__main__':                                   # pragma: no cover
 #        app.setFont(QFont('Segoe UI', 11))
 #    elif platform.system() == 'Linux':
 #        app.setFont(QFont('Ubuntu', 11))
-
-
-
 
 
     # wxdata_merger.set_workdir(workdir)
