@@ -124,7 +124,7 @@ class WXDataFrame(dict):
 
         # ---------------------------------------------------- format data ----
 
-        print('>>> Making daily time series continuous.')
+        print('Make daily time series continuous.')
 
         time = copy(self['Time'])
         date = [copy(self['Year']), copy(self['Month']), copy(self['Day'])]
@@ -137,7 +137,7 @@ class WXDataFrame(dict):
         for i, vbr in enumerate(vbrs):
             self[vbr] = data[i]
 
-        print('>>> Filling missing with estimated values.')
+        print('Fill missing with estimated values.')
 
         for vbr in ['Tmax', 'Tavg', 'Tmin', 'PET']:
             self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'interp')
@@ -222,8 +222,6 @@ class WXDataFrame(dict):
 
         print('-'*78)
 
-    # =========================================================================
-
     def __getitem__(self, key):
         if key == 'daily':
             vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
@@ -261,15 +259,6 @@ def read_weather_datafile(filename):
           'Rain': None,
           'Snow': None,
           'PET': None,
-          'Monthly Year': np.array([]),
-          'Monthly Month': np.array([]),
-          'Monthly Tmax': np.array([]),
-          'Monthly Tmin': np.array([]),
-          'Monthly Tavg': np.array([]),
-          'Monthly Ptot': np.array([]),
-          'Monthly Rain': None,
-          'Monthly Snow': None,
-          'Monthly PET': None
           }
 
     # Get info from header and grab data from file :
@@ -285,7 +274,7 @@ def read_weather_datafile(filename):
             elif row[0] in ['Latitude', 'Longitude', 'Elevation']:
                 try:
                     df[row[0]] = float(row[1])
-                except:
+                except ValueError:
                     print('Wrong format for entry "%s".' % row[0])
                     df[row[0]] = 0
             elif row[0] == 'Year':
@@ -300,20 +289,21 @@ def read_weather_datafile(filename):
     df['Month'] = data[:, var.index('Month')].astype(int)
     df['Day'] = data[:, var.index('Day')].astype(int)
 
-    df['Tmax'] = data[:, var.index('Max Temp (deg C)')]
-    df['Tmin'] = data[:, var.index('Min Temp (deg C)')]
-    df['Tavg'] = data[:, var.index('Mean Temp (deg C)')]
-    df['Ptot'] = data[:, var.index('Total Precip (mm)')]
+    df['Tmax'] = data[:, var.index('Max Temp (deg C)')].astype(float)
+    df['Tmin'] = data[:, var.index('Min Temp (deg C)')].astype(float)
+    df['Tavg'] = data[:, var.index('Mean Temp (deg C)')].astype(float)
+    df['Ptot'] = data[:, var.index('Total Precip (mm)')].astype(float)
 
     try:
         df['Time'] = data[:, var.index('Time')]
     except ValueError:
+        # The time is not saved in the datafile. We need to calculate it from
+        # the Year, Month, and Day arrays.
         df['Time'] = np.zeros(len(df['Year']))
         for i in range(len(df['Year'])):
             dtuple = (df['Year'][i], df['Month'][i], df['Day'][i])
             df['Time'][i] = xldate_from_date_tuple(dtuple, 0)
 
-    print()
     try:
         df['PET'] = data[:, var.index('ETP (mm)')]
         print('Potential evapotranspiration imported from datafile.')

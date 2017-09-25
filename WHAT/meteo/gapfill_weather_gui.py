@@ -51,6 +51,7 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 # Local imports :
 
 from meteo.gapfill_weather_algorithm2 import GapFillWeather
+from meteo.merge_weather_data import WXDataMergerWidget
 from common import IconDB, StyleDB, QToolButtonSmall
 import common.widgets as myqt
 
@@ -68,6 +69,7 @@ class GapFillWeatherGUI(QWidget):
         # Correlation calculation won't be triggered by events when
         # CORRFLAG is 'off'
         self.CORRFLAG = 'on'
+        self.wxdata_merger = WXDataMergerWidget()
 
         # Setup gap fill worker and thread :
         self.gapfill_worker = GapFillWeather()
@@ -111,9 +113,9 @@ class GapFillWeatherGUI(QWidget):
 
         widget_toolbar.setLayout(grid_toolbar)
 
-        # ---- LEFT PANEL ----
+        # ----------------------------------------------------- LEFT PANEL ----
 
-        # Target Station :
+        # ---- Target Station ----
 
         target_station_label = QLabel(
                 '<b>Fill data for weather station :</b>')
@@ -127,21 +129,28 @@ class GapFillWeatherGUI(QWidget):
             'Force the reloading of the weather data files')
         self.btn_refresh_staList.clicked.connect(self.load_data_dir_content)
 
+        btn_merge_data = QToolButtonSmall(IconDB().merge_data)
+        btn_merge_data.setToolTip(
+                'Tool for merging two ore more datasets together.')
+        btn_merge_data.clicked.connect(self.wxdata_merger.show)
+
+        # Generate the layout for the target station group widget.
+
         self.tarSta_widg = QWidget()
-        tarSta_grid = QGridLayout()
+        tarSta_grid = QGridLayout(self.tarSta_widg)
 
         row = 0
-        tarSta_grid.addWidget(target_station_label, row, 0, 1, 2)
+        tarSta_grid.addWidget(target_station_label, row, 0, 1, 3)
         row = 1
         tarSta_grid.addWidget(self.target_station, row, 0)
         tarSta_grid.addWidget(self.btn_refresh_staList, row, 1)
+        tarSta_grid.addWidget(btn_merge_data, row, 2)
         row = 2
-        tarSta_grid.addWidget(self.target_station_info, row, 0, 1, 2)
+        tarSta_grid.addWidget(self.target_station_info, row, 0, 1, 3)
 
         tarSta_grid.setSpacing(5)
         tarSta_grid.setColumnStretch(0, 500)
         tarSta_grid.setContentsMargins(0, 0, 0, 10)  # (L,T,R,B)
-        self.tarSta_widg.setLayout(tarSta_grid)
 
         # Gapfill Dates :
 
@@ -427,6 +436,8 @@ class GapFillWeatherGUI(QWidget):
         self.gapfill_worker.inputDir = os.path.join(dirname, 'Meteo', 'Input')
         self.gapfill_worker.outputDir = os.path.join(
                                              dirname, 'Meteo', 'Output')
+
+        self.wxdata_merger.set_workdir(os.path.join(dirname, 'Meteo', 'Input'))
 
     # =========================================================================
 
@@ -1505,7 +1516,7 @@ class MyHorizHeader(QHeaderView):
         return baseSize
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':                                   # pragma: no cover
 
     import platform
     import sys
@@ -1518,8 +1529,8 @@ if __name__ == '__main__':
         app.setFont(QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
-    w.set_workdir('C:\\Users\\jsgosselin\\OneDrive\\WHAT\\'
-                  'Projects\\Monteregie Est')
+    w.set_workdir("C:\\Users\\jsgosselin\\OneDrive\\WHAT"
+                  "\\WHAT\\tests\\@ new-prô'jèt!")
     w.load_data_dir_content()
 
     lat = w.gapfill_worker.WEATHER.LAT

@@ -1397,11 +1397,10 @@ class WeatherData(object):
         for name in self.STANAME:
             print(name)
 
-    def load_and_format_data(self, paths):  # ================================
-
+    def load_and_format_data(self, paths):
         # paths = list of paths of weater data files
-        nSTA = len(paths)  # Number of weather data file
 
+        nSTA = len(paths)  # Number of weather data file
         self.fnames = np.zeros(nSTA).astype(object)
         for i, path in enumerate(paths):
             self.fnames[i] = os.path.basename(path)
@@ -1915,7 +1914,7 @@ def L1LinearRegression(X, Y):
     return B
 
 
-def main():
+def main():                                                  # pragma: no cover
 
     # 1 - Create an instance of the class *GapFillWeather* --------------------
 
@@ -1998,5 +1997,5 @@ def main():
 #    gapfill_weather.fill_data()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':                                   # pragma: no cover
     main()
