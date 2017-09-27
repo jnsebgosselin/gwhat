@@ -17,7 +17,7 @@ def main():
     Run pytest tests.
     """
     errno = pytest.main(['-x', 'WHAT',  '-v', '-rw', '--durations=10',
-                         '--cov=WHAT'])
+                         '--cov=WHAT', '--cov-report=term-missing'])
 
     if errno != 0:
         raise SystemExit(errno)
