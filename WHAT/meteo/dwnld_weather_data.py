@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 try:
     from urllib2 import urlopen, URLError
@@ -34,7 +34,7 @@ from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 
@@ -45,7 +45,7 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
                              QMessageBox, QProgressBar)
 
-# Local imports :
+# ---- Local imports
 
 import WHAT.common.database as db
 from WHAT.common import IconDB, QToolButtonNormal, QToolButtonSmall

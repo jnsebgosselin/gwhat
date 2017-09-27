@@ -24,16 +24,14 @@ import copy
 # ---- Third parties imports
 
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap, QResizeEvent
-from PyQt5.QtWidgets import (QApplication, QSplashScreen, QMainWindow,
-                             QMessageBox, QTabWidget, QTextEdit, QSplitter,
-                             QWidget, QGridLayout, QDesktopWidget, QTabBar)
+from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import (QApplication, QTabWidget, QWidget, QTabBar,
+                             QDesktopWidget)
 
 # ---- Local imports
 
-from widgets.about import AboutWhat
-from common import IconDB, QToolButtonBase
+from WHAT.widgets.about import AboutWhat
+from WHAT.common import IconDB, QToolButtonBase
 
 
 class TabWidget(QTabWidget):

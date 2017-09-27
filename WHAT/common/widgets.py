@@ -26,7 +26,7 @@ from __future__ import division, unicode_literals
 from copy import copy
 import os
 
-from common import IconDB
+from WHAT.common import IconDB
 
 from PyQt5.QtCore import Qt, QSize, QPoint, QUrl
 from PyQt5.QtCore import pyqtSignal as QSignal
