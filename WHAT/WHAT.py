@@ -28,8 +28,9 @@ from __future__ import division, unicode_literals, print_function
 
 print('Starting WHAT...')
 
+from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QResizeEvent
 from PyQt5.QtWidgets import (QApplication, QSplashScreen, QMainWindow,
                              QMessageBox, QTabWidget, QTextEdit, QSplitter,
                              QWidget, QGridLayout, QDesktopWidget, QTabBar)
@@ -167,18 +168,14 @@ class WHAT(QMainWindow):
 
         # ---- TABS ASSEMBLY ----
 
-        self.tab_bar = TabBar(self)
+        self.tab_widget = TabWidget()
+        self.tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
+        self.tab_widget.addTab(self.tab_fill_weather_data, 'Gap-Fill Weather')
+        self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
+        self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
+        self.tab_widget.setCornerWidget(self.pmanager)
 
-        Tab_widget = QTabWidget()
-        Tab_widget.setTabBar(self.tab_bar)
-
-        Tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
-        Tab_widget.addTab(self.tab_fill_weather_data, 'Gap-Fill Weather')
-        Tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
-        Tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
-        Tab_widget.setCornerWidget(self.pmanager)
-
-        Tab_widget.currentChanged.connect(self.sync_datamanagers)
+        self.tab_widget.currentChanged.connect(self.sync_datamanagers)
 
         # --------------------------------------------------- Main Console ----
 
@@ -218,7 +215,7 @@ class WHAT(QMainWindow):
         splitter = QSplitter(self)
         splitter.setOrientation(Qt.Vertical)
 
-        splitter.addWidget(Tab_widget)
+        splitter.addWidget(self.tab_widget)
         splitter.addWidget(self.main_console)
 
         splitter.setCollapsible(0, True)
@@ -257,7 +254,11 @@ class WHAT(QMainWindow):
     # =========================================================================
 
     def sync_datamanagers(self):
-        current = self.tab_bar.currentIndex()
+        """
+        Move the data manager from tab _Plot Hydrograph_ to tab
+        _Analyze Hydrograph_ and vice-versa.
+        """
+        current = self.tab_widget.tabBar().currentIndex()
         if current == 3:
             self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
         elif current == 2:
@@ -383,29 +384,57 @@ class WHATPref(object):
                 raise e
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-# http://stackoverflow.com/a/20098415/4481445
-# http://stackoverflow.com/a/12429054/4481445
-
-class TabBar(QTabBar):
+class TabWidget(QTabWidget):
     def __init__(self, parent=None):
-        super(TabBar, self).__init__(parent=None)
+        super(TabWidget, self).__init__(parent=None)
 
         self.aboutwhat = AboutWhat(parent=parent)
-
-        self.__oldIndex = -1
-        self.__newIndex = -1
-        self.currentChanged.connect(self.storeIndex)
 
         self.about_btn = QToolButtonBase(IconDB().info)
         self.about_btn.setIconSize(QSize(20, 20))
         self.about_btn.setFixedSize(32, 32)
         self.about_btn.setToolTip('About WHAT...')
         self.about_btn.setParent(self)
-        self.movePlusButton()  # Move to the correct location
-
         self.about_btn.clicked.connect(self.aboutwhat.show)
+
+        tab_bar = TabBar(self, parent)
+        self.setTabBar(tab_bar)
+        tab_bar.sig_resized.connect(self.moveAboutButton)
+        tab_bar.sig_tab_layout_changed.connect(self.moveAboutButton)
+
+    def eventFilter(self, src, event):
+        if event.type() == QResizeEvent:
+            print('coucou')
+            self.movePlusButton()
+
+        super(TabWidget, self).eventFilter(src, event)
+
+    def moveAboutButton(self):
+        x = 0
+        for i in range(self.count()):
+            x += self.tabBar().tabRect(i).width()
+
+        # Set the plus button location in a visible area
+        y = self.geometry().top()
+        self.about_btn.move(x, y)
+
+
+class TabBar(QTabBar):
+
+    sig_resized = QSignal()
+    sig_tab_layout_changed = QSignal()
+
+    def __init__(self, tab_widget, parent=None):
+        super(TabBar, self).__init__(parent=None)
+
+        self.__tab_widget = tab_widget
+
+        self.__oldIndex = -1
+        self.__newIndex = -1
+        self.currentChanged.connect(self.storeIndex)
+
+    def tabWidget(self):
+        return self.__tab_widget
 
     def tabSizeHint(self, index):
         width = QTabBar.tabSizeHint(self, index).width()
@@ -413,28 +442,16 @@ class TabBar(QTabBar):
 
     def sizeHint(self):
         sizeHint = QTabBar.sizeHint(self)
-        w = sizeHint.width() + self.about_btn.size().width()
-        # h = sizeHint.height()
+        w = sizeHint.width() + self.tabWidget().about_btn.size().width()
         return QSize(w, 32)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        self.movePlusButton()
+        self.sig_resized.emit()
 
     def tabLayoutChange(self):
         super().tabLayoutChange()
-        self.movePlusButton()
-
-    def movePlusButton(self):
-        x = 0
-        for i in range(self.count()):
-            x += self.tabRect(i).width()
-
-        # Set the plus button location in a visible area
-        y = self.geometry().top()
-        self.about_btn.move(x, y)
-
-    # =========================================================================
+        self.sig_resized.emit()
 
     def storeIndex(self, index):
         self.__oldIndex = copy.copy(self.__newIndex)
@@ -442,10 +459,6 @@ class TabBar(QTabBar):
 
     def previousIndex(self):
         return self.__oldIndex
-
-
-# =============================================================================
-# =============================================================================
 
 
 if __name__ == '__main__':
