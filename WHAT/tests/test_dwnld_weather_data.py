@@ -251,7 +251,7 @@ def test_download_data(downloader_bot, mocker):
 @pytest.mark.run(order=3)
 def test_merge_widget(downloader_bot, mocker):
     wxdata_downloader, qtbot = downloader_bot
-    wxdata_downloader.show()
+    # wxdata_downloader.show()
 
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Raw")
     stations = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
