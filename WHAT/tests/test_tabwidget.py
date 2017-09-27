@@ -12,9 +12,9 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # ---- Third parties imports
 
-import pytest
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QWidget
+import pytest                                                          # nopep8
+from PyQt5.QtCore import Qt                                            # nopep8
+from PyQt5.QtWidgets import QWidget                                    # nopep8
 
 # ---- Local imports
 
