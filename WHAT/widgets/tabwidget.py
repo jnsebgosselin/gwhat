@@ -66,8 +66,6 @@ class TabWidget(QTabWidget):
         for i in range(self.count()):
             x += self.tabBar().tabRect(i).width()
         self.about_btn.move(x, 0)
-        self.setMinimumWidth(x + self.about_btn.width())
-        self.setMinimumHeight(self.tabBar().height())
 
 
 class TabBar(QTabBar):
