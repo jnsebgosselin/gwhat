@@ -8,6 +8,7 @@ Created on Fri Aug  4 01:50:50 2017
 
 import os
 from datetime import datetime
+import time
 
 # ---- Third party imports
 
@@ -253,30 +254,32 @@ def test_merge_widget(downloader_bot, mocker):
     wxdata_downloader.show()
 
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Raw")
+    stations = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
+                "L'ACADIE (702LED4)"]
     filenames = ["eng-daily-01012000-12312000.csv",
                  "eng-daily-01012001-12312001.csv",
                  "eng-daily-01012002-12312002.csv"]
-    staname = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
-               "L'ACADIE (702LED4)"]
 
-    # Disable auto save merged data" option.
+    # Disable 'auto save merged data' option.
     wxdata_downloader.saveAuto_checkbox.setChecked(False)
 
     # Opens raw data files for each station.
-    for station in ["MARIEVILLE (7024627)"]:
+    for station in stations:
         paths = []
         for file in filenames:
             paths.append(os.path.join(dirname, station, file))
 
         mocker.patch.object(QFileDialog, 'getOpenFileNames',
                             return_value=(paths, '*.csv'))
+        print(paths)
         wxdata_downloader.btn_selectRaw_isClicked()
 
-#    # Assert that the concatenated files were not saved.
+    # Assert that the concatenated files were not saved.
 #    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
 #    filenames = ["MARIEVILLE (7024627)_2000-2002.csv",
-#                 "IBERVILLE (7023270)_2000-2002.csv"]
-#
+#                 "IBERVILLE (7023270)_2000-2002.csv",
+#                 "L'ACADIE (702LED4)_2000-2002.csv"]
+##
 #    for file in filenames:
 #        assert not os.path.exists(os.path.join(dirname, file))
 #
