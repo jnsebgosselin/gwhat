@@ -4,19 +4,21 @@ Created on Fri Aug  4 01:50:50 2017
 @author: jsgosselin
 """
 
-# Standard library imports
+# ---- Standard library imports
+
 import sys
 import os
 from datetime import datetime
 
-# Third party imports
+# ---- Third party imports
+
 import pytest
 from PyQt5.QtCore import Qt
 
-# Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from meteo.dwnld_weather_data import (DwnldWeatherWidget, RawDataDownloader,
-                                      QFileDialog, QMessageBox)
+# ---- Local imports
+
+from WHAT.meteo.dwnld_weather_data import (
+        DwnldWeatherWidget, RawDataDownloader, QFileDialog, QMessageBox)
 
 
 # Qt Test Fixtures
