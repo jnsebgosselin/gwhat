@@ -570,10 +570,10 @@ class DwnldWeatherWidget(QWidget):
         """
 
         dialog_fir = os.path.join(self.workdir, 'Meteo', 'Raw')
-        fname, _ = QFileDialog.getOpenFileNames(
+        fnames, _ = QFileDialog.getOpenFileNames(
                 self, 'Open files', dialog_fir, '*.csv')
-        if fname:
-            self.concatenate_and_display(fname)
+        if fnames:
+            self.concatenate_and_display(fnames)
 
     def concatenate_and_display(self, filepaths):
         """
