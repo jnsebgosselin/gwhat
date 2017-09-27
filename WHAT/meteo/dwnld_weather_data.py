@@ -66,6 +66,7 @@ class DwnldWeatherWidget(QWidget):
 
     ConsoleSignal = QSignal(str)
     sig_download_process_ended = QSignal()
+    sig_raw_data_concatenated = QSignal()
 
     def __init__(self, parent=None):
         super(DwnldWeatherWidget, self).__init__(parent)
@@ -601,6 +602,8 @@ class DwnldWeatherWidget(QWidget):
             dirname = os.path.join(self.workdir, 'Meteo', 'Input')
             filename = cdf.get_proposed_saved_filename()
             cdf.save_to_csv(os.path.join(dirname, filename))
+
+        self.sig_raw_data_concatenated.emit()
 
     def concatenate(self, filepaths):
         """
