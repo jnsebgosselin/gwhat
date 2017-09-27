@@ -6,7 +6,6 @@ Created on Fri Aug  4 01:50:50 2017
 
 # ---- Standard library imports
 
-import sys
 import os
 from datetime import datetime
 
@@ -289,5 +288,5 @@ def test_merge_widget(downloader_bot, mocker):
 
 
 if __name__ == "__main__":                                   # pragma: no cover
-    pytest.main([os.path.basename(__file__)])
+    pytest.main([os.path.basename(__file__), '-v', '-rw', '--cov=WHAT'])
     # pytest.main()

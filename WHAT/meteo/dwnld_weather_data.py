@@ -47,11 +47,11 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 
 # Local imports :
 
-import common.database as db
-from common import IconDB, QToolButtonNormal, QToolButtonSmall
-import common.widgets as myqt
-from meteo.search_weather_data import WeatherStationDisplayTable
-from meteo.search_weather_data import Search4Stations
+import WHAT.common.database as db
+from WHAT.common import IconDB, QToolButtonNormal, QToolButtonSmall
+import WHAT.common.widgets as myqt
+from WHAT.meteo.search_weather_data import WeatherStationDisplayTable
+from WHAT.meteo.search_weather_data import Search4Stations
 
 
 # =============================================================================
