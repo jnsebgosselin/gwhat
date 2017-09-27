@@ -76,8 +76,8 @@ import HydroCalc2 as HydroCalc
 from meteo import dwnld_weather_data
 from meteo.gapfill_weather_gui import GapFillWeatherGUI
 from meteo.dwnld_weather_data import DwnldWeatherWidget
+from widgets.tabwidget import TabWidget
 
-from about import AboutWhat
 from projet.manager_projet import ProjetManager
 from projet.manager_data import DataManager
 from common import IconDB, StyleDB, QToolButtonBase
@@ -380,79 +380,7 @@ class WHATPref(object):
                 raise e
 
 
-class TabWidget(QTabWidget):
-    def __init__(self, parent=None):
-        super(TabWidget, self).__init__(parent=None)
-
-        self.aboutwhat = AboutWhat(parent=parent)
-
-        self.about_btn = QToolButtonBase(IconDB().info)
-        self.about_btn.setIconSize(QSize(20, 20))
-        self.about_btn.setFixedSize(32, 32)
-        self.about_btn.setToolTip('About WHAT...')
-        self.about_btn.setParent(self)
-        self.about_btn.clicked.connect(self.aboutwhat.show)
-
-        tab_bar = TabBar(self, parent)
-        self.setTabBar(tab_bar)
-        tab_bar.sig_resized.connect(self.moveAboutButton)
-        tab_bar.sig_tab_layout_changed.connect(self.moveAboutButton)
-
-    def moveAboutButton(self):
-        """
-        Move the buton to show the About dialog window to the right side of the
-        tab bar.
-        """
-        x = 0
-        for i in range(self.count()):
-            x += self.tabBar().tabRect(i).width()
-        y = self.geometry().top()
-        self.about_btn.move(x, y)
-
-
-class TabBar(QTabBar):
-
-    sig_resized = QSignal()
-    sig_tab_layout_changed = QSignal()
-
-    def __init__(self, tab_widget, parent=None):
-        super(TabBar, self).__init__(parent=None)
-
-        self.__tab_widget = tab_widget
-
-        self.__oldIndex = -1
-        self.__newIndex = -1
-        self.currentChanged.connect(self.storeIndex)
-
-    def tabWidget(self):
-        return self.__tab_widget
-
-    def tabSizeHint(self, index):
-        width = QTabBar.tabSizeHint(self, index).width()
-        return QSize(width, 32)
-
-    def sizeHint(self):
-        sizeHint = QTabBar.sizeHint(self)
-        w = sizeHint.width() + self.tabWidget().about_btn.size().width()
-        return QSize(w, 32)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.sig_resized.emit()
-
-    def tabLayoutChange(self):
-        super().tabLayoutChange()
-        self.sig_resized.emit()
-
-    def storeIndex(self, index):
-        self.__oldIndex = copy.copy(self.__newIndex)
-        self.__newIndex = index
-
-    def previousIndex(self):
-        return self.__oldIndex
-
-
-if __name__ == '__main__':
+if __name__ == '__main__':                                   # pragma: no cover
     import logging
 
     logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,
