@@ -259,17 +259,17 @@ def test_merge_widget(downloader_bot, mocker):
     staname = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
                "L'ACADIE (702LED4)"]
 
-    # Disable äuto save merged data" option.
-    qtbot.mouseClick(wxdata_downloader.saveAuto_checkbox, Qt.LeftButton)
+    # Disable auto save merged data" option.
+    wxdata_downloader.saveAuto_checkbox.setChecked(False)
 
     # Opens raw data files for each station.
     for station in staname:
         paths = []
         for file in filenames:
             paths.append(os.path.join(dirname, station, file))
+
         mocker.patch.object(QFileDialog, 'getOpenFileNames',
                             return_value=(paths, '*.csv'))
-
         wxdata_downloader.btn_selectRaw_isClicked()
 
     # Assert that the concatenated files were not saved.

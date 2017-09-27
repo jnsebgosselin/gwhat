@@ -22,7 +22,7 @@ from __future__ import division, unicode_literals
 
 # ---- Standard library imports
 
- import sys
+import sys
 import os
 import csv
 from time import strftime
