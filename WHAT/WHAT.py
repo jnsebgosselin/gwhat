@@ -306,10 +306,6 @@ class WHAT(QMainWindow):
         event.accept()
 
 
-# =============================================================================
-# =============================================================================
-
-
 class WHATPref(object):
     """
     This class contains all the preferences relative to the WHAT interface,
@@ -402,19 +398,14 @@ class TabWidget(QTabWidget):
         tab_bar.sig_resized.connect(self.moveAboutButton)
         tab_bar.sig_tab_layout_changed.connect(self.moveAboutButton)
 
-    def eventFilter(self, src, event):
-        if event.type() == QResizeEvent:
-            print('coucou')
-            self.movePlusButton()
-
-        super(TabWidget, self).eventFilter(src, event)
-
     def moveAboutButton(self):
+        """
+        Move the buton to show the About dialog window to the right side of the
+        tab bar.
+        """
         x = 0
         for i in range(self.count()):
             x += self.tabBar().tabRect(i).width()
-
-        # Set the plus button location in a visible area
         y = self.geometry().top()
         self.about_btn.move(x, y)
 
