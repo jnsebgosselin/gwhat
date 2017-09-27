@@ -20,13 +20,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
+ import sys
 import os
 import csv
 from time import strftime
 
-# Third party imports :
+# ---- Third party imports
 
 import xlsxwriter
 import numpy as np
@@ -38,22 +39,15 @@ from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QFileDialog, QApplication, QTableWidget,
                              QTableWidgetItem)
 
-# mpl.rcParams['backend.qt4'] = 'PySide'
 mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
-# Local imports :
+# ---- Local imports
 
-if __name__ == '__main__':
-    import sys
-    from os.path import dirname, realpath, basename
-    print('Running module %s as a standalone script...' % basename(__file__))
-    sys.path.append(dirname(dirname(realpath(__file__))))
-
-import common.database as db
-from colors2 import ColorsReader
-from common import IconDB, StyleDB, QToolButtonNormal
-from common.widgets import DialogWindow
+import WHAT.common.database as db
+from WHAT.colors2 import ColorsReader
+from WHAT.common import IconDB, StyleDB, QToolButtonNormal
+from WHAT.common.widgets import DialogWindow
 from _version import __version__
 
 

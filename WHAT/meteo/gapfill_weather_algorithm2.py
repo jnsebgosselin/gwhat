@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 import csv
 import os
@@ -29,7 +29,7 @@ from time import strftime, sleep
 from copy import copy
 from time import clock
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
@@ -43,12 +43,12 @@ from PyQt5.QtCore import QObject
 # from statsmodels.regression.linear_model import OLS
 # from statsmodels.regression.quantile_regression import QuantReg
 
-# PERSONAL IMPORTS :
+# ---- Local imports
 
-from hydrograph4 import LatLong2Dist
-from meteo.weather_viewer import FigWeatherNormals
-from meteo.gapfill_weather_postprocess import PostProcessErr
-import meteo.weather_reader as wxrd
+from WHAT.hydrograph4 import LatLong2Dist
+from WHAT.meteo.weather_viewer import FigWeatherNormals
+from WHAT.meteo.gapfill_weather_postprocess import PostProcessErr
+import WHAT.meteo.weather_reader as wxrd
 from _version import __version__
 
 

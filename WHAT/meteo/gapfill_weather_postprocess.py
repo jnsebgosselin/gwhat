@@ -32,8 +32,6 @@ from copy import copy
 
 # from PySide import QtGui
 import matplotlib as mpl
-mpl.use('Qt4Agg')
-mpl.rcParams['backend.qt4'] = 'PySide'
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 #from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -43,9 +41,9 @@ import scipy.stats as stats
 from xlrd.xldate import xldate_from_date_tuple
 #from xlrd import xldate_as_tuple
 
-#---- PERSONAL IMPORTS ----
+# ---- Local imports
 
-import meteo
+from WHAT import meteo
 #import database as db
 #from hydrograph3 import LatLong2Dist
 

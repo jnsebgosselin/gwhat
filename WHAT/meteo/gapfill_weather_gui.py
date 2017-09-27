@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 # import csv
 from time import sleep  # ctime, strftime, sleep
 import os
 
-# Third party imports :
+# ---- Third party imports
 
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QThread, QDate, QRect
@@ -48,12 +48,12 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 
-# Local imports :
+# ---- Local imports
 
-from meteo.gapfill_weather_algorithm2 import GapFillWeather
-from meteo.merge_weather_data import WXDataMergerWidget
-from common import IconDB, StyleDB, QToolButtonSmall
-import common.widgets as myqt
+from WHAT.meteo.gapfill_weather_algorithm2 import GapFillWeather
+from WHAT.meteo.merge_weather_data import WXDataMergerWidget
+from WHAT.common import IconDB, StyleDB, QToolButtonSmall
+import WHAT.common.widgets as myqt
 
 
 class GapFillWeatherGUI(QWidget):
