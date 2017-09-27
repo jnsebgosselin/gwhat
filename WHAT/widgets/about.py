@@ -47,7 +47,7 @@ class AboutWhat(QDialog):
 
     def __initUI__(self):
 
-        # ---------------------------------------------------- MAIN WINDOW ----
+        # ----- MAIN WINDOW ----
 
         self.setWindowTitle('About WHAT')
         self.setWindowIcon(IconDB().master)
@@ -55,7 +55,7 @@ class AboutWhat(QDialog):
         self.setModal(True)
         self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
 
-        # --------------------------------------------------- AboutTextBox ----
+        # ---- AboutTextBox ----
 
         self.AboutTextBox = QTextBrowser()
         self.AboutTextBox.installEventFilter(self)
@@ -69,12 +69,12 @@ class AboutWhat(QDialog):
         self.AboutTextBox.document().setDocumentMargin(0)
         self.set_html_in_AboutTextBox()
 
-        # --------------------------------------------------------- Ok btn ----
+        # ---- Ok btn ----
 
         ok_btn = QPushButton('OK')
         ok_btn.clicked.connect(self.close)
 
-        # ------------------------------------------------------ Main Grid ----
+        # ---- Main Grid ----
 
         grid = QGridLayout()
         grid.setSpacing(10)
@@ -195,9 +195,8 @@ class AboutWhat(QDialog):
         super(AboutWhat, self).show()
         self.setFixedSize(self.size())
 
-# =============================================================================
 
-if __name__ == '__main__':
+if __name__ == '__main__':                                   # pragma: no cover
     import sys
 
     app = QApplication(sys.argv)

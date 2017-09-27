@@ -28,8 +28,9 @@ from __future__ import division, unicode_literals, print_function
 
 print('Starting WHAT...')
 
+from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap, QResizeEvent
 from PyQt5.QtWidgets import (QApplication, QSplashScreen, QMainWindow,
                              QMessageBox, QTabWidget, QTextEdit, QSplitter,
                              QWidget, QGridLayout, QDesktopWidget, QTabBar)
@@ -75,8 +76,8 @@ import HydroCalc2 as HydroCalc
 from meteo import dwnld_weather_data
 from meteo.gapfill_weather_gui import GapFillWeatherGUI
 from meteo.dwnld_weather_data import DwnldWeatherWidget
+from widgets.tabwidget import TabWidget
 
-from about import AboutWhat
 from projet.manager_projet import ProjetManager
 from projet.manager_data import DataManager
 from common import IconDB, StyleDB, QToolButtonBase
@@ -167,18 +168,14 @@ class WHAT(QMainWindow):
 
         # ---- TABS ASSEMBLY ----
 
-        self.tab_bar = TabBar(self)
+        self.tab_widget = TabWidget()
+        self.tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
+        self.tab_widget.addTab(self.tab_fill_weather_data, 'Gap-Fill Weather')
+        self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
+        self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
+        self.tab_widget.setCornerWidget(self.pmanager)
 
-        Tab_widget = QTabWidget()
-        Tab_widget.setTabBar(self.tab_bar)
-
-        Tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
-        Tab_widget.addTab(self.tab_fill_weather_data, 'Gap-Fill Weather')
-        Tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
-        Tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
-        Tab_widget.setCornerWidget(self.pmanager)
-
-        Tab_widget.currentChanged.connect(self.sync_datamanagers)
+        self.tab_widget.currentChanged.connect(self.sync_datamanagers)
 
         # --------------------------------------------------- Main Console ----
 
@@ -218,7 +215,7 @@ class WHAT(QMainWindow):
         splitter = QSplitter(self)
         splitter.setOrientation(Qt.Vertical)
 
-        splitter.addWidget(Tab_widget)
+        splitter.addWidget(self.tab_widget)
         splitter.addWidget(self.main_console)
 
         splitter.setCollapsible(0, True)
@@ -257,7 +254,11 @@ class WHAT(QMainWindow):
     # =========================================================================
 
     def sync_datamanagers(self):
-        current = self.tab_bar.currentIndex()
+        """
+        Move the data manager from tab _Plot Hydrograph_ to tab
+        _Analyze Hydrograph_ and vice-versa.
+        """
+        current = self.tab_widget.tabBar().currentIndex()
         if current == 3:
             self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
         elif current == 2:
@@ -303,10 +304,6 @@ class WHAT(QMainWindow):
         self.pmanager.close_projet()
         print('Closing WHAT')
         event.accept()
-
-
-# =============================================================================
-# =============================================================================
 
 
 class WHATPref(object):
@@ -383,72 +380,7 @@ class WHATPref(object):
                 raise e
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-# http://stackoverflow.com/a/20098415/4481445
-# http://stackoverflow.com/a/12429054/4481445
-
-class TabBar(QTabBar):
-    def __init__(self, parent=None):
-        super(TabBar, self).__init__(parent=None)
-
-        self.aboutwhat = AboutWhat(parent=parent)
-
-        self.__oldIndex = -1
-        self.__newIndex = -1
-        self.currentChanged.connect(self.storeIndex)
-
-        self.about_btn = QToolButtonBase(IconDB().info)
-        self.about_btn.setIconSize(QSize(20, 20))
-        self.about_btn.setFixedSize(32, 32)
-        self.about_btn.setToolTip('About WHAT...')
-        self.about_btn.setParent(self)
-        self.movePlusButton()  # Move to the correct location
-
-        self.about_btn.clicked.connect(self.aboutwhat.show)
-
-    def tabSizeHint(self, index):
-        width = QTabBar.tabSizeHint(self, index).width()
-        return QSize(width, 32)
-
-    def sizeHint(self):
-        sizeHint = QTabBar.sizeHint(self)
-        w = sizeHint.width() + self.about_btn.size().width()
-        # h = sizeHint.height()
-        return QSize(w, 32)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self.movePlusButton()
-
-    def tabLayoutChange(self):
-        super().tabLayoutChange()
-        self.movePlusButton()
-
-    def movePlusButton(self):
-        x = 0
-        for i in range(self.count()):
-            x += self.tabRect(i).width()
-
-        # Set the plus button location in a visible area
-        y = self.geometry().top()
-        self.about_btn.move(x, y)
-
-    # =========================================================================
-
-    def storeIndex(self, index):
-        self.__oldIndex = copy.copy(self.__newIndex)
-        self.__newIndex = index
-
-    def previousIndex(self):
-        return self.__oldIndex
-
-
-# =============================================================================
-# =============================================================================
-
-
-if __name__ == '__main__':
+if __name__ == '__main__':                                   # pragma: no cover
     import logging
 
     logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,
