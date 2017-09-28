@@ -18,7 +18,8 @@ from PyQt5.QtCore import Qt
 # ---- Local imports
 
 from WHAT.meteo.dwnld_weather_data import (
-        DwnldWeatherWidget, RawDataDownloader, QFileDialog, QMessageBox)
+        DwnldWeatherWidget, RawDataDownloader, ConcatenatedDataFrame,
+        QFileDialog, QMessageBox)
 
 
 # Qt Test Fixtures
@@ -259,7 +260,7 @@ def test_download_data(downloader_bot, mocker):
 @pytest.mark.run(order=3)
 def test_merge_widget(downloader_bot, mocker):
     wxdata_downloader, qtbot = downloader_bot
-    # wxdata_downloader.show()
+    wxdata_downloader.show()
 
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Raw")
     stations = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
@@ -269,17 +270,21 @@ def test_merge_widget(downloader_bot, mocker):
                  "eng-daily-01012002-12312002.csv"]
 
     # Disable 'auto save merged data' option.
-    wxdata_downloader.saveAuto_checkbox.setChecked(False)
+    wxdata_downloader.saveAuto_checkbox.setChecked(True)
 
     # Opens raw data files for each station.
     for station in stations:
         paths = []
         for file in filenames:
-            paths.append(os.path.join(dirname, station, file))
+            filepath = os.path.join(dirname, station, file)
+            assert os.path.exists(filepath)
+            paths.append(filepath)
 
-        mocker.patch.object(QFileDialog, 'getOpenFileNames',
-                            return_value=(paths, '*.csv'))
-        wxdata_downloader.concatenate_and_display(paths)
+        ConcatenatedDataFrame(paths)
+
+#        mocker.patch.object(QFileDialog, 'getOpenFileNames',
+#                            return_value=(paths, '*.csv'))
+#        wxdata_downloader.concatenate_and_display(paths)
 #        print(paths)
 #        wxdata_downloader.btn_selectRaw_isClicked()
 
