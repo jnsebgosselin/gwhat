@@ -295,14 +295,56 @@ def test_merge_widget(downloader_bot, mocker):
                  "IBERVILLE (7023270)_2000-2002.csv",
                  "L'ACADIE (702LED4)_2000-2002.csv"]
 
-    for file in filenames:
-        assert not os.path.exists(os.path.join(dirname, file))
+    filepaths = [os.path.join(dirname, f) for f in filenames]
+    for path in filepaths:
+        assert not os.path.exists(path)
 
-    # Navigate through with the merge widget.
+    # Navigate to the first concatedated dataset and assert that
+    # the navigation buttons are enabled/disabled as expected.
     qtbot.mouseClick(wxdata_downloader.btn_goFirst, Qt.LeftButton)
+    qtbot.waitUntil(lambda: not wxdata_downloader.btn_goFirst.isEnabled())
+    qtbot.waitUntil(lambda: not wxdata_downloader.btn_goPrevious.isEnabled())
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goLast.isEnabled())
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goNext.isEnabled())
+
+    # Save the file and assert that it was created as expected
+                        return_value=(filepaths[0], '*.csv'))
+    qtbot.mouseClick(wxdata_downloader.btn_saveMerge, Qt.LeftButton)
+    qtbot.waitUntil(lambda: os.path.exists(filepaths[0]))
+
+    # Navigate to the last concatedated dataset and assert that
+    # the navigation buttons are enabled/disabled as expected.
     qtbot.mouseClick(wxdata_downloader.btn_goLast, Qt.LeftButton)
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goFirst.isEnabled())
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goPrevious.isEnabled())
+    qtbot.waitUntil(lambda: not wxdata_downloader.btn_goLast.isEnabled())
+    qtbot.waitUntil(lambda: not wxdata_downloader.btn_goNext.isEnabled())
+
+    # Save the file and assert that it was created as expected
+                        return_value=(filepaths[-1], '*.csv'))
+    qtbot.mouseClick(wxdata_downloader.btn_saveMerge, Qt.LeftButton)
+    qtbot.waitUntil(lambda: os.path.exists(filepaths[-1]))
+
+    # Navigate to the previous concatedated dataset and assert that
+    # the navigation buttons are enabled/disabled as expected.
     qtbot.mouseClick(wxdata_downloader.btn_goPrevious, Qt.LeftButton)
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goFirst.isEnabled())
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goPrevious.isEnabled())
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goLast.isEnabled())
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goNext.isEnabled())
+
+    # Save the file and assert that it was created as expected
+                        return_value=(filepaths[-2], '*.csv'))
+    qtbot.mouseClick(wxdata_downloader.btn_saveMerge, Qt.LeftButton)
+    qtbot.waitUntil(lambda: os.path.exists(filepaths[-2]))
+
+    # Navigate to the next concatedated dataset and assert that
+    # the navigation buttons are enabled/disabled as expected.
     qtbot.mouseClick(wxdata_downloader.btn_goNext, Qt.LeftButton)
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goFirst.isEnabled())
+    qtbot.waitUntil(lambda: wxdata_downloader.btn_goPrevious.isEnabled())
+    qtbot.waitUntil(lambda: not wxdata_downloader.btn_goLast.isEnabled())
+    qtbot.waitUntil(lambda: not wxdata_downloader.btn_goNext.isEnabled())
 
 
 if __name__ == "__main__":                                   # pragma: no cover
