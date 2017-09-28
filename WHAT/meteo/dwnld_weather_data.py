@@ -585,22 +585,22 @@ class DwnldWeatherWidget(QWidget):
             return
 
         cdf = self.concatenate(filepaths)
-        html = self.generate_html_table(cdf)
+#        html = self.generate_html_table(cdf)
 
         self.ConsoleSignal.emit("""<font color=black>Raw data files concatened
         successfully for station %s.</font>""" % cdf['Station Name'])
 
         # ---- Update history variables and UI ----
 
-        self.mergeHistoryLog.append(html)
-        self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
-        self.display_mergeHistory()
-        self.mergeHistoryFnames.append(filepaths)
-
-        if self.saveAuto_checkbox.isChecked():
-            dirname = os.path.join(self.workdir, 'Meteo', 'Input')
-            filename = cdf.get_proposed_saved_filename()
-            cdf.save_to_csv(os.path.join(dirname, filename))
+#        self.mergeHistoryLog.append(html)
+#        self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
+#        self.display_mergeHistory()
+#        self.mergeHistoryFnames.append(filepaths)
+#
+#        if self.saveAuto_checkbox.isChecked():
+#            dirname = os.path.join(self.workdir, 'Meteo', 'Input')
+#            filename = cdf.get_proposed_saved_filename()
+#            cdf.save_to_csv(os.path.join(dirname, filename))
 
     def concatenate(self, filepaths):
         """
