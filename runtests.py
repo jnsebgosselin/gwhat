@@ -9,14 +9,13 @@ File for running tests programmatically.
 """
 
 import pytest
-import WHAT
 
 
 def main():
     """
     Run pytest tests.
     """
-    pytest.main(['-x', 'WHAT',  '-v', '-rw', '--durations=10', '--cov=WHAT'])
+    pytest.main(['-x', 'WHAT',  '-v', '-rw', '--durations=10', '--cov'])
 
 
 if __name__ == '__main__':
