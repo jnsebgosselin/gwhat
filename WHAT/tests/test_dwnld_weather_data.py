@@ -262,7 +262,10 @@ def test_merge_widget(downloader_bot, mocker):
     wxdata_downloader, qtbot = downloader_bot
     wxdata_downloader.show()
 
-    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Raw")
+    projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
+    wxdata_downloader.set_workdir(projetpath)
+
+    dirname = os.path.join(projetpath, "Meteo", "Raw")
     stations = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
                 "L'ACADIE (702LED4)"]
     filenames = ["eng-daily-01012000-12312000.csv",
