@@ -196,23 +196,26 @@ class DwnldWeatherWidget(QWidget):
         self.mergeDisplay.setReadOnly(True)
         self.mergeDisplay.setMinimumHeight(250)
 
-        btn_selectRaw = QPushButton('Select')
-        btn_selectRaw.setIcon(IconDB().openFile)
-        btn_selectRaw.setToolTip('Select and format raw weather data files')
-        btn_selectRaw.setIconSize(IconDB().iconSize2)
+        self.btn_selectRaw = QPushButton('Select')
+        self.btn_selectRaw.setIcon(IconDB().openFile)
+        self.btn_selectRaw.setToolTip(
+                "Select and concatenate raw weather data files.")
+        self.btn_selectRaw.setIconSize(IconDB().iconSize2)
+        self.btn_selectRaw.clicked.connect(self.btn_selectRaw_isClicked)
 
-        btn_saveMerge = QPushButton('Save')
-        btn_saveMerge.setToolTip('Save formated weather data in a csv file')
-        btn_saveMerge.setIcon(IconDB().save)
-        btn_saveMerge.setIconSize(IconDB().iconSize2)
+        self.btn_saveMerge = QPushButton('Save')
+        self.btn_saveMerge.setToolTip(
+                "Save the concatenated weather dataset in a csv file.")
+        self.btn_saveMerge.setIcon(IconDB().save)
+        self.btn_saveMerge.setIconSize(IconDB().iconSize2)
+        self.btn_saveMerge.clicked.connect(self.btn_saveMerge_isClicked)
 
         rightPanel_grid = QGridLayout()
         rightPanel_widg = QFrame()
 
         row = 0
-
-        rightPanel_grid.addWidget(btn_selectRaw, row, 0)
-        rightPanel_grid.addWidget(btn_saveMerge, row, 1)
+        rightPanel_grid.addWidget(self.btn_selectRaw, row, 0)
+        rightPanel_grid.addWidget(self.btn_saveMerge, row, 1)
         row += 1
         rightPanel_grid.addWidget(self.mergeDisplay, row, 0, 1, 3)
         row += 1
@@ -228,7 +231,7 @@ class DwnldWeatherWidget(QWidget):
 
         rightPanel_widg.setLayout(rightPanel_grid)
 
-        # ------------------------------------------------------ Main Grid ----
+        # ---- Main Grid
 
         main_grid = QGridLayout()
 
@@ -247,26 +250,22 @@ class DwnldWeatherWidget(QWidget):
 
         self.setLayout(main_grid)
 
-        # --------------------------------------------------------- EVENTS ----
+        # ---- Events
 
-        # ---- concatenate raw data ----
-
-        btn_selectRaw.clicked.connect(self.btn_selectRaw_isClicked)
+        # concatenate raw data
 
         self.btn_goLast.clicked.connect(self.display_mergeHistory)
         self.btn_goFirst.clicked.connect(self.display_mergeHistory)
         self.btn_goNext.clicked.connect(self.display_mergeHistory)
         self.btn_goPrevious.clicked.connect(self.display_mergeHistory)
 
-        btn_saveMerge.clicked.connect(self.btn_saveMerge_isClicked)
-
-        # ---- weather station list ----
+        # weather station list
 
         btn_delSta.clicked.connect(self.btn_delSta_isClicked)
         btn_browse_staList.clicked.connect(self.btn_browse_staList_isClicked)
         self.btn_save_staList.clicked.connect(self.btn_save_staList_isClicked)
 
-        # ---- search4stations ----
+        # search4stations
 
         btn_search4station.clicked.connect(self.search4stations.show)
         self.search4stations.staListSignal.connect(self.add_stations2list)
@@ -543,7 +542,7 @@ class DwnldWeatherWidget(QWidget):
         elif button == self.btn_goNext:
             self.mergeHistoryIndx += 1
 
-        self.mergeDisplay.setHtml(self.mergeHistoryLog[self.mergeHistoryIndx])
+        self.mergeDisplay.setText(self.mergeHistoryLog[self.mergeHistoryIndx])
         if len(self.mergeHistoryLog) > 1:
             if self.mergeHistoryIndx == (len(self.mergeHistoryLog) - 1):
                 self.btn_goLast.setEnabled(False)
@@ -595,7 +594,7 @@ class DwnldWeatherWidget(QWidget):
         self.mergeHistoryLog.append(html)
         self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
         self.mergeHistoryFnames.append(filepaths)
-        # self.display_mergeHistory()
+        self.display_mergeHistory()
 
         if self.saveAuto_checkbox.isChecked():
             dirname = os.path.join(self.workdir, 'Meteo', 'Input')
