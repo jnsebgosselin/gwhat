@@ -9,7 +9,6 @@ File for running tests programmatically.
 """
 
 import pytest
-import WHAT
 
 
 def main():

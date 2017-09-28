@@ -1,14 +1,22 @@
 [run]
 omit = 
     */Backup/*
-    */Benchmark/*
     */Images/*  
     */Projects/*
     */PyInstaller 3.2.1-dev/*
     */PyInstaller-3.2.1/*
     */Reference/*
     */Releases/*
-    */User_Manual/*
+    */User_Manual/
+    */tests/*
 
 [report]
+# Regexes for lines to exclude from consideration
+exclude_lines =
+    # Have to re-enable the standard pragma
+    pragma: no cover
+
+    # Don't complain if non-runnable code isn't run
+    if __name__ == .__main__.:
+
 fail_under=0
