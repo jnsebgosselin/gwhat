@@ -4,19 +4,22 @@ Created on Fri Aug  4 01:50:50 2017
 @author: jsgosselin
 """
 
-# Standard library imports
-import sys
+# ---- Standard library imports
+
 import os
 from datetime import datetime
+import time
 
-# Third party imports
+# ---- Third party imports
+
 import pytest
 from PyQt5.QtCore import Qt
 
-# Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from meteo.dwnld_weather_data import (DwnldWeatherWidget, RawDataDownloader,
-                                      QFileDialog, QMessageBox)
+# ---- Local imports
+
+from WHAT.meteo.dwnld_weather_data import (
+        DwnldWeatherWidget, RawDataDownloader, ConcatenatedDataFrame,
+        QFileDialog, QMessageBox)
 
 
 # Qt Test Fixtures
@@ -245,36 +248,50 @@ def test_download_data(downloader_bot, mocker):
         path = os.path.join(dirname, station, filename)
         assert not os.path.exists(path)
 
+    # Assert that the concatenated datafiles were created.
+    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
+    files = ["MARIEVILLE (7024627)_2000-2010.csv",
+             "IBERVILLE (7023270)_2000-2010.csv",
+             "L'ACADIE (702LED4)_2000-2010.csv"]
+    for file in files:
+        assert os.path.exists(os.path.join(dirname, file))
+
 
 @pytest.mark.run(order=3)
 def test_merge_widget(downloader_bot, mocker):
     wxdata_downloader, qtbot = downloader_bot
     wxdata_downloader.show()
 
-    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Raw")
+    projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
+    wxdata_downloader.set_workdir(projetpath)
+
+    dirname = os.path.join(projetpath, "Meteo", "Raw")
+    stations = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
+                "L'ACADIE (702LED4)"]
     filenames = ["eng-daily-01012000-12312000.csv",
                  "eng-daily-01012001-12312001.csv",
                  "eng-daily-01012002-12312002.csv"]
-    staname = ["MARIEVILLE (7024627)", "IBERVILLE (7023270)",
-               "L'ACADIE (702LED4)"]
 
-    # Disable äuto save merged data" option.
-    qtbot.mouseClick(wxdata_downloader.saveAuto_checkbox, Qt.LeftButton)
+    # Disable 'auto save merged data' option.
+    wxdata_downloader.saveAuto_checkbox.setChecked(False)
 
     # Opens raw data files for each station.
-    for station in staname:
+    for station in stations:
         paths = []
         for file in filenames:
-            paths.append(os.path.join(dirname, station, file))
+            filepath = os.path.join(dirname, station, file)
+            assert os.path.exists(filepath)
+            paths.append(filepath)
+
         mocker.patch.object(QFileDialog, 'getOpenFileNames',
                             return_value=(paths, '*.csv'))
-
         wxdata_downloader.btn_selectRaw_isClicked()
 
     # Assert that the concatenated files were not saved.
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
     filenames = ["MARIEVILLE (7024627)_2000-2002.csv",
-                 "IBERVILLE (7023270)_2000-2002.csv"]
+                 "IBERVILLE (7023270)_2000-2002.csv",
+                 "L'ACADIE (702LED4)_2000-2002.csv"]
 
     for file in filenames:
         assert not os.path.exists(os.path.join(dirname, file))
@@ -287,5 +304,5 @@ def test_merge_widget(downloader_bot, mocker):
 
 
 if __name__ == "__main__":                                   # pragma: no cover
-    pytest.main([os.path.basename(__file__)])
+    pytest.main([os.path.basename(__file__), '-v', '-rw', '--cov=WHAT'])
     # pytest.main()

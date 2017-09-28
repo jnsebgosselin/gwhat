@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 try:
     from urllib2 import urlopen, URLError
@@ -33,7 +33,7 @@ import csv
 import time
 import os
 
-# Third party imports :
+# ---- Third party imports
 
 import xlsxwriter
 import numpy as np
@@ -45,10 +45,10 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QApplication, QHeaderView, QTableWidgetItem,
                              QStyle, QFileDialog)
 
-# Local imports :
+# ---- Local imports
 
-import common.database as db
-from common import IconDB, StyleDB
+import WHAT.common.database as db
+from WHAT.common import IconDB, StyleDB
 
 
 # =============================================================================

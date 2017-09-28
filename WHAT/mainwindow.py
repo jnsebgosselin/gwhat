@@ -60,7 +60,6 @@ splash.showMessage("Starting WHAT, please wait ...",
 import csv
 from time import ctime
 from os import makedirs, path
-import copy
 
 from multiprocessing import freeze_support
 import tkinter
@@ -69,19 +68,19 @@ import tkinter.messagebox
 
 # Local imports :
 
-import common.database as db
-import custom_widgets as MyQWidget
-import HydroPrint2 as HydroPrint
-import HydroCalc2 as HydroCalc
-from meteo import dwnld_weather_data
-from meteo.gapfill_weather_gui import GapFillWeatherGUI
-from meteo.dwnld_weather_data import DwnldWeatherWidget
-from widgets.tabwidget import TabWidget
+import WHAT.common.database as db
+import WHAT.custom_widgets as MyQWidget
+import WHAT.HydroPrint2 as HydroPrint
+import WHAT.HydroCalc2 as HydroCalc
+from WHAT.meteo import dwnld_weather_data
+from WHAT.meteo.gapfill_weather_gui import GapFillWeatherGUI
+from WHAT.meteo.dwnld_weather_data import DwnldWeatherWidget
+from WHAT.widgets.tabwidget import TabWidget
 
-from projet.manager_projet import ProjetManager
-from projet.manager_data import DataManager
-from common import IconDB, StyleDB, QToolButtonBase
-from _version import __version__
+from WHAT.projet.manager_projet import ProjetManager
+from WHAT.projet.manager_data import DataManager
+from WHAT.common import IconDB, StyleDB, QToolButtonBase
+from WHAT._version import __version__
 
 freeze_support()
 

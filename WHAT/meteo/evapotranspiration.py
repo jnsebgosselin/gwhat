@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+#----  Standard library imports
 
 import os
 import csv
@@ -29,7 +29,7 @@ from calendar import monthrange
 import copy
 import datetime
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple

@@ -19,11 +19,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 """
 
-# Standard library imports :
+# ---- Standard library imports
+
 import os
 import csv
 
-# Third party imports :
+# ---- Third party imports
+
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 import numpy as np
@@ -33,10 +35,10 @@ from PyQt5.QtWidgets import (QDialog, QApplication, QGridLayout,
                              QLabel, QPushButton, QCheckBox, QLineEdit,
                              QFileDialog)
 
-# Local imports :
+# ---- Local imports
 
-from common import IconDB, QToolButtonSmall
-from meteo.weather_reader import read_weather_datafile
+from WHAT.common import IconDB, QToolButtonSmall
+from WHAT.meteo.weather_reader import read_weather_datafile
 
 
 class WXDataMerger(dict):

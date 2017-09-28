@@ -21,33 +21,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 import os
 import csv
 from calendar import monthrange
 from copy import copy
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# Local imports :
+# ---- Local imports
 
-for i in range(2):
-    try:
-        from meteo.evapotranspiration import calcul_Thornthwaite
-        break
-    except ImportError:  # to run this module standalone
-        print('Running module as a standalone script...')
-        import sys
-        from os.path import dirname, realpath
-        sys.path.append(dirname(dirname(realpath(__file__))))
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+from WHAT.meteo.evapotranspiration import calcul_Thornthwaite
 
 
 class WXDataFrame(dict):

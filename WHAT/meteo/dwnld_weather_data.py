@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 try:
     from urllib2 import urlopen, URLError
@@ -34,7 +34,7 @@ from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 
@@ -45,13 +45,13 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
                              QMessageBox, QProgressBar)
 
-# Local imports :
+# ---- Local imports
 
-import common.database as db
-from common import IconDB, QToolButtonNormal, QToolButtonSmall
-import common.widgets as myqt
-from meteo.search_weather_data import WeatherStationDisplayTable
-from meteo.search_weather_data import Search4Stations
+import WHAT.common.database as db
+from WHAT.common import IconDB, QToolButtonNormal, QToolButtonSmall
+import WHAT.common.widgets as myqt
+from WHAT.meteo.search_weather_data import WeatherStationDisplayTable
+from WHAT.meteo.search_weather_data import Search4Stations
 
 
 # =============================================================================
@@ -543,7 +543,7 @@ class DwnldWeatherWidget(QWidget):
         elif button == self.btn_goNext:
             self.mergeHistoryIndx += 1
 
-        self.mergeDisplay.setText(self.mergeHistoryLog[self.mergeHistoryIndx])
+        self.mergeDisplay.setHtml(self.mergeHistoryLog[self.mergeHistoryIndx])
         if len(self.mergeHistoryLog) > 1:
             if self.mergeHistoryIndx == (len(self.mergeHistoryLog) - 1):
                 self.btn_goLast.setEnabled(False)
@@ -570,10 +570,10 @@ class DwnldWeatherWidget(QWidget):
         """
 
         dialog_fir = os.path.join(self.workdir, 'Meteo', 'Raw')
-        fname, _ = QFileDialog.getOpenFileNames(
+        fnames, ftypes = QFileDialog.getOpenFileNames(
                 self, 'Open files', dialog_fir, '*.csv')
-        if fname:
-            self.concatenate_and_display(fname)
+        if fnames:
+            self.concatenate_and_display(fnames)
 
     def concatenate_and_display(self, filepaths):
         """
@@ -594,8 +594,8 @@ class DwnldWeatherWidget(QWidget):
 
         self.mergeHistoryLog.append(html)
         self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
-        self.display_mergeHistory()
         self.mergeHistoryFnames.append(filepaths)
+        # self.display_mergeHistory()
 
         if self.saveAuto_checkbox.isChecked():
             dirname = os.path.join(self.workdir, 'Meteo', 'Input')
@@ -630,8 +630,8 @@ class DwnldWeatherWidget(QWidget):
         fields = ['T<sub>max<\sub>', 'T<sub>min<\sub>', 'T<sub>mean<\sub>',
                   'P<sub>tot<\sub>']
 
-        html = '''
-               <p align='center'>
+        html = """
+               <p align="center">
                  <b><font color=#C83737>%s</font></b><br>%s<br>(%d - %d)
                </p>
                <table border="0" cellpadding="1" cellspacing="0"
@@ -648,19 +648,19 @@ class DwnldWeatherWidget(QWidget):
                  <td colspan="2" align="right">Missing Data<\td>
                <\tr>
                <tr><td colspan="4"><hr><\td><\tr>
-               ''' % (station_name, province, min_year, max_year)
+               """ % (station_name, province, min_year, max_year)
 
         for i in range(0, len(fields)):
             nonan = sum(np.isnan(data[:, i+3]))
-            html += '''
+            html += """
                     <tr>
                       <td align="left">%s</td>
                       <td align="left" width=25></td>
                       <td align="right">%d</td>
                       <td align="right">&nbsp;(%d%%)</td>
                     </tr>
-                    ''' % (fields[i], nonan, nonan/ndata*100)
-        html += '<tr><td colspan="4"><hr><\td><\tr>'
+                    """ % (fields[i], nonan, nonan/ndata*100)
+        html += """<tr><td colspan="4"><hr><\td><\tr>"""
 
         return html
 
