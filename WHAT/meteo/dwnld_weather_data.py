@@ -543,23 +543,23 @@ class DwnldWeatherWidget(QWidget):
         elif button == self.btn_goNext:
             self.mergeHistoryIndx += 1
 
-        self.mergeDisplay.setHtml (self.mergeHistoryLog[self.mergeHistoryIndx])
-#        if len(self.mergeHistoryLog) > 1:
-#            if self.mergeHistoryIndx == (len(self.mergeHistoryLog) - 1):
-#                self.btn_goLast.setEnabled(False)
-#                self.btn_goNext.setEnabled(False)
-#                self.btn_goFirst.setEnabled(True)
-#                self.btn_goPrevious.setEnabled(True)
-#            elif self.mergeHistoryIndx == 0:
-#                self.btn_goLast.setEnabled(True)
-#                self.btn_goNext.setEnabled(True)
-#                self.btn_goFirst.setEnabled(False)
-#                self.btn_goPrevious.setEnabled(False)
-#            else:
-#                self.btn_goLast.setEnabled(True)
-#                self.btn_goNext.setEnabled(True)
-#                self.btn_goFirst.setEnabled(True)
-#                self.btn_goPrevious.setEnabled(True)
+        self.mergeDisplay.setHtml(self.mergeHistoryLog[self.mergeHistoryIndx])
+        if len(self.mergeHistoryLog) > 1:
+            if self.mergeHistoryIndx == (len(self.mergeHistoryLog) - 1):
+                self.btn_goLast.setEnabled(False)
+                self.btn_goNext.setEnabled(False)
+                self.btn_goFirst.setEnabled(True)
+                self.btn_goPrevious.setEnabled(True)
+            elif self.mergeHistoryIndx == 0:
+                self.btn_goLast.setEnabled(True)
+                self.btn_goNext.setEnabled(True)
+                self.btn_goFirst.setEnabled(False)
+                self.btn_goPrevious.setEnabled(False)
+            else:
+                self.btn_goLast.setEnabled(True)
+                self.btn_goNext.setEnabled(True)
+                self.btn_goFirst.setEnabled(True)
+                self.btn_goPrevious.setEnabled(True)
 
     def btn_selectRaw_isClicked(self):
         """
