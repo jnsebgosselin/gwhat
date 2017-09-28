@@ -630,8 +630,8 @@ class DwnldWeatherWidget(QWidget):
         fields = ['T<sub>max<\sub>', 'T<sub>min<\sub>', 'T<sub>mean<\sub>',
                   'P<sub>tot<\sub>']
 
-        html = '''
-               <p align='center'>
+        html = """
+               <p align="center">
                  <b><font color=#C83737>%s</font></b><br>%s<br>(%d - %d)
                </p>
                <table border="0" cellpadding="1" cellspacing="0"
@@ -648,19 +648,19 @@ class DwnldWeatherWidget(QWidget):
                  <td colspan="2" align="right">Missing Data<\td>
                <\tr>
                <tr><td colspan="4"><hr><\td><\tr>
-               ''' % (station_name, province, min_year, max_year)
+               """ % (station_name, province, min_year, max_year)
 
         for i in range(0, len(fields)):
             nonan = sum(np.isnan(data[:, i+3]))
-            html += '''
+            html += """
                     <tr>
                       <td align="left">%s</td>
                       <td align="left" width=25></td>
                       <td align="right">%d</td>
                       <td align="right">&nbsp;(%d%%)</td>
                     </tr>
-                    ''' % (fields[i], nonan, nonan/ndata*100)
-        html += '<tr><td colspan="4"><hr><\td><\tr>'
+                    """ % (fields[i], nonan, nonan/ndata*100)
+        html += """<tr><td colspan="4"><hr><\td><\tr>"""
 
         return html
 
