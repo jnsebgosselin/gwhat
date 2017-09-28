@@ -247,6 +247,14 @@ def test_download_data(downloader_bot, mocker):
         path = os.path.join(dirname, station, filename)
         assert not os.path.exists(path)
 
+    # Assert that the concatenated datafiles were created.
+    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
+    files = ["MARIEVILLE (7024627)_2000-2010.csv",
+             "IBERVILLE (7023270)_2000-2010.csv",
+             "L'ACADIE (702LED4)_2000-2010.csv"]
+    for file in files:
+        assert os.path.exists(os.path.join(dirname, file))
+
 
 @pytest.mark.run(order=3)
 def test_merge_widget(downloader_bot, mocker):
