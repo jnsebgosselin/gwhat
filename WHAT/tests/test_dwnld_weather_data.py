@@ -285,7 +285,10 @@ def test_merge_widget(downloader_bot, mocker):
 
         mocker.patch.object(QFileDialog, 'getOpenFileNames',
                             return_value=(paths, '*.csv'))
-        wxdata_downloader.btn_selectRaw_isClicked()
+
+        sig = wxdata_downloader.sig_merge_summary_displayed
+        with qtbot.waitSignal(sig, raising=True, timeout=60000):
+            wxdata_downloader.btn_selectRaw_isClicked()
 
     # Assert that the concatenated files were not saved.
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
