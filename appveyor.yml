@@ -5,6 +5,8 @@ init:
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 environment:
+  my_variable:
+    secure: C6f+X1lfx0nlwaBgRIbl3vEwy+EOkw7OAlkQquh76IK7Oz9JRhcwqj7/lSeumDIL
 
   global:
     PYTHON: "C:\\conda"
@@ -49,5 +51,8 @@ build: false
 test_script:
   - "%CMD_IN_ENV% python runtests.py"
 
-on_finish:
+after_success:
+  - "%CMD_IN_ENV% coveralls"
+
+on_finish:  
 #   - ps: $blockRdp = $false; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
