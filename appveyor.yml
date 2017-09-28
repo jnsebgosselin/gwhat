@@ -47,9 +47,7 @@ install:
 build: false
 
 test_script:
-  # - "%CMD_IN_ENV% coverage run --source=WHAT --concurrency=thread -m py.test"
   - "%CMD_IN_ENV% python runtests.py"
 
 on_finish:
-  - "%CMD_IN_ENV% coveralls"
 #   - ps: $blockRdp = $false; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
