@@ -5,7 +5,7 @@ python: "3.6"
 
 install:
   - sudo apt-get update
-  - pip install pyqt5
+  - sudo apt-get install python3-pyqt5
   - sudo apt-get install cython3
   - sudo apt-get install libhdf5-dev
   - pip install h5py
@@ -19,11 +19,6 @@ install:
   - pip install pytest-ordering
   - pip install coveralls
   - pip install matplotlib
-
-before_script:
-  - "export DISPLAY=:99.0"
-  - "sh -e /etc/init.d/xvfb start"
-  - sleep 3
 
 script:
   python runtests.py
