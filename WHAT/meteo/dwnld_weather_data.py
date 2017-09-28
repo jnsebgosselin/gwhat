@@ -543,8 +543,8 @@ class DwnldWeatherWidget(QWidget):
         elif button == self.btn_goNext:
             self.mergeHistoryIndx += 1
 
-        # self.mergeDisplay.setText(self.mergeHistoryLog[self.mergeHistoryIndx])
-        self.mergeDisplay.setText("Segmentation Fault my ass")
+#        self.mergeDisplay.setText(self.mergeHistoryLog[self.mergeHistoryIndx])
+#        self.mergeDisplay.setText("Segmentation Fault my ass")
         if len(self.mergeHistoryLog) > 1:
             if self.mergeHistoryIndx == (len(self.mergeHistoryLog) - 1):
                 self.btn_goLast.setEnabled(False)
