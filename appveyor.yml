@@ -6,7 +6,7 @@ init:
 
 environment:
   COVERALLS_REPO_TOKEN:
-  secure: 6tdds8x61Nm9X9NRdsdsd+hlU0iEyo8g+457eAJTisdhK14SERTfdfS7vsdOp1et+h
+    secure: C6f+X1lfx0nlwaBgRIbl3vEwy+EOkw7OAlkQquh76IK7Oz9JRhcwqj7/lSeumDIL
 
   global:
     PYTHON: "C:\\conda"
