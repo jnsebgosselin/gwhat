@@ -273,7 +273,7 @@ def test_merge_widget(downloader_bot, mocker):
                  "eng-daily-01012002-12312002.csv"]
 
     # Disable 'auto save merged data' option.
-    wxdata_downloader.saveAuto_checkbox.setChecked(True)
+    wxdata_downloader.saveAuto_checkbox.setChecked(False)
 
     # Opens raw data files for each station.
     for station in stations:

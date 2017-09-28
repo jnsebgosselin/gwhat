@@ -585,7 +585,7 @@ class DwnldWeatherWidget(QWidget):
             return
 
         cdf = self.concatenate(filepaths)
-#        html = self.generate_html_table(cdf)
+        html = self.generate_html_table(cdf)
 
 #        self.ConsoleSignal.emit("""<font color=black>Raw data files concatened
 #        successfully for station %s.</font>""" % cdf['Station Name'])
