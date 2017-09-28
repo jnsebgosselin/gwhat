@@ -264,15 +264,15 @@ def test_merge_widget(downloader_bot, mocker):
     wxdata_downloader.saveAuto_checkbox.setChecked(False)
 
     # Opens raw data files for each station.
-    for station in stations:
-        paths = []
-        for file in filenames:
-            paths.append(os.path.join(dirname, station, file))
-
-        mocker.patch.object(QFileDialog, 'getOpenFileNames',
-                            return_value=(paths, '*.csv'))
-        print(paths)
-        wxdata_downloader.btn_selectRaw_isClicked()
+#    for station in stations:
+#        paths = []
+#        for file in filenames:
+#            paths.append(os.path.join(dirname, station, file))
+#
+#        mocker.patch.object(QFileDialog, 'getOpenFileNames',
+#                            return_value=(paths, '*.csv'))
+#        print(paths)
+#        wxdata_downloader.btn_selectRaw_isClicked()
 
     # Assert that the concatenated files were not saved.
 #    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
