@@ -16,11 +16,7 @@ def main():
     """
     Run pytest tests.
     """
-    errno = pytest.main(['-x', 'WHAT',  '-v', '-rw', '--durations=10',
-                         '--cov=WHAT'])
-
-    if errno != 0:
-        raise SystemExit(errno)
+    pytest.main(['-x', 'WHAT',  '-v', '-rw', '--durations=10', '--cov=WHAT'])
 
 
 if __name__ == '__main__':
