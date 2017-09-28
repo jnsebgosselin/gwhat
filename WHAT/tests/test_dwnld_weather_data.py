@@ -263,7 +263,6 @@ def test_merge_widget(downloader_bot, mocker):
     wxdata_downloader.show()
 
     qtbot.waitActive(wxdata_downloader, timeout=3000)
-    qtbot.wait(3000)
 
     projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
     wxdata_downloader.set_workdir(projetpath)
