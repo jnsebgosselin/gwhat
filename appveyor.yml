@@ -6,7 +6,7 @@ init:
 
 environment:
   my_variable:
-    secure: C6f+X1lfx0nlwaBgRIbl3vEwy+EOkw7OAlkQquh76IK7Oz9JRhcwqj7/lSeumDIL
+    COVERALLS_REPO_TOKEN: C6f+X1lfx0nlwaBgRIbl3vEwy+EOkw7OAlkQquh76IK7Oz9JRhcwqj7/lSeumDIL
 
   global:
     PYTHON: "C:\\conda"
