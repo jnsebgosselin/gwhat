@@ -280,11 +280,10 @@ def test_merge_widget(downloader_bot, mocker):
             assert os.path.exists(filepath)
             paths.append(filepath)
 
-        ConcatenatedDataFrame(paths)
 
 #        mocker.patch.object(QFileDialog, 'getOpenFileNames',
 #                            return_value=(paths, '*.csv'))
-#        wxdata_downloader.concatenate_and_display(paths)
+        wxdata_downloader.concatenate(paths)
 #        print(paths)
 #        wxdata_downloader.btn_selectRaw_isClicked()
 
