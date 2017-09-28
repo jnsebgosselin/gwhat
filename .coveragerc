@@ -9,6 +9,7 @@ omit =
     */Reference/*
     */Releases/*
     */User_Manual/*
+    */tests/*
 
 [report]
 fail_under=0
