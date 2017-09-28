@@ -200,6 +200,7 @@ class DwnldWeatherWidget(QWidget):
         btn_selectRaw.setIcon(IconDB().openFile)
         btn_selectRaw.setToolTip('Select and format raw weather data files')
         btn_selectRaw.setIconSize(IconDB().iconSize2)
+        self.btn_selectRaw = btn_selectRaw
 
         btn_saveMerge = QPushButton('Save')
         btn_saveMerge.setToolTip('Save formated weather data in a csv file')
