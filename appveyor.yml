@@ -5,8 +5,21 @@ init:
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 environment:
+  COVERALLS_SERVICE_NAME: appveyor
   COVERALLS_REPO_TOKEN:
-    - secure: C6f+X1lfx0nlwaBgRIbl3vEwy+EOkw7OAlkQquh76IK7Oz9JRhcwqj7/lSeumDIL
+    secure: C6f+X1lfx0nlwaBgRIbl3vEwy+EOkw7OAlkQquh76IK7Oz9JRhcwqj7/lSeumDIL
+
+  global:
+    PYTHON: "C:\\conda"
+    MINICONDA_VERSION: "latest"
+    CMD_IN_ENV: "cmd /E:ON /V:ON /C .\\ci-helpers\\appveyor\\windows_sdk.cmd"
+    PYTHON_ARCH: "64"
+    PIP_DEPENDENCIES_FLAGS: "-q"
+    CONDA_DEPENDENCIES_FLAGS: "--quiet"
+    CONDA_DEPENDENCIES: >
+      mock pytest pytest-cov scipy matplotlib
+    PIP_DEPENDENCIES: "pytest-qt pytest-mock pytest-timeout pytest-ordering"
+
   matrix:
     - PYTHON_VERSION: "3.6"
 
@@ -25,19 +38,14 @@ install:
       https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
       Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
         throw "There are newer queued builds for this pull request, failing early." }
+  - "git clone git://github.com/astropy/ci-helpers.git"
+  - "powershell ci-helpers/appveyor/install-miniconda.ps1"
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - pip install pyqt5
-  - pip install h5py
-  - pip install xlsxwriter
+  - "activate test"
   - pip install xlrd
-  - pip install pytest
-  - pip install pytest-qt
-  - pip install pytest-xvfb
-  - pip install pytest-mock
-  - pip install pytest-cov
-  - pip install pytest-ordering
+  - pip install xlsxwriter
+  - pip install h5py
   - pip install coveralls
-  - pip install matplotlib
 
 build: false
 
