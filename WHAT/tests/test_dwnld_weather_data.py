@@ -308,6 +308,7 @@ def test_merge_widget(downloader_bot, mocker):
     qtbot.waitUntil(lambda: wxdata_downloader.btn_goNext.isEnabled())
 
     # Save the file and assert that it was created as expected
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
                         return_value=(filepaths[0], '*.csv'))
     qtbot.mouseClick(wxdata_downloader.btn_saveMerge, Qt.LeftButton)
     qtbot.waitUntil(lambda: os.path.exists(filepaths[0]))
@@ -321,6 +322,7 @@ def test_merge_widget(downloader_bot, mocker):
     qtbot.waitUntil(lambda: not wxdata_downloader.btn_goNext.isEnabled())
 
     # Save the file and assert that it was created as expected
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
                         return_value=(filepaths[-1], '*.csv'))
     qtbot.mouseClick(wxdata_downloader.btn_saveMerge, Qt.LeftButton)
     qtbot.waitUntil(lambda: os.path.exists(filepaths[-1]))
@@ -334,6 +336,7 @@ def test_merge_widget(downloader_bot, mocker):
     qtbot.waitUntil(lambda: wxdata_downloader.btn_goNext.isEnabled())
 
     # Save the file and assert that it was created as expected
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
                         return_value=(filepaths[-2], '*.csv'))
     qtbot.mouseClick(wxdata_downloader.btn_saveMerge, Qt.LeftButton)
     qtbot.waitUntil(lambda: os.path.exists(filepaths[-2]))
