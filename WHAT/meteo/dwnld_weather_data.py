@@ -595,7 +595,7 @@ class DwnldWeatherWidget(QWidget):
         self.mergeHistoryLog.append(html)
         self.mergeHistoryIndx = len(self.mergeHistoryLog) - 1
         self.mergeHistoryFnames.append(filepaths)
-        # self.display_mergeHistory()
+        self.display_mergeHistory()
 
         if self.saveAuto_checkbox.isChecked():
             dirname = os.path.join(self.workdir, 'Meteo', 'Input')
