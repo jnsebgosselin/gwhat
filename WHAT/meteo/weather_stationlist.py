@@ -84,7 +84,7 @@ class WeatherSationList(list):
                 with open(filelist, 'r') as f:
                     reader = list(csv.reader(f, delimiter=d))
                     assert reader[0] == self.HEADER
-            except AssertionError:
+            except (AssertionError, IndexError):
                 continue
             else:
                 self.extend(reader[1:])
@@ -92,8 +92,8 @@ class WeatherSationList(list):
             return
 
     def get_file_content(self):
-        file_content = copy(self.HEADER)
-        file_content = file_content.extend(self)
+        file_content = copy(self)
+        file_content.insert(0, self.HEADER)
         return file_content
 
     def save_to_file(self, filename):
@@ -113,4 +113,8 @@ class WeatherSationList(list):
 
 
 if __name__ == '__main__':
-    pass
+    fname = ("C:\\Users\\jsgosselin\\OneDrive\\WHAT\\WHAT\\tests\\"
+             "@ new-prô'jèt!\\weather_station_list.lst")
+    stationlist = WeatherSationList(fname)
+    filecontent = stationlist.get_file_content()
+    stationlist.save_to_file("test.csv")
