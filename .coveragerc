@@ -1,4 +1,5 @@
 [run]
+source = ./WHAT
 omit = 
     */Backup/*
     */Images/*  
