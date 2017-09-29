@@ -15,7 +15,7 @@ def main():
     """
     Run pytest tests.
     """
-    pytest.main(['-x', 'WHAT',  '-v', '-rw', '--durations=10', '--cov'])
+    pytest.main(['-x', 'WHAT',  '-v', '-rw', '--durations=10', '--cov=WHAT'])
 
 
 if __name__ == '__main__':
