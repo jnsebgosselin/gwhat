@@ -88,7 +88,7 @@ def test_load_old_stationlist(downloader_bot):
     assert station_list == expected_result
 
     # Assert that the data are stored correctly in the widget table.
-    list_from_table = wxdata_downloader.station_table.get_staList()
+    list_from_table = wxdata_downloader.station_table.get_stationlist()
     assert list_from_table == expected_result
 
 
@@ -121,11 +121,11 @@ def test_load_stationlist(downloader_bot, mocker):
     wxdata_downloader.btn_browse_staList_isClicked()
 
     # Assert that the data are stored correctly in the widget table.
-    assert expected_result == wxdata_downloader.station_table.get_staList()
+    assert expected_result == wxdata_downloader.station_table.get_stationlist()
 
     # Try to open a station list when the file does not exist.
     wxdata_downloader.load_stationList("dummy.lst")
-    assert [] == wxdata_downloader.station_table.get_staList()
+    assert [] == wxdata_downloader.station_table.get_stationlist()
 
 
 @pytest.mark.run(order=3)
@@ -157,7 +157,7 @@ def test_delete_add_stations(downloader_bot, mocker):
         widget = item.widget()
         qtbot.mouseClick(widget, Qt.LeftButton)
     wxdata_downloader.btn_delSta_isClicked()
-    assert expected_result == station_table.get_staList()
+    assert expected_result == station_table.get_stationlist()
 
     # Save station list.
     fname = os.path.join(dirname, "cleaned_station_list.lst")
@@ -180,18 +180,18 @@ def test_delete_add_stations(downloader_bot, mocker):
         ["MONTREAL/ST-HUBERT A", "5490", "1928", "2015", "QC", "7027320",
          "24.85"]]
     wxdata_downloader.add_stations2list(original_list)
-    assert expected_result == station_table.get_staList()
+    assert expected_result == station_table.get_stationlist()
 
     # Clear completely the station list.
     station_table.chkbox_header.setCheckState(Qt.CheckState(True))
     assert len(station_table.get_checked_rows()) == len(expected_result)
 
     wxdata_downloader.btn_delSta_isClicked()
-    assert [] == station_table.get_staList()
+    assert [] == station_table.get_stationlist()
 
     # Add back the stations that were deleted.
     wxdata_downloader.add_stations2list(original_list)
-    assert original_list == station_table.get_staList()
+    assert original_list == station_table.get_stationlist()
 
 
 @pytest.mark.run(order=3)

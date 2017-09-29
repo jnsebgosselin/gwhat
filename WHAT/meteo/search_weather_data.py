@@ -19,23 +19,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from __future__ import division, unicode_literals
-
 # ---- Standard library imports
 
-try:
-    from urllib2 import urlopen, URLError
-except ImportError:
-    from urllib.request import URLError, urlopen
+from urllib.request import URLError, urlopen
 from datetime import datetime
 import sys
-import csv
 import time
 import os
 
 # ---- Third party imports
 
-import xlsxwriter
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import QObject, Qt, QPoint, QEvent, QThread
@@ -47,11 +40,8 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
 
 # ---- Local imports
 
-import WHAT.common.database as db
 from WHAT.common import IconDB, StyleDB
-
-
-# =============================================================================
+from WHAT.meteo.weather_stationlist import WeatherSationList
 
 
 class StationFinder(QObject):
@@ -413,9 +403,6 @@ class StationFinder(QObject):
         return staInfo
 
 
-# =============================================================================
-
-
 class Search4Stations(QWidget):
     '''
     Widget that allows the user to search for weather stations on the
@@ -686,15 +673,12 @@ class Search4Stations(QWidget):
 
         toolbar_widg.setLayout(toolbar_grid)
 
-        # ---------------------------------------------------- Left Panel ----
+        # ---- Left Panel
 
         panel_title = QLabel('<b>Weather Station Search Criteria :</b>')
 
         left_panel = QFrame()
         left_panel_grid = QGridLayout()
-
-#        self.statusBar = QStatusBar()
-#        self.statusBar.setSizeGripEnabled(False)
 
         row = 0
         left_panel_grid.addWidget(panel_title, row, 0)
@@ -704,22 +688,20 @@ class Search4Stations(QWidget):
         left_panel_grid.addWidget(self.year_widg, row, 0)
         row += 1
         left_panel_grid.addWidget(toolbar_widg, row, 0)
-#        row += 1
-#        right_panel_grid.addWidget(self.statusBar, row, 0)
 
         left_panel_grid.setVerticalSpacing(20)
         left_panel_grid.setRowStretch(row+1, 100)
         left_panel_grid.setContentsMargins(0, 0, 0, 0)   # (L, T, R, B)
         left_panel.setLayout(left_panel_grid)
 
-        # ------------------------------------------------------ MAIN GRID ----
+        # ----- Main grid
 
-        # ---- Widgets ----
+        # Widgets
 
         vLine1 = QFrame()
         vLine1.setFrameStyle(StyleDB().VLine)
 
-        # ---- GRID ----
+        # Grid
 
         main_layout = QGridLayout(self)
 
@@ -734,8 +716,6 @@ class Search4Stations(QWidget):
         main_layout.setContentsMargins(10, 10, 10, 10)  # (L,T,R,B)
         main_layout.setSpacing(15)
         main_layout.setColumnStretch(col, 100)
-
-    # =========================================================================
 
     def show(self):
         super(Search4Stations, self).show()
@@ -780,22 +760,9 @@ class Search4Stations(QWidget):
         ddir = os.path.join(os.getcwd(), 'weather_station_list.csv')
         filename, ftype = QFileDialog().getSaveFileName(
                 self, 'Save normals', ddir, '*.csv;;*.xlsx;;*.xls')
-
-        station_list = self.station_table.get_staList()
-        station_list.insert(0, db.FileHeaders().weather_stations[0])
-
-        if ftype in ['*.xlsx', '*.xls']:
-            wb = xlsxwriter.Workbook(filename)
-            ws = wb.add_worksheet()
-            for i, row in enumerate(station_list):
-                ws.write_row(i, 0, row)
-        elif ftype == '*.csv':
-            with open(filename, 'w', encoding='utf8')as f:
-                writer = csv.writer(f, delimiter=',', lineterminator='\n')
-                writer.writerows(station_list)
+        self.station_table.save_stationlist(filename)
 
     def btn_addSta_isClicked(self):
-
         rows = self.station_table.get_checked_rows()
         if len(rows) > 0:
             staList = self.station_table.get_content4rows(rows)
@@ -821,13 +788,13 @@ class Search4Stations(QWidget):
             self.btn_search.setEnabled(False)
             return
 
-        # Update UI state :
+        # Update UI state.
         self.year_widg.setEnabled(False)
         self.tab_widg.setEnabled(False)
         self.btn_search.setIcon(IconDB().stop)
         self.station_table.clearContents()
 
-        # Set the attributes of the finder:
+        # Set the attributes of the finder.
         self.finder.prov = self.prov
         self.finder.lat = self.lat
         self.finder.lon = self.lon
@@ -837,7 +804,7 @@ class Search4Stations(QWidget):
         self.finder.nbr_of_years = self.nbr_of_years
         self.finder.search_by = self.search_by
 
-        # Start searching for weather station :
+        # Start searching for weather station.
         self.thread.started.connect(self.finder.search_envirocan)
         self.thread.start()
 
@@ -859,16 +826,13 @@ class Search4Stations(QWidget):
                 return
         self.thread.started.disconnect(self.finder.search_envirocan)
 
-        # ---- Reset the UI ----
+        # Reset the UI.
 
         self.finder.stop_searching = False
         self.btn_search.setEnabled(True)
         self.btn_search.setIcon(IconDB().search)
         self.year_widg.setEnabled(True)
         self.tab_widg.setEnabled(True)
-
-
-# =============================================================================
 
 
 class WeatherStationDisplayTable(QTableWidget):
@@ -895,7 +859,7 @@ class WeatherStationDisplayTable(QTableWidget):
         self.setAlternatingRowColors(True)
         self.setMinimumWidth(650)
 
-        # --------------------------------------------------------- Header ----
+        # ---- Header
 
         # http://stackoverflow.com/questions/9744975/
         # pyside-pyqt4-adding-a-checkbox-to-qtablewidget-
@@ -913,7 +877,7 @@ class WeatherStationDisplayTable(QTableWidget):
         self.setHorizontalHeaderLabels(HEADER)
         self.verticalHeader().hide()
 
-        # --------------------------------------------- Column Size Policy ----
+        # ---- Column Size Policy
 
 #        self.setColumnHidden(6, True)
         self.setColumnHidden(7, True)
@@ -926,7 +890,7 @@ class WeatherStationDisplayTable(QTableWidget):
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
 
-        # --------------------------------------------------------- Events ----
+        # ---- Events
 
         self.chkbox_header.stateChanged.connect(self.chkbox_header_isClicked)
 
@@ -1171,11 +1135,14 @@ class WeatherStationDisplayTable(QTableWidget):
     # -------------------------------------------------------------------------
 
     def get_content4rows(self, rows):
-        ''' Grabs weather station info save them in a list.'''
+        """
+        Grab the weather station info for the specified rows and
+        save the results in a list.
+        """
 
-        station_list = []
+        stationlist = WeatherSationList()
         for row in rows:
-            station_list.append(
+            stationlist.append(
                     [self.item(row, 1).text(),   # 0: name
                      self.item(row, 7).text(),   # 1: database ID
                      self.item(row, 3).text(),   # 2: from year
@@ -1184,15 +1151,16 @@ class WeatherStationDisplayTable(QTableWidget):
                      self.item(row, 6).text(),   # 5: climate ID
                      self.item(row, 2).text()])  # 6: proximity
             if self.year_display_mode == 1:
-                station_list[-1][2] = self.cellWidget(row, 3).currentText()
-                station_list[-1][3] = self.cellWidget(row, 4).currentText()
+                stationlist[-1][2] = self.cellWidget(row, 3).currentText()
+                stationlist[-1][3] = self.cellWidget(row, 4).currentText()
 
-        return station_list
+        return stationlist
 
-    def get_staList(self):
-        station_list = []
+    def get_stationlist(self):
+        """Get and format the content of the QTableWidget."""
+        stationlist = WeatherSationList()
         for row in range(self.rowCount()):
-            station_list.append(
+            stationlist.append(
                     [self.item(row, 1).text(),   # 0: name
                      self.item(row, 7).text(),   # 1: database ID
                      self.item(row, 3).text(),   # 2: from year
@@ -1201,15 +1169,12 @@ class WeatherStationDisplayTable(QTableWidget):
                      self.item(row, 6).text(),   # 5: climate ID
                      self.item(row, 2).text()])  # 6: proximity
 
-        return station_list
+        return stationlist
 
-    def save_staList(self, filename):
-        station_list = self.get_staList()
-        station_list.insert(0, db.FileHeaders().weather_stations[0])
-
-        with open(filename, 'w', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter=',', lineterminator='\n')
-            writer.writerows(station_list)
+    def save_stationlist(self, filename):
+        """Save the content of the QTableWidget to file."""
+        stationlist = self.get_stationlist()
+        stationlist.save_to_file(filename)
 
 
 def decdeg2dms(dd):

@@ -64,7 +64,7 @@ def test_search_weather_station(station_finder_bot, mocker):
     assert results == expected_results
 
     # Assert that the results are displayed correctly in the UI.
-    assert (station_finder_widget.station_table.get_staList() ==
+    assert (station_finder_widget.station_table.get_stationlist() ==
             station_finder_widget.finder.stationlist)
 
     # Mock the dialog window and answer to specify the file name and type.
@@ -117,7 +117,7 @@ def test_stop_search(station_finder_bot):
     assert results == expected_results[:len(results)]
 
     # Assert that the results are displayed correctly in the UI
-    assert (station_finder_widget.station_table.get_staList() ==
+    assert (station_finder_widget.station_table.get_stationlist() ==
             station_finder_widget.finder.stationlist)
 
     # Restart the search and let it fihish completely and assert the results.
@@ -129,7 +129,7 @@ def test_stop_search(station_finder_bot):
     assert results == expected_results
 
     # Assert that the results are displayed correctly in the UI
-    assert (station_finder_widget.station_table.get_staList() ==
+    assert (station_finder_widget.station_table.get_stationlist() ==
             station_finder_widget.finder.stationlist)
 
 
