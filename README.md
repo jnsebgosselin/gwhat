@@ -4,7 +4,7 @@ Copyright 2014-2017 © Jean-Sébastien Gosselin
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE)
 [![Travis status](https://travis-ci.org/jnsebgosselin/what.svg?branch=master)](https://travis-ci.org/jnsebgosselin/what)
-[![Build status](https://ci.appveyor.com/api/projects/status/poha8kce7bugrmh8/branch/master?svg=true)](https://ci.appveyor.com/project/jnsebgosselin/what-16b6q/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/uj5tjpy9lnehb4qb/branch/master?svg=true)](https://ci.appveyor.com/project/jnsebgosselin/what/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/jnsebgosselin/what/badge.svg?branch=master)](https://coveralls.io/github/jnsebgosselin/what?branch=master)
 
 News (2015-07-27): A <b>user guide</b> is available for download [here](https://github.com/jnsebgosselin/WHAT/raw/master/User_Manual/WHATMANUAL.pdf). The guide only covers, for the time being, the creation of gapless daily weather datasets, including the downloading and formatting of weather data from the online Canadian Daily Climatic Database (CDCD).
