@@ -289,23 +289,24 @@ class DwnldWeatherWidget(QWidget):
                 Qt.CheckState(False))
 
     def add_stations2list(self, staList2add):
+        """
+        Add to the table widget the stations from the list provided as argument
+        that are not already in the table widvet.
+        """
         staList2grow = self.station_table.get_stationlist()
-
         if len(staList2grow) == 0:
             self.station_table.populate_table(staList2add)
         else:
-            StationID = np.array(staList2grow)[:, 1].astype(str)
+            stationids = [str(row[1]) for row in staList2grow]
             for station in staList2add:
-                indx = np.where(StationID == station[1])[0]
-                if len(indx) > 0:
-                    print('Station %s already in list and was not added.'
+                if station[1] in stationids:
+                    print('Station %s is already in list and was not added.'
                           % station[0])
                 else:
                     print('Station %s added to list.' % station[0])
-                    staList2grow.append(station)
-
                     self.staList_isNotSaved = True
                     self.staList_fname = None
+                    staList2grow.append(station)
 
             self.station_table.populate_table(staList2grow)
 
