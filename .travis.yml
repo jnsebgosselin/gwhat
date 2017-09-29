@@ -4,7 +4,6 @@ language: python
 python: "3.6"
 
 install:
-  - sudo apt-get update
   - pip install pyqt5
   - sudo apt-get install cython3
   - sudo apt-get install libhdf5-dev
@@ -22,7 +21,6 @@ install:
 
 script:
   python runtests.py
-  # - coverage run --source=WHAT --cov=WHAT --cov-report=term-missing -m py.test
 
 after_success:
   - coveralls
