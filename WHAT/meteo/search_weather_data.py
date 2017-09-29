@@ -19,14 +19,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from __future__ import division, unicode_literals
-
 # ---- Standard library imports
 
-try:
-    from urllib2 import urlopen, URLError
-except ImportError:
-    from urllib.request import URLError, urlopen
+from urllib.request import URLError, urlopen
 from datetime import datetime
 import sys
 import csv
