@@ -46,9 +46,7 @@ from WHAT.common import IconDB, QToolButtonNormal, QToolButtonSmall
 import WHAT.common.widgets as myqt
 from WHAT.meteo.search_weather_data import WeatherStationDisplayTable
 from WHAT.meteo.search_weather_data import Search4Stations
-
-
-# =============================================================================
+from WHAT.meteo.weather_stationlist import WeatherSationList
 
 
 class DwnldWeatherWidget(QWidget):
@@ -66,7 +64,7 @@ class DwnldWeatherWidget(QWidget):
 
         self.set_workdir(getcwd())
 
-        self.staList_fname = []
+        self.staList_fname = None
         self.staList_isNotSaved = False
 
         self.mergeHistoryLog = []
@@ -284,39 +282,38 @@ class DwnldWeatherWidget(QWidget):
         else:
             print('No weather station selected.')
 
-        # Unckeck header ckbox if list is cleared :
+        # Unckeck header ckbox if list is cleared.
         nrow = self.station_table.rowCount()
         if nrow == 0:
             self.station_table.chkbox_header.setCheckState(
                 Qt.CheckState(False))
 
     def add_stations2list(self, staList2add):
-        staList2grow = self.station_table.get_staList()
+        staList2grow = self.station_table.get_stationlist()
 
         if len(staList2grow) == 0:
-            staList2grow = staList2add
+            self.station_table.populate_table(staList2add)
         else:
             StationID = np.array(staList2grow)[:, 1].astype(str)
-            for row in range(len(staList2add)):
-                sta2add = staList2add[row]
-                indx = np.where(StationID == sta2add[1])[0]
+            for station in staList2add:
+                indx = np.where(StationID == station[1])[0]
                 if len(indx) > 0:
                     print('Station %s already in list and was not added.'
-                          % sta2add[0])
+                          % station[0])
                 else:
-                    print('Station %s added to list.' % sta2add[0])
-                    staList2grow.append(sta2add)
+                    print('Station %s added to list.' % station[0])
+                    staList2grow.append(station)
 
                     self.staList_isNotSaved = True
-                    self.staList_fname = []
+                    self.staList_fname = None
 
-        self.station_table.populate_table(staList2grow)
+            self.station_table.populate_table(staList2grow)
 
     def btn_browse_staList_isClicked(self):
-        '''
+        """
         Allows the user to select a weather station list with
         a 'lst' extension.
-        '''
+        """
 
         filename, _ = QFileDialog.getOpenFileName(
                           self, 'Select a valid station list',
@@ -327,82 +324,39 @@ class DwnldWeatherWidget(QWidget):
             self.load_stationList(filename)
 
     def load_stationList(self, filename):
-        '''
-        It loads the informations in the weather stations list file (.lst) that
-        is located in "filename". The content is then displayed in a
-        QTableWidget named "station_table".
-
-        ----- weather_stations.lst -----
-
-        The weather_station.lst is a csv file that contains the following
-        information:  station names, station ID , date at which the data
-        records begin and date at which the data records end, the provinces
-        to which each station belongs, the climate ID and the Proximity
-        value in km for the original search location.
-
-        All these information can be found on the Government of Canada
-        website in the address bar of the web browser when a station is
-        selected. Note that the station ID is not the same as the Climate ID
-        of the station. For example, the ID for the station Abercorn is 5308,
-        as it can be found in the following address:
-
-        "http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
-         2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
-         1985&Month=1&Day=01"
-        '''
-
-        # ----- Check if file exists ----
-
-        # In case this method is not called from the UI.
+        """
+        Load the informations in the weather station list file (.lst) and
+        send the content to display to the QTableWidget.
+        """
 
         self.staList_isNotSaved = False
+        stationlist = WeatherSationList(filename)
 
-        if not path.exists(filename):
-            msg = ('"%s" not found. Please select an existing weather station'
-                   ' list or search for new stations on the CDCD.'
-                   ) % filename
-            print(msg)
-            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-
-            self.station_table.populate_table(staList=[])
-            self.staList_fname = []
-
-            return []
-
-        # ----- Open file ----
-
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter=','))
-
-        if reader[0] != db.FileHeaders().weather_stations[0]:
-            with open(filename, 'r') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
-
-        # ---- Load list in UI ----
-
-        if len(reader) > 1:
-            msg = 'Weather station list loaded successfully.'
-            print(msg)
-            self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-            staList = reader[1:]
+        if os.path.exists(filename):
+            self.staList_fname = filename
+            if len(stationlist) > 1:
+                msg = 'Weather station list loaded successfully.'
+                print(msg)
+                self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
+            else:
+                msg = 'Weather station list is empty.'
+                print(msg)
+                self.ConsoleSignal.emit('<font color=#C83737>%s</font>' % msg)
         else:
-            msg = 'Weather station list is empty.'
+            msg = 'The weather station list does not exist.'
             print(msg)
             self.ConsoleSignal.emit('<font color=#C83737>%s</font>' % msg)
-            staList = []
+            self.staList_fname = None
 
-        self.station_table.populate_table(staList)
-        self.staList_fname = filename
+        self.station_table.populate_table(stationlist)
 
-        return staList
+        return stationlist
 
     def btn_save_staList_isClicked(self):
-        filename = self.staList_fname
-        if filename:
-            msg = 'Station list saved in %s' % filename
-            print(msg)
+        if self.staList_fname:
+            msg = 'Station list saved in %s' % self.staList_fname
             self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-            self.station_table.save_staList(filename)
+            self.station_table.save_stationlist(self.staList_fname)
             self.staList_isNotSaved = False
         else:
             self.btn_saveAs_staList_isClicked()
@@ -413,16 +367,16 @@ class DwnldWeatherWidget(QWidget):
                            self, "Save Weather Stations List", fname, '*.lst')
 
         if fname:
-            if fname[-4:] != ftype[1:]:
+            root, ext = os.path.splitext(fname)
+            if ext != ftype[1:]:
                 # Add a file extension if there is none
                 fname = fname + ftype[1:]
 
-            self.station_table.save_staList(fname)
+            self.station_table.save_stationlist(fname)
             self.staList_fname = fname
             self.staList_isNotSaved = False
 
             msg = 'Station list saved in %s' % fname
-            print(msg)
             self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
     # ---- Download process
@@ -438,6 +392,8 @@ class DwnldWeatherWidget(QWidget):
             self.start_download_process()
 
     def start_download_process(self):
+        """Start the downloading process of raw weather data files."""
+
         # Grab the info of the weather stations that are selected.
         rows = self.station_table.get_checked_rows()
         self.staList2dwnld = self.station_table.get_content4rows(rows)
