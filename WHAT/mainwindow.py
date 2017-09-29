@@ -89,10 +89,10 @@ freeze_support()
 headerDB = []
 
 
-class WHAT(QMainWindow):
+class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
-        super(WHAT, self).__init__(parent)
+        super(MainWindow, self).__init__(parent)
 
         self.setWindowTitle(__version__)
         self.setWindowIcon(IconDB().master)
@@ -198,7 +198,7 @@ class WHAT(QMainWindow):
                            ' jean-sebastien.gosselin@ete.inrs.ca.'
                            '</font>')
 
-        # ---- Signal Piping ----
+        # ---- Signal Piping
 
         issuer = self.tab_dwnld_data
         issuer.ConsoleSignal.connect(self.write2console)
@@ -209,7 +209,7 @@ class WHAT(QMainWindow):
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)
 
-        # ------------------------------------------------ Splitter Widget ----
+        # ---- Splitter Widget
 
         splitter = QSplitter(self)
         splitter.setOrientation(Qt.Vertical)
@@ -222,7 +222,7 @@ class WHAT(QMainWindow):
         # Forces initially the main_console to its minimal height:
         splitter.setSizes([100, 1])
 
-        # ------------------------------------------------------ Main Grid ----
+        # ---- Main Grid
 
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -236,7 +236,7 @@ class WHAT(QMainWindow):
     # =========================================================================
 
     def show(self):
-        super(WHAT, self).showMaximized()
+        super(MainWindow, self).showMaximized()
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
@@ -254,8 +254,8 @@ class WHAT(QMainWindow):
 
     def sync_datamanagers(self):
         """
-        Move the data manager from tab _Plot Hydrograph_ to tab
-        _Analyze Hydrograph_ and vice-versa.
+        Move the data manager from tab "Plot Hydrograph" to tab
+        "Analyze Hydrograph" and vice-versa.
         """
         current = self.tab_widget.tabBar().currentIndex()
         if current == 3:
@@ -268,12 +268,12 @@ class WHAT(QMainWindow):
         filename = self.pmanager.projet.filename
         dirname = os.path.dirname(filename)
 
-        # Update WHAT.pref file :
+        # Update WHAT.pref file.
 
         self.whatPref.projectfile = filename
         self.whatPref.save_pref_file()
 
-        # Update UI :
+        # Enable UI.
 
         self.tab_dwnld_data.setEnabled(True)
         self.tab_fill_weather_data.setEnabled(True)
@@ -386,7 +386,7 @@ if __name__ == '__main__':                                   # pragma: no cover
     logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s:%(message)s')
     try:
-        main = WHAT()
+        main = MainWindow()
         main.show()
         splash.finish(main)
         sys.exit(app.exec_())
