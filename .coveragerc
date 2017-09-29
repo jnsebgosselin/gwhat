@@ -1,15 +1,7 @@
 [run]
-source = ./WHAT
 omit = 
-    */Backup/*
-    */Images/*  
-    */Projects/*
-    */PyInstaller 3.2.1-dev/*
-    */PyInstaller-3.2.1/*
-    */Reference/*
-    */Releases/*
-    */User_Manual/
     */tests/*
+data_file = .coverage
 
 [report]
 # Regexes for lines to exclude from consideration
