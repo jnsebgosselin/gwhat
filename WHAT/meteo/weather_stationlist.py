@@ -89,6 +89,7 @@ class WeatherSationList(list):
             else:
                 self.extend(reader[1:])
         else:
+            print("Failed to load %s" % filelist)
             return
 
     def get_file_content(self):
