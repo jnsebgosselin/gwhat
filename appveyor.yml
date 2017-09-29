@@ -27,7 +27,7 @@ install:
         throw "There are newer queued builds for this pull request, failing early." }
   - cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
   - python -m pip install sip
-  - python -m pip instal pyqt5
+  - python -m pip install pyqt5
   - python -m pip install h5py
   - python -m pip install xlsxwriter
   - python -m pip install xlrd
