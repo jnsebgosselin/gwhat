@@ -8,7 +8,6 @@ Created on Fri Aug  4 01:50:50 2017
 
 import os
 from datetime import datetime
-import time
 
 # ---- Third party imports
 
@@ -17,9 +16,8 @@ from PyQt5.QtCore import Qt
 
 # ---- Local imports
 
-from WHAT.meteo.dwnld_weather_data import (
-        DwnldWeatherWidget, RawDataDownloader, ConcatenatedDataFrame,
-        QFileDialog, QMessageBox)
+from WHAT.meteo.dwnld_weather_data import (DwnldWeatherWidget, QFileDialog,
+                                           RawDataDownloader, QMessageBox)
 
 
 # Qt Test Fixtures
