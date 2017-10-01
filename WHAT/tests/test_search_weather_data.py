@@ -103,8 +103,8 @@ def test_stop_search(station_finder_bot):
         ]
 
     # Start the search.
-    newStationFound = station_finder_widget.finder.newStationFound
-    with qtbot.waitSignal(newStationFound, raising=True, timeout=60000):
+    sig_newstation_found = station_finder_widget.finder.sig_newstation_found
+    with qtbot.waitSignal(sig_newstation_found, raising=True, timeout=60000):
         station_finder_widget.btn_search_isClicked()
 
     # Stop the search as soon as we received a result and assert the results.
