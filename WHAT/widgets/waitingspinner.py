@@ -28,6 +28,8 @@ SOFTWARE.
 
 import math
 
+from PyQt5.QtCore import Qt, QTimer, QRect
+from PyQt5.QtGui import QColor, QPainter
 from PyQt5.QtWidgets import QWidget
 
 
