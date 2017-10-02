@@ -43,6 +43,8 @@ class StationFinder(QObject):
     sig_newstation_found = QSignal(list)
     ConsoleSignal = QSignal(str)
 
+    PAGE_NRESULT = 100  # Number of results per page (maximu m possible is 100)
+
     def __init__(self, parent=None):
         super(StationFinder, self).__init__(parent)
 
@@ -62,33 +64,8 @@ class StationFinder(QObject):
         self.debug_mode = False
         self.station_nbr_found = 0
 
-    def search_envirocan(self):
-        """
-        Search on the Government of Canada website for weather stations with
-        daily meteo data around a decimal degree Lat & Lon coordinate with a
-        radius given in km.
-
-        The results are returned in a list formatted ready to be
-        read by WHAT UI. A signal is emitted with the list if the process is
-        completed successfully.
-
-        If no results are found, only the header is return with an empty
-        list of station.
-
-        If an error is raised, an empty list is returned.
-        """
-
-        print('Searching weather station on www.http://climate.weather.gc.ca.')
-
-        Nmax = 100  # Number of results per page (maximu m possible is 100)
-
-        self.stationlist = []
-        # [station_name, station_id, start_year,
-        #  end_year, province, climate_id, station_proxim]
-
-        # ---- Define url
-
-        # Last updated: May 25th, 2016
+    def get_url(self):
+        """Produce the url that is used to access the CDCD database."""
 
         url = ('http://climate.weather.gc.ca/historical_data/'
                'search_historic_data_stations_e.html?')
@@ -113,15 +90,40 @@ class StationFinder(QObject):
         url += '&StartYear=%d' % self.year_min
         url += '&EndYear=%d' % self.year_max
         url += '&Year=2013&Month=6&Day=4'
-        url += '&selRowPerPage=%d' % Nmax
+        url += '&selRowPerPage=%d' % self.PAGE_NRESULT
 
         if self.search_by == 'proximity':
             url += '&cmdProxSubmit=Search'
         elif self.search_by == 'province':
             url += '&cmdProvSubmit=Search'
 
+        return url
+
+    def search_envirocan(self):
+        """
+        Search on the Government of Canada website for weather stations with
+        daily meteo data around a decimal degree Lat & Lon coordinate with a
+        radius given in km.
+
+        The results are returned in a list formatted ready to be
+        read by WHAT UI. A signal is emitted with the list if the process is
+        completed successfully.
+
+        If no results are found, only the header is return with an empty
+        list of station.
+
+        If an error is raised, an empty list is returned.
+        """
+
+        print('Searching weather station on www.http://climate.weather.gc.ca.')
+
+        self.stationlist = []
+        # [station_name, station_id, start_year,
+        #  end_year, province, climate_id, station_proxim]
+
         # ---- Fetch data
 
+        url = self.get_url()
         try:
             if self.isOffline:
                 with open('url.txt', 'r') as f:
@@ -166,7 +168,7 @@ class StationFinder(QObject):
 
             # Fetch stations page per page :
 
-            Npage = int(np.ceil(Nsta / float(Nmax)))
+            Npage = int(np.ceil(Nsta / float(self.PAGE_NRESULT)))
             print('Total number of page = % d' % Npage)
 
             staCount = 0  # global station counter
@@ -176,7 +178,7 @@ class StationFinder(QObject):
                     return
 
                 print('Page :', page)
-                startRow = (Nmax * page) + 1
+                startRow = (self.PAGE_NRESULT * page) + 1
                 url4page = url + '&startRow=%d' % startRow
                 if self.isOffline:
                     with open('url.txt') as f:
@@ -270,7 +272,8 @@ class StationFinder(QObject):
                                 self.searchFinished.emit(self.stationlist)
                                 return
 
-                            staInfo = self.get_staInfo(province, station_id)
+                            staInfo = self.get_station_info(province,
+                                                            station_id)
                             climate_id = staInfo[5]
 
                             # ---- Send Signal to UI ----
@@ -322,7 +325,7 @@ class StationFinder(QObject):
 
         return self.stationlist
 
-    def get_staInfo(self, Prov, StationID):
+    def get_station_info(self, Prov, StationID):
         """
         Fetch the Climate Id for a given station. This ID is used to identify
         the station in the CDCD, but not for downloading the data from
@@ -1239,7 +1242,7 @@ def dms2decdeg(deg, mnt, sec):
     return dd
 
 
-if __name__ == '__main__':                                   # pragma: no cover
+if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
@@ -1260,6 +1263,6 @@ if __name__ == '__main__':                                   # pragma: no cover
     search4sta.show()
 
 #    search4sta.search_envirocan()
-#    search4sta.get_staInfo('QC', 5406)
+#    search4sta.get_station_info('QC', 5406)
 
     sys.exit(app.exec_())
