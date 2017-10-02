@@ -64,8 +64,8 @@ class StationFinder(QObject):
         self.debug_mode = False
         self.station_nbr_found = 0
 
-    def get_url(self):
-        """Produce the url that is used to access the CDCD database."""
+    def get_base_url(self):
+        """Produce the base url that is used to access the CDCD database."""
 
         url = ('http://climate.weather.gc.ca/historical_data/'
                'search_historic_data_stations_e.html?')
@@ -99,20 +99,45 @@ class StationFinder(QObject):
 
         return url
 
+    def get_html_from_url(self, url):
+        try:
+            with urlopen(url) as f:
+                html = f.read().decode('utf-8', 'replace')
+
+            return html
+
+        except URLError as e:
+            if hasattr(e, 'reason'):
+                msg = 'Failed to reach a server.'
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                print(msg)
+                print('Reason: ', e.reason)
+            elif hasattr(e, 'code'):
+                msg = 'The server couldn\'t fulfill the request.'
+                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+                print(msg)
+                print('Error code: ', e.code)
+
+            return None
+
+    def findUnique(self, pattern, string):
+        result = re.findall(pattern, string)
+        if len(result) > 0:
+            return result[0].strip()
+        else:
+            return None
+
     def search_envirocan(self):
         """
         Search on the Government of Canada website for weather stations with
         daily meteo data around a decimal degree Lat & Lon coordinate with a
-        radius given in km.
+        radius given in km. The results are returned in a list formatted ready
+        to be read by WHAT UI.
 
-        The results are returned in a list formatted ready to be
-        read by WHAT UI. A signal is emitted with the list if the process is
-        completed successfully.
-
-        If no results are found, only the header is return with an empty
-        list of station.
-
-        If an error is raised, an empty list is returned.
+        A signal is emitted with the list if the process is completed
+        successfully. If no results are found, only the header is return with
+        an empty list of station. If an error is raised, an empty list is
+        returned.
         """
 
         print('Searching weather station on www.http://climate.weather.gc.ca.')
@@ -121,208 +146,174 @@ class StationFinder(QObject):
         # [station_name, station_id, start_year,
         #  end_year, province, climate_id, station_proxim]
 
-        # ---- Fetch data
+        # ---- Fetch data.
 
-        url = self.get_url()
+        if self.isOffline:
+            with open('url.txt') as f:
+                html = f.read()
+        else:
+            html = self.get_html_from_url(self.get_base_url())
+            if self.debug_mode:
+                # write downloaded content to local file.
+                with open('url.txt', 'w') as local_file:
+                    local_file.write(html)
+
+        if html is None:
+            print('The search for weather station has failed.')
+            self.searchFinished.emit([])
+            return []
+
+        # ---- Get the number of stations found.
+
         try:
-            if self.isOffline:
-                with open('url.txt', 'r') as f:
-                    stnresults = f.read()
-            else:
-                with urlopen(url) as f:
-                    stnresults = f.read().decode('utf-8', 'replace')
+            nsta = int(self.findUnique('>(.*?)stations found', html))
+            print('%d weather stations found.' % nsta)
+            self.station_nbr_found = nsta
+        except TypeError:
+            self.station_nbr_found = 0
+            msg = 'No weather station found.'
+            print(msg)
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+            self.searchFinished.emit(self.stationlist)
+            return
 
-                if self.debug_mode:
-                    # write downloaded content to local file for
-                    # debugging purpose:
-                    with open('url.txt', 'w') as local_file:
-                        local_file.write(stnresults)
+        # ---- Fetch stations page per page.
 
-            # ---- Number of Stations Found ----
+        Npage = int(np.ceil(nsta/self.PAGE_NRESULT))
+        print('Total number of page = % d' % Npage)
 
-            if self.search_by == 'proximity':
-                txt2find = 'stations found within a search radius'
-            if self.search_by == 'province':
-                txt2find = 'stations found in'
-
-            indx_e = stnresults.find(txt2find, 0)
-            if indx_e == -1:
-                msg = 'No weather station found.'
-                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-                print(msg)
+        staCount = 0  # global station counter
+        for page in range(Npage):
+            if self.stop_searching:
                 self.searchFinished.emit(self.stationlist)
                 return
 
-            # Go backward from indx_e and find where the number starts to
-            # fetch the total number of weather station found :
+            print('Page :', page)
+            startRow = (self.PAGE_NRESULT * page) + 1
+            if self.isOffline:
+                with open('url.txt') as f:
+                    html = f.read()
+            else:
+                url = self.get_base_url() + '&startRow=%d' % startRow
+                self.get_html_from_url(url)
+                if self.debug_mode:
+                    # Write the results in a local file.
+                    filename = 'url4page%d.txt' % page
+                    with open(filename, 'w') as local_file:
+                        local_file.write(html)
 
-            indx_0 = np.copy(indx_e)
-            while 1:
-                indx_0 += -1
-                if stnresults[indx_0] == '>':
-                    indx_0 += 1
+            # Scan each row of the current page.
+            while True:
+
+                # ---- Location of station information block ----
+
+                indx_e = 0
+                txt2find = ('<form action="/climate_data/'
+                            'interform_e.html" method="post" '
+                            'id="stnRequest%d">') % staCount
+
+                n = len(txt2find)
+                indx_0 = html.find(txt2find, indx_e)
+                if indx_0 == -1:
+                    # No result left on this page. Break the loop and
+                    # iterate to the next page if it exists
                     break
-            Nsta = int(stnresults[indx_0:indx_e])
-            print('%d weather stations found.' % Nsta)
-            self.station_nbr_found = Nsta
-
-            # Fetch stations page per page :
-
-            Npage = int(np.ceil(Nsta / float(self.PAGE_NRESULT)))
-            print('Total number of page = % d' % Npage)
-
-            staCount = 0  # global station counter
-            for page in range(Npage):
-                if self.stop_searching:
-                    self.searchFinished.emit(self.stationlist)
-                    return
-
-                print('Page :', page)
-                startRow = (self.PAGE_NRESULT * page) + 1
-                url4page = url + '&startRow=%d' % startRow
-                if self.isOffline:
-                    with open('url.txt') as f:
-                        stnresults = f.read()
                 else:
-                    f = urlopen(url4page)
-                    stnresults = f.read().decode('utf-8')
+                    indx_e = indx_0 + n
 
-                    if self.debug_mode:
-                        # Write result in a local file for debugging purposes:
-                        filename = 'url4page%d.txt' % page
-                        with open(filename, 'w') as local_file:
-                            local_file.write(stnresults)
+                # ---- StartDate and EndDate ----
 
-                # Scan each row of the current page :
-                while 1:
+                txt2find = 'name="dlyRange" value="'
+                n = len(txt2find)
+                indx_0 = html.find(txt2find, indx_e)
+                indx_e = html.find('|', indx_0)
 
-                    # ---- Location of station information block ----
+                start_year = html[indx_0+n:indx_0+n+4]
+                end_year = html[indx_e+1:indx_e+1+4]
 
-                    indx_e = 0
-                    txt2find = ('<form action="/climate_data/'
-                                'interform_e.html" method="post" '
-                                'id="stnRequest%d">') % staCount
+                # ---- StationID ----
 
-                    n = len(txt2find)
-                    indx_0 = stnresults.find(txt2find, indx_e)
-                    if indx_0 == -1:
-                        # No result left on this page. Break the loop and
-                        # iterate to the next page if it exists
-                        break
-                    else:
-                        indx_e = indx_0 + n
+                txt2find = 'name="StationID" value="'
+                indx_0 = html.find(txt2find, indx_e) + len(txt2find)
+                indx_e = html.find('"', indx_0)
 
-                    # ---- StartDate and EndDate ----
+                station_id = html[indx_0:indx_e].strip()
 
-                    txt2find = 'name="dlyRange" value="'
-                    n = len(txt2find)
-                    indx_0 = stnresults.find(txt2find, indx_e)
-                    indx_e = stnresults.find('|', indx_0)
+                # ---- Province ----
 
-                    start_year = stnresults[indx_0+n:indx_0+n+4]
-                    end_year = stnresults[indx_e+1:indx_e+1+4]
+                txt2find = 'name="Prov" value="'
+                indx_0 = html.find(txt2find, indx_e) + len(txt2find)
+                indx_e = html.find('"', indx_0)
 
-                    # ---- StationID ----
+                province = html[indx_0:indx_e].strip()
 
-                    txt2find = 'name="StationID" value="'
-                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
-                    indx_e = stnresults.find('"', indx_0)
+                # ---- Station Name ----
 
-                    station_id = stnresults[indx_0:indx_e].strip()
+                txt2find = ('<div class="col-lg-3 col-md-3'
+                            ' col-sm-3 col-xs-3">')
+                indx_0 = html.find(txt2find, indx_e) + len(txt2find)
+                indx_e = html.find('</div>', indx_0)
 
-                    # ---- Province ----
+                station_name = html[indx_0:indx_e].strip()
 
-                    txt2find = 'name="Prov" value="'
-                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
-                    indx_e = stnresults.find('"', indx_0)
+                # ---- Proximity ----
 
-                    province = stnresults[indx_0:indx_e].strip()
+                if self.search_by == 'proximity':
+                    txt2find = ('<div class="col-lg-2 col-md-2'
+                                ' col-sm-2 col-xs-2">')
+                    indx_0 = (html.find(txt2find, indx_e) +
+                              len(txt2find))
+                    indx_e = html.find('</div>', indx_0)
 
-                    # ---- Station Name ----
+                    station_proxim = html[indx_0:indx_e].strip()
+                elif self.search_by == 'province':
+                    station_proxim = 0
 
-                    txt2find = ('<div class="col-lg-3 col-md-3'
-                                ' col-sm-3 col-xs-3">')
-                    indx_0 = stnresults.find(txt2find, indx_e) + len(txt2find)
-                    indx_e = stnresults.find('</div>', indx_0)
+                if start_year.isdigit():  # daily data exist
+                    year_range = int(end_year)-int(start_year)+1
+                    if year_range >= self.nbr_of_years:
 
-                    station_name = stnresults[indx_0:indx_e].strip()
+                        print("Adding %s to list..." % station_name)
 
-                    # ---- Proximity ----
+                        # ---- Climate ID ----
 
-                    if self.search_by == 'proximity':
-                        txt2find = ('<div class="col-lg-2 col-md-2'
-                                    ' col-sm-2 col-xs-2">')
-                        indx_0 = (stnresults.find(txt2find, indx_e) +
-                                  len(txt2find))
-                        indx_e = stnresults.find('</div>', indx_0)
+                        if self.stop_searching:
+                            self.searchFinished.emit(self.stationlist)
+                            return
 
-                        station_proxim = stnresults[indx_0:indx_e].strip()
-                    elif self.search_by == 'province':
-                        station_proxim = 0
+                        staInfo = self.get_station_info(province,
+                                                        station_id)
+                        climate_id = staInfo[5]
 
-                    if start_year.isdigit():  # daily data exist
-                        year_range = int(end_year)-int(start_year)+1
-                        if year_range >= self.nbr_of_years:
+                        # ---- Send Signal to UI ----
+                        new_station = [station_name, station_id,
+                                       start_year, end_year, province,
+                                       climate_id, station_proxim]
 
-                            print("Adding %s to list..." % station_name)
-
-                            # ---- Climate ID ----
-
-                            if self.stop_searching:
-                                self.searchFinished.emit(self.stationlist)
-                                return
-
-                            staInfo = self.get_station_info(province,
-                                                            station_id)
-                            climate_id = staInfo[5]
-
-                            # ---- Send Signal to UI ----
-                            new_station = [station_name, station_id,
-                                           start_year, end_year, province,
-                                           climate_id, station_proxim]
-
-                            if self.stop_searching:
-                                self.searchFinished.emit(self.stationlist)
-                                return self.stationlist
-                            else:
-                                self.stationlist.append(new_station)
-                                self.sig_newstation_found.emit(new_station)
+                        if self.stop_searching:
+                            self.searchFinished.emit(self.stationlist)
+                            return self.stationlist
                         else:
-                            print("Not adding %s (not enough data)"
-                                  % station_name)
+                            self.stationlist.append(new_station)
+                            self.sig_newstation_found.emit(new_station)
                     else:
-                        print("Not adding %s (no daily data)"
+                        print("Not adding %s (not enough data)"
                               % station_name)
+                else:
+                    print("Not adding %s (no daily data)"
+                          % station_name)
 
-                    staCount += 1
+                staCount += 1
 
-            msg = ('%d weather stations with daily data for at least %d years'
-                   ' between %d and %d'
-                   ) % (len(self.stationlist), self.nbr_of_years,
-                        self.year_min, self.year_max)
-            self.ConsoleSignal.emit('<font color=green>%s</font>' % msg)
-            print(msg)
-
-        except URLError as e:
-            if hasattr(e, 'reason'):
-                msg = 'Failed to reach a server.'
-                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-                print(msg)
-
-                print('Reason: ', e.reason)
-                print()
-
-            elif hasattr(e, 'code'):
-                msg = 'The server couldn\'t fulfill the request.'
-                self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-                print(msg)
-
-                print('Error code: ', e.code)
-                print()
+        msg = ('%d weather stations with daily data for at least %d years'
+               ' between %d and %d'
+               ) % (len(self.stationlist), self.nbr_of_years,
+                    self.year_min, self.year_max)
+        self.ConsoleSignal.emit('<font color=green>%s</font>' % msg)
+        print(msg)
 
         print('Searching for weather station is finished.')
         self.searchFinished.emit(self.stationlist)
-
         return self.stationlist
 
     def get_station_info(self, Prov, StationID):
@@ -346,10 +337,8 @@ class StationFinder(QObject):
         else:
             f = urlopen(url)
             urlread = f.read().decode('utf-8')
-
             if self.debug_mode:
-                # write downloaded content to local file for
-                # debugging purpose:
+                # Write the downloaded content to a local file.
                 with open('urlsinglestation.txt', 'w') as local_file:
                     local_file.write(urlread)
 
@@ -394,7 +383,6 @@ class StationFinder(QObject):
         proximity = np.nan
 
         print('%s (%s) : %s - %s' % (staName, climate_id, startYear, endYear))
-
         staInfo = [staName, StationID, startYear, endYear,
                    Prov, climate_id, proximity]
 
@@ -1244,6 +1232,12 @@ def dms2decdeg(deg, mnt, sec):
 
 if __name__ == '__main__':
 
+#    finder = StationFinder()
+#    finder.isOffline = True
+#    finder.lat = 25
+#    finder.lon = 74
+#    finder.search_envirocan()
+
     app = QApplication(sys.argv)
 
     ft = app.font()
@@ -1258,11 +1252,10 @@ if __name__ == '__main__':
     search4sta.minYear.setValue(1980)
     search4sta.maxYear.setValue(2015)
     search4sta.nbrYear.setValue(20)
+
     search4sta.finder.isOffline = False
+    # search4sta.finder.debug_mode = True
 
     search4sta.show()
-
-#    search4sta.search_envirocan()
-#    search4sta.get_station_info('QC', 5406)
 
     sys.exit(app.exec_())
