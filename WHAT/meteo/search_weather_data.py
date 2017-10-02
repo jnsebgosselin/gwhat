@@ -1,23 +1,15 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
-
-WHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
+# Copyright © 2014-2017 Jean-Sebastien Gosselin
+# email: jean-sebastien.gosselin@ete.inrs.ca
+#
+# This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
+#
+# SearchProgressBar is based on the class FileProgressBar from Spyder.
+# Present in spyder.widgets.findinfiles
+# Copyright © Spyder Project Contributors
+# https://github.com/spyder-ide/spyder
 
 # ---- Standard library imports
 
@@ -36,18 +28,19 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QTableWidget, QCheckBox,
                              QTabWidget, QSpinBox, QPushButton, QDesktopWidget,
                              QApplication, QHeaderView, QTableWidgetItem,
-                             QStyle, QFileDialog)
+                             QStyle, QFileDialog, QHBoxLayout)
 
 # ---- Local imports
 
 from WHAT.common import IconDB, StyleDB
 from WHAT.meteo.weather_stationlist import WeatherSationList
+from WHAT.widgets.waitingspinner import QWaitingSpinner
 
 
 class StationFinder(QObject):
 
     searchFinished = QSignal(list)
-    newStationFound = QSignal(list)
+    sig_newstation_found = QSignal(list)
     ConsoleSignal = QSignal(str)
 
     def __init__(self, parent=None):
@@ -67,6 +60,7 @@ class StationFinder(QObject):
         self.stop_searching = False
         self.isOffline = False
         self.debug_mode = False
+        self.station_nbr_found = 0
 
     def search_envirocan(self):
         """
@@ -92,7 +86,7 @@ class StationFinder(QObject):
         # [station_name, station_id, start_year,
         #  end_year, province, climate_id, station_proxim]
 
-        # ----------------------------------------------------- define url ----
+        # ---- Define url
 
         # Last updated: May 25th, 2016
 
@@ -126,7 +120,7 @@ class StationFinder(QObject):
         elif self.search_by == 'province':
             url += '&cmdProvSubmit=Search'
 
-        # ----------------------------------------------------- fetch data ----
+        # ---- Fetch data
 
         try:
             if self.isOffline:
@@ -168,6 +162,7 @@ class StationFinder(QObject):
                     break
             Nsta = int(stnresults[indx_0:indx_e])
             print('%d weather stations found.' % Nsta)
+            self.station_nbr_found = Nsta
 
             # Fetch stations page per page :
 
@@ -288,7 +283,7 @@ class StationFinder(QObject):
                                 return self.stationlist
                             else:
                                 self.stationlist.append(new_station)
-                                self.newStationFound.emit(new_station)
+                                self.sig_newstation_found.emit(new_station)
                         else:
                             print("Not adding %s (not enough data)"
                                   % station_name)
@@ -404,24 +399,25 @@ class StationFinder(QObject):
 
 
 class Search4Stations(QWidget):
-    '''
+    """
     Widget that allows the user to search for weather stations on the
     Government of Canada website.
-    '''
+    """
 
     ConsoleSignal = QSignal(str)
     staListSignal = QSignal(list)
 
     def __init__(self, parent=None):
         super(Search4Stations, self).__init__()
+
+        self.isOffline = False  # For testing and debugging.
         self.__initUI__()
 
         # Setup gap fill worker and thread :
         self.finder = StationFinder()
         self.thread = QThread()
         self.finder.moveToThread(self.thread)
-        self.finder.newStationFound.connect(
-                self.station_table.insert_row_at_end)
+        self.finder.sig_newstation_found.connect(self.add_new_station)
         self.finder.searchFinished.connect(self.search_is_finished)
 
     @property
@@ -465,8 +461,9 @@ class Search4Stations(QWidget):
 
         now = datetime.now()
 
+        self.progressbar = SearchProgressBar(self)
+        self.progressbar.hide()
         self.station_table = WeatherStationDisplayTable(0, self)
-        self.isOffline = False  # For testing and debugging purpose
 
         # ---------------------------------------------- Tab Widget Search ----
 
@@ -639,7 +636,7 @@ class Search4Stations(QWidget):
 
         self.year_widg.setLayout(year_grid)
 
-        # -------------------------------------------------------- TOOLBAR ----
+        # ---- Toolbar
 
         self.btn_search = QPushButton('Search')
         self.btn_search.setIcon(IconDB().search)
@@ -680,17 +677,13 @@ class Search4Stations(QWidget):
         left_panel = QFrame()
         left_panel_grid = QGridLayout()
 
-        row = 0
-        left_panel_grid.addWidget(panel_title, row, 0)
-        row += 1
-        left_panel_grid.addWidget(self.tab_widg, row, 0)
-        row += 1
-        left_panel_grid.addWidget(self.year_widg, row, 0)
-        row += 1
-        left_panel_grid.addWidget(toolbar_widg, row, 0)
+        left_panel_grid.addWidget(panel_title, 0, 0)
+        left_panel_grid.addWidget(self.tab_widg, 1, 0)
+        left_panel_grid.addWidget(self.year_widg, 2, 0)
+        left_panel_grid.setRowStretch(3, 100)
+        left_panel_grid.addWidget(toolbar_widg, 4, 0)
 
         left_panel_grid.setVerticalSpacing(20)
-        left_panel_grid.setRowStretch(row+1, 100)
         left_panel_grid.setContentsMargins(0, 0, 0, 0)   # (L, T, R, B)
         left_panel.setLayout(left_panel_grid)
 
@@ -705,16 +698,15 @@ class Search4Stations(QWidget):
 
         main_layout = QGridLayout(self)
 
-        row = 0
-        col = 0
-        main_layout.addWidget(left_panel, row, col)
-        col += 1
-        main_layout.addWidget(vLine1, row, col)
-        col += 1
-        main_layout.addWidget(self.station_table, row, col)
+        main_layout.addWidget(left_panel, 0, 0)
+        main_layout.addWidget(vLine1, 0, 1)
+        main_layout.addWidget(self.station_table, 0, 2)
+        main_layout.addWidget(self.progressbar, 1, 0, 1, 3)
 
         main_layout.setContentsMargins(10, 10, 10, 10)  # (L,T,R,B)
-        main_layout.setSpacing(15)
+        main_layout.setRowStretch(0, 100)
+        main_layout.setHorizontalSpacing(15)
+        main_layout.setVerticalSpacing(5)
         main_layout.setColumnStretch(col, 100)
 
     def show(self):
@@ -734,7 +726,6 @@ class Search4Stations(QWidget):
 
         qr.moveCenter(cp)
         self.move(qr.topLeft())
-        self.setFixedSize(self.size())
 
     # -------------------------------------------------------------------------
 
@@ -784,6 +775,7 @@ class Search4Stations(QWidget):
         if self.thread.isRunning():
             print('Telling the thread to stop searching.')
             self.finder.stop_searching = True
+            self.progressbar.setText("Stopping the search process...")
             self.btn_search.setIcon(IconDB().search)
             self.btn_search.setEnabled(False)
             return
@@ -793,6 +785,8 @@ class Search4Stations(QWidget):
         self.tab_widg.setEnabled(False)
         self.btn_search.setIcon(IconDB().stop)
         self.station_table.clearContents()
+        self.progressbar.show()
+        self.progressbar.setText("Searching for weather stations...")
 
         # Set the attributes of the finder.
         self.finder.prov = self.prov
@@ -833,6 +827,51 @@ class Search4Stations(QWidget):
         self.btn_search.setIcon(IconDB().search)
         self.year_widg.setEnabled(True)
         self.tab_widg.setEnabled(True)
+        self.progressbar.hide()
+
+    def add_new_station(self, info):
+        self.station_table.insert_row_at_end(info)
+        text = "%d stations found:" % self.finder.station_nbr_found
+        text += " fetching info for station %s." % info[0]
+        self.progressbar.setText(text)
+
+
+class SearchProgressBar(QWidget):
+    """
+    Simple progress spinner with a label.
+    SearchProgressBar is based on the class FileProgressBar from Spyder.
+    Copyright © Spyder Project Contributors
+    https://github.com/spyder-ide/spyder
+    """
+
+    def __init__(self, parent):
+        super(SearchProgressBar, self).__init__(parent)
+
+        self.status_text = QLabel(self)
+        self.spinner = QWaitingSpinner(self, centerOnParent=False)
+        self.spinner.setNumberOfLines(10)
+        self.spinner.setInnerRadius(2)
+        self.spinner.setLineLength(8)
+        layout = QHBoxLayout(self)
+        layout.addWidget(self.spinner)
+        layout.addWidget(self.status_text)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+    def setText(self, text):
+        self.status_text.setText(text)
+
+    def reset(self):
+        self.setText("Searching for stations...")
+
+    def showEvent(self, event):
+        """Override Qt method to start the waiting spinner."""
+        super(SearchProgressBar, self).showEvent(event)
+        self.spinner.start()
+
+    def hideEvent(self, event):
+        """Override Qt method to stop the waiting spinner."""
+        super(SearchProgressBar, self).hideEvent(event)
+        self.spinner.stop()
 
 
 class WeatherStationDisplayTable(QTableWidget):
