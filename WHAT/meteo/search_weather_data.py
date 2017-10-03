@@ -1277,10 +1277,14 @@ if __name__ == '__main__':
 
     if False:
         finder = StationFinder()
-        finder.isOffline = True
-        finder.lat = 25
-        finder.lon = 74
+        finder.isOffline = False
+        finder.lat = 45.40
+        finder.lon = 73.15
+        finder.year_min = 1960
+        finder.year_max = 2015
+        finder.nbr_of_years = 10
         finder.search_envirocan()
+        print(finder.stationlist)
 
     # ---- Test Search4Stations
 
