@@ -256,7 +256,8 @@ class StationFinder(QObject):
                             return self.stationlist
 
                         data = self.get_station_info(province, station_id)
-                        new_station = [station_name, station_id,
+                        new_station = [station_name,
+                                       station_id,
                                        '%d' % start_year,
                                        '%d' % end_year,
                                        province,
@@ -837,7 +838,7 @@ class WeatherStationDisplayTable(QTableWidget):
     """
     Widget for displaying a weather station list.
 
-    #---- Inputs ----
+    # ---- Inputs
 
     year_display_mode : 0 -> Years are displayed in a standard
                              QTableWidget cell
@@ -939,7 +940,7 @@ class WeatherStationDisplayTable(QTableWidget):
             widget.setCheckState(self.chkbox_header.checkState())
 
     def clearContents(self):
-        "Qt method override"
+        """Qt method override"""
         super(WeatherStationDisplayTable, self).clearContents()
         self.setRowCount(0)
 
@@ -1213,10 +1214,10 @@ def findUnique(pattern, string):
 
 
 def decdeg2dms(dd):
-    '''
+    """
     Convert decimal degree lat/lon coordinate to decimal, minute,
     second format.
-    '''
+    """
 
     mnt, sec = divmod(dd*3600, 60)
     deg, mnt = divmod(mnt, 60)
@@ -1225,10 +1226,10 @@ def decdeg2dms(dd):
 
 
 def dms2decdeg(deg, mnt, sec):
-    '''
+    """
     Convert decimal, minute, second format lat/lon coordinate to decimal
     degree.
-    '''
+    """
 
     dd = deg + mnt/60. + sec/3600.
 
