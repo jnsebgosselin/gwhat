@@ -121,13 +121,6 @@ class StationFinder(QObject):
 
             return None
 
-    def findUnique(self, pattern, string):
-        result = re.findall(pattern, string)
-        if len(result) > 0:
-            return result[0].strip()
-        else:
-            return None
-
     def search_envirocan(self):
         """
         Search on the Government of Canada website for weather stations with
@@ -164,7 +157,7 @@ class StationFinder(QObject):
         # ---- Get the number of stations found.
 
         try:
-            nsta = int(self.findUnique('>(.*?)stations found', html))
+            nsta = int(findUnique('>(.*?)stations found', html))
             print('%d weather stations found.' % nsta)
             self.station_nbr_found = nsta
         except TypeError:
@@ -354,7 +347,7 @@ class StationFinder(QObject):
         # ---- Min/Max Years
 
         tag = soup.find('script', attrs={'type': "text/javascript"})
-        maxmindates = self.findUnique('var maxMin = (.*?);', tag.string)[1:-1]
+        maxmindates = findUnique('var maxMin = (.*?);', tag.string)[1:-1]
         maxmindates = maxmindates.replace('"', '').split(',')
         data['Minimum Year'] = int(maxmindates[0])
         data['Maximum Year'] = int(maxmindates[3])
@@ -1216,6 +1209,19 @@ class WeatherStationDisplayTable(QTableWidget):
         """Save the content of the QTableWidget to file."""
         stationlist = self.get_stationlist()
         stationlist.save_to_file(filename)
+
+
+
+def findUnique(pattern, string):
+    """
+    Return the first result found for the regex search or return None if
+    nothing is found.
+    """
+    result = re.findall(pattern, string)
+    if len(result) > 0:
+        return result[0].strip()
+    else:
+        return None
 
 
 def decdeg2dms(dd):
