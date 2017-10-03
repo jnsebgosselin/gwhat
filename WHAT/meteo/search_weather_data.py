@@ -1249,30 +1249,36 @@ def dms2decdeg(deg, mnt, sec):
 
 if __name__ == '__main__':
 
-    finder = StationFinder()
-    finder.isOffline = True
-    finder.lat = 25
-    finder.lon = 74
-    finder.search_envirocan()
+    # ---- Test StationFinder
 
-#    app = QApplication(sys.argv)
-#
-#    ft = app.font()
-#    ft.setFamily('Segoe UI')
-#    ft.setPointSize(10)
-#    app.setFont(ft)
-#
-#    search4sta = Search4Stations()
-#
-#    search4sta.lat_spinBox.setValue(45.40)
-#    search4sta.lon_spinBox.setValue(73.15)
-#    search4sta.minYear.setValue(1980)
-#    search4sta.maxYear.setValue(2015)
-#    search4sta.nbrYear.setValue(20)
-#
-#    search4sta.finder.isOffline = True
-#    # search4sta.finder.debug_mode = True
-#
-#    search4sta.show()
-#
-#    sys.exit(app.exec_())
+    if False:
+        finder = StationFinder()
+        finder.isOffline = True
+        finder.lat = 25
+        finder.lon = 74
+        finder.search_envirocan()
+
+    # ---- Test Search4Stations
+
+    if True:
+        app = QApplication(sys.argv)
+
+        ft = app.font()
+        ft.setFamily('Segoe UI')
+        ft.setPointSize(10)
+        app.setFont(ft)
+
+        search4sta = Search4Stations()
+
+        search4sta.lat_spinBox.setValue(45.40)
+        search4sta.lon_spinBox.setValue(73.15)
+        search4sta.minYear.setValue(1980)
+        search4sta.maxYear.setValue(2015)
+        search4sta.nbrYear.setValue(20)
+
+        search4sta.finder.isOffline = False
+        # search4sta.finder.debug_mode = True
+
+        search4sta.show()
+
+        sys.exit(app.exec_())
