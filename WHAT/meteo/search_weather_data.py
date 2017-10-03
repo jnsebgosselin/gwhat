@@ -22,6 +22,7 @@ import re
 
 # ---- Third party imports
 
+from bs4 import BeautifulSoup
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import QObject, Qt, QPoint, QEvent, QThread
@@ -142,10 +143,7 @@ class StationFinder(QObject):
         """
 
         print('Searching weather station on www.http://climate.weather.gc.ca.')
-
         self.stationlist = []
-        # [station_name, station_id, start_year,
-        #  end_year, province, climate_id, station_proxim]
 
         # ---- Fetch data.
 
@@ -190,103 +188,72 @@ class StationFinder(QObject):
                 return
 
             print('Page :', page)
-            startRow = (self.PAGE_NRESULT * page) + 1
             if self.isOffline:
-                with open('url.txt') as f:
+                with open('url4page0.txt') as f:
                     html = f.read()
             else:
+                startRow = (self.PAGE_NRESULT*page) + 1
                 url = self.get_base_url() + '&startRow=%d' % startRow
-                self.get_html_from_url(url)
+                html = self.get_html_from_url(url)
                 if self.debug_mode:
                     # Write the results in a local file.
                     filename = 'url4page%d.txt' % page
                     with open(filename, 'w') as local_file:
                         local_file.write(html)
 
-            # Scan each row of the current page.
+            soup = BeautifulSoup(html, 'html.parser')
             while True:
-
-                # ---- Location of station information block ----
-
-                indx_e = 0
-                txt2find = ('<form action="/climate_data/'
-                            'interform_e.html" method="post" '
-                            'id="stnRequest%d">') % staCount
-
-                n = len(txt2find)
-                indx_0 = html.find(txt2find, indx_e)
-                if indx_0 == -1:
-                    # No result left on this page. Break the loop and
-                    # iterate to the next page if it exists
+                tag = soup.find("form", attrs={
+                        "method": "post",
+                        "action": "/climate_data/interform_e.html",
+                        "id": "stnRequest%d" % staCount})
+                if tag is None:
                     break
+
+                station_id = tag.find(
+                        "input", attrs={"name": "StationID"})["value"]
+                province = tag.find(
+                        "input", attrs={"name": "Prov"})["value"]
+                dly_range = tag.find(
+                        "input", attrs={"name": "dlyRange"})["value"]
+
+                if dly_range == "|":
+                    # There is no daily data for this station.
+                    start_year = None
+                    end_year = None
                 else:
-                    indx_e = indx_0 + n
+                    start_year = int(dly_range[:4])
+                    end_year = int(dly_range[11:15])
 
-                # ---- StartDate and EndDate ----
-
-                txt2find = 'name="dlyRange" value="'
-                n = len(txt2find)
-                indx_0 = html.find(txt2find, indx_e)
-                indx_e = html.find('|', indx_0)
-
-                start_year = html[indx_0+n:indx_0+n+4]
-                end_year = html[indx_e+1:indx_e+1+4]
-
-                # ---- StationID ----
-
-                txt2find = 'name="StationID" value="'
-                indx_0 = html.find(txt2find, indx_e) + len(txt2find)
-                indx_e = html.find('"', indx_0)
-
-                station_id = html[indx_0:indx_e].strip()
-
-                # ---- Province ----
-
-                txt2find = 'name="Prov" value="'
-                indx_0 = html.find(txt2find, indx_e) + len(txt2find)
-                indx_e = html.find('"', indx_0)
-
-                province = html[indx_0:indx_e].strip()
-
-                # ---- Station Name ----
-
-                txt2find = ('<div class="col-lg-3 col-md-3'
-                            ' col-sm-3 col-xs-3">')
-                indx_0 = html.find(txt2find, indx_e) + len(txt2find)
-                indx_e = html.find('</div>', indx_0)
-
-                station_name = html[indx_0:indx_e].strip()
-
-                # ---- Proximity ----
+                station_name = tag.findAll(
+                        'div', class_="col-lg-3 col-md-3 col-sm-3 col-xs-3")
+                station_name = station_name[0].string
 
                 if self.search_by == 'proximity':
-                    txt2find = ('<div class="col-lg-2 col-md-2'
-                                ' col-sm-2 col-xs-2">')
-                    indx_0 = (html.find(txt2find, indx_e) +
-                              len(txt2find))
-                    indx_e = html.find('</div>', indx_0)
-
-                    station_proxim = html[indx_0:indx_e].strip()
+                    station_proxim = tag.findAll(
+                        'div', class_="col-lg-2 col-md-2 col-sm-2 col-xs-2")
+                    station_proxim = float(station_proxim[0].string)
                 elif self.search_by == 'province':
                     station_proxim = 0
 
-                if start_year.isdigit():  # daily data exist
-                    year_range = int(end_year)-int(start_year)+1
-                    if year_range >= self.nbr_of_years:
+                staCount += 1
 
+                if start_year is None:
+                    print("Not adding %s (no daily data)" % station_name)
+                else:
+                    year_range = end_year-start_year+1
+                    if year_range < self.nbr_of_years:
+                        print("Not adding %s (not enough data)" % station_name)
+                    else:
                         print("Adding %s to list..." % station_name)
-
-                        # ---- Climate ID ----
 
                         if self.stop_searching:
                             self.searchFinished.emit(self.stationlist)
-                            return
+                            return self.stationlist
 
-                        staInfo = self.get_station_info(province,
-                                                        station_id)
-                        climate_id = staInfo[5]
+                        data = self.get_station_info(province, station_id)
+                        climate_id = data['Climate ID']
 
-                        # ---- Send Signal to UI ----
                         new_station = [station_name, station_id,
                                        start_year, end_year, province,
                                        climate_id, station_proxim]
@@ -297,14 +264,6 @@ class StationFinder(QObject):
                         else:
                             self.stationlist.append(new_station)
                             self.sig_newstation_found.emit(new_station)
-                    else:
-                        print("Not adding %s (not enough data)"
-                              % station_name)
-                else:
-                    print("Not adding %s (no daily data)"
-                          % station_name)
-
-                staCount += 1
 
         msg = ('%d weather stations with daily data for at least %d years'
                ' between %d and %d'
@@ -315,16 +274,12 @@ class StationFinder(QObject):
 
         print('Searching for weather station is finished.')
         self.searchFinished.emit(self.stationlist)
+        
         return self.stationlist
 
     def get_station_info(self, Prov, StationID):
         """
-        Fetch the Climate Id for a given station. This ID is used to identify
-        the station in the CDCD, but not for downloading the data from
-        the server.
-
-        This information is not available when doing a search for stations
-        and need to be fetch for each station individually.
+        Fetch weather station information from its Station ID and Province.
         """
 
         url = ('http://climate.weather.gc.ca/'
@@ -333,61 +288,65 @@ class StationFinder(QObject):
 
         if self.isOffline:
             with open('urlsinglestation.txt', 'r') as f:
-                urlread = f.read()
+                html = f.read()
                 time.sleep(0.25)
         else:
-            f = urlopen(url)
-            urlread = f.read().decode('utf-8')
+            html = self.get_html_from_url(url)
             if self.debug_mode:
                 # Write the downloaded content to a local file.
                 with open('urlsinglestation.txt', 'w') as local_file:
-                    local_file.write(urlread)
+                    local_file.write(html)
 
-        # ---- Station Name ----
+        soup = BeautifulSoup(html, 'html.parser')
+        data = {}
 
-        txt2find = '<p class="text-center table-header pdng-md mrgn-bttm-0">'
-        n = len(txt2find)
-        indx_0 = urlread.find(txt2find, 0) + n
-        indx_e = urlread.find('<br/>', indx_0)
+        # ---- Station Name
 
-        staName = urlread[indx_0:indx_e]
-        staName = staName.strip()
+        tag = soup.find(
+                'p', class_="text-center table-header pdng-md mrgn-bttm-0")
+        data['Station Name'] = tag.contents[0]
 
-        # ---- Climate ID ----
+        # ---- Latitude
 
-        txt2find = ('aria-labelledby="climateid">')
-        n = len(txt2find)
+        tag = soup.find('div', class_="col-lg-6 col-md-7 col-sm-7 col-xs-6",
+                        attrs={"aria-labelledby": "latitude"})
+        degree = int(tag.contents[0])
+        minute = int(tag.contents[2])
+        second = float(tag.contents[4])
+        data['Latitude'] = dms2decdeg(degree, minute, second)
 
-        indx_0 = urlread.find(txt2find, 0) + n
-        indx_e = urlread.find('</div>', indx_0)
+        # ---- Longitude
 
-        climate_id = urlread[indx_0:indx_e]
-        climate_id = climate_id.strip()
+        tag = soup.find('div', class_="col-lg-6 col-md-7 col-sm-7 col-xs-6",
+                        attrs={"aria-labelledby": "longitude"})
+        degree = int(tag.contents[0])
+        minute = int(tag.contents[2])
+        second = float(tag.contents[4])
+        data['Longitude'] = dms2decdeg(degree, minute, second)
 
-        # ---- Start Year ----
+        # ---- Elevation
 
-        txt2find = '<option value="'
-        n = len(txt2find)
-        indx_0 = urlread.find(txt2find, indx_e) + n
+        tag = soup.find('div', class_="col-lg-6 col-md-7 col-sm-7 col-xs-6",
+                        attrs={"aria-labelledby": "elevation"})
+        data['Elevation'] = float(tag.contents[0])
 
-        startYear = urlread[indx_0:indx_0+4]
+        # ---- Climate ID
 
-        # ---- End Year ----
+        tag = soup.find('div', class_="col-lg-6 col-md-7 col-sm-7 col-xs-6",
+                        attrs={"aria-labelledby": "climateid"})
+        data['Climate ID'] = tag.contents[0].strip()
 
-        txt2find = '" selected="'
-        indx_e = urlread.find(txt2find, indx_0)
+        # ---- Min/Max Years
 
-        endYear = urlread[indx_e-4:indx_e]
+        tag = soup.find('script', attrs={'type': "text/javascript"})
+        maxmindates = self.findUnique('var maxMin = (.*?);', tag.string)[1:-1]
+        maxmindates = maxmindates.replace('"', '').split(',')
+        data['Minimum Year'] = int(maxmindates[0])
+        data['Maximum Year'] = int(maxmindates[3])
 
-        # ---- Proximity ----
+        data['Proximity'] = 0
 
-        proximity = np.nan
-
-        print('%s (%s) : %s - %s' % (staName, climate_id, startYear, endYear))
-        staInfo = [staName, StationID, startYear, endYear,
-                   Prov, climate_id, proximity]
-
-        return staInfo
+        return data
 
 
 class Search4Stations(QWidget):
@@ -977,7 +936,7 @@ class WeatherStationDisplayTable(QTableWidget):
         row = self.rowCount()
         self.insertRow(row)
 
-        # ---- Checkbox ----
+        # ---- Checkbox
 
         col = 0
 
@@ -997,7 +956,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         self.setCellWidget(row, col, chckbox_center)
 
-        # ---- Weather Station ----
+        # ---- Weather Station
 
         col += 1
 
@@ -1007,7 +966,7 @@ class WeatherStationDisplayTable(QTableWidget):
         item.setToolTip(row_data[0])
         self.setItem(row, col, item)
 
-        # ---- Proximity ----
+        # ---- Proximity
 
         col += 1
 
@@ -1017,17 +976,13 @@ class WeatherStationDisplayTable(QTableWidget):
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
 
-        # ---- From Year ----
+        # ---- From Year
 
-        # ----
-        min_year = int(row_data[2])
-        max_year = int(row_data[3])
-        yearspan = np.arange(min_year, max_year+1).astype(str)
-        # ----
+        yearspan = np.arange(row_data[2], row_data[3]+1).astype(str)
 
         col += 1
 
-        item = QTableWidgetItem(row_data[2])
+        item = QTableWidgetItem('%d' % row_data[2])
         item.setFlags(item.flags() & Qt.ItemIsEnabled)
         self.setItem(row, col, item)
         item.setTextAlignment(Qt.AlignCenter)
@@ -1046,11 +1001,11 @@ class WeatherStationDisplayTable(QTableWidget):
 
             self.setCellWidget(row, col, self.fromYear)
 
-        # ---- To Year ----
+        # ---- To Year
 
         col += 1
 
-        item = QTableWidgetItem(row_data[3])
+        item = QTableWidgetItem('%d' % row_data[3])
 
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
@@ -1071,7 +1026,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
             self.setCellWidget(row, col, self.toYear)
 
-        # ---- Province ----
+        # ---- Province
 
         col += 1
 
@@ -1080,7 +1035,7 @@ class WeatherStationDisplayTable(QTableWidget):
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
 
-        # ---- Climate ID (hidden) ----
+        # ---- Climate ID
 
         col += 1
 
@@ -1089,7 +1044,7 @@ class WeatherStationDisplayTable(QTableWidget):
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
 
-        # ---- Station ID ----
+        # ---- Station ID (hidden)
 
         col += 1
 
