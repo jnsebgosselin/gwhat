@@ -232,15 +232,6 @@ class StationFinder(QObject):
                         'div', class_="col-lg-3 col-md-3 col-sm-3 col-xs-3")
                 station_name = station_name[0].string
 
-                # ---- Proximity
-
-                if self.search_by == 'proximity':
-                    station_proxim = tag.findAll(
-                        'div', class_="col-lg-2 col-md-2 col-sm-2 col-xs-2")
-                    station_proxim = float(station_proxim[0].string)
-                elif self.search_by == 'province':
-                    station_proxim = 0
-
                 staCount += 1
 
                 if year_range is None:
@@ -262,7 +253,6 @@ class StationFinder(QObject):
                                        '%d' % end_year,
                                        province,
                                        data['Climate ID'],
-                                       '%0.2f' % station_proxim,
                                        '%0.3f' % data['Latitude'],
                                        '%0.3f' % data['Longitude'],
                                        '%0.3f' % data['Elevation']]
@@ -353,8 +343,6 @@ class StationFinder(QObject):
         data['Minimum Year'] = int(maxmindates[0])
         data['Maximum Year'] = int(maxmindates[3])
 
-        data['Proximity'] = 0
-
         return data
 
 
@@ -372,6 +360,7 @@ class Search4Stations(QWidget):
 
         self.isOffline = False  # For testing and debugging.
         self.__initUI__()
+        self.station_table.setGeoCoord((self.lat, self.lon))
 
         # Setup gap fill worker and thread :
         self.finder = StationFinder()
@@ -747,6 +736,10 @@ class Search4Stations(QWidget):
         self.station_table.clearContents()
         self.progressbar.show()
         self.progressbar.setText("Searching for weather stations...")
+        if self.search_by == 'proximity':
+            self.station_table.setGeoCoord((self.lat, self.lon))
+        else:
+            self.station_table.setGeoCoord(None)
 
         # Set the attributes of the finder.
         self.finder.prov = self.prov
@@ -850,6 +843,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         self.year_display_mode = year_display_mode
         self.__initUI__()
+        self.setGeoCoord(None)
 
     def __initUI__(self):
         self.setFont(StyleDB().font1)
@@ -895,6 +889,13 @@ class WeatherStationDisplayTable(QTableWidget):
         # ---- Events
 
         self.chkbox_header.stateChanged.connect(self.chkbox_header_isClicked)
+
+    def setGeoCoord(self, latlon):
+        self.__latlon = latlon
+        self.setColumnHidden(2, latlon is None)
+
+    def geoCoord(self):
+        return self.__latlon
 
     class NumTableWidgetItem(QTableWidgetItem):
 
@@ -983,11 +984,15 @@ class WeatherStationDisplayTable(QTableWidget):
         # ---- Proximity
 
         col += 1
+        if self.geoCoord():
+            lat1, lon1 = self.geoCoord()
+            lat2, lon2 = float(row_data[6]), float(row_data[7])
+            dist = latlon_to_dist(lat1, lon1, lat2, lon2)
 
-        item = self.NumTableWidgetItem(row_data[6], float(row_data[6]))
-        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
-        item.setTextAlignment(Qt.AlignCenter)
-        self.setItem(row, col, item)
+            item = self.NumTableWidgetItem('%0.1f' % dist, dist)
+            item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+            item.setTextAlignment(Qt.AlignCenter)
+            self.setItem(row, col, item)
 
         # ---- From Year
 
@@ -1011,7 +1016,7 @@ class WeatherStationDisplayTable(QTableWidget):
             self.fromYear.addItems(yearspan)
             self.fromYear.setMinimumContentsLength(4)
             self.fromYear.setSizeAdjustPolicy(
-                QComboBox.AdjustToMinimumContentsLength)
+                    QComboBox.AdjustToMinimumContentsLength)
 
             self.setCellWidget(row, col, self.fromYear)
 
@@ -1034,7 +1039,7 @@ class WeatherStationDisplayTable(QTableWidget):
             self.toYear.setCurrentIndex(len(yearspan)-1)
             self.toYear.setMinimumContentsLength(4)
             self.toYear.setSizeAdjustPolicy(
-                QComboBox.AdjustToMinimumContentsLength)
+                    QComboBox.AdjustToMinimumContentsLength)
 
             self.setCellWidget(row, col, self.toYear)
 
@@ -1067,7 +1072,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = self.NumTableWidgetItem(row_data[7], float(row_data[7]))
+        item = self.NumTableWidgetItem(row_data[6], float(row_data[6]))
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
@@ -1076,7 +1081,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = self.NumTableWidgetItem(row_data[8], float(row_data[8]))
+        item = self.NumTableWidgetItem(row_data[7], float(row_data[7]))
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
@@ -1085,7 +1090,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = self.NumTableWidgetItem(row_data[9], float(row_data[9]))
+        item = self.NumTableWidgetItem(row_data[8], float(row_data[8]))
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
@@ -1199,6 +1204,36 @@ class WeatherStationDisplayTable(QTableWidget):
         stationlist = self.get_stationlist()
         stationlist.save_to_file(filename)
 
+# ---- Utility functions
+
+
+def latlon_to_dist(lat1, lon1, lat2, lon2):
+    """
+    Computes the horizontal distance in km between 2 points from geographic
+    coordinates given in decimal degrees.
+
+    source:
+    www.stackoverflow.com/questions/19412462 (last accessed on 17/01/2014)
+    """
+    from math import sin, cos, sqrt, atan2, radians
+
+    r = 6373  # r is the Earth radius in km.
+
+    # Convert decimal degrees to radians.
+    lat1 = radians(lat1)
+    lon1 = radians(lon1)
+    lat2 = radians(lat2)
+    lon2 = radians(lon2)
+
+    # Compute the horizontal distance between the two points in km.
+    dlon = lon2 - lon1
+    dlat = lat2 - lat1
+    a = (sin(dlat/2))**2 + cos(lat1) * cos(lat2) * (sin(dlon/2))**2
+    c = 2 * atan2(np.sqrt(a), sqrt(1-a))
+
+    dist = r * c
+
+    return dist
 
 
 def findUnique(pattern, string):
