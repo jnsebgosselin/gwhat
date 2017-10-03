@@ -52,7 +52,8 @@ class WeatherSationList(list):
     """
 
     HEADER = ['staName', 'stationId', 'StartYear', 'EndYear', 'Province',
-              'ClimateID', 'Proximity (km)']
+              'ClimateID', 'Proximity (km)', 'Latitude (dd)',
+              'Longitude (dd)', 'Elevation (m)']
 
     def __init__(self, filelist=None, *args, **kwargs):
         super(WeatherSationList, self).__init__(*args, **kwargs)

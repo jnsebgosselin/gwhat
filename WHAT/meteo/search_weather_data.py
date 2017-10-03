@@ -209,10 +209,15 @@ class StationFinder(QObject):
                 if tag is None:
                     break
 
+                # ---- Station ID and Province
+
                 station_id = tag.find(
                         "input", attrs={"name": "StationID"})["value"]
                 province = tag.find(
                         "input", attrs={"name": "Prov"})["value"]
+
+                # ---- Min and Max Years
+
                 dly_range = tag.find(
                         "input", attrs={"name": "dlyRange"})["value"]
 
@@ -220,13 +225,19 @@ class StationFinder(QObject):
                     # There is no daily data for this station.
                     start_year = None
                     end_year = None
+                    dly_range = None
                 else:
-                    start_year = int(dly_range[:4])
-                    end_year = int(dly_range[11:15])
+                    start_year = dly_range[:4]
+                    end_year = dly_range[11:15]
+                    dly_range = int(end_year) - int(start_year) + 1
+
+                # ---- Station Name
 
                 station_name = tag.findAll(
                         'div', class_="col-lg-3 col-md-3 col-sm-3 col-xs-3")
                 station_name = station_name[0].string
+
+                # ---- Proximity
 
                 if self.search_by == 'proximity':
                     station_proxim = tag.findAll(
@@ -251,11 +262,11 @@ class StationFinder(QObject):
                             return self.stationlist
 
                         data = self.get_station_info(province, station_id)
-                        climate_id = data['Climate ID']
-
                         new_station = [station_name, station_id,
                                        start_year, end_year, province,
-                                       climate_id, station_proxim]
+                                       data['Climate ID'], station_proxim,
+                                       data['Latitude'], data['Longitude'],
+                                       data['Elevation']]
 
                         if self.stop_searching:
                             self.searchFinished.emit(self.stationlist)
@@ -312,7 +323,7 @@ class StationFinder(QObject):
         degree = int(tag.contents[0])
         minute = int(tag.contents[2])
         second = float(tag.contents[4])
-        data['Latitude'] = dms2decdeg(degree, minute, second)
+        data['Latitude'] = str(dms2decdeg(degree, minute, second))
 
         # ---- Longitude
 
@@ -321,13 +332,13 @@ class StationFinder(QObject):
         degree = int(tag.contents[0])
         minute = int(tag.contents[2])
         second = float(tag.contents[4])
-        data['Longitude'] = dms2decdeg(degree, minute, second)
+        data['Longitude'] = str(dms2decdeg(degree, minute, second))
 
         # ---- Elevation
 
         tag = soup.find('div', class_="col-lg-6 col-md-7 col-sm-7 col-xs-6",
                         attrs={"aria-labelledby": "elevation"})
-        data['Elevation'] = float(tag.contents[0])
+        data['Elevation'] = tag.contents[0]
 
         # ---- Climate ID
 
@@ -340,8 +351,8 @@ class StationFinder(QObject):
         tag = soup.find('script', attrs={'type': "text/javascript"})
         maxmindates = self.findUnique('var maxMin = (.*?);', tag.string)[1:-1]
         maxmindates = maxmindates.replace('"', '').split(',')
-        data['Minimum Year'] = int(maxmindates[0])
-        data['Maximum Year'] = int(maxmindates[3])
+        data['Minimum Year'] = maxmindates[0]
+        data['Maximum Year'] = maxmindates[3]
 
         data['Proximity'] = 0
 
@@ -859,8 +870,9 @@ class WeatherStationDisplayTable(QTableWidget):
                                       'stations in the table.')
         self.horizontalHeader().installEventFilter(self)
 
-        HEADER = ('', 'Weather Stations', 'Proximity \n (km)', 'From \n Year',
-                  'To \n Year', 'Prov.', 'Climate ID', 'Station ID')
+        HEADER = ('', 'Weather Stations', 'Proximity\n(km)', 'From \n Year',
+                  'To \n Year', 'Prov.', 'Climate ID', 'Station ID',
+                  'Lat.\n(dd)', 'Lon.\n(dd)', 'Elev.\n(m)')
 
         self.setColumnCount(len(HEADER))
         self.setHorizontalHeaderLabels(HEADER)
@@ -868,8 +880,10 @@ class WeatherStationDisplayTable(QTableWidget):
 
         # ---- Column Size Policy
 
-#        self.setColumnHidden(6, True)
         self.setColumnHidden(7, True)
+        self.setColumnHidden(8, True)
+        self.setColumnHidden(9, True)
+        self.setColumnHidden(10, True)
 
         self.setColumnWidth(0, 32)
         self.setColumnWidth(3, 75)
@@ -979,14 +993,16 @@ class WeatherStationDisplayTable(QTableWidget):
 
         # ---- From Year
 
-        yearspan = np.arange(row_data[2], row_data[3]+1).astype(str)
+        min_year = int(row_data[2])
+        max_year = int(row_data[3])
+        yearspan = np.arange(min_year, max_year+1).astype(str)
 
         col += 1
 
-        item = QTableWidgetItem('%d' % row_data[2])
+        item = QTableWidgetItem('%d' % min_year)
         item.setFlags(item.flags() & Qt.ItemIsEnabled)
-        self.setItem(row, col, item)
         item.setTextAlignment(Qt.AlignCenter)
+        self.setItem(row, col, item)
 
         if self.year_display_mode == 1:
 
@@ -1006,11 +1022,9 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = QTableWidgetItem('%d' % row_data[3])
-
+        item = QTableWidgetItem('%d' % max_year)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
-
         self.setItem(row, col, item)
 
         if self.year_display_mode == 1:
@@ -1050,6 +1064,33 @@ class WeatherStationDisplayTable(QTableWidget):
         col += 1
 
         item = QTableWidgetItem(row_data[1])
+        self.setItem(row, col, item)
+
+        # ---- Latitude
+
+        col += 1
+
+        item = self.NumTableWidgetItem('%0.2f' % row_data[7], row_data[7])
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
+        self.setItem(row, col, item)
+
+        # ---- Longitude
+
+        col += 1
+
+        item = self.NumTableWidgetItem('%0.2f' % row_data[8], row_data[8])
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
+        self.setItem(row, col, item)
+
+        # ---- Elevation
+
+        col += 1
+
+        item = self.NumTableWidgetItem('%0.2f' % row_data[9], row_data[9])
+        item.setFlags(item.flags() & ~Qt.ItemIsEditable)
+        item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
 
         self.setSortingEnabled(True)
@@ -1138,7 +1179,11 @@ class WeatherStationDisplayTable(QTableWidget):
                      self.item(row, 4).text(),   # 3: to year
                      self.item(row, 5).text(),   # 4: province
                      self.item(row, 6).text(),   # 5: climate ID
-                     self.item(row, 2).text()])  # 6: proximity
+                     self.item(row, 2).text(),   # 6: proximity
+                     self.item(row, 8).text(),   # 7: latitude
+                     self.item(row, 9).text(),   # 8: longitude
+                     self.item(row, 10).text()   # 9: elevation
+                     ])
             if self.year_display_mode == 1:
                 stationlist[-1][2] = self.cellWidget(row, 3).currentText()
                 stationlist[-1][3] = self.cellWidget(row, 4).currentText()
@@ -1150,13 +1195,17 @@ class WeatherStationDisplayTable(QTableWidget):
         stationlist = WeatherSationList()
         for row in range(self.rowCount()):
             stationlist.append(
-                    [self.item(row, 1).text(),   # 0: name
-                     self.item(row, 7).text(),   # 1: database ID
-                     self.item(row, 3).text(),   # 2: from year
-                     self.item(row, 4).text(),   # 3: to year
-                     self.item(row, 5).text(),   # 4: province
-                     self.item(row, 6).text(),   # 5: climate ID
-                     self.item(row, 2).text()])  # 6: proximity
+                    [self.item(row, 1).text(),  # 0: name
+                     self.item(row, 7).text(),  # 1: database ID
+                     self.item(row, 3).text(),  # 2: from year
+                     self.item(row, 4).text(),  # 3: to year
+                     self.item(row, 5).text(),  # 4: province
+                     self.item(row, 6).text(),  # 5: climate ID
+                     self.item(row, 2).text(),  # 6: proximity
+                     self.item(row, 8).text(),  # 7: latitude
+                     self.item(row, 9).text(),  # 8: longitude
+                     self.item(row, 10).text()  # 9: elevation
+                     ])
 
         return stationlist
 
