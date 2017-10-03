@@ -1160,7 +1160,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
     # -------------------------------------------------------------------------
 
-    def get_content4rows(self, rows):
+    def get_content4rows(self, rows, daterange='full'):
         """
         Grab the weather station info for the specified rows and
         save the results in a list.
@@ -1175,12 +1175,12 @@ class WeatherStationDisplayTable(QTableWidget):
                      self.item(row, 4).text(),   # 3: to year
                      self.item(row, 5).text(),   # 4: province
                      self.item(row, 6).text(),   # 5: climate ID
-                     self.item(row, 2).text(),   # 6: proximity
                      self.item(row, 8).text(),   # 7: latitude
                      self.item(row, 9).text(),   # 8: longitude
                      self.item(row, 10).text()   # 9: elevation
                      ])
-            if self.year_display_mode == 1:
+
+            if daterange == 'selected':
                 stationlist[-1][2] = self.cellWidget(row, 3).currentText()
                 stationlist[-1][3] = self.cellWidget(row, 4).currentText()
 
@@ -1189,19 +1189,7 @@ class WeatherStationDisplayTable(QTableWidget):
     def get_stationlist(self):
         """Get and format the content of the QTableWidget."""
         stationlist = WeatherSationList()
-        for row in range(self.rowCount()):
-            stationlist.append(
-                    [self.item(row, 1).text(),  # 0: name
-                     self.item(row, 7).text(),  # 1: database ID
-                     self.item(row, 3).text(),  # 2: from year
-                     self.item(row, 4).text(),  # 3: to year
-                     self.item(row, 5).text(),  # 4: province
-                     self.item(row, 6).text(),  # 5: climate ID
-                     self.item(row, 2).text(),  # 6: proximity
-                     self.item(row, 8).text(),  # 7: latitude
-                     self.item(row, 9).text(),  # 8: longitude
-                     self.item(row, 10).text()  # 9: elevation
-                     ])
+        stationlist.extend(self.get_content4rows(range(self.rowCount())))
 
         return stationlist
 
