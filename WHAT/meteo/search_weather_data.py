@@ -255,7 +255,7 @@ class StationFinder(QObject):
                                        data['Climate ID'],
                                        '%0.3f' % data['Latitude'],
                                        '%0.3f' % data['Longitude'],
-                                       '%0.3f' % data['Elevation']]
+                                       '%0.1f' % data['Elevation']]
 
                         if self.stop_searching:
                             self.searchFinished.emit(self.stationlist)
