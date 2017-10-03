@@ -261,7 +261,6 @@ class StationFinder(QObject):
                             self.searchFinished.emit(self.stationlist)
                             return self.stationlist
                         else:
-                            self.stationlist.add_stations(new_station)
                             self.sig_newstation_found.emit(new_station)
 
         msg = ('%d weather stations with daily data for at least %d years'
