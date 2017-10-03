@@ -57,10 +57,9 @@ class StationFinder(QObject):
         self.year_min = 1960
         self.year_max = 2015
         self.nbr_of_years = 5
-        self.search_by = 'proximity'
-        # options are: 'proximity' or 'province'
-        self.stationlist = []
+        self.search_by = 'proximity'  # options are: 'proximity' or 'province'
 
+        self.stationlist = WeatherSationList()
         self.stop_searching = False
         self.isOffline = False
         self.debug_mode = False
@@ -143,7 +142,7 @@ class StationFinder(QObject):
         """
 
         print('Searching weather station on www.http://climate.weather.gc.ca.')
-        self.stationlist = []
+        self.stationlist.clear()
 
         # ---- Fetch data.
 
@@ -159,8 +158,8 @@ class StationFinder(QObject):
 
         if html is None:
             print('The search for weather station has failed.')
-            self.searchFinished.emit([])
-            return []
+            self.searchFinished.emit(self.stationlist)
+            return self.stationlist
 
         # ---- Get the number of stations found.
 
@@ -262,7 +261,7 @@ class StationFinder(QObject):
                             self.searchFinished.emit(self.stationlist)
                             return self.stationlist
                         else:
-                            self.stationlist.append(new_station)
+                            self.stationlist.add_stations(new_station)
                             self.sig_newstation_found.emit(new_station)
 
         msg = ('%d weather stations with daily data for at least %d years'
@@ -274,7 +273,7 @@ class StationFinder(QObject):
 
         print('Searching for weather station is finished.')
         self.searchFinished.emit(self.stationlist)
-        
+
         return self.stationlist
 
     def get_station_info(self, Prov, StationID):
