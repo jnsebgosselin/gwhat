@@ -935,6 +935,8 @@ class WeatherStationDisplayTable(QTableWidget):
         row = self.rowCount()
         self.insertRow(row)
 
+        self.setSortingEnabled(False)
+
         # ---- Checkbox
 
         col = 0
@@ -1049,6 +1051,8 @@ class WeatherStationDisplayTable(QTableWidget):
 
         item = QTableWidgetItem(row_data[1])
         self.setItem(row, col, item)
+
+        self.setSortingEnabled(True)
 
     def delete_rows(self, rows):
         # Going in reverse order to preserve indexes while
