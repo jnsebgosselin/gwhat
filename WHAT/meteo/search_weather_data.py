@@ -131,9 +131,9 @@ class StationFinder(QObject):
     def search_envirocan(self):
         """
         Search on the Government of Canada website for weather stations with
-        daily meteo data around a decimal degree Lat & Lon coordinate with a
+        daily weather data around a decimal degree Lat & Lon coordinate with a
         radius given in km. The results are returned in a list formatted ready
-        to be read by WHAT UI.
+        to be read by Search4Stations widget.
 
         A signal is emitted with the list if the process is completed
         successfully. If no results are found, only the header is return with
@@ -200,6 +200,8 @@ class StationFinder(QObject):
                     with open(filename, 'w') as local_file:
                         local_file.write(html)
 
+            # ---- Find wheather station data.
+
             soup = BeautifulSoup(html, 'html.parser')
             while True:
                 tag = soup.find("form", attrs={
@@ -225,11 +227,11 @@ class StationFinder(QObject):
                     # There is no daily data for this station.
                     start_year = None
                     end_year = None
-                    dly_range = None
+                    year_range = None
                 else:
-                    start_year = dly_range[:4]
-                    end_year = dly_range[11:15]
-                    dly_range = int(end_year) - int(start_year) + 1
+                    start_year = int(dly_range[:4])
+                    end_year = int(dly_range[11:15])
+                    year_range = end_year - start_year + 1
 
                 # ---- Station Name
 
@@ -248,10 +250,9 @@ class StationFinder(QObject):
 
                 staCount += 1
 
-                if start_year is None:
+                if year_range is None:
                     print("Not adding %s (no daily data)" % station_name)
                 else:
-                    year_range = end_year-start_year+1
                     if year_range < self.nbr_of_years:
                         print("Not adding %s (not enough data)" % station_name)
                     else:
@@ -263,10 +264,14 @@ class StationFinder(QObject):
 
                         data = self.get_station_info(province, station_id)
                         new_station = [station_name, station_id,
-                                       start_year, end_year, province,
-                                       data['Climate ID'], station_proxim,
-                                       data['Latitude'], data['Longitude'],
-                                       data['Elevation']]
+                                       '%d' % start_year,
+                                       '%d' % end_year,
+                                       province,
+                                       data['Climate ID'],
+                                       '%0.2f' % station_proxim,
+                                       '%0.3f' % data['Latitude'],
+                                       '%0.3f' % data['Longitude'],
+                                       '%0.3f' % data['Elevation']]
 
                         if self.stop_searching:
                             self.searchFinished.emit(self.stationlist)
@@ -323,7 +328,7 @@ class StationFinder(QObject):
         degree = int(tag.contents[0])
         minute = int(tag.contents[2])
         second = float(tag.contents[4])
-        data['Latitude'] = str(dms2decdeg(degree, minute, second))
+        data['Latitude'] = dms2decdeg(degree, minute, second)
 
         # ---- Longitude
 
@@ -332,13 +337,13 @@ class StationFinder(QObject):
         degree = int(tag.contents[0])
         minute = int(tag.contents[2])
         second = float(tag.contents[4])
-        data['Longitude'] = str(dms2decdeg(degree, minute, second))
+        data['Longitude'] = dms2decdeg(degree, minute, second)
 
         # ---- Elevation
 
         tag = soup.find('div', class_="col-lg-6 col-md-7 col-sm-7 col-xs-6",
                         attrs={"aria-labelledby": "elevation"})
-        data['Elevation'] = tag.contents[0]
+        data['Elevation'] = float(tag.contents[0])
 
         # ---- Climate ID
 
@@ -351,8 +356,8 @@ class StationFinder(QObject):
         tag = soup.find('script', attrs={'type': "text/javascript"})
         maxmindates = self.findUnique('var maxMin = (.*?);', tag.string)[1:-1]
         maxmindates = maxmindates.replace('"', '').split(',')
-        data['Minimum Year'] = maxmindates[0]
-        data['Maximum Year'] = maxmindates[3]
+        data['Minimum Year'] = int(maxmindates[0])
+        data['Maximum Year'] = int(maxmindates[3])
 
         data['Proximity'] = 0
 
@@ -985,8 +990,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = self.NumTableWidgetItem('%0.2f' % float(row_data[6]),
-                                       float(row_data[6]))
+        item = self.NumTableWidgetItem(row_data[6], float(row_data[6]))
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
@@ -999,13 +1003,12 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = QTableWidgetItem('%d' % min_year)
+        item = QTableWidgetItem(row_data[2])
         item.setFlags(item.flags() & Qt.ItemIsEnabled)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
 
         if self.year_display_mode == 1:
-
             item.setFlags(item.flags() & Qt.ItemIsEnabled)
 
             self.fromYear = QComboBox()
@@ -1022,7 +1025,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = QTableWidgetItem('%d' % max_year)
+        item = QTableWidgetItem(row_data[3])
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
@@ -1070,7 +1073,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = self.NumTableWidgetItem('%0.2f' % row_data[7], row_data[7])
+        item = self.NumTableWidgetItem(row_data[7], float(row_data[7]))
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
@@ -1079,7 +1082,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = self.NumTableWidgetItem('%0.2f' % row_data[8], row_data[8])
+        item = self.NumTableWidgetItem(row_data[8], float(row_data[8]))
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
@@ -1088,7 +1091,7 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = self.NumTableWidgetItem('%0.2f' % row_data[9], row_data[9])
+        item = self.NumTableWidgetItem(row_data[9], float(row_data[9]))
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
@@ -1240,30 +1243,30 @@ def dms2decdeg(deg, mnt, sec):
 
 if __name__ == '__main__':
 
-#    finder = StationFinder()
-#    finder.isOffline = True
-#    finder.lat = 25
-#    finder.lon = 74
-#    finder.search_envirocan()
+    finder = StationFinder()
+    finder.isOffline = True
+    finder.lat = 25
+    finder.lon = 74
+    finder.search_envirocan()
 
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(10)
-    app.setFont(ft)
-
-    search4sta = Search4Stations()
-
-    search4sta.lat_spinBox.setValue(45.40)
-    search4sta.lon_spinBox.setValue(73.15)
-    search4sta.minYear.setValue(1980)
-    search4sta.maxYear.setValue(2015)
-    search4sta.nbrYear.setValue(20)
-
-    search4sta.finder.isOffline = False
-    # search4sta.finder.debug_mode = True
-
-    search4sta.show()
-
-    sys.exit(app.exec_())
+#    app = QApplication(sys.argv)
+#
+#    ft = app.font()
+#    ft.setFamily('Segoe UI')
+#    ft.setPointSize(10)
+#    app.setFont(ft)
+#
+#    search4sta = Search4Stations()
+#
+#    search4sta.lat_spinBox.setValue(45.40)
+#    search4sta.lon_spinBox.setValue(73.15)
+#    search4sta.minYear.setValue(1980)
+#    search4sta.maxYear.setValue(2015)
+#    search4sta.nbrYear.setValue(20)
+#
+#    search4sta.finder.isOffline = True
+#    # search4sta.finder.debug_mode = True
+#
+#    search4sta.show()
+#
+#    sys.exit(app.exec_())
