@@ -49,7 +49,6 @@ class WeatherSationList(list):
 
     def __init__(self, filelist=None, *args, **kwargs):
         super(WeatherSationList, self).__init__(*args, **kwargs)
-        self._list = []
         self._filename = None
         if filelist:
             self.load_stationlist_from_file(filelist)
@@ -65,6 +64,7 @@ class WeatherSationList(list):
         return self.pop(index)
 
     def load_stationlist_from_file(self, filelist, overwrite=True):
+        self._filename = filelist
         if overwrite:
             self.clear()
 
@@ -80,22 +80,19 @@ class WeatherSationList(list):
             except (AssertionError, IndexError):
                 continue
             else:
-                for line in reader[1:]:
-                    if len(line) < len(self.HEADER):
-                        finder = swd.StationFinder()
-                        info = finder.get_station_info(line[4], line[1])
-                        self.append([info['Station Name'],
-                                     info['Station ID'],
-                                     info['Minimum Year'],
-                                     info['Maximum Year'],
-                                     info['Province'],
-                                     info['Climate ID'],
-                                     info['Latitude'],
-                                     info['Longitude'],
-                                     info['Elevation']
-                                     ])
+                self.extend(reader[1:])
         else:
             return
+
+    def update_station_list(self):
+        for i, station in enumerate(self):
+            print('Fetching missing data for station %s' % station[0])
+            finder = swd.StationFinder()
+            info = finder.get_station_info(station[4], station[1])
+            self[i] = [info['Station Name'], info['Station ID'],
+                       info['Minimum Year'], info['Maximum Year'],
+                       info['Province'], info['Climate ID'],
+                       info['Latitude'], info['Longitude'], info['Elevation']]
 
     def get_file_content(self):
         file_content = copy(self)
@@ -122,4 +119,5 @@ if __name__ == '__main__':
     fname = ("C:\\Users\\jsgosselin\\OneDrive\\Research\\PostDoc - MDDELCC\\"
              "RSESQ\\weather_stations_extended_copy.lst")
     stationlist = WeatherSationList(fname)
-    filecontent = stationlist.get_file_content()
+    stationlist.update_station_list()
+    stationlist.save_to_file(fname)
