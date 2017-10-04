@@ -253,9 +253,9 @@ class StationFinder(QObject):
                                        '%d' % end_year,
                                        province,
                                        data['Climate ID'],
-                                       '%0.3f' % data['Latitude'],
-                                       '%0.3f' % data['Longitude'],
-                                       '%0.1f' % data['Elevation']]
+                                       data['Latitude'],
+                                       data['Longitude'],
+                                       data['Elevation']]
 
                         if self.stop_searching:
                             self.searchFinished.emit(self.stationlist)
@@ -312,7 +312,7 @@ class StationFinder(QObject):
         degree = int(tag.contents[0])
         minute = int(tag.contents[2])
         second = float(tag.contents[4])
-        data['Latitude'] = dms2decdeg(degree, minute, second)
+        data['Latitude'] = '%0.3f' % dms2decdeg(degree, minute, second)
 
         # ---- Longitude
 
@@ -321,13 +321,16 @@ class StationFinder(QObject):
         degree = int(tag.contents[0])
         minute = int(tag.contents[2])
         second = float(tag.contents[4])
-        data['Longitude'] = dms2decdeg(degree, minute, second)
+        data['Longitude'] = '%0.3f' % dms2decdeg(degree, minute, second)
 
         # ---- Elevation
 
         tag = soup.find('div', class_="col-lg-6 col-md-7 col-sm-7 col-xs-6",
                         attrs={"aria-labelledby": "elevation"})
-        data['Elevation'] = float(tag.contents[0])
+        try:
+            data['Elevation'] = '%0.1f' % float(tag.contents[0])
+        except ValueError:
+            data['Elevation'] = ''
 
         # ---- Climate ID
 
@@ -1090,7 +1093,10 @@ class WeatherStationDisplayTable(QTableWidget):
 
         col += 1
 
-        item = self.NumTableWidgetItem(row_data[8], float(row_data[8]))
+        try:
+            item = self.NumTableWidgetItem(row_data[8], float(row_data[8]))
+        except ValueError:
+            item = QTableWidgetItem(row_data[8])
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, col, item)
