@@ -42,8 +42,8 @@ from xlrd import xldate_as_tuple
 
 # Local imports :
 
-import common.database as db
-from colors2 import ColorsReader
+import WHAT.common.database as db
+from WHAT.colors2 import ColorsReader
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'

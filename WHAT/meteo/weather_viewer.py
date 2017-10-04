@@ -48,8 +48,9 @@ import WHAT.common.database as db
 from WHAT.colors2 import ColorsReader
 from WHAT.common import IconDB, StyleDB, QToolButtonNormal
 from WHAT.common.widgets import DialogWindow
-from _version import __version__
 
+import WHAT
+from WHAT import __version__
 
 # =============================================================================
 
@@ -975,7 +976,7 @@ class GridWeatherNormals(QTableWidget):
         self.resizeColumnsToContents()
 
 if __name__ == '__main__':
-    from meteo.weather_reader import WXDataFrame
+    from WHAT.meteo.weather_reader import WXDataFrame
     app = QApplication(sys.argv)
 
     ft = app.font()

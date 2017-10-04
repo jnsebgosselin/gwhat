@@ -49,7 +49,7 @@ from WHAT.hydrograph4 import LatLong2Dist
 from WHAT.meteo.weather_viewer import FigWeatherNormals
 from WHAT.meteo.gapfill_weather_postprocess import PostProcessErr
 import WHAT.meteo.weather_reader as wxrd
-from _version import __version__
+from WHAT import __version__
 
 
 # =============================================================================

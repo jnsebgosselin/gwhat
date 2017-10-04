@@ -80,7 +80,7 @@ from WHAT.widgets.tabwidget import TabWidget
 from WHAT.projet.manager_projet import ProjetManager
 from WHAT.projet.manager_data import DataManager
 from WHAT.common import IconDB, StyleDB, QToolButtonBase
-from WHAT._version import __version__
+from WHAT import __version__
 
 freeze_support()
 
