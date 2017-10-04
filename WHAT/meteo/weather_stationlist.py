@@ -107,7 +107,7 @@ class WeatherSationList(list):
         for station in self:
             html += "<tr>"
             for attrs in station:
-                html = '<td>%s</td>' % attrs
+                html += '<td>%s</td>' % attrs
             html += "</tr>"
         html += "</table>"
 
