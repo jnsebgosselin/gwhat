@@ -38,7 +38,7 @@ import numpy as np
 
 # Local imports :
 
-import common.widgets as myqt
+import WHAT.common.widgets as myqt
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

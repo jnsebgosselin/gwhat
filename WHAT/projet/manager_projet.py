@@ -40,7 +40,7 @@ from projet.reader_projet import ProjetReader
 from common import IconDB, QToolButtonSmall
 from projet.manager_data import DataManager
 import common.widgets as myqt
-from _version import __version__
+from WHAT import __version__
 
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::

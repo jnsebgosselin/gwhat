@@ -31,7 +31,7 @@ from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
 
 # Local imports :
 
-from _version import __version__, __date__
+from WHAT import __version__, __date__
 from common import IconDB
 
 
