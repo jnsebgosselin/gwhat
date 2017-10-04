@@ -19,6 +19,7 @@ install:
   - pip install pytest-ordering
   - pip install coveralls
   - pip install matplotlib
+  - pip install beautifulsoup4
 
 script:
   python runtests.py

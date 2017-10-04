@@ -18,12 +18,11 @@ from PyQt5.QtCore import Qt
 # ---- Local imports
 
 from WHAT.meteo.dwnld_weather_data import (
-        DwnldWeatherWidget, RawDataDownloader, ConcatenatedDataFrame,
-        QFileDialog, QMessageBox)
+        DwnldWeatherWidget, RawDataDownloader, QFileDialog, QMessageBox)
 
 
-# Qt Test Fixtures
-# --------------------------------
+# ---- Qt Test Fixtures
+
 
 @pytest.fixture
 def raw_downloader_bot(qtbot):
@@ -38,8 +37,8 @@ def downloader_bot(qtbot):
     return wxdata_downloader, qtbot
 
 
-# Test RawDataDownloader
-# -------------------------------
+# ---- Test RawDataDownloader
+
 
 @pytest.mark.run(order=3)
 def test_download_raw_data(raw_downloader_bot):
@@ -66,30 +65,32 @@ def test_download_raw_data(raw_downloader_bot):
     dwnld_worker.download_data()
 
 
-# Test DwnldWeatherWidget
-# -------------------------------
+# ---- Test DwnldWeatherWidget
+
 
 @pytest.mark.run(order=3)
-def test_load_old_stationlist(downloader_bot):
+def test_load_tabsep_stationlist(downloader_bot):
     wxdata_downloader, qtbot = downloader_bot
     assert wxdata_downloader
 
     dirname = os.path.dirname(os.path.realpath(__file__))
-    expected_result = [["ABERCORN", "5308", "1950", "1985",
-                        "QC", "7020040", "1.25"],
-                       ["AIGREMONT", "5886", "1973", "1982",
-                        "QC", "7060070", "3.45"],
-                       ["ALBANEL", "5887", "1922", "1991",
-                        "QC", "7060080", "2.23"]]
+    expected_results = [
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627",
+         '45.400', '73.133', '38.0'],
+        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700",
+         '45.433', '73.100', '39.9'],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270",
+         '45.333', '73.250', '30.5']
+        ]
 
     # Assert that tab-separated-value station list loads correctly.
-    fname = os.path.join(dirname, "stationlist_tab.lst")
+    fname = os.path.join(dirname, "stationlist_tabsep.lst")
     station_list = wxdata_downloader.load_stationList(fname)
-    assert station_list == expected_result
+    assert station_list == expected_results
 
     # Assert that the data are stored correctly in the widget table.
     list_from_table = wxdata_downloader.station_table.get_stationlist()
-    assert list_from_table == expected_result
+    assert list_from_table == expected_results
 
 
 @pytest.mark.run(order=3)
@@ -98,17 +99,27 @@ def test_load_stationlist(downloader_bot, mocker):
     assert wxdata_downloader
 
     expected_result = [
-        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
-        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700", "5.43"],
-        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
-        ["MONT ST HILAIRE", "5423", "1960", "1969", "QC", "7025330", "17.49"],
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
-        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
-        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
-        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
-        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"],
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627",
+         '45.400', '73.133', '38.0'],
+        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700",
+         '45.433', '73.100', '39.9'],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270",
+         '45.333', '73.250', '30.5'],
+        ["MONT ST HILAIRE", "5423", "1960", "1969", "QC", "7025330",
+         '45.550', '73.083', '173.7'],
+        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+         '45.294', '73.349', '43.8'],
+        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734",
+         '45.217', '73.200', '38.1'],
+        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100",
+         '45.383', '73.433', '30.0'],
+        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320",
+         '45.300', '72.900', '68.0'],
+        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
+         '45.617', '73.133', '30.0'],
         ["MONTREAL/ST-HUBERT A", "5490", "1928", "2015", "QC", "7027320",
-         "24.85"]]
+         '45.517', '73.417', '27.4']
+        ]
 
     # Mock the dialog window and answer to specify the file name and type.
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!")
@@ -144,13 +155,21 @@ def test_delete_add_stations(downloader_bot, mocker):
 
     # Select some stations in the list and delete them.
     expected_result = [
-        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
-        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
-        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
-        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
-        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
-        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"]]
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627",
+         '45.400', '73.133', '38.0'],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270",
+         '45.333', '73.250', '30.5'],
+        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+         '45.294', '73.349', '43.8'],
+        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734",
+         '45.217', '73.200', '38.1'],
+        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100",
+         '45.383', '73.433', '30.0'],
+        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320",
+         '45.300', '72.900', '68.0'],
+        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
+         '45.617', '73.133', '30.0'],
+        ]
 
     for row in [1, 3, 9]:
         item = station_table.cellWidget(row, 0).layout().itemAtPosition(1, 1)
@@ -168,17 +187,28 @@ def test_delete_add_stations(downloader_bot, mocker):
 
     # Add back the stations that were deleted.
     expected_result = [
-        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
-        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
-        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
-        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
-        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
-        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"],
-        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700", "5.43"],
-        ["MONT ST HILAIRE", "5423", "1960", "1969", "QC", "7025330", "17.49"],
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627",
+         '45.400', '73.133', '38.0'],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270",
+         '45.333', '73.250', '30.5'],
+        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+         '45.294', '73.349', '43.8'],
+        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734",
+         '45.217', '73.200', '38.1'],
+        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100",
+         '45.383', '73.433', '30.0'],
+        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320",
+         '45.300', '72.900', '68.0'],
+        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
+         '45.617', '73.133', '30.0'],
+        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700",
+         '45.433', '73.100', '39.9'],
+        ["MONT ST HILAIRE", "5423", "1960", "1969", "QC", "7025330",
+         '45.550', '73.083', '173.7'],
         ["MONTREAL/ST-HUBERT A", "5490", "1928", "2015", "QC", "7027320",
-         "24.85"]]
+         '45.517', '73.417', '27.4']
+        ]
+
     wxdata_downloader.add_stations2list(original_list)
     assert expected_result == station_table.get_stationlist()
 
@@ -206,13 +236,21 @@ def test_download_data(downloader_bot, mocker):
 
     # Load the weather station list.
     expected_result = [
-        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
-        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
-        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
-        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
-        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
-        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"]]
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627",
+         '45.400', '73.133', '38.0'],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270",
+         '45.333', '73.250', '30.5'],
+        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+         '45.294', '73.349', '43.8'],
+        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734",
+         '45.217', '73.200', '38.1'],
+        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100",
+         '45.383', '73.433', '30.0'],
+        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320",
+         '45.300', '72.900', '68.0'],
+        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
+         '45.617', '73.133', '30.0'],
+        ]
 
     station_list = wxdata_downloader.load_stationList(
             os.path.join(projetpath, "cleaned_station_list.lst"))
@@ -350,6 +388,5 @@ def test_merge_widget(downloader_bot, mocker):
     qtbot.waitUntil(lambda: not wxdata_downloader.btn_goNext.isEnabled())
 
 
-if __name__ == "__main__":                                   # pragma: no cover
+if __name__ == "__main__":
     pytest.main([os.path.basename(__file__), '-v', '-rw', '--cov=WHAT'])
-    # pytest.main()

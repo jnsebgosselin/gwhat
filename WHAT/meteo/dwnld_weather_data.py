@@ -397,7 +397,8 @@ class DwnldWeatherWidget(QWidget):
 
         # Grab the info of the weather stations that are selected.
         rows = self.station_table.get_checked_rows()
-        self.staList2dwnld = self.station_table.get_content4rows(rows)
+        self.staList2dwnld = self.station_table.get_content4rows(
+                rows, daterange='selected')
         if len(self.staList2dwnld) == 0:
             msg = ('No weather station currently selected.')
             btn = QMessageBox.Ok

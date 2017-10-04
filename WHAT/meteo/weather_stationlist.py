@@ -38,21 +38,12 @@ class WeatherSationList(list):
     station names, station ID , year at which the data records begin and year
     at which the data records end, the provinces to which each station belongs,
     the climate ID and the Proximity value in km for the original search
-    location.
-
-    All these information can be found on the Government of Canada
-    website in the address bar of the web browser when a station is
-    selected. Note that the station ID is not the same as the Climate ID
-    of the station. For example, the ID for the station Abercorn is 5308,
-    as it can be found in the following address:
-
-    http://climate.weather.gc.ca/climateData/dailydata_e.html?timeframe=
-    2&Prov=QUE&StationID=5308&dlyRange=1950-12-01|1985-01-31&Year=
-    1985&Month=1&Day=01
+    location. Note that the station ID is not the same as the Climate ID
+    of the station.
     """
 
     HEADER = ['staName', 'stationId', 'StartYear', 'EndYear', 'Province',
-              'ClimateID', 'Proximity (km)']
+              'ClimateID', 'Latitude (dd)', 'Longitude (dd)', 'Elevation (m)']
 
     def __init__(self, filelist=None, *args, **kwargs):
         super(WeatherSationList, self).__init__(*args, **kwargs)

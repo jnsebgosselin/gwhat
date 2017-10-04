@@ -14,8 +14,8 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from meteo.search_weather_data import Search4Stations                  # nopep8
 from meteo.search_weather_data import QFileDialog                      # nopep8
 
-# Qt Test Fixtures
-# --------------------------------
+
+# ---- Qt Test Fixtures
 
 
 @pytest.fixture
@@ -31,8 +31,35 @@ def station_finder_bot(qtbot):
 
     return station_finder_widget, qtbot
 
-# Tests
-# -------------------------------
+
+# ---- Expected Results
+
+
+expected_results = [
+        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627",
+         '45.400', '73.133', '38.0'],
+        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700",
+         '45.433', '73.100', '39.9'],
+        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270",
+         '45.333', '73.250', '30.5'],
+        ["MONT ST HILAIRE", "5423", "1960", "1969", "QC", "7025330",
+         '45.550', '73.083', '173.7'],
+        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+         '45.294', '73.349', '43.8'],
+        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734",
+         '45.217', '73.200', '38.1'],
+        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100",
+         '45.383', '73.433', '30.0'],
+        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320",
+         '45.300', '72.900', '68.0'],
+        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
+         '45.617', '73.133', '30.0'],
+        ["MONTREAL/ST-HUBERT A", "5490", "1928", "2015", "QC", "7027320",
+         '45.517', '73.417', '27.4']
+        ]
+
+
+# ---- Tests
 
 
 @pytest.mark.run(order=2)
@@ -40,20 +67,6 @@ def test_search_weather_station(station_finder_bot, mocker):
     station_finder_widget, qtbot = station_finder_bot
     station_finder_widget.show()
     assert station_finder_widget
-
-    expected_results = [
-        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
-        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700", "5.43"],
-        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
-        ["MONT ST HILAIRE", "5423", "1960", "1969", "QC", "7025330", "17.49"],
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
-        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
-        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
-        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
-        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"],
-        ["MONTREAL/ST-HUBERT A", "5490", "1928", "2015", "QC", "7027320",
-         "24.85"]
-        ]
 
     # Search for stations and assert the results.
     searchFinished = station_finder_widget.finder.searchFinished
@@ -88,20 +101,6 @@ def test_stop_search(station_finder_bot):
     station_finder_widget.show()
     assert station_finder_widget
 
-    expected_results = [
-        ["MARIEVILLE", "5406", "1960", "2017", "QC", "7024627", "1.32"],
-        ["ROUGEMONT", "5442", "1956", "1985", "QC", "7026700", "5.43"],
-        ["IBERVILLE", "5376", "1963", "2016", "QC", "7023270", "10.86"],
-        ["MONT ST HILAIRE", "5423", "1960", "1969", "QC", "7025330", "17.49"],
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4", "19.73"],
-        ["SABREVOIS", "5444", "1975", "2017", "QC", "7026734", "20.76"],
-        ["LAPRAIRIE", "5389", "1963", "2017", "QC", "7024100", "22.57"],
-        ["FARNHAM", "5358", "1917", "2017", "QC", "7022320", "22.73"],
-        ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517", "24.12"],
-        ["MONTREAL/ST-HUBERT A", "5490", "1928", "2015", "QC", "7027320",
-         "24.85"]
-        ]
-
     # Start the search.
     sig_newstation_found = station_finder_widget.finder.sig_newstation_found
     with qtbot.waitSignal(sig_newstation_found, raising=True, timeout=60000):
@@ -133,6 +132,5 @@ def test_stop_search(station_finder_bot):
             station_finder_widget.finder.stationlist)
 
 
-if __name__ == "__main__":                                   # pragma: no cover
-    pytest.main([os.path.basename(__file__)])
-#    pytest.main()
+if __name__ == "__main__":
+    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
