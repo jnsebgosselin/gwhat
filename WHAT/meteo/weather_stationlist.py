@@ -104,6 +104,10 @@ class WeatherSationList(list):
 
     def format_list_in_html(self):
         html = "<table>"
+        html += "<tr>"
+        for attrs in self.HEADER:
+            html += '<th>%s</th>' % attrs
+        html += "<tr>"
         for station in self:
             html += "<tr>"
             for attrs in station:
