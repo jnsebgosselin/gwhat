@@ -102,6 +102,17 @@ class WeatherSationList(list):
 
             print('Station list saved successfully in %s' % filename)
 
+    def format_list_in_html(self):
+        html = "<table>"
+        for station in self:
+            html += "<tr>"
+            for attrs in station:
+                html = '<td>%s</td>' % attrs
+            html += "</tr>"
+        html += "</table>"
+
+        return html
+
 
 if __name__ == '__main__':
     fname = ("C:\\Users\\jsgosselin\\OneDrive\\WHAT\\WHAT\\tests\\"
