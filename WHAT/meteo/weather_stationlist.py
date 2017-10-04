@@ -119,5 +119,3 @@ if __name__ == '__main__':
     fname = ("C:\\Users\\jsgosselin\\OneDrive\\Research\\PostDoc - MDDELCC\\"
              "RSESQ\\weather_stations_extended_copy.lst")
     stationlist = WeatherSationList(fname)
-    stationlist.update_station_list()
-    stationlist.save_to_file(fname)
