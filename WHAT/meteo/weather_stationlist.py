@@ -31,6 +31,8 @@ import xlsxwriter
 
 # ---- Local imports
 
+from WHAT.meteo import search_weather_data as swd
+
 
 class WeatherSationList(list):
     """
@@ -74,11 +76,24 @@ class WeatherSationList(list):
             try:
                 with open(filelist, 'r') as f:
                     reader = list(csv.reader(f, delimiter=d))
-                    assert reader[0] == self.HEADER
+                    assert reader[0][0] == self.HEADER[0]
             except (AssertionError, IndexError):
                 continue
             else:
-                self.extend(reader[1:])
+                for line in reader[1:]:
+                    if len(line) < len(self.HEADER):
+                        finder = swd.StationFinder()
+                        info = finder.get_station_info(line[4], line[1])
+                        self.append([info['Station Name'],
+                                     info['Station ID'],
+                                     info['Minimum Year'],
+                                     info['Maximum Year'],
+                                     info['Province'],
+                                     info['Climate ID'],
+                                     info['Latitude'],
+                                     info['Longitude'],
+                                     info['Elevation']
+                                     ])
         else:
             return
 
@@ -104,8 +119,7 @@ class WeatherSationList(list):
 
 
 if __name__ == '__main__':
-    fname = ("C:\\Users\\jsgosselin\\OneDrive\\WHAT\\WHAT\\tests\\"
-             "@ new-prô'jèt!\\weather_station_list.lst")
+    fname = ("C:\\Users\\jsgosselin\\OneDrive\\Research\\PostDoc - MDDELCC\\"
+             "RSESQ\\weather_stations_extended_copy.lst")
     stationlist = WeatherSationList(fname)
     filecontent = stationlist.get_file_content()
-    stationlist.save_to_file("test.csv")

@@ -280,6 +280,9 @@ class StationFinder(QObject):
         """
         Fetch weather station information from its Station ID and Province.
         """
+        data = {}
+        data['Province'] = Prov
+        data['Station ID'] = StationID
 
         url = ('http://climate.weather.gc.ca/'
                'climate_data/daily_data_e.html?'
@@ -297,7 +300,6 @@ class StationFinder(QObject):
                     local_file.write(html)
 
         soup = BeautifulSoup(html, 'html.parser')
-        data = {}
 
         # ---- Station Name
 
