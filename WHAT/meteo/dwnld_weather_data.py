@@ -693,6 +693,7 @@ class RawDataDownloader(QObject):
 
         self.ERRFLAG = np.ones(yr_end - yr_start + 1)
 
+        print("Downloading data for station %s" % StaName)
         self.ConsoleSignal.emit(
             '''<font color=black>Downloading data from </font>
                <font color=blue>www.climate.weather.gc.ca</font>
@@ -738,9 +739,12 @@ class RawDataDownloader(QObject):
                     self.ERRFLAG[i] = self.dwnldfile(url, fname)
                 else:
                     self.ERRFLAG[i] = 3
-                    print('Not downloading: Raw Data File already exists.')
+                    print('    %s: Raw data file already exists for year %d.' %
+                          (StaName, year))
             else:
                 self.ERRFLAG[i] = self.dwnldfile(url, fname)
+                print('    %s: Downloading raw data file for year %d.' %
+                      (StaName, year))
 
             # Update UI :
 
@@ -779,7 +783,6 @@ class RawDataDownloader(QObject):
         try:
             ERRFLAG = 0
             f = urlopen(url)
-            print('downloading %s' % fname)
 
             # Write downloaded content to local file.
             with open(fname, 'wb') as local_file:
