@@ -103,6 +103,7 @@ class WeatherSationList(list):
             print('Station list saved successfully in %s' % filename)
 
     def format_list_in_html(self):
+        """Format the content of the weather station list into a HTML table."""
         html = "<table>"
         html += "<tr>"
         for attrs in self.HEADER:
