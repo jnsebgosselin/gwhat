@@ -132,7 +132,11 @@ def test_load_stationlist(downloader_bot, mocker):
     wxdata_downloader.btn_browse_staList_isClicked()
 
     # Assert that the data are stored correctly in the widget table.
-    assert expected_result == wxdata_downloader.station_table.get_stationlist()
+    station_list = wxdata_downloader.station_table.get_stationlist()
+    assert expected_result == station_list
+
+    # Test that the station list formating to html works without any error.
+    station_list.format_list_in_html()
 
     # Try to open a station list when the file does not exist.
     wxdata_downloader.load_stationList("dummy.lst")
