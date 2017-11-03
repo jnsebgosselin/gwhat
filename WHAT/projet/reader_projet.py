@@ -363,6 +363,16 @@ class WLDataFrameHDF5(dict):
         print(peak_indx)
 
     def mrc_exists(self):
+        if 'mrc' not in list(self.dset.keys()):
+            mrc = self.dset.create_group('mrc')
+            mrc.attrs['exists'] = 0
+            mrc.create_dataset('params', data=(0, 0), dtype='float64')
+            mrc.create_dataset('peak_indx', data=np.array([]),
+                               dtype='int16', maxshape=(None,))
+            mrc.create_dataset('recess', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('time', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
         return bool(self.dset['mrc'].attrs['exists'])
 
     # ================================================================ BRF ====
