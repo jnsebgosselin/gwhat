@@ -19,28 +19,20 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-# Standard library imports :
+# ---- Standard library imports
 
 import os
 import csv
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 import matplotlib.pyplot as plt
 from xlrd import xldate_as_tuple
 
-# Local imports :
+# ---- Local imports
 
-if __name__ == '__main__':
-    print('Running module as a standalone script...')
-    import sys
-    import platform
-    from os.path import dirname, realpath
-    root = dirname(dirname(realpath(__file__)))
-    sys.path.append(root)
-
-from brf_mod.kgs_plot import plot_BRF
+from WHAT.brf_mod.kgs_plot import plot_BRF
 
 
 # =============================================================================

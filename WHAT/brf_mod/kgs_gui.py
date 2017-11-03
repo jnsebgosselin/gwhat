@@ -31,10 +31,10 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-import common.widgets as myqt
-from brf_mod.kgs_plot import BRFFigure
-from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
-import brf_mod as bm
+import WHAT.common.widgets as myqt
+from WHAT.brf_mod.kgs_plot import BRFFigure
+from WHAT.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+from WHAT import brf_mod as bm
 
 mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})

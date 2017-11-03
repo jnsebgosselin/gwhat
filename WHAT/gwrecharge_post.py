@@ -21,13 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# ----- STANDARD LIBRARY IMPORTS -----
+# ---- Standard library imports
 
 # from datetime import date
 import csv
 import datetime
 
-# ----- THIRD PARTY IMPORTS -----
+# ---- Third party imports
 
 import numpy as np
 import matplotlib as mpl
@@ -35,10 +35,10 @@ from xlrd import xldate_as_tuple
 # from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
 
-# ----- PERSONAL LIBRARY IMPORTS -----
+# Local imports
 
-from waterlvldata import WaterlvlData
-import mplJS
+from WHAT.waterlvldata import WaterlvlData
+import WHAT.mplJS
 
 
 # =============================================================================

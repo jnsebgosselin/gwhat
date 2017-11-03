@@ -49,13 +49,13 @@ import xlsxwriter
 
 # Local imports :
 
-from gwrecharge_calc2 import SynthHydrograph
-from gwrecharge_post import plot_rechg_GLUE
+from WHAT.gwrecharge_calc2 import SynthHydrograph
+from WHAT.gwrecharge_post import plot_rechg_GLUE
 
-import common.database as db
-import common.widgets as myqt
-from common import IconDB, StyleDB, QToolButtonNormal
-import brf_mod as bm
+import WHAT.common.database as db
+import WHAT.common.widgets as myqt
+from WHAT.common import IconDB, StyleDB, QToolButtonNormal
+import WHAT.brf_mod as bm
 
 mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})

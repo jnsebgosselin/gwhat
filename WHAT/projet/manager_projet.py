@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 import os
 from datetime import datetime
 
-# Third party imports :
+# ---- Third party imports
 
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QPoint
@@ -34,12 +34,12 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
                              QApplication, QGridLayout, QMessageBox, QDialog,
                              QLineEdit, QToolButton, QFileDialog)
 
-# Local imports :
+# ---- Local imports
 
-from projet.reader_projet import ProjetReader
-from common import IconDB, QToolButtonSmall
-from projet.manager_data import DataManager
-import common.widgets as myqt
+from WHAT.projet.reader_projet import ProjetReader
+from WHAT.common import IconDB, QToolButtonSmall
+from WHAT.projet.manager_data import DataManager
+import WHAT.common.widgets as myqt
 from WHAT import __version__
 
 
