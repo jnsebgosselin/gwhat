@@ -11,8 +11,8 @@ import os.path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # Local imports
-from projet.reader_projet import ProjetReader                          # nopep8
-from projet.manager_projet import (ProjetManager, QFileDialog)         # nopep8
+from WHAT.projet.reader_projet import ProjetReader                     # nopep8
+from WHAT.projet.manager_projet import (ProjetManager, QFileDialog)    # nopep8
 
 
 # Qt Test Fixtures
