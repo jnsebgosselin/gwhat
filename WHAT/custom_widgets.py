@@ -12,8 +12,8 @@ import sys
 from PySide import QtGui, QtCore
 
 # PERSONAL IMPORTS :
-import common.database as db
-from common import IconDB, StyleDB, QToolButtonNormal
+import WHAT.common.database as db
+from WHAT.common import IconDB, StyleDB, QToolButtonNormal
 
 ###############################################################################
 

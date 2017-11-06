@@ -21,12 +21,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 import os
 from datetime import datetime
 
-# Third party imports :
+# ---- Third party imports
 
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -34,13 +34,13 @@ from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
                              QLabel, QMessageBox, QLineEdit, QPushButton,
                              QFileDialog, QApplication)
 
-# Local imports :
+# ---- Local imports
 
-from common import IconDB, QToolButtonSmall
-import common.widgets as myqt
-from hydrograph4 import LatLong2Dist
-import projet.reader_waterlvl as wlrd
-import meteo.weather_reader as wxrd
+from WHAT.common import IconDB, QToolButtonSmall
+import WHAT.common.widgets as myqt
+from WHAT.hydrograph4 import LatLong2Dist
+import WHAT.projet.reader_waterlvl as wlrd
+import WHAT.meteo.weather_reader as wxrd
 
 # :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 

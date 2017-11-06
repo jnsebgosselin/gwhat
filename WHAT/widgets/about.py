@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
 # Local imports :
 
 from WHAT import __version__, __date__
-from common import IconDB
+from WHAT.common import IconDB
 
 
 # =============================================================================

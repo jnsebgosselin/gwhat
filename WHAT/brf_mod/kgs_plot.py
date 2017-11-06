@@ -24,7 +24,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from os import getcwd
 
-# Third party imports:
+# ---- Third party imports
+
 from matplotlib import pyplot as plt
 import matplotlib as mpl
 import numpy as np

@@ -21,24 +21,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 # from datetime import date
 import csv
 import datetime
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 # from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
 
-# Local imports :
+# ---- Local imports
 
-import meteo.weather_reader as wxrd
-from waterlvldata import WaterlvlData
-from gwrecharge_post import plot_water_budget_yearly
+import WHAT.meteo.weather_reader as wxrd
+from WHAT.waterlvldata import WaterlvlData
+from WHAT.gwrecharge_post import plot_water_budget_yearly
 
 
 # =============================================================================

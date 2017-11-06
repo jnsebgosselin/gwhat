@@ -21,14 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 import csv
 import sys
 import os
 import copy
 
-# Third party imports :
+# ---- Third party imports
 
 from PyQt5.QtCore import Qt, QDate, QCoreApplication, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -42,17 +42,17 @@ import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# Local imports :
+# ---- Local imports
 
-import hydrograph4 as hydrograph
-import mplFigViewer3 as mplFigViewer
-from meteo.weather_viewer import WeatherAvgGraph
-from colors2 import ColorsReader, ColorsSetupWin
+import WHAT.hydrograph4 as hydrograph
+import WHAT.mplFigViewer3 as mplFigViewer
+from WHAT.meteo.weather_viewer import WeatherAvgGraph
+from WHAT.colors2 import ColorsReader, ColorsSetupWin
 
-from common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
-import common.widgets as myqt
-import common.database as db
-from projet.reader_waterlvl import load_waterlvl_measures
+from WHAT.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+import WHAT.common.widgets as myqt
+import WHAT.common.database as db
+from WHAT.projet.reader_waterlvl import load_waterlvl_measures
 
 
 # =============================================================================
