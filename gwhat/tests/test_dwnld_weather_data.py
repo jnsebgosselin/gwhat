@@ -17,7 +17,7 @@ from PyQt5.QtCore import Qt
 
 # ---- Local imports
 
-from WHAT.meteo.dwnld_weather_data import (
+from gwhat.meteo.dwnld_weather_data import (
         DwnldWeatherWidget, RawDataDownloader, QFileDialog, QMessageBox)
 
 

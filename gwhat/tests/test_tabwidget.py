@@ -18,7 +18,7 @@ from PyQt5.QtWidgets import QWidget                                    # nopep8
 
 # ---- Local imports
 
-from WHAT.widgets.tabwidget import TabWidget                                # nopep8
+from gwhat.widgets.tabwidget import TabWidget                          # nopep8
 
 
 # Qt Test Fixtures

@@ -11,8 +11,8 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 
 # Local imports
-from WHAT.meteo.search_weather_data import Search4Stations             # nopep8
-from WHAT.meteo.search_weather_data import QFileDialog                 # nopep8
+from gwhat.meteo.search_weather_data import Search4Stations            # nopep8
+from gwhat.meteo.search_weather_data import QFileDialog                # nopep8
 
 
 # ---- Qt Test Fixtures

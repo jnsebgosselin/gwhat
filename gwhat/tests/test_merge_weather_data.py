@@ -16,10 +16,10 @@ from PyQt5.QtCore import Qt
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from WHAT.meteo.dwnld_weather_data import ConcatenatedDataFrame
-from WHAT.meteo.weather_reader import read_weather_datafile
-from WHAT.meteo.merge_weather_data import (WXDataMerger, WXDataMergerWidget,
-                                           QFileDialog)
+from gwhat.meteo.dwnld_weather_data import ConcatenatedDataFrame
+from gwhat.meteo.weather_reader import read_weather_datafile
+from gwhat.meteo.merge_weather_data import (WXDataMerger, WXDataMergerWidget,
+                                            QFileDialog)
 
 
 # Qt Test Fixtures
