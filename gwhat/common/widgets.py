@@ -3,9 +3,9 @@
 copyright (C) 2016-2017 INRS
 contact: jean-sebastien.gosselin@outlook.com
 
-This is part of WHAT
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox)..
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -26,7 +26,7 @@ from __future__ import division, unicode_literals
 from copy import copy
 import os
 
-from WHAT.common import IconDB
+from gwhat.common import IconDB
 
 from PyQt5.QtCore import Qt, QSize, QPoint, QUrl
 from PyQt5.QtCore import pyqtSignal as QSignal
