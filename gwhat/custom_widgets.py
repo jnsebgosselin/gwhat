@@ -5,17 +5,16 @@ Created on Sun Jul  5 00:28:27 2015
 @author: jsgosselin
 """
 
-# STANDARD LIBRARY IMPORTS :
+# ---- Standard library imports
+
 import sys
 
-# THIRD PARTY IMPORTS :
+# ---- Third party imports
+
 from PySide import QtGui, QtCore
 
-# PERSONAL IMPORTS :
-import WHAT.common.database as db
-from WHAT.common import IconDB, StyleDB, QToolButtonNormal
+# ---- Personal imports
 
-###############################################################################
 
 class MyHorizHeader(QtGui.QHeaderView):
 

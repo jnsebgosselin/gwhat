@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -25,7 +25,6 @@ from __future__ import division, unicode_literals
 
 # from datetime import date
 import csv
-import datetime
 
 # ---- Third party imports
 
@@ -34,14 +33,6 @@ import matplotlib as mpl
 from xlrd import xldate_as_tuple
 # from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
-
-# Local imports
-
-from WHAT.waterlvldata import WaterlvlData
-import WHAT.mplJS
-
-
-# =============================================================================
 
 
 def calcul_glue(p, yrs_range=None):

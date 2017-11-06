@@ -2,16 +2,16 @@
 """
 ---- NOTICE ----
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox). This code is
-derived from a code provided in the example classes of the Qt Tookit by
-Trolltech AS. Original license is provided below.
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+This code is derived from a code provided in the example classes of the Qt
+Tookit by Trolltech AS. Original license is provided below.
 
 ---- LICENSE WHAT ----
 
 Copyright 2015 Jean-Sebastien Gosselin
 email: jnsebgosselin@gmail.com
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -48,8 +48,6 @@ WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 from PyQt5.QtCore import Qt, pyqtSignal, QEvent, QRect
 from PyQt5.QtGui import QImage, QPixmap, QPainter
 from PyQt5.QtWidgets import QFrame, QScrollArea, QApplication, QWidget
-
-###############################################################################
 
 
 class MplViewer(QFrame):

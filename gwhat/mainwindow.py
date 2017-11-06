@@ -3,7 +3,7 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-WHAT is free software: you can redistribute it and/or modify
+GHWAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -26,7 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals, print_function
 
-print('Starting WHAT...')
+print('Starting GWHAT...')
 
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QSize
@@ -52,10 +52,10 @@ if platform.system() == 'Windows':
     ft.setFamily('Segoe UI')
 app.setFont(ft)
 
-splash.showMessage("Starting WHAT, please wait ...",
+splash.showMessage("Starting GWHAT, please wait ...",
                    Qt.AlignBottom | Qt.AlignCenter)
 
-# Standard library imports :
+# ---- Standard library imports
 
 import csv
 from time import ctime
@@ -66,21 +66,21 @@ import tkinter
 import tkinter.filedialog
 import tkinter.messagebox
 
-# Local imports :
+# ---- Local imports
 
-import WHAT.common.database as db
-import WHAT.custom_widgets as MyQWidget
-import WHAT.HydroPrint2 as HydroPrint
-import WHAT.HydroCalc2 as HydroCalc
-from WHAT.meteo import dwnld_weather_data
-from WHAT.meteo.gapfill_weather_gui import GapFillWeatherGUI
-from WHAT.meteo.dwnld_weather_data import DwnldWeatherWidget
-from WHAT.widgets.tabwidget import TabWidget
+import gwhat.common.database as db
+import gwhat.custom_widgets as MyQWidget
+import gwhat.HydroPrint2 as HydroPrint
+import gwhat.HydroCalc2 as HydroCalc
+from gwhat.meteo import dwnld_weather_data
+from gwhat.meteo.gapfill_weather_gui import GapFillWeatherGUI
+from gwhat.meteo.dwnld_weather_data import DwnldWeatherWidget
+from gwhat.widgets.tabwidget import TabWidget
 
-from WHAT.projet.manager_projet import ProjetManager
-from WHAT.projet.manager_data import DataManager
-from WHAT.common import IconDB, StyleDB, QToolButtonBase
-from WHAT import __version__
+from gwhat.projet.manager_projet import ProjetManager
+from gwhat.projet.manager_data import DataManager
+from gwhat.common import IconDB, StyleDB, QToolButtonBase
+from gwhat import __version__
 
 freeze_support()
 

@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -26,7 +26,6 @@ from __future__ import division, unicode_literals
 import csv
 import sys
 import os
-import copy
 
 # ---- Third party imports
 
@@ -38,21 +37,20 @@ from PyQt5.QtWidgets import (QSpinBox, QDoubleSpinBox, QWidget, QDateEdit,
                              QFileDialog, QApplication, QPushButton,
                              QRadioButton, QDesktopWidget)
 
-import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
 
-import WHAT.hydrograph4 as hydrograph
-import WHAT.mplFigViewer3 as mplFigViewer
-from WHAT.meteo.weather_viewer import WeatherAvgGraph
-from WHAT.colors2 import ColorsReader, ColorsSetupWin
+import gwhat.hydrograph4 as hydrograph
+import gwhat.mplFigViewer3 as mplFigViewer
+from gwhat.meteo.weather_viewer import WeatherAvgGraph
+from gwhat.colors2 import ColorsReader, ColorsSetupWin
 
-from WHAT.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
-import WHAT.common.widgets as myqt
-import WHAT.common.database as db
-from WHAT.projet.reader_waterlvl import load_waterlvl_measures
+from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+import gwhat.common.widgets as myqt
+import gwhat.common.database as db
+from gwhat.projet.reader_waterlvl import load_waterlvl_measures
 
 
 # =============================================================================

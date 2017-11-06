@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -21,14 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 from time import clock, sleep
 import csv
 import os
 import datetime
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 from PyQt5.QtCore import Qt, QSize
@@ -47,21 +47,18 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 import xlsxwriter
 
-# Local imports :
+# ---- Local imports
 
-from WHAT.gwrecharge_calc2 import SynthHydrograph
-from WHAT.gwrecharge_post import plot_rechg_GLUE
+from gwhat.gwrecharge_calc2 import SynthHydrograph
+from gwhat.gwrecharge_post import plot_rechg_GLUE
 
-import WHAT.common.database as db
-import WHAT.common.widgets as myqt
-from WHAT.common import IconDB, StyleDB, QToolButtonNormal
-import WHAT.brf_mod as bm
+import gwhat.common.database as db
+import gwhat.common.widgets as myqt
+from gwhat.common import IconDB, StyleDB, QToolButtonNormal
+import gwhat.brf_mod as bm
 
 mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
-
-
-# =============================================================================
 
 
 class WLCalc(myqt.DialogWindow):

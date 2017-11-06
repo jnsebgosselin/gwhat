@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -23,22 +23,12 @@ from __future__ import division, unicode_literals
 
 # ---- Standard library imports
 
-# from datetime import date
-import csv
 import datetime
 
 # ---- Third party imports
 
 import numpy as np
-# from xlrd import xldate_as_tuple
-from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
-
-# ---- Local imports
-
-import WHAT.meteo.weather_reader as wxrd
-from WHAT.waterlvldata import WaterlvlData
-from WHAT.gwrecharge_post import plot_water_budget_yearly
 
 
 # =============================================================================

@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 from calendar import monthrange
 import csv
@@ -29,7 +29,7 @@ import os
 from math import sin, cos, sqrt, atan2, radians
 from time import clock
 
-# Third party imports :
+# ---- Third party imports
 
 import numpy as np
 import matplotlib as mpl
@@ -40,16 +40,14 @@ from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# Local imports :
+# ---- Local imports
 
-import WHAT.common.database as db
-from WHAT.colors2 import ColorsReader
+import gwhat.common.database as db
+from gwhat.colors2 import ColorsReader
 
 mpl.use('Qt4Agg')
 mpl.rcParams['backend.qt4'] = 'PySide'
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
-
-# =============================================================================
 
 
 class LabelDatabase():
