@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -36,14 +36,11 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
 
 # ---- Local imports
 
-from WHAT.projet.reader_projet import ProjetReader
-from WHAT.common import IconDB, QToolButtonSmall
-from WHAT.projet.manager_data import DataManager
-import WHAT.common.widgets as myqt
-from WHAT import __version__
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+from gwhat.projet.reader_projet import ProjetReader
+from gwhat.common import IconDB, QToolButtonSmall
+from gwhat.projet.manager_data import DataManager
+import gwhat.common.widgets as myqt
+from gwhat import __version__
 
 
 class ProjetManager(QWidget):
