@@ -13,9 +13,6 @@ import matplotlib.pyplot as plt
 #                                                  [ Right, Top    ]]
 
 
-###############################################################################
-
-
 class FigureMod(mpl.figure.Figure):
 
     def __init__(self, *args, **kargs):
