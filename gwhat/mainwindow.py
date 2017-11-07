@@ -239,7 +239,7 @@ class WHAT(QMainWindow):
     # =========================================================================
 
     def show(self):
-        super(WHAT, self).showMaximized()
+        super(WHAT, self).show()
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
@@ -388,7 +388,7 @@ if __name__ == '__main__':                                   # pragma: no cover
                         format='%(asctime)s - %(levelname)s:%(message)s')
     try:
         main = WHAT()
-        main.show()
+        main.showMaximized()
         splash.finish(main)
         sys.exit(app.exec_())
     except Exception as e:
