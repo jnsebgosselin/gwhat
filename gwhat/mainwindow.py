@@ -35,12 +35,10 @@ from PyQt5.QtWidgets import (QApplication, QSplashScreen, QMainWindow,
                              QMessageBox, QTabWidget, QTextEdit, QSplitter,
                              QWidget, QGridLayout, QDesktopWidget, QTabBar)
 import sys
-
 app = QApplication(sys.argv)
 
-splash = QSplashScreen(QPixmap('ressources/splash.png'),
-                       Qt.WindowStaysOnTopHint)
-splash.show()
+from gwhat.widgets.splash import SplashScrn
+splash = SplashScrn()
 
 import platform
 import os
@@ -52,8 +50,8 @@ if platform.system() == 'Windows':
     ft.setFamily('Segoe UI')
 app.setFont(ft)
 
-splash.showMessage("Starting GWHAT, please wait ...",
-                   Qt.AlignBottom | Qt.AlignCenter)
+from gwhat import __version__
+splash.showMessage("Starting %s." % __version__)
 
 # ---- Standard library imports
 
@@ -111,16 +109,16 @@ class WHAT(QMainWindow):
 
         # ------------------------------------------------- Projet Manager ----
 
+        splash.showMessage("Initializing project and data managers.")
         self.pmanager = ProjetManager(self)
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
-
         self.dmanager = DataManager(pm=self.pmanager)
-        self.dmanager2 = DataManager(pm=self.pmanager)
 
         # ----------------------------------------------------------- Init ----
 
         self.__initUI__()
 
+        splash.showMessage("Loading last opened project.")
         result = self.pmanager.load_project(self.projectfile)
         if result is False:
             self.tab_dwnld_data.setEnabled(False)
@@ -152,17 +150,21 @@ class WHAT(QMainWindow):
 
         # ---- download weather data ----
 
+        splash.showMessage("Initializing download weather data.")
         self.tab_dwnld_data = DwnldWeatherWidget(self)
         self.tab_dwnld_data.set_workdir(self.projectdir)
 
         # ---- gapfill weather data ----
 
+        splash.showMessage("Initializing gapfill weather data.")
         self.tab_fill_weather_data = GapFillWeatherGUI(self)
         self.tab_fill_weather_data.set_workdir(self.projectdir)
 
         # ---- hydrograph ----
 
+        splash.showMessage("Initializing plot hydrograph.")
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
+        splash.showMessage("Initializing analyse hydrograph.")
         self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
 
         # ---- TABS ASSEMBLY ----
@@ -178,6 +180,7 @@ class WHAT(QMainWindow):
 
         # --------------------------------------------------- Main Console ----
 
+        splash.showMessage("Initializing main window.")
         self.main_console = QTextEdit()
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QTextEdit.NoWrap)
@@ -298,10 +301,9 @@ class WHAT(QMainWindow):
     # =========================================================================
 
     def closeEvent(self, event):
-        print(event)
         print('Closing projet')
         self.pmanager.close_projet()
-        print('Closing WHAT')
+        print('Closing GWHAT')
         event.accept()
 
 
