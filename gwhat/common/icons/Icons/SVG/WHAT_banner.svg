@@ -16,10 +16,10 @@
    width="1897.0002"
    version="1.1"
    inkscape:version="0.92.1 r15371"
-   sodipodi:docname="GWHAT3.svg"
-   inkscape:export-filename="C:\Users\jsgosselin\Desktop\what_logo\GWHAT3.png"
-   inkscape:export-xdpi="31.663383"
-   inkscape:export-ydpi="31.663383">
+   sodipodi:docname="WHAT_banner.svg"
+   inkscape:export-filename="C:\Users\jsgosselin\OneDrive\GWHAT\gwhat\common\icons\Icons\WHAT_banner_750px.png"
+   inkscape:export-xdpi="37.954659"
+   inkscape:export-ydpi="37.954659">
   <sodipodi:namedview
      pagecolor="#ffffff"
      bordercolor="#666666"
@@ -35,10 +35,10 @@
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:zoom="0.37512071"
-     inkscape:cx="1071.1724"
-     inkscape:cy="408.26634"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:cx="927.96333"
+     inkscape:cy="353.48502"
+     inkscape:window-x="130"
+     inkscape:window-y="1072"
      inkscape:window-maximized="1"
      inkscape:current-layer="svg3336"
      fit-margin-top="0"
@@ -181,7 +181,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -347,4 +347,24 @@
          y="645.04346"
          style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.04190826px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:9.57270908px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762287"
          id="tspan3094">Toolbox for GroundWater Hydrograph Analysis</tspan></tspan></text>
+  <g
+     id="g4559"
+     transform="translate(119.06398,474.51392)">
+    <text
+       transform="scale(0.97852413,1.0219472)"
+       id="text3090-4"
+       y="-404.06998"
+       x="-110.26708"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:58.63801575px;line-height:0%;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:5.3779459px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.29792953;enable-background:new"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:55.15736771px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:6.28264475px;fill:#ffffff;fill-opacity:1;stroke-width:1.29792953"
+         id="tspan3092-0"
+         y="-404.06998"
+         x="-110.26708"
+         sodipodi:role="line">Version 0.1<tspan
+   id="tspan3094-4"
+   style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:55.15736771px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:6.28264475px;fill:#ffffff;fill-opacity:1;stroke-width:1.29792953"
+   y="-404.06998"
+   x="-110.26708" /></tspan></text>
+  </g>
 </svg>
