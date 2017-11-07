@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -21,14 +21,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Standard library imports
 
 import csv
 import sys
 import os
 from copy import copy
 
-# Third party imports :
+# ---- Third party imports
 
 # from PySide import QtGui
 import matplotlib as mpl
@@ -41,15 +41,8 @@ import scipy.stats as stats
 from xlrd.xldate import xldate_from_date_tuple
 #from xlrd import xldate_as_tuple
 
-# ---- Local imports
 
-from WHAT import meteo
-#import database as db
-#from hydrograph3 import LatLong2Dist
-
-#==============================================================================
 class PostProcessErr(object):
-#==============================================================================
 
     def __init__(self, fname):
 

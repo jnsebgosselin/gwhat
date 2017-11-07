@@ -2,9 +2,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -39,20 +39,15 @@ from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QFileDialog, QApplication, QTableWidget,
                              QTableWidgetItem)
 
-mpl.use('Qt5Agg')
-mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
-
 # ---- Local imports
 
-import WHAT.common.database as db
-from WHAT.colors2 import ColorsReader
-from WHAT.common import IconDB, StyleDB, QToolButtonNormal
-from WHAT.common.widgets import DialogWindow
+from gwhat.colors2 import ColorsReader
+from gwhat.common import IconDB, StyleDB, QToolButtonNormal
+from gwhat.common.widgets import DialogWindow
+from gwhat import __version__
 
-import WHAT
-from WHAT import __version__
-
-# =============================================================================
+mpl.use('Qt5Agg')
+mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
 class LabelDB(object):

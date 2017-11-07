@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of Pygwead (Python program for Gapfilling WEAther Data)
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-Pygwead is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -35,7 +35,6 @@ import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# =============================================================================
 
 def calcul_Thornthwaite(Date, Tavg, lat, Ta):
     """ Calcul reference PET0(mm/d) with  Thornwaite (1948).

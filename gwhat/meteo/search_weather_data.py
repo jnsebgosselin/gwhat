@@ -3,7 +3,7 @@
 # Copyright © 2014-2017 Jean-Sebastien Gosselin
 # email: jean-sebastien.gosselin@ete.inrs.ca
 #
-# This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 #
 # SearchProgressBar is based on the class FileProgressBar from Spyder.
@@ -34,9 +34,9 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
 
 # ---- Local imports
 
-from WHAT.common import IconDB, StyleDB
-from WHAT.meteo.weather_stationlist import WeatherSationList
-from WHAT.widgets.waitingspinner import QWaitingSpinner
+from gwhat.common import IconDB, StyleDB
+from gwhat.meteo.weather_stationlist import WeatherSationList
+from gwhat.widgets.waitingspinner import QWaitingSpinner
 
 
 class StationFinder(QObject):

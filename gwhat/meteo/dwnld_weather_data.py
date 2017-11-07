@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -41,12 +41,11 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 
 # ---- Local imports
 
-import WHAT.common.database as db
-from WHAT.common import IconDB, QToolButtonNormal, QToolButtonSmall
-import WHAT.common.widgets as myqt
-from WHAT.meteo.search_weather_data import WeatherStationDisplayTable
-from WHAT.meteo.search_weather_data import Search4Stations
-from WHAT.meteo.weather_stationlist import WeatherSationList
+from gwhat.common import IconDB, QToolButtonNormal, QToolButtonSmall
+import gwhat.common.widgets as myqt
+from gwhat.meteo.search_weather_data import WeatherStationDisplayTable
+from gwhat.meteo.search_weather_data import Search4Stations
+from gwhat.meteo.weather_stationlist import WeatherSationList
 
 
 class DwnldWeatherWidget(QWidget):

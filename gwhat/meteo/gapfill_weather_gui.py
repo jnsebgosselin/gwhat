@@ -3,9 +3,9 @@
 Copyright 2014-2017 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -50,10 +50,10 @@ from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
 
 # ---- Local imports
 
-from WHAT.meteo.gapfill_weather_algorithm2 import GapFillWeather
-from WHAT.meteo.merge_weather_data import WXDataMergerWidget
-from WHAT.common import IconDB, StyleDB, QToolButtonSmall
-import WHAT.common.widgets as myqt
+from gwhat.meteo.gapfill_weather_algorithm2 import GapFillWeather
+from gwhat.meteo.merge_weather_data import WXDataMergerWidget
+from gwhat.common import IconDB, StyleDB, QToolButtonSmall
+import gwhat.common.widgets as myqt
 
 
 class GapFillWeatherGUI(QWidget):

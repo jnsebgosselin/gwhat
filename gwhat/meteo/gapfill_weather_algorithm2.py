@@ -3,9 +3,9 @@
 Copyright 2014-2016 Jean-Sebastien Gosselin
 email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of WHAT (Well Hydrograph Analysis Toolbox).
+This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 
-WHAT is free software: you can redistribute it and/or modify
+GWHAT is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
@@ -45,11 +45,11 @@ from PyQt5.QtCore import QObject
 
 # ---- Local imports
 
-from WHAT.hydrograph4 import LatLong2Dist
-from WHAT.meteo.weather_viewer import FigWeatherNormals
-from WHAT.meteo.gapfill_weather_postprocess import PostProcessErr
-import WHAT.meteo.weather_reader as wxrd
-from WHAT import __version__
+from gwhat.hydrograph4 import LatLong2Dist
+from gwhat.meteo.weather_viewer import FigWeatherNormals
+from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
+import gwhat.meteo.weather_reader as wxrd
+from gwhat import __version__
 
 
 # =============================================================================
