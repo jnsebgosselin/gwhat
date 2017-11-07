@@ -46,7 +46,7 @@ class AboutWhat(QDialog):
 
         # ----- MAIN WINDOW ----
 
-        self.setWindowTitle('About WHAT')
+        self.setWindowTitle('About %s' % __version__)
         self.setWindowIcon(IconDB().master)
         self.setMinimumHeight(700)
         self.setModal(True)
@@ -143,7 +143,7 @@ class AboutWhat(QDialog):
                         </a>
                         <br>
                       </p2>
-                      ''' % (version[5:])
+                      ''' % (version[5:].strip())
 
         # ---- License ----
 
