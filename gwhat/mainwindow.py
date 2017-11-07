@@ -279,6 +279,7 @@ class WHAT(QMainWindow):
         # Update UI :
 
         self.tab_dwnld_data.setEnabled(True)
+        self.tab_fill_weather_data.setEnabled(True)
         self.tab_hydrograph.setEnabled(True)
         self.tab_hydrocalc.setEnabled(True)
 
