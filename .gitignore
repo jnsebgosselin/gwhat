@@ -52,40 +52,35 @@ docs/_build/
 # PyBuilder
 target/
 
-# Personal Ignore
-WHAT/url*
-WHAT/backup
-WHAT/tests/@ new-prô'jèt!
-@ new-prô'jèt!
-.spyproject
-/Backup
-User_Manual/Backup
-User_Manual/Revision
-Redaction/
+
+# ---- Personal Ignore
+
+Backup/
+*/Backup/
+Releases/
 Reference/
 Projects/
-Releases/
-Rainbird manual/
+*/Revision/
+.spyproject/
+
 WHAT.pref
-Doc/
-Backup_Projects/
-WHATMANUAL_CR1.docx
-WHATMANUAL_CR1.odt
-WHATMANUAL/Revision/
-log_changes.odt
-WHAT 4.1.5/
-WHAT 4.1.6/
-WHAT 4.1.7/
-WHAT 4.1.9/
-WHAT/url.txt
-WHAT/url4page0.txt
-WHAT/urlsinglestation.txt
+BRFInput.txt
+BRFOutput.txt
+GLUE.npy
+*.par
+*.wif
+
+url.txt
+urlsinglestation.txt
+
+weather_station_list.lst
+weather_station_list.csv
+climate_station_database.npy
+
 Organigram.svg
 WHATMANUAL/Local_Optimum.odt
 WHATMANUAL/Note_Recharge_article.odt
 WHAT_organigram.odt
-Technical Note - Recharge/
-WHAT/Icons/SVG/dev/
 
 # Technical Paper Meteo
 
@@ -107,27 +102,3 @@ Meteo_Ref_notes_JSG.odt
 *.bcf
 *.xml
 *.spl
-
-WHAT/gotogit.sh
-WHAT/test.pdf
-WHAT/wet_days_0.5mm.csv
-WHAT/err_pooled.h5
-WHAT/GLUE.h5
-WHAT/brf_mod/BRFInput.txt
-WHAT/brf_mod/BRFOutput.txt
-WHAT/GLUE.npy
-WHAT/brf_mod/kgs_brf.par
-WHAT/brf_mod/kgs_brf.par
-WHAT/brf_mod/kgs_brf.par
-WHAT/brf_mod/kgs_brf.par
-projet_structure.svg
-WHAT/kgs_brf/BRFInput.txt
-WHAT/glue50_results.csv
-WHAT/kgs_brf/kgs_brf.par
-*.par
-*.wif
-WHAT/kgs_brf/BRFOutput.txt
-WHAT/meteo/url.txt
-WHAT/meteo/urlsinglestation.txt
-WHAT/tests/weather_station_list.lst
-WHAT/tests/weather_station_list.csv
