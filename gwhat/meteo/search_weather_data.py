@@ -13,7 +13,6 @@
 
 # ---- Standard library imports
 
-from urllib.request import URLError, urlopen
 from datetime import datetime
 import sys
 import time
@@ -22,25 +21,23 @@ import re
 
 # ---- Third party imports
 
-from bs4 import BeautifulSoup
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import QObject, Qt, QPoint, QEvent, QThread
+from PyQt5.QtCore import Qt, QPoint, QEvent
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QTableWidget, QCheckBox,
                              QTabWidget, QSpinBox, QPushButton, QDesktopWidget,
                              QApplication, QHeaderView, QTableWidgetItem,
-                             QStyle, QFileDialog, QHBoxLayout)
+                             QStyle, QFileDialog)
 
 # ---- Local imports
 
 from gwhat.common import IconDB, StyleDB
 from gwhat.meteo.weather_stationlist import WeatherSationList
 from gwhat.meteo.weather_station_finder import WeatherStationFinder
-from gwhat.widgets.waitingspinner import QWaitingSpinner
 
 
-class WeatherStationsBrowser(QWidget):
+class WeatherStationBrowser(QWidget):
     """
     Widget that allows the user to browse and select ECCC climate stations.
     """
@@ -49,11 +46,15 @@ class WeatherStationsBrowser(QWidget):
     staListSignal = QSignal(list)
 
     def __init__(self, parent=None):
-        super(WeatherStationsBrowser, self).__init__()
+        super(WeatherStationBrowser, self).__init__()
 
         self.isOffline = False  # For testing and debugging.
         self.__initUI__()
         self.station_table.setGeoCoord((self.lat, self.lon))
+
+    @property
+    def stationlist(self):
+        return self.station_table.get_stationlist()
 
     @property
     def search_by(self):
@@ -341,7 +342,7 @@ class WeatherStationsBrowser(QWidget):
         main_layout.setColumnStretch(col, 100)
 
     def show(self):
-        super(WeatherStationsBrowser, self).show()
+        super(WeatherStationBrowser, self).show()
         qr = self.frameGeometry()
         if self.parentWidget():
             parent = self.parentWidget()
@@ -409,6 +410,7 @@ class WeatherStationsBrowser(QWidget):
                 yrange=(self.year_min, self.year_max, self.nbr_of_years))
 
         self.station_table.populate_table(stnlist)
+        return stnlist
 
 
 class WeatherStationDisplayTable(QTableWidget):
@@ -867,7 +869,7 @@ if __name__ == '__main__':
     ft.setPointSize(10)
     app.setFont(ft)
 
-    stn_browser = WeatherStationsBrowser()
+    stn_browser = WeatherStationBrowser()
 
     stn_browser.lat_spinBox.setValue(45.40)
     stn_browser.lon_spinBox.setValue(73.15)
