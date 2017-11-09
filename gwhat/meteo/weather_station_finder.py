@@ -138,12 +138,12 @@ def read_stationlist_from_tor():
     return df
 
 
-class StationFinder(object):
+class WeatherStationFinder(object):
 
     DATABASE_FILEPATH = 'climate_station_database.npy'
 
     def __init__(self, filelist=None, *args, **kwargs):
-        super(StationFinder, self).__init__(*args, **kwargs)
+        super(WeatherStationFinder, self).__init__(*args, **kwargs)
         self._data = None
         self.load_database()
 
@@ -223,7 +223,7 @@ class StationFinder(object):
 
 
 if __name__ == '__main__':
-    stn_browser = StationFinder()
+    stn_browser = WeatherStationFinder()
     stnlist = stn_browser.get_stationlist(prov=['QC', 'ON'],
                                           prox=(45.40, -73.15, 25),
                                           yrange=(1960, 2015, 10))
