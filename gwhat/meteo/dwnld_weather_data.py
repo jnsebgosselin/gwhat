@@ -44,7 +44,7 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 from gwhat.common import IconDB, QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
 from gwhat.meteo.search_weather_data import WeatherStationDisplayTable
-from gwhat.meteo.search_weather_data import Search4Stations
+from gwhat.meteo.search_weather_data import WeatherStationBrowser
 from gwhat.meteo.weather_stationlist import WeatherSationList
 
 
@@ -75,7 +75,7 @@ class DwnldWeatherWidget(QWidget):
 
         # Setup child widgets and UI.
 
-        self.search4stations = Search4Stations(self)
+        self.station_browser = WeatherStationBrowser(self)
         self.station_table = WeatherStationDisplayTable(1, self)
         self.__initUI__()
 
@@ -256,11 +256,11 @@ class DwnldWeatherWidget(QWidget):
         btn_browse_staList.clicked.connect(self.btn_browse_staList_isClicked)
         self.btn_save_staList.clicked.connect(self.btn_save_staList_isClicked)
 
-        # search4stations
+        # station_browser
 
-        btn_search4station.clicked.connect(self.search4stations.show)
-        self.search4stations.staListSignal.connect(self.add_stations2list)
-        self.search4stations.ConsoleSignal.connect(self.ConsoleSignal.emit)
+        btn_search4station.clicked.connect(self.station_browser.show)
+        self.station_browser.staListSignal.connect(self.add_stations2list)
+        self.station_browser.ConsoleSignal.connect(self.ConsoleSignal.emit)
 
     # ---- Workdir
 
@@ -973,9 +973,8 @@ if __name__ == '__main__':                                   # pragma: no cover
 
     testpath = "../tests/@ new-prô'jèt!"
     w.set_workdir(testpath)
-    w.search4stations.lat_spinBox.setValue(45.4)
-    w.search4stations.lon_spinBox.setValue(73.13)
-    w.search4stations.isOffline = True
+    w.station_browser.lat_spinBox.setValue(45.4)
+    w.station_browser.lon_spinBox.setValue(73.13)
     w.load_stationList(os.path.join(testpath, "weather_station_list.lst"))
 
     w.station_table.set_fromyear(2000)
