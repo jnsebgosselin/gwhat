@@ -35,7 +35,21 @@ import numpy as np
 
 # ---- Imports: local libraries
 
+from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.weather_stationlist import WeatherSationList
+PROV_NAME_ABB = [('ALBERTA', 'AB'),
+                 ('BRITISH COLUMBIA', 'BC'),
+                 ('MANITOBA', 'MB'),
+                 ('NEW BRUNSWICK', 'NB'),
+                 ('NEWFOUNDLAND', 'NL'),
+                 ('NORTHWEST TERRITORIES', 'NT'),
+                 ('NOVA SCOTIA', 'NS'),
+                 ('NUNAVUT', 'NU'),
+                 ('ONTARIO', 'ON'),
+                 ('PRINCE EDWARD ISLAND', 'PE'),
+                 ('QUEBEC', 'QC'),
+                 ('SASKATCHEWAN', 'SK'),
+                 ('YUKON TERRITORY', 'YT')]
 
 
 # ---- Base functions
@@ -100,21 +114,7 @@ def read_stationlist_from_tor():
     df['Status'][df['DLY Last Year'] < 2017] = 'Closed'
 
     # Format province value.
-    NAME_ABB = [('ALBERTA', 'AB'),
-                ('BRITISH COLUMBIA', 'BC'),
-                ('MANITOBA', 'MB'),
-                ('NEW BRUNSWICK', 'NB'),
-                ('NEWFOUNDLAND', 'NL'),
-                ('NORTHWEST TERRITORIES', 'NT'),
-                ('NOVA SCOTIA', 'NS'),
-                ('NUNAVUT', 'NU'),
-                ('ONTARIO', 'ON'),
-                ('PRINCE EDWARD ISLAND', 'PE'),
-                ('QUEBEC', 'QC'),
-                ('SASKATCHEWAN', 'SK'),
-                ('YUKON TERRITORY', 'YT')]
-
-    for name, abb in NAME_ABB:
+    for name, abb in PROV_NAME_ABB:
         df['Province'][df['Province'] == name] = abb
 
     return df
