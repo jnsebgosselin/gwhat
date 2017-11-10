@@ -33,8 +33,10 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
 # ---- Local imports
 
 from gwhat.common import IconDB, StyleDB
+from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.weather_stationlist import WeatherSationList
-from gwhat.meteo.weather_station_finder import WeatherStationFinder
+from gwhat.meteo.weather_station_finder import (WeatherStationFinder,
+                                                PROV_NAME_ABB)
 
 
 class WeatherStationBrowser(QWidget):
@@ -45,12 +47,16 @@ class WeatherStationBrowser(QWidget):
     ConsoleSignal = QSignal(str)
     staListSignal = QSignal(list)
 
+    PROV_NAME = [x[0].title() for x in PROV_NAME_ABB]
+    PROV_ABB = [x[1] for x in PROV_NAME_ABB]
+
     def __init__(self, parent=None):
         super(WeatherStationBrowser, self).__init__()
 
         self.isOffline = False  # For testing and debugging.
         self.__initUI__()
-        self.station_table.setGeoCoord((self.lat, self.lon))
+        self.station_table.setGeoCoord((self.lat, -self.lon))
+        self.proximity_grpbox_toggled()
 
     @property
     def stationlist(self):
@@ -62,7 +68,10 @@ class WeatherStationBrowser(QWidget):
 
     @property
     def prov(self):
-        return self.prov_widg.currentText()
+        if self.prov_widg.currentIndex() == 0:
+            return self.PROV_ABB
+        else:
+            return self.PROV_ABB[self.prov_widg.currentIndex()-1]
 
     @property
     def lat(self):
@@ -75,6 +84,13 @@ class WeatherStationBrowser(QWidget):
     @property
     def rad(self):
         return int(self.radius_SpinBox.currentText()[:-3])
+
+    @property
+    def prox(self):
+        if self.prox_grpbox.isChecked():
+            return (self.lat, -self.lon, self.rad)
+        else:
+            return None
 
     @property
     def year_min(self):
@@ -93,14 +109,12 @@ class WeatherStationBrowser(QWidget):
         self.setWindowIcon(IconDB().master)
         self.setWindowFlags(Qt.Window)
 
-        # ------------------------------------------------- INIT VARIABLES ----
-
         now = datetime.now()
         self.station_table = WeatherStationDisplayTable(0, self)
 
-        # ---------------------------------------------- Tab Widget Search ----
+        # ---- Tab Widget Search
 
-        # ---- Search by Proximity ----
+        # ---- Proximity filter groupbox
 
         label_Lat = QLabel('Latitude :')
         label_Lat2 = QLabel('North')
@@ -127,62 +141,66 @@ class WeatherStationBrowser(QWidget):
         self.radius_SpinBox = QComboBox()
         self.radius_SpinBox.addItems(['25 km', '50 km', '100 km', '200 km'])
 
-        prox_search_widg = QWidget()
         prox_search_grid = QGridLayout()
-
-        row, col = 0, 1
-        prox_search_grid.addWidget(label_Lat, row, col)
-        prox_search_grid.addWidget(self.lat_spinBox, row, col+1)
-        prox_search_grid.addWidget(label_Lat2, row, col+2)
+        row = 0
+        prox_search_grid.addWidget(label_Lat, row, 1)
+        prox_search_grid.addWidget(self.lat_spinBox, row, 2)
+        prox_search_grid.addWidget(label_Lat2, row, 3)
         row += 1
-        prox_search_grid.addWidget(label_Lon, row, col)
-        prox_search_grid.addWidget(self.lon_spinBox, row, col+1)
-        prox_search_grid.addWidget(label_Lon2, row, col+2)
+        prox_search_grid.addWidget(label_Lon, row, 1)
+        prox_search_grid.addWidget(self.lon_spinBox, row, 2)
+        prox_search_grid.addWidget(label_Lon2, row, 3)
         row += 1
-        prox_search_grid.addWidget(QLabel('Search Radius :'), row, col)
-        prox_search_grid.addWidget(self.radius_SpinBox, row, col+1)
+        prox_search_grid.addWidget(QLabel('Search Radius :'), row, 1)
+        prox_search_grid.addWidget(self.radius_SpinBox, row, 2)
 
         prox_search_grid.setColumnStretch(0, 100)
-        prox_search_grid.setColumnStretch(col+3, 100)
-        prox_search_grid.setRowStretch(row + 1, 100)
+        prox_search_grid.setColumnStretch(4, 100)
+        prox_search_grid.setRowStretch(row+1, 100)
         prox_search_grid.setHorizontalSpacing(20)
         prox_search_grid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
-        prox_search_widg.setLayout(prox_search_grid)
+        self.prox_grpbox = QGroupBox("Proximity filter :")
+        self.prox_grpbox.setCheckable(True)
+        self.prox_grpbox.setChecked(False)
+        self.prox_grpbox.toggled.connect(self.proximity_grpbox_toggled)
+        self.prox_grpbox.setLayout(prox_search_grid)
 
-        # ---- Search by Province ----
+        # ---- Province filter
 
+        prov_names = ['All']
+        prov_names.extend(self.PROV_NAME)
         self.prov_widg = QComboBox()
-        self.prov_widg.addItems(['QC', 'AB'])
+        self.prov_widg.addItems(prov_names)
+        self.prov_widg.setCurrentIndex(0)
 
-        prov_search_widg = QFrame()
-        prov_search_grid = QGridLayout()
+        layout = QGridLayout()
+        layout.addWidget(self.prov_widg, 2, 1)
+        layout.setColumnStretch(2, 100)
+        layout.setVerticalSpacing(10)
 
-        prov_search_grid.addWidget(QLabel('Province :'), 1, 1)
-        prov_search_grid.addWidget(self.prov_widg, 1, 2)
+        prov_grpbox = QGroupBox("Province filter :")
+        prov_grpbox.setLayout(layout)
 
-#        prov_search_grid.setColumnStretch(0, 100)
-        prov_search_grid.setColumnStretch(3, 100)
-        prov_search_grid.setRowStretch(0, 100)
-        prov_search_grid.setRowStretch(2, 100)
+        # ---- Data availability filter
 
-        prov_search_widg.setLayout(prov_search_grid)
+        # Number of years with data
 
-        # ---- Assemble TabWidget ----
+        self.nbrYear = QSpinBox()
+        self.nbrYear.setAlignment(Qt.AlignCenter)
+        self.nbrYear.setSingleStep(1)
+        self.nbrYear.setMinimum(0)
+        self.nbrYear.setValue(3)
 
-        self.tab_widg = QTabWidget()
+        subgrid1 = QGridLayout()
+        subgrid1.addWidget(self.nbrYear, 0, 0)
+        subgrid1.addWidget(QLabel('years of data between'), 0, 1)
 
-        self.tab_widg.addTab(prox_search_widg, 'Proximity')
-        self.tab_widg.addTab(prov_search_widg, 'Province')
+        subgrid1.setHorizontalSpacing(10)
+        subgrid1.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        subgrid1.setColumnStretch(2, 100)
 
-        # -------------------------------------------------- Year Criteria ----
-
-        label_date = QLabel('Search for stations with data available')
-
-        # ---- subgrid year boundary ----
-
-        label_between = QLabel('between')
-        label_between.setAlignment(Qt.AlignCenter)
+        # Year range
 
         self.minYear = QSpinBox()
         self.minYear.setAlignment(Qt.AlignCenter)
@@ -203,71 +221,29 @@ class WeatherStationBrowser(QWidget):
         self.maxYear.setValue(now.year)
         self.maxYear.valueChanged.connect(self.maxYear_changed)
 
-        yearbound_widget = QFrame()
-        yearbound_grid = QGridLayout()
+        subgrid2 = QGridLayout()
+        subgrid2.addWidget(self.minYear, 0, 0)
+        subgrid2.addWidget(label_and, 0, 1)
+        subgrid2.addWidget(self.maxYear, 0, 2)
 
-        col = 0
-        yearbound_grid.addWidget(label_between, 0, col)
-        col += 1
-        yearbound_grid.addWidget(self.minYear, 0, col)
-        col += 1
-        yearbound_grid.addWidget(label_and, 0, col)
-        col += 1
-        yearbound_grid.addWidget(self.maxYear, 0, col)
+        subgrid2.setHorizontalSpacing(10)
+        subgrid2.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        subgrid2.setColumnStretch(4, 100)
 
-        yearbound_grid.setSpacing(10)
-        yearbound_grid.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-        yearbound_grid.setColumnStretch(1, 100)
-        yearbound_grid.setColumnStretch(3, 100)
+        # Subgridgrid assembly
 
-        yearbound_widget.setLayout(yearbound_grid)
+        grid = QGridLayout()
 
-        # ---- subgrid min. nbr. of years ----
+        grid.addWidget(QLabel('Search for stations with at least'), 0, 0)
+        grid.addLayout(subgrid1, 1, 0)
+        grid.addLayout(subgrid2, 2, 0)
 
-        label_4atleast = QLabel('for at least')
-        label_years = QLabel('years')
+        grid.setVerticalSpacing(5)
+        grid.setRowStretch(0, 100)
+        # grid.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
-        self.nbrYear = QSpinBox()
-        self.nbrYear.setAlignment(Qt.AlignCenter)
-        self.nbrYear.setSingleStep(1)
-        self.nbrYear.setMinimum(0)
-        self.nbrYear.setValue(3)
-
-        subwidg1 = QWidget()
-        subgrid1 = QGridLayout()
-
-        col = 0
-        subgrid1.addWidget(label_4atleast, 0, col)
-        col += 1
-        subgrid1.addWidget(self.nbrYear, 0, col)
-        col += 1
-        subgrid1.addWidget(label_years, 0, col)
-
-        subgrid1.setSpacing(10)
-        subgrid1.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-        subgrid1.setColumnStretch(col+1, 100)
-
-        subwidg1.setLayout(subgrid1)
-
-        # ---- maingrid ----
-
-        self.year_widg = QFrame()
-        self.year_widg.setFrameStyle(0)  # styleDB.frame
-
-        year_grid = QGridLayout()
-
-        row = 1
-        year_grid.addWidget(label_date, row, 0)
-        row += 1
-        year_grid.addWidget(yearbound_widget, row, 0)
-        row += 1
-        year_grid.addWidget(subwidg1, row, 0)
-
-        year_grid.setVerticalSpacing(20)
-        year_grid.setRowStretch(0, 100)
-        year_grid.setContentsMargins(15, 0, 15, 0)  # (L, T, R, B)
-
-        self.year_widg.setLayout(year_grid)
+        self.year_widg = QGroupBox("Data Availability filter :")
+        self.year_widg.setLayout(grid)
 
         # ---- Toolbar
 
@@ -311,10 +287,11 @@ class WeatherStationBrowser(QWidget):
         left_panel_grid = QGridLayout()
 
         left_panel_grid.addWidget(panel_title, 0, 0)
-        left_panel_grid.addWidget(self.tab_widg, 1, 0)
-        left_panel_grid.addWidget(self.year_widg, 2, 0)
-        left_panel_grid.setRowStretch(3, 100)
-        left_panel_grid.addWidget(toolbar_widg, 4, 0)
+        left_panel_grid.addWidget(self.prox_grpbox, 1, 0)
+        left_panel_grid.addWidget(prov_grpbox, 2, 0)
+        left_panel_grid.addWidget(self.year_widg, 3, 0)
+        left_panel_grid.setRowStretch(4, 100)
+        left_panel_grid.addWidget(toolbar_widg, 5, 0)
 
         left_panel_grid.setVerticalSpacing(20)
         left_panel_grid.setContentsMargins(0, 0, 0, 0)   # (L, T, R, B)
@@ -398,19 +375,19 @@ class WeatherStationBrowser(QWidget):
         station in the ECCC network and show the resulting list of stations
         in the GUI.
         """
-
-        if self.search_by == 'proximity':
-            self.station_table.setGeoCoord((self.lat, self.lon))
-        else:
-            self.station_table.setGeoCoord(None)
-
         stn_finder = WeatherStationFinder()
         stnlist = stn_finder.get_stationlist(
-                prov=self.prov, prox=(self.lat, -self.lon, self.rad),
+                prov=self.prov, prox=self.prox,
                 yrange=(self.year_min, self.year_max, self.nbr_of_years))
 
         self.station_table.populate_table(stnlist)
         return stnlist
+
+    def proximity_grpbox_toggled(self):
+        if self.prox_grpbox.isChecked():
+            self.station_table.setGeoCoord((self.lat, -self.lon))
+        else:
+            self.station_table.setGeoCoord(None)
 
 
 class WeatherStationDisplayTable(QTableWidget):
@@ -573,7 +550,7 @@ class WeatherStationDisplayTable(QTableWidget):
         if self.geoCoord():
             lat1, lon1 = self.geoCoord()
             lat2, lon2 = float(row_data[6]), float(row_data[7])
-            dist = latlon_to_dist(lat1, lon1, lat2, lon2)
+            dist = calc_dist_from_coord(lat1, lon1, lat2, lon2)
 
             item = self.NumTableWidgetItem('%0.1f' % dist, dist)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
@@ -695,12 +672,14 @@ class WeatherStationDisplayTable(QTableWidget):
             self.removeRow(row)
 
     def populate_table(self, staList):
+        QApplication.setOverrideCursor(Qt.WaitCursor)
         self.clearContents()
         self.chkbox_header.setCheckState(Qt.CheckState(False))
         self.setSortingEnabled(False)
         for row_data in staList:
             self.insert_row_at_end(row_data)
         self.setSortingEnabled(True)
+        QApplication.restoreOverrideCursor()
 
     # -------------------------------------------------------------------------
 
