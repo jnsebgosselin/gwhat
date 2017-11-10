@@ -26,9 +26,9 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QPoint, QEvent
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QTableWidget, QCheckBox,
-                             QTabWidget, QSpinBox, QPushButton, QDesktopWidget,
+                             QSpinBox, QPushButton, QDesktopWidget,
                              QApplication, QHeaderView, QTableWidgetItem,
-                             QStyle, QFileDialog)
+                             QStyle, QFileDialog, QGroupBox)
 
 # ---- Local imports
 
