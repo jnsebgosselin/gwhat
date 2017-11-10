@@ -120,6 +120,9 @@ def read_stationlist_from_tor():
     return df
 
 
+# ---- API
+
+
 class WeatherStationFinder(object):
 
     DATABASE_FILEPATH = 'climate_station_database.npy'
