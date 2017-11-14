@@ -116,6 +116,7 @@ class WeatherStationBrowser(QWidget):
         self.lat_spinBox.setMinimum(0)
         self.lat_spinBox.setMaximum(180)
         self.lat_spinBox.setSuffix(u' °')
+        self.lat_spinBox.valueChanged.connect(self.search_filters_changed)
 
         label_Lon = QLabel('Longitude :')
         label_Lon2 = QLabel('West')
@@ -127,9 +128,12 @@ class WeatherStationBrowser(QWidget):
         self.lon_spinBox.setMinimum(0)
         self.lon_spinBox.setMaximum(180)
         self.lon_spinBox.setSuffix(u' °')
+        self.lon_spinBox.valueChanged.connect(self.search_filters_changed)
 
         self.radius_SpinBox = QComboBox()
         self.radius_SpinBox.addItems(['25 km', '50 km', '100 km', '200 km'])
+        self.radius_SpinBox.currentIndexChanged.connect(
+                self.search_filters_changed)
 
         prox_search_grid = QGridLayout()
         row = 0
@@ -163,6 +167,7 @@ class WeatherStationBrowser(QWidget):
         self.prov_widg = QComboBox()
         self.prov_widg.addItems(prov_names)
         self.prov_widg.setCurrentIndex(0)
+        self.prov_widg.currentIndexChanged.connect(self.search_filters_changed)
 
         layout = QGridLayout()
         layout.addWidget(self.prov_widg, 2, 1)
@@ -181,6 +186,7 @@ class WeatherStationBrowser(QWidget):
         self.nbrYear.setSingleStep(1)
         self.nbrYear.setMinimum(0)
         self.nbrYear.setValue(3)
+        self.nbrYear.valueChanged.connect(self.search_filters_changed)
 
         subgrid1 = QGridLayout()
         subgrid1.addWidget(self.nbrYear, 0, 0)
@@ -243,6 +249,7 @@ class WeatherStationBrowser(QWidget):
         self.btn_search.setToolTip('Search for weather stations in the online '
                                    'CDCD with the criteria given above.')
         self.btn_search.clicked.connect(self.btn_search_isClicked)
+        self.btn_search.hide()
 
         btn_addSta = QPushButton('Add')
         btn_addSta.setIcon(IconDB().add2list)
@@ -332,6 +339,7 @@ class WeatherStationBrowser(QWidget):
         max_yr = now.year
 
         self.maxYear.setRange(min_yr, max_yr)
+        self.search_filters_changed()
 
     def maxYear_changed(self):
         min_yr = 1840
@@ -340,6 +348,7 @@ class WeatherStationBrowser(QWidget):
         max_yr = min(self.maxYear.value(), now.year)
 
         self.minYear.setRange(min_yr, max_yr)
+        self.search_filters_changed()
 
     # -------------------------------------------------------------------------
 
@@ -378,9 +387,14 @@ class WeatherStationBrowser(QWidget):
             self.station_table.set_geocoord((self.lat, -self.lon))
         else:
             self.station_table.set_geocoord(None)
+        self.search_filters_changed()
 
-
-
+    def search_filters_changed(self):
+        stn_finder = WeatherStationFinder()
+        stnlist = stn_finder.get_stationlist(
+                prov=self.prov, prox=self.prox,
+                yrange=(self.year_min, self.year_max, self.nbr_of_years))
+        self.station_table.populate_table(stnlist)
 
 
 if __name__ == '__main__':
