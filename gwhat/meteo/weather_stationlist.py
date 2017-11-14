@@ -320,6 +320,8 @@ class WeatherSationModel(QAbstractTableModel):
         self.layoutAboutToBeChanged.emit()
         if column == 0:
             idx = np.argsort(self._checks)
+        elif column == 2:
+            idx = np.argsort(self._data[:, column].astype(float))
         else:
             idx = np.argsort(self._data[:, column])
         if direction == Qt.DescendingOrder:
