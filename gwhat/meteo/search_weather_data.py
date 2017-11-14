@@ -5,11 +5,6 @@
 #
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
-#
-# SearchProgressBar is based on the class FileProgressBar from Spyder.
-# Present in spyder.widgets.findinfiles
-# Copyright © Spyder Project Contributors
-# https://github.com/spyder-ide/spyder
 
 # ---- Standard library imports
 
