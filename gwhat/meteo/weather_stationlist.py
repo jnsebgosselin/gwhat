@@ -193,7 +193,7 @@ class WeatherSationView(QTableView):
 
     def chkbox_header_isClicked(self):
         model = self.model()
-        model._data[:, 0] = int(self.chkbox_header.checkState() == Qt.Checked)
+        model._checks[:] = int(self.chkbox_header.checkState() == Qt.Checked)
         model.dataChanged.emit(model.index(0, 0),
                                model.index(model.rowCount(0), 0))
 
@@ -222,7 +222,7 @@ class WeatherSationView(QTableView):
                 prox = np.empty(N).astype(str)
                 self.setColumnHidden(2, True)
 
-            data = np.vstack([np.zeros(N).astype(int),
+            data = np.vstack([np.arange(N).astype(int),
                               stationlist['Name'],
                               prox,
                               stationlist['DLY First Year'],
@@ -247,6 +247,7 @@ class WeatherSationModel(QAbstractTableModel):
     def __init__(self, data):
         super(WeatherSationModel, self).__init__()
         self._data = data
+        self._checks = np.zeros(len(data)).astype(int)
 
     def rowCount(self, x):
         return len(self._data)
@@ -257,7 +258,7 @@ class WeatherSationModel(QAbstractTableModel):
     def data(self, index, role=Qt.DisplayRole):
         if role == Qt.DisplayRole:
             if index.column() == 0:
-                return int(self._data[index.row(), 0])
+                return self._checks[index.row()]
             else:
                 return str(self._data[index.row(), index.column()])
         if role == Qt.TextAlignmentRole and index.column() != 1:
@@ -267,7 +268,7 @@ class WeatherSationModel(QAbstractTableModel):
 
     def setData(self, index, value, role=Qt.DisplayRole):
         if index.column() == 0:
-            self._data[index.row(), 0] = value
+            self._checks[index.row()] = value
         return value
 
     def headerData(self, section, orientation, role):
@@ -285,10 +286,14 @@ class WeatherSationModel(QAbstractTableModel):
     def sort(self, column, direction):
         """Sort data according to the selected column and direction."""
         self.layoutAboutToBeChanged.emit()
-        idx = np.argsort(self._data[:, column])
+        if column == 0:
+            idx = np.argsort(self._checks)
+        else:
+            idx = np.argsort(self._data[:, column])
         if direction == Qt.DescendingOrder:
             idx = np.flipud(idx)
         self._data = self._data[idx, :]
+        self._checks = self._checks[idx]
         self.layoutChanged.emit()
 
 
