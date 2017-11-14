@@ -11,10 +11,22 @@
 import os
 import csv
 from copy import copy
+import sys
 
-# ---- Third party imports
+# ---- Imports: third parties
 
+import numpy as np
 import xlsxwriter
+from PyQt5.QtCore import (Qt, QAbstractTableModel, QVariant, QEvent, QPoint,
+                          QRect)
+from PyQt5.QtWidgets import (QApplication, QTableView, QCheckBox, QStyle,
+                             QWidget, QStyledItemDelegate, QItemDelegate,
+                             QStyleOptionButton, QHeaderView)
+
+
+# ---- Imports: local
+
+from gwhat.common.utils import calc_dist_from_coord
 
 
 class WeatherSationList(list):
@@ -30,12 +42,27 @@ class WeatherSationList(list):
     HEADER = ['staName', 'stationId', 'StartYear', 'EndYear', 'Province',
               'ClimateID', 'Latitude (dd)', 'Longitude (dd)', 'Elevation (m)']
 
+    KEYS = ['Name', 'Station ID', 'DLY First Year', 'DLY Last Year',
+            'Province', 'ID', 'Latitude', 'Longitude', 'Elevation']
+    DTYPES = [str, str, int, int, str, str, float, float, float]
+
     def __init__(self, filelist=None, *args, **kwargs):
         super(WeatherSationList, self).__init__(*args, **kwargs)
         self._list = []
         self._filename = None
         if filelist:
             self.load_stationlist_from_file(filelist)
+
+    def __getitem__(self, key):
+        if type(key) == str:
+            try:
+                idx = self.KEYS.index(key)
+            except ValueError:
+                return None
+            else:
+                return np.array(self)[:, idx].astype(self.DTYPES[idx])
+        else:
+            return super(WeatherSationList, self).__getitem__(key)
 
     def add_stations(self, stations):
         for station in stations:
