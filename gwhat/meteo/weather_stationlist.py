@@ -289,6 +289,8 @@ class WeatherSationModel(QAbstractTableModel):
         if role == Qt.DisplayRole:
             if index.column() == 0:
                 return self._checks[index.row()]
+            elif index.column() == 2:
+                return '%0.1f' % float(self._data[index.row(), 2])
             else:
                 return str(self._data[index.row(), index.column()])
         if role == Qt.TextAlignmentRole and index.column() != 1:
