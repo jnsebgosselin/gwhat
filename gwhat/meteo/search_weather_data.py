@@ -29,7 +29,8 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
 
 from gwhat.common import IconDB, StyleDB
 from gwhat.common.utils import calc_dist_from_coord
-from gwhat.meteo.weather_stationlist import WeatherSationList
+from gwhat.meteo.weather_stationlist import (WeatherSationList,
+                                             WeatherSationView)
 from gwhat.meteo.weather_station_finder import (WeatherStationFinder,
                                                 PROV_NAME_ABB)
 
@@ -50,7 +51,7 @@ class WeatherStationBrowser(QWidget):
 
         self.isOffline = False  # For testing and debugging.
         self.__initUI__()
-        self.station_table.setGeoCoord((self.lat, -self.lon))
+        self.station_table.set_geocoord((self.lat, -self.lon))
         self.proximity_grpbox_toggled()
 
     @property
@@ -105,7 +106,7 @@ class WeatherStationBrowser(QWidget):
         self.setWindowFlags(Qt.Window)
 
         now = datetime.now()
-        self.station_table = WeatherStationDisplayTable(0, self)
+        self.station_table = WeatherSationView()
 
         # ---- Tab Widget Search
 
@@ -380,9 +381,9 @@ class WeatherStationBrowser(QWidget):
 
     def proximity_grpbox_toggled(self):
         if self.prox_grpbox.isChecked():
-            self.station_table.setGeoCoord((self.lat, -self.lon))
+            self.station_table.set_geocoord((self.lat, -self.lon))
         else:
-            self.station_table.setGeoCoord(None)
+            self.station_table.set_geocoord(None)
 
 
 class WeatherStationDisplayTable(QTableWidget):
