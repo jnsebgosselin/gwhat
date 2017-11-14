@@ -54,8 +54,6 @@ class WeatherSationList(list):
 
     def __init__(self, filelist=None, *args, **kwargs):
         super(WeatherSationList, self).__init__(*args, **kwargs)
-        self._list = []
-        self._filename = None
         if filelist:
             self.load_stationlist_from_file(filelist)
 
@@ -173,13 +171,11 @@ class WeatherSationView(QTableView):
 
     def set_geocoord(self, latlon):
         self.__latlon = latlon
-        if latlon is None:
-            self.setColumnHidden(2, True)
-        else:
-            self.setColumnHidden(2, False)
-            prox = calc_dist_from_coord(
-                        self.geocoord[0], self.geocoord[1],
-                        stationlist['Latitude'], stationlist['Longitude'])
+        self.setColumnHidden(2, latlon is None)
+        if latlon and self.stationlist:
+            prox = calc_dist_from_coord(self.geocoord[0], self.geocoord[1],
+                                        self.stationlist['Latitude'],
+                                        self.stationlist['Longitude'])
 
             model = self.model()
             model._data[:, 2] = prox
@@ -236,6 +232,40 @@ class WeatherSationView(QTableView):
                               ]).transpose()
 
         self.setModel(WeatherSationModel(data))
+
+    # ---- Utility methods
+
+    def get_row_from_climateid(self, climateid):
+        idx = np.where(self.model()._data[:, 6] == climateid)[0]
+        if len(idx) > 0:
+            return idx[0]
+        else:
+            return None
+
+    def get_checked_rows(self):
+        return np.where(self.model()._checks == 1)[0]
+
+    def get_content4rows(self, rows, daterange='full'):
+        """
+        Grab the weather station info for the specified rows and
+        save the results in a list.
+        """
+        idx = self.model()._data[rows, 0]
+        stationlist = WeatherSationList()
+        stationlist.extend(self.stationlist[idx])
+        return stationlist
+
+    def get_stationlist(self):
+        """Get and format the content of the QTableView."""
+        idx = self.model()._data[:, 0]
+        stationlist = WeatherSationList()
+        stationlist.extend(self.stationlist[idx])
+        return stationlist
+
+    def save_stationlist(self, filename):
+        """Save the content of the QTableWidget to file."""
+        stationlist = self.get_stationlist()
+        stationlist.save_to_file(filename)
 
 
 class WeatherSationModel(QAbstractTableModel):
