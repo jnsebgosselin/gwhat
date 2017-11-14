@@ -42,8 +42,7 @@ class WeatherStationBrowser(QWidget):
 
     def __init__(self, parent=None):
         super(WeatherStationBrowser, self).__init__()
-
-        self.isOffline = False  # For testing and debugging.
+        self.stn_finder = WeatherStationFinder()
         self.__initUI__()
         self.station_table.set_geocoord((self.lat, -self.lon))
         self.proximity_grpbox_toggled()
@@ -67,9 +66,21 @@ class WeatherStationBrowser(QWidget):
     def lat(self):
         return self.lat_spinBox.value()
 
+    def set_lat(self, x, silent=True):
+        if silent:
+            self.lat_spinBox.blockSignals(True)
+        self.lat_spinBox.setValue(x)
+        self.lat_spinBox.blockSignals(False)
+
     @property
     def lon(self):
         return self.lon_spinBox.value()
+
+    def set_lon(self, x, silent=True):
+        if silent:
+            self.lon_spinBox.blockSignals(True)
+        self.lon_spinBox.setValue(x)
+        self.lon_spinBox.blockSignals(False)
 
     @property
     def rad(self):
@@ -86,13 +97,31 @@ class WeatherStationBrowser(QWidget):
     def year_min(self):
         return int(self.minYear.value())
 
+    def set_yearmin(self, x, silent=True):
+        if silent:
+            self.minYear.blockSignals(True)
+        self.minYear.setValue(x)
+        self.minYear.blockSignals(False)
+
     @property
     def year_max(self):
         return int(self.maxYear.value())
 
+    def set_yearmax(self, x, silent=True):
+        if silent:
+            self.maxYear.blockSignals(True)
+        self.maxYear.setValue(x)
+        self.maxYear.blockSignals(False)
+
     @property
     def nbr_of_years(self):
         return int(self.nbrYear.value())
+
+    def set_yearnbr(self, x, silent=True):
+        if silent:
+            self.nbrYear.blockSignals(True)
+        self.nbrYear.setValue(x)
+        self.nbrYear.blockSignals(False)
 
     def __initUI__(self):
         self.setWindowTitle('Search for Weather Stations')
@@ -390,8 +419,7 @@ class WeatherStationBrowser(QWidget):
         self.search_filters_changed()
 
     def search_filters_changed(self):
-        stn_finder = WeatherStationFinder()
-        stnlist = stn_finder.get_stationlist(
+        stnlist = self.stn_finder.get_stationlist(
                 prov=self.prov, prox=self.prox,
                 yrange=(self.year_min, self.year_max, self.nbr_of_years))
         self.station_table.populate_table(stnlist)
@@ -407,16 +435,13 @@ if __name__ == '__main__':
     app.setFont(ft)
 
     stn_browser = WeatherStationBrowser()
-
-    stn_browser.lat_spinBox.setValue(45.40)
-    stn_browser.lon_spinBox.setValue(73.15)
-    stn_browser.minYear.setValue(1980)
-    stn_browser.maxYear.setValue(2015)
-    stn_browser.nbrYear.setValue(20)
-
-    # stn_browser.finder.isOffline = False
-    # search4sta.finder.debug_mode = True
-
     stn_browser.show()
+
+    stn_browser.set_lat(45.40)
+    stn_browser.set_lon(73.15)
+    stn_browser.set_yearmin(1980)
+    stn_browser.set_yearmax(2015)
+    stn_browser.set_yearnbr(20)
+    stn_browser.search_filters_changed()
 
     sys.exit(app.exec_())
