@@ -1,25 +1,12 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Copyright © 2014-2017 Jean-Sebastien Gosselin
+# email: jean-sebastien.gosselin@ete.inrs.ca
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
-
-# ---- Standard library imports
+# ---- Imports: standard libraries
 
 from urllib.request import URLError, urlopen
 import sys
@@ -28,7 +15,7 @@ from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
 
-# ---- Third party imports
+# ---- Imports: third parties
 
 import numpy as np
 
@@ -42,7 +29,7 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QTableWidget, QHeaderView, QStyle,
                              QComboBox)
 
-# ---- Local imports
+# ---- Imports: local
 
 from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
