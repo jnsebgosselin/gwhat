@@ -43,6 +43,7 @@ class WeatherStationBrowser(QWidget):
     def __init__(self, parent=None):
         super(WeatherStationBrowser, self).__init__()
         self.stn_finder = WeatherStationFinder()
+        self.station_table = WeatherSationView()
         self.__initUI__()
         self.station_table.set_geocoord((self.lat, -self.lon))
         self.proximity_grpbox_toggled()
@@ -129,7 +130,6 @@ class WeatherStationBrowser(QWidget):
         self.setWindowFlags(Qt.Window)
 
         now = datetime.now()
-        self.station_table = WeatherSationView()
 
         # ---- Tab Widget Search
 

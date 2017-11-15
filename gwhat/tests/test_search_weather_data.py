@@ -22,13 +22,13 @@ from gwhat.meteo.search_weather_data import QFileDialog                # nopep8
 @pytest.fixture
 def station_finder_bot(qtbot):
     station_browser = WeatherStationBrowser()
-    station_browser.lat_spinBox.setValue(45.40)
-    station_browser.lon_spinBox.setValue(73.15)
-    station_browser.minYear.setValue(1960)
-    station_browser.maxYear.setValue(2015)
-    station_browser.nbrYear.setValue(10)
+    station_browser.set_lat(45.40)
+    station_browser.set_lon(73.15)
+    station_browser.set_yearmin(1960)
+    station_browser.set_yearmax(2015)
+    station_browser.set_yearnbr(10)
 
-    qtbot.addWidget(station_browser)
+#    qtbot.addWidget(station_browser)
 
     return station_browser, qtbot
 
@@ -70,10 +70,10 @@ def test_search_weather_station(station_finder_bot, mocker):
     assert station_browser
 
     # Search for stations and assert the results.
-    qtbot.mouseClick(station_browser.btn_search, Qt.LeftButton)
-    result = station_browser.stationlist
-    for i in range(len(result)):
-        assert result[i] == expected_results[i]
+    station_browser.prox_grpbox.setChecked(True)
+    results = station_browser.stationlist
+    for item in results:
+        assert item in expected_results
 
     # Mock the dialog window and answer to specify the file name and type.
     fname = os.path.join(os.getcwd(), "@ new-prô'jèt!",
