@@ -112,6 +112,11 @@ These are recolored and modified versions of "external-link.svg" in the Suru ico
 
 (18) export-data.png
      This is adapted from: http://www.freeiconspng.com/free-images/export-icon-12654
+
+calendar, calendar_fromdate, calendar_todate
+------------
+Adapted from Suru - scalable icon set.
+
       
     
 
