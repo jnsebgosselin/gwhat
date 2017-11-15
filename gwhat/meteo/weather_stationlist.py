@@ -252,16 +252,18 @@ class WeatherSationView(QTableView):
         Grab the weather station info for the specified rows and
         save the results in a list.
         """
-        idx = self.model()._data[rows, 0]
+        indexes = self.model()._data[rows, 0]
         stationlist = WeatherSationList()
-        stationlist.extend(self.stationlist[idx])
+        for index in indexes:
+            stationlist.append(self.stationlist[int(index)])
         return stationlist
 
     def get_stationlist(self):
         """Get and format the content of the QTableView."""
-        idx = self.model()._data[:, 0]
+        indexes = self.model()._data[:, 0]
         stationlist = WeatherSationList()
-        stationlist.extend(self.stationlist[idx])
+        for index in indexes:
+            stationlist.append(self.stationlist[int(index)])
         return stationlist
 
     def save_stationlist(self, filename):
