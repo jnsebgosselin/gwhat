@@ -232,7 +232,8 @@ class WeatherSationView(QTableView):
                               stationlist['Elevation']
                               ]).transpose()
 
-        self.setModel(WeatherSationModel(data))
+        checked = self.chkbox_header.checkState() == Qt.Checked
+        self.setModel(WeatherSationModel(data, checked))
         self.model().sort(self.horizontalHeader().sortIndicatorSection(),
                           self.horizontalHeader().sortIndicatorOrder())
 
@@ -279,10 +280,10 @@ class WeatherSationModel(QAbstractTableModel):
               'To \n Year', 'Prov.', 'Climate ID', 'Station ID',
               'Lat.\n(dd)', 'Lon.\n(dd)', 'Elev.\n(m)')
 
-    def __init__(self, data):
+    def __init__(self, data, checked=False):
         super(WeatherSationModel, self).__init__()
         self._data = data
-        self._checks = np.zeros(len(data)).astype(int)
+        self._checks = np.ones(len(data)).astype(int) * int(checked)
 
     def rowCount(self, x):
         return len(self._data)
