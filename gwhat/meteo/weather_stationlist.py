@@ -232,6 +232,8 @@ class WeatherSationView(QTableView):
                               ]).transpose()
 
         self.setModel(WeatherSationModel(data))
+        self.model().sort(self.horizontalHeader().sortIndicatorSection(),
+                          self.horizontalHeader().sortIndicatorOrder())
 
     # ---- Utility methods
 
