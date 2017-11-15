@@ -291,8 +291,8 @@ class WHAT(QMainWindow):
         lon = self.pmanager.projet.lon
 
         self.tab_dwnld_data.set_workdir(dirname)
-        self.tab_dwnld_data.search4stations.lat_spinBox.setValue(lat)
-        self.tab_dwnld_data.search4stations.lon_spinBox.setValue(lon)
+        self.tab_dwnld_data.station_browser.lat_spinBox.setValue(lat)
+        self.tab_dwnld_data.station_browser.lon_spinBox.setValue(lon)
 
         # ---- fill_weather_data ----
 
