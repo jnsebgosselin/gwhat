@@ -148,6 +148,7 @@ class WeatherSationView(QTableView):
                                       'stations in the table.')
         self.chkbox_header.stateChanged.connect(self.chkbox_header_isClicked)
         self.horizontalHeader().installEventFilter(self)
+        self.verticalHeader().hide()
 
         self.set_geocoord(None)
         self.populate_table(WeatherSationList())
