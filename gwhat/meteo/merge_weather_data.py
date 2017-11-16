@@ -171,7 +171,7 @@ class WXDataMerger(dict):
         fcontent = fcontent + self['Combined Dataset'].astype(str).tolist()
 
         with open(filepath, 'w', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer = csv.writer(f, delimiter=',', lineterminator='\n')
             writer.writerows(fcontent)
 
         if self.deleteInpuFiles():
