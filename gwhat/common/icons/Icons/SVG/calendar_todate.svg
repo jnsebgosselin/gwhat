@@ -28,9 +28,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="4.396259"
-     inkscape:cx="102.71048"
-     inkscape:cy="198.10684"
+     inkscape:zoom="2.1981295"
+     inkscape:cx="143.69986"
+     inkscape:cy="129.59189"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
@@ -86,21 +86,21 @@
        inkscape:connector-curvature="0"
        id="path4100"
        d="m 97.14281,-60.881655 16.40001,-3.825127 v 49.179955 H 97.14281 Z"
-       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#212121;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:26.20197105;marker:none;enable-background:accumulate" />
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:26.20197105;marker:none;enable-background:accumulate" />
     <path
-       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#212121;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:26.20197105;marker:none;enable-background:accumulate"
+       style="color:#000000;display:inline;overflow:visible;visibility:visible;fill:#4d4d4d;fill-opacity:1;fill-rule:nonzero;stroke:none;stroke-width:26.20197105;marker:none;enable-background:accumulate"
        d="m -1.259091,-59.963093 16.39998,-3.825127 v 49.179955 h -16.39998 z"
        id="rect4097"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccc" />
     <path
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:125%;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;display:inline;fill:#212121;fill-opacity:1;stroke:none;stroke-width:2.62019706"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:125%;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;display:inline;fill:#4d4d4d;fill-opacity:1;stroke:none;stroke-width:2.62019706"
        d="m 123.74304,-47.396823 c 27.33333,0 39.00011,6.1e-4 39.00011,31.768529 V 133.94832 c 0,31.76793 -13.66678,31.76854 -41.00011,31.76854 H -9.457321 c -27.33334,0 -41.00012,-6.2e-4 -41.00012,-31.76854 V 90.727309 l 16.40005,14.229071 v 21.98742 c 0,22.38248 8.0206,22.3797 29.70333,22.3797 H 116.63978 c 21.68272,0 29.70332,0.003 29.70332,-22.3797 V 32.364752 c 0,-22.382479 -8.0206,-22.384816 -29.70332,-22.384816 H -4.354061 c -21.68273,0 -29.70333,0.0023 -29.70333,22.384816 v 7.686715 l -16.40005,14.310932 v -69.990693 c 0,-31.767919 11.66678,-31.768529 39.00012,-31.768529 V -6.413425 H 25.34277 v -40.983398 h 61.60018 v 40.983398 h 36.80009 z"
        id="path4098-6"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="csssssccssssssssccscccccccc" />
     <path
-       style="fill:#212121;fill-opacity:1;stroke-width:1.01004899"
+       style="fill:#4d4d4d;fill-opacity:1;stroke-width:1.01004899"
        d="M -50.219641,72.415239 5.975789,23.374727 V 47.169152 H 50.80586 V 97.819109 H 5.975789 v 23.352611 z"
        id="rect3845-7"
        inkscape:connector-curvature="0"
