@@ -41,7 +41,7 @@ class WeatherStationBrowser(QWidget):
     PROV_ABB = [x[1] for x in PROV_NAME_ABB]
 
     def __init__(self, parent=None):
-        super(WeatherStationBrowser, self).__init__()
+        super(WeatherStationBrowser, self).__init__(parent)
         self.stn_finder = WeatherStationFinder()
         self.station_table = WeatherSationView()
         self.__initUI__()
@@ -347,8 +347,8 @@ class WeatherStationBrowser(QWidget):
     def show(self):
         super(WeatherStationBrowser, self).show()
         qr = self.frameGeometry()
-        if self.parentWidget():
-            parent = self.parentWidget()
+        if self.parent():
+            parent = self.parent()
 
             wp = parent.frameGeometry().width()
             hp = parent.frameGeometry().height()
