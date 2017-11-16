@@ -1,43 +1,33 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Copyright © 2014-2017 Jean-Sebastien Gosselin
+# email: jean-sebastien.gosselin@ete.inrs.ca
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
-
-from __future__ import division, unicode_literals
-
-# ---- Standard library imports
+# ---- Imports: standard libraries
 
 import os
 import csv
 from calendar import monthrange
 from copy import copy
 
-# ---- Third party imports
+
+# ---- Imports: third parties
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# ---- Local imports
+
+# ---- Imports: local
 
 from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
 
+
+# ---- API
 
 class WXDataFrame(dict):
     def __init__(self, filename, *args, **kwargs):
@@ -223,8 +213,7 @@ class WXDataFrame(dict):
             return super(WXDataFrame, self).__getitem__(key)
 
 
-# =============================================================================
-
+# ---- Base functions: file and data manipulation
 
 def read_weather_datafile(filename):
     print('-'*78)
@@ -252,8 +241,10 @@ def read_weather_datafile(filename):
 
     # Get info from header and grab data from file :
 
-    with open(filename, 'r') as f:
-        reader = list(csv.reader(f, delimiter='\t'))
+    with open(filename, 'r') as csvfile:
+        dialect = csv.Sniffer().sniff(csvfile.read(1024), delimiters=",\t")
+        csvfile.seek(0)
+        reader = list(csv.reader(csvfile, dialect))
         for i, row in enumerate(reader):
             if len(row) == 0:
                 continue
@@ -314,9 +305,6 @@ def read_weather_datafile(filename):
     return df
 
 
-# =============================================================================
-
-
 def load_weather_log(fname, varname):
     print('loading info for missing %s' % varname)
 
@@ -353,9 +341,6 @@ def load_weather_log(fname, varname):
     time = np.array(time)
 
     return time
-
-
-# =============================================================================
 
 
 def clean_endsof_file(data):
@@ -396,8 +381,6 @@ def clean_endsof_file(data):
     return data
 
 
-# =========================================================================
-
 def make_timeserie_continuous(time, date, data):
     """
     Scan the entire time serie and will insert a row with nan values
@@ -425,9 +408,6 @@ def make_timeserie_continuous(time, date, data):
         i += 1
 
     return time, date, data
-
-
-# =============================================================================
 
 
 def fill_nan(time, data, name='data', fill_mode='zeros'):
@@ -471,10 +451,8 @@ def fill_nan(time, data, name='data', fill_mode='zeros'):
 def add_ETP_to_weather_data_file(filename):
     """ Add PET to weather data file."""
 
-    print('>>> Adding PET to weather data file...')
-
-    # load and stock original data :
-
+    print('Adding PET to weather data file...')
+    # Load and stock original data.
     with open(filename, 'r') as f:
         reader = list(csv.reader(f, delimiter='\t'))
         for i, row in enumerate(reader):
@@ -519,23 +497,12 @@ def add_ETP_to_weather_data_file(filename):
     # Save data :
 
     with open(filename, 'w', encoding='utf-8') as f:
-        writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+        writer = csv.writer(f, delimiter=',', lineterminator='\n')
         writer.writerows(reader)
-
     print('ETP time series added successfully to %s' % filename)
 
 
-# =============================================================================
-
-
-def calcul_rain_from_ptot(Tavg, Ptot, Tcrit=0):
-    rain = np.copy(Ptot)
-    rain[np.where(Tavg < Tcrit)[0]] = 0
-    return rain
-
-
-# =============================================================================
-
+# ----- Base functions: monthly downscaling
 
 def calc_monthly_sum(yy_dly, mm_dly, x_dly):
     return calc_monthly(yy_dly, mm_dly, x_dly, np.sum)
@@ -562,8 +529,20 @@ def calc_monthly(yy_dly, mm_dly, x_dly, func):
 
     return yy_mly, mm_mly, x_mly
 
-# -------------------------------------------------------------------------
 
+def calcul_monthly_normals(mm_mly, x_mly):
+    x_norm = np.zeros(12)
+    for i, mm in enumerate(range(1, 13)):
+        indx = np.where((mm_mly == mm) & (~np.isnan(x_mly)))[0]
+        if len(indx) > 0:
+            x_norm[i] = np.mean(x_mly[indx])
+        else:
+            x_norm[i] = np.nan
+
+    return x_norm
+
+
+# ----- Base functions: yearly downscaling
 
 def calc_yearly_sum(yy_dly, x_dly):
     return calc_yearly(yy_dly, x_dly, np.sum)
@@ -583,23 +562,15 @@ def calc_yearly(yy_dly, x_dly, func):
     return yy_yrly, x_yrly
 
 
-# =============================================================================
+# ----- Base functions: secondary variables
+
+def calcul_rain_from_ptot(Tavg, Ptot, Tcrit=0):
+    rain = np.copy(Ptot)
+    rain[np.where(Tavg < Tcrit)[0]] = 0
+    return rain
 
 
-def calcul_monthly_normals(mm_mly, x_mly):
-    x_norm = np.zeros(12)
-    for i, mm in enumerate(range(1, 13)):
-        indx = np.where((mm_mly == mm) & (~np.isnan(x_mly)))[0]
-        if len(indx) > 0:
-            x_norm[i] = np.mean(x_mly[indx])
-        else:
-            x_norm[i] = np.nan
-
-    return x_norm
-
-
-# =============================================================================
-
+# ---- Utility functions
 
 def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
@@ -628,11 +599,7 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
     return table
 
 
-# =============================================================================
-
-
 if __name__ == '__main__':
     filename = 'SUSSEX (8105200_8105210)_1980-2017.out'
     df = WXDataFrame(filename)
-
     add_ETP_to_weather_data_file(filename)
