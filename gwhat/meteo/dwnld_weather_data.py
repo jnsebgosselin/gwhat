@@ -27,12 +27,13 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
                              QMessageBox, QProgressBar, QTableWidgetItem,
                              QTableWidget, QHeaderView, QStyle,
-                             QComboBox)
+                             QComboBox, QSpinBox, QListWidget)
 
 # ---- Imports: local
 
 from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
+from gwhat.widgets.buttons import DropDownButton
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.search_weather_data import WeatherStationBrowser
 from gwhat.meteo.weather_stationlist import WeatherSationList
@@ -112,17 +113,36 @@ class DwnldWeatherWidget(QWidget):
                 "Download data for the selected weather stations.")
         self.btn_get.clicked.connect(self.btn_get_isClicked)
 
-        tb = QGridLayout()
+        yearlabels = [str(i) for i in range(2017, 1899, -1)]
+        btn_fromdate = DropDownButton(icon=IconDB().fromdate)
+        btn_fromdate.addItems(yearlabels)
+        btn_fromdate.sig_year_selected.connect(self.station_table.set_fromyear)
+
+        btn_todate = DropDownButton(icon=IconDB().todate)
+        btn_todate.addItems(yearlabels)
+        btn_todate.sig_year_selected.connect(self.station_table.set_toyear)
+
+        grid_fromtodate = QGridLayout()
+        grid_fromtodate.setContentsMargins(0, 0, 0, 0)
+        grid_fromtodate.setSpacing(0)
+        grid_fromtodate.addWidget(btn_fromdate, 0, 0)
+        grid_fromtodate.addWidget(btn_todate, 0, 1)
+
+        toolbar = QGridLayout()
         col = 0
         buttons = [btn_search4station, btn_browse_staList,
-                   self.btn_save_staList, btn_delSta, self.btn_get]
+                   self.btn_save_staList, btn_delSta, grid_fromtodate,
+                   self.btn_get]
         for button in buttons:
             col += 1
-            tb.addWidget(button, 0, col)
+            if isinstance(button, QGridLayout):
+                toolbar.addLayout(button, 0, col)
+            else:
+                toolbar.addWidget(button, 0, col)
 
-        tb.setColumnStretch(tb.columnCount(), 100)
-        tb.setSpacing(5)
-        tb.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
+        toolbar.setColumnStretch(toolbar.columnCount(), 100)
+        toolbar.setSpacing(5)
+        toolbar.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
 
         # ---- Progress Bar ----
 
@@ -216,7 +236,7 @@ class DwnldWeatherWidget(QWidget):
 
         main_grid = QGridLayout()
 
-        main_grid.addLayout(tb, 0, 0)
+        main_grid.addLayout(toolbar, 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
         main_grid.addWidget(myqt.VSep(), 0, 1, 2, 1)
 
@@ -923,6 +943,7 @@ class WeatherStationDisplayTable(QTableWidget):
     # -------------------------------------------------------------------------
 
     def set_fromyear(self, year):
+        print(year)
         for row in range(self.rowCount()):
             self.set_row_fromyear(row, year)
 
