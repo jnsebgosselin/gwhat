@@ -29,10 +29,10 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="2.1981295"
-     inkscape:cx="84.5473"
-     inkscape:cy="104.19463"
+     inkscape:cx="144.66851"
+     inkscape:cy="132.94096"
      inkscape:document-units="px"
-     inkscape:current-layer="layer1"
+     inkscape:current-layer="g4694"
      showgrid="true"
      showborder="true"
      fit-margin-top="0"
@@ -72,7 +72,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -99,8 +99,9 @@
       <path
          inkscape:connector-curvature="0"
          id="path4098-6"
-         d="m -9.457331,-47.856105 c -27.33333,0 -41.00011,6.1e-4 -41.00011,31.768529 V 133.48904 c 0,31.76793 13.66678,31.76854 41.00011,31.76854 H 121.74303 c 27.33334,0 41.00012,-6.2e-4 41.00012,-31.76854 V 84.268027 l -16.40005,14.22907 v 27.987423 c 0,22.38248 -8.0206,22.3797 -29.70333,22.3797 H -4.354071 c -21.68272,0 -29.70332,0.003 -29.70332,-22.3797 V 31.90547 c 0,-22.382479 8.0206,-22.384816 29.70332,-22.384816 H 116.63977 c 21.68273,0 29.70333,0.0023 29.70333,22.384816 v 13.686715 l 16.40005,14.310932 v -75.990693 c 0,-31.767919 -13.66678,-31.768529 -41.00012,-31.768529 V -6.872707 H 88.942939 v -40.983398 h -65.60018 v 40.983398 h -32.80009 z"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:125%;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;display:inline;fill:#212121;fill-opacity:1;stroke:none;stroke-width:2.62019706" />
+         d="m -11.457331,-47.856105 c -27.33333,0 -39.00011,6.1e-4 -39.00011,31.768529 V 133.48904 c 0,31.76793 13.66678,31.76854 41.00011,31.76854 H 121.74303 c 27.33334,0 41.00012,-6.2e-4 41.00012,-31.76854 V 90.268027 L 146.3431,104.4971 v 21.98742 c 0,22.38248 -8.0206,22.3797 -29.70333,22.3797 H -4.354071 c -21.68272,0 -29.70332,0.003 -29.70332,-22.3797 V 31.90547 c 0,-22.382479 8.0206,-22.384816 29.70332,-22.384816 H 116.63977 c 21.68273,0 29.70333,0.0023 29.70333,22.384816 v 7.686715 l 16.40005,14.310932 v -69.990693 c 0,-31.767919 -11.66678,-31.768529 -39.00012,-31.768529 V -6.872707 H 86.942939 v -40.983398 h -61.60018 v 40.983398 h -36.80009 z"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:15px;line-height:125%;font-family:Ubuntu;-inkscape-font-specification:Ubuntu;text-align:center;letter-spacing:0px;word-spacing:0px;writing-mode:lr-tb;text-anchor:middle;display:inline;fill:#212121;fill-opacity:1;stroke:none;stroke-width:2.62019706"
+         sodipodi:nodetypes="csssssccssssssssccscccccccc" />
       <path
          sodipodi:nodetypes="cccccccc"
          inkscape:connector-curvature="0"
