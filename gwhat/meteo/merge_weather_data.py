@@ -1,30 +1,17 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Copyright © 2014-2017 Jean-Sebastien Gosselin
+# email: jean-sebastien.gosselin@ete.inrs.ca
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
-
-# ---- Standard library imports
+# ---- Imports: standard libraries
 
 import os
 import csv
 
-# ---- Third party imports
+# ---- Imports: third parties
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -35,7 +22,7 @@ from PyQt5.QtWidgets import (QDialog, QApplication, QGridLayout,
                              QLabel, QPushButton, QCheckBox, QLineEdit,
                              QFileDialog)
 
-# ---- Local imports
+# ---- Imports: local
 
 from gwhat.common import IconDB, QToolButtonSmall
 from gwhat.meteo.weather_reader import read_weather_datafile
