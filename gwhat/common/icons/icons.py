@@ -1,31 +1,18 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox)..
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
+# Copyright © 2014-2017 Jean-Sebastien Gosselin
+# email: jean-sebastien.gosselin@ete.inrs.ca
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 from __future__ import division, unicode_literals
 
-# Standard library imports :
+# ---- Imports: standard libraries
 
 import os
 
-# Third party imports
+# ---- Imports: third parties
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
@@ -70,22 +57,24 @@ class IconDB(object):
         self.search = QIcon(os.path.join(dirname, 'search'))
         self.settings = QIcon(os.path.join(dirname, 'settings'))
 
-        # ----------------------------------------- Download Weather Data -----
+        # ---- Download Weather Data
 
         self.staList = QIcon(os.path.join(dirname, 'note'))
         self.plus_sign = QIcon(os.path.join(dirname, 'plus_sign'))
         self.add2list = QIcon(os.path.join(dirname, 'add2list'))
+        self.todate = QIcon(os.path.join(dirname, 'calendar_todate'))
+        self.fromdate = QIcon(os.path.join(dirname, 'calendar_fromdate'))
 
-        # ----------------------------------------------------------- BRF -----
+        # ---- BRF
 
         self.select_range = QIcon(os.path.join(dirname, 'select_range'))
 
-        # ------------------------------------------------------ HydroCalc ----
+        # ---- HydroCalc
 
         self.zoom_out = QIcon(os.path.join(dirname, 'zoom_out'))
         self.zoom_in = QIcon(os.path.join(dirname, 'zoom_in'))
 
-        # -------------------------------------------- Hydrograph Toolbar -----
+        # ---- Hydrograph Toolbar
 
         self.toggleMode = QIcon(os.path.join(dirname, 'toggleMode2'))
 
@@ -121,13 +110,13 @@ class IconDB(object):
         self.work = QIcon(os.path.join(dirname, 'work'))
         self.color_picker = QIcon(os.path.join(dirname, 'color_picker'))
 
-        # ---------------------------------------------- Fill Weather Data ----
+        # ---- Fill Weather Data
 
         self.merge_data = QIcon(os.path.join(dirname, 'merge_data'))
         self.fill_data = QIcon(os.path.join(dirname, 'fill_data'))
         self.fill_all_data = QIcon(os.path.join(dirname, 'fill_all_data'))
 
-        # ----------------------------------------------- Weather Averages ----
+        # ---- Weather Averages
 
         self.showGrid = QIcon(os.path.join(dirname, 'grid'))
         self.export_data = QIcon(os.path.join(dirname, 'export-data'))
