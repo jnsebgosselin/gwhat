@@ -26,8 +26,7 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QToolButton, QGridLayout, QLabel, QCheckBox,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
                              QMessageBox, QProgressBar, QTableWidgetItem,
-                             QTableWidget, QHeaderView, QStyle,
-                             QComboBox, QSpinBox, QListWidget)
+                             QTableWidget, QHeaderView, QStyle, QComboBox)
 
 # ---- Imports: local
 
@@ -922,15 +921,19 @@ class WeatherStationDisplayTable(QTableWidget):
 
         self.setSortingEnabled(True)
 
+    # ----- Handler: delete and add date to the table
+
     def delete_rows(self, rows):
+        """Remove stations from the table at the specified rows in argument."""
         # Going in reverse order to preserve indexes while
         # scanning the rows if any are deleted.
         for row in reversed(rows):
-            print('Removing %s (%s)' % (self.item(row, 1).text(),
-                                        self.item(row, 6).text()))
             self.removeRow(row)
 
     def populate_table(self, staList):
+        """
+        Clear and add the list of stations provided in argument to the table.
+        """
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self.clearContents()
         self.chkbox_header.setCheckState(Qt.CheckState(False))
@@ -940,14 +943,21 @@ class WeatherStationDisplayTable(QTableWidget):
         self.setSortingEnabled(True)
         QApplication.restoreOverrideCursor()
 
-    # -------------------------------------------------------------------------
+    # ----- Utility: set from and to years values
 
     def set_fromyear(self, year):
-        print(year)
+        """
+        Smartly set the value of the "From Year" column for all the stations
+        displayed in the table.
+        """
         for row in range(self.rowCount()):
             self.set_row_fromyear(row, year)
 
     def set_row_fromyear(self, row, year):
+        """
+        Smartly set the value of the "From Year" column for the station
+        at the row specified in argument.
+        """
         if self.year_display_mode == 1:
             widget = self.cellWidget(row, 3)
             years = [widget.itemText(i) for i in range(widget.count())]
@@ -960,10 +970,18 @@ class WeatherStationDisplayTable(QTableWidget):
                 widget.setCurrentIndex(index)
 
     def set_toyear(self, year):
+        """
+        Smartly set the value of the "To Year" column for all the stations
+        displayed in the table.
+        """
         for row in range(self.rowCount()):
             self.set_row_toyear(row, year)
 
     def set_row_toyear(self, row, year):
+        """
+        Smartly set the value of the "To Year" column for the station
+        at the row specified in argument.
+        """
         if self.year_display_mode == 1:
             widget = self.cellWidget(row, 4)
             years = [widget.itemText(i) for i in range(widget.count())]
@@ -975,7 +993,7 @@ class WeatherStationDisplayTable(QTableWidget):
             finally:
                 widget.setCurrentIndex(index)
 
-    # -------------------------------------------------------------------------
+    # ------ Utility: get and save data from the table
 
     def get_row_from_climateid(self, climateid):
         for row in range(self.rowCount()):
@@ -991,8 +1009,6 @@ class WeatherStationDisplayTable(QTableWidget):
                 rows.append(row)
 
         return rows
-
-    # -------------------------------------------------------------------------
 
     def get_content4rows(self, rows, daterange='full'):
         """

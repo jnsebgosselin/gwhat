@@ -18,6 +18,7 @@ from PyQt5.QtWidgets import QApplication, QToolButton, QListWidget, QStyle
 
 
 class DropDownButton(QToolButton):
+    """QToolButton with QComboBox dropdown-like capability."""
     sig_year_selected = QSignal(int)
 
     def __init__(self, parent=None, icon=None, icon_size=QSize(28, 28)):
@@ -34,10 +35,12 @@ class DropDownButton(QToolButton):
         self.sig_year_selected = self.droplist.sig_year_selected
 
     def addItems(self, items):
+        """Clear and add items to the button dropdown list."""
         self.droplist.clear()
         self.droplist.addItems(items)
 
     def show_dropdown(self):
+        """Show and set focus on the dropdown list."""
         self.droplist.show()
         self.droplist.setFocus()
 
@@ -51,27 +54,44 @@ class DropDownList(QListWidget):
         self.hide()
 
     def show(self):
+        """
+        Qt method override to show the dropdown list under its parent,
+        aligned to its left edge.
+        """
         point = self.parent().rect().bottomLeft()
         global_point = self.parent().mapToGlobal(point)
         self.move(global_point)
+        self.resizeColumnsToContents()
+        super(DropDownList, self).show()
+
+    def resizeColumnsToContents(self):
+        """Adjust the width of the list to its content."""
         self.setFixedWidth(
                 self.sizeHintForColumn(0) + 2*self.frameWidth() +
                 QApplication.style().pixelMetric(QStyle.PM_ScrollBarExtent))
-        super(DropDownList, self).show()
 
     def keyPressEvent(self, event):
+        """
+        Qt method override to select the highlighted item and hide the list
+        if the Enter key is pressed.
+        """
         super(DropDownList, self).keyPressEvent(event)
         if event.key() == Qt.Key_Return:
             self.sig_year_selected.emit(int(self.currentItem().text()))
             self.hide()
 
     def mousePressEvent(self, event):
+        """
+        Qt method override to select and hide the list if an item is clicked
+        with the left button of the mouse.
+        """
         super(DropDownList, self).mousePressEvent(event)
         if event.button() == 1:
             self.sig_year_selected.emit(int(self.currentItem().text()))
             self.hide()
 
     def focusOutEvent(self, event):
+        """Qt method override to hide the list when focus is lost."""
         event.ignore()
         # Don't hide it on Mac when main window loses focus because
         # keyboard input is lost
