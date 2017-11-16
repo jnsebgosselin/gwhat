@@ -215,6 +215,18 @@ class WXDataFrame(dict):
 
 # ---- Base functions: file and data manipulation
 
+def open_weather_datafile(filename):
+        for dlm in ['\t', ',']:
+            with open(filename, 'r') as csvfile:
+                reader = list(csv.reader(csvfile, delimiter=dlm))
+            for line in reader:
+                if line and line[0] == 'Station Name':
+                    return reader
+        else:                                                # pragma: no cover
+            print("Failed to open %s." % os.path.basename(filename))
+            return None
+
+
 def read_weather_datafile(filename):
     print('-'*78)
     print('Reading weather data from "%s"...' % os.path.basename(filename))
@@ -239,16 +251,15 @@ def read_weather_datafile(filename):
           'PET': None,
           }
 
-    # Get info from header and grab data from file :
+    # Get info from header and grab the data from the file.
 
-    with open(filename, 'r') as csvfile:
-        dialect = csv.Sniffer().sniff(csvfile.read(1024), delimiters=",\t")
-        csvfile.seek(0)
-        reader = list(csv.reader(csvfile, dialect))
+    reader = open_weather_datafile(filename)
+    if reader is None:                                       # pragma: no cover
+        return
+    else:
         for i, row in enumerate(reader):
             if len(row) == 0:
                 continue
-
             if row[0] in ['Station Name', 'Province', 'Climate Identifier']:
                 df[row[0]] = str(row[1])
             elif row[0] in ['Latitude', 'Longitude', 'Elevation']:
@@ -445,16 +456,15 @@ def fill_nan(time, data, name='data', fill_mode='zeros'):
     return data
 
 
-#  ============================================================================
-
-
 def add_ETP_to_weather_data_file(filename):
     """ Add PET to weather data file."""
 
     print('Adding PET to weather data file...')
-    # Load and stock original data.
-    with open(filename, 'r') as f:
-        reader = list(csv.reader(f, delimiter='\t'))
+    # Load and store original data.
+    reader = open_weather_datafile(filename)
+    if reader is None:                                       # pragma: no cover
+        return
+    else:
         for i, row in enumerate(reader):
             if len(row) == 0:
                 continue
