@@ -610,6 +610,10 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
 
 if __name__ == '__main__':
-    filename = 'SUSSEX (8105200_8105210)_1980-2017.out'
+    filename = 'FARNHAM (7022320)_1980-2017.csv'
     df = WXDataFrame(filename)
+    add_ETP_to_weather_data_file(filename)
+
+    filename = 'AUTEUIL (7020392)_1980-2014.csv'
+    df2 = WXDataFrame(filename)
     add_ETP_to_weather_data_file(filename)
