@@ -1,25 +1,12 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Copyright © 2014-2017 Jean-Sebastien Gosselin
+# email: jean-sebastien.gosselin@ete.inrs.ca
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
-
-# ---- Standard library imports
+# ---- Imports: standard libraries
 
 from urllib.request import URLError, urlopen
 import sys
@@ -28,7 +15,7 @@ from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
 
-# ---- Third party imports
+# ---- Imports: third parties
 
 import numpy as np
 
@@ -39,13 +26,13 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
                              QToolButton, QGridLayout, QLabel, QCheckBox,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
                              QMessageBox, QProgressBar, QTableWidgetItem,
-                             QTableWidget, QHeaderView, QStyle,
-                             QComboBox)
+                             QTableWidget, QHeaderView, QStyle, QComboBox)
 
-# ---- Local imports
+# ---- Imports: local
 
 from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
+from gwhat.widgets.buttons import DropDownButton
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.search_weather_data import WeatherStationBrowser
 from gwhat.meteo.weather_stationlist import WeatherSationList
@@ -125,17 +112,36 @@ class DwnldWeatherWidget(QWidget):
                 "Download data for the selected weather stations.")
         self.btn_get.clicked.connect(self.btn_get_isClicked)
 
-        tb = QGridLayout()
+        yearlabels = [str(i) for i in range(2017, 1899, -1)]
+        btn_fromdate = DropDownButton(icon=IconDB().fromdate)
+        btn_fromdate.addItems(yearlabels)
+        btn_fromdate.sig_year_selected.connect(self.station_table.set_fromyear)
+
+        btn_todate = DropDownButton(icon=IconDB().todate)
+        btn_todate.addItems(yearlabels)
+        btn_todate.sig_year_selected.connect(self.station_table.set_toyear)
+
+        grid_fromtodate = QGridLayout()
+        grid_fromtodate.setContentsMargins(0, 0, 0, 0)
+        grid_fromtodate.setSpacing(0)
+        grid_fromtodate.addWidget(btn_fromdate, 0, 0)
+        grid_fromtodate.addWidget(btn_todate, 0, 1)
+
+        toolbar = QGridLayout()
         col = 0
         buttons = [btn_search4station, btn_browse_staList,
-                   self.btn_save_staList, btn_delSta, self.btn_get]
+                   self.btn_save_staList, btn_delSta, grid_fromtodate,
+                   self.btn_get]
         for button in buttons:
             col += 1
-            tb.addWidget(button, 0, col)
+            if isinstance(button, QGridLayout):
+                toolbar.addLayout(button, 0, col)
+            else:
+                toolbar.addWidget(button, 0, col)
 
-        tb.setColumnStretch(tb.columnCount(), 100)
-        tb.setSpacing(5)
-        tb.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
+        toolbar.setColumnStretch(toolbar.columnCount(), 100)
+        toolbar.setSpacing(5)
+        toolbar.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
 
         # ---- Progress Bar ----
 
@@ -229,7 +235,7 @@ class DwnldWeatherWidget(QWidget):
 
         main_grid = QGridLayout()
 
-        main_grid.addLayout(tb, 0, 0)
+        main_grid.addLayout(toolbar, 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
         main_grid.addWidget(myqt.VSep(), 0, 1, 2, 1)
 
@@ -915,15 +921,19 @@ class WeatherStationDisplayTable(QTableWidget):
 
         self.setSortingEnabled(True)
 
+    # ----- Handler: delete and add date to the table
+
     def delete_rows(self, rows):
+        """Remove stations from the table at the specified rows in argument."""
         # Going in reverse order to preserve indexes while
         # scanning the rows if any are deleted.
         for row in reversed(rows):
-            print('Removing %s (%s)' % (self.item(row, 1).text(),
-                                        self.item(row, 6).text()))
             self.removeRow(row)
 
     def populate_table(self, staList):
+        """
+        Clear and add the list of stations provided in argument to the table.
+        """
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self.clearContents()
         self.chkbox_header.setCheckState(Qt.CheckState(False))
@@ -933,41 +943,57 @@ class WeatherStationDisplayTable(QTableWidget):
         self.setSortingEnabled(True)
         QApplication.restoreOverrideCursor()
 
-    # -------------------------------------------------------------------------
+    # ----- Utility: set from and to years values
 
     def set_fromyear(self, year):
+        """
+        Smartly set the value of the "From Year" column for all the stations
+        displayed in the table.
+        """
         for row in range(self.rowCount()):
             self.set_row_fromyear(row, year)
 
     def set_row_fromyear(self, row, year):
-        if self.year_display_mode == 1:
-            widget = self.cellWidget(row, 3)
-            years = [widget.itemText(i) for i in range(widget.count())]
+        """
+        Smartly set the value of the "From Year" column for the station
+        at the row specified in argument.
+        """
+        # Smartly set the current index of the "From Year" combobox.
+        widget = self.cellWidget(row, 3)
+        years = [int(widget.itemText(i)) for i in range(widget.count())]
+        fromyear = min(max(np.min(years), year), np.max(years))
+        widget.setCurrentIndex(years.index(fromyear))
 
-            try:
-                index = years.index(str(year))
-            except ValueError:
-                index = 0
-            finally:
-                widget.setCurrentIndex(index)
+        # Check that "To Year" is above "From Year".
+        toyear = int(self.cellWidget(row, 4).currentText())
+        if fromyear > toyear:
+            self.cellWidget(row, 4).setCurrentIndex(years.index(fromyear))
 
     def set_toyear(self, year):
+        """
+        Smartly set the value of the "To Year" column for all the stations
+        displayed in the table.
+        """
         for row in range(self.rowCount()):
             self.set_row_toyear(row, year)
 
     def set_row_toyear(self, row, year):
-        if self.year_display_mode == 1:
-            widget = self.cellWidget(row, 4)
-            years = [widget.itemText(i) for i in range(widget.count())]
+        """
+        Smartly set the value of the "To Year" column for the station
+        at the row specified in argument.
+        """
+        # Smartly set the current index of the "To Year" combobox.
+        widget = self.cellWidget(row, 4)
+        years = [int(widget.itemText(i)) for i in range(widget.count())]
+        toyear = min(max(np.min(years), year), np.max(years))
+        widget.setCurrentIndex(years.index(toyear))
 
-            try:
-                index = years.index(str(year))
-            except ValueError:
-                index = len(years)-1
-            finally:
-                widget.setCurrentIndex(index)
+        # Check that "To Year" is above "From Year".
+        fromyear = int(self.cellWidget(row, 3).currentText())
+        if fromyear > toyear:
+            self.cellWidget(row, 3).setCurrentIndex(years.index(toyear))
 
-    # -------------------------------------------------------------------------
+    # ------ Utility: get and save data from the table
 
     def get_row_from_climateid(self, climateid):
         for row in range(self.rowCount()):
@@ -983,8 +1009,6 @@ class WeatherStationDisplayTable(QTableWidget):
                 rows.append(row)
 
         return rows
-
-    # -------------------------------------------------------------------------
 
     def get_content4rows(self, rows, daterange='full'):
         """
