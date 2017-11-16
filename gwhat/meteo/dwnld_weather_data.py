@@ -958,16 +958,16 @@ class WeatherStationDisplayTable(QTableWidget):
         Smartly set the value of the "From Year" column for the station
         at the row specified in argument.
         """
-        if self.year_display_mode == 1:
-            widget = self.cellWidget(row, 3)
-            years = [widget.itemText(i) for i in range(widget.count())]
+        # Smartly set the current index of the "From Year" combobox.
+        widget = self.cellWidget(row, 3)
+        years = [int(widget.itemText(i)) for i in range(widget.count())]
+        fromyear = min(max(np.min(years), year), np.max(years))
+        widget.setCurrentIndex(years.index(fromyear))
 
-            try:
-                index = years.index(str(year))
-            except ValueError:
-                index = 0
-            finally:
-                widget.setCurrentIndex(index)
+        # Check that "To Year" is above "From Year".
+        toyear = int(self.cellWidget(row, 4).currentText())
+        if fromyear > toyear:
+            self.cellWidget(row, 4).setCurrentIndex(years.index(fromyear))
 
     def set_toyear(self, year):
         """
@@ -982,16 +982,16 @@ class WeatherStationDisplayTable(QTableWidget):
         Smartly set the value of the "To Year" column for the station
         at the row specified in argument.
         """
-        if self.year_display_mode == 1:
-            widget = self.cellWidget(row, 4)
-            years = [widget.itemText(i) for i in range(widget.count())]
+        # Smartly set the current index of the "To Year" combobox.
+        widget = self.cellWidget(row, 4)
+        years = [int(widget.itemText(i)) for i in range(widget.count())]
+        toyear = min(max(np.min(years), year), np.max(years))
+        widget.setCurrentIndex(years.index(toyear))
 
-            try:
-                index = years.index(str(year))
-            except ValueError:
-                index = len(years)-1
-            finally:
-                widget.setCurrentIndex(index)
+        # Check that "To Year" is above "From Year".
+        fromyear = int(self.cellWidget(row, 3).currentText())
+        if fromyear > toyear:
+            self.cellWidget(row, 3).setCurrentIndex(years.index(toyear))
 
     # ------ Utility: get and save data from the table
 
