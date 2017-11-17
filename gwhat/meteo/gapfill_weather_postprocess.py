@@ -41,6 +41,10 @@ import scipy.stats as stats
 from xlrd.xldate import xldate_from_date_tuple
 #from xlrd import xldate_as_tuple
 
+# Imports: local
+
+from gwhat.common.utils import save_content_to_csv
+
 
 class PostProcessErr(object):
 
@@ -59,31 +63,28 @@ class PostProcessErr(object):
 
         self.load_err_file()
 
-    def load_err_file(self): #=============================== Load err. File ==
-
-        with open(self.fname) as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-
-        #---- Finds Station Info + First Row of Data ----
-
-        row = 0
-        while True:
-            if row > 25:
-                print('Something is wrong with the ' +
-                      'formatting of the .err file')
-                return
-
-            try:
-                if reader[row][0] == 'VARIABLE':
+    def load_err_file(self):
+        """Read .err file and return None if it fails."""
+        for dlm in [',', '\t']:
+            with open(self.fname) as f:
+                reader = list(csv.reader(f, delimiter=dlm))
+            row = 0
+            while True:
+                if row > 25:
+                    print('The format of the .err file is wrong.')
                     break
-                elif reader[row][0] == 'Station Name':
-                    self.staName = reader[row][1]
-                elif reader[row][0] == 'Climate Identifier':
-                    self.climID = reader[row][1]
-            except IndexError:
-                pass
-
-            row += 1
+                try:
+                    if reader[row][0] == 'VARIABLE':
+                        break
+                    elif reader[row][0] == 'Station Name':
+                        self.staName = reader[row][1]
+                    elif reader[row][0] == 'Climate Identifier':
+                        self.climID = reader[row][1]
+                except IndexError:
+                    pass
+                row += 1
+        else:
+            return
         row += 1
 
         # ------------------------------------------------ Re-Organizes Data --
@@ -183,18 +184,14 @@ class PostProcessErr(object):
             if not os.path.exists(filename):
                 header = [['Station', 'RMSE', 'MAE', 'ME',
                            'r', 'Emax', 'Emin']]
-                with open(filename, 'w') as f:
-                    writer = csv.writer(f,delimiter='\t')
-                    writer.writerows(header)
+                save_content_to_csv(filename, header)
 
             # ---- Write Stats to File ----
 
             rowcontent = [[self.staName, '%0.1f' % RMSE, '%0.1f' % MAE,
                            '%0.2f' % ME, '%0.3f' % r, '%0.1f' % Emax,
                            '%0.1f' % Emin]]
-            with open(filename, 'a') as f:
-                writer = csv.writer(f, delimiter='\t')
-                writer.writerows(rowcontent)
+            save_content_to_csv(filename, rowcontent, mode='a')
 
     # ======================================================== Est. Errors ====
 
@@ -609,14 +606,12 @@ def compute_wet_days_LatexTable(dirname):
                 print('Precipitation sdt = %0.1f mm/day' % SD)
 
                 fcontent.append([pperr.staName,
-                                 '%d'%(Nmes/30.),
-                                 '%d'%(Npre/30.),
-                                 '%d'%((Npre-Nmes)/30.),
-                                 '%0.1f'%f])
+                                 '%d' % (Nmes/30.),
+                                 '%d' % (Npre/30.),
+                                 '%d' % ((Npre-Nmes)/30.),
+                                 '%0.1f' % f])
+    save_content_to_csv(fname, fcontent, mode='a')
 
-    with open(fname, 'a') as f:
-        writer = csv.writer(f,delimiter='\t')
-        writer.writerows(fcontent)
 
 def compute_err_boxplot(dirname):
 
