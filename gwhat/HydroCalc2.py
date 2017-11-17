@@ -1087,7 +1087,7 @@ class WLCalc(myqt.DialogWindow):
         # Load soil column info :
 
         with open(self.soilFilename, 'r') as f:
-            reader = list(csv.reader(f, delimiter="\t"))
+            reader = list(csv.reader(f, delimiter=','))
 
         NLayer = len(reader)
 
@@ -1879,7 +1879,7 @@ class SoilProfil():
         # ---- load soil column info ----
 
         with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter="\t"))
+            reader = list(csv.reader(f, delimiter=','))
 
         NLayer = len(reader)
 
