@@ -216,15 +216,19 @@ class WXDataFrame(dict):
 # ---- Base functions: file and data manipulation
 
 def open_weather_datafile(filename):
-        for dlm in ['\t', ',']:
-            with open(filename, 'r') as csvfile:
-                reader = list(csv.reader(csvfile, delimiter=dlm))
-            for line in reader:
-                if line and line[0] == 'Station Name':
-                    return reader
-        else:                                                # pragma: no cover
-            print("Failed to open %s." % os.path.basename(filename))
-            return None
+    """
+    Open the csv datafile and try to guess the delimiter.
+    Return None if this fails.
+    """
+    for dlm in ['\t', ',']:
+        with open(filename, 'r') as csvfile:
+            reader = list(csv.reader(csvfile, delimiter=dlm))
+        for line in reader:
+            if line and line[0] == 'Station Name':
+                return reader
+    else:                                                    # pragma: no cover
+        print("Failed to open %s." % os.path.basename(filename))
+        return None
 
 
 def read_weather_datafile(filename):
