@@ -40,7 +40,7 @@ from PyQt5.QtWidgets import (QSpinBox, QDoubleSpinBox, QWidget, QDateEdit,
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# ---- Local imports
+# ---- Imports: local
 
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
@@ -50,6 +50,7 @@ from gwhat.colors2 import ColorsReader, ColorsSetupWin
 from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
 import gwhat.common.database as db
+from gwhat.common.utils import save_content_to_csv
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
 
 
@@ -476,21 +477,18 @@ class HydroprintGUI(myqt.DialogWindow):
             print(msg)
 
             fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
-            with open(fname, 'w') as f:
-                writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-                writer.writerows(fcontent)
+            save_content_to_csv(fname, fcontent)
 
         # graph_layout.lst :
 
         filename = os.path.join(self.workdir, 'graph_layout.lst')
         if not os.path.exists(filename):
-            fcontent = db.FileHeaders().graph_layout
             msg = ('No "graph_layout.lst" file found. ' +
                    'A new one has been created.')
             print(msg)
-            with open(filename, 'w') as f:
-                writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-                writer.writerows(fcontent)
+
+            fcontent = db.FileHeaders().graph_layout
+            save_content_to_csv(filename, fcontent)
 
     # =========================================================================
 

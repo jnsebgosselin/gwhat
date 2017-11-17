@@ -21,6 +21,10 @@ from xlrd import xldate_as_tuple
 # from xlrd.xldate import xldate_from_date_tuple
 import matplotlib.pyplot as plt
 
+# ---- Imports: local
+
+from gwhat.common.utils import save_content_to_csv
+
 
 def calcul_glue(p, yrs_range=None):
 
@@ -123,12 +127,7 @@ def write_GLUE50_budget(yrs_range=None):
     for i in range(len(years)):
         filecontent.append([years[i], ptot[i], rechg[i][0], etr[i][0],
                             ru[i][0]])
-        with open('glue50_results.csv', 'w', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(filecontent)
-
-
-# =============================================================================
+    save_content_to_csv('glue50_results.csv', filecontent)
 
 
 def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):

@@ -68,6 +68,7 @@ import tkinter.messagebox
 
 import gwhat.common.database as db
 import gwhat.custom_widgets as MyQWidget
+from gwhat.common.utils import save_content_to_csv
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
 from gwhat.meteo import dwnld_weather_data
@@ -331,30 +332,24 @@ class WHATPref(object):
 
         self.load_pref_file()
 
-    def save_pref_file(self):  # ==============================================
-
+    def save_pref_file(self):
         print('\nSaving WHAT preferences to file...')
-
         fcontent = [['Project File:', os.path.relpath(self.projectfile)],
                     ['Language:', self.language],
                     ['Font-Size-General:', self.fontsize_general],
                     ['Font-Size-Console:', self.fontsize_console],
                     ['Font-Size-Menubar:', self.fontsize_menubar]]
-
-        with open('WHAT.pref', 'w', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(fcontent)
-
+        save_content_to_csv('WHAT.pref', fcontent)
         print('WHAT preferences saved.')
 
-    def load_pref_file(self, circloop=False):  # ==============================
+    def load_pref_file(self, circloop=False):
 
         # cicrcloop argument is a protection to prevent a circular loop
         # in case something goes wrong.
 
         try:
             with open('WHAT.pref', 'r', encoding='utf-8') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
+                reader = list(csv.reader(f, delimiter=','))
 
             self.projectfile = reader[0][1]
             if platform.system() == 'Linux':
