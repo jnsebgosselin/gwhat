@@ -320,17 +320,23 @@ def read_weather_datafile(filename):
     return df
 
 
+def open_weather_log(fname):
+    """
+    Open the csv file and try to guess the delimiter.
+    Return None if this fails.
+    """
+    for dlm in [',', '\t']:
+        with open(fname, 'r') as f:
+            reader = list(csv.reader(f, delimiter=dlm))
+            if reader[0][0] == 'Station Name':
+                return reader[36:]
+    else:
+        return None
+
+
 def load_weather_log(fname, varname):
     print('loading info for missing %s' % varname)
-
-    # ---- load Data ----
-
-    with open(fname, 'r') as f:
-        reader = csv.reader(f, delimiter='\t')
-        reader = list(reader)[36:]
-
-    # ---- load data and convert time ----
-
+    reader = open_weather_log(fname)
     xldates = []
     for i in range(len(reader)):
         if reader[i][0] == varname:
@@ -343,7 +349,8 @@ def load_weather_log(fname, varname):
     tseg = [np.nan, xldates[0], xldates[0]+1]
     for xldate in xldates:
         if tseg[2] == xldate:
-            if xldate == xldates[-1]:  # the last data of the series is missing
+            if xldate == xldates[-1]:
+                # the last data of the series is missing
                 time.extend(tseg)
             else:
                 tseg[2] += 1
