@@ -35,8 +35,8 @@
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:zoom="0.35355339"
-     inkscape:cx="511.0375"
-     inkscape:cy="258.07041"
+     inkscape:cx="982.50254"
+     inkscape:cy="160.87658"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -229,19 +229,19 @@
   </g>
   <text
      xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:14.01319695px;line-height:0%;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.0666666"
-     x="-16.185595"
-     y="398.39783"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.19263935px;line-height:0%;font-family:'EmojiOne Color';-inkscape-font-specification:'EmojiOne Color Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.00420678;"
+     x="-15.034737"
+     y="398.72504"
      id="text3084"
      transform="scale(0.97095778,1.0299109)"><tspan
        sodipodi:role="line"
-       x="-16.185595"
-       y="398.39783"
+       x="-15.034737"
+       y="398.72504"
        id="tspan3086"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:394.62020874px;line-height:5;font-family:'liberation sans';-inkscape-font-specification:'liberation sans Bold';fill:#ffffff;fill-opacity:1;stroke-width:1.0666666"><tspan
-         x="-16.185595"
-         y="398.39783"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:5;font-family:'liberation sans';-inkscape-font-specification:'liberation sans Bold';fill:#ffffff;fill-opacity:1;stroke-width:1.0666666"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:371.51278687px;line-height:5;font-family:'EmojiOne Color';-inkscape-font-specification:'EmojiOne Color Bold';fill:#ffffff;fill-opacity:1;stroke-width:1.00420678;letter-spacing:-18.93999419px;"><tspan
+         x="-15.034737"
+         y="398.72504"
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:5;font-family:'EmojiOne Color';-inkscape-font-specification:'EmojiOne Color Bold';fill:#ffffff;fill-opacity:1;stroke-width:1.00420678;letter-spacing:-18.93999419px;"
          id="tspan3088">GWHA</tspan></tspan></text>
   <rect
      x="-36.317749"
@@ -255,19 +255,19 @@
   <path
      sodipodi:nodetypes="ccc"
      style="fill:none;fill-opacity:0;stroke:#2a2a2a;stroke-width:30;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="m 1536.907,205.34882 h -36.9898 v 240.29697"
+     d="m 1536.907,191.34882 h -36.9898 v 240.29697"
      id="path2995-6"
      inkscape:connector-curvature="0" />
   <path
      sodipodi:nodetypes="cccc"
      inkscape:connector-curvature="0"
      id="path3765"
-     d="m 1325.9924,213.99646 v -55.78808 h 267.7619 v 55.78808"
+     d="m 1325.9924,199.99646 v -55.78808 h 267.7619 v 55.78808"
      style="display:inline;fill:none;fill-opacity:0;stroke:#2a2a2a;stroke-width:30;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;enable-background:new" />
   <path
      sodipodi:nodetypes="ccc"
      style="fill:none;fill-opacity:0;stroke:#2a2a2a;stroke-width:30;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-     d="m 1380.809,205.34884 h 41.359 v 237.99972"
+     d="m 1380.809,191.34884 h 41.359 v 237.99972"
      id="path2995"
      inkscape:connector-curvature="0" />
   <path
