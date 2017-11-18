@@ -34,7 +34,7 @@
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:zoom="0.57875767"
-     inkscape:cx="905.58328"
+     inkscape:cx="1758.8775"
      inkscape:cy="278.79259"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
@@ -76,13 +76,13 @@
     <sodipodi:guide
        position="1365.583,426.52937"
        orientation="0,1"
-       id="guide4528"
-       inkscape:locked="false" />
+       inkscape:locked="false"
+       id="guide4528" />
     <sodipodi:guide
        position="1353.3092,134.34824"
        orientation="0,1"
-       id="guide4550"
-       inkscape:locked="false" />
+       inkscape:locked="false"
+       id="guide4550" />
   </sodipodi:namedview>
   <defs
      id="defs3338">
@@ -212,13 +212,13 @@
      inkscape:connector-curvature="0" />
   <path
      inkscape:connector-curvature="0"
-     d="m 1809.0772,358.3903 h -65.1686 c 0,0 17.3567,31.48147 32.6046,57.89184 0.032,0 0.032,-0.0212 0.032,-0.0212 l 0.031,-0.0315 0.032,-0.0315 0.031,-0.0212 c 17.0578,-29.54515 32.4824,-57.85277 32.4824,-57.85277 z"
+     d="m 1807.3494,339.38406 h -65.1686 c 0,0 17.3567,31.48147 32.6046,57.89184 0.032,0 0.032,-0.0212 0.032,-0.0212 l 0.031,-0.0315 0.032,-0.0315 0.031,-0.0212 c 17.0578,-29.54515 32.4824,-57.85277 32.4824,-57.85277 z"
      style="color:#000000;display:inline;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1.23265612;enable-background:new"
      id="path4622"
      sodipodi:nodetypes="ccccccccc" />
   <path
      style="display:inline;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:26.44789505;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;enable-background:new"
-     d="m 1408,390.52985 c -0.6866,96.28267 101.8663,115.68438 142.9064,131.75807 215.9418,74.50333 317.5094,-102.29833 317.5094,-102.29833 C 1691.1673,536.39992 1576.8959,263.62001 1408,390.52985 Z"
+     d="m 1408,347.33388 c -0.6866,96.28267 101.8663,158.88035 142.9064,174.95404 C 1766.8482,596.79125 1896.0611,371.6101 1896.0611,371.6101 1680.8002,507.02666 1576.8959,220.42404 1408,347.33388 Z"
      id="path3852"
      inkscape:connector-curvature="0"
      sodipodi:nodetypes="cccc" />
