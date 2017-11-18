@@ -151,6 +151,3 @@ texinfo_documents = [
      author, 'gwhat', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-
