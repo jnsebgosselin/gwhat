@@ -227,22 +227,16 @@
        y="706.51733"
        x="145.06667" />
   </g>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.19263935px;line-height:0%;font-family:'EmojiOne Color';-inkscape-font-specification:'EmojiOne Color Bold';letter-spacing:0px;word-spacing:0px;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:1.00420678;"
-     x="-15.034737"
-     y="398.72504"
-     id="text3084"
-     transform="scale(0.97095778,1.0299109)"><tspan
-       sodipodi:role="line"
-       x="-15.034737"
-       y="398.72504"
-       id="tspan3086"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:371.51278687px;line-height:5;font-family:'EmojiOne Color';-inkscape-font-specification:'EmojiOne Color Bold';fill:#ffffff;fill-opacity:1;stroke-width:1.00420678;letter-spacing:-18.93999419px;"><tspan
-         x="-15.034737"
-         y="398.72504"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:5;font-family:'EmojiOne Color';-inkscape-font-specification:'EmojiOne Color Bold';fill:#ffffff;fill-opacity:1;stroke-width:1.00420678;letter-spacing:-18.93999419px;"
-         id="tspan3088">GWHA</tspan></tspan></text>
+  <g
+     aria-label="GWHA"
+     transform="scale(0.97095778,1.0299109)"
+     style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:13.19263935px;line-height:0%;font-family:'EmojiOne Color';-inkscape-font-specification:'EmojiOne Color Bold';letter-spacing:0px;word-spacing:0px;fill:#501616;fill-opacity:1;stroke:none;stroke-width:1.00420678"
+     id="text3084">
+    <path
+       id="path4597"
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;line-height:5;font-family:'EmojiOne Color';-inkscape-font-specification:'EmojiOne Color Bold';letter-spacing:-18.93999481px;fill:#ffffff;fill-opacity:1;stroke-width:1.00420678"
+       d="m 1152.6137,349.38349 h -109.2044 l -17.2333,49.34155 H 955.97314 L 1056.2888,127.89076 h 83.2639 l 100.3157,270.83428 h -70.2028 z m -91.7898,-50.24855 h 74.1937 L 1098.0115,191.38172 Z M 695.91572,127.89076 h 69.84005 V 231.10892 H 868.79252 V 127.89076 h 69.84005 V 398.72504 H 868.79252 V 283.89711 H 765.75577 v 114.82793 h -69.84005 z m -414.0683,0 h 66.93761 l 46.8019,196.82196 46.4391,-196.82196 h 67.30041 l 46.4391,196.82196 46.8019,-196.82196 h 66.3934 l -63.85376,270.83428 h -80.54281 l -49.16014,-205.8921 -48.61593,205.8921 h -80.54281 z m -19.33598,250.69857 q -26.122,12.69819 -54.23942,19.04729 -28.11742,6.3491 -58.04887,6.3491 -67.663219,0 -107.209014,-37.73177 Q 3.4683416,328.34078 3.4683416,263.58 q 0,-65.48638 40.2714054,-103.03675 40.271406,-37.55036 110.292863,-37.55036 27.029,0 51.69977,5.07928 24.85218,5.07927 46.80191,15.05642 v 56.05345 q -22.67534,-12.8796 -45.16928,-19.22869 -22.31254,-6.3491 -44.80648,-6.3491 -41.72262,0 -64.397964,23.40095 -22.493939,23.21955 -22.493939,66.5748 0,42.99245 21.768328,66.3934 21.768325,23.40095 61.858325,23.40095 10.88417,0 20.13571,-1.26981 9.43294,-1.45123 16.87045,-4.35367 V 295.14408 H 153.6698 v -46.8019 h 108.84164 z" />
+  </g>
   <rect
      x="-36.317749"
      y="1.1320057"
