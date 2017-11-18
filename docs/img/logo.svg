@@ -150,6 +150,13 @@
       </cc:Work>
     </rdf:RDF>
   </metadata>
+  <rect
+     style="opacity:1;fill:#4d4d4d;fill-opacity:1;stroke:#ffffff;stroke-width:25;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:165;stroke-opacity:1;paint-order:normal"
+     id="rect4533"
+     width="2119.3179"
+     height="730.43152"
+     x="-45.318745"
+     y="-64.991158" />
   <g
      id="layer6"
      style="opacity:0.3;filter:url(#filter4254)"
@@ -212,7 +219,7 @@
      inkscape:connector-curvature="0" />
   <path
      inkscape:connector-curvature="0"
-     d="m 1807.3494,339.38406 h -65.1686 c 0,0 17.3567,31.48147 32.6046,57.89184 0.032,0 0.032,-0.0212 0.032,-0.0212 l 0.031,-0.0315 0.032,-0.0315 0.031,-0.0212 c 17.0578,-29.54515 32.4824,-57.85277 32.4824,-57.85277 z"
+     d="m 1807.3494,319.38406 h -65.1686 c 0,0 17.3567,31.48147 32.6046,57.89184 0.032,0 0.032,-0.0212 0.032,-0.0212 l 0.031,-0.0315 0.032,-0.0315 0.031,-0.0212 c 17.0578,-29.54515 32.4824,-57.85277 32.4824,-57.85277 z"
      style="color:#000000;display:inline;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1.23265612;enable-background:new"
      id="path4622"
      sodipodi:nodetypes="ccccccccc" />
