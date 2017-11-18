@@ -47,8 +47,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'gwhat'
-copyright = '2017, Jean-Sébastien Gosselin'
-author = 'Jean-Sébastien Gosselin'
+copyright = '2014-2017, Jean-S\u00C9bastien Gosselin'
+author = 'Jean-S\u00C9bastien Gosselin'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
