@@ -128,7 +128,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'gwhat.tex', 'gwhat Documentation',
-     'Jean-Sébastien Gosselin', 'manual'),
+     'Jean-S\u00C9bastien Gosselin', 'manual'),
 ]
 
 
