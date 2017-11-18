@@ -22,8 +22,8 @@
 import sphinx_rtd_theme
 
 
-def setup(app):
-    app.add_stylesheet('extra.css')
+# def setup(app):
+#     app.add_stylesheet('extra.css')
 
 
 # -- General configuration ------------------------------------------------
