@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
 # gwhat documentation build configuration file, created by
@@ -47,8 +46,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'gwhat'
-copyright = '2014-2017, Jean-S\u00C9bastien Gosselin'
-author = 'Jean-S\u00C9bastien Gosselin'
+copyright = '2014-2017, Jean-Sébastien Gosselin'
+author = 'Jean-Sébastien Gosselin'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -128,7 +127,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'gwhat.tex', 'gwhat Documentation',
-     'Jean-S\u00C9bastien Gosselin', 'manual'),
+     'Jean-Sébastien Gosselin', 'manual'),
 ]
 
 
