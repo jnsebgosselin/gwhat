@@ -9,15 +9,10 @@ If you encounter any problems or errors during program execution, have any quest
 .. _GitHub: https://github.com/jnsebgosselin/gwhat
 .. _jean-sebastien.gosselin@ete.inrs.ca : mailto:jean-sebastien.gosselin@ete.inrs.ca
 
+.. _user-docs:
+
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: User Documentation
 
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+   getting_started
