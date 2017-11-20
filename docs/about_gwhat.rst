@@ -26,14 +26,14 @@ Contributors
 
 **GWHAT Documentation team:**
 
-|`Jean-Sébastien Gosselin`_, `INRS centre Eau-Terre-Environnement`_
-|`Richard Martel`_, INRS centre Eau-Terre-Environnement
-|`Christine Rivard`, `Geological Survey of Canada`_
-|`René Lefebvre`_, INRS centre Eau-Terre-Environnement
+| `Jean-Sébastien Gosselin`_, `INRS centre Eau-Terre-Environnement`_
+| `Richard Martel`_, INRS centre Eau-Terre-Environnement
+| `Christine Rivard`, `Geological Survey of Canada`_
+| `René Lefebvre`_, INRS centre Eau-Terre-Environnement
 
 **GWHAT development team:**
 
-|`Jean-Sébastien Gosselin`_, INRS centre Eau-Terre-Environnement (jean-sebastien.gosselin@ete.inrs.ca)
+| `Jean-Sébastien Gosselin`_, INRS centre Eau-Terre-Environnement (jean-sebastien.gosselin@ete.inrs.ca)
 
 .. _Jean-Sébastien Gosselin: https://github.com/jnsebgosselin
 .. _Richard Martel: http://www.inrs.ca/richard-martel
