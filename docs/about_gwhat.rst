@@ -26,23 +26,22 @@ Contributors
 
 **GWHAT Documentation team:**
 
-| `Jean-Sébastien Gosselin`_ (jean-sebastien.gosselin@ete.inrs.ca)
-| `Richard Martel`_ (richard.martel@ete.inrs.ca)
-| Christine Rivard (christine.rivard@canada.ca)
-`René Lefebvre`_ (rene.lefebvre@inrs.ca)
+|`Jean-Sébastien Gosselin`_, `INRS centre Eau-Terre-Environnement`_
+|`Richard Martel`_, INRS centre Eau-Terre-Environnement
+|`Christine Rivard`, `Geological Survey of Canada`_
+|`René Lefebvre`_, INRS centre Eau-Terre-Environnement
 
 **GWHAT development team:**
 
-`Jean-Sébastien Gosselin`_ (jean-sebastien.gosselin@ete.inrs.ca)
+|`Jean-Sébastien Gosselin`_, INRS centre Eau-Terre-Environnement (jean-sebastien.gosselin@ete.inrs.ca)
 
 .. _Jean-Sébastien Gosselin: https://github.com/jnsebgosselin
 .. _Richard Martel: http://www.inrs.ca/richard-martel
 .. _René Lefebvre: http://www.inrs.ca/rene-lefebvre
+.. _Christine Rivard: https://profils-profiles.science.gc.ca/en/profile/christine-rivard
 
-.. _richard.martel@ete.inrs.ca: mailto:richard.martel@ete.inrs.ca
-.. _jean-sebastien.gosselin@ete.inrs.ca : mailto:jean-sebastien.gosselin@ete.inrs.ca
-.. _Rene.Lefebvre@inrs.ca: mailto:rene.lefebvre@inrs.ca
-.. _christine.rivard@canada.ca: mailto:christine.rivard@canada.ca
+.. _INRS centre Eau-Terre-Environnement: http://www.ete.inrs.ca/
+.. _Geological Survey of Canada: http://www.nrcan.gc.ca/earth-sciences/science/geology/gsc/17100
 
 Feedback
 -----------------------------------------------
@@ -51,6 +50,8 @@ Please report bugs and feature requests on our `Issue tracker`_ or
 contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
 
 .. _Issue tracker: https://github.com/jnsebgosselin/gwhat/issues
+.. _jean-sebastien.gosselin@ete.inrs.ca : mailto:jean-sebastien.gosselin@ete.inrs.ca
+
 
 Financial Support
 -----------------------------------------------
