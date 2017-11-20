@@ -21,6 +21,14 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import sphinx_rtd_theme
 
+from sphinx.builders.html import (StandaloneHTMLBuilder, DirectoryHTMLBuilder,
+                                  SingleFileHTMLBuilder)
+
+# Redefine supported_image_types for the HTML builder
+
+StandaloneHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
+DirectoryHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
+SingleFileHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
 
 # def setup(app):
 #     app.add_stylesheet('extra.css')

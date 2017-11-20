@@ -24,16 +24,16 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 Contributors
 -----------------------------------------------
 
-**GWHAT Documentation team:**
-
+| **GWHAT Documentation team:**
+| 
 | `Jean-Sébastien Gosselin`_, `INRS centre Eau-Terre-Environnement`_
 | `Richard Martel`_, INRS centre Eau-Terre-Environnement
 | `Christine Rivard`_, `Geological Survey of Canada`_
 | `René Lefebvre`_, INRS centre Eau-Terre-Environnement
 |
 
-**GWHAT development team:**
-
+| **GWHAT development team:**
+| 
 | `Jean-Sébastien Gosselin`_, INRS centre Eau-Terre-Environnement
 |
 

@@ -3,10 +3,10 @@ Downloading Daily Weather Data
 
 This document will show you how to search and download daily climate data
 from the CDCD_ (Canadian Daily Climate Database) using the ``Download Weather``
-tool of GWHAT (:numref:`gif_dwnld_weather`)
+tool of GWHAT as shown in :numref:`gif_dwnld_weather`.
 
 .. _gif_dwnld_weather:
-.. figure:: img/gif_download_weather.gif
+.. figure:: img/download_weather.*
     :width: 650px
     :align: center
     :alt: alternate text
@@ -18,9 +18,7 @@ tool of GWHAT (:numref:`gif_dwnld_weather`)
 Searching for weather stations
 -----------------------------------------------
 
-
-
-Before data can be downloaded from the CDCD_, climate stations must first be 
+Before data can be downloaded from the CDCD_, climate stations must be 
 added to the table of the `Download Weather` tool. To do so, click on the 
 ``magnifying glass`` icon located on the toolbar to open a browser of the 
 online CDCD_ (:numref:`cdcd_browser`). The CDCD_ contains daily data for air
