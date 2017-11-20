@@ -21,16 +21,23 @@ distributed across Canada.
 
 .. _cdcd_browser:
 .. figure:: img/scs_search_weather_stations.png
-    :width: 450px
+    :width: 600px
     :align: center
     :alt: alternate text
     :figclass: align-center
+    Browser to the online CDCD_ (Canadian Daily Climate Database).
 
+The left panel of the browser allow you to filter the list of available
+climate stations by proximity, province, or/and the number and the range of
+years for which data are available.
 
-It is possible to search for weather stations in the online CDCD by clicking on the  . 
-This will open a new dialog window (see Fig. 3.2) where it is possible 
-to search for weather stations located within a given radius around a set of location coordinates (latitude and longitude) in decimal degrees. It is possible to further narrow down the search by including only stations with data available within a given period and/or with data available for a minimum number of years.
+Click on the button ``Save`` to export the list of visible station in the table
+to a Excel or CSV file.
 
+Select the stations for which you want to download climate data by clicking on
+their respective checkbox and click on the button ``Add``. This will append the
+selected stations to the table of the `Download Weather` tab, where the data
+for each station can be downloaded automatically.
 
 Downloading the weather data
 -----------------------------------------------
