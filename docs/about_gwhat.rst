@@ -26,10 +26,10 @@ Contributors
 
 **GWHAT Documentation team:**
 
-`Jean-Sébastien Gosselin`_ (jean-sebastien.gosselin@ete.inrs.ca)\n
-`Richard Martel`_ (richard.martel@ete.inrs.ca)\n
-Christine Rivard (christine.rivard@canada.ca)\n
-`René Lefebvre`_ (rene.lefebvre@inrs.ca)\n
+| `Jean-Sébastien Gosselin`_ (jean-sebastien.gosselin@ete.inrs.ca)
+| `Richard Martel`_ (richard.martel@ete.inrs.ca)
+| Christine Rivard (christine.rivard@canada.ca)
+`René Lefebvre`_ (rene.lefebvre@inrs.ca)
 
 **GWHAT development team:**
 
