@@ -21,6 +21,7 @@
 # sys.path.insert(0, os.path.abspath('.'))
 import sphinx_rtd_theme
 
+from sphinx.builders.latex import LaTeXBuilder
 from sphinx.builders.html import (StandaloneHTMLBuilder, DirectoryHTMLBuilder,
                                   SingleFileHTMLBuilder)
 
@@ -29,6 +30,8 @@ from sphinx.builders.html import (StandaloneHTMLBuilder, DirectoryHTMLBuilder,
 StandaloneHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
 DirectoryHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
 SingleFileHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
+LaTeXBuilder.supported_image_types = ['application/pdf', 'image/png',
+                                      'image/jpeg']
 
 # def setup(app):
 #     app.add_stylesheet('extra.css')
