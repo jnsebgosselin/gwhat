@@ -14,7 +14,7 @@
    height="15.137794cm"
    width="53.531464cm"
    version="1.1"
-   inkscape:version="0.92.1 r15371"
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    sodipodi:docname="logo.svg"
    inkscape:export-filename="C:\Users\jsgosselin\OneDrive\GWHAT\gwhat\common\icons\Icons\WHAT_banner_750px.png"
    inkscape:export-xdpi="37.954659"
@@ -33,9 +33,9 @@
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
-     inkscape:zoom="0.36062446"
-     inkscape:cx="931.47749"
-     inkscape:cy="530.51293"
+     inkscape:zoom="0.18031223"
+     inkscape:cx="455.28973"
+     inkscape:cy="438.92402"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -167,10 +167,10 @@
      inkscape:connector-curvature="0"
      id="path3765"
      d="m 1557.5368,203.05831 v -59.11523 h 280.0962 v 59.11523"
-     style="display:inline;fill:none;fill-opacity:0;stroke:#ffffff;stroke-width:19.90385246;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;enable-background:new" />
+     style="display:inline;fill:none;fill-opacity:0;stroke:#ffffff;stroke-width:20;stroke-linecap:square;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;enable-background:new" />
   <g
      id="g871"
-     transform="translate(2.5562457,4)">
+     transform="translate(2.5562457,10)">
     <path
        inkscape:connector-curvature="0"
        id="path2995-6"
@@ -186,18 +186,18 @@
   </g>
   <path
      inkscape:connector-curvature="0"
-     d="m 1858.1828,303.38403 h -65.1686 c 0,0 17.3567,31.48147 32.6046,57.89184 0.032,0 0.032,-0.0212 0.032,-0.0212 l 0.031,-0.0315 0.032,-0.0315 0.031,-0.0212 c 17.0578,-29.54515 32.4824,-57.85277 32.4824,-57.85277 z"
+     d="m 1858.1828,329.40832 h -65.1686 c 0,0 17.3567,31.48147 32.6046,57.89184 0.032,0 0.032,-0.0212 0.032,-0.0212 l 0.031,-0.0315 0.032,-0.0315 0.031,-0.0212 c 17.0578,-29.54515 32.4824,-57.85277 32.4824,-57.85277 z"
      style="color:#000000;display:inline;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:1.23265612;enable-background:new"
      id="path4622"
      sodipodi:nodetypes="ccccccccc" />
   <g
      id="g862"
-     transform="translate(0,31.478214)">
+     transform="translate(0,29.70686)">
     <path
        sodipodi:nodetypes="cccc"
        inkscape:connector-curvature="0"
        id="path3852"
-       d="m 1483.5385,333.6124 c -0.6209,76.66887 92.1295,126.51476 129.2468,139.31406 195.3012,59.32623 312.1634,-119.98317 312.1634,-119.98317 -194.6853,107.8308 -288.658,-120.38788 -441.4102,-19.33089 z"
+       d="m 1475.6954,336.55358 c -0.6209,76.66887 110.7569,139.25985 147.8742,152.05915 195.3012,59.32623 301.3791,-135.66944 301.3791,-135.66944 -194.6853,107.8308 -296.5011,-117.4467 -449.2533,-16.38971 z"
        style="display:inline;fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:22.44453812;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;enable-background:new" />
     <rect
        ry="240.41402"
