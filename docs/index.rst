@@ -16,3 +16,4 @@ If you encounter any problems or errors during program execution, have any quest
    :caption: User Documentation
 
    getting_started
+   dwnld_weather_data
