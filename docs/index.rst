@@ -23,5 +23,4 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
    :caption: User Documentation
 
    getting_started
-   dwnld_weather_data
    about_gwhat
