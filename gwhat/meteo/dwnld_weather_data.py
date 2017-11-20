@@ -1055,9 +1055,6 @@ class RawDataDownloader(QObject):
     www.climate.weather.gc.ca and saves them automatically in
     <Project_directory>/Meteo/Raw/<station_name (Climate ID)>.
 
-    New in 4.0.6: Raw data files that already exists in the Raw directory
-                  won't be downloaded again from the server.
-
     ERRFLAG = Flag for the download of files - np.arrays
                   0 -> File downloaded successfully
                   1 -> Problem downloading the file
@@ -1367,7 +1364,7 @@ class ConcatenatedDataFrame(dict):
             filepath = os.path.join(os.getcwd(), filename)
 
         with open(filepath, 'w', encoding='utf-8') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
+            writer = csv.writer(f, delimiter=',', lineterminator='\n')
             writer.writerows(fcontent)
 
 
