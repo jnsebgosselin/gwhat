@@ -4,7 +4,7 @@ Copyright 2014-2017 © Jean-Sébastien Gosselin
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE)
 [![Travis status](https://travis-ci.org/jnsebgosselin/gwhat.svg?branch=master)](https://travis-ci.org/jnsebgosselin/gwhat)
-[![Build status](https://ci.appveyor.com/api/projects/status/uj5tjpy9lnehb4qb/branch/master?svg=true)](https://ci.appveyor.com/project/jnsebgosselin/gwhat/branch/master)
+[![Build status](https://ci.appveyor.com/api/projects/status/7f2sr3ccd807ydjc/branch/master?svg=true)](https://ci.appveyor.com/project/jnsebgosselin/gwhat/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/jnsebgosselin/gwhat/badge.svg?branch=master)](https://coveralls.io/github/jnsebgosselin/gwhat?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/gwhat/badge/?version=readthedocs_init)](http://gwhat.readthedocs.io/en/readthedocs_init/?badge=readthedocs_init)
 
