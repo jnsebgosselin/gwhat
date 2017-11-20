@@ -6,6 +6,12 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
+
+# ---- Imports: standard libraries
+
+import csv
+
+
 # ---- Imports: third party
 
 import numpy as np
@@ -27,3 +33,9 @@ def calc_dist_from_coord(lat1, lon1, lat2, lon2):
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
 
     return r * c
+
+
+def save_content_to_csv(fname, fcontent, mode='w', delimiter=','):
+    with open(fname, mode) as csvfile:
+        writer = csv.writer(csvfile, delimiter=delimiter, lineterminator='\n')
+        writer.writerows(fcontent)

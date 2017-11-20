@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+# Copyright © 2014-2017 Jean-Sebastien Gosselin
+# email: jean-sebastien.gosselin@ete.inrs.ca
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 from __future__ import division, unicode_literals
 
@@ -45,10 +32,12 @@ from PyQt5.QtCore import QObject
 
 # ---- Local imports
 
+from gwhat.common.utils import save_content_to_csv
 from gwhat.hydrograph4 import LatLong2Dist
 from gwhat.meteo.weather_viewer import FigWeatherNormals
 from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
 import gwhat.meteo.weather_reader as wxrd
+from gwhat.meteo.weather_reader import open_weather_datafile
 from gwhat import __version__
 
 
@@ -227,6 +216,11 @@ class GapFillWeather(QObject):
 
     def read_summary(self):
         return self.WEATHER.read_summary(self.outputDir)
+#        except:
+#            print(self.outputDir)
+#            self.WEATHER.generate_summary(self.outputDir)
+#            summary = self.WEATHER.read_summary(self.outputDir)
+#        return summary
 
     # =========================================================================
 
@@ -1148,14 +1142,9 @@ class GapFillWeather(QObject):
         return Sta_index
 
     @staticmethod
-    def save_content_to_file(fname, fcontent):  # =============================
-
-        with open(fname, 'w') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(fcontent)
-
-
-# =============================================================================
+    def save_content_to_file(fname, fcontent):
+        """Save content to a coma-separated value text file."""
+        save_content_to_csv(fname, fcontent)
 
 
 def correlation_worker(WEATHER, tarStaIndx):
@@ -1436,11 +1425,8 @@ class WeatherData(object):
 
             # ---------------------------------------- WEATHER DATA IMPORT ----
 
-            with open(paths[i], 'r', encoding='utf8') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
-
+            reader = open_weather_datafile(paths[i])
             STADAT = np.array(reader[8:]).astype(float)
-
             self.DATE_START[i, :] = STADAT[0, :3]
             self.DATE_END[i, :] = STADAT[-1, :3]
 
@@ -1674,14 +1660,12 @@ class WeatherData(object):
 
         return DATA
 
-    def generate_summary(self, project_folder):  # ============================
-
+    def generate_summary(self, project_folder):
         """
-        This method generates a summary of the weather records including
-        all the data files contained in */<project_folder>/Meteo/Input*,
-        including dates when the records begin and end, total number of data,
-        and total number of data missing for each meteorological variable, and
-        more.
+        Generate a summary of the weather records including all the data files
+        contained in */<project_folder>/Meteo/Input*, including dates when the
+        records begin and end, total number of data, and total number of data
+        missing for each meteorological variable, and more.
         """
 
         fcontent = [['#', 'STATION NAMES', 'ClimateID',
@@ -1719,44 +1703,24 @@ class WeatherData(object):
                              '%0.1f' % (number_data / 365.25),
                              number_data])
 
-            # Missing data information for each meteorological variables
+            # Missing data information for each meteorological variables.
             for var in range(len(self.VARNAME)):
                 fcontent[-1].extend(['%d' % (self.NUMMISS[i, var])])
 
-#                txt1 = self.NUMMISS[i, var]
-#                txt2 = self.NUMMISS[i, var] / number_data * 100
-#                CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
+        output_path = os.path.join(
+                project_folder, 'weather_datasets_summary.log')
+        print(output_path)
+        save_content_to_csv(output_path, fcontent)
 
-#            # Total missing data information.
-#            txt1 = np.sum(self.NUMMISS[i, :])
-#            txt2 = txt1 / (number_data * nVAR) * 100
-#            CONTENT[-1].extend(['%d (%0.1f %%)' % (txt1, txt2)])
-
-        output_path = project_folder + '/weather_datasets_summary.log'
-
-        with open(output_path, 'w') as f:
-            writer = csv.writer(f, delimiter='\t', lineterminator='\n')
-            writer.writerows(fcontent)
-
-    def read_summary(self, project_folder):  # ================================
-
+    def read_summary(self, project_folder):
         """
-        This method read the content of the file generated by the method
-        <generate_summary> and will return the content of the file in a HTML
+        Read the content of the file generated by the method
+        <generate_summary> and return the content of the file in a HTML
         formatted table
         """
-
-        # ------------------------------------------------------ read data ----
-
-        filename = project_folder + '/weather_datasets_summary.log'
+        filename = os.path.join(project_folder, 'weather_datasets_summary.log')
         with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter='\t'))
-            reader = reader[1:]
-
-#        FIELDS = ['&#916;Alt.<br>(m)', 'Dist.<br>(km)', 'Tmax',
-#                  'Tmin', 'Tmean', 'Ptot']
-
-        # ----------------------------------------- generate table summary ----
+            reader = list(csv.reader(f, delimiter=','))[1:]
 
         table = '''
                 <table border="0" cellpadding="3" cellspacing="0"
@@ -1808,9 +1772,7 @@ class WeatherData(object):
                   </tr>
                 '''
         for i in range(len(reader)):
-
             color = ['transparent', '#E6E6E6']
-
             Ntotal = float(reader[i][9])
             TMAX = float(reader[i][10]) / Ntotal * 100
             TMIN = float(reader[i][11]) / Ntotal * 100
@@ -1819,7 +1781,6 @@ class WeatherData(object):
             firstyear = reader[i][6][:4]
             lastyear = reader[i][7][:4]
             nyears = float(lastyear) - float(firstyear)
-
             table += '''
                      <tr bgcolor="%s">
                        <td align="center" valign="middle">
@@ -1848,7 +1809,6 @@ class WeatherData(object):
                      ''' % (color[i % 2], i+1, reader[i][1], reader[i][2],
                             firstyear, lastyear, nyears,
                             TMAX, TMIN, TMEAN, PTOT)
-
         table += """
                    <tr>
                      <td colspan="10"><hr></td>
@@ -1857,9 +1817,6 @@ class WeatherData(object):
                  """
 
         return table
-
-
-# =============================================================================
 
 
 def L1LinearRegression(X, Y):
