@@ -1,37 +1,29 @@
 Getting Started
 ===============
 
-This document will show you how to get up and running with Read the Docs.
-You will have your docs imported on Read the Docs in 5 minutes,
-displayed beautifully for the world.
+This document will show you how to get up and running with GWHAT.
 
-Install GWHAT
--------------
+Installing on a Windows system
+------------------------------
 
-WHAT can run on Windows, Linux, or OS X computer operating systems. However, a stand-alone executable
-of the program is currently released and tested only for the Windows 7 platform. This executable
-should also be compatible with Windows XP. For the Linux and OS X platforms, the software can be
-run directly from the source code, provided that Python 2.7 and all the required third party packages are
-installed on the computer (PySide, NumPy, matplotlib, xlrd, xlwt).
-The stand-alone executable for Windows 7 is distributed in a Zip archive that can be downloaded
-freely on GitHub (https://github.com/jnsebgosselin/WHAT/releases). This archive
-contains:
+Download the latest binary distribution of GWHAT packaged as a zip archive from here_.
 
-- the GNU General Public License;
-- a folder named “WHAT” that contains all the necessary system files for the program to run, including
-the file “WHAT.exe” from which the software can be started;
-- a folder named “Projects” where all input and output files used or created by WHAT are stored by
-default. This folder includes samples of input and output files that provide a quick and convenient
-way to test and learn the various features of the program.
+Extract the content of the archive in a directory where you have write permission. You will get a directory which contains a folder named `GWHAT`. This folder contains several files including a file named `gwhat.exe`. Simply double click on this file to start GHWAT, no installation is required.
 
-Once the content of the Zip archive has been extracted, the program can be started directly from
-the “WHAT.exe” executable file that is contained within the folder named “WHAT”. The software can
-conveniently run from any location on the computer or from any storage device without the need to install
-the program beforehand.
+The zip archive also contains a folder named `Projects` where all input and output files used and created by GWHAT are stored by default. This folder include a project example with samples of input and output files to test and learn the various features of the program.
 
-Update GWHAT
-------------
+Please help GWHAT by reporting bugs or proposing new features in our `issue tracker`_.
 
-It is possible to update WHAT by downloading the Zip archive of a later version of the software,
-extracting the content, and by manually overwriting the “WHAT” folder of the older version with the
-newer one that was just downloaded.
+.. _here: https://github.com/jnsebgosselin/gwhat/releases/latest
+.. _GNU General Public License: https://www.gnu.org/licenses/gpl-3.0.en.html
+.. _issue tracker: https://github.com/jnsebgosselin/gwhat/issues
+
+Updating GWHAT
+--------------
+
+To update GWHAT to a new version, download and extract the content of the latest binary distribution of the software and replace the older `GWHAT` folder with the one that was just downloaded.
+
+Running GWHAT from the source files
+-----------------------------------
+
+Binary distribution are currently produced only for Windows systems. However, GWHAT can be run on Windows, Linux, or macOS computer operating systems directly from the source files.

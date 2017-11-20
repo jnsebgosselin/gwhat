@@ -55,9 +55,9 @@ target/
 
 # ---- Personal Ignore
 
-Backup/
+backup/
 */Backup/
-Releases/
+releases/
 Reference/
 Projects/
 */Revision/
