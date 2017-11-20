@@ -4,12 +4,12 @@ About GWHAT
 Copyright
 -----------------------------------------------
 
-`This document` is Copyright © 2017 by the GWHAT Documentation Team.
+**This document** is Copyright © 2014-2017 by the GWHAT Documentation Team.
 Contributors are listed below. You may distribute it and/or modify it under
 the terms of the `Creative Commons Attribution 4.0 International License`_. All
 trademarks within this guide belong to their legitimate owners.
 
-`GWHAT's source code` is Copyright © 2014-2017 by GWHAT development team.
+**GWHAT source code** is Copyright © 2014-2017 by GWHAT development team.
 Contributors are listed below. GWHAT is free software: you can redistribute
 it and/or modify it under the terms of the `GNU General Public License`_ as
 published by the Free Software Foundation, either version 3 of the License, or
@@ -24,17 +24,14 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 Contributors
 -----------------------------------------------
 
-**GWHAT Documentation team**
+**GWHAT Documentation team:**
 
-`Jean-Sébastien Gosselin`_ (jean-sebastien.gosselin@ete.inrs.ca)
+`Jean-Sébastien Gosselin`_ (jean-sebastien.gosselin@ete.inrs.ca)\n
+`Richard Martel`_ (richard.martel@ete.inrs.ca)\n
+Christine Rivard (christine.rivard@canada.ca)\n
+`René Lefebvre`_ (rene.lefebvre@inrs.ca)\n
 
-`Richard Martel`_ (richard.martel@ete.inrs.ca)
-
-Christine Rivard (christine.rivard@canada.ca)
-
-`René Lefebvre`_ (rene.lefebvre@inrs.ca)
-
-**GWHAT development team**
+**GWHAT development team:**
 
 `Jean-Sébastien Gosselin`_ (jean-sebastien.gosselin@ete.inrs.ca)
 
@@ -52,6 +49,8 @@ Feedback
 
 Please report bugs and feature requests on our `Issue tracker`_ or
 contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
+
+.. _Issue tracker: https://github.com/jnsebgosselin/gwhat/issues
 
 Financial Support
 -----------------------------------------------
