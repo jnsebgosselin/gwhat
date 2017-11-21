@@ -38,8 +38,8 @@ Contributors
 |
 
 .. _Jean-Sébastien Gosselin: https://github.com/jnsebgosselin
-.. _Richard Martel: http://www.inrs.ca/richard-martel
 .. _René Lefebvre: http://www.inrs.ca/rene-lefebvre
+.. _Richard Martel: http://www.inrs.ca/richard-martel
 .. _Christine Rivard: https://profils-profiles.science.gc.ca/en/profile/christine-rivard
 
 .. _INRS centre Eau-Terre-Environnement: http://www.ete.inrs.ca/

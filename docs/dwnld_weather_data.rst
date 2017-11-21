@@ -7,7 +7,6 @@ data` tool available in GWHAT and shown in :numref:`gif_dwnld_weather`.
 
 .. _gif_dwnld_weather:
 .. figure:: img/download_weather.*
-    :width: 750px
     :align: center
     :alt: alternate text
     :figclass: align-center
@@ -29,7 +28,6 @@ available daily data for air temperature and precipitation.
 
 .. _cdcd_browser:
 .. figure:: img/stations_browser.*
-    :width: 750px
     :align: center
     :alt: alternate text
     :figclass: align-center
@@ -52,7 +50,7 @@ Downloading the weather data
 -----------------------------------------------
 
 Daily climate data can be downloaded automatically for all the selected weather
-stations by clicking on the downward arrow button in the toolbar.
+stations by clicking on the ``downward arrow`` button in the toolbar.
 
 Concatenating the weather datafiles
 ----------------------------------------------------------
