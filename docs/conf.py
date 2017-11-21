@@ -46,7 +46,7 @@ LaTeXBuilder.supported_image_types = ['application/pdf', 'image/png',
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.viewcode']
+extensions = ['sphinx.ext.viewcode', 'sphinx.ext.autosectionlabel']
 numfig = True
 
 # Add any paths that contain templates here, relative to this directory.
