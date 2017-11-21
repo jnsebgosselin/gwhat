@@ -172,7 +172,7 @@ class WHAT(QMainWindow):
 
         self.tab_widget = TabWidget()
         self.tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
-        self.tab_widget.addTab(self.tab_fill_weather_data, 'Gap-Fill Weather')
+        self.tab_widget.addTab(self.tab_fill_weather_data, 'Gapfill Weather')
         self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
         self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         self.tab_widget.setCornerWidget(self.pmanager)

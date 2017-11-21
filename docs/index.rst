@@ -24,4 +24,5 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
 
    getting_started
    dwnld_weather_data
+   gapfill_weather_data
    about_gwhat
