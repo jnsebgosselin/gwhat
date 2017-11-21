@@ -26,10 +26,10 @@ from sphinx.builders.html import (StandaloneHTMLBuilder, DirectoryHTMLBuilder,
                                   SingleFileHTMLBuilder)
 
 # Redefine supported_image_types for the HTML builder
-
-StandaloneHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
-DirectoryHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
-SingleFileHTMLBuilder.supported_image_types = ['image/gif', 'image/png']
+html_img_types = ['image/gif', 'image/svg+xml', 'image/png', 'image/jpeg']
+StandaloneHTMLBuilder.supported_image_types = html_img_types
+DirectoryHTMLBuilder.supported_image_types = html_img_types
+SingleFileHTMLBuilder.supported_image_types = html_img_types
 LaTeXBuilder.supported_image_types = ['application/pdf', 'image/png',
                                       'image/jpeg']
 
@@ -62,7 +62,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'gwhat'
+project = 'GWHAT'
 copyright = '2014-2017, Jean-Sébastien Gosselin'
 author = 'Jean-Sébastien Gosselin'
 
