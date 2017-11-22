@@ -11,8 +11,8 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    width="40.973125cm"
-   height="27.298288cm"
-   viewBox="0 0 409.73125 272.98289"
+   height="31.036613cm"
+   viewBox="0 0 409.73125 310.36614"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
@@ -184,6 +184,66 @@
          id="path826-2-0-6-18-6-4-1-1-8"
          inkscape:connector-curvature="0" />
     </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="Arrow1Mend-5-8-6-6-0-3-0-1"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#ff0000;fill-opacity:1;fill-rule:evenodd;stroke:#ff0000;stroke-width:1.00000003pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path826-2-0-6-18-6-4-1-5"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="Arrow1Mend-5-8-6-6-0-3-0-14"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#ff0000;fill-opacity:1;fill-rule:evenodd;stroke:#ff0000;stroke-width:1.00000003pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path826-2-0-6-18-6-4-1-4"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="Arrow1Mend-5-8-6-6-0-3-0-1-1"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#ff0000;fill-opacity:1;fill-rule:evenodd;stroke:#ff0000;stroke-width:1.00000003pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path826-2-0-6-18-6-4-1-5-3"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="Arrow1Mend-5-8-6-6-0-3-8"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#ff00ff;fill-opacity:1;fill-rule:evenodd;stroke:#ff00ff;stroke-width:1.00000003pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path826-2-0-6-18-6-4-2"
+         inkscape:connector-curvature="0" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -193,8 +253,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.49497475"
-     inkscape:cx="766.71837"
-     inkscape:cy="655.84187"
+     inkscape:cx="756.80808"
+     inkscape:cy="618.15115"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -215,21 +275,36 @@
        type="xygrid"
        id="grid4705"
        originx="109.61563"
-       originy="-28.17559" />
+       originy="-28.175595" />
     <sodipodi:guide
-       position="87.499082,271.3291"
+       position="87.499083,271.3291"
        orientation="1,0"
        id="guide1353"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="87.499081,246.25149"
+       position="87.499082,246.25149"
        orientation="0,1"
        id="guide953"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="93.738095,259.10268"
+       position="103.43331,258.85054"
        orientation="0,1"
        id="guide955"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="39.522482,271.44562"
+       orientation="0,1"
+       id="guide1661"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="32.23359,283.41899"
+       orientation="0,1"
+       id="guide1873"
+       inkscape:locked="false" />
+    <sodipodi:guide
+       position="20.955951,295.84703"
+       orientation="0,1"
+       id="guide2254"
        inkscape:locked="false" />
   </sodipodi:namedview>
   <metadata
@@ -249,7 +324,7 @@
      id="layer2"
      inkscape:label="background"
      sodipodi:insensitive="true"
-     transform="translate(109.61563,4.158473)">
+     transform="translate(109.61563,41.54173)">
     <image
        y="31.282734"
        x="-99.615631"
@@ -263,57 +338,51 @@
      inkscape:label="annotations"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(109.61563,4.158473)">
+     transform="translate(109.61563,41.54173)">
     <text
        id="text1672-8-3"
-       y="60.1385"
-       x="12.231339"
+       y="26.046125"
+       x="-10.11972"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan2771"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
-         y="60.1385"
-         x="12.231339"
+         y="26.046125"
+         x="-10.11972"
          sodipodi:role="line">Download data for the selected stations</tspan></text>
-    <path
-       sodipodi:nodetypes="cc"
-       inkscape:connector-curvature="0"
-       id="path815-3-4-0-3"
-       d="M 7.4632804,57.832848 H -13.675315"
-       style="fill:#ff0000;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6)" />
     <path
        sodipodi:nodetypes="ccc"
        inkscape:connector-curvature="0"
        id="path815-3-4-0-3-0-11"
-       d="M -37.991553,22.572914 H -51.77625 v 26.891761"
+       d="m -14.662952,22.572914 h -7.453596 v 26.891761"
        style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3)" />
     <text
        id="text1672-8-3-4-5-9"
-       y="26.210917"
-       x="-34.72543"
+       y="13.515613"
+       x="-39.363358"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan2771-6-1-0"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
-         y="26.210917"
-         x="-34.72543"
+         y="13.515613"
+         x="-39.363358"
          sodipodi:role="line">Remove the selected stations from the table</tspan></text>
     <text
        id="text1672-8-3-4-5-9-5"
-       y="13.032819"
-       x="-18.266037"
+       y="1.0164344"
+       x="-53.237572"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan2771-6-1-0-0"
          style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
-         y="13.032819"
-         x="-18.266037"
-         sodipodi:role="line">Save the station list to a CSV file</tspan></text>
+         y="1.0164344"
+         x="-53.237572"
+         sodipodi:role="line">Save the station list to a csv file</tspan></text>
     <path
        sodipodi:nodetypes="ccc"
        inkscape:connector-curvature="0"
        id="path815-3-4-0-3-0-11-2"
-       d="M -22.116553,9.7217239 H -66.497932 V 49.464675"
+       d="m -43.925291,9.9738706 h -7.453593 V 49.464675"
        style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0)" />
     <path
        sodipodi:nodetypes="ccc"
@@ -388,5 +457,45 @@
          x="-42.842136"
          sodipodi:role="line"
          id="tspan4495">all stations</tspan></text>
+    <text
+       id="text1672-8-3-4-5-9-5-8"
+       y="-24.345615"
+       x="-76.397255"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       xml:space="preserve"><tspan
+         id="tspan2771-6-1-0-0-7"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         y="-24.345615"
+         x="-76.397255"
+         sodipodi:role="line">Open the climate stations browser</tspan></text>
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path815-3-4-0-3-0-11-2-6"
+       d="m -69.708638,-14.594582 h -7.453593 v 64.311404"
+       style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0-1)" />
+    <text
+       id="text1672-8-3-4-5-9-5-7"
+       y="-11.611582"
+       x="-64.416382"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       xml:space="preserve"><tspan
+         id="tspan2771-6-1-0-0-8"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         y="-11.611582"
+         x="-64.416382"
+         sodipodi:role="line">Add stations to the table from a csv file</tspan></text>
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path815-3-4-0-3-0-11-2-8"
+       d="m -58.101521,-2.6212094 h -7.453593 V 49.464681"
+       style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0-14)" />
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path815-3-4-0-3-0-11-2-6-8"
+       d="M -81.206087,-27.022615 H -88.65968 V 49.716824"
+       style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0-1-1)" />
   </g>
 </svg>

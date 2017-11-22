@@ -1,10 +1,7 @@
 Downloading Daily Weather Data
 ==============================
 
-This document shows how to search, download, and format daily climate data
-from the `Canadian Daily Climate Database`_ (CDCD) using the `download weather 
-data` tool of GWHAT available under the tab ``Download Weather`` shown in 
-:numref:`gif_dwnld_weather`.
+This document shows how to search, download, and format daily climate data from the `Canadian Daily Climate Database`_ (CDCD) using the download weather data tool of GWHAT available under the tab ``Download Weather`` shown in :numref:`gif_dwnld_weather`.
 
 .. _gif_dwnld_weather:
 .. figure:: img/download_weather.*
@@ -13,62 +10,14 @@ data` tool of GWHAT available under the tab ``Download Weather`` shown in
     :alt: alternate text
     :figclass: align-center
     
-    Presentation of the `download weather data` tool of GWHAT available under
-    the tab in GWHAT to search 
-    and download daily climate data from the CDCD_ (Canadian Daily Climate
-    Database).
+    Presentation of the download weather data tool of GWHAT available under the tab ``Download Weather``.
 
-Creating a list of climate stations
+Downloading weather data
 -----------------------------------------------
 
-Before any weather data can be downloaded with GWHAT, a list of stations 
-must first be added to the table displayed in the ``Download Weather`` tab. 
-This is done either by opening an existing list of stations from a file by
-clicking on the |open_file| icon or by using the 
-`climate stations browser`_ that can be opened by clicking on the
-|magnifying_glass| icon (see :numref:`cdcd_browser`).
+Daily weather data can be downloaded automatically for one or more stations at a time simply by selecting them in the table shown in :numref:`dwnld_weather_annoted` and by clicking on the |downward_arrow| icon in the toolbar.
 
-Climate stations can be removed from the current list of stations by 
-selecting them and clicking on the toolbar |eraser| icon. Also, the list of
-stations can be exported to a csv file by clicking on the |save| icon
-This list can then be directly loaded in successive session of GWHAT as
-explained in :ref:`Searching for weather stations`
-
-Searching for weather stations
------------------------------------------------
-
-The climate station browser shown in :numref:`cdcd_browser` provides a
-graphical interface to the CDCD_, which contains daily data for air temperature
-and precipitation dating back to 1840 to the present for more than 8000
-stations distributed across Canada. The list of stations can be filtered in
-the browser by proximity, province, or/and the number and the range of years
-for which data are available at each station. For example,
-:numref:`cdcd_browser` shows all stations with at least
-10 years of data available between 1960 and 2017 that are located less than
-25 km kilometres away from the specified lat/lon coordinates
-
-.. _cdcd_browser:
-.. figure:: img/stations_browser.*
-    :align: center
-    :width: 100%
-    :alt: alternate text
-    :figclass: align-center
-    
-    Presentation of the climate stations browser.
-    
-Stations can be added to the table displayed in the ``Download Weather`` tab by
-selecting them in the browser and clicking on the button |add_to_list|. 
-Alternatively, the selected stations can also be exported from the browser
-to an Excel or `comma-separated values`_ (csv) file by clicking on the
-button |save|.
-
-Downloading the weather data
------------------------------------------------
-
-Once one or more stations have been added to the ``Download Weather`` table, 
-daily weather data can be downloaded by selecting the desired stations and
-clicking on the |downward_arrow| icon on the toolbar 
-(see :numref:`dwnld_weather_annoted`).
+Climate stations can be added to the table either by selecting an existing list of stations from a file by clicking on the |open_file| icon or by using the `climate stations browser`_ by clicking on the |magnifying_glass| icon (see :numref:`cdcd_browser`). Climate stations can be removed from the table by selecting them and clicking on the |eraser| icon. The list of stations can be exported to a `comma-separated values`_ (csv) file by clicking on the |save| icon, so that it can be directly loaded in successive sessions of GWHAT.
 
 .. _dwnld_weather_annoted:
 .. figure:: img/dwnld_weather_annoted.*
@@ -79,17 +28,9 @@ clicking on the |downward_arrow| icon on the toolbar
     
     Tool to download and format daily weather data from the online
     CDCD_ (Canadian Daily Climate Database).
-    
-Daily weather data will be downloaded between the ``From Year`` and ``To Year``
-values specified for each selected station and the results will be saved
-automatically as a csv file in the Raw folder of 
-the current project. The downloading process can be stopped at any time by
-clicking on the ``stop`` button that appears in the toolbar as soon a
-downloading task is started. Weather data for a given station will not be
-downloaded for the years for which a data file already exist in the Raw folder. 
-Finally, the ``From Year`` and ``To Year`` values can be set individually
-for each station or for all stations at once as shown in
-:numref:`set_all_fromyear_toyear`.
+
+When clicking on the |downward_arrow| icon, daily weather data are downloaded between the ``From Year`` and ``To Year`` values specified for each selected station and the results are saved as a csv files in the Raw folder of the current project. The downloading process can be stopped at any time by clicking on the |stop| icon that appears in the toolbar as soon as a downloading task is started. Weather data for a given station will not be downloaded for the years for which a data file already exist in the Raw folder. Finally, the ``From Year`` and ``To Year`` values can be set individually
+for each station or for all stations at once as shown in :numref:`set_all_fromyear_toyear`.
 
 .. _set_all_fromyear_toyear:
 .. figure:: img/set_fromyear_toyear_annoted.*
@@ -99,6 +40,24 @@ for each station or for all stations at once as shown in
     :figclass: align-center
     
     Set the ``From Year`` and ``To Year`` values for all stations at once.
+
+.. _climate stations browser: `Searching for weather data`_
+
+Searching for weather data
+-----------------------------------------------
+
+The climate station browser shown in :numref:`cdcd_browser` provides a graphical interface to the CDCD_, which contains daily data for air temperature and precipitation dating back to 1840 to the present for more than 8000 stations distributed across Canada. The list of stations can be filtered in the browser by proximity, province, or/and the number and the range of years for which data are available at each station. For example, :numref:`cdcd_browser` shows all stations with at least 10 years of data available between 1960 and 2017 that are located less than 25 km kilometres away from the specified lat/lon coordinates.
+
+.. _cdcd_browser:
+.. figure:: img/stations_browser.*
+    :align: center
+    :width: 100%
+    :alt: alternate text
+    :figclass: align-center
+    
+    Presentation of the climate stations browser.
+    
+Stations can be added to the table displayed in the ``Download Weather`` tab by selecting them in the browser and clicking on the button |add_to_list|. Alternatively, the selected stations can also be exported from the browser to an Excel or csv file by clicking on the button |save|.
 
 Concatenating the weather datafiles
 ----------------------------------------------------------
@@ -151,3 +110,8 @@ left-right arrows and save any dataset manually by clicking on the save button.
                       :width: 1em
                       :height: 1em
                       :alt: save
+
+.. |stop| image:: img/icon_stop.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: stop

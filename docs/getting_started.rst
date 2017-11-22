@@ -3,7 +3,7 @@ Getting Started
 
 This document will show you how to get up and running with GWHAT.
 
-Installing on a Windows system
+Installing GWHAT on a Windows system
 ------------------------------
 
 Download the latest binary distribution of GWHAT packaged as a zip archive from here_.
