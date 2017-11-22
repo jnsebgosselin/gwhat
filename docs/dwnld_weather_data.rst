@@ -48,6 +48,8 @@ Searching for weather data
 
 The climate station browser shown in :numref:`cdcd_browser` provides a graphical interface to the CDCD_, which contains daily data for air temperature and precipitation dating back to 1840 to the present for more than 8000 stations distributed across Canada. The list of stations can be filtered in the browser by proximity, province, or/and the number and the range of years for which data are available at each station. For example, :numref:`cdcd_browser` shows all stations with at least 10 years of data available between 1960 and 2017 that are located less than 25 km kilometres away from the specified lat/lon coordinates.
 
+Stations can be added to the table displayed in the ``Download Weather`` tab by selecting them in the browser and clicking on the button |add_to_list|. Alternatively, the selected stations can also be exported from the browser to an Excel or csv file by clicking on the button |save|.
+
 .. _cdcd_browser:
 .. figure:: img/stations_browser.*
     :align: center
@@ -56,26 +58,24 @@ The climate station browser shown in :numref:`cdcd_browser` provides a graphical
     :figclass: align-center
     
     Presentation of the climate stations browser.
-    
-Stations can be added to the table displayed in the ``Download Weather`` tab by selecting them in the browser and clicking on the button |add_to_list|. Alternatively, the selected stations can also be exported from the browser to an Excel or csv file by clicking on the button |save|.
 
 Concatenating the weather datafiles
 ----------------------------------------------------------
-By default, when raw datafiles are downloaded from the CDCD_
+By default, GWHAT automatically formats and save the data in a csv file as soon as they have been successfully downloaded for a given station. Only the data related to air temperature (mean, max and min) and total precipitation are kept and days with missing data in the dataset are filled with a NaN (not a number) value.
 
-WHAT automatically formats the data as soon as they have been successfully downloaded for a given
-weather station. To do this, data from each annual file are put together end to end in chronological
-order. Only the data related to air temperature (mean, max and min) and total precipitation are kept.
-In addition, days with missing data in the dataset are filled with a NaN (not a number) value. Finally,
-information on the number of days with missing data for each meteorological variable are displayed in
-the right side-panel. Alternatively, it is possible to open and format previously downloaded weather data
-files by clicking on the Load button in the right side-panel and selecting the desired files from the
-dialog window that will open.
-By default, WHAT will automatically save the formatted data in a single tsv (tabular-separated values)
-file in the Input folder (see section 2.4). The automatic saving of the formatted data series can be disabled
-by unchecking the Automatically save concatenated data option. From the right side-panel, it is then
-possible to navigate through the datasets that were formatted over the course of a given session using the
+The automatic saving of the formatted data series can be disabled by unchecking the Automatically save concatenated data option. From the right side-panel, it is then possible to navigate through the datasets that were formatted over the course of a given session using the
 left-right arrows and save any dataset manually by clicking on the save button.
+
+
+
+
+Finally,
+information on the number of days with missing data for each meteorological variable are displayed in the right side-panel. Alternatively, it is possible to open and format previously downloaded weather data files by clicking on the Load button in the right side-panel and selecting the desired files from the dialog window that will open. By default, WHAT will automatically save the formatted data in a single csv file in the Input folder (see section 2.4).
+
+
+
+
+
 
 .. _comma-separated values: https://en.wikipedia.org/wiki/Comma-separated_values
 .. _Canadian Daily Climate Database: www.climate.weather.gc.ca
