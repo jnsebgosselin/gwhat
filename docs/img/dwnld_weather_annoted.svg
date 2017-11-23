@@ -10,9 +10,9 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="389.73126mm"
-   height="279.04373mm"
-   viewBox="0 0 389.73126 279.04373"
+   width="38.973125cm"
+   height="29.804373cm"
+   viewBox="0 0 389.73126 298.04372"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
@@ -283,8 +283,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.49497475"
-     inkscape:cx="760.39876"
-     inkscape:cy="504.58163"
+     inkscape:cx="432.09919"
+     inkscape:cy="504.58156"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -296,43 +296,43 @@
      showguides="true"
      inkscape:guide-bbox="true"
      inkscape:snap-grids="true"
-     fit-margin-top="1"
+     fit-margin-top="2"
      fit-margin-left="0"
-     fit-margin-bottom="1"
+     fit-margin-bottom="0.1"
      fit-margin-right="0"
-     units="mm">
+     units="cm">
     <inkscape:grid
        type="xygrid"
        id="grid4705"
-       originx="99.615634"
-       originy="-37.175612" />
+       originx="99.615643"
+       originy="-37.17563" />
     <sodipodi:guide
-       position="77.499088,262.32909"
+       position="77.499087,262.32907"
        orientation="1,0"
        id="guide1353"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="77.499087,237.25148"
+       position="77.499086,237.25146"
        orientation="0.0054412782,0.9999852"
        id="guide953"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="59.358634,246.11755"
+       position="59.358633,246.11753"
        orientation="0,1"
        id="guide955"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="43.719869,255.42522"
+       position="43.719868,255.4252"
        orientation="0,1"
        id="guide1661"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="19.132381,264.7282"
+       position="19.132381,264.72818"
        orientation="0,1"
        id="guide1873"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="21.537807,274.14945"
+       position="21.537807,274.14943"
        orientation="0,1"
        id="guide2254"
        inkscape:locked="false" />
@@ -354,7 +354,7 @@
      id="layer2"
      inkscape:label="background"
      sodipodi:insensitive="true"
-     transform="translate(99.615631,19.219316)">
+     transform="translate(99.615631,38.219316)">
     <image
        y="31.282734"
        x="-99.615631"
@@ -368,7 +368,7 @@
      inkscape:label="annotations"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(99.615631,19.219316)">
+     transform="translate(99.615631,38.219316)">
     <text
        id="text1672-8-3"
        y="26.046125"

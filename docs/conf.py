@@ -129,6 +129,7 @@ htmlhelp_basename = 'gwhatdoc'
 # -- Options for LaTeX output ---------------------------------------------
 
 latex_elements = {
+    'fncychap': '\\usepackage[Sonny]{fncychap}'
     # The paper size ('letterpaper' or 'a4paper').
     #
     # 'papersize': 'letterpaper',
@@ -151,6 +152,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_engine = 'pdflatex'
 # latex_logo = 'img/latex_logo.pdf'
+
 authors = (r'Jean-Sébastien Gosselin \and '
            r'René Lefebvre \and '
            r'Richard Martel \and '

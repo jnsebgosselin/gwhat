@@ -19,6 +19,8 @@ Daily weather data can be downloaded automatically for one or more stations at a
 
 Climate stations can be added to the table either by selecting an existing list of stations from a file by clicking on the |open_file| icon or by using the `climate stations browser`_ by clicking on the |magnifying_glass| icon. Climate stations can be removed from the table by selecting them and clicking on the |eraser| icon. The list of stations can be exported to a `comma-separated values`_ (csv) file by clicking on the |save| icon, so that it can be directly loaded in successive sessions of GWHAT.
 
+When clicking on the |downward_arrow| icon, daily weather data are downloaded between the ``From Year`` and ``To Year`` values specified for each selected station and the results are saved as csv files in the Raw folder of the current project. The downloading process can be stopped at any time by clicking on the |stop| icon that appears in the toolbar as soon as a downloading task is started. Weather data for a given station will not be downloaded for the years for which a data file already exist in the Raw folder. Finally, the ``From Year`` and ``To Year`` values can be set individually for each station or for all stations at once using the |set_fromyear| and |set_toyear| icons as shown in :numref:`set_all_fromyear_toyear`.
+
 .. _dwnld_weather_annoted:
 .. figure:: img/dwnld_weather_annoted.*
     :align: center
@@ -28,8 +30,6 @@ Climate stations can be added to the table either by selecting an existing list 
     
     Tool to download and format daily weather data from the online
     CDCD_ (Canadian Daily Climate Database).
-
-When clicking on the |downward_arrow| icon, daily weather data are downloaded between the ``From Year`` and ``To Year`` values specified for each selected station and the results are saved as csv files in the Raw folder of the current project. The downloading process can be stopped at any time by clicking on the |stop| icon that appears in the toolbar as soon as a downloading task is started. Weather data for a given station will not be downloaded for the years for which a data file already exist in the Raw folder. Finally, the ``From Year`` and ``To Year`` values can be set individually for each station or for all stations at once using the |set_fromyear| and |set_toyear| icons as shown in :numref:`set_all_fromyear_toyear`.
 
 .. _set_all_fromyear_toyear:
 .. figure:: img/set_fromyear_toyear_annoted.*
