@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'GWHAT'
-copyright = '2014-2017, Jean-Sébastien Gosselin'
+copyright = '2014-2017, GWHAT documentation team'
 author = 'Jean-Sébastien Gosselin'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -149,9 +149,16 @@ latex_elements = {
 # Grouping the document tree into LaTeX files. List of tuples
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
+latex_engine = 'pdflatex'
+# latex_logo = 'img/latex_logo.pdf'
+authors = (r'Jean-Sébastien Gosselin \and '
+           r'René Lefebvre \and '
+           r'Richard Martel \and '
+           r'Christine Rivard')
+
 latex_documents = [
-    (master_doc, 'gwhat.tex', 'gwhat Documentation',
-     'Jean-Sébastien Gosselin', 'manual'),
+    (master_doc, 'gwhat.tex', 'GWHAT Documentation',
+     authors, 'manual'),
 ]
 
 
@@ -160,7 +167,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'gwhat', 'gwhat Documentation',
+    (master_doc, 'GWHAT', 'GWHAT Documentation',
      [author], 1)
 ]
 
@@ -171,7 +178,7 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'gwhat', 'gwhat Documentation',
-     author, 'gwhat', 'One line description of project.',
+    (master_doc, 'GWHAT', 'GWHAT Documentation',
+     author, 'GWHAT', 'One line description of project.',
      'Miscellaneous'),
 ]
