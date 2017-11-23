@@ -1669,7 +1669,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
 
     A, B, hp, RMSE = None, None, None, None
 
-    # ------------------------------------------------------- Check MinMax ----
+    # ---- Check Min/Max
 
     if len(ipeak) == 0:
         print('No extremum selected')
@@ -1684,7 +1684,7 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
         print('There is a problem with the pair-ditribution of min-max')
         return A, B, hp, RMSE
 
-    # ------------------------------------------------------- Optimization ----
+    # ---- Optimization
 
     print('\n---- MRC calculation started ----\n')
     print('MRCTYPE = %s' % (['Linear', 'Exponential'][MRCTYPE]))
