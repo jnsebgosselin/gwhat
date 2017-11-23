@@ -55,7 +55,7 @@ contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
 .. _jean-sebastien.gosselin@ete.inrs.ca : mailto:jean-sebastien.gosselin@ete.inrs.ca
 
 
-Support
+Acknowledgments
 -----------------------------------------------
 
 This research was supported by the NSERC-postgraduate_ scholarship of 
@@ -67,6 +67,10 @@ l’Environnement et de la Lutte contre les Changement Climatiques).
 
 The project is currently supported by the MDDELCC_ through the postdoctoral
 grant of Dr. Jean-Sébastien Gosselin.
+
+.. image:: img/support_logos.*
+    :width: 100%
+    :alt: logo financial support
 
 .. _NSERC-postgraduate: http://www.nserc-crsng.gc.ca/Students-Etudiants/PG-CS/index_eng.asp
 .. _NSERC-discovery: http://www.nserc-crsng.gc.ca/Professors-Professeurs/Grants-Subs/DGIGP-PSIGP_eng.asp
