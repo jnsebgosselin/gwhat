@@ -4,7 +4,7 @@ Getting Started
 This document will show you how to get up and running with GWHAT.
 
 Installing GWHAT on a Windows system
-------------------------------
+----------------------------------------------------------
 
 Download the latest binary distribution of GWHAT packaged as a zip archive from here_.
 
@@ -19,11 +19,11 @@ Please help GWHAT by reporting bugs or proposing new features in our `issue trac
 .. _issue tracker: https://github.com/jnsebgosselin/gwhat/issues
 
 Updating GWHAT
---------------
+----------------------------------------------------------
 
 To update GWHAT to a new version, download and extract the content of the latest binary distribution of the software and replace the older `GWHAT` folder with the one that was just downloaded.
 
 Running GWHAT from the source files
------------------------------------
+----------------------------------------------------------
 
 Binary distribution are currently produced only for Windows systems. However, GWHAT can be run on Windows, Linux, or macOS computer operating systems directly from the source files.
