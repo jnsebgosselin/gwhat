@@ -22,7 +22,7 @@ Climate stations can be added to the table either by selecting an existing list 
 .. _dwnld_weather_annoted:
 .. figure:: img/dwnld_weather_annoted.*
     :align: center
-    :width: 85%
+    :width: 100%
     :alt: alternate text
     :figclass: align-center
     
@@ -34,7 +34,7 @@ When clicking on the |downward_arrow| icon, daily weather data are downloaded be
 .. _set_all_fromyear_toyear:
 .. figure:: img/set_fromyear_toyear_annoted.*
     :align: center
-    :width: 85%
+    :width: 100%
     :alt: alternate text
     :figclass: align-center
     
@@ -45,13 +45,14 @@ When clicking on the |downward_arrow| icon, daily weather data are downloaded be
 Searching for weather data
 -----------------------------------------------
 
+The climate station browser shown in :numref:`cdcd_browser` provides a graphical interface to the CDCD_, which contains daily data for air temperature and precipitation dating back to 1840 to the present for more than 8000 stations distributed across Canada. The list of stations can be filtered in the browser by proximity, province, or/and the number and the range of years for which data are available at each station. For example, :numref:`cdcd_browser` shows all stations with at least 10 years of available data between 1960 and 2017 that are located less than 25 kilometres away from the specified lat/lon coordinates.
 
 Stations can be added to the table displayed in the ``Download Weather`` tab by selecting them in the browser and clicking on the button |add_to_list| `Add`. Alternatively, the selected stations can also be exported from the browser to an Excel or csv file by clicking on the button |save| `Save`.
 
 .. _cdcd_browser:
 .. figure:: img/scs_stations_browser_annoted.*
     :align: center
-    :width: 85%
+    :width: 100%
     :alt: alternate text
     :figclass: align-center
     
@@ -67,7 +68,7 @@ It is possible to navigate through the datasets that were formatted over the cou
 .. _format_weather_panel:
 .. figure:: img/annotations_concatenate_panel.*
     :align: center
-    :width: 85%
+    :width: 100%
     :alt: alternate text
     :figclass: align-center
     
