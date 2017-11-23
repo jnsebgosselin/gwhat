@@ -1,7 +1,0 @@
-\documentclass[WHATMANUAL.tex]{subfiles}
-
-\begin{document}
-
-It is possible to use weather data from any sources in WHAT, given the right format is used, either to fill the gaps in the weather time series and/or to interpret water level time series. For this purpose, it is recommended to use a copy of one of the sample files that are provided in the project example (distributed with the software) and fill the information and the data directly in it. The file must be kept in a text format using tab-separated values either with the extension ‘‘.csv’’ or ‘‘.out’’, depending if you want to fill the gaps in the weather time series or  interpret water level time series. This can be achieved with any standard spreadsheet application such as Microsoft Excel or LibreOffice Calc. The format of the header must be faithfully observed for those files. In addition, ``NaN'' values must be entered where data are missing. Data must also be in chronological order, but do not need to be continuous over time. That is, missing blocks of data (e.g., several days, months or years) can be completely omitted in the time-series. These missing blocks of data will be filled during the gap filling procedure or will be ignored for the plotting of the hydrograph.
-
-\end{document}
