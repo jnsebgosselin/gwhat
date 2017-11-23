@@ -23,6 +23,7 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
    :caption: User Documentation
 
    getting_started
+   create_project
    dwnld_weather_data
    gapfill_weather_data
    about_gwhat
