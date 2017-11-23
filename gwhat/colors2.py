@@ -32,7 +32,7 @@ from collections import OrderedDict
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QWidget, QPushButton, QGridLayout, QLabel,
-                             QToolButton)
+                             QToolButton, QColorDialog, QApplication)
 
 import numpy as np
 
@@ -205,7 +205,7 @@ class ColorsSetupWin(myqt.DialogWindow):
 
     def pick_color(self):
         sender = self.sender()
-        color = QtGui.QColorDialog.getColor(sender.palette().base().color())
+        color = QColorDialog.getColor(sender.palette().base().color())
         if color.isValid():
             rgb = color.getRgb()[:-1]
             sender.setStyleSheet("background-color: rgb(%i,%i,%i)" % rgb)
@@ -244,7 +244,7 @@ class ColorsSetupWin(myqt.DialogWindow):
 if __name__ == '__main__':
     import sys
 
-    app = QtGui.QApplication(sys.argv)
+    app = QApplication(sys.argv)
 
     w = ColorsSetupWin()
     w.show()
