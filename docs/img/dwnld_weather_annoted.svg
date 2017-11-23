@@ -10,9 +10,9 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="40.973125cm"
-   height="31.036613cm"
-   viewBox="0 0 409.73125 310.36614"
+   width="389.73126mm"
+   height="279.04373mm"
+   viewBox="0 0 389.73126 279.04373"
    version="1.1"
    id="svg8"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
@@ -244,6 +244,36 @@
          id="path826-2-0-6-18-6-4-2"
          inkscape:connector-curvature="0" />
     </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="Arrow1Mend-5-8-6-6-3-4"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#ff0000;fill-opacity:1;fill-rule:evenodd;stroke:#ff0000;stroke-width:1.00000003pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path826-2-0-6-18-8-6"
+         inkscape:connector-curvature="0" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="Arrow1Mend-5-8-6-6-3-4-5"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#ff0000;fill-opacity:1;fill-rule:evenodd;stroke:#ff0000;stroke-width:1.00000003pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path826-2-0-6-18-8-6-2"
+         inkscape:connector-curvature="0" />
+    </marker>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -253,8 +283,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="0.49497475"
-     inkscape:cx="756.80808"
-     inkscape:cy="618.15115"
+     inkscape:cx="760.39876"
+     inkscape:cy="504.58163"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -267,42 +297,42 @@
      inkscape:guide-bbox="true"
      inkscape:snap-grids="true"
      fit-margin-top="1"
-     fit-margin-left="1"
+     fit-margin-left="0"
      fit-margin-bottom="1"
-     fit-margin-right="1"
-     units="cm">
+     fit-margin-right="0"
+     units="mm">
     <inkscape:grid
        type="xygrid"
        id="grid4705"
-       originx="109.61563"
-       originy="-28.175595" />
+       originx="99.615634"
+       originy="-37.175612" />
     <sodipodi:guide
-       position="87.499083,271.3291"
+       position="77.499088,262.32909"
        orientation="1,0"
        id="guide1353"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="87.499082,246.25149"
-       orientation="0,1"
+       position="77.499087,237.25148"
+       orientation="0.0054412782,0.9999852"
        id="guide953"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="103.43331,258.85054"
+       position="59.358634,246.11755"
        orientation="0,1"
        id="guide955"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="39.522482,271.44562"
+       position="43.719869,255.42522"
        orientation="0,1"
        id="guide1661"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="32.23359,283.41899"
+       position="19.132381,264.7282"
        orientation="0,1"
        id="guide1873"
        inkscape:locked="false" />
     <sodipodi:guide
-       position="20.955951,295.84703"
+       position="21.537807,274.14945"
        orientation="0,1"
        id="guide2254"
        inkscape:locked="false" />
@@ -324,7 +354,7 @@
      id="layer2"
      inkscape:label="background"
      sodipodi:insensitive="true"
-     transform="translate(109.61563,41.54173)">
+     transform="translate(99.615631,19.219316)">
     <image
        y="31.282734"
        x="-99.615631"
@@ -338,15 +368,15 @@
      inkscape:label="annotations"
      inkscape:groupmode="layer"
      id="layer1"
-     transform="translate(109.61563,41.54173)">
+     transform="translate(99.615631,19.219316)">
     <text
        id="text1672-8-3"
        y="26.046125"
        x="-10.11972"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan2771"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
          y="26.046125"
          x="-10.11972"
          sodipodi:role="line">Download data for the selected stations</tspan></text>
@@ -358,78 +388,72 @@
        style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3)" />
     <text
        id="text1672-8-3-4-5-9"
-       y="13.515613"
+       y="16.719196"
        x="-39.363358"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan2771-6-1-0"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
-         y="13.515613"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         y="16.719196"
          x="-39.363358"
          sodipodi:role="line">Remove the selected stations from the table</tspan></text>
     <text
        id="text1672-8-3-4-5-9-5"
-       y="1.0164344"
+       y="7.3901973"
        x="-53.237572"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan2771-6-1-0-0"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
-         y="1.0164344"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         y="7.3901973"
          x="-53.237572"
          sodipodi:role="line">Save the station list to a csv file</tspan></text>
     <path
        sodipodi:nodetypes="ccc"
        inkscape:connector-curvature="0"
        id="path815-3-4-0-3-0-11-2"
-       d="m -43.925291,9.9738706 h -7.453593 V 49.464675"
+       d="m -43.925291,13.70684 h -7.453593 v 35.757835"
        style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0)" />
     <path
        sodipodi:nodetypes="ccc"
        inkscape:connector-curvature="0"
        id="path815-3-4-0-3-7"
-       d="m 128.57749,156.109 h 10.21757 v -19.07871"
+       d="m 118.42125,154.77265 h 10.21757 v -19.07871"
        style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-3)" />
     <text
        id="text1672-8-3-4-5-3"
        y="152.18835"
-       x="124.69139"
+       x="112.85162"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:end;text-anchor:end;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:end;text-anchor:end;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
          y="152.18835"
-         x="124.69139"
+         x="115.1998"
          sodipodi:role="line"
          id="tspan3499">Set &quot;From Year<tspan
-   style="font-style:italic;line-height:1;text-align:end;text-anchor:end;stroke-width:0.26458332"
-   id="tspan1750-3-5">&quot;</tspan> and &quot;To Year&quot; value for</tspan><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:end;text-anchor:end;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+   style="font-style:italic;font-size:8.46666622px;line-height:1;text-align:end;text-anchor:end;stroke-width:0.26458332"
+   id="tspan1750-3-5">&quot;</tspan> value for the </tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:end;text-anchor:end;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
          y="162.77168"
-         x="124.69139"
+         x="112.85162"
          sodipodi:role="line"
-         id="tspan4505">the station on the corresponding row</tspan></text>
+         id="tspan4505">station on the corresponding row</tspan></text>
     <text
        id="text1672-9"
-       y="205.51721"
-       x="-53.53307"
+       y="215.44743"
+       x="-72.337387"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;stroke-width:0.26458332"
          id="tspan1674-2"
-         y="205.51721"
-         x="-53.53307"
+         y="215.44743"
+         x="-72.337387"
          sodipodi:role="line">Select or unselect the station</tspan><tspan
          id="tspan3931"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;stroke-width:0.26458332"
-         y="216.10054"
-         x="-53.53307"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;stroke-width:0.26458332"
+         y="226.03076"
+         x="-72.337387"
          sodipodi:role="line">on the corresponding row</tspan></text>
-    <path
-       sodipodi:nodetypes="ccc"
-       inkscape:connector-curvature="0"
-       id="path815-3-4-0-3-0-11-2-9-9"
-       d="M -57.807293,210.28066 H -87.447601 V 133.89704"
-       style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0-9-6)" />
     <path
        sodipodi:nodetypes="cc"
        inkscape:connector-curvature="0"
@@ -443,59 +467,89 @@
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan3931-6"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:start;text-anchor:start;fill:#ff0000;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:start;text-anchor:start;fill:#ff0000;stroke-width:0.26458332"
          y="73.189522"
          x="-42.842136"
          sodipodi:role="line">Select or</tspan><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:start;text-anchor:start;fill:#ff0000;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:start;text-anchor:start;fill:#ff0000;stroke-width:0.26458332"
          y="83.772858"
          x="-42.842136"
          sodipodi:role="line"
          id="tspan4497">unselect</tspan><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:start;text-anchor:start;fill:#ff0000;stroke-width:0.26458332"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:start;text-anchor:start;fill:#ff0000;stroke-width:0.26458332"
          y="94.356186"
          x="-42.842136"
          sodipodi:role="line"
          id="tspan4495">all stations</tspan></text>
     <text
        id="text1672-8-3-4-5-9-5-8"
-       y="-24.345615"
+       y="-12.051217"
        x="-76.397255"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan2771-6-1-0-0-7"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
-         y="-24.345615"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         y="-12.051217"
          x="-76.397255"
          sodipodi:role="line">Open the climate stations browser</tspan></text>
     <path
        sodipodi:nodetypes="ccc"
        inkscape:connector-curvature="0"
        id="path815-3-4-0-3-0-11-2-6"
-       d="m -69.708638,-14.594582 h -7.453593 v 64.311404"
+       d="m -69.708638,-4.9038095 h -7.453593 V 49.716822"
        style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0-1)" />
     <text
        id="text1672-8-3-4-5-9-5-7"
-       y="-11.611582"
+       y="-1.9346604"
        x="-64.416382"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
        xml:space="preserve"><tspan
          id="tspan2771-6-1-0-0-8"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:9.8777771px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
-         y="-11.611582"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:0;font-family:Arial;-inkscape-font-specification:Arial;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         y="-1.9346604"
          x="-64.416382"
          sodipodi:role="line">Add stations to the table from a csv file</tspan></text>
     <path
        sodipodi:nodetypes="ccc"
        inkscape:connector-curvature="0"
        id="path815-3-4-0-3-0-11-2-8"
-       d="m -58.101521,-2.6212094 h -7.453593 V 49.464681"
+       d="m -58.101521,4.3991704 h -7.453593 V 49.464681"
        style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0-14)" />
     <path
        sodipodi:nodetypes="ccc"
        inkscape:connector-curvature="0"
        id="path815-3-4-0-3-0-11-2-6-8"
-       d="M -81.206087,-27.022615 H -88.65968 V 49.716824"
+       d="M -81.206087,-14.325059 H -88.65968 V 49.716824"
        style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-0-3-0-1-1)" />
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path815-3-4-0-3-7-8"
+       d="m 138.25752,185.79667 h 10.21757 v -50.08198"
+       style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-3-4)" />
+    <text
+       id="text1672-8-3-4-5-3-7"
+       y="183.56052"
+       x="132.48097"
+       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:10.58333302px;line-height:1;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.26458332"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:end;text-anchor:end;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         y="183.56052"
+         x="134.82915"
+         sodipodi:role="line"
+         id="tspan3499-5">Set &quot;To Year<tspan
+   style="font-style:italic;font-size:8.46666622px;line-height:1;text-align:end;text-anchor:end;stroke-width:0.26458332"
+   id="tspan1750-3-5-8">&quot;</tspan> value for the </tspan><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.46666622px;line-height:1;font-family:Arial;-inkscape-font-specification:Arial;text-align:end;text-anchor:end;fill:#ff0000;fill-opacity:1;stroke-width:0.26458332"
+         y="194.14384"
+         x="132.48097"
+         sodipodi:role="line"
+         id="tspan4505-9">station on the corresponding row</tspan></text>
+    <path
+       sodipodi:nodetypes="ccc"
+       inkscape:connector-curvature="0"
+       id="path815-3-4-0-3-7-8-6"
+       d="m -77.284983,217.90239 h -10.21757 v -84.00535"
+       style="fill:none;stroke:#ff0000;stroke-width:1.32291663;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-end:url(#Arrow1Mend-5-8-6-6-3-4-5)" />
   </g>
 </svg>
