@@ -137,8 +137,9 @@ class GapFillWeatherGUI(QWidget):
 
         self.btn_delete_data = QToolButtonSmall(IconDB().clear)
         self.btn_delete_data.setEnabled(False)
-        self.btn_delete_data.setToolTip('Remove currently selected dataset '
-                                        'and delete the input datafile.')
+        self.btn_delete_data.setToolTip(
+                'Remove the currently selected dataset and delete the input '
+                'datafile. However, raw datafiles will be kept.')
         self.btn_delete_data.clicked.connect(self.delete_current_dataset)
 
         widgets = [self.target_station, self.btn_refresh_staList,
