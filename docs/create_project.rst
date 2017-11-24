@@ -1,8 +1,9 @@
-Creating a Project
+Project Management in GWHAT
 ===============================================
 
-This document shows how to start a new project in GWHAT with the
-``Project manager`` shown in :numref:`demo_create_project`.
+This document shows how to create and open existing project in GWHAT from the
+`project toolbar` that is located in the upper right corner of the GWHAT window
+as shown in :numref:`demo_create_project`.
 
 .. _demo_create_project:
 .. figure:: img/demo_create_project.*
@@ -13,22 +14,38 @@ This document shows how to start a new project in GWHAT with the
     
     Presentation of the interface to create a new project in GWHAT.
 
-Data are managed in GWHAT by project, that is to say, all input and output files
-relative to a particular project are stored in a common folder hereafter referred to as
+Open an existing project
+-----------------------------------------------
+
+Data are managed in GWHAT by project. This means that all input and output files
+relative to a particular project are stored in a common folder, hereafter referred to as
 the *project folder*.This file management system allows to easily backup or copy the
 data related to a particular project since all the files are saved at the same
 location.
 
-The first time GWHAT is started, the program will automatically open the 
-project *Example*, which includes all the files necessary to easily and
-quickly test the different features of the software. The title of the current
-project is shown in the menu bar located in the upper right corner of the 
-GWHAT window. Only one project at a time can be open per instance of GWHAT.
+Only one project at a time can be opened per instance of GWHAT. The title of the 
+currently opened project is displayed on a button located inthe project toolbar as
+shown in :numref:`project_toolbar`. The project named *Example* is opened by
+default the first time GWHAT is started. This project includes samples of
+files to easily and quickly test the different features of GWHAT.
+
+It is possible to open an existing project by clicking on the button where is
+displayed the name of the currently opened project in GWHAT. This will open a
+new dialog window, from which an existing project file (*.gwt) can be selected
+and opened. 
+
+The path to the project folder is stored in a relative format. This means that
+if the location of the project folder is changed relative the executable of
+the software (“WHAT.exe”), WHAT will need to be redirected to the new location
+of the project by repeating the procedure described in the paragraph above.
+
 
 Create a new project
 -----------------------------------------------
-The creation of a new project is started by clicking on the 
-|new_project| icon located in the project toolbar as shown in :numref:`project_toolbar`.
+
+
+The creation of a new project is started by clicking on the |new_project| icon
+located in the project toolbar as shown in .
 
 This will open a new dialog window (Fig. 2.1) where information about the project can
 be entered such as its title, author, and location coordinates. Clicking on the button Save will create a
@@ -50,16 +67,7 @@ directory “...nWHATnProjects”.
     
 
 
-Open an existing project
------------------------------------------------
 
-It is possible to open an existing project by clicking on the button Project, which displays the name of
-the current project, in the upper right corner of the WHAT window. This will open a new dialog window,
-from which an existing project file (*.what) can be selected and opened. The current project name will
-then change for the name of the project that was just selected.
-The path to the project folder is stored in a relative format. This means that if the location of the
-project folder is changed relative the executable of the software (“WHAT.exe”), WHAT will need to be
-redirected to the new location of the project by repeating the procedure described in the paragraph above.
 
 
 .. |new_project| image:: img/icon_new_project.*
