@@ -212,8 +212,11 @@ def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
         yr0 = yr2plot[i]
         yr1 = yr0 + 1
 
-        indx0 = np.where((YEARS == yr0) & (MONTHS == 10))[0][0]
-        indx1 = np.where((YEARS == yr1) & (MONTHS == 9))[0][-1]
+        indexes = np.where((YEARS == yr0) & (MONTHS == 10))[0]
+        indx0 = 0 if len(indexes) == 0 else indexes[0]
+
+        indexes = np.where((YEARS == yr1) & (MONTHS == 9))[0]
+        indx1 = len(YEARS-1) if len(indexes) == 0 else indexes[-1]
 
         min_rechg_yrly.append(np.sum(Rbound[indx0:indx1+1, 0]))
         prob_rechg_yrly.append(np.sum(Rbound[indx0:indx1+1, 1]))
