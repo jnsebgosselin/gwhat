@@ -145,7 +145,7 @@ class GapFillWeather(QObject):
         if not os.path.exists(binfile):
             return self.reload_data()
 
-        # ---- Scan input folder for changes ----------------------------------
+        # ---- Scan input folder for changes
 
         # If one of the csv data file contained within the input data directory
         # has changed since last time the binary file was created, the
@@ -156,11 +156,17 @@ class GapFillWeather(QObject):
         fnames = A['fnames']
 
         bmtime = os.path.getmtime(binfile)
+        count = 0
         for f in os.listdir(self.inputDir):
             if f.endswith('.csv'):
+                count += 1
                 fmtime = os.path.getmtime(os.path.join(self.inputDir, f))
                 if f not in fnames or fmtime > bmtime:
                     return self.reload_data()
+
+        # Force a reload of the data if some input files were deleted.
+        if len(fnames) != count:
+            return self.reload_data()
 
         # ---- Load data from binary ------------------------------------------
 
