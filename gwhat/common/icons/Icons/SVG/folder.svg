@@ -10,11 +10,14 @@
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg7384"
-   height="181.60677"
-   width="192.45296"
+   height="256"
+   width="256"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
-   sodipodi:docname="folder.svg">
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   sodipodi:docname="folder.svg"
+   inkscape:export-filename="C:\Users\jsgosselin\OneDrive\GWHAT\docs\img\icon_folder.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
   <defs
      id="defs10" />
   <sodipodi:namedview
@@ -26,17 +29,17 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1535"
-     inkscape:window-height="876"
+     inkscape:window-width="1600"
+     inkscape:window-height="838"
      id="namedview8"
      showgrid="false"
-     inkscape:zoom="2.6074563"
-     inkscape:cx="168.03141"
-     inkscape:cy="55.24756"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
+     inkscape:zoom="1.84375"
+     inkscape:cx="147.38991"
+     inkscape:cy="143.12846"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg7384"
+     inkscape:current-layer="g14154"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
@@ -57,7 +60,7 @@
      id="title9167">Gnome Symbolic Icon Theme</title>
   <g
      id="layer13"
-     transform="matrix(12.027934,0,0,12.027934,-5316.3318,-2127.7614)"
+     transform="matrix(12.027934,0,0,12.027934,-5316.3318,-2053.3682)"
      style="fill:#4d4d4d">
     <g
        id="g14154"
@@ -65,9 +68,10 @@
        style="fill:#4d4d4d">
       <path
          id="rect3845"
-         style="fill:#4d4d4d"
-         d="m 208.53,997 c -0.28913,0 -0.53125,0.24212 -0.53125,0.53125 v 13.93795 c 0,0.2985 0.23264,0.5312 0.53125,0.5312 h 14.938 c 0.2986,0 0.53125,-0.2326 0.53125,-0.5312 v -8.9375 c 0,-0.2891 -0.24212,-0.5313 -0.53125,-0.5313 h -12.469 v 7.5 c 0,0.2771 -0.223,0.5 -0.5,0.5 -0.277,0 -0.5,-0.2229 -0.5,-0.5 v -8 c 0,-0.277 0.223,-0.5 0.5,-0.5 h 2.9688 8.5312 v -1.40615 c 0,-0.3272 -0.26666,-0.5938 -0.59375,-0.5938 h -7.4062 v -1.4688 c 0,-0.39 -0.24,-0.63 -0.53,-0.63 z"
-         inkscape:connector-curvature="0" />
+         style="fill:#4d4d4d;stroke-width:1.33019519"
+         d="m 208.70542,991.91609 c -0.3846,0 -0.70667,0.45292 -0.70667,0.83752 v 18.54019 c 0,0.3971 0.30946,0.7066 0.70667,0.7066 h 19.87045 c 0.3972,0 0.70667,-0.3094 0.70667,-0.7066 v -11.88862 c 0,-0.38456 -0.32207,-0.70673 -0.70667,-0.70673 h -16.5862 v 9.97645 c 0,0.3686 -0.29664,0.6651 -0.6651,0.6651 -0.36846,0 -0.6651,-0.2965 -0.6651,-0.6651 v -10.64155 c 0,-0.36846 0.29664,-0.6651 0.6651,-0.6651 h 3.94908 11.34817 v -1.87045 c 0,-0.43524 -0.35471,-0.78987 -0.78981,-0.78987 h -9.85169 v -1.95379 c 0,-0.51878 -0.31925,-0.83805 -0.705,-0.83805 z"
+         inkscape:connector-curvature="0"
+         sodipodi:nodetypes="cssssssscsssssccsscscc" />
     </g>
   </g>
 </svg>
