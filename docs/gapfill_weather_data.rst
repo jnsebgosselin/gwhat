@@ -14,11 +14,10 @@ records using the gapfilling weather data tool of GWHAT available under the tab
     
     Presentation of the `gapfill weather data` tool of GWHAT available under
     the tab ``Gapfill Weather``.
-    
-    
+
 GWHAT provides an automated, robust, and efficient method to fill the gaps in
-daily weather data records. In addition, GWHAT validate and assess the uncertainty
-of the estimated missing values with a cross-validation resampling technique.
+daily weather data records. In addition, GWHAT automatically validates and assess
+the uncertainties of the estimated missing values with a cross-validation resampling technique.
 
 Loading the weather data files
 -----------------------------------------------
@@ -35,3 +34,15 @@ of stations and the summary.
 
 It is also possible to fill the gaps in weather datasets from files that were not produced with WHAT, provided that the data
 are formatted in the right format (see Appendix B).
+
+Mergin two weather data files
+-----------------------------------------------
+
+.. _merge_weather:
+.. figure:: img/scs_merge_weather_data.*
+    :align: center
+    :width: 50%
+    :alt: alternate text
+    :figclass: align-center
+    
+    Presentation of the tool to merge two daily weather records together.
