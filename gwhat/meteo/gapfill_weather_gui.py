@@ -29,7 +29,6 @@ import os
 
 # ---- Third party imports
 
-from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QThread, QDate, QRect
 from PyQt5.QtGui import QBrush, QColor, QFont, QPainter, QCursor, QTextDocument
@@ -55,7 +54,6 @@ from gwhat.meteo.gapfill_weather_algorithm2 import GapFillWeather
 from gwhat.meteo.merge_weather_data import WXDataMergerWidget
 from gwhat.common import IconDB, StyleDB, QToolButtonSmall
 import gwhat.common.widgets as myqt
-from gwhat.common.utils import delete_file
 
 
 class GapFillWeatherGUI(QWidget):
@@ -84,7 +82,7 @@ class GapFillWeatherGUI(QWidget):
     def __initUI__(self):
         self.setWindowIcon(IconDB().master)
 
-        # ---- Toolbar at the bottom
+        # ---- TOOLBAR ----
 
         self.btn_fill = QPushButton('Fill Station')
         self.btn_fill.setIcon(IconDB().fill_data)
@@ -115,12 +113,13 @@ class GapFillWeatherGUI(QWidget):
 
         widget_toolbar.setLayout(grid_toolbar)
 
-        # ---- Target Station groupbox
+        # ----------------------------------------------------- LEFT PANEL ----
 
+        # ---- Target Station ----
+
+        target_station_label = QLabel(
+                '<b>Fill data for weather station :</b>')
         self.target_station = QComboBox()
-        self.target_station.currentIndexChanged.connect(
-                self.target_station_changed)
-
         self.target_station_info = QTextEdit()
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
@@ -128,21 +127,12 @@ class GapFillWeatherGUI(QWidget):
         self.btn_refresh_staList = QToolButtonSmall(IconDB().refresh)
         self.btn_refresh_staList.setToolTip(
             'Force the reloading of the weather data files')
-        self.btn_refresh_staList.clicked.connect(self.btn_refresh_isclicked)
+        self.btn_refresh_staList.clicked.connect(self.load_data_dir_content)
 
         btn_merge_data = QToolButtonSmall(IconDB().merge_data)
         btn_merge_data.setToolTip(
                 'Tool for merging two ore more datasets together.')
         btn_merge_data.clicked.connect(self.wxdata_merger.show)
-
-        self.btn_delete_data = QToolButtonSmall(IconDB().clear)
-        self.btn_delete_data.setEnabled(False)
-        self.btn_delete_data.setToolTip('Remove currently selected dataset '
-                                        'and delete the input datafile.')
-        self.btn_delete_data.clicked.connect(self.delete_current_dataset)
-
-        widgets = [self.target_station, self.btn_refresh_staList,
-                   btn_merge_data, self.btn_delete_data]
 
         # Generate the layout for the target station group widget.
 
@@ -150,15 +140,13 @@ class GapFillWeatherGUI(QWidget):
         tarSta_grid = QGridLayout(self.tarSta_widg)
 
         row = 0
-        tarSta_grid.addWidget(QLabel('<b>Fill data for weather station :</b>'),
-                              row, 0, 1, len(widgets))
-        row += 1
-        tarSta_grid.addWidget(self.target_station, 1, 0)
-        for col, widget in enumerate(widgets):
-            tarSta_grid.addWidget(widget, row, col)
-        row += 1
-        tarSta_grid.addWidget(self.target_station_info,
-                              row, 0, 1, len(widgets))
+        tarSta_grid.addWidget(target_station_label, row, 0, 1, 3)
+        row = 1
+        tarSta_grid.addWidget(self.target_station, row, 0)
+        tarSta_grid.addWidget(self.btn_refresh_staList, row, 1)
+        tarSta_grid.addWidget(btn_merge_data, row, 2)
+        row = 2
+        tarSta_grid.addWidget(self.target_station_info, row, 0, 1, 3)
 
         tarSta_grid.setSpacing(5)
         tarSta_grid.setColumnStretch(0, 500)
@@ -326,7 +314,7 @@ class GapFillWeatherGUI(QWidget):
         self.stack_widget.addItem(MLRM_widg, 'Regression Model :')
         self.stack_widget.addItem(advanced_widg, 'Advanced Settings :')
 
-        # ---- LEFT PANEL
+        # SUBGRIDS ASSEMBLY :
 
         grid_leftPanel = QGridLayout()
         self.LEFT_widget = QFrame()
@@ -352,7 +340,7 @@ class GapFillWeatherGUI(QWidget):
 
         self.LEFT_widget.setLayout(grid_leftPanel)
 
-        # ---- Right Panel
+        # ---- Right Panel ----
 
         self.FillTextBox = QTextEdit()
         self.FillTextBox.setReadOnly(True)
@@ -394,7 +382,7 @@ class GapFillWeatherGUI(QWidget):
 #        RIGHT_widget.addTab(self.gafill_display_table,
 #                            'New Table (Work-in-Progress)')
 
-        # ---- Main grid
+        # ---- Main grid ----
 
         grid_MAIN = QGridLayout()
 
@@ -409,16 +397,17 @@ class GapFillWeatherGUI(QWidget):
 
         self.setLayout(grid_MAIN)
 
-        # ---- Progress Bar
+        # ---- Progress Bar ----
 
         self.pbar = QProgressBar()
         self.pbar.setValue(0)
         self.pbar.hide()
 
-        # ---- Events
+        # ---- Events ----
 
         # CORRELATION :
 
+        self.target_station.currentIndexChanged.connect(self.correlation_UI)
         self.distlimit.valueChanged.connect(self.correlation_table_display)
         self.altlimit.valueChanged.connect(self.correlation_table_display)
         self.date_start_widget.dateChanged.connect(
@@ -450,32 +439,14 @@ class GapFillWeatherGUI(QWidget):
 
         self.wxdata_merger.set_workdir(os.path.join(dirname, 'Meteo', 'Input'))
 
-    def delete_current_dataset(self):
-        """
-        Delete the current dataset source file and force a reload of the input
-        daily weather datafiles.
-        """
-        current_index = self.target_station.currentIndex()
-        if current_index != -1:
-            basename = self.gapfill_worker.WEATHER.fnames[current_index]
-            dirname = self.gapfill_worker.inputDir
-            filename = os.path.join(dirname, basename)
-            delete_file(filename)
-            self.load_data_dir_content(reload=True)
+    # =========================================================================
 
-    def btn_refresh_isclicked(self):
-        """
-        Handles when the button to refresh the list of input daily weather
-        datafiles is clicked
-        """
-        self.load_data_dir_content(reload=True)
-
-    def load_data_dir_content(self, reload=False):
-        """
+    def load_data_dir_content(self):
+        '''
         Initiate the loading of Weater Data Files contained in the
-        */Meteo/Input folder and display the resulting station list in the
-        target station combobox.
-        """
+        */Meteo/Input* folder and display the resulting station list in the
+        *Target station* combo box widget.
+        '''
 
         # Reset UI :
 
@@ -489,11 +460,10 @@ class GapFillWeatherGUI(QWidget):
         self.CORRFLAG = 'off'
         # Correlation calculation won't be triggered when this is off
 
-        if reload:
+        if self.sender() == self.btn_refresh_staList:
             stanames = self.gapfill_worker.reload_data()
         else:
             stanames = self.gapfill_worker.load_data()
-
         self.target_station.addItems(stanames)
         self.target_station.setCurrentIndex(-1)
         self.sta_display_summary.setHtml(self.gapfill_worker.read_summary())
@@ -565,20 +535,16 @@ class GapFillWeatherGUI(QWidget):
             self.FillTextBox.setText(table)
             self.target_station_info.setText(target_info)
 
-    @QSlot(int)
-    def target_station_changed(self, index):
-        """Handles when the target station is changed on the GUI side."""
-        self.btn_delete_data.setEnabled(index != -1)
-        if index != -1:
-            self.correlation_UI()
+    def correlation_UI(self):  # ==============================================
 
-    def correlation_UI(self):
         """
         Calculate automatically the correlation coefficients when a target
         station is selected by the user in the drop-down menu or if a new
         station is selected programmatically.
         """
+
         if self.CORRFLAG == 'on' and self.target_station.currentIndex() != -1:
+
             index = self.target_station.currentIndex()
             self.gapfill_worker.set_target_station(index)
 
@@ -1563,7 +1529,8 @@ if __name__ == '__main__':                                   # pragma: no cover
         app.setFont(QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
-    w.set_workdir("C:\\Users\\jsgosselin\\OneDrive\\GWHAT\\Projects\\Example")
+    w.set_workdir("C:\\Users\\jsgosselin\\OneDrive\\WHAT"
+                  "\\WHAT\\tests\\@ new-prô'jèt!")
     w.load_data_dir_content()
 
     lat = w.gapfill_worker.WEATHER.LAT
