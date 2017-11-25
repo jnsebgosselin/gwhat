@@ -39,6 +39,7 @@ install:
   - python -m pip install pytest-ordering
   - python -m pip install coveralls
   - python -m pip install matplotlib
+  - python -m pip install scipy
   - python -m pip install beautifulsoup4
 
 build: false
