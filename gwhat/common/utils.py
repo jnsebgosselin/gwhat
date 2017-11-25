@@ -10,6 +10,7 @@
 # ---- Imports: standard libraries
 
 import csv
+import os
 
 
 # ---- Imports: third party
@@ -39,3 +40,13 @@ def save_content_to_csv(fname, fcontent, mode='w', delimiter=','):
     with open(fname, mode) as csvfile:
         writer = csv.writer(csvfile, delimiter=delimiter, lineterminator='\n')
         writer.writerows(fcontent)
+
+
+def delete_file(filename):
+    """Try to delete a file on the disk and return the error if any."""
+    try:
+        os.remove(filename)
+        return None
+    except OSError as e:
+        print("Error: %s - %s." % (e.filename, e.strerror))
+        return e.strerror

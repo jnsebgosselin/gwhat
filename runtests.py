@@ -9,6 +9,8 @@ File for running tests programmatically.
 """
 
 import pytest
+import matplotlib as mpl
+mpl.use('Qt5Agg')
 
 
 def main():
