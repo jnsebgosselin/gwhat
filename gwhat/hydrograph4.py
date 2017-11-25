@@ -45,8 +45,7 @@ from xlrd import xldate_as_tuple
 import gwhat.common.database as db
 from gwhat.colors2 import ColorsReader
 
-mpl.use('Qt4Agg')
-mpl.rcParams['backend.qt4'] = 'PySide'
+mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 

@@ -145,7 +145,7 @@ class GapFillWeather(QObject):
         if not os.path.exists(binfile):
             return self.reload_data()
 
-        # ---- Scan input folder for changes ----------------------------------
+        # ---- Scan input folder for changes
 
         # If one of the csv data file contained within the input data directory
         # has changed since last time the binary file was created, the
@@ -156,11 +156,17 @@ class GapFillWeather(QObject):
         fnames = A['fnames']
 
         bmtime = os.path.getmtime(binfile)
+        count = 0
         for f in os.listdir(self.inputDir):
             if f.endswith('.csv'):
+                count += 1
                 fmtime = os.path.getmtime(os.path.join(self.inputDir, f))
                 if f not in fnames or fmtime > bmtime:
                     return self.reload_data()
+
+        # Force a reload of the data if some input files were deleted.
+        if len(fnames) != count:
+            return self.reload_data()
 
         # ---- Load data from binary ------------------------------------------
 
@@ -183,11 +189,10 @@ class GapFillWeather(QObject):
 
         n = len(paths)
         print('\n%d valid weather data files found in Input folder.' % n)
-        print('Loading data from csv files :\n')
-
+        print('Loading data from csv files...')
         self.WEATHER.load_and_format_data(paths)
         self.WEATHER.save_to_binary(self.inputDir)
-
+        print('Data loaded sucessfully.')
         self.WEATHER.generate_summary(self.outputDir)
         self.TARGET.index = -1
 
@@ -1434,7 +1439,6 @@ class WeatherData(object):
 
             # Check if data are continuous over time. If not, the serie will be
             # made continuous and the gaps will be filled with nan values.
-            print(reader[0][1])
 
             time_start = xldate_from_date_tuple((STADAT[0, 0].astype('int'),
                                                  STADAT[0, 1].astype('int'),
@@ -1445,9 +1449,6 @@ class WeatherData(object):
                                                STADAT[-1, 1].astype('int'),
                                                STADAT[-1, 2].astype('int')),
                                               0)
-
-            print(time_start, time_end, len(STADAT[:, 0]))
-            print(time_end - time_start + 1)
 
             if (time_end - time_start + 1) != len(STADAT[:, 0]):
                 print('\n%s is not continuous, correcting...' % reader[0][1])
