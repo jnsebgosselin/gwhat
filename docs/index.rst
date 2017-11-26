@@ -26,4 +26,5 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
    create_project
    dwnld_weather_data
    gapfill_weather_data
+   plotting_hydrograph
    about_gwhat
