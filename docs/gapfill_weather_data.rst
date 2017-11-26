@@ -23,18 +23,30 @@ Loading the weather data files
 -----------------------------------------------
 
 When starting GWHAT or when a new project is selected, the content of the
-*Meteo/Input* folder located in the *project folder* is automatically scanned
-for weather data files. The results are displayed in a list of weather stations,
-located under the label Fill data for weather station shown in Fig. 3.4.
+*Input* folder is automatically scanned for valid weather data files that respect
+the format described in :ref:`Formatting the weather datafiles`.
+
+The restuls are displayed in a list located under the label `Fill data for weather station`
+as shown in :numref:`scs_gapfill_weather_annoted`.
+The list of weather datasets can be refreshed at any times by clicking on the 
+|refresh| icon. This needs to be done if new datafiles were added or deleted manually
+from the *Input* folder outside of GWHAT. Dataset can be removed from the list
+by selecting them and clicking on the |clear| icon. Doing so also remove the
+corresponding data file from the *Input* folder.
 
 A summary of the number of days with missing data for each dataset is also
-produced and displayed in the tab Missing Data Overview of the display area, to the right.
-The |refresh| icon can be
-clicked to re-scan the Input folder for new weather data files to update the list
-of stations and the summary.
+produced and displayed under `Missing Data Overview` tab of the display area.
 
-It is also possible to fill the gaps in weather datasets from files that were not produced with WHAT, provided that the data
-are formatted in the right format (see Appendix B).
+
+.. _scs_gapfill_weather_annoted:
+.. figure:: img/scs_gapfill_weather_annoted.*
+    :align: center
+    :width: 100%
+    :alt: alternate text
+    :figclass: align-center
+    
+    Presentation of the `gapfill weather data` tool of GWHAT available under
+
 
 Merging two weather data files
 -----------------------------------------------
