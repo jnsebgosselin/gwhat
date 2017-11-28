@@ -9,7 +9,7 @@ records using the gapfilling weather data tool of GWHAT available under the tab
 :guilabel:`Gapfill Weather` shown in :numref:`gapfill_weather_demo`.
 
 .. _gapfill_weather_demo:
-.. figure:: img/gapfill_weather_demo.*
+.. figure:: img/demo/gapfill_weather_demo.*
     :align: center
     :width: 100%
     :alt: alternate text
@@ -104,7 +104,58 @@ the estimations, as well as the expected uncertainty of the estimates.
 Setting the parameters
 -----------------------------------------------
 
+Selected Station and Period
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The first step is to select the dataset for which missing values need to be filled.
+This is done from the drop-down list located under the :guilabel:`Fill data for station section` 
+shown in :numref:`fig_fill_data_for_station`.
+Under this list are displayed information about the currently selected weather station. 
+
+It is also possible to define the period for which the data of the selected
+station will be filled by editing the date fields located next to the 
+:guilabel:`From` and ::`To` labels. By default, dates are set as the first and
+the last date for which data are available for any of the stations of the list.
+
+.. _fig_fill_data_for_station:
+.. figure:: img/scs_gapfill_data_for_station.*
+    :align: center
+    :width: 50%
+    :alt: alternate text
+    :figclass: align-center
+    
+    Presentation of the :guilabel:`Fill data for weather station` section
+    located under the :guilabel:`Gapfill Weather` tab.
+
+Stations Selection Criteria
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _fig_gapfill_station_selection_criteri:
+.. figure:: img/scs_gapfill_station_selection_criteria.*
+    :align: center
+    :width: 50%
+    :alt: alternate text
+    :figclass: align-center
+
+Regression Model
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _fig_gapfill_regression_model:
+.. figure:: img/scs_gapfill_regression_model.*
+    :align: center
+    :width: 50%
+    :alt: alternate text
+    :figclass: align-center
+
+Advanced Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _fig_gapfill_advanced_setting:
+.. figure:: img/scs_gapfill_advanced_setting.*
+    :align: center
+    :width: 50%
+    :alt: alternate text
+    :figclass: align-center
 
 
 .. |icon_clear| image:: img/icon_clear.*
