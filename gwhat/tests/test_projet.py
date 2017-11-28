@@ -41,7 +41,7 @@ def test_create_new_projet(projet_manager_bot, mocker):
     manager.show()
 
     projetpath = os.path.join(
-            os.getcwd(), data_input['name'], data_input['name']+'.what')
+            os.getcwd(), data_input['name'], data_input['name']+'.gwt')
 
     # Delete project folder and its content if it already exist.
     if os.path.exists(os.path.join(os.getcwd(), data_input['name'])):
@@ -78,12 +78,12 @@ def test_load_projet(projet_manager_bot, mocker):
     manager.show_newproject_dialog()
 
     projetpath = os.path.join(
-            os.getcwd(), data_input['name'], data_input['name']+'.what')
+            os.getcwd(), data_input['name'], data_input['name']+'.gwt')
 
     # Mock the file dialog window so that we can specify programmatically
     # the path of the project.
     mocker.patch.object(QFileDialog, 'getOpenFileName',
-                        return_value=(projetpath, '*.what'))
+                        return_value=(projetpath, '*.gwt'))
 
     # Select and load the project.
     manager.select_project()
@@ -100,5 +100,5 @@ def test_load_projet(projet_manager_bot, mocker):
 
 
 if __name__ == "__main__":
-    pytest.main([os.path.basename(__file__)])
-    # pytest.main()
+    # pytest.main([os.path.basename(__file__)])
+    pytest.main()
