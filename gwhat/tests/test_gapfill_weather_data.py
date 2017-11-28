@@ -83,16 +83,10 @@ def test_delete_data(gapfill_weather_bot, mocker):
     for file in files:
         assert os.path.exists(os.path.join(dirname, file))
 
-    # Select the datasets to remove one by one, assert that it is the good
-    # dataset that was select, remove it from the list.
-    to_remove = ["IBERVILLE", "L'ACADIE", "MARIEVILLE",
-                 "Station 1 (1)", "Station 1"]
-    for text in to_remove:
-        index = gapfiller.target_station.findText(text)
+    # Select the datasets one by one by their filenames and delete them.
+    for file in files:
+        index = gapfiller.WEATHER.fnames.index(file)
         gapfiller.target_station.setCurrentIndex(index)
-        assert gapfiller.target_station.currentText() == text
-
-        # Delete the currently selected dataset.
         qtbot.mouseClick(gapfiller.btn_delete_data, Qt.LeftButton)
 
     # Assert that the dataset were effectively removed from the list.
@@ -102,9 +96,9 @@ def test_delete_data(gapfill_weather_bot, mocker):
         results.append(gapfiller.target_station.itemText(i))
     assert expected_results == results
 
-    # # Assert that the files were removed from the disk.
-    # for file in files:
-    #     assert not os.path.exists(os.path.join(dirname, file))
+    # Assert that the files were removed from the disk.
+    for file in files:
+        assert not os.path.exists(os.path.join(dirname, file))
 
 
 @pytest.mark.run(order=5)
