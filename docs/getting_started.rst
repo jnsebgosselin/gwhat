@@ -9,11 +9,11 @@ Installing GWHAT on a Windows system
 Download the latest binary distribution of GWHAT packaged as a zip archive from here_.
 
 Extract the content of the archive in a directory where you have write permission. 
-You will get a directory which contains a folder named :folder:`GWHAT`. This folder contains 
+You will get a directory which contains a folder named :file:`GWHAT`. This folder contains 
 several files including a file named :program:`gwhat.exe`. Simply double click on this file 
 to start GWHAT, no installation is required.
 
-The zip archive also contains a folder named `Projects` where all input and output 
+The zip archive also contains a folder named :file:`Projects` where all input and output 
 files used and created by GWHAT are stored by default. This folder include a project 
 example with samples of input and output files to test and learn the various features of the program.
 
