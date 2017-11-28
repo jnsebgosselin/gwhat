@@ -44,9 +44,11 @@ def save_content_to_csv(fname, fcontent, mode='w', delimiter=','):
 
 def delete_file(filename):
     """Try to delete a file on the disk and return the error if any."""
-    try:
-        os.remove(filename)
-        return None
-    except OSError as e:
-        print("Error: %s - %s." % (e.filename, e.strerror))
-        return e.strerror
+    os.remove(filename)
+    return None
+    # try:
+    #     os.remove(filename)
+    #     return None
+    # except OSError as e:
+    #     print("Error: %s - %s." % (e.filename, e.strerror))
+    #     return e.strerror
