@@ -158,20 +158,14 @@ authors = (r'Jean-Sébastien Gosselin \and '
            r'Richard Martel \and '
            r'Christine Rivard')
 
-latex_documents = [
-    (master_doc, 'gwhat.tex', 'GWHAT Documentation',
-     authors, 'manual'),
-]
-
+latex_documents = [(master_doc, 'gwhat.tex', 'Documentation',
+                    authors, 'manual')]
 
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
-man_pages = [
-    (master_doc, 'GWHAT', 'GWHAT Documentation',
-     [author], 1)
-]
+man_pages = [(master_doc, 'GWHAT', 'GWHAT Documentation', [author], 1)]
 
 
 # -- Options for Texinfo output -------------------------------------------
