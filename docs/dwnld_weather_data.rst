@@ -1,3 +1,5 @@
+.. _chap_dwnld_weather:
+
 Downloading Daily Weather Data
 ===============================================
 

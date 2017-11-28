@@ -19,6 +19,7 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
 .. _user-docs:
 
 .. toctree::
+   :numbered:
    :maxdepth: 2
    :caption: User Documentation
 
@@ -28,3 +29,4 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
    gapfill_weather_data
    plotting_hydrograph
    about_gwhat
+   glossary

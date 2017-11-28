@@ -4,7 +4,7 @@ Project Management in GWHAT
 This document shows how to create and open existing projects in GWHAT.
 Data are managed in GWHAT by project. This means that all input and output files
 relative to a particular project are stored in a common folder, hereafter referred
-to as the :file:`project folder`. This file management system allows to easily backup
+to as the :term:`project folder`. This file management system allows to easily backup
 or copy the data related to a particular project since all the files are saved
 at the same location.
 
@@ -58,9 +58,9 @@ of the project by repeating the procedure described in the paragraph above.
 Project Folder Structure Overview
 -----------------------------------------------
 
-This section describes in details the content of :file:`{project folder}` where are
+This section describes in details the content of project folders, where are
 stored all input and output files relative to a particular project.
-An example of a :file:`project folder` files and folders organization is presented in
+An example of a project folder files organization is presented in
 :numref:`file_and_folder_architecture`.
 
 .. _file_and_folder_architecture:
@@ -70,18 +70,18 @@ An example of a :file:`project folder` files and folders organization is present
     :alt: alternate text
     :figclass: align-center
     
-    Example of a :file:`project folder` files and folders organization.
+    Example of a project folder files organization.
 
-The file with the :file:`.gwt` extension is a binary file where are saved the metadata
-related to the project (e.g. project title, author, creation date, etc.), but is also
-where are saved input and output data related to the plotting and interpretation of
+The file with the :file:`gwt` extension is a binary file where are saved the metadata
+related to the project (e.g. project title, author, creation date, etc.). It is also
+where are saved all the input and output data related to the plotting and interpretation of
 hydrographs, including the estimation of recharge.
 
-The file with the :file:`lst` extension correspond to a list of weather stations from the
-Canadian Daily Climate Database (CDCD) that were created by the user with the
-availabel tools provided in GWHAT.
+The file with the :file:`lst` extension corresponds to a list of weather stations
+from the Canadian Daily Climate Database (CDCD) that were created with the tools
+presented in :numref:`chap_dwnld_weather` .
 
-The file :file:`waterlvl_manual_measurements.xls` contains all the manual
+The file :file:`waterlvl_manual_measurements.xls` contains the manual
 water-level measurements from field visits.
 
 .. _def_meteo_folder:
@@ -89,19 +89,27 @@ water-level measurements from field visits.
 .. _def_meteo_input_folder:
 .. _def_meteo_output_folder:
 
-The folder :file:`Meteo` contains three sub-folders named respectively 
-:file:`Raw`, :file:`Input`, and :file:`Output`.
-The folder :file:`Raw` is where the weather data downloaded from the CDCD are
-saved as described in section :ref:`sec_download_weather_data`.
-All the files related to a same station are saved within a common folder,
+The folder :file:`Meteo` contains all input and output data relative to the
+downloading, formatting, and the creation of gapless daily weather records. It
+contains three three sub-folders named respectively :file:`Raw`, :file:`Input`, 
+and :file:`Output`.
+
+The folder :file:`Raw` is where are saved the daily weather data files once they
+have been downloaded from the CDCD as described in :numref:`sec_download_weather_data`.
+All the files downloaded for a same station are saved within a common folder,
 named after the name of the station and its climate ID. For example,
 in :numref:`file_and_folder_architecture`, the data file
 :file:`eng-daily-01011980-12311980.csv`, which contains weather data from the station *Marieville*
 for the year 1980, is saved in a folder named :file:`MARIEVILLE (7024627)`, where the number in
 parentheses is the climate ID of the station.
-The folder :file:`Input` contains the formatted weather data files produced
-from the raw data files. These are csv files that are named after the name of
-the station, its climate ID, and the first and last year of the data record.
+
+The folder :file:`Input` is where are saved by default the formatted weather
+data files generated from the raw data files. The csv files are named by 
+default after the name of the station, its climate ID, and the first and last year of the data record.
+This folder is also the default location used by the tool to fill the gaps in 
+daily weather data records to look for input weather data files as described in 
+:numref:`sec_loading_weather_data`.
+
 The folder :file:`Output` is where the gapless weather time-series are saved in
 csv files with the extension :file:`.out`. The files with the extension :file:`.log`
 are csv files that contain detailed information about the missing
