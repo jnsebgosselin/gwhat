@@ -151,7 +151,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_engine = 'pdflatex'
-# latex_logo = 'img/latex_logo.pdf'
+latex_logo = 'img/logo_latex.pdf'
 
 authors = (r'Jean-Sébastien Gosselin \and '
            r'René Lefebvre \and '
