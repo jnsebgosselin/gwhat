@@ -1,7 +1,7 @@
 Project Management in GWHAT
 ===============================================
 
-This document shows how to create and open existing projects in GWHAT.
+This document shows how to create, open and manage existing projects in GWHAT.
 Data are managed in GWHAT by project. This means that all input and output files
 relative to a particular project are stored in a common folder, hereafter referred
 to as the :term:`project folder`. This file management system allows to easily backup
@@ -38,10 +38,14 @@ be entered such as its title, author, and location coordinates.
     :alt: alternate text
     :figclass: align-center
 
-Clicking on the button :guilabel:`Save` will create a new :file:`project folder`, named after
-the project’s title and a file with an extension :file:`.gwt` where the information
-related to the project are saved. The directory where the :file:`project folder` is
-created can be changed by clicking the |folder| icon.
+Clicking on the button :guilabel:`Save` will create a new project folder (named after
+the project’s title) and a file with a :file:`gwt` extension where the information
+related to the project are saved. 
+The directory where the :file:`project folder` is created can be changed by
+clicking the |folder| icon.
+The content and format of the project folder 
+and project file (:file:`*.gwt`) are described in more details, respectively, in 
+:numref:`sec_desc_project_folders` and :numref:`sec_gwt_structure_overview`.
 
 Opening an existing project
 -----------------------------------------------
@@ -50,12 +54,14 @@ Clicking on the button where is displayed the currently opened project title on
 the project toolbar (see :numref:`project_toolbar`) opens a dialog window where
 an existing project file (:file:`.gwt`) can be selected and opened.
 
-The path to the currently project folder is stored in a relative format. This means
+The path to the project folder is stored in a relative format in GWHAT. This means
 that if the location of the project folder is changed relative the executable of
-the software (:program:`GWHAT.exe`), GWHAT will need to be redirected to the new location
-of the project by repeating the procedure described in the paragraph above.
+the software (:program:`gwhat.exe`), GWHAT will need to be redirected to the new location
+of the project by repeating the procedure described above.
 
-Project Folder Structure Overview
+.. _sec_desc_project_folders:
+
+Project Folders
 -----------------------------------------------
 
 This section describes in details the content of project folders, where are
@@ -75,14 +81,16 @@ An example of a project folder files organization is presented in
 The file with the :file:`gwt` extension is a binary file where are saved the metadata
 related to the project (e.g. project title, author, creation date, etc.). It is also
 where are saved all the input and output data related to the plotting and interpretation of
-hydrographs, including the estimation of recharge.
+hydrographs, including the estimation of recharge. The format and structure of these
+files are described in more details in :numref:`sec_gwt_structure_overview`.
 
-The file with the :file:`lst` extension corresponds to a list of weather stations
-from the Canadian Daily Climate Database (CDCD) that were created with the tools
-presented in :numref:`chap_dwnld_weather` .
+The file with the :file:`lst` extension is a csv file containing a list of
+weather stations from the Canadian Daily Climate Database (CDCD). These files
+can be created with the tools presented in :numref:`chap_dwnld_weather` .
 
 The file :file:`waterlvl_manual_measurements.xls` contains the manual
-water-level measurements from field visits.
+water-level measurements from field visits that are used when plotting the
+hydrophraph as explained in :numref:`chap_plot_hydrographs`.
 
 .. _def_meteo_folder:
 .. _def_meteo_raw_folder:
@@ -91,7 +99,7 @@ water-level measurements from field visits.
 
 The folder :file:`Meteo` contains all input and output data relative to the
 downloading, formatting, and the creation of gapless daily weather records. It
-contains three three sub-folders named respectively :file:`Raw`, :file:`Input`, 
+contains three sub-folders named respectively :file:`Raw`, :file:`Input`, 
 and :file:`Output`.
 
 The folder :file:`Raw` is where are saved the daily weather data files once they
@@ -124,7 +132,17 @@ The folder :file:`Water Levels` is the preferred location where the water level
 datasets related to a same project should be stored. These files can be either
 in a csv, xls or xlsx file format.
 
+.. _sec_gwt_structure_overview:
 
+Project Files
+-----------------------------------------------
+
+.. figure:: img/Work-in-progress.*
+    :align: center
+    :width: 65%
+    :alt: http://breakingbad.wikia.com/wiki/File:Work-in-progress-1024x603.png.
+    :figclass: align-center
+    
 .. |folder| image:: img/icon_folder.*
                       :width: 1em
                       :height: 1em

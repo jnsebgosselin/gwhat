@@ -1,3 +1,5 @@
+.. _chap_plot_hydrographs:
+
 Plotting the hydrographs
 ===============================================
 
