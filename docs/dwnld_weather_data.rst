@@ -81,6 +81,8 @@ Stations can be added to the table displayed in the ``Download Weather`` tab by 
     
     Presentation of the climate stations browser.
 
+.. _sec_weather_datafiles_format:
+
 Formatting the weather datafiles
 ----------------------------------------------------------
 
