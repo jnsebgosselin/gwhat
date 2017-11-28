@@ -26,7 +26,8 @@ Updating GWHAT
 To update GWHAT to a new version, download and extract the content of the latest
 binary distribution of the software and replace the older `GWHAT` folder with the 
 one that was just downloaded.
-The latest binary distribution of GWHAT packaged as a zip archive from here_.
+The latest binary distribution of GWHAT packaged as a zip archive is available
+for download here_.
 
 Running GWHAT from the source files
 ----------------------------------------------------------
