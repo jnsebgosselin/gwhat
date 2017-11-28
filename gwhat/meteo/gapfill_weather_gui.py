@@ -46,8 +46,8 @@ import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 import matplotlib as mpl
-from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt4agg import NavigationToolbar2QT
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
+from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 # ---- Local imports
 
@@ -1564,7 +1564,7 @@ if __name__ == '__main__':                                   # pragma: no cover
         app.setFont(QFont('Ubuntu', 11))
 
     w = GapFillWeatherGUI()
-    w.set_workdir("C:\\Users\\jsgosselin\\OneDrive\\GWHAT\\Projects\\Example")
+    w.set_workdir("C:\\Users\\jsgosselin\\GWHAT\\Projects\\Example")
     w.load_data_dir_content()
 
     lat = w.gapfill_worker.WEATHER.LAT
