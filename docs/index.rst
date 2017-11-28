@@ -28,5 +28,6 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
    dwnld_weather_data
    gapfill_weather_data
    plotting_hydrograph
+   groundwater_recharge
    about_gwhat
    glossary
