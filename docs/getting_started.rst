@@ -9,9 +9,9 @@ Installing GWHAT on a Windows system
 Download the latest binary distribution of GWHAT packaged as a zip archive from here_.
 
 Extract the content of the archive in a directory where you have write permission. 
-You will get a directory which contains a folder named `GWHAT`. This folder contains 
+You will get a directory which contains a folder named :folder:`GWHAT`. This folder contains 
 several files including a file named :program:`gwhat.exe`. Simply double click on this file 
-to start GHWAT, no installation is required.
+to start GWHAT, no installation is required.
 
 The zip archive also contains a folder named `Projects` where all input and output 
 files used and created by GWHAT are stored by default. This folder include a project 
@@ -24,7 +24,7 @@ Updating GWHAT
 ----------------------------------------------------------
 
 To update GWHAT to a new version, download and extract the content of the latest
-binary distribution of the software and replace the older `GWHAT` folder with the 
+binary distribution of the software and replace the older :file:`GWHAT` folder with the 
 one that was just downloaded.
 The latest binary distribution of GWHAT packaged as a zip archive is available
 for download here_.
