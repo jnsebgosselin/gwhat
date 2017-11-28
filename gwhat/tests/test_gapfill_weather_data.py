@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Aug  4 01:50:50 2017
-@author: jsgosselin
-"""
+
+# Copyright © 2014-2017 GWHAT Project contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 # Standard library imports
 import sys
@@ -24,6 +26,7 @@ from gwhat.meteo.gapfill_weather_gui import GapFillWeatherGUI
 
 
 working_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!")
+input_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
 
 
 @pytest.fixture
@@ -31,6 +34,7 @@ def gapfill_weather_bot(qtbot):
     gapfiller = GapFillWeatherGUI()
     gapfiller.set_workdir(working_dir)
     qtbot.addWidget(gapfiller)
+    qtbot.addWidget(gapfiller.pbar)
 
     return gapfiller, qtbot
 
@@ -38,14 +42,15 @@ def gapfill_weather_bot(qtbot):
 # Test RawDataDownloader
 # -------------------------------
 
-expected_results = ["IBERVILLE", "IBERVILLE (1)",
-                    "L'ACADIE", "L'ACADIE (1)",
-                    "MARIEVILLE", "MARIEVILLE (1)",
-                    "Station 1", "Station 1 (1)"]
-
 
 @pytest.mark.run(order=5)
 def test_refresh_data(gapfill_weather_bot, mocker):
+
+    expected_results = ["IBERVILLE", "IBERVILLE (1)",
+                        "L'ACADIE", "L'ACADIE (1)",
+                        "MARIEVILLE", "MARIEVILLE (1)",
+                        "Station 1", "Station 1 (1)"]
+
     gapfiller, qtbot = gapfill_weather_bot
     gapfiller.show()
 
@@ -62,25 +67,63 @@ def test_refresh_data(gapfill_weather_bot, mocker):
 
 @pytest.mark.run(order=5)
 def test_delete_data(gapfill_weather_bot, mocker):
+    expected_results = ["IBERVILLE", "L'ACADIE", "MARIEVILLE"]
+
     gapfiller, qtbot = gapfill_weather_bot
     gapfiller.show()
 
-    # Load the input weather datafiles and select the last one in the list.
+    # Load the input weather datafiles.
     qtbot.mouseClick(gapfiller.btn_refresh_staList, Qt.LeftButton)
-    last_index = gapfiller.target_station.count()-1
-    gapfiller.target_station.setCurrentIndex(last_index)
-    assert gapfiller.target_station.currentText() == expected_results[-1]
 
-    # Delete the currently selected dataset.
-    qtbot.mouseClick(gapfiller.btn_delete_data, Qt.LeftButton)
+    # Assert that the files that need to be deleted exists.
+    files = ["IBERVILLE (7023270)_2000-2002.csv",
+             "L'ACADIE (702LED4)_2000-2002.csv",
+             "MARIEVILLE (7024627)_2000-2002.csv",
+             "Station 1 (7020561)_1960-1990.csv",
+             "Station 12 (7020562)_1960-1990.csv"]
+    for file in files:
+        assert os.path.exists(os.path.join(input_dir, file))
 
+    # Select the datasets to remove one by one, assert that it is the good
+    # dataset that was select, remove it from the list.
+    to_remove = ["IBERVILLE", "L'ACADIE", "MARIEVILLE",
+                 "Station 1 (1)", "Station 1"]
+    for text in to_remove:
+        index = gapfiller.target_station.findText(text)
+        gapfiller.target_station.setCurrentIndex(index)
+        assert gapfiller.target_station.currentText() == text
+
+        # Delete the currently selected dataset.
+        qtbot.mouseClick(gapfiller.btn_delete_data, Qt.LeftButton)
+
+    # Assert that the dataset were effectively removed from the list.
     results = []
     for i in range(gapfiller.target_station.count()):
         results.append(gapfiller.target_station.itemText(i))
+    assert expected_results == results
 
-    assert expected_results[:-1] == results
+    # Assert that the files were removed from the disk.
+    for file in files:
+        assert not os.path.exists(os.path.join(input_dir, file))
+
+
+@pytest.mark.run(order=5)
+def test_gapfill_data(gapfill_weather_bot, mocker):
+    """
+    Fill the data in each dataset one by one with the default values for
+    the parameters.
+    """
+    gapfiller, qtbot = gapfill_weather_bot
+    gapfiller.show()
+    qtbot.mouseClick(gapfiller.btn_refresh_staList, Qt.LeftButton)
+
+    # Gapfill the data for each dataset in batch
+    qtbot.mouseClick(gapfiller.btn_fill_all, Qt.LeftButton)
+    qtbot.waitUntil(lambda: not gapfiller.isFillAll_inProgress, timeout=100000)
+
+    assert gapfiller.isFillAll_inProgress is False
 
 
 if __name__ == "__main__":
-    pytest.main([os.path.basename(__file__)])
+    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
     # pytest.main()
