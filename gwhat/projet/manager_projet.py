@@ -93,7 +93,7 @@ class ProjetManager(QWidget):
     def select_project(self):
         directory = os.path.abspath(os.path.join('..', 'Projects'))
         filename, _ = QFileDialog.getOpenFileName(
-            self, 'Open Project', directory, '*.what')
+            self, 'Open Project', directory, '*.gwt ; *.what')
 
         if filename:
             self.projectfile = filename
@@ -329,7 +329,7 @@ class NewProject(QDialog):
 
         # ---- project.what ----
 
-        fname = os.path.join(dirname, '%s.what' % name)
+        fname = os.path.join(dirname, '%s.gwt' % name)
 
         projet = ProjetReader(fname)
         projet.name = self.name.text()
@@ -342,7 +342,7 @@ class NewProject(QDialog):
 
         del projet
 
-        print('Creating file %s.what' % name)
+        print('Creating file %s.gwt' % name)
         print('---------------')
 
         self.close()
