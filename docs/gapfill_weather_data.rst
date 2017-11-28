@@ -104,6 +104,18 @@ the estimations, as well as the expected uncertainty of the estimates.
 Setting the parameters
 -----------------------------------------------
 
+The method used to estimate the missing data for the selected weather station consists in the generation
+of a multiple linear regression (MLR) model, using synchronous data from selected neighboring
+stations from the list. The neighboring stations are selected mainly on the basis of the correlation coefficients
+computed between their data and those of the selected weather station. The values of these
+coefficients are automatically displayed in the table located in the right side of the interface when a new
+weather station is selected from the list. Moreover, among the selected neighboring stations, the ones
+with the highest correlation coefficients have more weight in the model than those with weak correlation
+coefficients. For this reason, correlation coefficients that fall below a value of 0.7 are shown in red in the
+table, as a guidance for the user. There are several settings that can be used to control the selection of the
+neighboring stations, the generation of the MLR model, and the outputs of the gapfilling procedure. An
+overview of these settings is presented below.
+
 Selected Station and Period
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -130,6 +142,26 @@ the last date for which data are available for any of the stations of the list.
 Stations Selection Criteria
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+A MLR model is generated for each day for which a data is missing in the
+dataset of the selected station. This is done because the number of neighboring stations with available
+data can vary in time. Therefore, for a given date with missing data in the dataset of the selected station,
+the neighboring stations are selected in decreasing order of their correlation coefficients. Neighboring
+stations that also have a missing data at this particular date are excluded from the selection process. The
+maximum number of station that are selected for the generation of the MLR model can be specified in
+the Nbr. of stations field, located in the Stations Selection Criteria menu shown in Fig. 3.5. The number
+of neighboring station that is selected by default is 4. If for a given date, all the neighboring stations have
+missing data synchronously with the selected station, a NaN value is kept in the dataset at this particular
+date.
+Moreover, the correlation between the data of two stations will, in general, decreases as the distance
+and the altitude difference between them increase. Therefore, the fields Max. Distance and Max. Elevation
+Diff. allow to specify thresholds for the distance and altitude difference. Neighboring stations
+exceeding either one of these thresholds will not be used to fill the gaps in the dataset of the selected station.
+The default values for the distance and altitude difference are set to 100 km and 350 m, respectively,
+based on a literature review (Simolo et al., 2010; Tronci et al., 1986; Xia et al., 1999). The horizontal
+distances and elevation differences calculated between the selected station and its neighbors are shown
+in the table to the right, alongside the correlation coefficients. The values that exceed their corresponding
+threshold are shown in red.
+
 .. _fig_gapfill_station_selection_criteri:
 .. figure:: img/scs_gapfill_station_selection_criteria.*
     :align: center
@@ -139,6 +171,10 @@ Stations Selection Criteria
 
 Regression Model
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+It is possible to select whether the MLR model is generated using a Ordinary Least
+Squares (OLS) or a Least Absolute Deviations (LAD) criteria from the Regression Model menu shown
+in Fig. 3.6. A regression based on a LAD is more robust to outliers than a regression based on a OLS, but
+is more expensive in computation time.
 
 .. _fig_gapfill_regression_model:
 .. figure:: img/scs_gapfill_regression_model.*
@@ -149,6 +185,43 @@ Regression Model
 
 Advanced Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+It is possible to automatically estimate and add the daily Potential Evapotranspiration
+(ETP) to the output data file produced at the end of the gapfilling procedure of the selected station.
+This option is enabled by checking the Add ETP to data file option in the menu Advanced Settings shown
+in Fig. 3.7. The daily ETP is estimated with a method adapted from Thornthwaite (1948), using the daily
+mean air temperature time series of the selected station. Alternatively, it is possible to add manually the
+ETP to an existing weather data file by clicking on the open file icon located next to the Add ETP to
+data file option.
+
+The Full Error Analysis option can be checked to perform a cross-validation resampling analysis
+during the gapfilling procedure. The results from this analysis can be used afterward to estimate the
+accuracy of the method. This option is discussed in more details in Section 3.2.5.
+
+Uncertainty Assessment
+-----------------------------------------------
+By default, each time a new MLR model is generated to estimate a missing value in the dataset of the
+selected station, the model is also used to predict the values in the dataset that are not missing. The
+accuracy of the MLR model is then approximated by computing a Root-Mean-Square Error (RMSE)
+between the values estimated with the model and the respective non-missing observations in the dataset
+of the selected station. The RMSE thus calculated is saved, along with the estimated value, in the “.log”
+file.
+
+When the Full Error Analysis option in the Advanced Settings menu is enabled, WHAT will also
+perform a cross-validation resampling procedure to estimate the accuracy of the model, in addition to fill
+the gaps in the dataset. More specifically, the procedure consists in estimating alternately a weather data
+value for each day of the selected station’s dataset, even for days for which data are not missing. Before
+estimating a value for a given day, the corresponding measured data in the dataset of the selected station
+is temporarily discarded to avoid self-influence of this observation on the generation of the MLR model.
+The model is then generated and used to estimate a value on this given day and the corresponding observed
+data is put back in the dataset of the selected station. When a value for every day of the dataset has
+thus been estimated, the estimated values are saved in a tsv (tabular-separated values) file in the Output
+folder with the extension “.err”, along with the “.log” and “.out” files described in Section 3.2.4. The accuracy
+of the method can then be estimated by computing the RMSE between the estimated weather data
+and the respective non-missing observations in the original dataset of the selected station. Activating this
+feature will significantly increase the computation time of the gap filling procedure, especially if the least
+absolute deviation regression model is selected, but can provide interesting insights on the performance
+of the procedure for the specific datasets used for a project.
 
 .. _fig_gapfill_advanced_setting:
 .. figure:: img/scs_gapfill_advanced_setting.*
