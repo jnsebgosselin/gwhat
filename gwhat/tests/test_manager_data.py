@@ -33,7 +33,7 @@ def data_manager_bot(qtbot):
 # -------------------------------
 
 
-@pytest.mark.run(order=1)
+@pytest.mark.run(order=6)
 def test_load_projet(data_manager_bot):
     data_manager, qtbot = data_manager_bot
     data_manager.show()
