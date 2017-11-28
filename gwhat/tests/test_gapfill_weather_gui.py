@@ -84,8 +84,9 @@ def test_delete_data(gapfill_weather_bot, mocker):
         assert os.path.exists(os.path.join(dirname, file))
 
     # Select the datasets one by one by their filenames and delete them.
+    fnames = gapfiller.gapfill_worker.WEATHER.fnames.tolist()
     for file in files:
-        index = gapfiller.gapfill_worker.WEATHER.fnames.index(file)
+        index = fnames.index(file)
         gapfiller.target_station.setCurrentIndex(index)
         qtbot.mouseClick(gapfiller.btn_delete_data, Qt.LeftButton)
 
