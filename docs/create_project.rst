@@ -86,7 +86,17 @@ files are described in more details in :numref:`sec_gwt_structure_overview`.
 
 The file with the :file:`lst` extension is a csv file containing a list of
 weather stations from the Canadian Daily Climate Database (CDCD). These files
-can be created with the tools presented in :numref:`chap_dwnld_weather` .
+can be created with the tools presented in :numref:`chap_dwnld_weather`.
+An exemple of weather station list is presented in :numref:`weather_stationlist_example`.
+
+.. _weather_stationlist_example:
+.. figure:: img/file_climate_station_list.*
+    :align: center
+    :width: 85%
+    :alt: file_climate_station_list.png
+    :figclass: align-center
+    
+    Example of a :file:`.lst` file containing a list of climate stations.
 
 The file :file:`waterlvl_manual_measurements.xls` contains the manual
 water-level measurements from field visits that are used when plotting the
