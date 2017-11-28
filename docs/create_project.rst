@@ -26,7 +26,7 @@ files to test the different features of GWHAT.
 Creating a new project
 -----------------------------------------------
 
-New projects are created by clicking on the |new_project| icon located on the
+New projects are created by clicking on the |icon_new_project| icon located on the
 :guilabel:`project toolbar` (see :numref:`project_toolbar`). This opens a dialog window 
 (see :numref:`create_new_project`) where information about the project can 
 be entered such as its title, author, and location coordinates.
@@ -42,7 +42,7 @@ Clicking on the button :guilabel:`Save` will create a new project folder (named 
 the project’s title) and a file with a :file:`gwt` extension where the information
 related to the project are saved. 
 The directory where the :file:`project folder` is created can be changed by
-clicking the |folder| icon.
+clicking the |icon_folder| icon.
 The content and format of the project folder 
 and project file (:file:`*.gwt`) are described in more details, respectively, in 
 :numref:`sec_desc_project_folders` and :numref:`sec_gwt_structure_overview`.
@@ -92,11 +92,6 @@ The file :file:`waterlvl_manual_measurements.xls` contains the manual
 water-level measurements from field visits that are used when plotting the
 hydrophraph as explained in :numref:`chap_plot_hydrographs`.
 
-.. _def_meteo_folder:
-.. _def_meteo_raw_folder:
-.. _def_meteo_input_folder:
-.. _def_meteo_output_folder:
-
 The folder :file:`Meteo` contains all input and output data relative to the
 downloading, formatting, and the creation of gapless daily weather records. It
 contains three sub-folders named respectively :file:`Raw`, :file:`Input`, 
@@ -139,16 +134,19 @@ Project Files
 
 .. figure:: img/Work-in-progress.*
     :align: center
-    :width: 65%
+    :width: 50%
     :alt: http://breakingbad.wikia.com/wiki/File:Work-in-progress-1024x603.png.
     :figclass: align-center
-    
-.. |folder| image:: img/icon_folder.*
+
+
+.. |icon_folder| image:: img/icon_folder.*
                       :width: 1em
                       :height: 1em
                       :alt: folder
 
-.. |new_project| image:: img/icon_new_project.*
+
+
+.. |icon_new_project| image:: img/icon_new_project.*
                       :width: 1em
                       :height: 1em
                       :alt: stop
