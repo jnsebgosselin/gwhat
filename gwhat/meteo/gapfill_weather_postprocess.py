@@ -637,66 +637,7 @@ def compute_err_boxplot(dirname):
                 Yp_tot.extend(pperr.Yp)
 
 
-if __name__ == '__main__': #=========================================== Main ==
-
-    # https://www.quora.com/Whats-the-easiest-way-to-recursively-get-a-list-
-    # of-all-the-files-in-a-directory-tree-in-Python
-
-    dirname = '../Projects/Monteregie Est/Meteo/Output/'
-#    compute_wet_days_LatexTable(dirname)
-
-
-#    Ym_tot = []
-#    Yp_tot = []
-#
-#    for root, directories, filenames in os.walk(dirname):
-#        for filename in filenames:
-#            if os.path.splitext(filename)[1] == '.err':
-#                print('---- %s ----' % os.path.basename(root))
-#                pperr = PostProcessErr(os.path.join(root, filename))
-#
-#                Ym_tot.extend(pperr.Ym[3])
-#                Yp_tot.extend(pperr.Yp[3])
-
-#    Yp_tot = np.array(Yp_tot)
-#    Ym_tot = np.array(Ym_tot)
-
-#    err = Yp_tot - Ym_tot
-#
-#    with h5py.File('err_pooled.h5', 'w') as hf:
-#            hf.create_dataset('err', data=err)
-#            hf.create_dataset('Yp', data=Yp_tot)
-#            hf.create_dataset('Ym', data=Ym_tot)
-
-    filename = dirname + 'GRANBY (7022800)/GRANBY (7022800)_1980-2009.err'
-    pperr = PostProcessErr(filename)
-    pperr.generates_graphs(language='French')
-
-#    for root, directories, filenames in os.walk(dirname):
-#        for filename in filenames:
-#            if os.path.splitext(filename)[1] == '.err':
-#                print('---- %s ----' % os.path.basename(root))
-#                pperr = PostProcessErr(os.path.join(root, filename))
-#                pperr.generates_graphs()
-#            elif os.path.splitext(filename)[1] == '.out':
-#                print('---- %s ----' % os.path.basename(root))
-#
-#                METEO = meteo.MeteoObj()
-#                METEO.load_and_format(os.path.join(root, filename))
-#                NORMALS, _ = meteo.calculate_normals(METEO.DATA,
-#                                                     METEO.datatypes)
-#
-#                w = meteo.FigWeatherNormals()
-#                w.plot_monthly_normals(NORMALS)
-#                savename = 'weather_normals.pdf'
-#                print('Generating %s.' % savename)
-#                w.figure.savefig(os.path.join(root, savename))
-
-#    for root, directories, filenames in os.walk(dirname):
-#        for filename in filenames:
-#            if os.path.splitext(filename)[1] == '.err':
-#                print filename
-#                pperr = PostProcessErr(os.path.join(root, filename))
-#                pperr.generates_summary()
-
-    print('fini stie')
+if __name__ == '__main__':
+    dirname = "C:\\Users\\jsgosselin\\GWHAT\\gwhat\\tests\\@ new-prô'jèt!\\Meteo\\Output\\IBERVILLE (7023270)"
+    filename = os.path.join(dirname, "IBERVILLE (7023270)_2000-2010.err")
+    PostProcessErr(filename)
