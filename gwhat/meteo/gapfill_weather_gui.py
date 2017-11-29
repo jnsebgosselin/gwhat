@@ -696,27 +696,28 @@ class GapFillWeatherGUI(QWidget):
         self.gap_fill_start(sta_indx2fill)
 
     def gapfill_worker_return(self, event):
-
-        # Method initiated from an automatic return from the gapfilling
-        # process in batch mode. Iterate over the station list and continue
-        # process normally.
-
+        """
+        Method initiated from an automatic return from the gapfilling
+        process in batch mode. Iterate over the station list and continue
+        process normally.
+        """
         self.gapfill_thread.quit()
 
         nSTA = len(self.gapfill_worker.WEATHER.STANAME)
         if event:
             sta_indx2fill = self.target_station.currentIndex() + 1
             if self.isFillAll_inProgress is False or sta_indx2fill == nSTA:
-
                 # Single fill process completed sucessfully for the current
                 # selected weather station OR Fill All process completed
                 # sucessfully for all the weather stations in the list.
-
+                self.gapfill_worker.STOP = False
+                self.isFillAll_inProgress = False
                 self.restoreUI()
             else:
                 self.gap_fill_start(sta_indx2fill)
         else:
-            print('Gap-filling routine stopped... restoring UI.')
+            print('Gap-filling routine stopped.')
+            # The gapfilling routine was stopped from the UI.
             self.gapfill_worker.STOP = False
             self.isFillAll_inProgress = False
             self.restoreUI()

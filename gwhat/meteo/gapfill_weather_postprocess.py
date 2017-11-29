@@ -63,28 +63,37 @@ class PostProcessErr(object):
 
         self.load_err_file()
 
-    def load_err_file(self):
-        """Read .err file and return None if it fails."""
+    def open_err_file(self, filename):
+        """Open .err file and return None if it fails."""
         for dlm in [',', '\t']:
             with open(self.fname) as f:
                 reader = list(csv.reader(f, delimiter=dlm))
-            row = 0
-            while True:
-                if row > 25:
-                    print('The format of the .err file is wrong.')
-                    break
-                try:
-                    if reader[row][0] == 'VARIABLE':
-                        break
-                    elif reader[row][0] == 'Station Name':
-                        self.staName = reader[row][1]
-                    elif reader[row][0] == 'Climate Identifier':
-                        self.climID = reader[row][1]
-                except IndexError:
-                    pass
-                row += 1
+                for line in reader:
+                    try:
+                        if line[0] == 'VARIABLE':
+                            return reader
+                    except IndexError:
+                        continue
         else:
+            print('The format of the .err file is wrong.')
+            return None
+
+    def load_err_file(self):
+        """Read .err file and return None if it fails."""
+        reader = self.open_err_file(self.fname)
+        if reader is None:
             return
+
+        for row, line in enumerate(reader):
+            try:
+                if line[0] == 'VARIABLE':
+                    break
+                elif line[0] == 'Station Name':
+                    self.staName = reader[row][1]
+                elif line[0] == 'Climate Identifier':
+                    self.climID = reader[row][1]
+            except IndexError:
+                continue
         row += 1
 
         # ------------------------------------------------ Re-Organizes Data --
@@ -628,66 +637,7 @@ def compute_err_boxplot(dirname):
                 Yp_tot.extend(pperr.Yp)
 
 
-if __name__ == '__main__': #=========================================== Main ==
-
-    # https://www.quora.com/Whats-the-easiest-way-to-recursively-get-a-list-
-    # of-all-the-files-in-a-directory-tree-in-Python
-
-    dirname = '../Projects/Monteregie Est/Meteo/Output/'
-#    compute_wet_days_LatexTable(dirname)
-
-
-#    Ym_tot = []
-#    Yp_tot = []
-#
-#    for root, directories, filenames in os.walk(dirname):
-#        for filename in filenames:
-#            if os.path.splitext(filename)[1] == '.err':
-#                print('---- %s ----' % os.path.basename(root))
-#                pperr = PostProcessErr(os.path.join(root, filename))
-#
-#                Ym_tot.extend(pperr.Ym[3])
-#                Yp_tot.extend(pperr.Yp[3])
-
-#    Yp_tot = np.array(Yp_tot)
-#    Ym_tot = np.array(Ym_tot)
-
-#    err = Yp_tot - Ym_tot
-#
-#    with h5py.File('err_pooled.h5', 'w') as hf:
-#            hf.create_dataset('err', data=err)
-#            hf.create_dataset('Yp', data=Yp_tot)
-#            hf.create_dataset('Ym', data=Ym_tot)
-
-    filename = dirname + 'GRANBY (7022800)/GRANBY (7022800)_1980-2009.err'
-    pperr = PostProcessErr(filename)
-    pperr.generates_graphs(language='French')
-
-#    for root, directories, filenames in os.walk(dirname):
-#        for filename in filenames:
-#            if os.path.splitext(filename)[1] == '.err':
-#                print('---- %s ----' % os.path.basename(root))
-#                pperr = PostProcessErr(os.path.join(root, filename))
-#                pperr.generates_graphs()
-#            elif os.path.splitext(filename)[1] == '.out':
-#                print('---- %s ----' % os.path.basename(root))
-#
-#                METEO = meteo.MeteoObj()
-#                METEO.load_and_format(os.path.join(root, filename))
-#                NORMALS, _ = meteo.calculate_normals(METEO.DATA,
-#                                                     METEO.datatypes)
-#
-#                w = meteo.FigWeatherNormals()
-#                w.plot_monthly_normals(NORMALS)
-#                savename = 'weather_normals.pdf'
-#                print('Generating %s.' % savename)
-#                w.figure.savefig(os.path.join(root, savename))
-
-#    for root, directories, filenames in os.walk(dirname):
-#        for filename in filenames:
-#            if os.path.splitext(filename)[1] == '.err':
-#                print filename
-#                pperr = PostProcessErr(os.path.join(root, filename))
-#                pperr.generates_summary()
-
-    print('fini stie')
+if __name__ == '__main__':
+    dirname = "C:\\Users\\jsgosselin\\GWHAT\\gwhat\\tests\\@ new-prô'jèt!\\Meteo\\Output\\IBERVILLE (7023270)"
+    filename = os.path.join(dirname, "IBERVILLE (7023270)_2000-2010.err")
+    PostProcessErr(filename)
