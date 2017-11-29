@@ -664,9 +664,8 @@ class WLCalc(myqt.DialogWindow):
         # ---- get filename ----
 
         dialog = QFileDialog()
-        dialog.setConfirmOverwrite(True)
         filename, ftype = dialog.getSaveFileName(
-            caption="Save Results Summary", dir=filename, filter=('*.xlsx'))
+                self, "Save Results Summary", filename, '*.xlsx')
 
         if not filename:
             return
