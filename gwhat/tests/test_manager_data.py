@@ -33,14 +33,33 @@ def data_manager_bot(qtbot):
 # -------------------------------
 
 
-@pytest.mark.run(order=6)
+@pytest.mark.run(order=7)
 def test_load_projet(data_manager_bot):
     data_manager, qtbot = data_manager_bot
     data_manager.show()
-
     assert data_manager
 
 
+@pytest.mark.run(order=7)
+def test_load_weather_data(data_manager_bot, mocker):
+    data_manager, qtbot = data_manager_bot
+    data_manager.new_weather_win.setModal(False)
+    data_manager.show()
+
+    output_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
+    filenames = [os.path.join("IBERVILLE (7023270)",
+                              "IBERVILLE (7023270)_2000-2010.out"),
+                 os.path.join("L'ACADIE (702LED4)",
+                              "L'ACADIE (702LED4)_2000-2010.out"),
+                 os.path.join("MARIEVILLE (7024627)",
+                              "MARIEVILLE (7024627)_2000-2010.out")
+                 ]
+
+    # Assert that the weather datafile exists.
+    for fname in filenames:
+        assert os.path.exists(os.path.join(output_dir, fname))
+
+
 if __name__ == "__main__":
-    pytest.main([os.path.basename(__file__), '-v', '-rw', '--cov=gwhat'])
+    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
     # pytest.main()
