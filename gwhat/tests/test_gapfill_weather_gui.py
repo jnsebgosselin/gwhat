@@ -19,6 +19,7 @@ from PyQt5.QtCore import Qt
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from gwhat.meteo.gapfill_weather_gui import GapFillWeatherGUI
+from gwhat.common.utils import delete_folder_recursively
 
 
 # Qt Test Fixtures
@@ -26,6 +27,9 @@ from gwhat.meteo.gapfill_weather_gui import GapFillWeatherGUI
 
 
 working_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!")
+output_dir = os.path.join(working_dir, "Meteo", "Output")
+input_dir = os.path.join(working_dir, "Meteo", "Input")
+delete_folder_recursively(output_dir)
 
 
 @pytest.fixture
@@ -44,7 +48,6 @@ def gapfill_weather_bot(qtbot):
 
 @pytest.mark.run(order=5)
 def test_refresh_data(gapfill_weather_bot, mocker):
-
     expected_results = ["IBERVILLE", "IBERVILLE (1)",
                         "L'ACADIE", "L'ACADIE (1)",
                         "MARIEVILLE", "MARIEVILLE (1)",
@@ -66,8 +69,6 @@ def test_refresh_data(gapfill_weather_bot, mocker):
 
 @pytest.mark.run(order=5)
 def test_delete_data(gapfill_weather_bot, mocker):
-    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
-
     gapfiller, qtbot = gapfill_weather_bot
     gapfiller.show()
 
@@ -81,7 +82,7 @@ def test_delete_data(gapfill_weather_bot, mocker):
              "Station 1 (7020561)_1960-1990.csv",
              "Station 12 (7020562)_1960-1990.csv"]
     for file in files:
-        assert os.path.exists(os.path.join(dirname, file))
+        assert os.path.exists(os.path.join(input_dir, file))
 
     # Select the datasets one by one by their filenames and delete them.
     for file in files:
@@ -91,7 +92,7 @@ def test_delete_data(gapfill_weather_bot, mocker):
         qtbot.mouseClick(gapfiller.btn_delete_data, Qt.LeftButton)
 
         # Wait and asses that the file was correctly deleted.
-        filepath = os.path.join(dirname, file)
+        filepath = os.path.join(input_dir, file)
         qtbot.waitUntil(lambda: not os.path.exists(filepath))
 
     # Assert that the dataset were effectively removed from the list.
@@ -103,7 +104,7 @@ def test_delete_data(gapfill_weather_bot, mocker):
 
 
 @pytest.mark.run(order=5)
-def test_gapfill_data(gapfill_weather_bot, mocker):
+def test_gapfill_all_data(gapfill_weather_bot, mocker):
     """
     Fill the data in each dataset one by one with the default values for
     the parameters.
