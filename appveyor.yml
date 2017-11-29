@@ -5,7 +5,7 @@ init:
 
 environment:
   COVERALLS_REPO_TOKEN:
-    secure: C6f+X1lfx0nlwaBgRIbl3vEwy+EOkw7OAlkQquh76IK7Oz9JRhcwqj7/lSeumDIL
+    secure: EWOwdKViJaHUARUcX4FHynz8eAlQxwWYLgWFg7C+MH1vgVlkBkMPYOSH4ysxs3kT
 
   matrix:
     - PYTHON_VERSION: "3.6"

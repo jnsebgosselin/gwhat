@@ -15,6 +15,7 @@ import os
 from time import strftime, sleep
 from copy import copy
 from time import clock
+from itertools import product
 
 # ---- Third party imports
 
@@ -210,8 +211,8 @@ class GapFillWeather(QObject):
         # calculate correlation coefficient between data series of the
         # target station and each neighboring station for every
         # weather variable
-
-        self.TARGET.CORCOEF = correlation_worker(self.WEATHER, index)
+        self.TARGET.CORCOEF = compute_correlation_coeff(
+                self.WEATHER.DATA, index)
 
         # Calculate horizontal distance and altitude difference between
         # the target station and each neighboring station.
@@ -1152,60 +1153,42 @@ class GapFillWeather(QObject):
         save_content_to_csv(fname, fcontent)
 
 
-def correlation_worker(WEATHER, tarStaIndx):
+def compute_correlation_coeff(data, tarStaIndx):
     """
     This function computes the correlation coefficients between the target
     station and the neighboring stations for each meteorological variable.
-
-    Results are stored in the 2D matrix *CORCOEF*, where:
-        rows :    meteorological variables
-        columns : weather stations
+    Results are stored in the 2D matrix where the rows are the
+    meteorological variables and the columns the weather stations.
     """
-
-    DATA = WEATHER.DATA
-
-    nVAR = len(DATA[0, 0, :])  # number of meteorological variables
-    nSTA = len(DATA[0, :, 0])  # number of stations including target
-
     print('\nCorrelation coefficients computation in progress...')
-
-    CORCOEF = np.zeros((nVAR, nSTA)) * np.nan
-
-    Ndata_limit = int(365 / 2.)
-
+    ndat, nsta, nvar = np.shape(data)
+    corrcoef = np.empty((nvar, nsta))
+    Ndata_limit = 365//2
     # Ndata_limit is the minimum number of pair of data necessary
     # between the target and a neighboring station to compute a correlation
     # coefficient.
+    for i, j in product(range(nvar), range(nsta)):
+        # Remove rows with nan values.
+        DATA_nonan = data[:, (tarStaIndx, j), i]
+        DATA_nonan = DATA_nonan[~np.isnan(DATA_nonan).any(axis=1)]
 
-    for i in range(nVAR):
-        for j in range(nSTA):
+        # Compute how many pair of data are available for the correlation
+        # coefficient calculation. For the precipitation, entries with 0
+        # are not considered.
+        if i in (0, 1, 2):
+            Nnonan = len(DATA_nonan[:, 0])
+        else:
+            Nnonan = sum((DATA_nonan != 0).any(axis=1))
 
-            # Rows with nan entries are removed from the data matrix.
-            DATA_nonan = np.copy(DATA[:, (tarStaIndx, j), i])
-            DATA_nonan = DATA_nonan[~np.isnan(DATA_nonan).any(axis=1)]
-
-            # Compute how many pair of data are available for the correlation
-            # coefficient calculation. For the precipitation, entries with 0
-            # are not considered.
-            if i in (0, 1, 2):
-                Nnonan = len(DATA_nonan[:, 0])
-            else:
-                Nnonan = sum((DATA_nonan != 0).any(axis=1))
-
-            # A correlation coefficient is computed between the target station
-            # and the neighboring station <j> for the variable <i> if there is
-            # enough data.
-            if Nnonan >= Ndata_limit:
-                CORCOEF[i, j] = np.corrcoef(DATA_nonan, rowvar=0)[0, 1:]
-            else:
-                pass  # Do nothing. Value will be nan by default.
-
+        # A correlation coefficient is computed between the target station
+        # and the neighboring station <j> for the variable <i> if there is
+        # enough data.
+        if Nnonan >= Ndata_limit:
+            corrcoef[i, j] = np.corrcoef(DATA_nonan, rowvar=0)[0, 1:]
+        else:
+            corrcoef[i, j] = np.nan
     print('Correlation coefficients computation completed.\n')
-
-    return CORCOEF
-
-
-# =============================================================================
+    return corrcoef
 
 
 class TargetStationInfo(object):

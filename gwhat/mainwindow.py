@@ -324,7 +324,7 @@ class WHATPref(object):
     def __init__(self, parent=None):  # =======================================
 
         self.projectfile = os.path.join(
-            '..', 'Projects', 'Example', 'Example.what')
+            '..', 'Projects', 'Example', 'Example.gwt')
         self.language = 'English'
         self.fontsize_general = '14px'
         self.fontsize_console = '12px'
