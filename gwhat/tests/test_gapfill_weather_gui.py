@@ -118,8 +118,19 @@ def test_gapfill_all_data(gapfill_weather_bot, mocker):
     qtbot.mouseClick(gapfiller.btn_fill_all, Qt.LeftButton)
     qtbot.waitUntil(lambda: not gapfiller.isFillAll_inProgress, timeout=100000)
 
-    assert gapfiller.isFillAll_inProgress is False
-
+    # Assert that all the ouput files were generated correctly.
+    files = [os.path.join(output_dir, "IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2010.out"),
+             os.path.join(output_dir, "IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2010.log"),
+             os.path.join(output_dir, "IBERVILLE (7023270)", "weather_normals.pdf"),
+             os.path.join(output_dir, "L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2010.out"),
+             os.path.join(output_dir, "L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2010.log"),
+             os.path.join(output_dir, "L'ACADIE (702LED4)", "weather_normals.pdf"),
+             os.path.join(output_dir, "MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2010.out"),
+             os.path.join(output_dir, "MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2010.log"),
+             os.path.join(output_dir, "MARIEVILLE (7024627)", "weather_normals.pdf")
+             ]
+    for file in files:
+        assert os.path.exists(file)
 
 if __name__ == "__main__":
     pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])

@@ -9,6 +9,7 @@
 # Standard library imports
 import sys
 import os
+from itertools import product
 
 # Third party imports
 import numpy as np
@@ -77,11 +78,37 @@ def test_fill_data(gapfill_weather_bot):
     gapfiller.set_target_station(0)
     gapfiller.fill_data()
 
-    gapfiller.regression_mode = 1
     gapfiller.set_target_station(1)
+    gapfiller.regression_mode = 1
     gapfiller.fill_data()
 
+    gapfiller.set_target_station(2)
+    gapfiller.limitDist = -1
+    gapfiller.limitAlt = -1
+    gapfiller.fill_data()
 
+    # Assert that all the ouput files were generated correctly.
+    files = [("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2010.out"),
+             ("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2010.log"),
+             ("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2010.err"),
+             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2010.out"),
+             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2010.log"),
+             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2010.err"),
+             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2010.out"),
+             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2010.log"),
+             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2010.err")
+             ]
+    for dirname, basename in files:
+        assert os.path.exists(os.path.join(output_dir, dirname, basename))
+
+    dirnames = ["IBERVILLE (7023270)",
+                "L'ACADIE (702LED4)",
+                "MARIEVILLE (7024627)"]
+    fignames = ["weather_normals.pdf", "max_temp_deg_c.pdf",
+                "mean_temp_deg_c.pdf", "min_temp_deg_c.pdf",
+                "precip_PDF.pdf", "total_precip_mm.pdf"]
+    for dirname, figname in product(dirnames, fignames):
+        assert os.path.join(output_dir, dirname, figname)
 
 
 if __name__ == "__main__":
