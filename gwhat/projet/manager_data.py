@@ -179,7 +179,7 @@ class DataManager(QWidget):
         btn = QMessageBox.Ok
         QMessageBox.warning(self, 'Warning', msg, btn)
 
-    # ========================================================= WL Dataset ====
+    # ---- WL Dataset
 
     @property
     def wldsets(self):
@@ -229,8 +229,6 @@ class DataManager(QWidget):
     def wldset_changed(self):
         self.wldsetChanged.emit(self.get_current_wldset())
 
-    # ---------------------------------------------------------------------
-
     def get_current_wldset(self):
         if self.wldsets_cbox.currentIndex() == -1:
             return None
@@ -255,7 +253,7 @@ class DataManager(QWidget):
             self.update_wldset_info()
             self.wldset_changed()
 
-    # ========================================================= WX Dataset ====
+    # ---- WX Dataset
 
     @property
     def wxdsets(self):
@@ -266,7 +264,7 @@ class DataManager(QWidget):
 
     def import_wxdataset(self):
         if self.projet is None:
-            msg = ('Please first select a valid WHAT project or '
+            msg = ('Please first select a valid project or '
                    'create a new one.')
             btn = QMessageBox.Ok
             QMessageBox.warning(self, 'Create dataset', msg, btn)
