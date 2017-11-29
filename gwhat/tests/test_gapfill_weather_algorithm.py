@@ -29,7 +29,6 @@ from gwhat.common.utils import delete_folder_recursively
 working_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!")
 input_dir = os.path.join(working_dir, "Meteo", "Input")
 output_dir = os.path.join(working_dir, "Meteo", "Output")
-delete_folder_recursively(output_dir)
 
 
 @pytest.fixture
@@ -57,6 +56,8 @@ def test_load_data(gapfill_weather_bot):
 
 @pytest.mark.run(order=6)
 def test_fill_data(gapfill_weather_bot):
+    delete_folder_recursively(output_dir)
+
     gapfiller, qtbot = gapfill_weather_bot
     gapfiller.inputDir = input_dir
     gapfiller.outputDir = output_dir
