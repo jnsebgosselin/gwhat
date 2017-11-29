@@ -1,11 +1,11 @@
-# https://ci.appveyor.com/project/jnsebgosselin/gwhat
+# https://ci.appveyor.com/project/jnsebgosselin/what
 
 init:
   - ps: iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
 
 environment:
   COVERALLS_REPO_TOKEN:
-    secure: EWOwdKViJaHUARUcX4FHynz8eAlQxwWYLgWFg7C+MH1vgVlkBkMPYOSH4ysxs3kT
+    secure: C6f+X1lfx0nlwaBgRIbl3vEwy+EOkw7OAlkQquh76IK7Oz9JRhcwqj7/lSeumDIL
 
   matrix:
     - PYTHON_VERSION: "3.6"
