@@ -62,20 +62,20 @@ class DataManager(QWidget):
         self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
-        btn_load_wl = QToolButtonSmall(IconDB().importFile)
-        btn_load_wl.setToolTip('Import a new WL dataset...')
-        btn_load_wl.clicked.connect(self.import_wldataset)
+        self.btn_load_wl = QToolButtonSmall(IconDB().importFile)
+        self.btn_load_wl.setToolTip('Import a new WL dataset...')
+        self.btn_load_wl.clicked.connect(self.import_wldataset)
 
-        btn_del_wldset = QToolButtonSmall(IconDB().clear)
-        btn_del_wldset.setToolTip('Delete current dataset.')
-        btn_del_wldset.clicked.connect(self.del_current_wldset)
+        self.btn_del_wldset = QToolButtonSmall(IconDB().clear)
+        self.btn_del_wldset.setToolTip('Delete current dataset.')
+        self.btn_del_wldset.clicked.connect(self.del_current_wldset)
 
         # ---- toolbar ----
 
         wltb = QGridLayout()
         wltb.setContentsMargins(0, 0, 0, 0)
 
-        widgets = [self.wldsets_cbox, btn_load_wl, btn_del_wldset]
+        widgets = [self.wldsets_cbox, self.btn_load_wl, self.btn_del_wldset]
         for col, widg in enumerate(widgets):
             wltb.addWidget(widg, 0, col)
 
@@ -91,15 +91,15 @@ class DataManager(QWidget):
         self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
         self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
 
-        btn_load_meteo = QToolButtonSmall(IconDB().importFile)
-        btn_load_meteo.setToolTip('Import a new weather dataset...')
-        btn_load_meteo.clicked.connect(self.import_wxdataset)
+        self.btn_load_meteo = QToolButtonSmall(IconDB().importFile)
+        self.btn_load_meteo.setToolTip('Import a new weather dataset...')
+        self.btn_load_meteo.clicked.connect(self.import_wxdataset)
 
         # btn_weather_dir.clicked.connect(self.select_meteo_file)
 
-        btn_del_wxdset = QToolButtonSmall(IconDB().clear)
-        btn_del_wxdset.setToolTip('Delete current dataset.')
-        btn_del_wxdset.clicked.connect(self.del_current_wxdset)
+        self.btn_del_wxdset = QToolButtonSmall(IconDB().clear)
+        self.btn_del_wxdset.setToolTip('Delete current dataset.')
+        self.btn_del_wxdset.clicked.connect(self.del_current_wxdset)
 
         btn_closest_meteo = QToolButtonSmall(IconDB().closest_meteo)
         btn_closest_meteo.setToolTip('<p>Select the weather station closest'
@@ -111,7 +111,7 @@ class DataManager(QWidget):
         wxtb = QGridLayout()
         wxtb.setContentsMargins(0, 0, 0, 0)
 
-        widgets = [self.wxdsets_cbox, btn_load_meteo, btn_del_wxdset,
+        widgets = [self.wxdsets_cbox, self.btn_load_meteo, self.btn_del_wxdset,
                    btn_closest_meteo]
 
         for col, widg in enumerate(widgets):
@@ -264,8 +264,7 @@ class DataManager(QWidget):
 
     def import_wxdataset(self):
         if self.projet is None:
-            msg = ('Please first select a valid project or '
-                   'create a new one.')
+            msg = ("Please first select a valid project or create a new one.")
             btn = QMessageBox.Ok
             QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
@@ -325,6 +324,7 @@ class DataManager(QWidget):
             self.wxdset_changed()
 
     def get_current_wxdset(self):
+        """Return the currently selected weather dataset dataframe."""
         if self.wxdsets_cbox.currentIndex() == -1:
             return None
         else:
@@ -771,7 +771,7 @@ class NewWXDataDialog(NewDataset):
 
     def select_dataset(self):
         filename, _ = QFileDialog.getOpenFileName(
-            self, 'Select a valid weather level data file',
+            self, 'Select a valid weather data file',
             self.workdir, '(*.out)')
 
         for i in range(5):
