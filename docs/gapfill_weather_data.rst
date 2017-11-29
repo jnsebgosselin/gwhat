@@ -119,18 +119,25 @@ list in batch by clicking on the button |icon_fill_all_data| `Fill All Stations`
 The parameters used in the gapfilling procedure will then be the same for
 all the stations.
 
-Once the process is completed for a station, the resulting gapless daily weather
+Description of the output files
+-----------------------------------------------
+
+Once the process to fill the gaps is completed for a station, the resulting gapless daily weather
 dataset is automatically saved in a csv file with a :file:`.out` extension
 in the :file:`Output` folder. The :file:`.out` file is named after the weather
 station name, climate ID, and first and last year of the dataset.
 For example, the resulting output file for the station *FARNHAM* in 
 :numref:`scs_gapfill_weather_annoted` would be :file:`FARNHAM (7022320)_1980-2017.out`.
 
-In addition, detailed information on the values estimated for filling the gaps
-in the data are saved in a file with the same name as the :file:`.out` file
-but with a :file:`.log` extension.
-Information includes, the names of the neighboring stations, the values of the
-data used for the estimations, as well as the expected uncertainty of the estimates.
+Detailed information about the estimated values that were used to fill the gaps
+in the data series (e.g., parameter values used in the method, uncertainty of the
+estimated values, simultaneous data at neighboring stations used for the estimations)
+are also saved in an accompanying file with a :file:`.log` extension.
+A histogram showing the yearly and monthly weather normals, calculated
+from the gapless data series is also produced and saved in a pdf format.
+An example is presented in .
+
+Finally, a graph 
 
 .. _sec_gapfill_parameters:
 
