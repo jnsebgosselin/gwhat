@@ -11,6 +11,7 @@
 
 import csv
 import os
+from shutil import rmtree
 
 
 # ---- Imports: third party
@@ -50,3 +51,13 @@ def delete_file(filename):
     except OSError as e:
         print("Error: %s - %s." % (e.filename, e.strerror))
         return e.strerror
+
+
+def delete_folder_recursively(dirpath):
+    """Try to delete all files and sub-folders below the given dirpath."""
+    for filename in os.listdir(dirpath):
+        filepath = os.path.join(dirpath, filename)
+        try:
+            rmtree(filepath)
+        except OSError:
+            os.remove(filepath)
