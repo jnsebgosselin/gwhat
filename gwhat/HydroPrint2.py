@@ -747,7 +747,6 @@ class HydroprintGUI(myqt.DialogWindow):
                                   'hydrograph_%s' % self.wldset['Well'])
 
         dialog = QFileDialog()
-        dialog.setConfirmOverwrite(True)
         fname, ftype = dialog.getSaveFileName(
                                     caption="Save Figure", dir=dialog_dir,
                                     filter=('*.pdf;;*.svg'))

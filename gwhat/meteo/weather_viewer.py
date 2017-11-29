@@ -236,7 +236,6 @@ class WeatherAvgGraph(DialogWindow):
         ddir = os.path.join(self.save_fig_dir, defaultname)
 
         dialog = QFileDialog()
-        dialog.setConfirmOverwrite(True)
         filename, ftype = dialog.getSaveFileName(
                 caption='Save graph', dir=ddir, filter='*.pdf;;*.svg')
 
@@ -259,7 +258,6 @@ class WeatherAvgGraph(DialogWindow):
         ddir = os.path.join(self.save_fig_dir, defaultname)
 
         dialog = QFileDialog()
-        dialog.setConfirmOverwrite(True)
         filename, ftype = dialog.getSaveFileName(caption='Save normals',
                                                  dir=ddir,
                                                  filter='*.xlsx;;*.xls;;*.csv')
@@ -316,7 +314,6 @@ class WeatherAvgGraph(DialogWindow):
 
         ddir = os.path.join(self.save_fig_dir, defaultname)
         dialog = QFileDialog()
-        dialog.setConfirmOverwrite(True)
 
         filename, ftype = dialog.getSaveFileName(
                 caption='Export %s' % time_frame, dir=ddir,
