@@ -165,7 +165,7 @@ omitted in the time-series.
                       :height: 1em
                       :alt: magnifying glass
 
-.. |open_file| image:: img/icon_open_file.*
+.. |open_file| image:: img/icon/icon_open_file.*
                       :width: 1em
                       :height: 1em
                       :alt: open file
