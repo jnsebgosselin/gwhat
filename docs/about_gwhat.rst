@@ -4,12 +4,12 @@ About GWHAT
 Copyright
 -----------------------------------------------
 
-**This document** is Copyright © 2014-2017 by the GWHAT Documentation contributors.
+**This document** is Copyright © 2014-2017 by the GWHAT Documentation Contributors.
 Contributors are listed below. You may distribute it and/or modify it under
 the terms of the `Creative Commons Attribution 4.0 International License`_. All
 trademarks within this guide belong to their legitimate owners.
 
-**GWHAT source code** is Copyright © 2014-2017 by GWHAT Project contributors.
+**GWHAT source code** is Copyright © 2014-2017 by GWHAT Project Contributors.
 Contributors are listed below. GWHAT is free software: you can redistribute
 it and/or modify it under the terms of the `GNU General Public License`_ as
 published by the Free Software Foundation, either version 3 of the License, or
@@ -24,17 +24,17 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 Contributors
 -----------------------------------------------
 
-| **GWHAT Documentation contributors:**
+| **GWHAT Documentation Contributors:**
 | 
 | `Jean-Sébastien Gosselin`_, `INRS centre Eau-Terre-Environnement`_
-| `René Lefebvre`_, INRS centre Eau-Terre-Environnement
-| `Richard Martel`_, INRS centre Eau-Terre-Environnement
 | `Christine Rivard`_, `Geological Survey of Canada`_
+| `René Lefebvre`_, `INRS centre Eau-Terre-Environnement`_
+| `Richard Martel`_, `INRS centre Eau-Terre-Environnement`_
 |
 
-| **GWHAT Project contributors:**
+| **GWHAT Project Contributors:**
 | 
-| `Jean-Sébastien Gosselin`_, INRS centre Eau-Terre-Environnement
+| `Jean-Sébastien Gosselin`_, `INRS centre Eau-Terre-Environnement`_
 |
 
 .. _Jean-Sébastien Gosselin: https://github.com/jnsebgosselin
