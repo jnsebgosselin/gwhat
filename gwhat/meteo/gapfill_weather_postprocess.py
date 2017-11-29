@@ -63,28 +63,37 @@ class PostProcessErr(object):
 
         self.load_err_file()
 
-    def load_err_file(self):
-        """Read .err file and return None if it fails."""
+    def open_err_file(self, filename):
+        """Open .err file and return None if it fails."""
         for dlm in [',', '\t']:
             with open(self.fname) as f:
                 reader = list(csv.reader(f, delimiter=dlm))
-            row = 0
-            while True:
-                if row > 25:
-                    print('The format of the .err file is wrong.')
-                    break
-                try:
-                    if reader[row][0] == 'VARIABLE':
-                        break
-                    elif reader[row][0] == 'Station Name':
-                        self.staName = reader[row][1]
-                    elif reader[row][0] == 'Climate Identifier':
-                        self.climID = reader[row][1]
-                except IndexError:
-                    pass
-                row += 1
+                for line in reader:
+                    try:
+                        if line[0] == 'VARIABLE':
+                            return reader
+                    except IndexError:
+                        continue
         else:
+            print('The format of the .err file is wrong.')
+            return None
+
+    def load_err_file(self):
+        """Read .err file and return None if it fails."""
+        reader = self.open_err_file(self.fname)
+        if reader is None:
             return
+
+        for row, line in enumerate(reader):
+            try:
+                if line[0] == 'VARIABLE':
+                    break
+                elif line[0] == 'Station Name':
+                    self.staName = reader[row][1]
+                elif line[0] == 'Climate Identifier':
+                    self.climID = reader[row][1]
+            except IndexError:
+                continue
         row += 1
 
         # ------------------------------------------------ Re-Organizes Data --
