@@ -748,8 +748,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         dialog = QFileDialog()
         fname, ftype = dialog.getSaveFileName(
-                                    caption="Save Figure", dir=dialog_dir,
-                                    filter=('*.pdf;;*.svg'))
+                self, "Save Figure", dialog_dir, '*.pdf;;*.svg')
 
         if fname:
             if fname[-4:] != ftype[1:]:

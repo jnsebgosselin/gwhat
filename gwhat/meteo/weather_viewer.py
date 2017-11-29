@@ -237,7 +237,7 @@ class WeatherAvgGraph(DialogWindow):
 
         dialog = QFileDialog()
         filename, ftype = dialog.getSaveFileName(
-                caption='Save graph', dir=ddir, filter='*.pdf;;*.svg')
+                self, 'Save graph', ddir, '*.pdf;;*.svg')
 
         if filename:
             if filename[-4:] != ftype[1:]:
@@ -258,9 +258,8 @@ class WeatherAvgGraph(DialogWindow):
         ddir = os.path.join(self.save_fig_dir, defaultname)
 
         dialog = QFileDialog()
-        filename, ftype = dialog.getSaveFileName(caption='Save normals',
-                                                 dir=ddir,
-                                                 filter='*.xlsx;;*.xls;;*.csv')
+        filename, ftype = dialog.getSaveFileName(
+                self, 'Save normals', ddir, '*.xlsx;;*.xls;;*.csv')
 
         hheader = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
                    'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']
@@ -316,8 +315,7 @@ class WeatherAvgGraph(DialogWindow):
         dialog = QFileDialog()
 
         filename, ftype = dialog.getSaveFileName(
-                caption='Export %s' % time_frame, dir=ddir,
-                filter='*.xlsx;;*.xls;;*.csv')
+                self, 'Export %s' % time_frame, ddir, '*.xlsx;;*.xls;;*.csv')
 
         if filename:
             self.export_series_tofile(filename, time_frame)
