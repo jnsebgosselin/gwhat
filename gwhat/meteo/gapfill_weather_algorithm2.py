@@ -943,7 +943,7 @@ class GapFillWeather(QObject):
         # Add ETP to file :
 
         if self.add_ETP:
-            wxrd.add_ETP_to_weather_data_file(output_path)
+            wxrd.add_PET_to_weather_datafile(output_path)
 
         # Produces Weather Normals Graph :
 

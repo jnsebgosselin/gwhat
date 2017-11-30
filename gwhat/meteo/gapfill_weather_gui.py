@@ -53,6 +53,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from gwhat.meteo.gapfill_weather_algorithm2 import GapFillWeather
 from gwhat.meteo.merge_weather_data import WXDataMergerWidget
+from gwhat.meteo.weather_reader import add_PET_to_weather_datafile
 from gwhat.common import IconDB, StyleDB, QToolButtonSmall
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import delete_file
@@ -786,18 +787,16 @@ class GapFillWeatherGUI(QWidget):
             self.gapfill_thread.started.connect(self.gapfill_worker.fill_data)
             self.gapfill_thread.start()
 
-    def btn_add_ETP_isClicked(self):  # =======================================
-
-        dirname = self.workdir + '/Meteo/Output'
+    def btn_add_ETP_isClicked(self):
+        """
+        Add PET to the selected weather datafile.
+        """
+        dirname = os.path.join(self.workdir, "Meteo", "Output")
         filename, _ = QFileDialog.getOpenFileName(
-                                  self, 'Select a valid water level data file',
-                                  dirname, '*.out')
+                self, 'Select a valid weather data file.', dirname, '*.out')
 
         if filename:
-            meteo.add_ETP_to_weather_data_file(filename)
-
-
-# =============================================================================
+            add_PET_to_weather_datafile(filename)
 
 
 class StaLocManager(QWidget):
