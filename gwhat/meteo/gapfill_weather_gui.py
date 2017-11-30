@@ -281,24 +281,26 @@ class GapFillWeatherGUI(QWidget):
 
         def advanced_settings(self):
 
-            chckstate = Qt.Unchecked
-
             # ---- Row Full Error ----
 
             self.full_error_analysis = QCheckBox('Full Error Analysis.')
-            self.full_error_analysis.setCheckState(chckstate)
+            self.full_error_analysis.setCheckState(Qt.Unchecked)
 
             # ---- Row ETP ----
 
-            self.add_ETP_ckckbox = QCheckBox('Add PET to data file.')
-            self.add_ETP_ckckbox.setCheckState(chckstate)
+            self.add_PET_ckckbox = QCheckBox('Add PET to data file.')
+            self.add_PET_ckckbox.setCheckState(Qt.Unchecked)
+            self.add_PET_ckckbox.setToolTip(
+                    '<p>Add daily potential evapotranspiration, calculated '
+                    'with the Thornthwaite (1948) method, to '
+                    'the output weather data file.</p>')
 
-            btn_add_ETP = QToolButtonSmall(IconDB().openFile)
-            btn_add_ETP.setToolTip(
-                    'Add daily potential evapotranspiration, calculated with '
-                    'the Thornthwaite (1948) method, to the output weather '
-                    'data file.')
-            btn_add_ETP.clicked.connect(self.btn_add_ETP_isClicked)
+            self.btn_add_PET = QToolButtonSmall(IconDB().openFile)
+            self.btn_add_PET.setToolTip(
+                    '<p>Add daily potential evapotranspiration, calculated '
+                    'with the Thornthwaite (1948) method, to '
+                    'an existing weather data file.</p>')
+            self.btn_add_PET.clicked.connect(self.btn_add_PET_isClicked)
 
             # ---- Row Layout Assembly ----
 
@@ -308,8 +310,8 @@ class GapFillWeatherGUI(QWidget):
             row = 0
             grid.addWidget(self.full_error_analysis, row, 0)
             row += 1
-            grid.addWidget(self.add_ETP_ckckbox, row, 0)
-            grid.addWidget(btn_add_ETP, row, 2)
+            grid.addWidget(self.add_PET_ckckbox, row, 0)
+            grid.addWidget(self.btn_add_PET, row, 2)
 
             grid.setSpacing(5)
             grid.setContentsMargins(10, 0, 10, 0)  # [L, T, R, B]
@@ -776,7 +778,7 @@ class GapFillWeatherGUI(QWidget):
 
         self.gapfill_worker.full_error_analysis = \
             self.full_error_analysis.isChecked()
-        self.gapfill_worker.add_ETP = self.add_ETP_ckckbox.isChecked()
+        self.gapfill_worker.add_ETP = self.add_PET_ckckbox.isChecked()
 
         # ---- Start the Thread ----
 
@@ -790,7 +792,7 @@ class GapFillWeatherGUI(QWidget):
             self.gapfill_thread.started.connect(self.gapfill_worker.fill_data)
             self.gapfill_thread.start()
 
-    def btn_add_ETP_isClicked(self):
+    def btn_add_PET_isClicked(self):
         """
         Add PET to the selected weather datafile.
         """
