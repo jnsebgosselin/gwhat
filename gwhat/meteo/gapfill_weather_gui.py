@@ -53,6 +53,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from gwhat.meteo.gapfill_weather_algorithm2 import GapFillWeather
 from gwhat.meteo.merge_weather_data import WXDataMergerWidget
+from gwhat.meteo.weather_reader import add_PET_to_weather_datafile
 from gwhat.common import IconDB, StyleDB, QToolButtonSmall
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import delete_file
@@ -280,21 +281,26 @@ class GapFillWeatherGUI(QWidget):
 
         def advanced_settings(self):
 
-            chckstate = Qt.Unchecked
-
             # ---- Row Full Error ----
 
             self.full_error_analysis = QCheckBox('Full Error Analysis.')
-            self.full_error_analysis.setCheckState(chckstate)
+            self.full_error_analysis.setCheckState(Qt.Unchecked)
 
             # ---- Row ETP ----
 
-            self.add_ETP_ckckbox = QCheckBox('Add ETP to data file.')
-            self.add_ETP_ckckbox.setCheckState(chckstate)
+            self.add_PET_ckckbox = QCheckBox('Add PET to data file.')
+            self.add_PET_ckckbox.setCheckState(Qt.Unchecked)
+            self.add_PET_ckckbox.setToolTip(
+                    '<p>Add daily potential evapotranspiration, calculated '
+                    'with the Thornthwaite (1948) method, to '
+                    'the output weather data file.</p>')
 
-            btn_add_ETP = QToolButtonSmall(IconDB().openFile)
-            btn_add_ETP.setToolTip('Add ETP to data file.')
-            btn_add_ETP.clicked.connect(self.btn_add_ETP_isClicked)
+            self.btn_add_PET = QToolButtonSmall(IconDB().openFile)
+            self.btn_add_PET.setToolTip(
+                    '<p>Add daily potential evapotranspiration, calculated '
+                    'with the Thornthwaite (1948) method, to '
+                    'an existing weather data file.</p>')
+            self.btn_add_PET.clicked.connect(self.btn_add_PET_isClicked)
 
             # ---- Row Layout Assembly ----
 
@@ -304,8 +310,8 @@ class GapFillWeatherGUI(QWidget):
             row = 0
             grid.addWidget(self.full_error_analysis, row, 0)
             row += 1
-            grid.addWidget(self.add_ETP_ckckbox, row, 0)
-            grid.addWidget(btn_add_ETP, row, 2)
+            grid.addWidget(self.add_PET_ckckbox, row, 0)
+            grid.addWidget(self.btn_add_PET, row, 2)
 
             grid.setSpacing(5)
             grid.setContentsMargins(10, 0, 10, 0)  # [L, T, R, B]
@@ -650,27 +656,22 @@ class GapFillWeatherGUI(QWidget):
         time_end = self.get_time_from_qdatedit(self.date_end_widget)
 
         if time_start > time_end:
-
             print('The time period is invalid.')
-            self.msgBox.setText('<b>Gap Fill Data Record</b> start date is ' +
-                                'set to a later time than the end date.')
-            self.msgBox.exec_()
-
+            msg = ('<i>From</i> date is set to a later time than '
+                   'the <i>To</i> date.')
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Warning', msg, btn)
             return
 
         # --------------------------------------------- Check Which Button ----
 
         button = self.sender()
         if button == self.btn_fill:
-
-            # ---- Check if Station is Selected ----
-
             if self.target_station.currentIndex() == -1:
-                self.msgBox.setText('No <b>weather station</b> is currently ' +
-                                    'selected.')
-                self.msgBox.exec_()
-                print('No weather station is currently selected.')
-
+                # Check if Station is Selected.
+                msg = 'No weather station is currently selected'
+                btn = QMessageBox.Ok
+                QMessageBox.warning(self, 'Warning', msg, btn)
                 return
 
             self.btn_fill_all.setEnabled(False)
@@ -772,7 +773,7 @@ class GapFillWeatherGUI(QWidget):
 
         self.gapfill_worker.full_error_analysis = \
             self.full_error_analysis.isChecked()
-        self.gapfill_worker.add_ETP = self.add_ETP_ckckbox.isChecked()
+        self.gapfill_worker.add_ETP = self.add_PET_ckckbox.isChecked()
 
         # ---- Start the Thread ----
 
@@ -786,18 +787,16 @@ class GapFillWeatherGUI(QWidget):
             self.gapfill_thread.started.connect(self.gapfill_worker.fill_data)
             self.gapfill_thread.start()
 
-    def btn_add_ETP_isClicked(self):  # =======================================
-
-        dirname = self.workdir + '/Meteo/Output'
+    def btn_add_PET_isClicked(self):
+        """
+        Add PET to the selected weather datafile.
+        """
+        dirname = os.path.join(self.workdir, "Meteo", "Output")
         filename, _ = QFileDialog.getOpenFileName(
-                                  self, 'Select a valid water level data file',
-                                  dirname, '*.out')
+                self, 'Select a valid weather data file.', dirname, '*.out')
 
         if filename:
-            meteo.add_ETP_to_weather_data_file(filename)
-
-
-# =============================================================================
+            add_PET_to_weather_datafile(filename)
 
 
 class StaLocManager(QWidget):

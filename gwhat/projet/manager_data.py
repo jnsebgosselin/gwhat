@@ -772,7 +772,7 @@ class NewWXDataDialog(NewDataset):
     def select_dataset(self):
         filename, _ = QFileDialog.getOpenFileName(
             self, 'Select a valid weather data file',
-            self.workdir, '(*.out)')
+            self.workdir, '(*.csv;*.out)')
 
         for i in range(5):
             QCoreApplication.processEvents()
@@ -880,7 +880,6 @@ class NewWXDataDialog(NewDataset):
 
 
 # ---- if __name__ == '__main__'
-
 if __name__ == '__main__':
     from reader_projet import ProjetReader
     import sys
