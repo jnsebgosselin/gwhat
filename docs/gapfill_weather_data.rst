@@ -229,12 +229,12 @@ Advanced Settings
 It is possible to automatically estimate and add the daily Potential
 Evapotranspiration |_| (PET) to the output data file (:file:`.out`) produced at
 the end of the gapfilling procedure of the selected station.
-This option is enabled by checking the :guilabel:`Add ETP to data file` option 
+This option is enabled by checking the :guilabel:`Add PET to data file` option 
 in the section :guilabel:`Advanced Settings` shown in :numref:`fig_gapfill_advanced_setting`.
-The daily ETP is estimated with a method adapted from Thornthwaite (1948), using the daily
+The daily PET is estimated with a method adapted from Thornthwaite (1948), using the daily
 mean air temperature time series of the selected station.
-Alternatively, it is possible to add manually the ETP retrospectively to an existing
-:file:`.out` file by clicking on the |open_file| icon.
+Alternatively, it is possible to add manually the PET retrospectively to an
+existing :file:`.out` file by clicking on the |open_file| icon.
 
 The :guilabel:`Full Error Analysis` option can be checked to perform a
 cross-validation resampling analysis during the gapfilling procedure.
