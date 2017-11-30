@@ -149,7 +149,7 @@ Project Files
     :figclass: align-center
 
 
-.. |icon_folder| image:: img/icon_folder.*
+.. |icon_folder| image:: img/icon/icon_folder.*
                       :width: 1em
                       :height: 1em
                       :alt: folder

@@ -1,3 +1,5 @@
+.. _chap_gapfilling_weather_data:
+
 Gapfilling Daily Weather Data
 ===============================================
 
