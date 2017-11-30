@@ -290,11 +290,14 @@ class GapFillWeatherGUI(QWidget):
 
             # ---- Row ETP ----
 
-            self.add_ETP_ckckbox = QCheckBox('Add ETP to data file.')
+            self.add_ETP_ckckbox = QCheckBox('Add PET to data file.')
             self.add_ETP_ckckbox.setCheckState(chckstate)
 
             btn_add_ETP = QToolButtonSmall(IconDB().openFile)
-            btn_add_ETP.setToolTip('Add ETP to data file.')
+            btn_add_ETP.setToolTip(
+                    'Add daily potential evapotranspiration, calculated with '
+                    'the Thornthwaite (1948) method, to the output weather '
+                    'data file.')
             btn_add_ETP.clicked.connect(self.btn_add_ETP_isClicked)
 
             # ---- Row Layout Assembly ----
