@@ -133,7 +133,7 @@ That is, missing blocks of data (e.g., several days, months or years) can be com
 omitted in the time-series.
 
 .. _weather_datafile_example:
-.. figure:: img/weather_datafile_example.*
+.. figure:: img/files/weather_datafile_example.*
     :align: center
     :width: 85%
     :alt: weather_datafile_example.png

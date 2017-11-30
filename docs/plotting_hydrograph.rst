@@ -16,7 +16,9 @@ in :numref:`scs_plot_hydrograph`.
     
     Presentation of the tool to plot hydrographs in GWHAT under the ``Plot Hydrograph`` tab.
  
-    
+
+.. _importing_data_inproject:
+  
 Importing Data
 -----------------------------------------------
 
@@ -34,19 +36,70 @@ water level and weather datasets by clicking on the corresponding
 :guilabel:`Plot Hydrograph`.
 
 This opens a dialog window that allow to select a valid water level or weather
-data file as shown in :numref:`scs_new_water_level_dataset_dialog`.
+data file as shown in :numref:`scs_new_water_level_dataset_dialog`. Data can be
+selected by clicking on the |icon_folder| icon. Once the file is opened in the
+dialog, the information relative to the climate of piezometric station will
+be displayed in the dialog and a name for the dataset will be proposed next to
+the :guilabel:`Dataset name` label. Once the information relative to the
+station and dataset name are correct, the dataset can be imported in the
+project by clicking on the button :guilabel:`Ok`
 
 .. _scs_new_water_level_dataset_dialog:
 .. figure:: img/scs/new_water_level_dataset_dialog.*
     :align: center
-    :width: 100%
+    :width: 50%
     :alt: alternate text
     :figclass: align-center
     
     Presentation of the dialog window to import water level data files.
 
+Input data files format
+-----------------------------------------------
+The format of the weather data files must be coma-separated values text files
+as described in :numref:`sec_weather_datafiles_format` with either a :file:`.out` or
+:file:`.csv` extension. Files with a :file:`.out` extension are gapfilled weather
+dataset produced with the gapfilling tool in tab :guilabel:`Gapfill Weather`
+presented in :numref:`chap_gapfilling_weather_data`.
+
+.. note:: Preferably, the gaps in the daily weather records must have been 
+          filled before importing them. Otherwise, a value of 0 is assumed 
+          for days where precipitation are missing and the missing values for 
+          air temperature are evaluated by linear interpolation.
+          
+The water level datafiles can be either in the :file:`xls` or :file:`xlsx` format. 
+An exemple of correctly formatted water level datafile is presented in
+:numref:`water_level_datafile_example`. The information contained in the header
+will be loaded into the dialog window presented in :numref:`importing_data_inproject`.
+The information can then be modified within this window before the data are imported into
+the project. The first column of the data must contained the time in excel numeric
+format. The second column must contain the water level, given in meters below the
+ground surface. The third and fourth columns correspond, respectively, to the
+barometric pressure and the Earth tides. This will be discussed in more details
+in another section.
+
+.. _water_level_datafile_example:
+.. figure:: img/files/water_level_datafile.*
+    :align: center
+    :width: 85%
+    :alt: water_level_datafile.png
+    :figclass: align-center
+    
+    Formatted weather datafile example.
+    
+.. important:: Water levels must be entered in meters below the ground surface.
+ 
 Weather Normals Viewer
 -----------------------------------------------
+
+.. _fig_weather_normal_viewer:
+.. figure:: img/scs/weather_normal_viewer.*
+    :align: center
+    :width: 85%
+    :alt: water_level_datafile.png
+    :figclass: align-center
+    
+    Presentation of the weather normals viewer.
+    
 
 
 .. |icon_folder| image:: img/icon/icon_folder.*
