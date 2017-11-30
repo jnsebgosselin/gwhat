@@ -656,27 +656,22 @@ class GapFillWeatherGUI(QWidget):
         time_end = self.get_time_from_qdatedit(self.date_end_widget)
 
         if time_start > time_end:
-
             print('The time period is invalid.')
-            self.msgBox.setText('<b>Gap Fill Data Record</b> start date is ' +
-                                'set to a later time than the end date.')
-            self.msgBox.exec_()
-
+            msg = ('<i>From</i> date is set to a later time than '
+                   'the <i>To</i> date.')
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Warning', msg, btn)
             return
 
         # --------------------------------------------- Check Which Button ----
 
         button = self.sender()
         if button == self.btn_fill:
-
-            # ---- Check if Station is Selected ----
-
             if self.target_station.currentIndex() == -1:
-                self.msgBox.setText('No <b>weather station</b> is currently ' +
-                                    'selected.')
-                self.msgBox.exec_()
-                print('No weather station is currently selected.')
-
+                # Check if Station is Selected.
+                msg = 'No weather station is currently selected'
+                btn = QMessageBox.Ok
+                QMessageBox.warning(self, 'Warning', msg, btn)
                 return
 
             self.btn_fill_all.setEnabled(False)
