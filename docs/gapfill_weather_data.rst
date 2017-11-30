@@ -89,7 +89,7 @@ Under this list are displayed information about the currently selected weather s
 
 It is also possible to define the period for which the data of the selected
 station will be filled by editing the date fields located next to the 
-:guilabel:`From` and ::`To` labels. By default, dates are set as the first and
+:guilabel:`From` and :guilabel:`To` labels. By default, dates are set as the first and
 the last date for which data are available for any of the stations of the list.
 
 The method used to estimate the missing data for the selected weather station
