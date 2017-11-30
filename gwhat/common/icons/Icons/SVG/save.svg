@@ -11,10 +11,13 @@
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
    id="svg2"
    version="1.1"
-   inkscape:version="0.92.1 r15371"
-   width="264.53333"
-   height="264.53333"
-   sodipodi:docname="save.svg">
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   width="256"
+   height="256"
+   sodipodi:docname="save.svg"
+   inkscape:export-filename="C:\Users\jsgosselin\OneDrive\GWHAT\docs\img\icon_save.png"
+   inkscape:export-xdpi="96"
+   inkscape:export-ydpi="96">
   <metadata
      id="metadata8">
     <rdf:RDF>
@@ -43,8 +46,8 @@
      id="namedview4"
      showgrid="false"
      inkscape:zoom="1.3409091"
-     inkscape:cx="-41.95092"
-     inkscape:cy="142.71998"
+     inkscape:cx="127.33721"
+     inkscape:cy="153.90643"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -54,8 +57,8 @@
      fit-margin-right="0"
      fit-margin-bottom="0" />
   <path
-     style="fill:#4d4d4d;fill-opacity:1;stroke-width:1.06666672"
-     d="M 40.04154,264.53333 16.533333,247.97094 0,231.40854 V 131.48213 31.555723 L 15.872,15.777856 31.744002,0 H 132.26666 232.78934 l 15.872,15.777856 15.87199,15.777867 V 132.50185 233.44798 l -19.84,16.36806 -19.40407,14.20135 c 0,-40.51792 -0.43595,-78.86912 -0.43595,-119.38704 H 132.99134 41.129379 c 0.914361,39.98409 -0.137159,79.93476 -1.087892,119.90298 z m 92.22512,-159.34762 h 92.58668 V 72.315179 39.444651 H 132.26666 39.680001 v 32.870528 32.870531 z m 0,157.77855 H 66.133335 V 216.94551 170.92677 H 132.26666 198.4 v 46.01874 46.01875 z m -26.45333,-26.29643 h 13.22668 V 216.94551 197.22319 H 105.81333 92.586671 v 19.72232 19.72232 z"
+     style="fill:#4d4d4d;fill-opacity:1;stroke-width:1.03225815"
+     d="M 38.749878,256 16,239.97188 0,223.94375 V 127.24077 30.537797 L 15.36,15.268893 30.720002,0 H 128 225.28001 l 15.36,15.268893 L 256,30.537797 v 97.689803 97.6898 l -19.2,15.84006 -18.77813,13.74324 c 0,-39.21089 -0.42189,-76.32495 -0.42189,-115.53584 H 128.7013 39.802625 C 40.687491,178.65914 39.669891,217.32108 38.749827,256 Z M 128,101.79262 h 89.60001 V 69.982432 38.172243 H 128 38.400001 v 31.810189 31.810188 z m 0,152.68893 H 64.000002 V 209.94727 165.41301 H 128 192 v 44.53426 44.53428 z m -25.6,-25.44816 h 12.80001 V 209.94727 190.86115 H 102.4 89.600005 v 19.08612 19.08612 z"
      id="path3181"
      inkscape:connector-curvature="0"
      sodipodi:nodetypes="cccccccccccccccccccccccccccccccccccccccccccccc"

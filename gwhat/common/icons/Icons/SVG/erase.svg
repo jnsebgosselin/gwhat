@@ -13,11 +13,11 @@
    height="90"
    id="svg3140"
    version="1.1"
-   inkscape:version="0.48.4 r9939"
-   sodipodi:docname="remove_points.svg"
-   inkscape:export-filename="/home/jsgosselin/Documents/Research/Hydrogeology/WHAT/WHAT/Icons/SVG/add_point.png"
-   inkscape:export-xdpi="600"
-   inkscape:export-ydpi="600">
+   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   sodipodi:docname="erase.svg"
+   inkscape:export-filename="C:\Users\jsgosselin\OneDrive\GWHAT\docs\img\icon_erase.png"
+   inkscape:export-xdpi="273.06668"
+   inkscape:export-ydpi="273.06668">
   <defs
      id="defs3142" />
   <sodipodi:namedview
@@ -28,15 +28,15 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="3.259629"
-     inkscape:cx="76.611894"
+     inkscape:cx="-23.092704"
      inkscape:cy="58.280901"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="true"
-     inkscape:window-width="1535"
-     inkscape:window-height="876"
-     inkscape:window-x="65"
-     inkscape:window-y="24"
+     inkscape:window-width="1600"
+     inkscape:window-height="838"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      fit-margin-top="0"
      fit-margin-left="0"
@@ -50,8 +50,10 @@
        visible="true"
        enabled="true"
        snapvisiblegridlinesonly="true"
-       originx="0px"
-       originy="-1.7382813e-05px" />
+       originx="0"
+       originy="-1.7382813e-005"
+       spacingx="1"
+       spacingy="1" />
   </sodipodi:namedview>
   <metadata
      id="metadata3145">

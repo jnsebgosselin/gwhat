@@ -125,7 +125,7 @@ class WeatherStationBrowser(QWidget):
         self.nbrYear.blockSignals(False)
 
     def __initUI__(self):
-        self.setWindowTitle('Search for Weather Stations')
+        self.setWindowTitle('Weather Stations Browser')
         self.setWindowIcon(IconDB().master)
         self.setWindowFlags(Qt.Window)
 
