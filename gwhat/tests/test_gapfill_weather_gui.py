@@ -18,7 +18,8 @@ from PyQt5.QtCore import Qt
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from gwhat.meteo.gapfill_weather_gui import GapFillWeatherGUI, QFileDialog
+from gwhat.meteo.gapfill_weather_gui import (GapFillWeatherGUI, QFileDialog,
+                                             QMessageBox)
 from gwhat.common.utils import delete_folder_recursively
 from gwhat.meteo.weather_reader import read_weather_datafile
 
@@ -104,7 +105,7 @@ def test_delete_data(gapfill_weather_bot, mocker):
 
 
 @pytest.mark.run(order=5)
-def test_fill_data(gapfill_weather_bot):
+def test_fill_data(gapfill_weather_bot, mocker):
     """
     Fill the data for the first dataset.
     """
@@ -114,8 +115,15 @@ def test_fill_data(gapfill_weather_bot):
     gapfiller.show()
     qtbot.mouseClick(gapfiller.btn_refresh_staList, Qt.LeftButton)
 
-    # Gapfill the data for each dataset in batch.
+    # Click button "Fill Data" while no station is selected.
+    mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
     qtbot.mouseClick(gapfiller.btn_fill, Qt.LeftButton)
+
+    # Select first dataset and gapfill the data.
+    gapfiller.target_station.setCurrentIndex(0)
+    qtbot.mouseClick(gapfiller.btn_fill, Qt.LeftButton)
+    qtbot.waitUntil(lambda: not gapfiller.gapfill_thread.isRunning(),
+                    timeout=100000)
 
     # Assert that all the ouput files were generated correctly.
     basenames = ["IBERVILLE (7023270)_2000-2010.out",
@@ -164,7 +172,7 @@ def test_gapfill_all_data(gapfill_weather_bot):
     qtbot.mouseClick(gapfiller.btn_refresh_staList, Qt.LeftButton)
 
     # Check the option "Add PET to datafile" in the "Advanced Settings".
-    gapfiller.add_PET_ckckbox(Qt.Checked)
+    gapfiller.add_PET_ckckbox.setCheckState(Qt.Checked)
 
     # Gapfill the data for each dataset in batch
     qtbot.mouseClick(gapfiller.btn_fill_all, Qt.LeftButton)
@@ -194,7 +202,7 @@ def test_gapfill_all_data(gapfill_weather_bot):
         assert os.path.exists(file)
 
     # Assert that ETP was added to the output file.
-    filenames = files[0, 3, 6]
+    filenames = [files[i] for i in [0, 3, 6]]
     for filename in filenames:
         wxdf = read_weather_datafile(filename)
         assert len(wxdf['PET']) == len(wxdf['Time'])
