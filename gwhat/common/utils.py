@@ -37,8 +37,13 @@ def calc_dist_from_coord(lat1, lon1, lat2, lon2):
     return r * c
 
 
-def save_content_to_csv(fname, fcontent, mode='w', delimiter=','):
-    with open(fname, mode) as csvfile:
+def save_content_to_csv(fname, fcontent, mode='w', delimiter=',',
+                        encoding='utf8'):
+    """
+    Save content in a csv file with the specifications provided
+    in arguments.
+    """
+    with open(fname, mode, encoding='utf8') as csvfile:
         writer = csv.writer(csvfile, delimiter=delimiter, lineterminator='\n')
         writer.writerows(fcontent)
 
