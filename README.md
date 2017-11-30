@@ -13,7 +13,7 @@ Licensed under the terms of the GNU-GPLv3
 
 You can read the GWHAT documentation [here](https://gwhat.readthedocs.io).<br>
 You can download the latest version of GWHAT [here](https://github.com/jnsebgosselin/gwhat/releases/latest).<br>
-Instructions for installing GWHAT are available [here](https://gwhat.readthedocs.io/en/readthedocs_init/getting_started.html).
+Instructions for installing GWHAT are available [here](https://gwhat.readthedocs.io/en/latest/getting_started.html).
 
 # About GWHAT
 
