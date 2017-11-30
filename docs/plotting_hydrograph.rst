@@ -8,7 +8,7 @@ in GWHAT using the tools availble under the tab :guilabel:`Plot Hydrograph` show
 in :numref:`scs_plot_hydrograph`.
 
 .. _scs_plot_hydrograph:
-.. figure:: img/scs/plot_hydrograph.*
+.. figure:: img/demo/demo_plot_hydrograph.*
     :align: center
     :width: 100%
     :alt: alternate text
@@ -55,6 +55,10 @@ project by clicking on the button :guilabel:`Ok`
 
 Input data files format
 -----------------------------------------------
+
+Weather data files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
 The format of the weather data files must be coma-separated values text files
 as described in :numref:`sec_weather_datafiles_format` with either a :file:`.out` or
 :file:`.csv` extension. Files with a :file:`.out` extension are gapfilled weather
@@ -65,6 +69,9 @@ presented in :numref:`chap_gapfilling_weather_data`.
           filled before importing them. Otherwise, a value of 0 is assumed 
           for days where precipitation are missing and the missing values for 
           air temperature are evaluated by linear interpolation.
+
+Water level data files
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
           
 The water level datafiles can be either in the :file:`xls` or :file:`xlsx` format. 
 An exemple of correctly formatted water level datafile is presented in
@@ -87,6 +94,16 @@ in another section.
     Formatted weather datafile example.
     
 .. important:: Water levels must be entered in meters below the ground surface.
+
+Plotting the Hydrograph
+-----------------------------------------------
+
+.. _fig_plot_hydrograph_annoted:
+.. figure:: img/scs/plot_hydrograph_annoted.*
+    :align: center
+    :width: 100%
+    :alt: alternate text
+    :figclass: align-center
  
 Weather Normals Viewer
 -----------------------------------------------
