@@ -47,7 +47,7 @@ import gwhat.mplFigViewer3 as mplFigViewer
 from gwhat.meteo.weather_viewer import WeatherAvgGraph
 from gwhat.colors2 import ColorsReader, ColorsSetupWin
 
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import IconDB, QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
 import gwhat.common.database as db
 from gwhat.common.utils import save_content_to_csv
