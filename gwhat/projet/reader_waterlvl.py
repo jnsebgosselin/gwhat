@@ -140,37 +140,57 @@ def make_waterlvl_continuous(t, wl):
 
     return t, wl
 
-# =============================================================================
 
-
-def load_waterlvl_measures(fname, well):
-
-    print('Loading waterlvl manual measures for well %s' % well)
-
-    WLmes, TIMEmes = [], []
+def init_waterlvl_measures(dirname):
+    """Create an empty waterlvl_manual_measurements.csv file with headers."""
+    fname = os.path.join(dirname, 'waterlvl_manual_measurements.csv')
     if not os.path.exists(fname):
-        return WLmes, TIMEmes
+        fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
+        save_content_to_csv(fname, fcontent)
 
-    with xlrd.open_workbook(fname) as wb:
-        sheet = wb.sheet_by_index(0)
 
-        NAME = sheet.col_values(0, start_rowx=1, end_rowx=None)
-        TIME = sheet.col_values(1, start_rowx=1, end_rowx=None)
-        OBS = sheet.col_values(2, start_rowx=1, end_rowx=None)
+def load_waterlvl_measures(filename, well):
+    """
+    Load and read the water level manual measurements from the specified
+    resource file for the specified well.
+    """
+    print('Loading manual water level measures for well %s...' % well, end=" ")
+    root, ext = os.path.splitext(filename)
+    if not os.path.exists(filename):
+        print("none")
+        init_waterlvl_measures(os.path.dirname(root))
+        return np.array([]), np.array([])
 
-        # Convert to Numpy :
+    if ext == '.csv':
+        with open(filename, 'r') as f:
+            reader = np.array(list(csv.reader(f, delimiter=',')))
+            data = np.array(reader[1:])
 
-        NAME = np.array(NAME).astype('str')
-        TIME = np.array(TIME).astype('float')
-        OBS = np.array(OBS).astype('float')
+            well_name = np.array(data[:, 0]).astype('str')
+            time = np.array(data[:, 1]).astype('float')
+            wl = np.array(data[:, 2]).astype('float')
 
-        if len(NAME) > 0:
-            rowx = np.where(NAME == well)[0]
-            if len(rowx) > 0:
-                WLmes = OBS[rowx]
-                TIMEmes = TIME[rowx]
+    elif ext in ['.xlsx', '.xls']:
+        with xlrd.open_workbook(filename) as wb:
+            sheet = wb.sheet_by_index(0)
 
-    return np.array(TIMEmes), np.array(WLmes)
+            well_name = sheet.col_values(0, start_rowx=1, end_rowx=None)
+            time = sheet.col_values(1, start_rowx=1, end_rowx=None)
+            wl = sheet.col_values(2, start_rowx=1, end_rowx=None)
+
+            # Convert to Numpy :
+
+            well_name = np.array(well_name).astype('str')
+            time = np.array(time).astype('float')
+            wl = np.array(wl).astype('float')
+
+    if len(well_name) > 0:
+        rowx = np.where(well_name == well)[0]
+        if len(rowx) > 0:
+            wl_mes = wl[rowx]
+            time_mes = time[rowx]
+    print("done")
+    return np.array(time_mes), np.array(wl_mes)
 
 
 # =========================================================================
