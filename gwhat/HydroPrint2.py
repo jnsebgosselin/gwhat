@@ -464,34 +464,6 @@ class HydroprintGUI(myqt.DialogWindow):
     def workdir(self):
         return self.dmngr.workdir
 
-    # ========================================================= Utilities =====
-
-    def check_files(self):
-
-        # water lvl manual measurements :
-
-        fname = os.path.join(self.workdir, 'waterlvl_manual_measurements.csv')
-        if not os.path.exists(fname):
-            msg = ('No "waterlvl_manual_measurements.xls" file found. '
-                   'A new one has been created.')
-            print(msg)
-
-            fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
-            save_content_to_csv(fname, fcontent)
-
-        # graph_layout.lst :
-
-        filename = os.path.join(self.workdir, 'graph_layout.lst')
-        if not os.path.exists(filename):
-            msg = ('No "graph_layout.lst" file found. ' +
-                   'A new one has been created.')
-            print(msg)
-
-            fcontent = db.FileHeaders().graph_layout
-            save_content_to_csv(filename, fcontent)
-
-    # =========================================================================
-
     def zoom_in(self):
         self.hydrograph_scrollarea.zoomIn()
 
