@@ -24,6 +24,9 @@ import numpy as np
 import xlrd
 import csv
 
+# ---- Imports: local
+from gwhat.common.utils import save_content_to_csv
+
 
 def load_excel_datafile(fname):
     print('Loading waterlvl time-series from Excel file...')
@@ -155,12 +158,22 @@ def load_waterlvl_measures(filename, well):
     resource file for the specified well.
     """
     print('Loading manual water level measures for well %s...' % well, end=" ")
+    time_mes, wl_mes = np.array([]), np.array([])
+    # Determine the extension of the file.
     root, ext = os.path.splitext(filename)
-    if not os.path.exists(filename):
+    exts = [ext] if ext in ['.csv, .xls, .xlsx'] else ['.csv, .xls, .xlsx']
+    for ext in exts:
+        filename = root+ext
+        if os.path.exists(root+ext):
+            break
+    else:
+        # The file does not exists, so we generate an empty file with
+        # a header.
         print("none")
         init_waterlvl_measures(os.path.dirname(root))
-        return np.array([]), np.array([])
+        return time_mes, wl_mes
 
+    # Open and read the file.
     if ext == '.csv':
         with open(filename, 'r') as f:
             reader = np.array(list(csv.reader(f, delimiter=',')))
@@ -178,8 +191,6 @@ def load_waterlvl_measures(filename, well):
             time = sheet.col_values(1, start_rowx=1, end_rowx=None)
             wl = sheet.col_values(2, start_rowx=1, end_rowx=None)
 
-            # Convert to Numpy :
-
             well_name = np.array(well_name).astype('str')
             time = np.array(time).astype('float')
             wl = np.array(wl).astype('float')
@@ -190,7 +201,8 @@ def load_waterlvl_measures(filename, well):
             wl_mes = wl[rowx]
             time_mes = time[rowx]
     print("done")
-    return np.array(time_mes), np.array(wl_mes)
+
+    return time_mes, wl_mes
 
 
 # =========================================================================

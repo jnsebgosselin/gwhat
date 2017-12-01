@@ -508,7 +508,8 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Load Manual Measures :
 
-        fname = os.path.join(self.workdir, 'waterlvl_manual_measurements.xls')
+        fname = os.path.join(self.workdir, "Water Levels",
+                             'waterlvl_manual_measurements')
         tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
         wldset.set_wlmeas(tmeas, wlmeas)
 
