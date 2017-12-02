@@ -1,23 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
+#
+# The function filt_data is based on the codes provided by
+# StackOverflow user Alleo.
+# https://stackoverflow.com/a/27681394/4481445
 
 from __future__ import division, unicode_literals
 
@@ -1281,49 +1272,26 @@ class Hydrograph(mpl.figure.Figure):
         return xticks_position, xticks_labels_position, xticks_labels
 
 
-# =============================================================================
-
-
-def filt_data(time, waterlvl, period):
+def filt_data(time, waterlvl, N):
     """
-    period is in days
+    Resamples the water level measurements on a daily basis and run a
+    moving average window of N days on the resampled data.
     """
-
-    # ------------ RESAMPLING 6H BASIS AND NAN ESTIMATION BY INTERPOLATION ----
-
-    time6h_0 = np.floor(time[0]) + 1/24
-    time6h_end = np.floor(time[-1]) + 1/24
-
-    time6h = np.arange(time6h_0, time6h_end + 6/24., 6/24.)
-
-    # Remove times with nan values
+    # Resample the data on a daily basis.
+    days = np.arange(np.floor(time[0]), np.floor(time[-1])+1)
     index_nonan = np.where(~np.isnan(waterlvl))[0]
+    waterlvl = np.interp(days, time[index_nonan], waterlvl[index_nonan])
 
-    # Resample data and interpolate missing values
-    waterlvl = np.interp(time6h, time[index_nonan], waterlvl[index_nonan])
+    # Compute a centered moving average window on the daily resampled data.
+    # Based on the codes provided by StackOverflow user Alleo.
+    # https://stackoverflow.com/a/27681394/4481445
+    N = int(N)
+    cumsum = np.cumsum(np.insert(waterlvl, 0, 0))
+    wlf = (cumsum[N:] - cumsum[:-N])/float(N)
+    tf = days[N//2:-N//2+1]
 
-    # ---------------------------------------------------------- FILT DATA ----
-#    cuttoff_freq = 1. / period
-#    samp_rate = 1. / (time[1] - time[0])
-#    Wn = cuttoff_freq / (samp_rate / 2)
-#    N = 3
-#
-#    (b, a) = signal.butter(N, Wn, btype='low')
-#    wlfilt = signal.lfilter(b, a, waterlvl)
+    return tf, wlf
 
-    win = 4 * period
-
-    wlfilt = np.zeros(len(waterlvl) - win)
-    tfilt = time6h[win/2:-win/2]
-
-    # Centered Moving Average Window
-    for i in range(len(wlfilt)):
-        wlfilt[i] = np.mean(waterlvl[i:i+win+1])
-
-    return tfilt, wlfilt
-
-
-# =============================================================================
 
 def LatLong2Dist(LAT1, LON1, LAT2, LON2):
     """
