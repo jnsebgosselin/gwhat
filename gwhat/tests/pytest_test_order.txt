@@ -6,6 +6,7 @@
 6 - test_gapfill_weather_algorithm.py
 7 - test_manager_data.py
 8 - test_hydroprint.py
+9 - test_hydrocalc.py
 
 test_tabwidget.py
 test_read_waterlvl.py
