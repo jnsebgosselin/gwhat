@@ -8,3 +8,4 @@
 8 - test_hydroprint.py
 
 test_tabwidget.py
+test_read_waterlvl.py
