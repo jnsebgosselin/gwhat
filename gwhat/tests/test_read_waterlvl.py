@@ -19,7 +19,7 @@ import xlsxwriter
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from gwhat.common.utils import save_content_to_csv, delete_file
-from gwhat.projet.reader_waterlvl import (load_waterlvl_measures, 
+from gwhat.projet.reader_waterlvl import (load_waterlvl_measures,
                                           init_waterlvl_measures)
 
 WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
@@ -38,14 +38,16 @@ WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
 
 def test_init_waterlvl_measures():
     # Assert that the water_level_measurement file is initialized correctly.
-    filename = os.path.join(os.getcwd(), "waterlvl_manual_measurements.csv")
-    assert not os.path.exists(filename)
-    init_waterlvl_measures(os.getcwd())
-    assert os.path.exists(filename)
+    filename = os.path.join(os.getcwd(), "waterlvl_manual_measurements")
+    assert not os.path.exists(filename+'.csv')
+    time, wl = load_waterlvl_measures(filename, 'Test')
+    assert os.path.exists(filename+'.csv')
+    assert len(time) == 0 and isinstance(time, np.ndarray)
+    assert len(wl) == 0 and isinstance(wl, np.ndarray)
 
     # Assert that the format of the file is correct.
     expected_result = ['Well_ID', 'Time (days)', 'Obs. (mbgs)']
-    with open(filename, 'r') as f:
+    with open(filename+'.csv', 'r') as f:
         reader = list(csv.reader(f, delimiter=','))
     assert len(reader) == 1
     assert reader[0] == expected_result
