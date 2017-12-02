@@ -48,6 +48,10 @@ class ProjetReader(object):
     def filename(self):
         return self.db.filename
 
+    @property
+    def dirname(self):
+        return os.path.dirname(self.filename)
+
     # =========================================================================
 
     def load_projet(self, filename):
