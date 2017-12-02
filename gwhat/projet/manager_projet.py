@@ -39,6 +39,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.common import IconDB, QToolButtonSmall
 from gwhat.projet.manager_data import DataManager
+from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
 from gwhat import __version__
 
@@ -110,6 +111,8 @@ class ProjetManager(QWidget):
             QMessageBox.warning(self, 'Warning', msg, btn)
             return False
         else:
+            wldir = os.path.join(projet.dirname, "Water Levels")
+            init_waterlvl_measures(wldir)
             self.project_display.setText(projet.name)
             self.project_display.adjustSize()
             self.currentProjetChanged.emit(projet)

@@ -24,6 +24,11 @@ import numpy as np
 import xlrd
 import csv
 
+# ---- Imports: local
+from gwhat.common.utils import save_content_to_csv
+
+FILE_EXTS = ['.csv', '.xls', '.xlsx']
+
 
 def load_excel_datafile(fname):
     print('Loading waterlvl time-series from Excel file...')
@@ -140,37 +145,78 @@ def make_waterlvl_continuous(t, wl):
 
     return t, wl
 
-# =============================================================================
+
+# ---- Water level manual measurements
+
+def init_waterlvl_measures(dirname):
+    """
+    Create an empty waterlvl_manual_measurements.csv file with headers
+    if it does not already exist.
+    """
+    for ext in FILE_EXTS:
+        fname = os.path.join(dirname, "waterlvl_manual_measurements"+ext)
+        if os.path.exists(fname):
+            return
+    else:
+        fname = os.path.join(dirname, 'waterlvl_manual_measurements.csv')
+        fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
+
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
+        save_content_to_csv(fname, fcontent)
 
 
-def load_waterlvl_measures(fname, well):
+def load_waterlvl_measures(filename, well):
+    """
+    Load and read the water level manual measurements from the specified
+    resource file for the specified well.
+    """
+    print('Loading manual water level measures for well %s...' % well, end=" ")
+    time_mes, wl_mes = np.array([]), np.array([])
+    # Determine the extension of the file.
+    root, ext = os.path.splitext(filename)
+    exts = [ext] if ext in FILE_EXTS else FILE_EXTS
+    for ext in exts:
+        filename = root+ext
+        if os.path.exists(root+ext):
+            break
+    else:
+        # The file does not exists, so we generate an empty file with
+        # a header.
+        print("none")
+        init_waterlvl_measures(os.path.dirname(root))
+        return time_mes, wl_mes
 
-    print('Loading waterlvl manual measures for well %s' % well)
+    # Open and read the file.
+    if ext == '.csv':
+        with open(filename, 'r') as f:
+            reader = np.array(list(csv.reader(f, delimiter=',')))
+            data = np.array(reader[1:])
 
-    WLmes, TIMEmes = [], []
-    if not os.path.exists(fname):
-        return WLmes, TIMEmes
+            well_name = np.array(data[:, 0]).astype('str')
+            time = np.array(data[:, 1]).astype('float')
+            wl = np.array(data[:, 2]).astype('float')
 
-    with xlrd.open_workbook(fname) as wb:
-        sheet = wb.sheet_by_index(0)
+    elif ext in ['.xlsx', '.xls']:
+        with xlrd.open_workbook(filename) as wb:
+            sheet = wb.sheet_by_index(0)
 
-        NAME = sheet.col_values(0, start_rowx=1, end_rowx=None)
-        TIME = sheet.col_values(1, start_rowx=1, end_rowx=None)
-        OBS = sheet.col_values(2, start_rowx=1, end_rowx=None)
+            well_name = sheet.col_values(0, start_rowx=1, end_rowx=None)
+            time = sheet.col_values(1, start_rowx=1, end_rowx=None)
+            wl = sheet.col_values(2, start_rowx=1, end_rowx=None)
 
-        # Convert to Numpy :
+            well_name = np.array(well_name).astype('str')
+            time = np.array(time).astype('float')
+            wl = np.array(wl).astype('float')
 
-        NAME = np.array(NAME).astype('str')
-        TIME = np.array(TIME).astype('float')
-        OBS = np.array(OBS).astype('float')
+    if len(well_name) > 0:
+        rowx = np.where(well_name == well)[0]
+        if len(rowx) > 0:
+            wl_mes = wl[rowx]
+            time_mes = time[rowx]
+    print("done")
 
-        if len(NAME) > 0:
-            rowx = np.where(NAME == well)[0]
-            if len(rowx) > 0:
-                WLmes = OBS[rowx]
-                TIMEmes = TIME[rowx]
-
-    return np.array(TIMEmes), np.array(WLmes)
+    return time_mes, wl_mes
 
 
 # =========================================================================

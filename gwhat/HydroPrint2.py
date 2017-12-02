@@ -23,7 +23,6 @@ from __future__ import division, unicode_literals
 
 # ---- Standard library imports
 
-import csv
 import sys
 import os
 
@@ -47,10 +46,8 @@ import gwhat.mplFigViewer3 as mplFigViewer
 from gwhat.meteo.weather_viewer import WeatherAvgGraph
 from gwhat.colors2 import ColorsReader, ColorsSetupWin
 
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import IconDB, QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
-import gwhat.common.database as db
-from gwhat.common.utils import save_content_to_csv
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
 
 
@@ -87,8 +84,6 @@ class HydroprintGUI(myqt.DialogWindow):
         # Generate UI:
 
         self.__initUI__()
-
-    # =========================================================================
 
     def __initUI__(self):
 
@@ -464,34 +459,6 @@ class HydroprintGUI(myqt.DialogWindow):
     def workdir(self):
         return self.dmngr.workdir
 
-    # ========================================================= Utilities =====
-
-    def check_files(self):
-
-        # water lvl manual measurements :
-
-        fname = os.path.join(self.workdir, 'waterlvl_manual_measurements.csv')
-        if not os.path.exists(fname):
-            msg = ('No "waterlvl_manual_measurements.xls" file found. '
-                   'A new one has been created.')
-            print(msg)
-
-            fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
-            save_content_to_csv(fname, fcontent)
-
-        # graph_layout.lst :
-
-        filename = os.path.join(self.workdir, 'graph_layout.lst')
-        if not os.path.exists(filename):
-            msg = ('No "graph_layout.lst" file found. ' +
-                   'A new one has been created.')
-            print(msg)
-
-            fcontent = db.FileHeaders().graph_layout
-            save_content_to_csv(filename, fcontent)
-
-    # =========================================================================
-
     def zoom_in(self):
         self.hydrograph_scrollarea.zoomIn()
 
@@ -536,7 +503,8 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Load Manual Measures :
 
-        fname = os.path.join(self.workdir, 'waterlvl_manual_measurements.xls')
+        fname = os.path.join(self.workdir, "Water Levels",
+                             'waterlvl_manual_measurements')
         tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
         wldset.set_wlmeas(tmeas, wlmeas)
 
@@ -1184,15 +1152,13 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = ('C:/Users/jsgosselin/OneDrive/Research/'
-          'PostDoc - MDDELCC/Outils/BRF MontEst/'
-          'BRF MontEst.what')
+    pf = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
+          "@ new-prô'jèt!/@ new-prô'jèt!.gwt")
     pr = ProjetReader(pf)
     dm = DataManager()
+    dm.set_projet(pr)
 
     Hydroprint = HydroprintGUI(dm)
     Hydroprint.show()
-
-    dm.set_projet(pr)
 
     sys.exit(app.exec_())
