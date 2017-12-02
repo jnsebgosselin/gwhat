@@ -23,7 +23,6 @@ from __future__ import division, unicode_literals
 
 # ---- Standard library imports
 
-import csv
 import sys
 import os
 
@@ -49,8 +48,6 @@ from gwhat.colors2 import ColorsReader, ColorsSetupWin
 
 from gwhat.common import IconDB, QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
-import gwhat.common.database as db
-from gwhat.common.utils import save_content_to_csv
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
 
 
@@ -87,8 +84,6 @@ class HydroprintGUI(myqt.DialogWindow):
         # Generate UI:
 
         self.__initUI__()
-
-    # =========================================================================
 
     def __initUI__(self):
 
@@ -1157,15 +1152,13 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = ('C:/Users/jsgosselin/OneDrive/Research/'
-          'PostDoc - MDDELCC/Outils/BRF MontEst/'
-          'BRF MontEst.what')
+    pf = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
+          "@ new-prô'jèt!/@ new-prô'jèt!.gwt")
     pr = ProjetReader(pf)
     dm = DataManager()
+    dm.set_projet(pr)
 
     Hydroprint = HydroprintGUI(dm)
     Hydroprint.show()
-
-    dm.set_projet(pr)
 
     sys.exit(app.exec_())
