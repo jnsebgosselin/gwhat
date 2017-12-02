@@ -144,11 +144,23 @@ def make_waterlvl_continuous(t, wl):
     return t, wl
 
 
+# ---- Water level manual measurements
+
 def init_waterlvl_measures(dirname):
-    """Create an empty waterlvl_manual_measurements.csv file with headers."""
-    fname = os.path.join(dirname, 'waterlvl_manual_measurements.csv')
-    if not os.path.exists(fname):
+    """
+    Create an empty waterlvl_manual_measurements.csv file with headers
+    if it does not already exist.
+    """
+    for ext in ['.csv, .xls, .xlsx']:
+        fname = os.path.join(dirname, "waterlvl_manual_measurements"+ext)
+        if os.path.exists(fname):
+            return
+    else:
+        fname = os.path.join(dirname, 'waterlvl_manual_measurements.csv')
         fcontent = [['Well_ID', 'Time (days)', 'Obs. (mbgs)']]
+
+        if not os.path.exists(dirname):
+            os.makedirs(dirname)
         save_content_to_csv(fname, fcontent)
 
 
