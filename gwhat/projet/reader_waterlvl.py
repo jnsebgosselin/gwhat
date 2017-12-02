@@ -27,6 +27,8 @@ import csv
 # ---- Imports: local
 from gwhat.common.utils import save_content_to_csv
 
+FILE_EXTS = ['.csv', '.xls', '.xlsx']
+
 
 def load_excel_datafile(fname):
     print('Loading waterlvl time-series from Excel file...')
@@ -151,7 +153,7 @@ def init_waterlvl_measures(dirname):
     Create an empty waterlvl_manual_measurements.csv file with headers
     if it does not already exist.
     """
-    for ext in ['.csv, .xls, .xlsx']:
+    for ext in FILE_EXTS:
         fname = os.path.join(dirname, "waterlvl_manual_measurements"+ext)
         if os.path.exists(fname):
             return
@@ -173,7 +175,7 @@ def load_waterlvl_measures(filename, well):
     time_mes, wl_mes = np.array([]), np.array([])
     # Determine the extension of the file.
     root, ext = os.path.splitext(filename)
-    exts = [ext] if ext in ['.csv, .xls, .xlsx'] else ['.csv, .xls, .xlsx']
+    exts = [ext] if ext in FILE_EXTS else FILE_EXTS
     for ext in exts:
         filename = root+ext
         if os.path.exists(root+ext):
