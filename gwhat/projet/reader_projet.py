@@ -237,8 +237,8 @@ class ProjetReader(object):
             # ---- Manual measurements ----
 
             mmeas = grp.create_group('manual')
-            mmeas.create_dataset('Time', data=np.array([]), maxshape=None)
-            mmeas.create_dataset('WL', data=np.array([]), maxshape=None)
+            mmeas.create_dataset('Time', data=np.array([]), maxshape=(None,))
+            mmeas.create_dataset('WL', data=np.array([]), maxshape=(None,))
 
             self.db.flush()
 
@@ -334,19 +334,28 @@ class WLDataFrameHDF5(dict):
     def name(self):
         return self.dset.name
 
-    # =========================================================================
-
-    # manual measure get/set functions
+    # ---- Manual measurents
 
     def set_wlmeas(self, time, wl):
-        self.dset['manual/Time'][:] = time
-        self.dset['manual/WL'][:] = wl
+        """Overwrite the water level measurements for this dataset."""
+        try:
+            self.dset['manual/Time'].resize(np.shape(time))
+            self.dset['manual/Time'][:] = time
+            self.dset['manual/WL'].resize(np.shape(wl))
+            self.dset['manual/WL'][:] = wl
+        except TypeError:
+            del self.dset['manual']
+            mmeas = self.dset.create_group('manual')
+            mmeas.create_dataset('Time', data=time, maxshape=(None,))
+            mmeas.create_dataset('WL', data=wl, maxshape=(None,))
+        self.dset.file.flush()
 
     def get_wlmeas(self):
+        """Get the water level measurements for this dataset."""
         grp = self.dset.require_group('manual')
         return grp['Time'].value, grp['WL'].value
 
-    # =========================================================================
+    # ---- Master recession curve
 
     def set_mrc(self, A, B, peak_indx, time, recess):
         self.dset['mrc/params'][:] = (A, B)
@@ -379,7 +388,7 @@ class WLDataFrameHDF5(dict):
                                dtype='float64', maxshape=(None,))
         return bool(self.dset['mrc'].attrs['exists'])
 
-    # ================================================================ BRF ====
+    # ---- Barometric response function
 
     def saved_brf(self):
         grp = self.dset.require_group('brf')
