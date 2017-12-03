@@ -105,6 +105,51 @@ Plotting the Hydrograph
     :alt: alternate text
     :figclass: align-center
  
+Page and figure settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _fig_hydroprint_page_settings:
+.. figure:: img/scs/hydroprint_page_setting.*
+    :align: center
+    :width: 100%
+    :alt: hydroprint_page_setting.svg
+    :figclass: align-center
+   
+Water level manual measurements
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _fig_water_level_measurements:
+.. figure:: img/files/water_level_measurements.*
+    :align: center
+    :width: 50%
+    :alt: water_level_measurements.png
+    :figclass: align-center
+
+
+Axes settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _fig_hydroprint_axis_settings:
+.. figure:: img/scs/axis_setup_annoted.*
+    :align: center
+    :width: 100%
+    :alt: axis_setup_annoted.svg
+    :figclass: align-center
+
+The axis can be configured from the 
+
+Color Settings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. _fig_hydroprint_color_settings:
+.. figure:: img/scs/hydroprint_color_settings.*
+    :align: center
+    :width: 100%
+    :alt: hydroprint_color_settings.svg
+    :figclass: align-center
+    
+
+ 
 Weather Normals Viewer
 -----------------------------------------------
 
