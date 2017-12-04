@@ -14,7 +14,8 @@ in :numref:`scs_plot_hydrograph`.
     :alt: alternate text
     :figclass: align-center
     
-    Presentation of the tool to plot hydrographs in GWHAT under the ``Plot Hydrograph`` tab.
+    Presentation of the tool to plot hydrographs in GWHAT under the 
+    :guilabel:`Plot Hydrograph` tab.
  
 
 .. _importing_data_inproject:
@@ -114,7 +115,7 @@ various components of the hydrograph. These options are available in the
 |icon_page_setup| icon (see :numref:`fig_plot_hydrograph_annoted`).
 The :guilabel:`Page and Figure Setup` window is shown in
 :numref:`fig_hydroprint_page_settings`, as well as the components of the
-hydrograph for which the size or visibility can be configured.
+hydrograph for which the size or the visibility can be configured.
 
 .. _fig_hydroprint_page_settings:
 .. figure:: img/scs/hydroprint_page_setting.*
@@ -126,12 +127,34 @@ hydrograph for which the size or visibility can be configured.
 Water level manual measurements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Water level measured manually during field visits can be plotted on the hydrograph.
+This provides a quick and easy way to validate visually the automated measurements acquired
+with a water level datalogger.
+
+To do so, the manual measurements must be saved in a csv or xls/xlsx file
+named :file:`water_level_measurements` in the :file:`Water Levels` folder 
+(see :numref:`sec_desc_project_folders`).
+An example is shown in :numref:`fig_water_level_measurements` below. The first column corresponds
+to the name of the observation wells, as specified when importing the data into
+the project (see :numref:`importing_data_inproject`), the second column is the
+dates entered in :term:`Excel numeric date format`, and the last column corresponds to
+the manual measurements, in meters below the ground surface.
+
 .. _fig_water_level_measurements:
 .. figure:: img/files/water_level_measurements.*
     :align: center
     :width: 50%
     :alt: water_level_measurements.png
     :figclass: align-center
+    
+    Example of a :file:`water_level_measurements` file.
+
+.. note:: A :file:`water_level_measurements` file is created in a csv format
+          by default by GWHAT the first time a project is created. If desired,
+          this file can be converted to a xsl or xslx format. Note that if more
+          than one file named :file:`water_level_measurements` exists in the folder
+          :file:`Water Levels`, but with different extension, GWHAT will always
+          read the data from the csv file by default.
 
 
 Axes settings
