@@ -15,7 +15,7 @@ default the first time GWHAT is started. This project includes samples of
 files to test the different features of GWHAT.
 
 .. _project_toolbar:
-.. figure:: img/scs_project_toolbar_annoted.*
+.. figure:: img/scs/scs_project_toolbar_annoted.*
     :align: center
     :width: 100%
     :alt: alternate text
