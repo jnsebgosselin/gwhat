@@ -34,7 +34,7 @@ from PyQt5.QtWidgets import (QSpinBox, QDoubleSpinBox, QWidget, QDateEdit,
                              QAbstractSpinBox, QGridLayout, QFrame,
                              QMessageBox, QComboBox, QLabel, QTabWidget,
                              QFileDialog, QApplication, QPushButton,
-                             QRadioButton, QDesktopWidget)
+                             QRadioButton, QDesktopWidget, QGroupBox)
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -911,9 +911,6 @@ class HydroprintGUI(myqt.DialogWindow):
 #        sender.blockSignals(False)
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
 class PageSetupWin(QWidget):
 
     newPageSetupSent = QSignal(bool)
@@ -921,8 +918,11 @@ class PageSetupWin(QWidget):
     def __init__(self, parent=None):
         super(PageSetupWin, self).__init__(parent)
 
-        self.setWindowTitle('Page Setup')
-        self.setWindowFlags(Qt.Window)
+        self.setWindowTitle('Page and Figure Setup')
+        self.setWindowIcon(IconDB().master)
+        self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowCloseButtonHint)
 
         # ---- Default Values ----
 
@@ -956,9 +956,7 @@ class PageSetupWin(QWidget):
 
         toolbar_widget.setLayout(toolbar_layout)
 
-        # ---- Figure Size ----
-
-        figSize_widget = QWidget()
+        # ---- Figure Size GroupBox
 
         self.fwidth = QDoubleSpinBox()
         self.fwidth.setSingleStep(0.05)
@@ -981,98 +979,90 @@ class PageSetupWin(QWidget):
         self.va_ratio_spinBox.setValue(self.va_ratio)
         self.va_ratio_spinBox.setAlignment(Qt.AlignCenter)
 
-        class QTitle(QLabel):
-            def __init__(self, label, parent=None):
-                super(QTitle, self).__init__(label, parent)
-                self.setAlignment(Qt.AlignCenter)
+        # GroupBox Layout
 
-        figSize_layout = QGridLayout()
+        figsize_grpbox = QGroupBox("Figure Size :")
+        figSize_layout = QGridLayout(figsize_grpbox)
         row = 0
-        figSize_layout.addWidget(QTitle('FIGURE SIZE\n'), row, 0, 1, 3)
-        row += 1
         figSize_layout.addWidget(QLabel('Figure Width :'), row, 0)
         figSize_layout.addWidget(self.fwidth, row, 2)
         row += 1
         figSize_layout.addWidget(QLabel('Figure Height :'), row, 0)
         figSize_layout.addWidget(self.fheight, row, 2)
         row += 1
-        figSize_layout.addWidget(
-            QLabel('Top/Bottom Axes Ratio :'), row, 0)
+        figSize_layout.addWidget(QLabel('Top/Bottom Axes Ratio :'), row, 0)
         figSize_layout.addWidget(self.va_ratio_spinBox, row, 2)
-        row += 1
-        figSize_layout.addWidget(myqt.HSep(), row, 0, 1, 3)
-        row += 1
-        figSize_layout.addWidget(
-            QTitle('GRAPH ELEMENTS VISIBILITY\n'), row, 0, 1, 3)
 
         figSize_layout.setColumnStretch(1, 100)
-        figSize_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        figSize_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
-        figSize_widget.setLayout(figSize_layout)
+        # ---- Graph Element Visibility GroupBox
 
-        # ---- Legend ----
-
-        legend_widget = QWidget()
+        # Legend
 
         self.legend_on = QRadioButton('On')
         self.legend_on.toggle()
         self.legend_off = QRadioButton('Off')
 
-        legend_layout = QGridLayout()
+        legend_grpwidget = QWidget()
+        legend_layout = QGridLayout(legend_grpwidget)
         legend_layout.addWidget(QLabel('Legend :'), 0, 0)
         legend_layout.addWidget(self.legend_on, 0, 2)
         legend_layout.addWidget(self.legend_off, 0, 3)
         legend_layout.setColumnStretch(1, 100)
         legend_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
-        legend_widget.setLayout(legend_layout)
-
-        # ----- Graph title -----
-
-        title_widget = QWidget()
+        # Graph title
 
         self.title_on = QRadioButton('On')
         self.title_on.toggle()
         self.title_off = QRadioButton('Off')
 
-        title_layout = QGridLayout()
+        title_grpwidget = QWidget()
+        title_layout = QGridLayout(title_grpwidget)
         title_layout.addWidget(QLabel('Graph Title :'), 0, 0)
         title_layout.addWidget(self.title_on, 0, 2)
         title_layout.addWidget(self.title_off, 0, 3)
         title_layout.setColumnStretch(1, 100)
         title_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
-        title_widget.setLayout(title_layout)
-
-        # ---- Trend Line ----
-
-        trend_widget = QWidget()
+        # Trend Line
 
         self.trend_on = QRadioButton('On')
         self.trend_off = QRadioButton('Off')
         self.trend_off.toggle()
 
-        trend_layout = QGridLayout()
+        trend_grpwidget = QWidget()
+        trend_layout = QGridLayout(trend_grpwidget)
         trend_layout.addWidget(QLabel('Water Level Trend :'), 0, 0)
         trend_layout.addWidget(self.trend_on, 0, 2)
         trend_layout.addWidget(self.trend_off, 0, 3)
         trend_layout.setColumnStretch(1, 100)
         trend_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
-        trend_widget.setLayout(trend_layout)
+        # GroupBox Layout
 
-        # ---- Main Layout ----
+        eleviz_grpbox = QGroupBox("Graph Components Visibility :")
+        eleviz_layout = QGridLayout(eleviz_grpbox)
+        eleviz_layout.addWidget(legend_grpwidget, 0, 0)
+        eleviz_layout.addWidget(title_grpwidget, 1, 0)
+        eleviz_layout.addWidget(trend_grpwidget, 2, 0)
+
+        eleviz_layout.setColumnStretch(1, 100)
+        eleviz_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+
+        # ---- Main Layout
 
         main_layout = QGridLayout()
-        main_layout.addWidget(figSize_widget, 0, 0)
-        main_layout.addWidget(legend_widget, 2, 0)
-        main_layout.addWidget(title_widget, 3, 0)
-        main_layout.addWidget(trend_widget, 4, 0)
-        main_layout.addWidget(toolbar_widget, 5, 0)
+        main_layout.addWidget(figsize_grpbox, 0, 0)
+        main_layout.addWidget(eleviz_grpbox, 1, 0)
+        main_layout.setRowStretch(2, 100)
+        main_layout.setRowMinimumHeight(2, 15)
+        main_layout.addWidget(toolbar_widget, 3, 0)
 
         self.setLayout(main_layout)
 
-    # =========================================================================
+    # ---- Handlers
 
     def btn_OK_isClicked(self):
         self.btn_apply_isClicked()
@@ -1086,8 +1076,6 @@ class PageSetupWin(QWidget):
         self.va_ratio = self.va_ratio_spinBox.value()
 
         self.newPageSetupSent.emit(True)
-
-    # =========================================================================
 
     def closeEvent(self, event):
         super(PageSetupWin, self).closeEvent(event)
@@ -1117,8 +1105,6 @@ class PageSetupWin(QWidget):
         else:
             self.trend_off.toggle()
 
-    # =========================================================================
-
     def show(self):
         super(PageSetupWin, self).show()
         self.activateWindow()
@@ -1136,10 +1122,8 @@ class PageSetupWin(QWidget):
 
         qr.moveCenter(cp)
         self.move(qr.topLeft())
+        self.setMinimumSize(self.size())
         self.setFixedSize(self.size())
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 if __name__ == '__main__':
