@@ -1048,7 +1048,6 @@ class PageSetupWin(QWidget):
         eleviz_layout.addWidget(title_grpwidget, 1, 0)
         eleviz_layout.addWidget(trend_grpwidget, 2, 0)
 
-        eleviz_layout.setColumnStretch(1, 100)
         eleviz_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
         # ---- Main Layout
