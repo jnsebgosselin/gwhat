@@ -23,7 +23,7 @@ Importing Data
 -----------------------------------------------
 
 The tools for downloading and filling the gaps in daily weather records
-(see in :numref:chap_dwnld_weather and :numref:chap_gapfilling_weather_data)
+(see in :numref:`chap_dwnld_weather` and :numref:`chap_gapfilling_weather_data`)
 work directly from the csv file to load and save the input and output data. This
 is practical because it allowed using GWHAT more easily to generate gapless
 daily weather datasets for any projects, even those not implying the
@@ -141,6 +141,15 @@ The axis can be configured from the
 Color Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+The color of several elements of the hydrograph figure can be changed from the
+:guilabel:`Colors Palette Setup` window that is accessible by clicking
+on the |icon_color_picker| icon (see :numref:`fig_plot_hydrograph_annoted`). The
+:guilabel:`Colors Palette Setup` and the elements of the hydrograph for which
+the color can be changed are both shown in :numref:`fig_hydroprint_color_settings`.
+A new color can be selected for a given element of the hydrograph by clicking
+on its corresponding colored square in the :guilabel:`Colors Palette Setup`
+window and by clicking on the :guilabel:`OK` or :guilabel:`Apply` button.
+
 .. _fig_hydroprint_color_settings:
 .. figure:: img/scs/hydroprint_color_settings.*
     :align: center
@@ -148,6 +157,8 @@ Color Settings
     :alt: hydroprint_color_settings.svg
     :figclass: align-center
     
+    Presentation of the :guilabel:`Colors Palette Setup` and identification on the
+    hydrograph of the various elements for which the color can be changed.
 
  
 Weather Normals Viewer
@@ -173,3 +184,13 @@ Weather Normals Viewer
                       :width: 1em
                       :height: 1em
                       :alt: folder
+                      
+.. |icon_meteo| image:: img/icon/meteo.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: folder
+                      
+.. |icon_color_picker| image:: img/icon/color_picker.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: color picker
