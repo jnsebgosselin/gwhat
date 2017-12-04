@@ -108,6 +108,14 @@ Plotting the Hydrograph
 Page and figure settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Several options are available to customize the size and visibility of the
+various components of the hydrograph. These options are available in the
+:guilabel:`Page and Figure Setup` window that is accessible by clicking on the
+|icon_page_setup| icon (see :numref:`fig_plot_hydrograph_annoted`).
+The :guilabel:`Page and Figure Setup` window is shown in
+:numref:`fig_hydroprint_page_settings`, as well as the components of the
+hydrograph for which the size or visibility can be configured.
+
 .. _fig_hydroprint_page_settings:
 .. figure:: img/scs/hydroprint_page_setting.*
     :align: center
@@ -141,12 +149,12 @@ The axis can be configured from the
 Color Settings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The color of several elements of the hydrograph figure can be changed from the
+The color of several components of the hydrograph can be changed from the
 :guilabel:`Colors Palette Setup` window that is accessible by clicking
 on the |icon_color_picker| icon (see :numref:`fig_plot_hydrograph_annoted`). The
-:guilabel:`Colors Palette Setup` and the elements of the hydrograph for which
+:guilabel:`Colors Palette Setup` window and the components of the hydrograph for which
 the color can be changed are both shown in :numref:`fig_hydroprint_color_settings`.
-A new color can be selected for a given element of the hydrograph by clicking
+A new color can be selected for a given component of the hydrograph by clicking
 on its corresponding colored square in the :guilabel:`Colors Palette Setup`
 window and by clicking on the :guilabel:`OK` or :guilabel:`Apply` button.
 
@@ -157,8 +165,8 @@ window and by clicking on the :guilabel:`OK` or :guilabel:`Apply` button.
     :alt: hydroprint_color_settings.svg
     :figclass: align-center
     
-    Presentation of the :guilabel:`Colors Palette Setup` and identification on the
-    hydrograph of the various elements for which the color can be changed.
+    Presentation of the :guilabel:`Colors Palette Setup` and identification on 
+    the hydrograph of the components for which the color can be changed.
 
  
 Weather Normals Viewer
@@ -194,3 +202,8 @@ Weather Normals Viewer
                       :width: 1em
                       :height: 1em
                       :alt: color picker
+                      
+.. |icon_page_setup| image:: img/icon/page_setup.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: page setup
