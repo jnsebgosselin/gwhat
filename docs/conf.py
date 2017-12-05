@@ -63,7 +63,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'GWHAT'
-copyright = '2014-2017, GWHAT documentation team'
+copyright = '2014-2017, GWHAT Documentation Contributors'
 author = 'Jean-Sébastien Gosselin'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -153,13 +153,8 @@ latex_elements = {
 latex_engine = 'pdflatex'
 latex_logo = 'img/logo_latex.pdf'
 
-authors = (r'Jean-Sébastien Gosselin \and '
-           r'René Lefebvre \and '
-           r'Richard Martel \and '
-           r'Christine Rivard')
-
 latex_documents = [(master_doc, 'gwhat.tex', 'Documentation',
-                    authors, 'manual')]
+                    "GWHAT Documentation Contributors", 'manual')]
 
 # -- Options for manual page output ---------------------------------------
 
@@ -175,6 +170,7 @@ man_pages = [(master_doc, 'GWHAT', 'GWHAT Documentation', [author], 1)]
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'GWHAT', 'GWHAT Documentation',
-     author, 'GWHAT', 'One line description of project.',
+     "GWHAT Documentation Contributors", 'GWHAT',
+     'One line description of project.',
      'Miscellaneous'),
 ]
