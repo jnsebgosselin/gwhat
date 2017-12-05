@@ -24,12 +24,16 @@ warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
 Contributors
 -----------------------------------------------
 
+GWHAT and this documentation have seen many revisions over the years as
+additional research has been completed. Contributing authors, listed in 
+chronological order, include:
+
 | **GWHAT Documentation Contributors:**
 | 
 | `Jean-Sébastien Gosselin`_, `INRS centre Eau-Terre-Environnement`_
 | `Christine Rivard`_, `Geological Survey of Canada`_
-| `René Lefebvre`_, `INRS centre Eau-Terre-Environnement`_
 | `Richard Martel`_, `INRS centre Eau-Terre-Environnement`_
+| `René Lefebvre`_, `INRS centre Eau-Terre-Environnement`_
 |
 
 | **GWHAT Project Contributors:**
