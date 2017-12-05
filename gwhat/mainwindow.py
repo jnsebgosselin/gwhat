@@ -67,7 +67,6 @@ import tkinter.messagebox
 # ---- Local imports
 
 import gwhat.common.database as db
-import gwhat.custom_widgets as MyQWidget
 from gwhat.common.utils import save_content_to_csv
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
