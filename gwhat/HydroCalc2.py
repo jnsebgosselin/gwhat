@@ -114,7 +114,7 @@ class WLCalc(myqt.DialogWindow):
         self.__brfcount = 0
         # self.config_brf = ConfigBRF()
         self.config_brf = bm.BRFManager(parent=self)
-        self.config_brf.btn_seldata.clicked.connect(self.select_BRF)
+        self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
 
         # Soil Profiles :
 
@@ -352,10 +352,10 @@ class WLCalc(myqt.DialogWindow):
         self.btn_undo.setEnabled(False)
         self.btn_undo.clicked.connect(self.undo)
 
-        self.btn_editPeak = QToolButtonNormal(IconDB().add_point)
-        self.btn_editPeak.clicked.connect(self.aToolbarBtn_isClicked)
-        self.btn_editPeak.setToolTip('<p>Toggle edit mode to manually'
-                                     ' add extremums to the graph</p>')
+        self.btn_addpeak = QToolButtonNormal(IconDB().add_point)
+        self.btn_addpeak.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_addpeak.setToolTip('<p>Toggle edit mode to manually'
+                                    ' add extremums to the graph</p>')
 
         self.btn_delPeak = QToolButtonNormal(IconDB().erase)
         self.btn_delPeak.clicked.connect(self.aToolbarBtn_isClicked)
@@ -374,7 +374,7 @@ class WLCalc(myqt.DialogWindow):
         mrc_tb = myqt.QFrameLayout()
         mrc_tb.addWidget(self.btn_undo, 0, 0)
         mrc_tb.addWidget(self.btn_clearPeak, 0, 1)
-        mrc_tb.addWidget(self.btn_editPeak, 0, 2)
+        mrc_tb.addWidget(self.btn_addpeak, 0, 2)
         mrc_tb.addWidget(self.btn_delPeak, 0, 3)
         mrc_tb.addWidget(self.btn_save_interp, 0, 4)
         mrc_tb.setColumnStretch(mrc_tb.columnCount(), 100)
@@ -556,11 +556,12 @@ class WLCalc(myqt.DialogWindow):
     # =========================================================================
 
     def aToolbarBtn_isClicked(self):
-        # slot that redirects all clicked actions from the toolbar buttons
-
+        """
+        Handles and redirects all clicked actions from toolbar buttons.
+        """
         if self.wldset is None:
-            msg = 'Please import a valid water level dataset first.'
-            self.emit_warning(msg)
+            self.emit_warning(
+                    "Please import a valid water level dataset first.")
             return
 
         sender = self.sender()
@@ -572,12 +573,14 @@ class WLCalc(myqt.DialogWindow):
             self.home()
         elif sender == self.btn_save_interp:
             self.save_mrc_tofile()
-        elif sender == self.btn_editPeak:
-            self.add_peak()
+        elif sender == self.btn_addpeak:
+            self.btn_addpeak_isclicked()
         elif sender == self.btn_delPeak:
             self.btn_delPeak_isclicked()
         elif sender == self.btn_dateFormat:
             self.switch_date_format()
+        elif sender == self.config_brf.btn_seldata:
+            self.select_BRF()
 
     # ---- MRC
 
@@ -748,14 +751,13 @@ class WLCalc(myqt.DialogWindow):
         Handles when the button to select a period to compute the BRF is
         clicked.
         """
-        print("select_BRF")
         btn = self.config_brf.btn_seldata
         btn.setAutoRaise(not btn.autoRaise())
         if btn.autoRaise() is False:
             self.brfperiod = [None, None]
             self.plot_BRFperiod()
 
-            self.btn_editPeak.setAutoRaise(True)
+            self.btn_addpeak.setAutoRaise(True)
             self.btn_delPeak.setAutoRaise(True)
 
     # ---- Peaks handlers
@@ -795,33 +797,32 @@ class WLCalc(myqt.DialogWindow):
 
         self.plot_peak()
 
-    def add_peak(self):
-        # slot connected when the button to add new peaks is clicked.
-        if self.isGraphExists is False:
-            print('Graph is empty')
-            self.emit_warning(
-              'Please select a valid Water Level Data File first.')
-            return
+    def btn_addpeak_isclicked(self):
+        """Handles when the button add_peak is clicked."""
+        self.btn_addpeak.setAutoRaise(not self.btn_addpeak.autoRaise())
+        self.btn_delPeak.setAutoRaise(True)
+        self.config_brf.btn_seldata.setAutoRaise(True)
+        self.brfperiod = [None, None]
+        self.__brfcount = 0
 
-        if self.btn_editPeak.autoRaise():
-            # Activate <add_peak>
-            self.btn_editPeak.setAutoRaise(False)
+        if not self.btn_addpeak.autoRaise():
             QApplication.setOverrideCursor(Qt.PointingHandCursor)
-
-            # Deactivate <delete_peak>
-            self.btn_delPeak.setAutoRaise(True)
         else:
-            # Deactivate <add_peak>
-            self.btn_editPeak.setAutoRaise(True)
             QApplication.restoreOverrideCursor()
-
-        # Draw to save background :
         self.draw()
 
     def btn_delPeak_isclicked(self):
-        """Handles when button btn_delPeak is clicked."""
+        """Handles when the button btn_delPeak is clicked."""
         self.btn_delPeak.setAutoRaise(not self.btn_delPeak.autoRaise())
-        self.btn_editPeak.setAutoRaise(True)
+        self.btn_addpeak.setAutoRaise(True)
+        self.config_brf.btn_seldata.setAutoRaise(True)
+        self.brfperiod = [None, None]
+        self.__brfcount = 0
+
+        if not self.btn_delPeak.autoRaise():
+            QApplication.setOverrideCursor(Qt.PointingHandCursor)
+        else:
+            QApplication.restoreOverrideCursor()
         self.draw()
 
     def clear_all_peaks(self):
@@ -1151,12 +1152,20 @@ class WLCalc(myqt.DialogWindow):
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
-    # -------------------------------------------------------------------------
+    # ----- Handlers: Mouse events
+
+    def is_all_btn_raised(self):
+        """
+        Returns whether all of the tool buttons that can block the panning and
+        zooming of the graph are raised.
+        """
+        return(self.btn_delPeak.autoRaise() and
+               self.btn_addpeak.autoRaise() and
+               self.config_brf.btn_seldata.autoRaise())
 
     def on_fig_leave(self, event):
+        """Handles when the mouse cursor leaves the graph."""
         self.draw()
-
-    # ----- Handlers: Mouse events
 
     def mouse_vguide(self, event):
         if self.isGraphExists is False:
@@ -1179,7 +1188,6 @@ class WLCalc(myqt.DialogWindow):
         # Trace a red vertical guide (line) that folows the mouse marker :
 
         x = event.xdata
-        print(x)
         if x:
             self.vguide.set_visible(True)
             self.vguide.set_xdata(x)
@@ -1235,18 +1243,9 @@ class WLCalc(myqt.DialogWindow):
 
         self.fig.canvas.blit()
 
-    def is_all_btn_raised(self):
-        """
-        Return wheter all of the tool buttons that can block the panning and
-        zooming of the graph are raised.
-        """
-        return(self.btn_delPeak.autoRaise() and
-               self.btn_editPeak.autoRaise() and
-               self.config_brf.btn_seldata.autoRaise())
-
     def onrelease(self, event):
         """
-        Handles when a button of the mouse is release after the graph has
+        Handles when a button of the mouse is released after the graph has
         been clicked.
         """
         if self.is_all_btn_raised():
@@ -1254,14 +1253,13 @@ class WLCalc(myqt.DialogWindow):
                 self.toolbar.pan()
                 self.draw()
                 QApplication.restoreOverrideCursor()
-                self.mouse_vguide(event)
-            return
+        else:
+            if event.button != 1:
+                return
 
-        if event.button != 1:
-            return
-
-        self.__addPeakVisible = True
-        self.plot_peak()
+            self.__addPeakVisible = True
+            self.plot_peak()
+        self.mouse_vguide(event)
 
     def onclick(self, event):
         """Handles when the graph is clicked with the mouse."""
@@ -1301,7 +1299,7 @@ class WLCalc(myqt.DialogWindow):
                 self.xcross.set_visible(False)
                 self.plot_peak()
 
-        elif not self.btn_editPeak.autoRaise():
+        elif not self.btn_addpeak.autoRaise():
             xclic = event.xdata
             if xclic is None:
                 return
