@@ -36,11 +36,7 @@ from gwhat.brf_mod.kgs_plot import BRFFigure
 from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat import brf_mod as bm
 
-mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
-
-
-# =============================================================================
 
 
 class BRFManager(myqt.QFrameLayout):
@@ -77,8 +73,8 @@ class BRFManager(myqt.QFrameLayout):
         self._dataend.setCalendarPopup(True)
         self._dataend.setDisplayFormat('dd/MM/yyyy')
 
-        btn_seldata = QToolButtonSmall(IconDB().select_range)
-        btn_seldata.clicked.connect(self.get_datarange)
+        self.btn_seldata = QToolButtonSmall(IconDB().select_range)
+        self.btn_seldata.clicked.connect(self.get_datarange)
 
         # ---- Detrend and Correct Options ----
 
@@ -119,7 +115,7 @@ class BRFManager(myqt.QFrameLayout):
         row += 1
         self.addWidget(QLabel('BRF Start :'), row, 0)
         self.addWidget(self._datastart, row, 1)
-        self.addWidget(btn_seldata, row, 2)
+        self.addWidget(self.btn_seldata, row, 2)
         row += 1
         self.addWidget(QLabel('BRF End :'), row, 0)
         self.addWidget(self._dataend, row, 1)
@@ -592,13 +588,16 @@ class BRFViewer(QWidget):
             # Window is minimised. Restore it.
             self.setWindowState(Qt.WindowNoState)
 
+
+# ---- if __name__ == "__main__":
+
 if __name__ == "__main__":
-    import projet.reader_projet as prd
+    import gwhat.projet.reader_projet as prd
     import sys
     projet = prd.ProjetReader('C:/Users/jsgosselin/OneDrive/Research/'
                               'PostDoc - MDDELCC/Outils/BRF MontEst/'
                               'BRF MontEst.what')
-    wldset = projet.get_wldset(projet.wldsets[0])
+    wldset = projet.get_wldset(projet.wldsets[1])
 
     app = QApplication(sys.argv)
 
