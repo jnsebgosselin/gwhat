@@ -114,6 +114,7 @@ class WLCalc(myqt.DialogWindow):
         self.__brfcount = 0
         # self.config_brf = ConfigBRF()
         self.config_brf = bm.BRFManager(parent=self)
+        self.config_brf.btn_seldata.clicked.connect(self.select_BRF)
 
         # Soil Profiles :
 
@@ -574,13 +575,11 @@ class WLCalc(myqt.DialogWindow):
         elif sender == self.btn_editPeak:
             self.add_peak()
         elif sender == self.btn_delPeak:
-            self.delete_peak()
+            self.btn_delPeak_isclicked()
         elif sender == self.btn_dateFormat:
             self.switch_date_format()
-        elif sender == self.btn_selBRF:
-            self.select_BRF()
 
-    # ================================================================ MRC ====
+    # ---- MRC
 
     def btn_MRCalc_isClicked(self):
 
@@ -725,7 +724,7 @@ class WLCalc(myqt.DialogWindow):
         mrc2rechg(self.time, self.water_lvl, self.A, self.B,
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
 
-    # =========================================================================
+    # ---- BRF handlers
 
     def plot_BRFperiod(self):
         if self.brfperiod[0]:
@@ -745,23 +744,21 @@ class WLCalc(myqt.DialogWindow):
         self.draw()
 
     def select_BRF(self):
-        # slot connected when the button to select a period to compute the
-        # BRF is clicked
-        if self.btn_selBRF.autoRaise():
-            self.btn_selBRF.setAutoRaise(False)
+        """
+        Handles when the button to select a period to compute the BRF is
+        clicked.
+        """
+        print("select_BRF")
+        btn = self.config_brf.btn_seldata
+        btn.setAutoRaise(not btn.autoRaise())
+        if btn.autoRaise() is False:
             self.brfperiod = [None, None]
             self.plot_BRFperiod()
 
-            self.btn_pan.setAutoRaise(True)
-            if self.toolbar._active == "PAN":
-                self.toolbar.pan()
-
             self.btn_editPeak.setAutoRaise(True)
             self.btn_delPeak.setAutoRaise(True)
-        else:
-            self.btn_selBRF.setAutoRaise(True)
 
-    # =========================================================================
+    # ---- Peaks handlers
 
     def plot_peak(self):
         if len(self.peak_memory) == 1:
@@ -821,18 +818,10 @@ class WLCalc(myqt.DialogWindow):
         # Draw to save background :
         self.draw()
 
-    def delete_peak(self):
-        if self.btn_delPeak.autoRaise():
-            # Activate <delete_peak>
-            self.btn_delPeak.setAutoRaise(False)
-
-            # Deactivate <add_peak>
-            self.btn_editPeak.setAutoRaise(True)
-        else:
-            # Deactivate <delete_peak>
-            self.btn_delPeak.setAutoRaise(True)
-
-        # Draw to save background :
+    def btn_delPeak_isclicked(self):
+        """Handles when button btn_delPeak is clicked."""
+        self.btn_delPeak.setAutoRaise(not self.btn_delPeak.autoRaise())
+        self.btn_editPeak.setAutoRaise(True)
         self.draw()
 
     def clear_all_peaks(self):
@@ -1167,7 +1156,7 @@ class WLCalc(myqt.DialogWindow):
     def on_fig_leave(self, event):
         self.draw()
 
-    # -------------------------------------------------------------------------
+    # ----- Handlers: Mouse events
 
     def mouse_vguide(self, event):
         if self.isGraphExists is False:
@@ -1175,7 +1164,6 @@ class WLCalc(myqt.DialogWindow):
 
         # if not self.btn_pan.autoRaise():
         #    return
-
         if self.toolbar._active == "PAN":
             return
 
@@ -1191,6 +1179,7 @@ class WLCalc(myqt.DialogWindow):
         # Trace a red vertical guide (line) that folows the mouse marker :
 
         x = event.xdata
+        print(x)
         if x:
             self.vguide.set_visible(True)
             self.vguide.set_xdata(x)
@@ -1246,10 +1235,21 @@ class WLCalc(myqt.DialogWindow):
 
         self.fig.canvas.blit()
 
-    # -------------------------------------------------------------------------
+    def is_all_btn_raised(self):
+        """
+        Return wheter all of the tool buttons that can block the panning and
+        zooming of the graph are raised.
+        """
+        return(self.btn_delPeak.autoRaise() and
+               self.btn_editPeak.autoRaise() and
+               self.config_brf.btn_seldata.autoRaise())
 
     def onrelease(self, event):
-        if self.btn_delPeak.autoRaise() and self.btn_editPeak.autoRaise():
+        """
+        Handles when a button of the mouse is release after the graph has
+        been clicked.
+        """
+        if self.is_all_btn_raised():
             if self.toolbar._active == 'PAN':
                 self.toolbar.pan()
                 self.draw()
@@ -1263,17 +1263,13 @@ class WLCalc(myqt.DialogWindow):
         self.__addPeakVisible = True
         self.plot_peak()
 
-    # -------------------------------------------------------------------------
-
     def onclick(self, event):
+        """Handles when the graph is clicked with the mouse."""
         x, y = event.x, event.y
         if x is None or y is None:
             return
 
         ax0 = self.fig.axes[0]
-
-        # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
-
         if not self.btn_delPeak.autoRaise():
             if len(self.peak_indx) == 0:
                 return
@@ -1332,6 +1328,27 @@ class WLCalc(myqt.DialogWindow):
 
             self.__addPeakVisible = False
             self.draw()
+        elif not self.config_brf.btn_seldata.autoRaise():
+            # Select the BRF period.
+            xclic = event.xdata
+            if xclic is None:
+                return
+            x = self.time + self.dt4xls2mpl*self.dformat
+            y = self.water_lvl
+
+            d = np.abs(xclic - x)
+            indx = np.argmin(d)
+            self.brfperiod[self.__brfcount] = self.time[indx]
+            if self.__brfcount == 0:
+                self.__brfcount += 1
+                self.plot_BRFperiod()
+            elif self.__brfcount == 1:
+                self.__brfcount = 0
+                self.select_BRF()
+                self.plot_BRFperiod()
+                self.config_brf.set_datarange(self.brfperiod)
+            else:
+                raise ValueError('Something is wrong in the code')
         else:
             if self.toolbar._active is None:
                 self.toolbar.pan()
@@ -1339,38 +1356,6 @@ class WLCalc(myqt.DialogWindow):
                 QApplication.setOverrideCursor(Qt.SizeAllCursor)
                 self.toolbar.press_pan(event)
 
-            # ------- Select BRF period ----
-
-#        elif not self.btn_selBRF.autoRaise():
-#            xclic = event.xdata
-#            if xclic is None:
-#                return
-#            x = self.time + self.dt4xls2mpl * self.dformat
-#            y = self.water_lvl
-#
-#            d = np.abs(xclic - x)
-#            indx = np.argmin(d)
-#            if len(self.peak_indx) > 0:
-#                if indx in self.peak_indx:
-#                    print('There is already a peak at this time.')
-#                    return
-#
-#                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 3:
-#                    print('There is a peak at less than 3 days.')
-#                    return
-#
-#            self.brfperiod[self.__brfcount] = self.time[indx]
-#            if self.__brfcount == 0:
-#                self.__brfcount += 1
-#                self.plot_BRFperiod()
-#            elif self.__brfcount == 1:
-#                self.__brfcount = 0
-#                self.select_BRF()
-#                self.plot_BRFperiod()
-#            else:
-#                raise ValueError('Something is wrong in the code')
-#
-#            print(self.brfperiod)
 
 # =============================================================================
 
