@@ -30,10 +30,8 @@ from copy import copy
 
 # ---- Third party imports
 
-# from PySide import QtGui
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-#from matplotlib.backends.backend_qt4agg import FigureCanvasQTAgg as FigureCanvas
 
 import numpy as np
 import scipy.stats as stats
@@ -48,8 +46,9 @@ from gwhat.common.utils import save_content_to_csv
 
 class PostProcessErr(object):
 
-    def __init__(self, fname):
+    SUPPORTED_FIG_FORMATS = ['pdf', 'svg']
 
+    def __init__(self, fname):
         self.Yp = None # Predicted value at target station
         self.Ym = None # Measured value at target station
         self.Time = None
@@ -57,11 +56,34 @@ class PostProcessErr(object):
 
         self.staName = None
         self.climID = None
+        self.set_fig_format(self.SUPPORTED_FIG_FORMATS[0])
 
         self.fname = fname
         self.dirname = os.path.dirname(self.fname)
 
         self.load_err_file()
+
+    # ---- Figure extension and format
+
+    @property
+    def fig_ext(self):
+        """Figure extension to use for saving the figures."""
+        return '.' + self.fig_format
+
+    @property
+    def fig_format(self):
+        """Figure format to use for saving the figures."""
+        return self.__fig_format
+
+    def set_fig_format(self, fig_format):
+        """Set the format that will be used for saving the figures."""
+        if fig_format in self.SUPPORTED_FIG_FORMATS:
+            self.__fig_format = fig_format
+        else:
+            print("Supported figure formats are:",  self.SUPPORTED_FIG_FORMATS)
+            raise ValueError
+
+    # ---- Open and Load files
 
     def open_err_file(self, filename):
         """Open .err file and return None if it fails."""
@@ -155,7 +177,7 @@ class PostProcessErr(object):
             name = name.replace("(", "")
             name = name.replace(")", "")
             print(name)
-            fname = '%s/%s.pdf' % (self.dirname, name)
+            fname = '%s/%s%s' % (self.dirname, name, self.fig_ext)
             print('------------------------')
             print('Generating %s.' % (os.path.basename(fname)))
             print('------------------------')
@@ -163,7 +185,7 @@ class PostProcessErr(object):
                               language)
 
             if self.varNames[i] == 'Total Precip (mm)':
-                fname = '%s/%s.pdf' % (self.dirname, 'precip_PDF')
+                fname = '%s/%s%s' % (self.dirname, 'precip_PDF', self.fig_ext)
                 self.plot_gamma_dist(self.Ym[i], self.Yp[i], fname,
                                      language)
                 print('Generating %s.' % (os.path.basename(fname)))
@@ -637,7 +659,12 @@ def compute_err_boxplot(dirname):
                 Yp_tot.extend(pperr.Yp)
 
 
+# ---- if __name__ == '__main__'
+
 if __name__ == '__main__':
-    dirname = "C:\\Users\\jsgosselin\\GWHAT\\gwhat\\tests\\@ new-prô'jèt!\\Meteo\\Output\\IBERVILLE (7023270)"
-    filename = os.path.join(dirname, "IBERVILLE (7023270)_2000-2010.err")
-    PostProcessErr(filename)
+    dirname = ("C:\\Users\\jsgosselin\\GWHAT\\Projects\\"
+               "Example\\Meteo\\Output\\FARNHAM (7022320)"
+               )
+    filename = os.path.join(dirname, "FARNHAM (7022320)_2005-2010.err")
+    post_worker = PostProcessErr(filename)
+    post_worker.set_fig_format("pdf")
