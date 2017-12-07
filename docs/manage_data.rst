@@ -6,24 +6,19 @@ Data Management in GWHAT
 Importing Data
 -----------------------------------------------
 
-The tools for downloading and filling the gaps in daily weather records
-(see in :numref:`chap_dwnld_weather` and :numref:`chap_gapfilling_weather_data`)
-work directly from csv files to load and save the input and output data. This
-is practical because it allowed using GWHAT more easily to generate gapless
-daily weather datasets for any projects, even those not implying the
-assessment of groundwater recharge.
+Before groundwater well hydrographs can be plotted or analyzed in GWHAT, time
+series of groundwater level and weather data must be imported into the currently
+opened project. This is done for water level and weather datasets by clicking
+on their corresponding |icon_open_project| icon located in the right side panel
+of the main window, under the tab :guilabel:`Plot Hydrograph` or :guilabel:`Analyze Hydrograph`.
 
-The tools to plot and analyze groundwater well hydrograph, however, requires to
-import the water level and weather data into the project. This is done for 
-water level and weather datasets by clicking on the corresponding  
-|icon_open_project| icon located in the right side panel of the tab 
-:guilabel:`Plot Hydrograph`.
+Clicking on either of the |icon_open_project| icons opens a dialog window 
+where a valid water level or weather datafile can be selected by clicking on
+the |icon_folder| icon (see :numref:`scs_new_water_level_dataset_dialog`).
 
-This opens a dialog window that allow to select a valid water level or weather
-data file as shown in :numref:`scs_new_water_level_dataset_dialog`. Data can be
-selected by clicking on the |icon_folder| icon. Once the file is opened in the
-dialog, the information relative to the climate of piezometric station will
-be displayed in the dialog and a name for the dataset will be proposed next to
+After a valid file has been selected, the information relative to the climate
+or piezometric station will be displayed in the dialog and a name for the dataset
+will be proposed next to
 the :guilabel:`Dataset name` label. Once the information relative to the
 station and dataset name are correct, the dataset can be imported in the
 project by clicking on the button :guilabel:`Ok`
@@ -36,6 +31,16 @@ project by clicking on the button :guilabel:`Ok`
     :figclass: align-center
     
     Presentation of the dialog window to import water level data files.
+
+The tools for downloading and filling the gaps in daily weather records
+(see in :numref:`chap_dwnld_weather` and :numref:`chap_gapfilling_weather_data`)
+work directly from csv files to load and save the input and output data. This
+is practical because it allowed using GWHAT more easily to generate gapless
+daily weather datasets for any projects, even those not implying the
+assessment of groundwater recharge.
+
+
+
 
 
 Input data files format
@@ -79,3 +84,8 @@ in another section.
     Formatted weather datafile example.
     
 .. important:: Water levels must be entered in meters below the ground surface.
+
+.. |icon_open_project| image:: img/icon/open_project.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: folder

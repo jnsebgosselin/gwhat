@@ -136,11 +136,6 @@ Weather Normals Viewer
                       :height: 1em
                       :alt: folder
                       
-.. |icon_open_project| image:: img/icon/open_project.*
-                      :width: 1em
-                      :height: 1em
-                      :alt: folder
-                      
 .. |icon_meteo| image:: img/icon/meteo.*
                       :width: 1em
                       :height: 1em
