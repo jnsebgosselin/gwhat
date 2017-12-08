@@ -19,11 +19,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>
 """
 
-from PyQt5.QtCore import pyqtProperty
-from PyQt5.QtCore import Qt, QDate
+
+# ---- Imports: standard libraries
+
+import os
+import requests
+import zipfile
+import io
+
+# ---- Imports: third parties
+
+from PyQt5.QtCore import Qt, QDate, QPoint
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
-                             QApplication, QDialog, QSpinBox, QAbstractSpinBox,
-                             QGridLayout, QDoubleSpinBox, QFrame, QWidget)
+                             QApplication, QSpinBox, QAbstractSpinBox,
+                             QGridLayout, QDoubleSpinBox, QFrame, QWidget,
+                             QDesktopWidget)
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
@@ -31,7 +41,11 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
+
+# ---- Imports: local
+
 import gwhat.common.widgets as myqt
+from PyQt5.QtCore import pyqtSignal as QSignal
 from gwhat.brf_mod.kgs_plot import BRFFigure
 from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat import brf_mod as bm
@@ -39,11 +53,78 @@ from gwhat import brf_mod as bm
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
+class KGSBRFInstaller(myqt.QFrameLayout):
+    """
+    A simple widget to download the kgs_brf program and install it in the
+    proper directory.
+    http://www.kgs.ku.edu/HighPlains/OHP/index_program/brf.html
+    """
+
+    sig_kgs_brf_installed = QSignal(str)
+
+    def __init__(self, parent=None):
+        super(KGSBRFInstaller, self).__init__(parent)
+
+        self.setAutoFillBackground(True)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        self.install_btn = QPushButton("Install")
+        self.install_btn.clicked.connect(self.install_kgsbrf)
+
+        self.addWidget(self.install_btn, 1, 1)
+        self.setRowStretch(0, 100)
+        self.setRowStretch(self.rowCount(), 100)
+        self.setColumnStretch(0, 100)
+        self.setColumnStretch(self.columnCount(), 100)
+
+    @property
+    def install_dir(self):
+        """Path to the installation folder."""
+        return os.path.dirname(os.path.realpath(__file__))
+
+    @property
+    def kgs_brf_name(self):
+        """Name of the kgs_brf binary executable."""
+        return "kgs_brf.exe"
+
+    @property
+    def kgs_brf_path(self):
+        """Path to the kgs_brf binary executable."""
+        return os.path.join(self.install_dir, "kgs_brf.exe")
+
+    def kgsbrf_is_installed(self):
+        """Returns whether kgs_brf is installed or not."""
+        return os.path.exists(self.kgs_brf_path)
+
+    def install_kgsbrf(self):
+        """Download and install the kgs_brf software."""
+        print("Installing KGS_BRF software...", end=" ")
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        url = "http://www.kgs.ku.edu/HighPlains/OHP/index_program/KGS_BRF.zip"
+        request = requests.get(url)
+        zfile = zipfile.ZipFile(io.BytesIO(request .content))
+
+        if not os.path.exists(self.install_dir):
+            os.mkdir(self.install_dir)
+
+        with open(self.kgs_brf_path, 'wb') as f:
+            f.write(zfile.read(self.kgs_brf_name))
+
+        if self.kgsbrf_is_installed():
+            self.sig_kgs_brf_installed.emit(self.install_dir)
+            self.close()
+            print("done")
+        else:
+            print("failed")
+        QApplication.restoreOverrideCursor()
+
+
 class BRFManager(myqt.QFrameLayout):
     def __init__(self, wldset=None, parent=None):
         super(BRFManager, self).__init__(parent)
 
         self.viewer = BRFViewer(wldset, parent)
+        self.kgs_brf_installer = None
         self.__initGUI__()
 
     def __initGUI__(self):
@@ -133,7 +214,12 @@ class BRFManager(myqt.QFrameLayout):
 
         self.setColumnStretch(self.columnCount(), 100)
 
-    # =========================================================================
+        # ---- Install Panel
+
+        if not KGSBRFInstaller().kgsbrf_is_installed():
+            self.__install_kgs_brf_installer()
+
+    # ---- Properties
 
     @property
     def lagBP(self):
@@ -163,6 +249,27 @@ class BRFManager(myqt.QFrameLayout):
         dend = xldate_from_date_tuple((y, m, d), 0)
 
         return (dstart, dend)
+
+    # ---- KGS BRF installer
+
+    def __install_kgs_brf_installer(self):
+        """
+        Installs a KGSBRFInstaller that overlays the whole brf tool
+        layout until the KGS_BRF program is installed correctly.
+        """
+        self.kgs_brf_installer = KGSBRFInstaller()
+        self.kgs_brf_installer.sig_kgs_brf_installed.connect(
+                self.__uninstall_kgs_brf_installer)
+        self.addWidget(self.kgs_brf_installer, 0, 0,
+                       self.rowCount(), self.columnCount())
+
+    def __uninstall_kgs_brf_installer(self):
+        """
+        Uninstall the KGSBRFInstaller after the KGS_BRF program has been
+        installed properly.
+        """
+        self.kgs_brf_installer.sig_kgs_brf_installed.disconnect()
+        self.kgs_brf_installer = None
 
     # =========================================================================
 
@@ -270,17 +377,16 @@ class BRFManager(myqt.QFrameLayout):
             return
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
 class BRFViewer(QWidget):
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
 
-        self.setWindowTitle('BRF Viewer')
+        self.setWindowTitle('BRF Results Viewer')
         self.setWindowIcon(IconDB().master)
         self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowMinimizeButtonHint |
                             Qt.WindowCloseButtonHint)
 
         self.__initGUI__()
@@ -580,6 +686,18 @@ class BRFViewer(QWidget):
 
     def show(self):
         super(BRFViewer, self).show()
+        qr = self.frameGeometry()
+        if self.parentWidget():
+            parent = self.parentWidget()
+
+            wp = parent.frameGeometry().width()
+            hp = parent.frameGeometry().height()
+            cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
+        else:
+            cp = QDesktopWidget().availableGeometry().center()
+
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
         self.fig_frame.setFixedSize(self.fig_frame.size())
         self.setFixedSize(self.size())
 

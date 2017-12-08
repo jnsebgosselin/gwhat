@@ -111,8 +111,8 @@ def run_kgsbrf():
     dirname = os.path.dirname(os.path.realpath(__file__))
     exename = os.path.join(dirname, 'kgs_brf.exe')
     parname = os.path.join(dirname, 'kgs_brf.par')
-
-    os.system('""%s" < "%s""' % (exename, parname))
+    if os.path.exists(exename) and os.path.exists(parname):
+        os.system('""%s" < "%s""' % (exename, parname))
 
 #    process = QtCore.QProcess()
 #    process.start(exename+" < "+ parname)
