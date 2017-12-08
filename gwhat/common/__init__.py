@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Sat Apr  8 13:56:17 2017
-@author: jnsebgosselin
-"""
+
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 from gwhat.common.icons.icons import IconDB
 from gwhat.common.icons.icons import (QToolButtonBase, QToolButtonSmall,
