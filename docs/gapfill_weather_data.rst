@@ -184,7 +184,7 @@ with the selected station, a nan value is kept in the dataset at this particular
 
 Moreover, the correlation between the data of two stations generally decreases as
 the distance and the altitude difference between them increase. 
-Therefore, the parameters :guilabel:`Max. Distance` and :guilabel`:Max. Elevation Diff.`
+Therefore, the parameters :guilabel:`Max. Distance` and :guilabel:`Max. Elevation Diff.`
 allow to specify thresholds for the distance and altitude difference.
 Neighboring stations exceeding either one of these thresholds will not be used to fill
 the gaps in the dataset of the selected station.
