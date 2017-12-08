@@ -299,7 +299,7 @@ class SynthHydrograph(object):
 
     # =============================================================== GLUE ====
 
-    def GLUE(self, Sy, RASmax, Cro, res='rough'):
+    def calcul_GLUE(self, Sy, RASmax, Cro, res='rough'):
         if res == 'rough':
             U_RAS = np.arange(RASmax[0], RASmax[1]+1, 5)
             U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.05)
@@ -806,7 +806,7 @@ if __name__ == '__main__':
     # ---- Calculations ----
 
     sh.load_data(fmeteo, fwaterlvl)
-    sh.GLUE(Sy, RASmax, Cru, res='rough')
+    sh.calcul_GLUE(Sy, RASmax, Cru, res='rough')
 
     # sh.calc_recharge()
     sh.initPlot()

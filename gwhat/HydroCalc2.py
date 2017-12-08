@@ -2268,7 +2268,7 @@ class RechgSetupWin(myqt.DialogWindow):
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         sh.load_data(self.wxdset, self.wldset)
-        sh.GLUE(Sy, RASmax, Cro, res='rough')
+        sh.calcul_GLUE(Sy, RASmax, Cro, res='rough')
 
         QApplication.restoreOverrideCursor()
 
