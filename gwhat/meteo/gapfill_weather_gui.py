@@ -309,17 +309,22 @@ class GapFillWeatherGUI(QWidget):
             pet_rowlayout.setContentsMargins(0, 0, 0, 0)
             pet_rowlayout.setColumnStretch(1, 100)
 
-            # Figure format.
+            # Figure format and language.
 
             self.fig_format = QComboBox()
             self.fig_format.addItems(PostProcessErr.SUPPORTED_FIG_FORMATS)
 
-            fig_format_layout = QGridLayout()
-            fig_format_layout.addWidget(
-                    QLabel("Figure output format : "), 0, 0)
-            fig_format_layout.addWidget(self.fig_format, 0, 1)
-            fig_format_layout.setContentsMargins(0, 0, 0, 0)
-            fig_format_layout.setColumnStretch(2, 100)
+            self.fig_language = QComboBox()
+            self.fig_language.addItems(PostProcessErr.SUPPORTED_LANGUAGES)
+
+            fig_opt_layout = QGridLayout()
+            fig_opt_layout.addWidget(QLabel("Figure output format : "), 0, 0)
+            fig_opt_layout.addWidget(self.fig_format, 0, 2)
+            fig_opt_layout.addWidget(QLabel("Figure label language : "), 1, 0)
+            fig_opt_layout.addWidget(self.fig_language, 1, 2)
+
+            fig_opt_layout.setContentsMargins(0, 0, 0, 0)
+            fig_opt_layout.setColumnStretch(1, 100)
 
             # ---- Row Layout Assembly ----
 
@@ -328,11 +333,11 @@ class GapFillWeatherGUI(QWidget):
 
             grid.addWidget(self.full_error_analysis, 0, 0)
             grid.addLayout(pet_rowlayout, 1, 0)
-            grid.addLayout(fig_format_layout, 2, 0)
+            grid.addLayout(fig_opt_layout, 2, 0)
 
             grid.setSpacing(5)
             grid.setContentsMargins(10, 0, 10, 0)  # [L, T, R, B]
-            grid.setRowStretch(3, 100)
+            grid.setRowStretch(grid.rowCount(), 100)
 
             return container
 
@@ -774,6 +779,7 @@ class GapFillWeatherGUI(QWidget):
         self.gapfill_worker.outputDir = os.path.join(
                 self.workdir, "Meteo", "Output")
         self.gapfill_worker.fig_format = self.fig_format.currentText()
+        self.gapfill_worker.fig_language = self.fig_language.currentText()
 
         time_start = self.get_time_from_qdatedit(self.date_start_widget)
         time_end = self.get_time_from_qdatedit(self.date_end_widget)
