@@ -29,6 +29,7 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
    gapfill_weather_data
    plotting_hydrograph
    master_recession_curve
+   compute_brf
    groundwater_recharge
    about_gwhat
    glossary
