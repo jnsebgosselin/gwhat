@@ -52,6 +52,7 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 # ---- Local imports
 
 from gwhat.meteo.gapfill_weather_algorithm2 import GapFillWeather
+from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
 from gwhat.meteo.merge_weather_data import WXDataMergerWidget
 from gwhat.meteo.weather_reader import add_PET_to_weather_datafile
 from gwhat.common import IconDB, StyleDB, QToolButtonSmall
@@ -302,22 +303,36 @@ class GapFillWeatherGUI(QWidget):
                     'an existing weather data file.</p>')
             self.btn_add_PET.clicked.connect(self.btn_add_PET_isClicked)
 
+            pet_rowlayout = QGridLayout()
+            pet_rowlayout.addWidget(self.add_PET_ckckbox, 0, 0)
+            pet_rowlayout.addWidget(self.btn_add_PET, 0, 2)
+            pet_rowlayout.setContentsMargins(0, 0, 0, 0)
+            pet_rowlayout.setColumnStretch(1, 100)
+
+            # Figure format.
+
+            self.fig_format = QComboBox()
+            self.fig_format.addItems(PostProcessErr.SUPPORTED_FIG_FORMATS)
+
+            fig_format_layout = QGridLayout()
+            fig_format_layout.addWidget(
+                    QLabel("Figure output format : "), 0, 0)
+            fig_format_layout.addWidget(self.fig_format, 0, 1)
+            fig_format_layout.setContentsMargins(0, 0, 0, 0)
+            fig_format_layout.setColumnStretch(2, 100)
+
             # ---- Row Layout Assembly ----
 
             container = QFrame()
-            grid = QGridLayout()
+            grid = QGridLayout(container)
 
-            row = 0
-            grid.addWidget(self.full_error_analysis, row, 0)
-            row += 1
-            grid.addWidget(self.add_PET_ckckbox, row, 0)
-            grid.addWidget(self.btn_add_PET, row, 2)
+            grid.addWidget(self.full_error_analysis, 0, 0)
+            grid.addLayout(pet_rowlayout, 1, 0)
+            grid.addLayout(fig_format_layout, 2, 0)
 
             grid.setSpacing(5)
             grid.setContentsMargins(10, 0, 10, 0)  # [L, T, R, B]
-            grid.setRowStretch(row+1, 100)
-            grid.setColumnStretch(1, 100)
-            container.setLayout(grid)
+            grid.setRowStretch(3, 100)
 
             return container
 
@@ -756,7 +771,9 @@ class GapFillWeatherGUI(QWidget):
 
         # -- Pass information to the worker --
 
-        self.gapfill_worker.outputDir = self.workdir + '/Meteo/Output'
+        self.gapfill_worker.outputDir = os.path.join(
+                self.workdir, "Meteo", "Output")
+        self.gapfill_worker.fig_format = self.fig_format.currentText()
 
         time_start = self.get_time_from_qdatedit(self.date_start_widget)
         time_end = self.get_time_from_qdatedit(self.date_end_widget)
@@ -1551,7 +1568,9 @@ class MyHorizHeader(QHeaderView):
         return baseSize
 
 
-if __name__ == '__main__':                                   # pragma: no cover
+# ---- if __name__ == '__main__'
+
+if __name__ == '__main__':
 
     import platform
     import sys

@@ -107,6 +107,7 @@ class GapFillWeather(QObject):
         self.leave_one_out = False
         # leave_one_out: flag to control if data are removed from the
         #                dataset in the cross-validation procedure.
+        self.fig_format = PostProcessErr.SUPPORTED_FIG_FORMATS[0]
 
     # =========================================================================
 
@@ -1013,6 +1014,7 @@ class GapFillWeather(QObject):
             # ---- Plot some graphs ----
 
             pperr = PostProcessErr(output_path)
+            pperr.set_fig_format(self.fig_format)
             pperr.generates_graphs()
 
             # ---- SOME CALCULATIONS ----
