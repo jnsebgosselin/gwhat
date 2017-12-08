@@ -2266,11 +2266,13 @@ class RechgSetupWin(myqt.DialogWindow):
         # ---- Calculations ----
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-
         sh.load_data(self.wxdset, self.wldset)
-        sh.calcul_GLUE(Sy, RASmax, Cro, res='rough')
-
+        N = sh.calcul_GLUE(Sy, RASmax, Cro, res='rough')
         QApplication.restoreOverrideCursor()
+
+        if N == 0:
+            print("The number of behavioural model produced is 0.")
+            return
 
         sh.calc_recharge()
         sh.initPlot()
