@@ -47,6 +47,7 @@ from gwhat.common.utils import save_content_to_csv
 class PostProcessErr(object):
 
     SUPPORTED_FIG_FORMATS = ['pdf', 'svg']
+    SUPPORTED_LANGUAGES = ['English', 'French']
 
     def __init__(self, fname):
         self.Yp = None # Predicted value at target station
@@ -57,6 +58,7 @@ class PostProcessErr(object):
         self.staName = None
         self.climID = None
         self.set_fig_format(self.SUPPORTED_FIG_FORMATS[0])
+        self.set_fig_language(self.SUPPORTED_LANGUAGES[0])
 
         self.fname = fname
         self.dirname = os.path.dirname(self.fname)
@@ -81,6 +83,21 @@ class PostProcessErr(object):
             self.__fig_format = fig_format
         else:
             print("Supported figure formats are:",  self.SUPPORTED_FIG_FORMATS)
+            raise ValueError
+
+    # ---- Language
+
+    @property
+    def fig_language(self):
+        """Language of the figure labels."""
+        return self.__fig_language
+
+    def set_fig_language(self, language):
+        """Set the language of the figure labels."""
+        if language in self.SUPPORTED_LANGUAGES:
+            self.__fig_language = language
+        else:
+            print("Supported language:",  self.SUPPORTED_LANGUAGES)
             raise ValueError
 
     # ---- Open and Load files
@@ -168,8 +185,8 @@ class PostProcessErr(object):
 
         return
 
-    def generates_graphs(self, language='English'):  # ========================
-
+    def generates_graphs(self):
+        """Generates all the graphs from the err file."""
         for i in range(len(self.Yp)):
             name = self.varNames[i]
             name = name.lower()
@@ -181,13 +198,13 @@ class PostProcessErr(object):
             print('------------------------')
             print('Generating %s.' % (os.path.basename(fname)))
             print('------------------------')
-            self.plot_est_err(self.Ym[i], self.Yp[i], self.varNames[i], fname,
-                              language)
+            plot_est_err(self.Ym[i], self.Yp[i], self.varNames[i],
+                         fname, self.fig_language)
 
             if self.varNames[i] == 'Total Precip (mm)':
                 fname = '%s/%s%s' % (self.dirname, 'precip_PDF', self.fig_ext)
-                self.plot_gamma_dist(self.Ym[i], self.Yp[i], fname,
-                                     language)
+                plot_gamma_dist(self.Ym[i], self.Yp[i],
+                                fname, self.fig_language)
                 print('Generating %s.' % (os.path.basename(fname)))
 
     def generates_summary(self): #======================== Generates Summary ==
@@ -224,311 +241,297 @@ class PostProcessErr(object):
                            '%0.1f' % Emin]]
             save_content_to_csv(filename, rowcontent, mode='a')
 
-    # ======================================================== Est. Errors ====
 
-    @staticmethod
-    def plot_est_err(Ymes, Ypre, varName, fname,
-                     language='English'):
+def plot_est_err(Ymes, Ypre, varName, fname, language='English'):
 
-        Ymax = np.ceil(np.max(Ymes)/10)*10
-        Ymin = np.floor(np.min(Ymes)/10)*10
+    Ymax = np.ceil(np.max(Ymes)/10)*10
+    Ymin = np.floor(np.min(Ymes)/10)*10
 
-        fw, fh = 6, 6
-        fig = mpl.figure.Figure(figsize=(fw, fh))
-        canvas = FigureCanvas(fig)
+    fw, fh = 6, 6
+    fig = mpl.figure.Figure(figsize=(fw, fh))
+    canvas = FigureCanvas(fig)
 
-        # ------------------------------------------------------ Create Axes --
+    # ---- Create Axes
 
-        leftMargin = 1. / fw
-        rightMargin = 0.25 / fw
-        bottomMargin = 0.8 / fh
-        topMargin = 0.25 / fh
+    leftMargin = 1. / fw
+    rightMargin = 0.25 / fw
+    bottomMargin = 0.8 / fh
+    topMargin = 0.25 / fh
 
-        x0 = leftMargin
-        y0 = bottomMargin
-        w0 = 1 - (leftMargin + rightMargin)
-        h0 = 1 - (bottomMargin + topMargin)
+    x0 = leftMargin
+    y0 = bottomMargin
+    w0 = 1 - (leftMargin + rightMargin)
+    h0 = 1 - (bottomMargin + topMargin)
 
-        ax0 = fig.add_axes([x0, y0, w0, h0])
-        ax0.set_axisbelow(True)
-        ax0.grid(axis='both', color='0.', linestyle='--', linewidth=0.5,
-                 dashes=[0.5, 3])
+    ax0 = fig.add_axes([x0, y0, w0, h0])
+    ax0.set_axisbelow(True)
+    ax0.grid(axis='both', color='0.', linestyle='--', linewidth=0.5,
+             dashes=[0.5, 3])
 
-        # ------------------------------------------------------------- Plot --
+    # ---- Plot
 
-        # ---- Estimation Error ----
+    # Estimation Error
+    hscat, = ax0.plot(Ymes, Ypre, '.', mec='k', mfc='k', ms=12, alpha=0.35)
+    hscat.set_rasterized(True)
 
-        hscat, = ax0.plot(Ymes, Ypre, '.', mec='k', mfc='k', ms=12, alpha=0.35)
-        hscat.set_rasterized(True)
+    # 1:1 Line
+    dl = 12    # dashes length
+    ds = 6     # spacing between dashes
+    dew = 0.5  # dashes edge width
+    dlw = 1.5  # dashes line width
 
-        # ---- 1:1 Line ----
+    # Plot a white contour line
+    ax0.plot([Ymin, Ymax], [Ymin, Ymax], '-w', lw=dlw + 2 * dew, alpha=1)
 
-        dl = 12    # dashes length
-        ds = 6     # spacing between dashes
-        dew = 0.5  # dashes edge width
-        dlw = 1.5  # dashes line width
+    # Plot a black dashed line
+    hbl, = ax0.plot([Ymin, Ymax], [Ymin, Ymax], 'k', lw=dlw,
+                    dashes=[dl, ds], dash_capstyle='butt')
 
-        # Plot a white contour line
-        ax0.plot([Ymin, Ymax], [Ymin, Ymax], '-w', lw=dlw + 2 * dew, alpha = 1)
+    # ---- Text
 
-        # Plot a black dashed line
-        hbl, = ax0.plot([Ymin, Ymax], [Ymin, Ymax], 'k', lw=dlw,
-                        dashes=[dl, ds], dash_capstyle='butt')
+    # Calculate Statistics
 
-        # ----------------------------------------------------------- Text ----
+    RMSE = (np.mean((Ypre - Ymes) ** 2)) ** 0.5
+    MAE = np.mean(np.abs(Ypre - Ymes))
+    ME = np.mean(Ypre - Ymes)
+    r = np.corrcoef(Ypre, Ymes)[1, 0]
+    print('RMSE=%0.1f ; MAE=%0.1f ; ME=%0.2f ; r=%0.3f' %
+          (RMSE, MAE, ME, r))
 
-        # ---- Calculate Statistics ----
+    Emax = np.min(Ypre - Ymes)
+    Emin = np.max(Ypre - Ymes)
 
-        RMSE = (np.mean((Ypre - Ymes) ** 2)) ** 0.5
-        MAE = np.mean(np.abs(Ypre - Ymes))
-        ME = np.mean(Ypre - Ymes)
-        r = np.corrcoef(Ypre, Ymes)[1, 0]
-        print('RMSE=%0.1f ; MAE=%0.1f ; ME=%0.2f ; r=%0.3f' %
-              (RMSE, MAE, ME, r))
+    print('Emax=%0.1f ; Emin=%0.1f' % (Emax, Emin))
 
-        Emax = np.min(Ypre - Ymes)
-        Emin = np.max(Ypre - Ymes)
+    # Generate and Plot Labels
 
-        print('Emax=%0.1f ; Emin=%0.1f' % (Emax, Emin))
+    if varName in ['Max Temp (deg C)', 'Mean Temp (deg C)',
+                   'Min Temp (deg C)']:
+        units = u'°C'
+    elif varName in ['Total Precip (mm)']:
+        units = 'mm'
+    else:
+        units = ''
 
-        # ---- Generate and Plot Labels ----
+    tcontent = [u'RMSE = %0.1f %s' % (RMSE, units),
+                u'MAE = %0.1f %s' % (MAE, units),
+                u'ME = %0.2f %s' % (ME, units),
+                u'r = %0.3f' % (r)]
+    tcontent = list(reversed(tcontent))
+    for i in range(len(tcontent)):
+        dx, dy = -10 / 72., 10 * (i+1) / 72.
+        padding = mpl.transforms.ScaledTranslation(dx, dy,
+                                                   fig.dpi_scale_trans)
+        transform = ax0.transAxes + padding
+        ax0.text(0, 0, tcontent[i], ha='left', va='bottom', fontsize=16,
+                 transform=transform)
 
-        if varName in ['Max Temp (deg C)', 'Mean Temp (deg C)',
-                       'Min Temp (deg C)']:
-            units = u'°C'
-        elif varName in ['Total Precip (mm)']:
-            units = 'mm'
-        else:
-            units = ''
+    # ---- Get Labels Win. Extents
 
-        tcontent = [u'RMSE = %0.1f %s' % (RMSE, units),
-                    u'MAE = %0.1f %s' % (MAE, units),
-                    u'ME = %0.2f %s' % (ME, units),
-                    u'r = %0.3f' % (r)]
-        tcontent = list(reversed(tcontent))
+    hext, vext = np.array([]), np.array([])
+    renderer = canvas.get_renderer()
+    for text in ax0.texts:
+        bbox = text.get_window_extent(renderer)
+        bbox = bbox.transformed(ax0.transAxes.inverted())
+        hext = np.append(hext, bbox.width)
+        vext = np.append(vext, bbox.height)
 
-        # ---- Plot Labels ----
+    # ---- Position Labels in Axes
 
-        for i in range(len(tcontent)):
-            dx, dy = -10 / 72., 10 * (i+1) / 72.
-            padding = mpl.transforms.ScaledTranslation(dx, dy,
-                                                       fig.dpi_scale_trans)
-            transform = ax0.transAxes + padding
-            ax0.text(0, 0, tcontent[i], ha='left', va='bottom', fontsize=16,
-                     transform=transform)
+    x0 = 1 - np.max(hext)
+    y0 = 0
+    for i, text in enumerate(ax0.texts):
+        text.set_position((x0, y0))
+        y0 += vext[i]
 
-        # ---- Get Labels Win. Extents ----
+    # ----- Labels
 
-        hext, vext = np.array([]), np.array([])
-        renderer = canvas.get_renderer()
-        for text in ax0.texts:
-            bbox = text.get_window_extent(renderer)
-            bbox = bbox.transformed(ax0.transAxes.inverted())
-            hext = np.append(hext, bbox.width)
-            vext = np.append(vext, bbox.height)
+    ax0.xaxis.set_ticks_position('bottom')
+    ax0.yaxis.set_ticks_position('left')
+    ax0.tick_params(axis='both', direction='out', labelsize=14)
 
-        # ---- Position Labels in Axes ----
-
-        x0 = 1 - np.max(hext)
-        y0 = 0
-        for i, text in enumerate(ax0.texts):
-            text.set_position((x0, y0))
-            y0 += vext[i]
-
-        # ----------------------------------------------------------- Labels --
-
-        # ---- Ticks ----
-
-        ax0.xaxis.set_ticks_position('bottom')
-        ax0.yaxis.set_ticks_position('left')
-        ax0.tick_params(axis='both', direction='out', labelsize=14)
-
-        # ---- Axis ----
-
-        if varName == 'Max Temp (deg C)':
-            if language == 'French':
-                var = u'Températures maximales journalières %s (°C)'
-            else:
-                var = u'%s Daily Max Temperature (°C)'
-        elif varName == 'Mean Temp (deg C)':
-            if language == 'French':
-                var = u'Températures moyennes journalières %s (°C)'
-            else:
-                var = u'%s Daily Mean Temperature (°C)'
-        elif varName == 'Min Temp (deg C)':
-            if language == 'French':
-                var = u'Températures minimales journalières %s (°C)'
-            else:
-                var = u'%s Daily Min Temperature (°C)'
-        elif varName == 'Total Precip (mm)':
-            if language == 'French':
-                var = u'Précipitations totales journalières %s (mm)'
-            else:
-                var = '%s Daily Total Precipitation (mm)'
-        else:
-            var = ''
-
+    if varName == 'Max Temp (deg C)':
         if language == 'French':
-            ax0.set_xlabel(var % u'mesurées', fontsize=16, labelpad=15)
-            ax0.set_ylabel(var % u'prédites', fontsize=16, labelpad=15)
+            var = u'Températures maximales journalières %s (°C)'
         else:
-            ax0.set_xlabel(var % 'Measured', fontsize=16, labelpad=15)
-            ax0.set_ylabel(var % 'Predicted', fontsize=16, labelpad=15)
-
-        # ----------------------------------------------------------- Axis ----
-
-        ax0.axis([Ymin, Ymax, Ymin, Ymax])
-
-        # --------------------------------------------------------- Legend ----
-
+            var = u'%s Daily Max Temperature (°C)'
+    elif varName == 'Mean Temp (deg C)':
         if language == 'French':
-            lglabels = ['Données journalières', '1:1']
+            var = u'Températures moyennes journalières %s (°C)'
         else:
-            lglabels = ['Daily weather data', '1:1']
-
-        ax0.legend([hscat, hbl], lglabels,
-                   loc='upper left', numpoints=1, frameon=False, fontsize=16)
-
-        # ----------------------------------------------------------- Draw ----
-
-        fig.savefig(fname, dpi=300)
-
-        return canvas
-
-
-    @staticmethod
-    def plot_gamma_dist(Ymes, Ypre, fname, #================= Plot Gamma PDF ==
-                        language='English'):
-
-        fw, fh = 6, 6
-        fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
-        canvas = FigureCanvas(fig)
-
-        #------------------------------------------------------- Create Axes --
-
-        leftMargin  = 1.1 / fw
-        rightMargin = 0.25 / fw
-        bottomMargin = 0.85 / fh
-        topMargin = 0.25 / fh
-
-        x0 = leftMargin
-        y0 = bottomMargin
-        w0 = 1 - (leftMargin + rightMargin)
-        h0 = 1 - (bottomMargin + topMargin)
-
-        ax0 = fig.add_axes([x0, y0, w0, h0])
-        ax0.set_yscale('log', nonposy='clip')
-
-        Xmax = max(np.ceil(np.max(Ymes)/10.) * 10, 80)
-
-        #------------------------------------------------------------- Plots --
-
-        c1, c2 = '#6495ED', 'red'
-
+            var = u'%s Daily Mean Temperature (°C)'
+    elif varName == 'Min Temp (deg C)':
         if language == 'French':
-            lg_labels = [u'DP des données mesurées', u'FDP Gamma (mesurée)',
-                         u'FDP Gamma (estimée)']
+            var = u'Températures minimales journalières %s (°C)'
         else:
-            lg_labels = ['Measured data PDF', 'Gamma PDF (measured)',
-                         'Gamma PDF (estimated)']
+            var = u'%s Daily Min Temperature (°C)'
+    elif varName == 'Total Precip (mm)':
+        if language == 'French':
+            var = u'Précipitations totales journalières %s (mm)'
+        else:
+            var = '%s Daily Total Precipitation (mm)'
+    else:
+        var = ''
 
-        #---- Histogram ----
+    if language == 'French':
+        ax0.set_xlabel(var % u'mesurées', fontsize=16, labelpad=15)
+        ax0.set_ylabel(var % u'prédites', fontsize=16, labelpad=15)
+    else:
+        ax0.set_xlabel(var % 'Measured', fontsize=16, labelpad=15)
+        ax0.set_ylabel(var % 'Predicted', fontsize=16, labelpad=15)
 
-        ax0.hist(Ymes, bins=20, color=c1, histtype='stepfilled', normed=True,
-                 alpha=0.25, ec=c1, label=lg_labels[0])
+    # ---- Axis
 
-        #---- Measured Gamma PDF ----
+    ax0.axis([Ymin, Ymax, Ymin, Ymax])
 
-        alpha, loc, beta = stats.gamma.fit(Ymes)
-        x = np.arange(0.5, Xmax, 0.1)
-        ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '-', lw=2,
-                 alpha=1., color=c1, label=lg_labels[1])
+    # ---- Legend
 
-        #---- Predicted Gamma PDF ----
+    if language == 'French':
+        lglabels = ['Données journalières', '1:1']
+    else:
+        lglabels = ['Daily weather data', '1:1']
 
-        alpha, loc, beta = stats.gamma.fit(Ypre)
-        x = np.arange(0.5, Xmax, 0.1)
-        ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '--r',
-                 lw=2, alpha=0.85, color=c2, label=lg_labels[2])
+    ax0.legend([hscat, hbl], lglabels,
+               loc='upper left', numpoints=1, frameon=False, fontsize=16)
 
-        #------------------------------------------------------- Axis Limits --
+    # ---- Draw
+
+    fig.savefig(fname, dpi=300)
+
+    return canvas
+
+
+def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
+
+    fw, fh = 6, 6
+    fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
+    canvas = FigureCanvas(fig)
+
+    #------------------------------------------------------- Create Axes --
+
+    leftMargin  = 1.1 / fw
+    rightMargin = 0.25 / fw
+    bottomMargin = 0.85 / fh
+    topMargin = 0.25 / fh
+
+    x0 = leftMargin
+    y0 = bottomMargin
+    w0 = 1 - (leftMargin + rightMargin)
+    h0 = 1 - (bottomMargin + topMargin)
+
+    ax0 = fig.add_axes([x0, y0, w0, h0])
+    ax0.set_yscale('log', nonposy='clip')
+
+    Xmax = max(np.ceil(np.max(Ymes)/10.) * 10, 80)
+
+    #------------------------------------------------------------- Plots --
+
+    c1, c2 = '#6495ED', 'red'
+
+    if language == 'French':
+        lg_labels = [u'DP des données mesurées', u'FDP Gamma (mesurée)',
+                     u'FDP Gamma (estimée)']
+    else:
+        lg_labels = ['Measured data PDF', 'Gamma PDF (measured)',
+                     'Gamma PDF (estimated)']
+
+    #---- Histogram ----
+
+    ax0.hist(Ymes, bins=20, color=c1, histtype='stepfilled', normed=True,
+             alpha=0.25, ec=c1, label=lg_labels[0])
+
+    #---- Measured Gamma PDF ----
+
+    alpha, loc, beta = stats.gamma.fit(Ymes)
+    x = np.arange(0.5, Xmax, 0.1)
+    ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '-', lw=2,
+             alpha=1., color=c1, label=lg_labels[1])
+
+    #---- Predicted Gamma PDF ----
+
+    alpha, loc, beta = stats.gamma.fit(Ypre)
+    x = np.arange(0.5, Xmax, 0.1)
+    ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '--r',
+             lw=2, alpha=0.85, color=c2, label=lg_labels[2])
+
+    #------------------------------------------------------- Axis Limits --
 
 #        ax0.set_xlim(0, Xmax)
-        ax0.axis(xmin=0, xmax=Xmax, ymax=1)
+    ax0.axis(xmin=0, xmax=Xmax, ymax=1)
 
-        #------------------------------------------------------------ Labels --
+    #------------------------------------------------------------ Labels --
 
-        #---- axis labels ----
+    #---- axis labels ----
 
+    if language == 'French':
+        ax0.set_xlabel(u'Précipitations totales journalières (mm)',
+                       fontsize=18, labelpad=15)
+        ax0.set_ylabel('Probabilité', fontsize=18, labelpad=15)
+    else:
+        ax0.set_xlabel('Daily Total Precipitation (mm)', fontsize=18,
+                       labelpad=15)
+        ax0.set_ylabel('Probability', fontsize=18, labelpad=15)
+
+
+    #---- yticks labels ----
+
+    ax0.xaxis.set_ticks_position('bottom')
+    ax0.yaxis.set_ticks_position('left')
+    ax0.tick_params(axis='both', direction='out', labelsize=14)
+    ax0.tick_params(axis='both', which='minor', direction='out',
+                    labelsize=14)
+
+    canvas.draw()
+    ylabels = []
+    for i, label in enumerate(ax0.get_yticks()):
+        if label >= 1:
+            ylabels.append('%d' % label)
+        elif label <= 10**-3:
+            ylabels.append('$\mathdefault{10^{%d}}$' % np.log10(label))
+        else:
+            ylabels.append(str(label))
+    ax0.set_yticklabels(ylabels)
+
+    #------------------------------------------------------------ Legend --
+
+    lg = ax0.legend(loc='upper right', frameon=False)
+
+    #----------------------------------------------- Wet Days Comparison --
+
+    #---- Generate text ----
+
+    preWetDays = np.where(Ypre > 0)[0]
+    mesWetDays = np.where(Ymes > 0)[0]
+
+    f = len(preWetDays) / float(len(mesWetDays)) * 100
+
+    if f > 100:
         if language == 'French':
-            ax0.set_xlabel(u'Précipitations totales journalières (mm)',
-                           fontsize=18, labelpad=15)
-            ax0.set_ylabel('Probabilité', fontsize=18, labelpad=15)
+            msg = u'Nombre de jours pluvieux surestimé de %0.1f%%' % (f - 100)
         else:
-            ax0.set_xlabel('Daily Total Precipitation (mm)', fontsize=18,
-                           labelpad=15)
-            ax0.set_ylabel('Probability', fontsize=18, labelpad=15)
-
-
-        #---- yticks labels ----
-
-        ax0.xaxis.set_ticks_position('bottom')
-        ax0.yaxis.set_ticks_position('left')
-        ax0.tick_params(axis='both', direction='out', labelsize=14)
-        ax0.tick_params(axis='both', which='minor', direction='out',
-                        labelsize=14)
-
-        canvas.draw()
-        ylabels = []
-        for i, label in enumerate(ax0.get_yticks()):
-            if label >= 1:
-                ylabels.append('%d' % label)
-            elif label <= 10**-3:
-                ylabels.append('$\mathdefault{10^{%d}}$' % np.log10(label))
-            else:
-                ylabels.append(str(label))
-        ax0.set_yticklabels(ylabels)
-
-        #------------------------------------------------------------ Legend --
-
-        lg = ax0.legend(loc='upper right', frameon=False)
-
-        #----------------------------------------------- Wet Days Comparison --
-
-        #---- Generate text ----
-
-        preWetDays = np.where(Ypre > 0)[0]
-        mesWetDays = np.where(Ymes > 0)[0]
-
-        f = len(preWetDays) / float(len(mesWetDays)) * 100
-
-        if f > 100:
-            if language == 'French':
-                msg = u'Nombre de jours pluvieux surestimé de %0.1f%%' % (f - 100)
-            else:
-                msg = 'Number of wet days overestimated by %0.1f%%' % (f - 100)
+            msg = 'Number of wet days overestimated by %0.1f%%' % (f - 100)
+    else:
+        if language == 'French':
+            msg = u'Nombre de jours pluvieux sous-estimé de %0.1f%%' % (100 - f)
         else:
-            if language == 'French':
-                msg = u'Nombre de jours pluvieux sous-estimé de %0.1f%%' % (100 - f)
-            else:
-                msg = 'Number of wet days underestimated by %0.1f%%' % (100 - f)
+            msg = 'Number of wet days underestimated by %0.1f%%' % (100 - f)
 
-        #---- Get Legend Box Position and Extent ----
+    #---- Get Legend Box Position and Extent ----
 
-        canvas.draw()
-        bbox = lg.get_window_extent(canvas.get_renderer())
-        bbox = bbox.transformed(ax0.transAxes.inverted())
+    canvas.draw()
+    bbox = lg.get_window_extent(canvas.get_renderer())
+    bbox = bbox.transformed(ax0.transAxes.inverted())
 
-        dx, dy = 5/72., 5/72.
-        padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
-        transform = ax0.transAxes + padding
+    dx, dy = 5/72., 5/72.
+    padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
+    transform = ax0.transAxes + padding
 
-        ax0.text(0., 0., msg, transform=transform, va='bottom', ha='left')
+    ax0.text(0., 0., msg, transform=transform, va='bottom', ha='left')
 
-        #-------------------------------------------------------------- Draw --
+    #-------------------------------------------------------------- Draw --
 
-        fig.savefig(fname) # A canvas.draw() is included with this.
-        return canvas
+    fig.savefig(fname) # A canvas.draw() is included with this.
+    return canvas
 
 def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
 
