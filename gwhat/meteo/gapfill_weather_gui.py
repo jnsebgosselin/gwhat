@@ -320,7 +320,7 @@ class GapFillWeatherGUI(QWidget):
             fig_opt_layout = QGridLayout()
             fig_opt_layout.addWidget(QLabel("Figure output format : "), 0, 0)
             fig_opt_layout.addWidget(self.fig_format, 0, 2)
-            fig_opt_layout.addWidget(QLabel("Figure label language : "), 1, 0)
+            fig_opt_layout.addWidget(QLabel("Figure labels language : "), 1, 0)
             fig_opt_layout.addWidget(self.fig_language, 1, 2)
 
             fig_opt_layout.setContentsMargins(0, 0, 0, 0)

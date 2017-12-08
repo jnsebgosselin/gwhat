@@ -948,7 +948,7 @@ class GapFillWeather(QObject):
         # Produces Weather Normals Graph :
 
         filename = 'weather_normals.'+self.fig_format
-        print('Generating %s...' % filename, end=" ")
+        print('Generating %s...' % filename)
         wxdset = wxrd.WXDataFrame(output_path)
         fig = FigWeatherNormals()
         fig.set_lang(self.fig_language)
@@ -1008,7 +1008,7 @@ class GapFillWeather(QObject):
                                            target_station_clim,
                                            YearStart, YearEnd)
 
-            output_path = dirname + fname
+            output_path = os.path.join(dirname, fname)
             self.save_content_to_file(output_path, fcontent)
             print('Generating %s.' % fname)
 
