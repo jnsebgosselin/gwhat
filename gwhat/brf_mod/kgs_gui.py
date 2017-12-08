@@ -68,10 +68,10 @@ class KGSBRFInstaller(myqt.QFrameLayout):
         self.setAutoFillBackground(True)
         self.setAttribute(Qt.WA_DeleteOnClose)
 
-        install_btn = QPushButton("Install")
-        install_btn.clicked.connect(self.install_kgsbrf)
+        self.install_btn = QPushButton("Install")
+        self.install_btn.clicked.connect(self.install_kgsbrf)
 
-        self.addWidget(install_btn, 1, 1)
+        self.addWidget(self.install_btn, 1, 1)
         self.setRowStretch(0, 100)
         self.setRowStretch(self.rowCount(), 100)
         self.setColumnStretch(0, 100)
