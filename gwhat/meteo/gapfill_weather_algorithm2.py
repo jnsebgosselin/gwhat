@@ -954,7 +954,6 @@ class GapFillWeather(QObject):
         fig.set_lang(self.fig_language)
         fig.plot_monthly_normals(wxdset['normals'])
         fig.figure.savefig(os.path.join(dirname, filename))
-        print("done")
 
         # ------------------------------------------------------ .err file ----
 
