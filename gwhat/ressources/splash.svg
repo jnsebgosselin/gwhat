@@ -17,7 +17,7 @@
    version="1.1"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    sodipodi:docname="splash.svg"
-   inkscape:export-filename="C:\Users\jsgosselin\OneDrive\GWHAT\gwhat\ressources\splash.png"
+   inkscape:export-filename="C:\Users\jsgosselin\GWHAT\gwhat\ressources\splash.png"
    inkscape:export-xdpi="31.663383"
    inkscape:export-ydpi="31.663383">
   <sodipodi:namedview
@@ -34,13 +34,13 @@
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
-     inkscape:zoom="0.75024143"
-     inkscape:cx="189.76508"
-     inkscape:cy="676.84282"
-     inkscape:window-x="140"
-     inkscape:window-y="1072"
+     inkscape:zoom="0.37512072"
+     inkscape:cx="953.83754"
+     inkscape:cy="285.82294"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
-     inkscape:current-layer="g4559"
+     inkscape:current-layer="svg3336"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
@@ -342,11 +342,11 @@
        x="43.000397"
        y="673.73761"
        id="tspan3092"
-       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.04190826px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:9.57270908px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762287"><tspan
+       style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.04190826px;line-height:1.25;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:3.00000001px;word-spacing:12.00000003px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762287"><tspan
          x="43.000397"
          y="673.73761"
-         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.04190826px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:9.57270908px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762287"
-         id="tspan3094">Toolbox for GroundWater Hydrograph Analysis</tspan></tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:84.04190826px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:3.00000001px;word-spacing:12.00000003px;fill:#2a2a2a;fill-opacity:1;stroke-width:1.97762287"
+         id="tspan3094">Ground-Water Hydrograph Analysis Toolbox</tspan></tspan></text>
   <g
      style="enable-background:new"
      id="g4559"
@@ -362,10 +362,6 @@
          id="tspan3092-0"
          y="-404.06998"
          x="-110.26708"
-         sodipodi:role="line">Version 0.1.0<tspan
-   id="tspan3094-4"
-   style="font-style:normal;font-variant:normal;font-weight:bold;font-stretch:normal;font-size:55.15736771px;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans Bold';letter-spacing:0px;word-spacing:6.28264475px;fill:#ffffff;fill-opacity:1;stroke-width:1.29792953"
-   y="-404.06998"
-   x="-110.26708" /></tspan></text>
+         sodipodi:role="line">Version 0.1.1</tspan></text>
   </g>
 </svg>
