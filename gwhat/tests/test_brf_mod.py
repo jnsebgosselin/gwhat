@@ -43,9 +43,8 @@ def test_install_kgs_brf(brf_manager_bot):
     # Install the KGS_BRF software and assert that it was correctly
     # installed and that the kgs_brf installer was uninstalled correctly.
     qtbot.mouseClick(brf_manager.kgs_brf_installer.install_btn, Qt.LeftButton)
-    qtbot.waitSignal(brf_manager.kgs_brf_installer.sig_kgs_brf_installed)
 
-    assert brf_manager.kgs_brf_installer is None
+    qtbot.waitUntil(lambda: brf_manager.kgs_brf_installer is None)
     assert KGSBRFInstaller().kgsbrf_is_installed()
 
 
