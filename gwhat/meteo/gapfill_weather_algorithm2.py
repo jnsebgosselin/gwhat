@@ -728,10 +728,8 @@ class GapFillWeather(QObject):
         clean_tarStaName = target_station_name.replace('\\', '_')
         clean_tarStaName = clean_tarStaName.replace('/', '_')
 
-        dirname = '%s/%s (%s)/' % (self.outputDir,
-                                   clean_tarStaName,
-                                   target_station_clim)
-
+        folder_name = "%s (%s)" % (clean_tarStaName, target_station_clim)
+        dirname = os.path.join(self.outputDir, folder_name)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
@@ -907,9 +905,8 @@ class GapFillWeather(QObject):
                                        target_station_clim,
                                        YearStart, YearEnd)
 
-        output_path = dirname + fname
+        output_path = os.path.join(dirname, fname)
         self.save_content_to_file(output_path, fcontent)
-
         self.ConsoleSignal.emit(
                '<font color=black>Info file saved in %s.</font>' % output_path)
 
@@ -937,7 +934,7 @@ class GapFillWeather(QObject):
                                        target_station_clim,
                                        YearStart, YearEnd)
 
-        output_path = dirname + fname
+        output_path = os.path.join(dirname, fname)
         self.save_content_to_file(output_path, fcontent)
 
         msg = 'Meteo data saved in %s.' % output_path
@@ -950,12 +947,14 @@ class GapFillWeather(QObject):
 
         # Produces Weather Normals Graph :
 
+        filename = 'weather_normals.'+self.fig_format
+        print('Generating %s...' % filename, end=" ")
         wxdset = wxrd.WXDataFrame(output_path)
         fig = FigWeatherNormals()
+        fig.set_lang(self.fig_language)
         fig.plot_monthly_normals(wxdset['normals'])
-        figname = dirname + 'weather_normals.pdf'
-        print('Generating %s.' % figname)
-        fig.figure.savefig(figname)
+        fig.figure.savefig(os.path.join(dirname, filename))
+        print("done")
 
         # ------------------------------------------------------ .err file ----
 
