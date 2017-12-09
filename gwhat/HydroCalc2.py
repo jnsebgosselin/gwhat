@@ -28,7 +28,6 @@ from PyQt5.QtWidgets import (QGridLayout, QWidget, QComboBox, QTextEdit,
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-import matplotlib.pyplot as plt
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
@@ -36,10 +35,9 @@ import xlsxwriter
 
 # ---- Local imports
 
-from gwhat.gwrecharge_calc2 import SynthHydrograph
-from gwhat.gwrecharge_post import plot_rechg_GLUE
+from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
+from gwhat.gwrecharge.gwrecharge_calc2 import SynthHydrograph
 
-import gwhat.common.database as db
 import gwhat.common.widgets as myqt
 from gwhat.common import IconDB, StyleDB, QToolButtonNormal
 import gwhat.brf_mod as bm
@@ -110,17 +108,9 @@ class WLCalc(myqt.DialogWindow):
 
         # Recharge :
 
-        self.rechg_setup_win = RechgSetupWin(parent=self)
+        self.rechg_setup_win = RechgEvalWidget(parent=self)
 
-        self.synth_hydro_widg = SynthHydroWidg()
-        self.synth_hydro_widg.hide()
-        self.synth_hydro_widg.newHydroParaSent.connect(self.plot_synth_hydro)
-
-        self.synth_hydrograph = SynthHydrograph()
-
-        # =====================================================================
-
-        # INIT UI :
+        # ---- Initialize the GUI
 
         self.__initFig__()
         self.__initUI__()
@@ -286,7 +276,6 @@ class WLCalc(myqt.DialogWindow):
 
 #        self.btn_synthHydro = QToolButtonNormal(IconDB().page_setup)
 #        self.btn_synthHydro.setToolTip('Show synthetic hydrograph')
-#        self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
 #        self.btn_synthHydro.hide()
 
         # ---- BRF ----
@@ -1948,327 +1937,6 @@ def mrc2rechg(t, ho, A, B, z, Sy):
     return RECHG
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-class SynthHydroWidg(QWidget):
-
-    newHydroParaSent = QSignal(dict)
-
-    def __init__(self, parent=None):
-        super(SynthHydroWidg, self).__init__(parent)
-
-        self.__initUI__()
-
-    def __initUI__(self):
-
-        class HSep(QFrame):  # horizontal separators for the toolbar
-            def __init__(self, parent=None):
-                super(HSep, self).__init__(parent)
-                self.setFrameStyle(db.styleUI().HLine)
-
-        class MyQDSpin(QDoubleSpinBox):
-            def __init__(self, step, min, max, dec, val,
-                         suffix=None, parent=None):
-                super(MyQDSpin, self).__init__(parent)
-
-                self.setSingleStep(step)
-                self.setMinimum(min)
-                self.setMaximum(max)
-                self.setDecimals(dec)
-                self.setValue(val)
-                self.setAlignment(Qt.AlignCenter)
-                if suffix:
-                    self.setSuffix(' %s' % suffix)
-                if parent:
-                    self.valueChanged.connect(parent.param_changed)
-
-        self.QSy = MyQDSpin(0.001, 0.005, 0.95, 3, 0.2, parent=self)
-        self.QRAS = MyQDSpin(1, 0, 1000, 0, 100, 'mm', parent=self)
-        self.CRO = MyQDSpin(0.001, 0, 1, 3, 0.3, parent=self)
-
-        self.Tcrit = MyQDSpin(0.1, -25, 25, 1, 0, '°C', parent=self)
-        self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, '°C', parent=self)
-        self.CM = MyQDSpin(0.1, 0, 100, 1, 2.7, 'mm/°C', parent=self)
-
-        main_grid = QGridLayout()
-
-        items = [QLabel('Sy:'), self.QSy,
-                 QLabel('Rasmax:'), self.QRAS,
-                 QLabel('Cro:'), self.CRO,
-                 QLabel('Tcrit:'), self.Tcrit,
-                 QLabel('Tmelt:'), self.Tmelt,
-                 QLabel('CM:'), self.CM]
-
-        for col, item in enumerate(items):
-            main_grid.addWidget(item, 1, col)
-#        main_grid.addWidget(HSep(), 0, 0, 1, col+1)
-
-        main_grid.setColumnStretch(col+1, 100)
-        main_grid.setContentsMargins(0, 0, 0, 0)
-
-        self.setLayout(main_grid)
-
-    # =========================================================================
-
-    def get_parameters(self):
-        parameters = {'Sy': self.QSy.value(),
-                      'RASmax': self.QRAS.value(),
-                      'Cro': self.CRO.value()}
-
-        return parameters
-
-    def param_changed(self):
-        self.newHydroParaSent.emit(self.get_parameters())
-
-    # =========================================================================
-
-    def toggleOnOff(self):
-        if self.isVisible():
-            self.hide()
-        else:
-            self.show()
-            self.newHydroParaSent.emit(self.get_parameters())
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-class RechgSetupWin(myqt.DialogWindow):
-    def __init__(self, parent):
-        super(RechgSetupWin, self).__init__(parent)
-
-        self.wxdset = None
-        self.wldset = None
-
-        self.setWindowTitle('Recharge Calibration Setup')
-        self.setWindowFlags(Qt.Window)
-
-        self.__initUI__()
-
-    def __initUI__(self):
-
-        class QRowLayout(QWidget):
-            def __init__(self, items, parent=None):
-                super(QRowLayout, self).__init__(parent)
-
-                layout = QGridLayout()
-                for col, item in enumerate(items):
-                    layout.addWidget(item, 0, col)
-                layout.setContentsMargins(0, 0, 0, 0)
-                layout.setColumnStretch(0, 100)
-                self.setLayout(layout)
-
-        # ---------------------------------------------------------- Toolbar --
-
-        toolbar_widget = QWidget()
-
-        btn_calib = QPushButton('Compute Recharge')
-        btn_calib.clicked.connect(self.btn_calibrate_isClicked)
-
-        toolbar_layout = QGridLayout()
-        toolbar_layout.addWidget(btn_calib, 0, 0)
-        toolbar_layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
-
-        toolbar_widget.setLayout(toolbar_layout)
-
-        # ------------------------------------------------------- Parameters --
-
-        # Specific yield (Sy) :
-
-        self.QSy_min = myqt.QDoubleSpinBox(0.2, 3)
-        self.QSy_min.setRange(0.001, 1)
-
-        self.QSy_max = myqt.QDoubleSpinBox(0.3, 3)
-        self.QSy_max.setRange(0.001, 1)
-
-        # Maximum readily available water (RASmax) :
-
-        # units=' mm'
-
-        self.QRAS_min = myqt.QDoubleSpinBox(40)
-        self.QRAS_min.setRange(0, 999)
-
-        self.QRAS_max = myqt.QDoubleSpinBox(120)
-        self.QRAS_max.setRange(0, 999)
-        self.QRAS_max.setValue(120)
-
-        # Runoff coefficient (Cro) :
-
-        self.CRO_min = myqt.QDoubleSpinBox(0.2, 3)
-        self.CRO_min.setRange(0, 1)
-
-        self.CRO_max = myqt.QDoubleSpinBox(0.4, 3)
-        self.CRO_max.setRange(0, 1)
-
-        # Snowmelt parameters :
-
-        # units=' °C'
-
-        self._Tcrit = myqt.QDoubleSpinBox(0, 1, )
-        self._Tcrit.setRange(-25, 25)
-
-        self._Tmelt = myqt.QDoubleSpinBox(0, 1)
-        self._Tmelt.setRange(-25, 25)
-
-        # units=' mm/°C'
-
-        self._CM = myqt.QDoubleSpinBox(4, 1, 0.1, )
-        self._CM.setRange(0.1, 100)
-
-        # units=' days'
-
-        self._deltaT = myqt.QDoubleSpinBox(0, 0, )
-        self._deltaT.setRange(0, 999)
-
-        class QLabelCentered(QLabel):
-            def __init__(self, text):
-                super(QLabelCentered, self).__init__(text)
-                self.setAlignment(Qt.AlignCenter)
-
-        # ---- Parameters ----
-
-        params_group = myqt.QFrameLayout()
-        params_group.setContentsMargins(10, 5, 10, 0)  # (L, T, R, B)
-        params_group.setObjectName("viewport")
-        params_group.setStyleSheet("#viewport {background-color:transparent;}")
-
-        row = 0
-        params_group.addWidget(QLabel('Sy :'), row, 0)
-        params_group.addWidget(self.QSy_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.QSy_max, row, 3)
-        row += 1
-        params_group.addWidget(QLabel('RAS<sub>max</sub> :'), row, 0)
-        params_group.addWidget(self.QRAS_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.QRAS_max, row, 3)
-        params_group.addWidget(QLabel('mm'), row, 4)
-        row += 1
-        params_group.addWidget(QLabel('Cro :'), row, 0)
-        params_group.addWidget(self.CRO_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.CRO_max, row, 3)
-        row += 1
-        params_group.setRowMinimumHeight(row, 10)
-        row += 1
-        params_group.addWidget(QLabel('Tcrit :'), row, 0)
-        params_group.addWidget(self._Tcrit, row, 1)
-        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
-        row += 1
-        params_group.addWidget(QLabel('Tmelt :'), row, 0)
-        params_group.addWidget(self._Tmelt, row, 1)
-        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
-        row += 1
-        params_group.addWidget(QLabel('CM :'), row, 0)
-        params_group.addWidget(self._CM, row, 1)
-        params_group.addWidget(QLabel('mm/°C'), row, 2, 1, 3)
-        row += 1
-        params_group.addWidget(QLabel('deltaT :'), row, 0)
-        params_group.addWidget(self._deltaT, row, 1)
-        params_group.addWidget(QLabel('days'), row, 2, 1, 3)
-        row += 1
-        params_group.setRowStretch(row, 100)
-        params_group.setColumnStretch(5, 100)
-
-        # ---- Layout ----
-
-        qtitle = QLabel('Parameter Range')
-        qtitle.setAlignment(Qt.AlignCenter)
-
-        sa = QScrollArea()
-        sa.setWidget(params_group)
-        sa.setWidgetResizable(True)
-        sa.setFrameStyle(0)
-        sa.setStyleSheet("QScrollArea {background-color:transparent;}")
-        sa.setSizePolicy(QSizePolicy(QSizePolicy.Ignored,
-                                     QSizePolicy.Preferred))
-
-        main_layout = QGridLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 10)   # (L, T, R, B)
-
-        main_layout.addWidget(qtitle, 0, 0)
-        main_layout.addWidget(myqt.HSep(), 1, 0)
-        main_layout.addWidget(sa, 2, 0)
-        main_layout.addWidget(myqt.HSep(), 3, 0)
-        main_layout.setRowMinimumHeight(4, 5)
-        main_layout.addWidget(toolbar_widget, 5, 0)
-
-        main_layout.setRowStretch(2, 100)
-        main_layout.setVerticalSpacing(5)
-
-    # =========================================================================
-
-    def get_Range(self, name):
-        if name == 'Sy':
-            return [self.QSy_min.value(), self.QSy_max.value()]
-        elif name == 'RASmax':
-            return [self.QRAS_min.value(), self.QRAS_max.value()]
-        elif name == 'Cro':
-            return [self.CRO_min.value(), self.CRO_max.value()]
-        else:
-            raise ValueError('Name must be either Sy, Rasmax or Cro.')
-
-    @property
-    def Tmelt(self):
-        return self._Tmelt.value()
-
-    @property
-    def Tcrit(self):
-        return self._Tcrit.value()
-
-    @property
-    def CM(self):
-        return self._CM.value()
-
-    @property
-    def deltaT(self):
-        return self._deltaT.value()
-
-    # =========================================================================
-
-    def closeEvent(self, event):
-        super(RechgSetupWin, self).closeEvent(event)
-        print('Closing Window')
-
-    def btn_calibrate_isClicked(self):
-        print('Calibration started')
-
-        plt.close('all')
-
-        sh = SynthHydrograph()
-
-        # ---- Parameter ranges ----
-
-        Sy = self.get_Range('Sy')
-        RASmax = self.get_Range('RASmax')
-        Cro = self.get_Range('Cro')
-
-        sh.TMELT = self.Tmelt
-        sh.CM = self.CM
-        sh.deltat = self.deltaT
-
-        print(self.wldset['mrc/params'])
-
-        # ---- Calculations ----
-
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        sh.load_data(self.wxdset, self.wldset)
-        N = sh.calcul_GLUE(Sy, RASmax, Cro, res='rough')
-        QApplication.restoreOverrideCursor()
-
-        if N == 0:
-            print("The number of behavioural model produced is 0.")
-            return
-
-        sh.calc_recharge()
-        sh.initPlot()
-        sh.plot_prediction()
-        plot_rechg_GLUE('English')
-
-        plt.show()
-
-
 if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
@@ -2345,6 +2013,6 @@ if __name__ == '__main__':
 #
 #    # Calcul recharge :
 #
-##    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
+#    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
 #
 #    sys.exit(app.exec_())
