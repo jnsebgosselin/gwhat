@@ -224,6 +224,8 @@ class WHAT(QMainWindow):
         mainGrid.addWidget(splitter, 0, 0)
         mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
         mainGrid.addWidget(self.tab_dwnld_data.pbar, 2, 0)
+        mainGrid.addWidget(
+                self.tab_hydrocalc.rechg_setup_win.progressbar, 3, 0)
 
     # =========================================================================
 
