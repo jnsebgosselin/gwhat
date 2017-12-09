@@ -6,16 +6,18 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from __future__ import division, unicode_literals
-
 # ---- Standard library imports
 
 import datetime
+from itertools import product
+import time
 
 # ---- Third party imports
 
 import numpy as np
 import matplotlib.pyplot as plt
+from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
+                                                 calc_hydrograph_forward)
 
 
 # =============================================================================
@@ -47,6 +49,7 @@ class SynthHydrograph(object):
         self.deltat = 0
 
         self.language = 'French'
+        self.glue_results = None
 
     # =========================================================================
 
@@ -217,9 +220,9 @@ class SynthHydrograph(object):
         ax.legend(lg_handles, lg_labels, ncol=2, fontsize=12, frameon=False,
                   numpoints=1)
 
-    def plot_prediction(self):
-
-        data = np.load('GLUE.npy').item()
+    def plot_prediction(self, data=None):
+        if data is None:
+            data = np.load('GLUE.npy').item()
         hydrograph = np.array(data['hydrograph'])
         RMSE = np.array(data['RMSE'])
         RMSE = RMSE / np.sum(RMSE)
@@ -262,8 +265,9 @@ class SynthHydrograph(object):
     def calc_RMSE(Xobs, Xpre):
         return (np.mean((Xobs - Xpre)**2))**0.5
 
-    def calc_recharge(self):
-        data = np.load('GLUE.npy').item()
+    def calc_recharge(self, data=None):
+        if data is None:
+            data = np.load('GLUE.npy').item()
         rechg = np.array(data['recharge'])
         RMSE = np.array(data['RMSE'])
 
@@ -286,10 +290,10 @@ class SynthHydrograph(object):
 
     # =============================================================== GLUE ====
 
-    def calcul_GLUE(self, Sy, RASmax, Cro, res='rough'):
+    def calcul_GLUE(self, Sy, RASmax, Cro, res='fine', save_results=True):
         if res == 'rough':
             U_RAS = np.arange(RASmax[0], RASmax[1]+1, 5)
-            U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.05)
+            U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.01)
         elif res == 'fine':
             U_RAS = np.arange(RASmax[0], RASmax[1]+1, 1)
             U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.01)
@@ -307,51 +311,62 @@ class SynthHydrograph(object):
         set_etr = []
 
         Sy0 = np.mean(Sy)
-        for i, cro in enumerate(U_Cro):
-            for j, rasmax in enumerate(U_RAS):
-                rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
-                SyOpt, RMSE, wlvlest = self.opt_Sy(Sy0, rechg)
-                Sy0 = SyOpt
+        tstart = time.clock()
+        for cro, rasmax in product(U_Cro, U_RAS):
+            rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
+            SyOpt, RMSE, wlvlest = self.opt_Sy(Sy0, rechg)
+            Sy0 = SyOpt
 
-                if SyOpt >= Sy[0] and SyOpt <= Sy[1]:
-                    set_RMSE.append(RMSE)
-                    set_RECHG.append(rechg)
-                    set_WLVL.append(wlvlest)
-                    set_Sy.append(SyOpt)
-                    set_RASmax.append(rasmax)
-                    set_Cru.append(cro)
-                    set_etr.append(etr)
-                    set_ru.append(ru)
+            if SyOpt >= Sy[0] and SyOpt <= Sy[1]:
+                set_RMSE.append(RMSE)
+                set_RECHG.append(rechg)
+                set_WLVL.append(wlvlest)
+                set_Sy.append(SyOpt)
+                set_RASmax.append(rasmax)
+                set_Cru.append(cro)
+                set_etr.append(etr)
+                set_ru.append(ru)
 
-                print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.4f ; ' +
-                       'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
+            print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.4f ; ' +
+                   'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
 
-        dataset = {}
-        dataset['RMSE'] = set_RMSE
-        dataset['recharge'] = set_RECHG
-        dataset['etr'] = set_etr
-        dataset['ru'] = set_ru
+        tend = time.clock()
+        print("GLUE computed in : ", tend-tstart)
 
-        dataset['twlvl'] = self.twlvl
-        dataset['hydrograph'] = set_WLVL
+        self.glue_results = {}
+        self.glue_results['RMSE'] = set_RMSE
+        self.glue_results['recharge'] = set_RECHG
+        self.glue_results['etr'] = set_etr
+        self.glue_results['ru'] = set_ru
 
-        dataset['Sy'] = set_Sy
-        dataset['RASmax'] = set_RASmax
-        dataset['Cru'] = set_Cru
-        dataset['deltat'] = self.deltat
+        self.glue_results['twlvl'] = self.twlvl
+        self.glue_results['hydrograph'] = set_WLVL
 
-        dataset['Time'] = self.wxdset['Time']
-        dataset['Year'] = self.wxdset['Year']
-        dataset['Month'] = self.wxdset['Month']
-        dataset['Weather'] = {'Tmax': self.wxdset['Tmax'],
-                              'Tmin': self.wxdset['Tmin'],
-                              'Tavg': self.wxdset['Tavg'],
-                              'Ptot': self.wxdset['Ptot'],
-                              'Rain': self.wxdset['Rain'],
-                              'PET': self.wxdset['PET']
-                              }
+        self.glue_results['Sy'] = set_Sy
+        self.glue_results['RASmax'] = set_RASmax
+        self.glue_results['Cru'] = set_Cru
+        self.glue_results['deltat'] = self.deltat
 
-        np.save('GLUE.npy', dataset)
+        self.glue_results['Time'] = self.wxdset['Time']
+        self.glue_results['Year'] = self.wxdset['Year']
+        self.glue_results['Month'] = self.wxdset['Month']
+        self.glue_results['Weather'] = {'Tmax': self.wxdset['Tmax'],
+                                        'Tmin': self.wxdset['Tmin'],
+                                        'Tavg': self.wxdset['Tavg'],
+                                        'Ptot': self.wxdset['Ptot'],
+                                        'Rain': self.wxdset['Rain'],
+                                        'PET': self.wxdset['PET']
+                                        }
+        return self.glue_results
+
+    def save_glue_to_npy(self, filename):
+        """Save the last computed glue results in a numpy npy file."""
+        if self.glue_results is None:
+            print("There is no results to save.")
+            return
+
+        root, ext = os.path.splitext(filename)
+        filename = filename if ext == '.npy' else filename+'.ext'
 
     # =========================================================================
 
@@ -440,89 +455,78 @@ class SynthHydrograph(object):
         ------
         {1D array} RECHG = Daily groundwater recharge in mm
         """
-        ETP = self.ETP
-        PTOT = self.PTOT
-        TAVG = self.TAVG
+        # t1 = time.clock()
+        # ETP = self.ETP
+        # PTOT = self.PTOT
+        # TAVG = self.TAVG
 
-        TMELT = self.TMELT
-        CM = self.CM
+        # TMELT = self.TMELT
+        # CM = self.CM
 
-        N = len(ETP)
+        # N = len(ETP)
+        RECHG, RU, ETR, RAS, PACC = calcul_surf_water_budget(self.ETP, self.PTOT, self.TAVG, self.TMELT, self.CM,  CRU, RASmax)
+#         PAVL = np.zeros(N)   # Available Precipitation
+#         PACC = np.zeros(N)   # Accumulated Precipitation
+#         RU = np.zeros(N)     # Runoff
+#         I = np.zeros(N)      # Infiltration
+#         ETR = np.zeros(N)    # Evapotranspiration Real
+#         dRAS = np.zeros(N)   # Variation of RAW
+#         RAS = np.zeros(N)    # Readily Available Storage
+#         RECHG = np.zeros(N)  # Recharge (mm)
 
-        PAVL = np.zeros(N)   # Available Precipitation
-        PACC = np.zeros(N)   # Accumulated Precipitation
-        RU = np.zeros(N)     # Runoff
-        I = np.zeros(N)      # Infiltration
-        ETR = np.zeros(N)    # Evapotranspiration Real
-        dRAS = np.zeros(N)   # Variation of RAW
-        RAS = np.zeros(N)    # Readily Available Storage
-        RECHG = np.zeros(N)  # Recharge (mm)
+#         MP = CM * (TAVG - TMELT)  # Snow Melt Potential
+#         MP[MP < 0] = 0
 
-        MP = CM * (TAVG - TMELT)  # Snow Melt Potential
-        MP[MP < 0] = 0
+#         PACC[0] = 0
+#         RAS[0] = RASmax
+#         for i in range(N-1):
 
-        PACC[0] = 0
-        RAS[0] = RASmax
+#             # ----- Precipitation, Accumulation, and Melt -----
 
-        for i in range(N-1):
+#             if TAVG[i] > TMELT:
+#                 # Precipitation is falling as rain.
+#                 if MP[i] >= PACC[i]:
+#                     # Rain is falling on bareground (all snow is melted).
+#                     PAVL[i] = PACC[i] + PTOT[i]
+#                     PACC[i+1] = 0
+#                 else:
+#                     # Rain is falling on the snowpack.
+#                     PAVL[i] = MP[i]
+#                     PACC[i+1] = PACC[i] - MP[i] + PTOT[i]
+#             else:
+#                 # Precipitation is falling as Snow.
+#                 PAVL[i] = 0
+#                 PACC[i+1] = PACC[i] + PTOT[i]
 
-            # ----- Precipitation, Accumulation, and Melt -----
+#             # ----- Infiltration and Runoff -----
 
-            if TAVG[i] > TMELT:  # Rain
-                if MP[i] >= PACC[i]:  # Rain on Bareground (All snow is melted)
-                    PAVL[i] = PACC[i] + PTOT[i]
-                    PACC[i+1] = 0
-                elif MP[i] < PACC[i]:  # Rain on Snow
-                    PAVL[i] = MP[i]
-                    PACC[i+1] = PACC[i] - MP[i] + PTOT[i]
-            elif TAVG[i] <= TMELT:  # Snow
-                PAVL[i] = 0
-                PACC[i+1] = PACC[i] + PTOT[i]
+#             # runoff coefficient
+#             RU[i] = CRU*PAVL[i]
 
-#            if TAVG[i] > TMELT:  # Rain
-#
-#                if MP[i] >= PACC[i]: # Rain on Bareground
-#                    PAVL[i+1] = PACC[i] + PTOT[i]
-#                    PACC[i+1] = 0
-#
-#                elif MP[i] < PACC[i]: #Rain on Snow
-#                    PAVL[i+1] = MP[i]
-#                    PACC[i+1] = PACC[i] - MP[i] + PTOT[i]
-#
-#            elif TAVG[i] <= TMELT: #Snow
-#                PAVL[i+1] = 0
-#                PACC[i+1] = PACC[i] + PTOT[i]
+#             # curve number
+#             # CN = CRU
+#             # num = (PAVL[i] - 0.2*(1000/CN-10))**2
+#             # den = PAVL[i] + 0.8*(1000/CN-10)
+#             # RU[i] = max(num/den, 0)
 
-            # ----- Infiltration and Runoff -----
+#             I[i] = PAVL[i] - RU[i]
 
-            # runoff coefficient
-            RU[i] = CRU * PAVL[i]
+#             # ----- ETR, Recharge and Storage change -----
 
-            # curve number
-            # CN = CRU
-            # num = (PAVL[i] - 0.2*(1000/CN-10))**2
-            # den = PAVL[i] + 0.8*(1000/CN-10)
-            # RU[i] = max(num/den, 0)
+#             # Intermediate Step
+#             dRAS[i] = min(I[i], RASmax - RAS[i])
+#             RAS[i+1] = RAS[i] + dRAS[i]
 
-            I[i] = PAVL[i] - RU[i]
+#             # Final Step
+#             RECHG[i] = I[i] - dRAS[i]
+#             ETR[i] = min(ETP[i], RAS[i])
+#             RAS[i+1] = RAS[i+1] - ETR[i]
 
-            # ----- ETR, Recharge and Storage change -----
+#             # Evaportransporation is calculated after recharge. It is assumed
+#             # that recharge occurs on a time scale that is faster than
+#             # evapotranspiration in permeable soil.
 
-            # Intermediate Step
-            dRAS[i] = min(I[i], RASmax - RAS[i])
-            RAS[i+1] = RAS[i] + dRAS[i]
-
-            # Final Step
-            RECHG[i] = I[i] - dRAS[i]
-            ETR[i] = min(ETP[i], RAS[i])
-            RAS[i+1] = RAS[i+1] - ETR[i]
-
-            # Evaportransporation is calculated after recharge. It is assumed
-            # that recharge occurs on a time scale that is faster than
-            # evapotranspiration in permeable soil.
-
-#        print np.sum(PTOT - ETR - RECHG - RU) - (RAS[-1] - RAS[0])
-
+# #        print np.sum(PTOT - ETR - RECHG - RU) - (RAS[-1] - RAS[0])
         return RECHG, RU, ETR, RAS, PACC
 
     def calc_hydrograph(self, RECHG, Sy, nscheme='forward'):
@@ -554,32 +558,32 @@ class SynthHydrograph(object):
         # check this out.
 
         A, B = self.A, self.B
-        WLobs = self.WLVLobs * 1000
-
-        WLpre = np.zeros(len(RECHG)+1) * np.nan
-
+        WLobs = self.WLVLobs*1000
         if nscheme == 'backward':
-            WLpre[0] = WLobs[-1]
+            wlpre = np.zeros(len(RECHG)+1) * np.nan
+            wlpre[0] = WLobs[-1]
             for i in reversed(range(len(RECHG))):
-                RECESS = (B - A * WLpre[i] / 1000.) * 1000
+                RECESS = (B - A * wlpre[i] / 1000.) * 1000
                 RECESS = max(RECESS, 0)
 
-                WLpre[i] = WLpre[i+1] + (RECHG[i] / Sy) - RECESS
+                wlpre[i] = wlpre[i+1] + (RECHG[i] / Sy) - RECESS
 
         elif nscheme == 'forward':
-            WLpre[0] = WLobs[0]
-            for i in range(len(RECHG)):
-                # if i%365 == 0:
-                #     WLpre[i+1] = WLobs[i]
-                # else:
-                RECESS = (B - A*WLpre[i]/1000) * 1000
-                RECESS = max(RECESS, 0)
+            wlpre = calc_hydrograph_forward(RECHG, WLobs, Sy, self.A, self.B)
+            
+            # WLpre[0] = WLobs[0]
+            # for i in range(len(RECHG)):
+            #     # if i%365 == 0:
+            #     #     WLpre[i+1] = WLobs[i]
+            #     # else:
+            #     RECESS = (B - A*WLpre[i]/1000) * 1000
+            #     RECESS = max(RECESS, 0)
 
-                WLpre[i+1] = WLpre[i] - (RECHG[i] / Sy) + RECESS
+            #     WLpre[i+1] = WLpre[i] - (RECHG[i] / Sy) + RECESS
         else:
-            WLpre = []
+            wlpre = []
 
-        return WLpre
+        return wlpre
 
     @staticmethod
     def mrc2rechg(t, hobs, A, B, z, Sy):
