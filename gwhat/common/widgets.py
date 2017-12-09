@@ -222,6 +222,12 @@ class QFrameLayout(QFrame):
     def setSpacing(self, spacing):
         self.layout().setSpacing(spacing)
 
+    def setVerticalSpacing(self, spacing):
+        self.layout().setVerticalSpacing(spacing)
+
+    def setHorizontalSpacing(self, spacing):
+        self.layout().setHorizontalSpacing(spacing)
+
     # -------------------------------------------------------------------------
 
     def rowCount(self):
