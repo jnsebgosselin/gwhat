@@ -66,7 +66,8 @@ from gwhat.widgets.tabwidget import TabWidget
 
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
-from gwhat.common import IconDB, StyleDB, QToolButtonBase
+from gwhat.common import StyleDB, QToolButtonBase
+from gwhat.common import icons
 from gwhat import __version__
 
 freeze_support()
@@ -82,7 +83,7 @@ class WHAT(QMainWindow):
         super(WHAT, self).__init__(parent)
 
         self.setWindowTitle(__version__)
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         if platform.system() == 'Windows':
             import ctypes
