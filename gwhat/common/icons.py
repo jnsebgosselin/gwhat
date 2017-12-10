@@ -18,7 +18,9 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolButton
 
-dirname = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'Icons')
+from gwhat import __rootdir__
+
+dirname = os.path.join(__rootdir__, 'ressources', 'icons_png')
 ICON_NAMES = {'master': 'WHAT',
               'info': 'info',
               'calc_brf': 'start',
@@ -47,9 +49,9 @@ ICON_NAMES = {'master': 'WHAT',
               'add2list': 'add2list',
               'todate': 'calendar_todate',
               'fromdate': 'calendar_fromdate',
-              'self.select_range': 'select_range',
-              'self.zoom_out': 'zoom_out',
-              'self.zoom_in': 'zoom_in',
+              'select_range': 'select_range',
+              'zoom_out': 'zoom_out',
+              'zoom_in': 'zoom_in',
               'toggleMode': 'toggleMode2',
               'undo': 'undo',
               'clear_search': 'clear-search',
@@ -242,7 +244,7 @@ if __name__ == '__main__':
 
     tic = time.clock()
     for i in range(25):
-        icon('undo')
+        get_icon('undo')
     toc = time.clock()
     t2 = toc-tic
     print(t2)
