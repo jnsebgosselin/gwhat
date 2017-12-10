@@ -6,14 +6,13 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from __future__ import division, unicode_literals
-
 # ---- Standard library imports
 
 from time import clock, sleep
 import csv
 import os
 import datetime
+
 
 # ---- Third party imports
 
@@ -33,16 +32,14 @@ from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 import xlsxwriter
 
+
 # ---- Local imports
 
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-from gwhat.gwrecharge.gwrecharge_calc2 import SynthHydrograph
-
 import gwhat.common.widgets as myqt
 from gwhat.common import IconDB, StyleDB, QToolButtonNormal
 import gwhat.brf_mod as bm
 
-mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
@@ -56,7 +53,6 @@ class WLCalc(myqt.DialogWindow):
 
     def __init__(self, datamanager, parent=None):
         super(WLCalc, self).__init__(parent, maximize=True)
-
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
@@ -97,6 +93,7 @@ class WLCalc(myqt.DialogWindow):
 
         self.brfperiod = [None, None]
         self.__brfcount = 0
+
         # self.config_brf = ConfigBRF()
         self.config_brf = bm.BRFManager(parent=self)
         self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
@@ -111,7 +108,6 @@ class WLCalc(myqt.DialogWindow):
         self.rechg_setup_win = RechgEvalWidget(parent=self)
 
         # ---- Initialize the GUI
-
         self.__initFig__()
         self.__initUI__()
         self.setup_ax_margins(None)
