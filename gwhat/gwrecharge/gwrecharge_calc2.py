@@ -408,16 +408,6 @@ class RechgEvalWorker(QObject):
                 wlpre[i] = wlpre[i+1] + (RECHG[i] / Sy) - RECESS
         elif nscheme == 'forward':
             wlpre = calc_hydrograph_forward(RECHG, wlobs, Sy, self.A, self.B)
-
-            # WLpre[0] = WLobs[0]
-            # for i in range(len(RECHG)):
-            #     # if i%365 == 0:
-            #     #     WLpre[i+1] = WLobs[i]
-            #     # else:
-            #     RECESS = (B - A*WLpre[i]/1000) * 1000
-            #     RECESS = max(RECESS, 0)
-
-            #     WLpre[i+1] = WLpre[i] - (RECHG[i] / Sy) + RECESS
         else:
             wlpre = []
 
