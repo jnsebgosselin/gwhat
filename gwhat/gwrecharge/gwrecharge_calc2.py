@@ -8,6 +8,7 @@
 
 # ---- Imports: standard libraries
 
+import os
 import datetime
 from itertools import product
 import time
@@ -15,6 +16,7 @@ import time
 # ---- Imports: third parties
 
 import numpy as np
+from xlrd import xldate_as_tuple
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 
@@ -239,13 +241,23 @@ class RechgEvalWorker(QObject):
         tend = time.clock()
         print("GLUE computed in : ", tend-tstart)
 
+        print('-'*78)
+        print('range Sy = %0.3f to %0.3f' % (np.min(set_Sy), np.max(set_Sy)))
+        print('range RASmax = %d to %d' % (np.min(set_RASmax),
+                                           np.max(set_RASmax)))
+        print('range Cru = %0.3f to %0.3f' % (np.min(set_Cru),
+                                              np.max(set_Cru)))
+        print('-'*78)
+
         self.glue_results = {}
         self.glue_results['RMSE'] = set_RMSE
         self.glue_results['recharge'] = set_RECHG
         self.glue_results['etr'] = set_etr
         self.glue_results['ru'] = set_ru
 
-        self.glue_results['twlvl'] = self.twlvl
+        self.glue_results['wl_time'] = self.twlvl
+        self.glue_results['wl_obs'] = self.WLVLobs
+        self.glue_results['wl_date'] = self.DATE
         self.glue_results['hydrograph'] = set_WLVL
 
         self.glue_results['Sy'] = set_Sy
@@ -269,6 +281,7 @@ class RechgEvalWorker(QObject):
     def load_glue_from_npy(self, filename):
         """Load previously computed results from a numpy npy file."""
         self.glue_results = np.load(filename).item()
+        return self.glue_results
 
     def save_glue_to_npy(self, filename):
         """Save the last computed glue results in a numpy npy file."""
@@ -278,6 +291,7 @@ class RechgEvalWorker(QObject):
 
         root, ext = os.path.splitext(filename)
         filename = filename if ext == '.npy' else filename+'.ext'
+        np.save(filename, self.glue_results)
 
     def optimize_Sy(self, Sy0, rechg):
         """
@@ -504,6 +518,70 @@ def calcul_containement_ratio(obs_wlvl, min_wlvl, max_wlvl):
     CR = CR/len(obs_wlvl)
     print('Containement Ratio = %0.1f' % CR)
     return CR
+
+
+def calcul_glue(data, p, varname='recharge'):
+    """
+    Calcul recharge for GLUE p confidence intervals from a set of
+    behavioural models.
+    """
+    if varname not in ['recharge', 'etr', 'ru', 'hydrograph']:
+        raise ValueError("varname value must be",
+                         ['recharge', 'etr', 'ru', 'hydrograph'])
+    x = np.array(data[varname])
+    m, n = np.shape(x)
+
+    rmse = np.array(data['RMSE'])
+    rmse = rmse/np.sum(rmse)  # Rescaling
+
+    glue_dly = np.zeros((n, len(p)))
+    for i in range(n):
+        # Sort predicted values.
+        isort = np.argsort(x[:, i])
+        # Compute the Cumulative Density Function.
+        CDF = np.cumsum(rmse[isort])
+        # Get GLUE values for the p confidence intervals.
+        glue_dly[i, :] = np.interp(p, CDF, x[isort, i])
+
+    return glue_dly
+
+
+def calcul_glue_yearly_rechg(data, p, yrs_range=None):
+    glue_rechg_dly = calcul_glue(data, p, varname='recharge')
+
+    years = np.array(data['Year']).astype(int)
+    months = np.array(data['Month']).astype(int)
+    deltat = data['deltat']
+    if deltat > 0:
+        Time = np.array(data['Time'])
+        for i, t in enumerate(Time):
+            date = xldate_as_tuple(t+deltat, 0)
+            years[i], months[i] = date[0], date[1]
+
+    # Convert daily to hydrological year. An hydrological year is defined from
+    # October 1 to September 30 of the next year.
+
+    if yrs_range:
+        yrs2plot = np.arange(yrs_range[0], yrs_range[1]).astype('int')
+    else:
+        yrs2plot = np.arange(np.min(years), np.max(years)).astype('int')
+
+    glue_rechg_yr = np.zeros((len(yrs2plot), len(p)))
+    year_labels = []
+    for i in range(len(yrs2plot)):
+        yr0 = yrs2plot[i]
+        yr1 = yr0 + 1
+        year_labels.append("'%s-'%s" % (str(yr0)[-2:], str(yr1)[-2:]))
+
+        indexes = np.where((years == yr0) & (months == 10))[0]
+        indx0 = 0 if len(indexes) == 0 else indexes[0]
+
+        indexes = np.where((years == yr1) & (months == 9))[0]
+        indx1 = len(years-1) if len(indexes) == 0 else indexes[-1]
+
+        glue_rechg_yr[i, :] = np.sum(glue_rechg_dly[indx0:indx1+1, :], axis=0)
+
+    return year_labels, glue_rechg_yr
 
 
 # ---- if __name__ == '__main__'
