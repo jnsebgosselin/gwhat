@@ -24,6 +24,7 @@ import matplotlib.pyplot as plt
 # ---- Imports: local
 
 from gwhat.common.utils import save_content_to_csv
+from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue_yearly_rechg
 
 
 def calcul_glue(p, yrs_range=None):
@@ -130,111 +131,19 @@ def write_GLUE50_budget(yrs_range=None):
     save_content_to_csv('glue50_results.csv', filecontent)
 
 
-def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
-    data = np.load('GLUE.npy').item()
+def plot_rechg_GLUE(data, lang='English', Ymin0=None, Ymax0=None,
+                    yrs_range=None):
 
-    rechg =  np.array(data['recharge'])
-    etr = np.array(data['etr'])
-    ru = np.array(data['ru'])
-    hydro = np.array(data['hydrograph'])
+    p = [0.05, 0.25, 0.5, 0.75, 0.95]
+    year_labels, glue_rechg_yr = calcul_glue_yearly_rechg(data, p, yrs_range)
 
-    RMSE = np.array(data['RMSE'])
-    TIME = np.array(data['Time'])
+    max_rechg_yrly = glue_rechg_yr[:, -1]
+    min_rechg_yrly = glue_rechg_yr[:, 0]
+    prob_rechg_yrly = glue_rechg_yr[:, 2]
+    glue25_yr = glue_rechg_yr[:, 1]
+    glue75_yr = glue_rechg_yr[:, -2]
 
-    YEARS = np.array(data['Year']).astype(int)
-    MONTHS = np.array(data['Month']).astype(int)
-    PTOT = np.array(data['Weather']['Ptot']).astype(float)
-
-    deltat = data['deltat']
-    Sy = np.array(data['Sy'])
-    RASmax = np.array(data['RASmax'])
-    Cru = np.array(data['Cru'])
-
-    print('')
-    print('range Sy = %0.3f to %0.3f' % (np.min(Sy), np.max(Sy)))
-    print('range RASmax = %d to %d' % (np.min(RASmax), np.max(RASmax)))
-    print('range Cru = %0.3f to %0.3f' % (np.min(Cru), np.max(Cru)))
-    print('')
-
-    # --------------------------------------------------- Calculation GLUE ----
-
-    RMSE = RMSE/np.sum(RMSE)  # Rescaling
-
-    Rbound = []
-    glue25 = []
-    glue75 = []
-    etr50 = []
-    ru50 = []
-    for i in range(len(TIME)):
-        isort = np.argsort(rechg[:, i])  # Sorting predicted values
-        # isort = np.argsort(hydro[:, i])
-        CDF = np.cumsum(RMSE[isort])     # Cumulative Density Function
-        Rbound.append(np.interp([0.05, 0.5, 0.95], CDF, rechg[isort, i]))
-        glue25.append(np.interp(0.25, CDF, rechg[isort, i]))
-        glue75.append(np.interp(0.75, CDF, rechg[isort, i]))
-
-        etr50.append(np.interp(0.5, CDF, etr[isort, i]))
-        ru50.append(np.interp(0.5, CDF, ru[isort, i]))
-
-    Rbound = np.array(Rbound)
-
-    # ---- Define new variables ----
-
-    if yrs_range is None:
-        yr2plot = np.arange(np.min(YEARS), np.max(YEARS)).astype('int')
-    else:
-        yr2plot = np.arange(yrs_range[0], yrs_range[1]).astype('int')
-    NYear = len(yr2plot)
-
-    # ---- Convert daily to hydrological year ----
-
-    # the hydrological year is defined from October 1 to September 30 of the
-    # next year.
-
-    max_rechg_yrly = []
-    min_rechg_yrly = []
-    prob_rechg_yrly = []
-    ptot_yrly = []
-
-    glue25_yr = []
-    glue75_yr = []
-
-    etr50_yr = []
-    ru50_yr = []
-
-    if deltat > 0:
-        for i, t in enumerate(TIME):
-            date = xldate_as_tuple(t+deltat, 0)
-            YEARS[i] = date[0]
-            MONTHS[i] = date[1]
-
-    for i in range(NYear):
-        yr0 = yr2plot[i]
-        yr1 = yr0 + 1
-
-        indexes = np.where((YEARS == yr0) & (MONTHS == 10))[0]
-        indx0 = 0 if len(indexes) == 0 else indexes[0]
-
-        indexes = np.where((YEARS == yr1) & (MONTHS == 9))[0]
-        indx1 = len(YEARS-1) if len(indexes) == 0 else indexes[-1]
-
-        min_rechg_yrly.append(np.sum(Rbound[indx0:indx1+1, 0]))
-        prob_rechg_yrly.append(np.sum(Rbound[indx0:indx1+1, 1]))
-        max_rechg_yrly.append(np.sum(Rbound[indx0:indx1+1, 2]))
-        glue25_yr.append(np.sum(glue25[indx0:indx1+1]))
-        glue75_yr.append(np.sum(glue75[indx0:indx1+1]))
-
-        etr50_yr.append(np.sum(etr50[indx0:indx1+1]))
-        ru50_yr.append(np.sum(ru50[indx0:indx1+1]))
-
-        ptot_yrly.append(np.sum(PTOT[indx0:indx1+1]))
-
-    max_rechg_yrly = np.array(max_rechg_yrly)
-    min_rechg_yrly = np.array(min_rechg_yrly)
-    prob_rechg_yrly = np.array(prob_rechg_yrly)
-    ptot_yrly = np.array(ptot_yrly)
-
-    # ----------------------------------------------------- Produce Figure ----
+    # ---- Produce Figure
 
     fig = plt.figure(figsize=(11.0, 6))
     fig.patch.set_facecolor('white')
@@ -262,8 +171,14 @@ def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
 
     # --------------------------------------------------------- AXIS RANGE ----
 
-    Xmin0 = min(yr2plot)-1
-    Xmax0 = max(yr2plot)+1
+    if yrs_range:
+        yrs2plot = np.arange(yrs_range[0], yrs_range[1]).astype('int')
+    else:
+        years = np.array(data['Year']).astype(int)
+        yrs2plot = np.arange(np.min(years), np.max(years)).astype('int')
+
+    Xmin0 = min(yrs2plot)-1
+    Xmax0 = max(yrs2plot)+1
 
     if Ymax0 is None:
         Ymax0 = np.max(max_rechg_yrly) + 50
@@ -272,16 +187,10 @@ def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
 
     # --------------------------------------------------- XTICKS FORMATING ----
 
-    xtcklabl = [''] * NYear
-    for i in range(NYear):
-        yr1 = str(yr2plot[i])[-2:]
-        yr2 = str(yr2plot[i]+1)[-2:]
-        xtcklabl[i] = "'%s - '%s" % (yr1, yr2)
-
     ax0.xaxis.set_ticks_position('bottom')
     ax0.tick_params(axis='x', direction='out', pad=1)
-    ax0.set_xticks(yr2plot)
-    ax0.xaxis.set_ticklabels(xtcklabl, rotation=45, ha='right')
+    ax0.set_xticks(yrs2plot)
+    ax0.xaxis.set_ticklabels(year_labels, rotation=45, ha='right')
 
     # --------------------------------------------------- YTICKS FORMATING ----
 
@@ -304,6 +213,7 @@ def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
     ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
 
     # ------------------------------------------------------------- LABELS ----
+
     ylabl = 'Annual Recharge (mm/y)'
     xlabl = ('Hydrological Years (October 1st of one ' +
              'year to September 30th of the next)')
@@ -327,21 +237,16 @@ def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
 
     # ---- Recharge ----
 
-    ax0.plot(yr2plot, prob_rechg_yrly, ls='--', color='0.35', zorder=100)
+    ax0.plot(yrs2plot, prob_rechg_yrly, ls='--', color='0.35', zorder=100)
 
     yerr = [prob_rechg_yrly-min_rechg_yrly, max_rechg_yrly-prob_rechg_yrly]
-    herr = ax0.errorbar(yr2plot, prob_rechg_yrly, yerr=yerr,
+    herr = ax0.errorbar(yrs2plot, prob_rechg_yrly, yerr=yerr,
                         fmt='o', capthick=1, capsize=4, ecolor='0',
                         elinewidth=1, mfc='White', mec='0', ms=5,
                         markeredgewidth=1, zorder=200)
 
-    h25 = ax0.plot(yr2plot, glue25_yr, color='red', dashes=[3, 5], alpha=0.65)
-    ax0.plot(yr2plot, glue75_yr, color='red', dashes=[3, 5], alpha=0.65)
-
-    # ---- Runoff and ETR ----
-    # print(etr50_yr)
-    # ax0.plot(yr2plot, etr50_yr, color='green', dashes=[3, 5], alpha=0.65)
-    # ax0.plot(yr2plot, ru50_yr, color='cyan', dashes=[3, 5], alpha=0.65)
+    h25 = ax0.plot(yrs2plot, glue25_yr, color='red', dashes=[3, 5], alpha=0.65)
+    ax0.plot(yrs2plot, glue75_yr, color='red', dashes=[3, 5], alpha=0.65)
 
     # --------------------------------------------------------------- Legend --
 
@@ -384,21 +289,21 @@ def plot_rechg_GLUE(lang='English', Ymin0=None, Ymax0=None, yrs_range=None):
 
     # ----- Some Calculation ----
 
-    print('')
-    print('%d behavioural realizations' % len(RMSE))
-    indx = np.where(prob_rechg_yrly == np.max(prob_rechg_yrly))[0][0]
-    print('Max. Recharge is %d mm/y at year %s' %
-          (np.max(prob_rechg_yrly), xtcklabl[indx]))
-    indx = np.where(prob_rechg_yrly == np.min(prob_rechg_yrly))[0][0]
-    print('Min. Recharge is %d mm/y at year %s' %
-          (np.min(prob_rechg_yrly), xtcklabl[indx]))
-    Runcer = max_rechg_yrly - min_rechg_yrly
-    print('Max uncertainty is %d mm/y at year %s'
-          % (np.max(Runcer),
-             xtcklabl[np.where(Runcer == np.max(Runcer))[0][0]]))
-    print('Min uncertainty is %d mm/y at year %s'
-          % (np.min(Runcer),
-             xtcklabl[np.where(Runcer == np.min(Runcer))[0][0]]))
+    # print('')
+    # print('%d behavioural realizations' % len(RMSE))
+    # indx = np.where(prob_rechg_yrly == np.max(prob_rechg_yrly))[0][0]
+    # print('Max. Recharge is %d mm/y at year %s' %
+    #       (np.max(prob_rechg_yrly), xtcklabl[indx]))
+    # indx = np.where(prob_rechg_yrly == np.min(prob_rechg_yrly))[0][0]
+    # print('Min. Recharge is %d mm/y at year %s' %
+    #       (np.min(prob_rechg_yrly), xtcklabl[indx]))
+    # Runcer = max_rechg_yrly - min_rechg_yrly
+    # print('Max uncertainty is %d mm/y at year %s'
+    #       % (np.max(Runcer),
+    #          xtcklabl[np.where(Runcer == np.max(Runcer))[0][0]]))
+    # print('Min uncertainty is %d mm/y at year %s'
+    #       % (np.min(Runcer),
+    #          xtcklabl[np.where(Runcer == np.min(Runcer))[0][0]]))
 
 
 # =============================================================================
