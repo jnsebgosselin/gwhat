@@ -85,9 +85,17 @@ ICON_NAMES = {'master': 'WHAT',
               'showGrid': 'grid',
               'export_data': 'export-data'}
 
+ICON_SIZES = {'iconSize': (32, 32),
+              'iconSize2': (20, 20)}
+
 
 def get_icon(name):
     return QIcon(os.path.join(dirname, ICON_NAMES[name]))
+
+
+def get_iconsize(size):
+    w, h = ICON_SIZES[size]
+    return QSize(w, h)
 
 
 class IconDB(object):
