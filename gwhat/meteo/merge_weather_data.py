@@ -24,7 +24,8 @@ from PyQt5.QtWidgets import (QDialog, QApplication, QGridLayout,
 
 # ---- Imports: local
 
-from gwhat.common import IconDB, QToolButtonSmall
+from gwhat.common import QToolButtonSmall
+from gwhat.common import icons
 from gwhat.meteo.weather_reader import read_weather_datafile
 
 
@@ -195,7 +196,7 @@ class WXDataMergerWidget(QDialog):
                             Qt.WindowCloseButtonHint)
 
         self.setWindowTitle('Combine two weather datasets')
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
         self._workdir = os.getcwd()
 
         self.__initUI__()
@@ -221,14 +222,14 @@ class WXDataMergerWidget(QDialog):
         self._file_path1 = QLineEdit()
         self._file_path1.setReadOnly(True)
         lbl_get_file1 = QLabel("Select a first weather data file :")
-        self.btn_get_file1 = QToolButtonSmall(IconDB().openFile)
+        self.btn_get_file1 = QToolButtonSmall(icons.get_icon('openFile'))
         self.btn_get_file1.file_path = self._file_path1
         self.btn_get_file1.clicked.connect(self.set_first_filepath)
 
         self._file_path2 = QLineEdit()
         self._file_path2.setReadOnly(True)
         lbl_get_file2 = QLabel("Select a second weather data file :")
-        self.btn_get_file2 = QToolButtonSmall(IconDB().openFile)
+        self.btn_get_file2 = QToolButtonSmall(icons.get_icon('openFile'))
         self.btn_get_file2.file_path = self._file_path2
         self.btn_get_file2.clicked.connect(self.set_second_filepath)
 
