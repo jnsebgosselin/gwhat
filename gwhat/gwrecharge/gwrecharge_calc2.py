@@ -16,6 +16,7 @@ import time
 
 import numpy as np
 from PyQt5.QtCore import QObject
+from PyQt5.QtCore import pyqtSignal as QSignal
 
 # ---- Imports: local
 
@@ -350,93 +351,21 @@ class RechgEvalWorker(QObject):
 
     def surf_water_budget(self, CRU, RASmax):
         """
-        Input
-        -----
-        {float} CRU = Runoff coefficient
-        {float} RASmax = Readily Available Storage Max in mm
-        {1D array} ETP = Dailty evapotranspiration in mm
-        {1D array} PTOT = Daily total precipitation in mm
-        {1D array} TAVG = Daily average air temperature in deg. C.
+        Compute recharge with a daily soil surface moisture balance model.
 
-        CM: Daily melt coefficient
-        TMELT: Temperature treshold for snowmelt
-
-        Output
-        ------
-        {1D array} RECHG = Daily groundwater recharge in mm
+        RU = Runoff coefficient
+        RASmax = Readily Available Storage Max in mm
+        ETP = Dailty evapotranspiration in mm
+        PTOT = Daily total precipitation in mm
+        TAVG = Daily average air temperature in deg. C.
+        CM = Daily melt coefficient
+        TMELT = Temperature treshold for snowmelt
+        RECHG = Daily groundwater recharge in mm
         """
-        # t1 = time.clock()
-        # ETP = self.ETP
-        # PTOT = self.PTOT
-        # TAVG = self.TAVG
+        RECHG, RU, ETR, RAS, PACC = calcul_surf_water_budget(
+                self.ETP, self.PTOT, self.TAVG, self.TMELT,
+                self.CM,  CRU, RASmax)
 
-        # TMELT = self.TMELT
-        # CM = self.CM
-
-        # N = len(ETP)
-        RECHG, RU, ETR, RAS, PACC = calcul_surf_water_budget(self.ETP, self.PTOT, self.TAVG, self.TMELT, self.CM,  CRU, RASmax)
-#         PAVL = np.zeros(N)   # Available Precipitation
-#         PACC = np.zeros(N)   # Accumulated Precipitation
-#         RU = np.zeros(N)     # Runoff
-#         I = np.zeros(N)      # Infiltration
-#         ETR = np.zeros(N)    # Evapotranspiration Real
-#         dRAS = np.zeros(N)   # Variation of RAW
-#         RAS = np.zeros(N)    # Readily Available Storage
-#         RECHG = np.zeros(N)  # Recharge (mm)
-
-#         MP = CM * (TAVG - TMELT)  # Snow Melt Potential
-#         MP[MP < 0] = 0
-
-#         PACC[0] = 0
-#         RAS[0] = RASmax
-#         for i in range(N-1):
-
-#             # ----- Precipitation, Accumulation, and Melt -----
-
-#             if TAVG[i] > TMELT:
-#                 # Precipitation is falling as rain.
-#                 if MP[i] >= PACC[i]:
-#                     # Rain is falling on bareground (all snow is melted).
-#                     PAVL[i] = PACC[i] + PTOT[i]
-#                     PACC[i+1] = 0
-#                 else:
-#                     # Rain is falling on the snowpack.
-#                     PAVL[i] = MP[i]
-#                     PACC[i+1] = PACC[i] - MP[i] + PTOT[i]
-#             else:
-#                 # Precipitation is falling as Snow.
-#                 PAVL[i] = 0
-#                 PACC[i+1] = PACC[i] + PTOT[i]
-
-#             # ----- Infiltration and Runoff -----
-
-#             # runoff coefficient
-#             RU[i] = CRU*PAVL[i]
-
-#             # curve number
-#             # CN = CRU
-#             # num = (PAVL[i] - 0.2*(1000/CN-10))**2
-#             # den = PAVL[i] + 0.8*(1000/CN-10)
-#             # RU[i] = max(num/den, 0)
-
-#             I[i] = PAVL[i] - RU[i]
-
-#             # ----- ETR, Recharge and Storage change -----
-
-#             # Intermediate Step
-#             dRAS[i] = min(I[i], RASmax - RAS[i])
-#             RAS[i+1] = RAS[i] + dRAS[i]
-
-#             # Final Step
-#             RECHG[i] = I[i] - dRAS[i]
-#             ETR[i] = min(ETP[i], RAS[i])
-#             RAS[i+1] = RAS[i+1] - ETR[i]
-
-#             # Evaportransporation is calculated after recharge. It is assumed
-#             # that recharge occurs on a time scale that is faster than
-#             # evapotranspiration in permeable soil.
-
-# #        print np.sum(PTOT - ETR - RECHG - RU) - (RAS[-1] - RAS[0])
         return RECHG, RU, ETR, RAS, PACC
 
     def calc_hydrograph(self, RECHG, Sy, nscheme='forward'):
