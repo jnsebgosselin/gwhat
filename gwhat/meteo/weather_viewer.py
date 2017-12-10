@@ -952,8 +952,11 @@ class GridWeatherNormals(QTableWidget):
 
         self.resizeColumnsToContents()
 
+
+# ---- if __name__ == '__main__'
+
 if __name__ == '__main__':
-    from WHAT.meteo.weather_reader import WXDataFrame
+    from gwhat.meteo.weather_reader import WXDataFrame
     app = QApplication(sys.argv)
 
     ft = app.font()
@@ -961,10 +964,9 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    fmeteo = ('C:/Users/jsgosselin/OneDrive/WHAT/Projects/'
-              'Project4Testing/Meteo/Output/IBERVILLE (7023270)/'
-              'IBERVILLE (7023270)_1980-2015.out')
-
+    fmeteo = ("C:\\Users\\jsgosselin\\GWHAT\\Projects\\"
+              "Example\\Meteo\\Output\\FARNHAM (7022320)\\"
+              "FARNHAM (7022320)_2005-2010.out")
     wxdset = WXDataFrame(fmeteo)
 
     w = WeatherAvgGraph()
