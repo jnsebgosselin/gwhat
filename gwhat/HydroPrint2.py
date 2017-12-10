@@ -1116,7 +1116,6 @@ class PageSetupWin(QWidget):
 if __name__ == '__main__':
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
-    import time
     app = QApplication(sys.argv)
 
     ft = app.font()
@@ -1130,9 +1129,7 @@ if __name__ == '__main__':
     dm = DataManager()
     dm.set_projet(pr)
 
-    tic = time.clock()
     Hydroprint = HydroprintGUI(dm)
     Hydroprint.show()
-    print(time.clock()-tic)
 
     sys.exit(app.exec_())

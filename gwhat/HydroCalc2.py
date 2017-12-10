@@ -2261,7 +2261,6 @@ if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
-    import time
 
     app = QApplication(sys.argv)
 
@@ -2276,10 +2275,8 @@ if __name__ == '__main__':
     pr = ProjetReader(pf)
     dm = DataManager()
 
-    tic = time.clock()
     hydrocalc = WLCalc(dm)
     hydrocalc.show()
-    print(time.clock()-tic)
 
     dm.set_projet(pr)
 
