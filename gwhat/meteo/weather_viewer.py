@@ -34,7 +34,6 @@ from gwhat.common import IconDB, StyleDB, QToolButtonNormal
 from gwhat.common.widgets import DialogWindow
 from gwhat import __version__
 
-mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
