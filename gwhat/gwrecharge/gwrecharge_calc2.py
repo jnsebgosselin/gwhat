@@ -219,7 +219,7 @@ class RechgEvalWorker(QObject):
         self.sig_glue_progress.emit(0)
         for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
             rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
-            SyOpt, RMSE, wlvlest = self.opt_Sy(Sy0, rechg)
+            SyOpt, RMSE, wlvlest = self.optimize_Sy(Sy0, rechg)
             Sy0 = SyOpt
 
             if SyOpt >= self.Sy[0] and SyOpt <= self.Sy[1]:
@@ -279,17 +279,20 @@ class RechgEvalWorker(QObject):
         root, ext = os.path.splitext(filename)
         filename = filename if ext == '.npy' else filename+'.ext'
 
-    # =========================================================================
-
-    def opt_Sy(self, Sy0, rechg):
-        tweatr = self.wxdset['Time']     # Here we introduce the time lag
+    def optimize_Sy(self, Sy0, rechg):
+        """
+        Finds the optimal value of Sy that minimizes the RMSE between the
+        observed and predicted ground-water hydrographs.
+        """
+        tweatr = self.wxdset['Time']     # time weather data
         twlvl = self.twlvl               # time water level
         WLVLobs = self.WLVLobs * 1000    # water level observations
 
+        # We introduce the time lag here.
         ts = np.where(twlvl[0] == tweatr+self.deltat)[0][0]
         te = np.where(twlvl[-1] == tweatr+self.deltat)[0][0]
 
-        # ---- Gauss-Newton ----
+        # ---- Gauss-Newton
 
         tolmax = 0.001
         Sy = Sy0
@@ -305,47 +308,39 @@ class RechgEvalWorker(QObject):
                 print('Not converging.')
                 break
 
-            # Calculating Jacobian (X) Numerically :
-
+            # Calculating Jacobian (X) Numerically.
             wlvl = self.calc_hydrograph(rechg[ts:te], Sy * (1+dSy))
             X = Xt = (wlvl[self.NaNindx] - WLVLpre[self.NaNindx])/(Sy*dSy)
 
-            # Solving Linear System :
-
+            # Solving Linear System.
             dh = WLVLobs[self.NaNindx] - WLVLpre[self.NaNindx]
             XtX = np.dot(Xt, X)
             Xtdh = np.dot(Xt, dh)
 
             dr = np.linalg.tensorsolve(XtX, Xtdh, axes=None)
 
-            # Storing old parameter values :
-
+            # Storing old parameter values.
             Syold = np.copy(Sy)
             RMSEold = np.copy(RMSE)
 
-            while 1:  # Loop for Damping (to prevent overshoot)
-
-                # Calculating new paramter values :
-
+            # Loop for Damping (to prevent overshoot)
+            while 1:
+                # Calculating new paramter values.
                 Sy = Syold + dr
 
-                # Solving for new parameter values :
-
+                # Solving for new parameter values.
                 WLVLpre = self.calc_hydrograph(rechg[ts:te], Sy)
                 RMSE = calcul_rmse(WLVLobs[self.NaNindx],
                                    WLVLpre[self.NaNindx])
 
-                # Checking overshoot :
-
+                # Checking overshoot.
                 if (RMSE - RMSEold) > 0.1:
                     dr = dr * 0.5
                 else:
                     break
 
-            # Checking tolerance :
-
+            # Checking tolerance.
             tol = np.abs(Sy - Syold)
-
             if tol < tolmax:
                 return Sy, RMSE, WLVLpre
 
