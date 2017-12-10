@@ -6,26 +6,30 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# ---- Standard library imports
+# ---- Imports: standard libraries
 
 import datetime
 from itertools import product
 import time
 
-# ---- Third party imports
+# ---- Imports: third parties
 
 import numpy as np
-import matplotlib.pyplot as plt
+from PyQt5.QtCore import QObject
+
+# ---- Imports: local
+
 from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
                                                  calc_hydrograph_forward)
 
 
-# =============================================================================
+class RechgEvalWorker(QObject):
 
-
-class SynthHydrograph(object):
+    sig_glue_progress = QSignal(float)
+    sig_glue_finished = QSignal(int)
 
     def __init__(self):
+        super(RechgEvalWorker, self).__init__()
 
         self.wxdset = None
         self.ETP, self.PTOT, self.TAVG = [], [], []
@@ -48,8 +52,14 @@ class SynthHydrograph(object):
         self.CM = 4
         self.deltat = 0
 
+        self.Sy = (0, 1)
+        self.Cro = (0, 1)
+        self.RASmax = (0, 150)
+
         self.language = 'French'
         self.glue_results = None
+        self.fig = None
+        self.glue_pardist_res = 'fine'
 
     # =========================================================================
 
@@ -82,8 +92,6 @@ class SynthHydrograph(object):
     @TMELT.setter
     def TMELT(self, x):
         self.__TMELT = x
-
-    # =========================================================================
 
     def load_data(self, wxdset, wldset):
 
@@ -161,113 +169,8 @@ class SynthHydrograph(object):
 
         return DATE
 
-    # =========================================================================
-
-    def initPlot(self):
-
-        # ---- Prepare Figure and Plot Obs. ----
-
-        fwidth, fheight = 12.5, 6
-        self.fig = plt.figure(figsize=(fwidth, fheight))
-
-        lmarg = 0.85/fwidth
-        rmarg = 0.25/fwidth
-        tmarg = 0.5/fheight
-        bmarg = 0.65/fheight
-
-        axwidth = 1 - (lmarg + rmarg)
-        axheight = 1 - (bmarg + tmarg)
-
-        ax = self.fig.add_axes([lmarg, bmarg, axwidth, axheight])
-
-        # ---- Figure setup ----
-        label = 'Water Level (mbgs)'
-        if self.language == 'French':
-            label = "Niveau d'eau (m sous la surface)"
-
-        ax.set_ylabel(label, fontsize=16)
-        ax.grid(axis='x', color=[0.65, 0.65, 0.65], ls=':', lw=1)
-        ax.set_axisbelow(True)
-
-        ax.invert_yaxis()
-
-        # ----------------------------------------------- Plot Observation ----
-
-        wlvl, = ax.plot(self.DATE, self.WLVLobs, color='b', ls='None',
-                        marker='.', ms=3, zorder=100)
-
-        self.fig.canvas.draw()
-
-        # ----------------------------------------------- YTICKS FORMATING ----
-
-        ax.yaxis.set_ticks_position('left')
-        ax.tick_params(axis='y', direction='out', gridOn=True, labelsize=12)
-
-        # ----------------------------------------------- XTICKS FORMATING ----
-
-        ax.xaxis.set_ticks_position('bottom')
-        ax.tick_params(axis='x', direction='out')
-        self.fig.autofmt_xdate()
-
-        # ---- Legend ----
-
-        dum1 = plt.Rectangle((0, 0), 1, 1, fc='0.5', ec='0.5')
-        dum2, = plt.plot([], [], color='b', ls='None', marker='.', ms=10)
-
-        lg_handles = [dum2, dum1]
-        lg_labels = ['Observations', 'GLUE 5/95']
-
-        ax.legend(lg_handles, lg_labels, ncol=2, fontsize=12, frameon=False,
-                  numpoints=1)
-
-    def plot_prediction(self, data=None):
-        if data is None:
-            data = np.load('GLUE.npy').item()
-        hydrograph = np.array(data['hydrograph'])
-        RMSE = np.array(data['RMSE'])
-        RMSE = RMSE / np.sum(RMSE)
-
-        hGLUE = []
-        for i in range(len(hydrograph[0, :])):
-            isort = np.argsort(hydrograph[:, i])
-            CDF = np.cumsum(RMSE[isort])
-            hGLUE.append(
-                np.interp([0.05, 0.5, 0.95], CDF, hydrograph[isort, i]))
-
-        hGLUE = np.array(hGLUE)
-        min_wlvl = hGLUE[:, 0] / 1000.
-        max_wlvl = hGLUE[:, 2] / 1000.
-
-        self.fig.axes[0].fill_between(
-                self.DATE, max_wlvl, min_wlvl, color='0.5', lw=1.5,
-                alpha=0.65, zorder=10)
-
-        # ---- Calculate Containement Ratio ----
-
-        obs_wlvl = self.WLVLobs
-        CR = 0
-        for i in range(len(obs_wlvl)):
-            if obs_wlvl[i] >= min_wlvl[i] and obs_wlvl[i] <= max_wlvl[i]:
-                CR += 1.
-
-        print('Containement Ratio = %0.1f' % CR)
-
-    # =========================================================================
-
-    @staticmethod
-    def nash_sutcliffe(Xobs, Xpre):
-        # Source: Wikipedia
-        # https://en.wikipedia.org/wiki/
-        # Nash%E2%80%93Sutcliffe_model_efficiency_coefficient
-        return 1 - np.sum((Xobs - Xpre)**2) / np.sum((Xobs - np.mean(Xobs))**2)
-
-    @staticmethod
-    def calc_RMSE(Xobs, Xpre):
-        return (np.mean((Xobs - Xpre)**2))**0.5
-
     def calc_recharge(self, data=None):
-        if data is None:
-            data = np.load('GLUE.npy').item()
+        data = self.glue_results
         rechg = np.array(data['recharge'])
         RMSE = np.array(data['RMSE'])
 
@@ -290,13 +193,12 @@ class SynthHydrograph(object):
 
     # =============================================================== GLUE ====
 
-    def calcul_GLUE(self, Sy, RASmax, Cro, res='fine', save_results=True):
-        if res == 'rough':
-            U_RAS = np.arange(RASmax[0], RASmax[1]+1, 5)
-            U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.01)
-        elif res == 'fine':
-            U_RAS = np.arange(RASmax[0], RASmax[1]+1, 1)
-            U_Cro = np.arange(Cro[0], Cro[1]+0.01, 0.01)
+    def calcul_GLUE(self):
+        if self.glue_pardist_res == 'rough':
+            U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 5)
+        elif self.glue_pardist_res == 'fine':
+            U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 1)
+        U_Cro = np.arange(self.Cro[0], self.Cro[1]+0.01, 0.01)
 
         # ---- Produce realization ----
 
@@ -310,14 +212,16 @@ class SynthHydrograph(object):
         set_ru = []
         set_etr = []
 
-        Sy0 = np.mean(Sy)
+        Sy0 = np.mean(self.Sy)
         tstart = time.clock()
-        for cro, rasmax in product(U_Cro, U_RAS):
+        N = sum(1 for p in product(U_Cro, U_RAS))
+        self.sig_glue_progress.emit(0)
+        for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
             rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
             SyOpt, RMSE, wlvlest = self.opt_Sy(Sy0, rechg)
             Sy0 = SyOpt
 
-            if SyOpt >= Sy[0] and SyOpt <= Sy[1]:
+            if SyOpt >= self.Sy[0] and SyOpt <= self.Sy[1]:
                 set_RMSE.append(RMSE)
                 set_RECHG.append(rechg)
                 set_WLVL.append(wlvlest)
@@ -327,6 +231,7 @@ class SynthHydrograph(object):
                 set_etr.append(etr)
                 set_ru.append(ru)
 
+            self.sig_glue_progress.emit((it+1)/N*100)
             print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.4f ; ' +
                    'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
 
@@ -357,7 +262,12 @@ class SynthHydrograph(object):
                                         'Rain': self.wxdset['Rain'],
                                         'PET': self.wxdset['PET']
                                         }
+        self.sig_glue_finished.emit(len(set_RECHG))
         return self.glue_results
+
+    def load_glue_from_npy(self, filename):
+        """Load previously computed results from a numpy npy file."""
+        self.glue_results = np.load(filename).item()
 
     def save_glue_to_npy(self, filename):
         """Save the last computed glue results in a numpy npy file."""
@@ -385,7 +295,7 @@ class SynthHydrograph(object):
         dSy = 0.01
 
         WLVLpre = self.calc_hydrograph(rechg[ts:te], Sy)
-        RMSE = self.calc_RMSE(WLVLobs[self.NaNindx], WLVLpre[self.NaNindx])
+        RMSE = calcul_rmse(WLVLobs[self.NaNindx], WLVLpre[self.NaNindx])
 
         it = 0
         while 1:
@@ -421,8 +331,8 @@ class SynthHydrograph(object):
                 # Solving for new parameter values :
 
                 WLVLpre = self.calc_hydrograph(rechg[ts:te], Sy)
-                RMSE = self.calc_RMSE(WLVLobs[self.NaNindx],
-                                      WLVLpre[self.NaNindx])
+                RMSE = calcul_rmse(WLVLobs[self.NaNindx],
+                                   WLVLpre[self.NaNindx])
 
                 # Checking overshoot :
 
@@ -554,23 +464,22 @@ class SynthHydrograph(object):
                  Default is "forward".
         """
 
-        # It should also be possible to do a Crank-Nicholson on this. I should
-        # check this out.
+        # TODO: It should also be possible to do a Crank-Nicholson on this.
+        # I should check this out.
 
         A, B = self.A, self.B
-        WLobs = self.WLVLobs*1000
+        wlobs = self.WLVLobs*1000
         if nscheme == 'backward':
             wlpre = np.zeros(len(RECHG)+1) * np.nan
-            wlpre[0] = WLobs[-1]
+            wlpre[0] = wlobs[-1]
             for i in reversed(range(len(RECHG))):
                 RECESS = (B - A * wlpre[i] / 1000.) * 1000
                 RECESS = max(RECESS, 0)
 
                 wlpre[i] = wlpre[i+1] + (RECHG[i] / Sy) - RECESS
-
         elif nscheme == 'forward':
-            wlpre = calc_hydrograph_forward(RECHG, WLobs, Sy, self.A, self.B)
-            
+            wlpre = calc_hydrograph_forward(RECHG, wlobs, Sy, self.A, self.B)
+
             # WLpre[0] = WLobs[0]
             # for i in range(len(RECHG)):
             #     # if i%365 == 0:
@@ -658,13 +567,40 @@ class SynthHydrograph(object):
 
         return RECHG
 
-if __name__ == '__main__':
 
+def calcul_rmse(Xobs, Xpre):
+    """Compute the root-mean square error."""
+    return (np.mean((Xobs - Xpre)**2))**0.5
+
+
+def calcul_nash_sutcliffe(Xobs, Xpre):
+    """
+    Compute the Nash–Sutcliffe model efficiency coefficient.
+    https://en.wikipedia.org/wiki/Nash–Sutcliffe_model_efficiency_coefficient
+    """
+    return 1 - np.sum((Xobs - Xpre)**2) / np.sum((Xobs - np.mean(Xobs))**2)
+
+
+def calcul_containement_ratio(obs_wlvl, min_wlvl, max_wlvl):
+    """Calcul the containement ratio of the GLUE5/95 predicted water levels."""
+    CR = 0
+    for i in range(len(obs_wlvl)):
+        if obs_wlvl[i] >= min_wlvl[i] and obs_wlvl[i] <= max_wlvl[i]:
+            CR += 1
+    CR = CR/len(obs_wlvl)
+    print('Containement Ratio = %0.1f' % CR)
+    return CR
+
+
+# ---- if __name__ == '__main__'
+
+if __name__ == '__main__':
+    import matplotlib.pyplot as plt
     plt.close('all')
     import os
     from gwrecharge_post import plot_rechg_GLUE
 
-    sh = SynthHydrograph()
+    sh = RechgEvalWorker()
 
     # ---- Pont-Rouge ----
 
@@ -803,5 +739,3 @@ if __name__ == '__main__':
     sh.initPlot()
     sh.plot_prediction()
     plot_rechg_GLUE('English', Ymin0=-20, yrs_range=[2000, 2016])
-
-    plt.show()

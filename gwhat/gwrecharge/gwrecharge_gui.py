@@ -6,35 +6,46 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
+import time
+
 # ---- Imports: third parties
 
 import matplotlib.pyplot as plt
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
                              QLabel, QSizePolicy, QScrollArea, QApplication)
 
 # ---- Imports: local
 
 from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
-from gwhat.gwrecharge.gwrecharge_calc2 import SynthHydrograph
+from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_post import plot_rechg_GLUE
+from gwhat.gwrecharge.gwrecharge_plot_results import FigWaterLevelGLUE
 
 
 class RechgEvalWidget(QFrameLayout):
     def __init__(self, parent):
         super(RechgEvalWidget, self).__init__(parent)
+        self.setWindowTitle('Recharge Calibration Setup')
+        self.setWindowFlags(Qt.Window)
 
         self.wxdset = None
         self.wldset = None
 
-        self.setWindowTitle('Recharge Calibration Setup')
-        self.setWindowFlags(Qt.Window)
-
-        self.__initUI__()
-
         self.progressbar = QProgressBar()
         self.progressbar.setValue(0)
         self.progressbar.hide()
+        self.__initUI__()
+
+        # Set the worker and thread mechanics
+
+        self.rechg_worker = RechgEvalWorker()
+        self.rechg_worker.sig_glue_finished.connect(self.receive_glue_calcul)
+        self.rechg_worker.sig_glue_progress.connect(self.progressbar.setValue)
+
+        self.rechg_thread = QThread()
+        self.rechg_worker.moveToThread(self.rechg_thread)
+        self.rechg_thread.started.connect(self.rechg_worker.calcul_GLUE)
 
     def __initUI__(self):
 
@@ -66,29 +77,28 @@ class RechgEvalWidget(QFrameLayout):
 
         # Specific yield (Sy) :
 
-        self.QSy_min = QDoubleSpinBox(0.2, 3)
+        self.QSy_min = QDoubleSpinBox(0.05, 3)
         self.QSy_min.setRange(0.001, 1)
 
-        self.QSy_max = QDoubleSpinBox(0.3, 3)
+        self.QSy_max = QDoubleSpinBox(0.2, 3)
         self.QSy_max.setRange(0.001, 1)
 
         # Maximum readily available water (RASmax) :
 
         # units=' mm'
 
-        self.QRAS_min = QDoubleSpinBox(40)
+        self.QRAS_min = QDoubleSpinBox(5)
         self.QRAS_min.setRange(0, 999)
 
-        self.QRAS_max = QDoubleSpinBox(120)
+        self.QRAS_max = QDoubleSpinBox(40)
         self.QRAS_max.setRange(0, 999)
-        self.QRAS_max.setValue(120)
 
         # Runoff coefficient (Cro) :
 
-        self.CRO_min = QDoubleSpinBox(0.2, 3)
+        self.CRO_min = QDoubleSpinBox(0.1, 3)
         self.CRO_min.setRange(0, 1)
 
-        self.CRO_max = QDoubleSpinBox(0.4, 3)
+        self.CRO_max = QDoubleSpinBox(0.3, 3)
         self.CRO_max.setRange(0, 1)
 
         # Snowmelt parameters :
@@ -222,38 +232,59 @@ class RechgEvalWidget(QFrameLayout):
         print('Closing Window')
 
     def btn_calibrate_isClicked(self):
-        print('Calibration started')
+        """
+        Handles when the button to compute recharge and its uncertainty is
+        clicked.
+        """
+        self.start_glue_calcul()
+
+    def start_glue_calcul(self):
+        """
+        Start the method to evaluate ground-water recharge and its
+        uncertainty.
+        """
         plt.close('all')
-        sh = SynthHydrograph()
-
-        # ---- Parameter ranges ----
-
-        Sy = self.get_Range('Sy')
-        RASmax = self.get_Range('RASmax')
-        Cro = self.get_Range('Cro')
-
-        sh.TMELT = self.Tmelt
-        sh.CM = self.CM
-        sh.deltat = self.deltaT
-
-        print(self.wldset['mrc/params'])
-
-        # ---- Calculations ----
         self.progressbar.show()
-        QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        sh.load_data(self.wxdset, self.wldset)
-        results = sh.calcul_GLUE(Sy, RASmax, Cro, 'fine', False)
+        # Set the parameter ranges
 
-        if len(results['recharge']) == 0:
-            print("The number of behavioural model produced is 0.")
-            return
+        self.rechg_worker.Sy = self.get_Range('Sy')
+        self.rechg_worker.Cro = self.get_Range('Cro')
+        self.rechg_worker.RASmax = self.get_Range('RASmax')
 
-        sh.calc_recharge(results)
-        sh.initPlot()
-        sh.plot_prediction(results)
-        plot_rechg_GLUE('English')
-        plt.show()
+        self.rechg_worker.TMELT = self.Tmelt
+        self.rechg_worker.CM = self.CM
+        self.rechg_worker.deltat = self.deltaT
 
-        QApplication.restoreOverrideCursor()
+        self.rechg_worker.load_data(self.wxdset, self.wldset)
+
+        # Start the thread
+
+        waittime = 0
+        while self.rechg_thread.isRunning():
+            time.sleep(0.1)
+            waittime += 0.1
+            if waittime > 15:
+                print('Impossible to quit the thread.')
+                return
+        self.rechg_thread.start()
+
+    def receive_glue_calcul(self, N):
+        """
+        Handles the plotting of the results once ground-water recharge has
+        been evaluated.
+        """
+        self.rechg_thread.quit()
         self.progressbar.hide()
+        if N == 0:
+            print("The number of behavioural model produced is 0.")
+        else:
+            glue_data = self.rechg_worker.glue_results
+            dates = self.rechg_worker.DATE
+            wlobs = self.rechg_worker.WLVLobs
+
+            fig_wl_glue = FigWaterLevelGLUE()
+            fig_wl_glue.plot_prediction(dates, wlobs, glue_data)
+
+            # plot_rechg_GLUE('English')
+            # plt.show()
