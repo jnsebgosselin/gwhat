@@ -34,7 +34,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 import gwhat.common.widgets as myqt
 from PyQt5.QtCore import pyqtSignal as QSignal
 from gwhat.brf_mod.kgs_plot import BRFFigure
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import icons
 from gwhat import brf_mod as bm
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
@@ -141,7 +142,7 @@ class BRFManager(myqt.QFrameLayout):
         self._dataend.setCalendarPopup(True)
         self._dataend.setDisplayFormat('dd/MM/yyyy')
 
-        self.btn_seldata = QToolButtonSmall(IconDB().select_range)
+        self.btn_seldata = QToolButtonSmall(icons.get_icon('select_range'))
         self.btn_seldata.clicked.connect(self.get_datarange)
 
         # ---- Detrend and Correct Options ----
@@ -158,7 +159,7 @@ class BRFManager(myqt.QFrameLayout):
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
 
-        btn_show = QToolButtonSmall(IconDB().search)
+        btn_show = QToolButtonSmall(icons.get_icon('search'))
         btn_show.clicked.connect(self.viewer.show)
 
         # ---- Layout ----
@@ -370,7 +371,7 @@ class BRFViewer(QWidget):
         super(BRFViewer, self).__init__(parent)
 
         self.setWindowTitle('BRF Results Viewer')
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
         self.setWindowFlags(Qt.Window |
                             Qt.CustomizeWindowHint |
                             Qt.WindowMinimizeButtonHint |
@@ -383,23 +384,23 @@ class BRFViewer(QWidget):
 
         # -------------------------------------------------------- Toolbar ----
 
-        self.btn_del = QToolButtonNormal(IconDB().clear_search)
+        self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
         self.btn_del.setToolTip('Delete current BRF results')
         self.btn_del.clicked.connect(self.del_brf)
 
-        btn_save = QToolButtonNormal(IconDB().save)
+        btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save current BRF graph...')
 
-        self.btn_setp = QToolButtonNormal(IconDB().page_setup)
+        self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
         # ---- Navigator ----
 
-        self.btn_prev = QToolButtonNormal(IconDB().go_previous)
+        self.btn_prev = QToolButtonNormal(icons.get_icon('go_previous'))
         self.btn_prev.clicked.connect(self.navigate_brf)
 
-        self.btn_next = QToolButtonNormal(IconDB().go_next)
+        self.btn_next = QToolButtonNormal(icons.get_icon('go_next'))
         self.btn_next.clicked.connect(self.navigate_brf)
 
         self.current_brf = QSpinBox()
