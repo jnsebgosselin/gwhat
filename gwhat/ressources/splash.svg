@@ -35,12 +35,12 @@
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:zoom="0.37512072"
-     inkscape:cx="953.83754"
-     inkscape:cy="285.82294"
-     inkscape:window-x="-8"
-     inkscape:window-y="-8"
+     inkscape:cx="824.54583"
+     inkscape:cy="344.47073"
+     inkscape:window-x="140"
+     inkscape:window-y="1072"
      inkscape:window-maximized="1"
-     inkscape:current-layer="svg3336"
+     inkscape:current-layer="g4559"
      fit-margin-top="0"
      fit-margin-left="0"
      fit-margin-right="0"
@@ -362,6 +362,6 @@
          id="tspan3092-0"
          y="-404.06998"
          x="-110.26708"
-         sodipodi:role="line">Version 0.1.1</tspan></text>
+         sodipodi:role="line">Version 0.2.0</tspan></text>
   </g>
 </svg>
