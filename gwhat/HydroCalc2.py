@@ -37,7 +37,8 @@ import xlsxwriter
 
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 import gwhat.common.widgets as myqt
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal
+from gwhat.common import StyleDB, QToolButtonNormal
+from gwhat.common import icons
 import gwhat.brf_mod as bm
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
@@ -238,29 +239,30 @@ class WLCalc(myqt.DialogWindow):
 
         # Toolbar Buttons :
 
-        self.btn_clearPeak = QToolButtonNormal(IconDB().clear_search)
+        self.btn_clearPeak = QToolButtonNormal(icons.get_icon('clear_search'))
         self.btn_clearPeak.setToolTip('Clear all extremum from the graph')
         self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
 
-        self.btn_home = QToolButtonNormal(IconDB().home)
+        self.btn_home = QToolButtonNormal(icons.get_icon('home'))
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
 
-        # self.btn_pan = QToolButtonNormal(IconDB().pan)
+        # self.btn_pan = QToolButtonNormal(icons.get_icon('pan'))
         # self.btn_pan.setToolTip('Pan axes with left mouse, zoom with right')
         # self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_strati = QToolButtonNormal(IconDB().stratigraphy)
+        self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
         self.btn_strati.setToolTip('Toggle on and off the display of the soil'
                                    ' stratigraphic layers')
         self.btn_strati.clicked.connect(self.btn_strati_isClicked)
 
-        self.btn_Waterlvl_lineStyle = QToolButtonNormal(IconDB().showDataDots)
+        self.btn_Waterlvl_lineStyle = QToolButtonNormal(
+                icons.get_icon('showDataDots'))
         self.btn_Waterlvl_lineStyle.setToolTip(
             '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_dateFormat = QToolButtonNormal(IconDB().calendar)
+        self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
         self.btn_dateFormat.setAutoRaise(1-self.dformat)
         self.btn_dateFormat.setToolTip('x axis label time format: '
                                        'date or MS Excel numeric')
@@ -268,18 +270,7 @@ class WLCalc(myqt.DialogWindow):
         # dformat: 0 -> Excel Numeric Date Format
         #          1 -> Matplotlib Date Format
 
-        # ---- recharge ----
-
-#        self.btn_synthHydro = QToolButtonNormal(IconDB().page_setup)
-#        self.btn_synthHydro.setToolTip('Show synthetic hydrograph')
-#        self.btn_synthHydro.hide()
-
         # ---- BRF ----
-
-#        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
-#        self.btn_findPeak.clicked.connect(self.find_peak)
-#        self.btn_mrc2rechg = toolBarBtn(iconDB.mrc2rechg, ttipDB.mrc2rechg)
-#        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
 
         # Grid Layout :
 
@@ -319,22 +310,22 @@ class WLCalc(myqt.DialogWindow):
 
         # ---- MRC Toolbar ----
 
-        self.btn_undo = QToolButtonNormal(IconDB().undo)
+        self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
         self.btn_undo.setToolTip('Undo')
         self.btn_undo.setEnabled(False)
         self.btn_undo.clicked.connect(self.undo)
 
-        self.btn_addpeak = QToolButtonNormal(IconDB().add_point)
+        self.btn_addpeak = QToolButtonNormal(icons.get_icon('add_point'))
         self.btn_addpeak.clicked.connect(self.aToolbarBtn_isClicked)
         self.btn_addpeak.setToolTip('<p>Toggle edit mode to manually'
                                     ' add extremums to the graph</p>')
 
-        self.btn_delPeak = QToolButtonNormal(IconDB().erase)
+        self.btn_delPeak = QToolButtonNormal(icons.get_icon('erase'))
         self.btn_delPeak.clicked.connect(self.aToolbarBtn_isClicked)
         self.btn_delPeak.setToolTip('<p>Toggle edit mode to manually remove '
                                     'extremums from the graph</p>')
 
-        self.btn_save_interp = QToolButtonNormal(IconDB().save)
+        self.btn_save_interp = QToolButtonNormal(icons.get_icon('save'))
         self.btn_save_interp.setToolTip('Save Calculated MRC to file.')
         self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
 
@@ -378,9 +369,9 @@ class WLCalc(myqt.DialogWindow):
         tooltab.setIconSize(QSize(28, 28))
         tooltab.setTabPosition(tooltab.North)
 
-        tooltab.addTab(self.widget_MRCparam, IconDB().MRCalc, '')
-        tooltab.addTab(self.rechg_setup_win, IconDB().recharge, '')
-        tooltab.addTab(self.config_brf, IconDB().setup, '')
+        tooltab.addTab(self.widget_MRCparam, icons.get_icon('MRCalc'), '')
+        tooltab.addTab(self.rechg_setup_win, icons.get_icon('recharge'), '')
+        tooltab.addTab(self.config_brf, icons.get_icon('setup'), '')
 
         # ---------------------------------------------------- Right Panel ----
 
@@ -1937,6 +1928,7 @@ if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
+
     app = QApplication(sys.argv)
 
     ft = app.font()

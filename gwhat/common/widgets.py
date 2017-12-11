@@ -13,7 +13,7 @@ from __future__ import division, unicode_literals
 from copy import copy
 import os
 
-from gwhat.common import IconDB
+from gwhat.common import icons
 
 from PyQt5.QtCore import Qt, QSize, QPoint, QUrl
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -284,7 +284,7 @@ class DialogWindow(QDialog):
             self.setWindowFlags(Qt.Window |
                                 Qt.WindowMinimizeButtonHint)
 
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
     def emit_warning(self, msg, title='Warning'):
         btn = QMessageBox.Ok
@@ -325,7 +325,7 @@ class AboutWindow(DialogWindow):
         super(AboutWindow, self).__init__(parent, resizable=False)
         self.setWindowTitle('About')
         self.setWindowFlags(Qt.Window)
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         grid = QGridLayout()
         self.setLayout(grid)
@@ -475,13 +475,13 @@ class BtnBase(QWidget):
 class GetBtn(BtnBase):
     def __init__(self, parent=None):
         super(GetBtn, self).__init__(parent)
-        self.setIcon(QIcon(IconDB().getfrom))
+        self.setIcon(icons.get_icon('getfrom'))
 
 
 class GuessBtn(BtnBase):
     def __init__(self, parent=None):
         super(GuessBtn, self).__init__(parent)
-        self.setIcon(QIcon(IconDB().calcul))
+        self.setIcon(icons.get_icon('calcul'))
         self.setToolTip('Guesstimate values')
 
 
@@ -490,7 +490,7 @@ class InfoBtn(QToolButton):
         super(InfoBtn, self).__init__(parent)
         self.setIconSize(QSize(16, 16))
         self.setAutoRaise(True)
-        self.setIcon(QIcon(IconDB().about))
+        self.setIcon(icons.get_icon('about'))
 
         self.infopg = AboutWindow()
 
@@ -528,10 +528,10 @@ class LinkBtn(QToolButton):
     def set_linked_state(self, state):
         self.__state = state
         if state is True:
-            self.setIcon(QIcon(IconDB().link))
+            self.setIcon(icons.get_icon('link'))
             self.setToolTip('Link values')
         else:
-            self.setIcon(QIcon(IconDB().notlink))
+            self.setIcon(icons.get_icon('notlink'))
             self.setToolTip('Unlink values')
 
 
