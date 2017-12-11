@@ -42,7 +42,8 @@ from gwhat.meteo.gapfill_weather_algorithm2 import GapFillWeather
 from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
 from gwhat.meteo.merge_weather_data import WXDataMergerWidget
 from gwhat.meteo.weather_reader import add_PET_to_weather_datafile
-from gwhat.common import IconDB, StyleDB, QToolButtonSmall
+from gwhat.common import StyleDB, QToolButtonSmall
+from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import delete_file
 
@@ -71,19 +72,19 @@ class GapFillWeatherGUI(QWidget):
         self.__initUI__()
 
     def __initUI__(self):
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         # ---- Toolbar at the bottom
 
         self.btn_fill = QPushButton('Fill Station')
-        self.btn_fill.setIcon(IconDB().fill_data)
-        self.btn_fill.setIconSize(IconDB().iconSize2)
+        self.btn_fill.setIcon(icons.get_icon('fill_data'))
+        self.btn_fill.setIconSize(icons.get_iconsize('iconSize2'))
         self.btn_fill.setToolTip('<p>Fill the gaps in the daily weather data '
                                  ' for the selected weather station.</p>')
 
         self.btn_fill_all = QPushButton('Fill All Stations')
-        self.btn_fill_all.setIconSize(IconDB().iconSize2)
-        self.btn_fill_all.setIcon(IconDB().fill_all_data)
+        self.btn_fill_all.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_fill_all.setIcon(icons.get_icon('fill_all_data'))
         self.btn_fill_all.setToolTip('<p>Fill the gaps in the daily weather '
                                      ' data for all the weather stations' +
                                      ' displayed in the list.</p>')
@@ -114,17 +115,17 @@ class GapFillWeatherGUI(QWidget):
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
 
-        self.btn_refresh_staList = QToolButtonSmall(IconDB().refresh)
+        self.btn_refresh_staList = QToolButtonSmall(icons.get_icon('refresh'))
         self.btn_refresh_staList.setToolTip(
             'Force the reloading of the weather data files')
         self.btn_refresh_staList.clicked.connect(self.btn_refresh_isclicked)
 
-        btn_merge_data = QToolButtonSmall(IconDB().merge_data)
+        btn_merge_data = QToolButtonSmall(icons.get_icon('merge_data'))
         btn_merge_data.setToolTip(
                 'Tool for merging two ore more datasets together.')
         btn_merge_data.clicked.connect(self.wxdata_merger.show)
 
-        self.btn_delete_data = QToolButtonSmall(IconDB().clear)
+        self.btn_delete_data = QToolButtonSmall(icons.get_icon('clear'))
         self.btn_delete_data.setEnabled(False)
         self.btn_delete_data.setToolTip(
                 'Remove the currently selected dataset and delete the input '
@@ -283,7 +284,7 @@ class GapFillWeatherGUI(QWidget):
                     'with the Thornthwaite (1948) method, to '
                     'the output weather data file.</p>')
 
-            self.btn_add_PET = QToolButtonSmall(IconDB().openFile)
+            self.btn_add_PET = QToolButtonSmall(icons.get_icon('openFile'))
             self.btn_add_PET.setToolTip(
                     '<p>Add daily potential evapotranspiration, calculated '
                     'with the Thornthwaite (1948) method, to '
@@ -335,7 +336,8 @@ class GapFillWeatherGUI(QWidget):
         advanced_widg = advanced_settings(self)
 
         self.stack_widget = myqt.QToolPanel()
-        self.stack_widget.setIcons(IconDB().triright, IconDB().tridown)
+        self.stack_widget.setIcons(icons.get_icon('triright'),
+                                   icons.get_icon('tridown'))
         self.stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
         self.stack_widget.addItem(MLRM_widg, 'Regression Model :')
         self.stack_widget.addItem(advanced_widg, 'Advanced Settings :')
@@ -605,10 +607,10 @@ class GapFillWeatherGUI(QWidget):
 
     def restoreUI(self):  # ===================================================
 
-        self.btn_fill.setIcon(IconDB().fill_data)
+        self.btn_fill.setIcon(icons.get_icon('fill_data'))
         self.btn_fill.setEnabled(True)
 
-        self.btn_fill_all.setIcon(IconDB().fill_all_data)
+        self.btn_fill_all.setIcon(icons.get_icon('fill_all_data'))
         self.btn_fill_all.setEnabled(True)
 
         self.tarSta_widg.setEnabled(True)
@@ -693,7 +695,7 @@ class GapFillWeatherGUI(QWidget):
 
         # -- Disable UI and continue the process normally --
 
-        button.setIcon(IconDB().stop)
+        button.setIcon(icons.get_icon('stop'))
         self.fillDates_widg.setEnabled(False)
         self.tarSta_widg.setEnabled(False)
         self.stack_widget.setEnabled(False)

@@ -6,7 +6,6 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from gwhat.common.icons.icons import IconDB
-from gwhat.common.icons.icons import (QToolButtonBase, QToolButtonSmall,
-                                     QToolButtonNormal)
+from gwhat.common.icons import (QToolButtonBase, QToolButtonSmall,
+                                QToolButtonNormal)
 from gwhat.common.styles import StyleDB

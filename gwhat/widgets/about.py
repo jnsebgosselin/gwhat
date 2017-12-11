@@ -9,6 +9,7 @@
 # ---- Standard library imports
 
 import platform
+import os
 
 # ---- Third party imports
 
@@ -19,7 +20,8 @@ from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
 # ---- Local imports
 
 from gwhat import __version__, __date__
-from gwhat.common import IconDB
+from gwhat.common import icons
+from gwhat import __rootdir__
 
 
 class AboutWhat(QDialog):
@@ -34,7 +36,7 @@ class AboutWhat(QDialog):
         # ----- MAIN WINDOW ----
 
         self.setWindowTitle('About %s' % __version__)
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumHeight(700)
         self.setModal(True)
         self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
@@ -81,7 +83,8 @@ class AboutWhat(QDialog):
         version = __version__
         date = __date__
 
-        filename = IconDB().banner
+        filename = os.path.join(
+                __rootdir__, 'ressources', 'WHAT_banner_750px.png')
 
         # http://doc.qt.io/qt-4.8/richtext-html-subset.html
 

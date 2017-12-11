@@ -30,7 +30,8 @@ from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
 # ---- Local imports
 
 from gwhat.colors2 import ColorsReader
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal
+from gwhat.common import StyleDB, QToolButtonNormal
+from gwhat.common import icons
 from gwhat.common.widgets import DialogWindow
 from gwhat import __version__
 
@@ -100,7 +101,7 @@ class WeatherAvgGraph(DialogWindow):
     def __initUI__(self):
 
         self.setWindowTitle('Weather Averages')
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         # ---------------------------------------------------- TOOLBAR ----
 
@@ -110,7 +111,7 @@ class WeatherAvgGraph(DialogWindow):
         menu_save.addAction('Save normals graph as...', self.save_graph)
         menu_save.addAction('Save normals table as...', self.save_normals)
 
-        btn_save = QToolButtonNormal(IconDB().save)
+        btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save normals')
         btn_save.setMenu(menu_save)
         btn_save.setPopupMode(QToolButton.InstantPopup)
@@ -124,14 +125,14 @@ class WeatherAvgGraph(DialogWindow):
         menu_export.addAction('Export yearly time series as...',
                               self.select_export_file)
 
-        self.btn_export = QToolButtonNormal(IconDB().export_data)
+        self.btn_export = QToolButtonNormal(icons.get_icon('export_data'))
         self.btn_export.setToolTip('Export time series')
         self.btn_export.setPopupMode(QToolButton.InstantPopup)
         self.btn_export.setMenu(menu_export)
         self.btn_export.setStyleSheet(
                 "QToolButton::menu-indicator {image: none;}")
 
-        btn_showStats = QToolButtonNormal(IconDB().showGrid)
+        btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
         btn_showStats.setToolTip('Show monthly weather normals data table.')
         btn_showStats.clicked.connect(self.show_monthly_grid)
 

@@ -30,7 +30,8 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 
 # ---- Imports: local
 
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.widgets.buttons import DropDownButton
 from gwhat.common.utils import calc_dist_from_coord
@@ -84,7 +85,7 @@ class DwnldWeatherWidget(QWidget):
 
         # ---- Main Window ----
 
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         # ---- TOOLBAR ----
 
@@ -92,32 +93,32 @@ class DwnldWeatherWidget(QWidget):
         btn_save_menu.addAction('Save As...',
                                 self.btn_saveAs_staList_isClicked)
 
-        self.btn_save_staList = QToolButtonNormal(IconDB().save)
+        self.btn_save_staList = QToolButtonNormal(icons.get_icon('save'))
         self.btn_save_staList.setToolTip('Save current station list.')
         self.btn_save_staList.setMenu(btn_save_menu)
         self.btn_save_staList.setPopupMode(QToolButton.MenuButtonPopup)
 
-        btn_search4station = QToolButtonNormal(IconDB().search)
+        btn_search4station = QToolButtonNormal(icons.get_icon('search'))
         btn_search4station.setToolTip('Search for weather stations in the ' +
                                       'Canadian Daily Climate Database (CDCD)')
 
-        btn_browse_staList = QToolButtonNormal(IconDB().openFile)
+        btn_browse_staList = QToolButtonNormal(icons.get_icon('openFile'))
         btn_browse_staList.setToolTip('Load an existing weather station list')
 
-        btn_delSta = QToolButtonNormal(IconDB().erase)
+        btn_delSta = QToolButtonNormal(icons.get_icon('erase'))
         btn_delSta.setToolTip('Remove selected weather stations from the list')
 
-        self.btn_get = QToolButtonNormal(IconDB().download)
+        self.btn_get = QToolButtonNormal(icons.get_icon('download'))
         self.btn_get.setToolTip(
                 "Download data for the selected weather stations.")
         self.btn_get.clicked.connect(self.btn_get_isClicked)
 
         yearlabels = [str(i) for i in range(2017, 1899, -1)]
-        btn_fromdate = DropDownButton(icon=IconDB().fromdate)
+        btn_fromdate = DropDownButton(icon=icons.get_icon('fromdate'))
         btn_fromdate.addItems(yearlabels)
         btn_fromdate.sig_year_selected.connect(self.station_table.set_fromyear)
 
-        btn_todate = DropDownButton(icon=IconDB().todate)
+        btn_todate = DropDownButton(icon=icons.get_icon('todate'))
         btn_todate.addItems(yearlabels)
         btn_todate.sig_year_selected.connect(self.station_table.set_toyear)
 
@@ -161,16 +162,16 @@ class DwnldWeatherWidget(QWidget):
 
         # ---- Go Toolbar ----
 
-        self.btn_goNext = QToolButtonSmall(IconDB().go_next)
+        self.btn_goNext = QToolButtonSmall(icons.get_icon('go_next'))
         self.btn_goNext.setEnabled(False)
 
-        self.btn_goPrevious = QToolButtonSmall(IconDB().go_previous)
+        self.btn_goPrevious = QToolButtonSmall(icons.get_icon('go_previous'))
         self.btn_goPrevious.setEnabled(False)
 
-        self.btn_goLast = QToolButtonSmall(IconDB().go_last)
+        self.btn_goLast = QToolButtonSmall(icons.get_icon('go_last'))
         self.btn_goLast.setEnabled(False)
 
-        self.btn_goFirst = QToolButtonSmall(IconDB().go_first)
+        self.btn_goFirst = QToolButtonSmall(icons.get_icon('go_first'))
         self.btn_goFirst.setEnabled(False)
 
         goToolbar_grid = QGridLayout()
@@ -197,17 +198,17 @@ class DwnldWeatherWidget(QWidget):
         self.mergeDisplay.setMinimumHeight(250)
 
         self.btn_selectRaw = QPushButton('Select')
-        self.btn_selectRaw.setIcon(IconDB().openFile)
+        self.btn_selectRaw.setIcon(icons.get_icon('openFile'))
         self.btn_selectRaw.setToolTip(
                 "Select and concatenate raw weather data files.")
-        self.btn_selectRaw.setIconSize(IconDB().iconSize2)
+        self.btn_selectRaw.setIconSize(icons.get_iconsize('iconSize2'))
         self.btn_selectRaw.clicked.connect(self.btn_selectRaw_isClicked)
 
         self.btn_saveMerge = QPushButton('Save')
         self.btn_saveMerge.setToolTip(
                 "Save the concatenated weather dataset in a csv file.")
-        self.btn_saveMerge.setIcon(IconDB().save)
-        self.btn_saveMerge.setIconSize(IconDB().iconSize2)
+        self.btn_saveMerge.setIcon(icons.get_icon('save'))
+        self.btn_saveMerge.setIconSize(icons.get_iconsize('iconSize2'))
         self.btn_saveMerge.clicked.connect(self.btn_saveMerge_isClicked)
 
         rightPanel_grid = QGridLayout()
@@ -415,7 +416,7 @@ class DwnldWeatherWidget(QWidget):
 
         # Update the UI.
         self.pbar.show()
-        self.btn_get.setIcon(IconDB().stop)
+        self.btn_get.setIcon(icons.get_icon('stop'))
 
         # Set thread working directory.
         self.dwnld_worker.dirname = os.path.join(self.workdir, 'Meteo', 'Raw')
@@ -425,7 +426,7 @@ class DwnldWeatherWidget(QWidget):
 
     def stop_download_process(self):
         print('Stopping the download process...')
-        self.btn_get.setIcon(IconDB().download)
+        self.btn_get.setIcon(icons.get_icon('download'))
         self.btn_get.setEnabled(False)
         self.dwnld_worker.stop_download()
         self.wait_for_thread_to_quit()
@@ -440,7 +441,7 @@ class DwnldWeatherWidget(QWidget):
         except IndexError:
             # There is no more data to download.
             print('Raw weather data downloaded for all selected stations.')
-            self.btn_get.setIcon(IconDB().download)
+            self.btn_get.setIcon(icons.get_icon('download'))
             self.pbar.hide()
             self.sig_download_process_ended.emit()
             return
