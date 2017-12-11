@@ -21,9 +21,10 @@ install:
   - pip install matplotlib
   - pip install scipy
   - pip install cython
+  - python setup.py build_ext --inplace
 
 script:
-  python setup.py build_ext --inplace || python runtests.py
+  python runtests.py
   # - coverage run --source=WHAT --cov=WHAT --cov-report=term-missing -m py.test
 
 after_success:
