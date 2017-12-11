@@ -222,6 +222,12 @@ class QFrameLayout(QFrame):
     def setSpacing(self, spacing):
         self.layout().setSpacing(spacing)
 
+    def setVerticalSpacing(self, spacing):
+        self.layout().setVerticalSpacing(spacing)
+
+    def setHorizontalSpacing(self, spacing):
+        self.layout().setHorizontalSpacing(spacing)
+
     # -------------------------------------------------------------------------
 
     def rowCount(self):
@@ -375,7 +381,7 @@ class QToolPanel(QWidget):
             QStyle.SP_ToolBarVerticalExtensionButton)
 
         self.setLayout(QGridLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setContentsMargins(0, 0, 0, 0)  # (l, t, r, b)
 
         self.__currentIndex = -1
 
