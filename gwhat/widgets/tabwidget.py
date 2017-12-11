@@ -20,7 +20,8 @@ from PyQt5.QtWidgets import (QApplication, QTabWidget, QWidget, QTabBar,
 # ---- Local imports
 
 from gwhat.widgets.about import AboutWhat
-from gwhat.common import IconDB, QToolButtonBase
+from gwhat.common import QToolButtonBase
+from gwhat.common import icons
 
 
 class TabWidget(QTabWidget):
@@ -29,7 +30,7 @@ class TabWidget(QTabWidget):
 
         self.aboutwhat = AboutWhat(parent=parent)
 
-        self.about_btn = QToolButtonBase(IconDB().info)
+        self.about_btn = QToolButtonBase(icons.get_icon('info'))
         self.about_btn.setIconSize(QSize(20, 20))
         self.about_btn.setFixedSize(32, 32)
         self.about_btn.setToolTip('About WHAT...')
