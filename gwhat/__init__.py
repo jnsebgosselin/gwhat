@@ -7,7 +7,7 @@
 # Licensed under the terms of the GNU General Public License.
 
 import os
-__version__ = 'GWHAT 0.1.1'
-__date__ = '08/12/2017'
-__project_url__ = 'https://github.com/jnsebgosselin/gwhat'
+__version__ = 'GWHAT 0.2.0'
+__date__ = '11/12/2017'
+__project_url__ = "https://github.com/jnsebgosselin/gwhat"
 __rootdir__ = os.path.dirname(os.path.realpath(__file__))
