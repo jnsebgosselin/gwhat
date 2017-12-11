@@ -20,9 +20,10 @@ install:
   - pip install coveralls
   - pip install matplotlib
   - pip install scipy
-  - pip install beautifulsoup4
+  - pip install cython
 
 script:
+  python setup.py build_ext --inplace
   python runtests.py
   # - coverage run --source=WHAT --cov=WHAT --cov-report=term-missing -m py.test
 
