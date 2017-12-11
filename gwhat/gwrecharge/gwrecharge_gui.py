@@ -282,10 +282,10 @@ class RechgEvalWidget(QFrameLayout):
             glue_data = self.rechg_worker.glue_results
             # self.rechg_worker.save_glue_to_npy("GLUE.npy")
 
-            fig_wl_glue = FigManagerWaterLevelGLUE(parent=self.parent())
+            fig_wl_glue = FigManagerWaterLevelGLUE()
             fig_wl_glue.plot_prediction(glue_data)
 
-            fig_rechg_glue = FigManagerRechgGLUE(parent=self.parent())
+            fig_rechg_glue = FigManagerRechgGLUE()
             fig_rechg_glue.plot_recharge(glue_data)
 
             fig_wl_glue.show()

@@ -17,7 +17,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QGridLayout, QApplication, QWidget
+from PyQt5.QtWidgets import QGridLayout, QApplication, QDialog
 
 
 # ---- Imports: local
@@ -60,14 +60,18 @@ class NavigationToolbar(NavigationToolbar2QT):
         return super(NavigationToolbar2QT, self).sizeHint()
 
 
-class FigManagerBase(QWidget):
+class FigManagerBase(QDialog):
     """
     Abstract manager to show the results from GLUE.
     """
     def __init__(self, figure_class, parent=None):
         super(FigManagerBase, self).__init__(parent)
         self.setFixedSize(1000, 550)
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowMinimizeButtonHint |
+                            Qt.WindowCloseButtonHint)
+        self.setModal(False)
         self.setAttribute(Qt.WA_DeleteOnClose)
         self.setWindowIcon(icons.get_icon('master'))
 
