@@ -27,30 +27,23 @@ from PyQt5.QtWidgets import QGridLayout, QApplication
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue_yearly_rechg
 from gwhat.common.widgets import DialogWindow
-from gwhat.common import IconDB
+from gwhat.common import icons
 
 
 class NavigationToolbar(NavigationToolbar2QT):
-    # only display the buttons we need
+    # Only display the buttons that we want.
     toolitems = [t for t in NavigationToolbar2QT.toolitems if
                  t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
 
     def __init__(self, *args, **kwargs):
-        icondb = IconDB()
-        self.icons = {'home.png': IconDB().home,
-                      'move.png': IconDB().pan,
-                      'zoom_to_rect.png': IconDB().search,
-                      'filesave.png': IconDB().save}
+        self.icons = {'home.png': icons.get_icon('home'),
+                      'move.png': icons.get_icon('pan'),
+                      'zoom_to_rect.png': icons.get_icon('search'),
+                      'filesave.png': icons.get_icon('save')}
         super(NavigationToolbar, self).__init__(*args, **kwargs)
-    #     self.layout().takeAt(1)  #or more than 1 if you have more buttons
 
     def _icon(self, name):
         """Matplotlib method override."""
-        icondb = IconDB()
-        self.icons = {'home.png': IconDB().home,
-                      'move.png': IconDB().pan,
-                      'zoom_to_rect.png': IconDB().search,
-                      'filesave.png': IconDB().save}
         if name in list(self.icons.keys()):
             return self.icons[name]
         else:
