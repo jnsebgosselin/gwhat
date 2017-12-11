@@ -280,7 +280,7 @@ class RechgEvalWidget(QFrameLayout):
             print("The number of behavioural model produced is 0.")
         else:
             glue_data = self.rechg_worker.glue_results
-            self.rechg_worker.save_glue_to_npy("GLUE.npy")
+            # self.rechg_worker.save_glue_to_npy("GLUE.npy")
 
             fig_wl_glue = FigManagerWaterLevelGLUE(parent=self.parent())
             fig_wl_glue.plot_prediction(glue_data)
