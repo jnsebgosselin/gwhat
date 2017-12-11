@@ -19,9 +19,8 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
 
 from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
-from gwhat.gwrecharge.gwrecharge_post import plot_rechg_GLUE
 from gwhat.gwrecharge.gwrecharge_plot_results import (
-        FigWaterLevelGLUE, FigYearlyRechgGLUE, ViewerWaterLevelGLUE)
+        FigManagerRechgGLUE, FigManagerWaterLevelGLUE)
 
 
 class RechgEvalWidget(QFrameLayout):
@@ -283,14 +282,11 @@ class RechgEvalWidget(QFrameLayout):
             glue_data = self.rechg_worker.glue_results
             self.rechg_worker.save_glue_to_npy("GLUE.npy")
 
-            fig_wl_glue = ViewerWaterLevelGLUE(parent=self)
+            fig_wl_glue = FigManagerWaterLevelGLUE(parent=self)
             fig_wl_glue.plot_prediction(glue_data)
 
-            # fig_rechg_glue = FigYearlyRechgGLUE()
-            # fig_rechg_glue.plot_recharge(glue_data)
+            fig_rechg_glue = FigManagerRechgGLUE()
+            fig_rechg_glue.plot_recharge(glue_data)
 
             fig_wl_glue.show()
-            # fig_rechg_glue.show()
-
-            # plot_rechg_GLUE(glue_data, 'English')
-            # plt.show()
+            fig_rechg_glue.show()

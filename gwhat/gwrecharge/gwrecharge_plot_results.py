@@ -8,8 +8,6 @@
 
 # ---- Standard library imports
 
-# from datetime import date
-import csv
 
 # ---- Imports: third parties
 
@@ -17,18 +15,19 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-# from xlrd.xldate import xldate_from_date_tuple
 
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QGridLayout, QApplication
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtWidgets import QGridLayout, QApplication, QWidget
+
 
 # ---- Imports: local
 
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue_yearly_rechg
-from gwhat.common.widgets import DialogWindow
 from gwhat.common import icons
 
+
+# ---- Figure Managers
 
 class NavigationToolbar(NavigationToolbar2QT):
     # Only display the buttons that we want.
@@ -36,35 +35,74 @@ class NavigationToolbar(NavigationToolbar2QT):
                  t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
 
     def __init__(self, *args, **kwargs):
-        self.icons = {'home.png': icons.get_icon('home'),
-                      'move.png': icons.get_icon('pan'),
-                      'zoom_to_rect.png': icons.get_icon('search'),
-                      'filesave.png': icons.get_icon('save')}
+        self.icon_names = {'home.png': 'home',
+                           'move.png': 'pan',
+                           'zoom_to_rect.png': 'search',
+                           'filesave.png': 'save'}
         super(NavigationToolbar, self).__init__(*args, **kwargs)
+        self.setIconSize(QSize(28, 28))
 
     def _icon(self, name):
         """Matplotlib method override."""
-        if name in list(self.icons.keys()):
-            return self.icons[name]
+        if name in list(self.icon_names.keys()):
+            icon = icons.get_icon(self.icon_names[name])
+            return icon
         else:
             return super(NavigationToolbar, self)._icon(name)
 
+    def sizeHint(self):
+        """
+        Matplotlib method override because the toolbar height is too big
+        otherwise.
+        """
+        return super(NavigationToolbar2QT, self).sizeHint()
 
-class ViewerWaterLevelGLUE(DialogWindow):
-    def __init__(self, language='English', parent=None):
-        super(ViewerWaterLevelGLUE, self).__init__(parent)
-        self.setFixedSize(900, 500)
 
-        self.figure = FigWaterLevelGLUE()
+class FigManagerBase(QWidget):
+    """
+    Abstract manager to show the results from GLUE.
+    """
+    def __init__(self, figure_class, parent=None):
+        super(FigManagerBase, self).__init__(parent)
+        self.setFixedSize(1000, 550)
+        self.setWindowFlags(Qt.Window)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowIcon(icons.get_icon('master'))
+
+        self.figure = figure_class()
         self.toolbar = NavigationToolbar(self.figure, parent=self)
 
         layout = QGridLayout(self)
         layout.addWidget(self.toolbar, 0, 0)
         layout.addWidget(self.figure, 1, 0)
 
+
+class FigManagerWaterLevelGLUE(FigManagerBase):
+    """
+    Figure manager with toolbar to show the results for the predicted
+    water level versus the observations.
+    """
+    def __init__(self, parent=None):
+        super(FigManagerWaterLevelGLUE, self).__init__(FigWaterLevelGLUE,
+                                                       parent)
+
     def plot_prediction(self, glue_data):
         self.figure.plot_prediction(glue_data)
 
+
+class FigManagerRechgGLUE(FigManagerBase):
+    """
+    Figure manager with a toolbar to show the results for the yearly
+    ground-water recharge and its uncertainty evaluated with GLUE.
+    """
+    def __init__(self, parent=None):
+        super(FigManagerRechgGLUE, self).__init__(FigYearlyRechgGLUE, parent)
+
+    def plot_recharge(self, data, Ymin0=None, Ymax0=None, yrs_range=None):
+        self.figure.plot_recharge(data, Ymin0, Ymax0, yrs_range)
+
+
+# ---- Figure Canvas
 
 class FigResultsBase(FigureCanvasQTAgg):
     """
@@ -75,7 +113,6 @@ class FigResultsBase(FigureCanvasQTAgg):
 
     def __init__(self, language='English'):
         super(FigResultsBase, self).__init__(mpl.figure.Figure())
-        self.setAttribute(Qt.WA_DeleteOnClose)
 
         self.language = language
 
@@ -167,17 +204,14 @@ class FigYearlyRechgGLUE(FigResultsBase):
 
     def __init__(self, *args, **kargs):
         super(FigYearlyRechgGLUE, self).__init__(*args, **kargs)
-        fig = self.figure
-        ax0 = self.ax0
 
         # ---- Modify ax0
 
+        ax0 = self.ax0
         ax0.patch.set_visible(False)
         for axis in ['top', 'bottom', 'left', 'right']:
             ax0.spines[axis].set_linewidth(0.5)
         ax0.set_axisbelow(True)
-
-        # ---- Prepare data
 
     def plot_recharge(self, data, Ymin0=None, Ymax0=None, yrs_range=None):
         fig = self.figure
@@ -218,10 +252,9 @@ class FigYearlyRechgGLUE(FigResultsBase):
 
         # ----- ticks format
 
-        if np.max(max_rechg_yrly) < 250:
-            yticks = np.arange(0, Ymax0+1, 25)
-        else:
-            yticks = np.arange(0, Ymax0+1, 100)
+        scale_yticks = 25 if np.max(max_rechg_yrly) < 250 else 100
+        scale_yticks_minor = 5 if np.max(max_rechg_yrly) < 250 else 25
+        yticks = np.arange(0, 2*Ymax0+1, scale_yticks)
 
         ax0.yaxis.set_ticks_position('left')
         ax0.set_yticks(yticks)
@@ -229,7 +262,7 @@ class FigYearlyRechgGLUE(FigResultsBase):
         ax0.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
                  linewidth=0.5, dashes=[0.5, 5])
 
-        ax0.set_yticks(np.arange(0, Ymax0, 25), minor=True)
+        ax0.set_yticks(np.arange(0, 2*Ymax0, scale_yticks_minor), minor=True)
         ax0.tick_params(axis='y', direction='out', which='minor', gridOn=False)
 
         # ---- Axis range
@@ -265,17 +298,18 @@ class FigYearlyRechgGLUE(FigResultsBase):
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
     import sys
-    import time
 
     app = QApplication(sys.argv)
 
     rechg_worker = RechgEvalWorker()
     data = rechg_worker.load_glue_from_npy("..\GLUE.npy")
 
-    tic = time.clock()
-    glue_wl_viewer = ViewerWaterLevelGLUE()
+    glue_wl_viewer = FigManagerWaterLevelGLUE()
     glue_wl_viewer.plot_prediction(data)
     glue_wl_viewer.show()
-    print(time.clock()-tic)
+
+    fig_rechg_glue = FigManagerRechgGLUE()
+    fig_rechg_glue.plot_recharge(data)
+    fig_rechg_glue.show()
 
     sys.exit(app.exec_())
