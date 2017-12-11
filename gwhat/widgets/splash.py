@@ -6,15 +6,25 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# ---- Third parties imports
+
+# ---- Imports: standard libraries
+
+import os
+
+
+# ---- Imports: third parties
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import QSplashScreen
 
-# ---- Local imports
 
-SPLASH_IMG = 'ressources/splash.png'
+# ---- Imports: local
+
+from gwhat import __rootdir__
+
+
+SPLASH_IMG = os.path.join(__rootdir__, 'ressources', 'splash.png')
 
 
 class SplashScrn(QSplashScreen):
