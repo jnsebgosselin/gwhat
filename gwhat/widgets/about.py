@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
 
 # ---- Local imports
 
-from gwhat import __version__, __date__
+from gwhat import __version__, __date__, __project_url__
 from gwhat.common import icons
 from gwhat import __rootdir__
 
@@ -132,9 +132,7 @@ class AboutWhat(QDialog):
                   <br>
                   Licensed under the terms of the GNU General Public License Version 3
                   <br>
-                  <a href="https://github.com/jnsebgosselin/gwhat">
-                    https://github.com/jnsebgosselin/gwhat
-                  </a>
+                  <a href="%s">%s</a>
                   <br>
                   <br>
                   Created by Jean-S&eacute;bastien Gosselin
@@ -154,7 +152,8 @@ class AboutWhat(QDialog):
                   </a>
                   <br>
                 </p1>
-                """ % (version[5:].strip(), __date__)
+                """ % (version[5:].strip(), __date__,
+                       __project_url__, __project_url__)
 
         # ---- License
 
