@@ -71,6 +71,7 @@ BRFOutput.txt
 GLUE.npy
 *.par
 *.wif
+*.bat
 
 url.txt
 urlsinglestation.txt
