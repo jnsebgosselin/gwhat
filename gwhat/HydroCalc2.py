@@ -1105,8 +1105,6 @@ class WLCalc(myqt.DialogWindow):
             self.h1_ax0.set_marker('None')
         self.draw()
 
-    # ======================================================== Mouse Event ====
-
     def draw(self):
         self.vguide.set_visible(False)
         self.xcoord.set_visible(False)

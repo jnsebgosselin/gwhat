@@ -381,7 +381,7 @@ class QToolPanel(QWidget):
             QStyle.SP_ToolBarVerticalExtensionButton)
 
         self.setLayout(QGridLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setContentsMargins(0, 0, 0, 0)  # (l, t, r, b)
 
         self.__currentIndex = -1
 
