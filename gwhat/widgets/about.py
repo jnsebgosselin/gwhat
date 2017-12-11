@@ -28,7 +28,6 @@ class AboutWhat(QDialog):
 
     def __init__(self, parent=None):
         super(AboutWhat, self).__init__(parent)
-
         self.__initUI__()
 
     def __initUI__(self):
@@ -37,9 +36,10 @@ class AboutWhat(QDialog):
 
         self.setWindowTitle('About %s' % __version__)
         self.setWindowIcon(icons.get_icon('master'))
-        self.setMinimumHeight(700)
-        self.setModal(True)
-        self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
+        self.setMinimumSize(800, 700)
+        self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowCloseButtonHint)
 
         # ---- AboutTextBox ----
 
@@ -57,8 +57,8 @@ class AboutWhat(QDialog):
 
         # ---- Ok btn ----
 
-        ok_btn = QPushButton('OK')
-        ok_btn.clicked.connect(self.close)
+        self.ok_btn = QPushButton('OK')
+        self.ok_btn.clicked.connect(self.close)
 
         # ---- Main Grid ----
 
@@ -66,7 +66,7 @@ class AboutWhat(QDialog):
         grid.setSpacing(10)
 
         grid.addWidget(self.AboutTextBox, 0, 1, 1, 2)
-        grid.addWidget(ok_btn, 1, 2)
+        grid.addWidget(self.ok_btn, 1, 2)
 
         grid.setColumnStretch(1, 500)
         grid.setContentsMargins(10, 10, 10, 10)
@@ -81,7 +81,6 @@ class AboutWhat(QDialog):
 
         width = 750
         version = __version__
-        date = __date__
 
         filename = os.path.join(
                 __rootdir__, 'ressources', 'WHAT_banner_750px.png')

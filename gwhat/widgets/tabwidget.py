@@ -27,29 +27,43 @@ from gwhat.common import icons
 class TabWidget(QTabWidget):
     def __init__(self, parent=None):
         super(TabWidget, self).__init__(parent=None)
+        self._pytesting = False
 
-        self.aboutwhat = AboutWhat(parent=parent)
+        self.about_win = None
 
         self.about_btn = QToolButtonBase(icons.get_icon('info'))
         self.about_btn.setIconSize(QSize(20, 20))
         self.about_btn.setFixedSize(32, 32)
         self.about_btn.setToolTip('About WHAT...')
         self.about_btn.setParent(self)
-        self.about_btn.clicked.connect(self.aboutwhat.show)
+        self.about_btn.clicked.connect(self._about_btn_isclicked)
 
         tab_bar = TabBar(self, parent)
         self.setTabBar(tab_bar)
-        tab_bar.sig_resized.connect(self.moveAboutButton)
-        tab_bar.sig_tab_layout_changed.connect(self.moveAboutButton)
+        tab_bar.sig_resized.connect(self.__move_about_btn)
+        tab_bar.sig_tab_layout_changed.connect(self.__move_about_btn)
+
+    def _about_btn_isclicked(self):
+        """
+        Create and show the About GWHAT window when the about button
+        is clicked.
+        """
+        if self.about_win is None:
+            self.about_win = AboutWhat(self)
+        if self._pytesting:
+            self.about_win.show()
+        else:
+            self.about_win.exec_()
 
     def resizeEvent(self, event):
+        """Qt method override."""
         super().resizeEvent(event)
-        self.moveAboutButton()
+        self.__move_about_btn()
 
-    def moveAboutButton(self):
+    def __move_about_btn(self):
         """
-        Move the buton to show the About dialog window to the right side of the
-        tab bar.
+        Move the buton to show the About dialog window to the right
+        side of the tab bar.
         """
         x = 0
         for i in range(self.count()):
