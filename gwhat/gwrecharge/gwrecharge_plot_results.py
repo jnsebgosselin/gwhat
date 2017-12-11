@@ -26,6 +26,8 @@ from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue_yearly_rechg
 from gwhat.common import icons
 
+mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
+
 
 # ---- Figure Managers
 
@@ -111,6 +113,8 @@ class FigResultsBase(FigureCanvasQTAgg):
     colors = {'dark grey': '0.65',
               'light grey': '0.85'}
 
+    MARGINS = [0.85, 0.15, 0.15, 0.65]  # left, top, right, bottom
+
     def __init__(self, language='English'):
         super(FigResultsBase, self).__init__(mpl.figure.Figure())
 
@@ -120,15 +124,23 @@ class FigResultsBase(FigureCanvasQTAgg):
         self.figure.set_size_inches(fwidth, fheight)
         self.figure.patch.set_facecolor('white')
 
-        lmarg = 0.85/fwidth
-        rmarg = 0.25/fwidth
-        tmarg = 0.5/fheight
-        bmarg = 0.65/fheight
+        self.ax0 = ax0 = self.figure.add_axes([0, 0, 1, 1])
+        self.set_ax_margins_inches(self.ax0, self.MARGINS)
+        ax0.patch.set_visible(False)
+        for axis in ['top', 'bottom', 'left', 'right']:
+            ax0.spines[axis].set_linewidth(0.5)
 
-        axwidth = 1 - (lmarg + rmarg)
-        axheight = 1 - (bmarg + tmarg)
+    def set_ax_margins_inches(self, ax, margins):
+        fheight = self.figure.get_figheight()
+        fwidth = self.figure.get_figwidth()
+        left, top, right, bottom = margins
 
-        self.ax0 = self.figure.add_axes([lmarg, bmarg, axwidth, axheight])
+        left = left/fwidth
+        right = right/fwidth
+        top = top/fheight
+        bottom = bottom/fheight
+
+        ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
 
 
 class FigWaterLevelGLUE(FigResultsBase):
@@ -142,14 +154,15 @@ class FigWaterLevelGLUE(FigResultsBase):
         fig = self.figure
         ax = self.ax0
 
+        # ---- Customize Ax0 margins
+
         # ---- Axes labels
 
         if self.language == 'French':
             label = "Niveau d'eau (m sous la surface)"
         else:
             label = 'Water Level (mbgs)'
-
-        ax.set_ylabel(label, fontsize=16)
+        ax.set_ylabel(label, fontsize=16, labelpad=20)
 
         # ---- Grids
 
@@ -205,13 +218,13 @@ class FigYearlyRechgGLUE(FigResultsBase):
     def __init__(self, *args, **kargs):
         super(FigYearlyRechgGLUE, self).__init__(*args, **kargs)
 
-        # ---- Modify ax0
+        # ---- Customize Ax0
 
-        ax0 = self.ax0
-        ax0.patch.set_visible(False)
-        for axis in ['top', 'bottom', 'left', 'right']:
-            ax0.spines[axis].set_linewidth(0.5)
-        ax0.set_axisbelow(True)
+        self.ax0
+        self.ax0.set_axisbelow(True)
+        margins = self.MARGINS
+        margins[-1] = 1.1
+        self.set_ax_margins_inches(self.ax0, margins)
 
     def plot_recharge(self, data, Ymin0=None, Ymax0=None, yrs_range=None):
         fig = self.figure
@@ -283,6 +296,19 @@ class FigYearlyRechgGLUE(FigResultsBase):
                        dashes=[3, 5], alpha=0.65)
         ax0.plot(yrs2plot, glue75_yr, color='red', dashes=[3, 5], alpha=0.65)
 
+        # ---- Axes labels
+
+        if self.language.lower() == 'french':
+            ylabl = "Recharge annuelle (mm/a)"
+            xlabl = ("Années Hydrologiques (1er octobre d'une année "
+                     "au 30 septembre de la suivante)")
+        else:
+            ylabl = "Annual Recharge (mm/y)"
+            xlabl = ("Hydrological Years (October 1st of one "
+                     "year to September 30th of the next)")
+        ax0.set_ylabel(ylabl, fontsize=16, labelpad=15)
+        ax0.set_xlabel(xlabl, fontsize=16, labelpad=20)
+
         # ----- Legend
 
         lg_handles = [herr[0], herr[1], h25[0]]
@@ -291,6 +317,29 @@ class FigYearlyRechgGLUE(FigResultsBase):
 
         ax0.legend(lg_handles, lg_labels, ncol=3, fontsize=12, frameon=False,
                    numpoints=1, loc='upper left')
+
+        # ---- Averages Text
+
+        if self.language.lower() == 'french':
+            text = 'Recharge annuelle moyenne :\n'
+            text += '(GLUE 5) %d mm/a ; ' % np.mean(min_rechg_yrly)
+            text += '(GLUE 25) %d mm/a ; ' % np.mean(glue25_yr)
+            text += '(GLUE 50) %d mm/a ; ' % np.mean(prob_rechg_yrly)
+            text += '(GLUE 75) %d mm/a ; ' % np.mean(glue75_yr)
+            text += '(GLUE 95) %d mm/a' % np.mean(max_rechg_yrly)
+        else:
+            text = 'Mean annual recharge :\n'
+            text += '(GLUE 5) %d mm/y ; ' % np.mean(min_rechg_yrly)
+            text += '(GLUE 25) %d mm/y ; ' % np.mean(glue25_yr)
+            text += '(GLUE 50) %d mm/y ; ' % np.mean(prob_rechg_yrly)
+            text += '(GLUE 75) %d mm/y ; ' % np.mean(glue75_yr)
+            text += '(GLUE 95) %d mm/y' % np.mean(max_rechg_yrly)
+
+        dx, dy = 5/72, 5/72
+        padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
+        transform = ax0.transAxes + padding
+        ax0.text(0, 0, text, va='bottom', ha='left', fontsize=10,
+                 transform=transform)
 
 
 # ---- if __name__ == '__main__'
