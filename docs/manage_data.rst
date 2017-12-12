@@ -6,15 +6,25 @@ Data Management in GWHAT
 Importing Data
 -----------------------------------------------
 
-Before groundwater well hydrographs can be plotted or analyzed in GWHAT, time
-series of groundwater level and weather data must be imported into the currently
-opened project. This is done for water level and weather datasets by clicking
-on their corresponding |icon_open_project| icon located in the right side panel
-of the main window, under the tab :guilabel:`Plot Hydrograph` or :guilabel:`Analyze Hydrograph`.
+Before ground-water hydrographs can be plotted or analyzed in a given project,
+time series of ground-water level and weather data must be imported in GWHAT.
+This is done for water level and weather datasets by clicking on their corresponding
+|icon_open_project| icon located in the right side panel of the tab
+:guilabel:`Plot Hydrograph` or :guilabel:`Analyze Hydrograph` as shown in
+:numref:`scs_datamanager_panel`. Clicking on either of the |icon_open_project|
+icons opens a dialog window where a valid water level or weather datafile can
+be selected by clicking on the |icon_folder| icon (see :numref:`scs_new_water_level_dataset_dialog`).
 
-Clicking on either of the |icon_open_project| icons opens a dialog window 
-where a valid water level or weather datafile can be selected by clicking on
-the |icon_folder| icon (see :numref:`scs_new_water_level_dataset_dialog`).
+.. _scs_datamanager_panel:
+.. figure:: img/scs/datamanager_panel.*
+    :align: center
+    :width: 100%
+    :alt: datamanager panel screenshot
+    :figclass: align-center
+
+    Presentation of the panel to manage water level and weather datasets.
+
+
 
 After a valid file has been selected, the information relative to the climate
 or piezometric station will be displayed in the dialog and a name for the dataset
@@ -29,7 +39,7 @@ project by clicking on the button :guilabel:`Ok`
     :width: 50%
     :alt: alternate text
     :figclass: align-center
-    
+
     Presentation of the dialog window to import water level data files.
 
 The tools for downloading and filling the gaps in daily weather records
@@ -55,15 +65,15 @@ as described in :numref:`sec_weather_datafiles_format` with either a :file:`.out
 dataset produced with the gapfilling tool in tab :guilabel:`Gapfill Weather`
 presented in :numref:`chap_gapfilling_weather_data`.
 
-.. note:: Preferably, the gaps in the daily weather records must have been 
-          filled before importing them. Otherwise, a value of 0 is assumed 
-          for days where precipitation are missing and the missing values for 
+.. note:: Preferably, the gaps in the daily weather records must have been
+          filled before importing them. Otherwise, a value of 0 is assumed
+          for days where precipitation are missing and the missing values for
           air temperature are evaluated by linear interpolation.
 
 Water level data files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-          
-The water level datafiles can be either in the :file:`xls` or :file:`xlsx` format. 
+
+The water level datafiles can be either in the :file:`xls` or :file:`xlsx` format.
 An exemple of correctly formatted water level datafile is presented in
 :numref:`water_level_datafile_example`. The information contained in the header
 will be loaded into the dialog window presented in :numref:`importing_data_inproject`.
@@ -80,12 +90,17 @@ in another section.
     :width: 85%
     :alt: water_level_datafile.png
     :figclass: align-center
-    
+
     Formatted weather datafile example.
-    
+
 .. important:: Water levels must be entered in meters below the ground surface.
 
 .. |icon_open_project| image:: img/icon/open_project.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: folder
+
+.. |icon_folder| image:: img/icon/icon_folder.*
                       :width: 1em
                       :height: 1em
                       :alt: folder
