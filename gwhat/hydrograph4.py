@@ -33,7 +33,6 @@ from xlrd import xldate_as_tuple
 
 # ---- Local imports
 
-import gwhat.common.database as db
 from gwhat.colors2 import ColorsReader
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
@@ -110,7 +109,6 @@ class Hydrograph(mpl.figure.Figure):
 
         # Database :
 
-        self.header = db.FileHeaders().graph_layout
         self.colorsDB = ColorsReader()
         self.colorsDB.load_colors_db()
 
