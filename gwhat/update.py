@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) Spyder Project Contributors
-# https://github.com/spyder-ide/spyder
-#
 # Copyright (c) 2014-2017 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
+#
+# Copyright (c) 2017 Spyder Project Contributors
+# https://github.com/spyder-ide/spyder
+#
+# Copyright (C) 2013 The IPython Development Team
+# https://github.com/ipython/ipython
 #
 # This file is a derivative work of codes from the Spyder project.
 # Licensed under the terms of the MIT License.
@@ -37,10 +40,7 @@ from gwhat import __version__, __releases_url__
 
 
 class WorkerUpdates(QObject):
-    """
-    Worker that checks for releases using the Github API without blocking the
-    GWHAT user interface, in case of connections issues.
-    """
+    """Worker that checks for releases using the Github API."""
     sig_ready = QSignal(bool, str)
 
     def __init__(self):
@@ -49,13 +49,13 @@ class WorkerUpdates(QObject):
         self.latest_release = None
 
     def start(self):
-        """Main method of the WorkerUpdates worker"""
+        """Main method of the WorkerUpdates worker."""
         self.update_available = False
         self.latest_release = __version__
         error_msg = None
         try:
             if hasattr(ssl, '_create_unverified_context'):
-                # Fix for Spyder issue #2685
+                # Fix for Spyder issue #2685.
                 context = ssl._create_unverified_context()
                 page = urlopen(__releases_url__, context=context)
             else:
@@ -65,7 +65,8 @@ class WorkerUpdates(QObject):
                 data = json.loads(data)
 
                 releases = [item['tag_name'].replace('gwhat-', '')
-                            for item in data if "gwhat" in item['tag_name']]
+                            for item in data
+                            if item['tag_name'].startswith("gwhat")]
                 version = __version__
 
                 result = check_update_available(version, releases)
