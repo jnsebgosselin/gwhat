@@ -12,7 +12,7 @@ from __future__ import division, unicode_literals
 
 import csv
 import os
-from time import strftime, sleep
+from time import strftime
 from copy import copy
 from time import clock
 from itertools import product
@@ -442,8 +442,6 @@ class GapFillWeather(QObject):
             # INNER LOOP: iterates over all the days with missing values.
 
             for row in row2fill:
-
-                # sleep(0.000001)  # If no sleep, the UI becomes whacked
 
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 # This block of code is used only to stop the gap-filling
