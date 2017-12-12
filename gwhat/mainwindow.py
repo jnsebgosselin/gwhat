@@ -55,7 +55,6 @@ import tkinter.messagebox
 
 # ---- Local imports
 
-import gwhat.common.database as db
 from gwhat.common.utils import save_content_to_csv
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
@@ -71,10 +70,6 @@ from gwhat.common import icons
 from gwhat import __version__
 
 freeze_support()
-
-# DATABASES :
-
-headerDB = []
 
 
 class WHAT(QMainWindow):
@@ -126,15 +121,6 @@ class WHAT(QMainWindow):
             QMessageBox.warning(self, 'Warning', msgtxt, btn)
 
     def __initUI__(self):
-
-        # ------------------------------------------------------ DATABASES ----
-
-        # http://stackoverflow.com/questions/423379/
-        # using-global-variables-in-a-function-other-
-        # than-the-one-that-created-them
-
-        global headerDB
-        headerDB = db.FileHeaders()
 
         # ----------------------------------------------------- TAB WIDGET ----
 
