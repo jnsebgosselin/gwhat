@@ -79,12 +79,12 @@ def test_fill_data(gapfill_weather_bot):
     gapfiller.fill_data()
 
     gapfiller.set_target_station(1)
-    gapfiller.regression_mode = 1
+    gapfiller.limitDist = -1
+    gapfiller.limitAlt = -1
     gapfiller.fill_data()
 
     gapfiller.set_target_station(2)
-    gapfiller.limitDist = -1
-    gapfiller.limitAlt = -1
+    gapfiller.regression_mode = 1
     gapfiller.fill_data()
 
     # Assert that all the ouput files were generated correctly.
