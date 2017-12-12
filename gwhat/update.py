@@ -9,8 +9,10 @@
 # Copyright (C) 2013 The IPython Development Team
 # https://github.com/ipython/ipython
 #
-# This file is a derivative work of codes from the Spyder project.
+# This file is a derivative work of codes from the files updates.py and
+# programs.py of the Spyder project.
 # Licensed under the terms of the MIT License.
+#
 # https://github.com/spyder-ide/spyder/master/spyder/workers/updates.py
 # https://github.com/spyder-ide/spyder/blob/master/spyder/utils/programs.py
 #
@@ -40,7 +42,12 @@ from gwhat import __version__, __releases_url__
 
 
 class WorkerUpdates(QObject):
-    """Worker that checks for releases using the Github API."""
+    """
+    Worker that checks for releases using the Github API.
+
+    Copyright (c) Spyder Project Contributors
+    Licensed under the terms of the MIT License
+    """
     sig_ready = QSignal(bool, str)
 
     def __init__(self):
