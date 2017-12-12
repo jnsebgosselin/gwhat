@@ -9,8 +9,7 @@
 # Copyright (C) 2013 The IPython Development Team
 # https://github.com/ipython/ipython
 #
-# This file is a derivative work of codes from the files updates.py and
-# programs.py of the Spyder project.
+# This file is a derivative work of codes from the Spyder project.
 # Licensed under the terms of the MIT License.
 #
 # https://github.com/spyder-ide/spyder/master/spyder/workers/updates.py
