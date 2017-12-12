@@ -443,7 +443,7 @@ class GapFillWeather(QObject):
 
             for row in row2fill:
 
-                sleep(0.000001)  # If no sleep, the UI becomes whacked
+                # sleep(0.000001)  # If no sleep, the UI becomes whacked
 
                 # !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
                 # This block of code is used only to stop the gap-filling
