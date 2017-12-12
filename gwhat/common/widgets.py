@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-copyright (C) 2016-2017 INRS
-contact: jean-sebastien.gosselin@outlook.com
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox)..
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it /will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 from __future__ import division, unicode_literals
 
@@ -26,7 +13,7 @@ from __future__ import division, unicode_literals
 from copy import copy
 import os
 
-from gwhat.common import IconDB
+from gwhat.common import icons
 
 from PyQt5.QtCore import Qt, QSize, QPoint, QUrl
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -235,6 +222,12 @@ class QFrameLayout(QFrame):
     def setSpacing(self, spacing):
         self.layout().setSpacing(spacing)
 
+    def setVerticalSpacing(self, spacing):
+        self.layout().setVerticalSpacing(spacing)
+
+    def setHorizontalSpacing(self, spacing):
+        self.layout().setHorizontalSpacing(spacing)
+
     # -------------------------------------------------------------------------
 
     def rowCount(self):
@@ -291,7 +284,7 @@ class DialogWindow(QDialog):
             self.setWindowFlags(Qt.Window |
                                 Qt.WindowMinimizeButtonHint)
 
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
     def emit_warning(self, msg, title='Warning'):
         btn = QMessageBox.Ok
@@ -332,7 +325,7 @@ class AboutWindow(DialogWindow):
         super(AboutWindow, self).__init__(parent, resizable=False)
         self.setWindowTitle('About')
         self.setWindowFlags(Qt.Window)
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         grid = QGridLayout()
         self.setLayout(grid)
@@ -388,7 +381,7 @@ class QToolPanel(QWidget):
             QStyle.SP_ToolBarVerticalExtensionButton)
 
         self.setLayout(QGridLayout())
-        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setContentsMargins(0, 0, 0, 0)  # (l, t, r, b)
 
         self.__currentIndex = -1
 
@@ -482,13 +475,13 @@ class BtnBase(QWidget):
 class GetBtn(BtnBase):
     def __init__(self, parent=None):
         super(GetBtn, self).__init__(parent)
-        self.setIcon(QIcon(IconDB().getfrom))
+        self.setIcon(icons.get_icon('getfrom'))
 
 
 class GuessBtn(BtnBase):
     def __init__(self, parent=None):
         super(GuessBtn, self).__init__(parent)
-        self.setIcon(QIcon(IconDB().calcul))
+        self.setIcon(icons.get_icon('calcul'))
         self.setToolTip('Guesstimate values')
 
 
@@ -497,7 +490,7 @@ class InfoBtn(QToolButton):
         super(InfoBtn, self).__init__(parent)
         self.setIconSize(QSize(16, 16))
         self.setAutoRaise(True)
-        self.setIcon(QIcon(IconDB().about))
+        self.setIcon(icons.get_icon('about'))
 
         self.infopg = AboutWindow()
 
@@ -535,10 +528,10 @@ class LinkBtn(QToolButton):
     def set_linked_state(self, state):
         self.__state = state
         if state is True:
-            self.setIcon(QIcon(IconDB().link))
+            self.setIcon(icons.get_icon('link'))
             self.setToolTip('Link values')
         else:
-            self.setIcon(QIcon(IconDB().notlink))
+            self.setIcon(icons.get_icon('notlink'))
             self.setToolTip('Unlink values')
 
 

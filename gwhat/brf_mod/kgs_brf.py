@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox)..
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
 
@@ -111,8 +98,8 @@ def run_kgsbrf():
     dirname = os.path.dirname(os.path.realpath(__file__))
     exename = os.path.join(dirname, 'kgs_brf.exe')
     parname = os.path.join(dirname, 'kgs_brf.par')
-
-    os.system('""%s" < "%s""' % (exename, parname))
+    if os.path.exists(exename) and os.path.exists(parname):
+        os.system('""%s" < "%s""' % (exename, parname))
 
 #    process = QtCore.QProcess()
 #    process.start(exename+" < "+ parname)

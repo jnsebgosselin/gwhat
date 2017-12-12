@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# Copyright © 2014-2017 Jean-Sebastien Gosselin
-# email: jean-sebastien.gosselin@ete.inrs.ca
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
@@ -107,6 +107,9 @@ class GapFillWeather(QObject):
         self.leave_one_out = False
         # leave_one_out: flag to control if data are removed from the
         #                dataset in the cross-validation procedure.
+
+        self.fig_format = PostProcessErr.SUPPORTED_FIG_FORMATS[0]
+        self.fig_language = PostProcessErr.SUPPORTED_LANGUAGES[0]
 
     # =========================================================================
 
@@ -725,10 +728,8 @@ class GapFillWeather(QObject):
         clean_tarStaName = target_station_name.replace('\\', '_')
         clean_tarStaName = clean_tarStaName.replace('/', '_')
 
-        dirname = '%s/%s (%s)/' % (self.outputDir,
-                                   clean_tarStaName,
-                                   target_station_clim)
-
+        folder_name = "%s (%s)" % (clean_tarStaName, target_station_clim)
+        dirname = os.path.join(self.outputDir, folder_name)
         if not os.path.exists(dirname):
             os.makedirs(dirname)
 
@@ -904,9 +905,8 @@ class GapFillWeather(QObject):
                                        target_station_clim,
                                        YearStart, YearEnd)
 
-        output_path = dirname + fname
+        output_path = os.path.join(dirname, fname)
         self.save_content_to_file(output_path, fcontent)
-
         self.ConsoleSignal.emit(
                '<font color=black>Info file saved in %s.</font>' % output_path)
 
@@ -934,7 +934,7 @@ class GapFillWeather(QObject):
                                        target_station_clim,
                                        YearStart, YearEnd)
 
-        output_path = dirname + fname
+        output_path = os.path.join(dirname, fname)
         self.save_content_to_file(output_path, fcontent)
 
         msg = 'Meteo data saved in %s.' % output_path
@@ -947,12 +947,13 @@ class GapFillWeather(QObject):
 
         # Produces Weather Normals Graph :
 
+        filename = 'weather_normals.'+self.fig_format
+        print('Generating %s...' % filename)
         wxdset = wxrd.WXDataFrame(output_path)
         fig = FigWeatherNormals()
+        fig.set_lang(self.fig_language)
         fig.plot_monthly_normals(wxdset['normals'])
-        figname = dirname + 'weather_normals.pdf'
-        print('Generating %s.' % figname)
-        fig.figure.savefig(figname)
+        fig.figure.savefig(os.path.join(dirname, filename))
 
         # ------------------------------------------------------ .err file ----
 
@@ -1006,13 +1007,15 @@ class GapFillWeather(QObject):
                                            target_station_clim,
                                            YearStart, YearEnd)
 
-            output_path = dirname + fname
+            output_path = os.path.join(dirname, fname)
             self.save_content_to_file(output_path, fcontent)
             print('Generating %s.' % fname)
 
             # ---- Plot some graphs ----
 
             pperr = PostProcessErr(output_path)
+            pperr.set_fig_format(self.fig_format)
+            pperr.set_fig_language(self.fig_language)
             pperr.generates_graphs()
 
             # ---- SOME CALCULATIONS ----

@@ -64,12 +64,14 @@ Projects/
 .spyproject/
 @ new-prô'jèt!/
 
+kgs_brf.exe
 WHAT.pref
 BRFInput.txt
 BRFOutput.txt
 GLUE.npy
 *.par
 *.wif
+*.bat
 
 url.txt
 urlsinglestation.txt

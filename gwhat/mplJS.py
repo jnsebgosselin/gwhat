@@ -1,11 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2016 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-last modification: 27/09/2016
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
-"""
 import matplotlib as mpl
 import matplotlib.pyplot as plt
 

@@ -1,29 +1,26 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox)..
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+# ---- Imports: standard libraries
 
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
+import os
+import requests
+import zipfile
+import io
 
-from PyQt5.QtCore import pyqtProperty
-from PyQt5.QtCore import Qt, QDate
+# ---- Imports: third parties
+
+from PyQt5.QtCore import Qt, QDate, QPoint
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
-                             QApplication, QDialog, QSpinBox, QAbstractSpinBox,
-                             QGridLayout, QDoubleSpinBox, QFrame, QWidget)
+                             QApplication, QSpinBox, QAbstractSpinBox,
+                             QGridLayout, QDoubleSpinBox, QFrame, QWidget,
+                             QDesktopWidget)
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
@@ -31,16 +28,83 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
+
+# ---- Imports: local
+
 import gwhat.common.widgets as myqt
+from PyQt5.QtCore import pyqtSignal as QSignal
 from gwhat.brf_mod.kgs_plot import BRFFigure
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import icons
 from gwhat import brf_mod as bm
 
-mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
-# =============================================================================
+class KGSBRFInstaller(myqt.QFrameLayout):
+    """
+    A simple widget to download the kgs_brf program and install it in the
+    proper directory.
+    http://www.kgs.ku.edu/HighPlains/OHP/index_program/brf.html
+    """
+
+    sig_kgs_brf_installed = QSignal(str)
+
+    def __init__(self, parent=None):
+        super(KGSBRFInstaller, self).__init__(parent)
+
+        self.setAutoFillBackground(True)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        self.install_btn = QPushButton("Install")
+        self.install_btn.clicked.connect(self.install_kgsbrf)
+
+        self.addWidget(self.install_btn, 1, 1)
+        self.setRowStretch(0, 100)
+        self.setRowStretch(self.rowCount(), 100)
+        self.setColumnStretch(0, 100)
+        self.setColumnStretch(self.columnCount(), 100)
+
+    @property
+    def install_dir(self):
+        """Path to the installation folder."""
+        return os.path.dirname(os.path.realpath(__file__))
+
+    @property
+    def kgs_brf_name(self):
+        """Name of the kgs_brf binary executable."""
+        return "kgs_brf.exe"
+
+    @property
+    def kgs_brf_path(self):
+        """Path to the kgs_brf binary executable."""
+        return os.path.join(self.install_dir, "kgs_brf.exe")
+
+    def kgsbrf_is_installed(self):
+        """Returns whether kgs_brf is installed or not."""
+        return os.path.exists(self.kgs_brf_path)
+
+    def install_kgsbrf(self):
+        """Download and install the kgs_brf software."""
+        print("Installing KGS_BRF software...", end=" ")
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        url = "http://www.kgs.ku.edu/HighPlains/OHP/index_program/KGS_BRF.zip"
+        request = requests.get(url)
+        zfile = zipfile.ZipFile(io.BytesIO(request .content))
+
+        if not os.path.exists(self.install_dir):
+            os.mkdir(self.install_dir)
+
+        with open(self.kgs_brf_path, 'wb') as f:
+            f.write(zfile.read(self.kgs_brf_name))
+
+        if self.kgsbrf_is_installed():
+            self.sig_kgs_brf_installed.emit(self.install_dir)
+            self.close()
+            print("done")
+        else:
+            print("failed")
+        QApplication.restoreOverrideCursor()
 
 
 class BRFManager(myqt.QFrameLayout):
@@ -48,6 +112,7 @@ class BRFManager(myqt.QFrameLayout):
         super(BRFManager, self).__init__(parent)
 
         self.viewer = BRFViewer(wldset, parent)
+        self.kgs_brf_installer = None
         self.__initGUI__()
 
     def __initGUI__(self):
@@ -77,8 +142,8 @@ class BRFManager(myqt.QFrameLayout):
         self._dataend.setCalendarPopup(True)
         self._dataend.setDisplayFormat('dd/MM/yyyy')
 
-        btn_seldata = QToolButtonSmall(IconDB().select_range)
-        btn_seldata.clicked.connect(self.get_datarange)
+        self.btn_seldata = QToolButtonSmall(icons.get_icon('select_range'))
+        self.btn_seldata.clicked.connect(self.get_datarange)
 
         # ---- Detrend and Correct Options ----
 
@@ -94,7 +159,7 @@ class BRFManager(myqt.QFrameLayout):
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
 
-        btn_show = QToolButtonSmall(IconDB().search)
+        btn_show = QToolButtonSmall(icons.get_icon('search'))
         btn_show.clicked.connect(self.viewer.show)
 
         # ---- Layout ----
@@ -119,7 +184,7 @@ class BRFManager(myqt.QFrameLayout):
         row += 1
         self.addWidget(QLabel('BRF Start :'), row, 0)
         self.addWidget(self._datastart, row, 1)
-        self.addWidget(btn_seldata, row, 2)
+        self.addWidget(self.btn_seldata, row, 2)
         row += 1
         self.addWidget(QLabel('BRF End :'), row, 0)
         self.addWidget(self._dataend, row, 1)
@@ -137,7 +202,12 @@ class BRFManager(myqt.QFrameLayout):
 
         self.setColumnStretch(self.columnCount(), 100)
 
-    # =========================================================================
+        # ---- Install Panel
+
+        if not KGSBRFInstaller().kgsbrf_is_installed():
+            self.__install_kgs_brf_installer()
+
+    # ---- Properties
 
     @property
     def lagBP(self):
@@ -167,6 +237,27 @@ class BRFManager(myqt.QFrameLayout):
         dend = xldate_from_date_tuple((y, m, d), 0)
 
         return (dstart, dend)
+
+    # ---- KGS BRF installer
+
+    def __install_kgs_brf_installer(self):
+        """
+        Installs a KGSBRFInstaller that overlays the whole brf tool
+        layout until the KGS_BRF program is installed correctly.
+        """
+        self.kgs_brf_installer = KGSBRFInstaller()
+        self.kgs_brf_installer.sig_kgs_brf_installed.connect(
+                self.__uninstall_kgs_brf_installer)
+        self.addWidget(self.kgs_brf_installer, 0, 0,
+                       self.rowCount(), self.columnCount())
+
+    def __uninstall_kgs_brf_installer(self):
+        """
+        Uninstall the KGSBRFInstaller after the KGS_BRF program has been
+        installed properly.
+        """
+        self.kgs_brf_installer.sig_kgs_brf_installed.disconnect()
+        self.kgs_brf_installer = None
 
     # =========================================================================
 
@@ -274,17 +365,16 @@ class BRFManager(myqt.QFrameLayout):
             return
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
 class BRFViewer(QWidget):
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
 
-        self.setWindowTitle('BRF Viewer')
-        self.setWindowIcon(IconDB().master)
+        self.setWindowTitle('BRF Results Viewer')
+        self.setWindowIcon(icons.get_icon('master'))
         self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowMinimizeButtonHint |
                             Qt.WindowCloseButtonHint)
 
         self.__initGUI__()
@@ -294,23 +384,23 @@ class BRFViewer(QWidget):
 
         # -------------------------------------------------------- Toolbar ----
 
-        self.btn_del = QToolButtonNormal(IconDB().clear_search)
+        self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
         self.btn_del.setToolTip('Delete current BRF results')
         self.btn_del.clicked.connect(self.del_brf)
 
-        btn_save = QToolButtonNormal(IconDB().save)
+        btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save current BRF graph...')
 
-        self.btn_setp = QToolButtonNormal(IconDB().page_setup)
+        self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
         # ---- Navigator ----
 
-        self.btn_prev = QToolButtonNormal(IconDB().go_previous)
+        self.btn_prev = QToolButtonNormal(icons.get_icon('go_previous'))
         self.btn_prev.clicked.connect(self.navigate_brf)
 
-        self.btn_next = QToolButtonNormal(IconDB().go_next)
+        self.btn_next = QToolButtonNormal(icons.get_icon('go_next'))
         self.btn_next.clicked.connect(self.navigate_brf)
 
         self.current_brf = QSpinBox()
@@ -584,6 +674,18 @@ class BRFViewer(QWidget):
 
     def show(self):
         super(BRFViewer, self).show()
+        qr = self.frameGeometry()
+        if self.parentWidget():
+            parent = self.parentWidget()
+
+            wp = parent.frameGeometry().width()
+            hp = parent.frameGeometry().height()
+            cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
+        else:
+            cp = QDesktopWidget().availableGeometry().center()
+
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
         self.fig_frame.setFixedSize(self.fig_frame.size())
         self.setFixedSize(self.size())
 
@@ -592,13 +694,16 @@ class BRFViewer(QWidget):
             # Window is minimised. Restore it.
             self.setWindowState(Qt.WindowNoState)
 
+
+# ---- if __name__ == "__main__":
+
 if __name__ == "__main__":
-    import projet.reader_projet as prd
+    import gwhat.projet.reader_projet as prd
     import sys
     projet = prd.ProjetReader('C:/Users/jsgosselin/OneDrive/Research/'
                               'PostDoc - MDDELCC/Outils/BRF MontEst/'
                               'BRF MontEst.what')
-    wldset = projet.get_wldset(projet.wldsets[0])
+    wldset = projet.get_wldset(projet.wldsets[1])
 
     app = QApplication(sys.argv)
 

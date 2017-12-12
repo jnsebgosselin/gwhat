@@ -1,21 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-GHWAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 # Source: http://www.gnu.org/licenses/gpl-howto.html
 
@@ -67,7 +56,6 @@ import tkinter.messagebox
 # ---- Local imports
 
 import gwhat.common.database as db
-import gwhat.custom_widgets as MyQWidget
 from gwhat.common.utils import save_content_to_csv
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
@@ -78,7 +66,8 @@ from gwhat.widgets.tabwidget import TabWidget
 
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
-from gwhat.common import IconDB, StyleDB, QToolButtonBase
+from gwhat.common import StyleDB, QToolButtonBase
+from gwhat.common import icons
 from gwhat import __version__
 
 freeze_support()
@@ -94,7 +83,7 @@ class WHAT(QMainWindow):
         super(WHAT, self).__init__(parent)
 
         self.setWindowTitle(__version__)
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         if platform.system() == 'Windows':
             import ctypes
@@ -236,6 +225,8 @@ class WHAT(QMainWindow):
         mainGrid.addWidget(splitter, 0, 0)
         mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
         mainGrid.addWidget(self.tab_dwnld_data.pbar, 2, 0)
+        mainGrid.addWidget(
+                self.tab_hydrocalc.rechg_setup_win.progressbar, 3, 0)
 
     # =========================================================================
 

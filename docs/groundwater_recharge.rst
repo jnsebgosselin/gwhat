@@ -3,8 +3,12 @@
 Estimating Groundwater Recharge
 ===============================================
 
-.. figure:: img/Work-in-progress.*
+.. _gwrecharge_eval_demo:
+.. figure:: img/demo/demo_eval_recharge.*
     :align: center
-    :width: 65%
-    :alt: http://breakingbad.wikia.com/wiki/File:Work-in-progress-1024x603.png.
+    :width: 100%
+    :alt: alternate text
     :figclass: align-center
+
+    Presentation of the tool to evaluate ground-water recharge in GWHAT
+    available under the tab :guilabel:`Analyze Hydrograph`.

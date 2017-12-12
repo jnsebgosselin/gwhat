@@ -1,22 +1,10 @@
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
+# -*- coding: utf-8 -*-
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 from __future__ import division, unicode_literals
 
@@ -42,11 +30,11 @@ from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
 # ---- Local imports
 
 from gwhat.colors2 import ColorsReader
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal
+from gwhat.common import StyleDB, QToolButtonNormal
+from gwhat.common import icons
 from gwhat.common.widgets import DialogWindow
 from gwhat import __version__
 
-mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
@@ -112,7 +100,7 @@ class WeatherAvgGraph(DialogWindow):
     def __initUI__(self):
 
         self.setWindowTitle('Weather Averages')
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         # ---------------------------------------------------- TOOLBAR ----
 
@@ -122,7 +110,7 @@ class WeatherAvgGraph(DialogWindow):
         menu_save.addAction('Save normals graph as...', self.save_graph)
         menu_save.addAction('Save normals table as...', self.save_normals)
 
-        btn_save = QToolButtonNormal(IconDB().save)
+        btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save normals')
         btn_save.setMenu(menu_save)
         btn_save.setPopupMode(QToolButton.InstantPopup)
@@ -136,14 +124,14 @@ class WeatherAvgGraph(DialogWindow):
         menu_export.addAction('Export yearly time series as...',
                               self.select_export_file)
 
-        self.btn_export = QToolButtonNormal(IconDB().export_data)
+        self.btn_export = QToolButtonNormal(icons.get_icon('export_data'))
         self.btn_export.setToolTip('Export time series')
         self.btn_export.setPopupMode(QToolButton.InstantPopup)
         self.btn_export.setMenu(menu_export)
         self.btn_export.setStyleSheet(
                 "QToolButton::menu-indicator {image: none;}")
 
-        btn_showStats = QToolButtonNormal(IconDB().showGrid)
+        btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
         btn_showStats.setToolTip('Show monthly weather normals data table.')
         btn_showStats.clicked.connect(self.show_monthly_grid)
 
@@ -965,8 +953,11 @@ class GridWeatherNormals(QTableWidget):
 
         self.resizeColumnsToContents()
 
+
+# ---- if __name__ == '__main__'
+
 if __name__ == '__main__':
-    from WHAT.meteo.weather_reader import WXDataFrame
+    from gwhat.meteo.weather_reader import WXDataFrame
     app = QApplication(sys.argv)
 
     ft = app.font()
@@ -974,10 +965,9 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    fmeteo = ('C:/Users/jsgosselin/OneDrive/WHAT/Projects/'
-              'Project4Testing/Meteo/Output/IBERVILLE (7023270)/'
-              'IBERVILLE (7023270)_1980-2015.out')
-
+    fmeteo = ("C:\\Users\\jsgosselin\\GWHAT\\Projects\\"
+              "Example\\Meteo\\Output\\FARNHAM (7022320)\\"
+              "FARNHAM (7022320)_2005-2010.out")
     wxdset = WXDataFrame(fmeteo)
 
     w = WeatherAvgGraph()

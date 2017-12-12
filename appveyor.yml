@@ -40,15 +40,16 @@ install:
   - python -m pip install coveralls
   - python -m pip install matplotlib
   - python -m pip install scipy
-  - python -m pip install beautifulsoup4
+  - python -m pip install cython
 
 build: false
 
 test_script:
+  - python setup.py build_ext --inplace
   - python runtests.py
 
 on_success:
   - coveralls
 
-on_finish:  
+on_finish:
 #   - ps: $blockRdp = $false; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))

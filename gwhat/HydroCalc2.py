@@ -1,25 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
-
-from __future__ import division, unicode_literals
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
 
@@ -27,6 +12,7 @@ from time import clock, sleep
 import csv
 import os
 import datetime
+
 
 # ---- Third party imports
 
@@ -41,23 +27,20 @@ from PyQt5.QtWidgets import (QGridLayout, QWidget, QComboBox, QTextEdit,
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
-import matplotlib.pyplot as plt
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 import xlsxwriter
 
+
 # ---- Local imports
 
-from gwhat.gwrecharge_calc2 import SynthHydrograph
-from gwhat.gwrecharge_post import plot_rechg_GLUE
-
-import gwhat.common.database as db
+from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 import gwhat.common.widgets as myqt
-from gwhat.common import IconDB, StyleDB, QToolButtonNormal
+from gwhat.common import StyleDB, QToolButtonNormal
+from gwhat.common import icons
 import gwhat.brf_mod as bm
 
-mpl.use('Qt5Agg')
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
@@ -71,7 +54,6 @@ class WLCalc(myqt.DialogWindow):
 
     def __init__(self, datamanager, parent=None):
         super(WLCalc, self).__init__(parent, maximize=True)
-
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
@@ -112,8 +94,10 @@ class WLCalc(myqt.DialogWindow):
 
         self.brfperiod = [None, None]
         self.__brfcount = 0
+
         # self.config_brf = ConfigBRF()
         self.config_brf = bm.BRFManager(parent=self)
+        self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
 
         # Soil Profiles :
 
@@ -122,18 +106,9 @@ class WLCalc(myqt.DialogWindow):
 
         # Recharge :
 
-        self.rechg_setup_win = RechgSetupWin(parent=self)
+        self.rechg_setup_win = RechgEvalWidget(parent=self)
 
-        self.synth_hydro_widg = SynthHydroWidg()
-        self.synth_hydro_widg.hide()
-        self.synth_hydro_widg.newHydroParaSent.connect(self.plot_synth_hydro)
-
-        self.synth_hydrograph = SynthHydrograph()
-
-        # =====================================================================
-
-        # INIT UI :
-
+        # ---- Initialize the GUI
         self.__initFig__()
         self.__initUI__()
         self.setup_ax_margins(None)
@@ -264,29 +239,30 @@ class WLCalc(myqt.DialogWindow):
 
         # Toolbar Buttons :
 
-        self.btn_clearPeak = QToolButtonNormal(IconDB().clear_search)
+        self.btn_clearPeak = QToolButtonNormal(icons.get_icon('clear_search'))
         self.btn_clearPeak.setToolTip('Clear all extremum from the graph')
         self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
 
-        self.btn_home = QToolButtonNormal(IconDB().home)
+        self.btn_home = QToolButtonNormal(icons.get_icon('home'))
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
 
-        # self.btn_pan = QToolButtonNormal(IconDB().pan)
+        # self.btn_pan = QToolButtonNormal(icons.get_icon('pan'))
         # self.btn_pan.setToolTip('Pan axes with left mouse, zoom with right')
         # self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_strati = QToolButtonNormal(IconDB().stratigraphy)
+        self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
         self.btn_strati.setToolTip('Toggle on and off the display of the soil'
                                    ' stratigraphic layers')
         self.btn_strati.clicked.connect(self.btn_strati_isClicked)
 
-        self.btn_Waterlvl_lineStyle = QToolButtonNormal(IconDB().showDataDots)
+        self.btn_Waterlvl_lineStyle = QToolButtonNormal(
+                icons.get_icon('showDataDots'))
         self.btn_Waterlvl_lineStyle.setToolTip(
             '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_dateFormat = QToolButtonNormal(IconDB().calendar)
+        self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
         self.btn_dateFormat.setAutoRaise(1-self.dformat)
         self.btn_dateFormat.setToolTip('x axis label time format: '
                                        'date or MS Excel numeric')
@@ -294,19 +270,7 @@ class WLCalc(myqt.DialogWindow):
         # dformat: 0 -> Excel Numeric Date Format
         #          1 -> Matplotlib Date Format
 
-        # ---- recharge ----
-
-#        self.btn_synthHydro = QToolButtonNormal(IconDB().page_setup)
-#        self.btn_synthHydro.setToolTip('Show synthetic hydrograph')
-#        self.btn_synthHydro.clicked.connect(self.synth_hydro_widg.toggleOnOff)
-#        self.btn_synthHydro.hide()
-
         # ---- BRF ----
-
-#        self.btn_findPeak = toolBarBtn(iconDB.findPeak2, ttipDB.find_peak)
-#        self.btn_findPeak.clicked.connect(self.find_peak)
-#        self.btn_mrc2rechg = toolBarBtn(iconDB.mrc2rechg, ttipDB.mrc2rechg)
-#        self.btn_mrc2rechg.clicked.connect(self.btn_mrc2rechg_isClicked)
 
         # Grid Layout :
 
@@ -346,22 +310,22 @@ class WLCalc(myqt.DialogWindow):
 
         # ---- MRC Toolbar ----
 
-        self.btn_undo = QToolButtonNormal(IconDB().undo)
+        self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
         self.btn_undo.setToolTip('Undo')
         self.btn_undo.setEnabled(False)
         self.btn_undo.clicked.connect(self.undo)
 
-        self.btn_editPeak = QToolButtonNormal(IconDB().add_point)
-        self.btn_editPeak.clicked.connect(self.aToolbarBtn_isClicked)
-        self.btn_editPeak.setToolTip('<p>Toggle edit mode to manually'
-                                     ' add extremums to the graph</p>')
+        self.btn_addpeak = QToolButtonNormal(icons.get_icon('add_point'))
+        self.btn_addpeak.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_addpeak.setToolTip('<p>Toggle edit mode to manually'
+                                    ' add extremums to the graph</p>')
 
-        self.btn_delPeak = QToolButtonNormal(IconDB().erase)
+        self.btn_delPeak = QToolButtonNormal(icons.get_icon('erase'))
         self.btn_delPeak.clicked.connect(self.aToolbarBtn_isClicked)
         self.btn_delPeak.setToolTip('<p>Toggle edit mode to manually remove '
                                     'extremums from the graph</p>')
 
-        self.btn_save_interp = QToolButtonNormal(IconDB().save)
+        self.btn_save_interp = QToolButtonNormal(icons.get_icon('save'))
         self.btn_save_interp.setToolTip('Save Calculated MRC to file.')
         self.btn_save_interp.clicked.connect(self.aToolbarBtn_isClicked)
 
@@ -373,7 +337,7 @@ class WLCalc(myqt.DialogWindow):
         mrc_tb = myqt.QFrameLayout()
         mrc_tb.addWidget(self.btn_undo, 0, 0)
         mrc_tb.addWidget(self.btn_clearPeak, 0, 1)
-        mrc_tb.addWidget(self.btn_editPeak, 0, 2)
+        mrc_tb.addWidget(self.btn_addpeak, 0, 2)
         mrc_tb.addWidget(self.btn_delPeak, 0, 3)
         mrc_tb.addWidget(self.btn_save_interp, 0, 4)
         mrc_tb.setColumnStretch(mrc_tb.columnCount(), 100)
@@ -405,9 +369,9 @@ class WLCalc(myqt.DialogWindow):
         tooltab.setIconSize(QSize(28, 28))
         tooltab.setTabPosition(tooltab.North)
 
-        tooltab.addTab(self.widget_MRCparam, IconDB().MRCalc, '')
-        tooltab.addTab(self.rechg_setup_win, IconDB().recharge, '')
-        tooltab.addTab(self.config_brf, IconDB().setup, '')
+        tooltab.addTab(self.widget_MRCparam, icons.get_icon('MRCalc'), '')
+        tooltab.addTab(self.rechg_setup_win, icons.get_icon('recharge'), '')
+        tooltab.addTab(self.config_brf, icons.get_icon('setup'), '')
 
         # ---------------------------------------------------- Right Panel ----
 
@@ -555,11 +519,12 @@ class WLCalc(myqt.DialogWindow):
     # =========================================================================
 
     def aToolbarBtn_isClicked(self):
-        # slot that redirects all clicked actions from the toolbar buttons
-
+        """
+        Handles and redirects all clicked actions from toolbar buttons.
+        """
         if self.wldset is None:
-            msg = 'Please import a valid water level dataset first.'
-            self.emit_warning(msg)
+            self.emit_warning(
+                    "Please import a valid water level dataset first.")
             return
 
         sender = self.sender()
@@ -571,16 +536,16 @@ class WLCalc(myqt.DialogWindow):
             self.home()
         elif sender == self.btn_save_interp:
             self.save_mrc_tofile()
-        elif sender == self.btn_editPeak:
-            self.add_peak()
+        elif sender == self.btn_addpeak:
+            self.btn_addpeak_isclicked()
         elif sender == self.btn_delPeak:
-            self.delete_peak()
+            self.btn_delPeak_isclicked()
         elif sender == self.btn_dateFormat:
             self.switch_date_format()
-        elif sender == self.btn_selBRF:
+        elif sender == self.config_brf.btn_seldata:
             self.select_BRF()
 
-    # ================================================================ MRC ====
+    # ---- MRC
 
     def btn_MRCalc_isClicked(self):
 
@@ -725,7 +690,7 @@ class WLCalc(myqt.DialogWindow):
         mrc2rechg(self.time, self.water_lvl, self.A, self.B,
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
 
-    # =========================================================================
+    # ---- BRF handlers
 
     def plot_BRFperiod(self):
         if self.brfperiod[0]:
@@ -745,23 +710,20 @@ class WLCalc(myqt.DialogWindow):
         self.draw()
 
     def select_BRF(self):
-        # slot connected when the button to select a period to compute the
-        # BRF is clicked
-        if self.btn_selBRF.autoRaise():
-            self.btn_selBRF.setAutoRaise(False)
+        """
+        Handles when the button to select a period to compute the BRF is
+        clicked.
+        """
+        btn = self.config_brf.btn_seldata
+        btn.setAutoRaise(not btn.autoRaise())
+        if btn.autoRaise() is False:
             self.brfperiod = [None, None]
             self.plot_BRFperiod()
 
-            self.btn_pan.setAutoRaise(True)
-            if self.toolbar._active == "PAN":
-                self.toolbar.pan()
-
-            self.btn_editPeak.setAutoRaise(True)
+            self.btn_addpeak.setAutoRaise(True)
             self.btn_delPeak.setAutoRaise(True)
-        else:
-            self.btn_selBRF.setAutoRaise(True)
 
-    # =========================================================================
+    # ---- Peaks handlers
 
     def plot_peak(self):
         if len(self.peak_memory) == 1:
@@ -798,41 +760,32 @@ class WLCalc(myqt.DialogWindow):
 
         self.plot_peak()
 
-    def add_peak(self):
-        # slot connected when the button to add new peaks is clicked.
-        if self.isGraphExists is False:
-            print('Graph is empty')
-            self.emit_warning(
-              'Please select a valid Water Level Data File first.')
-            return
+    def btn_addpeak_isclicked(self):
+        """Handles when the button add_peak is clicked."""
+        self.btn_addpeak.setAutoRaise(not self.btn_addpeak.autoRaise())
+        self.btn_delPeak.setAutoRaise(True)
+        self.config_brf.btn_seldata.setAutoRaise(True)
+        self.brfperiod = [None, None]
+        self.__brfcount = 0
 
-        if self.btn_editPeak.autoRaise():
-            # Activate <add_peak>
-            self.btn_editPeak.setAutoRaise(False)
+        if not self.btn_addpeak.autoRaise():
             QApplication.setOverrideCursor(Qt.PointingHandCursor)
-
-            # Deactivate <delete_peak>
-            self.btn_delPeak.setAutoRaise(True)
         else:
-            # Deactivate <add_peak>
-            self.btn_editPeak.setAutoRaise(True)
             QApplication.restoreOverrideCursor()
-
-        # Draw to save background :
         self.draw()
 
-    def delete_peak(self):
-        if self.btn_delPeak.autoRaise():
-            # Activate <delete_peak>
-            self.btn_delPeak.setAutoRaise(False)
+    def btn_delPeak_isclicked(self):
+        """Handles when the button btn_delPeak is clicked."""
+        self.btn_delPeak.setAutoRaise(not self.btn_delPeak.autoRaise())
+        self.btn_addpeak.setAutoRaise(True)
+        self.config_brf.btn_seldata.setAutoRaise(True)
+        self.brfperiod = [None, None]
+        self.__brfcount = 0
 
-            # Deactivate <add_peak>
-            self.btn_editPeak.setAutoRaise(True)
+        if not self.btn_delPeak.autoRaise():
+            QApplication.setOverrideCursor(Qt.PointingHandCursor)
         else:
-            # Deactivate <delete_peak>
-            self.btn_delPeak.setAutoRaise(True)
-
-        # Draw to save background :
+            QApplication.restoreOverrideCursor()
         self.draw()
 
     def clear_all_peaks(self):
@@ -1152,8 +1105,6 @@ class WLCalc(myqt.DialogWindow):
             self.h1_ax0.set_marker('None')
         self.draw()
 
-    # ======================================================== Mouse Event ====
-
     def draw(self):
         self.vguide.set_visible(False)
         self.xcoord.set_visible(False)
@@ -1162,12 +1113,20 @@ class WLCalc(myqt.DialogWindow):
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
-    # -------------------------------------------------------------------------
+    # ----- Handlers: Mouse events
+
+    def is_all_btn_raised(self):
+        """
+        Returns whether all of the tool buttons that can block the panning and
+        zooming of the graph are raised.
+        """
+        return(self.btn_delPeak.autoRaise() and
+               self.btn_addpeak.autoRaise() and
+               self.config_brf.btn_seldata.autoRaise())
 
     def on_fig_leave(self, event):
+        """Handles when the mouse cursor leaves the graph."""
         self.draw()
-
-    # -------------------------------------------------------------------------
 
     def mouse_vguide(self, event):
         if self.isGraphExists is False:
@@ -1175,7 +1134,6 @@ class WLCalc(myqt.DialogWindow):
 
         # if not self.btn_pan.autoRaise():
         #    return
-
         if self.toolbar._active == "PAN":
             return
 
@@ -1246,34 +1204,31 @@ class WLCalc(myqt.DialogWindow):
 
         self.fig.canvas.blit()
 
-    # -------------------------------------------------------------------------
-
     def onrelease(self, event):
-        if self.btn_delPeak.autoRaise() and self.btn_editPeak.autoRaise():
+        """
+        Handles when a button of the mouse is released after the graph has
+        been clicked.
+        """
+        if self.is_all_btn_raised():
             if self.toolbar._active == 'PAN':
                 self.toolbar.pan()
                 self.draw()
                 QApplication.restoreOverrideCursor()
-                self.mouse_vguide(event)
-            return
+        else:
+            if event.button != 1:
+                return
 
-        if event.button != 1:
-            return
-
-        self.__addPeakVisible = True
-        self.plot_peak()
-
-    # -------------------------------------------------------------------------
+            self.__addPeakVisible = True
+            self.plot_peak()
+        self.mouse_vguide(event)
 
     def onclick(self, event):
+        """Handles when the graph is clicked with the mouse."""
         x, y = event.x, event.y
         if x is None or y is None:
             return
 
         ax0 = self.fig.axes[0]
-
-        # www.github.com/eliben/code-for-blog/blob/master/2009/qt_mpl_bars.py
-
         if not self.btn_delPeak.autoRaise():
             if len(self.peak_indx) == 0:
                 return
@@ -1305,7 +1260,7 @@ class WLCalc(myqt.DialogWindow):
                 self.xcross.set_visible(False)
                 self.plot_peak()
 
-        elif not self.btn_editPeak.autoRaise():
+        elif not self.btn_addpeak.autoRaise():
             xclic = event.xdata
             if xclic is None:
                 return
@@ -1332,6 +1287,27 @@ class WLCalc(myqt.DialogWindow):
 
             self.__addPeakVisible = False
             self.draw()
+        elif not self.config_brf.btn_seldata.autoRaise():
+            # Select the BRF period.
+            xclic = event.xdata
+            if xclic is None:
+                return
+            x = self.time + self.dt4xls2mpl*self.dformat
+            y = self.water_lvl
+
+            d = np.abs(xclic - x)
+            indx = np.argmin(d)
+            self.brfperiod[self.__brfcount] = self.time[indx]
+            if self.__brfcount == 0:
+                self.__brfcount += 1
+                self.plot_BRFperiod()
+            elif self.__brfcount == 1:
+                self.__brfcount = 0
+                self.select_BRF()
+                self.plot_BRFperiod()
+                self.config_brf.set_datarange(self.brfperiod)
+            else:
+                raise ValueError('Something is wrong in the code')
         else:
             if self.toolbar._active is None:
                 self.toolbar.pan()
@@ -1339,38 +1315,6 @@ class WLCalc(myqt.DialogWindow):
                 QApplication.setOverrideCursor(Qt.SizeAllCursor)
                 self.toolbar.press_pan(event)
 
-            # ------- Select BRF period ----
-
-#        elif not self.btn_selBRF.autoRaise():
-#            xclic = event.xdata
-#            if xclic is None:
-#                return
-#            x = self.time + self.dt4xls2mpl * self.dformat
-#            y = self.water_lvl
-#
-#            d = np.abs(xclic - x)
-#            indx = np.argmin(d)
-#            if len(self.peak_indx) > 0:
-#                if indx in self.peak_indx:
-#                    print('There is already a peak at this time.')
-#                    return
-#
-#                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 3:
-#                    print('There is a peak at less than 3 days.')
-#                    return
-#
-#            self.brfperiod[self.__brfcount] = self.time[indx]
-#            if self.__brfcount == 0:
-#                self.__brfcount += 1
-#                self.plot_BRFperiod()
-#            elif self.__brfcount == 1:
-#                self.__brfcount = 0
-#                self.select_BRF()
-#                self.plot_BRFperiod()
-#            else:
-#                raise ValueError('Something is wrong in the code')
-#
-#            print(self.brfperiod)
 
 # =============================================================================
 
@@ -1978,329 +1922,11 @@ def mrc2rechg(t, ho, A, B, z, Sy):
     return RECHG
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-class SynthHydroWidg(QWidget):
-
-    newHydroParaSent = QSignal(dict)
-
-    def __init__(self, parent=None):
-        super(SynthHydroWidg, self).__init__(parent)
-
-        self.__initUI__()
-
-    def __initUI__(self):
-
-        class HSep(QFrame):  # horizontal separators for the toolbar
-            def __init__(self, parent=None):
-                super(HSep, self).__init__(parent)
-                self.setFrameStyle(db.styleUI().HLine)
-
-        class MyQDSpin(QDoubleSpinBox):
-            def __init__(self, step, min, max, dec, val,
-                         suffix=None, parent=None):
-                super(MyQDSpin, self).__init__(parent)
-
-                self.setSingleStep(step)
-                self.setMinimum(min)
-                self.setMaximum(max)
-                self.setDecimals(dec)
-                self.setValue(val)
-                self.setAlignment(Qt.AlignCenter)
-                if suffix:
-                    self.setSuffix(' %s' % suffix)
-                if parent:
-                    self.valueChanged.connect(parent.param_changed)
-
-        self.QSy = MyQDSpin(0.001, 0.005, 0.95, 3, 0.2, parent=self)
-        self.QRAS = MyQDSpin(1, 0, 1000, 0, 100, 'mm', parent=self)
-        self.CRO = MyQDSpin(0.001, 0, 1, 3, 0.3, parent=self)
-
-        self.Tcrit = MyQDSpin(0.1, -25, 25, 1, 0, '°C', parent=self)
-        self.Tmelt = MyQDSpin(0.1, -25, 25, 1, 0, '°C', parent=self)
-        self.CM = MyQDSpin(0.1, 0, 100, 1, 2.7, 'mm/°C', parent=self)
-
-        main_grid = QGridLayout()
-
-        items = [QLabel('Sy:'), self.QSy,
-                 QLabel('Rasmax:'), self.QRAS,
-                 QLabel('Cro:'), self.CRO,
-                 QLabel('Tcrit:'), self.Tcrit,
-                 QLabel('Tmelt:'), self.Tmelt,
-                 QLabel('CM:'), self.CM]
-
-        for col, item in enumerate(items):
-            main_grid.addWidget(item, 1, col)
-#        main_grid.addWidget(HSep(), 0, 0, 1, col+1)
-
-        main_grid.setColumnStretch(col+1, 100)
-        main_grid.setContentsMargins(0, 0, 0, 0)
-
-        self.setLayout(main_grid)
-
-    # =========================================================================
-
-    def get_parameters(self):
-        parameters = {'Sy': self.QSy.value(),
-                      'RASmax': self.QRAS.value(),
-                      'Cro': self.CRO.value()}
-
-        return parameters
-
-    def param_changed(self):
-        self.newHydroParaSent.emit(self.get_parameters())
-
-    # =========================================================================
-
-    def toggleOnOff(self):
-        if self.isVisible():
-            self.hide()
-        else:
-            self.show()
-            self.newHydroParaSent.emit(self.get_parameters())
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-class RechgSetupWin(myqt.DialogWindow):
-    def __init__(self, parent):
-        super(RechgSetupWin, self).__init__(parent)
-
-        self.wxdset = None
-        self.wldset = None
-
-        self.setWindowTitle('Recharge Calibration Setup')
-        self.setWindowFlags(Qt.Window)
-
-        self.__initUI__()
-
-    def __initUI__(self):
-
-        class QRowLayout(QWidget):
-            def __init__(self, items, parent=None):
-                super(QRowLayout, self).__init__(parent)
-
-                layout = QGridLayout()
-                for col, item in enumerate(items):
-                    layout.addWidget(item, 0, col)
-                layout.setContentsMargins(0, 0, 0, 0)
-                layout.setColumnStretch(0, 100)
-                self.setLayout(layout)
-
-        # ---------------------------------------------------------- Toolbar --
-
-        toolbar_widget = QWidget()
-
-        btn_calib = QPushButton('Compute Recharge')
-        btn_calib.clicked.connect(self.btn_calibrate_isClicked)
-
-        toolbar_layout = QGridLayout()
-        toolbar_layout.addWidget(btn_calib, 0, 0)
-        toolbar_layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
-
-        toolbar_widget.setLayout(toolbar_layout)
-
-        # ------------------------------------------------------- Parameters --
-
-        # Specific yield (Sy) :
-
-        self.QSy_min = myqt.QDoubleSpinBox(0.2, 3)
-        self.QSy_min.setRange(0.001, 1)
-
-        self.QSy_max = myqt.QDoubleSpinBox(0.3, 3)
-        self.QSy_max.setRange(0.001, 1)
-
-        # Maximum readily available water (RASmax) :
-
-        # units=' mm'
-
-        self.QRAS_min = myqt.QDoubleSpinBox(40)
-        self.QRAS_min.setRange(0, 999)
-
-        self.QRAS_max = myqt.QDoubleSpinBox(120)
-        self.QRAS_max.setRange(0, 999)
-        self.QRAS_max.setValue(120)
-
-        # Runoff coefficient (Cro) :
-
-        self.CRO_min = myqt.QDoubleSpinBox(0.2, 3)
-        self.CRO_min.setRange(0, 1)
-
-        self.CRO_max = myqt.QDoubleSpinBox(0.4, 3)
-        self.CRO_max.setRange(0, 1)
-
-        # Snowmelt parameters :
-
-        # units=' °C'
-
-        self._Tcrit = myqt.QDoubleSpinBox(0, 1, )
-        self._Tcrit.setRange(-25, 25)
-
-        self._Tmelt = myqt.QDoubleSpinBox(0, 1)
-        self._Tmelt.setRange(-25, 25)
-
-        # units=' mm/°C'
-
-        self._CM = myqt.QDoubleSpinBox(4, 1, 0.1, )
-        self._CM.setRange(0.1, 100)
-
-        # units=' days'
-
-        self._deltaT = myqt.QDoubleSpinBox(0, 0, )
-        self._deltaT.setRange(0, 999)
-
-        class QLabelCentered(QLabel):
-            def __init__(self, text):
-                super(QLabelCentered, self).__init__(text)
-                self.setAlignment(Qt.AlignCenter)
-
-        # ---- Parameters ----
-
-        params_group = myqt.QFrameLayout()
-        params_group.setContentsMargins(10, 5, 10, 0)  # (L, T, R, B)
-        params_group.setObjectName("viewport")
-        params_group.setStyleSheet("#viewport {background-color:transparent;}")
-
-        row = 0
-        params_group.addWidget(QLabel('Sy :'), row, 0)
-        params_group.addWidget(self.QSy_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.QSy_max, row, 3)
-        row += 1
-        params_group.addWidget(QLabel('RAS<sub>max</sub> :'), row, 0)
-        params_group.addWidget(self.QRAS_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.QRAS_max, row, 3)
-        params_group.addWidget(QLabel('mm'), row, 4)
-        row += 1
-        params_group.addWidget(QLabel('Cro :'), row, 0)
-        params_group.addWidget(self.CRO_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.CRO_max, row, 3)
-        row += 1
-        params_group.setRowMinimumHeight(row, 10)
-        row += 1
-        params_group.addWidget(QLabel('Tcrit :'), row, 0)
-        params_group.addWidget(self._Tcrit, row, 1)
-        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
-        row += 1
-        params_group.addWidget(QLabel('Tmelt :'), row, 0)
-        params_group.addWidget(self._Tmelt, row, 1)
-        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
-        row += 1
-        params_group.addWidget(QLabel('CM :'), row, 0)
-        params_group.addWidget(self._CM, row, 1)
-        params_group.addWidget(QLabel('mm/°C'), row, 2, 1, 3)
-        row += 1
-        params_group.addWidget(QLabel('deltaT :'), row, 0)
-        params_group.addWidget(self._deltaT, row, 1)
-        params_group.addWidget(QLabel('days'), row, 2, 1, 3)
-        row += 1
-        params_group.setRowStretch(row, 100)
-        params_group.setColumnStretch(5, 100)
-
-        # ---- Layout ----
-
-        qtitle = QLabel('Parameter Range')
-        qtitle.setAlignment(Qt.AlignCenter)
-
-        sa = QScrollArea()
-        sa.setWidget(params_group)
-        sa.setWidgetResizable(True)
-        sa.setFrameStyle(0)
-        sa.setStyleSheet("QScrollArea {background-color:transparent;}")
-        sa.setSizePolicy(QSizePolicy(QSizePolicy.Ignored,
-                                     QSizePolicy.Preferred))
-
-        main_layout = QGridLayout(self)
-        main_layout.setContentsMargins(0, 0, 0, 10)   # (L, T, R, B)
-
-        main_layout.addWidget(qtitle, 0, 0)
-        main_layout.addWidget(myqt.HSep(), 1, 0)
-        main_layout.addWidget(sa, 2, 0)
-        main_layout.addWidget(myqt.HSep(), 3, 0)
-        main_layout.setRowMinimumHeight(4, 5)
-        main_layout.addWidget(toolbar_widget, 5, 0)
-
-        main_layout.setRowStretch(2, 100)
-        main_layout.setVerticalSpacing(5)
-
-    # =========================================================================
-
-    def get_Range(self, name):
-        if name == 'Sy':
-            return [self.QSy_min.value(), self.QSy_max.value()]
-        elif name == 'RASmax':
-            return [self.QRAS_min.value(), self.QRAS_max.value()]
-        elif name == 'Cro':
-            return [self.CRO_min.value(), self.CRO_max.value()]
-        else:
-            raise ValueError('Name must be either Sy, Rasmax or Cro.')
-
-    @property
-    def Tmelt(self):
-        return self._Tmelt.value()
-
-    @property
-    def Tcrit(self):
-        return self._Tcrit.value()
-
-    @property
-    def CM(self):
-        return self._CM.value()
-
-    @property
-    def deltaT(self):
-        return self._deltaT.value()
-
-    # =========================================================================
-
-    def closeEvent(self, event):
-        super(RechgSetupWin, self).closeEvent(event)
-        print('Closing Window')
-
-    def btn_calibrate_isClicked(self):
-        print('Calibration started')
-
-        plt.close('all')
-
-        sh = SynthHydrograph()
-
-        # ---- Parameter ranges ----
-
-        Sy = self.get_Range('Sy')
-        RASmax = self.get_Range('RASmax')
-        Cro = self.get_Range('Cro')
-
-        sh.TMELT = self.Tmelt
-        sh.CM = self.CM
-        sh.deltat = self.deltaT
-
-        print(self.wldset['mrc/params'])
-
-        # ---- Calculations ----
-
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        sh.load_data(self.wxdset, self.wldset)
-        sh.GLUE(Sy, RASmax, Cro, res='rough')
-
-        QApplication.restoreOverrideCursor()
-
-        sh.calc_recharge()
-        sh.initPlot()
-        sh.plot_prediction()
-        plot_rechg_GLUE('English')
-
-        plt.show()
-
-
 if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
+
     app = QApplication(sys.argv)
 
     ft = app.font()
@@ -2373,6 +1999,6 @@ if __name__ == '__main__':
 #
 #    # Calcul recharge :
 #
-##    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
+#    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
 #
 #    sys.exit(app.exec_())

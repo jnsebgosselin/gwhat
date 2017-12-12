@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 from __future__ import division, unicode_literals
 
@@ -46,7 +33,8 @@ import gwhat.mplFigViewer3 as mplFigViewer
 from gwhat.meteo.weather_viewer import WeatherAvgGraph
 from gwhat.colors2 import ColorsReader, ColorsSetupWin
 
-from gwhat.common import IconDB, QToolButtonNormal, QToolButtonSmall
+from gwhat.common import QToolButtonNormal, QToolButtonSmall
+from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
 
@@ -89,47 +77,47 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # ---------------------------------------------------------- Toolbar --
 
-        btn_save = QToolButtonNormal(IconDB().save)
+        btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save the well hydrograph')
 
         # btn_draw is usefull for debugging purposes
-        btn_draw = QToolButtonNormal(IconDB().refresh)
+        btn_draw = QToolButtonNormal(icons.get_icon('refresh'))
         btn_draw.setToolTip('Force a refresh of the well hydrograph')
         btn_draw.hide()
 
-        btn_loadConfig = QToolButtonNormal(IconDB().load_graph_config)
+        btn_loadConfig = QToolButtonNormal(icons.get_icon('load_graph_config'))
         btn_loadConfig.setToolTip('<p>Load graph layout for the current'
                                   ' Water Level Data File if it exists</p>')
 
-        btn_saveConfig = QToolButtonNormal(IconDB().save_graph_config)
+        btn_saveConfig = QToolButtonNormal(icons.get_icon('save_graph_config'))
         btn_saveConfig.setToolTip('Save current graph layout')
 
-        btn_bestfit_waterlvl = QToolButtonNormal(IconDB().fit_y)
+        btn_bestfit_waterlvl = QToolButtonNormal(icons.get_icon('fit_y'))
         btn_bestfit_waterlvl.setToolTip('Best fit the water level scale')
 
-        btn_bestfit_time = QToolButtonNormal(IconDB().fit_x)
+        btn_bestfit_time = QToolButtonNormal(icons.get_icon('fit_x'))
         btn_bestfit_time.setToolTip('Best fit the time scale')
 
-        btn_weather_normals = QToolButtonNormal(IconDB().meteo)
+        btn_weather_normals = QToolButtonNormal(icons.get_icon('meteo'))
         btn_weather_normals.setToolTip(
                 'Show current weather dataset normals...')
 
-        btn_page_setup = QToolButtonNormal(IconDB().page_setup)
+        btn_page_setup = QToolButtonNormal(icons.get_icon('page_setup'))
         btn_page_setup.setToolTip('Show the page setup window')
         btn_page_setup.clicked.connect(self.page_setup_win.show)
 
-        btn_color_pick = QToolButtonNormal(IconDB().color_picker)
+        btn_color_pick = QToolButtonNormal(icons.get_icon('color_picker'))
         btn_color_pick.setToolTip('<p>Show a window to setup the color palette'
                                   ' used to draw the hydrograph</p.')
         btn_color_pick.clicked.connect(self.color_palette_win.show)
 
         # ---- Zoom Panel ----
 
-        btn_zoom_out = QToolButtonSmall(IconDB().zoom_out)
+        btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
         btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
         btn_zoom_out.clicked.connect(self.zoom_out)
 
-        btn_zoom_in = QToolButtonSmall(IconDB().zoom_in)
+        btn_zoom_in = QToolButtonSmall(icons.get_icon('zoom_in'))
         btn_zoom_out.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
         btn_zoom_in.clicked.connect(self.zoom_in)
 
@@ -240,7 +228,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.msgBox.setStandardButtons(QMessageBox.Yes | QMessageBox.No)
         self.msgBox.setDefaultButton(QMessageBox.Cancel)
         self.msgBox.setWindowTitle('Save Graph Layout')
-        self.msgBox.setWindowIcon(IconDB().master)
+        self.msgBox.setWindowIcon(icons.get_icon('master'))
 
         # --------------------------------------------------------- EVENTS ----
 
@@ -919,7 +907,7 @@ class PageSetupWin(QWidget):
         super(PageSetupWin, self).__init__(parent)
 
         self.setWindowTitle('Page and Figure Setup')
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
         self.setWindowFlags(Qt.Window |
                             Qt.CustomizeWindowHint |
                             Qt.WindowCloseButtonHint)

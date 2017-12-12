@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright © 2014-2017 GWHAT Project contributors
+# Copyright © 2014-2017 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
@@ -23,7 +23,8 @@ from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
 
 # ---- Local imports
 
-from gwhat.common import IconDB, QToolButtonSmall
+from gwhat.common import QToolButtonSmall
+from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
 import gwhat.projet.reader_waterlvl as wlrd
@@ -38,7 +39,7 @@ class DataManager(QWidget):
     def __init__(self, parent=None, projet=None, pm=None):
         super(DataManager, self).__init__(parent)
         self.setWindowFlags(Qt.Window)
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumWidth(250)
 
         self.new_waterlvl_win = NewWaterLvl(parent, projet)
@@ -62,11 +63,11 @@ class DataManager(QWidget):
         self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
-        self.btn_load_wl = QToolButtonSmall(IconDB().importFile)
+        self.btn_load_wl = QToolButtonSmall(icons.get_icon('importFile'))
         self.btn_load_wl.setToolTip('Import a new WL dataset...')
         self.btn_load_wl.clicked.connect(self.import_wldataset)
 
-        self.btn_del_wldset = QToolButtonSmall(IconDB().clear)
+        self.btn_del_wldset = QToolButtonSmall(icons.get_icon('clear'))
         self.btn_del_wldset.setToolTip('Delete current dataset.')
         self.btn_del_wldset.clicked.connect(self.del_current_wldset)
 
@@ -91,17 +92,17 @@ class DataManager(QWidget):
         self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
         self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
 
-        self.btn_load_meteo = QToolButtonSmall(IconDB().importFile)
+        self.btn_load_meteo = QToolButtonSmall(icons.get_icon('importFile'))
         self.btn_load_meteo.setToolTip('Import a new weather dataset...')
         self.btn_load_meteo.clicked.connect(self.import_wxdataset)
 
         # btn_weather_dir.clicked.connect(self.select_meteo_file)
 
-        self.btn_del_wxdset = QToolButtonSmall(IconDB().clear)
+        self.btn_del_wxdset = QToolButtonSmall(icons.get_icon('clear'))
         self.btn_del_wxdset.setToolTip('Delete current dataset.')
         self.btn_del_wxdset.clicked.connect(self.del_current_wxdset)
 
-        btn_closest_meteo = QToolButtonSmall(IconDB().closest_meteo)
+        btn_closest_meteo = QToolButtonSmall(icons.get_icon('closest_meteo'))
         btn_closest_meteo.setToolTip('<p>Select the weather station closest'
                                      ' from the observation well.</p>')
         btn_closest_meteo.clicked.connect(self.set_closest_wxdset)
@@ -411,7 +412,7 @@ class NewDataset(myqt.DialogWindow):
         self.directory.setReadOnly(True)
         self.directory.setMinimumWidth(400)
 
-        btn_browse = QToolButtonSmall(IconDB().openFile)
+        btn_browse = QToolButtonSmall(icons.get_icon('openFile'))
         btn_browse.setToolTip('Open file...')
         btn_browse.clicked.connect(self.select_dataset)
 

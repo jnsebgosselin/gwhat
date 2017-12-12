@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>.
-"""
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 from __future__ import division, unicode_literals
 
@@ -52,9 +39,11 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 # ---- Local imports
 
 from gwhat.meteo.gapfill_weather_algorithm2 import GapFillWeather
+from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
 from gwhat.meteo.merge_weather_data import WXDataMergerWidget
 from gwhat.meteo.weather_reader import add_PET_to_weather_datafile
-from gwhat.common import IconDB, StyleDB, QToolButtonSmall
+from gwhat.common import StyleDB, QToolButtonSmall
+from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import delete_file
 
@@ -83,19 +72,19 @@ class GapFillWeatherGUI(QWidget):
         self.__initUI__()
 
     def __initUI__(self):
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         # ---- Toolbar at the bottom
 
         self.btn_fill = QPushButton('Fill Station')
-        self.btn_fill.setIcon(IconDB().fill_data)
-        self.btn_fill.setIconSize(IconDB().iconSize2)
+        self.btn_fill.setIcon(icons.get_icon('fill_data'))
+        self.btn_fill.setIconSize(icons.get_iconsize('iconSize2'))
         self.btn_fill.setToolTip('<p>Fill the gaps in the daily weather data '
                                  ' for the selected weather station.</p>')
 
         self.btn_fill_all = QPushButton('Fill All Stations')
-        self.btn_fill_all.setIconSize(IconDB().iconSize2)
-        self.btn_fill_all.setIcon(IconDB().fill_all_data)
+        self.btn_fill_all.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_fill_all.setIcon(icons.get_icon('fill_all_data'))
         self.btn_fill_all.setToolTip('<p>Fill the gaps in the daily weather '
                                      ' data for all the weather stations' +
                                      ' displayed in the list.</p>')
@@ -126,17 +115,17 @@ class GapFillWeatherGUI(QWidget):
         self.target_station_info.setReadOnly(True)
         self.target_station_info.setMaximumHeight(110)
 
-        self.btn_refresh_staList = QToolButtonSmall(IconDB().refresh)
+        self.btn_refresh_staList = QToolButtonSmall(icons.get_icon('refresh'))
         self.btn_refresh_staList.setToolTip(
             'Force the reloading of the weather data files')
         self.btn_refresh_staList.clicked.connect(self.btn_refresh_isclicked)
 
-        btn_merge_data = QToolButtonSmall(IconDB().merge_data)
+        btn_merge_data = QToolButtonSmall(icons.get_icon('merge_data'))
         btn_merge_data.setToolTip(
                 'Tool for merging two ore more datasets together.')
         btn_merge_data.clicked.connect(self.wxdata_merger.show)
 
-        self.btn_delete_data = QToolButtonSmall(IconDB().clear)
+        self.btn_delete_data = QToolButtonSmall(icons.get_icon('clear'))
         self.btn_delete_data.setEnabled(False)
         self.btn_delete_data.setToolTip(
                 'Remove the currently selected dataset and delete the input '
@@ -295,29 +284,48 @@ class GapFillWeatherGUI(QWidget):
                     'with the Thornthwaite (1948) method, to '
                     'the output weather data file.</p>')
 
-            self.btn_add_PET = QToolButtonSmall(IconDB().openFile)
+            self.btn_add_PET = QToolButtonSmall(icons.get_icon('openFile'))
             self.btn_add_PET.setToolTip(
                     '<p>Add daily potential evapotranspiration, calculated '
                     'with the Thornthwaite (1948) method, to '
                     'an existing weather data file.</p>')
             self.btn_add_PET.clicked.connect(self.btn_add_PET_isClicked)
 
+            pet_rowlayout = QGridLayout()
+            pet_rowlayout.addWidget(self.add_PET_ckckbox, 0, 0)
+            pet_rowlayout.addWidget(self.btn_add_PET, 0, 2)
+            pet_rowlayout.setContentsMargins(0, 0, 0, 0)
+            pet_rowlayout.setColumnStretch(1, 100)
+
+            # Figure format and language.
+
+            self.fig_format = QComboBox()
+            self.fig_format.addItems(PostProcessErr.SUPPORTED_FIG_FORMATS)
+
+            self.fig_language = QComboBox()
+            self.fig_language.addItems(PostProcessErr.SUPPORTED_LANGUAGES)
+
+            fig_opt_layout = QGridLayout()
+            fig_opt_layout.addWidget(QLabel("Figure output format : "), 0, 0)
+            fig_opt_layout.addWidget(self.fig_format, 0, 2)
+            fig_opt_layout.addWidget(QLabel("Figure labels language : "), 1, 0)
+            fig_opt_layout.addWidget(self.fig_language, 1, 2)
+
+            fig_opt_layout.setContentsMargins(0, 0, 0, 0)
+            fig_opt_layout.setColumnStretch(1, 100)
+
             # ---- Row Layout Assembly ----
 
             container = QFrame()
-            grid = QGridLayout()
+            grid = QGridLayout(container)
 
-            row = 0
-            grid.addWidget(self.full_error_analysis, row, 0)
-            row += 1
-            grid.addWidget(self.add_PET_ckckbox, row, 0)
-            grid.addWidget(self.btn_add_PET, row, 2)
+            grid.addWidget(self.full_error_analysis, 0, 0)
+            grid.addLayout(pet_rowlayout, 1, 0)
+            grid.addLayout(fig_opt_layout, 2, 0)
 
             grid.setSpacing(5)
             grid.setContentsMargins(10, 0, 10, 0)  # [L, T, R, B]
-            grid.setRowStretch(row+1, 100)
-            grid.setColumnStretch(1, 100)
-            container.setLayout(grid)
+            grid.setRowStretch(grid.rowCount(), 100)
 
             return container
 
@@ -328,7 +336,8 @@ class GapFillWeatherGUI(QWidget):
         advanced_widg = advanced_settings(self)
 
         self.stack_widget = myqt.QToolPanel()
-        self.stack_widget.setIcons(IconDB().triright, IconDB().tridown)
+        self.stack_widget.setIcons(icons.get_icon('triright'),
+                                   icons.get_icon('tridown'))
         self.stack_widget.addItem(cutoff_widg, 'Stations Selection Criteria :')
         self.stack_widget.addItem(MLRM_widg, 'Regression Model :')
         self.stack_widget.addItem(advanced_widg, 'Advanced Settings :')
@@ -598,10 +607,10 @@ class GapFillWeatherGUI(QWidget):
 
     def restoreUI(self):  # ===================================================
 
-        self.btn_fill.setIcon(IconDB().fill_data)
+        self.btn_fill.setIcon(icons.get_icon('fill_data'))
         self.btn_fill.setEnabled(True)
 
-        self.btn_fill_all.setIcon(IconDB().fill_all_data)
+        self.btn_fill_all.setIcon(icons.get_icon('fill_all_data'))
         self.btn_fill_all.setEnabled(True)
 
         self.tarSta_widg.setEnabled(True)
@@ -686,7 +695,7 @@ class GapFillWeatherGUI(QWidget):
 
         # -- Disable UI and continue the process normally --
 
-        button.setIcon(IconDB().stop)
+        button.setIcon(icons.get_icon('stop'))
         self.fillDates_widg.setEnabled(False)
         self.tarSta_widg.setEnabled(False)
         self.stack_widget.setEnabled(False)
@@ -756,7 +765,10 @@ class GapFillWeatherGUI(QWidget):
 
         # -- Pass information to the worker --
 
-        self.gapfill_worker.outputDir = self.workdir + '/Meteo/Output'
+        self.gapfill_worker.outputDir = os.path.join(
+                self.workdir, "Meteo", "Output")
+        self.gapfill_worker.fig_format = self.fig_format.currentText()
+        self.gapfill_worker.fig_language = self.fig_language.currentText()
 
         time_start = self.get_time_from_qdatedit(self.date_start_widget)
         time_end = self.get_time_from_qdatedit(self.date_end_widget)
@@ -1551,7 +1563,9 @@ class MyHorizHeader(QHeaderView):
         return baseSize
 
 
-if __name__ == '__main__':                                   # pragma: no cover
+# ---- if __name__ == '__main__'
+
+if __name__ == '__main__':
 
     import platform
     import sys

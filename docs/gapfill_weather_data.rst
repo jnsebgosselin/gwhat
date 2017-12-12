@@ -244,6 +244,12 @@ The results from this analysis can be used afterward to estimate the
 accuracy of the method.
 This option is discussed in more details in :numref:`sec_gapfill_weather_uncertainty_assessment`.
 
+Finally, the format (pdf or svg) and the language (English or French) of the
+figures that are automatically produced by GWHAT after a dataset has been
+sucessfully gapfilled (see :numref:`fig_weather_avg_example` and
+:numref:`fig_mlr_model_img_samples`) can be selected from the
+:guilabel:`Figure output format` and :guilabel:`Figure labels language` menus.
+
 .. _fig_gapfill_advanced_setting:
 .. figure:: img/scs/gapfill_advanced_setting.*
     :align: center

@@ -1,23 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Copyright 2014-2017 Jean-Sebastien Gosselin
-email: jean-sebastien.gosselin@ete.inrs.ca
 
-This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
-
-GWHAT is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see <http://www.gnu.org/licenses/>
-"""
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 from __future__ import division, unicode_literals
 
@@ -37,7 +24,8 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
 # ---- Local imports
 
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.common import IconDB, QToolButtonSmall
+from gwhat.common import QToolButtonSmall
+from gwhat.common import icons
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
@@ -68,7 +56,7 @@ class ProjetManager(QWidget):
         ft.setPointSize(ft.pointSize()-1)
         self.project_display.setFont(ft)
 
-        new_btn = QToolButtonSmall(IconDB().new_project)
+        new_btn = QToolButtonSmall(icons.get_icon('new_project'))
         new_btn.setToolTip('Create a new project...')
         new_btn.clicked.connect(self.show_newproject_dialog)
 
@@ -142,7 +130,7 @@ class NewProject(QDialog):
         self.setModal(True)
 
         self.setWindowTitle('New Project')
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
 
         self.__initUI__()
 
@@ -233,8 +221,8 @@ class NewProject(QDialog):
 
         btn_browse = QToolButton()
         btn_browse.setAutoRaise(True)
-        btn_browse.setIcon(IconDB().openFolder)
-        btn_browse.setIconSize(IconDB().iconSize2)
+        btn_browse.setIcon(icons.get_icon('openFolder'))
+        btn_browse.setIconSize(icons.get_iconsize('iconSize2'))
         btn_browse.setToolTip('Browse...')
         btn_browse.setFocusPolicy(Qt.NoFocus)
         btn_browse.clicked.connect(self.browse_saveIn_folder)

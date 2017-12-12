@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# Copyright © 2014-2017 Jean-Sebastien Gosselin
-# email: jean-sebastien.gosselin@ete.inrs.ca
+# Copyright © 2014-2017 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
@@ -23,7 +23,8 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
 
 # ---- Local imports
 
-from gwhat.common import IconDB, StyleDB
+from gwhat.common import StyleDB
+from gwhat.common import icons
 from gwhat.meteo.weather_stationlist import WeatherSationView
 from gwhat.meteo.weather_station_finder import (WeatherStationFinder,
                                                 PROV_NAME_ABB)
@@ -126,7 +127,7 @@ class WeatherStationBrowser(QWidget):
 
     def __initUI__(self):
         self.setWindowTitle('Weather Stations Browser')
-        self.setWindowIcon(IconDB().master)
+        self.setWindowIcon(icons.get_icon('master'))
         self.setWindowFlags(Qt.Window)
 
         now = datetime.now()
@@ -273,23 +274,23 @@ class WeatherStationBrowser(QWidget):
         # ---- Toolbar
 
         self.btn_search = QPushButton('Search')
-        self.btn_search.setIcon(IconDB().search)
-        self.btn_search.setIconSize(IconDB().iconSize2)
+        self.btn_search.setIcon(icons.get_icon('search'))
+        self.btn_search.setIconSize(icons.get_iconsize('iconSize2'))
         self.btn_search.setToolTip('Search for weather stations in the online '
                                    'CDCD with the criteria given above.')
         self.btn_search.clicked.connect(self.btn_search_isClicked)
         self.btn_search.hide()
 
         btn_addSta = QPushButton('Add')
-        btn_addSta.setIcon(IconDB().add2list)
-        btn_addSta.setIconSize(IconDB().iconSize2)
+        btn_addSta.setIcon(icons.get_icon('add2list'))
+        btn_addSta.setIconSize(icons.get_iconsize('iconSize2'))
         btn_addSta.setToolTip('Add selected found weather stations to the '
                               'current list of weather stations.')
         btn_addSta.clicked.connect(self.btn_addSta_isClicked)
 
         btn_save = QPushButton('Save')
-        btn_save.setIcon(IconDB().save)
-        btn_save.setIconSize(IconDB().iconSize2)
+        btn_save.setIcon(icons.get_icon('save'))
+        btn_save.setIconSize(icons.get_iconsize('iconSize2'))
         btn_save.setToolTip('Save current found stations info in a csv file.')
         btn_save.clicked.connect(self.btn_save_isClicked)
 
