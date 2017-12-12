@@ -29,7 +29,7 @@ from gwhat.common import icons
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
-from gwhat import __version__
+from gwhat import __appname__
 
 
 class ProjetManager(QWidget):
@@ -148,7 +148,7 @@ class NewProject(QDialog):
         self.name = QLineEdit()
         self.author = QLineEdit()
         self.date = QLabel('%02d/%02d/%d %02d:%02d' % now)
-        self.createdby = QLabel(__version__)
+        self.createdby = QLabel(__appname__)
 
         # ---- Layout ----
 

@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
 
 # ---- Local imports
 
-from gwhat import __version__, __date__, __project_url__
+from gwhat import __version__, __appname__, __date__, __project_url__
 from gwhat.common import icons
 from gwhat import __rootdir__
 
@@ -34,7 +34,7 @@ class AboutWhat(QDialog):
 
         # ----- MAIN WINDOW ----
 
-        self.setWindowTitle('About %s' % __version__)
+        self.setWindowTitle('About %s' % __appname__)
         self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumSize(800, 700)
         self.setWindowFlags(Qt.Window |
@@ -80,7 +80,6 @@ class AboutWhat(QDialog):
         # ---- Image Logo ----
 
         width = 750
-        version = __version__
 
         filename = os.path.join(
                 __rootdir__, 'ressources', 'WHAT_banner_750px.png')
@@ -152,7 +151,7 @@ class AboutWhat(QDialog):
                   </a>
                   <br>
                 </p1>
-                """ % (version[5:].strip(), __date__,
+                """ % (__version__, __date__,
                        __project_url__, __project_url__)
 
         # ---- License
@@ -180,7 +179,7 @@ class AboutWhat(QDialog):
                   </a>.
                 </p>
                 </body>
-                """ % version
+                """ % __appname__
 
         self.AboutTextBox.setHtml(html)
 

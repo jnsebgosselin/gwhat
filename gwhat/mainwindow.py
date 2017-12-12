@@ -39,8 +39,8 @@ if platform.system() == 'Windows':
     ft.setFamily('Segoe UI')
 app.setFont(ft)
 
-from gwhat import __version__
-splash.showMessage("Starting %s." % __version__)
+from gwhat import __appname__
+splash.showMessage("Starting %s." % __appname__)
 
 # ---- Standard library imports
 
@@ -68,7 +68,6 @@ from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
 from gwhat.common import StyleDB, QToolButtonBase
 from gwhat.common import icons
-from gwhat import __version__
 
 freeze_support()
 
@@ -82,7 +81,7 @@ class WHAT(QMainWindow):
     def __init__(self, parent=None):
         super(WHAT, self).__init__(parent)
 
-        self.setWindowTitle(__version__)
+        self.setWindowTitle(__appname__)
         self.setWindowIcon(icons.get_icon('master'))
 
         if platform.system() == 'Windows':
@@ -184,7 +183,7 @@ class WHAT(QMainWindow):
                   ) % (style, size, family)
         self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
 
-        msg = '<font color=black>Thanks for using %s.</font>' % __version__
+        msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
         self.write2console('<font color=black>'
                            'Please report any bug or wishful feature at'
