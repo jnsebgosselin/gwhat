@@ -39,8 +39,8 @@ if platform.system() == 'Windows':
     ft.setFamily('Segoe UI')
 app.setFont(ft)
 
-from gwhat import __appname__
-splash.showMessage("Starting %s." % __appname__)
+from gwhat import __namever__, __appname__
+splash.showMessage("Starting %s." % __namever__)
 
 # ---- Standard library imports
 
@@ -76,7 +76,7 @@ class WHAT(QMainWindow):
     def __init__(self, parent=None):
         super(WHAT, self).__init__(parent)
 
-        self.setWindowTitle(__appname__)
+        self.setWindowTitle(__namever__)
         self.setWindowIcon(icons.get_icon('master'))
 
         if platform.system() == 'Windows':

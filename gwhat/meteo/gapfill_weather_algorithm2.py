@@ -39,7 +39,7 @@ from gwhat.meteo.weather_viewer import FigWeatherNormals
 from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
 import gwhat.meteo.weather_reader as wxrd
 from gwhat.meteo.weather_reader import open_weather_datafile
-from gwhat import __appname__
+from gwhat import __namever__
 
 
 # =============================================================================
@@ -740,7 +740,7 @@ class GapFillWeather(QObject):
                   ['Elevation', target_station_alt],
                   ['Climate Identifier', target_station_clim],
                   [],
-                  ['Created by', __appname__],
+                  ['Created by', __namever__],
                   ['Created on', strftime("%d/%m/%Y")],
                   []]
 

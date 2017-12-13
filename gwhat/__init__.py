@@ -50,10 +50,24 @@ OTHER DEALINGS IN THE SOFTWARE.
 """
 
 import os
+import sys
+
+
 version_info = (0, 2, 1, "dev0")
 __version__ = '.'.join(map(str, version_info))
-__appname__ = 'GWHAT ' + __version__
+__appname__ = 'GWHAT'
+__namever__ = __appname__ + " " + __version__
 __date__ = '11/12/2017'
 __project_url__ = "https://github.com/jnsebgosselin/gwhat"
-__releases_url__ = "https://api.github.com/repos/jnsebgosselin/gwhat/releases"
-__rootdir__ = os.path.dirname(os.path.realpath(__file__))
+__releases_url__ = __project_url__ + "/releases"
+__releases_api__ = "https://api.github.com/repos/jnsebgosselin/gwhat/releases"
+
+
+def is_frozen():
+    return getattr(sys, 'frozen', False)
+
+
+if is_frozen():
+    __rootdir__ = sys._MEIPASS
+else:
+    __rootdir__ = os.path.dirname(os.path.realpath(__file__))

@@ -20,9 +20,9 @@ from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
 
 # ---- Local imports
 
-from gwhat import __version__, __appname__, __date__, __project_url__
+from gwhat import (__version__, __appname__, __date__, __project_url__,
+                   __namever__, __rootdir__)
 from gwhat.common import icons
-from gwhat import __rootdir__
 from gwhat.widgets.updates import ManagerUpdates
 
 
@@ -195,7 +195,7 @@ class AboutWhat(QDialog):
                   </a>.
                 </p>
                 </body>
-                """ % __appname__
+                """ % __namever__
 
         self.AboutTextBox.setHtml(html)
 

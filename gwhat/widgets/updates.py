@@ -39,7 +39,8 @@ from PyQt5.QtWidgets import QDialog, QApplication, QMessageBox
 
 # ---- Imports: local
 
-from gwhat import __version__, __releases_url__, __appname__
+from gwhat import (__version__, __releases_url__, __releases_api__,
+                   __appname__, __namever__)
 from gwhat.common import icons
 
 
@@ -89,14 +90,23 @@ class ManagerUpdates(QMessageBox):
                 url_i = ("https://gwhat.readthedocs.io/en/latest/"
                          "getting_started.html")
                 msg = ("<b>GWHAT %s is available!</b><br><br>"
-                       "Please go to our <a href=\"%s\">Releases</a> "
-                       "page to download this new version.<br><br>"
-                       "If you are not sure how to proceed to update GWHAT, "
-                       "please refer to our "
+                       "This new version can be downloaded from our "
+                       "<a href=\"%s\">Releases</a> page.<br><br>"
+                       "Instructions to update GWHAT are provided on our "
                        "<a href=\"%s\">Installation</a> instructions."
                        ) % (latest_release, __releases_url__, url_i)
             else:
-                msg = ("%s is up to date." % __appname__)
+                url_m = "https://github.com/jnsebgosselin/gwhat/milestones"
+                url_t = "https://github.com/jnsebgosselin/gwhat/issues"
+                msg = ("<b>%s is up to date.</b><br><br>"
+                       "Further information about GWHAT releases are available"
+                       " on our <a href=\"%s\">Releases</a> page.<br><br>"
+                       "The roadmap of the GWHAT project can be consulted"
+                       " on our <a href=\"%s\">Milestones</a> page.<br><br>"
+                       "Please help GWHAT by reporting bugs or proposing new"
+                       " features on our"
+                       " <a href=\"%s\">Issues</a> tracker."
+                       ) % (__namever__, __releases_url__, url_m, url_t)
         self.setText(msg)
         self.setIcon(icn)
 
@@ -131,9 +141,9 @@ class WorkerUpdates(QObject):
             if hasattr(ssl, '_create_unverified_context'):
                 # Fix for Spyder issue #2685.
                 context = ssl._create_unverified_context()
-                page = urlopen(__releases_url__, context=context)
+                page = urlopen(__releases_api__, context=context)
             else:
-                page = urlopen(__releases_url__)
+                page = urlopen(__releases_api__)
             try:
                 data = page.read().decode()
                 data = json.loads(data)

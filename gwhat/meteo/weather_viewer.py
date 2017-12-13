@@ -33,7 +33,7 @@ from gwhat.colors2 import ColorsReader
 from gwhat.common import StyleDB, QToolButtonNormal
 from gwhat.common import icons
 from gwhat.common.widgets import DialogWindow
-from gwhat import __appname__
+from gwhat import __namever__
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -348,7 +348,7 @@ class WeatherAvgGraph(DialogWindow):
                   ['Start Date ', startdate],
                   ['End Date ', enddate],
                   ['', ''],
-                  ['Created by', __appname__],
+                  ['Created by', __namever__],
                   ['Created on', strftime("%d/%m/%Y")],
                   ['', '']
                   ]
