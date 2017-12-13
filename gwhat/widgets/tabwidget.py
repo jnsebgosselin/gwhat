@@ -34,7 +34,7 @@ class TabWidget(QTabWidget):
         self.about_btn = QToolButtonBase(icons.get_icon('info'))
         self.about_btn.setIconSize(QSize(20, 20))
         self.about_btn.setFixedSize(32, 32)
-        self.about_btn.setToolTip('About WHAT...')
+        self.about_btn.setToolTip('About GWHAT...')
         self.about_btn.setParent(self)
         self.about_btn.clicked.connect(self._about_btn_isclicked)
 
@@ -49,7 +49,7 @@ class TabWidget(QTabWidget):
         is clicked.
         """
         if self.about_win is None:
-            self.about_win = AboutWhat(self)
+            self.about_win = AboutWhat(self, self._pytesting)
         if self._pytesting:
             self.about_win.show()
         else:
