@@ -70,14 +70,14 @@ def test_update_manager(tabwidget_bot):
     assert tabwidget.about_win.manager_updates is None
 
     qtbot.mouseClick(tabwidget.about_win.btn_check_updates, Qt.LeftButton)
+    qtbot.waitSignal(tabwidget.about_win.manager_updates.thread_updates.started)
     qtbot.waitSignal(tabwidget.about_win.manager_updates.worker_updates.sig_ready)
+    qtbot.waitSignal(tabwidget.about_win.manager_updates.thread_updates.finished)
     assert tabwidget.about_win.manager_updates
 
     # Close the Updates and About window.
     tabwidget.about_win.manager_updates.close()
     qtbot.mouseClick(tabwidget.about_win.ok_btn, Qt.LeftButton)
-
-    assert not tabwidget.about_win.manager_updates.isVisible()
     assert not tabwidget.about_win.isVisible()
 
 
