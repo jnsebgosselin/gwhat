@@ -175,7 +175,6 @@ def check_update_available(version, releases):
 
     latest_release = releases[0]
     if version.endswith('dev'):
-        print("coucou")
         return (False, latest_release)
     else:
         return (check_version(version, latest_release, '<'),

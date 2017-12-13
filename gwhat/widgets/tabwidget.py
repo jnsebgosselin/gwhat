@@ -34,7 +34,7 @@ class TabWidget(QTabWidget):
         self.about_btn = QToolButtonBase(icons.get_icon('info'))
         self.about_btn.setIconSize(QSize(20, 20))
         self.about_btn.setFixedSize(32, 32)
-        self.about_btn.setToolTip('About WHAT...')
+        self.about_btn.setToolTip('About GWHAT...')
         self.about_btn.setParent(self)
         self.about_btn.clicked.connect(self._about_btn_isclicked)
 
