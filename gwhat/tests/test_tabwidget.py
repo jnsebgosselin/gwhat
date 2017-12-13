@@ -77,6 +77,8 @@ def test_update_manager(tabwidget_bot):
     qtbot.waitSignal(tabwidget.about_win.manager_updates.thread_updates.started)
     qtbot.waitSignal(tabwidget.about_win.manager_updates.worker_updates.sig_ready)
     qtbot.waitSignal(tabwidget.about_win.manager_updates.thread_updates.finished)
+    qtbot.waitUntil(lambda: not tabwidget.about_win.manager_updates.thread_updates.isRunning(),
+                    timeout=10000)
 
 
 def test_tabwidget_index_memory(tabwidget_bot):
