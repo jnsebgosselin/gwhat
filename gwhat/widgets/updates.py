@@ -30,14 +30,81 @@ from distutils.version import LooseVersion
 
 # ---- Imports: third parties
 
-from PyQt5.QtCore import QObject
+from PyQt5.QtCore import QObject, Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtGui import QCursor
+from PyQt5.QtWidgets import QDialog, QApplication, QMessageBox
 
 
 # ---- Imports: local
 
-from gwhat import __version__, __releases_url__
+from gwhat import __version__, __releases_url__, __appname__
+from gwhat.common import icons
+
+
+class ManagerUpdates(QMessageBox):
+    """
+    Self contained manager that checks if updates are available on GitHub
+    and displays the ressults in a message box.
+    """
+
+    def __init__(self, parent=None):
+        super(ManagerUpdates, self).__init__(parent)
+        self._pytesting = False
+
+        self.setWindowTitle('GWHAT updates')
+        self.setWindowIcon(icons.get_icon('master'))
+        self.setMinimumSize(800, 700)
+        self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowCloseButtonHint)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+
+        self.setStandardButtons(QMessageBox.Ok)
+        self.setDefaultButton(QMessageBox.Ok)
+
+        self.thread_updates = QThread()
+        self.worker_updates = WorkerUpdates()
+        self.worker_updates.moveToThread(self.thread_updates)
+        self.thread_updates.started.connect(self.worker_updates.start)
+        self.worker_updates.sig_ready.connect(self._receive_updates_check)
+
+        self.start_updates_check()
+
+    def start_updates_check(self):
+        QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
+        self.thread_updates.start()
+
+    @QSlot()
+    def _receive_updates_check(self):
+        self.thread_updates.quit()
+        latest_release = self.worker_updates.latest_release
+        if self.worker_updates.error is not None:
+            icn = QMessageBox.Warning
+            msg = self.worker_updates.error
+        else:
+            icn = QMessageBox.Information
+            if self.worker_updates.update_available:
+                url_i = ("https://gwhat.readthedocs.io/en/latest/"
+                         "getting_started.html")
+                msg = ("<b>GWHAT %s is available!</b><br><br>"
+                       "Please go to our <a href=\"%s\">Releases</a> "
+                       "page to download this new version.<br><br>"
+                       "If you are not sure how to proceed to update GWHAT, "
+                       "please refer to our "
+                       "<a href=\"%s\">Installation</a> instructions."
+                       ) % (latest_release, __releases_url__, url_i)
+            else:
+                msg = ("%s is up to date." % __appname__)
+        self.setText(msg)
+        self.setIcon(icn)
+
+        QApplication.restoreOverrideCursor()
+        if self._pytesting is False:
+            self.exec_()
+        else:
+            self.show()
 
 
 class WorkerUpdates(QObject):
@@ -47,18 +114,19 @@ class WorkerUpdates(QObject):
     Copyright (c) Spyder Project Contributors
     Licensed under the terms of the MIT License
     """
-    sig_ready = QSignal(bool, str)
+    sig_ready = QSignal()
 
     def __init__(self):
         super(WorkerUpdates, self).__init__()
         self.error = None
         self.latest_release = None
+        self.update_available = False
 
     def start(self):
         """Main method of the WorkerUpdates worker."""
         self.update_available = False
         self.latest_release = __version__
-        error_msg = None
+        self.error = None
         try:
             if hasattr(ssl, '_create_unverified_context'):
                 # Fix for Spyder issue #2685.
@@ -78,20 +146,16 @@ class WorkerUpdates(QObject):
                 result = check_update_available(version, releases)
                 self.update_available, self.latest_release = result
             except Exception:
-                error_msg = ('Unable to retrieve information.')
+                self.error = ('Unable to retrieve information.')
         except HTTPError:
-            error_msg = ('Unable to retrieve information.')
+            self.error = ('Unable to retrieve information.')
         except URLError:
-            error_msg = ('Unable to connect to the internet. <br><br>Make '
-                         'sure the connection is working properly.')
+            self.error = ('Unable to connect to the internet. <br><br>Make '
+                          'sure the connection is working properly.')
         except Exception:
-            error_msg = ('Unable to check for updates.')
+            self.error = ('Unable to check for updates.')
 
-        # Don't show dialog when starting up spyder and an error occur
-        if error_msg is None:
-            print(self.update_available, self.latest_release)
-            self.error = error_msg
-            self.sig_ready.emit(self.update_available, self.latest_release)
+        self.sig_ready.emit()
 
 
 def check_update_available(version, releases):
@@ -180,5 +244,7 @@ def is_stable_version(version):
 
 
 if __name__ == "__main__":
-    updates_worker = WorkerUpdates()
-    updates_worker.start()
+    import sys
+    app = QApplication(sys.argv)
+    updates_worker = ManagerUpdates()
+    sys.exit(app.exec_())
