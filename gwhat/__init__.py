@@ -64,6 +64,12 @@ __releases_api__ = "https://api.github.com/repos/jnsebgosselin/gwhat/releases"
 
 
 def is_frozen():
+    """
+    Return whether the application is running from a frozen exe or if it
+    is running from the Python source files.
+
+    See: https://stackoverflow.com/a/42615559/4481445
+    """
     return getattr(sys, 'frozen', False)
 
 
