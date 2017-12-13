@@ -28,8 +28,9 @@ from gwhat.widgets.updates import ManagerUpdates
 
 class AboutWhat(QDialog):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, pytesting=False):
         super(AboutWhat, self).__init__(parent)
+        self._pytesting = pytesting
         self.setWindowTitle('About %s' % __appname__)
         self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumSize(800, 700)
@@ -89,14 +90,14 @@ class AboutWhat(QDialog):
     @QSlot()
     def _btn_check_updates_isclicked(self):
         """Handles when the button to check for updates is clicked."""
-        self.manager_updates = ManagerUpdates(self)
+        self.manager_updates = ManagerUpdates(self, self._pytesting)
 
     def set_html_in_AboutTextBox(self):
+        """Set the text in the About GWHAT text browser widget."""
 
-        # ---- Image Logo ----
+        # ---- Header logo
 
         width = 750
-
         filename = os.path.join(
                 __rootdir__, 'ressources', 'WHAT_banner_750px.png')
 

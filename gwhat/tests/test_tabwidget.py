@@ -58,6 +58,29 @@ def test_tabwidget_and_about_window(tabwidget_bot):
     assert not tabwidget.about_win.isVisible()
 
 
+def test_update_manager(tabwidget_bot):
+    tabwidget, qtbot = tabwidget_bot
+    tabwidget.show()
+
+    # Show about window.
+    qtbot.mouseClick(tabwidget.about_btn, Qt.LeftButton)
+
+    # Click on the button to check for updates and assert that the manager
+    # is initialized and showed correctly.
+    assert tabwidget.about_win.manager_updates is None
+
+    qtbot.mouseClick(tabwidget.about_win.btn_check_updates, Qt.LeftButton)
+    qtbot.waitSignal(tabwidget.about_win.manager_updates.worker_updates.sig_ready)
+    assert tabwidget.about_win.manager_updates
+
+    # Close the Updates and About window.
+    tabwidget.about_win.manager_updates.close()
+    qtbot.mouseClick(tabwidget.about_win.ok_btn, Qt.LeftButton)
+
+    assert not tabwidget.about_win.manager_updates.isVisible()
+    assert not tabwidget.about_win.isVisible()
+
+
 def test_tabwidget_index_memory(tabwidget_bot):
     tabwidget, qtbot = tabwidget_bot
     tabwidget.show()
@@ -72,6 +95,6 @@ def test_tabwidget_index_memory(tabwidget_bot):
     assert tabbar.previousIndex() == 2
 
 
-if __name__ == "__main__":                                   # pragma: no cover
-    pytest.main([os.path.basename(__file__)])
+if __name__ == "__main__":
+    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
     # pytest.main()

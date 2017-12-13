@@ -49,7 +49,7 @@ class TabWidget(QTabWidget):
         is clicked.
         """
         if self.about_win is None:
-            self.about_win = AboutWhat(self)
+            self.about_win = AboutWhat(self, self._pytesting)
         if self._pytesting:
             self.about_win.show()
         else:

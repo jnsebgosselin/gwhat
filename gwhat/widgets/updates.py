@@ -50,9 +50,9 @@ class ManagerUpdates(QMessageBox):
     and displays the ressults in a message box.
     """
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, pytesting=False):
         super(ManagerUpdates, self).__init__(parent)
-        self._pytesting = False
+        self._pytesting = pytesting
 
         self.setWindowTitle('GWHAT updates')
         self.setWindowIcon(icons.get_icon('master'))
