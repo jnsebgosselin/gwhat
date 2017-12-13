@@ -64,21 +64,19 @@ def test_update_manager(tabwidget_bot):
 
     # Show about window.
     qtbot.mouseClick(tabwidget.about_btn, Qt.LeftButton)
+    qtbot.addWidget(tabwidget.about_win)
 
     # Click on the button to check for updates and assert that the manager
     # is initialized and showed correctly.
     assert tabwidget.about_win.manager_updates is None
 
     qtbot.mouseClick(tabwidget.about_win.btn_check_updates, Qt.LeftButton)
+    assert tabwidget.about_win.manager_updates
+    qtbot.addWidget(tabwidget.about_win.manager_updates)
+
     qtbot.waitSignal(tabwidget.about_win.manager_updates.thread_updates.started)
     qtbot.waitSignal(tabwidget.about_win.manager_updates.worker_updates.sig_ready)
     qtbot.waitSignal(tabwidget.about_win.manager_updates.thread_updates.finished)
-    assert tabwidget.about_win.manager_updates
-
-    # Close the Updates and About window.
-    tabwidget.about_win.manager_updates.close()
-    qtbot.mouseClick(tabwidget.about_win.ok_btn, Qt.LeftButton)
-    assert not tabwidget.about_win.isVisible()
 
 
 def test_tabwidget_index_memory(tabwidget_bot):
