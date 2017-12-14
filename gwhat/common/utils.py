@@ -17,6 +17,7 @@ from shutil import rmtree
 # ---- Imports: third party
 
 import numpy as np
+import xlsxwriter
 
 
 def calc_dist_from_coord(lat1, lon1, lat2, lon2):
@@ -46,6 +47,16 @@ def save_content_to_csv(fname, fcontent, mode='w', delimiter=',',
     with open(fname, mode, encoding='utf8') as csvfile:
         writer = csv.writer(csvfile, delimiter=delimiter, lineterminator='\n')
         writer.writerows(fcontent)
+
+
+def save_content_to_excel(fname, fcontent):
+    """Save content in a xls or xlsx file."""
+    root, ext = os.path.splitext(fname)
+    fname = fname+'.xlsx' if ext not in ['.xls', '.xlsx'] else fname
+    with xlsxwriter.Workbook(fname) as wb:
+        ws = wb.add_worksheet()
+        for i, row in enumerate(fcontent):
+            ws.write_row(i, 0, row)
 
 
 def delete_file(filename):
