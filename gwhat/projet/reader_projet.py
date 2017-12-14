@@ -196,10 +196,12 @@ class ProjetReader(object):
 
             grp.attrs['filename'] = df['filename']
             grp.attrs['Well'] = df['Well']
+            grp.attrs['Well ID'] = df['Well ID']
             grp.attrs['Latitude'] = df['Latitude']
             grp.attrs['Longitude'] = df['Longitude']
             grp.attrs['Elevation'] = df['Elevation']
             grp.attrs['Municipality'] = df['Municipality']
+            grp.attrs['Province'] = df['Province']
 
             # ---- MRC ----
 
@@ -303,13 +305,26 @@ class ProjetReader(object):
 
 
 class WLDataFrameHDF5(dict):
-    # This is a wrapper around the h5py group that is used to store
-    # water level datasets. It mimick the structure of the DataFrame that
-    # is returned when loading water level dataset from an Excel file in
-    # reader_waterlvl module.
+    """
+    This is a wrapper around the h5py group that is used to store
+    water level datasets. It mimick the structure of the DataFrame that
+    is returned when loading water level dataset from an Excel file in
+    reader_waterlvl module.
+    """
+
     def __init__(self, dset, *args, **kwargs):
         super(WLDataFrameHDF5, self).__init__(*args, **kwargs)
         self.dset = dset
+
+
+        if 'Well ID' not in list(self.dset.attrs.keys()):
+            # Added in version 0.2.1 (see PR #124).
+            dset.attrs['Well ID'] = ""
+            self.dset.file.flush()
+        if 'Province' not in list(self.dset.attrs.keys()):
+            # Added in version 0.2.1 (see PR #124).
+            dset.attrs['Province'] = ""
+            self.dset.file.flush()
 
     def __getitem__(self, key):
         if key in list(self.dset.attrs.keys()):
