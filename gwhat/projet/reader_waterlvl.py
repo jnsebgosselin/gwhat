@@ -11,103 +11,125 @@ import numpy as np
 import xlrd
 import csv
 
+
 # ---- Imports: local
+
 from gwhat.common.utils import save_content_to_csv
 
 FILE_EXTS = ['.csv', '.xls', '.xlsx']
 
 
-def load_excel_datafile(fname):
-    print('Loading waterlvl time-series from Excel file...')
+# ---- Read and Load Water Level Datafiles
 
-    with xlrd.open_workbook(fname, on_demand=True) as wb:
-        sheet = wb.sheet_by_index(0)
+def load_excel_datafile(filename):
+    """Load the data from a water level datafile in Excel format."""
+    root, ext = os.path.splitext(filename)
+    if ext not in FILE_EXTS:
+        print("ERROR: supported file format are: ", FILE_EXTS)
+        return None
+    else:
+        print('Loading waterlvl time-series from %s file...' % ext[1:])
 
-        df = {'filename': fname,
-              'Well': '',
-              'Latitude': 0,
-              'Longitude': 0,
-              'Elevation': 0,
-              'Municipality': '',
-              'Time': np.array([]),
-              'WL': np.array([]),
-              'BP': np.array([]),
-              'ET': np.array([])}
+    df = {'filename': filename,
+          'Well': '',
+          'Well ID': '',
+          'Province': '',
+          'Latitude': 0,
+          'Longitude': 0,
+          'Elevation': 0,
+          'Municipality': '',
+          'Time': np.array([]),
+          'WL': np.array([]),
+          'BP': np.array([]),
+          'ET': np.array([])}
 
-        # ---------------------------------------------------- Read header ----
+    if ext == '.csv':
+        with open(filename, 'r') as f:
+            data = list(csv.reader(f, delimiter=','))
+    elif ext in ['.xls', '.xlsx']:
+        with xlrd.open_workbook(filename, on_demand=True) as wb:
+            sheet = wb.sheet_by_index(0)
 
-        header = np.array(sheet.col_values(0, start_rowx=0, end_rowx=None))
+            data = [sheet.row_values(rowx, start_colx=0, end_colx=None) for
+                    rowx in range(sheet.nrows)]
 
-        for row, item in enumerate(header):
-            if item == 'Well Name':
-                df['Well'] = str(sheet.cell(row, 1).value)
-            elif item == 'Latitude':
-                try:
-                    df['Latitude'] = float(sheet.cell(row, 1).value)
-                except:
-                    print('Wrong format for entry "Latitude".')
-                    df['Latitude'] = 0
-            elif item == 'Longitude':
-                try:
-                    df['Longitude'] = float(sheet.cell(row, 1).value)
-                except:
-                    print('Wrong format for entry "Longitude".')
-                    df['Longitude'] = 0
-            elif item == 'Altitude':
-                try:
-                    df['Elevation'] = float(sheet.cell(row, 1).value)
-                except:
-                    print('Wrong format for entry "Altitude".')
-                    df['Elevation'] = 0
-            elif item == 'Municipality':
-                df['Municipality'] = str(sheet.cell(row, 1).value)
-            elif item == 'Date':
-                break
+    # ---- Read the Header
 
-        row += 1
+    for row, line in enumerate(data):
+        label = line[0].lower().replace(":", "").replace("=", "").strip()
+        if label == 'well name':
+            df['Well'] = str(line[1])
+        elif label == 'well id':
+            df['Well ID'] = str(line[1])
+        elif label == 'province':
+            df['Well ID'] = str(line[1])
+        elif label == 'latitude':
+            try:
+                df['Latitude'] = float(line[1])
+            except ValueError:
+                print('Wrong format for entry "Latitude".')
+                df['Latitude'] = 0
+        elif label == 'longitude':
+            try:
+                df['Longitude'] = float(line[1])
+            except ValueError:
+                print('Wrong format for entry "Longitude".')
+                df['Longitude'] = 0
+        elif label in ['altitude', 'elevation']:
+            try:
+                df['Elevation'] = float(line[1])
+            except ValueError:
+                print('Wrong format for entry "Altitude".')
+                df['Elevation'] = 0
+        elif label == 'municipality':
+            df['Municipality'] = str(line[1])
+        elif label == 'date':
+            column_labels = line
+            break
+    else:
+        print("ERROR: the water level datafile is not"
+              " formatted correctly.")
+        return None
 
-        # ------------------------------------------------------ Read Data ----
+    # ---- Read the Data
 
-        # ---- Water Level ----
+    try:
+        data = np.array(data[row+1:])
+    except IndexError:
+        # The file is correctly formatted but there is no data.
+        return df
 
-        try:
-            time = sheet.col_values(0, start_rowx=row, end_rowx=None)
-            time = np.array(time).astype(float)
-            df['Time'] = time
+    # Read the water level data :
 
-            wl = sheet.col_values(1, start_rowx=row, end_rowx=None)
-            wl = np.array(wl).astype(float)
-            df['WL'] = wl
-        except:
-            print('WARNING: Waterlvl data file is not formatted correctly')
-            return None
-
+    try:
+        df['Time'] = data[:, 0].astype(float)
+        df['WL'] = data[:, 1].astype(float)
+    except ValueError:
+        print('ERROR: The water level datafile is not formatted correctly')
+        return None
+    else:
         print('Waterlvl time-series for well %s loaded successfully.' %
               df['Well'])
 
-        # ---- Barometric data ----
+    # Read the barometric data
 
-        try:
-            if sheet.cell(row-1, 2).value == 'BP(m)':
-                bp = sheet.col_values(2, start_rowx=row, end_rowx=None)
-                bp = np.array(bp).astype(float)
-                df['BP'] = bp
-            else:
-                print('No barometric data.')
-        except:
+    try:
+        if column_labels[2] == 'BP(m)':
+            df['BP'] = data[:, 2].astype(float)
+        else:
             print('No barometric data.')
+    except:
+        print('No barometric data.')
 
-        # ---- Earth Tide ----
+    # Read the earth tide data :
 
-        try:
-            if sheet.cell(row-1, 3).value == 'ET':
-                et = sheet.col_values(3, start_rowx=row, end_rowx=None)
-                et = np.array(et).astype(float)
-                df['ET'] = et
-            else:
-                print('No Earth tide data.')
-        except:
+    try:
+        if column_labels[3] == 'ET':
+            df['ET'] = data[:, 3].astype(float)
+        else:
             print('No Earth tide data.')
+    except:
+        print('No Earth tide data.')
 
     return df
 
@@ -133,7 +155,7 @@ def make_waterlvl_continuous(t, wl):
     return t, wl
 
 
-# ---- Water level manual measurements
+# ---- Water Level Manual Measurements
 
 def init_waterlvl_measures(dirname):
     """
@@ -230,3 +252,9 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     table += '</table>'
 
     return table
+
+
+# ---- if __name__ == "__main__"
+
+if __name__ == "__main__":
+    df = load_excel_datafile("PO01_15min.xlsx")
