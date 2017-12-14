@@ -48,8 +48,8 @@ save_content_to_excel("water_level_datafile.xlsx", DATA)
 
 def test_reading_waterlvl():
     df1 = read_water_level_datafile("water_level_datafile.csv")
-    df2 = read_water_level_datafile("water_level_datafile.csv")
-    df3 = read_water_level_datafile("water_level_datafile.csv")
+    df2 = read_water_level_datafile("water_level_datafile.xls")
+    df3 = read_water_level_datafile("water_level_datafile.xlsx")
 
     assert list(df1.keys()) == list(df2.keys())
     assert list(df2.keys()) == list(df3.keys())
