@@ -56,13 +56,16 @@ def read_water_level_datafile(filename):
     # ---- Read the Header
 
     for row, line in enumerate(data):
+        if len(line) == 0:
+            continue
+
         label = line[0].lower().replace(":", "").replace("=", "").strip()
         if label == 'well name':
             df['Well'] = str(line[1])
         elif label == 'well id':
             df['Well ID'] = str(line[1])
         elif label == 'province':
-            df['Well ID'] = str(line[1])
+            df['Province'] = str(line[1])
         elif label == 'latitude':
             try:
                 df['Latitude'] = float(line[1])
