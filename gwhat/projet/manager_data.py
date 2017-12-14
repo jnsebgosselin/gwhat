@@ -615,7 +615,7 @@ class NewWaterLvl(NewDataset):
         for i in range(5):
             QCoreApplication.processEvents()
 
-        self._dataset = wlrd.load_excel_datafile(filename)
+        self._dataset = wlrd.read_water_level_datafile(filename)
 
         # Update the GUI :
 
