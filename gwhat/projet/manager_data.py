@@ -40,11 +40,13 @@ class DataManager(QWidget):
         self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumWidth(250)
 
-        self.new_waterlvl_win = NewWaterLvl(parent, projet)
+        self.new_waterlvl_win = NewDatasetDialog(
+                'water level', parent, projet)
         self.new_waterlvl_win.self.sig_new_dataset_imported.connect(
                 self.new_wldset_imported)
 
-        self.new_weather_win = NewWXDataDialog(parent, projet)
+        self.new_weather_win = NewDatasetDialog(
+                'daily weather', parent, projet)
         self.new_weather_win.sig_new_dataset_imported.connect(
                 self.new_wxdset_imported)
 
@@ -376,15 +378,12 @@ class DataManager(QWidget):
             self.set_current_wxdset(closest)
 
 
-# ---- New Dataset
-
-
-class NewDataset(QDialog):
+class NewDatasetDialog(QDialog):
     ConsoleSignal = QSignal(str)
     sig_new_dataset_imported = QSignal(str, dict)
 
     def __init__(self, datatype, parent=None, projet=None):
-        super(NewDataset, self).__init__(parent)
+        super(NewDatasetDialog, self).__init__(parent)
 
         if datatype.lower() not in ['water level', 'daily weather']:
             print("ERROR: datatype value must be :",
@@ -466,7 +465,7 @@ class NewDataset(QDialog):
         # Info Groubox Layout
 
         self.grp_info = myqt.QGroupWidget()
-        self.grp_info.setTitle("Station Info")
+        self.grp_info.setTitle("Dataset info")
         self.grp_info.setEnabled(False)
         self.grp_info.layout().setColumnStretch(2, 100)
         self.grp_info.layout().setSpacing(10)
@@ -540,17 +539,17 @@ class NewDataset(QDialog):
 
     @property
     def name(self):
-        """Name that will be used to reference the dataset in the project."""
+        """Name that will be use to reference the dataset in the project."""
         return self._dset_name.text()
 
     @property
     def station_name(self):
-        """Common name of the station."""
+        """Common name of the climate or piezomatric station."""
         return self._stn_name.text()
 
     @property
     def station_id(self):
-        """Unique identifier of the station."""
+        """Unique identifier of the climate or piezomatric station."""
         return self._sid.text()
 
     @property
@@ -576,13 +575,12 @@ class NewDataset(QDialog):
     # ---- Dataset Handlers
 
     def select_dataset(self):
-        """Opens a dialog to select a single water level datafile."""
+        """Opens a dialog to select a single datafile."""
+
         if self._datatype == 'water level':
             exts = '(*.csv;*.xls;*.xlsx)'
         elif self._datatype == 'daily weather':
-            self._dataset = wxrd.WXDataFrame(filename)
-
-
+            exts = '(*.csv;*.out)'
         filename, _ = QFileDialog.getOpenFileName(
             self, 'Select a %s data file' % self._datatype,
             self.workdir, exts)
@@ -591,6 +589,7 @@ class NewDataset(QDialog):
             QCoreApplication.processEvents()
 
         if filename:
+            self.workdir = os.path.dirname(filename)
             self.load_dataset(filename)
 
     def load_dataset(self, filename):
@@ -599,12 +598,9 @@ class NewDataset(QDialog):
             print('Path does not exist. Cannot open %s.' % filename)
             return
 
-        self.workdir = os.path.dirname(filename)
-
         # Load the Data :
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-
         msg = 'Loading %s data...' % self._datatype
         print(msg)
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
@@ -615,13 +611,17 @@ class NewDataset(QDialog):
             self._dataset = wlrd.read_water_level_datafile(filename)
         elif self._datatype == 'daily weather':
             self._dataset = wxrd.WXDataFrame(filename)
+        QApplication.restoreOverrideCursor()
 
         # Update the GUI :
 
-        QApplication.restoreOverrideCursor()
-
         self.directory.setText(filename)
-        if self._dataset is not None:
+        if self._dataset is None:
+            self._msg.setVisible(True)
+            self.btn_ok.setEnabled(False)
+            self.grp_info.setEnabled(False)
+            self.clear(clear_directory=False)
+        else:
             self.grp_info.setEnabled(True)
             self._msg.setVisible(False)
             self.btn_ok.setEnabled(True)
@@ -643,19 +643,52 @@ class NewDataset(QDialog):
                 self._alt.setValue(self._dataset['Elevation'])
                 self._dset_name.setText(self._dataset['Station Name'])
 
-        else:
-            self._msg.setVisible(True)
-            self.btn_ok.setEnabled(False)
-            self.grp_info.setEnabled(False)
-            self.clear(clear_directory=False)
-
     def accept_dataset(self):
-        pass
+        """Accept and emit the dataset."""
+        if self.name == '':
+            msg = 'Please enter a valid name for the dataset.'
+            btn = QMessageBox.Ok
+            QMessageBox.warning(self, 'Save dataset', msg, btn)
+            return
+
+        if self._datatype == 'water level':
+            is_dsetname_exists = self.name in self.projet.wldsets
+            del_dset = self.projet.del_wldset
+        elif self._datatype == 'daily weather':
+            is_dsetname_exists = self.name in self.projet.wxdsets
+            del_dset = self.projet.del_wxdset
+
+        if is_dsetname_exists:
+            msg = ('The dataset <i>%s</i> already exists.'
+                   ' Do you want tho replace the existing dataset?'
+                   ' All data will be lost.') % self.name
+            btn = QMessageBox.Yes | QMessageBox.No
+            reply = QMessageBox.question(self, 'Save dataset', msg, btn)
+            if reply == QMessageBox.No:
+                return
+            else:
+                del_dset(self.name)
+
+        # Update dataset attributes from UI and emit dataset :
+
+        if self._datatype == 'water level':
+            self._dataset['Well'] = self.station_name
+            self._dataset['Well ID'] = self.station_id
+        elif self._datatype == 'daily weather':
+            self._dataset['Station Name'] = self.station_name
+            self._dataset['Climate Identifier'] = self.station_id
+        self._dataset['Province'] = self.province
+        self._dataset['Latitude'] = self.latitude
+        self._dataset['Longitude'] = self.longitude
+        self._dataset['Elevation'] = self.altitude
+
+        self.sig_new_dataset_imported.emit(str, self._dataset)
+        self.close()
 
     # ---- Display Handlers
 
     def close(self):
-        super(NewDataset, self).close()
+        super(NewDatasetDialog, self).close()
         self.clear()
 
     def clear(self, clear_directory=True):
@@ -669,148 +702,6 @@ class NewDataset(QDialog):
         self._lon.setValue(0)
         self._alt.setValue(0)
         self._sid.clear()
-
-
-class NewWaterLvl(NewDataset):
-    def __init__(self, parent=None, projet=None):
-        super(NewWaterLvl, self).__init__('water level', parent, projet)
-
-    def select_dataset(self):
-        """Opens a dialog to select a single water level datafile."""
-        filename, _ = QFileDialog.getOpenFileName(
-            self, 'Select a water level data file',
-            self.workdir, '(*.csv;*.xls;*.xlsx)')
-
-        for i in range(5):
-            QCoreApplication.processEvents()
-
-        if filename:
-            self.load_dataset(filename)
-
-    def accept_dataset(self):
-        if self.name == '':
-            msg = 'Please enter a valid name for the dataset.'
-            btn = QMessageBox.Ok
-            QMessageBox.warning(self, 'Save dataset', msg, btn)
-            return
-
-        if self.name in self.projet.wldsets:
-            msg = ('The dataset <i>%s</i> already exists.'
-                   ' Do you want tho replace the existing dataset?'
-                   ' All data will be lost.') % self.name
-            btn = QMessageBox.Yes | QMessageBox.No
-            reply = QMessageBox.question(self, 'Save dataset', msg, btn)
-            if reply == QMessageBox.No:
-                return
-            else:
-                self.projet.del_wldset(self.name)
-
-        # Update dataset attributes from UI and emit dataset :
-
-        self._dataset['Well'] = self.station_name
-        self._dataset['Well ID'] = self.station_id
-        self._dataset['Province'] = self.province
-        self._dataset['Latitude'] = self.latitude
-        self._dataset['Longitude'] = self.longitude
-        self._dataset['Elevation'] = self.altitude
-
-        self.sig_new_dataset_imported.emit(str, self._dataset)
-        self.close()
-
-
-class NewWXDataDialog(NewDataset):
-
-    ConsoleSignal = QSignal(str)
-    newDatasetCreated = QSignal(str)
-
-    def __init__(self, parent=None, projet=None):
-        super(NewWXDataDialog, self).__init__('daily weather', parent, projet)
-
-    def select_dataset(self):
-        filename, _ = QFileDialog.getOpenFileName(
-            self, 'Select a daily weather data file',
-            self.workdir, '(*.csv;*.out)')
-
-        for i in range(5):
-            QCoreApplication.processEvents()
-
-        if filename:
-            self.load_dataset(filename)
-
-    # ---------------------------------------------------------------------
-
-    def load_dataset(self, filename):
-        """Loads the dataset and displays the information in the UI."""
-        if not os.path.exists(filename):
-            print('Path does not exist. Cannot open %s.' % filename)
-            return
-
-        # Update GUI path memory variables :
-
-        self.workdir = os.path.dirname(filename)
-
-        # Load Data :
-
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        msg = 'Loading water level data...'
-        print(msg)
-        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-        for i in range(5):
-            QCoreApplication.processEvents()
-
-        self._dataset = wxrd.WXDataFrame(filename)
-
-        # Update GUI :
-
-        QApplication.restoreOverrideCursor()
-
-        self.directory.setText(filename)
-        if self._dataset is not None:
-            self.grp_info.setEnabled(True)
-            self._msg.setVisible(False)
-            self.btn_ok.setEnabled(True)
-
-
-        else:
-            self.btn_ok.setEnabled(False)
-            self._msg.setVisible(True)
-            self.grp_info.setEnabled(False)
-            self.clear(clear_directory=False)
-
-    def accept_dataset(self):
-        if self.name == '':
-            msg = 'Please enter a valid name for the dataset.'
-            btn = QMessageBox.Ok
-            QMessageBox.warning(self, 'Save dataset', msg, btn)
-            return
-
-        if self.name in self.projet.wxdsets:
-            msg = ('The dataset <i>%s</i> already exists.'
-                   ' Do you want tho replace the existing dataset?'
-                   ' All data will be lost.') % self.name
-            btn = QMessageBox.Yes | QMessageBox.No
-            reply = QMessageBox.question(self, 'Save dataset', msg, btn)
-            if reply == QMessageBox.No:
-                return
-            else:
-                self.projet.del_wxdset(self.name)
-
-        # Update dataset attributes from UI :
-
-        self._dataset['Station Name'] = self.staname
-        self._dataset['Climate Identifier'] = self.staID
-        self._dataset['Province'] = self.prov
-
-        self._dataset['Latitude'] = self.lat
-        self._dataset['Longitude'] = self.lon
-        self._dataset['Elevation'] = self.alt
-
-        print('Saving dataset to project db.')
-        self.projet.add_wxdset(self.name, self._dataset)
-        self.newDatasetCreated.emit(self.name)
-
-        self.close()
 
 
 # ---- if __name__ == '__main__'
@@ -836,7 +727,10 @@ if __name__ == '__main__':
     # dm = DataManager(projet=p)
     # dm.show()
 
-    new_dataset = NewWaterLvl()
-    new_dataset.show()
+    new_wldset = NewDatasetDialog('water level')
+    new_wxdset = NewDatasetDialog('daily weather')
+
+    new_wldset.show()
+    new_wxdset.show()
 
     app.exec_()
