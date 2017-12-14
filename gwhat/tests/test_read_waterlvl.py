@@ -18,9 +18,67 @@ import xlsxwriter
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from gwhat.common.utils import save_content_to_csv, delete_file
-from gwhat.projet.reader_waterlvl import (load_waterlvl_measures,
-                                          init_waterlvl_measures)
+from gwhat.common.utils import (save_content_to_excel, save_content_to_csv,
+                                delete_file)
+from gwhat.projet.reader_waterlvl import (
+        load_waterlvl_measures, init_waterlvl_measures,
+        read_water_level_datafile)
+
+
+# Test reading water level datafiles
+# ----------------------------------
+
+DATA = [['Well name = ', "êi!@':i*"],
+        ['well id : ', '1234ABC'],
+        ['Province', 'Qc'],
+        ['latitude   ', 45.36],
+        ['Longitude=', -72.4234665345],
+        ['Elevation:', 123],
+        [],
+        [],
+        ['Date', 'WL(mbgs)', 'BP(m)', 'ET'],
+        [41241.69792, 3.667377006, 10.33327435, 383.9680352],
+        [41241.70833, 3.665777025, 10.33127437, 387.7404819],
+        [41241.71875, 3.665277031, 10.33097437, 396.9950643]
+        ]
+save_content_to_csv("water_level_datafile.csv", DATA)
+save_content_to_excel("water_level_datafile.xls", DATA)
+save_content_to_excel("water_level_datafile.xlsx", DATA)
+
+
+def test_reading_waterlvl():
+    df1 = read_water_level_datafile("water_level_datafile.csv")
+    df2 = read_water_level_datafile("water_level_datafile.csv")
+    df3 = read_water_level_datafile("water_level_datafile.csv")
+
+    assert list(df1.keys()) == list(df2.keys())
+    assert list(df2.keys()) == list(df3.keys())
+
+    expected_results = {
+          'Well': "êi!@':i*",
+          'Well ID': '1234ABC',
+          'Province': 'Qc',
+          'Latitude': 45.36,
+          'Longitude': -72.4234665345,
+          'Elevation': 123,
+          'Municipality': '',
+          'Time': np.array([41241.69792, 41241.70833, 41241.71875]),
+          'WL': np.array([3.667377006, 3.665777025, 3.665277031]),
+          'BP': np.array([10.33327435, 10.33127437, 10.33097437]),
+          'ET': np.array([383.9680352, 387.7404819, 396.9950643])}
+
+    keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
+            'Elevation', 'Municipality']
+    for key in keys:
+        assert df1[key] == expected_results[key]
+
+
+# Test water_level_measurements.*
+# -------------------------------
+
+delete_file("waterlvl_manual_measurements.csv")
+delete_file("waterlvl_manual_measurements.xls")
+delete_file("waterlvl_manual_measurements.xlsx")
 
 WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
           ['Test', 40623.54167, 1.43],
@@ -30,10 +88,6 @@ WLMEAS = [['Well_ID', 'Time (days)', 'Obs. (mbgs)'],
           ["é@#^'", 41240.8125, 3.75],
           ['test2', 41402.34375, 3.56],
           ]
-
-
-# Test water_level_measurements.*
-# -------------------------------
 
 
 def test_init_waterlvl_measures():
