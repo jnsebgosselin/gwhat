@@ -6,14 +6,14 @@ Data Management in GWHAT
 Importing Data
 -----------------------------------------------
 
-Before ground-water hydrographs can be plotted or analyzed in a given project,
+Before ground-water hydrographs can be plotted or analyzed for a given project,
 time series of ground-water level and weather data must be imported in GWHAT.
 This is done for water level and weather datasets by clicking on their corresponding
 |icon_open_project| icon located in the right side panel of the tab
-:guilabel:`Plot Hydrograph` or :guilabel:`Analyze Hydrograph` as shown in
-:numref:`scs_datamanager_panel`. Clicking on either of the |icon_open_project|
+:guilabel:`Plot Hydrograph` or the tab :guilabel:`Analyze Hydrograph`
+(see :numref:`scs_datamanager_panel`). Clicking on either of the |icon_open_project|
 icons opens a dialog window where a valid water level or weather datafile can
-be selected by clicking on the |icon_folder| icon (see :numref:`scs_new_water_level_dataset_dialog`).
+be selected.
 
 .. _scs_datamanager_panel:
 .. figure:: img/scs/datamanager_panel.*
@@ -24,14 +24,28 @@ be selected by clicking on the |icon_folder| icon (see :numref:`scs_new_water_le
 
     Presentation of the panel to manage water level and weather datasets.
 
+Selecting a valid datafile is done in the ::`Import Dataset`
+
+ by clicking on the |icon_folder| icon (see :numref:`scs_new_water_level_dataset_dialog`).
 
 
-After a valid file has been selected, the information relative to the climate
-or piezometric station will be displayed in the dialog and a name for the dataset
-will be proposed next to
-the :guilabel:`Dataset name` label. Once the information relative to the
-station and dataset name are correct, the dataset can be imported in the
-project by clicking on the button :guilabel:`Ok`
+
+After a valid datafile has been selected in the dialog, The information relative
+to the climate or piezometric station that were contained in the header of the
+datafile are displayed in the :guilabel:`Station Info` section.
+
+
+
+ and a name for the dataset is proposed
+in the field next to the :guilabel:`Dataset name` label. The information and
+the nam
+
+
+
+and a
+name for the dataset will be proposed next to the :guilabel:`Dataset name` label.
+Once the information relative to the station and dataset name are correct,
+the dataset can be imported in the project by clicking on the button :guilabel:`Ok`
 
 .. _scs_new_water_level_dataset_dialog:
 .. figure:: img/scs/new_water_level_dataset_dialog.*
@@ -48,9 +62,6 @@ work directly from csv files to load and save the input and output data. This
 is practical because it allowed using GWHAT more easily to generate gapless
 daily weather datasets for any projects, even those not implying the
 assessment of groundwater recharge.
-
-
-
 
 
 Input data files format
