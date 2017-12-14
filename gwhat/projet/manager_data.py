@@ -34,15 +34,16 @@ class DataManager(QWidget):
     wldsetChanged = QSignal(object)
     wxdsetChanged = QSignal(object)
 
-    def __init__(self, parent=None, projet=None, pm=None):
+    def __init__(self, parent=None, projet=None, pm=None, pytesting=False):
         super(DataManager, self).__init__(parent)
+        self._pytesting = pytesting
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumWidth(250)
 
         self.new_waterlvl_win = NewDatasetDialog(
                 'water level', parent, projet)
-        self.new_waterlvl_win.self.sig_new_dataset_imported.connect(
+        self.new_waterlvl_win.sig_new_dataset_imported.connect(
                 self.new_wldset_imported)
 
         self.new_weather_win = NewDatasetDialog(
@@ -199,7 +200,10 @@ class DataManager(QWidget):
             QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
         else:
-            self.new_waterlvl_win.show()
+            if self._pytesting:
+                self.new_weather_win.show()
+            else:
+                self.new_weather_win.exec_()
 
     def new_wldset_imported(self, name, dataset):
         """
@@ -277,7 +281,10 @@ class DataManager(QWidget):
             QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
         else:
-            self.new_weather_win.show()
+            if self._pytesting:
+                self.new_weather_win.show()
+            else:
+                self.new_weather_win.exec_()
 
     def new_wxdset_imported(self, name, dataset):
         """
@@ -703,6 +710,11 @@ class NewDatasetDialog(QDialog):
         self._alt.setValue(0)
         self._sid.clear()
 
+    def show(self):
+        """Qt method override."""
+        super(NewDatasetDialog, self).show()
+        self.setFixedSize(self.size())
+
 
 # ---- if __name__ == '__main__'
 
@@ -720,17 +732,11 @@ if __name__ == '__main__':
     ft.setFamily('Segoe UI')
     ft.setPointSize(11)
     app.setFont(ft)
-#
-#    pm = ProjetManager(projet=f)
-#    pm.show()
 
-    # dm = DataManager(projet=p)
-    # dm.show()
+    # pm = ProjetManager(projet=f)
+    # pm.show()
 
-    new_wldset = NewDatasetDialog('water level')
-    new_wxdset = NewDatasetDialog('daily weather')
-
-    new_wldset.show()
-    new_wxdset.show()
+    dm = DataManager(projet=p)
+    dm.show()
 
     app.exec_()
