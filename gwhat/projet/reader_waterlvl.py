@@ -22,7 +22,7 @@ FILE_EXTS = ['.csv', '.xls', '.xlsx']
 # ---- Read and Load Water Level Datafiles
 
 def read_water_level_datafile(filename):
-    """Load the data from a water level datafile in csv or Excel format."""
+    """Load a water level dataset from a csv or Excel file."""
     root, ext = os.path.splitext(filename)
     if ext not in FILE_EXTS:
         print("ERROR: supported file format are: ", FILE_EXTS)
