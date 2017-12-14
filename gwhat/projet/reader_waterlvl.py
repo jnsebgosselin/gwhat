@@ -21,8 +21,8 @@ FILE_EXTS = ['.csv', '.xls', '.xlsx']
 
 # ---- Read and Load Water Level Datafiles
 
-def load_excel_datafile(filename):
-    """Load the data from a water level datafile in Excel format."""
+def read_water_level_datafile(filename):
+    """Load the data from a water level datafile in csv or Excel format."""
     root, ext = os.path.splitext(filename)
     if ext not in FILE_EXTS:
         print("ERROR: supported file format are: ", FILE_EXTS)
@@ -44,7 +44,7 @@ def load_excel_datafile(filename):
           'ET': np.array([])}
 
     if ext == '.csv':
-        with open(filename, 'r') as f:
+        with open(filename, 'r', encoding='utf8') as f:
             data = list(csv.reader(f, delimiter=','))
     elif ext in ['.xls', '.xlsx']:
         with xlrd.open_workbook(filename, on_demand=True) as wb:
@@ -257,4 +257,6 @@ def generate_HTML_table(name, lat, lon, alt, mun):
 # ---- if __name__ == "__main__"
 
 if __name__ == "__main__":
-    df = load_excel_datafile("PO01_15min.xlsx")
+    df = read_water_level_datafile("PO01_15min.xlsx")
+    df2 = read_water_level_datafile("PO01_15min.xls")
+    df3 = read_water_level_datafile("PO01_15min.csv")
