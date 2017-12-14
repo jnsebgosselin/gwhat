@@ -32,7 +32,8 @@ from PyQt5.QtWidgets import (QApplication, QTableView, QCheckBox, QStyle,
 
 # ---- Imports: local
 
-from gwhat.common.utils import calc_dist_from_coord
+from gwhat.common.utils import (calc_dist_from_coord, save_content_to_csv,
+                                save_content_to_excel)
 
 
 class WeatherSationList(list):
@@ -104,18 +105,13 @@ class WeatherSationList(list):
         return file_content
 
     def save_to_file(self, filename):
+        """Save the content of the station list to file."""
         if filename:
             root, ext = os.path.splitext(filename)
             if ext in ['.xlsx', '.xls']:
-                with xlsxwriter.Workbook(filename) as wb:
-                    ws = wb.add_worksheet()
-                    for i, row in enumerate(self.get_file_content()):
-                        ws.write_row(i, 0, row)
+                save_content_to_excel(filename, self.get_file_content())
             else:
-                with open(filename, 'w', encoding='utf8')as f:
-                    writer = csv.writer(f, delimiter=',', lineterminator='\n')
-                    writer.writerows(self.get_file_content())
-
+                save_content_to_csv(filename, self.get_file_content())
             print('Station list saved successfully in %s' % filename)
 
     def format_list_in_html(self):
