@@ -1,7 +1,7 @@
 Welcome to GWHAT's documentation!
 =================================
 
-GWHAT (GroundWater Hydrograph Analysis Toolbox) is a free, open source, and
+GWHAT (Ground-Water Hydrograph Analysis Toolbox) is a free, open source, and
 cross-platform interactive computer program whose main focus is the
 interpretation of observation well hydrographs. It is written in the Python 3
 programming language and is currently maintained and developed by
