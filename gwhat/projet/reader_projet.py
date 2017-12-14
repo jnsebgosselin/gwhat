@@ -316,6 +316,7 @@ class WLDataFrameHDF5(dict):
         super(WLDataFrameHDF5, self).__init__(*args, **kwargs)
         self.dset = dset
 
+        # Make older datasets compatible with newer format :
 
         if 'Well ID' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
