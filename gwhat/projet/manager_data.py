@@ -201,9 +201,9 @@ class DataManager(QWidget):
             return
         else:
             if self._pytesting:
-                self.new_weather_win.show()
+                self.new_waterlvl_win.show()
             else:
-                self.new_weather_win.exec_()
+                self.new_waterlvl_win.exec_()
 
     def new_wldset_imported(self, name, dataset):
         """
@@ -422,9 +422,9 @@ class NewDatasetDialog(QDialog):
         self.directory.setReadOnly(True)
         self.directory.setMinimumWidth(400)
 
-        btn_browse = QToolButtonSmall(icons.get_icon('openFile'))
-        btn_browse.setToolTip('Select a datafile...')
-        btn_browse.clicked.connect(self.select_dataset)
+        self.btn_browse = QToolButtonSmall(icons.get_icon('openFile'))
+        self.btn_browse.setToolTip('Select a datafile...')
+        self.btn_browse.clicked.connect(self.select_dataset)
 
         msg = ('<font color=red size=2><i>Error : %s data file is '
                'not formatted correctly.</i></font>'
@@ -441,7 +441,7 @@ class NewDatasetDialog(QDialog):
         row += 1
         grp_dset.addWidget(QLabel("File name :"), row, 0)
         grp_dset.addWidget(self.directory, row, 1)
-        grp_dset.addWidget(btn_browse, row, 3)
+        grp_dset.addWidget(self.btn_browse, row, 3)
         row += 1
         grp_dset.addWidget(self._msg, row, 1, 1, 3)
 
@@ -689,7 +689,7 @@ class NewDatasetDialog(QDialog):
         self._dataset['Longitude'] = self.longitude
         self._dataset['Elevation'] = self.altitude
 
-        self.sig_new_dataset_imported.emit(str, self._dataset)
+        self.sig_new_dataset_imported.emit(self.name, self._dataset)
         self.close()
 
     # ---- Display Handlers
