@@ -37,7 +37,8 @@ read from the header of the selected datafile, are displayed in the section
 can all be modified before importing the dataset by clicking on the button
 :guilabel:`Import`. The dataset will then be added to the :term:`project file` and will
 be referenced in the list of imported water level of weather datasets
-(see :numref:`scs_datamanager_panel`) by the name that was provided in :guilabel:`Dataset name`.
+(see :numref:`scs_datamanager_panel`) by the name that was provided in the
+field :guilabel:`Dataset name`.
 
 .. _scs_import_data_dialog_windows:
 .. figure:: img/scs/import_data_dialog_windows.*
@@ -66,36 +67,55 @@ There is currently no tool in GWHAT to automatically download and format
 ground-water level time series. However, these data can be downloaded
 free of charge for the province of Quebec from the `Groundwater Monitoring Network
 of Quebec`_ [#url_rsesq]_  and for several canadian provinces from the
-`Groundwater Information Network`_ [#url_gin]_.
+`Groundwater Information Network (GIN)`_ [#url_gin]_.
 
+.. _daily_weather_datafile_format:
 
 Weather data files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The format of the weather data files must be coma-separated values text files
-as described in :numref:`sec_weather_datafiles_format` with either a :file:`.out` or
-:file:`.csv` extension. Files with a :file:`.out` extension are gapfilled weather
-dataset produced with the gapfilling tool in tab :guilabel:`Gapfill Weather`
-presented in :numref:`chap_gapfilling_weather_data`.
+GWHAT can read weather data saved in comma-separated values (csv) or tab-separated
+text files with UTF-8 encoding. An exemple of correctly formatted datafile is
+presented in :numref:`weather_datafile_example`.
+
+The file header contains information about the station name, province, latitude, longitude,
+elevation and climate identifier. The dataset is composed of daily maximum, minimum,
+and mean air temperature in °C and total precipitation in mm.
+:abbr:`nan (not a number)` values must be entered where data are missing.
+Data must also be in chronological order, but do not need to be continuous over time.
+That is, missing blocks of data (e.g., several days, months or years) can be completely
+omitted in the time-series.
+
+.. _weather_datafile_example:
+.. figure:: img/files/weather_datafile_example.*
+    :align: center
+    :width: 85%
+    :alt: weather_datafile_example.png
+    :figclass: align-center
+
+    Example of a correctly formatted weather datafile.
 
 .. note:: Preferably, the gaps in the daily weather records must have been
           filled before importing them. Otherwise, a value of 0 is assumed
           for days where precipitation are missing and the missing values for
-          air temperature are evaluated by linear interpolation.
+          air temperature are evaluated by linear interpolation. GWHAT provides
+          an automated, robust, and efficient tool to fill the gaps in
+          daily weather data records that is presented in :numref:`chap_gapfilling_weather_data`.
 
 Water level data files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The water level datafiles can be either in the :file:`xls` or :file:`xlsx` format.
+GWHAT can read water level data from either coma-separated text files with UTF-8 encoding
+or from an Excel spreasheet (:file:`xls` or :file:`xlsx`).
 An exemple of correctly formatted water level datafile is presented in
-:numref:`water_level_datafile_example`. The information contained in the header
-will be loaded into the dialog window presented in :numref:`importing_data_inproject`.
-The information can then be modified within this window before the data are imported into
-the project. The first column of the data must contained the time in excel numeric
-format. The second column must contain the water level, given in meters below the
-ground surface. The third and fourth columns correspond, respectively, to the
-barometric pressure and the Earth tides. This will be discussed in more details
-in another section.
+:numref:`water_level_datafile_example`.
+
+The file header contains information about the well name, identifier, province,
+latitude, longitude, and elevation. The first column of the data must contained
+the time in excel numeric format. The second column must contain the water level,
+given in meters below the ground surface. The third and fourth columns correspond,
+respectively, to the barometric pressure and the Earth tides.
+This will be discussed in more details in :numref:`chap_computing_the_brf`.
 
 .. _water_level_datafile_example:
 .. figure:: img/files/water_level_datafile.*
@@ -104,7 +124,7 @@ in another section.
     :alt: water_level_datafile.png
     :figclass: align-center
 
-    Formatted weather datafile example.
+    Example of a correctly formatted water level datafile.
 
 .. important:: Water levels must be entered in meters below the ground surface.
 
@@ -120,7 +140,7 @@ in another section.
 
 .. _Canadian Daily Climate Database: www.climate.weather.gc.ca
 .. _Groundwater Monitoring Network of Quebec: http://www.mddelcc.gouv.qc.ca/eau/piezo/
-.. _Groundwater Information Network: http://gin.gw-info.net/service/api_ngwds:gin2/en/gin.html
+.. _Groundwater Information Network (GIN): http://gin.gw-info.net/service/api_ngwds:gin2/en/gin.html
 
 .. rubric:: Footnotes
 .. [#url_cddc] http://climate.weather.gc.ca/
