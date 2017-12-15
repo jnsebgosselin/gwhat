@@ -13,6 +13,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 # ---- Third parties imports
 
 import pytest
+from flaky import flaky
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget
 
@@ -72,6 +73,7 @@ def test_tabwidget_and_about_window(tabwidget_bot):
 # --------------------------------------
 
 
+@flaky(max_runs=3)
 def test_worker_updates(worker_updates_bot):
     """
     Assert that the worker to check for updates on the GitHub API is
@@ -98,6 +100,7 @@ def test_worker_updates(worker_updates_bot):
     assert worker_updates.update_available is False
 
 
+@flaky(max_runs=3)
 def test_update_manager(tabwidget_bot):
     tabwidget, qtbot = tabwidget_bot
     tabwidget.show()
