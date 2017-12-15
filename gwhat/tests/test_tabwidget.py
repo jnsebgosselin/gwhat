@@ -82,16 +82,19 @@ def test_worker_updates(worker_updates_bot):
     gwhat.widgets.updates.__version__ = "0.1.0"
     worker_updates.start()
     qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.error is None
     assert worker_updates.update_available is True
 
     gwhat.widgets.updates.__version__ = "0.1.0.dev"
     worker_updates.start()
     qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.error is None
     assert worker_updates.update_available is False
 
     gwhat.widgets.updates.__version__ = "10.0.0"
     worker_updates.start()
     qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.error is None
     assert worker_updates.update_available is False
 
 
