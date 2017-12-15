@@ -20,6 +20,7 @@ from PyQt5.QtWidgets import QWidget
 
 from gwhat.widgets.tabwidget import TabWidget
 from gwhat.widgets.updates import WorkerUpdates
+import gwhat.widgets.updates
 
 
 # Qt Test Fixtures
@@ -76,6 +77,8 @@ def test_worker_updates(worker_updates_bot):
     working as expected.
     """
     worker_updates, qtbot = worker_updates_bot
+
+    gwhat.widgets.updates.__version__ = "0.1.0"
     worker_updates.start()
     qtbot.waitSignal(worker_updates.sig_ready)
 
