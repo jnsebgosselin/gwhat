@@ -18,7 +18,8 @@ from PyQt5.QtWidgets import QWidget
 
 # ---- Local imports
 
-from gwhat.widgets.tabwidget import TabWidget                          # nopep8
+from gwhat.widgets.tabwidget import TabWidget
+from gwhat.widgets.updates import WorkerUpdates
 
 
 # Qt Test Fixtures
@@ -37,7 +38,14 @@ def tabwidget_bot(qtbot):
 
     return tabwidget, qtbot
 
-# Tests
+
+@pytest.fixture
+def worker_updates_bot(qtbot):
+    worker_updates = WorkerUpdates()
+    return worker_updates, qtbot
+
+
+# Tests AboutWhat
 # -------------------------------
 
 
@@ -56,6 +64,20 @@ def test_tabwidget_and_about_window(tabwidget_bot):
     # Close the about window and assert it was closed correctly.
     qtbot.mouseClick(tabwidget.about_win.ok_btn, Qt.LeftButton)
     assert not tabwidget.about_win.isVisible()
+
+
+# Tests ManagerUpdates and WorkerUpdates
+# --------------------------------------
+
+
+def test_worker_updates(worker_updates_bot):
+    """
+    Assert that the worker to check for updates on the GitHub API is
+    working as expected.
+    """
+    worker_updates, qtbot = worker_updates_bot
+    worker_updates.start()
+    qtbot.waitSignal(worker_updates.sig_ready)
 
 
 def test_update_manager(tabwidget_bot):
@@ -80,6 +102,9 @@ def test_update_manager(tabwidget_bot):
     qtbot.waitUntil(lambda: not tabwidget.about_win.manager_updates.thread_updates.isRunning(),
                     timeout=10000)
 
+
+# Tests TabWidget
+# --------------------------------------
 
 def test_tabwidget_index_memory(tabwidget_bot):
     tabwidget, qtbot = tabwidget_bot
