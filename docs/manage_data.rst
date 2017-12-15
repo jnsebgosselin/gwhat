@@ -3,17 +3,23 @@
 Data Management in GWHAT
 ===============================================
 
+.. _sec_importing_data:
+
 Importing Data
 -----------------------------------------------
 
 Before ground-water hydrographs can be plotted or analyzed for a given project,
-time series of ground-water level and weather data must be imported in GWHAT.
-This is done for water level and weather datasets by clicking on their corresponding
-|icon_open_project| icon located in the right side panel of the tab
+time series of water level and weather data must be imported in GWHAT.
+The format in which the data must be saved, so that they can be imported in GWHAT,
+is described in :numref:`input_datafile_format`.
+
+Importing water level and weather datasets in GWHAT is done by clicking on their
+corresponding |icon_open_project| icon located in the right side panel of the tab
 :guilabel:`Plot Hydrograph` or the tab :guilabel:`Analyze Hydrograph`
-(see :numref:`scs_datamanager_panel`). Clicking on either of the |icon_open_project|
-icons opens a dialog window where a valid water level or weather datafile can
-be selected.
+(see :numref:`scs_datamanager_panel`).
+Clicking on either of the |icon_open_project| icons opens a :guilabel:`Import Dataset`
+window where a valid water level or weather datafile can be selected by clicking on
+the |icon_open_file| icon (see :numref:`scs_import_data_dialog_windows`).
 
 .. _scs_datamanager_panel:
 .. figure:: img/scs/datamanager_panel.*
@@ -24,48 +30,44 @@ be selected.
 
     Presentation of the panel to manage water level and weather datasets.
 
-Selecting a valid datafile is done in the ::`Import Dataset`
+After a valid datafile has been selected in the window :guilabel:`Import Dataset`,
+the information relative to the climate or piezometric station, which was
+read from the header of the selected datafile, are displayed in the section
+:guilabel:`Dataset info`. These information, as well as the :guilabel:`Dataset name`,
+can all be modified before importing the dataset by clicking on the button
+:guilabel:`Import`. The dataset will then be added to the :term:`project file` and will
+be referenced in the list of imported water level of weather datasets
+(see :numref:`scs_datamanager_panel`) by the name that was provided in :guilabel:`Dataset name`.
 
- by clicking on the |icon_folder| icon (see :numref:`scs_new_water_level_dataset_dialog`).
-
-
-
-After a valid datafile has been selected in the dialog, The information relative
-to the climate or piezometric station that were contained in the header of the
-datafile are displayed in the :guilabel:`Station Info` section.
-
-
-
- and a name for the dataset is proposed
-in the field next to the :guilabel:`Dataset name` label. The information and
-the nam
-
-
-
-and a
-name for the dataset will be proposed next to the :guilabel:`Dataset name` label.
-Once the information relative to the station and dataset name are correct,
-the dataset can be imported in the project by clicking on the button :guilabel:`Ok`
-
-.. _scs_new_water_level_dataset_dialog:
-.. figure:: img/scs/new_water_level_dataset_dialog.*
+.. _scs_import_data_dialog_windows:
+.. figure:: img/scs/import_data_dialog_windows.*
     :align: center
-    :width: 50%
+    :width: 100%
     :alt: alternate text
     :figclass: align-center
 
-    Presentation of the dialog window to import water level data files.
+    Presentation of the :guilabel:`Import Dataset` windows to import
+    water level and weather data files.
 
-The tools for downloading and filling the gaps in daily weather records
-(see in :numref:`chap_dwnld_weather` and :numref:`chap_gapfilling_weather_data`)
-work directly from csv files to load and save the input and output data. This
-is practical because it allowed using GWHAT more easily to generate gapless
-daily weather datasets for any projects, even those not implying the
-assessment of groundwater recharge.
-
+.. _input_datafile_format:
 
 Input data files format
 -----------------------------------------------
+
+This section describes the format in which daily weather and water level datasets
+must be saved so that they can be imported in GWHAT as described in
+:numref:`sec_importing_data`.
+GWHAT includes a tool to download and automatically save daily weather
+data from the `Canadian Daily Climate Database`_ [#url_cddc]_ in the
+appropriate format (see :numref:`chap_dwnld_weather`). Moreover,
+GWHAT provides an automated, robust, and efficient tool to fill the gaps in
+daily weather data records that is presented in :numref:`chap_gapfilling_weather_data`.
+There is currently no tool in GWHAT to automatically download and format
+ground-water level time series. However, these data can be downloaded
+free of charge for the province of Quebec from the `Groundwater Monitoring Network
+of Quebec`_ [#url_rsesq]_  and for several canadian provinces from the
+`Groundwater Information Network`_ [#url_gin]_.
+
 
 Weather data files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -111,7 +113,16 @@ in another section.
                       :height: 1em
                       :alt: folder
 
-.. |icon_folder| image:: img/icon/icon_folder.*
+.. |icon_open_file| image:: img/icon/icon_open_file.*
                       :width: 1em
                       :height: 1em
                       :alt: folder
+
+.. _Canadian Daily Climate Database: www.climate.weather.gc.ca
+.. _Groundwater Monitoring Network of Quebec: http://www.mddelcc.gouv.qc.ca/eau/piezo/
+.. _Groundwater Information Network: http://gin.gw-info.net/service/api_ngwds:gin2/en/gin.html
+
+.. rubric:: Footnotes
+.. [#url_cddc] http://climate.weather.gc.ca/
+.. [#url_rsesq] http://www.mddelcc.gouv.qc.ca/eau/piezo/
+.. [#url_gin] http://gin.gw-info.net/service/api_ngwds:gin2/en/gin.html
