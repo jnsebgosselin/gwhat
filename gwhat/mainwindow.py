@@ -96,7 +96,7 @@ class WHAT(QMainWindow):
         splash.showMessage("Initializing project and data managers.")
         self.pmanager = ProjetManager(self)
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
-        self.dmanager = DataManager(pm=self.pmanager)
+        self.dmanager = DataManager(parent=self, pm=self.pmanager)
 
         # ----------------------------------------------------------- Init ----
 

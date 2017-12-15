@@ -6,12 +6,10 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from __future__ import division, unicode_literals
 
 # ---- Standard library imports
 
 import os
-from datetime import datetime
 
 # ---- Third party imports
 
@@ -19,7 +17,7 @@ from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
                              QLabel, QMessageBox, QLineEdit, QPushButton,
-                             QFileDialog, QApplication)
+                             QFileDialog, QApplication, QGroupBox, QDialog)
 
 # ---- Local imports
 
@@ -36,17 +34,22 @@ class DataManager(QWidget):
     wldsetChanged = QSignal(object)
     wxdsetChanged = QSignal(object)
 
-    def __init__(self, parent=None, projet=None, pm=None):
+    def __init__(self, parent=None, projet=None, pm=None, pytesting=False):
         super(DataManager, self).__init__(parent)
+        self._pytesting = pytesting
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumWidth(250)
 
-        self.new_waterlvl_win = NewWaterLvl(parent, projet)
-        self.new_waterlvl_win.newDatasetCreated.connect(self.new_wldset_added)
+        self.new_waterlvl_win = NewDatasetDialog(
+                'water level', parent, projet)
+        self.new_waterlvl_win.sig_new_dataset_imported.connect(
+                self.new_wldset_imported)
 
-        self.new_weather_win = NewWXDataDialog(parent, projet)
-        self.new_weather_win.newDatasetCreated.connect(self.new_wxdset_added)
+        self.new_weather_win = NewDatasetDialog(
+                'daily weather', parent, projet)
+        self.new_weather_win.sig_new_dataset_imported.connect(
+                self.new_wxdset_imported)
 
         self.__initUI__()
 
@@ -197,14 +200,22 @@ class DataManager(QWidget):
             QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
         else:
-            self.new_waterlvl_win.show()
+            if self._pytesting:
+                self.new_waterlvl_win.show()
+            else:
+                self.new_waterlvl_win.exec_()
 
-    # ---------------------------------------------------------------------
-
-    def new_wldset_added(self):
+    def new_wldset_imported(self, name, dataset):
+        """
+        Receives the new water level dataset, saves it in the project and
+        update the GUI.
+        """
+        print("Saving the new water level dataset in the project...", end=" ")
+        self.projet.add_wldset(name, dataset)
         self.update_wldsets()
         self.update_wldset_info()
         self.wldset_changed()
+        print("done")
 
     def update_wldsets(self, name=None):
         self.wldsets_cbox.blockSignals(True)
@@ -270,12 +281,22 @@ class DataManager(QWidget):
             QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
         else:
-            self.new_weather_win.show()
+            if self._pytesting:
+                self.new_weather_win.show()
+            else:
+                self.new_weather_win.exec_()
 
-    def new_wxdset_added(self):
+    def new_wxdset_imported(self, name, dataset):
+        """
+        Receives the new weather dataset, saves it in the project and
+        update the GUI.
+        """
+        print("Saving the new weather dataset in the project.", end=" ")
+        self.projet.add_wxdset(name, dataset)
         self.update_wxdsets()
         self.update_wxdset_info()
         self.wxdset_changed()
+        print("done")
 
     def update_wxdsets(self, name=None, silent=False):
         self.wxdsets_cbox.blockSignals(True)
@@ -364,28 +385,153 @@ class DataManager(QWidget):
             self.set_current_wxdset(closest)
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-class NewDataset(myqt.DialogWindow):
+class NewDatasetDialog(QDialog):
     ConsoleSignal = QSignal(str)
-    newDatasetCreated = QSignal(str)
+    sig_new_dataset_imported = QSignal(str, dict)
 
-    def __init__(self, dsetname, parent=None, projet=None):
-        super(NewDataset, self).__init__(parent, resizable=False)
+    def __init__(self, datatype, parent=None, projet=None):
+        super(NewDatasetDialog, self).__init__(parent)
 
-        self._dsetname = dsetname
+        if datatype.lower() not in ['water level', 'daily weather']:
+            print("ERROR: datatype value must be :",
+                  ['water level', 'daily weather'])
+            raise ValueError
+        self._datatype = datatype.lower()
 
-        self.setModal(True)
-        self.setWindowTitle('New %s dataset' % dsetname.lower())
+        self.setWindowTitle('Import Dataset: %s' % datatype.title())
+        self.setWindowIcon(icons.get_icon('master'))
+        self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowCloseButtonHint)
 
         self.set_projet(projet)
         self.workdir = os.path.dirname(os.getcwd())
-        self._dataset = None  # dataset
+        self._dataset = None
 
         self.__initUI__()
+        if datatype == 'water level':
+            warning = ('<i>Warning : Water levels must be in meter below '
+                       'ground surface (mbgs)</i>')
+            self.layout().addWidget(QLabel(warning), 4, 0)
 
-    # =========================================================================
+    def __initUI__(self):
+
+        # ---- Select Dataset
+
+        self.directory = QLineEdit()
+        self.directory.setReadOnly(True)
+        self.directory.setMinimumWidth(400)
+
+        self.btn_browse = QToolButtonSmall(icons.get_icon('openFile'))
+        self.btn_browse.setToolTip('Select a datafile...')
+        self.btn_browse.clicked.connect(self.select_dataset)
+
+        msg = ('<font color=red size=2><i>Error : %s data file is '
+               'not formatted correctly.</i></font>'
+               ) % self._datatype.capitalize()
+        self._msg = QLabel(msg)
+        self._msg.setVisible(False)
+
+        # Select Dataset Layout
+
+        grp_dset = QGridLayout()
+        row = 0
+        text = "Select a valid %s datafile :" % self._datatype.lower()
+        grp_dset.addWidget(QLabel(text), row, 0, 1, 3)
+        row += 1
+        grp_dset.addWidget(QLabel("File name :"), row, 0)
+        grp_dset.addWidget(self.directory, row, 1)
+        grp_dset.addWidget(self.btn_browse, row, 3)
+        row += 1
+        grp_dset.addWidget(self._msg, row, 1, 1, 3)
+
+        grp_dset.setContentsMargins(0, 0, 0, 15)
+        grp_dset.setColumnStretch(2, 100)
+        grp_dset.setVerticalSpacing(15)
+
+        # ----- Station Info Groupbox
+
+        self._stn_name = QLineEdit()
+        self._stn_name.setAlignment(Qt.AlignCenter)
+
+        self._sid = QLineEdit()
+        self._sid.setAlignment(Qt.AlignCenter)
+
+        self._lat = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
+        self._lat.setRange(-180, 180)
+
+        self._lon = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
+        self._lon.setRange(-180, 180)
+
+        self._alt = myqt.QDoubleSpinBox(0, 3, 0.1, ' m')
+        self._alt.setRange(-9999, 9999)
+
+        self._prov = QLineEdit()
+        self._prov.setAlignment(Qt.AlignCenter)
+
+        # Info Groubox Layout
+
+        self.grp_info = myqt.QGroupWidget()
+        self.grp_info.setTitle("Dataset info")
+        self.grp_info.setEnabled(False)
+        self.grp_info.layout().setColumnStretch(2, 100)
+        self.grp_info.layout().setSpacing(10)
+
+        if self._datatype == 'water level':
+            labels = ['Well name :', 'Well ID :']
+        else:
+            labels = ['Station name :', 'Station ID :']
+        labels.extend(['Latitude :', 'Longitude :',
+                       'Altitude :', 'Province :'])
+        widgets = [self._stn_name, self._sid, self._lat,
+                   self._lon, self._alt, self._prov]
+        for label, widget in zip(labels, widgets):
+            self._add_info_field(label, widget)
+
+        # ----- Toolbar
+
+        self._dset_name = QLineEdit()
+
+        self.btn_ok = QPushButton('Import')
+        self.btn_ok.setMinimumWidth(100)
+        self.btn_ok.setEnabled(False)
+        self.btn_ok.clicked.connect(self.accept_dataset)
+
+        btn_cancel = QPushButton('Cancel')
+        btn_cancel.setMinimumWidth(100)
+        btn_cancel.clicked.connect(self.close)
+
+        # Tool layout
+
+        toolbar = QGridLayout()
+
+        toolbar.addWidget(QLabel('Dataset name :'), 0, 0)
+        toolbar.addWidget(self._dset_name, 0, 1)
+        toolbar.addWidget(self.btn_ok, 0, 3)
+        toolbar.addWidget(btn_cancel, 0, 4)
+
+        toolbar.setSpacing(10)
+        toolbar.setColumnStretch(2, 100)
+        toolbar.setContentsMargins(0, 15, 0, 0)  # (L, T, R, B)
+
+        # ---- Main Layout
+
+        layout = QGridLayout(self)
+
+        layout.addLayout(grp_dset, 0, 0)
+        layout.addWidget(self.grp_info, 1, 0)
+        layout.addLayout(toolbar, 2, 0)
+
+        layout.setRowMinimumHeight(3, 15)
+
+    def _add_info_field(self, label, widget):
+        """Add a new field to the Station Info group box."""
+        layout = self.grp_info.layout()
+        row = layout.rowCount()
+        layout.addWidget(QLabel(label), row, 0)
+        layout.addWidget(widget, row, 1)
+
+    # ---- Properties
 
     @property
     def projet(self):
@@ -400,448 +546,126 @@ class NewDataset(myqt.DialogWindow):
 
     @property
     def name(self):
-        return self._name.text()
-
-    # =========================================================================
-
-    def __initUI__(self):
-
-        # ------------------------------------------------- Dataset  ------
-
-        self.directory = QLineEdit()
-        self.directory.setReadOnly(True)
-        self.directory.setMinimumWidth(400)
-
-        btn_browse = QToolButtonSmall(icons.get_icon('openFile'))
-        btn_browse.setToolTip('Open file...')
-        btn_browse.clicked.connect(self.select_dataset)
-
-        msg = ('<font color=red size=2><i>Error : %s data file is '
-               'not formatted correctly.</i></font>'
-               ) % self._dsetname.capitalize()
-        self._msg = QLabel(msg)
-        self._msg.setVisible(False)
-
-        # ---- layout ----
-
-        grp_dset = QGridLayout()
-
-        row = 0
-        text = 'Select a valid %s dataset file :' % self._dsetname.lower()
-        grp_dset.addWidget(QLabel(text), row, 0, 1, 3)
-        row += 1
-        grp_dset.addWidget(QLabel('File name :'), row, 0)
-        grp_dset.addWidget(self.directory, row, 1, 1, 2)
-        grp_dset.addWidget(btn_browse, row, 3)
-        row += 1
-        grp_dset.addWidget(self._msg, row, 1, 1, 3)
-
-        grp_dset.setContentsMargins(0, 0, 0, 15)
-        grp_dset.setColumnStretch(2, 100)
-        grp_dset.setVerticalSpacing(15)
-
-        # ------------------------------------------------------ Info ----
-
-        infogrp = self.__initInfoGroup__()
-
-        # --------------------------------------------------- Toolbar ----
-
-        self._name = QLineEdit()
-
-        self.btn_ok = QPushButton(' Ok')
-        self.btn_ok.setMinimumWidth(100)
-        self.btn_ok.setEnabled(False)
-        self.btn_ok.clicked.connect(self.accept_dataset)
-
-        btn_cancel = QPushButton(' Cancel')
-        btn_cancel.setMinimumWidth(100)
-        btn_cancel.clicked.connect(self.close)
-
-        # ---- layout ----
-
-        toolbar = QGridLayout()
-
-        toolbar.addWidget(QLabel('Dataset name :'), 0, 0)
-        toolbar.addWidget(self._name, 0, 1)
-
-        toolbar.addWidget(self.btn_ok, 0, 3)
-        toolbar.addWidget(btn_cancel, 0, 4)
-
-        toolbar.setSpacing(10)
-        toolbar.setColumnStretch(2, 100)
-        toolbar.setContentsMargins(0, 15, 0, 0)  # (L, T, R, B)
-
-    # ----------------------------------------------------------- Main ----
-
-        layout = QGridLayout(self)
-
-        layout.addLayout(grp_dset, 0, 0)
-        layout.addWidget(infogrp, 1, 0)
-        layout.addLayout(toolbar, 2, 0)
-
-        layout.setRowMinimumHeight(3, 15)
-
-    def __initInfoGroup__(self):
-        return None
-
-    # =========================================================================
-
-    def select_dataset(self):
-        pass
-
-    def load_dataset(self, filename):
-        pass
-
-    def accept_dataset(self):
-        pass
-
-    # =========================================================================
-
-    def close(self):
-        super(NewDataset, self).close()
-        self.clear()
-
-    def clear(self):
-        self.directory.clear()
-        self._name.clear()
-        self._dataset = None
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-class NewWaterLvl(NewDataset):
-    def __init__(self, parent=None, projet=None):
-        super(NewWaterLvl, self).__init__('water level', parent, projet)
-
-        warning = ('<i>Warning : Water levels must be in meter below '
-                   'ground surface (mbgs)</i>')
-        self.layout().addWidget(QLabel(warning), 4, 0)
-
-    def __initInfoGroup__(self):
-        self._well = QLineEdit()
-        self._well.setAlignment(Qt.AlignCenter)
-
-        self._lat = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
-        self._lat.setRange(-180, 180)
-
-        self._lon = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
-        self._lon.setRange(-180, 180)
-
-        self._alt = myqt.QDoubleSpinBox(0, 3, 0.1, ' m')
-        self._alt.setRange(-9999, 9999)
-
-        self._mun = QLineEdit()
-        self._mun.setAlignment(Qt.AlignCenter)
-
-        # ---- layout ----
-
-        self.grp_well = myqt.QGroupWidget()
-        self.grp_well.setTitle('Well info')
-        self.grp_well.setEnabled(False)
-
-        row = 0
-        self.grp_well.addWidget(QLabel('Well ID :'), row, 0)
-        self.grp_well.addWidget(self._well, row, 1)
-        row += 1
-        self.grp_well.addWidget(QLabel('Latitude :'), row, 0)
-        self.grp_well.addWidget(self._lat, row, 1)
-        row += 1
-        self.grp_well.addWidget(QLabel('Longitude :'), row, 0)
-        self.grp_well.addWidget(self._lon, row, 1)
-        row += 1
-        self.grp_well.addWidget(QLabel('Altitude :'), row, 0)
-        self.grp_well.addWidget(self._alt, row, 1)
-        row += 1
-        self.grp_well.addWidget(QLabel('Municipality :'), row, 0)
-        self.grp_well.addWidget(self._mun, row, 1)
-
-        self.grp_well.layout().setColumnStretch(2, 100)
-        self.grp_well.layout().setSpacing(10)
-
-        return self.grp_well
-
-    # -------------------------------------------------------------------------
+        """Name that will be use to reference the dataset in the project."""
+        return self._dset_name.text()
 
     @property
-    def well(self):
-        return self._well.text()
+    def station_name(self):
+        """Common name of the climate or piezomatric station."""
+        return self._stn_name.text()
 
     @property
-    def municipality(self):
-        return self._mun.text()
+    def station_id(self):
+        """Unique identifier of the climate or piezomatric station."""
+        return self._sid.text()
 
     @property
-    def lat(self):
-        return self._lat.value()
-
-    @property
-    def lon(self):
-        return self._lon.value()
-
-    @property
-    def alt(self):
-        return self._alt.value()
-
-    # =========================================================================
-
-    def select_dataset(self):
-        filename, _ = QFileDialog.getOpenFileName(
-            self, 'Select a valid water level data file',
-            self.workdir, '(*.xls *.xlsx)')
-
-        for i in range(5):
-            QCoreApplication.processEvents()
-
-        if filename:
-            self.load_dataset(filename)
-
-    # -------------------------------------------------------------------------
-
-    def load_dataset(self, filename):
-        if not os.path.exists(filename):
-            print('Path does not exist. Cannot open %s.' % filename)
-            return
-
-        # Update GUI path memory variables :
-
-        self.workdir = os.path.dirname(filename)
-
-        # Load Data :
-
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        msg = 'Loading water level data...'
-        print(msg)
-        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-        for i in range(5):
-            QCoreApplication.processEvents()
-
-        self._dataset = wlrd.load_excel_datafile(filename)
-
-        # Update GUI :
-
-        QApplication.restoreOverrideCursor()
-
-        self.directory.setText(filename)
-        if self._dataset is not None:
-            self.grp_well.setEnabled(True)
-            self._msg.setVisible(False)
-            self.btn_ok.setEnabled(True)
-
-            self._well.setText(self._dataset['Well'])
-            self._mun.setText(self._dataset['Municipality'])
-            self._lat.setValue(self._dataset['Latitude'])
-            self._lon.setValue(self._dataset['Longitude'])
-            self._alt.setValue(self._dataset['Elevation'])
-            self._name.setText(self._dataset['Well'])
-        else:
-            self._msg.setVisible(True)
-            self.btn_ok.setEnabled(False)
-            self.grp_well.setEnabled(False)
-
-            self._mun.clear()
-            self._well.clear()
-            self._lat.setValue(0)
-            self._lon.setValue(0)
-            self._alt.setValue(0)
-
-    # -------------------------------------------------------------------------
-
-    def accept_dataset(self):
-        if self.name == '':
-            msg = 'Please enter a valid name for the dataset.'
-            btn = QMessageBox.Ok
-            QMessageBox.warning(self, 'Save dataset', msg, btn)
-            return
-
-        if self.name in self.projet.wldsets:
-            msg = ('The dataset <i>%s</i> already exists.'
-                   ' Do you want tho replace the existing dataset?'
-                   ' All data will be lost.') % self.name
-            btn = QMessageBox.Yes | QMessageBox.No
-            reply = QMessageBox.question(self, 'Save dataset', msg, btn)
-            if reply == QMessageBox.No:
-                return
-            else:
-                self.projet.del_wldset(self.name)
-
-        # Update dataset attributes from UI :
-
-        self._dataset['Well'] = self.well
-        self._dataset['Municipality'] = self.municipality
-        self._dataset['Latitude'] = self.lat
-        self._dataset['Longitude'] = self.lon
-        self._dataset['Elevation'] = self.alt
-
-        print('Saving dataset to project db.')
-        self.projet.add_wldset(self.name, self._dataset)
-        self.newDatasetCreated.emit(self.name)
-
-        self.close()
-
-    # =========================================================================
-
-    def clear(self):
-        super(NewWaterLvl, self).clear()
-        self._well.clear()
-        self._mun.clear()
-        self._lat.setValue(0)
-        self._lon.setValue(0)
-        self._alt.setValue(0)
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-class NewWXDataDialog(NewDataset):
-
-    ConsoleSignal = QSignal(str)
-    newDatasetCreated = QSignal(str)
-
-    def __init__(self, parent=None, projet=None):
-        super(NewWXDataDialog, self).__init__('daily weather', parent, projet)
-
-    def __initInfoGroup__(self):
-
-        self._staname = QLineEdit()
-        self._staname.setAlignment(Qt.AlignCenter)
-
-        self._staID = QLineEdit()
-        self._staID.setAlignment(Qt.AlignCenter)
-
-        self._lat = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
-        self._lat.setRange(-180, 180)
-
-        self._lon = myqt.QDoubleSpinBox(0, 3, 0.1, ' °')
-        self._lon.setRange(-180, 180)
-
-        self._alt = myqt.QDoubleSpinBox(0, 3, 0.1, ' m')
-
-        self._prov = QLineEdit()
-        self._prov.setAlignment(Qt.AlignCenter)
-
-        # ---- layout ----
-
-        self.grp_sta = myqt.QGroupWidget()
-        self.grp_sta.setTitle('Station info')
-        self.grp_sta.setEnabled(False)
-
-        labels = ['Name :', 'ID :', 'Latitude :', 'Longitude :', 'Altitude :',
-                  'Province :']
-        widgets = [self._staname, self._staID, self._lat, self._lon, self._alt,
-                   self._prov]
-
-        for label, widget in zip(labels, widgets):
-            row = self.grp_sta.rowCount()
-            self.grp_sta.addWidget(QLabel(label), row, 0)
-            self.grp_sta.addWidget(widget, row, 1)
-
-        self.grp_sta.layout().setColumnStretch(2, 100)
-        self.grp_sta.layout().setSpacing(10)
-
-        return self.grp_sta
-
-    # -------------------------------------------------------------------------
-
-    @property
-    def staname(self):
-        return self._staname.text()
-
-    @property
-    def staID(self):
-        return self._staID.text()
-
-    @property
-    def prov(self):
+    def province(self):
+        """Province where the station is located."""
         return self._prov.text()
 
     @property
-    def lat(self):
+    def latitude(self):
+        """Latitude in decimal degree of the station location."""
         return self._lat.value()
 
     @property
-    def lon(self):
+    def longitude(self):
+        """Longitude in decimal degree of the station location."""
         return self._lon.value()
 
     @property
-    def alt(self):
+    def altitude(self):
+        """Elevation of the station in meters above see level."""
         return self._alt.value()
 
-    # =========================================================================
+    # ---- Dataset Handlers
 
     def select_dataset(self):
+        """Opens a dialog to select a single datafile."""
+
+        if self._datatype == 'water level':
+            exts = '(*.csv;*.xls;*.xlsx)'
+        elif self._datatype == 'daily weather':
+            exts = '(*.csv;*.out)'
         filename, _ = QFileDialog.getOpenFileName(
-            self, 'Select a valid weather data file',
-            self.workdir, '(*.csv;*.out)')
+            self, 'Select a %s data file' % self._datatype,
+            self.workdir, exts)
 
         for i in range(5):
             QCoreApplication.processEvents()
 
         if filename:
+            self.workdir = os.path.dirname(filename)
             self.load_dataset(filename)
 
-    # ---------------------------------------------------------------------
-
     def load_dataset(self, filename):
+        """Loads the dataset and displays the information in the UI."""
         if not os.path.exists(filename):
             print('Path does not exist. Cannot open %s.' % filename)
             return
 
-        # Update GUI path memory variables :
-
-        self.workdir = os.path.dirname(filename)
-
-        # Load Data :
+        # Load the Data :
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        msg = 'Loading water level data...'
+        msg = 'Loading %s data...' % self._datatype
         print(msg)
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         for i in range(5):
             QCoreApplication.processEvents()
 
-        self._dataset = wxrd.WXDataFrame(filename)
-
-        # Update GUI :
-
+        if self._datatype == 'water level':
+            self._dataset = wlrd.read_water_level_datafile(filename)
+        elif self._datatype == 'daily weather':
+            self._dataset = wxrd.WXDataFrame(filename)
         QApplication.restoreOverrideCursor()
 
+        # Update the GUI :
+
         self.directory.setText(filename)
-        if self._dataset is not None:
-            self.grp_sta.setEnabled(True)
+        if self._dataset is None:
+            self._msg.setVisible(True)
+            self.btn_ok.setEnabled(False)
+            self.grp_info.setEnabled(False)
+            self.clear(clear_directory=False)
+        else:
+            self.grp_info.setEnabled(True)
             self._msg.setVisible(False)
             self.btn_ok.setEnabled(True)
 
-            self._staname.setText(self._dataset['Station Name'])
-            self._staID.setText(self._dataset['Climate Identifier'])
-            self._prov.setText(self._dataset['Province'])
-            self._lat.setValue(self._dataset['Latitude'])
-            self._lon.setValue(self._dataset['Longitude'])
-            self._alt.setValue(self._dataset['Elevation'])
-            self._name.setText(self._dataset['Station Name'])
-        else:
-            self.btn_ok.setEnabled(False)
-            self._msg.setVisible(True)
-            self.grp_sta.setEnabled(False)
-
-            self._staname.clear()
-            self._prov.clear()
-            self._lat.setValue(0)
-            self._lon.setValue(0)
-            self._alt.setValue(0)
-
-    # --------------------------------------------------------------------
+            if self._datatype == 'water level':
+                self._stn_name.setText(self._dataset['Well'])
+                self._sid.setText(self._dataset['Well ID'])
+                self._prov.setText(self._dataset['Province'])
+                self._lat.setValue(self._dataset['Latitude'])
+                self._lon.setValue(self._dataset['Longitude'])
+                self._alt.setValue(self._dataset['Elevation'])
+                self._dset_name.setText(self._dataset['Well'])
+            elif self._datatype == 'daily weather':
+                self._stn_name.setText(self._dataset['Station Name'])
+                self._sid.setText(self._dataset['Climate Identifier'])
+                self._prov.setText(self._dataset['Province'])
+                self._lat.setValue(self._dataset['Latitude'])
+                self._lon.setValue(self._dataset['Longitude'])
+                self._alt.setValue(self._dataset['Elevation'])
+                self._dset_name.setText(self._dataset['Station Name'])
 
     def accept_dataset(self):
+        """Accept and emit the dataset."""
         if self.name == '':
             msg = 'Please enter a valid name for the dataset.'
             btn = QMessageBox.Ok
             QMessageBox.warning(self, 'Save dataset', msg, btn)
             return
 
-        if self.name in self.projet.wxdsets:
+        if self._datatype == 'water level':
+            is_dsetname_exists = self.name in self.projet.wldsets
+            del_dset = self.projet.del_wldset
+        elif self._datatype == 'daily weather':
+            is_dsetname_exists = self.name in self.projet.wxdsets
+            del_dset = self.projet.del_wxdset
+
+        if is_dsetname_exists:
             msg = ('The dataset <i>%s</i> already exists.'
                    ' Do you want tho replace the existing dataset?'
                    ' All data will be lost.') % self.name
@@ -850,37 +674,50 @@ class NewWXDataDialog(NewDataset):
             if reply == QMessageBox.No:
                 return
             else:
-                self.projet.del_wxdset(self.name)
+                del_dset(self.name)
 
-        # Update dataset attributes from UI :
+        # Update dataset attributes from UI and emit dataset :
 
-        self._dataset['Station Name'] = self.staname
-        self._dataset['Climate Identifier'] = self.staID
-        self._dataset['Province'] = self.prov
+        if self._datatype == 'water level':
+            self._dataset['Well'] = self.station_name
+            self._dataset['Well ID'] = self.station_id
+        elif self._datatype == 'daily weather':
+            self._dataset['Station Name'] = self.station_name
+            self._dataset['Climate Identifier'] = self.station_id
+        self._dataset['Province'] = self.province
+        self._dataset['Latitude'] = self.latitude
+        self._dataset['Longitude'] = self.longitude
+        self._dataset['Elevation'] = self.altitude
 
-        self._dataset['Latitude'] = self.lat
-        self._dataset['Longitude'] = self.lon
-        self._dataset['Elevation'] = self.alt
-
-        print('Saving dataset to project db.')
-        self.projet.add_wxdset(self.name, self._dataset)
-        self.newDatasetCreated.emit(self.name)
-
+        self.sig_new_dataset_imported.emit(self.name, self._dataset)
         self.close()
 
-    # =========================================================================
+    # ---- Display Handlers
 
-    def clear(self):
-        super(NewWXDataDialog, self).clear()
-        self._staname.clear()
-        self._staID.clear()
+    def close(self):
+        super(NewDatasetDialog, self).close()
+        self.clear()
+
+    def clear(self, clear_directory=True):
+        if clear_directory:
+            self.directory.clear()
+        self._dataset = None
+        self._dset_name.clear()
+        self._stn_name.clear()
         self._prov.clear()
         self._lat.setValue(0)
         self._lon.setValue(0)
         self._alt.setValue(0)
+        self._sid.clear()
+
+    def show(self):
+        """Qt method override."""
+        super(NewDatasetDialog, self).show()
+        self.setFixedSize(self.size())
 
 
 # ---- if __name__ == '__main__'
+
 if __name__ == '__main__':
     from reader_projet import ProjetReader
     import sys
@@ -895,9 +732,9 @@ if __name__ == '__main__':
     ft.setFamily('Segoe UI')
     ft.setPointSize(11)
     app.setFont(ft)
-#
-#    pm = ProjetManager(projet=f)
-#    pm.show()
+
+    # pm = ProjetManager(projet=f)
+    # pm.show()
 
     dm = DataManager(projet=p)
     dm.show()
