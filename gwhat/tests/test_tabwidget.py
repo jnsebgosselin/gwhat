@@ -59,6 +59,7 @@ def test_tabwidget_and_about_window(tabwidget_bot):
 
     # Show about window and assert it was created and showed correctly.
     qtbot.mouseClick(tabwidget.about_btn, Qt.LeftButton)
+    qtbot.addWidget(tabwidget.about_btn)
     assert tabwidget.about_win
     assert tabwidget.about_win.isVisible()
 
@@ -81,6 +82,17 @@ def test_worker_updates(worker_updates_bot):
     gwhat.widgets.updates.__version__ = "0.1.0"
     worker_updates.start()
     qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.update_available is True
+
+    gwhat.widgets.updates.__version__ = "0.1.0.dev"
+    worker_updates.start()
+    qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.update_available is False
+
+    gwhat.widgets.updates.__version__ = "10.0.0"
+    worker_updates.start()
+    qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.update_available is False
 
 
 def test_update_manager(tabwidget_bot):
