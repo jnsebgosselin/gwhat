@@ -26,9 +26,6 @@ var/
 #  Usually these files are written by a python script from a template
 #  before PyInstaller builds the exe, so as to inject date/other infos into it.
 *.manifest
-*.spec
-PyInstaller-3.2.1
-PyInstaller 3.2.1-dev
 
 # Installer logs
 pip-log.txt
@@ -61,12 +58,17 @@ waterlvl_manual_measurements.*
 
 backup/
 */Backup/
-releases/
 references/
-Projects/
+/Projects/
 */Revision/
 .spyproject/
 @ new-prô'jèt!/
+releases/*.zip
+releases/build
+releases/dist
+releases/start_gwhat.bat
+releases/gwhat_*
+run_cython.bat
 
 Colors.db
 kgs_brf.exe
@@ -76,7 +78,6 @@ BRFOutput.txt
 GLUE.npy
 *.par
 *.wif
-*.bat
 
 url.txt
 urlsinglestation.txt
