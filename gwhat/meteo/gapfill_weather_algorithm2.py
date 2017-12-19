@@ -949,8 +949,8 @@ class GapFillWeather(QObject):
         print('Generating %s...' % filename)
         wxdset = wxrd.WXDataFrame(output_path)
         fig = FigWeatherNormals()
-        fig.set_lang(self.fig_language)
         fig.plot_monthly_normals(wxdset['normals'])
+        fig.set_lang(self.fig_language)
         fig.figure.savefig(os.path.join(dirname, filename))
 
         # ------------------------------------------------------ .err file ----
