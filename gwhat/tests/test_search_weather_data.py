@@ -26,6 +26,8 @@ def station_finder_bot(qtbot):
     station_browser.set_yearmin(1960)
     station_browser.set_yearmax(2015)
     station_browser.set_yearnbr(10)
+    station_browser.set_lat(45)
+    station_browser.set_lon(60)
 
     qtbot.addWidget(station_browser)
 
@@ -70,8 +72,8 @@ def test_search_weather_station(station_finder_bot, mocker):
 
     # Search for stations and assert that lat and lon are 0.
     station_browser.prox_grpbox.setChecked(True)
-    assert station_browser.lon_spinBox.value() == 0
-    assert station_browser.lat_spinBox.value() == 0
+    assert station_browser.lat_spinBox.value() == 45.0
+    assert station_browser.lon_spinBox.value() == 60.0
 
     # Changed the values of the lat and lon and assert that the proximity
     # values are shown correctly.
