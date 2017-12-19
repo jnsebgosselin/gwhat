@@ -202,7 +202,7 @@ class WeatherSationView(QTableView):
     def populate_table(self, stationlist):
         self.stationlist = stationlist
         N = len(stationlist)
-        M = len(WeatherSationModel.HEADER)
+        M = len(WeatherStationModel.HEADER)
         if N == 0:
             data = np.empty((0, M))
         else:
@@ -229,7 +229,7 @@ class WeatherSationView(QTableView):
                               ]).transpose()
 
         checked = self.chkbox_header.checkState() == Qt.Checked
-        self.setModel(WeatherSationModel(data, checked))
+        self.setModel(WeatherStationModel(data, checked))
         self.model().sort(self.horizontalHeader().sortIndicatorSection(),
                           self.horizontalHeader().sortIndicatorOrder())
 
@@ -256,6 +256,13 @@ class WeatherSationView(QTableView):
             stationlist.append(self.stationlist[int(index)])
         return stationlist
 
+    def get_prox_data(self):
+        """Returns the proximity value shown in the table."""
+        if self.geocoord:
+            return np.array(self.model()._data[:, 2]).astype(float)
+        else:
+            return None
+
     def get_stationlist(self):
         """Get and format the content of the QTableView."""
         indexes = self.model()._data[:, 0]
@@ -270,14 +277,14 @@ class WeatherSationView(QTableView):
         stationlist.save_to_file(filename)
 
 
-class WeatherSationModel(QAbstractTableModel):
+class WeatherStationModel(QAbstractTableModel):
 
     HEADER = ('', 'Weather Stations', 'Proximity\n(km)', 'From \n Year',
               'To \n Year', 'Prov.', 'Climate ID', 'Station ID',
               'Lat.\n(dd)', 'Lon.\n(dd)', 'Elev.\n(m)')
 
     def __init__(self, data, checked=False):
-        super(WeatherSationModel, self).__init__()
+        super(WeatherStationModel, self).__init__()
         self._data = data
         self._checks = np.ones(len(data)).astype(int) * int(checked)
 
