@@ -146,7 +146,7 @@ class WeatherStationBrowser(QWidget):
         self.lat_spinBox.setMinimum(0)
         self.lat_spinBox.setMaximum(180)
         self.lat_spinBox.setSuffix(u' °')
-        self.lat_spinBox.valueChanged.connect(self.search_filters_changed)
+        self.lat_spinBox.valueChanged.connect(self.proximity_grpbox_toggled)
 
         label_Lon = QLabel('Longitude :')
         label_Lon2 = QLabel('West')
@@ -158,7 +158,7 @@ class WeatherStationBrowser(QWidget):
         self.lon_spinBox.setMinimum(0)
         self.lon_spinBox.setMaximum(180)
         self.lon_spinBox.setSuffix(u' °')
-        self.lon_spinBox.valueChanged.connect(self.search_filters_changed)
+        self.lon_spinBox.valueChanged.connect(self.proximity_grpbox_toggled)
 
         self.radius_SpinBox = QComboBox()
         self.radius_SpinBox.addItems(['25 km', '50 km', '100 km', '200 km'])
@@ -413,6 +413,11 @@ class WeatherStationBrowser(QWidget):
         return stnlist
 
     def proximity_grpbox_toggled(self):
+        """
+        Set the values for the reference geo coordinates that are used in the
+        WeatherSationView to calculate the proximity values and forces a
+        refresh of the content of the table.
+        """
         if self.prox_grpbox.isChecked():
             self.station_table.set_geocoord((self.lat, -self.lon))
         else:
@@ -420,6 +425,10 @@ class WeatherStationBrowser(QWidget):
         self.search_filters_changed()
 
     def search_filters_changed(self):
+        """
+        Search for weather stations with the current filter values and forces
+        an update of the station table content.
+        """
         stnlist = self.stn_finder.get_stationlist(
                 prov=self.prov, prox=self.prox,
                 yrange=(self.year_min, self.year_max, self.nbr_of_years))
