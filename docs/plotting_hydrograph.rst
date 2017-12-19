@@ -4,7 +4,7 @@ Plotting Hydrographs
 ===============================================
 
 This document shows how to produce publication quality figures of well hydrographs
-in GWHAT using the tools availble under the tab :guilabel:`Plot Hydrograph` shown
+in GWHAT using the tools available under the tab :guilabel:`Plot Hydrograph` shown
 in :numref:`scs_plot_hydrograph`.
 
 .. _scs_plot_hydrograph:
@@ -17,9 +17,23 @@ in :numref:`scs_plot_hydrograph`.
     Presentation of the tool to plot hydrographs in GWHAT under the
     :guilabel:`Plot Hydrograph` tab.
 
-The tab :guilabel:`Plot Hydrograph` consist mainly of an editor to produce a
+The tab :guilabel:`Plot Hydrograph` consists mainly of an editor to produce a
 graph showing the ground-water level time series in relation to weather
-conditions.
+conditions. As shown in :numref:`fig_plot_hydrograph_annoted`, the editor
+consists of a toolbar, the panel :guilabel:`Input data`, the panel
+:guilabel:`Axes settings`, and a canvas where the hydrograph figure is shown.
+
+A figure of the hydrograph is produced as soon as a water level and weather
+dataset have been selected in the :guilabel:`Input data` panel.
+It is possible to zoom the figure canvas in or out by pressing the
+|icon_zoom_in| or |icon_zoom_out| icon or by rotating the mouse wheel while
+holdind the :kbd:`Ctrl` key.
+
+Various parameters are available to customize the layout of the hydrograph .
+
+The layout for the currently selected water level dataset can be saved in the
+project by clicking on the icon.
+
 
 .. _fig_plot_hydrograph_annoted:
 .. figure:: img/scs/plot_hydrograph_annoted.*
@@ -27,6 +41,10 @@ conditions.
     :width: 100%
     :alt: alternate text
     :figclass: align-center
+
+    Presentation of the editor to produce publication quality figures of
+    well hydrographs that is available in the tab :guilabel:`Plot Hydrograph`
+    of GWHAT..
 
 Components of the Hydrograph
 -----------------------------------------------
@@ -162,3 +180,13 @@ window and by clicking on the :guilabel:`OK` or :guilabel:`Apply` button.
                       :width: 1em
                       :height: 1em
                       :alt: page setup
+
+.. |icon_zoom_in| image:: img/icon/icon_zoom_in.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: zoom in
+
+.. |icon_zoom_out| image:: img/icon/icon_zoom_out.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: zoom in
