@@ -3,7 +3,7 @@
 Plotting Hydrographs
 ===============================================
 
-This document shows how to produce publication quality figure of well hydrographs
+This document shows how to produce publication quality figures of well hydrographs
 in GWHAT using the tools availble under the tab :guilabel:`Plot Hydrograph` shown
 in :numref:`scs_plot_hydrograph`.
 
@@ -16,9 +16,6 @@ in :numref:`scs_plot_hydrograph`.
 
     Presentation of the tool to plot hydrographs in GWHAT under the
     :guilabel:`Plot Hydrograph` tab.
-
-
-.. _importing_data_inproject:
 
 The tab :guilabel:`Plot Hydrograph` consist mainly of an editor to produce a
 graph showing the ground-water level time series in relation to weather
@@ -54,7 +51,7 @@ To do so, the manual measurements must be saved in a csv or xls/xlsx file
 named :file:`water_level_measurements` in the :file:`Water Levels` folder
 (see :numref:`sec_desc_project_folders`).
 An example is shown in :numref:`fig_water_level_measurements` below. The first column corresponds
-to the name of the observation wells (see :numref:`importing_data_inproject`), the second column is the
+to the name of the observation wells (see :numref:`sec_importing_data`), the second column is the
 dates entered in :term:`Excel numeric date format`, and the last column corresponds to
 the manual measurements, in meters below the ground surface.
 
