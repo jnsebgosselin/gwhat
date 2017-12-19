@@ -29,6 +29,7 @@ please contact Jean-Sébastien Gosselin at jean-sebastien.gosselin@ete.inrs.ca.
    dwnld_weather_data
    gapfill_weather_data
    plotting_hydrograph
+   weather_normals_viewer
    master_recession_curve
    compute_brf
    groundwater_recharge
