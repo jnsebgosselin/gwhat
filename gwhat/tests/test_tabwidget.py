@@ -13,12 +13,15 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 # ---- Third parties imports
 
 import pytest
+from flaky import flaky
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QWidget
 
 # ---- Local imports
 
-from gwhat.widgets.tabwidget import TabWidget                          # nopep8
+from gwhat.widgets.tabwidget import TabWidget
+from gwhat.widgets.updates import WorkerUpdates
+import gwhat.widgets.updates
 
 
 # Qt Test Fixtures
@@ -37,7 +40,14 @@ def tabwidget_bot(qtbot):
 
     return tabwidget, qtbot
 
-# Tests
+
+@pytest.fixture
+def worker_updates_bot(qtbot):
+    worker_updates = WorkerUpdates()
+    return worker_updates, qtbot
+
+
+# Tests AboutWhat
 # -------------------------------
 
 
@@ -50,6 +60,7 @@ def test_tabwidget_and_about_window(tabwidget_bot):
 
     # Show about window and assert it was created and showed correctly.
     qtbot.mouseClick(tabwidget.about_btn, Qt.LeftButton)
+    qtbot.addWidget(tabwidget.about_btn)
     assert tabwidget.about_win
     assert tabwidget.about_win.isVisible()
 
@@ -58,6 +69,38 @@ def test_tabwidget_and_about_window(tabwidget_bot):
     assert not tabwidget.about_win.isVisible()
 
 
+# Tests ManagerUpdates and WorkerUpdates
+# --------------------------------------
+
+
+@flaky(max_runs=3)
+def test_worker_updates(worker_updates_bot):
+    """
+    Assert that the worker to check for updates on the GitHub API is
+    working as expected.
+    """
+    worker_updates, qtbot = worker_updates_bot
+
+    gwhat.widgets.updates.__version__ = "0.1.0"
+    worker_updates.start()
+    qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.error is None
+    assert worker_updates.update_available is True
+
+    gwhat.widgets.updates.__version__ = "0.1.0.dev"
+    worker_updates.start()
+    qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.error is None
+    assert worker_updates.update_available is False
+
+    gwhat.widgets.updates.__version__ = "10.0.0"
+    worker_updates.start()
+    qtbot.waitSignal(worker_updates.sig_ready)
+    assert worker_updates.error is None
+    assert worker_updates.update_available is False
+
+
+@flaky(max_runs=3)
 def test_update_manager(tabwidget_bot):
     tabwidget, qtbot = tabwidget_bot
     tabwidget.show()
@@ -80,6 +123,9 @@ def test_update_manager(tabwidget_bot):
     qtbot.waitUntil(lambda: not tabwidget.about_win.manager_updates.thread_updates.isRunning(),
                     timeout=10000)
 
+
+# Tests TabWidget
+# --------------------------------------
 
 def test_tabwidget_index_memory(tabwidget_bot):
     tabwidget, qtbot = tabwidget_bot

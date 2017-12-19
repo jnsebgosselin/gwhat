@@ -9,6 +9,7 @@ import pytest
 import sys
 import os
 from PyQt5.QtCore import Qt
+import numpy as np
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
@@ -22,11 +23,11 @@ from gwhat.meteo.search_weather_data import QFileDialog                # nopep8
 @pytest.fixture
 def station_finder_bot(qtbot):
     station_browser = WeatherStationBrowser()
-    station_browser.set_lat(45.40)
-    station_browser.set_lon(73.15)
     station_browser.set_yearmin(1960)
     station_browser.set_yearmax(2015)
     station_browser.set_yearnbr(10)
+    station_browser.set_lat(45)
+    station_browser.set_lon(60)
 
     qtbot.addWidget(station_browser)
 
@@ -69,8 +70,19 @@ def test_search_weather_station(station_finder_bot, mocker):
     station_browser.show()
     assert station_browser
 
-    # Search for stations and assert the results.
+    # Search for stations and assert that lat and lon are 0.
     station_browser.prox_grpbox.setChecked(True)
+    assert station_browser.lat_spinBox.value() == 45.0
+    assert station_browser.lon_spinBox.value() == 60.0
+
+    # Changed the values of the lat and lon and assert that the proximity
+    # values are shown correctly.
+    station_browser.lon_spinBox.setValue(73.15)
+    station_browser.lat_spinBox.setValue(45.40)
+    prox_data = station_browser.station_table.get_prox_data()
+    assert np.max(prox_data) <= 25
+
+    # Assert that the search returns the expected results.
     results = station_browser.stationlist
     assert results == expected_results
 

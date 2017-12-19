@@ -17,6 +17,7 @@ install:
   - pip install pytest-mock
   - pip install pytest-cov
   - pip install pytest-ordering
+  - pip install flaky
   - pip install coveralls
   - pip install matplotlib
   - pip install scipy
