@@ -3,7 +3,7 @@
 # Copyright © 2014-2017 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
 from __future__ import division, unicode_literals
@@ -26,6 +26,7 @@ import numpy as np
 # Local imports :
 
 import gwhat.common.widgets as myqt
+from gwhat.common.utils import save_content_to_csv
 
 
 class ColorsReader(object):
@@ -56,41 +57,30 @@ class ColorsReader(object):
     def keys(self):
         return list(self.RGB.keys())
 
-    # =========================================================================
-
     def load_colors_db(self):
+        """Load the color settings from Colors.db."""
         fname = 'Colors.db'
         if not os.path.exists(fname):
-            print('No color database file exists, creating a new one...')
             self.save_colors_db()
 
         else:
-            print('Loading colors database...')
+            print('Loading the color settings...', end=" ")
             with open(fname, 'r') as f:
                 reader = list(csv.reader(f, delimiter=','))
 
             for row in reader:
                 self.RGB[row[0]] = [int(x) for x in row[1:]]
-
-        print('Colors database loaded sucessfully.')
-
-    # =========================================================================
+            print('done')
 
     def save_colors_db(self):
+        """Save the color settings to Colors.db."""
         fname = 'Colors.db'
         fcontent = []
         for key in self.RGB.keys():
             fcontent.append([key])
             fcontent[-1].extend(self.RGB[key])
-
-        with open(fname, 'w') as f:
-            writer = csv.writer(f, delimiter=',', lineterminator='\n')
-            writer.writerows(fcontent)
-
-        print('Color database saved successfully')
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+        save_content_to_csv(fname, fcontent)
+        print('Color settings saved successfully.')
 
 
 class ColorsSetupWin(myqt.DialogWindow):
