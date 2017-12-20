@@ -9,6 +9,9 @@
 # Copyright (C) 2013 The IPython Development Team
 # https://github.com/ipython/ipython
 #
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
+#
 # This file is a derivative work of codes from the Spyder project.
 # Licensed under the terms of the MIT License.
 #
