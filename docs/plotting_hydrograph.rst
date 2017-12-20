@@ -81,6 +81,8 @@ Components of the Hydrograph
 
     Identification of the components of the hydrograph.
 
+.. _subsec_water_level_component:
+
 Ground-water level
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -112,6 +114,8 @@ moving average window of 30 days.
 
     Example of an hydrogaph with an extended period of time for which data is
     missing.
+
+.. _subsec_weather_data_component:
 
 Weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -214,6 +218,42 @@ automatically when a value is changed in the :guilabel:`Axes settings` panel.
     :width: 100%
     :alt: axis_setup_annoted.svg
     :figclass: align-center
+
+Time axis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The range of the time axis can be changed by setting the :guilabel:`From` and 
+:guilabel:`To` dates. The :guilabel:`Scale` of the time axis can be set to
+`monthly` or `yearly`. The :guilabel:`Date Disp. Pattern` setting allow to define
+the interval with which the tick labels of the time axis are plotted. Four different
+cases with different values of the :guilabel:`Scale` and The :guilabel:`Date Disp. Pattern`
+settings are presented in :numref:`fig_hydroprint_axis_settings`.
+
+Water level axis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The :guilabel:`Minimum` setting of corresponds to the value at the bottom of
+the water level axis. The :guilabel:`Grid Divisions` value corresponds to the 
+number of intervals in which the water level axis is divided as shown on
+:numref:`fig_hydroprint_axis_settings`. The :guilabel:`Datum` of reference of
+the water level axis can be set to either ``Ground Surface`` or ``See Level``.
+
+The value at the top of the water level axis is calculated from the values
+specified in :guilabel:`Minimum`, :guilabel:`Scale`, and :guilabel:`Grid Divisions`.
+The equation that is used in the calculation, which depends on the :guilabel:`Datum` that
+is selected, is presented at the bottom of :numref:`fig_hydroprint_axis_settings`.
+
+Weather axis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Only the scale of the axis for the precipitation is configurable through the
+:guilabel:`Precip. Scale` setting. The minimum value for precipitation is always
+set to 0 and the range of the axis depends on the value specified for the setting
+:guilabel:`Precip. Scale` and :guilabel:`Grid Divisions` in the water level axis
+settings.
+
+As discussed in :numref:`subsec_weather_data_component`, the :guilabel:`Resampling` setting is used to set the time scale on which mean
+air temperature and cumulative precipitation are plotted on the graph.
 
 
 .. _subsec_color_settings:
