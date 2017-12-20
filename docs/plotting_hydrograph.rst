@@ -29,10 +29,33 @@ It is possible to zoom the figure canvas in or out by pressing the
 |icon_zoom_in| or |icon_zoom_out| icon or by rotating the mouse wheel while
 holdind the :kbd:`Ctrl` key.
 
-Various parameters are available to customize the layout of the hydrograph .
+Various parameters are available to customize the layout of the hydrograph:
 
-The layout for the currently selected water level dataset can be saved in the
-project by clicking on the icon.
+- Several options are available to customize the size and visibility of 
+  the components of the hydrograph in the :guilabel:`Page and Figure Setup`
+  window, which is accessible by clicking on the |icon_page_setup| icon.
+  This is covered in more details in :numref:`subsec_page_and_fig_settings`.
+  
+- The color of most of the elements that are plotted in the hydrograph
+  can be configured in the :guilabel:`Colors Palette Setup` window, which is
+  accessible by clicking on the |icon_color_picker| icon.
+  This is covered in more details in :numref:`subsec_color_settings`.
+  
+- The axis of the graph can be configured in the :guilabel:`Axes settings` panel.
+  This is covered in more details in :numref:`subsec_axis_settings`.
+  In addition, the |icon_fit_x| and |icon_fit_y| icons can be clicked at any time 
+  to, respectively, fit the time and water level axis automatically to the data.
+
+- The |icon_meteo| icon is used to access the :guilabel:`Weather Averages` window
+  where are displayed the yearly and monthly normals of the weather dataset.
+  This is covered in more details in :numref:`chap_weather_normals_viewer`.
+
+
+The layout for the currently selected water level dataset can be saved by
+clicking on the |icon_save_config| icon. The previously saved layout can be
+loaded back for the currently selected water level dataset by clicking on the
+|icon_load_config| icon. Finally, the hydrograph can be saved in a pdf or
+svg format by clicking on the |icon_save| icon.
 
 
 .. _fig_plot_hydrograph_annoted:
@@ -44,13 +67,15 @@ project by clicking on the icon.
 
     Presentation of the editor to produce publication quality figures of
     well hydrographs that is available in the tab :guilabel:`Plot Hydrograph`
-    of GWHAT..
+    of GWHAT.
 
 Components of the Hydrograph
 -----------------------------------------------
 
 Ground-water level
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ground-water level are plotted on the hydrograph without  
 
 Weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -61,7 +86,7 @@ Missing weather data
 Water level manual measurements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Water level measured manually during field visits can be plotted on the hydrograph.
+Water level measured manually during field visits can also be plotted on the hydrograph.
 This provides a quick and easy way to visually validate the automated measurements
 acquired with a water level datalogger.
 
@@ -89,6 +114,7 @@ the manual measurements, in meters below the ground surface.
           :file:`Water Levels`, but with different extension, GWHAT will always
           read the data from the csv file by default.
 
+.. _subsec_page_and_fig_settings:
 
 Page and figure settings
 -----------------------------------------------
@@ -111,6 +137,8 @@ hydrograph for which the size or the visibility can be configured.
     Presentation of the components of the hydrograph for which the size or the
     visibility can be configured in the `Page and Figure Setup` window.
 
+
+.. _subsec_axis_settings:
 
 Axis settings
 -----------------------------------------------
@@ -137,6 +165,7 @@ Water Level
 Precipitation and Air Temperature
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+.. _subsec_color_settings:
 
 Color Settings
 -----------------------------------------------
@@ -160,7 +189,10 @@ window and by clicking on the :guilabel:`OK` or :guilabel:`Apply` button.
     Presentation of the :guilabel:`Colors Palette Setup` and identification on
     the hydrograph of the components for which the color can be changed.
 
-
+.. |icon_save| image:: img/icon_save.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: folder
 .. |icon_folder| image:: img/icon/icon_folder.*
                       :width: 1em
                       :height: 1em
@@ -190,3 +222,24 @@ window and by clicking on the :guilabel:`OK` or :guilabel:`Apply` button.
                       :width: 1em
                       :height: 1em
                       :alt: zoom in
+                      
+.. |icon_fit_x| image:: img/icon/icon_fit_x.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: best-fit x-axis
+                                            
+.. |icon_fit_y| image:: img/icon/icon_fit_y.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: best-fit y-axis
+                      
+.. |icon_save_config| image:: img/icon/icon_save_config.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: save layout
+                                            
+.. |icon_load_config| image:: img/icon/icon_load_config.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: load layout
+                      

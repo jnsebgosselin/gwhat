@@ -72,7 +72,7 @@ An example of a project folder files organization is presented in
 .. _file_and_folder_architecture:
 .. figure:: img/file_and_folder_architecture.*
     :align: center
-    :width: 75%
+    :width: 100%
     :alt: alternate text
     :figclass: align-center
     
