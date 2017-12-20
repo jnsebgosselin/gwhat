@@ -1,6 +1,6 @@
 .. _chap_plot_hydrographs:
 
-Plotting Hydrographs
+Plotting the Hydrographs
 ===============================================
 
 This document shows how to produce publication quality figures of well hydrographs
@@ -84,7 +84,7 @@ Components of the Hydrograph
 Ground-water level
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ground-water level are plotted on the bottom part of the hydrograph. By default,
+The ground-water levels are plotted on the bottom part of the hydrograph. By default,
 the ground-water data are plotted as a continuous line that relies all the available
 data. 
 
@@ -118,9 +118,15 @@ Weather data
 
 Mean air temperature is plotted in the top part of the graph. The area
 between 0ºC and the observed temperature is colored by default to highlight the
-periods when air temperature is below the freezing point of water. The mean
-air temperature can be plotted on a 
+periods when air temperature is below the freezing point of water. Mean air
+temperature can be plotted on a daily, weekly, or monthly basis. This can be changed
+from the :guilabel:`Axes settings` panel as discussed in :numref:`subsec_axis_settings`. 
 
+Cumulative precipitation, as rain and snow, are plotted in the bottom part of the
+hydrograph along with the water level data. For a given day, precipitation is
+assumed to fall as snow if the mean air temperature for that day is below 0ºC and
+as rain otherwise. As for air temperature, cumulative precipitation can be plotted on
+a daily, weekly, or monthly basis. 
 
 Missing weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -209,14 +215,6 @@ automatically when a value is changed in the :guilabel:`Axes settings` panel.
     :alt: axis_setup_annoted.svg
     :figclass: align-center
 
-Time
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Water Level
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-Precipitation and Air Temperature
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. _subsec_color_settings:
 
