@@ -116,6 +116,12 @@ moving average window of 30 days.
 Weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Mean air temperature is plotted in the top part of the graph. The area
+between 0ºC and the observed temperature is colored by default to highlight the
+periods when air temperature is below the freezing point of water. The mean
+air temperature can be plotted on a 
+
+
 Missing weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
@@ -125,9 +131,9 @@ are read when importing a dataset in GWHAT (see :numref:`sec_importing_data`) fr
 the :file:`.log` file that is produced automatically when gapfilling daily
 weather records with the tool presented in :numref:`chap_gapfilling_weather_data`.
 
-.. note:: Data that are still missing in the daily weather dataset when
-          importing it in GWHAT (see :numref:`sec_importing_data`) are not taken
-          into account when plotting the ``Missing data`` markers on the hydrograph.
+.. note:: If no :file:`.log` exists when importing a daily weather datafile in 
+          GWHAT, ``Missing data`` markers won't be plotted on the hydrograph,
+          even if data are missing in the daily weather dataset.
 
 
 Water level manual measurements
