@@ -72,16 +72,63 @@ svg format by clicking on the |icon_save| icon.
 Components of the Hydrograph
 -----------------------------------------------
 
+.. _fig_hydrograph_components:
+.. figure:: img/scs/hydrograph_components.*
+    :align: center
+    :width: 100%
+    :alt: hydrograph_components.svg
+    :figclass: align-center
+
+    Identification of the components of the hydrograph.
+
 Ground-water level
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ground-water level are plotted on the hydrograph without  
+The ground-water level are plotted on the bottom part of the hydrograph. By default,
+the ground-water data are plotted as a continuous line that relies all the available
+data. 
+
+It is possible to force the line to break over an extended period of time for
+which data is missing by adding a nan value between the period for which data is
+available in the water level datafile before importing it.
+For example, in :numref:`fig_missing_water_level`, water level data
+were missing for the whole of 2012. A ``nan`` was thus added in the datafile 
+at one time during this period to avoid a line to be plotted between the
+31/12/2011 and the 01/01/2013.
+
+It is also possible to show the trend of the water level data with the option
+:guilabel:`Water Level Trend` that is available in the :guilabel:`Page and Figure Setup`
+window (see :numref:`subsec_page_and_fig_settings`). The actual data will then be
+plotted below the trend line as a scatter plot as shown in the hydrograph of 
+:numref:`fig_hydrograph_components`. The trend line is computed using a
+moving average window of 30 days.
+
+.. _fig_missing_water_level:
+.. figure:: img/scs/hydrograph_missing_period.*
+    :align: center
+    :width: 100%
+    :alt: hydrograph_missing_period.png
+    :figclass: align-center
+
+    Example of an hydrogaph with an extended period of time for which data is
+    missing.
 
 Weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Missing weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+The ``Missing data`` component is used to mark where daily air temperature and
+precipitation were estimated due to missing data in the dataset. These information
+are read when importing a dataset in GWHAT (see :numref:`sec_importing_data`) from
+the :file:`.log` file that is produced automatically when gapfilling daily
+weather records with the tool presented in :numref:`chap_gapfilling_weather_data`.
+
+.. note:: Data that are still missing in the daily weather dataset when
+          importing it in GWHAT (see :numref:`sec_importing_data`) are not taken
+          into account when plotting the ``Missing data`` markers on the hydrograph.
+
 
 Water level manual measurements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
