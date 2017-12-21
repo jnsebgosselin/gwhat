@@ -51,6 +51,7 @@ def test_install_kgs_brf(brf_manager_bot):
 
 
 @pytest.mark.run(order=9)
+@pytest.mark.skipif(os.name == 'posix')
 def test_run_kgs_brf(brf_manager_bot):
     brf_manager, qtbot = brf_manager_bot
     brf_manager.show()
