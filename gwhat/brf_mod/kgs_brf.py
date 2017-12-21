@@ -96,11 +96,6 @@ def run_kgsbrf():
         if os.name == 'nt':
             os.system('""%s" < "%s""' % (exename, parname))
 
-#    process = QtCore.QProcess()
-#    process.start(exename+" < "+ parname)
-#    process.waitForFinished()
-#    process.close()
-
 
 def read_BRFOutput():
     filename = os.path.join(__install_dir__, 'BRFOutput.txt')
