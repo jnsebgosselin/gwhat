@@ -87,6 +87,14 @@ class KGSBRFInstaller(myqt.QFrameLayout):
 
     def install_kgsbrf(self):
         """Download and install the kgs_brf software."""
+        if os.name != 'nt':
+            url_t = "https://github.com/jnsebgosselin/gwhat/issues"
+            msg = ("This feature is not currently supported for your."
+                   " operating system. Please open a ticket in our"
+                   " <a href=\"%s\">Issues Tracker</a>.") % url_t
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+            return
+
         print("Installing KGS_BRF software...", end=" ")
         QApplication.setOverrideCursor(Qt.WaitCursor)
         url = "http://www.kgs.ku.edu/HighPlains/OHP/index_program/KGS_BRF.zip"
@@ -343,21 +351,11 @@ class BRFManager(myqt.QFrameLayout):
         msg += ' or reduce the number of BP and ET lags.'
         if lagBP >= len(time) or lagET >= len(time):
             QApplication.restoreOverrideCursor()
-            self.emit_warning(msg)
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
 
         bm.produce_par_file(lagBP, lagET, detrend, correct)
-
-        if os.name == 'nt':
-            bm.run_kgsbrf()
-        else:
-            url_t = "https://github.com/jnsebgosselin/gwhat/issues"
-            msg = ("This feature is not currently supported on Linux."
-                   " If you would like to see this feature added in GWHAT"
-                   " in Linux, please open a ticket in our "
-                   " <a href=\"%s\">Issues Tracker</a>.") % url_t
-            self.emit_warning(self, msg)
-            return
+        bm.run_kgsbrf()
 
         try:
             lag, A, err = bm.read_BRFOutput()
@@ -366,16 +364,11 @@ class BRFManager(myqt.QFrameLayout):
             self.wldset.save_brf(lag, A, err, date_start, date_end)
             self.viewer.new_brf_added()
             self.viewer.show()
-
             QApplication.restoreOverrideCursor()
         except:
             QApplication.restoreOverrideCursor()
-            self.emit_warning(msg)
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
-
-    def emit_warning(self, msg, title='Warning'):
-        btn = QMessageBox.Ok
-        QMessageBox.warning(self, title, msg, btn)
 
 
 class BRFViewer(QWidget):

@@ -36,11 +36,15 @@ def brf_manager_bot(qtbot):
 # -------------------------------
 
 @pytest.mark.run(order=9)
-def test_install_kgs_brf(brf_manager_bot):
+def test_install_kgs_brf(brf_manager_bot, mocker):
     brf_manager, qtbot = brf_manager_bot
     brf_manager.show()
     assert brf_manager
     assert brf_manager.kgs_brf_installer
+
+    # In Linux, a warning message will popup telling the user that this
+    # feature is not supported for their system.
+    mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
 
     # Install the KGS_BRF software and assert that it was correctly
     # installed and that the kgs_brf installer was uninstalled correctly.
@@ -51,7 +55,9 @@ def test_install_kgs_brf(brf_manager_bot):
 
 
 @pytest.mark.run(order=9)
-def test_run_kgs_brf(brf_manager_bot, mocker):
+@pytest.mark.skipif(os.name == 'posix',
+                    reason="This feature is not supported on Linux")
+def test_run_kgs_brf(brf_manager_bot):
     brf_manager, qtbot = brf_manager_bot
     brf_manager.show()
 
@@ -72,15 +78,9 @@ def test_run_kgs_brf(brf_manager_bot, mocker):
     assert brf_manager.brfperiod == (41300.0, 41400.0)
 
     # Calcul the brf and assert the the results are plotted as expected.
-    mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
-
     assert brf_manager.viewer.current_brf.value() == 0
     brf_manager.calc_brf()
-
-    if os.name == 'nt':
-        assert brf_manager.viewer.current_brf.value() == 1
-    else:
-        assert brf_manager.viewer.current_brf.value() == 0
+    assert brf_manager.viewer.current_brf.value() == 1
 
 
 if __name__ == "__main__":
