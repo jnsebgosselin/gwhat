@@ -367,6 +367,10 @@ class BRFManager(myqt.QFrameLayout):
 
 
 class BRFViewer(QWidget):
+    """
+    Window that is used to show all the results produced with for the
+    currently selected water level dataset.
+    """
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
@@ -701,10 +705,8 @@ class BRFViewer(QWidget):
 if __name__ == "__main__":
     import gwhat.projet.reader_projet as prd
     import sys
-    projet = prd.ProjetReader('C:/Users/jsgosselin/OneDrive/Research/'
-                              'PostDoc - MDDELCC/Outils/BRF MontEst/'
-                              'BRF MontEst.what')
-    wldset = projet.get_wldset(projet.wldsets[1])
+    projet = prd.ProjetReader("C:/Users\jsgosselin/GWHAT/gwhat/tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
+    wldset = projet.get_wldset(projet.wldsets[0])
 
     app = QApplication(sys.argv)
 
