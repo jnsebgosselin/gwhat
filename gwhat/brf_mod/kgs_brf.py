@@ -98,7 +98,8 @@ def run_kgsbrf():
         elif os.name == 'posix':
             import subprocess
             # os.system('"wine "%s" < "%s""' % (exename, parname))
-            subprocess.call(["wine", "%s < %s" % (exename, parname)])
+            subprocess.call('"wine "%s" < "%s""' % (exename, parname),
+                            shell=True)
 
 
 def read_BRFOutput():
