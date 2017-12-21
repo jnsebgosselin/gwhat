@@ -10,6 +10,7 @@
 
 import os
 import csv
+import sys
 
 # ---- Third party imports
 
@@ -92,7 +93,11 @@ def run_kgsbrf():
     exename = os.path.join(__install_dir__, 'kgs_brf.exe')
     parname = os.path.join(__install_dir__, 'kgs_brf.par')
     if os.path.exists(exename) and os.path.exists(parname):
-        os.system('""%s" < "%s""' % (exename, parname))
+        if os.name('nt'):
+            os.system('""%s" < "%s""' % (exename, parname))
+        elif os.name('posix'):
+            import subprocess
+            subprocess.call(["wine", "%s < %s" % (exename, parname)])
 
 #    process = QtCore.QProcess()
 #    process.start(exename+" < "+ parname)
