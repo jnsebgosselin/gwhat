@@ -79,7 +79,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
     @property
     def kgs_brf_path(self):
         """Path to the kgs_brf binary executable."""
-        return os.path.join(__install_dir__, self.kgs_brf_name)
+        return os.path.join(self.install_dir, self.kgs_brf_name)
 
     def kgsbrf_is_installed(self):
         """Returns whether kgs_brf is installed or not."""
