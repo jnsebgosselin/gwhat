@@ -3,7 +3,7 @@
 # Copyright © 2014-2017 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
 
@@ -17,6 +17,7 @@ import io
 # ---- Imports: third parties
 
 from PyQt5.QtCore import Qt, QDate, QPoint
+from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
                              QGridLayout, QDoubleSpinBox, QFrame, QWidget,
@@ -32,11 +33,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # ---- Imports: local
 
 import gwhat.common.widgets as myqt
-from PyQt5.QtCore import pyqtSignal as QSignal
-from gwhat.brf_mod.kgs_plot import BRFFigure
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 from gwhat import brf_mod as bm
+from gwhat.brf_mod import __install_dir__
+from gwhat.brf_mod.kgs_plot import BRFFigure
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -68,7 +69,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
     @property
     def install_dir(self):
         """Path to the installation folder."""
-        return os.path.dirname(os.path.realpath(__file__))
+        return __install_dir__
 
     @property
     def kgs_brf_name(self):
@@ -78,7 +79,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
     @property
     def kgs_brf_path(self):
         """Path to the kgs_brf binary executable."""
-        return os.path.join(self.install_dir, "kgs_brf.exe")
+        return os.path.join(__install_dir__, self.kgs_brf_name)
 
     def kgsbrf_is_installed(self):
         """Returns whether kgs_brf is installed or not."""
@@ -93,7 +94,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
         zfile = zipfile.ZipFile(io.BytesIO(request .content))
 
         if not os.path.exists(self.install_dir):
-            os.mkdir(self.install_dir)
+            os.makedirs(self.install_dir)
 
         with open(self.kgs_brf_path, 'wb') as f:
             f.write(zfile.read(self.kgs_brf_name))

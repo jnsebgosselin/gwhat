@@ -3,7 +3,7 @@
 # Copyright © 2014-2017 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
@@ -14,15 +14,11 @@ import csv
 # ---- Third party imports
 
 import numpy as np
-import matplotlib.pyplot as plt
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
 
-from gwhat.brf_mod.kgs_plot import plot_BRF
-
-
-# =============================================================================
+from gwhat.brf_mod import __install_dir__
 
 
 def produce_BRFInputtxt(well, time, wl, bp, et):
@@ -63,19 +59,17 @@ def produce_BRFInputtxt(well, time, wl, bp, et):
     for i in range(N):
         fcontent.append([time[i], wl[i], bp[i], et[i]])
 
-    dirname = os.path.dirname(os.path.realpath(__file__))
-    filename = os.path.join(dirname, 'BRFInput.txt')
+    filename = os.path.join(__install_dir__, 'BRFInput.txt')
     with open(filename, 'w', encoding='utf8') as f:
         writer = writer = csv.writer(f, delimiter='\t', lineterminator='\n')
         writer.writerows(fcontent)
 
 
 def produce_par_file(lagBP, lagET, detrend, correct):
-    dirname = os.path.dirname(os.path.realpath(__file__))
-    brfinput = os.path.join(dirname, 'BRFInput.txt')
-    brfoutput = os.path.join(dirname, 'BRFOutput.txt')
-    wlcinput = os.path.join(dirname, 'WLCInput.txt')
-    wlcoutput = os.path.join(dirname, 'WLCOutput.txt')
+    brfinput = os.path.join(__install_dir__, 'BRFInput.txt')
+    brfoutput = os.path.join(__install_dir__, 'BRFOutput.txt')
+    wlcinput = os.path.join(__install_dir__, 'WLCInput.txt')
+    wlcoutput = os.path.join(__install_dir__, 'WLCOutput.txt')
 
     par = []
     par.append(['BRF Option (C[ompute] or R[ead]): Compute'])
@@ -88,16 +82,15 @@ def produce_par_file(lagBP, lagET, detrend, correct):
     par.append(['WLC Input Data File: %s' % wlcinput])
     par.append(['WLC Output Data File: %s' % wlcoutput])
 
-    filename = os.path.join(dirname, 'kgs_brf.par')
+    filename = os.path.join(__install_dir__, 'kgs_brf.par')
     with open(filename, 'w', encoding='utf8') as f:
         writer = csv.writer(f, delimiter='\t',  lineterminator='\n')
         writer.writerows(par)
 
 
 def run_kgsbrf():
-    dirname = os.path.dirname(os.path.realpath(__file__))
-    exename = os.path.join(dirname, 'kgs_brf.exe')
-    parname = os.path.join(dirname, 'kgs_brf.par')
+    exename = os.path.join(__install_dir__, 'kgs_brf.exe')
+    parname = os.path.join(__install_dir__, 'kgs_brf.par')
     if os.path.exists(exename) and os.path.exists(parname):
         os.system('""%s" < "%s""' % (exename, parname))
 
@@ -108,9 +101,7 @@ def run_kgsbrf():
 
 
 def read_BRFOutput():
-    dirname = os.path.dirname(os.path.realpath(__file__))
-    filename = os.path.join(dirname, 'BRFOutput.txt')
-
+    filename = os.path.join(__install_dir__, 'BRFOutput.txt')
     with open(filename, 'r') as f:
         reader = list(csv.reader(f))
 
@@ -145,13 +136,6 @@ def read_BRFOutput():
     err = dataf[:, 5]
 
     return lag, A, err
-
-    # plt.close('all')
-    # if show_ebar:
-    #     plot_BRF(lag, A, err, date0, date1, well, msize, draw_line, ylim)
-    # else:
-    #     plot_BRF(lag, A, [], date0, date1, well, msize, draw_line, ylim)
-    # plt.show()
 
 
 if __name__ == "__main__":
