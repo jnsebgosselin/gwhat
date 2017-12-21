@@ -16,7 +16,7 @@ from PyQt5.QtCore import Qt
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from gwhat.brf_mod.kgs_gui import BRFManager, KGSBRFInstaller
+from gwhat.brf_mod.kgs_gui import BRFManager, KGSBRFInstaller, QMessageBox
 from gwhat.projet.reader_projet import ProjetReader
 
 
@@ -36,8 +36,6 @@ def brf_manager_bot(qtbot):
 # -------------------------------
 
 @pytest.mark.run(order=9)
-@pytest.mark.skipif(os.name == 'posix',
-                    reason="This feature is not supported on Linux")
 def test_install_kgs_brf(brf_manager_bot):
     brf_manager, qtbot = brf_manager_bot
     brf_manager.show()
@@ -53,9 +51,7 @@ def test_install_kgs_brf(brf_manager_bot):
 
 
 @pytest.mark.run(order=9)
-@pytest.mark.skipif(os.name == 'posix',
-                    reason="This feature is not supported on Linux")
-def test_run_kgs_brf(brf_manager_bot):
+def test_run_kgs_brf(brf_manager_bot, mocker):
     brf_manager, qtbot = brf_manager_bot
     brf_manager.show()
 
@@ -76,9 +72,15 @@ def test_run_kgs_brf(brf_manager_bot):
     assert brf_manager.brfperiod == (41300.0, 41400.0)
 
     # Calcul the brf and assert the the results are plotted as expected.
+    mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
+
     assert brf_manager.viewer.current_brf.value() == 0
     brf_manager.calc_brf()
-    assert brf_manager.viewer.current_brf.value() == 1
+
+    if os.name == 'nt':
+        assert brf_manager.viewer.current_brf.value() == 1
+    else:
+        assert brf_manager.viewer.current_brf.value() == 0
 
 
 if __name__ == "__main__":

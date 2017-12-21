@@ -21,7 +21,7 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
                              QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-                             QDesktopWidget)
+                             QDesktopWidget, QMessageBox)
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
@@ -347,9 +347,17 @@ class BRFManager(myqt.QFrameLayout):
             return
 
         bm.produce_par_file(lagBP, lagET, detrend, correct)
-        bm.run_kgsbrf()
 
-        # ---- Save BRF results ----
+        if os.name == 'nt':
+            bm.run_kgsbrf()
+        else:
+            url_t = "https://github.com/jnsebgosselin/gwhat/issues"
+            msg = ("This feature is not currently supported on Linux."
+                   " If you would like to see this feature added in GWHAT"
+                   " in Linux, please open a ticket in our "
+                   " <a href=\"%s\">Issues Tracker</a>.") % url_t
+            self.emit_warning(self, msg)
+            return
 
         try:
             lag, A, err = bm.read_BRFOutput()
@@ -364,6 +372,10 @@ class BRFManager(myqt.QFrameLayout):
             QApplication.restoreOverrideCursor()
             self.emit_warning(msg)
             return
+
+    def emit_warning(self, msg, title='Warning'):
+        btn = QMessageBox.Ok
+        QMessageBox.warning(self, title, msg, btn)
 
 
 class BRFViewer(QWidget):
