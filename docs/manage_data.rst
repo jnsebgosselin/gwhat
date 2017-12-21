@@ -10,16 +10,16 @@ Importing Data
 
 Before ground-water hydrographs can be plotted or analyzed for a given project,
 time series of water level and weather data must be imported in GWHAT.
-The format in which the data must be saved, so that they can be imported in GWHAT,
-is described in :numref:`input_datafile_format`.
+The format in which the data must be saved, so that they can be imported
+successfully, is described in :numref:`input_datafile_format`.
 
 Importing water level and weather datasets in GWHAT is done by clicking on their
-corresponding |icon_open_project| icon located in the right side panel of the tab
+corresponding |icon_open_project| icon, in the right side panel of the tab
 :guilabel:`Plot Hydrograph` or the tab :guilabel:`Analyze Hydrograph`
 (see :numref:`scs_datamanager_panel`).
-Clicking on either of the |icon_open_project| icons opens a :guilabel:`Import Dataset`
-window where a valid water level or weather datafile can be selected by clicking on
-the |icon_open_file| icon (see :numref:`scs_import_data_dialog_windows`).
+Clicking on either of the |icon_open_project| icons opens a window named
+:guilabel:`Import Dataset`, where a valid water level or weather datafile can
+be selected by clicking on the |icon_open_file| icon (see :numref:`scs_import_data_dialog_windows`).
 
 .. _scs_datamanager_panel:
 .. figure:: img/scs/datamanager_panel.*
@@ -31,12 +31,12 @@ the |icon_open_file| icon (see :numref:`scs_import_data_dialog_windows`).
     Presentation of the panel to manage water level and weather datasets.
 
 After a valid datafile has been selected in the window :guilabel:`Import Dataset`,
-the information relative to the climate or piezometric station, which was
+the information relative to the climate or piezometric station, which were
 read from the header of the selected datafile, are displayed in the section
 :guilabel:`Dataset info`. These information, as well as the :guilabel:`Dataset name`,
-can all be modified before importing the dataset by clicking on the button
+can be modified before importing the dataset by clicking on the button
 :guilabel:`Import`. The dataset will then be added to the :term:`project file` and will
-be referenced in the list of imported water level of weather datasets
+be referenced in the list of imported water level or weather datasets
 (see :numref:`scs_datamanager_panel`) by the name that was provided in the
 field :guilabel:`Dataset name`.
 
@@ -48,7 +48,7 @@ field :guilabel:`Dataset name`.
     :figclass: align-center
 
     Presentation of the :guilabel:`Import Dataset` windows to import
-    water level and weather data files.
+    water level (to the left) and weather (to the right) data files.
 
 .. _input_datafile_format:
 
@@ -75,7 +75,7 @@ Weather data files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 GWHAT can read weather data saved in comma-separated values (csv) or tab-separated
-text files with UTF-8 encoding. An exemple of correctly formatted datafile is
+values (tsv) text files with UTF-8 encoding. An exemple of correctly formatted datafile is
 presented in :numref:`weather_datafile_example`.
 
 The file header contains information about the station name, province, latitude, longitude,
@@ -126,7 +126,7 @@ This will be discussed in more details in :numref:`chap_computing_the_brf`.
 
     Example of a correctly formatted water level datafile.
 
-.. important:: Water levels must be entered in meters below the ground surface.
+.. important:: Water levels must be in meters below the ground surface.
 
 .. |icon_open_project| image:: img/icon/open_project.*
                       :width: 1em
