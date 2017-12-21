@@ -8,7 +8,6 @@
 File for running tests programmatically.
 """
 
-import os
 import pytest
 import matplotlib as mpl
 mpl.use('Qt5Agg')
@@ -18,12 +17,8 @@ def main():
     """
     Run pytest tests.
     """
-    if os.name == 'nt':
-        errno = pytest.main(['-x', 'gwhat',  '-v', '-rw', '--durations=10',
-                             '--cov=gwhat'])
-    else:
-        errno = pytest.main(['-x', 'gwhat',  '-v', '-rw', '--durations=10'])
-
+    errno = pytest.main(['-x', 'gwhat',  '-v', '-rw', '--durations=10',
+                         '--cov=gwhat'])
     if errno != 0:
         raise SystemExit(errno)
 
