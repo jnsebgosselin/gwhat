@@ -50,8 +50,11 @@ def test_install_kgs_brf(brf_manager_bot, mocker):
     # installed and that the kgs_brf installer was uninstalled correctly.
     qtbot.mouseClick(brf_manager.kgs_brf_installer.install_btn, Qt.LeftButton)
 
-    qtbot.waitUntil(lambda: brf_manager.kgs_brf_installer is None)
-    assert KGSBRFInstaller().kgsbrf_is_installed()
+    if os.name == 'nt':
+        qtbot.waitUntil(lambda: brf_manager.kgs_brf_installer is None)
+        assert KGSBRFInstaller().kgsbrf_is_installed()
+    else:
+        assert not KGSBRFInstaller().kgsbrf_is_installed()
 
 
 @pytest.mark.run(order=9)
