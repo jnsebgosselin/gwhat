@@ -17,6 +17,9 @@ from __future__ import division, unicode_literals, print_function
 
 print('Starting GWHAT...')
 
+import matplotlib as mpl
+mpl.use('Qt5Agg')
+
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QPixmap, QResizeEvent
