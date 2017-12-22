@@ -58,6 +58,22 @@ def test_hydroprint_init(hydroprint_bot, mocker):
     assert os.path.exists(filename)
 
 
+@pytest.mark.run(order=8)
+def test_autoplot_hydroprint(hydroprint_bot):
+    hydroprint, qtbot = hydroprint_bot
+    hydroprint.show()
+
+    # Forces a refresh of the graph and check that the automatic values
+    # set for the axis is correct.
+
+    hydroprint.wldset_changed()
+
+    assert hydroprint.waterlvl_scale.value() == 0.25
+    assert hydroprint.waterlvl_max.value() == 3.75
+    assert hydroprint.NZGridWL_spinBox.value() == 8
+    assert hydroprint.datum_widget.currentText() == 'Ground Surface'
+
+
 if __name__ == "__main__":
-    # pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-    pytest.main()
+    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
+    # pytest.main()
