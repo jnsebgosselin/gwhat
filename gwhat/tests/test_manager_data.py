@@ -154,6 +154,33 @@ def test_delete_waterlevel_data(data_manager_bot, mocker):
     assert data_manager.wldataset_count() == 1
 
 
+@pytest.mark.run(order=7)
+def test_import_back_alldata(data_manager_bot):
+    data_manager, qtbot = data_manager_bot
+    data_manager.show()
+
+    # Import the weather data again since we will need it for another test.
+    output_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
+    filenames = [os.path.join(output_dir, "IBERVILLE (7023270)",
+                              "IBERVILLE (7023270)_2000-2010.out"),
+                 os.path.join(output_dir, "L'ACADIE (702LED4)",
+                              "L'ACADIE (702LED4)_2000-2010.out"),
+                 os.path.join(output_dir, "MARIEVILLE (7024627)",
+                              "MARIEVILLE (7024627)_2000-2010.out")
+                 ]
+    for filename in filenames:
+        data_manager.new_weather_win.load_dataset(filename)
+        data_manager.new_waterlvl_win.accept_dataset()
+    assert data_manager.wxdataset_count() == 3
+
+    # Import the water level again since we will need it for another test.
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, "sample_water_level_datafile.xlsx")
+    data_manager.new_waterlvl_win.load_dataset(filename)
+    data_manager.new_waterlvl_win.accept_dataset()
+    assert data_manager.wldataset_count() == 1
+
+
 if __name__ == "__main__":
     pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
     # pytest.main()
