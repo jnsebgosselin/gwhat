@@ -3,7 +3,7 @@
 # Copyright © 2014-2017 GWHAT Project contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
 # Standard library imports
@@ -88,15 +88,15 @@ def test_fill_data(gapfill_weather_bot):
     gapfiller.fill_data()
 
     # Assert that all the ouput files were generated correctly.
-    files = [("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2010.out"),
-             ("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2010.log"),
-             ("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2010.err"),
-             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2010.out"),
-             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2010.log"),
-             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2010.err"),
-             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2010.out"),
-             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2010.log"),
-             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2010.err")
+    files = [("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2015.out"),
+             ("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2015.log"),
+             ("IBERVILLE (7023270)", "IBERVILLE (7023270)_2000-2015.err"),
+             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2015.out"),
+             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2015.log"),
+             ("L'ACADIE (702LED4)", "L'ACADIE (702LED4)_2000-2015.err"),
+             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2015.out"),
+             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2015.log"),
+             ("MARIEVILLE (7024627)", "MARIEVILLE (7024627)_2000-2015.err")
              ]
     for dirname, basename in files:
         assert os.path.exists(os.path.join(output_dir, dirname, basename))

@@ -59,5 +59,5 @@ def test_hydroprint_init(hydroprint_bot, mocker):
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-    # pytest.main()
+    # pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
+    pytest.main()

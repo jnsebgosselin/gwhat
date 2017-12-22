@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Aug  4 01:50:50 2017
-@author: jsgosselin
-"""
+
+# Copyright © 2014-2017 GWHAT Project contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
+
 
 # ---- Standard library imports
 
@@ -263,7 +266,7 @@ def test_download_data(downloader_bot, mocker):
 
     # Set "to year" and "from year" for all stations.
     station_table.set_fromyear(2000)
-    station_table.set_toyear(2010)
+    station_table.set_toyear(2015)
 
     # Try starting the downloading process before selecting any station.
     mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
@@ -293,9 +296,9 @@ def test_download_data(downloader_bot, mocker):
 
     # Assert that the concatenated datafiles were created.
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
-    files = ["MARIEVILLE (7024627)_2000-2010.csv",
-             "IBERVILLE (7023270)_2000-2010.csv",
-             "L'ACADIE (702LED4)_2000-2010.csv"]
+    files = ["MARIEVILLE (7024627)_2000-2015.csv",
+             "IBERVILLE (7023270)_2000-2015.csv",
+             "L'ACADIE (702LED4)_2000-2015.csv"]
     for file in files:
         assert os.path.exists(os.path.join(dirname, file))
 
