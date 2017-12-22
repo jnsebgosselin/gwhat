@@ -9,7 +9,8 @@ Licensed under the terms of the GNU-GPLv3
 [![Documentation Status](https://readthedocs.org/projects/gwhat/badge/?version=gwhat-0.2.1)](http://gwhat.readthedocs.io/en/gwhat-0.2.1/?badge=gwhat-0.2.1)
 [![Travis status](https://travis-ci.org/jnsebgosselin/gwhat.svg?branch=master)](https://travis-ci.org/jnsebgosselin/gwhat)
 [![Build status](https://ci.appveyor.com/api/projects/status/7f2sr3ccd807ydjc/branch/master?svg=true)](https://ci.appveyor.com/project/jnsebgosselin/gwhat/branch/master)
-[![Coverage Status](https://coveralls.io/repos/github/jnsebgosselin/gwhat/badge.svg?branch=master&service=github#2)](https://coveralls.io/github/jnsebgosselin/gwhat?branch=master)
+[![codecov](https://codecov.io/gh/jnsebgosselin/gwhat/branch/master/graph/badge.svg)](https://codecov.io/gh/jnsebgosselin/gwhat)
+
 
 You can read the GWHAT documentation [here](https://gwhat.readthedocs.io).<br>
 You can download the latest version of GWHAT [here](https://github.com/jnsebgosselin/gwhat/releases/latest).<br>
