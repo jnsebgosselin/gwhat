@@ -39,6 +39,7 @@ install:
   - python -m pip install pytest-ordering
   - python -m pip install flaky
   - python -m pip install coveralls
+  - python -m pip install codecov
   - python -m pip install matplotlib
   - python -m pip install scipy
   - python -m pip install cython
@@ -51,6 +52,7 @@ test_script:
 
 on_success:
   - coveralls
+  - codecov
 
 on_finish:
 #   - ps: $blockRdp = $false; iex ((new-object net.webclient).DownloadString('https://raw.githubusercontent.com/appveyor/ci/master/scripts/enable-rdp.ps1'))
