@@ -63,15 +63,43 @@ def test_autoplot_hydroprint(hydroprint_bot):
     hydroprint, qtbot = hydroprint_bot
     hydroprint.show()
 
+    assert hydroprint.dmngr.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
+    assert hydroprint.dmngr.wxdsets_cbox.currentText() == "IBERVILLE"
+
     # Forces a refresh of the graph and check that the automatic values
     # set for the axis is correct.
 
     hydroprint.wldset_changed()
-
+    assert hydroprint.dmngr.wxdsets_cbox.currentText() == "MARIEVILLE"
     assert hydroprint.waterlvl_scale.value() == 0.25
     assert hydroprint.waterlvl_max.value() == 3.75
     assert hydroprint.NZGridWL_spinBox.value() == 8
     assert hydroprint.datum_widget.currentText() == 'Ground Surface'
+    data_start = hydroprint.date_start_widget.date()
+    assert data_start.day() == 1
+    assert data_start.month() == 11
+    assert data_start.year() == 2012
+    data_end = hydroprint.date_end_widget.date()
+    assert data_end.day() == 1
+    assert data_end.month() == 12
+    assert data_end.year() == 2013
+    assert hydroprint.time_scale_label.currentText() == "Month"
+
+
+@pytest.mark.run(order=8)
+def test_zoomin_zoomout(hydroprint_bot):
+    hydroprint, qtbot = hydroprint_bot
+    hydroprint.show()
+    hydroprint.wldset_changed()
+
+    expected_values = [100, 120, 144, 172, 172]
+    for expected_value in expected_values:
+        assert hydroprint.zoom_disp.value() == expected_value
+        hydroprint.zoom_in()
+    expected_values = [172, 144, 120, 100, 83, 69, 57, 57]
+    for expected_value in expected_values:
+        assert hydroprint.zoom_disp.value() == expected_value
+        hydroprint.zoom_out()
 
 
 if __name__ == "__main__":
