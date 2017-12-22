@@ -146,13 +146,6 @@ def test_delete_waterlevel_data(data_manager_bot, mocker):
     qtbot.mouseClick(data_manager.btn_del_wldset, Qt.LeftButton)
     assert data_manager.wldataset_count() == 0
 
-    # Import the water level again since we will need it for another test.
-    dirname = os.path.dirname(__file__)
-    filename = os.path.join(dirname, "sample_water_level_datafile.xlsx")
-    data_manager.new_waterlvl_win.load_dataset(filename)
-    data_manager.new_waterlvl_win.accept_dataset()
-    assert data_manager.wldataset_count() == 1
-
 
 @pytest.mark.run(order=7)
 def test_import_back_alldata(data_manager_bot):
@@ -170,7 +163,7 @@ def test_import_back_alldata(data_manager_bot):
                  ]
     for filename in filenames:
         data_manager.new_weather_win.load_dataset(filename)
-        data_manager.new_waterlvl_win.accept_dataset()
+        data_manager.new_weather_win.accept_dataset()
     assert data_manager.wxdataset_count() == 3
 
     # Import the water level again since we will need it for another test.
