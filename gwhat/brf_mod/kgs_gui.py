@@ -14,6 +14,7 @@ import requests
 import zipfile
 import io
 
+
 # ---- Imports: third parties
 
 from PyQt5.QtCore import Qt, QDate, QPoint
@@ -89,7 +90,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
         """Download and install the kgs_brf software."""
         if os.name != 'nt':
             url_t = "https://github.com/jnsebgosselin/gwhat/issues"
-            msg = ("This feature is not currently supported for your."
+            msg = ("This feature is currently not supported for your"
                    " operating system. Please open a ticket in our"
                    " <a href=\"%s\">Issues Tracker</a>.") % url_t
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
