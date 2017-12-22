@@ -8,7 +8,6 @@
 
 import os
 from gwhat import __rootdir__
-
 __install_dir__ = os.path.join(__rootdir__, 'brf_mod')
 
 from gwhat.brf_mod.kgs_brf import (produce_BRFInputtxt, produce_par_file,

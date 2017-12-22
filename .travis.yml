@@ -30,5 +30,5 @@ script:
   python runtests.py
   # - coverage run --source=WHAT --cov=WHAT --cov-report=term-missing -m py.test
 
-after_success:
-  - coveralls
+# after_success:
+#   - coveralls
