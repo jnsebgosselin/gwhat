@@ -266,9 +266,9 @@ class HydroprintGUI(myqt.DialogWindow):
                 self.setContentsMargins(0, 0, 0, 0)
                 self.setColumnStretch(0, 100)
 
-        # ----------------------------------------------------------  TIME ----
+        # ---- Time axis properties
 
-        # Widget :
+        # Generate the widgets :
 
         self.date_start_widget = QDateEdit()
         self.date_start_widget.setDisplayFormat('01 / MM / yyyy')
@@ -297,7 +297,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.dateDispFreq_spinBox.setKeyboardTracking(False)
         self.dateDispFreq_spinBox.valueChanged.connect(self.layout_changed)
 
-        # Layout :
+        # Setting up the layout :
 
         widget_time_scale = QFrame()
         widget_time_scale.setFrameStyle(0)
@@ -317,7 +317,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         widget_time_scale.setLayout(grid_time_scale)
 
-        # ---------------------------------------------------- WATER LEVEL ----
+        # ----- Water level axis properties
 
         # Widget :
 
@@ -1131,5 +1131,6 @@ if __name__ == '__main__':
 
     Hydroprint = HydroprintGUI(dm)
     Hydroprint.show()
+    Hydroprint.wldset_changed()
 
     sys.exit(app.exec_())
