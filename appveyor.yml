@@ -42,6 +42,7 @@ install:
   - python -m pip install matplotlib
   - python -m pip install scipy
   - python -m pip install cython
+  - python -m pip install requests
 
 build: false
 

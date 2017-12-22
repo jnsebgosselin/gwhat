@@ -23,6 +23,7 @@ install:
   - pip install matplotlib
   - pip install scipy
   - pip install cython
+  - pip install requests
   - python setup.py build_ext --inplace
 
 script:
