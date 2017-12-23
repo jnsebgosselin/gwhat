@@ -16,7 +16,7 @@ from PyQt5.QtCore import Qt
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from gwhat.HydroPrint2 import HydroprintGUI
+from gwhat.HydroPrint2 import HydroprintGUI, PageSetupWin
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_projet import ProjetReader
 
@@ -39,8 +39,17 @@ def hydroprint_bot(qtbot):
 
     hydroprint = HydroprintGUI(dm)
     qtbot.addWidget(hydroprint)
+    qtbot.addWidget(hydroprint.page_setup_win)
 
     return hydroprint, qtbot
+
+
+@pytest.fixture
+def pagesetup_bot(qtbot):
+    pagesetup_win = PageSetupWin()
+    qtbot.addWidget(pagesetup_win)
+
+    return pagesetup_win, qtbot
 
 
 # Test HydroprintGUI
@@ -56,6 +65,10 @@ def test_hydroprint_init(hydroprint_bot, mocker):
     # Assert that the water_level_measurement file was initialize correctly.
     filename = os.path.join(output_dir, "waterlvl_manual_measurements.csv")
     assert os.path.exists(filename)
+
+    # Assert that the Page Setup Window is shown correctly.
+    qtbot.mouseClick(hydroprint.btn_page_setup, Qt.LeftButton)
+    qtbot.waitForWindowShown(hydroprint.page_setup_win)
 
 
 @pytest.mark.run(order=8)
@@ -101,6 +114,57 @@ def test_zoomin_zoomout(hydroprint_bot):
         assert hydroprint.zoom_disp.value() == expected_value
         hydroprint.zoom_out()
 
+
+# Test PageSetupWin
+# -------------------------------
+
+@pytest.mark.run(order=8)
+def test_pagesetup(pagesetup_bot):  
+    pagesetup_win, qtbot = pagesetup_bot
+    pagesetup_win.show()
+
+    # Assert the default values.
+    assert pagesetup_win.fwidth.value() == pagesetup_win.pageSize[0] == 11
+    assert pagesetup_win.fheight.value() == pagesetup_win.pageSize[1] == 7
+    assert pagesetup_win.va_ratio_spinBox.value() == pagesetup_win.va_ratio == 0.2
+    assert pagesetup_win.legend_on.isChecked() == pagesetup_win.isLegend == True
+    assert pagesetup_win.trend_on.isChecked() == pagesetup_win.isTrendLine == False
+    assert pagesetup_win.title_on.isChecked() == pagesetup_win.isGraphTitle == True
+
+    # Test that previous values are kept when clicking on the button Cancel.
+    pagesetup_win.fwidth.setValue(12.5)
+    pagesetup_win.fheight.setValue(8.5)
+    pagesetup_win.va_ratio_spinBox.setValue(0.7)
+    pagesetup_win.legend_off.toggle()
+    pagesetup_win.trend_on.toggle()
+    pagesetup_win.title_off.toggle()
+
+    qtbot.mouseClick(pagesetup_win.btn_cancel, Qt.LeftButton)
+    assert pagesetup_win.fwidth.value() == pagesetup_win.pageSize[0] == 11
+    assert pagesetup_win.fheight.value() == pagesetup_win.pageSize[1] == 7
+    assert pagesetup_win.va_ratio_spinBox.value() == pagesetup_win.va_ratio == 0.2
+    assert pagesetup_win.legend_on.isChecked() == pagesetup_win.isLegend == True
+    assert pagesetup_win.trend_on.isChecked() == pagesetup_win.isTrendLine == False
+    assert pagesetup_win.title_on.isChecked() == pagesetup_win.isGraphTitle == True
+    assert not pagesetup_win.isVisible()
+    
+    # Test that the values are updated correctly when clicking the button OK.
+    pagesetup_win.show()
+    pagesetup_win.fwidth.setValue(12.5)
+    pagesetup_win.fheight.setValue(8.5)
+    pagesetup_win.va_ratio_spinBox.setValue(0.7)
+    pagesetup_win.legend_off.toggle()
+    pagesetup_win.trend_on.toggle()
+    pagesetup_win.title_off.toggle()
+
+    qtbot.mouseClick(pagesetup_win.btn_OK, Qt.LeftButton)
+    assert pagesetup_win.fwidth.value() == pagesetup_win.pageSize[0] == 12.5
+    assert pagesetup_win.fheight.value() == pagesetup_win.pageSize[1] == 8.5
+    assert pagesetup_win.va_ratio_spinBox.value() == pagesetup_win.va_ratio == 0.7
+    assert pagesetup_win.legend_on.isChecked() == pagesetup_win.isLegend == False
+    assert pagesetup_win.trend_on.isChecked() == pagesetup_win.isTrendLine == True
+    assert pagesetup_win.title_on.isChecked() == pagesetup_win.isGraphTitle == False
+    assert not pagesetup_win.isVisible()
 
 if __name__ == "__main__":
     pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])

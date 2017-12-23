@@ -102,9 +102,9 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_weather_normals.setToolTip(
                 'Show current weather dataset normals...')
 
-        btn_page_setup = QToolButtonNormal(icons.get_icon('page_setup'))
-        btn_page_setup.setToolTip('Show the page setup window')
-        btn_page_setup.clicked.connect(self.page_setup_win.show)
+        self.btn_page_setup = QToolButtonNormal(icons.get_icon('page_setup'))
+        self.btn_page_setup.setToolTip('Show the page setup window')
+        self.btn_page_setup.clicked.connect(self.page_setup_win.show)
 
         btn_color_pick = QToolButtonNormal(icons.get_icon('color_picker'))
         btn_color_pick.setToolTip('<p>Show a window to setup the color palette'
@@ -140,7 +140,7 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_list = [btn_save, btn_draw, btn_loadConfig, btn_saveConfig,
                     myqt.VSep(),
                     btn_bestfit_waterlvl, btn_bestfit_time,
-                    myqt.VSep(), btn_weather_normals, btn_page_setup,
+                    myqt.VSep(), btn_weather_normals, self.btn_page_setup,
                     btn_color_pick,
                     myqt.VSep(),
                     zoom_pan]
@@ -919,7 +919,6 @@ class PageSetupWin(QWidget):
         self.isGraphTitle = True
         self.isTrendLine = False
         self.va_ratio = 0.2
-        self.NZGrid = 8
 
         self.__initUI__()
 
@@ -929,11 +928,11 @@ class PageSetupWin(QWidget):
 
         toolbar_widget = QWidget()
 
-        btn_apply = QPushButton('Apply')
+        self.btn_apply = btn_apply = QPushButton('Apply')
         btn_apply.clicked.connect(self.btn_apply_isClicked)
-        btn_cancel = QPushButton('Cancel')
+        self.btn_cancel = btn_cancel = QPushButton('Cancel')
         btn_cancel.clicked.connect(self.close)
-        btn_OK = QPushButton('OK')
+        self.btn_OK = btn_OK = QPushButton('OK')
         btn_OK.clicked.connect(self.btn_OK_isClicked)
 
         toolbar_layout = QGridLayout()
