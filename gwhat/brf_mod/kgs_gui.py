@@ -3,7 +3,7 @@
 # Copyright © 2014-2017 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
 
@@ -14,13 +14,15 @@ import requests
 import zipfile
 import io
 
+
 # ---- Imports: third parties
 
 from PyQt5.QtCore import Qt, QDate, QPoint
+from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
                              QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-                             QDesktopWidget)
+                             QDesktopWidget, QMessageBox)
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
@@ -32,11 +34,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # ---- Imports: local
 
 import gwhat.common.widgets as myqt
-from PyQt5.QtCore import pyqtSignal as QSignal
-from gwhat.brf_mod.kgs_plot import BRFFigure
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 from gwhat import brf_mod as bm
+from gwhat.brf_mod import __install_dir__
+from gwhat.brf_mod.kgs_plot import BRFFigure
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -68,7 +70,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
     @property
     def install_dir(self):
         """Path to the installation folder."""
-        return os.path.dirname(os.path.realpath(__file__))
+        return __install_dir__
 
     @property
     def kgs_brf_name(self):
@@ -78,7 +80,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
     @property
     def kgs_brf_path(self):
         """Path to the kgs_brf binary executable."""
-        return os.path.join(self.install_dir, "kgs_brf.exe")
+        return os.path.join(self.install_dir, self.kgs_brf_name)
 
     def kgsbrf_is_installed(self):
         """Returns whether kgs_brf is installed or not."""
@@ -86,6 +88,14 @@ class KGSBRFInstaller(myqt.QFrameLayout):
 
     def install_kgsbrf(self):
         """Download and install the kgs_brf software."""
+        if os.name != 'nt':
+            url_t = "https://github.com/jnsebgosselin/gwhat/issues"
+            msg = ("This feature is currently not supported for your"
+                   " operating system. Please open a ticket in our"
+                   " <a href=\"%s\">Issues Tracker</a>.") % url_t
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+            return
+
         print("Installing KGS_BRF software...", end=" ")
         QApplication.setOverrideCursor(Qt.WaitCursor)
         url = "http://www.kgs.ku.edu/HighPlains/OHP/index_program/KGS_BRF.zip"
@@ -93,7 +103,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
         zfile = zipfile.ZipFile(io.BytesIO(request .content))
 
         if not os.path.exists(self.install_dir):
-            os.mkdir(self.install_dir)
+            os.makedirs(self.install_dir)
 
         with open(self.kgs_brf_path, 'wb') as f:
             f.write(zfile.read(self.kgs_brf_name))
@@ -342,13 +352,11 @@ class BRFManager(myqt.QFrameLayout):
         msg += ' or reduce the number of BP and ET lags.'
         if lagBP >= len(time) or lagET >= len(time):
             QApplication.restoreOverrideCursor()
-            self.emit_warning(msg)
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
 
         bm.produce_par_file(lagBP, lagET, detrend, correct)
         bm.run_kgsbrf()
-
-        # ---- Save BRF results ----
 
         try:
             lag, A, err = bm.read_BRFOutput()
@@ -357,15 +365,18 @@ class BRFManager(myqt.QFrameLayout):
             self.wldset.save_brf(lag, A, err, date_start, date_end)
             self.viewer.new_brf_added()
             self.viewer.show()
-
             QApplication.restoreOverrideCursor()
         except:
             QApplication.restoreOverrideCursor()
-            self.emit_warning(msg)
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
 
 
 class BRFViewer(QWidget):
+    """
+    Window that is used to show all the results produced with for the
+    currently selected water level dataset.
+    """
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
@@ -700,10 +711,9 @@ class BRFViewer(QWidget):
 if __name__ == "__main__":
     import gwhat.projet.reader_projet as prd
     import sys
-    projet = prd.ProjetReader('C:/Users/jsgosselin/OneDrive/Research/'
-                              'PostDoc - MDDELCC/Outils/BRF MontEst/'
-                              'BRF MontEst.what')
-    wldset = projet.get_wldset(projet.wldsets[1])
+    projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/gwhat/"
+                              "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
+    wldset = projet.get_wldset(projet.wldsets[0])
 
     app = QApplication(sys.argv)
 

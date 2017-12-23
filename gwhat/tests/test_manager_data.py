@@ -146,6 +146,13 @@ def test_delete_waterlevel_data(data_manager_bot, mocker):
     qtbot.mouseClick(data_manager.btn_del_wldset, Qt.LeftButton)
     assert data_manager.wldataset_count() == 0
 
+    # Import the water level again since we will need it for another test.
+    dirname = os.path.dirname(__file__)
+    filename = os.path.join(dirname, "sample_water_level_datafile.xlsx")
+    data_manager.new_waterlvl_win.load_dataset(filename)
+    data_manager.new_waterlvl_win.accept_dataset()
+    assert data_manager.wldataset_count() == 1
+
 
 if __name__ == "__main__":
     pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])

@@ -108,7 +108,7 @@ class ManagerUpdates(QMessageBox):
                        " on our <a href=\"%s\">Milestones</a> page.<br><br>"
                        "Please help GWHAT by reporting bugs or proposing new"
                        " features on our"
-                       " <a href=\"%s\">Issues</a> tracker."
+                       " <a href=\"%s\">Issues Tracker</a>."
                        ) % (__namever__, __releases_url__, url_m, url_t)
         self.setText(msg)
         self.setIcon(icn)

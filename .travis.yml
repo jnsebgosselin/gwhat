@@ -3,8 +3,10 @@
 language: python
 python: "3.6"
 
-install:
+before_install:
   - sudo apt-get update
+
+install:
   - pip install pyqt5
   - sudo apt-get install cython3
   - sudo apt-get install libhdf5-dev
@@ -18,15 +20,15 @@ install:
   - pip install pytest-cov
   - pip install pytest-ordering
   - pip install flaky
-  - pip install coveralls
   - pip install matplotlib
   - pip install scipy
   - pip install cython
+  - pip install requests
+  - pip install coveralls
   - python setup.py build_ext --inplace
 
 script:
   python runtests.py
-  # - coverage run --source=WHAT --cov=WHAT --cov-report=term-missing -m py.test
-
+  
 after_success:
-  - coveralls
+ - coveralls
