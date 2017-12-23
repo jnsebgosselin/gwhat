@@ -77,7 +77,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # ---------------------------------------------------------- Toolbar --
 
-        btn_save = QToolButtonNormal(icons.get_icon('save'))
+        self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save the well hydrograph')
 
         # btn_draw is usefull for debugging purposes

@@ -16,7 +16,7 @@ from PyQt5.QtCore import Qt
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from gwhat.HydroPrint2 import HydroprintGUI, PageSetupWin
+from gwhat.HydroPrint2 import HydroprintGUI, PageSetupWin, QFileDialog
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_projet import ProjetReader
 
@@ -113,6 +113,26 @@ def test_zoomin_zoomout(hydroprint_bot):
     for expected_value in expected_values:
         assert hydroprint.zoom_disp.value() == expected_value
         hydroprint.zoom_out()
+
+
+@pytest.mark.run(order=8)
+def test_save_figure(hydroprint_bot, mocker):
+    hydroprint, qtbot = hydroprint_bot
+    hydroprint.show()
+    hydroprint.wldset_changed()
+
+    # Assert that the hydrograph is saved correctly.
+    fname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "test_hydrograph.pdf")
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
+                        return_value=(fname, '*.pdf'))
+    qtbot.mouseClick(hydroprint.btn_save, Qt.LeftButton)
+    qtbot.waitUntil(lambda: os.path.exists(fname))
+
+    fname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "test_hydrograph.svg")
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
+                        return_value=(fname, '*.svg'))
+    qtbot.mouseClick(hydroprint.btn_save, Qt.LeftButton)
+    qtbot.waitUntil(lambda: os.path.exists(fname))
 
 
 # Test PageSetupWin
