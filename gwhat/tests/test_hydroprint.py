@@ -16,7 +16,8 @@ from PyQt5.QtCore import Qt
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from gwhat.HydroPrint2 import HydroprintGUI, PageSetupWin, QFileDialog
+from gwhat.HydroPrint2 import (HydroprintGUI, PageSetupWin, QFileDialog,
+                               QMessageBox)
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_projet import ProjetReader
 
@@ -135,6 +136,67 @@ def test_save_figure(hydroprint_bot, mocker):
     qtbot.waitUntil(lambda: os.path.exists(fname))
 
 
+@pytest.mark.run(order=8)
+def test_graph_layout(hydroprint_bot, mocker):
+    hydroprint, qtbot = hydroprint_bot
+    hydroprint.show()
+    hydroprint.wldset_changed()
+
+    # Save the graph layout.
+    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
+    qtbot.mouseClick(hydroprint.btn_save_layout, Qt.LeftButton)
+
+    layout = hydroprint.wldset.get_layout()
+    assert type(layout) == dict
+    assert layout['legend_on'] is True
+    assert layout['title_on'] is True
+    assert layout['trend_line'] is False
+    assert layout['wxdset'] == "MARIEVILLE"
+    assert layout['WLmin'] == 3.75
+    assert layout['WLscale'] == 0.25
+    assert layout['RAINscale'] == 20
+    assert layout['fwidth'] == 11
+    assert layout['fheight'] == 7
+    assert layout['va_ratio'] == 0.2
+    assert layout['NZGrid'] == 8
+    assert layout['bwidth_indx'] == 1
+    assert layout['date_labels_pattern'] == 2
+    assert layout['datemode'] == 'Month'
+
+    # Change some parameters values.
+    hydroprint.dmngr.wxdsets_cbox.setCurrentIndex(0)
+    assert hydroprint.dmngr.wxdsets_cbox.currentText() == "IBERVILLE"
+    hydroprint.waterlvl_scale.setValue(0.2)
+    hydroprint.waterlvl_max.setValue(3.5)
+    hydroprint.NZGridWL_spinBox.setValue(10)
+    hydroprint.datum_widget.setCurrentIndex(1)
+    assert hydroprint.datum_widget.currentText() == 'Sea Level'
+
+    # Click to save the layout, but cancel the operation.
+    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.No)
+    qtbot.mouseClick(hydroprint.btn_save_layout, Qt.LeftButton)
+
+    # Load the graph layout.
+    qtbot.mouseClick(hydroprint.btn_load_layout, Qt.LeftButton)
+    layout = hydroprint.wldset.get_layout()
+    assert type(layout) == dict
+    assert layout['legend_on'] is True
+    assert layout['title_on'] is True
+    assert layout['trend_line'] is False
+    assert layout['wxdset'] == hydroprint.dmngr.wxdsets_cbox.currentText() == "MARIEVILLE"
+    assert layout['WLmin'] == hydroprint.waterlvl_max.value() == 3.75
+    assert layout['WLscale'] == hydroprint.waterlvl_scale.value() == 0.25
+    assert layout['RAINscale'] == 20
+    assert layout['fwidth'] == 11
+    assert layout['fheight'] == 7
+    assert layout['va_ratio'] == 0.2
+    assert layout['NZGrid'] == hydroprint.NZGridWL_spinBox.value() == 8
+    assert layout['bwidth_indx'] == 1
+    assert layout['date_labels_pattern'] == 2
+    assert layout['datemode'] == 'Month'
+    assert hydroprint.datum_widget.currentText() == 'Ground Surface'
+
+
 # Test PageSetupWin
 # -------------------------------
 
@@ -188,4 +250,4 @@ def test_pagesetup(pagesetup_bot):
 
 if __name__ == "__main__":
     pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-    # pytest.main()
+#     pytest.main()
