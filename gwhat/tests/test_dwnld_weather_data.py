@@ -102,7 +102,7 @@ def test_load_stationlist(downloader_bot, mocker):
     assert wxdata_downloader
 
     expected_results = [
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+        ["L'ACADIE", "10843", "1994", "2018", "QC", "702LED4",
          '45.29', '-73.35', '43.8'],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
          '45.62', '-73.13', '30.0'],
@@ -163,7 +163,7 @@ def test_delete_add_stations(downloader_bot, mocker):
     # Select stations MONT ST HILAIRE, MONTREAL/ST-HUBERT A, and ROUGEMONT
     # in the list and delete them.
     expected_results = [
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+        ["L'ACADIE", "10843", "1994", "2018", "QC", "702LED4",
          '45.29', '-73.35', '43.8'],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
          '45.62', '-73.13', '30.0'],
@@ -195,7 +195,7 @@ def test_delete_add_stations(downloader_bot, mocker):
 
     # Add back the stations that were deleted.
     expected_results = [
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+        ["L'ACADIE", "10843", "1994", "2018", "QC", "702LED4",
          '45.29', '-73.35', '43.8'],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
          '45.62', '-73.13', '30.0'],
@@ -244,7 +244,7 @@ def test_download_data(downloader_bot, mocker):
 
     # Load the weather station list.
     expected_results = [
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+        ["L'ACADIE", "10843", "1994", "2018", "QC", "702LED4",
          '45.29', '-73.35', '43.8'],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
          '45.62', '-73.13', '30.0'],
