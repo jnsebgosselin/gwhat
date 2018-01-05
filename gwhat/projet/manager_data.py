@@ -721,10 +721,8 @@ class NewDatasetDialog(QDialog):
 if __name__ == '__main__':
     from reader_projet import ProjetReader
     import sys
-    f = ('C:/Users/jsgosselin/OneDrive/Research/'
-         'PostDoc - MDDELCC/Outils/BRF MontEst/'
-         'BRF MontEst.what')
-    p = ProjetReader(f)
+    projet = ProjetReader("C:/Users/jsgosselin/GWHAT/gwhat/"
+                          "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
 
     app = QApplication(sys.argv)
 
@@ -736,7 +734,7 @@ if __name__ == '__main__':
     # pm = ProjetManager(projet=f)
     # pm.show()
 
-    dm = DataManager(projet=p)
+    dm = DataManager(projet=projet)
     dm.show()
 
     app.exec_()

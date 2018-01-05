@@ -3,7 +3,7 @@
 # Copyright © 2014-2017 GWHAT Project contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
 # Standard library imports
@@ -126,8 +126,8 @@ def test_fill_data(gapfill_weather_bot, mocker):
                     timeout=100000)
 
     # Assert that all the ouput files were generated correctly.
-    basenames = ["IBERVILLE (7023270)_2000-2010.out",
-                 "IBERVILLE (7023270)_2000-2010.log",
+    basenames = ["IBERVILLE (7023270)_2000-2015.out",
+                 "IBERVILLE (7023270)_2000-2015.log",
                  "weather_normals.pdf"]
     for basename in basenames:
         fname = os.path.join(output_dir, "IBERVILLE (7023270)", basename)
@@ -147,7 +147,7 @@ def test_add_ETP(gapfill_weather_bot, mocker):
 
     # Mock the QFileDialog to return the path of the file.
     filename = os.path.join(output_dir, "IBERVILLE (7023270)",
-                            "IBERVILLE (7023270)_2000-2010.out")
+                            "IBERVILLE (7023270)_2000-2015.out")
     mocker.patch.object(QFileDialog, 'getOpenFileName',
                         return_value=(filename, '*.out'))
 
@@ -180,21 +180,21 @@ def test_gapfill_all_data(gapfill_weather_bot):
 
     # Assert that all the ouput files were generated correctly.
     files = [os.path.join(output_dir, "IBERVILLE (7023270)",
-                          "IBERVILLE (7023270)_2000-2010.out"),
+                          "IBERVILLE (7023270)_2000-2015.out"),
              os.path.join(output_dir, "IBERVILLE (7023270)",
-                          "IBERVILLE (7023270)_2000-2010.log"),
+                          "IBERVILLE (7023270)_2000-2015.log"),
              os.path.join(output_dir, "IBERVILLE (7023270)",
                           "weather_normals.pdf"),
              os.path.join(output_dir, "L'ACADIE (702LED4)",
-                          "L'ACADIE (702LED4)_2000-2010.out"),
+                          "L'ACADIE (702LED4)_2000-2015.out"),
              os.path.join(output_dir, "L'ACADIE (702LED4)",
-                          "L'ACADIE (702LED4)_2000-2010.log"),
+                          "L'ACADIE (702LED4)_2000-2015.log"),
              os.path.join(output_dir, "L'ACADIE (702LED4)",
                           "weather_normals.pdf"),
              os.path.join(output_dir, "MARIEVILLE (7024627)",
-                          "MARIEVILLE (7024627)_2000-2010.out"),
+                          "MARIEVILLE (7024627)_2000-2015.out"),
              os.path.join(output_dir, "MARIEVILLE (7024627)",
-                          "MARIEVILLE (7024627)_2000-2010.log"),
+                          "MARIEVILLE (7024627)_2000-2015.log"),
              os.path.join(output_dir, "MARIEVILLE (7024627)",
                           "weather_normals.pdf")
              ]

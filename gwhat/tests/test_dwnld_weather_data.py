@@ -1,8 +1,11 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Aug  4 01:50:50 2017
-@author: jsgosselin
-"""
+
+# Copyright © 2014-2017 GWHAT Project contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
+
 
 # ---- Standard library imports
 
@@ -99,7 +102,7 @@ def test_load_stationlist(downloader_bot, mocker):
     assert wxdata_downloader
 
     expected_results = [
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+        ["L'ACADIE", "10843", "1994", "2018", "QC", "702LED4",
          '45.29', '-73.35', '43.8'],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
          '45.62', '-73.13', '30.0'],
@@ -160,7 +163,7 @@ def test_delete_add_stations(downloader_bot, mocker):
     # Select stations MONT ST HILAIRE, MONTREAL/ST-HUBERT A, and ROUGEMONT
     # in the list and delete them.
     expected_results = [
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+        ["L'ACADIE", "10843", "1994", "2018", "QC", "702LED4",
          '45.29', '-73.35', '43.8'],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
          '45.62', '-73.13', '30.0'],
@@ -192,7 +195,7 @@ def test_delete_add_stations(downloader_bot, mocker):
 
     # Add back the stations that were deleted.
     expected_results = [
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+        ["L'ACADIE", "10843", "1994", "2018", "QC", "702LED4",
          '45.29', '-73.35', '43.8'],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
          '45.62', '-73.13', '30.0'],
@@ -241,7 +244,7 @@ def test_download_data(downloader_bot, mocker):
 
     # Load the weather station list.
     expected_results = [
-        ["L'ACADIE", "10843", "1994", "2017", "QC", "702LED4",
+        ["L'ACADIE", "10843", "1994", "2018", "QC", "702LED4",
          '45.29', '-73.35', '43.8'],
         ["STE MADELEINE", "5501", "1979", "2016", "QC", "7027517",
          '45.62', '-73.13', '30.0'],
@@ -263,7 +266,7 @@ def test_download_data(downloader_bot, mocker):
 
     # Set "to year" and "from year" for all stations.
     station_table.set_fromyear(2000)
-    station_table.set_toyear(2010)
+    station_table.set_toyear(2015)
 
     # Try starting the downloading process before selecting any station.
     mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
@@ -293,9 +296,9 @@ def test_download_data(downloader_bot, mocker):
 
     # Assert that the concatenated datafiles were created.
     dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
-    files = ["MARIEVILLE (7024627)_2000-2010.csv",
-             "IBERVILLE (7023270)_2000-2010.csv",
-             "L'ACADIE (702LED4)_2000-2010.csv"]
+    files = ["MARIEVILLE (7024627)_2000-2015.csv",
+             "IBERVILLE (7023270)_2000-2015.csv",
+             "L'ACADIE (702LED4)_2000-2015.csv"]
     for file in files:
         assert os.path.exists(os.path.join(dirname, file))
 
