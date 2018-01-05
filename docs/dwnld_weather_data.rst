@@ -4,9 +4,9 @@ Downloading Daily Weather Data
 ===============================================
 
 This document shows how to search, download, and format daily climate data
-from the `Canadian Daily Climate Database`_ (CDCD) using the download
-weather data tool of GWHAT available under the tab ``Download Weather`` shown
-in :numref:`gif_dwnld_weather`.
+from the `Canadian Daily Climate Database`_ (CDCD) [#url_cddc]_ using the download
+weather data tool of GWHAT available under the tab :guilabel:`Download Weather`
+shown in :numref:`gif_dwnld_weather`.
 
 .. _gif_dwnld_weather:
 .. figure:: img/download_weather.*
@@ -14,8 +14,9 @@ in :numref:`gif_dwnld_weather`.
     :width: 100%
     :alt: alternate text
     :figclass: align-center
-    
-    Presentation of the download weather data tool of GWHAT available under the ``Download Weather`` tab.
+
+    Presentation of the download weather data tool of GWHAT available under
+    the :guilabel:`Download Weather` tab.
 
 .. _sec_download_weather_data:
 
@@ -28,7 +29,8 @@ and by clicking on the |downward_arrow| icon in the toolbar.
 
 Climate stations can be added to the table either by selecting an existing list
 of stations from a file by clicking on the |open_file| icon or by using the
-`climate stations browser`_ by clicking on the |magnifying_glass| icon.
+:guilabel:`Weather Stations Browser` (see :numref:`cdcd_browser`) that is
+accessible by clicking on the |magnifying_glass| icon.
 Climate stations can be removed from the table by selecting them and clicking
 on the |eraser| icon. The list of stations can be exported to a :abbr:`csv (comma-separated values)`
 file by clicking on the |save| icon, so that it can be directly loaded in successive sessions of GWHAT.
@@ -50,7 +52,7 @@ at once using the |set_fromyear| and |set_toyear| icons as shown in
     :width: 100%
     :alt: alternate text
     :figclass: align-center
-    
+
     Tool to download and format daily weather data from the online
     CDCD_ (Canadian Daily Climate Database).
 
@@ -60,7 +62,7 @@ at once using the |set_fromyear| and |set_toyear| icons as shown in
     :width: 100%
     :alt: alternate text
     :figclass: align-center
-    
+
     Set the ``From Year`` and ``To Year`` values for all stations at once.
 
 .. _climate stations browser: `Searching for weather data`_
@@ -68,7 +70,7 @@ at once using the |set_fromyear| and |set_toyear| icons as shown in
 Searching for weather data
 -----------------------------------------------
 
-The climate station browser shown in :numref:`cdcd_browser` provides a graphical
+The :guilabel:Weather Stations Browser shown in :numref:`cdcd_browser` provides a graphical
 interface to the CDCD_, which contains daily data for air temperature and precipitation
 dating back to 1840 to the present for more than 8000 stations distributed across Canada.
 The list of stations can be filtered in the browser by proximity, province, or/and the
@@ -88,8 +90,8 @@ Excel or :abbr:`csv (comma-separated values)` file by clicking on the button |sa
     :width: 100%
     :alt: alternate text
     :figclass: align-center
-    
-    Presentation of the climate stations browser.
+
+    Presentation of the :guilabel:Weather Stations Browser.
 
 .. _sec_weather_datafiles_format:
 
@@ -97,51 +99,40 @@ Formatting the weather datafiles
 ----------------------------------------------------------
 
 After all data have been successfully downloaded for a given weather station,
-GWHAT automatically format the data and displays information about the number
+GWHAT automatically displays information about the number
 and the proportion of days with missing data in the the right-side panel of
 the :guilabel:`Download Weather` tab (see :numref:`format_weather_panel`).
-It is also possible to open and format previously downloaded weather data files
-by clicking on the button |open_file| `Select` at the top of the panel. 
+It is possible to navigate through the information of all the datasets that were
+downloaded over the course of a given session by using the left-right arrows located
+at the bottom of the panel.
 
-It is possible to navigate through the datasets that were formatted over the
-course of a given session using the left-right arrows and save any dataset
-manually by clicking on the button |save| `Save` button.
-By default, GWHAT automatically save the formatted data in a single :abbr:`csv (comma-separated values)`
-file in the :file:`Input` folder of the current project folder. 
-It is possible to prevent GWHAT from automatically saving the formatted dataset
+By default, GWHAT saves the formatted data automatically in a single
+csv (comma-separated values) file in the :file:`Input` folder of the current project folder.
+Details about the format of the csv files in which the data are saved are provided
+in :numref:`daily_weather_datafile_format`.
+It is possible to prevent GWHAT from automatically saving the formatted data
 by unchecking the :guilabel:`Automatically save formatted weather data` option
-located at the bottom of the formating tool.
+located at the bottom of the formating tool. The formatted data can be manually
+saved afterwards by clicking on the button |save| `Save`.
+
+Moreover, previously downloaded raw weather data files, which are saved automatically
+in the :file:`Raw` folder, can be opened and formated at any times by
+clicking on the button |open_file| `Select` at the top of the panel. The formatted
+data can then be saved manually by clicking on the button |save| `Save` or automatically
+if the :guilabel:`Automatically save formatted weather data` option is checked.
+
 
 .. _format_weather_panel:
-.. figure:: img/annotations_concatenate_panel.*
+.. figure:: img/scs/annotations_concatenate_panel.*
     :align: center
     :width: 100%
     :alt: alternate text
     :figclass: align-center
-    
+
     Presentation of the tool to format raw weather datafiles located in the right
     panel of the :guilabel:`Download Weather` tab.
 
-The formatted weather datafiles are utf8_ :abbr:`csv (comma-separated values)` text
-files. An exemple of formatted datafile is presented in :numref:`weather_datafile_example`. 
-The file header contains information about the station name, province, latitude, longitude, 
-elevation and climate identifier. The dataset is composed of daily maximum, minimum, 
-and mean air temperature in °C and total precipitation in mm. 
-:abbr:`nan (not a number)` values must be entered where data are missing. 
-Data must also be in chronological order, but do not need to be continuous over time. 
-That is, missing blocks of data (e.g., several days, months or years) can be completely 
-omitted in the time-series.
 
-.. _weather_datafile_example:
-.. figure:: img/weather_datafile_example.*
-    :align: center
-    :width: 85%
-    :alt: weather_datafile_example.png
-    :figclass: align-center
-    
-    Formatted weather datafile example.
-
-.. _utf8: https://en.wikipedia.org/wiki/UTF-8
 .. _Canadian Daily Climate Database: www.climate.weather.gc.ca
 .. _CDCD: _Canadian Daily Climate Database
 
@@ -190,3 +181,7 @@ omitted in the time-series.
                       :width: 1em
                       :height: 1em
                       :alt: stop
+
+
+.. rubric:: Footnotes
+.. [#url_cddc] http://climate.weather.gc.ca/

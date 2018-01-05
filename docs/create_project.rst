@@ -15,7 +15,7 @@ default the first time GWHAT is started. This project includes samples of
 files to test the different features of GWHAT.
 
 .. _project_toolbar:
-.. figure:: img/scs_project_toolbar_annoted.*
+.. figure:: img/scs/scs_project_toolbar_annoted.*
     :align: center
     :width: 100%
     :alt: alternate text
@@ -72,7 +72,7 @@ An example of a project folder files organization is presented in
 .. _file_and_folder_architecture:
 .. figure:: img/file_and_folder_architecture.*
     :align: center
-    :width: 75%
+    :width: 100%
     :alt: alternate text
     :figclass: align-center
     
@@ -149,7 +149,7 @@ Project Files
     :figclass: align-center
 
 
-.. |icon_folder| image:: img/icon_folder.*
+.. |icon_folder| image:: img/icon/icon_folder.*
                       :width: 1em
                       :height: 1em
                       :alt: folder

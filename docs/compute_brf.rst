@@ -1,3 +1,5 @@
+.. _chap_computing_the_brf:
+
 Computing the Well Barometric Response Function
 ===============================================
 
@@ -7,8 +9,8 @@ Computing the Well Barometric Response Function
     :width: 100%
     :alt: alternate text
     :figclass: align-center
-    
+
     Presentation of the interface to the `KGS Barometric Response Function Software`_
     to compute the barometric response function of a well.
-    
+
 .. _KGS Barometric Response Function Software: http://www.kgs.ku.edu/HighPlains/OHP/index_program/brf.html

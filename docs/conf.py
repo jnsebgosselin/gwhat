@@ -46,7 +46,8 @@ LaTeXBuilder.supported_image_types = ['application/pdf', 'image/png',
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.viewcode', 'sphinx.ext.autosectionlabel']
+extensions = ['sphinx.ext.viewcode', 'sphinx.ext.autosectionlabel',
+              'sphinx.ext.mathjax']
 numfig = True
 
 # Add any paths that contain templates here, relative to this directory.
@@ -63,7 +64,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'GWHAT'
-copyright = '2014-2017, GWHAT Documentation Team'
+copyright = '2014-2017, GWHAT Documentation Contributors'
 author = 'Jean-Sébastien Gosselin'
 
 # The version info for the project you're documenting, acts as replacement for
@@ -150,13 +151,8 @@ latex_elements = {
 latex_engine = 'pdflatex'
 latex_logo = 'img/logo_latex.pdf'
 
-authors = (r'Jean-Sébastien Gosselin \and '
-           r'René Lefebvre \and '
-           r'Richard Martel \and '
-           r'Christine Rivard')
-
 latex_documents = [(master_doc, 'gwhat.tex', 'Documentation',
-                    authors, 'manual')]
+                    "GWHAT Documentation Contributors", 'manual')]
 
 # -- Options for manual page output ---------------------------------------
 
@@ -172,6 +168,7 @@ man_pages = [(master_doc, 'GWHAT', 'GWHAT Documentation', [author], 1)]
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'GWHAT', 'GWHAT Documentation',
-     author, 'GWHAT', 'One line description of project.',
+     "GWHAT Documentation Contributors", 'GWHAT',
+     'One line description of project.',
      'Miscellaneous'),
 ]
