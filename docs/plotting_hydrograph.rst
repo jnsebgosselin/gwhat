@@ -18,7 +18,7 @@ in :numref:`scs_plot_hydrograph`.
     :guilabel:`Plot Hydrograph` tab.
 
 The tab :guilabel:`Plot Hydrograph` consists mainly of an editor to produce a
-graph showing the ground-water level time series in relation to weather
+graph showing the groundwater level time series in relation to weather
 conditions. As shown in :numref:`fig_plot_hydrograph_annoted`, the editor
 consists of a toolbar, the panel :guilabel:`Input data`, the panel
 :guilabel:`Axes settings`, and a canvas where the hydrograph figure is shown.
@@ -57,7 +57,6 @@ loaded back for the currently selected water level dataset by clicking on the
 |icon_load_config| icon. Finally, the hydrograph can be saved in a pdf or
 svg format by clicking on the |icon_save| icon.
 
-
 .. _fig_plot_hydrograph_annoted:
 .. figure:: img/scs/plot_hydrograph_annoted.*
     :align: center
@@ -72,6 +71,9 @@ svg format by clicking on the |icon_save| icon.
 Components of the Hydrograph
 -----------------------------------------------
 
+:numref:`fig_hydrograph_components` presents the various elements of the hydrograph.
+Each of these are discussed in more details below.
+
 .. _fig_hydrograph_components:
 .. figure:: img/scs/hydrograph_components.*
     :align: center
@@ -83,18 +85,18 @@ Components of the Hydrograph
 
 .. _subsec_water_level_component:
 
-Ground-water level
+Groundwater levels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The ground-water levels are plotted on the bottom part of the hydrograph. By default,
-the ground-water data are plotted as a continuous line that relies all the available
-data. 
+The groundwater levels are plotted on the bottom part of the hydrograph. 
+By default, groundwater levels are represented by a continuous line that connects 
+to all available data.
 
-It is possible to force the line to break over an extended period of time for
-which data is missing by adding a nan value between the period for which data is
-available in the water level datafile before importing it.
+It is possible to ensure that the continuous line is not drawn over periods of time
+where data is missing by adding a nan value in the water levels time series before
+importing it in GWHAT.
 For example, in :numref:`fig_missing_water_level`, water level data
-were missing for the whole of 2012. A ``nan`` was thus added in the datafile 
+were missing for the whole of 2012. A ``nan`` was thus added in the data file 
 at one time during this period to avoid a line to be plotted between the
 31/12/2011 and the 01/01/2013.
 
@@ -126,7 +128,7 @@ periods when air temperature is below the freezing point of water. Mean air
 temperature can be plotted on a daily, weekly, or monthly basis. This can be changed
 from the :guilabel:`Axes settings` panel as discussed in :numref:`subsec_axis_settings`. 
 
-Cumulative precipitation, as rain and snow, are plotted in the bottom part of the
+Cumulative precipitation, as rain and snow, is plotted in the bottom part of the
 hydrograph along with the water level data. For a given day, precipitation is
 assumed to fall as snow if the mean air temperature for that day is below 0ºC and
 as rain otherwise. As for air temperature, cumulative precipitation can be plotted on
@@ -136,9 +138,9 @@ Missing weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The ``Missing data`` component is used to mark where daily air temperature and
-precipitation were estimated due to missing data in the dataset. These information
-are read when importing a dataset in GWHAT (see :numref:`sec_importing_data`) from
-the :file:`.log` file that is produced automatically when gapfilling daily
+precipitation were estimated due to missing data in the dataset. This information
+is read when importing a dataset in GWHAT (see :numref:`sec_importing_data`) from
+the :file:`.log` file that is produced automatically when gap filling daily
 weather records with the tool presented in :numref:`chap_gapfilling_weather_data`.
 
 .. note:: If no :file:`.log` exists when importing a daily weather datafile in 
@@ -146,12 +148,12 @@ weather records with the tool presented in :numref:`chap_gapfilling_weather_data
           even if data are missing in the daily weather dataset.
 
 
-Water level manual measurements
+Water levels manual measurements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Water level measured manually during field visits can also be plotted on the hydrograph.
+Water levels measured manually during field visits can also be plotted on the hydrograph.
 This provides a quick and easy way to visually validate the automated measurements
-acquired with a water level datalogger.
+acquired with a water-level data logger.
 
 To do so, the manual measurements must be saved in a csv or xls/xlsx file
 named :file:`water_level_measurements` in the :file:`Water Levels` folder
@@ -159,7 +161,7 @@ named :file:`water_level_measurements` in the :file:`Water Levels` folder
 An example is shown in :numref:`fig_water_level_measurements` below. The first column corresponds
 to the name of the observation wells (see :numref:`sec_importing_data`), the second column is the
 dates entered in :term:`Excel numeric date format`, and the last column corresponds to
-the manual measurements, in meters below the ground surface.
+the manual measurements, in metres below the ground surface.
 
 .. _fig_water_level_measurements:
 .. figure:: img/files/water_level_measurements.*
@@ -224,19 +226,19 @@ Time axis
 
 The range of the time axis can be changed by setting the :guilabel:`From` and 
 :guilabel:`To` dates. The :guilabel:`Scale` of the time axis can be set to
-`monthly` or `yearly`. The :guilabel:`Date Disp. Pattern` setting allow to define
+`monthly` or `yearly`. The :guilabel:`Date Disp. Pattern` setting allows to define
 the interval with which the tick labels of the time axis are plotted. Four different
 cases with different values of the :guilabel:`Scale` and The :guilabel:`Date Disp. Pattern`
 settings are presented in :numref:`fig_hydroprint_axis_settings`.
 
-Water level axis
+Water levels axis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The :guilabel:`Minimum` setting of corresponds to the value at the bottom of
 the water level axis. The :guilabel:`Grid Divisions` value corresponds to the 
 number of intervals in which the water level axis is divided as shown on
 :numref:`fig_hydroprint_axis_settings`. The :guilabel:`Datum` of reference of
-the water level axis can be set to either ``Ground Surface`` or ``See Level``.
+the water level axis can be set to either ``Ground Surface`` or ``Sea Level``.
 
 The value at the top of the water level axis is calculated from the values
 specified in :guilabel:`Minimum`, :guilabel:`Scale`, and :guilabel:`Grid Divisions`.
