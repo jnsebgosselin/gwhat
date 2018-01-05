@@ -57,7 +57,7 @@ def test_import_weather_data(data_manager_bot, mocker):
     # Assert that the weather datafile exists.
     output_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
     filename = os.path.join(output_dir, "IBERVILLE (7023270)",
-                            "IBERVILLE (7023270)_2000-2010.out")
+                            "IBERVILLE (7023270)_2000-2015.out")
     assert os.path.exists(filename)
 
     # Mock the QFileDialog to return the path of the file.
@@ -145,6 +145,26 @@ def test_delete_waterlevel_data(data_manager_bot, mocker):
     mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
     qtbot.mouseClick(data_manager.btn_del_wldset, Qt.LeftButton)
     assert data_manager.wldataset_count() == 0
+
+
+@pytest.mark.run(order=7)
+def test_import_back_alldata(data_manager_bot):
+    data_manager, qtbot = data_manager_bot
+    data_manager.show()
+
+    # Import the weather data again since we will need it for another test.
+    output_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
+    filenames = [os.path.join(output_dir, "IBERVILLE (7023270)",
+                              "IBERVILLE (7023270)_2000-2015.out"),
+                 os.path.join(output_dir, "L'ACADIE (702LED4)",
+                              "L'ACADIE (702LED4)_2000-2015.out"),
+                 os.path.join(output_dir, "MARIEVILLE (7024627)",
+                              "MARIEVILLE (7024627)_2000-2015.out")
+                 ]
+    for filename in filenames:
+        data_manager.new_weather_win.load_dataset(filename)
+        data_manager.new_weather_win.accept_dataset()
+    assert data_manager.wxdataset_count() == 3
 
     # Import the water level again since we will need it for another test.
     dirname = os.path.dirname(__file__)
