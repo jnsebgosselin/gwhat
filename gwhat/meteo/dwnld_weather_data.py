@@ -3,7 +3,7 @@
 # Copyright © 2014-2017 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Imports: standard libraries
@@ -51,6 +51,7 @@ class DwnldWeatherWidget(QWidget):
 
     def __init__(self, parent=None):
         super(DwnldWeatherWidget, self).__init__(parent)
+        self.__station_browser_latlon_buffer = None
 
         self.set_workdir(getcwd())
 
@@ -66,7 +67,7 @@ class DwnldWeatherWidget(QWidget):
 
         # Setup child widgets and UI.
 
-        self.station_browser = WeatherStationBrowser(self)
+        self.station_browser = None
         self.station_table = WeatherStationDisplayTable(1, self)
         self.__initUI__()
 
@@ -268,9 +269,34 @@ class DwnldWeatherWidget(QWidget):
 
         # station_browser
 
-        btn_search4station.clicked.connect(self.station_browser.show)
-        self.station_browser.staListSignal.connect(self.add_stations2list)
-        self.station_browser.ConsoleSignal.connect(self.ConsoleSignal.emit)
+        btn_search4station.clicked.connect(self.btn_search4station_isclicked)
+
+    # ---- Station Browser Handlers
+
+    def set_station_browser_latlon(self, lat_lon_tuple):
+        """
+        Set the latitude and longitude location coordinates in the
+        station browser. If the station browser does not exist yet, the
+        coordinates are saved in a buffer that will be used the first time
+        the station browser is accessed.
+        """
+        self.__station_browser_latlon_buffer = lat_lon_tuple
+        if self.station_browser is not None:
+            self.station_browser.set_lat(lat_lon_tuple[0])
+            self.station_browser.set_lon(lat_lon_tuple[1])
+
+    def btn_search4station_isclicked(self):
+        """Handles when the button search4station is clicked."""
+        if self.station_browser is None:
+            # Initialize and register the station browser :
+            self.station_browser = WeatherStationBrowser(self)
+            self.station_browser.staListSignal.connect(self.add_stations2list)
+            self.station_browser.ConsoleSignal.connect(self.ConsoleSignal.emit)
+            self.station_browser.set_lat(
+                    self.__station_browser_latlon_buffer[0])
+            self.station_browser.set_lon(
+                    self.__station_browser_latlon_buffer[1])
+        self.station_browser.show()
 
     # ---- Workdir
 
@@ -1369,7 +1395,9 @@ class ConcatenatedDataFrame(dict):
             writer.writerows(fcontent)
 
 
-if __name__ == '__main__':                                   # pragma: no cover
+# %% if __name__ == '__main__'
+
+if __name__ == '__main__':
     app = QApplication(sys.argv)
 
     ft = app.font()
@@ -1381,8 +1409,7 @@ if __name__ == '__main__':                                   # pragma: no cover
 
     testpath = "../tests/@ new-prô'jèt!"
     w.set_workdir(testpath)
-    w.station_browser.lat_spinBox.setValue(45.4)
-    w.station_browser.lon_spinBox.setValue(73.13)
+    w.set_station_browser_latlon((45.4, 73.13))
     w.load_stationList(os.path.join(testpath, "weather_station_list.lst"))
 
     w.station_table.set_fromyear(2000)

@@ -73,6 +73,7 @@ class WeatherStationBrowser(QWidget):
             self.lat_spinBox.blockSignals(True)
         self.lat_spinBox.setValue(x)
         self.lat_spinBox.blockSignals(False)
+        self.proximity_grpbox_toggled()
 
     @property
     def lon(self):
@@ -83,6 +84,7 @@ class WeatherStationBrowser(QWidget):
             self.lon_spinBox.blockSignals(True)
         self.lon_spinBox.setValue(x)
         self.lon_spinBox.blockSignals(False)
+        self.proximity_grpbox_toggled()
 
     @property
     def rad(self):
@@ -434,6 +436,8 @@ class WeatherStationBrowser(QWidget):
                 yrange=(self.year_min, self.year_max, self.nbr_of_years))
         self.station_table.populate_table(stnlist)
 
+
+# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
 

@@ -77,8 +77,8 @@ def test_search_weather_station(station_finder_bot, mocker):
 
     # Changed the values of the lat and lon and assert that the proximity
     # values are shown correctly.
-    station_browser.lon_spinBox.setValue(73.15)
-    station_browser.lat_spinBox.setValue(45.40)
+    station_browser.set_lat(45.40)
+    station_browser.set_lon(73.15)
     prox_data = station_browser.station_table.get_prox_data()
     assert np.max(prox_data) <= 25
 
