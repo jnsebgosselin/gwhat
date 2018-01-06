@@ -200,15 +200,16 @@ class Hydrograph(mpl.figure.Figure):
     def isHydrographExists(self):
         return self.__isHydrographExists
 
-    # =========================================================================
-
     def set_wldset(self, wldset):
         self.wldset = wldset
 
     def set_wxdset(self, wxdset):
         self.wxdset = wxdset
 
-    # =========================================================================
+    def clf(self, *args, **kargs):
+        """Matplotlib override to set internal flag."""
+        self.__isHydrographExists = False
+        super(Hydrograph, self).clf(*args, **kargs)
 
     def generate_hydrograph(self, wxdset=None, wldset=None):
         if wxdset is None:
