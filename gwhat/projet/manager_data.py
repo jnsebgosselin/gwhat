@@ -250,7 +250,7 @@ class DataManager(QWidget):
     def del_current_wldset(self):
         if self.wldsets_cbox.count() > 0:
             name = self.wldsets_cbox.currentText()
-            msg = ('Do you want to delete dataset <i>%s</i>? ' +
+            msg = ('Do you want to delete the dataset <i>%s</i>? ' +
                    'All data will be deleted from the project database, ' +
                    'but the original data files will be preserved') % name
             reply = QMessageBox.question(
@@ -330,7 +330,7 @@ class DataManager(QWidget):
     def del_current_wxdset(self):
         if self.wxdsets_cbox.count() > 0:
             name = self.wxdsets_cbox.currentText()
-            msg = ('Do you want to delete weather dataset <i>%s</i>? ' +
+            msg = ('Do you want to delete the weather dataset <i>%s</i>? ' +
                    'All data will be deleted from the project database, ' +
                    'but the original data files will be preserved') % name
             reply = QMessageBox.question(
