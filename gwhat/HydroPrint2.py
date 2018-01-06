@@ -365,7 +365,7 @@ class HydroprintGUI(myqt.DialogWindow):
         WLScale_widget.setFrameStyle(0)
         WLScale_widget.setLayout(subgrid_WLScale)
 
-        # -------------------------------------------------------- WEATHER ----
+        # ---- Weather Axis
 
         # Widgets :
 
@@ -401,7 +401,7 @@ class HydroprintGUI(myqt.DialogWindow):
         widget_weather_scale.setFrameStyle(0)
         widget_weather_scale.setLayout(layout)
 
-        # ------------------------------------------------ ASSEMBLING TABS ----
+        # ---- ASSEMBLING TABS
 
         tabscales = QTabWidget()
         tabscales.addTab(widget_time_scale, 'Time')
@@ -526,6 +526,104 @@ class HydroprintGUI(myqt.DialogWindow):
             date0, date1 = self.hydrograph.best_fit_time(wldset['Time'])
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
+
+    def layout_changed(self):
+        """
+        When an element of the graph layout is changed in the UI.
+        """
+
+        if self.__updateUI is False:
+            return
+
+        self.update_graph_layout_parameter()
+
+        if self.hydrograph.isHydrographExists is False:
+            return
+
+        sender = self.sender()
+
+        if sender == self.language_box:
+            self.hydrograph.draw_ylabels()
+            self.hydrograph.draw_xlabels()
+            self.hydrograph.set_legend()
+
+        elif sender in [self.waterlvl_max, self.waterlvl_scale]:
+            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.draw_ylabels()
+
+        elif sender == self.NZGridWL_spinBox:
+            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.update_precip_scale()
+            self.hydrograph.draw_ylabels()
+
+        elif sender == self.Ptot_scale:
+            self.hydrograph.update_precip_scale()
+            self.hydrograph.draw_ylabels()
+
+        elif sender == self.datum_widget:
+            yoffset = int(self.wldset['Elevation']/self.hydrograph.WLscale)
+            yoffset *= self.hydrograph.WLscale
+
+            self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)
+
+            self.waterlvl_max.blockSignals(True)
+            self.waterlvl_max.setValue(self.hydrograph.WLmin)
+            self.waterlvl_max.blockSignals(False)
+
+            # This is calculated so that trailing zeros in the altitude of the
+            # well is not carried to the y axis labels, so that they remain a
+            # int multiple of *WLscale*.
+
+            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.draw_waterlvl()
+            self.hydrograph.draw_ylabels()
+
+        elif sender in [self.date_start_widget, self.date_end_widget]:
+            self.hydrograph.set_time_scale()
+            self.hydrograph.draw_weather()
+            self.hydrograph.draw_figure_title()
+
+        elif sender == self.dateDispFreq_spinBox:
+            self.hydrograph.set_time_scale()
+            self.hydrograph.draw_xlabels()
+
+        elif sender == self.page_setup_win:
+            self.hydrograph.update_fig_size()
+            # Implicitly call : set_margins()
+            #                   draw_ylabels()
+            #                   set_time_scale()
+            #                   draw_figure_title
+
+            self.hydrograph.draw_waterlvl()
+            self.hydrograph.set_legend()
+
+        elif sender == self.qweather_bin:
+            self.hydrograph.resample_bin()
+            self.hydrograph.draw_weather()
+            self.hydrograph.draw_ylabels()
+
+        elif sender == self.time_scale_label:
+            self.hydrograph.set_time_scale()
+            self.hydrograph.draw_weather()
+
+        else:
+            print('No action for this widget yet.')
+
+        # !!!! temporary fix until I can find a better solution !!!!
+
+#        sender.blockSignals(True)
+        if type(sender) in [QDoubleSpinBox, QSpinBox]:
+            sender.setReadOnly(True)
+
+        for i in range(10):
+            QCoreApplication.processEvents()
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+        for i in range(10):
+            QCoreApplication.processEvents()
+
+        if type(sender) in [QDoubleSpinBox, QSpinBox]:
+            sender.setReadOnly(False)
+#        sender.blockSignals(False)
 
     def clear_hydrograph(self):
         """Clear the hydrograph figure to show only a blank canvas."""
@@ -778,106 +876,6 @@ class HydroprintGUI(myqt.DialogWindow):
         # Weather bins :
 
         self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex()
-
-    # =========================================================================
-
-    def layout_changed(self):
-        """
-        When an element of the graph layout is changed in the UI.
-        """
-
-        if self.__updateUI is False:
-            return
-
-        self.update_graph_layout_parameter()
-
-        if self.hydrograph.isHydrographExists is False:
-            return
-
-        sender = self.sender()
-
-        if sender == self.language_box:
-            self.hydrograph.draw_ylabels()
-            self.hydrograph.draw_xlabels()
-            self.hydrograph.set_legend()
-
-        elif sender in [self.waterlvl_max, self.waterlvl_scale]:
-            self.hydrograph.update_waterlvl_scale()
-            self.hydrograph.draw_ylabels()
-
-        elif sender == self.NZGridWL_spinBox:
-            self.hydrograph.update_waterlvl_scale()
-            self.hydrograph.update_precip_scale()
-            self.hydrograph.draw_ylabels()
-
-        elif sender == self.Ptot_scale:
-            self.hydrograph.update_precip_scale()
-            self.hydrograph.draw_ylabels()
-
-        elif sender == self.datum_widget:
-            yoffset = int(self.wldset['Elevation']/self.hydrograph.WLscale)
-            yoffset *= self.hydrograph.WLscale
-
-            self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)
-
-            self.waterlvl_max.blockSignals(True)
-            self.waterlvl_max.setValue(self.hydrograph.WLmin)
-            self.waterlvl_max.blockSignals(False)
-
-            # This is calculated so that trailing zeros in the altitude of the
-            # well is not carried to the y axis labels, so that they remain a
-            # int multiple of *WLscale*.
-
-            self.hydrograph.update_waterlvl_scale()
-            self.hydrograph.draw_waterlvl()
-            self.hydrograph.draw_ylabels()
-
-        elif sender in [self.date_start_widget, self.date_end_widget]:
-            self.hydrograph.set_time_scale()
-            self.hydrograph.draw_weather()
-            self.hydrograph.draw_figure_title()
-
-        elif sender == self.dateDispFreq_spinBox:
-            self.hydrograph.set_time_scale()
-            self.hydrograph.draw_xlabels()
-
-        elif sender == self.page_setup_win:
-            self.hydrograph.update_fig_size()
-            # Implicitly call : set_margins()
-            #                   draw_ylabels()
-            #                   set_time_scale()
-            #                   draw_figure_title
-
-            self.hydrograph.draw_waterlvl()
-            self.hydrograph.set_legend()
-
-        elif sender == self.qweather_bin:
-            self.hydrograph.resample_bin()
-            self.hydrograph.draw_weather()
-            self.hydrograph.draw_ylabels()
-
-        elif sender == self.time_scale_label:
-            self.hydrograph.set_time_scale()
-            self.hydrograph.draw_weather()
-
-        else:
-            print('No action for this widget yet.')
-
-        # !!!! temporary fix until I can find a better solution !!!!
-
-#        sender.blockSignals(True)
-        if type(sender) in [QDoubleSpinBox, QSpinBox]:
-            sender.setReadOnly(True)
-
-        for i in range(10):
-            QCoreApplication.processEvents()
-        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
-        for i in range(10):
-            QCoreApplication.processEvents()
-
-        if type(sender) in [QDoubleSpinBox, QSpinBox]:
-            sender.setReadOnly(False)
-#        sender.blockSignals(False)
 
 
 class PageSetupWin(QWidget):
