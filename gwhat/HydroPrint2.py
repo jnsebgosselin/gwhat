@@ -1093,6 +1093,8 @@ class PageSetupWin(QWidget):
         self.setFixedSize(self.size())
 
 
+# %% if __name__ == '__main__'
+
 if __name__ == '__main__':
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
