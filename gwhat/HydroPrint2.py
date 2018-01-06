@@ -471,6 +471,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def wldset_changed(self):
         if self.wldset is None:
+            self.clear_hydrograph()
             return
         else:
             wldset = self.wldset
@@ -503,6 +504,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def wxdset_changed(self):
         if self.wxdset is None:
+            self.clear_hydrograph()
             return
         else:
             self.hydrograph.set_wxdset(self.wxdset)
@@ -524,6 +526,11 @@ class HydroprintGUI(myqt.DialogWindow):
             date0, date1 = self.hydrograph.best_fit_time(wldset['Time'])
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
+
+    def clear_hydrograph(self):
+        """Clear the hydrograph figure to show only a blank canvas."""
+        self.hydrograph.clf()
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
     def draw_hydrograph(self):
         if self.dmngr.wldataset_count() == 0:
