@@ -78,9 +78,6 @@ class LabelDatabase():
                            'Récession simulée']
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
 class Hydrograph(mpl.figure.Figure):
     def __init__(self, *args, **kargs):
         super(Hydrograph, self).__init__(*args, **kargs)
