@@ -470,14 +470,13 @@ class HydroprintGUI(myqt.DialogWindow):
         return self.dmngr.get_current_wxdset()
 
     def wldset_changed(self):
-        if self.wldset is None:
         """Handles when the water level dataset of the datamanager changed."""
+        if self.wxdset is None or self.wldset is None:
             self.clear_hydrograph()
             return
         else:
             wldset = self.wldset
-
-        self.hydrograph.set_wldset(wldset)
+            self.hydrograph.set_wldset(wldset)
 
         # Load Manual Measures :
 
@@ -504,14 +503,13 @@ class HydroprintGUI(myqt.DialogWindow):
             self.__updateUI = True
 
     def wxdset_changed(self):
-        if self.wxdset is None:
         """Handles when the weather dataset of the datamanager changed."""
+        if self.wxdset is None or self.wldset is None:
             self.clear_hydrograph()
-            return
         else:
             self.hydrograph.set_wxdset(self.wxdset)
-        QCoreApplication.processEvents()
-        self.draw_hydrograph()
+            QCoreApplication.processEvents()
+            self.draw_hydrograph()
 
     # ---- Draw Hydrograph Handlers
 
