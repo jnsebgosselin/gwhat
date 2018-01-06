@@ -625,6 +625,52 @@ class HydroprintGUI(myqt.DialogWindow):
             sender.setReadOnly(False)
 #        sender.blockSignals(False)
 
+    def update_graph_layout_parameter(self):
+
+        # language :
+
+        self.hydrograph.language = self.language_box.currentText()
+        self.weather_avg_graph.set_lang(self.language_box.currentText())
+
+        # Scales :
+
+        self.hydrograph.WLmin = self.waterlvl_max.value()
+        self.hydrograph.WLscale = self.waterlvl_scale.value()
+        self.hydrograph.RAINscale = self.Ptot_scale.value()
+        self.hydrograph.NZGrid = self.NZGridWL_spinBox.value()
+
+        # WL Datum :
+
+        self.hydrograph.WLdatum = self.datum_widget.currentIndex()
+
+        # Dates :
+
+        self.hydrograph.datemode = self.time_scale_label.currentText()
+
+        year = self.date_start_widget.date().year()
+        month = self.date_start_widget.date().month()
+        self.hydrograph.TIMEmin = xldate_from_date_tuple((year, month, 1), 0)
+
+        year = self.date_end_widget.date().year()
+        month = self.date_end_widget.date().month()
+        self.hydrograph.TIMEmax = xldate_from_date_tuple((year, month, 1), 0)
+
+        self.hydrograph.date_labels_pattern = self.dateDispFreq_spinBox.value()
+
+        # Page Setup :
+
+        self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
+        self.hydrograph.fheight = self.page_setup_win.pageSize[1]
+        self.hydrograph.va_ratio = self.page_setup_win.va_ratio
+
+        self.hydrograph.trend_line = self.page_setup_win.isTrendLine
+        self.hydrograph.isLegend = self.page_setup_win.isLegend
+        self.hydrograph.isGraphTitle = self.page_setup_win.isGraphTitle
+
+        # Weather bins :
+
+        self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex()
+
     def clear_hydrograph(self):
         """Clear the hydrograph figure to show only a blank canvas."""
         self.hydrograph.clf()
@@ -830,52 +876,6 @@ class HydroprintGUI(myqt.DialogWindow):
         msg = 'Layout saved successfully for well %s.' % self.wldset['Well']
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         print("done")
-
-    def update_graph_layout_parameter(self):
-
-        # language :
-
-        self.hydrograph.language = self.language_box.currentText()
-        self.weather_avg_graph.set_lang(self.language_box.currentText())
-
-        # Scales :
-
-        self.hydrograph.WLmin = self.waterlvl_max.value()
-        self.hydrograph.WLscale = self.waterlvl_scale.value()
-        self.hydrograph.RAINscale = self.Ptot_scale.value()
-        self.hydrograph.NZGrid = self.NZGridWL_spinBox.value()
-
-        # WL Datum :
-
-        self.hydrograph.WLdatum = self.datum_widget.currentIndex()
-
-        # Dates :
-
-        self.hydrograph.datemode = self.time_scale_label.currentText()
-
-        year = self.date_start_widget.date().year()
-        month = self.date_start_widget.date().month()
-        self.hydrograph.TIMEmin = xldate_from_date_tuple((year, month, 1), 0)
-
-        year = self.date_end_widget.date().year()
-        month = self.date_end_widget.date().month()
-        self.hydrograph.TIMEmax = xldate_from_date_tuple((year, month, 1), 0)
-
-        self.hydrograph.date_labels_pattern = self.dateDispFreq_spinBox.value()
-
-        # Page Setup :
-
-        self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
-        self.hydrograph.fheight = self.page_setup_win.pageSize[1]
-        self.hydrograph.va_ratio = self.page_setup_win.va_ratio
-
-        self.hydrograph.trend_line = self.page_setup_win.isTrendLine
-        self.hydrograph.isLegend = self.page_setup_win.isLegend
-        self.hydrograph.isGraphTitle = self.page_setup_win.isGraphTitle
-
-        # Weather bins :
-
-        self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex()
 
 
 class PageSetupWin(QWidget):
