@@ -197,6 +197,25 @@ def test_graph_layout(hydroprint_bot, mocker):
     assert hydroprint.datum_widget.currentText() == 'Ground Surface'
 
 
+@pytest.mark.run(order=8)
+def test_clear_hydrograph(hydroprint_bot, mocker):
+    """
+    Test that the hydrograph is cleared correctly when the water level or
+    weather dataset become None at some point.
+    """
+    hydroprint, qtbot = hydroprint_bot
+    hydroprint.show()
+    assert hydroprint.hydrograph.isHydrographExists is False
+
+    hydroprint.wldset_changed()
+    assert hydroprint.hydrograph.isHydrographExists is True
+
+    empty_project = ProjetReader('empty_project.gwt')
+    hydroprint.dmngr.set_projet(empty_project)
+
+    assert hydroprint.hydrograph.isHydrographExists is False
+
+
 # Test PageSetupWin
 # -------------------------------
 

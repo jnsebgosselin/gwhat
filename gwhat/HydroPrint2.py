@@ -72,7 +72,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def __initUI__(self):
 
-        # ---------------------------------------------------------- Toolbar --
+        # ---- Toolbar
 
         self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save the well hydrograph')
@@ -113,7 +113,7 @@ class HydroprintGUI(myqt.DialogWindow):
                                   ' used to draw the hydrograph</p.')
         btn_color_pick.clicked.connect(self.color_palette_win.show)
 
-        # ---- Zoom Panel ----
+        # ---- Zoom Panel
 
         btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
         btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
@@ -161,7 +161,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         toolbar_widget.setLayout(subgrid_toolbar)
 
-        # ----------------------------------------------------- LEFT PANEL ----
+        # ---- LEFT PANEL
 
         # SubGrid Hydrograph Frame :
 
@@ -192,7 +192,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.grid_layout_widget.setLayout(grid_layout)
 
-        # ---------------------------------------------------- Right Panel ----
+        # ---- Right Panel
 
         self.tabscales = self.__init_scalesTabWidget__()
         self.qAxeLabelsLanguage = self.__init_labelLangWidget__()
@@ -209,7 +209,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.right_panel.setSpacing(15)
 
-        # ------------------------------------------------------ MAIN GRID ----
+        # ---- MAIN GRID
 
         mainGrid = QGridLayout()
 
@@ -224,9 +224,9 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.setLayout(mainGrid)
 
-        # --------------------------------------------------------- EVENTS ----
+        # ---- EVENTS
 
-        # ---- Toolbox Layout ----
+        # Toolbox Layout :
 
         btn_bestfit_waterlvl.clicked.connect(self.best_fit_waterlvl)
         btn_bestfit_time.clicked.connect(self.best_fit_time)
@@ -240,7 +240,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.Ptot_scale.valueChanged.connect(self.layout_changed)
         self.qweather_bin.currentIndexChanged.connect(self.layout_changed)
 
-        # ----------------------------------------------------- Init Image ----
+        # ---- Init Image
 
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
@@ -365,7 +365,7 @@ class HydroprintGUI(myqt.DialogWindow):
         WLScale_widget.setFrameStyle(0)
         WLScale_widget.setLayout(subgrid_WLScale)
 
-        # -------------------------------------------------------- WEATHER ----
+        # ---- Weather Axis
 
         # Widgets :
 
@@ -401,7 +401,7 @@ class HydroprintGUI(myqt.DialogWindow):
         widget_weather_scale.setFrameStyle(0)
         widget_weather_scale.setLayout(layout)
 
-        # ------------------------------------------------ ASSEMBLING TABS ----
+        # ---- ASSEMBLING TABS
 
         tabscales = QTabWidget()
         tabscales.addTab(widget_time_scale, 'Time')
@@ -433,11 +433,11 @@ class HydroprintGUI(myqt.DialogWindow):
 
         return qAxeLabelsLanguage
 
-    # =========================================================================
-
     @property
     def workdir(self):
         return self.dmngr.workdir
+
+    # ---- Utilities
 
     def zoom_in(self):
         self.hydrograph_scrollarea.zoomIn()
@@ -445,13 +445,9 @@ class HydroprintGUI(myqt.DialogWindow):
     def zoom_out(self):
         self.hydrograph_scrollarea.zoomOut()
 
-    # =========================================================================
-
     def update_colors(self):
         self.hydrograph.update_colors()
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
-
-    # =========================================================================
 
     def show_weather_averages(self):
         if self.wxdset is None:
@@ -463,7 +459,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.weather_avg_graph.generate_graph(self.wxdset)
         self.weather_avg_graph.show()
 
-    # =========================================================================
+    # ---- Datasets Handlers
 
     @property
     def wldset(self):
@@ -474,12 +470,13 @@ class HydroprintGUI(myqt.DialogWindow):
         return self.dmngr.get_current_wxdset()
 
     def wldset_changed(self):
-        if self.wldset is None:
+        """Handles when the water level dataset of the datamanager changed."""
+        if self.wxdset is None or self.wldset is None:
+            self.clear_hydrograph()
             return
         else:
             wldset = self.wldset
-
-        self.hydrograph.set_wldset(wldset)
+            self.hydrograph.set_wldset(wldset)
 
         # Load Manual Measures :
 
@@ -488,7 +485,7 @@ class HydroprintGUI(myqt.DialogWindow):
         tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
         wldset.set_wlmeas(tmeas, wlmeas)
 
-        # Well Layout :
+        # Hydrograph Layout :
 
         layout = wldset.get_layout()
         if layout is not None:
@@ -506,15 +503,233 @@ class HydroprintGUI(myqt.DialogWindow):
             self.__updateUI = True
 
     def wxdset_changed(self):
-        if self.wxdset is None:
-            return
+        """Handles when the weather dataset of the datamanager changed."""
+        if self.wxdset is None or self.wldset is None:
+            self.clear_hydrograph()
         else:
             self.hydrograph.set_wxdset(self.wxdset)
+            QCoreApplication.processEvents()
+            self.draw_hydrograph()
 
-        QCoreApplication.processEvents()
-        self.draw_hydrograph()
+    # ---- Draw Hydrograph Handlers
 
-    # ---- Hydrograph layout
+    def best_fit_waterlvl(self):
+        wldset = self.dmngr.get_current_wldset()
+        if wldset is not None:
+            WLscale, WLmin = self.hydrograph.best_fit_waterlvl()
+            self.waterlvl_scale.setValue(WLscale)
+            self.waterlvl_max.setValue(WLmin)
+
+    def best_fit_time(self):
+        wldset = self.dmngr.get_current_wldset()
+        if wldset is not None:
+            date0, date1 = self.hydrograph.best_fit_time(wldset['Time'])
+            self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
+            self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
+
+    def layout_changed(self):
+        """
+        When an element of the graph layout is changed in the UI.
+        """
+
+        if self.__updateUI is False:
+            return
+
+        self.update_graph_layout_parameter()
+
+        if self.hydrograph.isHydrographExists is False:
+            return
+
+        sender = self.sender()
+
+        if sender == self.language_box:
+            self.hydrograph.draw_ylabels()
+            self.hydrograph.draw_xlabels()
+            self.hydrograph.set_legend()
+
+        elif sender in [self.waterlvl_max, self.waterlvl_scale]:
+            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.draw_ylabels()
+
+        elif sender == self.NZGridWL_spinBox:
+            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.update_precip_scale()
+            self.hydrograph.draw_ylabels()
+
+        elif sender == self.Ptot_scale:
+            self.hydrograph.update_precip_scale()
+            self.hydrograph.draw_ylabels()
+
+        elif sender == self.datum_widget:
+            yoffset = int(self.wldset['Elevation']/self.hydrograph.WLscale)
+            yoffset *= self.hydrograph.WLscale
+
+            self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)
+
+            self.waterlvl_max.blockSignals(True)
+            self.waterlvl_max.setValue(self.hydrograph.WLmin)
+            self.waterlvl_max.blockSignals(False)
+
+            # This is calculated so that trailing zeros in the altitude of the
+            # well is not carried to the y axis labels, so that they remain a
+            # int multiple of *WLscale*.
+
+            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.draw_waterlvl()
+            self.hydrograph.draw_ylabels()
+
+        elif sender in [self.date_start_widget, self.date_end_widget]:
+            self.hydrograph.set_time_scale()
+            self.hydrograph.draw_weather()
+            self.hydrograph.draw_figure_title()
+
+        elif sender == self.dateDispFreq_spinBox:
+            self.hydrograph.set_time_scale()
+            self.hydrograph.draw_xlabels()
+
+        elif sender == self.page_setup_win:
+            self.hydrograph.update_fig_size()
+            # Implicitly call : set_margins()
+            #                   draw_ylabels()
+            #                   set_time_scale()
+            #                   draw_figure_title
+
+            self.hydrograph.draw_waterlvl()
+            self.hydrograph.set_legend()
+
+        elif sender == self.qweather_bin:
+            self.hydrograph.resample_bin()
+            self.hydrograph.draw_weather()
+            self.hydrograph.draw_ylabels()
+
+        elif sender == self.time_scale_label:
+            self.hydrograph.set_time_scale()
+            self.hydrograph.draw_weather()
+
+        else:
+            print('No action for this widget yet.')
+
+        # !!!! temporary fix until I can find a better solution !!!!
+
+#        sender.blockSignals(True)
+        if type(sender) in [QDoubleSpinBox, QSpinBox]:
+            sender.setReadOnly(True)
+
+        for i in range(10):
+            QCoreApplication.processEvents()
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+        for i in range(10):
+            QCoreApplication.processEvents()
+
+        if type(sender) in [QDoubleSpinBox, QSpinBox]:
+            sender.setReadOnly(False)
+#        sender.blockSignals(False)
+
+    def update_graph_layout_parameter(self):
+
+        # language :
+
+        self.hydrograph.language = self.language_box.currentText()
+        self.weather_avg_graph.set_lang(self.language_box.currentText())
+
+        # Scales :
+
+        self.hydrograph.WLmin = self.waterlvl_max.value()
+        self.hydrograph.WLscale = self.waterlvl_scale.value()
+        self.hydrograph.RAINscale = self.Ptot_scale.value()
+        self.hydrograph.NZGrid = self.NZGridWL_spinBox.value()
+
+        # WL Datum :
+
+        self.hydrograph.WLdatum = self.datum_widget.currentIndex()
+
+        # Dates :
+
+        self.hydrograph.datemode = self.time_scale_label.currentText()
+
+        year = self.date_start_widget.date().year()
+        month = self.date_start_widget.date().month()
+        self.hydrograph.TIMEmin = xldate_from_date_tuple((year, month, 1), 0)
+
+        year = self.date_end_widget.date().year()
+        month = self.date_end_widget.date().month()
+        self.hydrograph.TIMEmax = xldate_from_date_tuple((year, month, 1), 0)
+
+        self.hydrograph.date_labels_pattern = self.dateDispFreq_spinBox.value()
+
+        # Page Setup :
+
+        self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
+        self.hydrograph.fheight = self.page_setup_win.pageSize[1]
+        self.hydrograph.va_ratio = self.page_setup_win.va_ratio
+
+        self.hydrograph.trend_line = self.page_setup_win.isTrendLine
+        self.hydrograph.isLegend = self.page_setup_win.isLegend
+        self.hydrograph.isGraphTitle = self.page_setup_win.isGraphTitle
+
+        # Weather bins :
+
+        self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex()
+
+    def clear_hydrograph(self):
+        """Clear the hydrograph figure to show only a blank canvas."""
+        self.hydrograph.clf()
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+
+    def draw_hydrograph(self):
+        if self.dmngr.wldataset_count() == 0:
+            msg = 'Please import a valid water level data file first.'
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+            self.emit_warning(msg)
+            return
+
+        if self.dmngr.wxdataset_count() == 0:
+            msg = 'Please import a valid weather data file first.'
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+            self.emit_warning(msg)
+            return
+
+        self.update_graph_layout_parameter()
+
+        # Generate and Display Graph :
+
+        for i in range(5):
+            QCoreApplication.processEvents()
+
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        self.hydrograph.set_wldset(self.dmngr.get_current_wldset())
+        self.hydrograph.set_wxdset(self.dmngr.get_current_wxdset())
+        self.hydrograph.generate_hydrograph()
+
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+
+        QApplication.restoreOverrideCursor()
+
+    def select_save_path(self):
+        """
+        Opens a dialog which allows to select a file path where the hydrograph
+        figure can be saved.
+        """
+        dialog_dir = os.path.join(self.save_fig_dir,
+                                  'hydrograph_%s' % self.wldset['Well'])
+
+        dialog = QFileDialog()
+        fname, ftype = dialog.getSaveFileName(
+                self, "Save Figure", dialog_dir, '*.pdf;;*.svg')
+        ftype = ftype.replace('*', '')
+        if fname:
+            if not fname.endswith(ftype):
+                fname = fname + ftype
+            self.save_fig_dir = os.path.dirname(fname)
+            self.save_figure(fname)
+
+    def save_figure(self, fname):
+        """Save the hydrograph figure in a file."""
+        self.hydrograph.generate_hydrograph()
+        self.hydrograph.savefig(fname)
+
+    # ---- Graph Layout Handlers
 
     def load_layout_isClicked(self):
         if self.wldset is None:
@@ -661,221 +876,6 @@ class HydroprintGUI(myqt.DialogWindow):
         msg = 'Layout saved successfully for well %s.' % self.wldset['Well']
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         print("done")
-
-    def best_fit_waterlvl(self):
-        wldset = self.dmngr.get_current_wldset()
-        if wldset is not None:
-            WLscale, WLmin = self.hydrograph.best_fit_waterlvl()
-            self.waterlvl_scale.setValue(WLscale)
-            self.waterlvl_max.setValue(WLmin)
-
-    def best_fit_time(self):
-        wldset = self.dmngr.get_current_wldset()
-        if wldset is not None:
-            date0, date1 = self.hydrograph.best_fit_time(wldset['Time'])
-            self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
-            self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
-
-    def select_save_path(self):
-        """
-        Opens a dialog which allows to select a file path where the hydrograph
-        figure can be saved.
-        """
-        dialog_dir = os.path.join(self.save_fig_dir,
-                                  'hydrograph_%s' % self.wldset['Well'])
-
-        dialog = QFileDialog()
-        fname, ftype = dialog.getSaveFileName(
-                self, "Save Figure", dialog_dir, '*.pdf;;*.svg')
-        ftype = ftype.replace('*', '')
-        if fname:
-            if not fname.endswith(ftype):
-                fname = fname + ftype
-            self.save_fig_dir = os.path.dirname(fname)
-            self.save_figure(fname)
-
-    def save_figure(self, fname):
-        """Save the hydrograph figure in a file."""
-        self.hydrograph.generate_hydrograph()
-        self.hydrograph.savefig(fname)
-
-    def draw_hydrograph(self):
-        if self.dmngr.wldataset_count() == 0:
-            msg = 'Please import a valid water level data file first.'
-            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-            self.emit_warning(msg)
-            return
-
-        if self.dmngr.wxdataset_count() == 0:
-            msg = 'Please import a valid weather data file first.'
-            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-            self.emit_warning(msg)
-            return
-
-        self.update_graph_layout_parameter()
-
-        # Generate and Display Graph :
-
-        for i in range(5):
-            QCoreApplication.processEvents()
-
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        self.hydrograph.set_wldset(self.dmngr.get_current_wldset())
-        self.hydrograph.set_wxdset(self.dmngr.get_current_wxdset())
-        self.hydrograph.generate_hydrograph()
-
-        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
-
-        QApplication.restoreOverrideCursor()
-
-    # =========================================================================
-
-    def update_graph_layout_parameter(self):
-
-        # language :
-
-        self.hydrograph.language = self.language_box.currentText()
-        self.weather_avg_graph.set_lang(self.language_box.currentText())
-
-        # Scales :
-
-        self.hydrograph.WLmin = self.waterlvl_max.value()
-        self.hydrograph.WLscale = self.waterlvl_scale.value()
-        self.hydrograph.RAINscale = self.Ptot_scale.value()
-        self.hydrograph.NZGrid = self.NZGridWL_spinBox.value()
-
-        # WL Datum :
-
-        self.hydrograph.WLdatum = self.datum_widget.currentIndex()
-
-        # Dates :
-
-        self.hydrograph.datemode = self.time_scale_label.currentText()
-
-        year = self.date_start_widget.date().year()
-        month = self.date_start_widget.date().month()
-        self.hydrograph.TIMEmin = xldate_from_date_tuple((year, month, 1), 0)
-
-        year = self.date_end_widget.date().year()
-        month = self.date_end_widget.date().month()
-        self.hydrograph.TIMEmax = xldate_from_date_tuple((year, month, 1), 0)
-
-        self.hydrograph.date_labels_pattern = self.dateDispFreq_spinBox.value()
-
-        # Page Setup :
-
-        self.hydrograph.fwidth = self.page_setup_win.pageSize[0]
-        self.hydrograph.fheight = self.page_setup_win.pageSize[1]
-        self.hydrograph.va_ratio = self.page_setup_win.va_ratio
-
-        self.hydrograph.trend_line = self.page_setup_win.isTrendLine
-        self.hydrograph.isLegend = self.page_setup_win.isLegend
-        self.hydrograph.isGraphTitle = self.page_setup_win.isGraphTitle
-
-        # Weather bins :
-
-        self.hydrograph.bwidth_indx = self.qweather_bin.currentIndex()
-
-    # =========================================================================
-
-    def layout_changed(self):
-        """
-        When an element of the graph layout is changed in the UI.
-        """
-
-        if self.__updateUI is False:
-            return
-
-        self.update_graph_layout_parameter()
-
-        if self.hydrograph.isHydrographExists is False:
-            return
-
-        sender = self.sender()
-
-        if sender == self.language_box:
-            self.hydrograph.draw_ylabels()
-            self.hydrograph.draw_xlabels()
-            self.hydrograph.set_legend()
-
-        elif sender in [self.waterlvl_max, self.waterlvl_scale]:
-            self.hydrograph.update_waterlvl_scale()
-            self.hydrograph.draw_ylabels()
-
-        elif sender == self.NZGridWL_spinBox:
-            self.hydrograph.update_waterlvl_scale()
-            self.hydrograph.update_precip_scale()
-            self.hydrograph.draw_ylabels()
-
-        elif sender == self.Ptot_scale:
-            self.hydrograph.update_precip_scale()
-            self.hydrograph.draw_ylabels()
-
-        elif sender == self.datum_widget:
-            yoffset = int(self.wldset['Elevation']/self.hydrograph.WLscale)
-            yoffset *= self.hydrograph.WLscale
-
-            self.hydrograph.WLmin = (yoffset - self.hydrograph.WLmin)
-
-            self.waterlvl_max.blockSignals(True)
-            self.waterlvl_max.setValue(self.hydrograph.WLmin)
-            self.waterlvl_max.blockSignals(False)
-
-            # This is calculated so that trailing zeros in the altitude of the
-            # well is not carried to the y axis labels, so that they remain a
-            # int multiple of *WLscale*.
-
-            self.hydrograph.update_waterlvl_scale()
-            self.hydrograph.draw_waterlvl()
-            self.hydrograph.draw_ylabels()
-
-        elif sender in [self.date_start_widget, self.date_end_widget]:
-            self.hydrograph.set_time_scale()
-            self.hydrograph.draw_weather()
-            self.hydrograph.draw_figure_title()
-
-        elif sender == self.dateDispFreq_spinBox:
-            self.hydrograph.set_time_scale()
-            self.hydrograph.draw_xlabels()
-
-        elif sender == self.page_setup_win:
-            self.hydrograph.update_fig_size()
-            # Implicitly call : set_margins()
-            #                   draw_ylabels()
-            #                   set_time_scale()
-            #                   draw_figure_title
-
-            self.hydrograph.draw_waterlvl()
-            self.hydrograph.set_legend()
-
-        elif sender == self.qweather_bin:
-            self.hydrograph.resample_bin()
-            self.hydrograph.draw_weather()
-            self.hydrograph.draw_ylabels()
-
-        elif sender == self.time_scale_label:
-            self.hydrograph.set_time_scale()
-            self.hydrograph.draw_weather()
-
-        else:
-            print('No action for this widget yet.')
-
-        # !!!! temporary fix until I can find a better solution !!!!
-
-#        sender.blockSignals(True)
-        if type(sender) in [QDoubleSpinBox, QSpinBox]:
-            sender.setReadOnly(True)
-
-        for i in range(10):
-            QCoreApplication.processEvents()
-        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
-        for i in range(10):
-            QCoreApplication.processEvents()
-
-        if type(sender) in [QDoubleSpinBox, QSpinBox]:
-            sender.setReadOnly(False)
-#        sender.blockSignals(False)
 
 
 class PageSetupWin(QWidget):
@@ -1090,6 +1090,8 @@ class PageSetupWin(QWidget):
         self.setMinimumSize(self.size())
         self.setFixedSize(self.size())
 
+
+# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     from projet.manager_data import DataManager
