@@ -72,7 +72,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def __initUI__(self):
 
-        # ---------------------------------------------------------- Toolbar --
+        # ---- Toolbar
 
         self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save the well hydrograph')
@@ -113,7 +113,7 @@ class HydroprintGUI(myqt.DialogWindow):
                                   ' used to draw the hydrograph</p.')
         btn_color_pick.clicked.connect(self.color_palette_win.show)
 
-        # ---- Zoom Panel ----
+        # ---- Zoom Panel
 
         btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
         btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
@@ -161,7 +161,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         toolbar_widget.setLayout(subgrid_toolbar)
 
-        # ----------------------------------------------------- LEFT PANEL ----
+        # ---- LEFT PANEL
 
         # SubGrid Hydrograph Frame :
 
@@ -192,7 +192,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.grid_layout_widget.setLayout(grid_layout)
 
-        # ---------------------------------------------------- Right Panel ----
+        # ---- Right Panel
 
         self.tabscales = self.__init_scalesTabWidget__()
         self.qAxeLabelsLanguage = self.__init_labelLangWidget__()
@@ -209,7 +209,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.right_panel.setSpacing(15)
 
-        # ------------------------------------------------------ MAIN GRID ----
+        # ---- MAIN GRID
 
         mainGrid = QGridLayout()
 
@@ -224,9 +224,9 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.setLayout(mainGrid)
 
-        # --------------------------------------------------------- EVENTS ----
+        # ---- EVENTS
 
-        # ---- Toolbox Layout ----
+        # Toolbox Layout :
 
         btn_bestfit_waterlvl.clicked.connect(self.best_fit_waterlvl)
         btn_bestfit_time.clicked.connect(self.best_fit_time)
@@ -240,7 +240,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.Ptot_scale.valueChanged.connect(self.layout_changed)
         self.qweather_bin.currentIndexChanged.connect(self.layout_changed)
 
-        # ----------------------------------------------------- Init Image ----
+        # ---- Init Image
 
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
@@ -433,11 +433,11 @@ class HydroprintGUI(myqt.DialogWindow):
 
         return qAxeLabelsLanguage
 
-    # =========================================================================
-
     @property
     def workdir(self):
         return self.dmngr.workdir
+
+    # ---- Utilities
 
     def zoom_in(self):
         self.hydrograph_scrollarea.zoomIn()
@@ -445,13 +445,9 @@ class HydroprintGUI(myqt.DialogWindow):
     def zoom_out(self):
         self.hydrograph_scrollarea.zoomOut()
 
-    # =========================================================================
-
     def update_colors(self):
         self.hydrograph.update_colors()
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
-
-    # =========================================================================
 
     def show_weather_averages(self):
         if self.wxdset is None:
@@ -463,7 +459,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.weather_avg_graph.generate_graph(self.wxdset)
         self.weather_avg_graph.show()
 
-    # =========================================================================
+    # ---- Datasets Handlers
 
     @property
     def wldset(self):
@@ -488,7 +484,7 @@ class HydroprintGUI(myqt.DialogWindow):
         tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
         wldset.set_wlmeas(tmeas, wlmeas)
 
-        # Well Layout :
+        # Hydrograph Layout :
 
         layout = wldset.get_layout()
         if layout is not None:
@@ -510,11 +506,79 @@ class HydroprintGUI(myqt.DialogWindow):
             return
         else:
             self.hydrograph.set_wxdset(self.wxdset)
-
         QCoreApplication.processEvents()
         self.draw_hydrograph()
 
-    # ---- Hydrograph layout
+    # ---- Draw Hydrograph Handlers
+
+    def best_fit_waterlvl(self):
+        wldset = self.dmngr.get_current_wldset()
+        if wldset is not None:
+            WLscale, WLmin = self.hydrograph.best_fit_waterlvl()
+            self.waterlvl_scale.setValue(WLscale)
+            self.waterlvl_max.setValue(WLmin)
+
+    def best_fit_time(self):
+        wldset = self.dmngr.get_current_wldset()
+        if wldset is not None:
+            date0, date1 = self.hydrograph.best_fit_time(wldset['Time'])
+            self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
+            self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
+
+    def draw_hydrograph(self):
+        if self.dmngr.wldataset_count() == 0:
+            msg = 'Please import a valid water level data file first.'
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+            self.emit_warning(msg)
+            return
+
+        if self.dmngr.wxdataset_count() == 0:
+            msg = 'Please import a valid weather data file first.'
+            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
+            self.emit_warning(msg)
+            return
+
+        self.update_graph_layout_parameter()
+
+        # Generate and Display Graph :
+
+        for i in range(5):
+            QCoreApplication.processEvents()
+
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+
+        self.hydrograph.set_wldset(self.dmngr.get_current_wldset())
+        self.hydrograph.set_wxdset(self.dmngr.get_current_wxdset())
+        self.hydrograph.generate_hydrograph()
+
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+
+        QApplication.restoreOverrideCursor()
+
+    def select_save_path(self):
+        """
+        Opens a dialog which allows to select a file path where the hydrograph
+        figure can be saved.
+        """
+        dialog_dir = os.path.join(self.save_fig_dir,
+                                  'hydrograph_%s' % self.wldset['Well'])
+
+        dialog = QFileDialog()
+        fname, ftype = dialog.getSaveFileName(
+                self, "Save Figure", dialog_dir, '*.pdf;;*.svg')
+        ftype = ftype.replace('*', '')
+        if fname:
+            if not fname.endswith(ftype):
+                fname = fname + ftype
+            self.save_fig_dir = os.path.dirname(fname)
+            self.save_figure(fname)
+
+    def save_figure(self, fname):
+        """Save the hydrograph figure in a file."""
+        self.hydrograph.generate_hydrograph()
+        self.hydrograph.savefig(fname)
+
+    # ---- Graph Layout Handlers
 
     def load_layout_isClicked(self):
         if self.wldset is None:
@@ -661,75 +725,6 @@ class HydroprintGUI(myqt.DialogWindow):
         msg = 'Layout saved successfully for well %s.' % self.wldset['Well']
         self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         print("done")
-
-    def best_fit_waterlvl(self):
-        wldset = self.dmngr.get_current_wldset()
-        if wldset is not None:
-            WLscale, WLmin = self.hydrograph.best_fit_waterlvl()
-            self.waterlvl_scale.setValue(WLscale)
-            self.waterlvl_max.setValue(WLmin)
-
-    def best_fit_time(self):
-        wldset = self.dmngr.get_current_wldset()
-        if wldset is not None:
-            date0, date1 = self.hydrograph.best_fit_time(wldset['Time'])
-            self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
-            self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
-
-    def select_save_path(self):
-        """
-        Opens a dialog which allows to select a file path where the hydrograph
-        figure can be saved.
-        """
-        dialog_dir = os.path.join(self.save_fig_dir,
-                                  'hydrograph_%s' % self.wldset['Well'])
-
-        dialog = QFileDialog()
-        fname, ftype = dialog.getSaveFileName(
-                self, "Save Figure", dialog_dir, '*.pdf;;*.svg')
-        ftype = ftype.replace('*', '')
-        if fname:
-            if not fname.endswith(ftype):
-                fname = fname + ftype
-            self.save_fig_dir = os.path.dirname(fname)
-            self.save_figure(fname)
-
-    def save_figure(self, fname):
-        """Save the hydrograph figure in a file."""
-        self.hydrograph.generate_hydrograph()
-        self.hydrograph.savefig(fname)
-
-    def draw_hydrograph(self):
-        if self.dmngr.wldataset_count() == 0:
-            msg = 'Please import a valid water level data file first.'
-            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-            self.emit_warning(msg)
-            return
-
-        if self.dmngr.wxdataset_count() == 0:
-            msg = 'Please import a valid weather data file first.'
-            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-            self.emit_warning(msg)
-            return
-
-        self.update_graph_layout_parameter()
-
-        # Generate and Display Graph :
-
-        for i in range(5):
-            QCoreApplication.processEvents()
-
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        self.hydrograph.set_wldset(self.dmngr.get_current_wldset())
-        self.hydrograph.set_wxdset(self.dmngr.get_current_wxdset())
-        self.hydrograph.generate_hydrograph()
-
-        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
-
-        QApplication.restoreOverrideCursor()
-
-    # =========================================================================
 
     def update_graph_layout_parameter(self):
 
