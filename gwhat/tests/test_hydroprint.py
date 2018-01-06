@@ -162,6 +162,7 @@ def test_graph_layout(hydroprint_bot, mocker):
     assert layout['bwidth_indx'] == 1
     assert layout['date_labels_pattern'] == 2
     assert layout['datemode'] == 'Month'
+    assert layout['language'] == 'English'
 
     # Change some parameters values.
     hydroprint.dmngr.wxdsets_cbox.setCurrentIndex(0)
@@ -171,6 +172,9 @@ def test_graph_layout(hydroprint_bot, mocker):
     hydroprint.NZGridWL_spinBox.setValue(10)
     hydroprint.datum_widget.setCurrentIndex(1)
     assert hydroprint.datum_widget.currentText() == 'Sea Level'
+    hydroprint.language_box.setCurrentIndex(
+            hydroprint.language_box.findText('French'))
+    assert hydroprint.language_box.currentText() == 'French'
 
     # Click to save the layout, but cancel the operation.
     mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.No)
@@ -194,6 +198,7 @@ def test_graph_layout(hydroprint_bot, mocker):
     assert layout['bwidth_indx'] == 1
     assert layout['date_labels_pattern'] == 2
     assert layout['datemode'] == 'Month'
+    assert layout['language'] == hydroprint.language_box.currentText() == 'English'
     assert hydroprint.datum_widget.currentText() == 'Ground Surface'
 
 

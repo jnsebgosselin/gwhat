@@ -768,6 +768,11 @@ class HydroprintGUI(myqt.DialogWindow):
         x = ['mbgs', 'masl'].index(layout['WLdatum'])
         self.datum_widget.setCurrentIndex(x)
 
+        # Language :
+
+        index = max(0, self.language_box.findText(layout['language']))
+        self.language_box.setCurrentIndex(index)
+
         # Color Palette :
 
         self.color_palette_win.load_colors()
