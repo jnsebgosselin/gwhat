@@ -471,6 +471,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def wldset_changed(self):
         if self.wldset is None:
+        """Handles when the water level dataset of the datamanager changed."""
             self.clear_hydrograph()
             return
         else:
@@ -504,6 +505,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def wxdset_changed(self):
         if self.wxdset is None:
+        """Handles when the weather dataset of the datamanager changed."""
             self.clear_hydrograph()
             return
         else:
