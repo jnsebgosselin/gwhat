@@ -53,83 +53,6 @@ class WeatherStationBrowser(QWidget):
         self.station_table = WeatherSationView()
         self.__initUI__()
 
-    @property
-    def stationlist(self):
-        return self.station_table.get_stationlist()
-
-    @property
-    def search_by(self):
-        return ['proximity', 'province'][self.tab_widg.currentIndex()]
-
-    @property
-    def prov(self):
-        if self.prov_widg.currentIndex() == 0:
-            return self.PROV_ABB
-        else:
-            return self.PROV_ABB[self.prov_widg.currentIndex()-1]
-
-    @property
-    def lat(self):
-        return self.lat_spinBox.value()
-
-    def set_lat(self, x, silent=True):
-        if silent:
-            self.lat_spinBox.blockSignals(True)
-        self.lat_spinBox.setValue(x)
-        self.lat_spinBox.blockSignals(False)
-        self.proximity_grpbox_toggled()
-
-    @property
-    def lon(self):
-        return self.lon_spinBox.value()
-
-    def set_lon(self, x, silent=True):
-        if silent:
-            self.lon_spinBox.blockSignals(True)
-        self.lon_spinBox.setValue(x)
-        self.lon_spinBox.blockSignals(False)
-        self.proximity_grpbox_toggled()
-
-    @property
-    def rad(self):
-        return int(self.radius_SpinBox.currentText()[:-3])
-
-    @property
-    def prox(self):
-        if self.prox_grpbox.isChecked():
-            return (self.lat, -self.lon, self.rad)
-        else:
-            return None
-
-    @property
-    def year_min(self):
-        return int(self.minYear.value())
-
-    def set_yearmin(self, x, silent=True):
-        if silent:
-            self.minYear.blockSignals(True)
-        self.minYear.setValue(x)
-        self.minYear.blockSignals(False)
-
-    @property
-    def year_max(self):
-        return int(self.maxYear.value())
-
-    def set_yearmax(self, x, silent=True):
-        if silent:
-            self.maxYear.blockSignals(True)
-        self.maxYear.setValue(x)
-        self.maxYear.blockSignals(False)
-
-    @property
-    def nbr_of_years(self):
-        return int(self.nbrYear.value())
-
-    def set_yearnbr(self, x, silent=True):
-        if silent:
-            self.nbrYear.blockSignals(True)
-        self.nbrYear.setValue(x)
-        self.nbrYear.blockSignals(False)
         self.start_load_database()
 
     def __initUI__(self):
@@ -344,6 +267,83 @@ class WeatherStationBrowser(QWidget):
         main_layout.setVerticalSpacing(5)
         main_layout.setColumnStretch(col+1, 100)
 
+    @property
+    def stationlist(self):
+        return self.station_table.get_stationlist()
+
+    @property
+    def search_by(self):
+        return ['proximity', 'province'][self.tab_widg.currentIndex()]
+
+    @property
+    def prov(self):
+        if self.prov_widg.currentIndex() == 0:
+            return self.PROV_ABB
+        else:
+            return self.PROV_ABB[self.prov_widg.currentIndex()-1]
+
+    @property
+    def lat(self):
+        return self.lat_spinBox.value()
+
+    def set_lat(self, x, silent=True):
+        if silent:
+            self.lat_spinBox.blockSignals(True)
+        self.lat_spinBox.setValue(x)
+        self.lat_spinBox.blockSignals(False)
+        self.proximity_grpbox_toggled()
+
+    @property
+    def lon(self):
+        return self.lon_spinBox.value()
+
+    def set_lon(self, x, silent=True):
+        if silent:
+            self.lon_spinBox.blockSignals(True)
+        self.lon_spinBox.setValue(x)
+        self.lon_spinBox.blockSignals(False)
+        self.proximity_grpbox_toggled()
+
+    @property
+    def rad(self):
+        return int(self.radius_SpinBox.currentText()[:-3])
+
+    @property
+    def prox(self):
+        if self.prox_grpbox.isChecked():
+            return (self.lat, -self.lon, self.rad)
+        else:
+            return None
+
+    @property
+    def year_min(self):
+        return int(self.minYear.value())
+
+    def set_yearmin(self, x, silent=True):
+        if silent:
+            self.minYear.blockSignals(True)
+        self.minYear.setValue(x)
+        self.minYear.blockSignals(False)
+
+    @property
+    def year_max(self):
+        return int(self.maxYear.value())
+
+    def set_yearmax(self, x, silent=True):
+        if silent:
+            self.maxYear.blockSignals(True)
+        self.maxYear.setValue(x)
+        self.maxYear.blockSignals(False)
+
+    @property
+    def nbr_of_years(self):
+        return int(self.nbrYear.value())
+
+    def set_yearnbr(self, x, silent=True):
+        if silent:
+            self.nbrYear.blockSignals(True)
+        self.nbrYear.setValue(x)
+        self.nbrYear.blockSignals(False)
 
     # ---- Weather Station Finder Handlers
 
