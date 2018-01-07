@@ -275,14 +275,6 @@ class WeatherStationBrowser(QWidget):
 
         # ---- Toolbar
 
-        self.btn_search = QPushButton('Search')
-        self.btn_search.setIcon(icons.get_icon('search'))
-        self.btn_search.setIconSize(icons.get_iconsize('iconSize2'))
-        self.btn_search.setToolTip('Search for weather stations in the online '
-                                   'CDCD with the criteria given above.')
-        self.btn_search.clicked.connect(self.btn_search_isClicked)
-        self.btn_search.hide()
-
         btn_addSta = QPushButton('Add')
         btn_addSta.setIcon(icons.get_icon('add2list'))
         btn_addSta.setIconSize(icons.get_iconsize('iconSize2'))
@@ -299,7 +291,7 @@ class WeatherStationBrowser(QWidget):
         toolbar_grid = QGridLayout()
         toolbar_widg = QWidget()
 
-        for col, btn in enumerate([self.btn_search, btn_addSta, btn_save]):
+        for col, btn in enumerate([btn_addSta, btn_save]):
             toolbar_grid.addWidget(btn, 0, col+1)
 
         toolbar_grid.setColumnStretch(toolbar_grid.columnCount(), 100)
@@ -399,20 +391,6 @@ class WeatherStationBrowser(QWidget):
         else:
             msg = 'No station currently selected'
             print(msg)
-
-    def btn_search_isClicked(self):
-        """
-        Use the WeatherStationFinder class to question the list of climate
-        station in the ECCC network and show the resulting list of stations
-        in the GUI.
-        """
-        stn_finder = WeatherStationFinder()
-        stnlist = stn_finder.get_stationlist(
-                prov=self.prov, prox=self.prox,
-                yrange=(self.year_min, self.year_max, self.nbr_of_years))
-
-        self.station_table.populate_table(stnlist)
-        return stnlist
 
     def proximity_grpbox_toggled(self):
         """
