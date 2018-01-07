@@ -418,6 +418,7 @@ if __name__ == '__main__':
 
     from gwhat.meteo.weather_station_finder import WeatherStationFinder
     stn_browser = WeatherStationFinder()
+    stn_browser.load_database()
     stationlist = stn_browser.get_stationlist()
 
     app = QApplication(sys.argv)

@@ -44,6 +44,7 @@ class WeatherStationBrowser(QWidget):
     def __init__(self, parent=None):
         super(WeatherStationBrowser, self).__init__(parent)
         self.stn_finder = WeatherStationFinder()
+        self.stn_finder.load_database()
         self.station_table = WeatherSationView()
         self.__initUI__()
         self.station_table.set_geocoord((self.lat, -self.lon))
