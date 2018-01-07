@@ -5,6 +5,7 @@ Created on Fri Aug  4 01:50:50 2017
 """
 
 import pytest
+from flaky import flaky
 
 import sys
 import os
@@ -13,8 +14,9 @@ import numpy as np
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from gwhat.meteo.search_weather_data import WeatherStationBrowser      # nopep8
-from gwhat.meteo.search_weather_data import QFileDialog                # nopep8
+from gwhat.meteo.search_weather_data import WeatherStationBrowser
+from gwhat.meteo.search_weather_data import QFileDialog
+from gwhat.meteo.weather_station_finder import WeatherStationFinder
 
 
 # ---- Qt Test Fixtures
@@ -62,6 +64,23 @@ expected_results = [
 
 
 # ---- Tests
+
+@flaky(max_runs=3)
+@pytest.mark.run(order=2)
+def test_load_database(qtbot):
+    station_finder = WeatherStationFinder()
+
+    # Delete the climate station database file if it exists.
+    if os.path.exists(station_finder.DATABASE_FILEPATH):
+        os.remove(station_finder.DATABASE_FILEPATH)
+    assert not os.path.exists(station_finder.DATABASE_FILEPATH)
+    assert station_finder.data is None
+
+    # Load the climate station database from ECC server.
+    station_finder.load_database()
+    qtbot.waitUntil(lambda: os.path.exists(station_finder.DATABASE_FILEPATH))
+    assert station_finder.data is not None
+    station_finder.load_database()
 
 
 @pytest.mark.run(order=2)
