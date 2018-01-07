@@ -24,6 +24,7 @@ import numpy as np
 
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.weather_stationlist import WeatherSationList
+MAX_FAILED_FETCH_TRY = 3
 PROV_NAME_ABB = [('ALBERTA', 'AB'),
                  ('BRITISH COLUMBIA', 'BC'),
                  ('MANITOBA', 'MB'),
@@ -145,10 +146,25 @@ class WeatherStationFinder(object):
         """
         print("Fetching station list from ECCC Tor ftp server...")
         ts = time.time()
-        self._data = read_stationlist_from_tor()
-        np.save(self.DATABASE_FILEPATH, self._data)
-        te = time.time()
-        print("Station list fetched sucessfully in %0.2f sec." % (te-ts))
+        failed_fetch_try = 0
+        while True:
+            self._data = read_stationlist_from_tor()
+            if self._data is None:
+                failed_fetch_try += 1
+                if failed_fetch_try <= MAX_FAILED_FETCH_TRY:
+                    print("Failed to fetch the database from the ECC server.")
+                    print("Trying another time (%d/%d)."
+                          % (failed_fetch_try, MAX_FAILED_FETCH_TRY))
+                    time.sleep(3)
+                else:
+                    print("Failed to fetch the database from the ECC server.")
+                    break
+            else:
+                np.save(self.DATABASE_FILEPATH, self._data)
+                te = time.time()
+                print("Station list fetched sucessfully in %0.2f sec."
+                      % (te-ts))
+                break
 
     # ---- Utility functions
 
