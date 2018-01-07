@@ -11,11 +11,12 @@
 from datetime import datetime
 import sys
 import os
+from time import sleep
 
 # ---- Imports: Third Parties
 
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, QThread
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QSpinBox, QPushButton,
                              QDesktopWidget, QApplication,
@@ -43,12 +44,14 @@ class WeatherStationBrowser(QWidget):
 
     def __init__(self, parent=None):
         super(WeatherStationBrowser, self).__init__(parent)
-        self.stn_finder = WeatherStationFinder()
-        self.stn_finder.load_database()
+        self.stn_finder_worker = WeatherStationFinder()
+        self.stn_finder_worker.sig_load_database_finished.connect(
+                self.receive_load_database)
+        self.stn_finder_thread = QThread()
+        self.stn_finder_worker.moveToThread(self.stn_finder_thread)
+
         self.station_table = WeatherSationView()
         self.__initUI__()
-        self.station_table.set_geocoord((self.lat, -self.lon))
-        self.proximity_grpbox_toggled()
 
     @property
     def stationlist(self):
@@ -127,6 +130,7 @@ class WeatherStationBrowser(QWidget):
             self.nbrYear.blockSignals(True)
         self.nbrYear.setValue(x)
         self.nbrYear.blockSignals(False)
+        self.start_load_database()
 
     def __initUI__(self):
         self.setWindowTitle('Weather Stations Browser')
@@ -340,6 +344,33 @@ class WeatherStationBrowser(QWidget):
         main_layout.setVerticalSpacing(5)
         main_layout.setColumnStretch(col+1, 100)
 
+
+    # ---- Weather Station Finder Handlers
+
+    def start_load_database(self):
+        """Start the process of loading the climate station database."""
+        # Start the downloading process.
+        self.stn_finder_thread.started.connect(
+                self.stn_finder_worker.load_database)
+        self.stn_finder_thread.start()
+
+    def receive_load_database(self):
+        """Handles when loading the database is finished."""
+        # Disconnect the thread.
+        self.stn_finder_thread.started.disconnect(
+                self.stn_finder_worker.load_database)
+        # Quit the thread.
+        self.stn_finder_thread.quit()
+        waittime = 0
+        while self.stn_finder_thread.isRunning():
+            sleep(0.1)
+            waittime += 0.1
+            if waittime > 15:                                # pragma: no cover
+                print("Unable to quit the thread.")
+                break
+        # Force an update of the GUI.
+        self.proximity_grpbox_toggled()
+
     def show(self):
         super(WeatherStationBrowser, self).show()
         qr = self.frameGeometry()
@@ -409,10 +440,11 @@ class WeatherStationBrowser(QWidget):
         Search for weather stations with the current filter values and forces
         an update of the station table content.
         """
-        stnlist = self.stn_finder.get_stationlist(
-                prov=self.prov, prox=self.prox,
-                yrange=(self.year_min, self.year_max, self.nbr_of_years))
-        self.station_table.populate_table(stnlist)
+        if self.stn_finder_worker.data is not None:
+            stnlist = self.stn_finder_worker.get_stationlist(
+                    prov=self.prov, prox=self.prox,
+                    yrange=(self.year_min, self.year_max, self.nbr_of_years))
+            self.station_table.populate_table(stnlist)
 
 
 # %% if __name__ == '__main__'
