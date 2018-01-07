@@ -18,6 +18,8 @@ import os
 # ---- Imports: third parties
 
 import numpy as np
+from PyQt5.QtCore import QObject
+from PyQt5.QtCore import pyqtSignal as QSignal
 
 
 # ---- Imports: local libraries
@@ -111,9 +113,10 @@ def read_stationlist_from_tor():
 # ---- API
 
 
-class WeatherStationFinder(object):
+class WeatherStationFinder(QObject):
 
     DATABASE_FILEPATH = 'climate_station_database.npy'
+    sig_load_database_finished = QSignal(bool)
 
     def __init__(self, filelist=None, *args, **kwargs):
         super(WeatherStationFinder, self).__init__(*args, **kwargs)
@@ -138,6 +141,7 @@ class WeatherStationFinder(object):
             print("Station list loaded sucessfully in %0.2f sec." % (te-ts))
         else:
             self.fetch_database()
+        self.sig_load_database_finished.emit(True)
 
     def fetch_database(self):
         """
