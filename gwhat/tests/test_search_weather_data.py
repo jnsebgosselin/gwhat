@@ -70,6 +70,13 @@ def test_search_weather_station(station_finder_bot, mocker):
     station_browser.show()
     assert station_browser
 
+    qtbot.waitSignal(station_browser.stn_finder_thread.started)
+    qtbot.waitSignal(station_browser.stn_finder_worker.sig_load_database_finished)
+    qtbot.waitSignal(station_browser.stn_finder_thread.finished)
+    qtbot.waitUntil(lambda: not station_browser.stn_finder_thread.isRunning(),
+                    timeout=60*1000)
+    assert station_browser.stn_finder_worker._data is not None
+
     # Search for stations and assert that lat and lon are 0.
     station_browser.prox_grpbox.setChecked(True)
     assert station_browser.lat_spinBox.value() == 45.0
