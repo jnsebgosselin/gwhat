@@ -6,13 +6,13 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# ---- Standard library imports
+# ---- Imports: Standard Libraries
 
 from datetime import datetime
 import sys
 import os
 
-# ---- Third party imports
+# ---- Imports: Third Parties
 
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QPoint
@@ -21,7 +21,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QDesktopWidget, QApplication,
                              QFileDialog, QGroupBox)
 
-# ---- Local imports
+# ---- Imports: Local
 
 from gwhat.common import StyleDB
 from gwhat.common import icons
@@ -345,10 +345,9 @@ class WeatherStationBrowser(QWidget):
         qr = self.frameGeometry()
         if self.parent():
             parent = self.parent()
-
             wp = parent.frameGeometry().width()
             hp = parent.frameGeometry().height()
-            cp = parent.mapToGlobal(QPoint(wp/2., hp/2.))
+            cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
         else:
             cp = QDesktopWidget().availableGeometry().center()
 
