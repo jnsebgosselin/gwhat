@@ -3,10 +3,10 @@
 # Copyright (C) 2005-2005 Trolltech AS. All rights reserved.
 # http://www.trolltech.com/products/qt/opensource.html
 #
-# Copyright © 2014-2017 GWHAT Project Contributors
+# Copyright © 2014-2018 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 #
 # This code is derived from a code provided in the example classes of the Qt

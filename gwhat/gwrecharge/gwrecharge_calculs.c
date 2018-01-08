@@ -6109,7 +6109,7 @@ PyMODINIT_FUNC PyInit_gwrecharge_calculs(void)
   /* "gwhat/gwrecharge/gwrecharge_calculs.pyx":1
  * # -*- coding: utf-8 -*-             # <<<<<<<<<<<<<<
  * 
- * # Copyright  2014-2017 GWHAT Project Contributors
+ * # Copyright  2014-2018 GWHAT Project Contributors
  */
   __pyx_t_2 = PyDict_New(); if (unlikely(!__pyx_t_2)) __PYX_ERR(0, 1, __pyx_L1_error)
   __Pyx_GOTREF(__pyx_t_2);

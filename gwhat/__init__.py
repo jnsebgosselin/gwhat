@@ -4,7 +4,7 @@
 GWHAT License Agreement (GNU-GPLv3)
 --------------------------------------
 
-Copyright (c) 2014-2017 GWHAT Project Contributors
+Copyright (c) 2014-2018 GWHAT Project Contributors
 https://github.com/jnsebgosselin/gwhat
 
 GWHAT is free software: you can redistribute it and/or modify
@@ -53,7 +53,7 @@ import os
 import sys
 
 
-version_info = (0, 2, 2, 'dev')
+version_info = (0, 2, 2)
 __version__ = '.'.join(map(str, version_info))
 __appname__ = 'GWHAT'
 __namever__ = __appname__ + " " + __version__

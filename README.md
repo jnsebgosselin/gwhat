@@ -1,14 +1,14 @@
 ![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_banner_lowres(150).png)
 ====
-Copyright 2014-2017 © GWHAT Project Contributors.<br>
+Copyright 2014-2018 © GWHAT Project Contributors.<br>
 Licensed under the terms of the GNU-GPLv3
 
 # Project details and build status
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE)
-[![Documentation Status](https://readthedocs.org/projects/gwhat/badge/?version=gwhat-0.2.1)](http://gwhat.readthedocs.io/en/gwhat-0.2.1/?badge=gwhat-0.2.1)
+[![Documentation Status](https://readthedocs.org/projects/gwhat/badge/?version=latest)](http://gwhat.readthedocs.io)
 [![Travis status](https://travis-ci.org/jnsebgosselin/gwhat.svg?branch=master)](https://travis-ci.org/jnsebgosselin/gwhat)
-[![Coverage Status](https://coveralls.io/repos/github/jnsebgosselin/gwhat/badge.svg?branch=master&service=github#2)](https://coveralls.io/github/jnsebgosselin/gwhat?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/jnsebgosselin/gwhat/badge.svg?branch=master&service=github#3)](https://coveralls.io/github/jnsebgosselin/gwhat?branch=master)
 [![Build status](https://ci.appveyor.com/api/projects/status/7f2sr3ccd807ydjc/branch/master?svg=true)](https://ci.appveyor.com/project/jnsebgosselin/gwhat/branch/master)
 [![codecov](https://codecov.io/gh/jnsebgosselin/gwhat/branch/master/graph/badge.svg)](https://codecov.io/gh/jnsebgosselin/gwhat)
 
@@ -63,4 +63,4 @@ If you encounter any problems or errors during program execution, have any quest
 
 ![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
 
-Last edited: 21/11/2017
+Last edited: 08/01/2018
