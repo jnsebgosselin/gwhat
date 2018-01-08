@@ -270,7 +270,7 @@ class WeatherStationBrowser(QWidget):
         btn_save.setToolTip('Save current found stations info in a csv file.')
         btn_save.clicked.connect(self.btn_save_isClicked)
 
-        btn_fetch = QPushButton('Fetch')
+        self.btn_fetch = btn_fetch = QPushButton('Fetch')
         btn_fetch.setIcon(icons.get_icon('refresh'))
         btn_fetch.setIconSize(icons.get_iconsize('iconSize2'))
         btn_fetch.setToolTip("Updates the climate station database by"
