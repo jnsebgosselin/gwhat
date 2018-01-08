@@ -6,28 +6,80 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# ---- Standard library imports
+# ---- Imports: Standard Libraries
 
 from datetime import datetime
 import sys
 import os
+from time import sleep
 
-# ---- Third party imports
+# ---- Imports: Third Parties
 
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import pyqtSlot as QSlot
+from PyQt5.QtCore import Qt, QPoint, QThread, QSize
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QSpinBox, QPushButton,
                              QDesktopWidget, QApplication,
-                             QFileDialog, QGroupBox)
+                             QFileDialog, QGroupBox, QStyle)
 
-# ---- Local imports
+# ---- Imports: Local
 
 from gwhat.common import StyleDB
 from gwhat.common import icons
+from gwhat.widgets.waitingspinner import QWaitingSpinner
 from gwhat.meteo.weather_stationlist import WeatherSationView
 from gwhat.meteo.weather_station_finder import (WeatherStationFinder,
                                                 PROV_NAME_ABB)
+
+
+class WaitSpinnerBar(QWidget):
+
+    def __init__(self, parent=None):
+        super(WaitSpinnerBar, self).__init__(parent)
+
+        self._layout = QGridLayout(self)
+
+        self._label = QLabel()
+        self._label.setAlignment(Qt.AlignCenter)
+        self._spinner = QWaitingSpinner(self, centerOnParent=False)
+
+        icon = QWidget().style().standardIcon(QStyle.SP_MessageBoxCritical)
+        pixmap = icon.pixmap(QSize(64, 64))
+        self._failed_icon = QLabel()
+        self._failed_icon.setPixmap(pixmap)
+        self._failed_icon.hide()
+
+        self._layout.addWidget(self._spinner, 1, 1)
+        self._layout.addWidget(self._failed_icon, 1, 1)
+        self._layout.addWidget(self._label, 2, 0, 1, 3)
+
+        self._layout.setRowStretch(0, 100)
+        self._layout.setRowStretch(3, 100)
+        self._layout.setColumnStretch(0, 100)
+        self._layout.setColumnStretch(2, 100)
+
+    def set_label(self, text):
+        """Set the text that is displayed next to the spinner."""
+        self._label.setText(text)
+
+    def show_warning_icon(self):
+        """Stop and hide the spinner and show a critical icon instead."""
+        self._spinner.hide()
+        self._spinner.stop()
+        self._failed_icon.show()
+
+    def show(self):
+        """Override Qt show to start waiting spinner."""
+        self._spinner.show()
+        self._failed_icon.hide()
+        super(WaitSpinnerBar, self).show()
+        self._spinner.start()
+
+    def hide(self):
+        """Override Qt hide to stop waiting spinner."""
+        super(WaitSpinnerBar, self).hide()
+        self._spinner.stop()
 
 
 class WeatherStationBrowser(QWidget):
@@ -43,87 +95,19 @@ class WeatherStationBrowser(QWidget):
 
     def __init__(self, parent=None):
         super(WeatherStationBrowser, self).__init__(parent)
-        self.stn_finder = WeatherStationFinder()
+        self.stn_finder_worker = WeatherStationFinder()
+        self.stn_finder_worker.sig_load_database_finished.connect(
+                self.receive_load_database)
+        self.stn_finder_thread = QThread()
+        self.stn_finder_worker.moveToThread(self.stn_finder_thread)
+
         self.station_table = WeatherSationView()
+        self.waitspinnerbar = WaitSpinnerBar()
+        self.stn_finder_worker.sig_progress_msg.connect(
+                self.waitspinnerbar.set_label)
         self.__initUI__()
-        self.station_table.set_geocoord((self.lat, -self.lon))
-        self.proximity_grpbox_toggled()
 
-    @property
-    def stationlist(self):
-        return self.station_table.get_stationlist()
-
-    @property
-    def search_by(self):
-        return ['proximity', 'province'][self.tab_widg.currentIndex()]
-
-    @property
-    def prov(self):
-        if self.prov_widg.currentIndex() == 0:
-            return self.PROV_ABB
-        else:
-            return self.PROV_ABB[self.prov_widg.currentIndex()-1]
-
-    @property
-    def lat(self):
-        return self.lat_spinBox.value()
-
-    def set_lat(self, x, silent=True):
-        if silent:
-            self.lat_spinBox.blockSignals(True)
-        self.lat_spinBox.setValue(x)
-        self.lat_spinBox.blockSignals(False)
-
-    @property
-    def lon(self):
-        return self.lon_spinBox.value()
-
-    def set_lon(self, x, silent=True):
-        if silent:
-            self.lon_spinBox.blockSignals(True)
-        self.lon_spinBox.setValue(x)
-        self.lon_spinBox.blockSignals(False)
-
-    @property
-    def rad(self):
-        return int(self.radius_SpinBox.currentText()[:-3])
-
-    @property
-    def prox(self):
-        if self.prox_grpbox.isChecked():
-            return (self.lat, -self.lon, self.rad)
-        else:
-            return None
-
-    @property
-    def year_min(self):
-        return int(self.minYear.value())
-
-    def set_yearmin(self, x, silent=True):
-        if silent:
-            self.minYear.blockSignals(True)
-        self.minYear.setValue(x)
-        self.minYear.blockSignals(False)
-
-    @property
-    def year_max(self):
-        return int(self.maxYear.value())
-
-    def set_yearmax(self, x, silent=True):
-        if silent:
-            self.maxYear.blockSignals(True)
-        self.maxYear.setValue(x)
-        self.maxYear.blockSignals(False)
-
-    @property
-    def nbr_of_years(self):
-        return int(self.nbrYear.value())
-
-    def set_yearnbr(self, x, silent=True):
-        if silent:
-            self.nbrYear.blockSignals(True)
-        self.nbrYear.setValue(x)
-        self.nbrYear.blockSignals(False)
+        self.start_load_database()
 
     def __initUI__(self):
         self.setWindowTitle('Weather Stations Browser')
@@ -273,15 +257,7 @@ class WeatherStationBrowser(QWidget):
 
         # ---- Toolbar
 
-        self.btn_search = QPushButton('Search')
-        self.btn_search.setIcon(icons.get_icon('search'))
-        self.btn_search.setIconSize(icons.get_iconsize('iconSize2'))
-        self.btn_search.setToolTip('Search for weather stations in the online '
-                                   'CDCD with the criteria given above.')
-        self.btn_search.clicked.connect(self.btn_search_isClicked)
-        self.btn_search.hide()
-
-        btn_addSta = QPushButton('Add')
+        self.btn_addSta = btn_addSta = QPushButton('Add')
         btn_addSta.setIcon(icons.get_icon('add2list'))
         btn_addSta.setIconSize(icons.get_iconsize('iconSize2'))
         btn_addSta.setToolTip('Add selected found weather stations to the '
@@ -294,10 +270,17 @@ class WeatherStationBrowser(QWidget):
         btn_save.setToolTip('Save current found stations info in a csv file.')
         btn_save.clicked.connect(self.btn_save_isClicked)
 
+        self.btn_fetch = btn_fetch = QPushButton('Fetch')
+        btn_fetch.setIcon(icons.get_icon('refresh'))
+        btn_fetch.setIconSize(icons.get_iconsize('iconSize2'))
+        btn_fetch.setToolTip("Updates the climate station database by"
+                             " fetching it again from the ECCC ftp server.")
+        btn_fetch.clicked.connect(self.btn_fetch_isClicked)
+
         toolbar_grid = QGridLayout()
         toolbar_widg = QWidget()
 
-        for col, btn in enumerate([self.btn_search, btn_addSta, btn_save]):
+        for col, btn in enumerate([btn_addSta, btn_save, btn_fetch]):
             toolbar_grid.addWidget(btn, 0, col+1)
 
         toolbar_grid.setColumnStretch(toolbar_grid.columnCount(), 100)
@@ -338,22 +321,143 @@ class WeatherStationBrowser(QWidget):
         main_layout.addWidget(left_panel, 0, 0)
         main_layout.addWidget(vLine1, 0, 1)
         main_layout.addWidget(self.station_table, 0, 2)
+        main_layout.addWidget(self.waitspinnerbar, 0, 2)
 
         main_layout.setContentsMargins(10, 10, 10, 10)  # (L,T,R,B)
         main_layout.setRowStretch(0, 100)
         main_layout.setHorizontalSpacing(15)
         main_layout.setVerticalSpacing(5)
-        main_layout.setColumnStretch(col, 100)
+        main_layout.setColumnStretch(col+1, 100)
+
+    @property
+    def stationlist(self):
+        return self.station_table.get_stationlist()
+
+    @property
+    def search_by(self):
+        return ['proximity', 'province'][self.tab_widg.currentIndex()]
+
+    @property
+    def prov(self):
+        if self.prov_widg.currentIndex() == 0:
+            return self.PROV_ABB
+        else:
+            return self.PROV_ABB[self.prov_widg.currentIndex()-1]
+
+    @property
+    def lat(self):
+        return self.lat_spinBox.value()
+
+    def set_lat(self, x, silent=True):
+        if silent:
+            self.lat_spinBox.blockSignals(True)
+        self.lat_spinBox.setValue(x)
+        self.lat_spinBox.blockSignals(False)
+        self.proximity_grpbox_toggled()
+
+    @property
+    def lon(self):
+        return self.lon_spinBox.value()
+
+    def set_lon(self, x, silent=True):
+        if silent:
+            self.lon_spinBox.blockSignals(True)
+        self.lon_spinBox.setValue(x)
+        self.lon_spinBox.blockSignals(False)
+        self.proximity_grpbox_toggled()
+
+    @property
+    def rad(self):
+        return int(self.radius_SpinBox.currentText()[:-3])
+
+    @property
+    def prox(self):
+        if self.prox_grpbox.isChecked():
+            return (self.lat, -self.lon, self.rad)
+        else:
+            return None
+
+    @property
+    def year_min(self):
+        return int(self.minYear.value())
+
+    def set_yearmin(self, x, silent=True):
+        if silent:
+            self.minYear.blockSignals(True)
+        self.minYear.setValue(x)
+        self.minYear.blockSignals(False)
+
+    @property
+    def year_max(self):
+        return int(self.maxYear.value())
+
+    def set_yearmax(self, x, silent=True):
+        if silent:
+            self.maxYear.blockSignals(True)
+        self.maxYear.setValue(x)
+        self.maxYear.blockSignals(False)
+
+    @property
+    def nbr_of_years(self):
+        return int(self.nbrYear.value())
+
+    def set_yearnbr(self, x, silent=True):
+        if silent:
+            self.nbrYear.blockSignals(True)
+        self.nbrYear.setValue(x)
+        self.nbrYear.blockSignals(False)
+
+    # ---- Weather Station Finder Handlers
+
+    def start_load_database(self, force_fetch=False):
+        """Start the process of loading the climate station database."""
+        if self.stn_finder_thread.isRunning():
+            return
+
+        self.station_table.clear()
+        self.waitspinnerbar.show()
+
+        # Start the downloading process.
+        if force_fetch:
+            self.stn_finder_thread.started.connect(
+                    self.stn_finder_worker.fetch_database)
+        else:
+            self.stn_finder_thread.started.connect(
+                    self.stn_finder_worker.load_database)
+        self.stn_finder_thread.start()
+
+    @QSlot()
+    def receive_load_database(self):
+        """Handles when loading the database is finished."""
+        # Disconnect the thread.
+        self.stn_finder_thread.started.disconnect()
+
+        # Quit the thread.
+        self.stn_finder_thread.quit()
+        waittime = 0
+        while self.stn_finder_thread.isRunning():
+            sleep(0.1)
+            waittime += 0.1
+            if waittime > 15:                                # pragma: no cover
+                print("Unable to quit the thread.")
+                break
+        # Force an update of the GUI.
+        self.proximity_grpbox_toggled()
+        if self.stn_finder_worker.data is None:
+            self.waitspinnerbar.show_warning_icon()
+        else:
+            self.waitspinnerbar.hide()
+
+    # ---- GUI handlers
 
     def show(self):
         super(WeatherStationBrowser, self).show()
         qr = self.frameGeometry()
         if self.parent():
             parent = self.parent()
-
             wp = parent.frameGeometry().width()
             hp = parent.frameGeometry().height()
-            cp = parent.mapToGlobal(QPoint(wp/2., hp/2.))
+            cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
         else:
             cp = QDesktopWidget().availableGeometry().center()
 
@@ -380,7 +484,7 @@ class WeatherStationBrowser(QWidget):
         self.minYear.setRange(min_yr, max_yr)
         self.search_filters_changed()
 
-    # -------------------------------------------------------------------------
+    # ---- Toolbar Buttons Handlers
 
     def btn_save_isClicked(self):
         ddir = os.path.join(os.getcwd(), 'weather_station_list.csv')
@@ -395,22 +499,13 @@ class WeatherStationBrowser(QWidget):
             self.staListSignal.emit(staList)
             print('Selected stations sent to list')
         else:
-            msg = 'No station currently selected'
-            print(msg)
+            print('No station currently selected')
 
-    def btn_search_isClicked(self):
-        """
-        Use the WeatherStationFinder class to question the list of climate
-        station in the ECCC network and show the resulting list of stations
-        in the GUI.
-        """
-        stn_finder = WeatherStationFinder()
-        stnlist = stn_finder.get_stationlist(
-                prov=self.prov, prox=self.prox,
-                yrange=(self.year_min, self.year_max, self.nbr_of_years))
+    def btn_fetch_isClicked(self):
+        """Handles when the button fetch is clicked."""
+        self.start_load_database(force_fetch=True)
 
-        self.station_table.populate_table(stnlist)
-        return stnlist
+    # ---- Search Filters Handlers
 
     def proximity_grpbox_toggled(self):
         """
@@ -429,11 +524,14 @@ class WeatherStationBrowser(QWidget):
         Search for weather stations with the current filter values and forces
         an update of the station table content.
         """
-        stnlist = self.stn_finder.get_stationlist(
-                prov=self.prov, prox=self.prox,
-                yrange=(self.year_min, self.year_max, self.nbr_of_years))
-        self.station_table.populate_table(stnlist)
+        if self.stn_finder_worker.data is not None:
+            stnlist = self.stn_finder_worker.get_stationlist(
+                    prov=self.prov, prox=self.prox,
+                    yrange=(self.year_min, self.year_max, self.nbr_of_years))
+            self.station_table.populate_table(stnlist)
 
+
+# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
 

@@ -63,35 +63,43 @@ at once using the |set_fromyear| and |set_toyear| icons as shown in
     :alt: alternate text
     :figclass: align-center
 
-    Set the ``From Year`` and ``To Year`` values for all stations at once.
+    Set the :guilabel:`From Year` and :guilabel:`To Year` values for all stations at once.
 
 .. _climate stations browser: `Searching for weather data`_
 
 Searching for weather data
 -----------------------------------------------
 
-The :guilabel:Weather Stations Browser shown in :numref:`cdcd_browser` provides a graphical
+The :guilabel:`Weather Stations Browser` shown in :numref:`cdcd_browser` provides a graphical
 interface to the CDCD_, which contains daily data for air temperature and precipitation
 dating back to 1840 to the present for more than 8000 stations distributed across Canada.
-The list of stations can be filtered in the browser by proximity, province, or/and the
+The list of stations can be filtered in the browser by proximity, provinces, or/and the
 number and the range of years for which data are available at each station.
 For example, :numref:`cdcd_browser` shows all stations with at least 10 years
-of available data between 1960 and 2017 that are located less than 25 kilometres
+of available data between 1960 and 2018 that are located less than 25 kilometres
 away from the specified lat/lon coordinates.
 
-Stations can be added to the table displayed in the :guilabel:`Download Weather` tab
-by selecting them in the browser and clicking on the button |add_to_list| `Add`.
-Alternatively, the selected stations can also be exported from the browser to an
-Excel or :abbr:`csv (comma-separated values)` file by clicking on the button |save| `Save`.
+The list of stations displayed in the table can be exported to an
+Excel or csv file by clicking on the button |save| `Save`.
+Stations can be added from the :guilabel:`Weather Stations Browser` to the table
+displayed in the :guilabel:`Download Weather` tab (see :numref:`dwnld_weather_annoted`)
+by checking them in the table and clicking on the button |add_to_list| `Add`.
+
+The first time that the :guilabel:`Weather Stations Browser` is opened after installing GWHAT,
+a database of the available climate stations in the CDCD_ is downloaded
+from the ECCC (Environment and Climate Change Canada) server.
+The database is then saved in the installation directory of GWHAT (see :numref:`sec_installing_on_windows`).
+The local copy of the climate station database can be updated whenever by
+fetching it again from the ECCC server by clicking on the button |icon_fetch| `Fetch`.
 
 .. _cdcd_browser:
-.. figure:: img/scs_stations_browser_annoted.*
+.. figure:: img/scs/stations_browser_annoted.*
     :align: center
     :width: 100%
     :alt: alternate text
     :figclass: align-center
 
-    Presentation of the :guilabel:Weather Stations Browser.
+    Presentation of the :guilabel:`Weather Stations Browser`.
 
 .. _sec_weather_datafiles_format:
 
@@ -134,24 +142,32 @@ if the :guilabel:`Automatically save formatted weather data` option is checked.
 
 
 .. _Canadian Daily Climate Database: www.climate.weather.gc.ca
-.. _CDCD: _Canadian Daily Climate Database
+.. _CDCD: www.climate.weather.gc.ca
 
-.. |add_to_list| image:: img/icon_add_to_list.*
+.. |_| unicode:: 0xA0
+   :trim:
+
+.. |add_to_list| image:: img/icon/add_to_list.*
                       :width: 1em
                       :height: 1em
                       :alt: Add
 
-.. |downward_arrow| image:: img/icon_download.*
+.. |downward_arrow| image:: img/icon/download.*
                     :width: 1em
                     :height: 1em
                     :alt: downward arrow
 
-.. |eraser| image:: img/icon_erase.*
+.. |eraser| image:: img/icon/erase.*
                       :width: 1em
                       :height: 1em
                       :alt: eraser
 
-.. |magnifying_glass| image:: img/icon_search.*
+.. |icon_fetch| image:: img/icon/icon_refresh.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: fetch                    
+
+.. |magnifying_glass| image:: img/icon/icon_search.*
                       :width: 1em
                       :height: 1em
                       :alt: magnifying glass
@@ -161,23 +177,23 @@ if the :guilabel:`Automatically save formatted weather data` option is checked.
                       :height: 1em
                       :alt: open file
 
-.. |save| image:: img/icon_save.*
+.. |save| image:: img/icon/save.*
                       :width: 1em
                       :height: 1em
                       :alt: save
 
-.. |set_fromyear| image:: img/icon_set_fromyear.*
+.. |set_fromyear| image:: img/icon/set_fromyear.*
                       :width: 1em
                       :height: 1em
                       :alt: set From Year
 
-.. |set_toyear| image:: img/icon_set_toyear.*
+.. |set_toyear| image:: img/icon/set_toyear.*
                       :width: 1em
                       :height: 1em
                       :alt: set To Year
 
 
-.. |stop| image:: img/icon_stop.*
+.. |stop| image:: img/icon/stop.*
                       :width: 1em
                       :height: 1em
                       :alt: stop

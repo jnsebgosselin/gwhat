@@ -396,5 +396,56 @@ def test_merge_widget(downloader_bot, mocker):
     qtbot.waitUntil(lambda: not wxdata_downloader.btn_goNext.isEnabled())
 
 
+# ---- Test WeatherStationFinder
+
+@pytest.mark.run(order=3)
+def test_search_weather_data(downloader_bot, mocker):
+    """
+    Test that the Climate Station Browser is initialise correctly from
+    the Weather Data Downloader widget and that the stations from the
+    browser are added correctly to the table of the downloader.
+    """
+    wxdata_downloader, qtbot = downloader_bot
+    assert wxdata_downloader.station_browser is None
+    wxdata_downloader.set_station_browser_latlon((45.40, 73.15))
+
+    # Open the Climate station browser.
+    wxdata_downloader.btn_search4station_isclicked()
+    assert wxdata_downloader.station_browser is not None
+    assert wxdata_downloader.station_browser.lat == 45.40
+    assert wxdata_downloader.station_browser.lon == 73.15
+
+    # Assert that the database was loaded correctly in the browser.
+    station_browser = wxdata_downloader.station_browser
+    qtbot.addWidget(station_browser)
+
+    qtbot.waitSignal(station_browser.stn_finder_thread.started)
+    qtbot.waitSignal(station_browser.stn_finder_worker.sig_load_database_finished)
+    qtbot.waitSignal(station_browser.stn_finder_thread.finished)
+    qtbot.waitUntil(lambda: not station_browser.stn_finder_thread.isRunning(),
+                    timeout=60*1000)
+    assert station_browser.stn_finder_worker._data is not None
+
+    # Add no station to the download table and assert the result.
+    assert wxdata_downloader.station_table.get_stationlist() == []
+    qtbot.mouseClick(wxdata_downloader.station_browser.btn_addSta, Qt.LeftButton)
+    assert wxdata_downloader.station_table.get_stationlist() == []
+
+    # Check and Add one station to the download table and assert the result.
+    station_tbl = wxdata_downloader.station_browser.station_table
+    model = station_tbl.model()
+    model._checks[0] = 1
+    model.dataChanged.emit(model.index(0, 0),
+                           model.index(model.rowCount(0), 0))
+
+    checked_rows = station_tbl.get_checked_rows()
+    assert checked_rows == [0]
+    checked_sta = station_tbl.get_content4rows(checked_rows)
+    assert len(checked_sta) == 1
+
+    qtbot.mouseClick(wxdata_downloader.station_browser.btn_addSta, Qt.LeftButton)
+    assert wxdata_downloader.station_table.get_stationlist() == checked_sta
+
+
 if __name__ == "__main__":
-    pytest.main([os.path.basename(__file__), '-v', '-rw', '--cov=WHAT'])
+    pytest.main([os.path.basename(__file__), '-v', '-rw'])

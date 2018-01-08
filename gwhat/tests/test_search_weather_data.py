@@ -5,6 +5,7 @@ Created on Fri Aug  4 01:50:50 2017
 """
 
 import pytest
+from flaky import flaky
 
 import sys
 import os
@@ -13,12 +14,17 @@ import numpy as np
 
 # Local imports
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-from gwhat.meteo.search_weather_data import WeatherStationBrowser      # nopep8
-from gwhat.meteo.search_weather_data import QFileDialog                # nopep8
+from gwhat.meteo.search_weather_data import WeatherStationBrowser
+from gwhat.meteo.search_weather_data import QFileDialog
+import gwhat.meteo.weather_station_finder
+from gwhat.meteo.weather_station_finder import WeatherStationFinder
+
+# Mock the path of the database resource file.
+DATABASE_FILEPATH = 'climate_station_database.npy'
+gwhat.meteo.weather_station_finder.DATABASE_FILEPATH = DATABASE_FILEPATH
 
 
 # ---- Qt Test Fixtures
-
 
 @pytest.fixture
 def station_finder_bot(qtbot):
@@ -63,12 +69,51 @@ expected_results = [
 
 # ---- Tests
 
+@flaky(max_runs=3)
+@pytest.mark.run(order=2)
+def test_load_database(qtbot, mocker):
+    station_finder = WeatherStationFinder()
+
+    # Delete the climate station database file if it exists.
+    if os.path.exists(DATABASE_FILEPATH):
+        os.remove(DATABASE_FILEPATH)
+    assert not os.path.exists(DATABASE_FILEPATH)
+    assert station_finder.data is None
+
+    # Load the climate station database from ECCC server.
+    station_finder.load_database()
+    qtbot.waitUntil(lambda: os.path.exists(DATABASE_FILEPATH))
+    assert station_finder.data is not None
+
+
+@pytest.mark.run(order=2)
+def test_failed_fetch_database(qtbot, mocker):
+    station_finder = WeatherStationFinder()
+    station_finder.load_database()
+    assert station_finder.data is not None
+
+    # Test loading the database when the fetching fails.
+    mocker.patch(
+            'gwhat.meteo.weather_station_finder.read_stationlist_from_tor',
+            return_value=None)
+    station_finder.fetch_database()
+    qtbot.waitSignal(station_finder.sig_load_database_finished)
+    assert station_finder.data is None
+    assert os.path.exists(DATABASE_FILEPATH)
+
 
 @pytest.mark.run(order=2)
 def test_search_weather_station(station_finder_bot, mocker):
     station_browser, qtbot = station_finder_bot
     station_browser.show()
     assert station_browser
+
+    qtbot.waitSignal(station_browser.stn_finder_thread.started)
+    qtbot.waitSignal(station_browser.stn_finder_worker.sig_load_database_finished)
+    qtbot.waitSignal(station_browser.stn_finder_thread.finished)
+    qtbot.waitUntil(lambda: not station_browser.stn_finder_thread.isRunning(),
+                    timeout=60*1000)
+    assert station_browser.stn_finder_worker._data is not None
 
     # Search for stations and assert that lat and lon are 0.
     station_browser.prox_grpbox.setChecked(True)
@@ -77,8 +122,8 @@ def test_search_weather_station(station_finder_bot, mocker):
 
     # Changed the values of the lat and lon and assert that the proximity
     # values are shown correctly.
-    station_browser.lon_spinBox.setValue(73.15)
-    station_browser.lat_spinBox.setValue(45.40)
+    station_browser.set_lat(45.40)
+    station_browser.set_lon(73.15)
     prox_data = station_browser.station_table.get_prox_data()
     assert np.max(prox_data) <= 25
 
@@ -99,6 +144,38 @@ def test_search_weather_station(station_finder_bot, mocker):
     # Save the file and assert it was created correctly.
     station_browser.btn_save_isClicked()
     assert os.path.exists(fname)
+
+
+@pytest.mark.run(order=2)
+def test_refreshes_database_and_fails(station_finder_bot, mocker):
+    station_browser, qtbot = station_finder_bot
+    station_browser.show()
+
+    qtbot.waitSignal(station_browser.stn_finder_thread.started)
+    qtbot.waitSignal(station_browser.stn_finder_worker.sig_load_database_finished)
+    qtbot.waitSignal(station_browser.stn_finder_thread.finished)
+    qtbot.waitUntil(lambda: not station_browser.stn_finder_thread.isRunning(),
+                    timeout=60*1000)
+
+    assert station_browser.stn_finder_worker._data is not None
+
+    # Patch the function to fetch the database so that it fails.
+    # Test loading the database when the fetching fails.
+    mocker.patch(
+            'gwhat.meteo.weather_station_finder.read_stationlist_from_tor',
+            return_value=None)
+
+    # Force an update of the database from the GUI.
+    qtbot.mouseClick(station_browser.btn_fetch, Qt.LeftButton)
+
+    qtbot.waitSignal(station_browser.stn_finder_thread.started)
+    qtbot.waitSignal(station_browser.stn_finder_worker.sig_load_database_finished)
+    qtbot.waitSignal(station_browser.stn_finder_thread.finished)
+    qtbot.waitUntil(lambda: not station_browser.stn_finder_thread.isRunning(),
+                    timeout=60*1000)
+
+    assert station_browser.stn_finder_worker._data is None
+    assert station_browser.stationlist == []
 
 
 if __name__ == "__main__":

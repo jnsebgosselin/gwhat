@@ -271,8 +271,7 @@ class WHAT(QMainWindow):
         lon = self.pmanager.projet.lon
 
         self.tab_dwnld_data.set_workdir(dirname)
-        self.tab_dwnld_data.station_browser.lat_spinBox.setValue(lat)
-        self.tab_dwnld_data.station_browser.lon_spinBox.setValue(lon)
+        self.tab_dwnld_data.set_station_browser_latlon((lat, lon))
 
         # ---- fill_weather_data ----
 
@@ -356,7 +355,9 @@ class WHATPref(object):
                 raise e
 
 
-if __name__ == '__main__':                                   # pragma: no cover
+# %% if __name__ == '__main__'
+
+if __name__ == '__main__':
     import logging
 
     logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,

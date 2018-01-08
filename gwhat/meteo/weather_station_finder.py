@@ -13,17 +13,23 @@ from urllib.error import HTTPError, URLError
 import csv
 import time
 import os
+import os.path as osp
 
 
 # ---- Imports: third parties
 
 import numpy as np
+from PyQt5.QtCore import QObject
+from PyQt5.QtCore import pyqtSignal as QSignal
 
 
 # ---- Imports: local libraries
 
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.weather_stationlist import WeatherSationList
+from gwhat import __rootdir__
+DATABASE_FILEPATH = osp.join(__rootdir__, 'climate_station_database.npy')
+MAX_FAILED_FETCH_TRY = 3
 PROV_NAME_ABB = [('ALBERTA', 'AB'),
                  ('BRITISH COLUMBIA', 'BC'),
                  ('MANITOBA', 'MB'),
@@ -110,14 +116,14 @@ def read_stationlist_from_tor():
 # ---- API
 
 
-class WeatherStationFinder(object):
+class WeatherStationFinder(QObject):
 
-    DATABASE_FILEPATH = 'climate_station_database.npy'
+    sig_progress_msg = QSignal(str)
+    sig_load_database_finished = QSignal(bool)
 
     def __init__(self, filelist=None, *args, **kwargs):
         super(WeatherStationFinder, self).__init__(*args, **kwargs)
         self._data = None
-        self.load_database()
 
     # ---- Load and fetch database
 
@@ -131,11 +137,14 @@ class WeatherStationFinder(object):
         Load the climate station list from a file if it exist or else fetch it
         from ECCC Tor ftp server.
         """
-        if os.path.exists(self.DATABASE_FILEPATH):
+        if os.path.exists(DATABASE_FILEPATH):
+            self.sig_progress_msg.emit(
+                    "Loading the climate station database from file.")
             ts = time.time()
-            self._data = np.load(self.DATABASE_FILEPATH).item()
+            self._data = np.load(DATABASE_FILEPATH).item()
             te = time.time()
             print("Station list loaded sucessfully in %0.2f sec." % (te-ts))
+            self.sig_load_database_finished.emit(True)
         else:
             self.fetch_database()
 
@@ -146,10 +155,31 @@ class WeatherStationFinder(object):
         """
         print("Fetching station list from ECCC Tor ftp server...")
         ts = time.time()
-        self._data = read_stationlist_from_tor()
-        np.save(self.DATABASE_FILEPATH, self._data)
-        te = time.time()
-        print("Station list fetched sucessfully in %0.2f sec." % (te-ts))
+        self._data = None
+        failed_fetch_try = 0
+        while True:
+            self.sig_progress_msg.emit("Fetching the climate station database"
+                                       " from the ECCC server...")
+            self._data = read_stationlist_from_tor()
+            if self._data is None:
+                failed_fetch_try += 1
+                if failed_fetch_try <= MAX_FAILED_FETCH_TRY:
+                    print("Failed to fetch the database from "
+                          " the ECCC server (%d/%d)."
+                          % (failed_fetch_try, MAX_FAILED_FETCH_TRY))
+                    time.sleep(3)
+                else:
+                    msg = "Failed to fetch the database from the ECCC server."
+                    print(msg)
+                    self.sig_progress_msg.emit(msg)
+                    break
+            else:
+                np.save(DATABASE_FILEPATH, self._data)
+                te = time.time()
+                print("Station list fetched sucessfully in %0.2f sec."
+                      % (te-ts))
+                break
+        self.sig_load_database_finished.emit(True)
 
     # ---- Utility functions
 
@@ -196,6 +226,7 @@ class WeatherStationFinder(object):
 
 if __name__ == '__main__':
     stn_browser = WeatherStationFinder()
+    stn_browser.load_database()
     stnlist = stn_browser.get_stationlist(prov=['QC', 'ON'],
                                           prox=(45.40, -73.15, 25),
                                           yrange=(1960, 2015, 10))

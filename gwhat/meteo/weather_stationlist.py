@@ -199,6 +199,10 @@ class WeatherSationView(QTableView):
         x0 = (W - w)//2
         self.chkbox_header.setGeometry(x0, y0, w, h)
 
+    def clear(self):
+        """Removes all items in the view."""
+        self.populate_table(WeatherSationList())
+
     def populate_table(self, stationlist):
         self.stationlist = stationlist
         N = len(stationlist)
@@ -418,6 +422,7 @@ if __name__ == '__main__':
 
     from gwhat.meteo.weather_station_finder import WeatherStationFinder
     stn_browser = WeatherStationFinder()
+    stn_browser.load_database()
     stationlist = stn_browser.get_stationlist()
 
     app = QApplication(sys.argv)
