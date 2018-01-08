@@ -141,8 +141,8 @@ if the :guilabel:`Automatically save formatted weather data` option is checked.
     panel of the :guilabel:`Download Weather` tab.
 
 
-.. _Canadian Daily Climate Database: www.climate.weather.gc.ca
-.. _CDCD: www.climate.weather.gc.ca
+.. _Canadian Daily Climate Database: http://climate.weather.gc.ca/
+.. _CDCD: http://climate.weather.gc.ca/
 
 .. |_| unicode:: 0xA0
    :trim:
