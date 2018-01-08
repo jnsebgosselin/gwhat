@@ -64,7 +64,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'GWHAT'
-copyright = '2014-2017, GWHAT Documentation Contributors'
+copyright = '2014-2018, GWHAT Documentation Contributors'
 author = 'Jean-Sébastien Gosselin'
 
 # The version info for the project you're documenting, acts as replacement for

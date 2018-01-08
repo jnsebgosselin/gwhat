@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
 
-# Copyright (c) 2014-2017 GWHAT Project Contributors
+# Copyright (c) 2014-2018 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
-#
-# Copyright (c) 2017 Spyder Project Contributors
-# https://github.com/spyder-ide/spyder
-#
-# Copyright (C) 2013 The IPython Development Team
-# https://github.com/ipython/ipython
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 #
-# This file is a derivative work of codes from the Spyder project.
-# Licensed under the terms of the MIT License.
+# Copyright (c) 2017 Spyder Project Contributors
+# https://github.com/spyder-ide/spyder
 #
+# Some parts of this file is a derivative work of the Spyder project.
+# Licensed under the terms of the MIT License.
 # https://github.com/spyder-ide/spyder/master/spyder/workers/updates.py
 # https://github.com/spyder-ide/spyder/blob/master/spyder/utils/programs.py
+#
+# Copyright (C) 2013 The IPython Development Team
+# https://github.com/ipython/ipython
 #
 # See gwhat/__init__.py for more details.
 

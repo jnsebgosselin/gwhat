@@ -1,6 +1,6 @@
 ![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_banner_lowres(150).png)
 ====
-Copyright 2014-2017 © GWHAT Project Contributors.<br>
+Copyright 2014-2018 © GWHAT Project Contributors.<br>
 Licensed under the terms of the GNU-GPLv3
 
 # Project details and build status
@@ -63,4 +63,4 @@ If you encounter any problems or errors during program execution, have any quest
 
 ![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
 
-Last edited: 21/11/2017
+Last edited: 08/01/2018

@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
 
-# Copyright © 2014-2017 GWHAT Project Contributors
+# Copyright © 2014-2018 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
-# This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
@@ -141,7 +141,7 @@ class AboutWhat(QDialog):
                 <br>
                 <p1 align="right">
                   GWHAT version %s released on %s<br>
-                  Copyright 2014-2017
+                  Copyright 2014-2018
                   <a href="https://github.com/jnsebgosselin/gwhat/graphs/contributors">
                     GWHAT Project Contributors
                   </a>

@@ -4,7 +4,7 @@
 GWHAT License Agreement (GNU-GPLv3)
 --------------------------------------
 
-Copyright (c) 2014-2017 GWHAT Project Contributors
+Copyright (c) 2014-2018 GWHAT Project Contributors
 https://github.com/jnsebgosselin/gwhat
 
 GWHAT is free software: you can redistribute it and/or modify
