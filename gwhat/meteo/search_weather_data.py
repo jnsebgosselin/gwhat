@@ -257,7 +257,7 @@ class WeatherStationBrowser(QWidget):
 
         # ---- Toolbar
 
-        btn_addSta = QPushButton('Add')
+        self.btn_addSta = btn_addSta = QPushButton('Add')
         btn_addSta.setIcon(icons.get_icon('add2list'))
         btn_addSta.setIconSize(icons.get_iconsize('iconSize2'))
         btn_addSta.setToolTip('Add selected found weather stations to the '
