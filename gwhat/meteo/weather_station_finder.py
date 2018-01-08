@@ -144,9 +144,9 @@ class WeatherStationFinder(QObject):
             self._data = np.load(DATABASE_FILEPATH).item()
             te = time.time()
             print("Station list loaded sucessfully in %0.2f sec." % (te-ts))
+            self.sig_load_database_finished.emit(True)
         else:
             self.fetch_database()
-        self.sig_load_database_finished.emit(True)
 
     def fetch_database(self):
         """
@@ -179,6 +179,7 @@ class WeatherStationFinder(QObject):
                 print("Station list fetched sucessfully in %0.2f sec."
                       % (te-ts))
                 break
+        self.sig_load_database_finished.emit(True)
 
     # ---- Utility functions
 

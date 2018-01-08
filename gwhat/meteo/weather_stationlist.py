@@ -199,6 +199,10 @@ class WeatherSationView(QTableView):
         x0 = (W - w)//2
         self.chkbox_header.setGeometry(x0, y0, w, h)
 
+    def clear(self):
+        """Removes all items in the view."""
+        self.populate_table(WeatherSationList())
+
     def populate_table(self, stationlist):
         self.stationlist = stationlist
         N = len(stationlist)

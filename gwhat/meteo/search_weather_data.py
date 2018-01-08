@@ -16,8 +16,8 @@ from time import sleep
 # ---- Imports: Third Parties
 
 from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import Qt, QPoint, QThread, QSize
-from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QSpinBox, QPushButton,
                              QDesktopWidget, QApplication,
@@ -270,10 +270,17 @@ class WeatherStationBrowser(QWidget):
         btn_save.setToolTip('Save current found stations info in a csv file.')
         btn_save.clicked.connect(self.btn_save_isClicked)
 
+        btn_fetch = QPushButton('Fetch')
+        btn_fetch.setIcon(icons.get_icon('refresh'))
+        btn_fetch.setIconSize(icons.get_iconsize('iconSize2'))
+        btn_fetch.setToolTip("Updates the climate station database by"
+                             " fetching it again from the ECCC ftp server.")
+        btn_fetch.clicked.connect(self.btn_fetch_isClicked)
+
         toolbar_grid = QGridLayout()
         toolbar_widg = QWidget()
 
-        for col, btn in enumerate([btn_addSta, btn_save]):
+        for col, btn in enumerate([btn_addSta, btn_save, btn_fetch]):
             toolbar_grid.addWidget(btn, 0, col+1)
 
         toolbar_grid.setColumnStretch(toolbar_grid.columnCount(), 100)
@@ -402,19 +409,29 @@ class WeatherStationBrowser(QWidget):
 
     # ---- Weather Station Finder Handlers
 
-    def start_load_database(self):
+    def start_load_database(self, force_fetch=False):
         """Start the process of loading the climate station database."""
+        if self.stn_finder_thread.isRunning():
+            return
+
+        self.station_table.clear()
         self.waitspinnerbar.show()
+
         # Start the downloading process.
-        self.stn_finder_thread.started.connect(
-                self.stn_finder_worker.load_database)
+        if force_fetch:
+            self.stn_finder_thread.started.connect(
+                    self.stn_finder_worker.fetch_database)
+        else:
+            self.stn_finder_thread.started.connect(
+                    self.stn_finder_worker.load_database)
         self.stn_finder_thread.start()
 
+    @QSlot()
     def receive_load_database(self):
         """Handles when loading the database is finished."""
         # Disconnect the thread.
-        self.stn_finder_thread.started.disconnect(
-                self.stn_finder_worker.load_database)
+        self.stn_finder_thread.started.disconnect()
+
         # Quit the thread.
         self.stn_finder_thread.quit()
         waittime = 0
@@ -467,7 +484,7 @@ class WeatherStationBrowser(QWidget):
         self.minYear.setRange(min_yr, max_yr)
         self.search_filters_changed()
 
-    # -------------------------------------------------------------------------
+    # ---- Toolbar Buttons Handlers
 
     def btn_save_isClicked(self):
         ddir = os.path.join(os.getcwd(), 'weather_station_list.csv')
@@ -482,8 +499,13 @@ class WeatherStationBrowser(QWidget):
             self.staListSignal.emit(staList)
             print('Selected stations sent to list')
         else:
-            msg = 'No station currently selected'
-            print(msg)
+            print('No station currently selected')
+
+    def btn_fetch_isClicked(self):
+        """Handles when the button fetch is clicked."""
+        self.start_load_database(force_fetch=True)
+
+    # ---- Search Filters Handlers
 
     def proximity_grpbox_toggled(self):
         """
