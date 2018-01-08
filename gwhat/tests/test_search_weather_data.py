@@ -16,11 +16,11 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from gwhat.meteo.search_weather_data import WeatherStationBrowser
 from gwhat.meteo.search_weather_data import QFileDialog
+import gwhat.meteo.weather_station_finder
 from gwhat.meteo.weather_station_finder import WeatherStationFinder
-
+                                                
 
 # ---- Qt Test Fixtures
-
 
 @pytest.fixture
 def station_finder_bot(qtbot):
@@ -70,15 +70,19 @@ expected_results = [
 def test_load_database(qtbot):
     station_finder = WeatherStationFinder()
 
+    # Mock the path of the database resource file.
+    DATABASE_FILEPATH = 'climate_station_database.npy'
+    gwhat.meteo.weather_station_finder.DATABASE_FILEPATH = DATABASE_FILEPATH
+
     # Delete the climate station database file if it exists.
-    if os.path.exists(station_finder.DATABASE_FILEPATH):
-        os.remove(station_finder.DATABASE_FILEPATH)
-    assert not os.path.exists(station_finder.DATABASE_FILEPATH)
+    if os.path.exists(DATABASE_FILEPATH):
+        os.remove(DATABASE_FILEPATH)
+    assert not os.path.exists(DATABASE_FILEPATH)
     assert station_finder.data is None
 
-    # Load the climate station database from ECC server.
+    # Load the climate station database from ECCC server.
     station_finder.load_database()
-    qtbot.waitUntil(lambda: os.path.exists(station_finder.DATABASE_FILEPATH))
+    qtbot.waitUntil(lambda: os.path.exists(DATABASE_FILEPATH))
     assert station_finder.data is not None
     station_finder.load_database()
 
