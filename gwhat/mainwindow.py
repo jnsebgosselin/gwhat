@@ -74,10 +74,10 @@ from gwhat.common import icons
 freeze_support()
 
 
-class WHAT(QMainWindow):
+class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
-        super(WHAT, self).__init__(parent)
+        super(MainWindow, self).__init__(parent)
 
         self.setWindowTitle(__namever__)
         self.setWindowIcon(icons.get_icon('master'))
@@ -219,7 +219,7 @@ class WHAT(QMainWindow):
     # =========================================================================
 
     def show(self):
-        super(WHAT, self).show()
+        super(MainWindow, self).show()
         qr = self.frameGeometry()
         cp = QDesktopWidget().availableGeometry().center()
         qr.moveCenter(cp)
@@ -363,7 +363,7 @@ if __name__ == '__main__':
     logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s:%(message)s')
     try:
-        main = WHAT()
+        main = MainWindow()
         main.showMaximized()
         splash.finish(main)
         sys.exit(app.exec_())
