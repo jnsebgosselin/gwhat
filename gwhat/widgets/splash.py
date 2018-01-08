@@ -29,9 +29,10 @@ SPLASH_IMG = os.path.join(__rootdir__, 'ressources', 'splash.png')
 
 class SplashScrn(QSplashScreen):
     def __init__(self):
-        super(SplashScrn, self).__init__(QPixmap(SPLASH_IMG),
-                                         Qt.WindowStaysOnTopHint)
+        super(SplashScrn, self).__init__(QPixmap(SPLASH_IMG))
         self.show()
+        self.activateWindow()
+        self.raise_()
 
     def showMessage(self, msg):
         """Override Qt method."""
