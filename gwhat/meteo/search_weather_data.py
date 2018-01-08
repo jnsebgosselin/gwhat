@@ -16,19 +16,70 @@ from time import sleep
 # ---- Imports: Third Parties
 
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt, QPoint, QThread
+from PyQt5.QtCore import Qt, QPoint, QThread, QSize
+from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
                              QFrame, QGridLayout, QSpinBox, QPushButton,
                              QDesktopWidget, QApplication,
-                             QFileDialog, QGroupBox)
+                             QFileDialog, QGroupBox, QStyle)
 
 # ---- Imports: Local
 
 from gwhat.common import StyleDB
 from gwhat.common import icons
+from gwhat.widgets.waitingspinner import QWaitingSpinner
 from gwhat.meteo.weather_stationlist import WeatherSationView
 from gwhat.meteo.weather_station_finder import (WeatherStationFinder,
                                                 PROV_NAME_ABB)
+
+
+class WaitSpinnerBar(QWidget):
+
+    def __init__(self, parent=None):
+        super(WaitSpinnerBar, self).__init__(parent)
+
+        self._layout = QGridLayout(self)
+
+        self._label = QLabel()
+        self._label.setAlignment(Qt.AlignCenter)
+        self._spinner = QWaitingSpinner(self, centerOnParent=False)
+
+        icon = QWidget().style().standardIcon(QStyle.SP_MessageBoxCritical)
+        pixmap = icon.pixmap(QSize(64, 64))
+        self._failed_icon = QLabel()
+        self._failed_icon.setPixmap(pixmap)
+        self._failed_icon.hide()
+
+        self._layout.addWidget(self._spinner, 1, 1)
+        self._layout.addWidget(self._failed_icon, 1, 1)
+        self._layout.addWidget(self._label, 2, 0, 1, 3)
+
+        self._layout.setRowStretch(0, 100)
+        self._layout.setRowStretch(3, 100)
+        self._layout.setColumnStretch(0, 100)
+        self._layout.setColumnStretch(2, 100)
+
+    def set_label(self, text):
+        """Set the text that is displayed next to the spinner."""
+        self._label.setText(text)
+
+    def show_warning_icon(self):
+        """Stop and hide the spinner and show a critical icon instead."""
+        self._spinner.hide()
+        self._spinner.stop()
+        self._failed_icon.show()
+
+    def show(self):
+        """Override Qt show to start waiting spinner."""
+        self._spinner.show()
+        self._failed_icon.hide()
+        super(WaitSpinnerBar, self).show()
+        self._spinner.start()
+
+    def hide(self):
+        """Override Qt hide to stop waiting spinner."""
+        super(WaitSpinnerBar, self).hide()
+        self._spinner.stop()
 
 
 class WeatherStationBrowser(QWidget):
@@ -51,6 +102,9 @@ class WeatherStationBrowser(QWidget):
         self.stn_finder_worker.moveToThread(self.stn_finder_thread)
 
         self.station_table = WeatherSationView()
+        self.waitspinnerbar = WaitSpinnerBar()
+        self.stn_finder_worker.sig_progress_msg.connect(
+                self.waitspinnerbar.set_label)
         self.__initUI__()
 
         self.start_load_database()
@@ -260,6 +314,7 @@ class WeatherStationBrowser(QWidget):
         main_layout.addWidget(left_panel, 0, 0)
         main_layout.addWidget(vLine1, 0, 1)
         main_layout.addWidget(self.station_table, 0, 2)
+        main_layout.addWidget(self.waitspinnerbar, 0, 2)
 
         main_layout.setContentsMargins(10, 10, 10, 10)  # (L,T,R,B)
         main_layout.setRowStretch(0, 100)
@@ -349,6 +404,7 @@ class WeatherStationBrowser(QWidget):
 
     def start_load_database(self):
         """Start the process of loading the climate station database."""
+        self.waitspinnerbar.show()
         # Start the downloading process.
         self.stn_finder_thread.started.connect(
                 self.stn_finder_worker.load_database)
@@ -370,6 +426,12 @@ class WeatherStationBrowser(QWidget):
                 break
         # Force an update of the GUI.
         self.proximity_grpbox_toggled()
+        if self.stn_finder_worker.data is None:
+            self.waitspinnerbar.show_warning_icon()
+        else:
+            self.waitspinnerbar.hide()
+
+    # ---- GUI handlers
 
     def show(self):
         super(WeatherStationBrowser, self).show()

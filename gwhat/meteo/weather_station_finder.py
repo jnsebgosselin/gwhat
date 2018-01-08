@@ -116,6 +116,7 @@ def read_stationlist_from_tor():
 class WeatherStationFinder(QObject):
 
     DATABASE_FILEPATH = 'climate_station_database.npy'
+    sig_progress_msg = QSignal(str)
     sig_load_database_finished = QSignal(bool)
 
     def __init__(self, filelist=None, *args, **kwargs):
@@ -135,6 +136,8 @@ class WeatherStationFinder(QObject):
         from ECCC Tor ftp server.
         """
         if os.path.exists(self.DATABASE_FILEPATH):
+            self.sig_progress_msg.emit(
+                    "Loading the climate station database from file.")
             ts = time.time()
             self._data = np.load(self.DATABASE_FILEPATH).item()
             te = time.time()
@@ -150,18 +153,23 @@ class WeatherStationFinder(QObject):
         """
         print("Fetching station list from ECCC Tor ftp server...")
         ts = time.time()
+        self._data = None
         failed_fetch_try = 0
         while True:
+            self.sig_progress_msg.emit("Fetching the climate station database"
+                                       " from the ECCC server...")
             self._data = read_stationlist_from_tor()
             if self._data is None:
                 failed_fetch_try += 1
                 if failed_fetch_try <= MAX_FAILED_FETCH_TRY:
-                    print("Failed to fetch the database from the ECC server.")
-                    print("Trying another time (%d/%d)."
+                    print("Failed to fetch the database from "
+                          " the ECCC server (%d/%d)."
                           % (failed_fetch_try, MAX_FAILED_FETCH_TRY))
                     time.sleep(3)
                 else:
-                    print("Failed to fetch the database from the ECC server.")
+                    msg = "Failed to fetch the database from the ECCC server."
+                    print(msg)
+                    self.sig_progress_msg.emit(msg)
                     break
             else:
                 np.save(self.DATABASE_FILEPATH, self._data)
