@@ -282,7 +282,7 @@ window and by clicking on the :guilabel:`OK` or :guilabel:`Apply` button.
     Presentation of the :guilabel:`Colors Palette Setup` and identification on
     the hydrograph of the components for which the color can be changed.
 
-.. |icon_save| image:: img/icon_save.*
+.. |icon_save| image:: img/icon/save.*
                       :width: 1em
                       :height: 1em
                       :alt: folder

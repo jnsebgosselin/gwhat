@@ -1,6 +1,8 @@
 Getting Started
 ==========================================================
 
+.. _sec_installing_on_windows:
+
 Installing GWHAT on a Windows system
 ----------------------------------------------------------
 

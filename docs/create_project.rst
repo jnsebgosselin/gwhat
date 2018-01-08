@@ -156,7 +156,7 @@ Project Files
 
 
 
-.. |icon_new_project| image:: img/icon_new_project.*
+.. |icon_new_project| image:: img/icon/new_project.*
                       :width: 1em
                       :height: 1em
                       :alt: stop
