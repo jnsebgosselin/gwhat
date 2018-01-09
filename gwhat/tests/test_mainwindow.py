@@ -45,6 +45,12 @@ def mainwindow_bot(qtbot):
 
 @pytest.mark.run(order=11)
 def test_mainwindow_init(qtbot, mocker):
+    """
+    Tests that the MainWindow opens correctly and throws an error message
+    since the project Example does not exist. Asserts that GWHAT throws an
+    error message correctly when the project file is not valide. Finally,
+    tests that a valid project is loaded correctly.
+    """
     # Since the project Example does not exist, we need to mock QMessageBox
     # to close the warning message that will appears on startup.
     mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
@@ -75,6 +81,10 @@ def test_mainwindow_init(qtbot, mocker):
 
 @pytest.mark.run(order=11)
 def test_restart_mainwindow(qtbot, mocker):
+    """
+    Tests that the last opened valid project in the last session is loaded
+    correctly from the config file.
+    """
     mainwindow = MainWindow()
     qtbot.addWidget(mainwindow)
 
