@@ -14,6 +14,7 @@ import sys
 import os
 import csv
 from time import strftime
+from datetime import datetime
 
 # ---- Third party imports
 
@@ -25,14 +26,15 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QFileDialog, QApplication, QTableWidget,
-                             QTableWidgetItem)
+                             QTableWidgetItem, QLabel, QHBoxLayout)
 
 # ---- Local imports
 
 from gwhat.colors2 import ColorsReader
 from gwhat.common import StyleDB, QToolButtonNormal
 from gwhat.common import icons
-from gwhat.common.widgets import DialogWindow
+from gwhat.common.widgets import DialogWindow, VSep
+from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat import __namever__
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
@@ -133,25 +135,32 @@ class WeatherViewer(DialogWindow):
         btn_showStats.setToolTip('Show monthly weather normals data table.')
         btn_showStats.clicked.connect(self.show_monthly_grid)
 
-        # Layout :
+        # Instantiate and define a layout for the year range widget :
 
-        subgrid_toolbar = QGridLayout()
+        self.year_rng = RangeSpinBoxes()
+        self.year_rng.set_range(1800, datetime.now().year)
+
+        qgrid = QHBoxLayout(self.year_rng)
+        qgrid.setContentsMargins(0, 0, 0, 0)
+        qgrid.addWidget(QLabel('Year Range :'))
+        qgrid.addWidget(self.year_rng.spb_lower)
+        qgrid.addWidget(QLabel('to'))
+        qgrid.addWidget(self.year_rng.spb_upper)
+
+        # Generate the layout of the toolbar :
+
         toolbar_widget = QWidget()
+        subgrid_toolbar = QGridLayout(toolbar_widget)
 
-        col = 0
-        row = 0
-        subgrid_toolbar.addWidget(btn_save, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(self.btn_export, row, col)
-        col += 1
-        subgrid_toolbar.addWidget(btn_showStats, row, col)
-        col += 1
-        subgrid_toolbar.setColumnStretch(col, 4)
+        buttons = [btn_save, self.btn_export, btn_showStats, VSep(),
+                   self.year_rng]
+        for col, btn in enumerate(buttons):
+            subgrid_toolbar.addWidget(btn, 0, col)
 
+        subgrid_toolbar.setColumnStretch(subgrid_toolbar.columnCount(), 4)
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
 
-        toolbar_widget.setLayout(subgrid_toolbar)
         # ---- MAIN GRID
 
         # Initialize the widgets :
