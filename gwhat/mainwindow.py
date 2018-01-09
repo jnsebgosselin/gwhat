@@ -50,6 +50,7 @@ splash.showMessage("Starting %s." % __namever__)
 import csv
 from time import ctime
 from os import makedirs, path
+import os.path as osp
 
 from multiprocessing import freeze_support
 import tkinter
@@ -74,38 +75,41 @@ from gwhat.common import icons
 freeze_support()
 
 
-class WHAT(QMainWindow):
+class MainWindow(QMainWindow):
 
     def __init__(self, parent=None):
-        super(WHAT, self).__init__(parent)
+        super(MainWindow, self).__init__(parent)
 
         self.setWindowTitle(__namever__)
         self.setWindowIcon(icons.get_icon('master'))
 
         if platform.system() == 'Windows':
             import ctypes
-            myappid = 'what_application'  # arbitrary string
+            myappid = 'gwhat_application'  # arbitrary string
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 myappid)
 
-        # ---------------------------------------------------- Preferences ----
+        # Setup preferences :
 
         self.whatPref = WHATPref(self)
         self.projectfile = self.whatPref.projectfile
-        self.projectdir = path.dirname(self.projectfile)
+        self.projectdir = osp.dirname(self.projectfile)
 
-        # ------------------------------------------------- Projet Manager ----
+        # Setup the project and data managers :
 
         splash.showMessage("Initializing project and data managers.")
         self.pmanager = ProjetManager(self)
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
 
-        # ----------------------------------------------------------- Init ----
+        # Generate the GUI :
 
         self.__initUI__()
+        splash.finish(self)
+        self.showMaximized()
 
-        splash.showMessage("Loading last opened project.")
+        # Load the last opened project :
+
         result = self.pmanager.load_project(self.projectfile)
         if result is False:
             self.tab_dwnld_data.setEnabled(False)
@@ -113,39 +117,30 @@ class WHAT(QMainWindow):
             self.tab_hydrograph.setEnabled(False)
             self.tab_hydrocalc.setEnabled(False)
 
-            msgtxt = '''
-                     Unable to read the project file.<br><br>
-                     "%s" does not exist.<br><br> Please open an existing
-                     project or create a new one.
-                     ''' % self.projectfile
-
-            btn = QMessageBox.Ok
-            QMessageBox.warning(self, 'Warning', msgtxt, btn)
-
     def __initUI__(self):
 
-        # ----------------------------------------------------- TAB WIDGET ----
+        # ---- TAB WIDGET
 
-        # ---- download weather data ----
+        # download weather data :
 
         splash.showMessage("Initializing download weather data.")
         self.tab_dwnld_data = DwnldWeatherWidget(self)
         self.tab_dwnld_data.set_workdir(self.projectdir)
 
-        # ---- gapfill weather data ----
+        # gapfill weather data :
 
         splash.showMessage("Initializing gapfill weather data.")
         self.tab_fill_weather_data = GapFillWeatherGUI(self)
         self.tab_fill_weather_data.set_workdir(self.projectdir)
 
-        # ---- hydrograph ----
+        # hydrograph :
 
         splash.showMessage("Initializing plot hydrograph.")
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
         splash.showMessage("Initializing analyse hydrograph.")
         self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
 
-        # ---- TABS ASSEMBLY ----
+        # ---- TABS ASSEMBLY
 
         self.tab_widget = TabWidget()
         self.tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
@@ -156,7 +151,7 @@ class WHAT(QMainWindow):
 
         self.tab_widget.currentChanged.connect(self.sync_datamanagers)
 
-        # --------------------------------------------------- Main Console ----
+        # ---- Main Console
 
         splash.showMessage("Initializing main window.")
         self.main_console = QTextEdit()
@@ -179,7 +174,7 @@ class WHAT(QMainWindow):
                            ' jean-sebastien.gosselin@ete.inrs.ca.'
                            '</font>')
 
-        # ---- Signal Piping ----
+        # ---- Signal Piping
 
         issuer = self.tab_dwnld_data
         issuer.ConsoleSignal.connect(self.write2console)
@@ -190,7 +185,7 @@ class WHAT(QMainWindow):
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)
 
-        # ------------------------------------------------ Splitter Widget ----
+        # ---- Splitter Widget
 
         splitter = QSplitter(self)
         splitter.setOrientation(Qt.Vertical)
@@ -203,7 +198,7 @@ class WHAT(QMainWindow):
         # Forces initially the main_console to its minimal height:
         splitter.setSizes([100, 1])
 
-        # ------------------------------------------------------ Main Grid ----
+        # ---- Main Grid
 
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
@@ -216,24 +211,13 @@ class WHAT(QMainWindow):
         mainGrid.addWidget(
                 self.tab_hydrocalc.rechg_setup_win.progressbar, 3, 0)
 
-    # =========================================================================
-
-    def show(self):
-        super(WHAT, self).show()
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
-
-    # =========================================================================
-
     def write2console(self, text):
-        # This function is the bottle neck through which all messages writen
-        # in the console must go through.
+        """
+        This function is the bottle neck through which all messages writen
+        in the console must go through.
+        """
         textime = '<font color=black>[%s] </font>' % ctime()[4:-8]
         self.main_console.append(textime + text)
-
-    # =========================================================================
 
     def sync_datamanagers(self):
         """
@@ -247,6 +231,7 @@ class WHAT(QMainWindow):
             self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
 
     def new_project_loaded(self):
+        """Handles when a new project is loaded in the project manager."""
 
         filename = self.pmanager.projet.filename
         dirname = os.path.dirname(filename)
@@ -263,24 +248,28 @@ class WHAT(QMainWindow):
         self.tab_hydrograph.setEnabled(True)
         self.tab_hydrocalc.setEnabled(True)
 
-        # Update child widgets :
+        # Update the child widgets :
 
-        # ---- dwnld_weather_data ----
-
+        # dwnld_weather_data
         lat = self.pmanager.projet.lat
         lon = self.pmanager.projet.lon
-
         self.tab_dwnld_data.set_workdir(dirname)
         self.tab_dwnld_data.set_station_browser_latlon((lat, lon))
 
-        # ---- fill_weather_data ----
-
+        # fill_weather_data
         self.tab_fill_weather_data.set_workdir(dirname)
         self.tab_fill_weather_data.load_data_dir_content()
 
-    # =========================================================================
+    def show(self):
+        """Qt method override to center the app on the screen."""
+        super(MainWindow, self).show()
+        qr = self.frameGeometry()
+        cp = QDesktopWidget().availableGeometry().center()
+        qr.moveCenter(cp)
+        self.move(qr.topLeft())
 
     def closeEvent(self, event):
+        """Qt method override to close the project before close the app."""
         print('Closing projet')
         self.pmanager.close_projet()
         print('Closing GWHAT')
@@ -363,9 +352,7 @@ if __name__ == '__main__':
     logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,
                         format='%(asctime)s - %(levelname)s:%(message)s')
     try:
-        main = WHAT()
-        main.showMaximized()
-        splash.finish(main)
+        main = MainWindow()
         sys.exit(app.exec_())
     except Exception as e:
         logging.exception(str(e))

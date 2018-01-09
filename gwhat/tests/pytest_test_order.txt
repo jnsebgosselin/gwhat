@@ -8,6 +8,7 @@
  8 - test_hydroprint.py
  9 - test_hydrocalc.py
 10 - test_brf_mod.py
+11 - test_mainwindow.py
 
 test_tabwidget.py
 test_read_waterlvl.py

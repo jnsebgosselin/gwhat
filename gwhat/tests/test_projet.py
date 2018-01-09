@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Aug  4 01:50:50 2017
-@author: jsgosselin
-"""
+
+# Copyright © 2014-2018 GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 import pytest
 
@@ -70,6 +72,8 @@ def test_create_new_projet(projet_manager_bot, mocker):
     assert manager.project_display.text() == data_input['name']
     assert os.path.exists(projetpath)
 
+    manager.close_projet()
+
 
 @pytest.mark.run(order=1)
 def test_load_projet(projet_manager_bot, mocker):
@@ -97,6 +101,8 @@ def test_load_projet(projet_manager_bot, mocker):
     assert manager.projet.author == data_input['name']
     assert manager.projet.lat == data_input['latitude']
     assert manager.projet.lon == data_input['longitude']
+
+    manager.close_projet()
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ from __future__ import division, unicode_literals
 # ---- Standard library imports
 
 import os
+import os.path as osp
 from datetime import datetime
 
 # ---- Third party imports
@@ -89,14 +90,32 @@ class ProjetManager(QWidget):
             self.load_project(filename)
 
     def load_project(self, filename):
+        if not osp.exists(filename):
+            self.__projet = None
+            msg = """
+                  <p>
+                    <b>Failed to load the project.</b><br><br>
+                    The project file<br>%s<br>
+                    does not exist.<br><br>
+                    Please open an existing project or create a new one.
+                  </p>
+                """ % osp.abspath(filename)
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+            return False
+
         try:
             self.__projet = projet = ProjetReader(filename)
-        except:
+        except Exception:
             self.__projet = None
-            msg = ('Project loading failed. <i>%s</i> is not a valid ' +
-                   'WHAT project file.') % os.path.basename(filename)
-            btn = QMessageBox.Ok
-            QMessageBox.warning(self, 'Warning', msg, btn)
+            msg = """
+                  <p>
+                    <b>Failed to load the project.</b><br><br>
+                    The project file<br>%s<br>
+                    is not valid.<br><br>
+                    Please open a valid project or create a new one.
+                  </p>
+                """ % osp.abspath(filename)
+            QMessageBox.warning(self, 'Warning', msg,  QMessageBox.Ok)
             return False
         else:
             wldir = os.path.join(projet.dirname, "Water Levels")
@@ -104,18 +123,16 @@ class ProjetManager(QWidget):
             self.project_display.setText(projet.name)
             self.project_display.adjustSize()
             self.currentProjetChanged.emit(projet)
-
             return True
 
     def close_projet(self):
-        self.__projet.close_projet()
+        """Closes the currently opened hdf5 project file."""
+        if self.__projet is not None:
+            self.__projet.close_projet()
 
     def show_newproject_dialog(self):
         self.new_projet_dialog.reset_UI()
         self.new_projet_dialog.show()
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 class NewProject(QDialog):
