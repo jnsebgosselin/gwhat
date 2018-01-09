@@ -79,13 +79,13 @@ class LabelDB(object):
                                 "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
 
 
-class WeatherAvgGraph(DialogWindow):
+class WeatherViewer(DialogWindow):
     """
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
     def __init__(self, parent=None):
-        super(WeatherAvgGraph, self).__init__(parent)
+        super(WeatherViewer, self).__init__(parent)
 
         self.wxdset = None
 
