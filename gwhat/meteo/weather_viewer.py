@@ -95,16 +95,14 @@ class WeatherViewer(DialogWindow):
 
         self.__initUI__()
 
-    # =========================================================================
-
     def __initUI__(self):
 
         self.setWindowTitle('Weather Averages')
         self.setWindowIcon(icons.get_icon('master'))
 
-        # ---------------------------------------------------- TOOLBAR ----
+        # ---- TOOLBAR
 
-        # Widgets :
+        # Initialize the widgets :
 
         menu_save = QMenu()
         menu_save.addAction('Save normals graph as...', self.save_graph)
@@ -154,16 +152,15 @@ class WeatherViewer(DialogWindow):
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
 
         toolbar_widget.setLayout(subgrid_toolbar)
+        # ---- MAIN GRID
 
-        # -------------------------------------------------- MAIN GRID ----
-
-        # ---- widgets ----
+        # Initialize the widgets :
 
         self.fig_weather_normals = FigWeatherNormals()
         self.grid_weather_normals = GridWeatherNormals()
         self.grid_weather_normals.hide()
 
-        # ---- layout ----
+        # Generate the layout :
 
         mainGrid = QGridLayout()
 
@@ -970,7 +967,7 @@ if __name__ == '__main__':
               "FARNHAM (7022320)_2005-2010.out")
     wxdset = WXDataFrame(fmeteo)
 
-    w = WeatherAvgGraph()
+    w = WeatherViewer()
     w.save_fig_dir = os.getcwd()
 
     w.set_lang('English')

@@ -6,11 +6,11 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# ---- Imports: standard libraries
+# ---- Imports: Standard Libraries
 
 import sys
 
-# ---- Imports: third parties
+# ---- Imports: Third Parties
 
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import QSize, Qt
@@ -102,7 +102,6 @@ class DropDownList(QListWidget):
             self.hide()
 
 
-if __name__ == '__main__':                                   # pragma: no cover
     import sys
 
     app = QApplication(sys.argv)
