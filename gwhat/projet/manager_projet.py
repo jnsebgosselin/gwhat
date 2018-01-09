@@ -104,7 +104,6 @@ class ProjetManager(QWidget):
             self.project_display.setText(projet.name)
             self.project_display.adjustSize()
             self.currentProjetChanged.emit(projet)
-
             return True
 
     def close_projet(self):
@@ -113,9 +112,6 @@ class ProjetManager(QWidget):
     def show_newproject_dialog(self):
         self.new_projet_dialog.reset_UI()
         self.new_projet_dialog.show()
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 class NewProject(QDialog):
