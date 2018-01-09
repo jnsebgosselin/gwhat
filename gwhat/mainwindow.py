@@ -116,15 +116,6 @@ class MainWindow(QMainWindow):
             self.tab_hydrograph.setEnabled(False)
             self.tab_hydrocalc.setEnabled(False)
 
-            msgtxt = '''
-                     Unable to read the project file.<br><br>
-                     "%s" does not exist.<br><br> Please open an existing
-                     project or create a new one.
-                     ''' % self.projectfile
-
-            btn = QMessageBox.Ok
-            QMessageBox.warning(self, 'Warning', msgtxt, btn)
-
     def __initUI__(self):
 
         # ---- TAB WIDGET
