@@ -13,8 +13,79 @@ import sys
 # ---- Imports: Third Parties
 
 from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QApplication, QToolButton, QListWidget, QStyle
+from PyQt5.QtWidgets import (QApplication, QToolButton, QListWidget, QStyle,
+                             QSpinBox, QWidget, QAbstractSpinBox)
+
+
+class RangeSpinBoxes(QWidget):
+    """
+    Consists of two QSpinBox that are linked togheter so that one represent a
+    lower boundary and the other one the upper boundary of a range.
+    """
+    sig_range_changed = QSignal(tuple)
+
+    def __init__(self, min_value=0, max_value=0, orientation=Qt.Horizontal,
+                 parent=None):
+        super(RangeSpinBoxes, self).__init__(parent)
+        self.spb_lower = QSpinBox()
+        self.spb_lower.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.spb_lower.setAlignment(Qt.AlignCenter)
+        self.spb_lower.setRange(0, 9999)
+        self.spb_lower.setKeyboardTracking(False)
+
+        self.spb_upper = QSpinBox()
+        self.spb_upper.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.spb_upper.setAlignment(Qt.AlignCenter)
+        self.spb_upper.setRange(0, 9999)
+        self.spb_upper.setKeyboardTracking(False)
+
+        self.spb_lower.valueChanged.connect(self.constain_bounds_to_minmax)
+        self.spb_upper.valueChanged.connect(self.constain_bounds_to_minmax)
+
+        self.set_range(1000, 9999)
+
+    @property
+    def lower_bound(self):
+        return self.spb_lower.value()
+
+    @property
+    def upper_bound(self):
+        return self.spb_upper.value()
+
+    def set_range(self, min_value, max_value):
+        """Set the min max values of the range for both spin boxes."""
+        self.min_value = min_value
+        self.max_value = max_value
+        self.spb_lower.setValue(min_value)
+        self.spb_upper.setValue(max_value)
+
+    @QSlot(int)
+    def constain_bounds_to_minmax(self, new_value):
+        """
+        Makes sure that the new value is within the min and max values that
+        were set for the range. Also makes sure that the
+        """
+        is_range_changed = False
+        corr_value = min(max(new_value, self.min_value), self.max_value)
+        if corr_value != new_value:
+            is_range_changed = True
+            self.sender().blockSignals(True)
+            self.sender().setValue(corr_value)
+            self.sender().blockSignals(False)
+        if corr_value > self.spb_upper.value():
+            is_range_changed = True
+            self.spb_upper.blockSignals(True)
+            self.spb_upper.setValue(corr_value)
+            self.spb_upper.blockSignals(False)
+        if corr_value < self.spb_lower.value():
+            is_range_changed = True
+            self.spb_lower.blockSignals(True)
+            self.spb_lower.setValue(corr_value)
+            self.spb_lower.blockSignals(False)
+        if is_range_changed is True:
+            self.sig_range_changed.emit((self.lower_bound, self.upper_bound))
 
 
 class DropDownButton(QToolButton):
@@ -102,6 +173,7 @@ class DropDownList(QListWidget):
             self.hide()
 
 
+if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
