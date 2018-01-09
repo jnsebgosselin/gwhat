@@ -105,9 +105,10 @@ class MainWindow(QMainWindow):
         # Generate the GUI :
 
         self.__initUI__()
+        self.showMaximized()
+
         # Load the last opened project :
 
-        splash.showMessage("Loading last opened project.")
         result = self.pmanager.load_project(self.projectfile)
         if result is False:
             self.tab_dwnld_data.setEnabled(False)
@@ -360,7 +361,6 @@ if __name__ == '__main__':
                         format='%(asctime)s - %(levelname)s:%(message)s')
     try:
         main = MainWindow()
-        main.showMaximized()
         splash.finish(main)
         sys.exit(app.exec_())
     except Exception as e:
