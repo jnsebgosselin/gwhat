@@ -518,10 +518,18 @@ def fill_nan(time, data, name='data', fill_mode='zeros'):
 # ----- Base functions: monthly downscaling
 
 def calc_monthly_sum(yy_dly, mm_dly, x_dly):
+    """
+    Calcul monthly cumulative values from daily values, where yy_dly are the
+    years, mm_dly are the months (1 to 12), and x_dly are the daily values.
+    """
     return calc_monthly(yy_dly, mm_dly, x_dly, np.sum)
 
 
 def calc_monthly_mean(yy_dly, mm_dly, x_dly):
+    """
+    Calcul monthly mean values from daily values, where yy_dly are the
+    years, mm_dly are the months (1 to 12), and x_dly are the daily values.
+    """
     return calc_monthly(yy_dly, mm_dly, x_dly, np.mean)
 
 
@@ -558,10 +566,18 @@ def calcul_monthly_normals(mm_mly, x_mly):
 # ----- Base functions: yearly downscaling
 
 def calc_yearly_sum(yy_dly, x_dly):
+    """
+    Calcul yearly cumulative values from daily values, where yy_dly are the
+    years and x_dly are the daily values.
+    """
     return calc_yearly(yy_dly, x_dly, np.sum)
 
 
 def calc_yearly_mean(yy_dly, x_dly):
+    """
+    Calcul yearly mean values from daily values, where yy_dly are the years
+    and x_dly are the daily values.
+    """
     return calc_yearly(yy_dly, x_dly, np.mean)
 
 
