@@ -204,11 +204,10 @@ class WeatherViewer(DialogWindow):
     # =========================================================================
 
     def set_lang(self, lang):
+        """Sets the language of all the labels in the figure."""
         self.language = lang
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
-
-    # =========================================================================
 
     def generate_graph(self, wxdset):
         self.wxdset = wxdset
@@ -633,6 +632,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
     # ========================================================= Plot data =====
 
     def plot_monthly_normals(self, normals):
+        """Plot the normals on the figure."""
 
         self.normals = normals
 
@@ -960,7 +960,7 @@ class GridWeatherNormals(QTableWidget):
         self.resizeColumnsToContents()
 
 
-# ---- if __name__ == '__main__'
+# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     from gwhat.meteo.weather_reader import WXDataFrame

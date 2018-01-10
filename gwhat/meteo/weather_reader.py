@@ -87,13 +87,13 @@ class WXDataFrame(dict):
                            'Snow': None,
                            'PET': None}
 
-        # -------------------------------------------- Import primary data ----
+        # ---- Import primary data
 
         data = read_weather_datafile(filename)
         for key in data.keys():
             self[key] = data[key]
 
-        # ------------------------------------------------- Import missing ----
+        # ---- Import missing
 
         finfo = filename[:-3] + 'log'
         if os.path.exists(finfo):
@@ -102,7 +102,7 @@ class WXDataFrame(dict):
             self['Missing Tavg'] = load_weather_log(finfo, 'Mean Temp (deg C)')
             self['Missing Ptot'] = load_weather_log(finfo, 'Total Precip (mm)')
 
-        # ---------------------------------------------------- format data ----
+        # ---- format data
 
         print('Make daily time series continuous.')
 
@@ -125,7 +125,7 @@ class WXDataFrame(dict):
         for vbr in ['Ptot', 'Rain', 'Snow']:
             self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'zeros')
 
-        # ---------------------------------------------- monthly & normals ----
+        # ---- Monthly & Normals
 
         # Temperature based variables:
 
@@ -151,9 +151,9 @@ class WXDataFrame(dict):
 
         self['normals']['Ptot'] = calcul_monthly_normals(x[1], x[2])
 
-        # ------------------------------------------------- secondary vrbs ----
+        # ---- Secondary Variables
 
-        # ---- Rain ----
+        # Rain
 
         if self['Rain'] is None:
             self['Rain'] = calcul_rain_from_ptot(
@@ -168,7 +168,7 @@ class WXDataFrame(dict):
 
         self['normals']['Rain'] = calcul_monthly_normals(x[1], x[2])
 
-        # ---- Snow ----
+        # Snow
 
         if self['Snow'] is None:
             self['Snow'] = self['Ptot'] - self['Rain']
@@ -182,7 +182,7 @@ class WXDataFrame(dict):
 
         self['normals']['Snow'] = calcul_monthly_normals(x[1], x[2])
 
-        # ---- Potential Evapotranspiration ----
+        # Potential Evapotranspiration
 
         if self['PET'] is None:
             dates = [self['Year'], self['Month'], self['Day']]
