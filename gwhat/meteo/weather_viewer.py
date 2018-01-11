@@ -8,7 +8,7 @@
 
 from __future__ import division, unicode_literals
 
-# ---- Standard library imports
+# ---- Imports: Standard Libraries
 
 import sys
 import os
@@ -16,7 +16,7 @@ import csv
 from time import strftime
 from datetime import datetime
 
-# ---- Third party imports
+# ---- Imports: Third Parties
 
 import xlsxwriter
 import numpy as np
@@ -28,7 +28,7 @@ from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QFileDialog, QApplication, QTableWidget,
                              QTableWidgetItem, QLabel, QHBoxLayout)
 
-# ---- Local imports
+# ---- Imports: Local
 
 from gwhat.colors2 import ColorsReader
 from gwhat.common import StyleDB, QToolButtonNormal
@@ -201,8 +201,6 @@ class WeatherViewer(DialogWindow):
 #            self.setFixedWidth(self.size().width()-75)
             self.sender().setAutoRaise(True)
 
-    # =========================================================================
-
     def set_lang(self, lang):
         """Sets the language of all the labels in the figure."""
         self.language = lang
@@ -218,7 +216,6 @@ class WeatherViewer(DialogWindow):
 
         self.grid_weather_normals.populate_table(wxdset['normals'])
 
-    # ---------------------------------------------------------------------
 
     def save_graph(self):
         yrmin = np.min(self.wxdset['Year'])
@@ -398,9 +395,6 @@ class WeatherViewer(DialogWindow):
             f.close()
 
         QApplication.restoreOverrideCursor()
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 class FigWeatherNormals(FigureCanvasQTAgg):
@@ -636,7 +630,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         self.normals = normals
 
-        # ------------------------------------------- assign local variables --
+        # Assign local variables :
 
         Tmax_norm = normals['Tmax']
         Tmin_norm = normals['Tmin']
@@ -645,18 +639,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         Rain_norm = normals['Rain']
         Snow_norm = Ptot_norm - Rain_norm
 
-        print('Tmax Yearly Avg. = %0.1f' % np.mean(Tmax_norm))
-        print('Tmin Yearly Avg. = %0.1f' % np.mean(Tmin_norm))
-        print('Tavg Yearly Avg. = %0.1f' % np.mean(Tavg_norm))
-        print('Ptot Yearly Acg. = %0.1f' % np.sum(Ptot_norm))
+        # Define the range of the axis :
 
-        # ------------------------------------------------ DEFINE AXIS RANGE --
-
-        if np.sum(Ptot_norm) < 500:
-            Yscale0 = 10  # Precipitation (mm)
-        else:
-            Yscale0 = 20
-
+        Yscale0 = 10 if np.sum(Ptot_norm) < 500 else 20  # Precipitation (mm)
         Yscale1 = 5  # Temperature (deg C)
 
         SCA0 = np.arange(0, 10000, Yscale0)
@@ -701,7 +686,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             Ymin1 = -20
         # ----
 
-        # ------------------------------------------------- YTICKS FORMATING --
+        # Define the fomatting of the yticks :
 
         ax0 = self.figure.axes[1]
         ax1 = self.figure.axes[2]
@@ -723,7 +708,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1/5.)
         ax1.set_yticks(yticks1_minor, minor=True)
 
-        # --------------------------------------------------- SET AXIS RANGE --
+        # Set the range of the axis :
 
         ax0.set_ylim(Ymin0, Ymax0)
         ax1.set_ylim(Ymin1, Ymax1)
@@ -768,47 +753,38 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax1.set_ylabel(labelDB.Tlabel, va='bottom', fontsize=16)
         ax1.yaxis.set_label_coords(-0.09, 0.5)
 
-    # =========================================================================
+    # ---- Plot the Data
 
     def plot_precip(self, PNORM, SNORM):
 
-        # ---- define vertices manually ----
+        # Define the vertices manually :
 
         Xmid = np.arange(0.5, 12.5, 1)
         n = 0.5   # Controls the width of the bins
-        f = 0.65  # Controls the spacing between the bins
+        f = 0.75  # Controls the spacing between the bins
 
-        Xpos = np.vstack((Xmid - n * f,
-                          Xmid - n * f,
-                          Xmid + n * f,
-                          Xmid + n * f)).transpose().flatten()
+        Xpos = np.vstack((Xmid - n * f, Xmid - n * f,
+                          Xmid + n * f, Xmid + n * f)).transpose().flatten()
 
-        Ptot = np.vstack((PNORM * 0,
-                          PNORM,
-                          PNORM,
-                          PNORM * 0)).transpose().flatten()
+        Ptot = np.vstack((PNORM * 0, PNORM,
+                          PNORM, PNORM * 0)).transpose().flatten()
 
-        Snow = np.vstack((SNORM * 0,
-                          SNORM,
-                          SNORM,
-                          SNORM * 0)).transpose().flatten()
+        Snow = np.vstack((SNORM * 0, SNORM,
+                          SNORM, SNORM * 0)).transpose().flatten()
 
-        # -- plot data --
+        # Plot the data :
 
         ax = self.figure.axes[1]
-
         for collection in reversed(ax.collections):
             collection.remove()
 
         colors = ColorsReader()
         colors.load_colors_db()
 
-        ax.fill_between(Xpos, 0., Ptot, edgecolor='none',
+        ax.fill_between(Xpos, 0, Ptot, edgecolor='none',
                         color=colors.rgb['Rain'])
-        ax.fill_between(Xpos, 0., Snow, edgecolor='none',
+        ax.fill_between(Xpos, 0, Snow, edgecolor='none',
                         color=colors.rgb['Snow'])
-
-    # ---------------------------------------------------------------------
 
     def plot_air_temp(self, Tmax_norm, Tavg_norm, Tmin_norm):
         for i, Tnorm in enumerate([Tmax_norm, Tavg_norm, Tmin_norm]):
@@ -817,31 +793,23 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             self.figure.axes[2].lines[i].set_ydata(T)
         self.figure.axes[2].lines[3].set_ydata(Tavg_norm)
 
-    # =========================================================================
-
     def update_yearly_avg(self):
 
         Tavg_norm = self.normals['Tavg']
         Ptot_norm = self.normals['Ptot']
-
         ax = self.figure.axes[0]
 
-        # ---- update position ----
+        # Update the position of the labels :
 
         bbox = ax.texts[0].get_window_extent(self.get_renderer())
         bbox = bbox.transformed(ax.transAxes.inverted())
-
         ax.texts[1].set_position((0, bbox.y0))
 
-        # ---- update labels ----
+        # Update the text of the labels :
 
         labelDB = LabelDB(self.lang)
-
         ax.texts[0].set_text(labelDB.Tyrly % np.mean(Tavg_norm))
         ax.texts[1].set_text(labelDB.Pyrly % np.sum(Ptot_norm))
-
-
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 
 
 class GridWeatherNormals(QTableWidget):
