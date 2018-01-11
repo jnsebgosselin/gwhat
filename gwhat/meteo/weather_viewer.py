@@ -12,6 +12,7 @@ from __future__ import division, unicode_literals
 
 import sys
 import os
+import os.path as osp
 import csv
 from time import strftime
 from datetime import datetime
@@ -37,6 +38,7 @@ from gwhat.common.widgets import DialogWindow, VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat import __namever__
 from gwhat.meteo.weather_reader import calcul_monthly_normals
+from gwhat.common.utils import save_content_to_excel, save_content_to_csv
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -91,6 +93,7 @@ class WeatherViewer(DialogWindow):
         super(WeatherViewer, self).__init__(parent)
 
         self.wxdset = None
+        self.normals = None
 
         self.save_fig_dir = os.getcwd()
         self.meteo_dir = os.getcwd()
@@ -139,7 +142,7 @@ class WeatherViewer(DialogWindow):
 
         self.year_rng = RangeSpinBoxes()
         self.year_rng.setRange(1800, datetime.now().year)
-        self.year_rng.sig_range_changed.connect(self.year_range_changed)
+        self.year_rng.sig_range_changed.connect(self.update_normals)
 
         qgrid = QHBoxLayout(self.year_rng)
         qgrid.setContentsMargins(0, 0, 0, 0)
@@ -217,19 +220,19 @@ class WeatherViewer(DialogWindow):
         self.setWindowTitle('Weather Averages for %s' % wxdset['Station Name'])
         self.year_rng.setRange(np.min(wxdset['monthly']['Year']),
                                np.max(wxdset['monthly']['Year']))
-        self.year_range_changed()
+        self.update_normals()
 
-    def year_range_changed(self):
+    def update_normals(self):
         """
         Forces a replot of the normals and an update of the table with the
         values calculated over the new range of years.
         """
-        normals = self.calcul_normals()
+        self.normals = self.calcul_normals()
         # Redraw the normals in the graph :
-        self.fig_weather_normals.plot_monthly_normals(normals)
+        self.fig_weather_normals.plot_monthly_normals(self.normals)
         self.fig_weather_normals.draw()
         # Update the values in the table :
-        self.grid_weather_normals.populate_table(normals)
+        self.grid_weather_normals.populate_table(self.normals)
 
     # ---- Normals
 
@@ -275,51 +278,49 @@ class WeatherViewer(DialogWindow):
             self.fig_weather_normals.figure.savefig(filename)
 
     def save_normals(self):
-        yrmin = np.min(self.wxdset['Year'])
-        yrmax = np.max(self.wxdset['Year'])
+        """
+        Save the montly and yearly normals in a file.
+        """
+        # Define a default name for the file :
+        yrmin = self.normals['Period'][0]
+        yrmax = self.normals['Period'][1]
         staname = self.wxdset['Station Name']
 
         defaultname = 'WeatherNormals_%s (%d-%d)' % (staname, yrmin, yrmax)
-        ddir = os.path.join(self.save_fig_dir, defaultname)
+        ddir = osp.join(self.save_fig_dir, defaultname)
 
+        # Open a dialog to get a save file name :
         dialog = QFileDialog()
         filename, ftype = dialog.getSaveFileName(
                 self, 'Save normals', ddir, '*.xlsx;;*.xls;;*.csv')
 
-        hheader = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
-                   'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']
+        if filename:
+            self.save_fig_dir = osp.dirname(filename)
 
-        vrbs = ['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET']
+            # Organise the content to save to file.
+            hheader = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
+                       'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']
 
-        lbls = ['Daily Tmin (\u00B0C)', 'Daily Tavg (\u00B0C)',
-                'Daily Tmax (\u00B0C)', 'Rain (mm)', 'Snow (mm)',
-                'Total Precip. (mm)', 'ETP (mm)']
+            vrbs = ['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET']
 
-        if ftype in ['*.xlsx', '*.xls']:
-            wb = xlsxwriter.Workbook(filename)
-            ws = wb.add_worksheet()
+            lbls = ['Daily Tmin (\u00B0C)', 'Daily Tavg (\u00B0C)',
+                    'Daily Tmax (\u00B0C)', 'Rain (mm)', 'Snow (mm)',
+                    'Total Precip. (mm)', 'ETP (mm)']
 
-            ws.write_row(0, 0, hheader)
-            for i, (vrb, lbl) in enumerate(zip(vrbs, lbls)):
-                ws.write(i+1, 0, lbl)
-                ws.write_row(i+1, 1, self.wxdset['normals'][vrb])
-                if vrb in ['Tmin', 'Tavg', 'Tmax']:
-                    ws.write(i+1, 13, np.mean(self.wxdset['normals'][vrb]))
-                else:
-                    ws.write(i+1, 13, np.sum(self.wxdset['normals'][vrb]))
-        elif ftype == '*.csv':
             fcontent = [hheader]
             for i, (vrb, lbl) in enumerate(zip(vrbs, lbls)):
                 fcontent.append([lbl])
-                fcontent[-1].extend(self.wxdset['normals'][vrb].tolist())
+                fcontent[-1].extend(self.normals[vrb].tolist())
                 if vrb in ['Tmin', 'Tavg', 'Tmax']:
-                    fcontent[-1].append(np.mean(self.wxdset['normals'][vrb]))
+                    fcontent[-1].append(np.mean(self.normals[vrb]))
                 else:
-                    fcontent[-1].append(np.sum(self.wxdset['normals'][vrb]))
+                    fcontent[-1].append(np.sum(self.normals[vrb]))
 
-            with open(filename, 'w', encoding='utf8')as f:
-                writer = csv.writer(f, delimiter=',', lineterminator='\n')
-                writer.writerows(fcontent)
+            # Save the content to file :
+            if ftype in ['*.xlsx', '*.xls']:
+                save_content_to_excel(filename, fcontent)
+            else:
+                save_content_to_csv(filename, fcontent)
 
     # ---- Export Time Series
 
