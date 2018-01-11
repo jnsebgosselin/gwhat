@@ -39,6 +39,20 @@ def calc_dist_from_coord(lat1, lon1, lat2, lon2):
     return r * c
 
 
+def save_content_to_file(fname, fcontent):
+    """
+    Smart function that checks the extension and save the content in the
+    appropriate file format.
+    """
+    root, ext = os.path.splitext(fname)
+    if ext in ['.xlsx', '.xls']:
+        save_content_to_excel(fname, fcontent)
+    elif ext == '.tsv':
+        save_content_to_csv(fname, fcontent, delimiter='\t')
+    else:
+        save_content_to_csv(fname, fcontent)
+
+
 def save_content_to_csv(fname, fcontent, mode='w', delimiter=',',
                         encoding='utf8'):
     """
