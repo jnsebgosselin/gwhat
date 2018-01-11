@@ -407,8 +407,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
     """
 
     def __init__(self, lang='English'):
-        self.__figlang = lang if lang in FigureLabels.LANGUAGES else 'English'
-        self.__figlabels = FigureLabels(self.__figlang)
+        lang = lang if lang.lower() in FigureLabels.LANGUAGES else 'English'
+        self.__figlang = lang
+        self.__figlabels = FigureLabels(lang)
         self.normals = None
 
         fw, fh = 8.5, 5.
@@ -419,7 +420,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         left_margin = 1/fw
         right_margin = 1/fw
-        bottom_margin = 0.85/fh
+        bottom_margin = 0.7/fh
         top_margin = 0.1/fh
 
         # ---- Yearly Avg Labels
@@ -575,7 +576,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
     def set_lang(self, lang):
         """Sets the language of the figure labels."""
-        lang = lang if lang in FigureLabels.LANGUAGES else 'English'
+        lang = lang if lang.lower() in FigureLabels.LANGUAGES else 'English'
         self.__figlabels = FigureLabels(lang)
         self.__figlang = lang
 
