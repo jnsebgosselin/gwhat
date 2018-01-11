@@ -78,8 +78,8 @@ class LabelDB(object):
 
             self.Tlabel = 'Températures moyennes mensuelles (°C)'
             self.Plabel = 'Précipitations totales mensuelles (mm)'
-            self.month_names = ["JAN", u"FÉV", "MAR", "AVR", "MAI", "JUN",
-                                "JUL", u"AOÛ", "SEP", "OCT", "NOV", u"DÉC"]
+            self.month_names = ["JAN", "FÉV", "MAR", "AVR", "MAI", "JUN",
+                                "JUL", "AOÛ", "SEP", "OCT", "NOV", "DÉC"]
 
 
 class WeatherViewer(DialogWindow):
@@ -99,7 +99,6 @@ class WeatherViewer(DialogWindow):
         self.__initUI__()
 
     def __initUI__(self):
-
         self.setWindowTitle('Weather Averages')
         self.setWindowIcon(icons.get_icon('master'))
 
@@ -182,14 +181,12 @@ class WeatherViewer(DialogWindow):
         row += 1
         mainGrid.addWidget(self.grid_weather_normals, row, 0)
 
-        mainGrid.setContentsMargins(10, 10, 10, 10)  # (L,T,R,B)
+        mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
         mainGrid.setSpacing(10)
         mainGrid.setRowStretch(row, 500)
         mainGrid.setColumnStretch(0, 500)
 
         self.setLayout(mainGrid)
-
-    # =========================================================================
 
     def show_monthly_grid(self):
         if self.grid_weather_normals.isHidden():
@@ -234,6 +231,8 @@ class WeatherViewer(DialogWindow):
         # Update the values in the table :
         self.grid_weather_normals.populate_table(normals)
 
+    # ---- Normals
+
     def calcul_normals(self):
         """
         Calcul the normal values of the weather dataset for the currently
@@ -274,8 +273,6 @@ class WeatherViewer(DialogWindow):
 
             self.save_fig_dir = os.path.dirname(filename)
             self.fig_weather_normals.figure.savefig(filename)
-
-    # =========================================================================
 
     def save_normals(self):
         yrmin = np.min(self.wxdset['Year'])
@@ -324,7 +321,7 @@ class WeatherViewer(DialogWindow):
                 writer = csv.writer(f, delimiter=',', lineterminator='\n')
                 writer.writerows(fcontent)
 
-    # ================================================= Export Time Series ====
+    # ---- Export Time Series
 
     def select_export_file(self):
         if self.sender() == self.btn_export.menu().actions()[0]:
@@ -347,8 +344,6 @@ class WeatherViewer(DialogWindow):
 
         if filename:
             self.export_series_tofile(filename, time_frame)
-
-    # ---------------------------------------------------------------------
 
     def export_series_tofile(self, filename, time_frame):
         if time_frame == 'daily':
