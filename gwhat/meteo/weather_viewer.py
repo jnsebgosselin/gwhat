@@ -41,47 +41,6 @@ from gwhat.common.utils import save_content_to_file
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
-class LabelDB(object):
-
-    def __init__(self, language):
-
-        # ---- Legend ----
-
-        self.Pyrly = 'Annual total precipitation = %0.0f mm'
-        self.Tyrly = 'Average annual air temperature = %0.1f °C'
-        self.rain = 'Rain'
-        self.snow = 'Snow'
-        self.Tmax = 'Temp. max.'
-        self.Tmin = 'Temp. min.'
-        self.Tavg = 'Temp. mean'
-
-        # ---- Labels ----
-
-        self.Tlabel = 'Monthly Air Temperature (°C)'
-        self.Plabel = 'Monthly Total Precipitation (mm)'
-        self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-                            "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
-
-        if language == 'French':
-
-            # ---- Legend ----
-
-            self.Pyrly = 'Précipitations totales annuelles = %0.0f mm'
-            self.Tyrly = 'Température moyenne annuelle = %0.1f °C'
-            self.rain = 'Pluie'
-            self.snow = 'Neige'
-            self.Tmax = 'Températures min.'
-            self.Tmin = 'Températures max.'
-            self.Tavg = 'Températures moy.'
-
-            # ---- Labels ----
-
-            self.Tlabel = 'Températures moyennes mensuelles (°C)'
-            self.Plabel = 'Précipitations totales mensuelles (mm)'
-            self.month_names = ["JAN", "FÉV", "MAR", "AVR", "MAI", "JUN",
-                                "JUL", "AOÛ", "SEP", "OCT", "NOV", "DÉC"]
-
-
 class WeatherViewer(DialogWindow):
     """
     GUI that allows to plot weather normals, save the graphs to file, see
@@ -394,6 +353,49 @@ class WeatherViewer(DialogWindow):
         QApplication.restoreOverrideCursor()
 
 
+class FigureLabels(object):
+
+    LANGUAGES = ['english', 'french']
+
+    def __init__(self, language):
+
+        # Legend :
+
+        self.Pyrly = 'Annual total precipitation = %0.0f mm'
+        self.Tyrly = 'Average annual air temperature = %0.1f °C'
+        self.rain = 'Rain'
+        self.snow = 'Snow'
+        self.Tmax = 'Temp. max.'
+        self.Tmin = 'Temp. min.'
+        self.Tavg = 'Temp. mean'
+
+        # Labels :
+
+        self.Tlabel = 'Monthly Air Temperature (°C)'
+        self.Plabel = 'Monthly Total Precipitation (mm)'
+        self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
+                            "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+
+        if language.lower() == 'french':
+
+            # Legend :
+
+            self.Pyrly = 'Précipitations totales annuelles = %0.0f mm'
+            self.Tyrly = 'Température moyenne annuelle = %0.1f °C'
+            self.rain = 'Pluie'
+            self.snow = 'Neige'
+            self.Tmax = 'Températures min.'
+            self.Tmin = 'Températures max.'
+            self.Tavg = 'Températures moy.'
+
+            # Labels :
+
+            self.Tlabel = 'Températures moyennes mensuelles (°C)'
+            self.Plabel = 'Précipitations totales mensuelles (mm)'
+            self.month_names = ["JAN", "FÉV", "MAR", "AVR", "MAI", "JUN",
+                                "JUL", "AOÛ", "SEP", "OCT", "NOV", "DÉC"]
+
+
 class FigWeatherNormals(FigureCanvasQTAgg):
     """
     This is the class that does all the plotting of the weather normals.
@@ -405,19 +407,15 @@ class FigWeatherNormals(FigureCanvasQTAgg):
     """
 
     def __init__(self, lang='English'):
+        self.__figlang = lang if lang in FigureLabels.LANGUAGES else 'English'
+        self.__figlabels = FigureLabels(self.__figlang)
+        self.normals = None
 
         fw, fh = 8.5, 5.
         fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
-
         super(FigWeatherNormals, self).__init__(fig)
 
-        self.lang = lang
-        self.normals = None
-
-        labelDB = LabelDB(self.lang)
-        month_names = labelDB.month_names
-
-        # --------------------------------------------------- Define Margins --
+        # Define the Margins :
 
         left_margin = 1/fw
         right_margin = 1/fw
@@ -534,7 +532,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
         ax0.tick_params(axis='x', which='minor', direction='out',
                         length=0, labelsize=13)
-        ax0.xaxis.set_ticklabels(month_names, minor=True)
+        ax0.xaxis.set_ticklabels(self.fig_labels.month_names, minor=True)
 
         # ---- Y-ticks Formatting
 
@@ -567,18 +565,22 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         self.plot_legend()
 
+    @property
+    def fig_labels(self):
+        return self.__figlabels
+
+    @property
+    def fig_language(self):
+        return self.__figlang
 
     def set_lang(self, lang):
-        self.lang = lang
-        if self.normals is None:
-            return
+        """Sets the language of the figure labels."""
+        lang = lang if lang in FigureLabels.LANGUAGES else 'English'
+        self.__figlabels = FigureLabels(lang)
+        self.__figlang = lang
 
+        # Update the labels in the plot :
         self.plot_legend()
-        self.set_axes_labels()
-        self.update_yearly_avg()
-        month_names = LabelDB(self.lang).month_names
-        self.figure.axes[1].xaxis.set_ticklabels(month_names, minor=True)
-
         self.figure.axes[1].xaxis.set_ticklabels(
                 self.fig_labels.month_names, minor=True)
         if self.normals is not None:
@@ -608,9 +610,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # Define the legend labels and markers :
 
         lines = [ax.lines[0], ax.lines[1], ax.lines[2], rec2, rec1]
-        labelDB = LabelDB(self.lang)
-        labels = [labelDB.Tmax, labelDB.Tavg, labelDB.Tmin,
-                  labelDB.rain, labelDB.snow]
+        labels = [self.fig_labels.Tmax, self.fig_labels.Tavg,
+                  self.fig_labels.Tmin, self.fig_labels.rain,
+                  self.fig_labels.snow]
 
         # Plot the legend :
 
@@ -738,14 +740,16 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             line.set_clip_box(clip_bbox)
 
     def set_axes_labels(self):
-        labelDB = LabelDB(self.lang)
-
+        """Sets the labels of the y axis."""
+        # Set the label fo the precipitation :
         ax0 = self.figure.axes[1]
-        ax0.set_ylabel(labelDB.Plabel, va='bottom', fontsize=16, rotation=270)
+        ax0.set_ylabel(self.fig_labels.Plabel, va='bottom',
+                       fontsize=16, rotation=270)
         ax0.yaxis.set_label_coords(1.09, 0.5)
 
+        # Set the label fo the air temperature :
         ax1 = self.figure.axes[2]
-        ax1.set_ylabel(labelDB.Tlabel, va='bottom', fontsize=16)
+        ax1.set_ylabel(self.fig_labels.Tlabel, va='bottom', fontsize=16)
         ax1.yaxis.set_label_coords(-0.09, 0.5)
 
     # ---- Plot the Data
@@ -802,9 +806,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # Update the text of the labels :
 
-        labelDB = LabelDB(self.lang)
-        ax.texts[0].set_text(labelDB.Tyrly % np.mean(Tavg_norm))
-        ax.texts[1].set_text(labelDB.Pyrly % np.sum(Ptot_norm))
+        ax.texts[0].set_text(self.fig_labels.Tyrly % np.mean(Tavg_norm))
+        ax.texts[1].set_text(self.fig_labels.Pyrly % np.sum(Ptot_norm))
 
 
 class GridWeatherNormals(QTableWidget):
