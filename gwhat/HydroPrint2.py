@@ -456,7 +456,7 @@ class HydroprintGUI(myqt.DialogWindow):
             return
 
         self.weather_avg_graph.save_fig_dir = self.workdir
-        self.weather_avg_graph.generate_graph(self.wxdset)
+        self.weather_avg_graph.set_weather_dataset(self.wxdset)
         self.weather_avg_graph.show()
 
     # ---- Datasets Handlers

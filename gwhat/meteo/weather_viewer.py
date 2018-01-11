@@ -36,6 +36,7 @@ from gwhat.common import icons
 from gwhat.common.widgets import DialogWindow, VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat import __namever__
+from gwhat.meteo.weather_reader import calcul_monthly_normals
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -138,7 +139,8 @@ class WeatherViewer(DialogWindow):
         # Instantiate and define a layout for the year range widget :
 
         self.year_rng = RangeSpinBoxes()
-        self.year_rng.set_range(1800, datetime.now().year)
+        self.year_rng.setRange(1800, datetime.now().year)
+        self.year_rng.sig_range_changed.connect(self.year_range_changed)
 
         qgrid = QHBoxLayout(self.year_rng)
         qgrid.setContentsMargins(0, 0, 0, 0)
@@ -207,15 +209,51 @@ class WeatherViewer(DialogWindow):
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
 
-    def generate_graph(self, wxdset):
+    def set_weather_dataset(self, wxdset):
+        """
+        Generates the graph, updates the table, and updates the GUI for
+        the new weather dataset.
+        """
         self.wxdset = wxdset
-        self.fig_weather_normals.plot_monthly_normals(wxdset['normals'])
-        self.fig_weather_normals.draw()
 
+        # Update the GUI :
         self.setWindowTitle('Weather Averages for %s' % wxdset['Station Name'])
+        self.year_rng.setRange(np.min(wxdset['monthly']['Year']),
+                               np.max(wxdset['monthly']['Year']))
+        self.year_range_changed()
 
-        self.grid_weather_normals.populate_table(wxdset['normals'])
+    def year_range_changed(self):
+        """
+        Forces a replot of the normals and an update of the table with the
+        values calculated over the new range of years.
+        """
+        normals = self.calcul_normals()
+        # Redraw the normals in the graph :
+        self.fig_weather_normals.plot_monthly_normals(normals)
+        self.fig_weather_normals.draw()
+        # Update the values in the table :
+        self.grid_weather_normals.populate_table(normals)
 
+    def calcul_normals(self):
+        """
+        Calcul the normal values of the weather dataset for the currently
+        defined period in the year range widget.
+        """
+        keys = ['Tmax', 'Tmin', 'Tavg', 'Ptot', 'Rain', 'Snow', 'PET']
+        monthly = self.wxdset['monthly']
+        normals = {}
+        for key in keys:
+            if monthly[key] is None:
+                normals[key] = None
+            else:
+                normals[key] = calcul_monthly_normals(
+                        monthly['Year'], monthly['Month'], monthly[key],
+                        self.year_rng.lower_bound, self.year_rng.upper_bound)
+
+        normals['Period'] = (self.year_rng.lower_bound,
+                             self.year_rng.upper_bound)
+
+        return normals
 
     def save_graph(self):
         yrmin = np.min(self.wxdset['Year'])
@@ -948,7 +986,7 @@ if __name__ == '__main__':
     w.save_fig_dir = os.getcwd()
 
     w.set_lang('English')
-    w.generate_graph(wxdset)
+    w.set_weather_dataset(wxdset)
     w.show()
 
     app.exec_()
