@@ -34,6 +34,7 @@ from gwhat.common import StyleDB, QToolButtonNormal
 from gwhat.common import icons
 from gwhat.common.widgets import DialogWindow
 from gwhat import __namever__
+from gwhat.common.utils import save_content_to_file
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -321,7 +322,7 @@ class WeatherAvgGraph(DialogWindow):
             vrbs = ['Year']
             lbls = ['Year']
         else:
-            raise ValueError('"time_frame" must be either "yearly", "monthly" '
+            raise ValueError('"time_frame" must be either "yearly", "monthly"'
                              ' or "daily".')
 
         vrbs.extend(['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET'])
@@ -338,59 +339,30 @@ class WeatherAvgGraph(DialogWindow):
                                     self.wxdset['Month'][-1],
                                     self.wxdset['Year'][-1])
 
-        header = [['Station Name', self.wxdset['Station Name']],
-                  ['Province', self.wxdset['Province']],
-                  ['Latitude', self.wxdset['Longitude']],
-                  ['Longitude', self.wxdset['Longitude']],
-                  ['Elevation', self.wxdset['Elevation']],
-                  ['Climate Identifier', self.wxdset['Climate Identifier']],
-                  ['', ''],
-                  ['Start Date ', startdate],
-                  ['End Date ', enddate],
-                  ['', ''],
-                  ['Created by', __namever__],
-                  ['Created on', strftime("%d/%m/%Y")],
-                  ['', '']
-                  ]
+        fcontent = [['Station Name', self.wxdset['Station Name']],
+                    ['Province', self.wxdset['Province']],
+                    ['Latitude', self.wxdset['Longitude']],
+                    ['Longitude', self.wxdset['Longitude']],
+                    ['Elevation', self.wxdset['Elevation']],
+                    ['Climate Identifier', self.wxdset['Climate Identifier']],
+                    ['', ''],
+                    ['Start Date ', startdate],
+                    ['End Date ', enddate],
+                    ['', ''],
+                    ['Created by', __namever__],
+                    ['Created on', strftime("%d/%m/%Y")],
+                    ['', '']
+                    ]
 
-        root, ext = os.path.splitext(filename)
-        if ext in ['.xlsx', '.xls']:
-            wb = xlsxwriter.Workbook(filename)
-            ws = wb.add_worksheet()
+        N = len(self.wxdset[time_frame]['Year'])
+        M = len(vrbs)
+        data = np.zeros((N+1, M)).astype('str')
+        data[0, :] = lbls
+        for j, vrb in enumerate(vrbs):
+            data[1:, j] = self.wxdset[time_frame][vrb]
+        fcontent.extend(data.tolist())
 
-            # ---- header ----
-
-            line = 0
-            for row in header:
-                ws.write_row(line, 0, row)
-                line += 1
-
-            # ---- content ----
-
-            ws.write_row(line, 0, lbls)
-            line += 1
-            for j, vrb in enumerate(vrbs):
-                for i, val in enumerate(self.wxdset[time_frame][vrb]):
-                    if np.isnan(val):
-                        ws.write_string(i+line, j, 'nan')
-                    else:
-                        ws.write_number(i+line, j, val)
-            wb.close()
-        elif ext == '.csv':
-            N = len(self.wxdset[time_frame]['Year'])
-            M = len(vrbs)
-            data = np.zeros((N+1, M)).astype('str')
-
-            data[0, :] = lbls
-            for j, vrb in enumerate(vrbs):
-                data[1:, j] = self.wxdset[time_frame][vrb]
-
-            fcontent = header
-            fcontent.extend(data.tolist())
-            with open(filename, 'w', encoding='utf8')as f:
-                writer = csv.writer(f, delimiter=',', lineterminator='\n')
-                writer.writerows(fcontent)
-            f.close()
+        save_content_to_file(filename, fcontent)
 
         QApplication.restoreOverrideCursor()
 
