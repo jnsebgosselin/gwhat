@@ -419,7 +419,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         left_margin = 1/fw
         right_margin = 1/fw
-        bottom_margin = 0.35/fh
+        bottom_margin = 0.85/fh
         top_margin = 0.1/fh
 
         # ---- Yearly Avg Labels
@@ -752,6 +752,17 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax1.set_ylabel(self.fig_labels.Tlabel, va='bottom', fontsize=16)
         ax1.yaxis.set_label_coords(-0.09, 0.5)
 
+    def set_year_range(self):
+        """Sets the year range label that is displayed below the x axis."""
+        if self.normals is not None:
+            ax0 = self.figure.axes[1]
+            yearmin, yearmax = self.normals['Period']
+            if yearmin == yearmax:
+                ax0.set_xlabel("%d" % yearmin, fontsize=16, labelpad=10)
+            else:
+                ax0.set_xlabel("%d - %d" % (yearmin, yearmax), fontsize=16,
+                               labelpad=10)
+
     # ---- Plot the Data
 
     def plot_precip(self, PNORM, SNORM):
@@ -945,7 +956,7 @@ if __name__ == '__main__':
     w = WeatherViewer()
     w.save_fig_dir = os.getcwd()
 
-    w.set_lang('English')
+    w.set_lang('French')
     w.set_weather_dataset(wxdset)
     w.show()
 
