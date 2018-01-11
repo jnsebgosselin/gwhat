@@ -309,8 +309,6 @@ class WeatherAvgGraph(DialogWindow):
         if filename:
             self.export_series_tofile(filename, time_frame)
 
-    # ---------------------------------------------------------------------
-
     def export_series_tofile(self, filename, time_frame):
         if time_frame == 'daily':
             vrbs = ['Year', 'Month', 'Day']
@@ -353,17 +351,16 @@ class WeatherAvgGraph(DialogWindow):
                     ['Created on', strftime("%d/%m/%Y")],
                     ['', '']
                     ]
+        fcontent.append(lbls)
 
         N = len(self.wxdset[time_frame]['Year'])
         M = len(vrbs)
-        data = np.zeros((N+1, M)).astype('str')
-        data[0, :] = lbls
+        data = np.zeros((N, M))
         for j, vrb in enumerate(vrbs):
-            data[1:, j] = self.wxdset[time_frame][vrb]
+            data[:, j] = self.wxdset[time_frame][vrb]
         fcontent.extend(data.tolist())
 
         save_content_to_file(filename, fcontent)
-
         QApplication.restoreOverrideCursor()
 
 
