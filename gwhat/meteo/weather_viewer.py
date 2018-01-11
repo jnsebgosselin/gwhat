@@ -12,6 +12,7 @@ from __future__ import division, unicode_literals
 
 import sys
 import os
+import os.path as osp
 import csv
 from time import strftime
 
@@ -249,29 +250,18 @@ class WeatherAvgGraph(DialogWindow):
         dialog = QFileDialog()
         filename, ftype = dialog.getSaveFileName(
                 self, 'Save normals', ddir, '*.xlsx;;*.xls;;*.csv')
+        if filename:
+            self.save_fig_dir = osp.dirname(filename)
 
-        hheader = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
-                   'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']
+            hheader = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
+                       'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']
 
-        vrbs = ['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET']
+            vrbs = ['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET']
 
-        lbls = ['Daily Tmin (\u00B0C)', 'Daily Tavg (\u00B0C)',
-                'Daily Tmax (\u00B0C)', 'Rain (mm)', 'Snow (mm)',
-                'Total Precip. (mm)', 'ETP (mm)']
+            lbls = ['Daily Tmin (\u00B0C)', 'Daily Tavg (\u00B0C)',
+                    'Daily Tmax (\u00B0C)', 'Rain (mm)', 'Snow (mm)',
+                    'Total Precip. (mm)', 'ETP (mm)']
 
-        if ftype in ['*.xlsx', '*.xls']:
-            wb = xlsxwriter.Workbook(filename)
-            ws = wb.add_worksheet()
-
-            ws.write_row(0, 0, hheader)
-            for i, (vrb, lbl) in enumerate(zip(vrbs, lbls)):
-                ws.write(i+1, 0, lbl)
-                ws.write_row(i+1, 1, self.wxdset['normals'][vrb])
-                if vrb in ['Tmin', 'Tavg', 'Tmax']:
-                    ws.write(i+1, 13, np.mean(self.wxdset['normals'][vrb]))
-                else:
-                    ws.write(i+1, 13, np.sum(self.wxdset['normals'][vrb]))
-        elif ftype == '*.csv':
             fcontent = [hheader]
             for i, (vrb, lbl) in enumerate(zip(vrbs, lbls)):
                 fcontent.append([lbl])
@@ -280,10 +270,7 @@ class WeatherAvgGraph(DialogWindow):
                     fcontent[-1].append(np.mean(self.wxdset['normals'][vrb]))
                 else:
                     fcontent[-1].append(np.sum(self.wxdset['normals'][vrb]))
-
-            with open(filename, 'w', encoding='utf8')as f:
-                writer = csv.writer(f, delimiter=',', lineterminator='\n')
-                writer.writerows(fcontent)
+            save_content_to_file(filename, fcontent)
 
     # ================================================= Export Time Series ====
 
@@ -307,6 +294,7 @@ class WeatherAvgGraph(DialogWindow):
                 self, 'Export %s' % time_frame, ddir, '*.xlsx;;*.xls;;*.csv')
 
         if filename:
+            self.save_fig_dir = osp.dirname(filename)
             self.export_series_tofile(filename, time_frame)
 
     def export_series_tofile(self, filename, time_frame):
