@@ -37,9 +37,11 @@ class SmartSpinBox(QDoubleSpinBox):
     """
     sig_value_changed = QSignal(float, float)
 
-    def __init__(self, val=0, dec=0, step=1, units=None, parent=None):
+    def __init__(self, val=0, dec=0, step=1, units=None, parent=None,
+                 show_btns=True):
         super(SmartSpinBox, self).__init__(parent)
-        self.setButtonSymbols(QDoubleSpinBox.NoButtons)
+        if show_btns is False:
+            self.setButtonSymbols(QDoubleSpinBox.NoButtons)
         self.setAlignment(Qt.AlignCenter)
         self.setKeyboardTracking(False)
         self.setAccelerated(True)
