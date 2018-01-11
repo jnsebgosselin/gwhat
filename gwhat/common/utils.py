@@ -18,6 +18,7 @@ from shutil import rmtree
 
 import numpy as np
 import xlsxwriter
+import xlwt
 
 
 def calc_dist_from_coord(lat1, lon1, lat2, lon2):
@@ -38,6 +39,20 @@ def calc_dist_from_coord(lat1, lon1, lat2, lon2):
     return r * c
 
 
+def save_content_to_file(fname, fcontent):
+    """
+    Smart function that checks the extension and save the content in the
+    appropriate file format.
+    """
+    root, ext = os.path.splitext(fname)
+    if ext in ['.xlsx', '.xls']:
+        save_content_to_excel(fname, fcontent)
+    elif ext == '.tsv':
+        save_content_to_csv(fname, fcontent, delimiter='\t')
+    else:
+        save_content_to_csv(fname, fcontent)
+
+
 def save_content_to_csv(fname, fcontent, mode='w', delimiter=',',
                         encoding='utf8'):
     """
@@ -52,11 +67,18 @@ def save_content_to_csv(fname, fcontent, mode='w', delimiter=',',
 def save_content_to_excel(fname, fcontent):
     """Save content in a xls or xlsx file."""
     root, ext = os.path.splitext(fname)
-    fname = fname+'.xlsx' if ext not in ['.xls', '.xlsx'] else fname
-    with xlsxwriter.Workbook(fname) as wb:
-        ws = wb.add_worksheet()
+    if ext == '.xls':
+        wb = xlwt.Workbook()
+        ws = wb.add_sheet('Normals')
         for i, row in enumerate(fcontent):
-            ws.write_row(i, 0, row)
+            for j, cell in enumerate(row):
+                ws.write(i, j, cell)
+        wb.save(root+'.xls')
+    else:
+        with xlsxwriter.Workbook(root+'.xlsx') as wb:
+            ws = wb.add_worksheet('Normals')
+            for i, row in enumerate(fcontent):
+                ws.write_row(i, 0, row)
 
 
 def delete_file(filename):

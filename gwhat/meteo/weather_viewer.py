@@ -38,7 +38,7 @@ from gwhat.common.widgets import DialogWindow, VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat import __namever__
 from gwhat.meteo.weather_reader import calcul_monthly_normals
-from gwhat.common.utils import save_content_to_excel, save_content_to_csv
+from gwhat.common.utils import save_content_to_file
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -293,7 +293,6 @@ class WeatherViewer(DialogWindow):
         dialog = QFileDialog()
         filename, ftype = dialog.getSaveFileName(
                 self, 'Save normals', ddir, '*.xlsx;;*.xls;;*.csv')
-
         if filename:
             self.save_fig_dir = osp.dirname(filename)
 
@@ -315,12 +314,7 @@ class WeatherViewer(DialogWindow):
                     fcontent[-1].append(np.mean(self.normals[vrb]))
                 else:
                     fcontent[-1].append(np.sum(self.normals[vrb]))
-
-            # Save the content to file :
-            if ftype in ['*.xlsx', '*.xls']:
-                save_content_to_excel(filename, fcontent)
-            else:
-                save_content_to_csv(filename, fcontent)
+            save_content_to_file(filename, fcontent)
 
     # ---- Export Time Series
 
@@ -344,6 +338,7 @@ class WeatherViewer(DialogWindow):
                 self, 'Export %s' % time_frame, ddir, '*.xlsx;;*.xls;;*.csv')
 
         if filename:
+            self.save_fig_dir = osp.dirname(filename)
             self.export_series_tofile(filename, time_frame)
 
     def export_series_tofile(self, filename, time_frame):
@@ -357,7 +352,7 @@ class WeatherViewer(DialogWindow):
             vrbs = ['Year']
             lbls = ['Year']
         else:
-            raise ValueError('"time_frame" must be either "yearly", "monthly" '
+            raise ValueError('"time_frame" must be either "yearly", "monthly"'
                              ' or "daily".')
 
         vrbs.extend(['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET'])
@@ -374,60 +369,30 @@ class WeatherViewer(DialogWindow):
                                     self.wxdset['Month'][-1],
                                     self.wxdset['Year'][-1])
 
-        header = [['Station Name', self.wxdset['Station Name']],
-                  ['Province', self.wxdset['Province']],
-                  ['Latitude', self.wxdset['Longitude']],
-                  ['Longitude', self.wxdset['Longitude']],
-                  ['Elevation', self.wxdset['Elevation']],
-                  ['Climate Identifier', self.wxdset['Climate Identifier']],
-                  ['', ''],
-                  ['Start Date ', startdate],
-                  ['End Date ', enddate],
-                  ['', ''],
-                  ['Created by', __namever__],
-                  ['Created on', strftime("%d/%m/%Y")],
-                  ['', '']
-                  ]
+        fcontent = [['Station Name', self.wxdset['Station Name']],
+                    ['Province', self.wxdset['Province']],
+                    ['Latitude', self.wxdset['Longitude']],
+                    ['Longitude', self.wxdset['Longitude']],
+                    ['Elevation', self.wxdset['Elevation']],
+                    ['Climate Identifier', self.wxdset['Climate Identifier']],
+                    ['', ''],
+                    ['Start Date ', startdate],
+                    ['End Date ', enddate],
+                    ['', ''],
+                    ['Created by', __namever__],
+                    ['Created on', strftime("%d/%m/%Y")],
+                    ['', '']
+                    ]
+        fcontent.append(lbls)
 
-        root, ext = os.path.splitext(filename)
-        if ext in ['.xlsx', '.xls']:
-            wb = xlsxwriter.Workbook(filename)
-            ws = wb.add_worksheet()
+        N = len(self.wxdset[time_frame]['Year'])
+        M = len(vrbs)
+        data = np.zeros((N, M))
+        for j, vrb in enumerate(vrbs):
+            data[:, j] = self.wxdset[time_frame][vrb]
+        fcontent.extend(data.tolist())
 
-            # ---- header ----
-
-            line = 0
-            for row in header:
-                ws.write_row(line, 0, row)
-                line += 1
-
-            # ---- content ----
-
-            ws.write_row(line, 0, lbls)
-            line += 1
-            for j, vrb in enumerate(vrbs):
-                for i, val in enumerate(self.wxdset[time_frame][vrb]):
-                    if np.isnan(val):
-                        ws.write_string(i+line, j, 'nan')
-                    else:
-                        ws.write_number(i+line, j, val)
-            wb.close()
-        elif ext == '.csv':
-            N = len(self.wxdset[time_frame]['Year'])
-            M = len(vrbs)
-            data = np.zeros((N+1, M)).astype('str')
-
-            data[0, :] = lbls
-            for j, vrb in enumerate(vrbs):
-                data[1:, j] = self.wxdset[time_frame][vrb]
-
-            fcontent = header
-            fcontent.extend(data.tolist())
-            with open(filename, 'w', encoding='utf8')as f:
-                writer = csv.writer(f, delimiter=',', lineterminator='\n')
-                writer.writerows(fcontent)
-            f.close()
-
+        save_content_to_file(filename, fcontent)
         QApplication.restoreOverrideCursor()
 
 
