@@ -13,13 +13,11 @@ from __future__ import division, unicode_literals
 import sys
 import os
 import os.path as osp
-import csv
 from time import strftime
 from datetime import datetime
 
 # ---- Imports: Third Parties
 
-import xlsxwriter
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
