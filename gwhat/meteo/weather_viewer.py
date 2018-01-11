@@ -424,7 +424,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         bottom_margin = 0.35/fh
         top_margin = 0.1/fh
 
-        # ------------------------------------------------ Yearly Avg Labels --
+        # ---- Yearly Avg Labels
 
         # The yearly yearly averages for the mean air temperature and
         # the total precipitation are displayed in <ax3>, which is placed on
@@ -437,7 +437,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                         right='off', labelbottom='off', labeltop='off',
                         labelleft='off', labelright='off')
 
-        # ---- Mean Annual Air Temperature ----
+        # Mean Annual Air Temperature :
 
         # Places first label at the top left corner of <ax3> with a horizontal
         # padding of 5 points and downward padding of 3 points.
@@ -449,7 +449,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax3.text(0., 1., 'Mean Annual Air Temperature',
                  fontsize=13, va='top', transform=transform)
 
-        # ---- Mean Annual Precipitation ----
+        # Mean Annual Precipitation :
 
         # Get the bounding box of the first label.
 
@@ -466,7 +466,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         bbox = ax3.texts[1].get_window_extent(renderer)
         bbox = bbox.transformed(fig.transFigure.inverted())
 
-        # ---- update geometry ----
+        # Update geometry :
 
         # Updates the geometry and position of <ax3> to accomodate the text.
 
@@ -477,24 +477,24 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         ax3.set_position([x0, y0, axw, axh])
 
-        # -------------------------------------------------------- Data Axes --
+        # ---- Data Axes
 
         axh = y0 - bottom_margin
         y0 = y0 - axh
 
-        # ---- Precip ----
+        # Precipitation :
 
         ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1)
         ax0.patch.set_visible(False)
         ax0.spines['top'].set_visible(False)
         ax0.set_axisbelow(True)
 
-        # ---- Air Temp. ----
+        # Air Temperature :
 
         ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=5,
                            sharex=ax0)
 
-        # ----------------------------------------------------- INIT ARTISTS --
+        # ---- Initialize the Artists
 
         # This is only to initiates the artists and to set their parameters
         # in advance. The plotting of the data is actually done by calling
@@ -506,23 +506,22 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         y = range(len(XPOS))
         colors = ['#990000', '#FF0000', '#FF6666']
 
-        # dashed lines for Tmax, Tavg, and Tmin :
+        # Dashed lines for Tmax, Tavg, and Tmin :
 
         for i in range(3):
             ax1.plot(XPOS, y, color=colors[i], ls='--', lw=1.5, zorder=100)
 
-        # markers for Tavg :
+        # Markers for Tavg :
 
         ax1.plot(XPOS[1:-1], y[1:-1], color=colors[1], marker='o', ls='none',
                  ms=6, zorder=100, mec=colors[1], mfc='white', mew=1.5)
 
-        # ------------------------------------------------- XTICKS FORMATING --
+        # ---- Xticks Formatting
 
         Xmin0 = 0
         Xmax0 = 12.001
 
-        # ---- major ----
-
+        # Major ticks
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out')
         ax0.xaxis.set_ticklabels([])
@@ -531,47 +530,43 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax1.tick_params(axis='x', which='both', bottom='off', top='off',
                         labelbottom='off')
 
-        # ---- minor ----
-
+        # Minor ticks
         ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
         ax0.tick_params(axis='x', which='minor', direction='out',
                         length=0, labelsize=13)
         ax0.xaxis.set_ticklabels(month_names, minor=True)
 
-        # ------------------------------------------------- Yticks Formating --
+        # ---- Y-ticks Formatting
 
-        # ---- Precipitation ----
-
+        # Precipitation
         ax0.yaxis.set_ticks_position('right')
         ax0.tick_params(axis='y', direction='out', labelsize=13)
 
         ax0.tick_params(axis='y', which='minor', direction='out')
         ax0.yaxis.set_ticklabels([], minor=True)
 
-        # ---- Air Temp. ----
-
+        # Air Temperature
         ax1.yaxis.set_ticks_position('left')
         ax1.tick_params(axis='y', direction='out', labelsize=13)
 
         ax1.tick_params(axis='y', which='minor', direction='out')
         ax1.yaxis.set_ticklabels([], minor=True)
 
-        # ------------------------------------------------------------- GRID --
+        # ---- Grid Parameters
 
     #    ax0.grid(axis='y', color=[0.5, 0.5, 0.5], linestyle=':', linewidth=1,
     #             dashes=[1, 5])
     #    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-',
 #                 linewidth=0.5)
 
-        # ------------------------------------------------------------ XLIMS --
+        # ---- Limits of the Axes
 
         ax0.set_xlim(Xmin0, Xmax0)
 
-        # ------------------------------------------------------ Plot Legend --
+        # ---- Legend
 
         self.plot_legend()
 
-    # =========================================================== Language ====
 
     def set_lang(self, lang):
         self.lang = lang
@@ -584,19 +579,23 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         month_names = LabelDB(self.lang).month_names
         self.figure.axes[1].xaxis.set_ticklabels(month_names, minor=True)
 
-    # ============================================================ Legend =====
+        self.figure.axes[1].xaxis.set_ticklabels(
+                self.fig_labels.month_names, minor=True)
+        if self.normals is not None:
+            self.set_axes_labels()
+            self.update_yearly_avg()
 
     def plot_legend(self):
+        """Plot the legend of the figure."""
+        ax = self.figure.axes[2]
 
-        ax = self.figure.axes[2]  # Axe on which the legend is hosted
-
-        # --- bbox transform --- #
+        # bbox transform :
 
         padding = mpl.transforms.ScaledTranslation(5/72, -5/72,
                                                    self.figure.dpi_scale_trans)
         transform = ax.transAxes + padding
 
-        # --- proxy artists --- #
+        # Define proxy artists :
 
         colors = ColorsReader()
         colors.load_colors_db()
@@ -606,21 +605,19 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         rec2 = mpl.patches.Rectangle((0, 0), 1, 1,
                                      fc=colors.rgb['Rain'], ec='none')
 
-        # --- legend entry --- #
+        # Define the legend labels and markers :
 
         lines = [ax.lines[0], ax.lines[1], ax.lines[2], rec2, rec1]
         labelDB = LabelDB(self.lang)
         labels = [labelDB.Tmax, labelDB.Tavg, labelDB.Tmin,
                   labelDB.rain, labelDB.snow]
 
-        # --- plot legend --- #
+        # Plot the legend :
 
         leg = ax.legend(lines, labels, numpoints=1, fontsize=13,
                         borderaxespad=0, loc='upper left', borderpad=0,
                         bbox_to_anchor=(0, 1), bbox_transform=transform)
         leg.draw_frame(False)
-
-    # ========================================================= Plot data =====
 
     def plot_monthly_normals(self, normals):
         """Plot the normals on the figure."""
@@ -710,17 +707,18 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax0.set_ylim(Ymin0, Ymax0)
         ax1.set_ylim(Ymin1, Ymax1)
 
-        # ----------------------------------------------------------- LABELS --
+        # ---- LABELS
 
         self.set_axes_labels()
+        self.set_year_range()
 
-        # --------------------------------------------------------- PLOTTING --
+        # ---- PLOTTING
 
         self.plot_precip(Ptot_norm, Snow_norm)
         self.plot_air_temp(Tmax_norm, Tavg_norm, Tmin_norm)
         self.update_yearly_avg()
 
-        # --------------------------------------------------------- Clipping --
+        # ---- Clipping
 
         # There is currently a bug regarding this. So we need to do a
         # workaround
