@@ -164,13 +164,15 @@ class WeatherViewer(DialogWindow):
     def show_monthly_grid(self):
         if self.grid_weather_normals.isHidden():
             self.grid_weather_normals.show()
-            self.setFixedHeight(self.size().height()+250)
-#            self.setFixedWidth(self.size().width()+75)
+            self.setFixedHeight(self.size().height() +
+                                self.layout().verticalSpacing() +
+                                self.grid_weather_normals.calcul_height())
             self.sender().setAutoRaise(False)
         else:
             self.grid_weather_normals.hide()
-            self.setFixedHeight(self.size().height()-250)
-#            self.setFixedWidth(self.size().width()-75)
+            self.setFixedHeight(self.size().height() -
+                                self.layout().verticalSpacing() -
+                                self.grid_weather_normals.calcul_height())
             self.sender().setAutoRaise(True)
 
     def set_lang(self, lang):
@@ -863,14 +865,16 @@ class GridWeatherNormals(QTableWidget):
         self.setHorizontalHeaderLabels(HEADER)
         self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.horizontalHeader().setHighlightSections(False)
-        self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
-        self.verticalHeader().setHighlightSections(False)
 
         self.setRowCount(7)
         self.setVerticalHeaderLabels(['Daily Tmax (°C)', 'Daily Tmin (°C)',
                                       'Daily Tavg (°C)', 'Rain (mm)',
                                       'Snow (mm)', 'Total Precip (mm)',
                                       'ETP (mm)'])
+
+        self.resizeRowsToContents()
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.verticalHeader().setHighlightSections(False)
 
     def populate_table(self, NORMALS):
 
@@ -956,6 +960,12 @@ class GridWeatherNormals(QTableWidget):
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
+
+    def calcul_height(self):
+        h = self.horizontalHeader().height() + 2*self.frameWidth()
+        for i in range(self.rowCount()):
+            h += self.rowHeight(i)
+        return h
 
 
 # %% if __name__ == '__main__'
