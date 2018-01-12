@@ -957,8 +957,6 @@ class GridWeatherNormals(QTableWidget):
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
-        self.resizeColumnsToContents()
-
 
 # %% if __name__ == '__main__'
 
