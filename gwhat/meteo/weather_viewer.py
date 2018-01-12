@@ -30,8 +30,9 @@ from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
 # ---- Imports: Local
 
 from gwhat.colors2 import ColorsReader
-from gwhat.common import StyleDB, QToolButtonNormal
+from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
+from gwhat.common.icons import QToolButtonVRectSmall
 from gwhat.common.widgets import DialogWindow, VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat import __namever__
@@ -62,7 +63,7 @@ class WeatherViewer(DialogWindow):
         self.setWindowTitle('Weather Averages')
         self.setWindowIcon(icons.get_icon('master'))
 
-        # ---- TOOLBAR
+        # ---- Toolbar
 
         # Initialize the widgets :
 
@@ -101,12 +102,22 @@ class WeatherViewer(DialogWindow):
         self.year_rng.setRange(1800, datetime.now().year)
         self.year_rng.sig_range_changed.connect(self.update_normals)
 
+        btn_expand = QToolButtonVRectSmall(icons.get_icon('expand_range_vert'))
+        btn_expand.clicked.connect(self.expands_year_range)
+        btn_expand.setToolTip("Set the maximal possible year range.")
+
+        lay_expand = QGridLayout()
+        lay_expand.addWidget(self.year_rng.spb_upper, 0, 0)
+        lay_expand.addWidget(btn_expand, 0, 1)
+        lay_expand.setContentsMargins(0, 0, 0, 0)
+        lay_expand.setSpacing(1)
+
         qgrid = QHBoxLayout(self.year_rng)
         qgrid.setContentsMargins(0, 0, 0, 0)
         qgrid.addWidget(QLabel('Year Range :'))
         qgrid.addWidget(self.year_rng.spb_lower)
         qgrid.addWidget(QLabel('to'))
-        qgrid.addWidget(self.year_rng.spb_upper)
+        qgrid.addLayout(lay_expand)
 
         # Generate the layout of the toolbar :
 
@@ -122,7 +133,7 @@ class WeatherViewer(DialogWindow):
         subgrid_toolbar.setSpacing(5)
         subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
 
-        # ---- MAIN GRID
+        # ---- Main Layout
 
         # Initialize the widgets :
 
@@ -179,6 +190,16 @@ class WeatherViewer(DialogWindow):
                                np.max(wxdset['monthly']['Year']))
         self.update_normals()
 
+    def expands_year_range(self):
+        """Sets the maximal possible year range."""
+        self.year_rng.spb_upper.setValueSilently(
+                np.max(self.wxdset['monthly']['Year']))
+        self.year_rng.spb_lower.setValueSilently(
+                np.min(self.wxdset['monthly']['Year']))
+        self.update_normals()
+
+    # ---- Normals
+
     def update_normals(self):
         """
         Forces a replot of the normals and an update of the table with the
@@ -190,8 +211,6 @@ class WeatherViewer(DialogWindow):
         self.fig_weather_normals.draw()
         # Update the values in the table :
         self.grid_weather_normals.populate_table(self.normals)
-
-    # ---- Normals
 
     def calcul_normals(self):
         """

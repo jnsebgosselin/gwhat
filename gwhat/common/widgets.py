@@ -282,7 +282,8 @@ class DialogWindow(QDialog):
         else:
             self.__resizable = resizable
             self.setWindowFlags(Qt.Window |
-                                Qt.WindowMinimizeButtonHint)
+                                Qt.WindowMinimizeButtonHint |
+                                Qt.WindowCloseButtonHint)
 
         self.setWindowIcon(icons.get_icon('master'))
 
