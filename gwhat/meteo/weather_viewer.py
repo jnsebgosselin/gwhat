@@ -861,9 +861,9 @@ class GridWeatherNormals(QTableWidget):
 
         self.setColumnCount(len(HEADER))
         self.setHorizontalHeaderLabels(HEADER)
-        self.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.horizontalHeader().setHighlightSections(False)
-        self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Stretch)
         self.verticalHeader().setHighlightSections(False)
 
         self.setRowCount(7)
