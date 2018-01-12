@@ -853,15 +853,16 @@ class GridWeatherNormals(QTableWidget):
         self.setFrameStyle(StyleDB().frame)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
-#        self.setMinimumWidth(650)
-
-        # ------------------------------------------------------- Header --
 
         HEADER = ('JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
                   'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR')
 
         self.setColumnCount(len(HEADER))
         self.setHorizontalHeaderLabels(HEADER)
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.horizontalHeader().setHighlightSections(False)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
+        self.verticalHeader().setHighlightSections(False)
 
         self.setRowCount(7)
         self.setVerticalHeaderLabels(['Daily Tmax (°C)', 'Daily Tmin (°C)',
