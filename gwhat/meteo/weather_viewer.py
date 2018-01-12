@@ -48,7 +48,7 @@ class WeatherViewer(DialogWindow):
     various stats about the dataset, etc...
     """
     def __init__(self, parent=None):
-        super(WeatherViewer, self).__init__(parent)
+        super(WeatherViewer, self).__init__(parent, False, False)
 
         self.wxdset = None
         self.normals = None
@@ -93,7 +93,8 @@ class WeatherViewer(DialogWindow):
                 "QToolButton::menu-indicator {image: none;}")
 
         btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
-        btn_showStats.setToolTip('Show monthly weather normals data table.')
+        btn_showStats.setToolTip(
+                "Show the monthly weather normals data table.")
         btn_showStats.clicked.connect(self.show_monthly_grid)
 
         # Instantiate and define a layout for the year range widget :
