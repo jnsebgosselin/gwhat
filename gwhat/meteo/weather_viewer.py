@@ -25,7 +25,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QFileDialog, QApplication, QTableWidget,
-                             QTableWidgetItem, QLabel, QHBoxLayout)
+                             QTableWidgetItem, QLabel, QHBoxLayout,
+                             QHeaderView)
 
 # ---- Imports: Local
 
