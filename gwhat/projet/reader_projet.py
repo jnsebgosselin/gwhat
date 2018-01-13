@@ -491,6 +491,11 @@ class WXDataFrameHDF5(dict):
             x = {}
             for vrb in self.dset[key].keys():
                 x[vrb] = self.dset[key][vrb].value
+            if key == 'normals' and 'Period' not in x.keys():
+                # This is needed for backward compatibility with
+                # gwhat < 0.2.3 (see PR#142).
+                x['Period'] = (np.min(self.dset['Year']),
+                               np.max(self.dset['Year']))
             return x
         elif key == 'daily':
             vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',

@@ -85,7 +85,8 @@ class WXDataFrame(dict):
                            'Ptot': np.array([]),
                            'Rain': None,
                            'Snow': None,
-                           'PET': None}
+                           'PET': None,
+                           'Period': (None, None)}
 
         # ---- Import primary data
 
@@ -116,6 +117,9 @@ class WXDataFrame(dict):
         self['Year'], self['Month'], self['Day'] = date[0], date[1], date[2]
         for i, vbr in enumerate(vbrs):
             self[vbr] = data[i]
+
+        self['normals']['Period'] = (np.min(self['Year']),
+                                     np.max(self['Year']))
 
         # Fill missing with estimated values :
 
