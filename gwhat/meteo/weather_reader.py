@@ -102,14 +102,14 @@ class WXDataFrame(dict):
             self['Missing Tavg'] = load_weather_log(finfo, 'Mean Temp (deg C)')
             self['Missing Ptot'] = load_weather_log(finfo, 'Total Precip (mm)')
 
-        # ---- format data
-
-        print('Make daily time series continuous.')
+        # ---- Format Data
 
         time = copy(self['Time'])
         date = [copy(self['Year']), copy(self['Month']), copy(self['Day'])]
         vbrs = ['Tmax', 'Tavg', 'Tmin', 'Ptot', 'Rain', 'PET']
         data = [self[x] for x in vbrs]
+
+        # Make daily time series continuous :
 
         time, date, data = make_timeserie_continuous(self['Time'], date, data)
         self['Time'] = time
@@ -117,7 +117,7 @@ class WXDataFrame(dict):
         for i, vbr in enumerate(vbrs):
             self[vbr] = data[i]
 
-        print('Fill missing with estimated values.')
+        # Fill missing with estimated values :
 
         for vbr in ['Tmax', 'Tavg', 'Tmin', 'PET']:
             self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'interp')

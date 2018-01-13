@@ -878,7 +878,7 @@ class GridWeatherNormals(QTableWidget):
 
     def populate_table(self, NORMALS):
 
-        # ---- Air Temperature ----
+        # ---- Air Temperature
 
         for row, key in enumerate(['Tmax', 'Tmin', 'Tavg']):
             # Months
@@ -895,7 +895,7 @@ class GridWeatherNormals(QTableWidget):
             item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, 12, item)
 
-        # ---- Rain ----
+        # ---- Rain
 
         row = 3
         # Months
@@ -912,7 +912,7 @@ class GridWeatherNormals(QTableWidget):
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
-        # ---- Snow ----
+        # ---- Snow
 
         row = 4
         # Months
@@ -930,7 +930,7 @@ class GridWeatherNormals(QTableWidget):
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
-        # ---- Total Precip ----
+        # ---- Total Precip
 
         row = 5
         # Months
@@ -946,9 +946,10 @@ class GridWeatherNormals(QTableWidget):
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
-        # ---- ETP ----
+        # ---- ETP
 
         row = 6
+        # Months
         for col in range(12):
             item = QTableWidgetItem('%0.1f' % NORMALS['PET'][col])
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
