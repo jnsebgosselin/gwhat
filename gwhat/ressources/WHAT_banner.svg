@@ -35,7 +35,7 @@
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:zoom="0.37512071"
-     inkscape:cx="827.99551"
+     inkscape:cx="373.47515"
      inkscape:cy="374.81148"
      inkscape:window-x="140"
      inkscape:window-y="1072"
@@ -361,6 +361,6 @@
          id="tspan3092-0"
          y="-404.06998"
          x="-110.26708"
-         sodipodi:role="line">Version 0.2.2</tspan></text>
+         sodipodi:role="line">Version 0.2.3</tspan></text>
   </g>
 </svg>
