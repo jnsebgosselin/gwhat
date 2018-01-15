@@ -407,8 +407,8 @@ class FigureLabels(object):
             self.Tyrly = 'Température moyenne annuelle = %0.1f °C'
             self.rain = 'Pluie'
             self.snow = 'Neige'
-            self.Tmax = 'Températures min.'
-            self.Tmin = 'Températures max.'
+            self.Tmax = 'Températures max.'
+            self.Tmin = 'Températures min.'
             self.Tavg = 'Températures moy.'
 
             # Labels :
