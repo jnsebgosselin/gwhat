@@ -30,7 +30,7 @@ from xlrd import xldate_as_tuple
 
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
-from gwhat.meteo.weather_viewer import WeatherAvgGraph
+from gwhat.meteo.weather_viewer import WeatherViewer
 from gwhat.colors2 import ColorsReader, ColorsSetupWin
 
 from gwhat.common import QToolButtonNormal, QToolButtonSmall
@@ -54,7 +54,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.dmngr.wldsetChanged.connect(self.wldset_changed)
         self.dmngr.wxdsetChanged.connect(self.wxdset_changed)
 
-        self.weather_avg_graph = WeatherAvgGraph(self)
+        self.weather_avg_graph = WeatherViewer(self)
 
         self.page_setup_win = PageSetupWin(self)
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
@@ -456,7 +456,7 @@ class HydroprintGUI(myqt.DialogWindow):
             return
 
         self.weather_avg_graph.save_fig_dir = self.workdir
-        self.weather_avg_graph.generate_graph(self.wxdset)
+        self.weather_avg_graph.set_weather_dataset(self.wxdset)
         self.weather_avg_graph.show()
 
     # ---- Datasets Handlers

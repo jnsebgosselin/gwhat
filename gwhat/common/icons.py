@@ -22,6 +22,7 @@ from gwhat import __rootdir__
 
 dirname = os.path.join(__rootdir__, 'ressources', 'icons_png')
 ICON_NAMES = {'master': 'WHAT',
+              'expand_range_vert': 'expand_range_vert',
               'info': 'info',
               'calc_brf': 'start',
               'setup': 'page_setup',
@@ -131,3 +132,9 @@ class QToolButtonSmall(QToolButtonBase):
     def __init__(self, Qicon, *args, **kargs):
         super(QToolButtonSmall, self).__init__(Qicon, *args, **kargs)
         self.setIconSize(QSize(20, 20))
+
+
+class QToolButtonVRectSmall(QToolButtonBase):
+    def __init__(self, Qicon, *args, **kargs):
+        super(QToolButtonVRectSmall, self).__init__(Qicon, *args, **kargs)
+        self.setIconSize(QSize(8, 20))

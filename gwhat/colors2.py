@@ -64,13 +64,11 @@ class ColorsReader(object):
             self.save_colors_db()
 
         else:
-            print('Loading the color settings...', end=" ")
             with open(fname, 'r') as f:
                 reader = list(csv.reader(f, delimiter=','))
 
             for row in reader:
                 self.RGB[row[0]] = [int(x) for x in row[1:]]
-            print('done')
 
     def save_colors_db(self):
         """Save the color settings to Colors.db."""
@@ -80,7 +78,6 @@ class ColorsReader(object):
             fcontent.append([key])
             fcontent[-1].extend(self.RGB[key])
         save_content_to_csv(fname, fcontent)
-        print('Color settings saved successfully.')
 
 
 class ColorsSetupWin(myqt.DialogWindow):

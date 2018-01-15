@@ -85,15 +85,16 @@ class WXDataFrame(dict):
                            'Ptot': np.array([]),
                            'Rain': None,
                            'Snow': None,
-                           'PET': None}
+                           'PET': None,
+                           'Period': (None, None)}
 
-        # -------------------------------------------- Import primary data ----
+        # ---- Import primary data
 
         data = read_weather_datafile(filename)
         for key in data.keys():
             self[key] = data[key]
 
-        # ------------------------------------------------- Import missing ----
+        # ---- Import missing
 
         finfo = filename[:-3] + 'log'
         if os.path.exists(finfo):
@@ -102,14 +103,14 @@ class WXDataFrame(dict):
             self['Missing Tavg'] = load_weather_log(finfo, 'Mean Temp (deg C)')
             self['Missing Ptot'] = load_weather_log(finfo, 'Total Precip (mm)')
 
-        # ---------------------------------------------------- format data ----
-
-        print('Make daily time series continuous.')
+        # ---- Format Data
 
         time = copy(self['Time'])
         date = [copy(self['Year']), copy(self['Month']), copy(self['Day'])]
         vbrs = ['Tmax', 'Tavg', 'Tmin', 'Ptot', 'Rain', 'PET']
         data = [self[x] for x in vbrs]
+
+        # Make daily time series continuous :
 
         time, date, data = make_timeserie_continuous(self['Time'], date, data)
         self['Time'] = time
@@ -117,7 +118,10 @@ class WXDataFrame(dict):
         for i, vbr in enumerate(vbrs):
             self[vbr] = data[i]
 
-        print('Fill missing with estimated values.')
+        self['normals']['Period'] = (np.min(self['Year']),
+                                     np.max(self['Year']))
+
+        # Fill missing with estimated values :
 
         for vbr in ['Tmax', 'Tavg', 'Tmin', 'PET']:
             self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'interp')
@@ -125,7 +129,7 @@ class WXDataFrame(dict):
         for vbr in ['Ptot', 'Rain', 'Snow']:
             self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'zeros')
 
-        # ---------------------------------------------- monthly & normals ----
+        # ---- Monthly & Normals
 
         # Temperature based variables:
 
@@ -136,7 +140,7 @@ class WXDataFrame(dict):
             x = calc_monthly_mean(self['Year'], self['Month'], self[vrb])
             self['monthly'][vrb] = x[2]
 
-            self['normals'][vrb] = calcul_monthly_normals(x[1], x[2])
+            self['normals'][vrb] = calcul_monthly_normals(x[0], x[1], x[2])
 
         # Precipitation :
 
@@ -149,11 +153,11 @@ class WXDataFrame(dict):
         self['monthly']['Year'] = x[0]
         self['monthly']['Month'] = x[1]
 
-        self['normals']['Ptot'] = calcul_monthly_normals(x[1], x[2])
+        self['normals']['Ptot'] = calcul_monthly_normals(x[0], x[1], x[2])
 
-        # ------------------------------------------------- secondary vrbs ----
+        # ---- Secondary Variables
 
-        # ---- Rain ----
+        # Rain
 
         if self['Rain'] is None:
             self['Rain'] = calcul_rain_from_ptot(
@@ -166,9 +170,9 @@ class WXDataFrame(dict):
         x = calc_monthly_sum(self['Year'], self['Month'], self['Rain'])
         self['monthly']['Rain'] = x[2]
 
-        self['normals']['Rain'] = calcul_monthly_normals(x[1], x[2])
+        self['normals']['Rain'] = calcul_monthly_normals(x[0], x[1], x[2])
 
-        # ---- Snow ----
+        # Snow
 
         if self['Snow'] is None:
             self['Snow'] = self['Ptot'] - self['Rain']
@@ -180,9 +184,9 @@ class WXDataFrame(dict):
         x = calc_monthly_sum(self['Year'], self['Month'], self['Snow'])
         self['monthly']['Snow'] = x[2]
 
-        self['normals']['Snow'] = calcul_monthly_normals(x[1], x[2])
+        self['normals']['Snow'] = calcul_monthly_normals(x[0], x[1], x[2])
 
-        # ---- Potential Evapotranspiration ----
+        # Potential Evapotranspiration
 
         if self['PET'] is None:
             dates = [self['Year'], self['Month'], self['Day']]
@@ -198,7 +202,7 @@ class WXDataFrame(dict):
         x = calc_monthly_sum(self['Year'], self['Month'], self['PET'])
         self['monthly']['PET'] = x[2]
 
-        self['normals']['PET'] = calcul_monthly_normals(x[1], x[2])
+        self['normals']['PET'] = calcul_monthly_normals(x[0], x[1], x[2])
 
         print('-'*78)
 
@@ -349,7 +353,7 @@ def add_PET_to_weather_datafile(filename):
 
     Tavg = data[:, vrbs.index('Mean Temp (deg C)')]
     x = calc_monthly_mean(Year, Month, Tavg)
-    Ta = calcul_monthly_normals(x[1], x[2])
+    Ta = calcul_monthly_normals(x[0], x[1], x[2])
 
     PET = calcul_Thornthwaite(Dates, Tavg, lat, Ta)
 
@@ -518,10 +522,18 @@ def fill_nan(time, data, name='data', fill_mode='zeros'):
 # ----- Base functions: monthly downscaling
 
 def calc_monthly_sum(yy_dly, mm_dly, x_dly):
+    """
+    Calcul monthly cumulative values from daily values, where yy_dly are the
+    years, mm_dly are the months (1 to 12), and x_dly are the daily values.
+    """
     return calc_monthly(yy_dly, mm_dly, x_dly, np.sum)
 
 
 def calc_monthly_mean(yy_dly, mm_dly, x_dly):
+    """
+    Calcul monthly mean values from daily values, where yy_dly are the
+    years, mm_dly are the months (1 to 12), and x_dly are the daily values.
+    """
     return calc_monthly(yy_dly, mm_dly, x_dly, np.mean)
 
 
@@ -543,10 +555,26 @@ def calc_monthly(yy_dly, mm_dly, x_dly, func):
     return yy_mly, mm_mly, x_mly
 
 
-def calcul_monthly_normals(mm_mly, x_mly):
+def calcul_monthly_normals(years, months, x_mly, yearmin=None, yearmax=None):
+    """Calcul the monthly normals from monthly values."""
+    if len(years) != len(months) != len(x_mly):
+        raise ValueError("The dimension of the years, months, and x_mly array"
+                         " must match exactly.")
+    if np.min(months) < 1 or np.max(months) > 12:
+        raise ValueError("Months values must be between 1 and 12.")
+
+    # Mark as nan monthly values that are outside the year range that is
+    # defined by yearmin and yearmax :
+    x_mly = np.copy(x_mly)
+    if yearmin is not None:
+        x_mly[years < yearmin] = np.nan
+    if yearmax is not None:
+        x_mly[years > yearmax] = np.nan
+
+    # Calcul the monthly normals :
     x_norm = np.zeros(12)
     for i, mm in enumerate(range(1, 13)):
-        indx = np.where((mm_mly == mm) & (~np.isnan(x_mly)))[0]
+        indx = np.where((months == mm) & (~np.isnan(x_mly)))[0]
         if len(indx) > 0:
             x_norm[i] = np.mean(x_mly[indx])
         else:
@@ -558,10 +586,18 @@ def calcul_monthly_normals(mm_mly, x_mly):
 # ----- Base functions: yearly downscaling
 
 def calc_yearly_sum(yy_dly, x_dly):
+    """
+    Calcul yearly cumulative values from daily values, where yy_dly are the
+    years and x_dly are the daily values.
+    """
     return calc_yearly(yy_dly, x_dly, np.sum)
 
 
 def calc_yearly_mean(yy_dly, x_dly):
+    """
+    Calcul yearly mean values from daily values, where yy_dly are the years
+    and x_dly are the daily values.
+    """
     return calc_yearly(yy_dly, x_dly, np.mean)
 
 

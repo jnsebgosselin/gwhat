@@ -106,10 +106,11 @@ class ProjetReader(object):
     def close_projet(self):
         try:
             self.db.close()
-        except:
-            pass  # projet is None or already closed
+        except AttributeError:
+            # projet is None or already closed.
+            pass
 
-    # =========================================================================
+    # ---- Project Properties
 
     @property
     def name(self):
@@ -169,7 +170,7 @@ class ProjetReader(object):
     def lon(self, x):
         self.db.attrs['longitude'] = x
 
-    # ======================================================== water level ====
+    # ---- Water Levels Dataset Handlers
 
     @property
     def wldsets(self):
@@ -232,7 +233,7 @@ class ProjetReader(object):
             self.db.flush()
 
             print('New dataset created sucessfully')
-        except:
+        except Exception:
             print('Unable to save dataset to project db')
             del self.db['wldsets'][name]
 
@@ -241,7 +242,7 @@ class ProjetReader(object):
     def del_wldset(self, name):
         del self.db['wldsets/%s' % name]
 
-    # =========================================================== weather =====
+    # ---- Weather Dataset Handlers
 
     @property
     def wxdsets(self):
@@ -474,12 +475,11 @@ class WLDataFrameHDF5(dict):
         return layout
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
 class WXDataFrameHDF5(dict):
-    # This is a wrapper around the h5py group that is used to mimick the
-    # structure of WXDataFrame in meteo_utils.
+    """
+    This is a wrapper around the h5py group that is used to mimick the
+    structure of WXDataFrame in gwhat.meteo.weather_reader.
+    """
     def __init__(self, dset, *args, **kwargs):
         super(WXDataFrameHDF5, self).__init__(*args, **kwargs)
         self.dset = dset
@@ -491,6 +491,11 @@ class WXDataFrameHDF5(dict):
             x = {}
             for vrb in self.dset[key].keys():
                 x[vrb] = self.dset[key][vrb].value
+            if key == 'normals' and 'Period' not in x.keys():
+                # This is needed for backward compatibility with
+                # gwhat < 0.2.3 (see PR#142).
+                x['Period'] = (np.min(self.dset['Year']),
+                               np.max(self.dset['Year']))
             return x
         elif key == 'daily':
             vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
@@ -508,6 +513,6 @@ class WXDataFrameHDF5(dict):
 
 
 if __name__ == '__main__':
-    f = 'C:/Users/jnsebgosselin/Desktop/testé/testé.what'
-    f = 'C:/Users/jsgosselin/OneDrive/WHAT/WHAT/tests/Example.what'
+    f = ("C:/Users/jsgosselin/GWHAT/"
+         "gwhat/tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
     pr = ProjetReader(f)
