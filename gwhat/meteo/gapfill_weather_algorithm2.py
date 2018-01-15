@@ -1383,21 +1383,22 @@ class WeatherData(object):
         for i, path in enumerate(paths):
             self.fnames[i] = os.path.basename(path)
 
-        if nSTA == 0:  # Reset states of all class variables
-            self.STANAME = []
-            self.ALT = []
-            self.LAT = []
-            self.LON = []
-            self.PROVINCE = []
-            self.ClimateID = []
-            self.DATE_START = []
-            self.DATE_END = []
+        # Reset the state of all class variables :
 
+        self.STANAME = []
+        self.ALT = []
+        self.LAT = []
+        self.LON = []
+        self.PROVINCE = []
+        self.ClimateID = []
+        self.DATE_START = []
+        self.DATE_END = []
+
+        if nSTA == 0:
             return False
 
-        # Variable Initialization ---------------------------------------------
+        # Initialize the variables :
 
-        self.STANAME = np.zeros(nSTA).astype('str')
         self.ALT = np.zeros(nSTA)
         self.LAT = np.zeros(nSTA)
         self.LON = np.zeros(nSTA)
@@ -1547,24 +1548,16 @@ class WeatherData(object):
             # Check if a station with this name already exist in the list.
             # If so, a number at the end of the name is added so it is
             # possible to differentiate them in the list.
-
-            isNameExist = np.where(reader[0][1] == self.STANAME)[0]
-            if len(isNameExist) > 0:
-
-                msg = ('Station name %s already exists. '
-                       'Added a number at the end.') % reader[0][1]
-                print(msg)
-
+            newname = reader[0][1]
+            if newname in self.STANAME:
+                print("Station name %s already exists."
+                      " Added a number at the end." % reader[0][1])
                 count = 1
-                while len(isNameExist) > 0:
+                newname = '%s (%d)' % (reader[0][1], count)
+                while newname in self.STANAME:
                     newname = '%s (%d)' % (reader[0][1], count)
-                    isNameExist = np.where(newname == self.STANAME)[0]
                     count += 1
-
-                self.STANAME[i] = newname
-
-            else:
-                self.STANAME[i] = reader[0][1]
+            self.STANAME.append(newname)
 
             # Other station info :
 
@@ -1574,7 +1567,11 @@ class WeatherData(object):
             self.ALT[i] = float(reader[4][1])
             self.ClimateID[i] = str(reader[5][1])
 
-        # ------------------------------------ SORT STATION ALPHABETICALLY ----
+        # Convert to Numpy Array :
+
+        self.STANAME = np.array(self.STANAME)
+
+        # Sort the stations alphabetically :
 
         sort_index = np.argsort(self.STANAME)
 
