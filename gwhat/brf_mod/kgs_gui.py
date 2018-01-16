@@ -396,20 +396,6 @@ class BRFViewer(QWidget):
 
     def __initGUI__(self):
 
-        # ---- Toolbar
-
-        self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
-        self.btn_del.setToolTip('Delete current BRF results')
-        self.btn_del.clicked.connect(self.del_brf)
-
-        btn_save = QToolButtonNormal(icons.get_icon('save'))
-        btn_save.setToolTip('Save current BRF graph...')
-        btn_save.clicked.connect(self.select_savefig_path)
-
-        self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
-        self.btn_setp.setToolTip('Show graph layout parameters...')
-        self.btn_setp.clicked.connect(self.toggle_graphpannel)
-
         # ---- Navigator
 
         self.btn_prev = QToolButtonNormal(icons.get_icon('go_previous'))
@@ -429,7 +415,21 @@ class BRFViewer(QWidget):
 
         self.total_brf = QLabel('/ 0')
 
-        # ---- Layout ----
+        # ---- Toolbar
+
+        self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
+        self.btn_del.setToolTip('Delete current BRF results')
+        self.btn_del.clicked.connect(self.del_brf)
+
+        btn_save = QToolButtonNormal(icons.get_icon('save'))
+        btn_save.setToolTip('Save current BRF graph...')
+        btn_save.clicked.connect(self.select_savefig_path)
+
+        self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
+        self.btn_setp.setToolTip('Show graph layout parameters...')
+        self.btn_setp.clicked.connect(self.toggle_graphpannel)
+
+        # Layout
 
         self.tbar = myqt.QFrameLayout()
 
@@ -445,7 +445,7 @@ class BRFViewer(QWidget):
         self.tbar.setColumnStretch(row, 100)
         self.tbar.setContentsMargins(10, 0, 10, 10)  # (l, t, r, b)
 
-        # -------------------------------------------------- Graph Options ----
+        # ---- Graph Options Panel
 
         self._errorbar = QCheckBox('Show error bars')
         self._errorbar.setCheckState(Qt.Checked)
@@ -462,7 +462,7 @@ class BRFViewer(QWidget):
         self._markersize['widget'].setRange(0, 25)
         self._markersize['widget'].valueChanged.connect(self.plot_brf)
 
-        # ---- axis limits ----
+        # Axis limits
 
         axlayout = QGridLayout()
         axlayout.addWidget(QLabel('y-axis limits:'), 0, 0, 1, 2)
@@ -498,7 +498,7 @@ class BRFViewer(QWidget):
         axlayout.setColumnStretch(3, 100)
         axlayout.setContentsMargins(0, 0, 0, 0)  # (left, top, right, bottom)
 
-        # ---- Layout ----
+        # Layout
 
         self.graph_pan = myqt.QFrameLayout()
         self.graph_pan.setContentsMargins(10, 0, 10, 0)  # (l, t, r, b)
@@ -519,7 +519,7 @@ class BRFViewer(QWidget):
         self.graph_pan.setRowMinimumHeight(row, 15)
         self.graph_pan.setRowStretch(row, 100)
 
-        # ---------------------------------------------------------- Graph ----
+        # ---- Graph Canvas
 
         self.fig_frame = QFrame()
         self.fig_frame.setFrameStyle(StyleDB().frame)
@@ -533,7 +533,7 @@ class BRFViewer(QWidget):
         fflay.addWidget(self.tbar, 1, 0)
         fflay.addWidget(self.brf_canvas, 0, 0)
 
-        # ---------------------------------------------------- Main Layout ----
+        # ---- Main Layout
 
         ml = QGridLayout(self)
 
@@ -552,75 +552,7 @@ class BRFViewer(QWidget):
             self.setEnabled(True)
             self.update_brfnavigate_state()
 
-    # ======================================================= Graph Panel  ====
-
-    def toggle_graphpannel(self):
-        if self.graph_pan.isVisible() is True:                     # Hide panel
-            self.graph_pan.setVisible(False)
-            self.btn_setp.setAutoRaise(True)
-            self.btn_setp.setToolTip('Show graph layout parameters...')
-
-            w = self.size().width() - self.graph_pan.size().width()
-            self.setFixedWidth(w)
-        else:                                                      # Show panel
-            self.graph_pan.setVisible(True)
-            self.btn_setp.setAutoRaise(False)
-            self.btn_setp.setToolTip('Hide graph layout parameters...')
-
-            w = self.size().width() + self.graph_pan.size().width()
-            self.setFixedWidth(w)
-
-    # =========================================================================
-
-    def navigate_brf(self):
-        if self.sender() == self.btn_prev:
-            cur_num = self.current_brf.value() - 1
-        elif self.sender() == self.btn_next:
-            cur_num = self.current_brf.value() + 1
-        elif self.sender() == self.current_brf:
-            cur_num = self.current_brf.value()
-        self.current_brf.setValue(cur_num)
-
-        self.update_brfnavigate_state()
-
-    def del_brf(self):
-        index = self.current_brf.value()-1
-        name = self.wldset.get_brfAt(index)
-        self.wldset.del_brf(name)
-        self.update_brfnavigate_state()
-
-    def new_brf_added(self):
-        self.current_brf.setMaximum(self.wldset.brf_count())
-        self.current_brf.setValue(self.wldset.brf_count())
-        self.update_brfnavigate_state()
-
-    def update_brfnavigate_state(self):
-        count = self.wldset.brf_count()
-        self.total_brf.setText('/ %d' % count)
-
-        self.current_brf.setMinimum(min(count, 1))
-        self.current_brf.setMaximum(count)
-        curnt = self.current_brf.value()
-
-        self.tbar.setEnabled(count > 0)
-        self.btn_prev.setEnabled(curnt > 1)
-        self.btn_next.setEnabled(curnt < count)
-        self.btn_del.setEnabled(count > 0)
-
-        self.plot_brf()
-
-    # =========================================================================
-
-    def xlimModeChanged(self, state):
-        if state == 2:
-            self._ylim['min'].setEnabled(False)
-            self._ylim['max'].setEnabled(False)
-        else:
-            self._ylim['min'].setEnabled(True)
-            self._ylim['max'].setEnabled(True)
-        self.plot_brf()
-
-    # =========================================================================
+    # ---- Graph Panel Properties
 
     @property
     def ymin(self):
@@ -654,9 +586,78 @@ class BRFViewer(QWidget):
     def markersize(self):
         return self._markersize['widget'].value()
 
+    # ---- Graph Panel Handlers
+
+    def toggle_graphpannel(self):
+        if self.graph_pan.isVisible() is True:
+            # Hide the panel.
+            self.graph_pan.setVisible(False)
+            self.btn_setp.setAutoRaise(True)
+            self.btn_setp.setToolTip('Show graph layout parameters...')
+
+            w = self.size().width() - self.graph_pan.size().width()
+            self.setFixedWidth(w)
+        else:
+            # Show the panel.
+            self.graph_pan.setVisible(True)
+            self.btn_setp.setAutoRaise(False)
+            self.btn_setp.setToolTip('Hide graph layout parameters...')
+
+            w = self.size().width() + self.graph_pan.size().width()
+            self.setFixedWidth(w)
+
+    def xlimModeChanged(self, state):
+        if state == 2:
+            self._ylim['min'].setEnabled(False)
+            self._ylim['max'].setEnabled(False)
+        else:
+            self._ylim['min'].setEnabled(True)
+            self._ylim['max'].setEnabled(True)
+        self.plot_brf()
+
+    # ---- Toolbar Handlers
+
+    def navigate_brf(self):
+        if self.sender() == self.btn_prev:
+            cur_num = self.current_brf.value() - 1
+        elif self.sender() == self.btn_next:
+            cur_num = self.current_brf.value() + 1
+        elif self.sender() == self.current_brf:
+            cur_num = self.current_brf.value()
+        self.current_brf.setValue(cur_num)
+
+        self.update_brfnavigate_state()
+
+    def del_brf(self):
+        """Delete the graph and data of the currently selected result."""
+        index = self.current_brf.value()-1
+        name = self.wldset.get_brfAt(index)
+        self.wldset.del_brf(name)
+        self.update_brfnavigate_state()
+
+    def new_brf_added(self):
+        self.current_brf.setMaximum(self.wldset.brf_count())
+        self.current_brf.setValue(self.wldset.brf_count())
+        self.update_brfnavigate_state()
+
+    def update_brfnavigate_state(self):
+        count = self.wldset.brf_count()
+        self.total_brf.setText('/ %d' % count)
+
+        self.current_brf.setMinimum(min(count, 1))
+        self.current_brf.setMaximum(count)
+        curnt = self.current_brf.value()
+
+        self.tbar.setEnabled(count > 0)
+        self.btn_prev.setEnabled(curnt > 1)
+        self.btn_next.setEnabled(curnt < count)
+        self.btn_del.setEnabled(count > 0)
+
+        self.plot_brf()
+
     def select_savefig_path(self):
         """
-        Opens a dialog to select a file path where the save the brf figure.
+        Opens a dialog to select a file path where to save the brf figure.
         """
         ddir = osp.join(self.__save_ddir,
                         'brf_%s' % self.wldset['Well'])
@@ -672,7 +673,7 @@ class BRFViewer(QWidget):
             self.save_brf_fig(fname)
 
     def save_brf_fig(self, fname):
-        """Saves the current BRF figure to filename."""
+        """Saves the current BRF figure to fname."""
         self.brf_canvas.figure.savefig(fname)
 
     def plot_brf(self):
@@ -701,10 +702,7 @@ class BRFViewer(QWidget):
 
             self.brf_canvas.figure.plot_BRF(lag, A, err, date0, date1, well,
                                             msize, draw_line, [ymin, ymax])
-
         self.brf_canvas.draw()
-
-    # =========================================================================
 
     def show(self):
         super(BRFViewer, self).show()
