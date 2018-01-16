@@ -23,7 +23,7 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
                              QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-                             QDesktopWidget, QMessageBox)
+                             QDesktopWidget, QMessageBox, QFileDialog)
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
@@ -40,6 +40,7 @@ from gwhat.common import icons
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
 from gwhat.brf_mod.kgs_plot import BRFFigure
+from gwhat import __rootdir__
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -381,6 +382,7 @@ class BRFViewer(QWidget):
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
+        self.__save_ddir = osp.dirname(__rootdir__)
 
         self.setWindowTitle('BRF Results Viewer')
         self.setWindowIcon(icons.get_icon('master'))
@@ -402,6 +404,7 @@ class BRFViewer(QWidget):
 
         btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save current BRF graph...')
+        btn_save.clicked.connect(self.select_savefig_path)
 
         self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
         self.btn_setp.setToolTip('Show graph layout parameters...')
@@ -651,6 +654,26 @@ class BRFViewer(QWidget):
     def markersize(self):
         return self._markersize['widget'].value()
 
+    def select_savefig_path(self):
+        """
+        Opens a dialog to select a file path where the save the brf figure.
+        """
+        ddir = osp.join(self.__save_ddir,
+                        'brf_%s' % self.wldset['Well'])
+
+        dialog = QFileDialog()
+        fname, ftype = dialog.getSaveFileName(
+                self, "Save Figure", ddir, '*.pdf;;*.svg')
+        ftype = ftype.replace('*', '')
+        if fname:
+            self.__save_ddir = osp.dirname(fname)
+            if not fname.endswith(ftype):
+                fname = fname + ftype
+            self.save_brf_fig(fname)
+
+    def save_brf_fig(self, fname):
+        """Saves the current BRF figure to filename."""
+        self.brf_canvas.figure.savefig(fname)
 
     def plot_brf(self):
         if self.wldset.brf_count() == 0:
