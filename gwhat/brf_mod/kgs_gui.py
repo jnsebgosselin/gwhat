@@ -7,15 +7,16 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: standard libraries
+# ---- Imports: Standard Libraries
 
 import os
+import os.path as osp
 import requests
 import zipfile
 import io
 
 
-# ---- Imports: third parties
+# ---- Imports: Third Parties
 
 from PyQt5.QtCore import Qt, QDate, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -31,7 +32,7 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 
-# ---- Imports: local
+# ---- Imports: Local
 
 import gwhat.common.widgets as myqt
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
@@ -393,7 +394,7 @@ class BRFViewer(QWidget):
 
     def __initGUI__(self):
 
-        # -------------------------------------------------------- Toolbar ----
+        # ---- Toolbar
 
         self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
         self.btn_del.setToolTip('Delete current BRF results')
@@ -406,7 +407,7 @@ class BRFViewer(QWidget):
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
-        # ---- Navigator ----
+        # ---- Navigator
 
         self.btn_prev = QToolButtonNormal(icons.get_icon('go_previous'))
         self.btn_prev.clicked.connect(self.navigate_brf)
@@ -650,7 +651,6 @@ class BRFViewer(QWidget):
     def markersize(self):
         return self._markersize['widget'].value()
 
-    # -------------------------------------------------------------------------
 
     def plot_brf(self):
         if self.wldset.brf_count() == 0:

@@ -31,7 +31,7 @@ class BRFFigure(mpl.figure.Figure):
     def __init__(self):
         super(BRFFigure, self).__init__()
 
-        # -------------------------------------------------- FIG CREATION -----
+        # ---- Figure Creation
 
         fig_width = 8
         fig_height = 5
@@ -82,7 +82,6 @@ class BRFFigure(mpl.figure.Figure):
         self.title = ax.text(0.5, 1, '', ha='center', va='top', fontsize=14,
                              transform=ax.transAxes+offset)
 
-    # =========================================================================
 
     def empty_BRF(self):
         ax = self.axes[0]
