@@ -44,7 +44,7 @@ class BRFFigure(mpl.figure.Figure):
         bottom_margin = 0.75
         top_margin = 0.25
 
-        # ---------------------------------------------------------- AXES -----
+        # ---- Axe Setup
 
         ax = self.add_axes([left_margin/fig_width, bottom_margin/fig_height,
                             1 - (left_margin + right_margin)/fig_width,
@@ -52,20 +52,20 @@ class BRFFigure(mpl.figure.Figure):
                            zorder=1)
         ax.set_visible(False)
 
-        # ---- ticks ----
+        # ---- Ticks Setup
 
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
         ax.tick_params(axis='both', which='major', direction='out',
                        gridOn=True)
 
-        # ---- axis ----
+        # ---- Axis Labels
 
         lbd = LabelDataBase('English')
         ax.set_xlabel(lbd.lag, fontsize=14, labelpad=8)
         ax.set_ylabel(lbd.A, fontsize=14)
 
-        # ---- artists ----
+        # ---- Artists Init
 
         self.line, = ax.plot([], [], ls='-', color='blue', linewidth=1.5,
                              zorder=20, clip_on=True)
@@ -89,14 +89,13 @@ class BRFFigure(mpl.figure.Figure):
 
     def plot_BRF(self, lag, A, err, date0, date1, well, msize=0,
                  draw_line=True, ylim=[None, None]):
-
         ax = self.axes[0]
         ax.set_visible(True)
 
         lbd = LabelDataBase('English')
         lag_max = np.max(lag)
 
-        # --------------------------------------------------------- TICKS -----
+        # ---- Ticks Setup
 
         TCKPOS = np.arange(0, max(lag_max+1, 10), 1)
         ax.set_xticks(TCKPOS)
@@ -104,7 +103,7 @@ class BRFFigure(mpl.figure.Figure):
         TCKPOS = np.arange(-10, 10, 0.2)
         ax.set_yticks(TCKPOS)
 
-        # ---------------------------------------------------------- AXIS -----
+        # ---- Axis Limits
 
         if ylim[0] is None:
             if len(err) > 0:
@@ -127,7 +126,7 @@ class BRFFigure(mpl.figure.Figure):
 
         ax.axis([0, lag_max, ymin, ymax])
 
-        # ---------------------------------------------------------- PLOT -----
+        # ---- Update the data
 
         self.line.set_xdata(lag)
         self.line.set_ydata(A)
@@ -145,8 +144,3 @@ class BRFFigure(mpl.figure.Figure):
             self.errbar, = ax.plot([], [])
 #
         self.title.set_text(lbd.title % (well, date0, date1))
-
-
-
-if __name__ == '__main__':
-    pass
