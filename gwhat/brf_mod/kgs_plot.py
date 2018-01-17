@@ -15,21 +15,26 @@ import matplotlib as mpl
 import numpy as np
 
 
-class LabelDataBase():
+class FigureLabels():
+    LANGUAGES = ['english', 'french']
+
     def __init__(self, language):
-        self.lag = u'Time Lag (days)'
+        self.lag = 'Time Lag (days)'
         self.A = 'Cumulative Response Function'
         self.title = ('Well %s from %s to %s')
 
-        if language == 'French':
-            self.lag = u'Lag temporel (h)'
-            self.A = u'Réponse barométrique cumulative'
-            self.title = u'Réponse barométrique pour le puits %s du %s au %s'
+        if language.lower() == 'french':
+            self.lag = 'Lag temporel (h)'
+            self.A = 'Réponse barométrique cumulative'
+            self.title = 'Réponse barométrique pour le puits %s du %s au %s'
 
 
 class BRFFigure(mpl.figure.Figure):
-    def __init__(self):
+    def __init__(self, lang='English'):
         super(BRFFigure, self).__init__()
+        lang = lang if lang.lower() in FigureLabels.LANGUAGES else 'English'
+        self.__figlang = lang
+        self.__figlabels = FigureLabels(lang)
 
         # ---- Figure Creation
 
@@ -61,9 +66,8 @@ class BRFFigure(mpl.figure.Figure):
 
         # ---- Axis Labels
 
-        lbd = LabelDataBase('English')
-        ax.set_xlabel(lbd.lag, fontsize=14, labelpad=8)
-        ax.set_ylabel(lbd.A, fontsize=14)
+        ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
+        ax.set_ylabel(self.fig_labels.A, fontsize=14)
 
         # ---- Artists Init
 
@@ -82,6 +86,26 @@ class BRFFigure(mpl.figure.Figure):
         self.title = ax.text(0.5, 1, '', ha='center', va='top', fontsize=14,
                              transform=ax.transAxes+offset)
 
+    @property
+    def fig_labels(self):
+        return self.__figlabels
+
+    @property
+    def fig_language(self):
+        return self.__figlang
+
+    def set_language(self, lang):
+        """
+        Sets the language of the figure labels and update the labels
+        of the axis, but not the title of the figure.
+        """
+        lang = lang if lang.lower() in FigureLabels.LANGUAGES else 'English'
+        self.__figlang = lang
+        self.__figlabels = FigureLabels(lang)
+
+        ax = self.axes[0]
+        ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
+        ax.set_ylabel(self.fig_labels.A, fontsize=14)
 
     def empty_BRF(self):
         ax = self.axes[0]
@@ -92,7 +116,6 @@ class BRFFigure(mpl.figure.Figure):
         ax = self.axes[0]
         ax.set_visible(True)
 
-        lbd = LabelDataBase('English')
         lag_max = np.max(lag)
 
         # ---- Ticks Setup
@@ -142,5 +165,4 @@ class BRFFigure(mpl.figure.Figure):
                                           color='0.75', clip_on=True)
         else:
             self.errbar, = ax.plot([], [])
-#
         self.title.set_text(lbd.title % (well, date0, date1))
