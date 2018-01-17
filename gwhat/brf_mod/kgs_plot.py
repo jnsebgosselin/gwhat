@@ -165,4 +165,4 @@ class BRFFigure(mpl.figure.Figure):
                                           color='0.75', clip_on=True)
         else:
             self.errbar, = ax.plot([], [])
-        self.title.set_text(lbd.title % (well, date0, date1))
+        self.title.set_text(self.fig_labels.title % (well, date0, date1))
