@@ -293,7 +293,7 @@ class BRFManager(myqt.QFrameLayout):
         while True:
             try:
                 child.parent().raise_()
-            except:
+            except Exception:
                 break
             else:
                 child = child.parent()
@@ -368,7 +368,7 @@ class BRFManager(myqt.QFrameLayout):
             self.viewer.new_brf_added()
             self.viewer.show()
             QApplication.restoreOverrideCursor()
-        except:
+        except Exception:
             QApplication.restoreOverrideCursor()
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
