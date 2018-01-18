@@ -7,22 +7,24 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: standard libraries
+# ---- Imports: Standard Libraries
 
 import os
+import os.path as osp
 import requests
 import zipfile
 import io
 
 
-# ---- Imports: third parties
+# ---- Imports: Third Parties
 
 from PyQt5.QtCore import Qt, QDate, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
                              QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-                             QDesktopWidget, QMessageBox)
+                             QDesktopWidget, QMessageBox, QFileDialog,
+                             QComboBox, QLayout)
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
@@ -31,14 +33,16 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 
-# ---- Imports: local
+# ---- Imports: Local
 
 import gwhat.common.widgets as myqt
+from gwhat.common.widgets import VSep
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
 from gwhat.brf_mod.kgs_plot import BRFFigure
+from gwhat import __rootdir__
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -163,25 +167,23 @@ class BRFManager(myqt.QFrameLayout):
         self._correct = QCheckBox('Correct WL')
         self._correct.setEnabled(False)
 
-        # -------------------------------------------------------- Toolbar ----
+        # ---- Toolbar
 
         btn_comp = QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
 
-        btn_show = QToolButtonSmall(icons.get_icon('search'))
+        self.btn_show = btn_show = QToolButtonSmall(icons.get_icon('search'))
         btn_show.clicked.connect(self.viewer.show)
 
-        # ---- Layout ----
+        # Layout
 
         tbar = myqt.QFrameLayout()
         tbar.addWidget(btn_comp, 0, 0)
         tbar.addWidget(btn_show, 0, 1)
         tbar.setColumnStretch(0, 100)
 
-        # ---------------------------------------------------- Main Layout ----
-
-        # ---- Layout ----
+        # ---- Main Layout
 
         row = 0
         self.addWidget(self._bplag['label'], row, 0)
@@ -291,7 +293,7 @@ class BRFManager(myqt.QFrameLayout):
         while True:
             try:
                 child.parent().raise_()
-            except:
+            except Exception:
                 break
             else:
                 child = child.parent()
@@ -366,7 +368,7 @@ class BRFManager(myqt.QFrameLayout):
             self.viewer.new_brf_added()
             self.viewer.show()
             QApplication.restoreOverrideCursor()
-        except:
+        except Exception:
             QApplication.restoreOverrideCursor()
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
@@ -380,6 +382,7 @@ class BRFViewer(QWidget):
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
+        self.__save_ddir = osp.dirname(__rootdir__)
 
         self.setWindowTitle('BRF Results Viewer')
         self.setWindowIcon(icons.get_icon('master'))
@@ -393,20 +396,7 @@ class BRFViewer(QWidget):
 
     def __initGUI__(self):
 
-        # -------------------------------------------------------- Toolbar ----
-
-        self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
-        self.btn_del.setToolTip('Delete current BRF results')
-        self.btn_del.clicked.connect(self.del_brf)
-
-        btn_save = QToolButtonNormal(icons.get_icon('save'))
-        btn_save.setToolTip('Save current BRF graph...')
-
-        self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
-        self.btn_setp.setToolTip('Show graph layout parameters...')
-        self.btn_setp.clicked.connect(self.toggle_graphpannel)
-
-        # ---- Navigator ----
+        # ---- Navigator
 
         self.btn_prev = QToolButtonNormal(icons.get_icon('go_previous'))
         self.btn_prev.clicked.connect(self.navigate_brf)
@@ -425,23 +415,58 @@ class BRFViewer(QWidget):
 
         self.total_brf = QLabel('/ 0')
 
-        # ---- Layout ----
+        # ---- Language Widget
+
+        self.cbb_language = QComboBox()
+        self.cbb_language.setEditable(False)
+        self.cbb_language.setInsertPolicy(QComboBox.NoInsert)
+        self.cbb_language.addItems(['French', 'English'])
+        self.cbb_language.setCurrentIndex(1)
+        self.cbb_language.currentIndexChanged.connect(self.plot_brf)
+        self.cbb_language.setToolTip("Graph label language.")
+
+        lay_language = QGridLayout()
+        lay_language.addWidget(QLabel('Label Language:'), 0, 0)
+        lay_language.addWidget(self.cbb_language, 0, 1)
+        lay_language.setSpacing(5)
+        lay_language.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+
+        # ---- Toolbar
+
+        # Generate the buttons :
+
+        self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
+        self.btn_del.setToolTip('Delete current BRF results')
+        self.btn_del.clicked.connect(self.del_brf)
+
+        self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
+        btn_save.setToolTip('Save current BRF graph...')
+        btn_save.clicked.connect(self.select_savefig_path)
+
+        self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
+        self.btn_setp.setToolTip('Show graph layout parameters...')
+        self.btn_setp.clicked.connect(self.toggle_graphpannel)
+
+        # Generate the layout :
 
         self.tbar = myqt.QFrameLayout()
 
-        buttons = [btn_save, self.btn_del,
-                   self.btn_prev, self.current_brf, self.total_brf,
-                   self.btn_next, self.btn_setp]
+        buttons = [btn_save, self.btn_del, VSep(), self.btn_prev,
+                   self.current_brf, self.total_brf, self.btn_next, VSep(),
+                   lay_language, VSep(), self.btn_setp]
 
         for btn in buttons:
-            self.tbar.addWidget(btn, 1, self.tbar.columnCount())
+            if isinstance(btn, QLayout):
+                self.tbar.addLayout(btn, 1, self.tbar.columnCount())
+            else:
+                self.tbar.addWidget(btn, 1, self.tbar.columnCount())
 
         row = self.tbar.columnCount()
         self.tbar.addWidget(myqt.HSep(), 0, 0, 1, row+1)
         self.tbar.setColumnStretch(row, 100)
         self.tbar.setContentsMargins(10, 0, 10, 10)  # (l, t, r, b)
 
-        # -------------------------------------------------- Graph Options ----
+        # ---- Graph Options Panel
 
         self._errorbar = QCheckBox('Show error bars')
         self._errorbar.setCheckState(Qt.Checked)
@@ -458,7 +483,7 @@ class BRFViewer(QWidget):
         self._markersize['widget'].setRange(0, 25)
         self._markersize['widget'].valueChanged.connect(self.plot_brf)
 
-        # ---- axis limits ----
+        # Axis limits
 
         axlayout = QGridLayout()
         axlayout.addWidget(QLabel('y-axis limits:'), 0, 0, 1, 2)
@@ -494,7 +519,7 @@ class BRFViewer(QWidget):
         axlayout.setColumnStretch(3, 100)
         axlayout.setContentsMargins(0, 0, 0, 0)  # (left, top, right, bottom)
 
-        # ---- Layout ----
+        # Layout
 
         self.graph_pan = myqt.QFrameLayout()
         self.graph_pan.setContentsMargins(10, 0, 10, 0)  # (l, t, r, b)
@@ -515,7 +540,7 @@ class BRFViewer(QWidget):
         self.graph_pan.setRowMinimumHeight(row, 15)
         self.graph_pan.setRowStretch(row, 100)
 
-        # ---------------------------------------------------------- Graph ----
+        # ---- Graph Canvas
 
         self.fig_frame = QFrame()
         self.fig_frame.setFrameStyle(StyleDB().frame)
@@ -529,7 +554,7 @@ class BRFViewer(QWidget):
         fflay.addWidget(self.tbar, 1, 0)
         fflay.addWidget(self.brf_canvas, 0, 0)
 
-        # ---------------------------------------------------- Main Layout ----
+        # ---- Main Layout
 
         ml = QGridLayout(self)
 
@@ -548,17 +573,47 @@ class BRFViewer(QWidget):
             self.setEnabled(True)
             self.update_brfnavigate_state()
 
-    # ======================================================= Graph Panel  ====
+    # ---- Graph Panel Properties
+
+    @property
+    def ymin(self):
+        if self._ylim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            return self._ylim['min'].value()
+
+    @property
+    def ymax(self):
+        if self._ylim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            return self._ylim['max'].value()
+
+    @property
+    def show_ebar(self):
+        return self._errorbar.checkState() == Qt.Checked
+
+    @property
+    def draw_line(self):
+        return self._drawline.checkState() == Qt.Checked
+
+    @property
+    def markersize(self):
+        return self._markersize['widget'].value()
+
+    # ---- Graph Panel Handlers
 
     def toggle_graphpannel(self):
-        if self.graph_pan.isVisible() is True:                     # Hide panel
+        if self.graph_pan.isVisible() is True:
+            # Hide the panel.
             self.graph_pan.setVisible(False)
             self.btn_setp.setAutoRaise(True)
             self.btn_setp.setToolTip('Show graph layout parameters...')
 
             w = self.size().width() - self.graph_pan.size().width()
             self.setFixedWidth(w)
-        else:                                                      # Show panel
+        else:
+            # Show the panel.
             self.graph_pan.setVisible(True)
             self.btn_setp.setAutoRaise(False)
             self.btn_setp.setToolTip('Hide graph layout parameters...')
@@ -566,7 +621,16 @@ class BRFViewer(QWidget):
             w = self.size().width() + self.graph_pan.size().width()
             self.setFixedWidth(w)
 
-    # =========================================================================
+    def xlimModeChanged(self, state):
+        """
+        Handles when the Auto checkbox state change for the
+        limits of the y-axis.
+        """
+        self._ylim['min'].setEnabled(state != 2)
+        self._ylim['max'].setEnabled(state != 2)
+        self.plot_brf()
+
+    # ---- Toolbar Handlers
 
     def navigate_brf(self):
         if self.sender() == self.btn_prev:
@@ -580,6 +644,7 @@ class BRFViewer(QWidget):
         self.update_brfnavigate_state()
 
     def del_brf(self):
+        """Delete the graph and data of the currently selected result."""
         index = self.current_brf.value()-1
         name = self.wldset.get_brfAt(index)
         self.wldset.del_brf(name)
@@ -605,54 +670,29 @@ class BRFViewer(QWidget):
 
         self.plot_brf()
 
-    # =========================================================================
+    def select_savefig_path(self):
+        """
+        Opens a dialog to select a file path where to save the brf figure.
+        """
+        ddir = osp.join(self.__save_ddir,
+                        'brf_%s' % self.wldset['Well'])
 
-    def xlimModeChanged(self, state):
-        if state == 2:
-            self._ylim['min'].setEnabled(False)
-            self._ylim['max'].setEnabled(False)
-        else:
-            self._ylim['min'].setEnabled(True)
-            self._ylim['max'].setEnabled(True)
-        self.plot_brf()
+        dialog = QFileDialog()
+        fname, ftype = dialog.getSaveFileName(
+                self, "Save Figure", ddir, '*.pdf;;*.svg')
+        ftype = ftype.replace('*', '')
+        if fname:
+            self.__save_ddir = osp.dirname(fname)
+            if not fname.endswith(ftype):
+                fname = fname + ftype
+            self.save_brf_fig(fname)
 
-    # =========================================================================
-
-    @property
-    def ymin(self):
-        if self._ylim['auto'].checkState() == Qt.Checked:
-            return None
-        else:
-            return self._ylim['min'].value()
-
-    @property
-    def ymax(self):
-        if self._ylim['auto'].checkState() == Qt.Checked:
-            return None
-        else:
-            return self._ylim['max'].value()
-
-    @property
-    def show_ebar(self):
-        if self._errorbar.checkState() == Qt.Checked:
-            return True
-        else:
-            return False
-
-    @property
-    def draw_line(self):
-        if self._drawline.checkState() == Qt.Checked:
-            return True
-        else:
-            return False
-
-    @property
-    def markersize(self):
-        return self._markersize['widget'].value()
-
-    # -------------------------------------------------------------------------
+    def save_brf_fig(self, fname):
+        """Saves the current BRF figure to fname."""
+        self.brf_canvas.figure.savefig(fname)
 
     def plot_brf(self):
+        self.brf_canvas.figure.set_language(self.cbb_language.currentText())
         if self.wldset.brf_count() == 0:
             self.brf_canvas.figure.empty_BRF()
         else:
@@ -678,10 +718,7 @@ class BRFViewer(QWidget):
 
             self.brf_canvas.figure.plot_BRF(lag, A, err, date0, date1, well,
                                             msize, draw_line, [ymin, ymax])
-
         self.brf_canvas.draw()
-
-    # =========================================================================
 
     def show(self):
         super(BRFViewer, self).show()
