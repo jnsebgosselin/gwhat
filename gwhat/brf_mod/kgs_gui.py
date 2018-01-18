@@ -167,25 +167,23 @@ class BRFManager(myqt.QFrameLayout):
         self._correct = QCheckBox('Correct WL')
         self._correct.setEnabled(False)
 
-        # -------------------------------------------------------- Toolbar ----
+        # ---- Toolbar
 
         btn_comp = QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
 
-        btn_show = QToolButtonSmall(icons.get_icon('search'))
+        self.btn_show = btn_show = QToolButtonSmall(icons.get_icon('search'))
         btn_show.clicked.connect(self.viewer.show)
 
-        # ---- Layout ----
+        # Layout
 
         tbar = myqt.QFrameLayout()
         tbar.addWidget(btn_comp, 0, 0)
         tbar.addWidget(btn_show, 0, 1)
         tbar.setColumnStretch(0, 100)
 
-        # ---------------------------------------------------- Main Layout ----
-
-        # ---- Layout ----
+        # ---- Main Layout
 
         row = 0
         self.addWidget(self._bplag['label'], row, 0)
@@ -441,7 +439,7 @@ class BRFViewer(QWidget):
         self.btn_del.setToolTip('Delete current BRF results')
         self.btn_del.clicked.connect(self.del_brf)
 
-        btn_save = QToolButtonNormal(icons.get_icon('save'))
+        self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save current BRF graph...')
         btn_save.clicked.connect(self.select_savefig_path)
 
@@ -593,17 +591,11 @@ class BRFViewer(QWidget):
 
     @property
     def show_ebar(self):
-        if self._errorbar.checkState() == Qt.Checked:
-            return True
-        else:
-            return False
+        return self._errorbar.checkState() == Qt.Checked
 
     @property
     def draw_line(self):
-        if self._drawline.checkState() == Qt.Checked:
-            return True
-        else:
-            return False
+        return self._drawline.checkState() == Qt.Checked
 
     @property
     def markersize(self):
@@ -630,12 +622,12 @@ class BRFViewer(QWidget):
             self.setFixedWidth(w)
 
     def xlimModeChanged(self, state):
-        if state == 2:
-            self._ylim['min'].setEnabled(False)
-            self._ylim['max'].setEnabled(False)
-        else:
-            self._ylim['min'].setEnabled(True)
-            self._ylim['max'].setEnabled(True)
+        """
+        Handles when the Auto checkbox state change for the
+        limits of the y-axis.
+        """
+        self._ylim['min'].setEnabled(state != 2)
+        self._ylim['max'].setEnabled(state != 2)
         self.plot_brf()
 
     # ---- Toolbar Handlers
