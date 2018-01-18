@@ -23,7 +23,8 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
                              QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-                             QDesktopWidget, QMessageBox, QFileDialog)
+                             QDesktopWidget, QMessageBox, QFileDialog,
+                             QComboBox, QLayout)
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
@@ -35,6 +36,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # ---- Imports: Local
 
 import gwhat.common.widgets as myqt
+from gwhat.common.widgets import VSep
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 from gwhat import brf_mod as bm
@@ -415,7 +417,25 @@ class BRFViewer(QWidget):
 
         self.total_brf = QLabel('/ 0')
 
+        # ---- Language Widget
+
+        self.cbb_language = QComboBox()
+        self.cbb_language.setEditable(False)
+        self.cbb_language.setInsertPolicy(QComboBox.NoInsert)
+        self.cbb_language.addItems(['French', 'English'])
+        self.cbb_language.setCurrentIndex(1)
+        self.cbb_language.currentIndexChanged.connect(self.plot_brf)
+        self.cbb_language.setToolTip("Graph label language.")
+
+        lay_language = QGridLayout()
+        lay_language.addWidget(QLabel('Label Language:'), 0, 0)
+        lay_language.addWidget(self.cbb_language, 0, 1)
+        lay_language.setSpacing(5)
+        lay_language.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+
         # ---- Toolbar
+
+        # Generate the buttons :
 
         self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
         self.btn_del.setToolTip('Delete current BRF results')
@@ -429,16 +449,19 @@ class BRFViewer(QWidget):
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
-        # Layout
+        # Generate the layout :
 
         self.tbar = myqt.QFrameLayout()
 
-        buttons = [btn_save, self.btn_del,
-                   self.btn_prev, self.current_brf, self.total_brf,
-                   self.btn_next, self.btn_setp]
+        buttons = [btn_save, self.btn_del, VSep(), self.btn_prev,
+                   self.current_brf, self.total_brf, self.btn_next, VSep(),
+                   lay_language, VSep(), self.btn_setp]
 
         for btn in buttons:
-            self.tbar.addWidget(btn, 1, self.tbar.columnCount())
+            if isinstance(btn, QLayout):
+                self.tbar.addLayout(btn, 1, self.tbar.columnCount())
+            else:
+                self.tbar.addWidget(btn, 1, self.tbar.columnCount())
 
         row = self.tbar.columnCount()
         self.tbar.addWidget(myqt.HSep(), 0, 0, 1, row+1)
@@ -677,6 +700,7 @@ class BRFViewer(QWidget):
         self.brf_canvas.figure.savefig(fname)
 
     def plot_brf(self):
+        self.brf_canvas.figure.set_language(self.cbb_language.currentText())
         if self.wldset.brf_count() == 0:
             self.brf_canvas.figure.empty_BRF()
         else:
