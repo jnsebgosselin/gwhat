@@ -20,20 +20,19 @@ from gwhat.brf_mod.kgs_gui import BRFManager, KGSBRFInstaller, QMessageBox
 from gwhat.projet.reader_projet import ProjetReader
 
 
-# Qt Test Fixtures
-# --------------------------------
+# ---- Qt Test Fixtures
 
 @pytest.fixture
 def brf_manager_bot(qtbot):
     brf_manager = BRFManager(None)
+
     qtbot.addWidget(brf_manager)
     qtbot.addWidget(brf_manager.viewer)
 
     return brf_manager, qtbot
 
 
-# Test BRFManager
-# -------------------------------
+# ---- Test BRFManager
 
 @pytest.mark.run(order=9)
 def test_install_kgs_brf(brf_manager_bot, mocker):
@@ -66,8 +65,8 @@ def test_run_kgs_brf(brf_manager_bot):
 
     # Set the water level dataset and assert the expected values are displayed
     # correctly in the GUI.
-    projet = ProjetReader(os.path.join(os.getcwd(),
-                                       "@ new-prô'jèt!", "@ new-prô'jèt!.gwt"))
+    ppath = osp.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
+    projet = ProjetReader(ppath)
     wldset = projet.get_wldset(projet.wldsets[0])
     brf_manager.set_wldset(wldset)
 
