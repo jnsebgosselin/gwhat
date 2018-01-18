@@ -26,7 +26,7 @@ class FigureLabels():
         if language.lower() == 'french':
             self.lag = 'Lag temporel (h)'
             self.A = 'Réponse barométrique cumulative'
-            self.title = 'Réponse barométrique pour le puits %s du %s au %s'
+            self.title = 'Puits %s du %s au %s'
 
 
 class BRFFigure(mpl.figure.Figure):
