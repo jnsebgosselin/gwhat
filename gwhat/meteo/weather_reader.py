@@ -7,22 +7,21 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: standard libraries
+# ---- Imports: Standard Libraries
 
 import os
 import csv
 from calendar import monthrange
 from copy import copy
 
-
-# ---- Imports: third parties
+# ---- Imports: Third Parties
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 
-# ---- Imports: local
+# ---- Imports: Local Libraries
 
 from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
 from gwhat.common.utils import save_content_to_csv
