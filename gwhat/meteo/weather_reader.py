@@ -13,7 +13,6 @@ import os
 import os.path as osp
 import csv
 from calendar import monthrange
-from copy import copy
 from collections.abc import Mapping
 from abc import abstractmethod
 
