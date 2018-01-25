@@ -44,6 +44,23 @@ class WXDataFrameBase(Mapping):
         """Loads the dataset and save it in a store."""
         pass
 
+    def get_monthly_normals(self, yearmin=None, yearmax=None):
+        """
+        Returns a dict with the normal values of the weather dataset
+        for the period defined by yearmin and yearmax.
+        """
+        raise NotImplementedError
+
+    def export_dataset_to_csv():
+        raise NotImplementedError
+
+    def export_dataset_to_excel():
+        raise NotImplementedError
+
+    def export_dataset_to_HELP():
+        raise NotImplementedError
+
+
 class WXDataFrame(WXDataFrameBase):
     """A daily weather dataset container that loads its data from a file."""
 
