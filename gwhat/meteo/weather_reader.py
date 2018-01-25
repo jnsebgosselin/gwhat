@@ -456,12 +456,12 @@ def clean_endsof_file(data):
 
 def make_timeserie_continuous(time, date, data):
     """
-    Scan the entire time serie and will insert a row with nan values
-    whenever there is a gap in the data and will return the continuous
-    data set.
+    Scans the entire daily time series, inserts a row with nan values whenever
+    there is a gap in the data, and returns the continuous daily data set.
 
-    data = tuple containing the data series
-    date = tuple containg the time series for year, month and days
+    time = 1d numpy array containing the time in Excel numeric format.
+    date = tuple containg the time series for year, month and days.
+    data = tuple containing the data series.
     """
 
     i = 0
