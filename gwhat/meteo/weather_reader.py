@@ -493,14 +493,20 @@ def make_timeserie_continuous(time, date, data):
 
 
 def fill_nan(time, data, name='data', fill_mode='zeros'):
-    # Preferable to be run before ETP or RAIN is estimated, So that
-    # there is no missing value in both of these estimated time series.
-    # It needs to be ran after but after 'check_time_continuity'.
-
-    # fill_mode can be either 'zeros' or 'interp'
+    """
+    Fills the nan values in data with zeros if fill_mode value is 'zeros' or
+    using linear interpolation if fill_mode value is 'interp'.
+    """
+    if fill_mode not in ['zeros', 'interp']:
+        raise ValueError('fill_mode must be either "zeros" or "interp"')
 
     if data is None:
         return None
+
+    nbr_nan = len(np.where(np.isnan(data))[0])
+    if nbr_nan == 0:
+        # There is no missing value in the dataset.
+        return data
 
     if fill_mode == 'interp':
         indx = np.where(~np.isnan(data))[0]
