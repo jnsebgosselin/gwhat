@@ -10,9 +10,12 @@
 # ---- Imports: Standard Libraries
 
 import os
+import os.path as osp
 import csv
 from calendar import monthrange
 from copy import copy
+from collections.abc import Mapping
+from abc import abstractmethod
 
 # ---- Imports: Third Parties
 
@@ -30,6 +33,17 @@ from gwhat.common.utils import save_content_to_csv
 # ---- API
 
 class WXDataFrame(dict):
+class WXDataFrameBase(Mapping):
+    """
+    A daily weather data frame base class.
+    """
+    def __init__(self, *args, **kwargs):
+        super(WXDataFrameBase, self).__init__(*args, **kwargs)
+        self.store = None
+
+    @abstractmethod
+    def __load_dataset__(self):
+        pass
     def __init__(self, filename, *args, **kwargs):
         super(WXDataFrame, self).__init__(*args, **kwargs)
 
