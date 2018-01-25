@@ -463,22 +463,31 @@ def make_timeserie_continuous(time, date, data):
     date = tuple containg the time series for year, month and days.
     data = tuple containing the data series.
     """
+    # Initialize the arrays in which the continuous time series will be saved :
 
-    i = 0
-    while i < len(time)-1:
-        if (time[i+1]-time[i]) > 1:
-            time = np.insert(time, i+1, time[i]+1)
+    ctime = np.arange(time[0], time[-1]+1)
+    if np.array_equal(ctime, time):
+        # The dataset is already continuous.
+        return time, date, data
+    cdate = [np.empty(len(ctime))*np.nan for item in date]
+    cdata = [np.empty(len(ctime))*np.nan for item in data]
 
-            new = xldate_as_tuple(time[i]+1, 0)
-            date[0] = np.insert(date[0], i+1, new[0])
-            date[1] = np.insert(date[1], i+1, new[1])
-            date[2] = np.insert(date[2], i+1, new[2])
+    # Fill the continuous arrays :
 
-            for k in range(len(data)):
-                if data[k] is not None:
-                    data[k] = np.insert(data[k], i+1, np.nan)
+    indexes = np.digitize(time, ctime, right=True)
+    for i in range(len(date)):
+        cdate[i][indexes] = date[i]
+    for i in range(len(data)):
+        cdata[i][indexes] = data[i]
 
-        i += 1
+    # Complete the dates for the lines that where missing :
+
+    nan_indexes = np.where(np.isnan(cdate[0]))[0]
+    for idx in nan_indexes:
+        new_date = xldate_as_tuple(ctime[idx], 0)
+        cdate[0][idx] = new_date[0]
+        cdate[1][idx] = new_date[1]
+        cdate[2][idx] = new_date[2]
 
     return time, date, data
 
