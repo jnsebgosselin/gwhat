@@ -43,6 +43,7 @@ class WXDataFrameBase(Mapping):
 
     @abstractmethod
     def __load_dataset__(self):
+        """Loads the dataset and save it in a store."""
         pass
     def __init__(self, filename, *args, **kwargs):
         super(WXDataFrame, self).__init__(*args, **kwargs)
