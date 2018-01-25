@@ -510,26 +510,14 @@ def fill_nan(time, data, name='data', fill_mode='zeros'):
 
     if fill_mode == 'interp':
         indx = np.where(~np.isnan(data))[0]
-        nbr_nan = len(data)-len(indx)
-        if nbr_nan == 0:
-            print('There was no nan values in %s series.' % name)
-        else:
-            data = np.interp(time, time[indx], data[indx])
-            print('There was %d nan values in %s series.' % (nbr_nan, name))
-            print('Missing values were estimated by linear interpolation.')
-
+        data = np.interp(time, time[indx], data[indx])
+        print("%d missing values were estimated by linear interpolation"
+              " in %s." % (nbr_nan, name))
     elif fill_mode == 'zeros':
         indx = np.where(np.isnan(data))[0]
-        if len(indx) == 0:
-            print('There was no nan values in %s series.' % name)
-        else:
-            data[indx] = 0
-            print(('There was %d nan values in %s series. Missing values'
-                   ' were assigned a 0 value.') % (len(indx), name))
-
-    else:
-        raise ValueError('fill_mode must be either "zeros" or "interp"')
-
+        data[indx] = 0
+        print("%d missing values were assigned a value of 0"
+              " in %s." % (nbr_nan, name))
     return data
 
 
