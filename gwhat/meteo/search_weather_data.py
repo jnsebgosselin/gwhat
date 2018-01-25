@@ -327,7 +327,7 @@ class WeatherStationBrowser(QWidget):
         main_layout.setRowStretch(0, 100)
         main_layout.setHorizontalSpacing(15)
         main_layout.setVerticalSpacing(5)
-        main_layout.setColumnStretch(col+1, 100)
+        main_layout.setColumnStretch(col, 100)
 
     @property
     def stationlist(self):
