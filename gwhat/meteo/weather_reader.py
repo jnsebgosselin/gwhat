@@ -695,3 +695,5 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
 if __name__ == '__main__':
     fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
+              "sample_weather_datafile.csv")
+    wxdset = WXDataFrame(fmeteo)
