@@ -47,9 +47,9 @@ class SmartSpinBox(QDoubleSpinBox):
         self.setAccelerated(True)
 
         self.__current_value = val
-        self.__previous_value = None
-        self.setDecimals(dec)
+        self.__previous_value = 0
         self.setRange(0, 100)
+        self.setDecimals(dec)
         self.setValue(val)
         if step is not None:
             self.setSingleStep(step)
@@ -78,9 +78,7 @@ class SmartSpinBox(QDoubleSpinBox):
         Ensure that the value that was entered by editing the value of the
         spin box is within the range of values of the spinbox.
         """
-        new_value = super(SmartSpinBox, self).value()
-        new_value = max(min(new_value, self.__max_value), self.__min_value)
-        self.setValue(new_value)
+        self.setValue(super(SmartSpinBox, self).value())
 
     def stepBy(self, n):
         """
@@ -88,7 +86,6 @@ class SmartSpinBox(QDoubleSpinBox):
         range of values of the spinbox.
         """
         new_value = self.value() + n*self.singleStep()
-        new_value = max(min(new_value, self.__max_value), self.__min_value)
         self.setValue(new_value)
 
     def value(self):
@@ -106,6 +103,7 @@ class SmartSpinBox(QDoubleSpinBox):
 
     def setValue(self, new_value):
         """Qt method override to save the value in an internal variable."""
+        new_value = max(min(new_value, self.__max_value), self.__min_value)
         self.blockSignals(True)
         super(SmartSpinBox, self).setValue(new_value)
         self.blockSignals(False)
@@ -123,9 +121,9 @@ class SmartSpinBox(QDoubleSpinBox):
         self.setValue(x)
         self.blockSignals(False)
 
-    def setDecimal(self, x):
+    def setDecimals(self, x):
         """Qt method override to force a reset of the displayed range."""
-        super(SmartSpinBox, self).setDecimal(x)
+        super(SmartSpinBox, self).setDecimals(x)
         self.setRange(self.__min_value, self.__max_value)
 
     def setRange(self, xmin, xmax):
@@ -135,13 +133,13 @@ class SmartSpinBox(QDoubleSpinBox):
         self.__max_value = xmax
         self.__min_value = xmin
 
+        # Set the range of the spinbox so that its width is adjusted
+        # correctly :
         lenght_int = int(np.ceil(np.log10(max(abs(xmax), abs(xmin)))))+1
-        max_edit = '9' * lenght_int + '.' + '9' * self.decimals()
-        max_edit = int(max_edit) if self.decimals() > 0 else float(max_edit)
+        max_edit = float('9' * lenght_int + '.' + '9' * self.decimals())
         super(SmartSpinBox, self).setRange(-max_edit, max_edit)
 
-        new_value = max(min(self.value(), self.__max_value), self.__min_value)
-        self.setValue(new_value)
+        self.setValue(super(SmartSpinBox, self).value())
 
 
 class RangeSpinBoxes(QWidget):
