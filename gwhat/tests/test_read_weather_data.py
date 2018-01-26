@@ -8,6 +8,7 @@
 
 # Standard library imports
 import os
+import os.path as osp
 
 # Third party imports
 import numpy as np
@@ -18,7 +19,7 @@ from gwhat.meteo.weather_reader import WXDataFrame
 
 
 def test_read_weather_data():
-    fmeteo = "sample_weather_datafile.csv"
+    fmeteo = osp.join(osp.dirname(__file__), "sample_weather_datafile.csv")
     wxdset = WXDataFrame(fmeteo)
 
     # Assert that the dataset was loaded correctly and that the 3 lines that
