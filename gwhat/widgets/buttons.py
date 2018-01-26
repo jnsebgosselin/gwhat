@@ -149,18 +149,18 @@ class RangeSpinBoxes(QWidget):
     """
     sig_range_changed = QSignal(tuple)
 
-    def __init__(self, min_value=0, max_value=0, orientation=Qt.Horizontal,
+    def __init__(self, min_value=0, max_value=100, orientation=Qt.Horizontal,
                  parent=None):
         super(RangeSpinBoxes, self).__init__(parent)
         self.spb_lower = SmartSpinBox()
         self.spb_upper = SmartSpinBox()
 
         self.spb_lower.sig_value_changed.connect(
-                self.constain_bounds_to_minmax)
+                self.constrain_bounds_to_minmax)
         self.spb_upper.sig_value_changed.connect(
-                self.constain_bounds_to_minmax)
+                self.constrain_bounds_to_minmax)
 
-        self.setRange(1000, 9999)
+        self.setRange(min_value, max_value)
 
     @property
     def lower_bound(self):
@@ -180,7 +180,7 @@ class RangeSpinBoxes(QWidget):
         self.spb_upper.setValueSilently(max_value)
 
     @QSlot(float, float)
-    def constain_bounds_to_minmax(self, new_value, old_value):
+    def constrain_bounds_to_minmax(self, new_value, old_value):
         """
         Makes sure that the new value is within the min and max values that
         were set for the range. Also makes sure that the

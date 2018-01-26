@@ -18,8 +18,8 @@ from PyQt5.QtCore import Qt
 from gwhat.widgets.buttons import SmartSpinBox, RangeSpinBoxes
 
 
-# Test SmartSpinBox
-# -------------------------------
+# ---- Test SmartSpinBox
+
 
 def test_smartspinbox_prog(qtbot):
     """Tests the interface of the SmartSpinBox when used programatically."""
@@ -92,6 +92,69 @@ def test_smartspinbox_gui(qtbot):
     qtbot.keyPress(spinbox, Qt.Key_Enter)
     assert spinbox.value() == -6.53
     assert spinbox.previousValue() == 15
+
+
+# ---- Test RangeSpinBoxes
+
+def test_rangespinbox(qtbot):
+    """Tests the interface of the RangeSpinBoxes when used from the GUI."""
+    rangespinbox = RangeSpinBoxes(1800, 2010)
+    qtbot.addWidget(rangespinbox)
+
+    assert rangespinbox.lower_bound == 1800
+    assert rangespinbox.upper_bound == 2010
+
+    # Test if setting a non valide range :
+
+    with pytest.raises(ValueError):
+        rangespinbox.setRange(2010, 2000)
+    assert rangespinbox.lower_bound == 1800
+    assert rangespinbox.upper_bound == 2010
+
+    # Test the link between the smartspinboxes min and max values :
+
+    rangespinbox.spb_lower.clear()
+    qtbot.keyClicks(rangespinbox.spb_lower, '2009')
+    qtbot.keyPress(rangespinbox.spb_lower, Qt.Key_Enter)
+    assert rangespinbox.lower_bound == 2009
+
+    rangespinbox.spb_upper.clear()
+    qtbot.keyClicks(rangespinbox.spb_upper, '2005')
+    qtbot.keyPress(rangespinbox.spb_upper, Qt.Key_Enter)
+    assert rangespinbox.lower_bound == 2005
+    assert rangespinbox.upper_bound == 2005
+
+    rangespinbox.spb_lower.clear()
+    qtbot.keyClicks(rangespinbox.spb_lower, '2015')
+    qtbot.keyPress(rangespinbox.spb_lower, Qt.Key_Enter)
+    assert rangespinbox.lower_bound == 2010
+    assert rangespinbox.upper_bound == 2010
+
+    # Test when navigating with the up and down keys :
+
+    qtbot.keyClick(rangespinbox.spb_lower, Qt.Key_Down)
+    qtbot.keyClick(rangespinbox.spb_upper, Qt.Key_Down)
+    assert rangespinbox.lower_bound == 2009
+    assert rangespinbox.upper_bound == 2009
+
+    qtbot.keyClick(rangespinbox.spb_upper, Qt.Key_Up)
+    qtbot.keyClick(rangespinbox.spb_lower, Qt.Key_Up)
+    assert rangespinbox.lower_bound == 2010
+    assert rangespinbox.upper_bound == 2010
+
+    # Test the link between the smartspinboxes when using the
+    # up and down keys :
+
+    nclick = 5
+    for i in range(nclick):
+        qtbot.keyClick(rangespinbox.spb_upper, Qt.Key_Down)
+    assert rangespinbox.lower_bound == 2010-nclick
+    assert rangespinbox.upper_bound == 2010-nclick
+
+    for i in range(nclick+3):
+        qtbot.keyClick(rangespinbox.spb_lower, Qt.Key_Up)
+    assert rangespinbox.lower_bound == 2010
+    assert rangespinbox.upper_bound == 2010
 
 
 if __name__ == "__main__":

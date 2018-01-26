@@ -100,7 +100,7 @@ class WeatherViewer(DialogWindow):
 
         # Instantiate and define a layout for the year range widget :
 
-        self.year_rng = RangeSpinBoxes()
+        self.year_rng = RangeSpinBoxes(1000, 9999)
         self.year_rng.setRange(1800, datetime.now().year)
         self.year_rng.sig_range_changed.connect(self.update_normals)
 
