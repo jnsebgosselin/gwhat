@@ -387,7 +387,7 @@ class DataManager(QWidget):
 
 class NewDatasetDialog(QDialog):
     ConsoleSignal = QSignal(str)
-    sig_new_dataset_imported = QSignal(str, WXDataFrameBase)
+    sig_new_dataset_imported = QSignal(str, object)
 
     def __init__(self, datatype, parent=None, projet=None):
         super(NewDatasetDialog, self).__init__(parent)
