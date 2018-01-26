@@ -8,15 +8,20 @@
 
 from __future__ import division, unicode_literals
 
-# ---- Standard library imports
+# ---- Import: Standard Libraries
 
 import os
 import csv
+import os.path as osp
 
-# ---- Third party imports
+# ---- Imports: Third Parties
 
 import h5py
 import numpy as np
+
+# ---- Imports: Local Librairies
+
+from gwhat.meteo.weather_reader import WXDataFrameBase
 
 
 class ProjetReader(object):
@@ -302,9 +307,6 @@ class ProjetReader(object):
         del self.db['wxdsets/%s' % name]
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
 class WLDataFrameHDF5(dict):
     """
     This is a wrapper around the h5py group that is used to store
@@ -475,41 +477,54 @@ class WLDataFrameHDF5(dict):
         return layout
 
 
-class WXDataFrameHDF5(dict):
+class WXDataFrameHDF5(WXDataFrameBase):
     """
-    This is a wrapper around the h5py group that is used to mimick the
-    structure of WXDataFrame in gwhat.meteo.weather_reader.
+    This is a wrapper around the h5py group to read the weather data
+    from the project.
     """
-    def __init__(self, dset, *args, **kwargs):
+    def __init__(self, dataset, *args, **kwargs):
         super(WXDataFrameHDF5, self).__init__(*args, **kwargs)
-        self.dset = dset
+        self.__load_dataset__(dataset)
 
     def __getitem__(self, key):
-        if key in list(self.dset.attrs.keys()):
-            return self.dset.attrs[key]
+        if key in list(self.store.attrs.keys()):
+            return self.store.attrs[key]
         elif key in ['normals', 'yearly', 'monthly']:
             x = {}
-            for vrb in self.dset[key].keys():
-                x[vrb] = self.dset[key][vrb].value
+            for vrb in self.store[key].keys():
+                x[vrb] = self.store[key][vrb].value
             if key == 'normals' and 'Period' not in x.keys():
                 # This is needed for backward compatibility with
                 # gwhat < 0.2.3 (see PR#142).
-                x['Period'] = (np.min(self.dset['Year']),
-                               np.max(self.dset['Year']))
+                x['Period'] = (np.min(self.store['Year']),
+                               np.max(self.store['Year']))
             return x
         elif key == 'daily':
             vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
                     'Rain', 'Snow', 'Ptot', 'PET']
             x = {}
             for vrb in vrbs:
-                x[vrb] = self.dset[vrb].value
+                x[vrb] = self.store[vrb].value
             return x
         else:
-            return self.dset[key].value
+            return self.store[key].value
+
+    def __setitem__(self, key, value):
+        return NotImplementedError
+
+    def __iter__(self):
+        return NotImplementedError
+
+    def __len__(self, key):
+        return NotImplementedError
+
+    def __load_dataset__(self, dataset):
+        """Saves the h5py dataset to the store."""
+        self.store = dataset
 
     @property
     def name(self):
-        return os.path.basename(self.dset.name)
+        return osp.basename(self.store.name)
 
 
 if __name__ == '__main__':
