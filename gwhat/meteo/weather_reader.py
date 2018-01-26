@@ -171,7 +171,7 @@ class WXDataFrame(WXDataFrameBase):
         self.store['Time'] = time
         self.store['Year'], self.store['Month'], self.store['Day'] = date
         for i, vrb in enumerate(vrbs):
-            self.store[key] = data[i]
+            self.store[vrb] = data[i]
 
         # Fill missing with estimated values :
 
@@ -182,6 +182,9 @@ class WXDataFrame(WXDataFrameBase):
             self.store[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'zeros')
 
         # ---- Rain & Snow
+
+        # Generate rain and snow daily series if it was not present in the
+        # datafile.
 
         # Rain
 
@@ -513,7 +516,12 @@ def make_timeserie_continuous(time, date, data):
         # The dataset is already continuous.
         return time, date, data
     cdate = [np.empty(len(ctime))*np.nan for item in date]
-    cdata = [np.empty(len(ctime))*np.nan for item in data]
+    cdata = []
+    for item in data:
+        if item is not None:
+            cdata.append(np.empty(len(ctime))*np.nan)
+        else:
+            cdata.append(None)
 
     # Fill the continuous arrays :
 
@@ -521,9 +529,11 @@ def make_timeserie_continuous(time, date, data):
     for i in range(len(date)):
         cdate[i][indexes] = date[i]
     for i in range(len(data)):
-        cdata[i][indexes] = data[i]
+        if data[i] is not None:
+            cdata[i][indexes] = data[i]
 
-    # Complete the dates for the lines that where missing :
+    # Complete the dates for the lines that where missing and convert to
+    # integers :
 
     nan_indexes = np.where(np.isnan(cdate[0]))[0]
     for idx in nan_indexes:
@@ -531,8 +541,11 @@ def make_timeserie_continuous(time, date, data):
         cdate[0][idx] = new_date[0]
         cdate[1][idx] = new_date[1]
         cdate[2][idx] = new_date[2]
+    cdate[0] = cdate[0].astype(int)
+    cdate[1] = cdate[1].astype(int)
+    cdate[2] = cdate[2].astype(int)
 
-    return time, date, data
+    return ctime, cdate, cdata
 
 
 def fill_nan(time, data, name='data', fill_mode='zeros'):
