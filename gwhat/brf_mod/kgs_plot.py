@@ -113,6 +113,7 @@ class BRFFigure(mpl.figure.Figure):
         # ---- Xticks labels time_units
 
         if time_units not in ['days', 'hours', 'auto']:
+            raise ValueError("time_units value must be either :",
                              ['days', 'hours', 'auto'])
         if time_units == 'auto':
             time_units = 'days' if np.max(lag) >= 2 else 'hours'
