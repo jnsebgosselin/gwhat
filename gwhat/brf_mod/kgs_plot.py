@@ -66,11 +66,6 @@ class BRFFigure(mpl.figure.Figure):
         ax.tick_params(axis='both', which='major', direction='out',
                        gridOn=True)
 
-        # ---- Axis Labels
-
-        ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
-        ax.set_ylabel(self.fig_labels.A, fontsize=14)
-
         # ---- Artists Init
 
         self.line, = ax.plot([], [], ls='-', color='blue', linewidth=1.5,
@@ -105,30 +100,40 @@ class BRFFigure(mpl.figure.Figure):
         self.__figlang = lang
         self.__figlabels = FigureLabels(lang)
 
-        ax = self.axes[0]
-        ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
-        ax.set_ylabel(self.fig_labels.A, fontsize=14)
-
     def empty_BRF(self):
         ax = self.axes[0]
         ax.set_visible(False)
 
     def plot_BRF(self, lag, A, err, date0, date1, well, msize=0,
-                 draw_line=True, ylim=[None, None]):
+                 draw_line=True, ylim=[None, None], xlim=[None, None],
+                 time_units='auto'):
         ax = self.axes[0]
         ax.set_visible(True)
 
-        lag_max = np.max(lag)
+        # ---- Xticks labels time_units
 
-        # ---- Ticks Setup
+        if time_units not in ['days', 'hours', 'auto']:
+                             ['days', 'hours', 'auto'])
+        if time_units == 'auto':
+            time_units = 'days' if np.max(lag) >= 2 else 'hours'
+        if time_units == 'hours':
+            lag = lag * 24
+            xlim[0] = None if xlim[0] is None else xlim[0]*24
+            xlim[1] = None if xlim[1] is None else xlim[1]*24
 
-        TCKPOS = np.arange(0, max(lag_max+1, 10), 1)
-        ax.set_xticks(TCKPOS)
+        # ---- Axis Labels
 
-        TCKPOS = np.arange(-10, 10, 0.2)
-        ax.set_yticks(TCKPOS)
+        if time_units == 'hours':
+            ax.set_xlabel(self.fig_labels.lag_hr, fontsize=14, labelpad=8)
+        else:
+            ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
+
+        ax.set_ylabel(self.fig_labels.A, fontsize=14)
 
         # ---- Axis Limits
+
+        xmin = 0 if xlim[0] is None else xlim[0]
+        xmax = np.max(lag) if xlim[1] is None else xlim[1]
 
         if ylim[0] is None:
             if len(err) > 0:
@@ -148,8 +153,9 @@ class BRFFigure(mpl.figure.Figure):
 
         ymin += -10**-12
         ymax += 10**-12
+        xmax += 10**-12
 
-        ax.axis([0, lag_max, ymin, ymax])
+        ax.axis([xmin, xmax, ymin, ymax])
 
         # ---- Update the data
 
