@@ -15,18 +15,20 @@ import matplotlib as mpl
 import numpy as np
 
 
-class FigureLabels():
+class FigureLabels(object):
     LANGUAGES = ['english', 'french']
 
     def __init__(self, language):
-        self.lag = 'Time Lag (days)'
-        self.A = 'Cumulative Response Function'
-        self.title = ('Well %s from %s to %s')
-
         if language.lower() == 'french':
-            self.lag = 'Lag temporel (h)'
+            self.lag = 'Lag temporel (jours)'
+            self.lag_hr = 'Lag temporel (heures)'
             self.A = 'Réponse barométrique cumulative'
             self.title = 'Puits %s du %s au %s'
+        else:
+            self.lag = 'Time Lag (days)'
+            self.lag_hr = 'Time Lag (hours)'
+            self.A = 'Cumulative Response Function'
+            self.title = ('Well %s from %s to %s')
 
 
 class BRFFigure(mpl.figure.Figure):
