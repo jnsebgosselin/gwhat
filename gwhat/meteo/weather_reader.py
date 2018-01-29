@@ -7,22 +7,23 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: standard libraries
+# ---- Imports: Standard Libraries
 
 import os
+import os.path as osp
 import csv
 from calendar import monthrange
-from copy import copy
+from collections.abc import Mapping
+from abc import abstractmethod
 
-
-# ---- Imports: third parties
+# ---- Imports: Third Parties
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 
-# ---- Imports: local
+# ---- Imports: Local Libraries
 
 from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
 from gwhat.common.utils import save_content_to_csv
@@ -30,183 +31,45 @@ from gwhat.common.utils import save_content_to_csv
 
 # ---- API
 
-class WXDataFrame(dict):
+class WXDataFrameBase(Mapping):
+    """
+    A daily weather data frame base class.
+    """
+    def __init__(self, *args, **kwargs):
+        super(WXDataFrameBase, self).__init__(*args, **kwargs)
+        self.store = None
+
+    @abstractmethod
+    def __load_dataset__(self):
+        """Loads the dataset and save it in a store."""
+        pass
+
+    def get_monthly_normals(self, yearmin=None, yearmax=None):
+        """
+        Returns a dict with the normal values of the weather dataset
+        for the period defined by yearmin and yearmax.
+        """
+        raise NotImplementedError
+
+    def export_dataset_to_csv():
+        raise NotImplementedError
+
+    def export_dataset_to_excel():
+        raise NotImplementedError
+
+    def export_dataset_to_HELP():
+        raise NotImplementedError
+
+
+class WXDataFrame(WXDataFrameBase):
+    """A daily weather dataset container that loads its data from a file."""
+
     def __init__(self, filename, *args, **kwargs):
         super(WXDataFrame, self).__init__(*args, **kwargs)
-
-        self['filename'] = filename
-        self['Station Name'] = ''
-        self['Latitude'] = 0
-        self['Longitude'] = 0
-        self['Province'] = ''
-        self['Elevation'] = 0
-        self['Climate Identifier'] = ''
-
-        self['Year'] = np.array([])
-        self['Month'] = np.array([])
-        self['Day'] = np.array([])
-        self['Time'] = np.array([])
-
-        self['Missing Tmax'] = []
-        self['Missing Tmin'] = []
-        self['Missing Tavg'] = []
-        self['Missing Ptot'] = []
-
-        self['Tmax'] = np.array([])
-        self['Tavg'] = np.array([])
-        self['Tmin'] = np.array([])
-        self['Ptot'] = np.array([])
-        self['Rain'] = None
-        self['Snow'] = None
-        self['PET'] = None
-
-        self['monthly'] = {'Year': np.array([]),
-                           'Month': np.array([]),
-                           'Tmax': np.array([]),
-                           'Tmin': np.array([]),
-                           'Tavg': np.array([]),
-                           'Ptot': np.array([]),
-                           'Rain': None,
-                           'Snow': None,
-                           'PET': None}
-
-        self['yearly'] = {'Year': np.array([]),
-                          'Tmax': np.array([]),
-                          'Tmin': np.array([]),
-                          'Tavg': np.array([]),
-                          'Ptot': np.array([]),
-                          'Rain': None,
-                          'Snow': None,
-                          'PET': None}
-
-        self['normals'] = {'Tmax': np.array([]),
-                           'Tmin': np.array([]),
-                           'Tavg': np.array([]),
-                           'Ptot': np.array([]),
-                           'Rain': None,
-                           'Snow': None,
-                           'PET': None,
-                           'Period': (None, None)}
-
-        # ---- Import primary data
-
-        data = read_weather_datafile(filename)
-        for key in data.keys():
-            self[key] = data[key]
-
-        # ---- Import missing
-
-        finfo = filename[:-3] + 'log'
-        if os.path.exists(finfo):
-            self['Missing Tmax'] = load_weather_log(finfo, 'Max Temp (deg C)')
-            self['Missing Tmin'] = load_weather_log(finfo, 'Min Temp (deg C)')
-            self['Missing Tavg'] = load_weather_log(finfo, 'Mean Temp (deg C)')
-            self['Missing Ptot'] = load_weather_log(finfo, 'Total Precip (mm)')
-
-        # ---- Format Data
-
-        time = copy(self['Time'])
-        date = [copy(self['Year']), copy(self['Month']), copy(self['Day'])]
-        vbrs = ['Tmax', 'Tavg', 'Tmin', 'Ptot', 'Rain', 'PET']
-        data = [self[x] for x in vbrs]
-
-        # Make daily time series continuous :
-
-        time, date, data = make_timeserie_continuous(self['Time'], date, data)
-        self['Time'] = time
-        self['Year'], self['Month'], self['Day'] = date[0], date[1], date[2]
-        for i, vbr in enumerate(vbrs):
-            self[vbr] = data[i]
-
-        self['normals']['Period'] = (np.min(self['Year']),
-                                     np.max(self['Year']))
-
-        # Fill missing with estimated values :
-
-        for vbr in ['Tmax', 'Tavg', 'Tmin', 'PET']:
-            self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'interp')
-
-        for vbr in ['Ptot', 'Rain', 'Snow']:
-            self[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'zeros')
-
-        # ---- Monthly & Normals
-
-        # Temperature based variables:
-
-        for vrb in ['Tmax', 'Tmin', 'Tavg']:
-            x = calc_yearly_mean(self['Year'], self[vrb])
-            self['yearly'][vrb] = x[1]
-
-            x = calc_monthly_mean(self['Year'], self['Month'], self[vrb])
-            self['monthly'][vrb] = x[2]
-
-            self['normals'][vrb] = calcul_monthly_normals(x[0], x[1], x[2])
-
-        # Precipitation :
-
-        x = calc_yearly_sum(self['Year'], self['Ptot'])
-        self['yearly']['Ptot'] = x[1]
-        self['yearly']['Year'] = x[0]
-
-        x = calc_monthly_sum(self['Year'], self['Month'], self['Ptot'])
-        self['monthly']['Ptot'] = x[2]
-        self['monthly']['Year'] = x[0]
-        self['monthly']['Month'] = x[1]
-
-        self['normals']['Ptot'] = calcul_monthly_normals(x[0], x[1], x[2])
-
-        # ---- Secondary Variables
-
-        # Rain
-
-        if self['Rain'] is None:
-            self['Rain'] = calcul_rain_from_ptot(
-                    self['Tavg'], self['Ptot'], Tcrit=0)
-            print('Rain estimated from Ptot.')
-
-        x = calc_yearly_sum(self['Year'], self['Rain'])
-        self['yearly']['Rain'] = x[1]
-
-        x = calc_monthly_sum(self['Year'], self['Month'], self['Rain'])
-        self['monthly']['Rain'] = x[2]
-
-        self['normals']['Rain'] = calcul_monthly_normals(x[0], x[1], x[2])
-
-        # Snow
-
-        if self['Snow'] is None:
-            self['Snow'] = self['Ptot'] - self['Rain']
-            print('Snow estimated from Ptot.')
-
-        x = calc_yearly_sum(self['Year'], self['Snow'])
-        self['yearly']['Snow'] = x[1]
-
-        x = calc_monthly_sum(self['Year'], self['Month'], self['Snow'])
-        self['monthly']['Snow'] = x[2]
-
-        self['normals']['Snow'] = calcul_monthly_normals(x[0], x[1], x[2])
-
-        # Potential Evapotranspiration
-
-        if self['PET'] is None:
-            dates = [self['Year'], self['Month'], self['Day']]
-            Tavg = self['Tavg']
-            lat = self['Latitude']
-            Ta = self['normals']['Tavg']
-            self['PET'] = calcul_Thornthwaite(dates, Tavg, lat, Ta)
-            print('Potential evapotranspiration evaluated with Thornthwaite.')
-
-        x = calc_yearly_sum(self['Year'], self['PET'])
-        self['yearly']['PET'] = x[1]
-
-        x = calc_monthly_sum(self['Year'], self['Month'], self['PET'])
-        self['monthly']['PET'] = x[2]
-
-        self['normals']['PET'] = calcul_monthly_normals(x[0], x[1], x[2])
-
-        print('-'*78)
+        self.__load_dataset__(filename)
 
     def __getitem__(self, key):
+        """Returns the value saved in the store at key."""
         if key == 'daily':
             vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
                     'Rain', 'Snow', 'Ptot', 'PET']
@@ -215,7 +78,193 @@ class WXDataFrame(dict):
                 x[vrb] = self[vrb]
             return x
         else:
-            return super(WXDataFrame, self).__getitem__(key)
+            return self.store.__getitem__(key)
+
+    def __setitem__(self, key, value):
+        return NotImplementedError
+
+    def __iter__(self):
+        return NotImplementedError
+
+    def __len__(self, key):
+        return NotImplementedError
+
+    def __init_store__(self, filename):
+        """Initializes the store."""
+        self.store = dict()
+        self.store['filename'] = filename
+        self.store['Station Name'] = ''
+        self.store['Latitude'] = 0
+        self.store['Longitude'] = 0
+        self.store['Province'] = ''
+        self.store['Elevation'] = 0
+        self.store['Climate Identifier'] = ''
+
+        self.store['Year'] = np.array([])
+        self.store['Month'] = np.array([])
+        self.store['Day'] = np.array([])
+        self.store['Time'] = np.array([])
+
+        self.store['Tmax'] = np.array([])
+        self.store['Tavg'] = np.array([])
+        self.store['Tmin'] = np.array([])
+        self.store['Ptot'] = np.array([])
+        self.store['Rain'] = None
+        self.store['Snow'] = None
+        self.store['PET'] = None
+
+        self.store['Missing Tmax'] = []
+        self.store['Missing Tmin'] = []
+        self.store['Missing Tavg'] = []
+        self.store['Missing Ptot'] = []
+
+        self.store['monthly'] = {'Year': np.array([]),
+                                 'Month': np.array([]),
+                                 'Tmax': np.array([]),
+                                 'Tmin': np.array([]),
+                                 'Tavg': np.array([]),
+                                 'Ptot': np.array([]),
+                                 'Rain': None,
+                                 'Snow': None,
+                                 'PET': None}
+
+        self.store['yearly'] = {'Year': np.array([]),
+                                'Tmax': np.array([]),
+                                'Tmin': np.array([]),
+                                'Tavg': np.array([]),
+                                'Ptot': np.array([]),
+                                'Rain': None,
+                                'Snow': None,
+                                'PET': None}
+
+        self.store['normals'] = {'Tmax': np.array([]),
+                                 'Tmin': np.array([]),
+                                 'Tavg': np.array([]),
+                                 'Ptot': np.array([]),
+                                 'Rain': None,
+                                 'Snow': None,
+                                 'PET': None,
+                                 'Period': (None, None)}
+
+    def __load_dataset__(self, filename):
+        """Loads the dataset from a file and saves it in the store."""
+        print('-'*78)
+        print('Reading weather data from "%s"...' % os.path.basename(filename))
+
+        self.__init_store__(filename)
+
+        # ---- Import primary data
+
+        data = read_weather_datafile(filename)
+        for key in data.keys():
+            self.store[key] = data[key]
+
+        # ---- Format Data
+
+        # Make the daily time series continuous :
+
+        date = [self['Year'], self['Month'], self['Day']]
+        vrbs = ['Tmax', 'Tavg', 'Tmin', 'Ptot', 'Rain', 'PET']
+        data = [self[vrb] for vrb in vrbs]
+        time, date, data = make_timeserie_continuous(self['Time'], date, data)
+
+        self.store['Time'] = time
+        self.store['Year'], self.store['Month'], self.store['Day'] = date
+        for i, vrb in enumerate(vrbs):
+            self.store[vrb] = data[i]
+
+        # Fill missing with estimated values :
+
+        for vbr in ['Tmax', 'Tavg', 'Tmin', 'PET']:
+            self.store[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'interp')
+
+        for vbr in ['Ptot', 'Rain', 'Snow']:
+            self.store[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'zeros')
+
+        # ---- Rain & Snow
+
+        # Generate rain and snow daily series if it was not present in the
+        # datafile.
+
+        # Rain
+
+        if self['Rain'] is None:
+            self.store['Rain'] = calcul_rain_from_ptot(
+                    self['Tavg'], self['Ptot'], Tcrit=0)
+            print("Rain estimated from Ptot.")
+
+        # Snow
+
+        if self['Snow'] is None:
+            self.store['Snow'] = self['Ptot'] - self['Rain']
+            print("Snow estimated from Ptot.")
+
+        # ---- Missing data
+
+        root, ext = osp.splitext(filename)
+        finfo = root + '.log'
+        if os.path.exists(finfo):
+            print('Reading gapfill data from "%s"...' % osp.basename(finfo))
+            keys_labels = [('Missing Tmax', 'Max Temp (deg C)'),
+                           ('Missing Tmin', 'Min Temp (deg C)'),
+                           ('Missing Tavg', 'Mean Temp (deg C)'),
+                           ('Missing Ptot', 'Total Precip (mm)')]
+            for key, label in keys_labels:
+                self.store[key] = load_weather_log(finfo, label)
+
+        # ---- Monthly & Normals
+
+        self.store['normals']['Period'] = (np.min(self['Year']),
+                                           np.max(self['Year']))
+
+        # Temperature based variables :
+
+        for vrb in ['Tmax', 'Tmin', 'Tavg']:
+            x_yr = calc_yearly_mean(self['Year'], self[vrb])
+            self.store['yearly'][vrb] = x_yr[1]
+
+            x_mt = calc_monthly_mean(self['Year'], self['Month'], self[vrb])
+            self.store['monthly'][vrb] = x_mt[2]
+
+            self.store['normals'][vrb] = calcul_monthly_normals(
+                    x_mt[0], x_mt[1], x_mt[2])
+
+        # Precipitation based variables :
+
+        for vrb in ['Ptot', 'Rain', 'Snow']:
+            x_yr = calc_yearly_sum(self['Year'], self[vrb])
+            self.store['yearly'][vrb] = x_yr[1]
+
+            x_mt = calc_monthly_sum(self['Year'], self['Month'], self[vrb])
+            self.store['monthly'][vrb] = x_mt[2]
+
+            self.store['normals'][vrb] = calcul_monthly_normals(
+                    x_mt[0], x_mt[1], x_mt[2])
+
+        self.store['yearly']['Year'] = x_yr[0]
+        self.store['monthly']['Year'] = x_mt[0]
+        self.store['monthly']['Month'] = x_mt[1]
+
+        # ---- Potential Evapotranspiration
+
+        if self['PET'] is None:
+            dates = [self['Year'], self['Month'], self['Day']]
+            Tavg = self['Tavg']
+            lat = self['Latitude']
+            Ta = self['normals']['Tavg']
+            self.store['PET'] = calcul_Thornthwaite(dates, Tavg, lat, Ta)
+            print("Potential evapotranspiration evaluated with Thornthwaite.")
+
+        x_yr = calc_yearly_sum(self['Year'], self['PET'])
+        self['yearly']['PET'] = x_yr[1]
+
+        x_mt = calc_monthly_sum(self['Year'], self['Month'], self['PET'])
+        self.store['monthly']['PET'] = x_mt[2]
+
+        self.store['normals']['PET'] = calcul_monthly_normals(
+                x_mt[0], x_mt[1], x_mt[2])
+
+        print('-'*78)
 
 
 # ---- Base functions: file and data manipulation
@@ -237,9 +286,6 @@ def open_weather_datafile(filename):
 
 
 def read_weather_datafile(filename):
-    print('-'*78)
-    print('Reading weather data from "%s"...' % os.path.basename(filename))
-
     df = {'filename': filename,
           'Station Name': '',
           'Latitude': 0,
@@ -308,19 +354,19 @@ def read_weather_datafile(filename):
         df['PET'] = data[:, var.index('ETP (mm)')]
         print('Potential evapotranspiration imported from datafile.')
     except ValueError:
-        print('No potential evapotranspiration in datafile.')
+        pass
 
     try:
         df['Rain'] = data[:, var.index('Rain (mm)')]
         print('Rain data imported from datafile.')
     except ValueError:
-        print('No rain in datafile.')
+        pass
 
     try:
         df['Snow'] = data[:, var.index('Snow (mm)')]
         print('Snow data imported from datafile.')
     except ValueError:
-        print('No snow in datafile.')
+        pass
 
     return df
 
@@ -387,7 +433,6 @@ def open_weather_log(fname):
 
 
 def load_weather_log(fname, varname):
-    print('loading info for missing %s' % varname)
     reader = open_weather_log(fname)
     xldates = []
     for i in range(len(reader)):
@@ -457,65 +502,78 @@ def clean_endsof_file(data):
 
 def make_timeserie_continuous(time, date, data):
     """
-    Scan the entire time serie and will insert a row with nan values
-    whenever there is a gap in the data and will return the continuous
-    data set.
+    Scans the entire daily time series, inserts a row with nan values whenever
+    there is a gap in the data, and returns the continuous daily data set.
 
-    data = tuple containing the data series
-    date = tuple containg the time series for year, month and days
+    time = 1d numpy array containing the time in Excel numeric format.
+    date = tuple containg the time series for year, month and days.
+    data = tuple containing the data series.
     """
+    # Initialize the arrays in which the continuous time series will be saved :
 
-    i = 0
-    while i < len(time)-1:
-        if (time[i+1]-time[i]) > 1:
-            time = np.insert(time, i+1, time[i]+1)
+    ctime = np.arange(time[0], time[-1]+1)
+    if np.array_equal(ctime, time):
+        # The dataset is already continuous.
+        return time, date, data
+    cdate = [np.empty(len(ctime))*np.nan for item in date]
+    cdata = []
+    for item in data:
+        if item is not None:
+            cdata.append(np.empty(len(ctime))*np.nan)
+        else:
+            cdata.append(None)
 
-            new = xldate_as_tuple(time[i]+1, 0)
-            date[0] = np.insert(date[0], i+1, new[0])
-            date[1] = np.insert(date[1], i+1, new[1])
-            date[2] = np.insert(date[2], i+1, new[2])
+    # Fill the continuous arrays :
 
-            for k in range(len(data)):
-                if data[k] is not None:
-                    data[k] = np.insert(data[k], i+1, np.nan)
+    indexes = np.digitize(time, ctime, right=True)
+    for i in range(len(date)):
+        cdate[i][indexes] = date[i]
+    for i in range(len(data)):
+        if data[i] is not None:
+            cdata[i][indexes] = data[i]
 
-        i += 1
+    # Complete the dates for the lines that where missing and convert to
+    # integers :
 
-    return time, date, data
+    nan_indexes = np.where(np.isnan(cdate[0]))[0]
+    for idx in nan_indexes:
+        new_date = xldate_as_tuple(ctime[idx], 0)
+        cdate[0][idx] = new_date[0]
+        cdate[1][idx] = new_date[1]
+        cdate[2][idx] = new_date[2]
+    cdate[0] = cdate[0].astype(int)
+    cdate[1] = cdate[1].astype(int)
+    cdate[2] = cdate[2].astype(int)
+
+    return ctime, cdate, cdata
 
 
 def fill_nan(time, data, name='data', fill_mode='zeros'):
-    # Preferable to be run before ETP or RAIN is estimated, So that
-    # there is no missing value in both of these estimated time series.
-    # It needs to be ran after but after 'check_time_continuity'.
-
-    # fill_mode can be either 'zeros' or 'interp'
+    """
+    Fills the nan values in data with zeros if fill_mode value is 'zeros' or
+    using linear interpolation if fill_mode value is 'interp'.
+    """
+    if fill_mode not in ['zeros', 'interp']:
+        raise ValueError('fill_mode must be either "zeros" or "interp"')
 
     if data is None:
         return None
 
+    nbr_nan = len(np.where(np.isnan(data))[0])
+    if nbr_nan == 0:
+        # There is no missing value in the dataset.
+        return data
+
     if fill_mode == 'interp':
         indx = np.where(~np.isnan(data))[0]
-        nbr_nan = len(data)-len(indx)
-        if nbr_nan == 0:
-            print('There was no nan values in %s series.' % name)
-        else:
-            data = np.interp(time, time[indx], data[indx])
-            print('There was %d nan values in %s series.' % (nbr_nan, name))
-            print('Missing values were estimated by linear interpolation.')
-
+        data = np.interp(time, time[indx], data[indx])
+        print("%d missing values were estimated by linear interpolation"
+              " in %s." % (nbr_nan, name))
     elif fill_mode == 'zeros':
         indx = np.where(np.isnan(data))[0]
-        if len(indx) == 0:
-            print('There was no nan values in %s series.' % name)
-        else:
-            data[indx] = 0
-            print(('There was %d nan values in %s series. Missing values'
-                   ' were assigned a 0 value.') % (len(indx), name))
-
-    else:
-        raise ValueError('fill_mode must be either "zeros" or "interp"')
-
+        data[indx] = 0
+        print("%d missing values were assigned a value of 0"
+              " in %s." % (nbr_nan, name))
     return data
 
 
@@ -649,10 +707,6 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
 
 if __name__ == '__main__':
-    filename = 'FARNHAM (7022320)_1980-2017.csv'
-    df = WXDataFrame(filename)
-    add_PET_to_weather_datafile(filename)
-
-    filename = 'AUTEUIL (7020392)_1980-2014.csv'
-    df2 = WXDataFrame(filename)
-    add_PET_to_weather_datafile(filename)
+    fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
+              "sample_weather_datafile.csv")
+    wxdset = WXDataFrame(fmeteo)

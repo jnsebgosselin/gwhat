@@ -27,7 +27,7 @@ import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
 import gwhat.projet.reader_waterlvl as wlrd
 import gwhat.meteo.weather_reader as wxrd
-
+from gwhat.meteo.weather_reader import WXDataFrameBase
 
 class DataManager(QWidget):
 
@@ -387,7 +387,7 @@ class DataManager(QWidget):
 
 class NewDatasetDialog(QDialog):
     ConsoleSignal = QSignal(str)
-    sig_new_dataset_imported = QSignal(str, dict)
+    sig_new_dataset_imported = QSignal(str, object)
 
     def __init__(self, datatype, parent=None, projet=None):
         super(NewDatasetDialog, self).__init__(parent)
