@@ -599,9 +599,11 @@ class BRFViewer(QWidget):
 
             ymin = self.graph_opt_panel.ymin
             ymax = self.graph_opt_panel.ymax
+            yscale = self.graph_opt_panel.yscale
 
             xmin = self.graph_opt_panel.xmin
             xmax = self.graph_opt_panel.xmax
+            xscale = self.graph_opt_panel.xscale
 
             time_units = self.graph_opt_panel.time_units
 
@@ -615,7 +617,7 @@ class BRFViewer(QWidget):
 
             self.brf_canvas.figure.plot_BRF(
                     lag, A, err, date0, date1, well, msize, draw_line,
-                    [ymin, ymax], [xmin, xmax], time_units)
+                    [ymin, ymax], [xmin, xmax], time_units, xscale, yscale)
         self.brf_canvas.draw()
 
     def show(self):
@@ -687,6 +689,13 @@ class BRFOptionsPanel(QWidget):
         self._ylim['max'].setRange(-10, 10)
         self._ylim['max'].setEnabled(True)
         self._ylim['max'].valueChanged.connect(self._graphconf_changed)
+        self._ylim['scale'] = QDoubleSpinBox()
+        self._ylim['scale'].setValue(0.2)
+        self._ylim['scale'].setDecimals(2)
+        self._ylim['scale'].setSingleStep(0.05)
+        self._ylim['scale'].setRange(0.01, 1)
+        self._ylim['scale'].setEnabled(True)
+        self._ylim['scale'].valueChanged.connect(self._graphconf_changed)
         self._ylim['auto'] = QCheckBox('')
         self._ylim['auto'].setCheckState(Qt.Checked)
         self._ylim['auto'].stateChanged.connect(self.axis_autocheck_changed)
@@ -711,6 +720,13 @@ class BRFOptionsPanel(QWidget):
         self._xlim['max'].setRange(1, 9999)
         self._xlim['max'].setEnabled(True)
         self._xlim['max'].valueChanged.connect(self._graphconf_changed)
+        self._xlim['scale'] = QDoubleSpinBox()
+        self._xlim['scale'].setValue(1)
+        self._xlim['scale'].setDecimals(1)
+        self._xlim['scale'].setSingleStep(0.1)
+        self._xlim['scale'].setRange(0.1, 99)
+        self._xlim['scale'].setEnabled(True)
+        self._xlim['scale'].valueChanged.connect(self._graphconf_changed)
         self._xlim['auto'] = QCheckBox('')
         self._xlim['auto'].setCheckState(Qt.Checked)
         self._xlim['auto'].stateChanged.connect(self.axis_autocheck_changed)
@@ -730,6 +746,9 @@ class BRFOptionsPanel(QWidget):
         axlayout.addWidget(QLabel('   Maximum :'), row, 0)
         axlayout.addWidget(self._ylim['max'], row, 1)
         row += 1
+        axlayout.addWidget(QLabel('   Scale :'), row, 0)
+        axlayout.addWidget(self._ylim['scale'], row, 1)
+        row += 1
         axlayout.addWidget(QLabel('   Auto :'), row, 0)
         axlayout.addWidget(self._ylim['auto'], row, 1)
         row += 1
@@ -745,6 +764,9 @@ class BRFOptionsPanel(QWidget):
         row += 1
         axlayout.addWidget(QLabel('   Maximum :'), row, 0)
         axlayout.addWidget(self._xlim['max'], row, 1)
+        row += 1
+        axlayout.addWidget(QLabel('   Scale :'), row, 0)
+        axlayout.addWidget(self._xlim['scale'], row, 1)
         row += 1
         axlayout.addWidget(QLabel('   Auto :'), row, 0)
         axlayout.addWidget(self._xlim['auto'], row, 1)
@@ -791,19 +813,31 @@ class BRFOptionsPanel(QWidget):
     def xmin(self):
         if self._xlim['auto'].checkState() == Qt.Checked:
             return None
-        if self.time_units == 'hours':
-            return self._xlim['min'].value()/24
         else:
-            return self._xlim['min'].value()
+            if self.time_units == 'hours':
+                return self._xlim['min'].value()/24
+            else:
+                return self._xlim['min'].value()
 
     @property
     def xmax(self):
         if self._xlim['auto'].checkState() == Qt.Checked:
             return None
-        if self.time_units == 'hours':
-            return self._xlim['max'].value()/24
         else:
-            return self._xlim['max'].value()
+            if self.time_units == 'hours':
+                return self._xlim['max'].value()/24
+            else:
+                return self._xlim['max'].value()
+
+    @property
+    def xscale(self):
+        if self._xlim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            if self.time_units == 'hours':
+                return self._xlim['scale'].value()/24
+            else:
+                return self._xlim['scale'].value()
 
     @property
     def ymin(self):
@@ -818,6 +852,13 @@ class BRFOptionsPanel(QWidget):
             return None
         else:
             return self._ylim['max'].value()
+
+    @property
+    def yscale(self):
+        if self._ylim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            return self._ylim['scale'].value()
 
     @property
     def show_ebar(self):
@@ -835,7 +876,8 @@ class BRFOptionsPanel(QWidget):
 
     def time_units_changed(self):
         """ Handles when the time_units combobox selection changes."""
-        for xlim in [self._xlim['min'], self._xlim['max']]:
+        for xlim in [self._xlim['min'], self._xlim['max'],
+                     self._xlim['scale']]:
             xlim.blockSignals(True)
             if self._xlim['units'].currentText() == 'Hours':
                 xlim.setValue(xlim.value()*24)
@@ -852,10 +894,12 @@ class BRFOptionsPanel(QWidget):
         """
         self._ylim['min'].setEnabled(not self._ylim['auto'].isChecked())
         self._ylim['max'].setEnabled(not self._ylim['auto'].isChecked())
+        self._ylim['scale'].setEnabled(not self._ylim['auto'].isChecked())
 
         self._xlim['units'].setEnabled(not self._xlim['auto'].isChecked())
         self._xlim['min'].setEnabled(not self._xlim['auto'].isChecked())
         self._xlim['max'].setEnabled(not self._xlim['auto'].isChecked())
+        self._xlim['scale'].setEnabled(not self._xlim['auto'].isChecked())
 
         self._graphconf_changed()
 

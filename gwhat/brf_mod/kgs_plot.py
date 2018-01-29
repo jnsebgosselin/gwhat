@@ -152,11 +152,10 @@ class BRFFigure(mpl.figure.Figure):
         else:
             ymax = ylim[1]
 
-        ymin += -10**-12
-        ymax += 10**-12
-        xmax += 10**-12
+        # ---- Xticks ans Yticks Setup
 
-        # ---- Xticks Setup
+        yscl = 0.2 if yscl is None else yscl
+        ax.set_yticks(np.arange(ymin, ymax+yscl, yscl))
 
         if time_units == 'hours':
             # We want the ticks to be a multiple of 24.
@@ -174,9 +173,9 @@ class BRFFigure(mpl.figure.Figure):
         elif time_units == 'days':
             if xscl is None:
                 xscl = 1
-
         ax.set_xticks(np.arange(xmin, xmax+xscl, xscl))
-        ax.axis([xmin, xmax, ymin, ymax])
+
+        ax.axis([xmin, xmax+10**-12, ymin-10**-12, ymax+10**-12])
 
         # ---- Update the data
 
