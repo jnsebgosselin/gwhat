@@ -466,80 +466,6 @@ class BRFViewer(QWidget):
         self.tbar.setColumnStretch(row, 100)
         self.tbar.setContentsMargins(10, 0, 10, 10)  # (l, t, r, b)
 
-        # ---- Graph Options Panel
-
-        self._errorbar = QCheckBox('Show error bars')
-        self._errorbar.setCheckState(Qt.Checked)
-        self._errorbar.stateChanged.connect(self.plot_brf)
-
-        self._drawline = QCheckBox('Draw line')
-        self._drawline.setCheckState(Qt.Unchecked)
-        self._drawline.stateChanged.connect(self.plot_brf)
-
-        self._markersize = {}
-        self._markersize['label'] = QLabel('Marker size :')
-        self._markersize['widget'] = QSpinBox()
-        self._markersize['widget'].setValue(5)
-        self._markersize['widget'].setRange(0, 25)
-        self._markersize['widget'].valueChanged.connect(self.plot_brf)
-
-        # Axis limits
-
-        axlayout = QGridLayout()
-        axlayout.addWidget(QLabel('y-axis limits:'), 0, 0, 1, 2)
-        axlayout.addWidget(QLabel('   Minimum :'), 1, 0)
-        axlayout.addWidget(QLabel('   Maximum :'), 2, 0)
-        axlayout.addWidget(QLabel('   Auto :'), 3, 0)
-
-        self._ylim = {}
-        self._ylim['min'] = QDoubleSpinBox()
-        self._ylim['min'].setValue(0)
-        self._ylim['min'].setDecimals(1)
-        self._ylim['min'].setSingleStep(0.1)
-        self._ylim['min'].setRange(-10, 10)
-        self._ylim['min'].setEnabled(True)
-        self._ylim['min'].valueChanged.connect(self.plot_brf)
-
-        self._ylim['max'] = QDoubleSpinBox()
-        self._ylim['max'].setValue(1)
-        self._ylim['max'].setDecimals(1)
-        self._ylim['max'].setSingleStep(0.1)
-        self._ylim['max'].setRange(-10, 10)
-        self._ylim['max'].setEnabled(True)
-        self._ylim['max'].valueChanged.connect(self.plot_brf)
-
-        self._ylim['auto'] = QCheckBox('')
-        self._ylim['auto'].setCheckState(Qt.Unchecked)
-        self._ylim['auto'].stateChanged.connect(self.xlimModeChanged)
-
-        axlayout.addWidget(self._ylim['min'], 1, 1)
-        axlayout.addWidget(self._ylim['max'], 2, 1)
-        axlayout.addWidget(self._ylim['auto'], 3, 1)
-
-        axlayout.setColumnStretch(3, 100)
-        axlayout.setContentsMargins(0, 0, 0, 0)  # (left, top, right, bottom)
-
-        # Layout
-
-        self.graph_pan = myqt.QFrameLayout()
-        self.graph_pan.setContentsMargins(10, 0, 10, 0)  # (l, t, r, b)
-        self.graph_pan.setVisible(False)
-
-        row = 0
-        self.graph_pan.addWidget(self._errorbar, row, 1, 1, 2)
-        row += 1
-        self.graph_pan.addWidget(self._drawline, row, 1, 1, 2)
-        row += 1
-        self.graph_pan.addWidget(self._markersize['label'], row, 1)
-        self.graph_pan.addWidget(self._markersize['widget'], row, 2)
-        row += 1
-        self.graph_pan.addWidget(myqt.HSep(), row, 1, 1, 2)
-        row += 1
-        self.graph_pan.addLayout(axlayout, row, 1, 1, 2)
-        row += 1
-        self.graph_pan.setRowMinimumHeight(row, 15)
-        self.graph_pan.setRowStretch(row, 100)
-
         # ---- Graph Canvas
 
         self.fig_frame = QFrame()
@@ -554,83 +480,39 @@ class BRFViewer(QWidget):
         fflay.addWidget(self.tbar, 1, 0)
         fflay.addWidget(self.brf_canvas, 0, 0)
 
+        # ---- Graph Options Panel
+
+        self.graph_opt_panel = BRFOptionsPanel()
+        self.graph_opt_panel.sig_graphconf_changed.connect(self.plot_brf)
+
         # ---- Main Layout
 
         ml = QGridLayout(self)
 
         ml.addWidget(self.fig_frame, 0, 2)
-        ml.addWidget(self.graph_pan, 0, 3)
+        ml.addWidget(self.graph_opt_panel, 0, 3)
 
         ml.setColumnStretch(1, 100)
 
-    # =========================================================================
-
-    def set_wldset(self, wldset):
-        self.wldset = wldset
-        if wldset is None:
-            self.setEnabled(False)
-        else:
-            self.setEnabled(True)
-            self.update_brfnavigate_state()
-
-    # ---- Graph Panel Properties
-
-    @property
-    def ymin(self):
-        if self._ylim['auto'].checkState() == Qt.Checked:
-            return None
-        else:
-            return self._ylim['min'].value()
-
-    @property
-    def ymax(self):
-        if self._ylim['auto'].checkState() == Qt.Checked:
-            return None
-        else:
-            return self._ylim['max'].value()
-
-    @property
-    def show_ebar(self):
-        return self._errorbar.checkState() == Qt.Checked
-
-    @property
-    def draw_line(self):
-        return self._drawline.checkState() == Qt.Checked
-
-    @property
-    def markersize(self):
-        return self._markersize['widget'].value()
-
-    # ---- Graph Panel Handlers
+    # ---- Toolbar Handlers
 
     def toggle_graphpannel(self):
-        if self.graph_pan.isVisible() is True:
+        if self.graph_opt_panel.isVisible() is True:
             # Hide the panel.
-            self.graph_pan.setVisible(False)
+            self.graph_opt_panel.setVisible(False)
             self.btn_setp.setAutoRaise(True)
             self.btn_setp.setToolTip('Show graph layout parameters...')
 
-            w = self.size().width() - self.graph_pan.size().width()
+            w = self.size().width() - self.graph_opt_panel.size().width()
             self.setFixedWidth(w)
         else:
             # Show the panel.
-            self.graph_pan.setVisible(True)
+            self.graph_opt_panel.setVisible(True)
             self.btn_setp.setAutoRaise(False)
             self.btn_setp.setToolTip('Hide graph layout parameters...')
 
-            w = self.size().width() + self.graph_pan.size().width()
+            w = self.size().width() + self.graph_opt_panel.size().width()
             self.setFixedWidth(w)
-
-    def xlimModeChanged(self, state):
-        """
-        Handles when the Auto checkbox state change for the
-        limits of the y-axis.
-        """
-        self._ylim['min'].setEnabled(state != 2)
-        self._ylim['max'].setEnabled(state != 2)
-        self.plot_brf()
-
-    # ---- Toolbar Handlers
 
     def navigate_brf(self):
         if self.sender() == self.btn_prev:
@@ -691,6 +573,16 @@ class BRFViewer(QWidget):
         """Saves the current BRF figure to fname."""
         self.brf_canvas.figure.savefig(fname)
 
+    # ---- Others
+
+    def set_wldset(self, wldset):
+        self.wldset = wldset
+        if wldset is None:
+            self.setEnabled(False)
+        else:
+            self.setEnabled(True)
+            self.update_brfnavigate_state()
+
     def plot_brf(self):
         self.brf_canvas.figure.set_language(self.cbb_language.currentText())
         if self.wldset.brf_count() == 0:
@@ -700,13 +592,20 @@ class BRFViewer(QWidget):
             lag, A, err, date_start, date_end = self.wldset.get_brf(name)
             well = self.wldset['Well']
 
-            if self.show_ebar is False:
+            if self.graph_opt_panel.show_ebar is False:
                 err = []
-            msize = self.markersize
-            draw_line = self.draw_line
+            msize = self.graph_opt_panel.markersize
+            draw_line = self.graph_opt_panel.draw_line
 
-            ymin = self.ymin
-            ymax = self.ymax
+            ymin = self.graph_opt_panel.ymin
+            ymax = self.graph_opt_panel.ymax
+            yscale = self.graph_opt_panel.yscale
+
+            xmin = self.graph_opt_panel.xmin
+            xmax = self.graph_opt_panel.xmax
+            xscale = self.graph_opt_panel.xscale
+
+            time_units = self.graph_opt_panel.time_units
 
             date0 = '%02d/%02d/%04d' % (date_start[2],
                                         date_start[1],
@@ -716,8 +615,9 @@ class BRFViewer(QWidget):
                                         date_end[1],
                                         date_end[0])
 
-            self.brf_canvas.figure.plot_BRF(lag, A, err, date0, date1, well,
-                                            msize, draw_line, [ymin, ymax])
+            self.brf_canvas.figure.plot_BRF(
+                    lag, A, err, date0, date1, well, msize, draw_line,
+                    [ymin, ymax], [xmin, xmax], time_units, xscale, yscale)
         self.brf_canvas.draw()
 
     def show(self):
@@ -743,11 +643,274 @@ class BRFViewer(QWidget):
             self.setWindowState(Qt.WindowNoState)
 
 
-# ---- if __name__ == "__main__":
+class BRFOptionsPanel(QWidget):
+    """A Panel where the options to plot the graph are displayed."""
+
+    sig_graphconf_changed = QSignal()
+
+    def __init__(self, parent=None):
+        super(BRFOptionsPanel, self).__init__(parent)
+        self.__initGUI__()
+        self.setVisible(False)
+
+    def __initGUI__(self):
+        # ---- Line and Markers Style Widgets
+
+        self._errorbar = QCheckBox('Show error bars')
+        self._errorbar.setCheckState(Qt.Checked)
+        self._errorbar.stateChanged.connect(self._graphconf_changed)
+
+        self._drawline = QCheckBox('Draw line')
+        self._drawline.setCheckState(Qt.Unchecked)
+        self._drawline.stateChanged.connect(self._graphconf_changed)
+
+        self._markersize = {}
+        self._markersize['label'] = QLabel('Marker size :')
+        self._markersize['widget'] = QSpinBox()
+        self._markersize['widget'].setValue(5)
+        self._markersize['widget'].setRange(0, 25)
+        self._markersize['widget'].valueChanged.connect(
+                self._graphconf_changed)
+
+        # ---- Y-Axis Options Widgets
+
+        self._ylim = {}
+        self._ylim['min'] = QDoubleSpinBox()
+        self._ylim['min'].setValue(0)
+        self._ylim['min'].setDecimals(1)
+        self._ylim['min'].setSingleStep(0.1)
+        self._ylim['min'].setRange(-10, 10)
+        self._ylim['min'].setEnabled(True)
+        self._ylim['min'].valueChanged.connect(self._graphconf_changed)
+        self._ylim['max'] = QDoubleSpinBox()
+        self._ylim['max'].setValue(1)
+        self._ylim['max'].setDecimals(1)
+        self._ylim['max'].setSingleStep(0.1)
+        self._ylim['max'].setRange(-10, 10)
+        self._ylim['max'].setEnabled(True)
+        self._ylim['max'].valueChanged.connect(self._graphconf_changed)
+        self._ylim['scale'] = QDoubleSpinBox()
+        self._ylim['scale'].setValue(0.2)
+        self._ylim['scale'].setDecimals(2)
+        self._ylim['scale'].setSingleStep(0.05)
+        self._ylim['scale'].setRange(0.01, 1)
+        self._ylim['scale'].setEnabled(True)
+        self._ylim['scale'].valueChanged.connect(self._graphconf_changed)
+        self._ylim['auto'] = QCheckBox('')
+        self._ylim['auto'].setCheckState(Qt.Checked)
+        self._ylim['auto'].stateChanged.connect(self.axis_autocheck_changed)
+
+        # ---- X-Axis Options Widgets
+
+        self._xlim = {}
+        self._xlim['units'] = QComboBox()
+        self._xlim['units'].addItems(['Hours', 'Days'])
+        self._xlim['units'].setCurrentIndex(1)
+        self._xlim['units'].currentIndexChanged.connect(
+                self.time_units_changed)
+        self._xlim['min'] = QSpinBox()
+        self._xlim['min'].setValue(0)
+        self._xlim['min'].setSingleStep(1)
+        self._xlim['min'].setRange(0, 9999)
+        self._xlim['min'].setEnabled(True)
+        self._xlim['min'].valueChanged.connect(self._graphconf_changed)
+        self._xlim['max'] = QSpinBox()
+        self._xlim['max'].setValue(1)
+        self._xlim['max'].setSingleStep(1)
+        self._xlim['max'].setRange(1, 9999)
+        self._xlim['max'].setEnabled(True)
+        self._xlim['max'].valueChanged.connect(self._graphconf_changed)
+        self._xlim['scale'] = QDoubleSpinBox()
+        self._xlim['scale'].setValue(1)
+        self._xlim['scale'].setDecimals(1)
+        self._xlim['scale'].setSingleStep(0.1)
+        self._xlim['scale'].setRange(0.1, 99)
+        self._xlim['scale'].setEnabled(True)
+        self._xlim['scale'].valueChanged.connect(self._graphconf_changed)
+        self._xlim['auto'] = QCheckBox('')
+        self._xlim['auto'].setCheckState(Qt.Checked)
+        self._xlim['auto'].stateChanged.connect(self.axis_autocheck_changed)
+
+        self.axis_autocheck_changed()
+
+        # ---- Axis Options Layout
+
+        axlayout = QGridLayout()
+
+        row = 0
+        axlayout.addWidget(QLabel('y-axis limits:'), 0, 0, 1, 2)
+        row += 1
+        axlayout.addWidget(QLabel('   Minimum :'), row, 0)
+        axlayout.addWidget(self._ylim['min'], row, 1)
+        row += 1
+        axlayout.addWidget(QLabel('   Maximum :'), row, 0)
+        axlayout.addWidget(self._ylim['max'], row, 1)
+        row += 1
+        axlayout.addWidget(QLabel('   Scale :'), row, 0)
+        axlayout.addWidget(self._ylim['scale'], row, 1)
+        row += 1
+        axlayout.addWidget(QLabel('   Auto :'), row, 0)
+        axlayout.addWidget(self._ylim['auto'], row, 1)
+        row += 1
+        axlayout.setRowMinimumHeight(row, 15)
+        row += 1
+        axlayout.addWidget(QLabel('x-axis limits:'), row, 0, 1, 2)
+        row += 1
+        axlayout.addWidget(QLabel('   Time units :'), row, 0)
+        axlayout.addWidget(self._xlim['units'], row, 1)
+        row += 1
+        axlayout.addWidget(QLabel('   Minimum :'), row, 0)
+        axlayout.addWidget(self._xlim['min'], row, 1)
+        row += 1
+        axlayout.addWidget(QLabel('   Maximum :'), row, 0)
+        axlayout.addWidget(self._xlim['max'], row, 1)
+        row += 1
+        axlayout.addWidget(QLabel('   Scale :'), row, 0)
+        axlayout.addWidget(self._xlim['scale'], row, 1)
+        row += 1
+        axlayout.addWidget(QLabel('   Auto :'), row, 0)
+        axlayout.addWidget(self._xlim['auto'], row, 1)
+
+        axlayout.setColumnStretch(3, 100)
+        axlayout.setContentsMargins(0, 0, 0, 0)  # (left, top, right, bottom)
+
+        # ---- Graph Panel Layout
+
+        layout = QGridLayout(self)
+        layout.setContentsMargins(10, 0, 10, 0)  # (l, t, r, b)
+
+        row = 0
+        layout.addWidget(self._errorbar, row, 1, 1, 2)
+        row += 1
+        layout.addWidget(self._drawline, row, 1, 1, 2)
+        row += 1
+        layout.addWidget(self._markersize['label'], row, 1)
+        layout.addWidget(self._markersize['widget'], row, 2)
+        row += 1
+        layout.addWidget(myqt.HSep(), row, 1, 1, 2)
+        row += 1
+        layout.addLayout(axlayout, row, 1, 1, 2)
+        row += 1
+        layout.setRowMinimumHeight(row, 15)
+        layout.setRowStretch(row, 100)
+
+    def _graphconf_changed(self):
+        """
+        Emits a signal to indicate that the graph configuration has changed.
+        """
+        self.sig_graphconf_changed.emit()
+
+    # ---- Graph Panel Properties
+
+    @property
+    def time_units(self):
+        if self._xlim['auto'].checkState() == Qt.Checked:
+            return 'auto'
+        else:
+            return self._xlim['units'].currentText().lower()
+
+    @property
+    def xmin(self):
+        if self._xlim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            if self.time_units == 'hours':
+                return self._xlim['min'].value()/24
+            else:
+                return self._xlim['min'].value()
+
+    @property
+    def xmax(self):
+        if self._xlim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            if self.time_units == 'hours':
+                return self._xlim['max'].value()/24
+            else:
+                return self._xlim['max'].value()
+
+    @property
+    def xscale(self):
+        if self._xlim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            if self.time_units == 'hours':
+                return self._xlim['scale'].value()/24
+            else:
+                return self._xlim['scale'].value()
+
+    @property
+    def ymin(self):
+        if self._ylim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            return self._ylim['min'].value()
+
+    @property
+    def ymax(self):
+        if self._ylim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            return self._ylim['max'].value()
+
+    @property
+    def yscale(self):
+        if self._ylim['auto'].checkState() == Qt.Checked:
+            return None
+        else:
+            return self._ylim['scale'].value()
+
+    @property
+    def show_ebar(self):
+        return self._errorbar.checkState() == Qt.Checked
+
+    @property
+    def draw_line(self):
+        return self._drawline.checkState() == Qt.Checked
+
+    @property
+    def markersize(self):
+        return self._markersize['widget'].value()
+
+    # ---- Handlers
+
+    def time_units_changed(self):
+        """ Handles when the time_units combobox selection changes."""
+        for xlim in [self._xlim['min'], self._xlim['max'],
+                     self._xlim['scale']]:
+            xlim.blockSignals(True)
+            if self._xlim['units'].currentText() == 'Hours':
+                xlim.setValue(xlim.value()*24)
+            elif self._xlim['units'].currentText() == 'Days':
+                xlim.setValue(xlim.value()/24)
+            xlim.blockSignals(False)
+
+        self._graphconf_changed()
+
+    def axis_autocheck_changed(self):
+        """
+        Handles when the Auto checkbox state change for the
+        limits of the y-axis or the x-axis.
+        """
+        self._ylim['min'].setEnabled(not self._ylim['auto'].isChecked())
+        self._ylim['max'].setEnabled(not self._ylim['auto'].isChecked())
+        self._ylim['scale'].setEnabled(not self._ylim['auto'].isChecked())
+
+        self._xlim['units'].setEnabled(not self._xlim['auto'].isChecked())
+        self._xlim['min'].setEnabled(not self._xlim['auto'].isChecked())
+        self._xlim['max'].setEnabled(not self._xlim['auto'].isChecked())
+        self._xlim['scale'].setEnabled(not self._xlim['auto'].isChecked())
+
+        self._graphconf_changed()
+
+
+# %% if __name__ == "__main__"
 
 if __name__ == "__main__":
     import gwhat.projet.reader_projet as prd
     import sys
+    # projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/Projects/Example/"
+    #                            "Example.gwt")
     projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/gwhat/"
                               "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
     wldset = projet.get_wldset(projet.wldsets[0])
@@ -762,6 +925,8 @@ if __name__ == "__main__":
     brfwin = BRFManager(None)
     brfwin.show()
     brfwin.set_wldset(wldset)
+    brfwin.viewer.show()
+    brfwin.viewer.toggle_graphpannel()
 
     sys.exit(app.exec_())
 

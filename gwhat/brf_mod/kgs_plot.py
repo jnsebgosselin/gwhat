@@ -15,18 +15,20 @@ import matplotlib as mpl
 import numpy as np
 
 
-class FigureLabels():
+class FigureLabels(object):
     LANGUAGES = ['english', 'french']
 
     def __init__(self, language):
-        self.lag = 'Time Lag (days)'
-        self.A = 'Cumulative Response Function'
-        self.title = ('Well %s from %s to %s')
-
         if language.lower() == 'french':
-            self.lag = 'Lag temporel (h)'
+            self.lag = 'Lag temporel (jours)'
+            self.lag_hr = 'Lag temporel (heures)'
             self.A = 'Réponse barométrique cumulative'
             self.title = 'Puits %s du %s au %s'
+        else:
+            self.lag = 'Time Lag (days)'
+            self.lag_hr = 'Time Lag (hours)'
+            self.A = 'Cumulative Response Function'
+            self.title = ('Well %s from %s to %s')
 
 
 class BRFFigure(mpl.figure.Figure):
@@ -64,11 +66,6 @@ class BRFFigure(mpl.figure.Figure):
         ax.tick_params(axis='both', which='major', direction='out',
                        gridOn=True)
 
-        # ---- Axis Labels
-
-        ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
-        ax.set_ylabel(self.fig_labels.A, fontsize=14)
-
         # ---- Artists Init
 
         self.line, = ax.plot([], [], ls='-', color='blue', linewidth=1.5,
@@ -103,30 +100,41 @@ class BRFFigure(mpl.figure.Figure):
         self.__figlang = lang
         self.__figlabels = FigureLabels(lang)
 
-        ax = self.axes[0]
-        ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
-        ax.set_ylabel(self.fig_labels.A, fontsize=14)
-
     def empty_BRF(self):
         ax = self.axes[0]
         ax.set_visible(False)
 
     def plot_BRF(self, lag, A, err, date0, date1, well, msize=0,
-                 draw_line=True, ylim=[None, None]):
+                 draw_line=True, ylim=[None, None], xlim=[None, None],
+                 time_units='auto', xscl=None, yscl=None):
         ax = self.axes[0]
         ax.set_visible(True)
 
-        lag_max = np.max(lag)
+        # ---- Xticks labels time_units
 
-        # ---- Ticks Setup
+        if time_units not in ['days', 'hours', 'auto']:
+            raise ValueError("time_units value must be either :",
+                             ['days', 'hours', 'auto'])
+        if time_units == 'auto':
+            time_units = 'days' if np.max(lag) >= 2 else 'hours'
+        if time_units == 'hours':
+            lag = lag * 24
+            xlim[0] = None if xlim[0] is None else xlim[0]*24
+            xlim[1] = None if xlim[1] is None else xlim[1]*24
 
-        TCKPOS = np.arange(0, max(lag_max+1, 10), 1)
-        ax.set_xticks(TCKPOS)
+        # ---- Axis Labels
 
-        TCKPOS = np.arange(-10, 10, 0.2)
-        ax.set_yticks(TCKPOS)
+        if time_units == 'hours':
+            ax.set_xlabel(self.fig_labels.lag_hr, fontsize=14, labelpad=8)
+        else:
+            ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
+
+        ax.set_ylabel(self.fig_labels.A, fontsize=14)
 
         # ---- Axis Limits
+
+        xmin = 0 if xlim[0] is None else xlim[0]
+        xmax = np.max(lag) if xlim[1] is None else xlim[1]
 
         if ylim[0] is None:
             if len(err) > 0:
@@ -144,10 +152,30 @@ class BRFFigure(mpl.figure.Figure):
         else:
             ymax = ylim[1]
 
-        ymin += -10**-12
-        ymax += 10**-12
+        # ---- Xticks ans Yticks Setup
 
-        ax.axis([0, lag_max, ymin, ymax])
+        yscl = 0.2 if yscl is None else yscl
+        ax.set_yticks(np.arange(ymin, ymax+yscl, yscl))
+
+        if time_units == 'hours':
+            # We want the ticks to be a multiple of 24.
+            if xscl is None:
+                if np.floor(xmax) > 24*7:
+                    xscl = 24
+                elif np.floor(xmax) > 48:
+                    xscl = 12
+                elif np.floor(xmax) > 12:
+                    xscl = 4
+                else:
+                    xscl = 1
+            else:
+                xscl *= 24
+        elif time_units == 'days':
+            if xscl is None:
+                xscl = 1
+        ax.set_xticks(np.arange(xmin, xmax+xscl, xscl))
+
+        ax.axis([xmin, xmax+10**-12, ymin-10**-12, ymax+10**-12])
 
         # ---- Update the data
 
@@ -155,8 +183,12 @@ class BRFFigure(mpl.figure.Figure):
         self.line.set_ydata(A)
         self.line.set_visible(draw_line)
 
-        self.markers.set_xdata(lag)
-        self.markers.set_ydata(A)
+        indexes = np.where((lag >= xmin) & (lag <= xmax) &
+                           (A >= ymin) & (A <= ymax)
+                           )[0]
+
+        self.markers.set_xdata(lag[indexes])
+        self.markers.set_ydata(A[indexes])
         self.markers.set_markersize(msize)
 
         self.errbar.remove()
