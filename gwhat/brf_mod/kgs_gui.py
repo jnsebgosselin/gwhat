@@ -708,7 +708,7 @@ class BRFOptionsPanel(QWidget):
         self._xlim['max'] = QSpinBox()
         self._xlim['max'].setValue(1)
         self._xlim['max'].setSingleStep(1)
-        self._xlim['max'].setRange(0, 9999)
+        self._xlim['max'].setRange(1, 9999)
         self._xlim['max'].setEnabled(True)
         self._xlim['max'].valueChanged.connect(self._graphconf_changed)
         self._xlim['auto'] = QCheckBox('')

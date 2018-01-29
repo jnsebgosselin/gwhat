@@ -106,7 +106,7 @@ class BRFFigure(mpl.figure.Figure):
 
     def plot_BRF(self, lag, A, err, date0, date1, well, msize=0,
                  draw_line=True, ylim=[None, None], xlim=[None, None],
-                 time_units='auto'):
+                 time_units='auto', xscl=None, yscl=None):
         ax = self.axes[0]
         ax.set_visible(True)
 
@@ -156,6 +156,26 @@ class BRFFigure(mpl.figure.Figure):
         ymax += 10**-12
         xmax += 10**-12
 
+        # ---- Xticks Setup
+
+        if time_units == 'hours':
+            # We want the ticks to be a multiple of 24.
+            if xscl is None:
+                if np.floor(xmax) > 24*7:
+                    xscl = 24
+                elif np.floor(xmax) > 48:
+                    xscl = 12
+                elif np.floor(xmax) > 12:
+                    xscl = 4
+                else:
+                    xscl = 1
+            else:
+                xscl *= 24
+        elif time_units == 'days':
+            if xscl is None:
+                xscl = 1
+
+        ax.set_xticks(np.arange(xmin, xmax+xscl, xscl))
         ax.axis([xmin, xmax, ymin, ymax])
 
         # ---- Update the data
