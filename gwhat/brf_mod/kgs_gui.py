@@ -865,8 +865,10 @@ class BRFOptionsPanel(QWidget):
 if __name__ == "__main__":
     import gwhat.projet.reader_projet as prd
     import sys
-    projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/gwhat/"
-                              "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
+    projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/Projects/Example/"
+                              "Example.gwt")
+    # projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/gwhat/"
+                              # "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
     wldset = projet.get_wldset(projet.wldsets[0])
 
     app = QApplication(sys.argv)
@@ -879,6 +881,8 @@ if __name__ == "__main__":
     brfwin = BRFManager(None)
     brfwin.show()
     brfwin.set_wldset(wldset)
+    brfwin.viewer.show()
+    brfwin.viewer.toggle_graphpannel()
 
     sys.exit(app.exec_())
 
