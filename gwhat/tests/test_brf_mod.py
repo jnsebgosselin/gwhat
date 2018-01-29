@@ -129,6 +129,7 @@ def test_save_brf_figure(brf_manager_bot, mocker):
 def test_graph_panel(brf_manager_bot, mocker):
     brf_manager, qtbot = brf_manager_bot
     brf_manager.show()
+    graph_opt_panel = brf_manager.viewer.graph_opt_panel
 
     # Set the water level dataset.
     ppath = osp.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
@@ -140,24 +141,56 @@ def test_graph_panel(brf_manager_bot, mocker):
     qtbot.waitExposed(brf_manager.viewer)
 
     # Toggle on the panel and assert it is shown correctly.
-    assert(brf_manager.viewer.graph_pan.isVisible() is False)
+    assert(graph_opt_panel.isVisible() is False)
     qtbot.mouseClick(brf_manager.viewer.btn_setp, Qt.LeftButton)
-    assert(brf_manager.viewer.graph_pan.isVisible())
+    assert(graph_opt_panel.isVisible())
 
-    # Assert the default values.
-    assert(brf_manager.viewer.ymin == 0)
-    assert(brf_manager.viewer.ymax == 1)
-    brf_manager.viewer._ylim['auto'].setChecked(True)
-    assert(brf_manager.viewer.ymin is None)
-    assert(brf_manager.viewer.ymax is None)
+    # Assert the default values for the y-axis :
 
-    assert brf_manager.viewer.show_ebar is True
-    assert brf_manager.viewer.draw_line is False
-    assert brf_manager.viewer.markersize == 5
+    assert(graph_opt_panel.ymin is None)
+    assert(graph_opt_panel.ymax is None)
+    assert(graph_opt_panel.yscale is None)
+
+    graph_opt_panel._ylim['auto'].setChecked(False)
+    assert(graph_opt_panel.ymin == 0)
+    assert(graph_opt_panel.ymax == 1)
+
+    # Assert the default values for the x-axis :
+
+    assert(graph_opt_panel.xmin is None)
+    assert(graph_opt_panel.xmax is None)
+    assert(graph_opt_panel.xscale is None)
+    assert(graph_opt_panel.time_units is 'auto')
+
+    graph_opt_panel._xlim['auto'].setChecked(False)
+    assert(graph_opt_panel.xmin == 0)
+    assert(graph_opt_panel._xlim['min'].value() == 0)
+    assert(graph_opt_panel.xmax == 1)
+    assert(graph_opt_panel._xlim['max'].value() == 1)
+    assert(graph_opt_panel.xscale == 1)
+    assert(graph_opt_panel._xlim['scale'].value() == 1)
+    assert(graph_opt_panel.time_units == 'days')
+
+    # Assert when the value of time_units change :
+
+    graph_opt_panel._xlim['units'].setCurrentIndex(0)
+    assert(graph_opt_panel.time_units == 'hours')
+    assert(graph_opt_panel.xmin == 0)
+    assert(graph_opt_panel._xlim['min'].value() == 0)
+    assert(graph_opt_panel.xmax == 1)
+    assert(graph_opt_panel._xlim['max'].value() == 24)
+    assert(graph_opt_panel.xscale == 1)
+    assert(graph_opt_panel._xlim['scale'].value() == 24)
+
+    # Assert the default values for the artists :
+
+    assert graph_opt_panel.show_ebar is True
+    assert graph_opt_panel.draw_line is False
+    assert graph_opt_panel.markersize == 5
 
     # Toggle off the panel and assert it is hidden correctly.
     qtbot.mouseClick(brf_manager.viewer.btn_setp, Qt.LeftButton)
-    assert(brf_manager.viewer.graph_pan.isVisible() is False)
+    assert(brf_manager.viewer.graph_opt_panel.isVisible() is False)
 
 
 @pytest.mark.run(order=9)
