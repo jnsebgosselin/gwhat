@@ -183,8 +183,12 @@ class BRFFigure(mpl.figure.Figure):
         self.line.set_ydata(A)
         self.line.set_visible(draw_line)
 
-        self.markers.set_xdata(lag)
-        self.markers.set_ydata(A)
+        indexes = np.where((lag >= xmin) & (lag <= xmax) &
+                           (A >= ymin) & (A <= ymax)
+                           )[0]
+
+        self.markers.set_xdata(lag[indexes])
+        self.markers.set_ydata(A[indexes])
         self.markers.set_markersize(msize)
 
         self.errbar.remove()
