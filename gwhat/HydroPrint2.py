@@ -120,7 +120,7 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_zoom_out.clicked.connect(self.zoom_out)
 
         btn_zoom_in = QToolButtonSmall(icons.get_icon('zoom_in'))
-        btn_zoom_out.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
+        btn_zoom_in.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
         btn_zoom_in.clicked.connect(self.zoom_in)
 
         self.zoom_disp = QSpinBox()
