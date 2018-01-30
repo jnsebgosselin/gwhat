@@ -716,7 +716,71 @@ class NewDatasetDialog(QDialog):
         self.setFixedSize(self.size())
 
 
-# ---- if __name__ == '__main__'
+class ExportWeatherButton(QToolButtonBase):
+    """
+    A toolbutton with a popup menu that handles the export of the weather
+    dataset in various format.
+    """
+    def __init__(self, workdir=None, wxdset=None, *args, **kargs):
+        super(ExportWeatherButton, self).__init__(
+                icons.get_icon('export_data'), *args, **kargs)
+        self.__save_dialog_dir = os.getcwd() if workdir is None else workdir
+        self.set_wxdset(wxdset)
+
+        self.setToolTip('Export time series')
+        self.setPopupMode(QToolButtonSmall.InstantPopup)
+        self.setStyleSheet("QToolButton::menu-indicator {image: none;}")
+
+        # Generate the menu of the button :
+
+        menu = QMenu()
+        menu.addAction('Export daily time series as...',
+                       lambda: self.select_export_file('daily'))
+        menu.addAction('Export monthly time series as...',
+                       lambda: self.select_export_file('monthly'))
+        menu.addAction('Export yearly time series as...',
+                       lambda: self.select_export_file('yearly'))
+        self.setMenu(menu)
+
+    # ---- Weather Dataset
+
+    @property
+    def wxdset(self):
+        return self.__wxdset
+
+    def set_wxdset(self, wxdset):
+        """Sets the weather dataset of the button."""
+        if wxdset is None:
+            self.__wxdset = None
+        else:
+            if isinstance(wxdset, WXDataFrameBase):
+                self.__wxdset = wxdset
+            else:
+                raise ValueError("wxdset must be a derived class"
+                                 " of WXDataFrameBase")
+
+    # ---- Export Time Series
+
+    def select_export_file(self, time_frame):
+        if isinstance(self.wxdset, WXDataFrameBase):
+            staname = self.wxdset['Station Name']
+            filename = 'Weather%s_%s' % (time_frame.capitalize(), staname)
+            dirname = os.path.join(self.__save_dialog_dir, filename)
+            winname = 'Export %s' % time_frame
+            filename, ftype = QFileDialog.getSaveFileName(
+                    self, winname, dirname, '*.xlsx;;*.xls;;*.csv')
+            if filename:
+                self.__save_dialog_dir = osp.dirname(filename)
+                self.export_series_tofile(filename, time_frame)
+
+    def export_series_tofile(self, filename, time_frame):
+        if isinstance(self.wxdset, WXDataFrameBase):
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            self.wxdset.export_dataset_to_file(filename, time_frame)
+            QApplication.restoreOverrideCursor()
+
+
+# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     from reader_projet import ProjetReader

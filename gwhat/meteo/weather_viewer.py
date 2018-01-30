@@ -21,7 +21,7 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QFileDialog, QApplication, QTableWidget,
                              QTableWidgetItem, QLabel, QHBoxLayout,
@@ -37,6 +37,7 @@ from gwhat.common.widgets import DialogWindow, VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.meteo.weather_reader import calcul_monthly_normals
 from gwhat.common.utils import save_content_to_file
+from gwhat.projet.manager_data import ExportWeatherButton
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -76,20 +77,8 @@ class WeatherViewer(DialogWindow):
         btn_save.setPopupMode(QToolButton.InstantPopup)
         btn_save.setStyleSheet("QToolButton::menu-indicator {image: none;}")
 
-        menu_export = QMenu()
-        menu_export.addAction('Export daily time series as...',
-                              self.select_export_file)
-        menu_export.addAction('Export monthly time series as...',
-                              self.select_export_file)
-        menu_export.addAction('Export yearly time series as...',
-                              self.select_export_file)
-
-        self.btn_export = QToolButtonNormal(icons.get_icon('export_data'))
-        self.btn_export.setToolTip('Export time series')
-        self.btn_export.setPopupMode(QToolButton.InstantPopup)
-        self.btn_export.setMenu(menu_export)
-        self.btn_export.setStyleSheet(
-                "QToolButton::menu-indicator {image: none;}")
+        self.btn_export = ExportWeatherButton()
+        self.btn_export.setIconSize(QSize(28, 28))
 
         btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
         btn_showStats.setToolTip(
@@ -184,6 +173,7 @@ class WeatherViewer(DialogWindow):
         Generates the graph, updates the table, and updates the GUI for
         the new weather dataset.
         """
+        self.btn_export.set_wxdset(wxdset)
         self.wxdset = wxdset
 
         # Update the GUI :
@@ -293,36 +283,6 @@ class WeatherViewer(DialogWindow):
                 else:
                     fcontent[-1].append(np.sum(self.normals[vrb]))
             save_content_to_file(filename, fcontent)
-
-    # ---- Export Time Series
-
-    def select_export_file(self):
-        if self.sender() == self.btn_export.menu().actions()[0]:
-            time_frame = 'daily'
-        elif self.sender() == self.btn_export.menu().actions()[1]:
-            time_frame = 'monthly'
-        elif self.sender() == self.btn_export.menu().actions()[2]:
-            time_frame = 'yearly'
-        else:
-            return
-
-        staname = self.wxdset['Station Name']
-        defaultname = 'Weather%s_%s' % (time_frame.capitalize(), staname)
-
-        ddir = os.path.join(self.save_fig_dir, defaultname)
-        dialog = QFileDialog()
-
-        filename, ftype = dialog.getSaveFileName(
-                self, 'Export %s' % time_frame, ddir, '*.xlsx;;*.xls;;*.csv')
-
-        if filename:
-            self.save_fig_dir = osp.dirname(filename)
-            self.export_series_tofile(filename, time_frame)
-
-    def export_series_tofile(self, filename, time_frame):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        self.wxdset.export_dataset_to_file(filename, time_frame)
-        QApplication.restoreOverrideCursor()
 
 
 class FigureLabels(object):
