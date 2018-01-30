@@ -13,7 +13,6 @@ from __future__ import division, unicode_literals
 import sys
 import os
 import os.path as osp
-from time import strftime
 from datetime import datetime
 
 # ---- Imports: Third Parties
@@ -36,7 +35,6 @@ from gwhat.common import icons
 from gwhat.common.icons import QToolButtonVRectSmall, QToolButtonNormal
 from gwhat.common.widgets import DialogWindow, VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
-from gwhat import __namever__
 from gwhat.meteo.weather_reader import calcul_monthly_normals
 from gwhat.common.utils import save_content_to_file
 
@@ -322,57 +320,8 @@ class WeatherViewer(DialogWindow):
             self.export_series_tofile(filename, time_frame)
 
     def export_series_tofile(self, filename, time_frame):
-        if time_frame == 'daily':
-            vrbs = ['Year', 'Month', 'Day']
-            lbls = ['Year', 'Month', 'Day']
-        elif time_frame == 'monthly':
-            vrbs = ['Year', 'Month']
-            lbls = ['Year', 'Month']
-        elif time_frame == 'yearly':
-            vrbs = ['Year']
-            lbls = ['Year']
-        else:
-            raise ValueError('"time_frame" must be either "yearly", "monthly"'
-                             ' or "daily".')
-
-        vrbs.extend(['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET'])
-        lbls.extend(['Tmin (\u00B0C)', 'Tavg (\u00B0C)', 'Tmax (\u00B0C)',
-                     'Rain (mm)', 'Snow (mm)', 'Ptot (mm)',
-                     'PET (mm)'])
-
         QApplication.setOverrideCursor(Qt.WaitCursor)
-
-        startdate = '%02d/%02d/%d' % (self.wxdset['Day'][0],
-                                      self.wxdset['Month'][0],
-                                      self.wxdset['Year'][0])
-        enddate = '%02d/%02d/%d' % (self.wxdset['Day'][-1],
-                                    self.wxdset['Month'][-1],
-                                    self.wxdset['Year'][-1])
-
-        fcontent = [['Station Name', self.wxdset['Station Name']],
-                    ['Province', self.wxdset['Province']],
-                    ['Latitude', self.wxdset['Longitude']],
-                    ['Longitude', self.wxdset['Longitude']],
-                    ['Elevation', self.wxdset['Elevation']],
-                    ['Climate Identifier', self.wxdset['Climate Identifier']],
-                    ['', ''],
-                    ['Start Date ', startdate],
-                    ['End Date ', enddate],
-                    ['', ''],
-                    ['Created by', __namever__],
-                    ['Created on', strftime("%d/%m/%Y")],
-                    ['', '']
-                    ]
-        fcontent.append(lbls)
-
-        N = len(self.wxdset[time_frame]['Year'])
-        M = len(vrbs)
-        data = np.zeros((N, M))
-        for j, vrb in enumerate(vrbs):
-            data[:, j] = self.wxdset[time_frame][vrb]
-        fcontent.extend(data.tolist())
-
-        save_content_to_file(filename, fcontent)
+        self.wxdset.export_dataset_to_file(filename, time_frame)
         QApplication.restoreOverrideCursor()
 
 
