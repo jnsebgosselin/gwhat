@@ -7,27 +7,29 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Standard library imports
+# ---- Imports: Standard Libraries
 
 import os
+import os.path as osp
 
-# ---- Third party imports
+# ---- Import: Third Party Libraries
 
-from PyQt5.QtCore import Qt, QCoreApplication
+from PyQt5.QtCore import Qt, QCoreApplication, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
                              QLabel, QMessageBox, QLineEdit, QPushButton,
-                             QFileDialog, QApplication, QGroupBox, QDialog)
+                             QFileDialog, QApplication, QDialog, QMenu)
 
-# ---- Local imports
+# ---- Imports: Local Libraries
 
-from gwhat.common import QToolButtonSmall
+from gwhat.common.icons import QToolButtonSmall, QToolButtonBase
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
 import gwhat.projet.reader_waterlvl as wlrd
 import gwhat.meteo.weather_reader as wxrd
 from gwhat.meteo.weather_reader import WXDataFrameBase
+
 
 class DataManager(QWidget):
 
@@ -37,6 +39,8 @@ class DataManager(QWidget):
     def __init__(self, parent=None, projet=None, pm=None, pytesting=False):
         super(DataManager, self).__init__(parent)
         self._pytesting = pytesting
+        self._projet = projet
+
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumWidth(250)
@@ -60,7 +64,7 @@ class DataManager(QWidget):
 
     def __initUI__(self):
 
-        # -------------------------------------------- water level dataset ----
+        # ---- Water Level Dataset Toolbar
 
         self.wldsets_cbox = QComboBox()
         self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
@@ -74,8 +78,6 @@ class DataManager(QWidget):
         self.btn_del_wldset.setToolTip('Delete current dataset.')
         self.btn_del_wldset.clicked.connect(self.del_current_wldset)
 
-        # ---- toolbar ----
-
         wltb = QGridLayout()
         wltb.setContentsMargins(0, 0, 0, 0)
 
@@ -83,13 +85,15 @@ class DataManager(QWidget):
         for col, widg in enumerate(widgets):
             wltb.addWidget(widg, 0, col)
 
-        # ---- info box -----
+        # ---- Water Level Dataset Info Box
 
         self.well_info_widget = QTextEdit()
         self.well_info_widget.setReadOnly(True)
         self.well_info_widget.setFixedHeight(100)
 
-        # ------------------------------------------------ weather dataset ----
+        # ---- Weather Dataset Toolbar
+
+        # Generate the widgets :
 
         self.wxdsets_cbox = QComboBox()
         self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
@@ -98,8 +102,6 @@ class DataManager(QWidget):
         self.btn_load_meteo = QToolButtonSmall(icons.get_icon('importFile'))
         self.btn_load_meteo.setToolTip('Import a new weather dataset...')
         self.btn_load_meteo.clicked.connect(self.import_wxdataset)
-
-        # btn_weather_dir.clicked.connect(self.select_meteo_file)
 
         self.btn_del_wxdset = QToolButtonSmall(icons.get_icon('clear'))
         self.btn_del_wxdset.setToolTip('Delete current dataset.')
@@ -110,24 +112,27 @@ class DataManager(QWidget):
                                      ' from the observation well.</p>')
         btn_closest_meteo.clicked.connect(self.set_closest_wxdset)
 
-        # ---- toolbar ----
+        self.btn_export_weather = ExportWeatherButton(workdir=self.workdir)
+        self.btn_export_weather.setIconSize(QSize(20, 20))
+
+        # Generate the layout :
 
         wxtb = QGridLayout()
         wxtb.setContentsMargins(0, 0, 0, 0)
 
         widgets = [self.wxdsets_cbox, self.btn_load_meteo, self.btn_del_wxdset,
-                   btn_closest_meteo]
+                   btn_closest_meteo, self.btn_export_weather]
 
         for col, widg in enumerate(widgets):
             wxtb.addWidget(widg, 0, col)
 
-        # ---- info box -----
+        # Weather Dataset Info Box
 
         self.meteo_info_widget = QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
         self.meteo_info_widget.setFixedHeight(100)
 
-        # ---------------------------------------------------- Main Layout ----
+        # ---- Main Layout
 
         layout = QGridLayout()
 
@@ -146,14 +151,12 @@ class DataManager(QWidget):
 
         self.setLayout(layout)
 
-    # =========================================================================
-
     @property
     def workdir(self):
         if self.projet is None:
-            return os.path.dirname(os.getcwd())
+            return osp.dirname(os.getcwd())
         else:
-            return os.path.dirname(self.projet.filename)
+            return osp.dirname(self.projet.filename)
 
     @property
     def projet(self):
@@ -177,7 +180,7 @@ class DataManager(QWidget):
         self.new_waterlvl_win.set_projet(projet)
         self.new_weather_win.set_projet(projet)
 
-    # ========================================================== utilities ====
+    # ---- Utilities
 
     def emit_warning(self, msg):
         btn = QMessageBox.Ok
@@ -239,6 +242,7 @@ class DataManager(QWidget):
             self.well_info_widget.setText(html)
 
     def wldset_changed(self):
+        """Handles when the currently selected water level dataset changed."""
         self.wldsetChanged.emit(self.get_current_wldset())
 
     def get_current_wldset(self):
@@ -323,9 +327,9 @@ class DataManager(QWidget):
             self.meteo_info_widget.setText(html)
 
     def wxdset_changed(self):
+        """Handles when the currently selected weather dataset changed."""
+        self.btn_export_weather.set_wxdset(self.get_current_wxdset())
         self.wxdsetChanged.emit(self.get_current_wxdset())
-
-    # ---------------------------------------------------------------------
 
     def del_current_wxdset(self):
         if self.wxdsets_cbox.count() > 0:
