@@ -6,26 +6,31 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-import pytest
+
+# ---- Imports: Standard Libraries
 
 import sys
 import os.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+import os.path as osp
 
-# ---- Third party imports
+# ---- Imports: Third Party Libraries
 
 import pytest
 from PyQt5.QtCore import Qt
 
-# Local imports
+
+# ---- Imports: Local Libraries
+
+from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.projet.manager_data import DataManager, QFileDialog, QMessageBox
+from gwhat.projet.manager_data import (DataManager, QFileDialog, QMessageBox,
+                                       ExportWeatherButton)
 
 projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
+OUTPUTDIR = osp.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
 
 
-# Qt Test Fixtures
-# --------------------------------
+# ---- Qt Test Fixtures
 
 @pytest.fixture
 def data_manager_bot(qtbot):
@@ -37,8 +42,18 @@ def data_manager_bot(qtbot):
 
     return data_manager, qtbot
 
-# Tests
-# -------------------------------
+
+@pytest.fixture
+def export_weather_bot(qtbot):
+    datafile = osp.join(OUTPUTDIR, "IBERVILLE (7023270)",
+                        "IBERVILLE (7023270)_2000-2015.out")
+    export_btn = ExportWeatherButton(wxdset=WXDataFrame(datafile))
+    qtbot.addWidget(export_btn)
+
+    return export_btn, qtbot
+
+
+# ---- Tests DataManager
 
 
 @pytest.mark.run(order=7)
@@ -172,6 +187,24 @@ def test_import_back_alldata(data_manager_bot):
     data_manager.new_waterlvl_win.load_dataset(filename)
     data_manager.new_waterlvl_win.accept_dataset()
     assert data_manager.wldataset_count() == 1
+
+
+# ---- Tests ExportWeatherButton
+
+@pytest.mark.run(order=7)
+def test_export_yearly_monthly_daily(export_weather_bot, mocker):
+    export_btn, qtbot = export_weather_bot
+    # export_btn.show()
+
+    for ftype in ['xlsx', 'csv', 'xls']:
+        for time_frame in ['daily', 'monthly', 'yearly']:
+            filename = "export_%s_weather.%s" % (time_frame, ftype)
+            if osp.exists(filename):
+                os.remove(filename)
+            mocker.patch.object(QFileDialog, 'getSaveFileName',
+                                return_value=(filename, '*.'+ftype))
+            export_btn.select_export_file(time_frame)
+            assert osp.exists(filename)
 
 
 if __name__ == "__main__":
