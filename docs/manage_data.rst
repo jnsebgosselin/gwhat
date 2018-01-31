@@ -130,6 +130,33 @@ This will be discussed in more details in :numref:`chap_computing_the_brf`.
 
 .. important:: Water levels must be in metres below the ground surface.
 
+.. _sec_exporting_data:
+
+Exporting Data
+-----------------------------------------------
+
+It is possible to export the currently selected weather dataset to a coma-separated 
+text file (with UTF-8 encoding) or an Excel spreadsheet (:file:`xls` or :file:`xlsx`)
+by clicking on the |icon_export_data| icon as shown in :numref:`export_weather_data`.
+The dataset can be exported in a daily, monthly or yearly format. Note that 
+the export of water level datasets is currently not available in GWHAT.
+
+.. _export_weather_data:
+.. figure:: img/scs/export_weather_data.*
+    :align: center
+    :width: 100%
+    :alt: export_weather_data.png
+    :figclass: align-center
+
+    Tool to export weather datasets in a daily, monthly, or yearly format to
+    a :file:`csv`, :file:`xls`, or :file:`xlsx` file.
+
+
+.. |icon_export_data| image:: img/icon/export-data.*
+                      :width: 1em
+                      :height: 1em
+                      :alt: export-data
+
 .. |icon_open_project| image:: img/icon/open_project.*
                       :width: 1em
                       :height: 1em

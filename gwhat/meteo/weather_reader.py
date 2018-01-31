@@ -13,6 +13,7 @@ import os
 import os.path as osp
 import csv
 from calendar import monthrange
+from time import strftime
 from collections.abc import Mapping
 from abc import abstractmethod
 
@@ -26,7 +27,8 @@ from xlrd import xldate_as_tuple
 # ---- Imports: Local Libraries
 
 from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
-from gwhat.common.utils import save_content_to_csv
+from gwhat.common.utils import save_content_to_csv, save_content_to_file
+from gwhat import __namever__
 
 
 # ---- API
@@ -51,11 +53,60 @@ class WXDataFrameBase(Mapping):
         """
         raise NotImplementedError
 
-    def export_dataset_to_csv():
-        raise NotImplementedError
+    def export_dataset_to_file(self, filename, time_frame):
+        """
+        Exports the dataset to file using a daily, monthly or yearly format.
+        The extension of the file determine in which file type the data will
+        be saved (xls or xlsx for Excel, csv for coma-separated values text
+        file, or tsv for tab-separated values text file).
+        """
+        if time_frame == 'daily':
+            vrbs = ['Year', 'Month', 'Day']
+            lbls = ['Year', 'Month', 'Day']
+        elif time_frame == 'monthly':
+            vrbs = ['Year', 'Month']
+            lbls = ['Year', 'Month']
+        elif time_frame == 'yearly':
+            vrbs = ['Year']
+            lbls = ['Year']
+        else:
+            raise ValueError('"time_frame" must be either "yearly", "monthly"'
+                             ' or "daily".')
 
-    def export_dataset_to_excel():
-        raise NotImplementedError
+        vrbs.extend(['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET'])
+        lbls.extend(['Tmin (\u00B0C)', 'Tavg (\u00B0C)', 'Tmax (\u00B0C)',
+                     'Rain (mm)', 'Snow (mm)', 'Ptot (mm)',
+                     'PET (mm)'])
+
+        startdate = '%02d/%02d/%d' % (
+                self['Day'][0], self['Month'][0], self['Year'][0])
+        enddate = '%02d/%02d/%d' % (
+                self['Day'][-1], self['Month'][-1], self['Year'][-1])
+
+        fcontent = [['Station Name', self['Station Name']],
+                    ['Province', self['Province']],
+                    ['Latitude', self['Longitude']],
+                    ['Longitude', self['Longitude']],
+                    ['Elevation', self['Elevation']],
+                    ['Climate Identifier', self['Climate Identifier']],
+                    ['', ''],
+                    ['Start Date ', startdate],
+                    ['End Date ', enddate],
+                    ['', ''],
+                    ['Created by', __namever__],
+                    ['Created on', strftime("%d/%m/%Y")],
+                    ['', '']
+                    ]
+        fcontent.append(lbls)
+
+        N = len(self[time_frame]['Year'])
+        M = len(vrbs)
+        data = np.zeros((N, M))
+        for j, vrb in enumerate(vrbs):
+            data[:, j] = self[time_frame][vrb]
+        fcontent.extend(data.tolist())
+
+        save_content_to_file(filename, fcontent)
 
     def export_dataset_to_HELP():
         raise NotImplementedError
