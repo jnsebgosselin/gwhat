@@ -139,7 +139,7 @@ It is possible to export the currently selected weather dataset to a coma-separa
 text file (with UTF-8 encoding) or an Excel spreadsheet (:file:`xls` or :file:`xlsx`)
 by clicking on the |icon_export_data| icon as shown in :numref:`export_weather_data`.
 The dataset can be exported in a daily, monthly or yearly format. Note that 
-exporting water level datasets is currently not supported in GWHAT.
+the export of water level datasets is currently not available in GWHAT.
 
 .. _export_weather_data:
 .. figure:: img/scs/export_weather_data.*
