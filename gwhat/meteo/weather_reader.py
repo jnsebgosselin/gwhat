@@ -108,7 +108,7 @@ class WXDataFrameBase(Mapping):
 
         save_content_to_file(filename, fcontent)
 
-    def export_dataset_to_HELP():
+    def export_dataset_to_HELP(self):
         raise NotImplementedError
 
 
@@ -628,6 +628,39 @@ def fill_nan(time, data, name='data', fill_mode='zeros'):
     return data
 
 
+# ---- Read CWEEDS Files
+
+def read_cweeds(filename, daily_format=False):
+    """Reads and formats data from CWEEDS file, either version WY2 or WY3."""
+    # Determine if the CWEEDS file is in the WY2 or WY3 format :
+
+    root, ext = osp.splitext(filename)
+    ext = ext.replace('.', '')
+    if ext not in ['WY2', 'WY3']:
+        raise ValueError("%s is not a valid file extension. CWEEHDS files must"
+                         " have either a WY2 or WY3 extension" % ext)
+
+    # Open and format the data from the CWEEDS file :
+
+    with open(filename, 'r') as f:
+        reader = list(csv.reader(f))
+        if ext == 'WY3':
+            # We remove the header line from the data if the format is WY3.
+            reader = reader[1:]
+
+    char_offset = 0 if ext == 'WY2' else 2
+    years = np.empty(len(reader)).astype(int)
+    months = np.empty(len(reader)).astype(int)
+    days = np.empty(len(reader)).astype(int)
+    hours = np.empty(len(reader)).astype(int)
+    datetimes = np.empty(len(reader)).astype('datetime64')
+    for i, line in enumerate(reader):
+        years[i] = int(line[0][char_offset:][6:10])
+        months[i] = int(line[0][char_offset:][10:12])
+        days[i] = int(line[0][char_offset:][12:14])
+        hours[i] = int(line[0][char_offset:][14:16]) - 1
+
+    return years
 # ----- Base functions: monthly downscaling
 
 def calc_monthly_sum(yy_dly, mm_dly, x_dly):
@@ -756,8 +789,16 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
     return table
 
-
+# %% if __name__ == '__main__'
+    
 if __name__ == '__main__':
-    fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
-              "sample_weather_datafile.csv")
-    wxdset = WXDataFrame(fmeteo)
+    # fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
+              # "sample_weather_datafile.csv")
+    # wxdset = WXDataFrame(fmeteo)
+
+    filename = "C:/Users/jsgosselin/Desktop/CWEEDS/94792.WY2"
+    years_wy2 = read_cweeds(filename)
+
+    filename = ("C:/Users/jsgosselin/Desktop/CWEEDS/"
+                "CAN_QC_MONTREAL-INTL-A_7025251_CWEEDS2011_T_N.WY3")
+    years_wy3 = read_cweeds(filename)
