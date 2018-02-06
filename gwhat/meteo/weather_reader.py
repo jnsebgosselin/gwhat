@@ -813,13 +813,12 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
-    # fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
-              # "sample_weather_datafile.csv")
-    # wxdset = WXDataFrame(fmeteo)
+    fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
+              "sample_weather_datafile.csv")
+    wxdset = WXDataFrame(fmeteo)
 
-    filename = "C:/Users/jsgosselin/Desktop/CWEEDS/94792.WY2"
-    years_wy2 = read_cweeds(filename)
+    filename = "C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY2"
+    daily_wy2 = read_cweeds_file(filename, daily_format=True)
 
-    filename = ("C:/Users/jsgosselin/Desktop/CWEEDS/"
-                "CAN_QC_MONTREAL-INTL-A_7025251_CWEEDS2011_T_N.WY3")
-    years_wy3 = read_cweeds(filename)
+    filename = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY3")
+    daily_wy3 = read_cweeds_file(filename, daily_format=True)
