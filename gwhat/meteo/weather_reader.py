@@ -7,7 +7,7 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: Standard Libraries
+# ---- Standard Library imports
 
 import os
 import os.path as osp
@@ -17,14 +17,14 @@ from time import strftime
 from collections.abc import Mapping
 from abc import abstractmethod
 
-# ---- Imports: Third Parties
+# ---- Third Party imports
 
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 
-# ---- Imports: Local Libraries
+# ---- Local Library imports
 
 from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
 from gwhat.common.utils import save_content_to_csv, save_content_to_file
@@ -789,8 +789,9 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
     return table
 
+
 # %% if __name__ == '__main__'
-    
+
 if __name__ == '__main__':
     # fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
               # "sample_weather_datafile.csv")
