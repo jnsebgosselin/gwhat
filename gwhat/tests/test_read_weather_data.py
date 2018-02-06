@@ -65,7 +65,7 @@ def test_read_weather_data():
 
 def test_read_cweeds_wy2_file():
     filename = osp.join(osp.dirname(__file__), "cweed_sample.WY2")
-    daily_wy2 = read_cweeds_file(filename, daily_format=True)
+    daily_wy2 = read_cweeds_file(filename, format_to_daily=True)
     for key in daily_wy2.keys():
         assert len(daily_wy2[key]) == 1095
 
@@ -95,7 +95,7 @@ def test_read_cweeds_wy2_file():
 
 def test_read_cweeds_wy3_file():
     filename = osp.join(osp.dirname(__file__), "cweed_sample.WY3")
-    daily_wy3 = read_cweeds_file(filename, daily_format=True)
+    daily_wy3 = read_cweeds_file(filename, format_to_daily=True)
     for key in daily_wy3.keys():
         assert len(daily_wy3[key]) == 730
 

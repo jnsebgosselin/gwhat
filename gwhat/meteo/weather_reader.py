@@ -630,8 +630,15 @@ def fill_nan(time, data, name='data', fill_mode='zeros'):
 
 # ---- Read CWEEDS Files
 
-def read_cweeds_file(filename, daily_format=False):
-    """Reads and formats data from CWEEDS file, either version WY2 or WY3."""
+def read_cweeds_file(filename, format_to_daily=True):
+    """
+    Reads and formats data from a CWEEDS file, either version WY2 or WY3.
+    Returns a dictionary, which includes a numpy array of the global
+    solar irradiance in MJ/m², as well as corresponding arrays of the years,
+    months, days, and hours. By default, the hourly data from the CWEEDS file
+    are formated to daily values. The data are kept in a hourly format if
+    format_to_daily is set to False.
+    """
     # Determine if the CWEEDS file is in the WY2 or WY3 format :
 
     root, ext = osp.splitext(filename)
@@ -665,7 +672,7 @@ def read_cweeds_file(filename, daily_format=False):
         # The global horizontal irradiance is converted from kJ/m² to MJ/m².
         hourly_df['Irradiance'][i] = float(line[0][char_offset:][20:24])/1000
 
-    if daily_format:
+    if format_to_daily:
         # Convert the hourly data to daily format.
         assert len(hourly_df['Irradiance']) % 24 == 0
         new_shape = (len(hourly_df['Irradiance'])//24, 24)
@@ -675,6 +682,7 @@ def read_cweeds_file(filename, daily_format=False):
                 hourly_df['Irradiance'].reshape(new_shape), axis=1)
         for key in ['Years', 'Months', 'Days']:
             daily_df[key] = hourly_df[key].reshape(new_shape)[:, 0]
+        daily_df['Hours'] = np.zeros(len(daily_df['Irradiance']))
 
         return daily_df
     else:
