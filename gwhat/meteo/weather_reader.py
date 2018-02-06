@@ -20,7 +20,7 @@ from abc import abstractmethod
 # ---- Third Party imports
 
 import numpy as np
-from xlrd.xldate import xldate_from_date_tuple
+from xlrd.xldate import xldate_from_datetime_tuple, xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 
@@ -651,9 +651,20 @@ def read_cweeds_file(filename, format_to_daily=True):
 
     with open(filename, 'r') as f:
         reader = list(csv.reader(f))
-        if ext == 'WY3':
-            # We remove the header line from the data if the format is WY3.
-            reader = reader[1:]
+
+    header_df = {}
+    if ext == 'WY3':
+        # We remove the header line from the data if the format is WY3.
+        header_list = reader.pop(0)
+        header_df['HORZ version'] = header_list[0]
+        header_df['Location'] = header_list[1]
+        header_df['Province'] = header_list[2]
+        header_df['Country'] = header_list[3]
+        header_df['Station ID'] = header_list[4]
+        header_df['Latitude'] = float(header_list[5])
+        header_df['Longitude'] = float(header_list[6])
+        header_df['Time Zone'] = float(header_list[7])
+        header_df['Elevation'] = float(header_list[8])
 
     char_offset = 0 if ext == 'WY2' else 2
     hourly_df = {}
@@ -661,16 +672,21 @@ def read_cweeds_file(filename, format_to_daily=True):
     hourly_df['Months'] = np.empty(len(reader)).astype(int)
     hourly_df['Days'] = np.empty(len(reader)).astype(int)
     hourly_df['Hours'] = np.empty(len(reader)).astype(int)
+    hourly_df['Time'] = np.empty(len(reader)).astype('float64')
     # Global horizontal irradiance, kJ/m²
     hourly_df['Irradiance'] = np.empty(len(reader)).astype('float64')
 
     for i, line in enumerate(reader):
-        hourly_df['Years'][i] = int(line[0][char_offset:][6:10])
-        hourly_df['Months'][i] = int(line[0][char_offset:][10:12])
-        hourly_df['Days'][i] = int(line[0][char_offset:][12:14])
-        hourly_df['Hours'][i] = int(line[0][char_offset:][14:16]) - 1
+        hourly_df['Years'][i] = year = int(line[0][char_offset:][6:10])
+        hourly_df['Months'][i] = month = int(line[0][char_offset:][10:12])
+        hourly_df['Days'][i] = day = int(line[0][char_offset:][12:14])
+        hourly_df['Hours'][i] = hour = int(line[0][char_offset:][14:16]) - 1
         # The global horizontal irradiance is converted from kJ/m² to MJ/m².
         hourly_df['Irradiance'][i] = float(line[0][char_offset:][20:24])/1000
+
+        # Compute time in Excel numeric format :
+        hourly_df['Time'][i] = xldate_from_datetime_tuple(
+                (year, month, day, hour, 0, 0), 0)
 
     if format_to_daily:
         # Convert the hourly data to daily format.
@@ -680,12 +696,16 @@ def read_cweeds_file(filename, format_to_daily=True):
         daily_df = {}
         daily_df['Irradiance'] = np.sum(
                 hourly_df['Irradiance'].reshape(new_shape), axis=1)
-        for key in ['Years', 'Months', 'Days']:
+        for key in ['Years', 'Months', 'Days', 'Time']:
             daily_df[key] = hourly_df[key].reshape(new_shape)[:, 0]
         daily_df['Hours'] = np.zeros(len(daily_df['Irradiance']))
 
+        daily_df.update(header_df)
+        daily_df['Time Format'] = 'daily'
         return daily_df
     else:
+        daily_df.update(hourly_df)
+        daily_df['Time Format'] = 'hourly'
         return hourly_df
 
 
@@ -826,7 +846,7 @@ if __name__ == '__main__':
     wxdset = WXDataFrame(fmeteo)
 
     filename = "C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY2"
-    daily_wy2 = read_cweeds_file(filename, daily_format=True)
+    daily_wy2 = read_cweeds_file(filename, format_to_daily=True)
 
     filename = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY3")
-    daily_wy3 = read_cweeds_file(filename, daily_format=True)
+    daily_wy3 = read_cweeds_file(filename, format_to_daily=True)

@@ -66,29 +66,29 @@ def test_read_weather_data():
 def test_read_cweeds_wy2_file():
     filename = osp.join(osp.dirname(__file__), "cweed_sample.WY2")
     daily_wy2 = read_cweeds_file(filename, format_to_daily=True)
-    for key in daily_wy2.keys():
-        assert len(daily_wy2[key]) == 1095
+    for key in ['Years', 'Months', 'Days', 'Hours', 'Irradiance']:
+        assert len(daily_wy2[key]) == 1096
 
     # Assert the Years, Months, and Days arrays :
 
-    expected_result = np.array([1953, 1954, 1955])
+    expected_result = np.array([1996, 1997, 1998])
     assert np.array_equal(np.unique(daily_wy2['Years']), expected_result)
     expected_result = np.arange(1, 13)
     assert np.array_equal(np.unique(daily_wy2['Months']), expected_result)
     expected_result = np.arange(1, 32)
     assert np.array_equal(np.unique(daily_wy2['Days']), expected_result)
+    expected_result = np.arange(35065, 36161)
+    assert np.array_equal(np.unique(daily_wy2['Time']), expected_result)
 
     # Assert the beginning of the Irradiance daily data series :
 
-    expected_result = np.array([7.346, 2.552, 2.304, 7.926, 8.146,
-                                6.145, 7.964, 9.128, 2.993, 3.539])
+    expected_result = np.array([7.384, 5.460, 3.008, 7.244, 7.524])
     for i in range(len(expected_result)):
         assert np.round(daily_wy2['Irradiance'][i], 3) == expected_result[i]
 
     # Assert the end of the Irradiance daily data series :
 
-    expected_result = np.array([5.187, 7.215, 1.262, 5.147, 3.562,
-                                5.441, 6.816, 5.375, 7.029, 7.888])
+    expected_result = np.array([5.511, 4.248, 3.773, 4.821, 7.074])
     for i in range(1, len(expected_result)+1):
         assert np.round(daily_wy2['Irradiance'][-i], 3) == expected_result[-i]
 
@@ -96,29 +96,41 @@ def test_read_cweeds_wy2_file():
 def test_read_cweeds_wy3_file():
     filename = osp.join(osp.dirname(__file__), "cweed_sample.WY3")
     daily_wy3 = read_cweeds_file(filename, format_to_daily=True)
-    for key in daily_wy3.keys():
-        assert len(daily_wy3[key]) == 730
+    for key in ['Years', 'Months', 'Days', 'Hours', 'Time', 'Irradiance']:
+        assert len(daily_wy3[key]) == 1096
+
+    # Assert header values :
+
+    assert daily_wy3['HORZ version'] == 'CWEEDS2011'
+    assert daily_wy3['Location'] == 'MONTREAL INTL A'
+    assert daily_wy3['Province'] == 'QC'
+    assert daily_wy3['Country'] == 'CAN'
+    assert daily_wy3['Station ID'] == '7025251'
+    assert daily_wy3['Latitude'] == 45.47
+    assert daily_wy3['Longitude'] == -73.74
+    assert daily_wy3['Time Zone'] == -5.0
+    assert daily_wy3['Elevation'] == 36.0
 
     # Assert the Years, Months, and Days arrays :
 
-    expected_result = np.array([1998, 1999])
+    expected_result = np.array([1998, 1999, 2000])
     assert np.array_equal(np.unique(daily_wy3['Years']), expected_result)
     expected_result = np.arange(1, 13)
     assert np.array_equal(np.unique(daily_wy3['Months']), expected_result)
     expected_result = np.arange(1, 32)
     assert np.array_equal(np.unique(daily_wy3['Days']), expected_result)
+    expected_result = np.arange(35796, 36892)
+    assert np.array_equal(np.unique(daily_wy3['Time']), expected_result)
 
     # Assert the beginning of the Irradiance daily data series :
 
-    expected_result = np.array([4.425, 4.982, 4.798, 6.174, 3.059,
-                                4.999, 4.305, 2.318, 3.881, 4.684])
+    expected_result = np.array([4.425, 4.982, 4.798, 6.174, 3.059])
     for i in range(len(expected_result)):
         assert np.round(daily_wy3['Irradiance'][i], 3) == expected_result[i]
 
     # Assert the end of the Irradiance daily data series :
 
-    expected_result = np.array([5.777, 4.422, 6.396, 6.48, 4.008,
-                                5.5, 4.225, 5.649, 7.082, 5.753])
+    expected_result = np.array([4.709, 5.337, 4.737, 3.746, 3.028])
     for i in range(1, len(expected_result)+1):
         assert np.round(daily_wy3['Irradiance'][-i], 3) == expected_result[-i]
 
