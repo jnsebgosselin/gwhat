@@ -630,7 +630,7 @@ def fill_nan(time, data, name='data', fill_mode='zeros'):
 
 # ---- Read CWEEDS Files
 
-def read_cweeds(filename, daily_format=False):
+def read_cweeds_file(filename, daily_format=False):
     """Reads and formats data from CWEEDS file, either version WY2 or WY3."""
     # Determine if the CWEEDS file is in the WY2 or WY3 format :
 
@@ -649,18 +649,38 @@ def read_cweeds(filename, daily_format=False):
             reader = reader[1:]
 
     char_offset = 0 if ext == 'WY2' else 2
-    years = np.empty(len(reader)).astype(int)
-    months = np.empty(len(reader)).astype(int)
-    days = np.empty(len(reader)).astype(int)
-    hours = np.empty(len(reader)).astype(int)
-    datetimes = np.empty(len(reader)).astype('datetime64')
-    for i, line in enumerate(reader):
-        years[i] = int(line[0][char_offset:][6:10])
-        months[i] = int(line[0][char_offset:][10:12])
-        days[i] = int(line[0][char_offset:][12:14])
-        hours[i] = int(line[0][char_offset:][14:16]) - 1
+    hourly_df = {}
+    hourly_df['Years'] = np.empty(len(reader)).astype(int)
+    hourly_df['Months'] = np.empty(len(reader)).astype(int)
+    hourly_df['Days'] = np.empty(len(reader)).astype(int)
+    hourly_df['Hours'] = np.empty(len(reader)).astype(int)
+    # Global horizontal irradiance, kJ/m²
+    hourly_df['Irradiance'] = np.empty(len(reader)).astype('float64')
 
-    return years
+    for i, line in enumerate(reader):
+        hourly_df['Years'][i] = int(line[0][char_offset:][6:10])
+        hourly_df['Months'][i] = int(line[0][char_offset:][10:12])
+        hourly_df['Days'][i] = int(line[0][char_offset:][12:14])
+        hourly_df['Hours'][i] = int(line[0][char_offset:][14:16]) - 1
+        # The global horizontal irradiance is converted from kJ/m² to MJ/m².
+        hourly_df['Irradiance'][i] = float(line[0][char_offset:][20:24])/1000
+
+    if daily_format:
+        # Convert the hourly data to daily format.
+        assert len(hourly_df['Irradiance']) % 24 == 0
+        new_shape = (len(hourly_df['Irradiance'])//24, 24)
+
+        daily_df = {}
+        daily_df['Irradiance'] = np.sum(
+                hourly_df['Irradiance'].reshape(new_shape), axis=1)
+        for key in ['Years', 'Months', 'Days']:
+            daily_df[key] = hourly_df[key].reshape(new_shape)[:, 0]
+
+        return daily_df
+    else:
+        return hourly_df
+
+
 # ----- Base functions: monthly downscaling
 
 def calc_monthly_sum(yy_dly, mm_dly, x_dly):
