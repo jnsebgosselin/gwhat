@@ -702,11 +702,54 @@ def read_cweeds_file(filename, format_to_daily=True):
 
         daily_df.update(header_df)
         daily_df['Time Format'] = 'daily'
+        daily_df['CWEEDS Format'] = ext
         return daily_df
     else:
-        daily_df.update(hourly_df)
-        daily_df['Time Format'] = 'hourly'
+        hourly_df.update(header_df)
+        hourly_df['Time Format'] = 'hourly'
+        hourly_df['CWEEDS Format'] = ext
         return hourly_df
+
+
+def join_daily_cweeds_wy2_and_wy3(wy2_df, wy3_df):
+    """
+    Join a CWEEDS dataset in the wy2 format to another cweeds dataset in the
+    wy3 format.
+    """
+    assert wy2_df['CWEEDS Format'] == 'WY2'
+    assert wy3_df['CWEEDS Format'] == 'WY3'
+    assert wy2_df['Time Format'] == wy3_df['Time Format']
+
+    time_wy23 = np.hstack([wy2_df['Time'], wy3_df['Time']])
+    time_wy23 = np.unique(time_wy23)
+    time_wy23 = np.sort(time_wy23)
+
+    wy23_df = {}
+    wy23_df['Time Format'] = wy3_df['Time Format']
+    wy23_df['CWEEDS Format'] = 'WY2+WY3'
+
+    # Copy the header info from WY3 dataset :
+
+    for key in ['HORZ version', 'Location', 'Province', 'Country',
+                'Station ID', 'Latitude', 'Longitude', 'Time Zone',
+                'Elevation']:
+        wy23_df[key] = wy3_df[key]
+
+    # Merge the two datasets :
+
+    wy23_df['Time'] = time_wy23
+    wy23_df['Years'] = np.empty(len(time_wy23)).astype(int)
+    wy23_df['Months'] = np.empty(len(time_wy23)).astype(int)
+    wy23_df['Days'] = np.empty(len(time_wy23)).astype(int)
+    wy23_df['Hours'] = np.empty(len(time_wy23)).astype(int)
+    wy23_df['Irradiance'] = np.empty(len(time_wy23)).astype('float64')
+
+    for dataset in [wy2_df, wy3_df]:
+        indexes = np.digitize(dataset['Time'], time_wy23, right=True)
+        for key in ['Years', 'Months', 'Days', 'Hours', 'Irradiance']:
+            wy23_df[key][indexes] = dataset[key]
+
+    return wy23_df
 
 
 # ----- Base functions: monthly downscaling
@@ -850,3 +893,5 @@ if __name__ == '__main__':
 
     filename = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY3")
     daily_wy3 = read_cweeds_file(filename, format_to_daily=True)
+
+    wy23_df = join_daily_cweeds_wy2_and_wy3(daily_wy2, daily_wy3)
