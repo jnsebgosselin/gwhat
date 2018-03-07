@@ -241,13 +241,15 @@ class RechgEvalWorker(QObject):
         tend = time.clock()
         print("GLUE computed in : ", tend-tstart)
 
-        print('-'*78)
-        print('range Sy = %0.3f to %0.3f' % (np.min(set_Sy), np.max(set_Sy)))
-        print('range RASmax = %d to %d' % (np.min(set_RASmax),
-                                           np.max(set_RASmax)))
-        print('range Cru = %0.3f to %0.3f' % (np.min(set_Cru),
-                                              np.max(set_Cru)))
-        print('-'*78)
+        if len(set_RMSE) > 0:
+            print('-'*78)
+            range_sy = (np.min(set_Sy), np.max(set_Sy))
+            print('range Sy = %0.3f to %0.3f' % range_sy)
+            range_rasmax = (np.min(set_RASmax), np.max(set_RASmax))
+            print('range RASmax = %d to %d' % range_rasmax)
+            range_cru = (np.min(set_Cru), np.max(set_Cru))
+            print('range Cru = %0.3f to %0.3f' % range_cru)
+            print('-'*78)
 
         self.glue_results = {}
         self.glue_results['RMSE'] = set_RMSE
