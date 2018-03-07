@@ -61,7 +61,7 @@ class RechgEvalWidget(QFrameLayout):
                 layout.setColumnStretch(0, 100)
                 self.setLayout(layout)
 
-        # ---------------------------------------------------------- Toolbar --
+        # ---- Toolbar
 
         toolbar_widget = QWidget()
 
@@ -74,7 +74,7 @@ class RechgEvalWidget(QFrameLayout):
 
         toolbar_widget.setLayout(toolbar_layout)
 
-        # ------------------------------------------------------- Parameters --
+        # ---- Parameters
 
         # Specific yield (Sy) :
 
@@ -127,7 +127,7 @@ class RechgEvalWidget(QFrameLayout):
                 super(QLabelCentered, self).__init__(text)
                 self.setAlignment(Qt.AlignCenter)
 
-        # ---- Parameters ----
+        # ---- Parameters
 
         params_group = QFrameLayout()
         params_group.setContentsMargins(10, 5, 10, 0)  # (L, T, R, B)
@@ -272,7 +272,7 @@ class RechgEvalWidget(QFrameLayout):
 
     def receive_glue_calcul(self, N):
         """
-        Handles the plotting of the results once ground-water recharge has
+        Handle the plotting of the results once ground-water recharge has
         been evaluated.
         """
         self.rechg_thread.quit()
