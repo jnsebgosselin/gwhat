@@ -12,6 +12,7 @@ from __future__ import division, unicode_literals
 
 import csv
 import os
+import os.path as osp
 from time import strftime
 from copy import copy
 from time import clock
@@ -139,11 +140,11 @@ class GapFillWeather(QObject):
 
         if not self.inputDir:
             print('Please specify a valid input data file directory.')
-            return None
+            return []
 
         if not os.path.exists(self.inputDir):
             print('Data Directory path does not exists.')
-            return None
+            return []
 
         binfile = os.path.join(self.inputDir, 'fdata.npy')
         if not os.path.exists(binfile):
@@ -182,8 +183,10 @@ class GapFillWeather(QObject):
         return self.WEATHER.STANAME
 
     def reload_data(self):
-        # Reads the csv files in the input data directory folder, format
-        # the datasets and save the results in a binary file
+        """
+        Read the csv files in the input data directory folder, format
+        the datasets and save the results in a binary file.
+        """
 
         paths = []
         for f in os.listdir(self.inputDir):
@@ -1701,6 +1704,9 @@ class WeatherData(object):
         formatted table
         """
         filename = os.path.join(project_folder, 'weather_datasets_summary.log')
+        if not osp.exists(filename):
+            return ''
+
         with open(filename, 'r') as f:
             reader = list(csv.reader(f, delimiter=','))[1:]
 
