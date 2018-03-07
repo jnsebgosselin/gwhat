@@ -13,7 +13,8 @@ import time
 import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
-                             QLabel, QSizePolicy, QScrollArea, QApplication)
+                             QLabel, QSizePolicy, QScrollArea, QApplication,
+                             QMessageBox)
 
 # ---- Imports: local
 
@@ -278,6 +279,14 @@ class RechgEvalWidget(QFrameLayout):
         self.progressbar.hide()
         if N == 0:
             print("The number of behavioural model produced is 0.")
+            msg = ("Recharge evaluation was not possible because all"
+                   " the models produced were deemed non-behavioural."
+                   "\n\n"
+                   "This usually happens when the range of values for"
+                   " Sy, RASmax, and Cro are too restrictive or when the"
+                   " Master Recession Curve (MRC) does not represent well the"
+                   " behaviour of the observed hydrograph.")
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
         else:
             glue_data = self.rechg_worker.glue_results
             # self.rechg_worker.save_glue_to_npy("GLUE.npy")
