@@ -13,7 +13,8 @@ import time
 import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
-                             QLabel, QSizePolicy, QScrollArea, QApplication)
+                             QLabel, QSizePolicy, QScrollArea, QApplication,
+                             QMessageBox)
 
 # ---- Imports: local
 
@@ -60,7 +61,7 @@ class RechgEvalWidget(QFrameLayout):
                 layout.setColumnStretch(0, 100)
                 self.setLayout(layout)
 
-        # ---------------------------------------------------------- Toolbar --
+        # ---- Toolbar
 
         toolbar_widget = QWidget()
 
@@ -73,7 +74,7 @@ class RechgEvalWidget(QFrameLayout):
 
         toolbar_widget.setLayout(toolbar_layout)
 
-        # ------------------------------------------------------- Parameters --
+        # ---- Parameters
 
         # Specific yield (Sy) :
 
@@ -126,7 +127,7 @@ class RechgEvalWidget(QFrameLayout):
                 super(QLabelCentered, self).__init__(text)
                 self.setAlignment(Qt.AlignCenter)
 
-        # ---- Parameters ----
+        # ---- Parameters
 
         params_group = QFrameLayout()
         params_group.setContentsMargins(10, 5, 10, 0)  # (L, T, R, B)
@@ -271,13 +272,21 @@ class RechgEvalWidget(QFrameLayout):
 
     def receive_glue_calcul(self, N):
         """
-        Handles the plotting of the results once ground-water recharge has
+        Handle the plotting of the results once ground-water recharge has
         been evaluated.
         """
         self.rechg_thread.quit()
         self.progressbar.hide()
         if N == 0:
             print("The number of behavioural model produced is 0.")
+            msg = ("Recharge evaluation was not possible because all"
+                   " the models produced were deemed non-behavioural."
+                   "\n\n"
+                   "This usually happens when the range of values for"
+                   " Sy, RASmax, and Cro are too restrictive or when the"
+                   " Master Recession Curve (MRC) does not represent well the"
+                   " behaviour of the observed hydrograph.")
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
         else:
             glue_data = self.rechg_worker.glue_results
             # self.rechg_worker.save_glue_to_npy("GLUE.npy")
