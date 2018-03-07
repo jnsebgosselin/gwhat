@@ -488,7 +488,7 @@ class GapFillWeatherGUI(QWidget):
 
     def load_data_dir_content(self, reload=False):
         """
-        Initiate the loading of Weater Data Files contained in the
+        Initiate the loading of weater data files contained in the
         */Meteo/Input folder and display the resulting station list in the
         target station combobox.
         """
@@ -509,6 +509,7 @@ class GapFillWeatherGUI(QWidget):
             stanames = self.gapfill_worker.reload_data()
         else:
             stanames = self.gapfill_worker.load_data()
+        stanames = [] if stanames is None else stanames
 
         self.target_station.addItems(stanames)
         self.target_station.setCurrentIndex(-1)
