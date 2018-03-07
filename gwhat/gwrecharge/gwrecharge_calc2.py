@@ -100,8 +100,6 @@ class RechgEvalWorker(QObject):
 
         # ---- Load Data ----
 
-        print('--------')
-
         self.wxdset = wxdset
 
         # Includes the estimation of ETP if not already present in file.
@@ -109,8 +107,6 @@ class RechgEvalWorker(QObject):
         self.ETP = self.wxdset['PET']
         self.PTOT = self.wxdset['Ptot']
         self.TAVG = self.wxdset['Tavg']
-
-        print('--------')
 
         self.wldset = wldset
 
@@ -137,8 +133,6 @@ class RechgEvalWorker(QObject):
         self.TIME = self.wxdset['Time'][ts:te+1]
         self.DATE = self.convert_time_to_date(self.YEAR, self.MONTH, DAY)
         self.PRECIP = self.wxdset['Ptot'][ts:te+1]
-
-    # =========================================================================
 
     def make_data_daily(self, t, h):
         argsort = np.argsort(t)
@@ -194,7 +188,7 @@ class RechgEvalWorker(QObject):
         print('Min Recharge = %0.1f mm/y' % min_rechg)
         print('Most Probable Recharge = %0.1f mm/y' % prob_rechg)
 
-    # =============================================================== GLUE ====
+    # ---- GLUE
 
     def calcul_GLUE(self):
         if self.glue_pardist_res == 'rough':
