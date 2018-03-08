@@ -129,7 +129,7 @@ class RechgEvalWorker(QObject):
         years = self.wxdset['Year'][ts:te+1]
         months = self.wxdset['Month'][ts:te+1]
         days = self.wxdset['Day'][ts:te+1]
-        self.wl_date = self.convert_time_to_date(years, months, days)
+        self.wl_date = convert_date_to_datetime(years, months, days)
 
         return None
 
@@ -152,17 +152,6 @@ class RechgEvalWorker(QObject):
                 hd[i] = h[indx[-1]]
 
         return td, hd
-
-    @staticmethod
-    def convert_time_to_date(years, months, days):
-        """
-        Produce datetime series from years, months, and days series.
-        """
-        dates = [0] * len(years)
-        for t in range(len(years)):
-            dates[t] = datetime.datetime(
-                    int(years[t]), int(months[t]), int(days[t]), 0)
-        return dates
 
     def calc_recharge(self, data=None):
         data = self.glue_results
@@ -500,6 +489,17 @@ class RechgEvalWorker(QObject):
             RECHG[i] *= np.sign(hp - hobs[i+1])
 
         return RECHG
+
+
+def convert_date_to_datetime(years, months, days):
+    """
+    Produce datetime series from years, months, and days series.
+    """
+    dates = [0] * len(years)
+    for t in range(len(years)):
+        dates[t] = datetime.datetime(
+                int(years[t]), int(months[t]), int(days[t]), 0)
+    return dates
 
 
 def calcul_rmse(Xobs, Xpre):
