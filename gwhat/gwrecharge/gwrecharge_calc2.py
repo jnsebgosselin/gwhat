@@ -155,14 +155,15 @@ class RechgEvalWorker(QObject):
         return td, hd
 
     @staticmethod
-    def convert_time_to_date(YEAR, MONTH, DAY):
-
-        DATE = [0] * len(YEAR)
-        for t in range(len(YEAR)):
-            DATE[t] = datetime.datetime(int(YEAR[t]), int(MONTH[t]),
-                                        int(DAY[t]), 0)
-
-        return DATE
+    def convert_time_to_date(years, months, days):
+        """
+        Produce datetime series from years, months, and days series.
+        """
+        dates = [0] * len(years)
+        for t in range(len(years)):
+            dates[t] = datetime.datetime(
+                    int(years[t]), int(months[t]), int(days[t]), 0)
+        return dates
 
     def calc_recharge(self, data=None):
         data = self.glue_results
