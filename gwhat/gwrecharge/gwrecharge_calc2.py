@@ -356,20 +356,25 @@ class RechgEvalWorker(QObject):
         """
         Compute recharge with a daily soil surface moisture balance model.
 
-        RU = Runoff coefficient
-        RASmax = Readily Available Storage Max in mm
-        ETP = Dailty evapotranspiration in mm
+        CRU = Surface runoff coefficient
+        RASmax = Maximum readily available storage in mm
+        ETP = Dailty potential evapotranspiration in mm
         PTOT = Daily total precipitation in mm
         TAVG = Daily average air temperature in deg. C.
         CM = Daily melt coefficient
         TMELT = Temperature treshold for snowmelt
-        RECHG = Daily groundwater recharge in mm
+
+        rechg = Daily groundwater recharge in mm
+        etr = Daily real evapotranspiration in mm
+        ru = Daily surface runoff in mm
+        ras = Daily readily available storage in mm
+        pacc = Daily accumulated precipitation on the ground surface in mm
         """
-        RECHG, RU, ETR, RAS, PACC = calcul_surf_water_budget(
+        rechg, ru, etr, ras, pacc = calcul_surf_water_budget(
                 self.ETP, self.PTOT, self.TAVG, self.TMELT,
                 self.CM,  CRU, RASmax)
 
-        return RECHG, RU, ETR, RAS, PACC
+        return rechg, ru, etr, ras, pacc
 
     def calc_hydrograph(self, RECHG, Sy, nscheme='forward'):
         """
