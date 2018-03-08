@@ -152,7 +152,7 @@ class RechgEvalWorker(QObject):
             if len(indx) > 0:
                 hd[i] = h[indx[-1]]
 
-        return t1d, h1d
+        return td, hd
 
     @staticmethod
     def convert_time_to_date(YEAR, MONTH, DAY):
