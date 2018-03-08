@@ -33,23 +33,15 @@ class RechgEvalWorker(QObject):
 
     def __init__(self):
         super(RechgEvalWorker, self).__init__()
-
         self.wxdset = None
         self.ETP, self.PTOT, self.TAVG = [], [], []
 
         self.wldset = None
         self.A, self.B = None, None
-
         self.twlvl = []
         self.WLVLobs = []
         self.NaNindx = []
-
-        self.YEAR = []
-        self.MONTH = []
-        self.TIME = []
-        self.PRECIP = []
-
-        self.DATE = []
+        self.wl_date = []
 
         self.TMELT = 0
         self.CM = 4
@@ -63,8 +55,6 @@ class RechgEvalWorker(QObject):
         self.glue_results = None
         self.fig = None
         self.glue_pardist_res = 'fine'
-
-    # =========================================================================
 
     @property
     def language(self):
@@ -127,12 +117,12 @@ class RechgEvalWorker(QObject):
         ts = self.ts = np.where(self.twlvl[0] == tweatr)[0][0]
         te = self.te = np.where(self.twlvl[-1] == tweatr)[0][0]
 
-        self.YEAR = self.wxdset['Year'][ts:te+1]
-        self.MONTH = self.wxdset['Month'][ts:te+1]
-        DAY = self.wxdset['Day'][ts:te+1]
-        self.TIME = self.wxdset['Time'][ts:te+1]
-        self.DATE = self.convert_time_to_date(self.YEAR, self.MONTH, DAY)
-        self.PRECIP = self.wxdset['Ptot'][ts:te+1]
+
+        years = self.wxdset['Year'][ts:te+1]
+        months = self.wxdset['Month'][ts:te+1]
+        days = self.wxdset['Day'][ts:te+1]
+        self.wl_date = self.convert_time_to_date(years, months, days)
+
 
     def make_data_daily(self, t, h):
         """
@@ -252,7 +242,7 @@ class RechgEvalWorker(QObject):
 
         self.glue_results['wl_time'] = self.twlvl
         self.glue_results['wl_obs'] = self.WLVLobs
-        self.glue_results['wl_date'] = self.DATE
+        self.glue_results['wl_date'] = self.wl_date
         self.glue_results['hydrograph'] = set_WLVL
 
         self.glue_results['Sy'] = set_Sy
