@@ -135,24 +135,22 @@ class RechgEvalWorker(QObject):
         self.PRECIP = self.wxdset['Ptot'][ts:te+1]
 
     def make_data_daily(self, t, h):
+        """
+        Convert a given time series to a daily basis. Only the last water level
+        measurements made on a given day is kept in the daily time series.
+        If there is no measurement at all for a given day, the default nan
+        value is kept instead in the daily time series.
+        """
         argsort = np.argsort(t)
         t = np.floor(t[argsort])
         h = h[argsort]
 
-        tmin = np.min(t)
-        tmax = np.max(t)
-        t1d = np.arange(tmin, tmax+1, 1)
-        h1d = np.ones(len(t1d))*np.nan
-
-        # Only the last water level measurements made on that day will be
-        # kept in the h1d time series.
-        # If there is no measurement at all, the default nan value is
-        # kept instead in the h1d time series.
-
-        for i in range(len(t1d)):
-            indx = np.where(t == t1d[i])[0]
+        td = np.arange(np.min(t), np.max(t)+1, 1).astype(int)
+        hd = np.ones(len(td)) * np.nan
+        for i in range(len(td)):
+            indx = np.where(t == td[i])[0]
             if len(indx) > 0:
-                h1d[i] = h[indx[-1]]
+                hd[i] = h[indx[-1]]
 
         return t1d, h1d
 
