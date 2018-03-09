@@ -245,9 +245,8 @@ class RechgEvalWidget(QFrameLayout):
         uncertainty.
         """
         plt.close('all')
-        self.progressbar.show()
 
-        # Set the parameter ranges
+        # Set the parameter ranges.
 
         self.rechg_worker.Sy = self.get_Range('Sy')
         self.rechg_worker.Cro = self.get_Range('Cro')
@@ -257,12 +256,16 @@ class RechgEvalWidget(QFrameLayout):
         self.rechg_worker.CM = self.CM
         self.rechg_worker.deltat = self.deltaT
 
+        # Set the data and check for errors.
+
         error = self.rechg_worker.load_data(self.wxdset, self.wldset)
         if error is not None:
             QMessageBox.warning(self, 'Warning', error, QMessageBox.Ok)
+            return
 
-        # Start the thread
+        # Start the computation of groundwater recharge.
 
+        self.progressbar.show()
         waittime = 0
         while self.rechg_thread.isRunning():
             time.sleep(0.1)
