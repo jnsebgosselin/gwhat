@@ -309,11 +309,11 @@ class BRFManager(myqt.QFrameLayout):
 
         return date_start, date_end
 
-    # =========================================================================
-
     def calc_brf(self):
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        print('calculating BRF')
+        """Prepare the data, calcul the brf, and save and plot the results."""
+
+        # Prepare the datasets.
+
         well = self.wldset['Well']
 
         t1 = min(self.brfperiod)
@@ -325,6 +325,12 @@ class BRFManager(myqt.QFrameLayout):
         time = np.copy(self.wldset['Time'][i1:i2+1])
         wl = np.copy(self.wldset['WL'][i1:i2+1])
         bp = np.copy(self.wldset['BP'][i1:i2+1])
+        if len(bp) == 0:
+            msg = ("The barometric response function cannot be computed"
+                   " because the currently selected water level dataset does"
+                   " not contain any barometric data for the selected period.")
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+            return
         et = np.copy(self.wldset['ET'][i1:i2+1])
         if len(et) == 0:
             et = np.zeros(len(wl))
@@ -333,6 +339,8 @@ class BRFManager(myqt.QFrameLayout):
         lagET = self.lagET
         detrend = self.detrend
         correct = self.correct_WL
+
+        # Fill the gaps in the dataset.
 
         dt = np.min(np.diff(time))
         tc = np.arange(t1, t2+dt/2, dt)
@@ -348,6 +356,9 @@ class BRFManager(myqt.QFrameLayout):
             et = np.interp(tc, time[indx], et[indx])
 
             time = tc
+
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        print('calculating BRF')
 
         bm.produce_BRFInputtxt(well, time, wl, bp, et)
         msg = 'Not enough data. Try enlarging the selected period'
