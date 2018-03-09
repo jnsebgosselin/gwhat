@@ -101,10 +101,14 @@ class RechgEvalWorker(QObject):
         self.twlvl, self.wlobs = self.make_data_daily(wldset['Time'],
                                                       wldset['WL'])
 
+        if not self.A and not self.B:
+            error = ("Groundwater recharge cannot be computed because a"
+                     " master recession curve (MRC) must be defined first.")
+            return error
+
         # Check that the wldset and wxdset are not mutually exclusive.
         time = np.unique(np.hstack([self.tweatr, self.twlvl]))
         if len(time) == (len(self.tweatr) + len(self.twlvl)):
-            self.__ready_to_run = False
             error = ("Groundwater recharge cannot be computed because the"
                      " water level and weather datasets are mutually"
                      " exclusive in time.")
