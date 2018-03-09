@@ -50,9 +50,7 @@ class RechgEvalWorker(QObject):
         self.Cro = (0, 1)
         self.RASmax = (0, 150)
 
-        self.language = 'French'
         self.glue_results = None
-        self.fig = None
         self.glue_pardist_res = 'fine'
 
     @property
