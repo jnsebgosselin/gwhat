@@ -542,30 +542,35 @@ def calcul_glue(data, p, varname='recharge'):
     return glue_dly
 
 
-def calcul_glue_yearly_rechg(data, p, yrs_range=None):
+def calcul_glue_yearly_rechg(data, p, year_limits=None):
     glue_rechg_dly = calcul_glue(data, p, varname='recharge')
-
     years = np.array(data['Year']).astype(int)
     months = np.array(data['Month']).astype(int)
-    deltat = data['deltat']
-    if deltat > 0:
-        Time = np.array(data['Time'])
-        for i, t in enumerate(Time):
-            date = xldate_as_tuple(t+deltat, 0)
+
+    if data['deltat'] > 0:
+        # Adjust time to take into account the time delay, which represents
+        # the percolation time of water through the unsaturated zone.
+        for i, t in enumerate(np.array(data['Time'])):
+            date = xldate_as_tuple(t + data['deltat'], 0)
             years[i], months[i] = date[0], date[1]
+
+    # Define the range of the years for which yearly recharge will be computed.
+
+    if year_limits:
+        year_min = max(min(year_limits), np.min(years))
+        year_max = min(max(year_limits), np.max(years))
+    else:
+        year_min = np.min(years)
+        year_max = np.max(years)
+    year_range = np.arange(year_min, year_max).astype('int')
 
     # Convert daily to hydrological year. An hydrological year is defined from
     # October 1 to September 30 of the next year.
 
-    if yrs_range:
-        yrs2plot = np.arange(yrs_range[0], yrs_range[1]).astype('int')
-    else:
-        yrs2plot = np.arange(np.min(years), np.max(years)).astype('int')
-
-    glue_rechg_yr = np.zeros((len(yrs2plot), len(p)))
+    glue_rechg_yr = np.zeros((len(year_range), len(p)))
     year_labels = []
-    for i in range(len(yrs2plot)):
-        yr0 = yrs2plot[i]
+    for i in range(len(year_range)):
+        yr0 = year_range[i]
         yr1 = yr0 + 1
         year_labels.append("'%s-'%s" % (str(yr0)[-2:], str(yr1)[-2:]))
 
@@ -577,7 +582,7 @@ def calcul_glue_yearly_rechg(data, p, yrs_range=None):
 
         glue_rechg_yr[i, :] = np.sum(glue_rechg_dly[indx0:indx1+1, :], axis=0)
 
-    return year_labels, glue_rechg_yr
+    return year_labels, year_range, glue_rechg_yr
 
 
 # ---- if __name__ == '__main__'

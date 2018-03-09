@@ -230,13 +230,13 @@ class FigYearlyRechgGLUE(FigResultsBase):
         margins[-1] = 1.1
         self.set_ax_margins_inches(self.ax0, margins)
 
-    def plot_recharge(self, data, Ymin0=None, Ymax0=None, yrs_range=None):
+    def plot_recharge(self, data, Ymin0=None, Ymax0=None, year_limits=None):
         fig = self.figure
         ax0 = self.ax0
 
         p = [0.05, 0.25, 0.5, 0.75, 0.95]
-        year_labels, glue_rechg_yr = calcul_glue_yearly_rechg(
-                data, p, yrs_range)
+        year_labels, year_range, glue_rechg_yr = calcul_glue_yearly_rechg(
+                data, p, year_limits)
 
         max_rechg_yrly = glue_rechg_yr[:, -1]
         min_rechg_yrly = glue_rechg_yr[:, 0]
@@ -246,14 +246,8 @@ class FigYearlyRechgGLUE(FigResultsBase):
 
         # ---- Axis range
 
-        if yrs_range:
-            yrs2plot = np.arange(yrs_range[0], yrs_range[1]).astype('int')
-        else:
-            years = np.array(data['Year']).astype(int)
-            yrs2plot = np.arange(np.min(years), np.max(years)).astype('int')
-
-        Xmin0 = min(yrs2plot)-1
-        Xmax0 = max(yrs2plot)+1
+        Xmin0 = min(year_range)-1
+        Xmax0 = max(year_range)+1
 
         if Ymax0 is None:
             Ymax0 = np.max(max_rechg_yrly) + 50
@@ -264,7 +258,7 @@ class FigYearlyRechgGLUE(FigResultsBase):
 
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out', pad=1)
-        ax0.set_xticks(yrs2plot)
+        ax0.set_xticks(year_range)
         ax0.xaxis.set_ticklabels(year_labels, rotation=45, ha='right')
 
         # ----- ticks format
@@ -288,17 +282,18 @@ class FigYearlyRechgGLUE(FigResultsBase):
 
         # ---- Plot results
 
-        ax0.plot(yrs2plot, prob_rechg_yrly, ls='--', color='0.35', zorder=100)
+        ax0.plot(year_range, prob_rechg_yrly, ls='--', color='0.35',
+                 zorder=100)
 
         yerr = [prob_rechg_yrly-min_rechg_yrly, max_rechg_yrly-prob_rechg_yrly]
-        herr = ax0.errorbar(yrs2plot, prob_rechg_yrly, yerr=yerr,
+        herr = ax0.errorbar(year_range, prob_rechg_yrly, yerr=yerr,
                             fmt='o', capthick=1, capsize=4, ecolor='0',
                             elinewidth=1, mfc='White', mec='0', ms=5,
                             markeredgewidth=1, zorder=200)
 
-        h25 = ax0.plot(yrs2plot, glue25_yr, color='red',
+        h25 = ax0.plot(year_range, glue25_yr, color='red',
                        dashes=[3, 5], alpha=0.65)
-        ax0.plot(yrs2plot, glue75_yr, color='red', dashes=[3, 5], alpha=0.65)
+        ax0.plot(year_range, glue75_yr, color='red', dashes=[3, 5], alpha=0.65)
 
         # ---- Axes labels
 
@@ -346,7 +341,7 @@ class FigYearlyRechgGLUE(FigResultsBase):
                  transform=transform)
 
 
-# ---- if __name__ == '__main__'
+# %% ---- if __name__ == '__main__'
 
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
