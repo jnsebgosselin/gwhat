@@ -257,7 +257,9 @@ class RechgEvalWidget(QFrameLayout):
         self.rechg_worker.CM = self.CM
         self.rechg_worker.deltat = self.deltaT
 
-        self.rechg_worker.load_data(self.wxdset, self.wldset)
+        error = self.rechg_worker.load_data(self.wxdset, self.wldset)
+        if error is not None:
+            QMessageBox.warning(self, 'Warning', error, QMessageBox.Ok)
 
         # Start the thread
 

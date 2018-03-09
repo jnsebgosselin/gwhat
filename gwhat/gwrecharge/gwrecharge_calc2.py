@@ -33,23 +33,14 @@ class RechgEvalWorker(QObject):
 
     def __init__(self):
         super(RechgEvalWorker, self).__init__()
-
         self.wxdset = None
         self.ETP, self.PTOT, self.TAVG = [], [], []
 
         self.wldset = None
         self.A, self.B = None, None
-
         self.twlvl = []
-        self.WLVLobs = []
-        self.NaNindx = []
-
-        self.YEAR = []
-        self.MONTH = []
-        self.TIME = []
-        self.PRECIP = []
-
-        self.DATE = []
+        self.wlobs = []
+        self.wl_date = []
 
         self.TMELT = 0
         self.CM = 4
@@ -59,12 +50,8 @@ class RechgEvalWorker(QObject):
         self.Cro = (0, 1)
         self.RASmax = (0, 150)
 
-        self.language = 'French'
         self.glue_results = None
-        self.fig = None
         self.glue_pardist_res = 'fine'
-
-    # =========================================================================
 
     @property
     def language(self):
@@ -97,74 +84,72 @@ class RechgEvalWorker(QObject):
         self.__TMELT = x
 
     def load_data(self, wxdset, wldset):
-
-        # ---- Load Data ----
+        # Setup weather data.
 
         self.wxdset = wxdset
-
-        # Includes the estimation of ETP if not already present in file.
-
         self.ETP = self.wxdset['PET']
         self.PTOT = self.wxdset['Ptot']
         self.TAVG = self.wxdset['Tavg']
+        self.tweatr = self.wxdset['Time'] + self.deltat
+        # We introduce a time lag here to take into account the travel time
+        # through the unsaturated zone.
+
+        # Setup water level data.
 
         self.wldset = wldset
-
         self.A, self.B = wldset['mrc/params']
-        self.twlvl, self.WLVLobs = self.make_data_daily(wldset['Time'],
-                                                        wldset['WL'])
-        self.NaNindx = np.where(~np.isnan(self.WLVLobs))
+        self.twlvl, self.wlobs = self.make_data_daily(wldset['Time'],
+                                                      wldset['WL'])
 
-        print('--------')
+        # Check that the wldset and wxdset are not mutually exclusive.
+        time = np.unique(np.hstack([self.tweatr, self.twlvl]))
+        if len(time) == (len(self.tweatr) + len(self.twlvl)):
+            self.__ready_to_run = False
+            error = ("Groundwater recharge cannot be computed because the"
+                     " water level and weather datasets are mutually"
+                     " exclusive in time.")
+            return error
 
-        # ---- Prepare DATE time series ----
+        # Clip the observed water level time series to the weather data.
+        if self.twlvl[0] < self.tweatr[0]:
+            idx = np.where(self.twlvl == self.tweatr[0])[0][0]
+            self.twlvl = self.twlvl[idx:]
+            self.wlobs = self.wlobs[idx:]
+        if self.twlvl[-1] > self.tweatr[-1]:
+            idx = np.where(self.twlvl == self.tweatr[-1])[0][0]
+            self.twlvl = self.twlvl[:idx+1]
+            self.wlobs = self.wlobs[:idx+1]
 
-        # Converting time in a date format readable by matplotlib and also make
-        # the weather and water level time series synchroneous.
+        # Compute time in a datetime format readable by matplotlib.
+        ts = np.where(self.twlvl[0] == self.tweatr)[0][0]
+        te = np.where(self.twlvl[-1] == self.tweatr)[0][0]
 
-        tweatr = self.wxdset['Time']
+        years = self.wxdset['Year'][ts:te+1]
+        months = self.wxdset['Month'][ts:te+1]
+        days = self.wxdset['Day'][ts:te+1]
+        self.wl_date = convert_date_to_datetime(years, months, days)
 
-        ts = self.ts = np.where(self.twlvl[0] == tweatr)[0][0]
-        te = self.te = np.where(self.twlvl[-1] == tweatr)[0][0]
-
-        self.YEAR = self.wxdset['Year'][ts:te+1]
-        self.MONTH = self.wxdset['Month'][ts:te+1]
-        DAY = self.wxdset['Day'][ts:te+1]
-        self.TIME = self.wxdset['Time'][ts:te+1]
-        self.DATE = self.convert_time_to_date(self.YEAR, self.MONTH, DAY)
-        self.PRECIP = self.wxdset['Ptot'][ts:te+1]
+        return None
 
     def make_data_daily(self, t, h):
+        """
+        Convert a given time series to a daily basis. Only the last water level
+        measurements made on a given day is kept in the daily time series.
+        If there is no measurement at all for a given day, the default nan
+        value is kept instead in the daily time series.
+        """
         argsort = np.argsort(t)
         t = np.floor(t[argsort])
         h = h[argsort]
 
-        tmin = np.min(t)
-        tmax = np.max(t)
-        t1d = np.arange(tmin, tmax+1, 1)
-        h1d = np.ones(len(t1d))*np.nan
-
-        # Only the last water level measurements made on that day will be
-        # kept in the h1d time series.
-        # If there is no measurement at all, the default nan value is
-        # kept instead in the h1d time series.
-
-        for i in range(len(t1d)):
-            indx = np.where(t == t1d[i])[0]
+        td = np.arange(np.min(t), np.max(t)+1, 1).astype(int)
+        hd = np.ones(len(td)) * np.nan
+        for i in range(len(td)):
+            indx = np.where(t == td[i])[0]
             if len(indx) > 0:
-                h1d[i] = h[indx[-1]]
+                hd[i] = h[indx[-1]]
 
-        return t1d, h1d
-
-    @staticmethod
-    def convert_time_to_date(YEAR, MONTH, DAY):
-
-        DATE = [0] * len(YEAR)
-        for t in range(len(YEAR)):
-            DATE[t] = datetime.datetime(int(YEAR[t]), int(MONTH[t]),
-                                        int(DAY[t]), 0)
-
-        return DATE
+        return td, hd
 
     def calc_recharge(self, data=None):
         data = self.glue_results
@@ -191,13 +176,22 @@ class RechgEvalWorker(QObject):
     # ---- GLUE
 
     def calcul_GLUE(self):
+
+        # ---- Produce parameters combinations
+
         if self.glue_pardist_res == 'rough':
             U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 5)
         elif self.glue_pardist_res == 'fine':
             U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 1)
         U_Cro = np.arange(self.Cro[0], self.Cro[1]+0.01, 0.01)
 
-        # ---- Produce realization ----
+        # Find the indexes to align the water level with the weather data
+        # daily time series.
+
+        ts = np.where(self.twlvl[0] == self.tweatr)[0][0]
+        te = np.where(self.twlvl[-1] == self.tweatr)[0][0]
+
+        # ---- Produce realizations
 
         set_RMSE = []
         set_RECHG = []
@@ -215,7 +209,8 @@ class RechgEvalWorker(QObject):
         self.sig_glue_progress.emit(0)
         for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
             rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
-            SyOpt, RMSE, wlvlest = self.optimize_Sy(Sy0, rechg)
+            SyOpt, RMSE, wlvlest = self.optimize_specific_yield(
+                    Sy0, self.wlobs*1000, rechg[ts:te])
             Sy0 = SyOpt
 
             if SyOpt >= self.Sy[0] and SyOpt <= self.Sy[1]:
@@ -245,6 +240,8 @@ class RechgEvalWorker(QObject):
             print('range Cru = %0.3f to %0.3f' % range_cru)
             print('-'*78)
 
+        # ---- Format results
+
         self.glue_results = {}
         self.glue_results['RMSE'] = set_RMSE
         self.glue_results['recharge'] = set_RECHG
@@ -252,8 +249,8 @@ class RechgEvalWorker(QObject):
         self.glue_results['ru'] = set_ru
 
         self.glue_results['wl_time'] = self.twlvl
-        self.glue_results['wl_obs'] = self.WLVLobs
-        self.glue_results['wl_date'] = self.DATE
+        self.glue_results['wl_obs'] = self.wlobs
+        self.glue_results['wl_date'] = self.wl_date
         self.glue_results['hydrograph'] = set_WLVL
 
         self.glue_results['Sy'] = set_Sy
@@ -264,13 +261,13 @@ class RechgEvalWorker(QObject):
         self.glue_results['Time'] = self.wxdset['Time']
         self.glue_results['Year'] = self.wxdset['Year']
         self.glue_results['Month'] = self.wxdset['Month']
+        self.glue_results['Day'] = self.wxdset['Day']
         self.glue_results['Weather'] = {'Tmax': self.wxdset['Tmax'],
                                         'Tmin': self.wxdset['Tmin'],
                                         'Tavg': self.wxdset['Tavg'],
                                         'Ptot': self.wxdset['Ptot'],
                                         'Rain': self.wxdset['Rain'],
-                                        'PET': self.wxdset['PET']
-                                        }
+                                        'PET': self.wxdset['PET']}
         self.sig_glue_finished.emit(len(set_RECHG))
         return self.glue_results
 
@@ -289,18 +286,14 @@ class RechgEvalWorker(QObject):
         filename = filename if ext == '.npy' else filename+'.ext'
         np.save(filename, self.glue_results)
 
-    def optimize_Sy(self, Sy0, rechg):
+    def optimize_specific_yield(self, Sy0, wlobs, rechg):
         """
-        Finds the optimal value of Sy that minimizes the RMSE between the
-        observed and predicted ground-water hydrographs.
+        Find the optimal value of Sy that minimizes the RMSE between the
+        observed and predicted ground-water hydrographs. The observed water
+        level (wlobs) and simulated recharge (rechg) time series must be
+        in mm and be properly align in time.
         """
-        tweatr = self.wxdset['Time']     # time weather data
-        twlvl = self.twlvl               # time water level
-        WLVLobs = self.WLVLobs * 1000    # water level observations
-
-        # We introduce the time lag here.
-        ts = np.where(twlvl[0] == tweatr+self.deltat)[0][0]
-        te = np.where(twlvl[-1] == tweatr+self.deltat)[0][0]
+        nonan_indx = np.where(~np.isnan(wlobs))
 
         # ---- Gauss-Newton
 
@@ -308,8 +301,8 @@ class RechgEvalWorker(QObject):
         Sy = Sy0
         dSy = 0.01
 
-        WLVLpre = self.calc_hydrograph(rechg[ts:te], Sy)
-        RMSE = calcul_rmse(WLVLobs[self.NaNindx], WLVLpre[self.NaNindx])
+        wlpre = self.calc_hydrograph(rechg, Sy)
+        RMSE = calcul_rmse(wlobs[nonan_indx], wlpre[nonan_indx])
 
         it = 0
         while 1:
@@ -319,11 +312,11 @@ class RechgEvalWorker(QObject):
                 break
 
             # Calculating Jacobian (X) Numerically.
-            wlvl = self.calc_hydrograph(rechg[ts:te], Sy * (1+dSy))
-            X = Xt = (wlvl[self.NaNindx] - WLVLpre[self.NaNindx])/(Sy*dSy)
+            wlvl = self.calc_hydrograph(rechg, Sy * (1+dSy))
+            X = Xt = (wlvl[nonan_indx] - wlpre[nonan_indx])/(Sy*dSy)
 
             # Solving Linear System.
-            dh = WLVLobs[self.NaNindx] - WLVLpre[self.NaNindx]
+            dh = wlobs[nonan_indx] - wlpre[nonan_indx]
             XtX = np.dot(Xt, X)
             Xtdh = np.dot(Xt, dh)
 
@@ -339,9 +332,8 @@ class RechgEvalWorker(QObject):
                 Sy = Syold + dr
 
                 # Solving for new parameter values.
-                WLVLpre = self.calc_hydrograph(rechg[ts:te], Sy)
-                RMSE = calcul_rmse(WLVLobs[self.NaNindx],
-                                   WLVLpre[self.NaNindx])
+                wlpre = self.calc_hydrograph(rechg, Sy)
+                RMSE = calcul_rmse(wlobs[nonan_indx], wlpre[nonan_indx])
 
                 # Checking overshoot.
                 if (RMSE - RMSEold) > 0.1:
@@ -352,26 +344,31 @@ class RechgEvalWorker(QObject):
             # Checking tolerance.
             tol = np.abs(Sy - Syold)
             if tol < tolmax:
-                return Sy, RMSE, WLVLpre
+                return Sy, RMSE, wlpre
 
     def surf_water_budget(self, CRU, RASmax):
         """
         Compute recharge with a daily soil surface moisture balance model.
 
-        RU = Runoff coefficient
-        RASmax = Readily Available Storage Max in mm
-        ETP = Dailty evapotranspiration in mm
+        CRU = Surface runoff coefficient
+        RASmax = Maximum readily available storage in mm
+        ETP = Dailty potential evapotranspiration in mm
         PTOT = Daily total precipitation in mm
         TAVG = Daily average air temperature in deg. C.
         CM = Daily melt coefficient
         TMELT = Temperature treshold for snowmelt
-        RECHG = Daily groundwater recharge in mm
+
+        rechg = Daily groundwater recharge in mm
+        etr = Daily real evapotranspiration in mm
+        ru = Daily surface runoff in mm
+        ras = Daily readily available storage in mm
+        pacc = Daily accumulated precipitation on the ground surface in mm
         """
-        RECHG, RU, ETR, RAS, PACC = calcul_surf_water_budget(
+        rechg, ru, etr, ras, pacc = calcul_surf_water_budget(
                 self.ETP, self.PTOT, self.TAVG, self.TMELT,
                 self.CM,  CRU, RASmax)
 
-        return RECHG, RU, ETR, RAS, PACC
+        return rechg, ru, etr, ras, pacc
 
     def calc_hydrograph(self, RECHG, Sy, nscheme='forward'):
         """
@@ -402,7 +399,7 @@ class RechgEvalWorker(QObject):
         # I should check this out.
 
         A, B = self.A, self.B
-        wlobs = self.WLVLobs*1000
+        wlobs = self.wlobs*1000
         if nscheme == 'backward':
             wlpre = np.zeros(len(RECHG)+1) * np.nan
             wlpre[0] = wlobs[-1]
@@ -490,6 +487,17 @@ class RechgEvalWorker(QObject):
             RECHG[i] *= np.sign(hp - hobs[i+1])
 
         return RECHG
+
+
+def convert_date_to_datetime(years, months, days):
+    """
+    Produce datetime series from years, months, and days series.
+    """
+    dates = [0] * len(years)
+    for t in range(len(years)):
+        dates[t] = datetime.datetime(
+                int(years[t]), int(months[t]), int(days[t]), 0)
+    return dates
 
 
 def calcul_rmse(Xobs, Xpre):
