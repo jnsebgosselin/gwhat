@@ -544,14 +544,14 @@ def calcul_glue(data, p, varname='recharge'):
 
 def calcul_glue_yearly_rechg(data, p, yrs_range=None):
     glue_rechg_dly = calcul_glue(data, p, varname='recharge')
-
     years = np.array(data['Year']).astype(int)
     months = np.array(data['Month']).astype(int)
-    deltat = data['deltat']
-    if deltat > 0:
-        Time = np.array(data['Time'])
-        for i, t in enumerate(Time):
-            date = xldate_as_tuple(t+deltat, 0)
+
+    if data['deltat'] > 0:
+        # Adjust time to take into account the time delay, which represents
+        # the percolation time of water through the unsaturated zone.
+        for i, t in enumerate(np.array(data['Time'])):
+            date = xldate_as_tuple(t + data['deltat'], 0)
             years[i], months[i] = date[0], date[1]
 
     # Convert daily to hydrological year. An hydrological year is defined from
