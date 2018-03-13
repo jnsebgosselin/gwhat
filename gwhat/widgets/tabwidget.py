@@ -43,6 +43,8 @@ class TabWidget(QTabWidget):
         tab_bar.sig_resized.connect(self.__move_about_btn)
         tab_bar.sig_tab_layout_changed.connect(self.__move_about_btn)
 
+        self.about_btn.raise_()
+
     def _about_btn_isclicked(self):
         """
         Create and show the About GWHAT window when the about button
