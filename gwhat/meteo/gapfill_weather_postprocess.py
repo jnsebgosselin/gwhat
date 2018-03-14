@@ -7,14 +7,14 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Standard library imports
+# ---- Standard Library Imports
 
 import csv
 import sys
 import os
 from copy import copy
 
-# ---- Third party imports
+# ---- Third Party Imports
 
 import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
@@ -25,7 +25,7 @@ import scipy.stats as stats
 from xlrd.xldate import xldate_from_date_tuple
 #from xlrd import xldate_as_tuple
 
-# Imports: local
+# ---- Local Library Imports
 
 from gwhat.common.utils import save_content_to_csv
 
@@ -36,8 +36,8 @@ class PostProcessErr(object):
     SUPPORTED_LANGUAGES = ['English', 'French']
 
     def __init__(self, fname):
-        self.Yp = None # Predicted value at target station
-        self.Ym = None # Measured value at target station
+        self.Yp = None  # Predicted value at target station
+        self.Ym = None  # Measured value at target station
         self.Time = None
         self.Date = None
 
@@ -193,7 +193,7 @@ class PostProcessErr(object):
                                 fname, self.fig_language)
                 print('Generating %s.' % (os.path.basename(fname)))
 
-    def generates_summary(self): #======================== Generates Summary ==
+    def generates_summary(self):
 
         Ypre = self.Yp
         Ymes = self.Ym
@@ -393,9 +393,9 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
     fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
     canvas = FigureCanvas(fig)
 
-    #------------------------------------------------------- Create Axes --
+    # ---- Create Axes
 
-    leftMargin  = 1.1 / fw
+    leftMargin = 1.1 / fw
     rightMargin = 0.25 / fw
     bottomMargin = 0.85 / fh
     topMargin = 0.25 / fh
@@ -410,7 +410,7 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
 
     Xmax = max(np.ceil(np.max(Ymes)/10.) * 10, 80)
 
-    #------------------------------------------------------------- Plots --
+    # ---- Plots
 
     c1, c2 = '#6495ED', 'red'
 
@@ -421,33 +421,33 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
         lg_labels = ['Measured data PDF', 'Gamma PDF (measured)',
                      'Gamma PDF (estimated)']
 
-    #---- Histogram ----
+    # Histogram
 
     ax0.hist(Ymes, bins=20, color=c1, histtype='stepfilled', normed=True,
              alpha=0.25, ec=c1, label=lg_labels[0])
 
-    #---- Measured Gamma PDF ----
+    # Measured Gamma PDF
 
     alpha, loc, beta = stats.gamma.fit(Ymes)
     x = np.arange(0.5, Xmax, 0.1)
     ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '-', lw=2,
              alpha=1., color=c1, label=lg_labels[1])
 
-    #---- Predicted Gamma PDF ----
+    # Predicted Gamma PDF
 
     alpha, loc, beta = stats.gamma.fit(Ypre)
     x = np.arange(0.5, Xmax, 0.1)
     ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '--r',
              lw=2, alpha=0.85, color=c2, label=lg_labels[2])
 
-    #------------------------------------------------------- Axis Limits --
+    # ---- Axis Limits
 
 #        ax0.set_xlim(0, Xmax)
     ax0.axis(xmin=0, xmax=Xmax, ymax=1)
 
-    #------------------------------------------------------------ Labels --
+    # ---- Labels
 
-    #---- axis labels ----
+    # Setup axis labels
 
     if language == 'French':
         ax0.set_xlabel(u'Précipitations totales journalières (mm)',
@@ -458,8 +458,7 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
                        labelpad=15)
         ax0.set_ylabel('Probability', fontsize=18, labelpad=15)
 
-
-    #---- yticks labels ----
+    # Setup yticks labels
 
     ax0.xaxis.set_ticks_position('bottom')
     ax0.yaxis.set_ticks_position('left')
@@ -478,13 +477,13 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
             ylabels.append(str(label))
     ax0.set_yticklabels(ylabels)
 
-    #------------------------------------------------------------ Legend --
+    # ---- Legend
 
     lg = ax0.legend(loc='upper right', frameon=False)
 
-    #----------------------------------------------- Wet Days Comparison --
+    # ---- Wet Days Comparison --
 
-    #---- Generate text ----
+    # ---- Generate text
 
     preWetDays = np.where(Ypre > 0)[0]
     mesWetDays = np.where(Ymes > 0)[0]
@@ -502,7 +501,7 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
         else:
             msg = 'Number of wet days underestimated by %0.1f%%' % (100 - f)
 
-    #---- Get Legend Box Position and Extent ----
+    # ---- Get Legend Box Position and Extent
 
     canvas.draw()
     bbox = lg.get_window_extent(canvas.get_renderer())
@@ -514,10 +513,11 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
 
     ax0.text(0., 0., msg, transform=transform, va='bottom', ha='left')
 
-    #-------------------------------------------------------------- Draw --
+    # ---- Draw
 
-    fig.savefig(fname) # A canvas.draw() is included with this.
+    fig.savefig(fname)  # A canvas.draw() is included with this.
     return canvas
+
 
 def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
 
@@ -525,9 +525,9 @@ def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
     fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
     canvas = FigureCanvas(fig)
 
-    #----------------------------------------------------------- Create Axes --
+    # ---- Create Axes
 
-    leftMargin  = 0.75 / fw
+    leftMargin = 0.75 / fw
     rightMargin = 0.75 / fw
     bottomMargin = 0.75 / fh
     topMargin = 0.75 / fh
@@ -538,9 +538,9 @@ def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
 
     ax0 = fig.add_axes([x0, y0, w0, h0], polar=True)
 
-    #------------------------------------------------------------- Plot Data --
+    # ---- Plot Data
 
-    #---- Estimation Error ----
+    # Estimation Error
 
     Yerr = np.abs(Ypre - Ymes)
     Time *= 2 * np.pi / 365.
@@ -548,7 +548,7 @@ def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
     c = '0.4'
     ax0.plot(Time, Yerr, '.', mec=c, mfc=c, ms=15, alpha=0.5)
 
-    #---- RMSE Polygon ----
+    # RMSE Polygon
 
     Months = Date[1]
     RMSE = np.zeros(12)
@@ -565,15 +565,10 @@ def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
     # Add first point at the end to close the polygon
     mfd = np.append(mfd, mfd[0])
     RMSE = np.append(RMSE, RMSE[0])
-
-    RMSEscl = RMSE * np.max(Yerr) / np.max(RMSE)
-    ax0.plot(mfd, RMSE * 5, ls= '--', c='red', lw=2, mec='b', mew=3, mfc='b',
+    ax0.plot(mfd, RMSE * 5, ls='--', c='red', lw=2, mec='b', mew=3, mfc='b',
              ms=10, dash_capstyle='round', dash_joinstyle='round')
 
-
-    #---- RMSE Text ----
-
-    #---------------------------------------------------------------- Labels --
+    # ---- Labels
 
     ax0.tick_params(axis='both', direction='out', labelsize=16)
     ax0.set_xticklabels(['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN',
@@ -583,22 +578,18 @@ def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
     ax0.set_yticklabels([])
     ax0.set_yticks([])
     ax0.set_rmax(1.1 * np.max(Yerr))
-#    ax0.set_rgrids([10,20,30,40,50,60,70,80,90], angle=345.)
+    # ax0.set_rgrids([10,20,30,40,50,60,70,80,90], angle=345.)
 
-    #------------------------------------------------------------------ Draw --
-
-#    ax0.set_ylim(0, )
-#    ax0.set_xlim(0, np.pi)
-
-    #------------------------------------------------------------- Axis Lim. --
+    # ---- Draw
 
     fig.savefig(name + '_polar_error.pdf')
     canvas.show()
 
+
 def compute_wet_days_LatexTable(dirname):
     fname = 'wet_days_0.5mm.csv'
-    fcontent=[['station', 'Meas. wet days', 'Pred. wet days', 'Err.(days)',
-               'Err.(%)']]
+    fcontent = [['station', 'Meas. wet days', 'Pred. wet days', 'Err.(days)',
+                 'Err.(%)']]
 
     for root, directories, filenames in os.walk(dirname):
         for filename in filenames:
