@@ -18,7 +18,7 @@ import matplotlib as mpl
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 import numpy as np
-import scipy.stats as stats
+from scipy.stats._continuous_distns import gamma
 
 from xlrd.xldate import xldate_from_date_tuple
 
@@ -425,16 +425,16 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
 
     # Measured Gamma PDF
 
-    alpha, loc, beta = stats.gamma.fit(Ymes)
+    alpha, loc, beta = gamma.fit(Ymes)
     x = np.arange(0.5, Xmax, 0.1)
-    ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '-', lw=2,
+    ax0.plot(x, gamma.pdf(x, alpha, loc=loc, scale=beta), '-', lw=2,
              alpha=1., color=c1, label=lg_labels[1])
 
     # Predicted Gamma PDF
 
-    alpha, loc, beta = stats.gamma.fit(Ypre)
+    alpha, loc, beta = gamma.fit(Ypre)
     x = np.arange(0.5, Xmax, 0.1)
-    ax0.plot(x, stats.gamma.pdf(x, alpha, loc=loc, scale=beta), '--r',
+    ax0.plot(x, gamma.pdf(x, alpha, loc=loc, scale=beta), '--r',
              lw=2, alpha=0.85, color=c2, label=lg_labels[2])
 
     # ---- Axis Limits
