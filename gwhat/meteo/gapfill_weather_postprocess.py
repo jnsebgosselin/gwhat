@@ -6,7 +6,6 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from __future__ import division, unicode_literals
 
 # ---- Standard library imports
 
@@ -494,12 +493,12 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
 
     if f > 100:
         if language == 'French':
-            msg = u'Nombre de jours pluvieux surestimé de %0.1f%%' % (f - 100)
+            msg = 'Nombre de jours pluvieux surestimé de %0.1f%%' % (f - 100)
         else:
             msg = 'Number of wet days overestimated by %0.1f%%' % (f - 100)
     else:
         if language == 'French':
-            msg = u'Nombre de jours pluvieux sous-estimé de %0.1f%%' % (100 - f)
+            msg = 'Nombre de jours pluvieux sous-estimé de %0.1f%%' % (100 - f)
         else:
             msg = 'Number of wet days underestimated by %0.1f%%' % (100 - f)
 
