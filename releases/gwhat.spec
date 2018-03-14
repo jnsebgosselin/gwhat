@@ -5,16 +5,16 @@ from gwhat import __version__
 
 block_cipher = None
 
-added_files = [('C:/Users/jsgosselin/GWHAT/gwhat/ressources/splash.png', 'ressources'),
-               ('C:/Users/jsgosselin/GWHAT/gwhat/ressources/WHAT_banner_750px.png', 'ressources'),
-               ('C:/Users/jsgosselin/GWHAT/gwhat/ressources/icons_png/*.png', 'ressources/icons_png')
+added_files = [('E:/GWHAT/gwhat/ressources/splash.png', 'ressources'),
+               ('E:/GWHAT/gwhat/ressources/WHAT_banner_750px.png', 'ressources'),
+               ('E:/GWHAT/gwhat/ressources/icons_png/*.png', 'ressources/icons_png')
                ]
 
-a = Analysis(['C:\\Users\\jsgosselin\\GWHAT\\gwhat\\mainwindow.py'],
-             pathex=['C:\\Python36', 'C:\\Users\\jsgosselin\\GWHAT\\releases'],
+a = Analysis(['E:\\GWHAT\\gwhat\\mainwindow.py'],
+             pathex=['C:\\Program Files\\Python36', 'E:\\GWHAT\\releases'],
              binaries=[],
              datas=added_files ,
-             hiddenimports=['h5py.defs', 'h5py.utils', 'h5py.h5ac', 'h5py._proxy', 'scipy.stats'],
+             hiddenimports=['h5py.defs', 'h5py.utils', 'h5py.h5ac', 'h5py._proxy', 'scipy.stats._continuous_distns', 'scipy._lib.messagestream'],
              hookspath=[],
              runtime_hooks=[],
              excludes=['PySide', 'PyQt4'],
