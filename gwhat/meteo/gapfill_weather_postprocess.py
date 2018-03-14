@@ -10,9 +10,7 @@
 # ---- Standard Library Imports
 
 import csv
-import sys
 import os
-from copy import copy
 
 # ---- Third Party Imports
 
@@ -23,7 +21,6 @@ import numpy as np
 import scipy.stats as stats
 
 from xlrd.xldate import xldate_from_date_tuple
-#from xlrd import xldate_as_tuple
 
 # ---- Local Library Imports
 
@@ -442,7 +439,6 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
 
     # ---- Axis Limits
 
-#        ax0.set_xlim(0, Xmax)
     ax0.axis(xmin=0, xmax=Xmax, ymax=1)
 
     # ---- Labels
