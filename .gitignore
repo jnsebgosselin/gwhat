@@ -69,6 +69,7 @@ releases/dist
 releases/start_gwhat.bat
 releases/gwhat_*
 run_cython.bat
+environment/
 
 Colors.db
 kgs_brf.exe
