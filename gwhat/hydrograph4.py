@@ -263,8 +263,8 @@ class Hydrograph(Figure):
         self.ax0 = self.add_axes(self.ax1.get_position(), frameon=True)
         self.ax0.patch.set_visible(False)
         self.ax0.set_zorder(self.ax1.get_zorder() + 200)
-        self.ax0.tick_params(bottom='off', top='off', left='off', right='off',
-                             labelbottom='off', labelleft='off')
+        self.ax0.tick_params(bottom=False, top=False, left=False, right=False,
+                             labelbottom=False, labelleft=False)
 
         # ---- Water Levels ----
 
@@ -296,8 +296,8 @@ class Hydrograph(Figure):
         self.axLow = self.ax1.twinx()
         self.axLow.patch.set_visible(False)
         self.axLow.set_zorder(self.ax2.get_zorder() - 50)
-        self.axLow.tick_params(bottom='off', top='off', left='off',
-                               right='off', labelbottom='off', labelleft='off')
+        self.axLow.tick_params(bottom=False, top=False, left=False,
+                               right=False, labelbottom=False, labelleft=False)
 
         self.update_waterlvl_scale()
 
@@ -350,8 +350,8 @@ class Hydrograph(Figure):
         self.ax1.xaxis.set_ticks_position('bottom')
         self.ax1.tick_params(axis='x', direction='out')
         self.ax1.patch.set_facecolor('none')
-        self.ax1.tick_params(top='off', left='off', right='off',
-                             labeltop='off', labelleft='off', labelright='off')
+        self.ax1.tick_params(top=False, left=False, right=False,
+                             labeltop=False, labelleft=False, labelright=False)
 
         self.set_gridLines()
 
