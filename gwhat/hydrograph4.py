@@ -282,6 +282,8 @@ class Hydrograph(Figure):
         self.ax4.set_zorder(self.ax1.get_zorder() + 150)
         self.ax4.set_navigate(False)
         self.ax4.set_axisbelow(True)
+        self.ax4.tick_params(bottom=False, top=False, left=False,
+                             right=False, labelbottom=False, labelleft=False)
 
         if self.meteo_on is False:
             self.ax3.set_visible(False)
