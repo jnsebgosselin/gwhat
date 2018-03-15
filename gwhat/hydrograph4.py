@@ -15,18 +15,15 @@ from __future__ import division, unicode_literals
 # ---- Standard library imports
 
 from calendar import monthrange
-import csv
-import os
 from math import sin, cos, sqrt, atan2, radians
-from time import clock
 
 # ---- Third party imports
 
 import numpy as np
 import matplotlib as mpl
+from matplotlib.figure import Figure
 # import matplotlib.patches
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
-#from matplotlib import rc
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -78,7 +75,7 @@ class LabelDatabase():
                            'Récession simulée']
 
 
-class Hydrograph(mpl.figure.Figure):
+class Hydrograph(Figure):
     def __init__(self, *args, **kargs):
         super(Hydrograph, self).__init__(*args, **kargs)
 
