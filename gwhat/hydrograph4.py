@@ -261,7 +261,8 @@ class Hydrograph(Figure):
 
         # ---- Water Levels ----
 
-        self.ax2 = self.ax1.twinx()
+        self.ax2 = self.add_axes(self.ax1.get_position(), frameon=False,
+                                 label='axes2', sharex=self.ax1)
         self.ax2.set_zorder(self.ax1.get_zorder() + 100)
         self.ax2.yaxis.set_ticks_position('left')
         self.ax2.yaxis.set_label_position('left')
@@ -269,13 +270,15 @@ class Hydrograph(Figure):
 
         # ---- Precipitation ----
 
-        self.ax3 = self.ax1.twinx()
+        self.ax3 = self.add_axes(self.ax1.get_position(), frameon=False,
+                                 label='axes3', sharex=self.ax1)
         self.ax3.set_zorder(self.ax1.get_zorder() + 150)
         self.ax3.set_navigate(False)
 
         # ---- Air Temperature ----
 
-        self.ax4 = self.ax1.twinx()
+        self.ax4 = self.add_axes(self.ax1.get_position(), frameon=False,
+                                 label='axes4', sharex=self.ax1)
         self.ax4.set_zorder(self.ax1.get_zorder() + 150)
         self.ax4.set_navigate(False)
         self.ax4.set_axisbelow(True)
@@ -286,7 +289,8 @@ class Hydrograph(Figure):
 
         # ---- Bottom Graph Grid ----
 
-        self.axLow = self.ax1.twinx()
+        self.axLow = self.add_axes(self.ax1.get_position(), frameon=False,
+                                   label='axLow', sharex=self.ax1)
         self.axLow.patch.set_visible(False)
         self.axLow.set_zorder(self.ax2.get_zorder() - 50)
         self.axLow.tick_params(bottom=False, top=False, left=False,
