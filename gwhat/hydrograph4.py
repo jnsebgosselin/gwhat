@@ -242,13 +242,6 @@ class Hydrograph(Figure):
 
         # -------------------------------------------------- AXES CREATION ----
 
-        # http://stackoverflow.com/questions/15303284/
-        # multiple-y-scales-but-only-one-enabled-for-pan-and-zoom
-
-        # http://matplotlib.1069221.n5.nabble.com/Control-twinx-series-zorder-
-        # ax2-series-behind-ax1-series-or-place-ax2-on-left-ax1
-        # -on-right-td12994.html
-
         # ---- Time (host) ----
 
         # Also holds the gridlines.
