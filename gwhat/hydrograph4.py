@@ -1324,177 +1324,116 @@ def LatLong2Dist(LAT1, LON1, LAT2, LON2):
     return DIST
 
 
-if __name__ == '__main__':  # =================================================
+if __name__ == '__main__':
 
     from PyQt5.QtWidgets import QApplication
     import sys
     from mplFigViewer3 import ImageViewer
-    import matplotlib.pyplot as plt
-    plt.ioff()
+    from gwhat.projet.reader_waterlvl import read_water_level_datafile
+    from gwhat.meteo.weather_reader import WXDataFrame
+    from gwhat.projet.reader_projet import ProjetReader
 
     app = QApplication(sys.argv)
 
-    # ------------------------------------------------------------ load data --
+    # ---- load data
 
-#    fmeteo = 'Files4testing/AUTEUIL_2000-2013.out'
-#    fwaterlvl = 'Files4testing/PO16A.xls'
+    path_projet = "E:\\GWHAT\\Projects\\Pont-Rouge\\Pont-Rouge.what"
+    projet = ProjetReader(path_projet)
 
-    # ---- Pont Rouge ----
+    # projname = "E:\\GWHAT\\Projects\\Pont-Rouge\\Pont-Rouge.what"
+    # dirname = '../Projects/Pont-Rouge'
+    # fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
+    # finfo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.log'
+    # fwaterlvl = dirname + '/Water Levels/5080001.xls'
 
-    dirname = '../Projects/Pont-Rouge'
-    fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    finfo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.log'
-    fwaterlvl = dirname + '/Water Levels/5080001.xls'
-
-    # ---- Cap-aux-Meules ----
-    dirname = '../Projects/IDM/'
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
-                          'IDM (JSG2017)_1960-2016.out')
-    finfo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
-                         'IDM (JSG2017)_1960-2016.log')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Cap-aux-Meules.xls')
-
-    # ---- Suffield ----
-
-#    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
-#    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
-#
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-#                          'MEDICINE HAT RCS (3034485)',
-#                          'MEDICINE HAT RCS (3034485)_2000-2016.out')
-#
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
-
-    # ---- Wainwright ----
-
-#    dirname = '../Projects/Wainwright/'
-#    fmeteo = (dirname + 'Meteo/Output/WAINWRIGHT CFB AIRFIELD 21 (301S001)' +
-#              '/WAINWRIGHT CFB AIRFIELD 21 (301S001)_2000-2016.out')
-#
-#    fwaterlvl = dirname + 'Water Levels/area3-GW-07.xlsx'
-
-
-    # ---- Valcartier ----
-
-#    dirname = '../Projects/Valcartier'
-#    fmeteo = dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.out'
-#    fwaterlvl = dirname + '/Water Levels/valcartier2.xls'
-#    finfo = (dirname + '/Meteo/Output/Valcartier (9999999)/Valcartier (9999999)_1994-2015.log')
-
-    # ---- Dundurn ----
-
-#    dirname = '/home/jnsebgosselin/Dropbox/WHAT/Projects/Dundurn'
-#    fmeteo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.out"
-#    fwaterlvl = dirname + '/Water Levels/P19 2013-2014.xls'
-#    fwaterlvl = dirname + '/Water Levels/P22 2014-2015.xls'
-#    finfo = dirname + "/Meteo/Output/SASKATOON DIEFENBAKER INT'L A (4057120)/SASKATOON DIEFENBAKER INT'L A (4057120)_1950-2015.log"
-
-    # ---- NB ----
-
-    dirname = '../Projects/Sussex'
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-                          'SUSSEX (8105200_8105210)',
-                          'SUSSEX (8105200_8105210)_1980-2017.out')
-    finfo = os.path.join(dirname, 'Meteo', 'Output',
-                         'SUSSEX (8105200_8105210)',
-                         'SUSSEX (8105200_8105210)_1980-2017.log')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
-
-    waterLvlObj = WaterlvlData()
-    waterLvlObj.load(fwaterlvl)
-
-#    fname = 'Files4testing/waterlvl_manual_measurements.xls'
-#    waterLvlObj.load_waterlvl_measures(fname, 'PO16A')
-
-    meteo_obj = MeteoObj()
-    meteo_obj.load_and_format(fmeteo)
+    wldset = projet.get_wldset('#5080001')
+    wxdset = projet.get_wxdset('STE CHRISTINE')
 
     # ---------------------------------------------------- set up hydrograph --
 
-    hg = Hydrograph()
-    hg.set_waterLvlObj(waterLvlObj)
-    hg.set_MeteoObj(meteo_obj)
-    hg.finfo = finfo
-    hg.language = 'english'
+    hydrograph = Hydrograph()
+    hydrograph.set_wldset(wldset)
+    hydrograph.set_wxdset(wxdset)
+    hydrograph.language = 'english'
 
-    what = ['normal', 'MRC', 'GLUE'][2]
+    what = ['normal', 'MRC', 'GLUE'][0]
 
     if what == 'normal':
-        hg.fwidth = 11.  # Width of the figure in inches
-        hg.fheight = 8.5
+        hydrograph.fwidth = 11.  # Width of the figure in inches
+        hydrograph.fheight = 8.5
 
-        hg.WLdatum = 0  # 0 -> mbgs ; 1 -> masl
-        hg.trend_line = False
-        hg.gridLines = 2  # Gridlines Style
-        hg.isGraphTitle = 1  # 1 -> title ; 0 -> no title
-        hg.isLegend = 1
+        hydrograph.WLdatum = 0  # 0 -> mbgs ; 1 -> masl
+        hydrograph.trend_line = False
+        hydrograph.gridLines = 2  # Gridlines Style
+        hydrograph.isGraphTitle = 1  # 1 -> title ; 0 -> no title
+        hydrograph.isLegend = 1
 
-        hg.meteo_on = True  # True or False
-        hg.datemode = 'year'  # 'month' or 'year'
-        hg.date_labels_pattern = 1
-        hg.bwidth_indx = 2  # Meteo Bin Width
+        hydrograph.meteo_on = True  # True or False
+        hydrograph.datemode = 'year'  # 'month' or 'year'
+        hydrograph.date_labels_pattern = 1
+        hydrograph.bwidth_indx = 2  # Meteo Bin Width
         # 0: daily | 1: weekly | 2: monthly | 3: yearly
-        hg.RAINscale = 100
+        hydrograph.RAINscale = 100
 
-        hg.best_fit_time(waterLvlObj.time)
-        hg.best_fit_waterlvl()
-        hg.generate_hydrograph()
-
-    elif what == 'MRC':
-
-        hg.fheight = 5.
-        hg.isGraphTitle = 0
-
-        hg.NZGrid = 11
-        hg.WLmin = 10.75
-        hg.WLscale = 0.25
-
-        hg.best_fit_time(waterLvlObj.time)
-        hg.generate_hydrograph(meteo_obj)
-
-        hg.draw_recession()
-        hg.savefig(dirname + '/MRC_hydrograph.pdf')
-
-        hg.isMRC = False
-
-    elif what == 'GLUE':
-
-        hg.fwidth = 11
-        hg.fheight = 6
-
-        hg.NZGrid = 10
-        hg.WLmin = 9
-        hg.WLscale = 1
-
-        hg.isGraphTitle = 1  # 1 -> title ; 0 -> no title
-        hg.isLegend = 1
-        hg.meteo_on = True
-        hg.datemode = 'month'  # 'month' or 'year'
-        hg.date_labels_pattern = 1
-
-        hg.best_fit_time(waterLvlObj.time)
-        hg.generate_hydrograph(meteo_obj)
-
-        # hg.l1_ax2.setp(zorder=10, linewidth=1, color='blue', ms=2,
-        #                linestyle='none', marker='.')
-
-        # hg.l1_ax2.set_rasterized(True)
-
-        # plot a hydrograph friend
-#        wl2 = WaterlvlData()
-#        wl2.load(dirname + '/Water Levels/5080001.xls')
-#        ax2 = hydrograph.ax2
-#        ax2.plot(wl2.time, wl2.lvl, color='green')
-
-        hg.draw_GLUE()
-        hg.draw_recession()
-        hg.savefig(dirname + '/GLUE_hydrograph.pdf', dpi=300)
-
-    # ------------------------------------------------ show figure on-screen --
+        hydrograph.best_fit_time(wldset['Time'])
+        hydrograph.best_fit_waterlvl()
+        hydrograph.generate_hydrograph()
+#
+#    elif what == 'MRC':
+#
+#        hg.fheight = 5.
+#        hg.isGraphTitle = 0
+#
+#        hg.NZGrid = 11
+#        hg.WLmin = 10.75
+#        hg.WLscale = 0.25
+#
+#        hg.best_fit_time(waterLvlObj.time)
+#        hg.generate_hydrograph(meteo_obj)
+#
+#        hg.draw_recession()
+#        hg.savefig(dirname + '/MRC_hydrograph.pdf')
+#
+#        hg.isMRC = False
+#
+#    elif what == 'GLUE':
+#
+#        hg.fwidth = 11
+#        hg.fheight = 6
+#
+#        hg.NZGrid = 10
+#        hg.WLmin = 9
+#        hg.WLscale = 1
+#
+#        hg.isGraphTitle = 1  # 1 -> title ; 0 -> no title
+#        hg.isLegend = 1
+#        hg.meteo_on = True
+#        hg.datemode = 'month'  # 'month' or 'year'
+#        hg.date_labels_pattern = 1
+#
+#        hg.best_fit_time(waterLvlObj.time)
+#        hg.generate_hydrograph(meteo_obj)
+#
+#        # hg.l1_ax2.setp(zorder=10, linewidth=1, color='blue', ms=2,
+#        #                linestyle='none', marker='.')
+#
+#        # hg.l1_ax2.set_rasterized(True)
+#
+#        # plot a hydrograph friend
+##        wl2 = WaterlvlData()
+##        wl2.load(dirname + '/Water Levels/5080001.xls')
+##        ax2 = hydrograph.ax2
+##        ax2.plot(wl2.time, wl2.lvl, color='green')
+#
+#        hg.draw_GLUE()
+#        hg.draw_recession()
+#        hg.savefig(dirname + '/GLUE_hydrograph.pdf', dpi=300)
+#
+    # ---- Show figure on-screen
 
     imgview = ImageViewer()
     imgview.sfmax = 10
-    imgview.load_mpl_figure(hg)
+    imgview.load_mpl_figure(hydrograph)
     imgview.show()
 
     sys.exit(app.exec_())
