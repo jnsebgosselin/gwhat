@@ -361,12 +361,12 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # the total precipitation are displayed in <ax3>, which is placed on
         # top of the axes that display the data (<ax0> and <ax1>).
 
-        ax3 = fig.add_axes([0, 0, 1, 1], zorder=1)  # temporary position
+        ax3 = fig.add_axes([0, 0, 1, 1], zorder=1, label='axe3')
         ax3.patch.set_visible(False)
         ax3.spines['bottom'].set_visible(False)
-        ax3.tick_params(axis='both', bottom='off', top='off', left='off',
-                        right='off', labelbottom='off', labeltop='off',
-                        labelleft='off', labelright='off')
+        ax3.tick_params(axis='both', bottom=False, top=False, left=False,
+                        right=False, labelbottom=False, labeltop=False,
+                        labelleft=False, labelright=False)
 
         # Mean Annual Air Temperature :
 
@@ -415,7 +415,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # Precipitation :
 
-        ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1)
+        ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1, label='axe0')
         ax0.patch.set_visible(False)
         ax0.spines['top'].set_visible(False)
         ax0.set_axisbelow(True)
@@ -423,7 +423,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # Air Temperature :
 
         ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=5,
-                           sharex=ax0)
+                           sharex=ax0, label='axe1')
 
         # ---- Initialize the Artists
 
@@ -458,8 +458,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         ax0.xaxis.set_ticklabels([])
         ax0.set_xticks(np.arange(Xmin0, Xmax0))
 
-        ax1.tick_params(axis='x', which='both', bottom='off', top='off',
-                        labelbottom='off')
+        ax1.tick_params(axis='x', which='both', bottom=False, top=False,
+                        labelbottom=False)
 
         # Minor ticks
         ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
@@ -661,7 +661,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         x0, x1 = ax1.get_position().x0, ax1.get_position().x1
         y0, y1 = ax1.get_position().y0, ax3.get_position().y1
 
-        dummy_ax = self.figure.add_axes([x0, y0, x1-x0, y1-y0])
+        dummy_ax = self.figure.add_axes([x0, y0, x1-x0, y1-y0], label='dummy')
         dummy_ax.patch.set_visible(False)
         dummy_ax.axis('off')
 
