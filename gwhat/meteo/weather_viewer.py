@@ -889,9 +889,8 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    fmeteo = ("C:\\Users\\jsgosselin\\GWHAT\\Projects\\"
-              "Example\\Meteo\\Output\\FARNHAM (7022320)\\"
-              "FARNHAM (7022320)_2005-2010.out")
+    fmeteo = ("E:\\GWHAT\\Projects\\Example\\Meteo\\Output\\"
+              "MARIEVILLE (7024627)\MARIEVILLE (7024627)_1980-2017.out")
     wxdset = WXDataFrame(fmeteo)
 
     w = WeatherViewer()
