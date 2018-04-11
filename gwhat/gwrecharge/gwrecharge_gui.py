@@ -20,8 +20,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
 
 from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
-from gwhat.gwrecharge.gwrecharge_plot_results import (
-        FigManagerRechgGLUE, FigManagerWaterLevelGLUE)
+from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 
 
 class RechgEvalWidget(QFrameLayout):
@@ -296,11 +295,6 @@ class RechgEvalWidget(QFrameLayout):
             glue_data = self.rechg_worker.glue_results
             # self.rechg_worker.save_glue_to_npy("GLUE.npy")
 
-            fig_wl_glue = FigManagerWaterLevelGLUE()
-            fig_wl_glue.plot_prediction(glue_data)
-
-            fig_rechg_glue = FigManagerRechgGLUE()
-            fig_rechg_glue.plot_recharge(glue_data)
-
-            fig_wl_glue.show()
-            fig_rechg_glue.show()
+            fig_stack = FigureStackManager(parent=self)
+            fig_stack.plot_results(glue_data)
+            fig_stack.show()
