@@ -15,9 +15,14 @@ import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
+from matplotlib.figure import Figure as MPLFigure
+
 
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QGridLayout, QApplication, QDialog
+from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtWidgets import (
+    QGridLayout, QApplication, QComboBox, QDoubleSpinBox, QFileDialog,
+    QGroupBox, QLabel, QTabWidget, QToolBar, QWidget)
 
 
 # ---- Imports: local
