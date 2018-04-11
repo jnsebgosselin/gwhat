@@ -157,6 +157,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
         self.ax0.set_position([left, bottom, 1-left-right, 1-top-bottom])
 
 
+    def set_fig_language(self, language):
+        """
+        Set the language of the text shown in the figure. This needs to be
+        impemented in the derived class.
+        """
+        pass
+
 
 class FigWaterLevelGLUE(FigCanvasBase):
     """
@@ -172,11 +179,7 @@ class FigWaterLevelGLUE(FigCanvasBase):
 
         # ---- Axes labels
 
-        if self.language == 'French':
-            label = "Niveau d'eau (m sous la surface)"
-        else:
-            label = 'Water Level (mbgs)'
-        ax.set_ylabel(label, fontsize=16, labelpad=20)
+        self.set_axes_labels()
 
         # ---- Grids
 
@@ -222,6 +225,22 @@ class FigWaterLevelGLUE(FigCanvasBase):
         ax.fill_between(dates, glue_dly[:, -1]/1000, glue_dly[:, 0]/1000,
                         facecolor='0.85', lw=1, edgecolor='0.65', zorder=0)
 
+    def set_fig_language(self, language):
+        """
+        Set the language of the text shown in the figure.
+        """
+        self.language = language
+        self.set_axes_labels()
+
+    def set_axes_labels(self):
+        """
+        Set the text and position of the axes labels.
+        """
+        if self.language == 'French':
+            xlabel = "Niveau d'eau (m sous la surface)"
+        else:
+            xlabel = 'Water Level (mbgs)'
+        self.ax0.set_ylabel(xlabel, fontsize=16, labelpad=20)
 
 
 class FigYearlyRechgGLUE(FigCanvasBase):
@@ -306,16 +325,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ---- Axes labels
 
-        if self.language.lower() == 'french':
-            ylabl = "Recharge annuelle (mm/a)"
-            xlabl = ("Années Hydrologiques (1er octobre d'une année "
-                     "au 30 septembre de la suivante)")
-        else:
-            ylabl = "Annual Recharge (mm/y)"
-            xlabl = ("Hydrological Years (October 1st of one "
-                     "year to September 30th of the next)")
-        ax0.set_ylabel(ylabl, fontsize=16, labelpad=15)
-        ax0.set_xlabel(xlabl, fontsize=16, labelpad=20)
+        self.set_axes_labels()
 
         # ----- Legend
 
@@ -348,6 +358,28 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         transform = ax0.transAxes + padding
         ax0.text(0, 0, text, va='bottom', ha='left', fontsize=10,
                  transform=transform)
+
+    def set_fig_language(self, language):
+        """
+        Set the language of the text shown in the figure.
+        """
+        self.language = language
+        self.set_axes_labels()
+
+    def set_axes_labels(self):
+        """
+        Set the text and position of the axes labels.
+        """
+        if self.language.lower() == 'french':
+            ylabl = "Recharge annuelle (mm/a)"
+            xlabl = ("Années Hydrologiques (1er octobre d'une année "
+                     "au 30 septembre de la suivante)")
+        else:
+            ylabl = "Annual Recharge (mm/y)"
+            xlabl = ("Hydrological Years (October 1st of one "
+                     "year to September 30th of the next)")
+        self.ax0.set_ylabel(ylabl, fontsize=16, labelpad=15)
+        self.ax0.set_xlabel(xlabl, fontsize=16, labelpad=20)
 
 
 # %% ---- if __name__ == '__main__'
