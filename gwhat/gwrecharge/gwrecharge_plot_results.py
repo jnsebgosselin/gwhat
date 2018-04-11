@@ -37,6 +37,34 @@ LOCS = ['left', 'top', 'right', 'bottom']
 LANGUAGES = ['French', 'English']
 
 
+class FigureStackManager(QWidget):
+    def __init__(self, parent=None):
+        super(FigureStackManager, self).__init__(parent)
+        self.setMinimumSize(1250, 650)
+        self.setWindowTitle('Recharge Results')
+        self.setWindowFlags(Qt.Window)
+        self.setAttribute(Qt.WA_DeleteOnClose)
+        self.setWindowIcon(icons.get_icon('master'))
+
+        self.setup()
+
+    def setup(self):
+        """Setup the FigureStackManager withthe provided options."""
+        self.setup_stack()
+        layout = QGridLayout(self)
+        layout.addWidget(self.stack, 0, 0)
+
+    def setup_stack(self):
+        self.fig_wl_glue = FigManagerWaterLevelGLUE(self)
+        self.fig_rechg_glue = FigManagerRechgGLUE(self)
+
+        self.stack = QTabWidget()
+        self.stack.addTab(self.fig_wl_glue, 'Hydrograph')
+        self.stack.addTab(self.fig_rechg_glue, 'Recharge')
+
+    def plot_results(self, glue_data):
+        self.fig_wl_glue.plot_prediction(glue_data)
+        self.fig_rechg_glue.plot_recharge(glue_data)
 
 
 # ---- Figure Managers
