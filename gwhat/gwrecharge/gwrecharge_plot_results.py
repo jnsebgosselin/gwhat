@@ -128,14 +128,14 @@ class FigCanvasBase(FigureCanvasQTAgg):
               'light grey': '0.85'}
 
     MARGINS = [0.85, 0.15, 0.15, 0.65]  # left, top, right, bottom
+    FWIDTH, FHEIGHT = 8.5, 5
 
     def __init__(self, language='English'):
         super(FigCanvasBase, self).__init__(mpl.figure.Figure())
 
         self.language = language
 
-        fwidth, fheight = 8.5, 5
-        self.figure.set_size_inches(fwidth, fheight)
+        self.figure.set_size_inches(self.FWIDTH, self.FHEIGHT)
         self.figure.patch.set_facecolor('white')
 
         self.ax0 = ax0 = self.figure.add_axes([0, 0, 1, 1])
