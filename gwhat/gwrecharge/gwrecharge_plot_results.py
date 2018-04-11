@@ -29,7 +29,8 @@ from PyQt5.QtWidgets import (
 
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue_yearly_rechg
-from gwhat.common import icons
+from gwhat.common import icons, QToolButtonNormal
+from gwhat.mplFigViewer3 import ImageViewer
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
