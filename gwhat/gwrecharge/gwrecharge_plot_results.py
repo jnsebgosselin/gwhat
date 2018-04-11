@@ -69,26 +69,6 @@ class FigureStackManager(QWidget):
 
 # ---- Figure Managers
 
-class NavigationToolbar(NavigationToolbar2QT):
-    # Only display the buttons that we want.
-    toolitems = [t for t in NavigationToolbar2QT.toolitems if
-                 t[0] in ('Home', 'Pan', 'Zoom', 'Save')]
-
-    def __init__(self, *args, **kwargs):
-        self.icon_names = {'home.png': 'home',
-                           'move.png': 'pan',
-                           'zoom_to_rect.png': 'search',
-                           'filesave.png': 'save'}
-        super(NavigationToolbar, self).__init__(*args, **kwargs)
-        self.setIconSize(QSize(28, 28))
-
-    def _icon(self, name):
-        """Matplotlib method override."""
-        if name in list(self.icon_names.keys()):
-            icon = icons.get_icon(self.icon_names[name])
-            return icon
-        else:
-            return super(NavigationToolbar, self)._icon(name)
 class FigureSetupPanel(QWidget):
 
     def __init__(self, figcanvas, parent=None):
@@ -222,23 +202,40 @@ class FigManagerBase(QWidget):
     """
     Abstract manager to show the results from GLUE.
     """
-    def __init__(self, figure_class, parent=None):
+    def __init__(self, figure_canvas, parent=None):
         super(FigManagerBase, self).__init__(parent)
-        self.setFixedSize(1000, 550)
-        self.setWindowFlags(Qt.Window |
-                            Qt.CustomizeWindowHint |
-                            Qt.WindowMinimizeButtonHint |
-                            Qt.WindowCloseButtonHint)
-        self.setModal(False)
-        self.setAttribute(Qt.WA_DeleteOnClose)
-        self.setWindowIcon(icons.get_icon('master'))
 
-        self.figure = figure_class()
-        self.toolbar = NavigationToolbar(self.figure, parent=self)
+        self.figcanvas = figure_canvas()
+        self.figviewer = ImageViewer()
+        self.figcanvas.sig_fig_changed.connect(self.figviewer.load_mpl_figure)
+
+        self.setup_toolbar()
+        self.figsetp = FigureSetupPanel(self.figcanvas)
 
         layout = QGridLayout(self)
-        layout.addWidget(self.toolbar, 0, 0)
-        layout.addWidget(self.figure, 1, 0)
+        layout.addWidget(self.figviewer, 0, 0)
+        layout.addWidget(self.toolbar, 1, 0)
+        layout.addWidget(self.figsetp, 0, 1, 2, 1)
+
+        layout.setColumnStretch(0, 100)
+
+    def setup_toolbar(self):
+        """Setup the toolbar of the figure manager."""
+
+        self.btn_save = QToolButtonNormal(icons.get_icon('save'))
+        self.btn_save.setToolTip('Save current graph as...')
+        self.btn_save.clicked.connect(self._select_savefig_path)
+
+        # Setup the layout of the toolbar
+
+        self.toolbar = QToolBar()
+        self.toolbar.addWidget(self.btn_save)
+
+    def _select_savefig_path(self):
+        """Open a dialog window to select a file to save the figure."""
+        pass
+        # filepath, _ = QFileDialog.getSaveFileName(
+        # self, 'Save file', dialog_dir, '*.csv')
 
 
 class FigManagerWaterLevelGLUE(FigManagerBase):
