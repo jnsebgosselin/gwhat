@@ -127,7 +127,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
     colors = {'dark grey': '0.65',
               'light grey': '0.85'}
 
-    MARGINS = [0.85, 0.15, 0.15, 0.65]  # left, top, right, bottom
+    MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
     FWIDTH, FHEIGHT = 8.5, 5
 
     def __init__(self, language='English'):
@@ -229,6 +229,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
     This is a graph that shows annual ground-water recharge and its
     uncertainty.
     """
+
+    MARGINS = [1, 0.15, 0.15, 1.1]  # left, top, right, bottom
 
     def __init__(self, *args, **kargs):
         super(FigYearlyRechgGLUE, self).__init__(*args, **kargs)
