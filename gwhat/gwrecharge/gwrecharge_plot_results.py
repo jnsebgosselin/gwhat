@@ -120,7 +120,7 @@ class FigManagerRechgGLUE(FigManagerBase):
 
 # ---- Figure Canvas
 
-class FigResultsBase(FigureCanvasQTAgg):
+class FigCanvasBase(FigureCanvasQTAgg):
     """
     This is the base figure format to plot GLUE results.
     """
@@ -130,7 +130,7 @@ class FigResultsBase(FigureCanvasQTAgg):
     MARGINS = [0.85, 0.15, 0.15, 0.65]  # left, top, right, bottom
 
     def __init__(self, language='English'):
-        super(FigResultsBase, self).__init__(mpl.figure.Figure())
+        super(FigCanvasBase, self).__init__(mpl.figure.Figure())
 
         self.language = language
 
@@ -157,7 +157,7 @@ class FigResultsBase(FigureCanvasQTAgg):
         ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
 
 
-class FigWaterLevelGLUE(FigResultsBase):
+class FigWaterLevelGLUE(FigCanvasBase):
     """
     This is a graph that shows observed ground-water levels and GLUE 5/95
     predicted water levels.
@@ -223,7 +223,8 @@ class FigWaterLevelGLUE(FigResultsBase):
                         facecolor='0.85', lw=1, edgecolor='0.65', zorder=0)
 
 
-class FigYearlyRechgGLUE(FigResultsBase):
+
+class FigYearlyRechgGLUE(FigCanvasBase):
     """
     This is a graph that shows annual ground-water recharge and its
     uncertainty.
