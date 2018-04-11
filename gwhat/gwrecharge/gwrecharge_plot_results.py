@@ -89,16 +89,136 @@ class NavigationToolbar(NavigationToolbar2QT):
             return icon
         else:
             return super(NavigationToolbar, self)._icon(name)
+class FigureSetupPanel(QWidget):
 
-    def sizeHint(self):
+    def __init__(self, figcanvas, parent=None):
+        super(FigureSetupPanel, self).__init__(parent)
+        self.figcanvas = figcanvas
+        # self.setVisible(True)
+        self.setup()
+
+    @property
+    def fig_width(self):
+        return self._spb_fwidth.value()
+
+    @property
+    def fig_height(self):
+        return self._spb_fheight.value()
+
+    @property
+    def fig_margins(self):
+        return [self._spb_margins[loc].value() for loc in LOCS]
+
+    @property
+    def fig_language(self):
+        return self._cbb_language.currentText()
+
+    def setup(self):
+        """Setup the gui of the panel."""
+        layout = QGridLayout(self)
+
+        layout.addWidget(self._setup_figsize_grpbox(), 0, 0)
+        layout.addWidget(self._setup_margins_grpbox(), 1, 0)
+        layout.addWidget(self._setup_language_grpbox(), 2, 0)
+
+        layout.setRowStretch(layout.rowCount(), 100)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+    def _setup_figsize_grpbox(self):
         """
-        Matplotlib method override because the toolbar height is too big
-        otherwise.
+        Setup a group box with spin boxes that allows to set the figure
+        size in inches.
         """
-        return super(NavigationToolbar2QT, self).sizeHint()
+        self._spb_fwidth = QDoubleSpinBox()
+        self._spb_fwidth.setSingleStep(0.1)
+        self._spb_fwidth.setDecimals(1)
+        self._spb_fwidth.setMinimum(3)
+        self._spb_fwidth.setSuffix('  in')
+        self._spb_fwidth.setAlignment(Qt.AlignCenter)
+        self._spb_fwidth.setKeyboardTracking(False)
+        self._spb_fwidth.setValue(self.figcanvas.FWIDTH)
+        self._spb_fwidth.valueChanged.connect(self._fig_size_changed)
+
+        self._spb_fheight = QDoubleSpinBox()
+        self._spb_fheight.setSingleStep(0.1)
+        self._spb_fheight.setDecimals(1)
+        self._spb_fheight.setMinimum(3)
+        self._spb_fheight.setSuffix('  in')
+        self._spb_fheight.setAlignment(Qt.AlignCenter)
+        self._spb_fheight.setKeyboardTracking(False)
+        self._spb_fheight.setValue(self.figcanvas.FHEIGHT)
+        self._spb_fheight.valueChanged.connect(self._fig_size_changed)
+
+        grpbox = QGroupBox("Figure Size :")
+        layout = QGridLayout(grpbox)
+
+        layout.addWidget(QLabel('width :'), 0, 0)
+        layout.addWidget(self._spb_fwidth, 0, 2)
+        layout.addWidget(QLabel('height :'), 1, 0)
+        layout.addWidget(self._spb_fheight, 1, 2)
+
+        layout.setColumnStretch(1, 100)
+        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+
+        return grpbox
+
+    def _fig_size_changed(self):
+        self.figcanvas.set_fig_size(
+            self.fig_width, self.fig_height, units='IP')
+
+    def _setup_margins_grpbox(self):
+        """
+        Setup a group box with spin boxes that allows to set the figure
+        margins size in inches.
+        """
+        grpbox = QGroupBox("Margins Size :")
+        layout = QGridLayout(grpbox)
+
+        self._spb_margins = {}
+        for row, loc in enumerate(LOCS):
+            self._spb_margins[loc] = QDoubleSpinBox()
+            self._spb_margins[loc].setSingleStep(0.05)
+            self._spb_margins[loc].setMinimum(0.05)
+            self._spb_margins[loc].setSuffix('  in')
+            self._spb_margins[loc].setAlignment(Qt.AlignCenter)
+            self._spb_margins[loc].setKeyboardTracking(False)
+            self._spb_margins[loc].setValue(self.figcanvas.MARGINS[row])
+            self._spb_margins[loc].valueChanged.connect(self._margins_changed)
+
+            layout.addWidget(QLabel("%s :" % loc), row, 0)
+            layout.addWidget(self._spb_margins[loc], row, 2)
+        layout.setColumnStretch(1, 100)
+        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+
+        return grpbox
+
+    def _margins_changed(self):
+        self.figcanvas.set_axes_margins_inches(self.fig_margins)
+
+    def _setup_language_grpbox(self):
+        self._cbb_language = QComboBox()
+        self._cbb_language.setEditable(False)
+        self._cbb_language.setInsertPolicy(QComboBox.NoInsert)
+        self._cbb_language.addItems(LANGUAGES)
+        self._cbb_language.setCurrentIndex(1)
+        self._cbb_language.currentIndexChanged.connect(self._language_changed)
+        self._cbb_language.setToolTip(
+            "Set the language of the text shown in the figure.")
+
+        grp_lang = QWidget()
+        lay_lang = QGridLayout(grp_lang)
+        lay_lang.addWidget(QLabel('Language :'), 0, 0)
+        lay_lang.addWidget(self._cbb_language, 0, 1)
+        lay_lang.setSpacing(5)
+        lay_lang.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+
+        return grp_lang
+
+    def _language_changed(self):
+        self.figcanvas.set_fig_language(self.fig_language)
 
 
-class FigManagerBase(QDialog):
+class FigManagerBase(QWidget):
     """
     Abstract manager to show the results from GLUE.
     """
