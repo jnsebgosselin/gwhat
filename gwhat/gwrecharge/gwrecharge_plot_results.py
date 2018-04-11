@@ -422,18 +422,19 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.ax0.set_axisbelow(True)
 
     def plot_recharge(self, data, Ymin0=None, Ymax0=None, year_limits=None):
-        fig = self.figure
         ax0 = self.ax0
 
         p = [0.05, 0.25, 0.5, 0.75, 0.95]
         year_labels, year_range, glue_rechg_yr = calcul_glue_yearly_rechg(
-                data, p, year_limits)
 
-        max_rechg_yrly = glue_rechg_yr[:, -1]
-        min_rechg_yrly = glue_rechg_yr[:, 0]
-        prob_rechg_yrly = glue_rechg_yr[:, 2]
+        glue95_yr = glue_rechg_yr[:, -1]
+        glue05_yr = glue_rechg_yr[:, 0]
+        glue50_yr = glue_rechg_yr[:, 2]
         glue25_yr = glue_rechg_yr[:, 1]
         glue75_yr = glue_rechg_yr[:, -2]
+
+        self.glue_year_rechg_avg = tuple(
+            np.mean(glue_rechg_yr[:, i]) for i in range(5))
 
         # ---- Axis range
 
@@ -441,7 +442,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         Xmax0 = max(year_range)+1
 
         if Ymax0 is None:
-            Ymax0 = np.max(max_rechg_yrly) + 50
+            Ymax0 = np.max(glue95_yr) + 50
         if Ymin0 is None:
             Ymin0 = 0
 
@@ -454,8 +455,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ----- ticks format
 
-        scale_yticks = 25 if np.max(max_rechg_yrly) < 250 else 100
-        scale_yticks_minor = 5 if np.max(max_rechg_yrly) < 250 else 25
+        scale_yticks = 25 if np.max(glue95_yr) < 250 else 100
+        scale_yticks_minor = 5 if np.max(glue95_yr) < 250 else 25
         yticks = np.arange(0, 2*Ymax0+1, scale_yticks)
 
         ax0.yaxis.set_ticks_position('left')
@@ -476,8 +477,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         ax0.plot(year_range, prob_rechg_yrly, ls='--', color='0.35',
                  zorder=100)
 
-        yerr = [prob_rechg_yrly-min_rechg_yrly, max_rechg_yrly-prob_rechg_yrly]
-        herr = ax0.errorbar(year_range, prob_rechg_yrly, yerr=yerr,
+        yerr = [glue50_yr-glue05_yr, glue95_yr-glue50_yr]
+        herr = ax0.errorbar(year_range, glue50_yr, yerr=yerr,
                             fmt='o', capthick=1, capsize=4, ecolor='0',
                             elinewidth=1, mfc='White', mec='0', ms=5,
                             markeredgewidth=1, zorder=200)
@@ -499,41 +500,17 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         ax0.legend(lg_handles, lg_labels, ncol=3, fontsize=12, frameon=False,
                    numpoints=1, loc='upper left')
 
-        # ---- Averages Text
-
-        if self.language.lower() == 'french':
-            text = 'Recharge annuelle moyenne :\n'
-            text += '(GLUE 5) %d mm/a ; ' % np.mean(min_rechg_yrly)
-            text += '(GLUE 25) %d mm/a ; ' % np.mean(glue25_yr)
-            text += '(GLUE 50) %d mm/a ; ' % np.mean(prob_rechg_yrly)
-            text += '(GLUE 75) %d mm/a ; ' % np.mean(glue75_yr)
-            text += '(GLUE 95) %d mm/a' % np.mean(max_rechg_yrly)
-        else:
-            text = 'Mean annual recharge :\n'
-            text += '(GLUE 5) %d mm/y ; ' % np.mean(min_rechg_yrly)
-            text += '(GLUE 25) %d mm/y ; ' % np.mean(glue25_yr)
-            text += '(GLUE 50) %d mm/y ; ' % np.mean(prob_rechg_yrly)
-            text += '(GLUE 75) %d mm/y ; ' % np.mean(glue75_yr)
-            text += '(GLUE 95) %d mm/y' % np.mean(max_rechg_yrly)
-
-        dx, dy = 5/72, 5/72
-        padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
-        transform = ax0.transAxes + padding
-        ax0.text(0, 0, text, va='bottom', ha='left', fontsize=10,
-                 transform=transform)
+        self.setup_yearly_avg_legend()
 
     def set_fig_language(self, language):
-        """
-        Set the language of the text shown in the figure.
-        """
+        """Set the language of the text shown in the figure."""
         self.language = language
         self.set_axes_labels()
+        self.set_yearly_avg_legend_text()
         self.sig_fig_changed.emit(self.figure)
 
     def set_axes_labels(self):
-        """
-        Set the text and position of the axes labels.
-        """
+        """Set the text and position of the axes labels."""
         if self.language.lower() == 'french':
             ylabl = "Recharge annuelle (mm/a)"
             xlabl = ("Années Hydrologiques (1er octobre d'une année "
@@ -544,6 +521,35 @@ class FigYearlyRechgGLUE(FigCanvasBase):
                      "year to September 30th of the next)")
         self.ax0.set_ylabel(ylabl, fontsize=16, labelpad=15)
         self.ax0.set_xlabel(xlabl, fontsize=16, labelpad=20)
+
+    def setup_yearly_avg_legend(self):
+        """Setup the yearly average legend."""
+        padding = mpl.transforms.ScaledTranslation(
+            5/72, 5/72, self.figure.dpi_scale_trans)
+        self.txt_yearly_avg = self.ax0.text(
+            0, 0, '', va='bottom', ha='left', fontsize=10,
+            transform=self.ax0.transAxes + padding)
+        self.set_yearly_avg_legend_text()
+
+    def set_yearly_avg_legend_text(self):
+        """Set the text and position of for the yearly averages results."""
+        if self.language.lower() == 'french':
+            text = ("Recharge annuelle moyenne :\n"
+                    "(GLUE 5) %d mm/a ; "
+                    "(GLUE 25) %d mm/a ; "
+                    "(GLUE 50) %d mm/a ; "
+                    "(GLUE 75) %d mm/a ; "
+                    "(GLUE 95) %d mm/a"
+                    ) % self.glue_year_rechg_avg
+        else:
+            text = ("Mean annual recharge :\n"
+                    "(GLUE 5) %d mm/y ; "
+                    "(GLUE 25) %d mm/y ; "
+                    "(GLUE 50) %d mm/y ; "
+                    "(GLUE 75) %d mm/y ; "
+                    "(GLUE 95) %d mm/y"
+                    ) % self.glue_year_rechg_avg
+        self.txt_yearly_avg.set_text(text)
 
 
 # %% ---- if __name__ == '__main__'
