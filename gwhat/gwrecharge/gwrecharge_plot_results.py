@@ -139,22 +139,23 @@ class FigCanvasBase(FigureCanvasQTAgg):
         self.figure.patch.set_facecolor('white')
 
         self.ax0 = ax0 = self.figure.add_axes([0, 0, 1, 1])
-        self.set_ax_margins_inches(self.ax0, self.MARGINS)
+        self.set_axes_margins_inches(self.MARGINS)
         ax0.patch.set_visible(False)
         for axis in ['top', 'bottom', 'left', 'right']:
             ax0.spines[axis].set_linewidth(0.5)
 
-    def set_ax_margins_inches(self, ax, margins):
+    def set_axes_margins_inches(self, margins):
+        """Set the margins of the figure axes in inches."""
         fheight = self.figure.get_figheight()
         fwidth = self.figure.get_figwidth()
-        left, top, right, bottom = margins
 
-        left = left/fwidth
-        right = right/fwidth
-        top = top/fheight
-        bottom = bottom/fheight
+        left = margins[0]/fwidth
+        top = margins[1]/fheight
+        right = margins[2]/fwidth
+        bottom = margins[3]/fheight
 
-        ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
+        self.ax0.set_position([left, bottom, 1-left-right, 1-top-bottom])
+
 
 
 class FigWaterLevelGLUE(FigCanvasBase):
@@ -166,9 +167,8 @@ class FigWaterLevelGLUE(FigCanvasBase):
     def __init__(self, *args, **kargs):
         super(FigWaterLevelGLUE, self).__init__(*args, **kargs)
         fig = self.figure
-        ax = self.ax0
 
-        # ---- Customize Ax0 margins
+        ax = self.ax0
 
         # ---- Axes labels
 
@@ -237,11 +237,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ---- Customize Ax0
 
-        self.ax0
         self.ax0.set_axisbelow(True)
-        margins = self.MARGINS
-        margins[-1] = 1.1
-        self.set_ax_margins_inches(self.ax0, margins)
 
     def plot_recharge(self, data, Ymin0=None, Ymax0=None, year_limits=None):
         fig = self.figure
