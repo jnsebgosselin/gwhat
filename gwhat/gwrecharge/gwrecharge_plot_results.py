@@ -156,6 +156,18 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
         self.ax0.set_position([left, bottom, 1-left-right, 1-top-bottom])
 
+        self.sig_fig_changed.emit(self.figure)
+
+    def set_fig_size(self, fw, fh, units='IP'):
+        """
+        Set the figure width and height in inches if units is IP
+        or in cm if units is SI.
+        """
+        if units == 'SI':
+            # Convert values from cm to in.
+            fw = fw / 2.54
+            fh = fh / 2.54
+        self.figure.set_size_inches(fw, fh)
 
     def set_fig_language(self, language):
         """
