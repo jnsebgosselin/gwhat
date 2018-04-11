@@ -213,11 +213,12 @@ class FigManagerBase(QWidget):
         self.figsetp = FigureSetupPanel(self.figcanvas)
 
         layout = QGridLayout(self)
-        layout.addWidget(self.figviewer, 0, 0)
-        layout.addWidget(self.toolbar, 1, 0)
-        layout.addWidget(self.figsetp, 0, 1, 2, 1)
+        layout.addWidget(self.figviewer, 0, 0, 3, 1)
+        layout.addWidget(self.toolbar, 2, 1)
+        layout.addWidget(self.figsetp, 0, 1)
 
         layout.setColumnStretch(0, 100)
+        layout.setRowStretch(1, 100)
 
     def setup_toolbar(self):
         """Setup the toolbar of the figure manager."""
@@ -426,6 +427,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         p = [0.05, 0.25, 0.5, 0.75, 0.95]
         year_labels, year_range, glue_rechg_yr = calcul_glue_yearly_rechg(
+            data, p, year_limits)
 
         glue95_yr = glue_rechg_yr[:, -1]
         glue05_yr = glue_rechg_yr[:, 0]
@@ -474,8 +476,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ---- Plot results
 
-        ax0.plot(year_range, prob_rechg_yrly, ls='--', color='0.35',
-                 zorder=100)
+        ax0.plot(year_range, glue50_yr, ls='--', color='0.35', zorder=100)
 
         yerr = [glue50_yr-glue05_yr, glue95_yr-glue50_yr]
         herr = ax0.errorbar(year_range, glue50_yr, yerr=yerr,
