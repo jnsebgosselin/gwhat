@@ -33,6 +33,10 @@ from gwhat.common import icons, QToolButtonNormal
 from gwhat.mplFigViewer3 import ImageViewer
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
+LOCS = ['left', 'top', 'right', 'bottom']
+LANGUAGES = ['French', 'English']
+
+
 
 
 # ---- Figure Managers
