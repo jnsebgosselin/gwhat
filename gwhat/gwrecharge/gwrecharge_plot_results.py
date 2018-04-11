@@ -124,11 +124,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
     """
     This is the base figure format to plot GLUE results.
     """
+    sig_fig_changed = QSignal(MPLFigure)
+
     colors = {'dark grey': '0.65',
               'light grey': '0.85'}
 
-    MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
     FWIDTH, FHEIGHT = 8.5, 5
+    MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
 
     def __init__(self, language='English'):
         super(FigCanvasBase, self).__init__(mpl.figure.Figure())
@@ -168,6 +170,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
             fw = fw / 2.54
             fh = fh / 2.54
         self.figure.set_size_inches(fw, fh)
+        self.sig_fig_changed.emit(self.figure)
 
     def set_fig_language(self, language):
         """
@@ -243,6 +246,7 @@ class FigWaterLevelGLUE(FigCanvasBase):
         """
         self.language = language
         self.set_axes_labels()
+        self.sig_fig_changed.emit(self.figure)
 
     def set_axes_labels(self):
         """
@@ -377,6 +381,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         """
         self.language = language
         self.set_axes_labels()
+        self.sig_fig_changed.emit(self.figure)
 
     def set_axes_labels(self):
         """
