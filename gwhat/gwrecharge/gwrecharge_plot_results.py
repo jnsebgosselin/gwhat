@@ -557,12 +557,8 @@ if __name__ == '__main__':
     rechg_worker = RechgEvalWorker()
     data = rechg_worker.load_glue_from_npy("..\GLUE.npy")
 
-    glue_wl_viewer = FigManagerWaterLevelGLUE()
-    glue_wl_viewer.plot_prediction(data)
-    glue_wl_viewer.show()
-
-    fig_rechg_glue = FigManagerRechgGLUE()
-    fig_rechg_glue.plot_recharge(data)
-    fig_rechg_glue.show()
+    figstack = FigureStackManager()
+    figstack.plot_results(data)
+    figstack.show()
 
     sys.exit(app.exec_())
