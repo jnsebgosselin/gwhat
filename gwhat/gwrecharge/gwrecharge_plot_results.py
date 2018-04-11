@@ -247,11 +247,12 @@ class FigManagerWaterLevelGLUE(FigManagerBase):
     water level versus the observations.
     """
     def __init__(self, parent=None):
-        super(FigManagerWaterLevelGLUE, self).__init__(FigWaterLevelGLUE,
-                                                       parent)
+        super(FigManagerWaterLevelGLUE, self).__init__(
+            FigWaterLevelGLUE, parent)
 
     def plot_prediction(self, glue_data):
-        self.figure.plot_prediction(glue_data)
+        self.figcanvas.plot_prediction(glue_data)
+        self.figviewer.load_mpl_figure(self.figcanvas.figure)
 
 
 class FigManagerRechgGLUE(FigManagerBase):
@@ -263,7 +264,8 @@ class FigManagerRechgGLUE(FigManagerBase):
         super(FigManagerRechgGLUE, self).__init__(FigYearlyRechgGLUE, parent)
 
     def plot_recharge(self, data, Ymin0=None, Ymax0=None, yrs_range=None):
-        self.figure.plot_recharge(data, Ymin0, Ymax0, yrs_range)
+        self.figcanvas.plot_recharge(data, Ymin0, Ymax0, yrs_range)
+        self.figviewer.load_mpl_figure(self.figcanvas.figure)
 
 
 # ---- Figure Canvas
