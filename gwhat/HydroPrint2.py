@@ -715,6 +715,8 @@ class HydroprintGUI(myqt.DialogWindow):
         """
         dialog_dir = os.path.join(self.save_fig_dir,
                                   'hydrograph_%s' % self.wldset['Well'])
+        if self.wldset is None:
+            return
 
         dialog = QFileDialog()
         fname, ftype = dialog.getSaveFileName(
