@@ -21,16 +21,18 @@ from matplotlib.figure import Figure as MPLFigure
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
-    QGridLayout, QApplication, QComboBox, QDoubleSpinBox, QFileDialog,
-    QGroupBox, QLabel, QMessageBox, QTabWidget, QToolBar, QWidget)
+    QGridLayout, QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
+    QFileDialog, QGroupBox, QLabel, QMessageBox, QSpinBox, QTabWidget,
+    QToolBar, QWidget)
 
 
 # ---- Imports: local
 
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue_yearly_rechg
-from gwhat.common import icons, QToolButtonNormal
+from gwhat.common import icons, QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
+from gwhat.common.widgets import QFrameLayout
 from gwhat.mplFigViewer3 import ImageViewer
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
@@ -233,6 +235,36 @@ class FigManagerBase(QWidget):
 
         self.toolbar = QToolBar()
         self.toolbar.addWidget(self.btn_save)
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(self._setup_zoomwidget())
+
+    def _setup_zoomwidget(self):
+        """Setup a toolbar widget to zoom in and zoom out the figure."""
+
+        btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
+        btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
+        btn_zoom_out.clicked.connect(self.figviewer.zoomOut)
+
+        btn_zoom_in = QToolButtonSmall(icons.get_icon('zoom_in'))
+        btn_zoom_in.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
+        btn_zoom_in.clicked.connect(self.figviewer.zoomIn)
+
+        self.zoom_disp = QSpinBox()
+        self.zoom_disp.setAlignment(Qt.AlignCenter)
+        self.zoom_disp.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        self.zoom_disp.setReadOnly(True)
+        self.zoom_disp.setSuffix(' %')
+        self.zoom_disp.setRange(0, 9999)
+        self.zoom_disp.setValue(100)
+        self.figviewer.zoomChanged.connect(self.zoom_disp.setValue)
+
+        zoom_pan = QFrameLayout()
+        zoom_pan.setSpacing(3)
+        zoom_pan.addWidget(btn_zoom_out, 0, 0)
+        zoom_pan.addWidget(btn_zoom_in, 0, 1)
+        zoom_pan.addWidget(self.zoom_disp, 0, 2)
+
+        return zoom_pan
 
     def _select_savefig_path(self):
         """Open a dialog window to select a file to save the figure."""
