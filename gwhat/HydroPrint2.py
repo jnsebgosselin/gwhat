@@ -12,6 +12,7 @@ from __future__ import division, unicode_literals
 
 import sys
 import os
+import os.path as osp
 
 # ---- Third party imports
 
@@ -36,6 +37,7 @@ from gwhat.colors2 import ColorsReader, ColorsSetupWin
 from gwhat.common import QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
+from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
 
 
@@ -722,7 +724,13 @@ class HydroprintGUI(myqt.DialogWindow):
             if not fname.endswith(ftype):
                 fname = fname + ftype
             self.save_fig_dir = os.path.dirname(fname)
-            self.save_figure(fname)
+
+            try:
+                self.save_figure(fname)
+            except PermissionError:
+                msg = "The file is in use by another application or user."
+                QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+                self.select_save_path()
 
     def save_figure(self, fname):
         """Save the hydrograph figure in a file."""
