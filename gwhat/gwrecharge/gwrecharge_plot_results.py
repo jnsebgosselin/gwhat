@@ -8,21 +8,21 @@
 
 # ---- Standard library imports
 
+import os
+import os.path as osp
 
 # ---- Imports: third parties
 
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 from matplotlib.figure import Figure as MPLFigure
 
-
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QApplication, QComboBox, QDoubleSpinBox, QFileDialog,
-    QGroupBox, QLabel, QTabWidget, QToolBar, QWidget)
+    QGroupBox, QLabel, QMessageBox, QTabWidget, QToolBar, QWidget)
 
 
 # ---- Imports: local
@@ -30,6 +30,7 @@ from PyQt5.QtWidgets import (
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue
 from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue_yearly_rechg
 from gwhat.common import icons, QToolButtonNormal
+from gwhat.common.utils import find_unique_filename
 from gwhat.mplFigViewer3 import ImageViewer
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
@@ -204,6 +205,7 @@ class FigManagerBase(QWidget):
     """
     def __init__(self, figure_canvas, parent=None):
         super(FigManagerBase, self).__init__(parent)
+        self.savefig_dir = os.getcwd()
 
         self.figcanvas = figure_canvas()
         self.figviewer = ImageViewer()
@@ -234,9 +236,26 @@ class FigManagerBase(QWidget):
 
     def _select_savefig_path(self):
         """Open a dialog window to select a file to save the figure."""
-        pass
-        # filepath, _ = QFileDialog.getSaveFileName(
-        # self, 'Save file', dialog_dir, '*.csv')
+        figname = find_unique_filename(
+            osp.join(self.savefig_dir, self.figcanvas.FIGNAME) + ".pdf")
+        ffmat = "*.pdf;;*.svg;;*.png"
+
+        fname, ftype = QFileDialog.getSaveFileName(
+                self, "Save Figure", figname, ffmat)
+        if fname:
+            ftype = ftype.replace('*', '')
+            fname = fname if fname.endswith(ftype) else fname + ftype
+            self.savefig_dir = osp.dirname(fname)
+            self.save_figure_tofile(fname)
+
+    def save_figure_tofile(self, fname):
+        """Save the figure to fname."""
+        try:
+            self.figcanvas.figure.savefig(fname)
+        except PermissionError:
+            msg = "The file is in use by another application or user."
+            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+            self._select_savefig_path()
 
 
 class FigManagerWaterLevelGLUE(FigManagerBase):
@@ -325,7 +344,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
         Set the language of the text shown in the figure. This needs to be
         impemented in the derived class.
         """
-        pass
+        raise NotImplementedError
 
 
 class FigWaterLevelGLUE(FigCanvasBase):
@@ -333,6 +352,8 @@ class FigWaterLevelGLUE(FigCanvasBase):
     This is a graph that shows observed ground-water levels and GLUE 5/95
     predicted water levels.
     """
+
+    FIGNAME = "water_level_glue"
 
     def __init__(self, *args, **kargs):
         super(FigWaterLevelGLUE, self).__init__(*args, **kargs)
@@ -414,6 +435,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
     """
 
     MARGINS = [1, 0.15, 0.15, 1.1]  # left, top, right, bottom
+    FIGNAME = "gw_rechg_glue"
 
     def __init__(self, *args, **kargs):
         super(FigYearlyRechgGLUE, self).__init__(*args, **kargs)
