@@ -921,8 +921,8 @@ if __name__ == "__main__":
     import gwhat.projet.reader_projet as prd
     import sys
     # projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/Projects/Example/"
-    #                            "Example.gwt")
-    projet = prd.ProjetReader("C:/Users/jsgosselin/GWHAT/gwhat/"
+                                # "Example.gwt")
+    projet = prd.ProjetReader("C:/Users/User/gwhat/gwhat/"
                               "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
     wldset = projet.get_wldset(projet.wldsets[0])
 

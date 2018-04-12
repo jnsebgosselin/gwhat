@@ -11,6 +11,7 @@
 
 import csv
 import os
+import os.path as osp
 from shutil import rmtree
 
 
@@ -37,6 +38,20 @@ def calc_dist_from_coord(lat1, lon1, lat2, lon2):
     c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1-a))
 
     return r * c
+
+
+def find_unique_filename(filename):
+    """
+    Add an integer between () to the filename until a unique filename is found.
+    """
+    root, ext = osp.splitext(filename)
+    i = 1
+    while True:
+        if osp.exists(filename):
+            filename = root + ' (%d)' % i + ext
+            i += 1
+        else:
+            return filename
 
 
 def save_content_to_file(fname, fcontent):
