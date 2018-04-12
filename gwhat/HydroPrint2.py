@@ -12,6 +12,7 @@ from __future__ import division, unicode_literals
 
 import sys
 import os
+import os.path as osp
 
 # ---- Third party imports
 
@@ -36,6 +37,7 @@ from gwhat.colors2 import ColorsReader, ColorsSetupWin
 from gwhat.common import QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
+from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
 
 
@@ -708,21 +710,29 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def select_save_path(self):
         """
-        Opens a dialog which allows to select a file path where the hydrograph
-        figure can be saved.
+        Open a dialog where the user can select a file name to save the
+        hydrograph.
         """
-        dialog_dir = os.path.join(self.save_fig_dir,
-                                  'hydrograph_%s' % self.wldset['Well'])
+        if self.wldset is None:
+            return
 
-        dialog = QFileDialog()
-        fname, ftype = dialog.getSaveFileName(
-                self, "Save Figure", dialog_dir, '*.pdf;;*.svg')
-        ftype = ftype.replace('*', '')
+        ffmat = "*.pdf;;*.svg;;*.png"
+        fname = find_unique_filename(osp.join(
+            self.save_fig_dir, 'hydrograph_%s.pdf' % self.wldset['Well']))
+
+        fname, ftype = QFileDialog.getSaveFileName(
+            self, "Save Figure", fname, ffmat)
         if fname:
-            if not fname.endswith(ftype):
-                fname = fname + ftype
+            ftype = ftype.replace('*', '')
+            fname = fname if fname.endswith(ftype) else fname + ftype
             self.save_fig_dir = os.path.dirname(fname)
-            self.save_figure(fname)
+
+            try:
+                self.save_figure(fname)
+            except PermissionError:
+                msg = "The file is in use by another application or user."
+                QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+                self.select_save_path()
 
     def save_figure(self, fname):
         """Save the hydrograph figure in a file."""
