@@ -710,8 +710,8 @@ class HydroprintGUI(myqt.DialogWindow):
 
     def select_save_path(self):
         """
-        Opens a dialog which allows to select a file path where the hydrograph
-        figure can be saved.
+        Open a dialog where the user can select a file name to save the
+        hydrograph.
         """
         dialog_dir = os.path.join(self.save_fig_dir,
                                   'hydrograph_%s' % self.wldset['Well'])
