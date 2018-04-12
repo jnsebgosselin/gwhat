@@ -713,14 +713,15 @@ class HydroprintGUI(myqt.DialogWindow):
         Open a dialog where the user can select a file name to save the
         hydrograph.
         """
-        dialog_dir = os.path.join(self.save_fig_dir,
-                                  'hydrograph_%s' % self.wldset['Well'])
         if self.wldset is None:
             return
 
-        dialog = QFileDialog()
-        fname, ftype = dialog.getSaveFileName(
-                self, "Save Figure", dialog_dir, '*.pdf;;*.svg')
+        ffmat = "*.pdf;;*.svg;;*.png"
+        fname = find_unique_filename(osp.join(
+            self.save_fig_dir, 'hydrograph_%s.pdf' % self.wldset['Well']))
+
+        fname, ftype = QFileDialog.getSaveFileName(
+            self, "Save Figure", fname, ffmat)
         if fname:
             ftype = ftype.replace('*', '')
             fname = fname if fname.endswith(ftype) else fname + ftype
