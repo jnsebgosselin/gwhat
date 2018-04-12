@@ -390,10 +390,15 @@ class DwnldWeatherWidget(QWidget):
 
     def btn_save_staList_isClicked(self):
         if self.staList_fname:
-            msg = 'Station list saved in %s' % self.staList_fname
-            self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
-            self.station_table.save_stationlist(self.staList_fname)
-            self.staList_isNotSaved = False
+            try:
+                self.station_table.save_stationlist(self.staList_fname)
+            except PermissionError:
+                msg = "The file is in use by another application or user."
+                QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+            else:
+                self.staList_isNotSaved = False
+                msg = 'Station list saved in %s' % self.staList_fname
+                self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
         else:
             self.btn_saveAs_staList_isClicked()
 
@@ -403,17 +408,21 @@ class DwnldWeatherWidget(QWidget):
                            self, "Save Weather Stations List", fname, '*.lst')
 
         if fname:
-            root, ext = os.path.splitext(fname)
-            if ext != ftype[1:]:
-                # Add a file extension if there is none
-                fname = fname + ftype[1:]
+            ftype = ftype.replace('*', '')
+            fname = fname if fname.endswith(ftype) else fname + ftype
 
-            self.station_table.save_stationlist(fname)
-            self.staList_fname = fname
-            self.staList_isNotSaved = False
+            try:
+                self.station_table.save_stationlist(fname)
+            except PermissionError:
+                msg = "The file is in use by another application or user."
+                QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+                self.btn_saveAs_staList_isClicked()
+            else:
+                self.staList_fname = fname
+                self.staList_isNotSaved = False
 
-            msg = 'Station list saved in %s' % fname
-            self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
+                msg = 'Station list saved in %s' % fname
+                self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
 
     # ---- Download process
 
