@@ -19,6 +19,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure as MPLFigure
 
 from PyQt5.QtCore import Qt
+from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
@@ -92,17 +93,12 @@ class FigureSetupPanel(QWidget):
     def fig_margins(self):
         return [self._spb_margins[loc].value() for loc in LOCS]
 
-    @property
-    def fig_language(self):
-        return self._cbb_language.currentText()
-
     def setup(self):
         """Setup the gui of the panel."""
         layout = QGridLayout(self)
 
         layout.addWidget(self._setup_figsize_grpbox(), 0, 0)
         layout.addWidget(self._setup_margins_grpbox(), 1, 0)
-        layout.addWidget(self._setup_language_grpbox(), 2, 0)
 
         layout.setRowStretch(layout.rowCount(), 100)
         layout.setContentsMargins(0, 0, 0, 0)
@@ -145,7 +141,9 @@ class FigureSetupPanel(QWidget):
 
         return grpbox
 
+    @QSlot()
     def _fig_size_changed(self):
+        """Handle when the size of the figure is changed by the user."""
         self.figcanvas.set_fig_size(
             self.fig_width, self.fig_height, units='IP')
 
@@ -175,30 +173,10 @@ class FigureSetupPanel(QWidget):
 
         return grpbox
 
+    @QSlot()
     def _margins_changed(self):
+        """Handle when one of the margin size is changed by the user."""
         self.figcanvas.set_axes_margins_inches(self.fig_margins)
-
-    def _setup_language_grpbox(self):
-        self._cbb_language = QComboBox()
-        self._cbb_language.setEditable(False)
-        self._cbb_language.setInsertPolicy(QComboBox.NoInsert)
-        self._cbb_language.addItems(LANGUAGES)
-        self._cbb_language.setCurrentIndex(1)
-        self._cbb_language.currentIndexChanged.connect(self._language_changed)
-        self._cbb_language.setToolTip(
-            "Set the language of the text shown in the figure.")
-
-        grp_lang = QWidget()
-        lay_lang = QGridLayout(grp_lang)
-        lay_lang.addWidget(QLabel('Language :'), 0, 0)
-        lay_lang.addWidget(self._cbb_language, 0, 1)
-        lay_lang.setSpacing(5)
-        lay_lang.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-
-        return grp_lang
-
-    def _language_changed(self):
-        self.figcanvas.set_fig_language(self.fig_language)
 
 
 class FigManagerBase(QWidget):
@@ -236,9 +214,11 @@ class FigManagerBase(QWidget):
         self.toolbar = QToolBar()
         self.toolbar.addWidget(self.btn_save)
         self.toolbar.addSeparator()
-        self.toolbar.addWidget(self._setup_zoomwidget())
+        self.toolbar.addWidget(self._setup_zoom_widget())
+        self.toolbar.addSeparator()
+        self.toolbar.addWidget(self._setup_language_widget())
 
-    def _setup_zoomwidget(self):
+    def _setup_zoom_widget(self):
         """Setup a toolbar widget to zoom in and zoom out the figure."""
 
         btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
@@ -263,8 +243,41 @@ class FigManagerBase(QWidget):
         zoom_pan.addWidget(btn_zoom_out, 0, 0)
         zoom_pan.addWidget(btn_zoom_in, 0, 1)
         zoom_pan.addWidget(self.zoom_disp, 0, 2)
+        zoom_pan.setContentsMargins(5, 0, 5, 0)  # (L, T, R, B)
 
         return zoom_pan
+
+    @property
+    def fig_language(self):
+        return self._cbb_language.currentText()
+
+    def _setup_language_widget(self):
+        """
+        Setup a toolbar widget to change the language of the text shown in the
+        figure.
+        """
+        self._cbb_language = QComboBox()
+        self._cbb_language.setEditable(False)
+        self._cbb_language.setInsertPolicy(QComboBox.NoInsert)
+        self._cbb_language.addItems(LANGUAGES)
+        self._cbb_language.setCurrentIndex(1)
+        self._cbb_language.currentIndexChanged.connect(self._language_changed)
+        self._cbb_language.setToolTip(
+            "Set the language of the text shown in the figure.")
+
+        grp_lang = QWidget()
+        lay_lang = QGridLayout(grp_lang)
+        lay_lang.addWidget(QLabel('Language :'), 0, 0)
+        lay_lang.addWidget(self._cbb_language, 0, 1)
+        lay_lang.setSpacing(5)
+        lay_lang.setContentsMargins(5, 0, 5, 0)  # (L, T, R, B)
+
+        return grp_lang
+
+    @QSlot()
+    def _language_changed(self):
+        """Handle when the language is changed by the user."""
+        self.figcanvas.set_fig_language(self.fig_language)
 
     def _select_savefig_path(self):
         """Open a dialog window to select a file to save the figure."""
