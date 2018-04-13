@@ -334,6 +334,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
     def set_axes_margins_inches(self, margins):
         """Set the margins of the figure axes in inches."""
+        self.MARGINS = margins
         fheight = self.figure.get_figheight()
         fwidth = self.figure.get_figwidth()
 
@@ -356,7 +357,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
             fw = fw / 2.54
             fh = fh / 2.54
         self.figure.set_size_inches(fw, fh)
-        self.sig_fig_changed.emit(self.figure)
+        self.set_axes_margins_inches(self.MARGINS)
 
     def set_fig_language(self, language):
         """
