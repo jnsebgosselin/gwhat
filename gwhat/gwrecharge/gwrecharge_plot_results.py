@@ -59,8 +59,9 @@ class FigureStackManager(QWidget):
         layout.addWidget(self.stack, 0, 0)
 
     def setup_stack(self):
-        self.fig_wl_glue = FigManagerWaterLevelGLUE(self)
-        self.fig_rechg_glue = FigManagerRechgGLUE(self)
+        self.fig_wl_glue = FigureManager(FigWaterLevelGLUE)
+        self.fig_rechg_glue = FigureManager(FigYearlyRechgGLUE)
+        self.fig_watbudg_glue = FigureManager(FigWaterBudgetGLUE)
 
         self.stack = QTabWidget()
         self.stack.addTab(self.fig_wl_glue, 'Hydrograph')
@@ -179,12 +180,12 @@ class FigureSetupPanel(QWidget):
         self.figcanvas.set_axes_margins_inches(self.fig_margins)
 
 
-class FigManagerBase(QWidget):
+class FigureManager(QWidget):
     """
     Abstract manager to show the results from GLUE.
     """
     def __init__(self, figure_canvas, parent=None):
-        super(FigManagerBase, self).__init__(parent)
+        super(FigureManager, self).__init__(parent)
         self.savefig_dir = os.getcwd()
 
         self.figcanvas = figure_canvas()
@@ -301,33 +302,6 @@ class FigManagerBase(QWidget):
             msg = "The file is in use by another application or user."
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             self._select_savefig_path()
-
-
-class FigManagerWaterLevelGLUE(FigManagerBase):
-    """
-    Figure manager with toolbar to show the results for the predicted
-    water level versus the observations.
-    """
-    def __init__(self, parent=None):
-        super(FigManagerWaterLevelGLUE, self).__init__(
-            FigWaterLevelGLUE, parent)
-
-    def plot_prediction(self, glue_data):
-        self.figcanvas.plot_prediction(glue_data)
-        self.figviewer.load_mpl_figure(self.figcanvas.figure)
-
-
-class FigManagerRechgGLUE(FigManagerBase):
-    """
-    Figure manager with a toolbar to show the results for the yearly
-    ground-water recharge and its uncertainty evaluated with GLUE.
-    """
-    def __init__(self, parent=None):
-        super(FigManagerRechgGLUE, self).__init__(FigYearlyRechgGLUE, parent)
-
-    def plot_recharge(self, data, Ymin0=None, Ymax0=None, yrs_range=None):
-        self.figcanvas.plot_recharge(data, Ymin0, Ymax0, yrs_range)
-        self.figviewer.load_mpl_figure(self.figcanvas.figure)
 
 
 # ---- Figure Canvas
