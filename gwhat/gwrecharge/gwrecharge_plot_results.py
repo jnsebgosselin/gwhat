@@ -719,8 +719,10 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         else:
             lg_labels = ['Total Precipitation', 'Recharge', 'Runoff',
                          'Real Evapotranspiration']
-        self.ax0.legend(lg_handles, lg_labels, loc=2, ncol=4, numpoints=1,
-                        fontsize=14, frameon=False)
+        self.ax0.legend(lg_handles, lg_labels, ncol=4, numpoints=1,
+                        bbox_to_anchor=[0, 1], loc='upper left',
+                        fontsize=14, frameon=False,
+                        handletextpad=0.2, borderaxespad=0.2, borderpad=0.2)
 
 
 class FigWaterLevelGLUE(FigCanvasBase):
@@ -844,9 +846,6 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ---- Xticks format
 
-        year_labels = ["'%s-'%s" % (str(y)[-2:], str(y+1)[-2:])
-                       for y in year_range]
-
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out', pad=1)
         ax0.set_xticks(year_range)
@@ -854,7 +853,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         # ----- ticks format
 
         if ymax0 is None:
-            ymax0 = np.ceil(np.max(glue95_yr)/100)*100 + 50
+            ymax0 = np.ceil(np.max(glue95_yr)/10)*10 + 50
         ymin0 = 0 if ymin0 is None else ymin0
         scale_yticks = 50 if np.max(glue95_yr) < 250 else 250
         scale_yticks_minor = 10 if np.max(glue95_yr) < 250 else 50
@@ -904,7 +903,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         lg_labels = ['Recharge (GLUE 50)', 'Recharge (GLUE 25/75)',
                      'Recharge (GLUE 5/95)']
         ax0.legend(lg_handles, lg_labels, ncol=3, fontsize=12, frameon=False,
-                   numpoints=1, loc='upper left', handletextpad=0.2)
+                   handletextpad=0.2, borderaxespad=0.2, borderpad=0.2,
+                   numpoints=1, bbox_to_anchor=[0, 1], loc='upper left')
         self.setup_yearly_avg_legend()
 
         self.sig_fig_changed.emit(self.figure)
