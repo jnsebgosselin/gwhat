@@ -108,9 +108,38 @@ class FigureSetupPanel(QWidget):
 
         layout.addWidget(self._setup_figsize_grpbox(), 0, 0)
         layout.addWidget(self._setup_margins_grpbox(), 1, 0)
+        layout.addWidget(self._setup_xaxis_grpbox(), 2, 0)
+        layout.addWidget(self._setup_yaxis_grpbox(), 3, 0)
 
         layout.setRowStretch(layout.rowCount(), 100)
         layout.setContentsMargins(0, 0, 0, 0)
+
+        self.figcanvas.sig_newfig_plotted.connect(self.update_from_setp)
+
+    def update_from_setp(self, setp):
+        self._spb_xmin.blockSignals(True)
+        self._spb_xmin.setValue(setp['xmin'])
+        self._spb_xmin.blockSignals(False)
+
+        self._spb_xmax.blockSignals(True)
+        self._spb_xmax.setValue(setp['xmax'])
+        self._spb_xmax.blockSignals(False)
+
+        self._spb_ymin.blockSignals(True)
+        self._spb_ymin.setValue(setp['ymin'])
+        self._spb_ymin.blockSignals(False)
+
+        self._spb_ymax.blockSignals(True)
+        self._spb_ymax.setValue(setp['ymax'])
+        self._spb_ymax.blockSignals(False)
+
+        self._spb_yscl.blockSignals(True)
+        self._spb_yscl.setValue(setp['yscl'])
+        self._spb_yscl.blockSignals(False)
+
+        self._spb_yscl_minor.blockSignals(True)
+        self._spb_yscl_minor.setValue(setp['yscl minor'])
+        self._spb_yscl_minor.blockSignals(False)
 
     def _setup_figsize_grpbox(self):
         """
@@ -186,6 +215,94 @@ class FigureSetupPanel(QWidget):
     def _margins_changed(self):
         """Handle when one of the margin size is changed by the user."""
         self.figcanvas.set_axes_margins_inches(self.fig_margins)
+
+    def _setup_xaxis_grpbox(self):
+        self._spb_xmin = QDoubleSpinBox()
+        self._spb_xmin.setValue(1900)
+        self._spb_xmin.setDecimals(0)
+        self._spb_xmin.setSingleStep(1)
+        self._spb_xmin.setRange(1900, 2100)
+        self._spb_xmin.setKeyboardTracking(False)
+        self._spb_xmin.valueChanged.connect(self._xaxis_changed)
+
+        self._spb_xmax = QDoubleSpinBox()
+        self._spb_xmax.setValue(1900)
+        self._spb_xmax.setDecimals(0)
+        self._spb_xmax.setSingleStep(1)
+        self._spb_xmax.setRange(1900, 2100)
+        self._spb_xmax.setKeyboardTracking(False)
+        self._spb_xmax.valueChanged.connect(self._xaxis_changed)
+
+        grpbox = QGroupBox("X-Axis :")
+        layout = QGridLayout(grpbox)
+
+        layout.addWidget(QLabel('min :'), 0, 0)
+        layout.addWidget(self._spb_xmin, 0, 2)
+        layout.addWidget(QLabel('max :'), 1, 0)
+        layout.addWidget(self._spb_xmax, 1, 2)
+
+        layout.setColumnStretch(1, 100)
+        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+
+        return grpbox
+
+    @QSlot()
+    def _xaxis_changed(self):
+        self.figcanvas.set_xlimits(
+            self._spb_xmin.value(), self._spb_xmax.value())
+
+    def _setup_yaxis_grpbox(self):
+        self._spb_ymin = QDoubleSpinBox()
+        self._spb_ymin.setDecimals(0)
+        self._spb_ymin.setSingleStep(50)
+        self._spb_ymin.setRange(0, 10000)
+        self._spb_ymin.setKeyboardTracking(False)
+        self._spb_ymin.valueChanged.connect(self._yaxis_changed)
+
+        self._spb_ymax = QDoubleSpinBox()
+        self._spb_ymax.setDecimals(0)
+        self._spb_ymax.setSingleStep(50)
+        self._spb_ymax.setRange(0, 10000)
+        self._spb_ymax.setKeyboardTracking(False)
+        self._spb_ymax.valueChanged.connect(self._yaxis_changed)
+
+        self._spb_yscl = QDoubleSpinBox()
+        self._spb_yscl.setDecimals(0)
+        self._spb_yscl.setSingleStep(50)
+        self._spb_yscl.setRange(10, 999)
+        self._spb_yscl.setKeyboardTracking(False)
+        self._spb_yscl.valueChanged.connect(self._yaxis_changed)
+
+        self._spb_yscl_minor = QDoubleSpinBox()
+        self._spb_yscl_minor.setDecimals(0)
+        self._spb_yscl_minor.setSingleStep(10)
+        self._spb_yscl_minor.setRange(10, 999)
+        self._spb_yscl_minor.setKeyboardTracking(False)
+        self._spb_yscl_minor.valueChanged.connect(self._yaxis_changed)
+
+        grpbox = QGroupBox("Y-Axis :")
+        layout = QGridLayout(grpbox)
+
+        layout.addWidget(QLabel('minimum :'), 0, 0)
+        layout.addWidget(self._spb_ymin, 0, 2)
+        layout.addWidget(QLabel('maximum :'), 1, 0)
+        layout.addWidget(self._spb_ymax, 1, 2)
+        layout.addWidget(QLabel('scale major :'), 2, 0)
+        layout.addWidget(self._spb_yscl, 2, 2)
+        layout.addWidget(QLabel('scale minor :'), 3, 0)
+        layout.addWidget(self._spb_yscl_minor, 3, 2)
+
+        layout.setColumnStretch(1, 100)
+        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+
+        return grpbox
+
+    @QSlot()
+    def _yaxis_changed(self):
+        self.figcanvas.set_ylimits(
+            self._spb_ymin.value(), self._spb_ymax.value(),
+            self._spb_yscl.value(), self._spb_yscl_minor.value()
+        )
 
 
 class FigureManager(QWidget):
@@ -319,12 +436,14 @@ class FigCanvasBase(FigureCanvasQTAgg):
     This is the base figure format to plot GLUE results.
     """
     sig_fig_changed = QSignal(MPLFigure)
+    sig_newfig_plotted = QSignal(dict)
 
     colors = {'dark grey': '0.65',
               'light grey': '0.85'}
 
     FWIDTH, FHEIGHT = 8.5, 5
     MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
+    setp = {}
 
     def __init__(self, language='English'):
         super(FigCanvasBase, self).__init__(mpl.figure.Figure())
@@ -372,7 +491,34 @@ class FigCanvasBase(FigureCanvasQTAgg):
         Set the language of the text shown in the figure. This needs to be
         impemented in the derived class.
         """
-        raise NotImplementedError
+        pass
+
+    def set_xlimits(self, xmin, xmax):
+        """Set the limits of the xaxis to the provided values."""
+        pass
+
+    def set_ylimits(self, ymin, ymax):
+        """Set the limits of the yaxis to the provided values."""
+        pass
+
+    def get_xlabel_xt(self, fontsize, rotation):
+        """
+        Calcul the horizontal translation that is required to align the top
+        right corner (before rotation) of the text box with the tick.
+        """
+        # Random text bbox height :
+        dummytxt = self.ax0.text(0.5, 0.5, 'some_dummy_text',
+                                 fontsize=fontsize, ha='right', va='top',
+                                 transform=self.ax0.transAxes)
+
+        renderer = self.get_renderer()
+        bbox = dummytxt.get_window_extent(renderer)
+        bbox = bbox.transformed(self.figure.dpi_scale_trans.inverted())
+        dx = bbox.height * np.sin(np.radians(45))
+
+        dummytxt.remove()
+        return dx
+
 
 class FigWaterBudgetGLUE(FigCanvasBase):
     FIGNAME = "water_budget_glue"
