@@ -29,8 +29,7 @@ from PyQt5.QtWidgets import (
 
 # ---- Imports: local
 
-from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue
-from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue_yearly_rechg
+from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue, calcul_glue_yearly
 from gwhat.common import icons, QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
 from gwhat.common.widgets import QFrameLayout
@@ -66,10 +65,20 @@ class FigureStackManager(QWidget):
         self.stack = QTabWidget()
         self.stack.addTab(self.fig_wl_glue, 'Hydrograph')
         self.stack.addTab(self.fig_rechg_glue, 'Recharge')
+        self.stack.addTab(self.fig_watbudg_glue, 'Water Budget')
 
     def plot_results(self, glue_data):
-        self.fig_wl_glue.plot_prediction(glue_data)
-        self.fig_rechg_glue.plot_recharge(glue_data)
+        p = [0.05, 0.25, 0.5, 0.75, 0.95]
+        glue_yrly = calcul_glue_yearly(glue_data, p)
+
+        self.fig_wl_glue.figcanvas.plot_prediction(glue_data)
+        self.fig_rechg_glue.figcanvas.plot_recharge(
+            glue_yrly['years'], glue_yrly['recharge'])
+        self.fig_watbudg_glue.figcanvas.plot_data(glue_yrly['years'],
+                                                  glue_yrly['precip'],
+                                                  glue_yrly['recharge'][:, 2],
+                                                  glue_yrly['evapo'][:, 2],
+                                                  glue_yrly['runoff'][:, 2])
 
 
 # ---- Figure Managers
@@ -79,7 +88,6 @@ class FigureSetupPanel(QWidget):
     def __init__(self, figcanvas, parent=None):
         super(FigureSetupPanel, self).__init__(parent)
         self.figcanvas = figcanvas
-        # self.setVisible(True)
         self.setup()
 
     @property
@@ -365,6 +373,200 @@ class FigCanvasBase(FigureCanvasQTAgg):
         impemented in the derived class.
         """
         raise NotImplementedError
+
+class FigWaterBudgetGLUE(FigCanvasBase):
+    FIGNAME = "water_budget_glue"
+    FWIDTH, FHEIGHT = 15, 7
+    MARGINS = [1, 0.25, 0.25, 1.1]
+    COLOR = [[0/255, 25/255, 51/255],
+             [0/255, 76/255, 153/255],
+             [0/255, 128/255, 255/255],
+             [102/255, 178/255, 255/255]]
+
+    def __init__(self, *args, **kargs):
+        super(FigWaterBudgetGLUE, self).__init__(*args, **kargs)
+        self.xticklabels = []
+        self.set_axes_labels()
+        self.setup_legend()
+
+    def plot_data(self, years, precip, rechg, evapo, runoff):
+        ax = self.ax0
+
+        # Axis range
+
+        nyrs = len(years)
+
+        # Setup xticks
+
+        ax.tick_params(axis='x', length=0, direction='out')
+        ax.tick_params(axis='x', which='minor', length=5, direction='out')
+
+        # Setup yticks
+
+        ax.yaxis.set_ticks_position('left')
+        ax.tick_params(axis='y', direction='out', gridOn=True, labelsize=14)
+        ax.tick_params(axis='y', direction='out', which='minor', gridOn=False)
+        ax.set_axisbelow(True)
+
+        # Setup axis range.
+
+        self.set_ylimits(0, np.ceil(np.max(precip)/100)*100, 250, 50)
+        self.set_xlimits(years[0], years[-1])
+
+        # set_ylimits must be called before set_xlimits because ymin is needed
+        # for the positioning of the xticklabels of the xaxis.
+
+        # Plot the data.
+
+        bwidth = 0.35
+        xpad = 1
+        xpad_left = mpl.transforms.ScaledTranslation(
+            -xpad/72, 0, self.figure.dpi_scale_trans)
+        xpad_right = mpl.transforms.ScaledTranslation(
+            xpad/72, 0, self.figure.dpi_scale_trans)
+
+        # Plot precipitation.
+        ax.bar(years-bwidth/2, precip, align='center', width=bwidth,
+               color=self.COLOR[0], edgecolor=None,
+               transform=ax.transData + xpad_left)
+
+        # Plot runoff.
+        var2plot = rechg + evapo + runoff
+        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
+               color=self.COLOR[3], edgecolor=None,
+               transform=ax.transData + xpad_right)
+
+        # Plot evapotranspiration.
+        var2plot = rechg + evapo
+        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
+               color=self.COLOR[2], edgecolor=None,
+               transform=ax.transData + xpad_right)
+
+        # Plot recharge.
+        var2plot = rechg
+        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
+               color=self.COLOR[1], edgecolor=None,
+               transform=ax.transData + xpad_right)
+
+        # Plot the text.
+
+        xpad_right = mpl.transforms.ScaledTranslation(
+            2*xpad/72, 0, self.figure.dpi_scale_trans)
+
+        for i in range(nyrs):
+            y = precip[i]/2
+            x = years[i] - bwidth/2
+            txt = '%d' % precip[i]
+            self.ax0.text(x, y, txt, color='white', va='center', ha='center',
+                          rotation=90, fontsize=10, clip_on=True,
+                          transform=ax.transData + xpad_left)
+
+            y = rechg[i]/2
+            x = years[i] + bwidth/2
+            txt = '%d' % rechg[i]
+            self.ax0.text(x, y, txt, color='white', va='center', ha='center',
+                          rotation=90, fontsize=10, clip_on=True,
+                          transform=ax.transData + xpad_right)
+
+            y = evapo[i]/2 + rechg[i]
+            x = years[i] + bwidth/2
+            txt = '%d' % evapo[i]
+            self.ax0.text(x, y, txt, color='black', va='center', ha='center',
+                          rotation=90, fontsize=10, clip_on=True,
+                          transform=ax.transData + xpad_right)
+
+            y = runoff[i]/2 + rechg[i] + evapo[i]
+            x = years[i] + bwidth/2
+            txt = '%d' % runoff[i]
+            self.ax0.text(x, y, txt, color='black', va='center', ha='center',
+                          rotation=90, fontsize=10, clip_on=True,
+                          transform=ax.transData + xpad_right)
+
+        self.sig_fig_changed.emit(self.figure)
+        self.sig_newfig_plotted.emit(self.setp)
+
+    def setup_xticklabels(self, year_range):
+        """Setup the year labels of the xaxis."""
+        # Remove currently plotted labels :
+        self.ax0.xaxis.set_ticklabels([])
+        for label in self.xticklabels:
+            label.remove()
+        self.xticklabels = []
+
+        # Draw the labels anew.
+        xlabels = ["'%s - '%s" % (str(y)[-2:], str(y+1)[-2:])
+                   for y in year_range]
+
+        xt = self.get_xlabel_xt(14, 45)
+        offset = mpl.transforms.ScaledTranslation(
+            xt, -2/72, self.figure.dpi_scale_trans)
+        for i in range(len(year_range)):
+            new_label = self.ax0.text(
+                year_range[i], self.setp['ymin'], xlabels[i], rotation=45,
+                va='top', ha='right', fontsize=14,
+                transform=self.ax0.transData + offset)
+
+            self.xticklabels.append(new_label)
+
+    def set_xlimits(self, xmin, xmax):
+        """Set the limits of the xaxis to the provided values."""
+        self.setp['xmin'], self.setp['xmax'] = xmin, xmax
+        self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
+
+        year_range = np.arange(xmin, xmax+1).astype(int)
+        self.setup_xticklabels(year_range)
+        self.ax0.set_xticks(year_range)
+        self.ax0.set_xticks(
+            np.hstack([year_range-0.5, year_range[-1] + 0.5]), minor=True)
+
+        self.sig_fig_changed.emit(self.figure)
+
+    def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
+        """Set the limits of the yaxis to the provided values."""
+        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
+        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
+
+        self.ax0.set_yticks(np.arange(ymin, ymax+1, yscl))
+        self.ax0.set_yticks(np.arange(ymin, ymax+1, yscl_minor), minor=True)
+        self.ax0.axis(ymin=ymin, ymax=ymax)
+
+        self.sig_fig_changed.emit(self.figure)
+
+    def set_fig_language(self, language):
+        """Set the language of the text shown in the figure."""
+        self.language = language
+        self.set_axes_labels()
+        self.setup_legend()
+        self.sig_fig_changed.emit(self.figure)
+
+    def set_axes_labels(self):
+        """
+        Set the text and position of the axes labels.
+        """
+        if self.language == 'French':
+            ylabel = "Colonne d'eau équivalente (mm)"
+            xlabel = ("Année Hydrologique (1er octobre d'une"
+                      " année au 30 septembre de l'année suivante)")
+        else:
+            ylabel = 'Equivalent Water (mm)'
+            xlabel = ("Hydrological Years (October 1st of one"
+                      " year to September 30th of the next)")
+        self.ax0.set_ylabel(ylabel, fontsize=16, labelpad=10)
+        self.ax0.set_xlabel(xlabel, fontsize=16, labelpad=50)
+
+    def setup_legend(self):
+        """Setup the legend of the graph."""
+        lg_handles = [
+            mpl.patches.Rectangle((0, 0), 1, 1, fc=self.COLOR[i], ec='none')
+            for i in range(4)]
+        if self.language == 'French':
+            lg_labels = ['Précipitations totales', 'Recharge', 'Ruissellement',
+                         'Évapotranspiration réelle']
+        else:
+            lg_labels = ['Total Precipitation', 'Recharge', 'Runoff',
+                         'Real Evapotranspiration']
+        self.ax0.legend(lg_handles, lg_labels, loc=2, ncol=4, numpoints=1,
+                        fontsize=14, frameon=False)
 
 
 class FigWaterLevelGLUE(FigCanvasBase):
