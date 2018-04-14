@@ -236,9 +236,9 @@ class FigureSetupPanel(QWidget):
         grpbox = QGroupBox("X-Axis :")
         layout = QGridLayout(grpbox)
 
-        layout.addWidget(QLabel('min :'), 0, 0)
+        layout.addWidget(QLabel('minimum :'), 0, 0)
         layout.addWidget(self._spb_xmin, 0, 2)
-        layout.addWidget(QLabel('max :'), 1, 0)
+        layout.addWidget(QLabel('maximum :'), 1, 0)
         layout.addWidget(self._spb_xmax, 1, 2)
 
         layout.setColumnStretch(1, 100)
