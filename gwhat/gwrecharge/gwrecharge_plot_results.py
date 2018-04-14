@@ -864,17 +864,19 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ---- Plot results
 
-        ax0.plot(year_range, glue50_yr, ls='--', color='0.35', zorder=100)
+        ax0.plot(year_range, glue50_yr, ls='-', lw=1, marker=None,
+                 color='black', zorder=300)
+        g50, = ax0.plot(year_range, glue50_yr, ls='none', marker='o',
+                        color='black', mew=1, mfc='White', mec='black', ms=6,
+                        zorder=300)
 
         yerr = [glue50_yr-glue05_yr, glue95_yr-glue50_yr]
-        herr = ax0.errorbar(year_range, glue50_yr, yerr=yerr,
-                            fmt='o', capthick=1, capsize=4, ecolor='0',
-                            elinewidth=1, mfc='White', mec='0', ms=5,
-                            markeredgewidth=1, zorder=200)
+        g0595 = ax0.errorbar(year_range, glue50_yr, yerr=yerr,
+                             fmt='none', capthick=1, capsize=4, ecolor='0',
+                             elinewidth=1, zorder=200)
 
-        h25 = ax0.plot(year_range, glue25_yr, color='red',
-                       dashes=[3, 5], alpha=0.65)
-        ax0.plot(year_range, glue75_yr, color='red', dashes=[3, 5], alpha=0.65)
+        g2575 = ax0.fill_between(year_range, glue25_yr, glue75_yr,
+                                 color="#FFCCCC")
 
         # ---- Axes labels
 
@@ -882,13 +884,11 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ----- Legend
 
-        lg_handles = [herr[0], herr[1], h25[0]]
-        lg_labels = ['Recharge (GLUE 50)', 'Recharge (GLUE 5/95)',
-                     'Recharge (GLUE 25/75)']
-
+        lg_handles = [g50, g2575, g0595]
+        lg_labels = ['Recharge (GLUE 50)', 'Recharge (GLUE 25/75)',
+                     'Recharge (GLUE 5/95)']
         ax0.legend(lg_handles, lg_labels, ncol=3, fontsize=12, frameon=False,
-                   numpoints=1, loc='upper left')
-
+                   numpoints=1, loc='upper left', handletextpad=0.2)
         self.setup_yearly_avg_legend()
 
         self.sig_fig_changed.emit(self.figure)
