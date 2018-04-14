@@ -554,19 +554,42 @@ def calcul_glue(data, p, varname='recharge'):
     return glue_dly
 
 
-def calcul_glue_yearly_rechg(data, p, year_limits=None):
-    glue_rechg_dly = calcul_glue(data, p, varname='recharge')
+def calcul_glue_yearly(data, p, year_limits=None):
+    times = np.array(data['Time']).astype(float)
     years = np.array(data['Year']).astype(int)
     months = np.array(data['Month']).astype(int)
 
-    if data['deltat'] > 0:
-        # Adjust time to take into account the time delay, which represents
-        # the percolation time of water through the unsaturated zone.
-        for i, t in enumerate(np.array(data['Time'])):
-            date = xldate_as_tuple(t + data['deltat'], 0)
-            years[i], months[i] = date[0], date[1]
+    glue_rechg_dly = calcul_glue(data, p, varname='recharge')
+    glue_evapo_dly = calcul_glue(data, p, varname='etr')
+    glue_runof_dly = calcul_glue(data, p, varname='ru')
+    precip_dly = data['Weather']['Ptot']
 
-    # Define the range of the years for which yearly recharge will be computed.
+    deltat = data['deltat']
+    if deltat > 0:
+        # We pad data with zeros at the beginning of the recharge array and
+        # at the end of the evapotranspiration and runoff array to take into
+        # account the time delta that represents the percolation time of
+        # water through the unsaturated zone.
+        zeros_pad = np.zeros((deltat, len(p)))
+        glue_rechg_dly = np.vstack([zeros_pad, glue_rechg_dly])
+        glue_evapo_dly = np.vstack([glue_evapo_dly, zeros_pad])
+        glue_runof_dly = np.vstack([glue_runof_dly, zeros_pad])
+        precip_dly = np.hstack([precip_dly, np.zeros(len(p))])
+
+        # We extend the time and date arrays.
+        times2add = np.arange(deltat) + times[-1] + 1
+        years2add = []
+        months2add = []
+        for i, t in enumerate(times2add):
+            date = xldate_as_tuple(t, 0)
+            years2add.append(date[0])
+            months2add.append(date[1])
+        times = np.hstack([times, times2add])
+        years = np.hstack([times, years2add])
+        months = np.hstack([times, months2add])
+
+    # Define the range of the years for which yearly values of the water budget
+    # components will be computed.
 
     if year_limits:
         year_min = max(min(year_limits), np.min(years))
@@ -579,12 +602,13 @@ def calcul_glue_yearly_rechg(data, p, year_limits=None):
     # Convert daily to hydrological year. An hydrological year is defined from
     # October 1 to September 30 of the next year.
 
-    glue_rechg_yr = np.zeros((len(year_range), len(p)))
-    year_labels = []
+    glue_rechg_yly = np.zeros((len(year_range), len(p)))
+    glue_evapo_yly = np.zeros((len(year_range), len(p)))
+    glue_runof_yly = np.zeros((len(year_range), len(p)))
+    precip_yly = np.zeros(len(year_range))
     for i in range(len(year_range)):
         yr0 = year_range[i]
         yr1 = yr0 + 1
-        year_labels.append("'%s-'%s" % (str(yr0)[-2:], str(yr1)[-2:]))
 
         indexes = np.where((years == yr0) & (months == 10))[0]
         indx0 = 0 if len(indexes) == 0 else indexes[0]
@@ -592,9 +616,16 @@ def calcul_glue_yearly_rechg(data, p, year_limits=None):
         indexes = np.where((years == yr1) & (months == 9))[0]
         indx1 = len(years-1) if len(indexes) == 0 else indexes[-1]
 
-        glue_rechg_yr[i, :] = np.sum(glue_rechg_dly[indx0:indx1+1, :], axis=0)
+        glue_rechg_yly[i, :] = np.sum(glue_rechg_dly[indx0:indx1+1, :], axis=0)
+        glue_evapo_yly[i, :] = np.sum(glue_evapo_dly[indx0:indx1+1, :], axis=0)
+        glue_runof_yly[i, :] = np.sum(glue_runof_dly[indx0:indx1+1, :], axis=0)
+        precip_yly[i] = np.sum(precip_dly[indx0:indx1+1])
 
-    return year_labels, year_range, glue_rechg_yr
+    return {'years': year_range,
+            'recharge': glue_rechg_yly,
+            'evapo': glue_evapo_yly,
+            'runoff': glue_runof_yly,
+            'precip': precip_yly}
 
 
 # ---- if __name__ == '__main__'
