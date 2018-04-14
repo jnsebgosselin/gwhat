@@ -850,7 +850,6 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out', pad=1)
         ax0.set_xticks(year_range)
-        ax0.xaxis.set_ticklabels(year_labels, rotation=45, ha='right')
 
         # ----- ticks format
 
