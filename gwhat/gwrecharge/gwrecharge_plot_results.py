@@ -631,7 +631,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.sig_fig_changed.emit(self.figure)
         self.sig_newfig_plotted.emit(self.setp)
 
-    def setup_xticklabels(self, year_range):
+    def setup_xticklabels(self):
         """Setup the year labels of the xaxis."""
         # Remove currently plotted labels :
         self.ax0.xaxis.set_ticklabels([])
@@ -640,6 +640,8 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.xticklabels = []
 
         # Draw the labels anew.
+        year_range = np.arange(
+            self.setp['xmin'], self.setp['xmax']+1).astype(int)
         xlabels = ["'%s - '%s" % (str(y)[-2:], str(y+1)[-2:])
                    for y in year_range]
 
@@ -660,7 +662,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
 
         year_range = np.arange(xmin, xmax+1).astype(int)
-        self.setup_xticklabels(year_range)
+        self.setup_xticklabels()
         self.ax0.set_xticks(year_range)
         self.ax0.set_xticks(
             np.hstack([year_range-0.5, year_range[-1] + 0.5]), minor=True)
@@ -672,6 +674,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.setp['ymin'], self.setp['ymax'] = ymin, ymax
         self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
 
+        self.setup_xticklabels()
         self.ax0.set_yticks(np.arange(ymin, ymax+1, yscl))
         self.ax0.set_yticks(np.arange(ymin, ymax+1, yscl_minor), minor=True)
         self.ax0.axis(ymin=ymin, ymax=ymax)
