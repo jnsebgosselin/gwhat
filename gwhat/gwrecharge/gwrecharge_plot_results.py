@@ -378,7 +378,6 @@ class FigWaterLevelGLUE(FigCanvasBase):
     def __init__(self, *args, **kargs):
         super(FigWaterLevelGLUE, self).__init__(*args, **kargs)
         fig = self.figure
-
         ax = self.ax0
 
         # ---- Axes labels
@@ -419,6 +418,8 @@ class FigWaterLevelGLUE(FigCanvasBase):
         ax.legend(lg_handles, lg_labels, ncol=2, fontsize=12, frameon=False,
                   numpoints=1)
 
+        self.sig_fig_changed.emit(self.figure)
+
     def plot_prediction(self, glue_data):
         glue_dly = calcul_glue(glue_data, [0.05, 0.95], varname='hydrograph')
 
@@ -428,6 +429,16 @@ class FigWaterLevelGLUE(FigCanvasBase):
         self.plot_wlobs.set_ydata(wlobs)
         ax.fill_between(dates, glue_dly[:, -1]/1000, glue_dly[:, 0]/1000,
                         facecolor='0.85', lw=1, edgecolor='0.65', zorder=0)
+        self.sig_fig_changed.emit(self.figure)
+
+    def set_xlimits(self, xmin, xmax):
+        """Set the limits of the xaxis to the provided values."""
+        pass
+
+    def set_ylimits(self, ymin, ymax, yscl=None, yscl_minor=None):
+        """Set the limits of the yaxis to the provided values."""
+        self.ax0.axis(ymin=ymin, ymax=ymax)
+        self.sig_fig_changed.emit(self.figure)
 
     def set_fig_language(self, language):
         """
