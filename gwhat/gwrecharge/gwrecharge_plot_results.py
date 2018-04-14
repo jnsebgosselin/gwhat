@@ -459,17 +459,11 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def __init__(self, *args, **kargs):
         super(FigYearlyRechgGLUE, self).__init__(*args, **kargs)
-
-        # ---- Customize Ax0
-
         self.ax0.set_axisbelow(True)
 
-    def plot_recharge(self, data, Ymin0=None, Ymax0=None, year_limits=None):
+    def plot_recharge(self, year_range, glue_rechg_yr, ymin0=None, ymax0=None,
+                      year_limits=None):
         ax0 = self.ax0
-
-        p = [0.05, 0.25, 0.5, 0.75, 0.95]
-        year_labels, year_range, glue_rechg_yr = calcul_glue_yearly_rechg(
-            data, p, year_limits)
 
         glue95_yr = glue_rechg_yr[:, -1]
         glue05_yr = glue_rechg_yr[:, 0]
@@ -480,17 +474,10 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.glue_year_rechg_avg = tuple(
             np.mean(glue_rechg_yr[:, i]) for i in range(5))
 
-        # ---- Axis range
-
-        Xmin0 = min(year_range)-1
-        Xmax0 = max(year_range)+1
-
-        if Ymax0 is None:
-            Ymax0 = np.max(glue95_yr) + 50
-        if Ymin0 is None:
-            Ymin0 = 0
-
         # ---- Xticks format
+
+        year_labels = ["'%s-'%s" % (str(y)[-2:], str(y+1)[-2:])
+                       for y in year_range]
 
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out', pad=1)
@@ -499,22 +486,22 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ----- ticks format
 
-        scale_yticks = 25 if np.max(glue95_yr) < 250 else 100
-        scale_yticks_minor = 5 if np.max(glue95_yr) < 250 else 25
-        yticks = np.arange(0, 2*Ymax0+1, scale_yticks)
+        if ymax0 is None:
+            ymax0 = np.ceil(np.max(glue95_yr)/100)*100 + 50
+        ymin0 = 0 if ymin0 is None else ymin0
+        scale_yticks = 50 if np.max(glue95_yr) < 250 else 250
+        scale_yticks_minor = 10 if np.max(glue95_yr) < 250 else 50
 
         ax0.yaxis.set_ticks_position('left')
-        ax0.set_yticks(yticks)
         ax0.tick_params(axis='y', direction='out', gridOn=True, labelsize=12)
         ax0.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
                  linewidth=0.5, dashes=[0.5, 5])
-
-        ax0.set_yticks(np.arange(0, 2*Ymax0, scale_yticks_minor), minor=True)
         ax0.tick_params(axis='y', direction='out', which='minor', gridOn=False)
 
         # ---- Axis range
 
-        ax0.axis([Xmin0, Xmax0, Ymin0, Ymax0])
+        self.set_ylimits(ymin0, ymax0, scale_yticks, scale_yticks_minor)
+        self.set_xlimits(min(year_range), max(year_range))
 
         # ---- Plot results
 
@@ -545,11 +532,30 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         self.setup_yearly_avg_legend()
 
+        self.sig_fig_changed.emit(self.figure)
+        self.sig_newfig_plotted.emit(self.setp)
+
     def set_fig_language(self, language):
         """Set the language of the text shown in the figure."""
         self.language = language
         self.set_axes_labels()
         self.set_yearly_avg_legend_text()
+        self.sig_fig_changed.emit(self.figure)
+
+    def set_xlimits(self, xmin, xmax):
+        """Set the limits of the xaxis to the provided values."""
+        self.setp['xmin'], self.setp['xmax'] = xmin, xmax
+        self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
+        self.sig_fig_changed.emit(self.figure)
+
+    def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
+        """Set the limits of the yaxis to the provided values."""
+        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
+        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
+
+        self.ax0.set_yticks(np.arange(0, 2*ymax+1, yscl))
+        self.ax0.set_yticks(np.arange(0, 2*ymax, yscl_minor), minor=True)
+        self.ax0.axis(ymin=ymin, ymax=ymax)
         self.sig_fig_changed.emit(self.figure)
 
     def set_axes_labels(self):
