@@ -556,11 +556,16 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
         # Setup axis range.
 
-        self.set_ylimits(0, np.ceil(np.max(precip)/100)*100, 250, 50)
-        self.set_xlimits(years[0], years[-1])
+        self.setp['xmin'] = years[0]
+        self.setp['xmax'] = years[-1]
+        self.setp['ymin'] = 0
+        self.setp['ymax'] = np.ceil(np.max(precip)/100)*100
+        self.setp['yscl'] = 250
+        self.setp['yscl_minor'] = 50
 
-        # set_ylimits must be called before set_xlimits because ymin is needed
-        # for the positioning of the xticklabels of the xaxis.
+        self.set_ylimits(self.setp['ymin'], self.setp['ymax'],
+                         self.setp['yscl'], self.setp['yscl_minor'])
+        self.set_xlimits(self.setp['xmin'], self.setp['xmax'])
 
         # Plot the data.
 
@@ -821,6 +826,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def __init__(self, *args, **kargs):
         super(FigYearlyRechgGLUE, self).__init__(*args, **kargs)
+        self.xticklabels = []
         self.ax0.set_axisbelow(True)
 
     def plot_recharge(self, year_range, glue_rechg_yr, ymin0=None, ymax0=None,
@@ -862,8 +868,16 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ---- Axis range
 
-        self.set_ylimits(ymin0, ymax0, scale_yticks, scale_yticks_minor)
-        self.set_xlimits(min(year_range), max(year_range))
+        self.setp['xmin'] = min(year_range)
+        self.setp['xmax'] = max(year_range)
+        self.setp['ymin'] = ymin0
+        self.setp['ymax'] = ymax0
+        self.setp['yscl'] = scale_yticks
+        self.setp['yscl_minor'] = scale_yticks_minor
+
+        self.set_ylimits(self.setp['ymin'], self.setp['ymax'],
+                         self.setp['yscl'], self.setp['yscl_minor'])
+        self.set_xlimits(self.setp['xmin'], self.setp['xmax'])
 
         # ---- Plot results
 
@@ -904,9 +918,36 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.set_yearly_avg_legend_text()
         self.sig_fig_changed.emit(self.figure)
 
+    def setup_xticklabels(self):
+        """Setup the year labels of the xaxis."""
+        xticks_labels_fs = 12
+        # Remove currently plotted labels :
+        self.ax0.xaxis.set_ticklabels([])
+        for label in self.xticklabels:
+            label.remove()
+        self.xticklabels = []
+
+        # Draw the labels anew.
+        year_range = np.arange(
+            self.setp['xmin'], self.setp['xmax']+1).astype(int)
+        xlabels = ["'%s - '%s" % (str(y)[-2:], str(y+1)[-2:])
+                   for y in year_range]
+
+        xt = self.get_xlabel_xt(xticks_labels_fs, 45)
+        offset = mpl.transforms.ScaledTranslation(
+            xt, -4/72, self.figure.dpi_scale_trans)
+        for i in range(len(year_range)):
+            new_label = self.ax0.text(
+                year_range[i], self.setp['ymin'], xlabels[i], rotation=45,
+                va='top', ha='right', fontsize=xticks_labels_fs,
+                transform=self.ax0.transData + offset)
+
+            self.xticklabels.append(new_label)
+
     def set_xlimits(self, xmin, xmax):
         """Set the limits of the xaxis to the provided values."""
         self.setp['xmin'], self.setp['xmax'] = xmin, xmax
+        self.setup_xticklabels()
         self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
         self.sig_fig_changed.emit(self.figure)
 
@@ -915,6 +956,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.setp['ymin'], self.setp['ymax'] = ymin, ymax
         self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
 
+        self.setup_xticklabels()
         self.ax0.set_yticks(np.arange(0, 2*ymax+1, yscl))
         self.ax0.set_yticks(np.arange(0, 2*ymax, yscl_minor), minor=True)
         self.ax0.axis(ymin=ymin, ymax=ymax)
@@ -931,7 +973,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
             xlabl = ("Hydrological Years (October 1st of one "
                      "year to September 30th of the next)")
         self.ax0.set_ylabel(ylabl, fontsize=16, labelpad=15)
-        self.ax0.set_xlabel(xlabl, fontsize=16, labelpad=20)
+        self.ax0.set_xlabel(xlabl, fontsize=16, labelpad=50)
 
     def setup_yearly_avg_legend(self):
         """Setup the yearly average legend."""
