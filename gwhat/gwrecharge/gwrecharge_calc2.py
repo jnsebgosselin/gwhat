@@ -564,7 +564,7 @@ def calcul_glue_yearly(data, p, year_limits=None):
     glue_runof_dly = calcul_glue(data, p, varname='ru')
     precip_dly = data['Weather']['Ptot']
 
-    deltat = data['deltat']
+    deltat = int(data['deltat'])
     if deltat > 0:
         # We pad data with zeros at the beginning of the recharge array and
         # at the end of the evapotranspiration and runoff array to take into
@@ -585,8 +585,8 @@ def calcul_glue_yearly(data, p, year_limits=None):
             years2add.append(date[0])
             months2add.append(date[1])
         times = np.hstack([times, times2add])
-        years = np.hstack([times, years2add])
-        months = np.hstack([times, months2add])
+        years = np.hstack([years, years2add])
+        months = np.hstack([months, months2add])
 
     # Define the range of the years for which yearly values of the water budget
     # components will be computed.
