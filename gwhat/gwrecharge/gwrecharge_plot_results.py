@@ -23,8 +23,8 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
-    QFileDialog, QGroupBox, QLabel, QMessageBox, QSpinBox, QTabWidget,
-    QToolBar, QWidget)
+    QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
+    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget)
 
 
 # ---- Imports: local
@@ -58,9 +58,22 @@ class FigureStackManager(QWidget):
         layout.addWidget(self.stack, 0, 0)
 
     def setup_stack(self):
-        self.fig_wl_glue = FigureManager(FigWaterLevelGLUE)
-        self.fig_rechg_glue = FigureManager(FigYearlyRechgGLUE)
-        self.fig_watbudg_glue = FigureManager(FigWaterBudgetGLUE)
+        self.fig_wl_glue = FigManagerBase(
+            FigWaterLevelGLUE,
+            setp_panels=[FigSizePanel(),
+                         MarginSizePanel()])
+        self.fig_rechg_glue = FigManagerBase(
+            FigYearlyRechgGLUE,
+            setp_panels=[FigSizePanel(),
+                         MarginSizePanel(),
+                         YAxisOptPanel(),
+                         YearLimitsPanel()])
+        self.fig_watbudg_glue = FigManagerBase(
+            FigWaterBudgetGLUE,
+            setp_panels=[FigSizePanel(),
+                         MarginSizePanel(),
+                         YAxisOptPanel(),
+                         YearLimitsPanel()])
 
         self.stack = QTabWidget()
         self.stack.addTab(self.fig_wl_glue, 'Hydrograph')
@@ -81,14 +94,138 @@ class FigureStackManager(QWidget):
                                                   glue_yrly['runoff'][:, 2])
 
 
-# ---- Figure Managers
+# ---- Figure setp panels
 
-class FigureSetupPanel(QWidget):
+class FigSetpPanelManager(QWidget):
+    """
+    A widget that hold the panels that contains widget to setup the figure
+    layout.
+    """
 
     def __init__(self, figcanvas, parent=None):
-        super(FigureSetupPanel, self).__init__(parent)
-        self.figcanvas = figcanvas
+        super(FigSetpPanelManager, self).__init__(parent)
+        self.figsetp_panels = []
+        self.set_figcanvas(figcanvas)
         self.setup()
+
+    def setup(self):
+        """Setup the main layout of the widget."""
+        self.view = QWidget()
+
+        scrollarea = QScrollArea()
+        scrollarea.setWidget(self.view)
+        scrollarea.setWidgetResizable(True)
+        scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+
+        # This is required to avoid a "RuntimeError: no access to protected
+        # functions or signals for objects not created from Python" in Linux.
+        scrollarea.setVerticalScrollBar(QScrollBar())
+
+        self.scene = QGridLayout(self.view)
+        self.scene.setColumnStretch(1, 100)
+
+        layout = QGridLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
+        layout.addWidget(scrollarea)
+
+    def set_figcanvas(self, figcanvas):
+        """Set the namespace for the FigureCanvas."""
+        self.figcanvas = figcanvas
+
+    def add_figsetp_panel(self, figsetp_panel):
+        self.figsetp_panels.append(figsetp_panel)
+        figsetp_panel.register_figcanvas(self.figcanvas)
+
+        self.scene.setRowStretch(self.scene.rowCount()-1, 0)
+        self.scene.addWidget(figsetp_panel, self.scene.rowCount()-1, 1)
+        self.scene.setRowStretch(self.scene.rowCount(), 100)
+
+
+class SetpPanelBase(QWidget):
+    def __init__(self, parent=None):
+        super(SetpPanelBase, self).__init__(parent)
+        layout = QGridLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+    def register_figcanvas(self, figcanvas):
+        self.figcanvas = figcanvas
+        figcanvas.sig_newfig_plotted.connect(self.update_from_setp)
+
+
+class MarginSizePanel(SetpPanelBase):
+    def __init__(self, parent=None):
+        super(MarginSizePanel, self).__init__(parent)
+        self.setup()
+
+    def setup(self):
+        """Setup the gui of the panel."""
+        self.layout().addWidget(self._setup_margins_grpbox())
+        self.layout().setRowStretch(self.layout().rowCount(), 100)
+
+    @property
+    def fig_margins(self):
+        return [self._spb_margins[loc].value() for loc in LOCS]
+
+    def _setup_margins_grpbox(self):
+        """
+        Setup a group box with spin boxes that allows to set the figure
+        margins size in inches.
+        """
+        grpbox = QGroupBox("Margins Size :")
+        layout = QGridLayout(grpbox)
+
+        self._spb_margins = {}
+        for row, loc in enumerate(LOCS):
+            self._spb_margins[loc] = QDoubleSpinBox()
+            self._spb_margins[loc].setSingleStep(0.05)
+            self._spb_margins[loc].setMinimum(0)
+            self._spb_margins[loc].setSuffix('  in')
+            self._spb_margins[loc].setAlignment(Qt.AlignCenter)
+            self._spb_margins[loc].setKeyboardTracking(False)
+            self._spb_margins[loc].valueChanged.connect(self._margins_changed)
+
+            layout.addWidget(QLabel("%s :" % loc), row, 0)
+            layout.addWidget(self._spb_margins[loc], row, 2)
+        layout.setColumnStretch(1, 100)
+        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+
+        return grpbox
+
+    @QSlot()
+    def _margins_changed(self):
+        """Handle when one of the margin size is changed by the user."""
+        self.figcanvas.set_axes_margins_inches(self.fig_margins)
+
+    @QSlot(dict)
+    def update_from_setp(self, setp):
+        self._spb_margins['left'].blockSignals(True)
+        self._spb_margins['left'].setValue(setp['left margin'])
+        self._spb_margins['left'].blockSignals(False)
+
+        self._spb_margins['right'].blockSignals(True)
+        self._spb_margins['right'].setValue(setp['right margin'])
+        self._spb_margins['right'].blockSignals(False)
+
+        self._spb_margins['top'].blockSignals(True)
+        self._spb_margins['top'].setValue(setp['top margin'])
+        self._spb_margins['top'].blockSignals(False)
+
+        self._spb_margins['bottom'].blockSignals(True)
+        self._spb_margins['bottom'].setValue(setp['bottom margin'])
+        self._spb_margins['bottom'].blockSignals(False)
+
+
+class FigSizePanel(SetpPanelBase):
+
+    def __init__(self, parent=None):
+        super(FigSizePanel, self).__init__(parent)
+        self.setup()
+
+    def setup(self):
+        """Setup the gui of the panel."""
+        self.layout().addWidget(self._setup_figsize_grpbox())
+        self.layout().setRowStretch(self.layout().rowCount(), 100)
 
     @property
     def fig_width(self):
@@ -98,48 +235,15 @@ class FigureSetupPanel(QWidget):
     def fig_height(self):
         return self._spb_fheight.value()
 
-    @property
-    def fig_margins(self):
-        return [self._spb_margins[loc].value() for loc in LOCS]
-
-    def setup(self):
-        """Setup the gui of the panel."""
-        layout = QGridLayout(self)
-
-        layout.addWidget(self._setup_figsize_grpbox(), 0, 0)
-        layout.addWidget(self._setup_margins_grpbox(), 1, 0)
-        layout.addWidget(self._setup_xaxis_grpbox(), 2, 0)
-        layout.addWidget(self._setup_yaxis_grpbox(), 3, 0)
-
-        layout.setRowStretch(layout.rowCount(), 100)
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        self.figcanvas.sig_newfig_plotted.connect(self.update_from_setp)
-
+    @QSlot(dict)
     def update_from_setp(self, setp):
-        self._spb_xmin.blockSignals(True)
-        self._spb_xmin.setValue(setp['xmin'])
-        self._spb_xmin.blockSignals(False)
+        self._spb_fwidth.blockSignals(True)
+        self._spb_fwidth.setValue(setp['fwidth'])
+        self._spb_fwidth.blockSignals(False)
 
-        self._spb_xmax.blockSignals(True)
-        self._spb_xmax.setValue(setp['xmax'])
-        self._spb_xmax.blockSignals(False)
-
-        self._spb_ymin.blockSignals(True)
-        self._spb_ymin.setValue(setp['ymin'])
-        self._spb_ymin.blockSignals(False)
-
-        self._spb_ymax.blockSignals(True)
-        self._spb_ymax.setValue(setp['ymax'])
-        self._spb_ymax.blockSignals(False)
-
-        self._spb_yscl.blockSignals(True)
-        self._spb_yscl.setValue(setp['yscl'])
-        self._spb_yscl.blockSignals(False)
-
-        self._spb_yscl_minor.blockSignals(True)
-        self._spb_yscl_minor.setValue(setp['yscl minor'])
-        self._spb_yscl_minor.blockSignals(False)
+        self._spb_fheight.blockSignals(True)
+        self._spb_fheight.setValue(setp['fheight'])
+        self._spb_fheight.blockSignals(False)
 
     def _setup_figsize_grpbox(self):
         """
@@ -153,7 +257,6 @@ class FigureSetupPanel(QWidget):
         self._spb_fwidth.setSuffix('  in')
         self._spb_fwidth.setAlignment(Qt.AlignCenter)
         self._spb_fwidth.setKeyboardTracking(False)
-        self._spb_fwidth.setValue(self.figcanvas.FWIDTH)
         self._spb_fwidth.valueChanged.connect(self._fig_size_changed)
 
         self._spb_fheight = QDoubleSpinBox()
@@ -163,7 +266,6 @@ class FigureSetupPanel(QWidget):
         self._spb_fheight.setSuffix('  in')
         self._spb_fheight.setAlignment(Qt.AlignCenter)
         self._spb_fheight.setKeyboardTracking(False)
-        self._spb_fheight.setValue(self.figcanvas.FHEIGHT)
         self._spb_fheight.valueChanged.connect(self._fig_size_changed)
 
         grpbox = QGroupBox("Figure Size :")
@@ -185,36 +287,27 @@ class FigureSetupPanel(QWidget):
         self.figcanvas.set_fig_size(
             self.fig_width, self.fig_height, units='IP')
 
-    def _setup_margins_grpbox(self):
-        """
-        Setup a group box with spin boxes that allows to set the figure
-        margins size in inches.
-        """
-        grpbox = QGroupBox("Margins Size :")
-        layout = QGridLayout(grpbox)
 
-        self._spb_margins = {}
-        for row, loc in enumerate(LOCS):
-            self._spb_margins[loc] = QDoubleSpinBox()
-            self._spb_margins[loc].setSingleStep(0.05)
-            self._spb_margins[loc].setMinimum(0.05)
-            self._spb_margins[loc].setSuffix('  in')
-            self._spb_margins[loc].setAlignment(Qt.AlignCenter)
-            self._spb_margins[loc].setKeyboardTracking(False)
-            self._spb_margins[loc].setValue(self.figcanvas.MARGINS[row])
-            self._spb_margins[loc].valueChanged.connect(self._margins_changed)
+class YearLimitsPanel(SetpPanelBase):
 
-            layout.addWidget(QLabel("%s :" % loc), row, 0)
-            layout.addWidget(self._spb_margins[loc], row, 2)
-        layout.setColumnStretch(1, 100)
-        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+    def __init__(self, parent=None):
+        super(YearLimitsPanel, self).__init__(parent)
+        self.setup()
 
-        return grpbox
+    def setup(self):
+        """Setup the gui of the panel."""
+        self.layout().addWidget(self._setup_xaxis_grpbox())
+        self.layout().setRowStretch(self.layout().rowCount(), 100)
 
-    @QSlot()
-    def _margins_changed(self):
-        """Handle when one of the margin size is changed by the user."""
-        self.figcanvas.set_axes_margins_inches(self.fig_margins)
+    @QSlot(dict)
+    def update_from_setp(self, setp):
+        self._spb_xmin.blockSignals(True)
+        self._spb_xmin.setValue(setp['xmin'])
+        self._spb_xmin.blockSignals(False)
+
+        self._spb_xmax.blockSignals(True)
+        self._spb_xmax.setValue(setp['xmax'])
+        self._spb_xmax.blockSignals(False)
 
     def _setup_xaxis_grpbox(self):
         self._spb_xmin = QDoubleSpinBox()
@@ -250,6 +343,35 @@ class FigureSetupPanel(QWidget):
     def _xaxis_changed(self):
         self.figcanvas.set_xlimits(
             self._spb_xmin.value(), self._spb_xmax.value())
+
+
+class YAxisOptPanel(SetpPanelBase):
+    def __init__(self, parent=None):
+        super(YAxisOptPanel, self).__init__(parent)
+        self.setup()
+
+    def setup(self):
+        """Setup the gui of the panel."""
+        self.layout().addWidget(self._setup_yaxis_grpbox())
+        self.layout().setRowStretch(self.layout().rowCount(), 100)
+
+    @QSlot(dict)
+    def update_from_setp(self, setp):
+        self._spb_ymin.blockSignals(True)
+        self._spb_ymin.setValue(setp['ymin'])
+        self._spb_ymin.blockSignals(False)
+
+        self._spb_ymax.blockSignals(True)
+        self._spb_ymax.setValue(setp['ymax'])
+        self._spb_ymax.blockSignals(False)
+
+        self._spb_yscl.blockSignals(True)
+        self._spb_yscl.setValue(setp['yscl'])
+        self._spb_yscl.blockSignals(False)
+
+        self._spb_yscl_minor.blockSignals(True)
+        self._spb_yscl_minor.setValue(setp['yscl minor'])
+        self._spb_yscl_minor.blockSignals(False)
 
     def _setup_yaxis_grpbox(self):
         self._spb_ymin = QDoubleSpinBox()
@@ -305,25 +427,29 @@ class FigureSetupPanel(QWidget):
         )
 
 
-class FigureManager(QWidget):
+# ---- Figure managers
+
+class FigManagerBase(QWidget):
     """
     Abstract manager to show the results from GLUE.
     """
-    def __init__(self, figure_canvas, parent=None):
-        super(FigureManager, self).__init__(parent)
+    def __init__(self, figure_canvas, setp_panels=[], parent=None):
+        super(FigManagerBase, self).__init__(parent)
         self.savefig_dir = os.getcwd()
 
-        self.figcanvas = figure_canvas()
+        self.figcanvas = figure_canvas(setp={})
         self.figviewer = ImageViewer()
         self.figcanvas.sig_fig_changed.connect(self.figviewer.load_mpl_figure)
 
         self.setup_toolbar()
-        self.figsetp = FigureSetupPanel(self.figcanvas)
+        self.figsetp_manager = FigSetpPanelManager(self.figcanvas)
+        for setp_panel in setp_panels:
+            self.figsetp_manager.add_figsetp_panel(setp_panel)
 
         layout = QGridLayout(self)
-        layout.addWidget(self.figviewer, 0, 0)
-        layout.addWidget(self.toolbar, 1, 0)
-        layout.addWidget(self.figsetp, 0, 1, 2, 1)
+        layout.addWidget(self.figviewer, 1, 0)
+        layout.addWidget(self.toolbar, 0, 0, 1, 2)
+        layout.addWidget(self.figsetp_manager, 1, 1)
 
         layout.setColumnStretch(0, 100)
         layout.setRowStretch(0, 100)
@@ -429,12 +555,13 @@ class FigureManager(QWidget):
             self._select_savefig_path()
 
 
-# ---- Figure Canvas
+# ---- Figure canvas
 
 class FigCanvasBase(FigureCanvasQTAgg):
     """
     This is the base figure format to plot GLUE results.
     """
+    FIGNAME = "figure_name"
     sig_fig_changed = QSignal(MPLFigure)
     sig_newfig_plotted = QSignal(dict)
 
@@ -443,36 +570,38 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
     FWIDTH, FHEIGHT = 8.5, 5
     MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
-    setp = {}
 
-    def __init__(self, language='English'):
+    def __init__(self, setp={}):
         super(FigCanvasBase, self).__init__(mpl.figure.Figure())
-
-        self.language = language
-
-        self.figure.set_size_inches(self.FWIDTH, self.FHEIGHT)
-        self.figure.patch.set_facecolor('white')
-
-        self.ax0 = ax0 = self.figure.add_axes([0, 0, 1, 1])
-        self.set_axes_margins_inches(self.MARGINS)
-        ax0.patch.set_visible(False)
+        self.ax0 = self.figure.add_axes([0, 0, 1, 1])
+        self.ax0.patch.set_visible(False)
         for axis in ['top', 'bottom', 'left', 'right']:
-            ax0.spines[axis].set_linewidth(0.5)
+            self.ax0.spines[axis].set_linewidth(0.5)
 
-    def set_axes_margins_inches(self, margins):
-        """Set the margins of the figure axes in inches."""
-        self.MARGINS = margins
-        fheight = self.figure.get_figheight()
-        fwidth = self.figure.get_figwidth()
+        self.figure.patch.set_facecolor('white')
+        self.set_figure_setp(setp)
 
-        left = margins[0]/fwidth
-        top = margins[1]/fheight
-        right = margins[2]/fwidth
-        bottom = margins[3]/fheight
+    def set_figure_setp(self, setp):
+        self.setp = setp
+        if 'language' not in self.setp.keys():
+            self.setp['language'] = 'english'
 
-        self.ax0.set_position([left, bottom, 1-left-right, 1-top-bottom])
+        if 'fwidth' not in self.setp.keys():
+            self.setp['fwidth'] = self.FWIDTH
+        if 'fheight' not in self.setp.keys():
+            self.setp['fheight'] = self.FHEIGHT
 
-        self.sig_fig_changed.emit(self.figure)
+        if 'left margin' not in self.setp.keys():
+            self.setp['left margin'] = self.MARGINS[0]
+        if 'top margin' not in self.setp.keys():
+            self.setp['top margin'] = self.MARGINS[1]
+        if 'right margin' not in self.setp.keys():
+            self.setp['right margin'] = self.MARGINS[2]
+        if 'bottom margin' not in self.setp.keys():
+            self.setp['bottom margin'] = self.MARGINS[3]
+
+        self.figure.set_size_inches(self.setp['fwidth'], self.setp['fheight'])
+        self.refresh_margins()
 
     def set_fig_size(self, fw, fh, units='IP'):
         """
@@ -483,8 +612,27 @@ class FigCanvasBase(FigureCanvasQTAgg):
             # Convert values from cm to in.
             fw = fw / 2.54
             fh = fh / 2.54
+        self.setp['fwidth'], self.setp['fheight'] = fw, fh
         self.figure.set_size_inches(fw, fh)
-        self.set_axes_margins_inches(self.MARGINS)
+        self.refresh_margins()
+
+    def set_axes_margins_inches(self, margins):
+        """Set the margins of the figure axes in inches."""
+        self.setp['left margin'] = margins[0]
+        self.setp['top margin'] = margins[1]
+        self.setp['right margin'] = margins[2]
+        self.setp['bottom margin'] = margins[3]
+        self.refresh_margins()
+
+    def refresh_margins(self):
+        left = self.setp['left margin']/self.setp['fwidth']
+        top = self.setp['top margin']/self.setp['fheight']
+        right = self.setp['right margin']/self.setp['fwidth']
+        bottom = self.setp['bottom margin']/self.setp['fheight']
+        for ax in self.figure.axes:
+            ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
+
+        self.sig_fig_changed.emit(self.figure)
 
     def set_fig_language(self, language):
         """
@@ -523,14 +671,14 @@ class FigCanvasBase(FigureCanvasQTAgg):
 class FigWaterBudgetGLUE(FigCanvasBase):
     FIGNAME = "water_budget_glue"
     FWIDTH, FHEIGHT = 15, 7
-    MARGINS = [1, 0.25, 0.25, 1.1]
+    MARGINS = [1, 0.15, 0.15, 1.1]
     COLOR = [[0/255, 25/255, 51/255],
              [0/255, 76/255, 153/255],
              [0/255, 128/255, 255/255],
              [102/255, 178/255, 255/255]]
 
-    def __init__(self, *args, **kargs):
-        super(FigWaterBudgetGLUE, self).__init__(*args, **kargs)
+    def __init__(self, setp={}):
+        super(FigWaterBudgetGLUE, self).__init__(setp)
         self.xticklabels = []
         self.set_axes_labels()
         self.setup_legend()
@@ -688,7 +836,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
     def set_fig_language(self, language):
         """Set the language of the text shown in the figure."""
-        self.language = language
+        self.setp['language'] = language.lower()
         self.set_axes_labels()
         self.setup_legend()
         self.sig_fig_changed.emit(self.figure)
@@ -697,7 +845,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         """
         Set the text and position of the axes labels.
         """
-        if self.language == 'French':
+        if self.setp['language'] == 'french':
             ylabel = "Colonne d'eau équivalente (mm)"
             xlabel = ("Année Hydrologique (1er octobre d'une"
                       " année au 30 septembre de l'année suivante)")
@@ -713,7 +861,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         lg_handles = [
             mpl.patches.Rectangle((0, 0), 1, 1, fc=self.COLOR[i], ec='none')
             for i in range(4)]
-        if self.language == 'French':
+        if self.setp['language'] == 'french':
             lg_labels = ['Précipitations totales', 'Recharge', 'Ruissellement',
                          'Évapotranspiration réelle']
         else:
@@ -733,8 +881,8 @@ class FigWaterLevelGLUE(FigCanvasBase):
 
     FIGNAME = "water_level_glue"
 
-    def __init__(self, *args, **kargs):
-        super(FigWaterLevelGLUE, self).__init__(*args, **kargs)
+    def __init__(self, setp={}):
+        super(FigWaterLevelGLUE, self).__init__(setp)
         fig = self.figure
         ax = self.ax0
 
@@ -788,6 +936,7 @@ class FigWaterLevelGLUE(FigCanvasBase):
         ax.fill_between(dates, glue_dly[:, -1]/1000, glue_dly[:, 0]/1000,
                         facecolor='0.85', lw=1, edgecolor='0.65', zorder=0)
         self.sig_fig_changed.emit(self.figure)
+        self.sig_newfig_plotted.emit(self.setp)
 
     def set_xlimits(self, xmin, xmax):
         """Set the limits of the xaxis to the provided values."""
@@ -802,7 +951,7 @@ class FigWaterLevelGLUE(FigCanvasBase):
         """
         Set the language of the text shown in the figure.
         """
-        self.language = language
+        self.setp['language'] = language.lower()
         self.set_axes_labels()
         self.sig_fig_changed.emit(self.figure)
 
@@ -810,7 +959,7 @@ class FigWaterLevelGLUE(FigCanvasBase):
         """
         Set the text and position of the axes labels.
         """
-        if self.language == 'French':
+        if self.setp['language'] == 'french':
             xlabel = "Niveau d'eau (m sous la surface)"
         else:
             xlabel = 'Water Level (mbgs)'
@@ -826,8 +975,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
     MARGINS = [1, 0.15, 0.15, 1.1]  # left, top, right, bottom
     FIGNAME = "gw_rechg_glue"
 
-    def __init__(self, *args, **kargs):
-        super(FigYearlyRechgGLUE, self).__init__(*args, **kargs)
+    def __init__(self, setp={}):
+        super(FigYearlyRechgGLUE, self).__init__(setp)
         self.xticklabels = []
         self.ax0.set_axisbelow(True)
 
@@ -912,7 +1061,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def set_fig_language(self, language):
         """Set the language of the text shown in the figure."""
-        self.language = language
+        self.setp['language'] = language.lower()
         self.set_axes_labels()
         self.set_yearly_avg_legend_text()
         self.sig_fig_changed.emit(self.figure)
@@ -963,7 +1112,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def set_axes_labels(self):
         """Set the text and position of the axes labels."""
-        if self.language.lower() == 'french':
+        if self.setp['language'] == 'french':
             ylabl = "Recharge annuelle (mm/a)"
             xlabl = ("Années Hydrologiques (1er octobre d'une année "
                      "au 30 septembre de la suivante)")
@@ -985,7 +1134,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def set_yearly_avg_legend_text(self):
         """Set the text and position of for the yearly averages results."""
-        if self.language.lower() == 'french':
+        if self.setp['language'] == 'french':
             text = ("Recharge annuelle moyenne :\n"
                     "(GLUE 5) %d mm/a ; "
                     "(GLUE 25) %d mm/a ; "
