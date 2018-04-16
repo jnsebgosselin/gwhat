@@ -18,13 +18,13 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure as MPLFigure
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
     QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
-    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget)
+    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget, QStyle)
 
 
 # ---- Imports: local
