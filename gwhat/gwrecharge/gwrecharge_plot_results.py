@@ -215,6 +215,129 @@ class MarginSizePanel(SetpPanelBase):
         self._spb_margins['bottom'].blockSignals(False)
 
 
+class TextOptPanel(SetpPanelBase):
+    def __init__(self, parent=None):
+        super(TextOptPanel, self).__init__(parent)
+        self.setup()
+
+    def setup(self):
+        """Setup the gui of the panel."""
+        self.layout().addWidget(self._setup_textprop_grpbox())
+        self.layout().setRowStretch(self.layout().rowCount(), 100)
+
+    @QSlot(dict)
+    def update_from_setp(self, setp):
+        self._spb_xlabelsize.blockSignals(True)
+        self._spb_xlabelsize.setValue(setp['xlabel size'])
+        self._spb_xlabelsize.blockSignals(False)
+
+        self._spb_xticksize.blockSignals(True)
+        self._spb_xticksize.setValue(setp['xticks size'])
+        self._spb_xticksize.blockSignals(False)
+
+        self._spb_ylabelsize.blockSignals(True)
+        self._spb_ylabelsize.setValue(setp['ylabel size'])
+        self._spb_ylabelsize.blockSignals(False)
+
+        self._spb_ylabelsize.blockSignals(True)
+        self._spb_ylabelsize.setValue(setp['ylabel size'])
+        self._spb_ylabelsize.blockSignals(False)
+
+        self._spb_yticksize.blockSignals(True)
+        self._spb_yticksize.setValue(setp['yticks size'])
+        self._spb_yticksize.blockSignals(False)
+
+        self._spb_yticksize.blockSignals(True)
+        self._spb_legendsize.setValue(setp['legend size'])
+        self._spb_yticksize.blockSignals(False)
+
+        self._spb_notesize.blockSignals(True)
+        self._spb_notesize.setValue(setp['notes size'])
+        self._spb_notesize.blockSignals(False)
+
+    def _setup_textprop_grpbox(self):
+        """
+        Setup a group box with widgets that allows to set the figure
+        text properties.
+        """
+        self._spb_xlabelsize = QSpinBox()
+        self._spb_xlabelsize.setSingleStep(1)
+        self._spb_xlabelsize.setMinimum(1)
+        self._spb_xlabelsize.setAlignment(Qt.AlignCenter)
+        self._spb_xlabelsize.setKeyboardTracking(False)
+        self._spb_xlabelsize.valueChanged.connect(self._axes_labels_changed)
+
+        self._spb_xticksize = QSpinBox()
+        self._spb_xticksize.setSingleStep(1)
+        self._spb_xticksize.setMinimum(1)
+        self._spb_xticksize.setAlignment(Qt.AlignCenter)
+        self._spb_xticksize.setKeyboardTracking(False)
+        self._spb_xticksize.valueChanged.connect(self._ticks_changed)
+
+        self._spb_ylabelsize = QSpinBox()
+        self._spb_ylabelsize.setSingleStep(1)
+        self._spb_ylabelsize.setMinimum(1)
+        self._spb_ylabelsize.setAlignment(Qt.AlignCenter)
+        self._spb_ylabelsize.setKeyboardTracking(False)
+        self._spb_ylabelsize.valueChanged.connect(self._axes_labels_changed)
+
+        self._spb_yticksize = QSpinBox()
+        self._spb_yticksize.setSingleStep(1)
+        self._spb_yticksize.setMinimum(1)
+        self._spb_yticksize.setAlignment(Qt.AlignCenter)
+        self._spb_yticksize.setKeyboardTracking(False)
+        self._spb_yticksize.valueChanged.connect(self._ticks_changed)
+
+        self._spb_legendsize = QSpinBox()
+        self._spb_legendsize.setSingleStep(1)
+        self._spb_legendsize.setMinimum(1)
+        self._spb_legendsize.setAlignment(Qt.AlignCenter)
+        self._spb_legendsize.setKeyboardTracking(False)
+        self._spb_legendsize.valueChanged.connect(self._legend_changed)
+        
+        self._spb_notesize = QSpinBox()
+        self._spb_notesize.setSingleStep(1)
+        self._spb_notesize.setMinimum(1)
+        self._spb_notesize.setAlignment(Qt.AlignCenter)
+        self._spb_notesize.setKeyboardTracking(False)
+        self._spb_notesize.valueChanged.connect(self._notes_changed)
+
+        grpbox = QGroupBox("Text Properties :")
+        layout = QGridLayout(grpbox)
+
+        layout.addWidget(QLabel('xlabel size:'), 0, 0)
+        layout.addWidget(self._spb_xlabelsize, 0, 2)
+        layout.addWidget(QLabel('xticks size:'), 1, 0)
+        layout.addWidget(self._spb_xticksize, 1, 2)
+        layout.addWidget(QLabel('ylabel size:'), 2, 0)
+        layout.addWidget(self._spb_ylabelsize, 2, 2)
+        layout.addWidget(QLabel('yticks size:'), 3, 0)
+        layout.addWidget(self._spb_yticksize, 3, 2)
+        layout.addWidget(QLabel('legend size:'), 4, 0)
+        layout.addWidget(self._spb_legendsize, 4, 2)
+        layout.addWidget(QLabel('notes size:'), 5, 0)
+        layout.addWidget(self._spb_notesize, 5, 2)
+
+        layout.setColumnStretch(1, 100)
+        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+
+        return grpbox
+
+    def _legend_changed(self):
+        self.figcanvas.set_legend_fontsize(self._spb_legendsize.value())
+
+    def _axes_labels_changed(self):
+        self.figcanvas.set_axes_labels_size(
+            self._spb_xlabelsize.value(), self._spb_ylabelsize.value())
+
+    def _ticks_changed(self):
+        self.figcanvas.set_tick_labels_size(
+            self._spb_xticksize.value(), self._spb_yticksize.value())
+        
+    def _notes_changed(self):
+        self.figcanvas.set_notes_size(self._spb_notesize.value())
+
+
 class FigSizePanel(SetpPanelBase):
 
     def __init__(self, parent=None):
