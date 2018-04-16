@@ -111,14 +111,14 @@ class FigSetpPanelManager(QWidget):
         """Setup the main layout of the widget."""
         self.view = QWidget()
 
-        scrollarea = QScrollArea()
-        scrollarea.setWidget(self.view)
-        scrollarea.setWidgetResizable(True)
-        scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
+        self.scrollarea = QScrollArea()
+        self.scrollarea.setWidget(self.view)
+        self.scrollarea.setWidgetResizable(True)
+        self.scrollarea.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
 
         # This is required to avoid a "RuntimeError: no access to protected
         # functions or signals for objects not created from Python" in Linux.
-        scrollarea.setVerticalScrollBar(QScrollBar())
+        self.scrollarea.setVerticalScrollBar(QScrollBar())
 
         self.scene = QGridLayout(self.view)
         self.scene.setColumnStretch(1, 100)
@@ -126,7 +126,7 @@ class FigSetpPanelManager(QWidget):
         layout = QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-        layout.addWidget(scrollarea)
+        layout.addWidget(self.scrollarea)
 
     def set_figcanvas(self, figcanvas):
         """Set the namespace for the FigureCanvas."""
@@ -575,6 +575,14 @@ class FigManagerBase(QWidget):
 
         layout.setColumnStretch(0, 100)
         layout.setRowStretch(0, 100)
+
+    def resizeEvent(self, event):
+        super(FigManagerBase, self).resizeEvent(event)
+        self.figsetp_manager.setMinimumWidth(
+            self.figsetp_manager.view.minimumSizeHint().width() +
+            2*self.figsetp_manager.scrollarea.frameWidth() +
+            QApplication.style().pixelMetric(QStyle.PM_ScrollBarExtent)
+            )
 
     def setup_toolbar(self):
         """Setup the toolbar of the figure manager."""
