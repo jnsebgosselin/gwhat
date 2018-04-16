@@ -39,6 +39,8 @@ class RechgEvalWidget(QFrameLayout):
 
         # Set the worker and thread mechanics
 
+        self.figstack = FigureStackManager(parent=self)
+
         self.rechg_worker = RechgEvalWorker()
         self.rechg_worker.sig_glue_finished.connect(self.receive_glue_calcul)
         self.rechg_worker.sig_glue_progress.connect(self.progressbar.setValue)
@@ -295,6 +297,5 @@ class RechgEvalWidget(QFrameLayout):
             glue_data = self.rechg_worker.glue_results
             # self.rechg_worker.save_glue_to_npy("GLUE.npy")
 
-            fig_stack = FigureStackManager(parent=self)
-            fig_stack.plot_results(glue_data)
-            fig_stack.show()
+            self.figstack.plot_results(glue_data)
+            self.figstack.show()
