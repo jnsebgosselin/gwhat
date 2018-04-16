@@ -85,14 +85,14 @@ class FigureStackManager(QWidget):
         p = [0.05, 0.25, 0.5, 0.75, 0.95]
         glue_yrly = calcul_glue_yearly(glue_data, p)
 
-        self.fig_wl_glue.figcanvas.plot_prediction(glue_data)
-        self.fig_rechg_glue.figcanvas.plot_recharge(
-            glue_yrly['years'], glue_yrly['recharge'])
-        self.fig_watbudg_glue.figcanvas.plot_data(glue_yrly['years'],
-                                                  glue_yrly['precip'],
-                                                  glue_yrly['recharge'][:, 2],
-                                                  glue_yrly['evapo'][:, 2],
-                                                  glue_yrly['runoff'][:, 2])
+        self.fig_wl_glue.figcanvas.plot(glue_data)
+        self.fig_rechg_glue.figcanvas.plot(glue_yrly['years'],
+                                           glue_yrly['recharge'])
+        self.fig_watbudg_glue.figcanvas.plot(glue_yrly['years'],
+                                             glue_yrly['precip'],
+                                             glue_yrly['recharge'][:, 2],
+                                             glue_yrly['evapo'][:, 2],
+                                             glue_yrly['runoff'][:, 2])
 
 
 # ---- Figure setp panels
@@ -827,7 +827,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.set_axes_labels()
         self.setup_legend()
 
-    def plot_data(self, years, precip, rechg, evapo, runoff):
+    def plot(self, years, precip, rechg, evapo, runoff):
         ax = self.ax0
 
         # Axis range
@@ -1124,8 +1124,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.xticklabels = []
         self.ax0.set_axisbelow(True)
 
-    def plot_recharge(self, year_range, glue_rechg_yr, ymin0=None, ymax0=None,
-                      year_limits=None):
+    def plot(self, year_range, glue_rechg_yr, ymin0=None, ymax0=None,
+             year_limits=None):
         ax0 = self.ax0
 
         glue95_yr = glue_rechg_yr[:, -1]
