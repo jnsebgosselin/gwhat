@@ -1190,12 +1190,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ----- Legend
 
-        lg_handles = [g50, g2575, g0595]
-        lg_labels = ['Recharge (GLUE 50)', 'Recharge (GLUE 25/75)',
-                     'Recharge (GLUE 5/95)']
-        ax0.legend(lg_handles, lg_labels, ncol=3, fontsize=12, frameon=False,
-                   handletextpad=0.2, borderaxespad=0.2, borderpad=0.2,
-                   numpoints=1, bbox_to_anchor=[0, 1], loc='upper left')
+        self.setup_legend()
         self.setup_yearly_avg_legend()
 
         self.sig_fig_changed.emit(self.figure)
@@ -1293,6 +1288,16 @@ class FigYearlyRechgGLUE(FigCanvasBase):
                     "(GLUE 95) %d mm/y"
                     ) % self.glue_year_rechg_avg
         self.txt_yearly_avg.set_text(text)
+
+    def setup_legend(self,):
+        """Setup the legend of the graph."""
+        lg_handles = [self.g50, self.g2575, self.g0595]
+        lg_labels = ['Recharge (GLUE 50)', 'Recharge (GLUE 25/75)',
+                     'Recharge (GLUE 5/95)']
+        self.ax0.legend(
+            lg_handles, lg_labels, ncol=3, fontsize=self.setp['legend size'],
+            frameon=False, handletextpad=0.2, borderaxespad=0.2, borderpad=0.2,
+            numpoints=1, bbox_to_anchor=[0, 1], loc='upper left')
 
 
 # %% ---- if __name__ == '__main__'
