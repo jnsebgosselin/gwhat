@@ -66,13 +66,15 @@ class FigureStackManager(QWidget):
             setp_panels=[FigSizePanel(),
                          MarginSizePanel(),
                          YAxisOptPanel(),
-                         YearLimitsPanel()])
+                         YearLimitsPanel(),
+                         TextOptPanel()])
         self.fig_watbudg_glue = FigManagerBase(
             FigWaterBudgetGLUE,
             setp_panels=[FigSizePanel(),
                          MarginSizePanel(),
                          YAxisOptPanel(),
-                         YearLimitsPanel()])
+                         YearLimitsPanel(),
+                         TextOptPanel()])
 
         self.stack = QTabWidget()
         self.stack.addTab(self.fig_wl_glue, 'Hydrograph')
