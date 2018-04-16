@@ -7,6 +7,8 @@
 # Licensed under the terms of the GNU General Public License.
 
 import time
+import os
+import os.path as osp
 
 # ---- Imports: third parties
 
@@ -14,13 +16,16 @@ import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
                              QLabel, QSizePolicy, QScrollArea, QApplication,
-                             QMessageBox)
+                             QMessageBox, QMenu, QFileDialog)
 
 # ---- Imports: local
 
 from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
+from gwhat.common.icons import QToolButtonBase, QToolButtonSmall
+from gwhat.common import icons
+from gwhat.common.utils import find_unique_filename
 
 
 class RechgEvalWidget(QFrameLayout):
@@ -299,3 +304,68 @@ class RechgEvalWidget(QFrameLayout):
 
             self.figstack.plot_results(glue_data)
             self.figstack.show()
+
+
+class ExportDataButton(QToolButtonBase):
+    """
+    A toolbutton with a popup menu that handles the export of data to file.
+    """
+    def __init__(self, workdir=None, data=None, *args, **kargs):
+        super(ExportDataButton, self).__init__(
+              icons.get_icon('export_data'), *args, **kargs)
+        self.__ddir = os.getcwd() if workdir is None else workdir
+        self.set_data(data)
+
+        self.setToolTip('Export time series')
+        self.setPopupMode(QToolButtonSmall.InstantPopup)
+        self.setStyleSheet("QToolButton::menu-indicator {image: none;}")
+        self.setEnabled(False)
+
+        # Generate the menu of the button :
+
+        menu = QMenu()
+        menu.addAction('Export glue results as...',
+                       lambda: self.select_export_file('daily'))
+        self.setMenu(menu)
+
+    # ---- Set data
+
+    @property
+    def data(self):
+        return self.__data
+
+    def set_data(self, data):
+        """Sets the glue data."""
+        self.__data = data
+        self.setEnabled(self.__data is not None)
+
+    # ---- Export data
+
+    def select_savefilename(self):
+        """
+        Open a dialog where the user can select a file name to save the
+        glue results.
+        """
+        if self.data is None:
+            return
+
+        ffmat = "*.xlsx;;*.xls;;*.csv"
+        fname = find_unique_filename(osp.join(self.__ddir, 'glue_results.csv'))
+        fname, ftype = QFileDialog.getSaveFileName(
+            self, "Save GLUE results", fname, ffmat)
+        if fname:
+            ftype = ftype.replace('*', '')
+            fname = fname if fname.endswith(ftype) else fname + ftype
+            self.__ddir = os.path.dirname(fname)
+            try:
+                self.save_glue_tofile(fname)
+            except PermissionError:
+                msg = "The file is in use by another application or user."
+                QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+                self.select_savefilename()
+
+    def save_glue_tofile(self, fname):
+        if self.data is None:
+            return
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.restoreOverrideCursor()
