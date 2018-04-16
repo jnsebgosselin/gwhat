@@ -29,13 +29,13 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1600"
-     inkscape:window-height="838"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
      inkscape:zoom="0.53050081"
-     inkscape:cx="262.83087"
+     inkscape:cx="-43.48346"
      inkscape:cy="529.89889"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
@@ -362,6 +362,6 @@
          id="tspan3092-0"
          y="-404.06998"
          x="-110.26708"
-         sodipodi:role="line">Version 0.2.5</tspan></text>
+         sodipodi:role="line">Version 0.3.0</tspan></text>
   </g>
 </svg>
