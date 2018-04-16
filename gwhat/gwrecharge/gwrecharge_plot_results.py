@@ -729,6 +729,18 @@ class FigCanvasBase(FigureCanvasQTAgg):
             self.setp['right margin'] = self.MARGINS[2]
         if 'bottom margin' not in self.setp.keys():
             self.setp['bottom margin'] = self.MARGINS[3]
+        if 'xlabel size' not in self.setp.keys():
+            self.setp['xlabel size'] = 16
+        if 'xticks size' not in self.setp.keys():
+            self.setp['xticks size'] = 14
+        if 'ylabel size' not in self.setp.keys():
+            self.setp['ylabel size'] = 16
+        if 'yticks size' not in self.setp.keys():
+            self.setp['yticks size'] = 14
+        if 'legend size' not in self.setp.keys():
+            self.setp['legend size'] = 14
+        if 'notes size' not in self.setp.keys():
+            self.setp['notes size'] = 10
 
         self.figure.set_size_inches(self.setp['fwidth'], self.setp['fheight'])
         self.refresh_margins()
