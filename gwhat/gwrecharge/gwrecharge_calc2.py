@@ -9,6 +9,7 @@
 # ---- Imports: standard libraries
 
 import os
+import os.path as osp
 import datetime
 from itertools import product
 import time
@@ -16,12 +17,12 @@ import time
 # ---- Imports: third parties
 
 import numpy as np
-from xlrd import xldate_as_tuple
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 
 # ---- Imports: local
 
+from gwhat.gwrecharge.glue import GLUEDataFrame
 from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
                                                  calc_hydrograph_forward)
 
@@ -29,7 +30,7 @@ from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
 class RechgEvalWorker(QObject):
 
     sig_glue_progress = QSignal(float)
-    sig_glue_finished = QSignal(int)
+    sig_glue_finished = QSignal(object)
 
     def __init__(self):
         super(RechgEvalWorker, self).__init__()
@@ -50,7 +51,6 @@ class RechgEvalWorker(QObject):
         self.Cro = (0, 1)
         self.RASmax = (0, 150)
 
-        self.glue_results = None
         self.glue_pardist_res = 'fine'
 
     @property
@@ -227,49 +227,57 @@ class RechgEvalWorker(QObject):
 
         # ---- Format results
 
-        self.glue_results = {}
-        self.glue_results['RMSE'] = set_RMSE
-        self.glue_results['recharge'] = set_RECHG
-        self.glue_results['etr'] = set_etr
-        self.glue_results['ru'] = set_ru
+        results = {}
+        results['N']
+        results['RMSE'] = set_RMSE
+        results['recharge'] = set_RECHG
+        results['etr'] = set_etr
+        results['ru'] = set_ru
 
-        self.glue_results['wl_time'] = self.twlvl
-        self.glue_results['wl_obs'] = self.wlobs
-        self.glue_results['wl_date'] = self.wl_date
-        self.glue_results['hydrograph'] = set_WLVL
+        results['wl_time'] = self.twlvl
+        results['wl_obs'] = self.wlobs
+        results['wl_date'] = self.wl_date
+        results['hydrograph'] = set_WLVL
 
-        self.glue_results['Sy'] = set_Sy
-        self.glue_results['RASmax'] = set_RASmax
-        self.glue_results['Cru'] = set_Cru
-        self.glue_results['deltat'] = self.deltat
+        results['Sy'] = set_Sy
+        results['RASmax'] = set_RASmax
+        results['Cru'] = set_Cru
+        results['deltat'] = self.deltat
 
-        self.glue_results['Time'] = self.wxdset['Time']
-        self.glue_results['Year'] = self.wxdset['Year']
-        self.glue_results['Month'] = self.wxdset['Month']
-        self.glue_results['Day'] = self.wxdset['Day']
-        self.glue_results['Weather'] = {'Tmax': self.wxdset['Tmax'],
-                                        'Tmin': self.wxdset['Tmin'],
-                                        'Tavg': self.wxdset['Tavg'],
-                                        'Ptot': self.wxdset['Ptot'],
-                                        'Rain': self.wxdset['Rain'],
-                                        'PET': self.wxdset['PET']}
-        self.sig_glue_finished.emit(len(set_RECHG))
-        return self.glue_results
+        results['Time'] = self.wxdset['Time']
+        results['Year'] = self.wxdset['Year']
+        results['Month'] = self.wxdset['Month']
+        results['Day'] = self.wxdset['Day']
+        results['Weather'] = {'Tmax': self.wxdset['Tmax'],
+                              'Tmin': self.wxdset['Tmin'],
+                              'Tavg': self.wxdset['Tavg'],
+                              'Ptot': self.wxdset['Ptot'],
+                              'Rain': self.wxdset['Rain'],
+                              'PET': self.wxdset['PET']}
 
-    def load_glue_from_npy(self, filename):
-        """Load previously computed results from a numpy npy file."""
-        self.glue_results = np.load(filename).item()
-        return self.glue_results
+        # Save infos about the piezometric station.
+        keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
+                'Elevation', 'Municipality']
+        results['wlinfo'] = {k: self.wldset[k] for k in keys}
 
-    def save_glue_to_npy(self, filename):
+        # Save infos about the weather station.
+        keys = ['Station Name', 'Climate Identifier', 'Province', 'Latitude',
+                'Longitude', 'Elevation']
+        results['wxinfo'] = {k: self.wxdset[k] for k in keys}
+
+        if len(set_RECHG) == 0:
+            glue_dataf = GLUEDataFrame(results)
+        else:
+            glue_dataf = None
+        self.sig_glue_finished.emit(glue_dataf)
+
+        return glue_dataf
+
+    def save_glue_to_npy(self, filename, results):
         """Save the last computed glue results in a numpy npy file."""
-        if self.glue_results is None:
-            print("There is no results to save.")
-            return
-
         root, ext = os.path.splitext(filename)
         filename = filename if ext == '.npy' else filename+'.ext'
-        np.save(filename, self.glue_results)
+        np.save(filename, results)
 
     def optimize_specific_yield(self, Sy0, wlobs, rechg):
         """
