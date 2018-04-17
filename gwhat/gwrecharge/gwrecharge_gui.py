@@ -52,7 +52,7 @@ class RechgEvalWidget(QFrameLayout):
 
         self.rechg_thread = QThread()
         self.rechg_worker.moveToThread(self.rechg_thread)
-        self.rechg_thread.started.connect(self.rechg_worker.calcul_GLUE)
+        self.rechg_thread.started.connect(self.rechg_worker.eval_recharge)
 
     def __initUI__(self):
 
@@ -204,8 +204,6 @@ class RechgEvalWidget(QFrameLayout):
         self.setVerticalSpacing(5)
         self.setContentsMargins(0, 0, 0, 10)   # (L, T, R, B)
 
-    # =========================================================================
-
     def get_Range(self, name):
         if name == 'Sy':
             return [self.QSy_min.value(), self.QSy_max.value()]
@@ -231,8 +229,6 @@ class RechgEvalWidget(QFrameLayout):
     @property
     def deltaT(self):
         return self._deltaT.value()
-
-    # =========================================================================
 
     def closeEvent(self, event):
         super(RechgEvalWidget, self).closeEvent(event)
@@ -281,14 +277,14 @@ class RechgEvalWidget(QFrameLayout):
                 return
         self.rechg_thread.start()
 
-    def receive_glue_calcul(self, N):
+    def receive_glue_calcul(self, glue_data):
         """
         Handle the plotting of the results once ground-water recharge has
         been evaluated.
         """
         self.rechg_thread.quit()
         self.progressbar.hide()
-        if N == 0:
+        if glue_data is None:
             print("The number of behavioural model produced is 0.")
             msg = ("Recharge evaluation was not possible because all"
                    " the models produced were deemed non-behavioural."
@@ -299,9 +295,7 @@ class RechgEvalWidget(QFrameLayout):
                    " behaviour of the observed hydrograph.")
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
         else:
-            glue_data = self.rechg_worker.glue_results
-            # self.rechg_worker.save_glue_to_npy("GLUE.npy")
-
+            self.wldset.save_glue_data(glue_data)
             self.figstack.plot_results(glue_data)
             self.figstack.show()
 

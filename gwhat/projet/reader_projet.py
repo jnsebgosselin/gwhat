@@ -191,15 +191,13 @@ class ProjetReader(object):
         try:
             grp = self.db['wldsets'].create_group(name)
 
-            # ---- Data ----
-
+            # Water level data
             grp.create_dataset('Time', data=df['Time'])
             grp.create_dataset('WL', data=df['WL'])
             grp.create_dataset('BP', data=df['BP'])
             grp.create_dataset('ET', data=df['ET'])
 
-            # ---- Well info ----
-
+            # Piezometric well info
             grp.attrs['filename'] = df['filename']
             grp.attrs['Well'] = df['Well']
             grp.attrs['Well ID'] = df['Well ID']
@@ -209,8 +207,7 @@ class ProjetReader(object):
             grp.attrs['Municipality'] = df['Municipality']
             grp.attrs['Province'] = df['Province']
 
-            # ---- MRC ----
-
+            # Master Recession Curve
             mrc = grp.create_group('mrc')
             mrc.attrs['exists'] = 0
             mrc.create_dataset('params', data=(0, 0), dtype='float64')
@@ -221,16 +218,17 @@ class ProjetReader(object):
             mrc.create_dataset('time', data=np.array([]),
                                dtype='float64', maxshape=(None,))
 
-            # ---- BRF ----
-
+            # Barometric Response Function
             grp.create_group('brf')
 
-            # ---- Layout ----
+            # GLUE (recharge, evapotranspiration, runoff, water levels)
+            # Added in version 0.3.1 (see PR #)
+            grp.create_group('glue')
 
+            # Hydrograph layout
             grp.create_group('layout')
 
-            # ---- Manual measurements ----
-
+            # Manual water level measurements
             mmeas = grp.create_group('manual')
             mmeas.create_dataset('Time', data=np.array([]), maxshape=(None,))
             mmeas.create_dataset('WL', data=np.array([]), maxshape=(None,))
@@ -403,8 +401,6 @@ class WLDataFrameHDF5(dict):
     def brf_count(self):
         return len(list(self.dset['brf'].keys()))
 
-    # -------------------------------------------------------------------------
-
     def get_brfAt(self, index):
         if index < self.brf_count():
             names = list(self.dset['brf'].keys())
@@ -418,8 +414,6 @@ class WLDataFrameHDF5(dict):
         grp = self.dset['brf'][name]
         return (grp['lag'].value, grp['A'].value, grp['err'].value,
                 grp['date start'].value, grp['date end'].value)
-
-    # -------------------------------------------------------------------------
 
     def save_brf(self, lag, A, err, date_start, date_end):
         if list(self.dset['brf'].keys()):
@@ -445,8 +439,6 @@ class WLDataFrameHDF5(dict):
             print('BRF %s deleted successfully' % name)
         else:
             print('BRF does not exist')
-
-    # =========================================================================
 
     def save_layout(self, layout):
         grp = self.dset['layout']
