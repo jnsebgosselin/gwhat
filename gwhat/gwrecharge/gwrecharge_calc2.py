@@ -155,30 +155,6 @@ class RechgEvalWorker(QObject):
 
         return td, hd
 
-    def calc_recharge(self, data=None):
-        data = self.glue_results
-        rechg = np.array(data['recharge'])
-        RMSE = np.array(data['RMSE'])
-
-        CPDF = np.cumsum(RMSE / np.sum(RMSE))
-        TIME = self.wxdset['Time']
-        Rbound = []
-        for i in range(len(TIME)):
-            isort = np.argsort(rechg[:, i])
-            Rbound.append(
-                np.interp([0.05, 0.5, 0.95], CPDF[isort], rechg[isort, i]))
-        Rbound = np.array(Rbound)
-
-        max_rechg = np.sum(Rbound[:, 2]) / len(Rbound[:, 0]) * 365.25
-        min_rechg = np.sum(Rbound[:, 0]) / len(Rbound[:, 0]) * 365.25
-        prob_rechg = np.sum(Rbound[:, 1]) / len(Rbound[:, 0]) * 365.25
-
-        print('Max Recharge = %0.1f mm/y' % max_rechg)
-        print('Min Recharge = %0.1f mm/y' % min_rechg)
-        print('Most Probable Recharge = %0.1f mm/y' % prob_rechg)
-
-    # ---- GLUE
-
     def calcul_GLUE(self):
 
         # ---- Produce parameters combinations
