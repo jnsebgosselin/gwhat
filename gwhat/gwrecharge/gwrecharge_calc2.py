@@ -155,7 +155,12 @@ class RechgEvalWorker(QObject):
 
         return td, hd
 
-    def calcul_GLUE(self):
+    def eval_recharge(self):
+        """
+        Produce a set of behavioural models that all represent the observed
+        data equiprobably and evaluate the water budget with GLUE for diffrent
+        GLUE uncertainty limits.
+        """
 
         # ---- Produce parameters combinations
 
