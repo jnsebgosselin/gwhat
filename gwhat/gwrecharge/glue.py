@@ -65,17 +65,32 @@ class GLUEDataFrame(GLUEDataFrameBase):
         the store.
         """
         self.store = {}
-        self.store['params'] = {key: data[key] for key in
-                                ['Sy', 'RASmax', 'Cru', 'deltat', 'RMSE']}
 
+        # Store the model distribution info.
+        self.store['models'] = data['models']
+
+        # Store the piezometric and weather stations info.
         self.store['wlinfo'] = data['wlinfo']
         self.store['wxinfo'] = data['wxinfo']
 
-        self.store['daily budget'] = glue_dly = calcul_dly_budget(
-            data, self.GLUE_LIMITS)
-        self.store['monthly budget'] = glue_mly = calcul_mly_budget(glue_dly)
-        self.store['yearly budget'] = calcul_yrly_budget(glue_mly)
-        self.store['hydrol yearly budget'] = calcul_hydro_yrly_budget(glue_dly)
+        # Store the Master Recession Curve parameters and simulated values.
+        self.store['mrc'] = data['mrc']
+
+        # Calcul daily, monthly, and yearly GLUE values of all the computed
+        # components of the water budget.
+        grp = self.store['budget'] = {}
+        grp['daily'] = calcul_dly_budget(data, [0.05, 0.25, 0.5, 0.75, 0.95])
+        grp['monthly'] = calcul_mly_budget(grp['daily'])
+        grp['yearly'] = calcul_yrly_budget(grp['monthly'])
+        grp['hydrol yearly'] = calcul_hydro_yrly_budget(grp['daily'])
+
+        # Calcul daily GLUE values for the water levels and store the results
+        # along with the oberved values.
+
+        grp = self.store['water levels'] = data['water levels']
+        grp['GLUE limits'] = [0.05, 0.5, 0.95]
+        grp['predicted'] = calcul_glue(
+            data, grp['GLUE limits'], varname='hydrograph')
 
 
 def calcul_glue(data, glue_limits, varname='recharge'):
@@ -89,19 +104,20 @@ def calcul_glue(data, glue_limits, varname='recharge'):
     x = np.array(data[varname])
     _, n = np.shape(x)
 
-    rmse = np.array(data['RMSE'])
-    rmse = rmse/np.sum(rmse)  # Rescaling
+    rmse = np.array(data['models']['RMSE'])
+    # Rescale the RMSE so the sum of all values equal 1.
+    rmse = rmse/np.sum(rmse)
 
-    glue_dly = np.zeros((n, len(glue_limits)))
+    glue = np.zeros((n, len(glue_limits)))
     for i in range(n):
         # Sort predicted values.
         isort = np.argsort(x[:, i])
         # Compute the Cumulative Density Function.
         cdf = np.cumsum(rmse[isort])
         # Get GLUE values for the p confidence intervals.
-        glue_dly[i, :] = np.interp(glue_limits, cdf, x[isort, i])
+        glue[i, :] = np.interp(glue_limits, cdf, x[isort, i])
 
-    return glue_dly
+    return glue
 
 
 def calcul_dly_budget(data, glue_limits):
@@ -118,7 +134,7 @@ def calcul_dly_budget(data, glue_limits):
     glue_runof_dly = calcul_glue(data, glue_limits, varname='ru')
     precip_dly = data['Weather']['Ptot']
 
-    deltat = int(data['deltat'])
+    deltat = int(data['models']['params']['deltat'])
     if deltat > 0:
         # We pad data with zeros at the beginning of the recharge array and
         # at the end of the evapotranspiration and runoff array to take into
@@ -263,6 +279,5 @@ def calcul_hydro_yrly_budget(glue_dly):
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
 
-    GLUE_DATA = load_glue_from_npy("GLUE.npy")
+    GLUE_DATA = load_glue_from_npy('glue_rawdata.npy')
     GLUE_DSET = GLUEDataFrame(GLUE_DATA)
-    np.save('glue_data_frame.npy', GLUE_DSET.store)
