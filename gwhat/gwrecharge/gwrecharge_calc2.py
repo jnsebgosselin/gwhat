@@ -155,6 +155,19 @@ class RechgEvalWorker(QObject):
 
         return td, hd
 
+    def produce_params_combinations(self):
+        """
+        Produce a set of parameter combinations (RASmax + Cro) from the ranges
+        provided by the user using a flat distribution.
+        """
+        if self.glue_pardist_res == 'rough':
+            U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 5)
+        elif self.glue_pardist_res == 'fine':
+            U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 1)
+        U_Cro = np.arange(self.Cro[0], self.Cro[1]+0.01, 0.01)
+
+        return U_RAS, U_Cro
+
     def eval_recharge(self):
         """
         Produce a set of behavioural models that all represent the observed
@@ -162,13 +175,7 @@ class RechgEvalWorker(QObject):
         GLUE uncertainty limits.
         """
 
-        # ---- Produce parameters combinations
-
-        if self.glue_pardist_res == 'rough':
-            U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 5)
-        elif self.glue_pardist_res == 'fine':
-            U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 1)
-        U_Cro = np.arange(self.Cro[0], self.Cro[1]+0.01, 0.01)
+        U_RAS, U_Cro = self.produce_params_combinations()
 
         # Find the indexes to align the water level with the weather data
         # daily time series.
