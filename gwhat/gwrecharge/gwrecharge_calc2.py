@@ -224,43 +224,60 @@ class RechgEvalWorker(QObject):
 
         # ---- Format results
 
-        results = {}
-        results['N']
-        results['RMSE'] = set_RMSE
-        results['recharge'] = set_RECHG
-        results['etr'] = set_etr
-        results['ru'] = set_ru
+        glue_rawdata = {}
+        glue_rawdata['models'] = {}
+        glue_rawdata['models']['count'] = len(set_RMSE)
+        glue_rawdata['models']['RMSE'] = set_RMSE
+        glue_rawdata['models']['params'] = {'RMSE': set_RMSE,
+                                            'Sy': set_Sy,
+                                            'RASmax': set_RASmax,
+                                            'Cru': set_Cru}
+        glue_rawdata['models']['input ranges'] = {'Sy': self.Sy,
+                                                  'Cro': self.Cro,
+                                                  'RASmax': self.RASmax,
+                                                  'tmelt': self.TMELT,
+                                                  'CM': self.CM,
+                                                  'deltat': self.deltat}
 
-        results['wl_time'] = self.twlvl
-        results['wl_obs'] = self.wlobs
-        results['wl_date'] = self.wl_date
-        results['hydrograph'] = set_WLVL
+        glue_rawdata['water levels'] = {}
+        glue_rawdata['water levels']['time'] = self.twlvl
+        glue_rawdata['water levels']['date'] = self.wl_date
+        glue_rawdata['water levels']['observed'] = self.wlobs
+        glue_rawdata['water levels']['simulated'] = sets_waterlevels
 
-        results['Sy'] = set_Sy
-        results['RASmax'] = set_RASmax
-        results['Cru'] = set_Cru
-        results['deltat'] = self.deltat
+        glue_rawdata['mrc'] = {}
+        glue_rawdata['mrc']['params'] = self.wldset['mrc/params']
+        glue_rawdata['mrc']['time'] = self.wldset['mrc/time']
+        glue_rawdata['mrc']['levels'] = self.wldset['mrc/recess']
 
-        results['Time'] = self.wxdset['Time']
-        results['Year'] = self.wxdset['Year']
-        results['Month'] = self.wxdset['Month']
-        results['Day'] = self.wxdset['Day']
-        results['Weather'] = {'Tmax': self.wxdset['Tmax'],
-                              'Tmin': self.wxdset['Tmin'],
-                              'Tavg': self.wxdset['Tavg'],
-                              'Ptot': self.wxdset['Ptot'],
-                              'Rain': self.wxdset['Rain'],
-                              'PET': self.wxdset['PET']}
+        glue_rawdata['recharge'] = set_recharge
+        glue_rawdata['etr'] = set_evapo
+        glue_rawdata['ru'] = set_runoff
+        glue_rawdata['Time'] = self.wxdset['Time']
+        glue_rawdata['Year'] = self.wxdset['Year']
+        glue_rawdata['Month'] = self.wxdset['Month']
+        glue_rawdata['Day'] = self.wxdset['Day']
+        glue_rawdata['Weather'] = {'Tmax': self.wxdset['Tmax'],
+                                   'Tmin': self.wxdset['Tmin'],
+                                   'Tavg': self.wxdset['Tavg'],
+                                   'Ptot': self.wxdset['Ptot'],
+                                   'Rain': self.wxdset['Rain'],
+                                   'PET': self.wxdset['PET']}
 
         # Save infos about the piezometric station.
+
         keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
                 'Elevation', 'Municipality']
-        results['wlinfo'] = {k: self.wldset[k] for k in keys}
+        glue_rawdata['wlinfo'] = {k: self.wldset[k] for k in keys}
 
         # Save infos about the weather station.
+
         keys = ['Station Name', 'Climate Identifier', 'Province', 'Latitude',
                 'Longitude', 'Elevation']
-        results['wxinfo'] = {k: self.wxdset[k] for k in keys}
+        glue_rawdata['wxinfo'] = {k: self.wxdset[k] for k in keys}
+
+        self.save_glue_to_npy('glue_rawdata.npy', glue_rawdata)
+
 
         if len(set_RECHG) == 0:
             glue_dataf = GLUEDataFrame(results)
