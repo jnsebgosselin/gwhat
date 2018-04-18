@@ -146,7 +146,7 @@ def calcul_dly_budget(data, glue_limits):
         glue_rechg_dly = np.vstack([zeros_pad, glue_rechg_dly])
         glue_evapo_dly = np.vstack([glue_evapo_dly, zeros_pad])
         glue_runof_dly = np.vstack([glue_runof_dly, zeros_pad])
-        precip_dly = np.hstack([precip_dly, np.zeros(len(glue_limits))])
+        precip_dly = np.hstack([precip_dly, np.zeros(deltat)])
 
         # We extend the time and date arrays.
         times2add = np.arange(deltat) + times[-1] + 1
