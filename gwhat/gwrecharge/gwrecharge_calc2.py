@@ -186,17 +186,18 @@ class RechgEvalWorker(QObject):
         # ---- Produce realizations
 
         set_RMSE = []
-        set_RECHG = []
-        sets_waterlevels = []
+
         set_Sy = []
         set_RASmax = []
         set_Cru = []
 
-        set_ru = []
-        set_etr = []
+        sets_waterlevels = []
+        set_recharge = []
+        set_runoff = []
+        set_evapo = []
 
         Sy0 = np.mean(self.Sy)
-        tstart = time.clock()
+        time_start = time.clock()
         N = sum(1 for p in product(U_Cro, U_RAS))
         self.sig_glue_progress.emit(0)
         for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
@@ -205,21 +206,21 @@ class RechgEvalWorker(QObject):
                     Sy0, self.wlobs*1000, rechg[ts:te])
             Sy0 = SyOpt
 
-            if SyOpt >= self.Sy[0] and SyOpt <= self.Sy[1]:
+            if SyOpt >= min(self.Sy) and SyOpt <= max(self.Sy):
                 set_RMSE.append(RMSE)
-                set_RECHG.append(rechg)
+                set_recharge.append(rechg)
                 sets_waterlevels.append(wlvlest)
                 set_Sy.append(SyOpt)
                 set_RASmax.append(rasmax)
                 set_Cru.append(cro)
-                set_etr.append(etr)
-                set_ru.append(ru)
+                set_evapo.append(etr)
+                set_runoff.append(ru)
 
             self.sig_glue_progress.emit((it+1)/N*100)
             print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.4f ; ' +
                    'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
-        tend = time.clock()
-        print("GLUE computed in : ", tend-tstart)
+
+        print("GLUE computed in : %0.1 s" % (time.clock()-time_start))
         self._print_model_params_summary(set_Sy, set_Cru, set_RASmax)
 
         # ---- Format results
