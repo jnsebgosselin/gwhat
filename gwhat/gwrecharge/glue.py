@@ -86,8 +86,10 @@ class GLUEDataFrame(GLUEDataFrameBase):
 
         # Calcul daily GLUE values for the water levels and store the results
         # along with the oberved values.
-
-        grp = self.store['water levels'] = data['water levels']
+        grp = self.store['water levels'] = {}
+        grp['time'] = data['water levels']['time']
+        grp['date'] = data['water levels']['date']
+        grp['observed'] = data['water levels']['observed']
         grp['GLUE limits'] = [0.05, 0.5, 0.95]
         grp['predicted'] = calcul_glue(
             data, grp['GLUE limits'], varname='hydrograph')
