@@ -187,7 +187,7 @@ class RechgEvalWorker(QObject):
 
         set_RMSE = []
         set_RECHG = []
-        set_WLVL = []
+        sets_waterlevels = []
         set_Sy = []
         set_RASmax = []
         set_Cru = []
@@ -208,7 +208,7 @@ class RechgEvalWorker(QObject):
             if SyOpt >= self.Sy[0] and SyOpt <= self.Sy[1]:
                 set_RMSE.append(RMSE)
                 set_RECHG.append(rechg)
-                set_WLVL.append(wlvlest)
+                sets_waterlevels.append(wlvlest)
                 set_Sy.append(SyOpt)
                 set_RASmax.append(rasmax)
                 set_Cru.append(cro)
