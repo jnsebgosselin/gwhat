@@ -220,7 +220,7 @@ class RechgEvalWorker(QObject):
             print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.4f ; ' +
                    'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
 
-        print("GLUE computed in : %0.1 s" % (time.clock()-time_start))
+        print("GLUE computed in : %0.1f s" % (time.clock()-time_start))
         self._print_model_params_summary(set_Sy, set_Cru, set_RASmax)
 
         # ---- Format results

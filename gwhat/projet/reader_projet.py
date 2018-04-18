@@ -327,7 +327,7 @@ class WLDataFrameHDF5(dict):
             # Added in version 0.2.1 (see PR #124).
             dset.attrs['Province'] = ""
             self.dset.file.flush()
-        if 'glue' not in list(self.dset['glue'].keys()):
+        if 'glue' not in list(self.dset.keys()):
             # Added in version 0.3.1 (see PR #184)
             self.dset.create_group('glue')
             self.dset.file.flush()
