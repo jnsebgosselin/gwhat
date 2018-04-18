@@ -229,28 +229,36 @@ class RechgEvalWorker(QObject):
         glue_rawdata['models'] = {}
         glue_rawdata['models']['count'] = len(set_RMSE)
         glue_rawdata['models']['RMSE'] = set_RMSE
-        glue_rawdata['models']['params'] = {'RMSE': set_RMSE,
-                                            'Sy': set_Sy,
+        glue_rawdata['models']['params'] = {'Sy': set_Sy,
                                             'RASmax': set_RASmax,
-                                            'Cru': set_Cru}
+                                            'Cru': set_Cru,
+                                            'tmelt': self.TMELT,
+                                            'CM': self.CM,
+                                            'deltat': self.deltat}
         glue_rawdata['models']['input ranges'] = {'Sy': self.Sy,
                                                   'Cro': self.Cro,
-                                                  'RASmax': self.RASmax,
-                                                  'tmelt': self.TMELT,
-                                                  'CM': self.CM,
-                                                  'deltat': self.deltat}
+                                                  'RASmax': self.RASmax}
 
         glue_rawdata['water levels'] = {}
         glue_rawdata['water levels']['time'] = self.twlvl
         glue_rawdata['water levels']['date'] = self.wl_date
         glue_rawdata['water levels']['observed'] = self.wlobs
-        glue_rawdata['water levels']['simulated'] = sets_waterlevels
+
+        glue_rawdata['Weather'] = {'Tmax': self.wxdset['Tmax'],
+                                   'Tmin': self.wxdset['Tmin'],
+                                   'Tavg': self.wxdset['Tavg'],
+                                   'Ptot': self.wxdset['Ptot'],
+                                   'Rain': self.wxdset['Rain'],
+                                   'PET': self.wxdset['PET']}
 
         glue_rawdata['mrc'] = {}
         glue_rawdata['mrc']['params'] = self.wldset['mrc/params']
         glue_rawdata['mrc']['time'] = self.wldset['mrc/time']
         glue_rawdata['mrc']['levels'] = self.wldset['mrc/recess']
 
+        # Store the models output that will need to be processed with GLUE.
+
+        glue_rawdata['hydrograph'] = sets_waterlevels
         glue_rawdata['recharge'] = set_recharge
         glue_rawdata['etr'] = set_evapo
         glue_rawdata['ru'] = set_runoff
@@ -258,12 +266,6 @@ class RechgEvalWorker(QObject):
         glue_rawdata['Year'] = self.wxdset['Year']
         glue_rawdata['Month'] = self.wxdset['Month']
         glue_rawdata['Day'] = self.wxdset['Day']
-        glue_rawdata['Weather'] = {'Tmax': self.wxdset['Tmax'],
-                                   'Tmin': self.wxdset['Tmin'],
-                                   'Tavg': self.wxdset['Tavg'],
-                                   'Ptot': self.wxdset['Ptot'],
-                                   'Rain': self.wxdset['Rain'],
-                                   'PET': self.wxdset['PET']}
 
         # Save infos about the piezometric station.
 
