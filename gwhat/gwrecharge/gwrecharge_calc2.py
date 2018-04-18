@@ -218,19 +218,9 @@ class RechgEvalWorker(QObject):
             self.sig_glue_progress.emit((it+1)/N*100)
             print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.4f ; ' +
                    'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
-
         tend = time.clock()
         print("GLUE computed in : ", tend-tstart)
-
-        if len(set_RMSE) > 0:
-            print('-'*78)
-            range_sy = (np.min(set_Sy), np.max(set_Sy))
-            print('range Sy = %0.3f to %0.3f' % range_sy)
-            range_rasmax = (np.min(set_RASmax), np.max(set_RASmax))
-            print('range RASmax = %d to %d' % range_rasmax)
-            range_cru = (np.min(set_Cru), np.max(set_Cru))
-            print('range Cru = %0.3f to %0.3f' % range_cru)
-            print('-'*78)
+        self._print_model_params_summary(set_Sy, set_Cru, set_RASmax)
 
         # ---- Format results
 
