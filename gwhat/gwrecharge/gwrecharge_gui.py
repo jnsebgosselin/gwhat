@@ -285,7 +285,6 @@ class RechgEvalWidget(QFrameLayout):
         self.rechg_thread.quit()
         self.progressbar.hide()
         if glue_data is None:
-            print("The number of behavioural model produced is 0.")
             msg = ("Recharge evaluation was not possible because all"
                    " the models produced were deemed non-behavioural."
                    "\n\n"

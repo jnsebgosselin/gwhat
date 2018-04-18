@@ -270,11 +270,29 @@ class RechgEvalWorker(QObject):
 
         return glue_dataf
 
-    def save_glue_to_npy(self, filename, results):
+    def _print_model_params_summary(self, set_Sy, set_Cru, set_RASmax):
+        """
+        Print a summary of the range of parameter values that were used to
+        produce the set of behavioural models.
+        """
+        print('-'*78)
+        if len(set_Sy) > 0:
+            print('-'*78)
+            range_sy = (np.min(set_Sy), np.max(set_Sy))
+            print('range Sy = %0.3f to %0.3f' % range_sy)
+            range_rasmax = (np.min(set_RASmax), np.max(set_RASmax))
+            print('range RASmax = %d to %d' % range_rasmax)
+            range_cru = (np.min(set_Cru), np.max(set_Cru))
+            print('range Cru = %0.3f to %0.3f' % range_cru)
+            print('-'*78)
+        else:
+            print("The number of behavioural model produced is 0.")
+
+    def save_glue_to_npy(self, filename, glue_rawdata):
         """Save the last computed glue results in a numpy npy file."""
         root, ext = os.path.splitext(filename)
         filename = filename if ext == '.npy' else filename+'.ext'
-        np.save(filename, results)
+        np.save(filename, glue_rawdata)
 
     def optimize_specific_yield(self, Sy0, wlobs, rechg):
         """
