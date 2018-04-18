@@ -279,9 +279,11 @@ class RechgEvalWorker(QObject):
 
         self.save_glue_to_npy('glue_rawdata.npy', glue_rawdata)
 
+        # Calcul GLUE from the set of behavioural model and send the results
+        # with a signal so that it can be handled on the UI side.
 
-        if len(set_RECHG) == 0:
-            glue_dataf = GLUEDataFrame(results)
+        if glue_rawdata['models']['count'] > 0:
+            glue_dataf = GLUEDataFrame(glue_rawdata)
         else:
             glue_dataf = None
         self.sig_glue_finished.emit(glue_dataf)
