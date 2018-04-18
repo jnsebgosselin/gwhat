@@ -277,14 +277,14 @@ class RechgEvalWidget(QFrameLayout):
                 return
         self.rechg_thread.start()
 
-    def receive_glue_calcul(self, glue_data):
+    def receive_glue_calcul(self, glue_dataframe):
         """
         Handle the plotting of the results once ground-water recharge has
         been evaluated.
         """
         self.rechg_thread.quit()
         self.progressbar.hide()
-        if glue_data is None:
+        if glue_dataframe is None:
             msg = ("Recharge evaluation was not possible because all"
                    " the models produced were deemed non-behavioural."
                    "\n\n"
@@ -294,8 +294,8 @@ class RechgEvalWidget(QFrameLayout):
                    " behaviour of the observed hydrograph.")
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
         else:
-            self.wldset.save_glue_data(glue_data)
-            self.figstack.plot_results(glue_data)
+            self.wldset.save_glue_data(glue_dataframe)
+            self.figstack.plot_results(glue_dataframe)
             self.figstack.show()
 
 
