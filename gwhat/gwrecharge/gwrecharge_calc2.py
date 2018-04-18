@@ -279,7 +279,7 @@ class RechgEvalWorker(QObject):
                 'Longitude', 'Elevation']
         glue_rawdata['wxinfo'] = {k: self.wxdset[k] for k in keys}
 
-        self.save_glue_to_npy('glue_rawdata.npy', glue_rawdata)
+        self._save_glue_to_npy(glue_rawdata)
 
         # Calcul GLUE from the set of behavioural model and send the results
         # with a signal so that it can be handled on the UI side.
@@ -310,10 +310,9 @@ class RechgEvalWorker(QObject):
         else:
             print("The number of behavioural model produced is 0.")
 
-    def save_glue_to_npy(self, filename, glue_rawdata):
+    def _save_glue_to_npy(self, glue_rawdata):
         """Save the last computed glue results in a numpy npy file."""
-        root, ext = os.path.splitext(filename)
-        filename = filename if ext == '.npy' else filename+'.ext'
+        filename = osp.join(osp.dirname(__file__), 'glue_rawdata.npy')
         np.save(filename, glue_rawdata)
 
     def optimize_specific_yield(self, Sy0, wlobs, rechg):
