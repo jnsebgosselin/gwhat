@@ -22,6 +22,7 @@ import numpy as np
 # ---- Imports: Local Librairies
 
 from gwhat.meteo.weather_reader import WXDataFrameBase
+from gwhat.gwrecharge.glue import GLUEDataFrameBase
 
 
 class ProjetReader(object):
@@ -396,6 +397,44 @@ class WLDataFrameHDF5(dict):
                                dtype='float64', maxshape=(None,))
         return bool(self.dset['mrc'].attrs['exists'])
 
+    # ---- GLUE water budget and water level evaluation
+
+    def glue_idnums(self):
+        """Return the id numbers of all the previously saved GLUE results"""
+        return list(self.dset['glue'].keys())
+
+    def glue_count(self):
+        """Return the number of GLUE results saved in this dataset."""
+        return len(self.glue_idnumsglue_idnums())
+
+    def save_glue(self, gluedf):
+        """Save GLUE results in the project hdf file."""
+        if list(self.dset['glue'].keys()):
+            idnum = np.array(list(self.dset['glue'].keys())).astype(int)
+            idnum = np.max(idnum) + 1
+        else:
+            idnum = 1
+        idnum = str(idnum)
+
+        grp = self.dset['glue'].create_group(idnum)
+        save_dict_to_h5grp(grp, gluedf)
+        self.dset.file.flush()
+        print('GLUE results saved successfully')
+
+    def get_glue(self, idnum):
+        """Get GLUE results at idnum."""
+        if idnum in self.glue_idnums():
+            return GLUEDataFrameHDF5(self.dset['glue'][idnum])
+
+    def del_glue(self, idnum):
+        """Delete GLUE results at idnum."""
+        if idnum in self.glue_idnums():
+            del self.dset['glue'][idnum]
+            self.dset.file.flush()
+            print('GLUE data %s deleted successfully' % idnum)
+        else:
+            print('GLUE data %s does not exist' % idnum)
+
     # ---- Barometric response function
 
     def saved_brf(self):
@@ -443,6 +482,8 @@ class WLDataFrameHDF5(dict):
             print('BRF %s deleted successfully' % name)
         else:
             print('BRF does not exist')
+
+    # ---- Hydrograph layout
 
     def save_layout(self, layout):
         grp = self.dset['layout']
@@ -521,6 +562,69 @@ class WXDataFrameHDF5(WXDataFrameBase):
     @property
     def name(self):
         return osp.basename(self.store.name)
+
+
+class GLUEDataFrameHDF5(GLUEDataFrameBase):
+    """
+    This is a wrapper around the h5py group to read the GLUE results
+    from the project.
+    """
+    def __init__(self, data, *args, **kwargs):
+        super(GLUEDataFrameHDF5, self).__init__(*args, **kwargs)
+        self.__load_data__(data)
+
+    def __getitem__(self, key):
+        """Return the value saved in the store at key."""
+        if key not in self.store.keys():
+            raise KeyError(key)
+
+        if isinstance(self.store[key], h5py._hl.dataset.Dataset):
+            return self.store[key].value
+        elif isinstance(self.store[key], h5py._hl.group.Group):
+            return load_dict_from_h5grp(self.store[key])
+        else:
+            return None
+
+    def __setitem__(self, key, value):
+        raise NotImplementedError
+
+    def __iter__(self):
+        raise NotImplementedError
+
+    def __len__(self):
+        raise NotImplementedError
+
+    def __load_data__(self, data):
+        """Saves the h5py glue data to the store."""
+        self.store = data
+
+
+def save_dict_to_h5grp(h5grp, dic):
+    """
+    Save the content of a dictionay recursively in a hdf5.
+    Based on answers provided at
+    https://codereview.stackexchange.com/questions/120802
+    """
+    for key, item in dic.items():
+        if isinstance(item, dict):
+            save_dict_to_h5grp(h5grp.require_group(key), item)
+        else:
+            h5grp.create_dataset(key, data=item)
+
+
+def load_dict_from_h5grp(h5grp):
+    """
+    Retrieve the content of a hdf5 group and organize it in a dictionary.
+    Based on answers provided at
+    https://codereview.stackexchange.com/questions/120802
+    """
+    dic = {}
+    for key, item in h5grp.items():
+        if isinstance(item, h5py._hl.dataset.Dataset):
+            dic[key] = item.value
+        elif isinstance(item, h5py._hl.group.Group):
+            dic[key] = load_dict_from_h5grp(item)
+    return dic
 
 
 if __name__ == '__main__':
