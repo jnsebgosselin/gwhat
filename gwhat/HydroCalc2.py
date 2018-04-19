@@ -414,7 +414,7 @@ class WLCalc(myqt.DialogWindow):
 
     def set_wldset(self, wldset):
         self.config_brf.set_wldset(wldset)
-        self.rechg_setup_win.wldset = wldset
+        self.rechg_setup_win.set_wldset(wldset)
 
         if wldset is None:
             self.water_lvl = None
