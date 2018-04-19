@@ -98,9 +98,6 @@ class RechgEvalWidget(QFrameLayout):
 
         # units=' °C'
 
-        self._Tcrit = QDoubleSpinBox(0, 1, )
-        self._Tcrit.setRange(-25, 25)
-
         self._Tmelt = QDoubleSpinBox(0, 1)
         self._Tmelt.setRange(-25, 25)
 
@@ -144,10 +141,6 @@ class RechgEvalWidget(QFrameLayout):
         params_group.addWidget(self.CRO_max, row, 3)
         row += 1
         params_group.setRowMinimumHeight(row, 10)
-        row += 1
-        params_group.addWidget(QLabel('Tcrit :'), row, 0)
-        params_group.addWidget(self._Tcrit, row, 1)
-        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
         row += 1
         params_group.addWidget(QLabel('Tmelt :'), row, 0)
         params_group.addWidget(self._Tmelt, row, 1)
@@ -251,10 +244,6 @@ class RechgEvalWidget(QFrameLayout):
     @property
     def Tmelt(self):
         return self._Tmelt.value()
-
-    @property
-    def Tcrit(self):
-        return self._Tcrit.value()
 
     @property
     def CM(self):
