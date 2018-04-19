@@ -9,6 +9,7 @@
 # ---- Imports: standard libraries
 
 import os
+import os.path as osp
 import datetime
 from itertools import product
 import time
@@ -16,12 +17,12 @@ import time
 # ---- Imports: third parties
 
 import numpy as np
-from xlrd import xldate_as_tuple
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 
 # ---- Imports: local
 
+from gwhat.gwrecharge.glue import GLUEDataFrame
 from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
                                                  calc_hydrograph_forward)
 
@@ -29,7 +30,7 @@ from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
 class RechgEvalWorker(QObject):
 
     sig_glue_progress = QSignal(float)
-    sig_glue_finished = QSignal(int)
+    sig_glue_finished = QSignal(object)
 
     def __init__(self):
         super(RechgEvalWorker, self).__init__()
@@ -50,7 +51,6 @@ class RechgEvalWorker(QObject):
         self.Cro = (0, 1)
         self.RASmax = (0, 150)
 
-        self.glue_results = None
         self.glue_pardist_res = 'fine'
 
     @property
@@ -131,7 +131,7 @@ class RechgEvalWorker(QObject):
         years = self.wxdset['Year'][ts:te+1]
         months = self.wxdset['Month'][ts:te+1]
         days = self.wxdset['Day'][ts:te+1]
-        self.wl_date = convert_date_to_datetime(years, months, days)
+        self.wl_date = convert_date_to_strdate(years, months, days)
 
         return None
 
@@ -155,39 +155,27 @@ class RechgEvalWorker(QObject):
 
         return td, hd
 
-    def calc_recharge(self, data=None):
-        data = self.glue_results
-        rechg = np.array(data['recharge'])
-        RMSE = np.array(data['RMSE'])
-
-        CPDF = np.cumsum(RMSE / np.sum(RMSE))
-        TIME = self.wxdset['Time']
-        Rbound = []
-        for i in range(len(TIME)):
-            isort = np.argsort(rechg[:, i])
-            Rbound.append(
-                np.interp([0.05, 0.5, 0.95], CPDF[isort], rechg[isort, i]))
-        Rbound = np.array(Rbound)
-
-        max_rechg = np.sum(Rbound[:, 2]) / len(Rbound[:, 0]) * 365.25
-        min_rechg = np.sum(Rbound[:, 0]) / len(Rbound[:, 0]) * 365.25
-        prob_rechg = np.sum(Rbound[:, 1]) / len(Rbound[:, 0]) * 365.25
-
-        print('Max Recharge = %0.1f mm/y' % max_rechg)
-        print('Min Recharge = %0.1f mm/y' % min_rechg)
-        print('Most Probable Recharge = %0.1f mm/y' % prob_rechg)
-
-    # ---- GLUE
-
-    def calcul_GLUE(self):
-
-        # ---- Produce parameters combinations
-
+    def produce_params_combinations(self):
+        """
+        Produce a set of parameter combinations (RASmax + Cro) from the ranges
+        provided by the user using a flat distribution.
+        """
         if self.glue_pardist_res == 'rough':
             U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 5)
         elif self.glue_pardist_res == 'fine':
             U_RAS = np.arange(self.RASmax[0], self.RASmax[1]+1, 1)
         U_Cro = np.arange(self.Cro[0], self.Cro[1]+0.01, 0.01)
+
+        return U_RAS, U_Cro
+
+    def eval_recharge(self):
+        """
+        Produce a set of behavioural models that all represent the observed
+        data equiprobably and evaluate the water budget with GLUE for diffrent
+        GLUE uncertainty limits.
+        """
+
+        U_RAS, U_Cro = self.produce_params_combinations()
 
         # Find the indexes to align the water level with the weather data
         # daily time series.
@@ -198,17 +186,18 @@ class RechgEvalWorker(QObject):
         # ---- Produce realizations
 
         set_RMSE = []
-        set_RECHG = []
-        set_WLVL = []
+
         set_Sy = []
         set_RASmax = []
         set_Cru = []
 
-        set_ru = []
-        set_etr = []
+        sets_waterlevels = []
+        set_recharge = []
+        set_runoff = []
+        set_evapo = []
 
         Sy0 = np.mean(self.Sy)
-        tstart = time.clock()
+        time_start = time.clock()
         N = sum(1 for p in product(U_Cro, U_RAS))
         self.sig_glue_progress.emit(0)
         for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
@@ -217,24 +206,98 @@ class RechgEvalWorker(QObject):
                     Sy0, self.wlobs*1000, rechg[ts:te])
             Sy0 = SyOpt
 
-            if SyOpt >= self.Sy[0] and SyOpt <= self.Sy[1]:
+            if SyOpt >= min(self.Sy) and SyOpt <= max(self.Sy):
                 set_RMSE.append(RMSE)
-                set_RECHG.append(rechg)
-                set_WLVL.append(wlvlest)
+                set_recharge.append(rechg)
+                sets_waterlevels.append(wlvlest)
                 set_Sy.append(SyOpt)
                 set_RASmax.append(rasmax)
                 set_Cru.append(cro)
-                set_etr.append(etr)
-                set_ru.append(ru)
+                set_evapo.append(etr)
+                set_runoff.append(ru)
 
             self.sig_glue_progress.emit((it+1)/N*100)
             print(('Cru = %0.3f ; RASmax = %0.0f mm ; Sy = %0.4f ; ' +
                    'RMSE = %0.1f') % (cro, rasmax, SyOpt, RMSE))
 
-        tend = time.clock()
-        print("GLUE computed in : ", tend-tstart)
+        print("GLUE computed in : %0.1f s" % (time.clock()-time_start))
+        self._print_model_params_summary(set_Sy, set_Cru, set_RASmax)
 
-        if len(set_RMSE) > 0:
+        # ---- Format results
+
+        glue_rawdata = {}
+        glue_rawdata['count'] = len(set_RMSE)
+        glue_rawdata['RMSE'] = set_RMSE
+        glue_rawdata['params'] = {'Sy': set_Sy,
+                                  'RASmax': set_RASmax,
+                                  'Cru': set_Cru,
+                                  'tmelt': self.TMELT,
+                                  'CM': self.CM,
+                                  'deltat': self.deltat}
+        glue_rawdata['ranges'] = {'Sy': self.Sy,
+                                  'Cro': self.Cro,
+                                  'RASmax': self.RASmax}
+
+        glue_rawdata['water levels'] = {}
+        glue_rawdata['water levels']['time'] = self.twlvl
+        glue_rawdata['water levels']['date'] = self.wl_date
+        glue_rawdata['water levels']['observed'] = self.wlobs
+
+        glue_rawdata['Weather'] = {'Tmax': self.wxdset['Tmax'],
+                                   'Tmin': self.wxdset['Tmin'],
+                                   'Tavg': self.wxdset['Tavg'],
+                                   'Ptot': self.wxdset['Ptot'],
+                                   'Rain': self.wxdset['Rain'],
+                                   'PET': self.wxdset['PET']}
+
+        glue_rawdata['mrc'] = {}
+        glue_rawdata['mrc']['params'] = self.wldset['mrc/params']
+        glue_rawdata['mrc']['time'] = self.wldset['mrc/time']
+        glue_rawdata['mrc']['levels'] = self.wldset['mrc/recess']
+
+        # Store the models output that will need to be processed with GLUE.
+
+        glue_rawdata['hydrograph'] = sets_waterlevels
+        glue_rawdata['recharge'] = set_recharge
+        glue_rawdata['etr'] = set_evapo
+        glue_rawdata['ru'] = set_runoff
+        glue_rawdata['Time'] = self.wxdset['Time']
+        glue_rawdata['Year'] = self.wxdset['Year']
+        glue_rawdata['Month'] = self.wxdset['Month']
+        glue_rawdata['Day'] = self.wxdset['Day']
+
+        # Save infos about the piezometric station.
+
+        keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
+                'Elevation', 'Municipality']
+        glue_rawdata['wlinfo'] = {k: self.wldset[k] for k in keys}
+
+        # Save infos about the weather station.
+
+        keys = ['Station Name', 'Climate Identifier', 'Province', 'Latitude',
+                'Longitude', 'Elevation']
+        glue_rawdata['wxinfo'] = {k: self.wxdset[k] for k in keys}
+
+        self._save_glue_to_npy(glue_rawdata)
+
+        # Calcul GLUE from the set of behavioural model and send the results
+        # with a signal so that it can be handled on the UI side.
+
+        if glue_rawdata['count'] > 0:
+            glue_dataf = GLUEDataFrame(glue_rawdata)
+        else:
+            glue_dataf = None
+        self.sig_glue_finished.emit(glue_dataf)
+
+        return glue_dataf
+
+    def _print_model_params_summary(self, set_Sy, set_Cru, set_RASmax):
+        """
+        Print a summary of the range of parameter values that were used to
+        produce the set of behavioural models.
+        """
+        print('-'*78)
+        if len(set_Sy) > 0:
             print('-'*78)
             range_sy = (np.min(set_Sy), np.max(set_Sy))
             print('range Sy = %0.3f to %0.3f' % range_sy)
@@ -243,52 +306,13 @@ class RechgEvalWorker(QObject):
             range_cru = (np.min(set_Cru), np.max(set_Cru))
             print('range Cru = %0.3f to %0.3f' % range_cru)
             print('-'*78)
+        else:
+            print("The number of behavioural model produced is 0.")
 
-        # ---- Format results
-
-        self.glue_results = {}
-        self.glue_results['RMSE'] = set_RMSE
-        self.glue_results['recharge'] = set_RECHG
-        self.glue_results['etr'] = set_etr
-        self.glue_results['ru'] = set_ru
-
-        self.glue_results['wl_time'] = self.twlvl
-        self.glue_results['wl_obs'] = self.wlobs
-        self.glue_results['wl_date'] = self.wl_date
-        self.glue_results['hydrograph'] = set_WLVL
-
-        self.glue_results['Sy'] = set_Sy
-        self.glue_results['RASmax'] = set_RASmax
-        self.glue_results['Cru'] = set_Cru
-        self.glue_results['deltat'] = self.deltat
-
-        self.glue_results['Time'] = self.wxdset['Time']
-        self.glue_results['Year'] = self.wxdset['Year']
-        self.glue_results['Month'] = self.wxdset['Month']
-        self.glue_results['Day'] = self.wxdset['Day']
-        self.glue_results['Weather'] = {'Tmax': self.wxdset['Tmax'],
-                                        'Tmin': self.wxdset['Tmin'],
-                                        'Tavg': self.wxdset['Tavg'],
-                                        'Ptot': self.wxdset['Ptot'],
-                                        'Rain': self.wxdset['Rain'],
-                                        'PET': self.wxdset['PET']}
-        self.sig_glue_finished.emit(len(set_RECHG))
-        return self.glue_results
-
-    def load_glue_from_npy(self, filename):
-        """Load previously computed results from a numpy npy file."""
-        self.glue_results = np.load(filename).item()
-        return self.glue_results
-
-    def save_glue_to_npy(self, filename):
+    def _save_glue_to_npy(self, glue_rawdata):
         """Save the last computed glue results in a numpy npy file."""
-        if self.glue_results is None:
-            print("There is no results to save.")
-            return
-
-        root, ext = os.path.splitext(filename)
-        filename = filename if ext == '.npy' else filename+'.ext'
-        np.save(filename, self.glue_results)
+        filename = osp.join(osp.dirname(__file__), 'glue_rawdata.npy')
+        np.save(filename, glue_rawdata)
 
     def optimize_specific_yield(self, Sy0, wlobs, rechg):
         """
@@ -493,6 +517,22 @@ class RechgEvalWorker(QObject):
         return RECHG
 
 
+def convert_date_to_strdate(years, months, days):
+    """Produce a list of dates in bytes using the '%Y-%m-%d' format."""
+    strdates = ['%d-%02d-%02d' % (yy, mm, dd) for
+                yy, mm, dd in zip(years, months, days)]
+    # We need to encode the strings because it cannot be saved in hdf5
+    # otherwise. See https://github.com/h5py/h5py/issues/289.
+    strdates = [s.encode('utf8') for s in strdates]
+    return strdates
+
+
+def strdate_to_datetime(strdates):
+    """Return a list of datetime objects created from a list of bytes."""
+    return [datetime.datetime.strptime(s.decode('utf8'), '%Y-%m-%d')
+            for s in strdates]
+
+
 def convert_date_to_datetime(years, months, days):
     """
     Produce datetime series from years, months, and days series.
@@ -528,250 +568,7 @@ def calcul_containement_ratio(obs_wlvl, min_wlvl, max_wlvl):
     return CR
 
 
-def calcul_glue(data, p, varname='recharge'):
-    """
-    Calcul recharge for GLUE p confidence intervals from a set of
-    behavioural models.
-    """
-    if varname not in ['recharge', 'etr', 'ru', 'hydrograph']:
-        raise ValueError("varname value must be",
-                         ['recharge', 'etr', 'ru', 'hydrograph'])
-    x = np.array(data[varname])
-    m, n = np.shape(x)
-
-    rmse = np.array(data['RMSE'])
-    rmse = rmse/np.sum(rmse)  # Rescaling
-
-    glue_dly = np.zeros((n, len(p)))
-    for i in range(n):
-        # Sort predicted values.
-        isort = np.argsort(x[:, i])
-        # Compute the Cumulative Density Function.
-        CDF = np.cumsum(rmse[isort])
-        # Get GLUE values for the p confidence intervals.
-        glue_dly[i, :] = np.interp(p, CDF, x[isort, i])
-
-    return glue_dly
-
-
-def calcul_glue_yearly(data, p, year_limits=None):
-    times = np.array(data['Time']).astype(float)
-    years = np.array(data['Year']).astype(int)
-    months = np.array(data['Month']).astype(int)
-
-    glue_rechg_dly = calcul_glue(data, p, varname='recharge')
-    glue_evapo_dly = calcul_glue(data, p, varname='etr')
-    glue_runof_dly = calcul_glue(data, p, varname='ru')
-    precip_dly = data['Weather']['Ptot']
-
-    deltat = int(data['deltat'])
-    if deltat > 0:
-        # We pad data with zeros at the beginning of the recharge array and
-        # at the end of the evapotranspiration and runoff array to take into
-        # account the time delta that represents the percolation time of
-        # water through the unsaturated zone.
-        zeros_pad = np.zeros((deltat, len(p)))
-        glue_rechg_dly = np.vstack([zeros_pad, glue_rechg_dly])
-        glue_evapo_dly = np.vstack([glue_evapo_dly, zeros_pad])
-        glue_runof_dly = np.vstack([glue_runof_dly, zeros_pad])
-        precip_dly = np.hstack([precip_dly, np.zeros(len(p))])
-
-        # We extend the time and date arrays.
-        times2add = np.arange(deltat) + times[-1] + 1
-        years2add = []
-        months2add = []
-        for i, t in enumerate(times2add):
-            date = xldate_as_tuple(t, 0)
-            years2add.append(date[0])
-            months2add.append(date[1])
-        times = np.hstack([times, times2add])
-        years = np.hstack([years, years2add])
-        months = np.hstack([months, months2add])
-
-    # Define the range of the years for which yearly values of the water budget
-    # components will be computed.
-
-    if year_limits:
-        year_min = max(min(year_limits), np.min(years))
-        year_max = min(max(year_limits), np.max(years))
-    else:
-        year_min = np.min(years)
-        year_max = np.max(years)
-    year_range = np.arange(year_min, year_max).astype('int')
-
-    # Convert daily to hydrological year. An hydrological year is defined from
-    # October 1 to September 30 of the next year.
-
-    glue_rechg_yly = np.zeros((len(year_range), len(p)))
-    glue_evapo_yly = np.zeros((len(year_range), len(p)))
-    glue_runof_yly = np.zeros((len(year_range), len(p)))
-    precip_yly = np.zeros(len(year_range))
-    for i in range(len(year_range)):
-        yr0 = year_range[i]
-        yr1 = yr0 + 1
-
-        indexes = np.where((years == yr0) & (months == 10))[0]
-        indx0 = 0 if len(indexes) == 0 else indexes[0]
-
-        indexes = np.where((years == yr1) & (months == 9))[0]
-        indx1 = len(years-1) if len(indexes) == 0 else indexes[-1]
-
-        glue_rechg_yly[i, :] = np.sum(glue_rechg_dly[indx0:indx1+1, :], axis=0)
-        glue_evapo_yly[i, :] = np.sum(glue_evapo_dly[indx0:indx1+1, :], axis=0)
-        glue_runof_yly[i, :] = np.sum(glue_runof_dly[indx0:indx1+1, :], axis=0)
-        precip_yly[i] = np.sum(precip_dly[indx0:indx1+1])
-
-    return {'years': year_range,
-            'recharge': glue_rechg_yly,
-            'evapo': glue_evapo_yly,
-            'runoff': glue_runof_yly,
-            'precip': precip_yly}
-
-
-# ---- if __name__ == '__main__'
-
-if __name__ == '__main__':
-    import matplotlib.pyplot as plt
-    plt.close('all')
-    import os
-    from gwrecharge_post import plot_rechg_GLUE
-
-    sh = RechgEvalWorker()
-
-    # ---- Pont-Rouge ----
-
-#    dirname = '../Projects/Pont-Rouge/'
-#    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-#    fwaterlvl = dirname + 'Water Levels/5080001.xls'
-
-    # ---- Valcartier ----
-
-#    dirname = '../Projects/Valcartier'
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'Valcartier (9999999)',
-#                          'Valcartier (9999999)_1994-2015.out')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'valcartier2.xls')
-#
-#    Sy = [0.2, 0.3]
-#    RASmax = [40, 100]
-#    Cru = [0.22, 0.39]
-#    sh.TMELT = 0
-#    sh.CM = 4
-
-    # ---- IDM ----
-
-#    dirname = '../Projects/IDM/'
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
-#                          'IDM (JSG2017)_1960-2016.out')
-
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
-#    Sy = [0.05, 0.15]
-#    RASmax = [10, 100]
-#    Cru = [0.1, 0.3]
-#    sh.TMELT = -2
-
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Cap-aux-Meules.xls')
-#    Sy = [0.2, 0.3]
-#    RASmax = [100, 200]
-#    Cru = [0.2, 0.4]
-#    sh.TMELT = -2
-
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Fatima.xls')
-#    Sy = [0.05, 0.15]
-#    RASmax = [10, 100]
-#    Cru = [0.1, 0.3]
-#    sh.TMELT = -5
-
-    # ---- NB ----
-
-    dirname = '../Projects/Sussex'
-    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-                          'SUSSEX (8105200_8105210)',
-                          'SUSSEX (8105200_8105210)_1980-2017.out')
-    fwaterlvl = os.path.join(dirname, 'Water Levels', 'PO-03.xlsx')
-
-    Sy = [0.001, 0.05]
-    # RASmax = [40, 110]
-    # Cru = [0.35, 0.45]
-    RASmax = [40, 110]
-    Cru = [0.35, 0.45]
-#    Cru = [60, 70]
-    sh.TMELT = -2
-    sh.CM = 4
-
-    # ---- Suffield ----
-
-#    dirname = 'C:\\Users\\jnsebgosselin\\OneDrive\\Research\\Collaborations\\'
-#    dirname += 'R. Martel - Suffield\\Suffield (WHAT)'
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-#                          'MEDICINE HAT RCS (3034485)',
-#                          'MEDICINE HAT RCS (3034485)_2000-2016.out')
-
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-#                          'SUFFIELD A (3036240)',
-#                          'SUFFIELD A (3036240)_1990-2016.out')
-##
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-#                          'ROLLING HILLS AGCM (3035530)',
-#                          'ROLLING HILLS AGCM (3035530)_2007-2016.out')
-
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-#                          'ATLEE AGCM (3020405)',
-#                          'ATLEE AGCM (3020405)_2009-2016.out')
-
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output',
-#                          'SCHULER AGDM (3025768)',
-#                          'SCHULER AGDM (3025768)_2002-2016.out')
-
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'GWSU16.xlsx')
-#
-#    Sy = [0.1, 0.32]
-#    RASmax = [15, 35]
-#    Cru = [0, 0.05]
-#    sh.TMELT = -2.5
-#    sh.CM = 4
-#    sh.deltat = 80
-
-    # ---- Pont-Rouge ----
-
-#    dirname = '../Projects/Pont-Rouge/'
-#    fmeteo = dirname + 'Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-#    fwaterlvl = dirname + 'Water Levels/5080001.xls'
-
-    # ---- Wainwright ----
-
-#    dirname = '../Projects/Wainwright/'
-#    fmeteo = (dirname + 'Meteo/Output/WAINWRIGHT CFB AIRFIELD 21 (301S001)' +
-#              '/WAINWRIGHT CFB AIRFIELD 21 (301S001)_2000-2016.out')
-#
-#    fwaterlvl = dirname + 'Water Levels/area3-GW-07.xlsx'
-#
-#    Sy = [0.2*0.9, 0.2*1.1]
-#    RASmax = [15, 55]
-#    Cru = [0, 0.15]
-#    sh.TMELT = 0
-#    sh.CM = 4
-#    sh.deltat = delta = 25
-
-    # ---- Example ----
-
-#    fmeteo = ('C:/Users/jnsebgosselin/Desktop/Example/Meteo/Output/'
-#              'STE CHRISTINE (7017000)/'
-#              'STE CHRISTINE (7017000)_1990-2015.out')
-#    fwaterlvl = ('C:/Users/jnsebgosselin/Desktop/Example/'
-#                 'Water Levels/5080001.xls')
-#
-#    Sy = [0.2, 0.3]
-#    RASmax = [40, 120]
-#    Cru = [0.2, 0.4]
-#    sh.TMELT = 0
-#    sh.CM = 2.75
-
-    # ---- Calculations ----
-
-    sh.load_data(fmeteo, fwaterlvl)
-    sh.calcul_GLUE(Sy, RASmax, Cru, res='rough')
-
-    # sh.calc_recharge()
-    sh.initPlot()
-    sh.plot_prediction()
-    plot_rechg_GLUE('English', Ymin0=-20, yrs_range=[2000, 2016])
+def load_glue_from_npy(filename):
+    """Load previously computed results from a numpy npy file."""
+    glue_results = np.load(filename).item()
+    return glue_results

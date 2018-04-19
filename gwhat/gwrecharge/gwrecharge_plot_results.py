@@ -29,7 +29,9 @@ from PyQt5.QtWidgets import (
 
 # ---- Imports: local
 
-from gwhat.gwrecharge.gwrecharge_calc2 import calcul_glue, calcul_glue_yearly
+from gwhat.gwrecharge.glue import (
+    calcul_glue, calcul_hydro_yrly_budget)
+from gwhat.gwrecharge.gwrecharge_calc2 import strdate_to_datetime
 from gwhat.common import icons, QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
 from gwhat.common.widgets import QFrameLayout
@@ -45,7 +47,10 @@ class FigureStackManager(QWidget):
         super(FigureStackManager, self).__init__(parent)
         self.setMinimumSize(1250, 650)
         self.setWindowTitle('Recharge Results')
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowMinimizeButtonHint |
+                            Qt.WindowCloseButtonHint)
         self.setWindowIcon(icons.get_icon('master'))
 
         self.setup()
@@ -81,18 +86,16 @@ class FigureStackManager(QWidget):
         self.stack.addTab(self.fig_rechg_glue, 'Recharge')
         self.stack.addTab(self.fig_watbudg_glue, 'Water Budget')
 
-    def plot_results(self, glue_data):
-        p = [0.05, 0.25, 0.5, 0.75, 0.95]
-        glue_yrly = calcul_glue_yearly(glue_data, p)
+    def plot_results(self, glue_df):
+        self.fig_wl_glue.figcanvas.plot(glue_df)
+        self.fig_rechg_glue.figcanvas.plot(glue_df)
+        self.fig_watbudg_glue.figcanvas.plot(glue_df)
 
-        self.fig_wl_glue.figcanvas.plot(glue_data)
-        self.fig_rechg_glue.figcanvas.plot(glue_yrly['years'],
-                                           glue_yrly['recharge'])
-        self.fig_watbudg_glue.figcanvas.plot(glue_yrly['years'],
-                                             glue_yrly['precip'],
-                                             glue_yrly['recharge'][:, 2],
-                                             glue_yrly['evapo'][:, 2],
-                                             glue_yrly['runoff'][:, 2])
+    def clear_figures(self):
+        """Clear the figures of all figure canvas of the stack."""
+        self.fig_wl_glue.figcanvas.clear_figure(silent=False)
+        self.fig_rechg_glue.figcanvas.clear_figure(silent=False)
+        self.fig_watbudg_glue.figcanvas.clear_figure(silent=False)
 
 
 # ---- Figure setp panels
@@ -296,7 +299,7 @@ class TextOptPanel(SetpPanelBase):
         self._spb_legendsize.setAlignment(Qt.AlignCenter)
         self._spb_legendsize.setKeyboardTracking(False)
         self._spb_legendsize.valueChanged.connect(self._legend_changed)
-        
+
         self._spb_notesize = QSpinBox()
         self._spb_notesize.setSingleStep(1)
         self._spb_notesize.setMinimum(1)
@@ -335,7 +338,7 @@ class TextOptPanel(SetpPanelBase):
     def _ticks_changed(self):
         self.figcanvas.set_tick_labels_size(
             self._spb_xticksize.value(), self._spb_yticksize.value())
-        
+
     def _notes_changed(self):
         self.figcanvas.set_notes_size(self._spb_notesize.value())
 
@@ -708,18 +711,36 @@ class FigCanvasBase(FigureCanvasQTAgg):
         self.xticklabels = []
         self.notes = []
         self._xticklabels_yt = 0
+        self.ax0 = None
+        self.figure.patch.set_facecolor('white')
+        self.set_figure_setp(setp)
+
+        self.sig_fig_changed.emit(self.figure)
+
+    def clear_ax(self, silent=True):
+        """Clear the main axe."""
+        self.ax0.clear()
+        self.xticklabels = []
+        self.notes = []
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
+
+    def clear_figure(self, silent=True):
+        """Clear the whole figure."""
+        self.figure.clear()
+        self.xticklabels = []
+        self.notes = []
+        self.ax0 = None
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
+
+    def setup_ax(self):
+        """Setup the main axe of the figure."""
         self.ax0 = self.figure.add_axes([0, 0, 1, 1])
         self.ax0.patch.set_visible(False)
         for axis in ['top', 'bottom', 'left', 'right']:
             self.ax0.spines[axis].set_linewidth(0.75)
-
-        self.figure.patch.set_facecolor('white')
-        self.set_figure_setp(setp)
-
-    def clear(self):
-        self.ax0.clear()
-        self.xticklabels = []
-        self.notes = []
+        self.refresh_margins(silent=True)
 
     def set_figure_setp(self, setp):
         self.setp = setp
@@ -774,15 +795,16 @@ class FigCanvasBase(FigureCanvasQTAgg):
         self.setp['bottom margin'] = margins[3]
         self.refresh_margins()
 
-    def refresh_margins(self):
+    def refresh_margins(self, silent=False):
+        """Refresh the axes marings using the values defined in setp."""
         left = self.setp['left margin']/self.setp['fwidth']
         top = self.setp['top margin']/self.setp['fheight']
         right = self.setp['right margin']/self.setp['fwidth']
         bottom = self.setp['bottom margin']/self.setp['fheight']
         for ax in self.figure.axes:
             ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
-
-        self.sig_fig_changed.emit(self.figure)
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
 
     def set_fig_language(self, language):
         """
@@ -876,9 +898,18 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         super(FigWaterBudgetGLUE, self).__init__(setp)
         self._xticklabels_yt = -2/72
 
-    def plot(self, years, precip, rechg, evapo, runoff):
+    def plot(self, glue_df):
+        if self.ax0 is None:
+            self.setup_ax()
         ax = self.ax0
-        self.clear()
+        self.clear_ax()
+
+        glue_yrly = glue_df['hydrol yearly budget']
+        years = glue_yrly['years']
+        precip = glue_yrly['precip']
+        rechg = glue_yrly['recharge'][:, 2]
+        evapo = glue_yrly['evapo'][:, 2]
+        runoff = glue_yrly['runoff'][:, 2]
 
         # Setup xticks
 
@@ -1092,8 +1123,10 @@ class FigWaterLevelGLUE(FigCanvasBase):
     def __init__(self, setp={}):
         super(FigWaterLevelGLUE, self).__init__(setp)
 
-    def plot(self, glue_data):
-        self.clear()
+    def plot(self, glue_df):
+        if self.ax0 is None:
+            self.setup_ax()
+        self.clear_ax()
         ax = self.ax0
 
         ax.grid(axis='x', color='0.35', ls=':', lw=1, zorder=200)
@@ -1108,16 +1141,20 @@ class FigWaterLevelGLUE(FigCanvasBase):
         ax.tick_params(axis='x', direction='out')
         self.figure.autofmt_xdate()
 
-        self.setup_axes_labels()
+        # ---- Plot the observed and glue predicted water levels.
 
-        glue_dly = calcul_glue(glue_data, [0.05, 0.95], varname='hydrograph')
+        wlobs = glue_df['water levels']['observed']
+        dates = strdate_to_datetime(glue_df['water levels']['date'])
+        wl05 = glue_df['water levels']['predicted'][:, 0]/1000
+        wl95 = glue_df['water levels']['predicted'][:, 2]/1000
 
-        dates, wlobs = glue_data['wl_date'], glue_data['wl_obs']
         ax = self.figure.axes[0]
         ax.plot(dates, wlobs, color='b', ls='None', marker='.', ms=3,
                 zorder=100)
-        ax.fill_between(dates, glue_dly[:, -1]/1000, glue_dly[:, 0]/1000,
-                        facecolor='0.85', lw=1, edgecolor='0.65', zorder=0)
+        ax.fill_between(dates, wl95, wl05, facecolor='0.85', lw=1,
+                        edgecolor='0.65', zorder=0)
+
+        self.setup_axes_labels()
         self.setup_legend()
 
         self.sig_fig_changed.emit(self.figure)
@@ -1172,15 +1209,19 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def __init__(self, setp={}):
         super(FigYearlyRechgGLUE, self).__init__(setp)
-        self.ax0.set_axisbelow(True)
         self._xticklabels_yt = -4/72
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
 
-    def plot(self, year_range, glue_rechg_yr, ymin0=None, ymax0=None,
-             year_limits=None):
+    def plot(self, glue_data):
+        if self.ax0 is None:
+            self.setup_ax()
         ax0 = self.ax0
-        self.clear()
+        self.clear_ax()
+        self.ax0.set_axisbelow(True)
+
+        year_range = glue_data['hydrol yearly budget']['years']
+        glue_rechg_yr = glue_data['hydrol yearly budget']['recharge']
 
         glue95_yr = glue_rechg_yr[:, -1]
         glue05_yr = glue_rechg_yr[:, 0]
@@ -1199,9 +1240,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         # ----- ticks format
 
-        if ymax0 is None:
-            ymax0 = np.ceil(np.max(glue95_yr)/10)*10 + 50
-        ymin0 = 0 if ymin0 is None else ymin0
+        ymax0 = np.ceil(np.max(glue95_yr)/10)*10 + 50
+        ymin0 = 0
         scale_yticks = 50 if np.max(glue95_yr) < 250 else 250
         scale_yticks_minor = 10 if np.max(glue95_yr) < 250 else 50
 
@@ -1370,16 +1410,17 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 # %% ---- if __name__ == '__main__'
 
 if __name__ == '__main__':
-    from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
+    from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
+    from gwhat.gwrecharge.glue import GLUEDataFrame
     import sys
 
     app = QApplication(sys.argv)
 
-    rechg_worker = RechgEvalWorker()
-    data = rechg_worker.load_glue_from_npy("..\GLUE.npy")
+    GLUE_RAWDATA = load_glue_from_npy('glue_rawdata.npy')
+    GLUE_DF = GLUEDataFrame(GLUE_RAWDATA)
 
     figstack = FigureStackManager()
-    figstack.plot_results(data)
+    figstack.plot_results(GLUE_DF)
     figstack.show()
 
     sys.exit(app.exec_())

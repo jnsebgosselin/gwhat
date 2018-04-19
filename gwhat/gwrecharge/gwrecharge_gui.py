@@ -7,6 +7,8 @@
 # Licensed under the terms of the GNU General Public License.
 
 import time
+import os
+import os.path as osp
 
 # ---- Imports: third parties
 
@@ -14,13 +16,16 @@ import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
                              QLabel, QSizePolicy, QScrollArea, QApplication,
-                             QMessageBox)
+                             QMessageBox, QMenu, QFileDialog)
 
 # ---- Imports: local
 
 from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
+from gwhat.common.icons import QToolButtonBase, QToolButtonSmall
+from gwhat.common import icons
+from gwhat.common.utils import find_unique_filename
 
 
 class RechgEvalWidget(QFrameLayout):
@@ -31,6 +36,7 @@ class RechgEvalWidget(QFrameLayout):
 
         self.wxdset = None
         self.wldset = None
+        self.figstack = FigureStackManager(parent=self)
 
         self.progressbar = QProgressBar()
         self.progressbar.setValue(0)
@@ -39,15 +45,13 @@ class RechgEvalWidget(QFrameLayout):
 
         # Set the worker and thread mechanics
 
-        self.figstack = FigureStackManager(parent=self)
-
         self.rechg_worker = RechgEvalWorker()
         self.rechg_worker.sig_glue_finished.connect(self.receive_glue_calcul)
         self.rechg_worker.sig_glue_progress.connect(self.progressbar.setValue)
 
         self.rechg_thread = QThread()
         self.rechg_worker.moveToThread(self.rechg_thread)
-        self.rechg_thread.started.connect(self.rechg_worker.calcul_GLUE)
+        self.rechg_thread.started.connect(self.rechg_worker.eval_recharge)
 
     def __initUI__(self):
 
@@ -61,19 +65,6 @@ class RechgEvalWidget(QFrameLayout):
                 layout.setContentsMargins(0, 0, 0, 0)
                 layout.setColumnStretch(0, 100)
                 self.setLayout(layout)
-
-        # ---- Toolbar
-
-        toolbar_widget = QWidget()
-
-        btn_calib = QPushButton('Compute Recharge')
-        btn_calib.clicked.connect(self.btn_calibrate_isClicked)
-
-        toolbar_layout = QGridLayout()
-        toolbar_layout.addWidget(btn_calib, 0, 0)
-        toolbar_layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
-
-        toolbar_widget.setLayout(toolbar_layout)
 
         # ---- Parameters
 
@@ -106,9 +97,6 @@ class RechgEvalWidget(QFrameLayout):
         # Snowmelt parameters :
 
         # units=' °C'
-
-        self._Tcrit = QDoubleSpinBox(0, 1, )
-        self._Tcrit.setRange(-25, 25)
 
         self._Tmelt = QDoubleSpinBox(0, 1)
         self._Tmelt.setRange(-25, 25)
@@ -154,10 +142,6 @@ class RechgEvalWidget(QFrameLayout):
         row += 1
         params_group.setRowMinimumHeight(row, 10)
         row += 1
-        params_group.addWidget(QLabel('Tcrit :'), row, 0)
-        params_group.addWidget(self._Tcrit, row, 1)
-        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
-        row += 1
         params_group.addWidget(QLabel('Tmelt :'), row, 0)
         params_group.addWidget(self._Tmelt, row, 1)
         params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
@@ -193,13 +177,61 @@ class RechgEvalWidget(QFrameLayout):
         self.addWidget(sa, 2, 0)
         self.addWidget(HSep(), 3, 0)
         self.setRowMinimumHeight(4, 5)
-        self.addWidget(toolbar_widget, 5, 0)
+        self.addWidget(self.setup_toolbar(), 5, 0)
 
         self.setRowStretch(2, 100)
         self.setVerticalSpacing(5)
         self.setContentsMargins(0, 0, 0, 10)   # (L, T, R, B)
 
-    # =========================================================================
+    def setup_toolbar(self):
+        """Setup the toolbar of the widget. """
+        toolbar = QWidget()
+
+        btn_calib = QPushButton('Compute Recharge')
+        btn_calib.clicked.connect(self.btn_calibrate_isClicked)
+
+        self.btn_show_result = QToolButtonSmall(icons.get_icon('search'))
+        self.btn_show_result .clicked.connect(self.figstack.show)
+
+        layout = QGridLayout(toolbar)
+        layout.addWidget(btn_calib, 0, 0)
+        layout.addWidget(self.btn_show_result, 0, 1)
+        layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
+
+        return toolbar
+
+    def set_wldset(self, wldset):
+        """
+        Set the namespace for the water level dataset and plot the last
+        results saved in the project.
+        """
+        self.wldset = wldset
+        if wldset is not None and self.wldset.glue_count():
+            self.figstack.plot_results(
+                self.wldset.get_glue(self.wldset.glue_idnums()[-1]))
+            self._setup_ranges_from_wldset()
+        else:
+            self.figstack.clear_figures()
+
+    def _setup_ranges_from_wldset(self):
+        """
+        Set the parameter range values from the last values that were used
+        to produce the last GLUE results saved into the project.
+        """
+        gluedf = self.wldset.get_glue(self.wldset.glue_idnums()[-1])
+
+        self.QSy_min.setValue(min(gluedf['ranges']['Sy']))
+        self.QSy_max.setValue(max(gluedf['ranges']['Sy']))
+
+        self.CRO_min.setValue(min(gluedf['ranges']['Cro']))
+        self.CRO_max.setValue(max(gluedf['ranges']['Cro']))
+
+        self.QRAS_min.setValue(min(gluedf['ranges']['RASmax']))
+        self.QRAS_max.setValue(max(gluedf['ranges']['RASmax']))
+
+        self._Tmelt.setValue(gluedf['params']['tmelt'])
+        self._CM.setValue(gluedf['params']['CM'])
+        self._deltaT.setValue(gluedf['params']['deltat'])
 
     def get_Range(self, name):
         if name == 'Sy':
@@ -216,18 +248,12 @@ class RechgEvalWidget(QFrameLayout):
         return self._Tmelt.value()
 
     @property
-    def Tcrit(self):
-        return self._Tcrit.value()
-
-    @property
     def CM(self):
         return self._CM.value()
 
     @property
     def deltaT(self):
         return self._deltaT.value()
-
-    # =========================================================================
 
     def closeEvent(self, event):
         super(RechgEvalWidget, self).closeEvent(event)
@@ -276,15 +302,14 @@ class RechgEvalWidget(QFrameLayout):
                 return
         self.rechg_thread.start()
 
-    def receive_glue_calcul(self, N):
+    def receive_glue_calcul(self, glue_dataframe):
         """
         Handle the plotting of the results once ground-water recharge has
         been evaluated.
         """
         self.rechg_thread.quit()
         self.progressbar.hide()
-        if N == 0:
-            print("The number of behavioural model produced is 0.")
+        if glue_dataframe is None:
             msg = ("Recharge evaluation was not possible because all"
                    " the models produced were deemed non-behavioural."
                    "\n\n"
@@ -294,8 +319,73 @@ class RechgEvalWidget(QFrameLayout):
                    " behaviour of the observed hydrograph.")
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
         else:
-            glue_data = self.rechg_worker.glue_results
-            # self.rechg_worker.save_glue_to_npy("GLUE.npy")
+            self.wldset.clear_glue()
+            self.wldset.save_glue(glue_dataframe)
 
-            self.figstack.plot_results(glue_data)
+            self.figstack.plot_results(glue_dataframe)
             self.figstack.show()
+
+
+class ExportDataButton(QToolButtonBase):
+    """
+    A toolbutton with a popup menu that handles the export of data to file.
+    """
+    def __init__(self, workdir=None, data=None, *args, **kargs):
+        super(ExportDataButton, self).__init__(
+              icons.get_icon('export_data'), *args, **kargs)
+        self.__ddir = os.getcwd() if workdir is None else workdir
+        self.set_data(data)
+
+        self.setToolTip('Export time series')
+        self.setPopupMode(QToolButtonSmall.InstantPopup)
+        self.setStyleSheet("QToolButton::menu-indicator {image: none;}")
+        self.setEnabled(False)
+
+        # Generate the menu of the button :
+
+        menu = QMenu()
+        menu.addAction('Export glue results as...',
+                       lambda: self.select_export_file('daily'))
+        self.setMenu(menu)
+
+    # ---- Set data
+
+    @property
+    def data(self):
+        return self.__data
+
+    def set_data(self, data):
+        """Sets the glue data."""
+        self.__data = data
+        self.setEnabled(self.__data is not None)
+
+    # ---- Export data
+
+    def select_savefilename(self):
+        """
+        Open a dialog where the user can select a file name to save the
+        glue results.
+        """
+        if self.data is None:
+            return
+
+        ffmat = "*.xlsx;;*.xls;;*.csv"
+        fname = find_unique_filename(osp.join(self.__ddir, 'glue_results.csv'))
+        fname, ftype = QFileDialog.getSaveFileName(
+            self, "Save GLUE results", fname, ffmat)
+        if fname:
+            ftype = ftype.replace('*', '')
+            fname = fname if fname.endswith(ftype) else fname + ftype
+            self.__ddir = os.path.dirname(fname)
+            try:
+                self.save_glue_tofile(fname)
+            except PermissionError:
+                msg = "The file is in use by another application or user."
+                QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+                self.select_savefilename()
+
+    def save_glue_tofile(self, fname):
+        if self.data is None:
+            return
+        QApplication.setOverrideCursor(Qt.WaitCursor)
+        QApplication.restoreOverrideCursor()
