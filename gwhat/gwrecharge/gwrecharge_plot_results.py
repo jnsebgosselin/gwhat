@@ -91,6 +91,12 @@ class FigureStackManager(QWidget):
         self.fig_rechg_glue.figcanvas.plot(glue_df)
         self.fig_watbudg_glue.figcanvas.plot(glue_df)
 
+    def clear_figures(self):
+        """Clear the figures of all figure canvas of the stack."""
+        self.fig_wl_glue.figcanvas.clear_figure(silent=False)
+        self.fig_rechg_glue.figcanvas.clear_figure(silent=False)
+        self.fig_watbudg_glue.figcanvas.clear_figure(silent=False)
+
 
 # ---- Figure setp panels
 
@@ -705,18 +711,36 @@ class FigCanvasBase(FigureCanvasQTAgg):
         self.xticklabels = []
         self.notes = []
         self._xticklabels_yt = 0
+        self.ax0 = None
+        self.figure.patch.set_facecolor('white')
+        self.set_figure_setp(setp)
+
+        self.sig_fig_changed.emit(self.figure)
+
+    def clear_ax(self, silent=True):
+        """Clear the main axe."""
+        self.ax0.clear()
+        self.xticklabels = []
+        self.notes = []
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
+
+    def clear_figure(self, silent=True):
+        """Clear the whole figure."""
+        self.figure.clear()
+        self.xticklabels = []
+        self.notes = []
+        self.ax0 = None
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
+
+    def setup_ax(self):
+        """Setup the main axe of the figure."""
         self.ax0 = self.figure.add_axes([0, 0, 1, 1])
         self.ax0.patch.set_visible(False)
         for axis in ['top', 'bottom', 'left', 'right']:
             self.ax0.spines[axis].set_linewidth(0.75)
-
-        self.figure.patch.set_facecolor('white')
-        self.set_figure_setp(setp)
-
-    def clear(self):
-        self.ax0.clear()
-        self.xticklabels = []
-        self.notes = []
+        self.refresh_margins(silent=True)
 
     def set_figure_setp(self, setp):
         self.setp = setp
@@ -771,15 +795,16 @@ class FigCanvasBase(FigureCanvasQTAgg):
         self.setp['bottom margin'] = margins[3]
         self.refresh_margins()
 
-    def refresh_margins(self):
+    def refresh_margins(self, silent=False):
+        """Refresh the axes marings using the values defined in setp."""
         left = self.setp['left margin']/self.setp['fwidth']
         top = self.setp['top margin']/self.setp['fheight']
         right = self.setp['right margin']/self.setp['fwidth']
         bottom = self.setp['bottom margin']/self.setp['fheight']
         for ax in self.figure.axes:
             ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
-
-        self.sig_fig_changed.emit(self.figure)
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
 
     def set_fig_language(self, language):
         """
@@ -874,8 +899,10 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self._xticklabels_yt = -2/72
 
     def plot(self, glue_df):
+        if self.ax0 is None:
+            self.setup_ax()
         ax = self.ax0
-        self.clear()
+        self.clear_ax()
 
         glue_yrly = glue_df['hydrol yearly budget']
         years = glue_yrly['years']
@@ -1097,7 +1124,9 @@ class FigWaterLevelGLUE(FigCanvasBase):
         super(FigWaterLevelGLUE, self).__init__(setp)
 
     def plot(self, glue_df):
-        self.clear()
+        if self.ax0 is None:
+            self.setup_ax()
+        self.clear_ax()
         ax = self.ax0
 
         ax.grid(axis='x', color='0.35', ls=':', lw=1, zorder=200)
@@ -1180,14 +1209,16 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def __init__(self, setp={}):
         super(FigYearlyRechgGLUE, self).__init__(setp)
-        self.ax0.set_axisbelow(True)
         self._xticklabels_yt = -4/72
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
 
     def plot(self, glue_data):
+        if self.ax0 is None:
+            self.setup_ax()
         ax0 = self.ax0
-        self.clear()
+        self.clear_ax()
+        self.ax0.set_axisbelow(True)
 
         year_range = glue_data['hydrol yearly budget']['years']
         glue_rechg_yr = glue_data['hydrol yearly budget']['recharge']
