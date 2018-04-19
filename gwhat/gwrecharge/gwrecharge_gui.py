@@ -296,7 +296,9 @@ class RechgEvalWidget(QFrameLayout):
                    " behaviour of the observed hydrograph.")
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
         else:
-            self.wldset.save_glue_data(glue_dataframe)
+            self.wldset.clear_glue()
+            self.wldset.save_glue(glue_dataframe)
+
             self.figstack.plot_results(glue_dataframe)
             self.figstack.show()
 
