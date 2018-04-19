@@ -216,6 +216,27 @@ class RechgEvalWidget(QFrameLayout):
         if wldset is not None and self.wldset.glue_count():
             self.figstack.plot_results(
                 self.wldset.get_glue(self.wldset.glue_idnums()[-1]))
+            self._setup_ranges_from_wldset()
+
+    def _setup_ranges_from_wldset(self):
+        """
+        Set the parameter range values from the last values that were used
+        to produce the last GLUE results saved into the project.
+        """
+        gluedf = self.wldset.get_glue(self.wldset.glue_idnums()[-1])
+
+        self.QSy_min.setValue(min(gluedf['ranges']['Sy']))
+        self.QSy_max.setValue(max(gluedf['ranges']['Sy']))
+
+        self.CRO_min.setValue(min(gluedf['ranges']['Cro']))
+        self.CRO_max.setValue(max(gluedf['ranges']['Cro']))
+
+        self.QRAS_min.setValue(min(gluedf['ranges']['RASmax']))
+        self.QRAS_max.setValue(max(gluedf['ranges']['RASmax']))
+
+        self._Tmelt.setValue(gluedf['params']['tmelt'])
+        self._CM.setValue(gluedf['params']['CM'])
+        self._deltaT.setValue(gluedf['params']['deltat'])
 
     def get_Range(self, name):
         if name == 'Sy':
