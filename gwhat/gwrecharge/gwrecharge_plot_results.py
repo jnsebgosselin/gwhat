@@ -873,7 +873,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         ax = self.ax0
         self.clear()
 
-        glue_yrly = glue_df['budget']['hydrol yearly']
+        glue_yrly = glue_df['hydrol yearly budget']
         years = glue_yrly['years']
         precip = glue_yrly['precip']
         rechg = glue_yrly['recharge'][:, 2]
@@ -1185,8 +1185,6 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         ax0 = self.ax0
         self.clear()
 
-        year_range = glue_data['budget']['hydrol yearly']['years']
-        glue_rechg_yr = glue_data['budget']['hydrol yearly']['recharge']
 
         glue95_yr = glue_rechg_yr[:, -1]
         glue05_yr = glue_rechg_yr[:, 0]

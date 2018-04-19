@@ -226,18 +226,17 @@ class RechgEvalWorker(QObject):
         # ---- Format results
 
         glue_rawdata = {}
-        glue_rawdata['models'] = {}
-        glue_rawdata['models']['count'] = len(set_RMSE)
-        glue_rawdata['models']['RMSE'] = set_RMSE
-        glue_rawdata['models']['params'] = {'Sy': set_Sy,
-                                            'RASmax': set_RASmax,
-                                            'Cru': set_Cru,
-                                            'tmelt': self.TMELT,
-                                            'CM': self.CM,
-                                            'deltat': self.deltat}
-        glue_rawdata['models']['input ranges'] = {'Sy': self.Sy,
-                                                  'Cro': self.Cro,
-                                                  'RASmax': self.RASmax}
+        glue_rawdata['count'] = len(set_RMSE)
+        glue_rawdata['RMSE'] = set_RMSE
+        glue_rawdata['params'] = {'Sy': set_Sy,
+                                  'RASmax': set_RASmax,
+                                  'Cru': set_Cru,
+                                  'tmelt': self.TMELT,
+                                  'CM': self.CM,
+                                  'deltat': self.deltat}
+        glue_rawdata['ranges'] = {'Sy': self.Sy,
+                                  'Cro': self.Cro,
+                                  'RASmax': self.RASmax}
 
         glue_rawdata['water levels'] = {}
         glue_rawdata['water levels']['time'] = self.twlvl
@@ -284,7 +283,7 @@ class RechgEvalWorker(QObject):
         # Calcul GLUE from the set of behavioural model and send the results
         # with a signal so that it can be handled on the UI side.
 
-        if glue_rawdata['models']['count'] > 0:
+        if glue_rawdata['count'] > 0:
             glue_dataf = GLUEDataFrame(glue_rawdata)
         else:
             glue_dataf = None

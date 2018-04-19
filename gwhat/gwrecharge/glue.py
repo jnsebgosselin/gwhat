@@ -67,7 +67,10 @@ class GLUEDataFrame(GLUEDataFrameBase):
         self.store = {}
 
         # Store the model distribution info.
-        self.store['models'] = data['models']
+        self.store['count'] = data['count']
+        self.store['RMSE'] = data['RMSE']
+        self.store['params'] = data['params']
+        self.store['ranges'] = data['ranges']
 
         # Store the piezometric and weather stations info.
         self.store['wlinfo'] = data['wlinfo']
@@ -78,11 +81,14 @@ class GLUEDataFrame(GLUEDataFrameBase):
 
         # Calcul daily, monthly, and yearly GLUE values of all the computed
         # components of the water budget.
-        grp = self.store['budget'] = {}
-        grp['daily'] = calcul_dly_budget(data, [0.05, 0.25, 0.5, 0.75, 0.95])
-        grp['monthly'] = calcul_mly_budget(grp['daily'])
-        grp['yearly'] = calcul_yrly_budget(grp['monthly'])
-        grp['hydrol yearly'] = calcul_hydro_yrly_budget(grp['daily'])
+        self.store['daily budget'] = calcul_dly_budget(
+            data, [0.05, 0.25, 0.5, 0.75, 0.95])
+        self.store['monthly budget'] = calcul_mly_budget(
+            self.store['daily budget'])
+        self.store['yearly budget'] = calcul_yrly_budget(
+            self.store['monthly budget'])
+        self.store['hydrol yearly budget'] = calcul_hydro_yrly_budget(
+            self.store['daily budget'])
 
         # Calcul daily GLUE values for the water levels and store the results
         # along with the oberved values.
@@ -106,7 +112,7 @@ def calcul_glue(data, glue_limits, varname='recharge'):
     x = np.array(data[varname])
     _, n = np.shape(x)
 
-    rmse = np.array(data['models']['RMSE'])
+    rmse = np.array(data['RMSE'])
     # Rescale the RMSE so the sum of all values equal 1.
     rmse = rmse/np.sum(rmse)
 
@@ -136,7 +142,7 @@ def calcul_dly_budget(data, glue_limits):
     glue_runof_dly = calcul_glue(data, glue_limits, varname='ru')
     precip_dly = data['Weather']['Ptot']
 
-    deltat = int(data['models']['params']['deltat'])
+    deltat = int(data['params']['deltat'])
     if deltat > 0:
         # We pad data with zeros at the beginning of the recharge array and
         # at the end of the evapotranspiration and runoff array to take into
@@ -266,11 +272,7 @@ def calcul_hydro_yrly_budget(glue_dly):
         glue_runof_yly[i, :] = np.sum(glue_runof_dly[indx0:indx1+1, :], axis=0)
         precip_yly[i] = np.sum(precip_dly[indx0:indx1+1])
 
-    year_labels = ["'%s - '%s" % (str(y)[-2:], str(y+1)[-2:])
-                   for y in year_range]
-
     return {'years': year_range,
-            'year labels': year_labels,
             'recharge': glue_rechg_yly,
             'evapo': glue_evapo_yly,
             'runoff': glue_runof_yly,
