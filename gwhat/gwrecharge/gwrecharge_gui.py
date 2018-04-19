@@ -210,6 +210,8 @@ class RechgEvalWidget(QFrameLayout):
             self.figstack.plot_results(
                 self.wldset.get_glue(self.wldset.glue_idnums()[-1]))
             self._setup_ranges_from_wldset()
+        else:
+            self.figstack.clear_figures()
 
     def _setup_ranges_from_wldset(self):
         """
