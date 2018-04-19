@@ -91,7 +91,7 @@ class ProjetReader(object):
                 version = reader[4][1]
                 lat = float(reader[6][1])
                 lon = float(reader[7][1])
-        except:
+        except Exception:
             self.__db = None
             raise ValueError('Project file is not valid!')
         else:
@@ -405,7 +405,7 @@ class WLDataFrameHDF5(dict):
 
     def glue_count(self):
         """Return the number of GLUE results saved in this dataset."""
-        return len(self.glue_idnumsglue_idnums())
+        return len(self.glue_idnums())
 
     def save_glue(self, gluedf):
         """Save GLUE results in the project hdf file."""
@@ -434,6 +434,11 @@ class WLDataFrameHDF5(dict):
             print('GLUE data %s deleted successfully' % idnum)
         else:
             print('GLUE data %s does not exist' % idnum)
+
+    def clear_glue(self):
+        """Delete all GLUE results from the dataset."""
+        while self.glue_count():
+            self.del_glue(self.glue_idnums()[0])
 
     # ---- Barometric response function
 
