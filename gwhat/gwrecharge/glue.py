@@ -53,10 +53,10 @@ class GLUEDataFrame(GLUEDataFrameBase):
         raise NotImplementedError
 
     def __iter__(self):
-        raise NotImplementedError
+        return self.store.__iter__()
 
     def __len__(self):
-        raise NotImplementedError
+        return self.store.__len__()
 
     def __load_data__(self, data):
         """
