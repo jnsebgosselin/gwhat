@@ -206,6 +206,17 @@ class RechgEvalWidget(QFrameLayout):
         layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
 
         return toolbar
+
+    def set_wldset(self, wldset):
+        """
+        Set the namespace for the water level dataset and plot the last
+        results saved in the project.
+        """
+        self.wldset = wldset
+        if wldset is not None and self.wldset.glue_count():
+            self.figstack.plot_results(
+                self.wldset.get_glue(self.wldset.glue_idnums()[-1]))
+
     def get_Range(self, name):
         if name == 'Sy':
             return [self.QSy_min.value(), self.QSy_max.value()]
