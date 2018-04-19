@@ -36,6 +36,7 @@ class RechgEvalWidget(QFrameLayout):
 
         self.wxdset = None
         self.wldset = None
+        self.figstack = FigureStackManager(parent=self)
 
         self.progressbar = QProgressBar()
         self.progressbar.setValue(0)
@@ -43,8 +44,6 @@ class RechgEvalWidget(QFrameLayout):
         self.__initUI__()
 
         # Set the worker and thread mechanics
-
-        self.figstack = FigureStackManager(parent=self)
 
         self.rechg_worker = RechgEvalWorker()
         self.rechg_worker.sig_glue_finished.connect(self.receive_glue_calcul)
@@ -66,19 +65,6 @@ class RechgEvalWidget(QFrameLayout):
                 layout.setContentsMargins(0, 0, 0, 0)
                 layout.setColumnStretch(0, 100)
                 self.setLayout(layout)
-
-        # ---- Toolbar
-
-        toolbar_widget = QWidget()
-
-        btn_calib = QPushButton('Compute Recharge')
-        btn_calib.clicked.connect(self.btn_calibrate_isClicked)
-
-        toolbar_layout = QGridLayout()
-        toolbar_layout.addWidget(btn_calib, 0, 0)
-        toolbar_layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
-
-        toolbar_widget.setLayout(toolbar_layout)
 
         # ---- Parameters
 
@@ -198,12 +184,28 @@ class RechgEvalWidget(QFrameLayout):
         self.addWidget(sa, 2, 0)
         self.addWidget(HSep(), 3, 0)
         self.setRowMinimumHeight(4, 5)
-        self.addWidget(toolbar_widget, 5, 0)
+        self.addWidget(self.setup_toolbar(), 5, 0)
 
         self.setRowStretch(2, 100)
         self.setVerticalSpacing(5)
         self.setContentsMargins(0, 0, 0, 10)   # (L, T, R, B)
 
+    def setup_toolbar(self):
+        """Setup the toolbar of the widget. """
+        toolbar = QWidget()
+
+        btn_calib = QPushButton('Compute Recharge')
+        btn_calib.clicked.connect(self.btn_calibrate_isClicked)
+
+        self.btn_show_result = QToolButtonSmall(icons.get_icon('search'))
+        self.btn_show_result .clicked.connect(self.figstack.show)
+
+        layout = QGridLayout(toolbar)
+        layout.addWidget(btn_calib, 0, 0)
+        layout.addWidget(self.btn_show_result, 0, 1)
+        layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
+
+        return toolbar
     def get_Range(self, name):
         if name == 'Sy':
             return [self.QSy_min.value(), self.QSy_max.value()]
