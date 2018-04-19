@@ -131,7 +131,7 @@ class RechgEvalWorker(QObject):
         years = self.wxdset['Year'][ts:te+1]
         months = self.wxdset['Month'][ts:te+1]
         days = self.wxdset['Day'][ts:te+1]
-        self.wl_date = convert_date_to_datetime(years, months, days)
+        self.wl_date = convert_date_to_strdate(years, months, days)
 
         return None
 
@@ -515,6 +515,22 @@ class RechgEvalWorker(QObject):
             RECHG[i] *= np.sign(hp - hobs[i+1])
 
         return RECHG
+
+
+def convert_date_to_strdate(years, months, days):
+    """Produce a list of dates in bytes using the '%Y-%m-%d' format."""
+    strdates = ['%d-%02d-%02d' % (yy, mm, dd) for
+                yy, mm, dd in zip(years, months, days)]
+    # We need to encode the strings because it cannot be saved in hdf5
+    # otherwise. See https://github.com/h5py/h5py/issues/289.
+    strdates = [s.encode('utf8') for s in strdates]
+    return strdates
+
+
+def strdate_to_datetime(strdates):
+    """Return a list of datetime objects created from a list of bytes."""
+    return [datetime.datetime.strptime(s.decode('utf8'), '%Y-%m-%d')
+            for s in strdates]
 
 
 def convert_date_to_datetime(years, months, days):

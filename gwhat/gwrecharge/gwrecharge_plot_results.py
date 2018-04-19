@@ -31,6 +31,7 @@ from PyQt5.QtWidgets import (
 
 from gwhat.gwrecharge.glue import (
     calcul_glue, calcul_hydro_yrly_budget)
+from gwhat.gwrecharge.gwrecharge_calc2 import strdate_to_datetime
 from gwhat.common import icons, QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
 from gwhat.common.widgets import QFrameLayout
@@ -1111,7 +1112,7 @@ class FigWaterLevelGLUE(FigCanvasBase):
         # ---- Plot the observed and glue predicted water levels.
 
         wlobs = glue_df['water levels']['observed']
-        dates = glue_df['water levels']['date']
+        dates = strdate_to_datetime(glue_df['water levels']['date'])
         wl05 = glue_df['water levels']['predicted'][:, 0]/1000
         wl95 = glue_df['water levels']['predicted'][:, 2]/1000
 
@@ -1185,6 +1186,8 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         ax0 = self.ax0
         self.clear()
 
+        year_range = glue_data['hydrol yearly budget']['years']
+        glue_rechg_yr = glue_data['hydrol yearly budget']['recharge']
 
         glue95_yr = glue_rechg_yr[:, -1]
         glue05_yr = glue_rechg_yr[:, 0]
