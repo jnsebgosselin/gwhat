@@ -47,7 +47,10 @@ class FigureStackManager(QWidget):
         super(FigureStackManager, self).__init__(parent)
         self.setMinimumSize(1250, 650)
         self.setWindowTitle('Recharge Results')
-        self.setWindowFlags(Qt.Window)
+        self.setWindowFlags(Qt.Window |
+                            Qt.CustomizeWindowHint |
+                            Qt.WindowMinimizeButtonHint |
+                            Qt.WindowCloseButtonHint)
         self.setWindowIcon(icons.get_icon('master'))
 
         self.setup()
