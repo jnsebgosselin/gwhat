@@ -628,6 +628,14 @@ def load_dict_from_h5grp(h5grp):
 
 
 if __name__ == '__main__':
-    f = ("C:/Users/jsgosselin/GWHAT/"
-         "gwhat/tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
-    pr = ProjetReader(f)
+    FNAME = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
+    PROJET = ProjetReader(FNAME)
+
+    WLDSET = PROJET.get_wldset('3040002.0')
+    print(WLDSET.glue_idnums())
+
+    GLUEDF = WLDSET.get_glue('1')
+    glue_count = GLUEDF['count']
+    dly_glue = GLUEDF['daily budget']
+
+    PROJET.db.close()
