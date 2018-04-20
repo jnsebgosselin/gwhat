@@ -1418,6 +1418,124 @@ class FigYearlyRechgGLUE(FigCanvasBase):
             numpoints=1, bbox_to_anchor=[0, 1], loc='upper left')
 
 
+
+class FigAvgMonthlyBudget(FigCanvasBase):
+    """
+    This is a graph that shows average monthly values of the water budget
+    components calculated with GLUE at the 0.5 limit.
+    """
+    FIGNAME = "avg_monthly_water_budget"
+    FWIDTH, FHEIGHT = 8, 4.5
+    MARGINS = [1, 0.35, 0.15, 0.35]
+    COLOR = [[102/255, 178/255, 255/255],
+             [0/255, 128/255, 255/255],
+             [0/255, 76/255, 153/255],
+             [0/255, 25/255, 51/255]]
+
+    def __init__(self, setp={}):
+        super(FigAvgMonthlyBudget, self).__init__(setp)
+        self._xticklabels_yt = 5
+        self.lg_handles = []
+        self.setp['xticks size'] = 14
+        self.setp['yticks size'] = 14
+        self.setp['notes size'] = 12
+        self.setp['ylabel size'] = 16
+        self.setp['legend size'] = 12
+
+    def plot(self, glue_df):
+        """Plot the results."""
+        super(FigAvgMonthlyBudget, self).plot()
+        avg_mly = [
+            np.nanmean(glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
+            np.nanmean(glue_df['monthly budget']['runoff'][:, :, 2], axis=0),
+            np.nanmean(glue_df['monthly budget']['recharge'][:, :, 2], axis=0),
+            np.nanmean(glue_df['monthly budget']['precip'], axis=0)]
+
+        # Plot the results.
+        months = np.arange(1, 13)
+        for i, ser in enumerate(avg_mly):
+            hl, = self.ax0.plot(months, ser, marker='o', mec='white',
+                                clip_on=False, lw=2, color=self.COLOR[i],
+                                zorder=3)
+            self.lg_handles.append(hl)
+
+        # Setup the axis limits.
+        if 'ymin' not in self.setp.keys():
+            self.setp['ymin'] = 0
+        if 'ymax' not in self.setp.keys():
+            self.setp['ymax'] = np.max(avg_mly) + 10
+        if 'yscl' not in self.setp.keys():
+            self.setp['yscl'] = 50
+        if 'yscl minor' not in self.setp.keys():
+            self.setp['yscl minor'] = 10
+        self.setup_ylimits()
+        self.ax0.axis(xmin=0.5, xmax=12.5)
+        self.ax0.set_xticks(months)
+
+        # Setup ticks.
+        self.setup_xticklabels()
+        self.setup_yticklabels()
+
+        # Setup grid and axes labels.
+        self.ax0.grid(axis='y', color=[0.35, 0.35, 0.35], ls='-', lw=0.5)
+        self.ax0.set_axisbelow(True)
+        self.setup_axes_labels()
+
+        self.setup_axes_labels()
+        self.setup_legend()
+
+        self.sig_fig_changed.emit(self.figure)
+        self.sig_newfig_plotted.emit(self.setp)
+
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
+        self.setup_xticklabels()
+        self.setup_legend()
+
+    def setup_axes_labels(self):
+        """Set the text and position of the axes labels."""
+        if self.setp['language'] == 'french':
+            ylabel = "Colonne d'eau équivalente (mm/mois)"
+        else:
+            ylabel = 'Equivalent Water (mm/month)'
+        self.ax0.set_ylabel(ylabel, fontsize=self.setp['ylabel size'],
+                            labelpad=10)
+
+    def setup_yticklabels(self):
+        """Setup the labels of the yaxis."""
+        self.ax0.tick_params(axis='y', direction='out', gridOn=True,
+                             labelsize=self.setp['yticks size'])
+        self.ax0.tick_params(axis='y', direction='out', which='minor',
+                             gridOn=False)
+
+    def setup_xticklabels(self):
+        """Setup the labels of the xaxis."""
+        if self.setp['language'] == 'french':
+            labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+                      'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+        else:
+            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        self.ax0.set_xticklabels(labels)
+        self.ax0.tick_params(axis='x', gridOn=True, length=0, pad=6,
+                             labelsize=self.setp['xticks size'])
+
+    def setup_legend(self):
+        """Setup the legend of the graph."""
+        if self.setp['language'] == 'french':
+            labels = ['Évapotranspiration', 'Ruissellement',
+                      'Recharge', 'Précipitations']
+        else:
+            labels = ['Evapotranspiration', 'Runoff',
+                      'Recharge', 'Precipitation']
+        legend = self.ax0.legend(
+            self.lg_handles, labels, numpoints=1, borderaxespad=0,
+            loc='lower left', borderpad=0.5, bbox_to_anchor=(0, 1, 1, 1),
+            ncol=4, mode="expand", fontsize=self.setp['legend size'])
+        legend.draw_frame(False)
+
+
 # %% ---- if __name__ == '__main__'
 
 if __name__ == '__main__':
