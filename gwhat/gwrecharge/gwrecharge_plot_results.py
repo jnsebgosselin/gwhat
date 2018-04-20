@@ -1115,11 +1115,11 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         Set the text and position of the axes labels.
         """
         if self.setp['language'] == 'french':
-            ylabel = "Colonne d'eau équivalente (mm)"
+            ylabel = "Colonne d'eau équivalente (mm/an)"
             xlabel = ("Année Hydrologique (1er octobre d'une"
                       " année au 30 septembre de l'année suivante)")
         else:
-            ylabel = 'Equivalent Water (mm)'
+            ylabel = 'Equivalent Water (mm/y)'
             xlabel = ("Hydrological Years (October 1st of one"
                       " year to September 30th of the next)")
 
