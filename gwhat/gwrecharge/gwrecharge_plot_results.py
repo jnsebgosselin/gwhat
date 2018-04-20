@@ -1418,6 +1418,135 @@ class FigYearlyRechgGLUE(FigCanvasBase):
             numpoints=1, bbox_to_anchor=[0, 1], loc='upper left')
 
 
+class FigAvgYearlyBudget(FigCanvasBase):
+    """
+    This is a graph that shows average yearly values of the water budget
+    components calculated with GLUE at the 0.5 limit.
+    """
+    FIGNAME = "avg_yearly_water_budget"
+    FWIDTH, FHEIGHT = 8, 4.5
+    MARGINS = [1, 0.15, 0.15, 0.35]
+    COLOR = [[102/255, 178/255, 255/255],
+             [0/255, 128/255, 255/255],
+             [0/255, 76/255, 153/255],
+             [0/255, 25/255, 51/255]]
+
+    def __init__(self, setp={}):
+        super(FigAvgYearlyBudget, self).__init__(setp)
+        self._xticklabels_yt = 5
+        self.bar_handles = []
+        self.setp['xticks size'] = 12
+        self.setp['yticks size'] = 14
+        self.setp['notes size'] = 12
+        self.setp['ylabel size'] = 16
+
+    def plot(self, glue_df):
+        super(FigAvgYearlyBudget, self).plot()
+
+        avg_yrly_rechg = np.nanmean(glue_df['yearly budget']['recharge'])
+        avg_yrly_evapo = np.nanmean(glue_df['yearly budget']['evapo'])
+        avg_yrly_runoff = np.nanmean(glue_df['yearly budget']['runoff'])
+        avg_yrly_precip = np.nanmean(glue_df['yearly budget']['precip'])
+
+        avg_yrly = [np.nanmean(glue_df['yearly budget']['evapo']),
+                    np.nanmean(glue_df['yearly budget']['runoff']),
+                    np.nanmean(glue_df['yearly budget']['recharge']),
+                    np.nanmean(glue_df['yearly budget']['precip'])]
+
+        # Plot the results.
+        offset = mpl.transforms.ScaledTranslation(
+            0, 3/72, self.figure.dpi_scale_trans)
+        self.bar_handles = []
+        self.notes = []
+        for i, val in enumerate(avg_yrly):
+            l, = self.ax0.bar(i+1, val, 0.65, align='center',
+                              color=self.COLOR[i])
+            self.bar_handles.append(l)
+            self.notes.append(self.ax0.text(
+                i+1, val, "%d" % val, ha='center', va='bottom',
+                transform=self.ax0.transData + offset,
+                fontsize=self.setp['notes size']))
+
+        # Setup the axis limits.
+        if 'ymin' not in self.setp.keys():
+            self.setp['ymin'] = 0
+        if 'ymax' not in self.setp.keys():
+            self.setp['ymax'] = np.max(
+                [avg_yrly_rechg, avg_yrly_evapo,
+                 avg_yrly_runoff, avg_yrly_precip]) + 100
+        if 'yscl' not in self.setp.keys():
+            self.setp['yscl'] = 250
+        if 'yscl minor' not in self.setp.keys():
+            self.setp['yscl minor'] = 50
+        self.setup_ylimits()
+        self.ax0.axis(xmin=0.25, xmax=4.75)
+        self.ax0.set_xticks([1, 2, 3, 4])
+
+        # Setup ticks.
+        self.setup_xticklabels()
+        self.setup_yticklabels()
+
+        # Setup grid and axes labels.
+        self.ax0.grid(axis='y', color=[0.35, 0.35, 0.35], ls='-', lw=0.5)
+        self.ax0.set_axisbelow(True)
+        self.setup_axes_labels()
+
+        self.sig_fig_changed.emit(self.figure)
+        self.sig_newfig_plotted.emit(self.setp)
+
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
+        self.setup_xticklabels()
+
+    def setup_axes_labels(self):
+        """Set the text and position of the axes labels."""
+        if self.setp['language'] == 'french':
+            ylabel = "Colonne d'eau équivalente (mm/an)"
+        else:
+            ylabel = 'Equivalent Water (mm/y)'
+        self.ax0.set_ylabel(ylabel, fontsize=self.setp['ylabel size'],
+                            labelpad=10)
+
+    def setup_xticklabels(self):
+        """Setup the labels of the xaxis."""
+        if self.setp['language'] == 'french':
+            labels = ['Évapotranspiration', 'Ruissellement',
+                      'Recharge', 'Précipitations']
+        else:
+            labels = ['Evapotranspiration', 'Runoff',
+                      'Recharge', 'Precipitation']
+
+        self.ax0.tick_params(axis='x', gridOn=False, length=0)
+        self.ax0.xaxis.set_ticklabels([])
+        for label in self.xticklabels:
+            label.remove()
+        self.xticklabels = []
+
+        # Draw the labels anew.
+        for i, label in enumerate(labels):
+            self.xticklabels.append(self.ax0.text(
+                i+1, self.setp['ymin'], label, rotation=0,
+                va='bottom', ha='center', fontsize=self.setp['xticks size']))
+
+        # Calculate and set the transform of the xticklabels.
+        yt = self._get_xaxis_labelpad()
+        offset = mpl.transforms.ScaledTranslation(
+            0, -yt/72, self.figure.dpi_scale_trans)
+        for xticklabel in self.xticklabels:
+            xticklabel.set_transform(self.ax0.transData + offset)
+
+    def setup_yticklabels(self):
+        """Setup the labels of the yaxis."""
+        self.ax0.tick_params(axis='y', direction='out', gridOn=True,
+                             labelsize=self.setp['yticks size'])
+        self.ax0.tick_params(axis='y', direction='out', which='minor',
+                             gridOn=False)
+
+    def setup_legend(self):
+        """Setup the legend of the graph."""
+        pass
+
 
 class FigAvgMonthlyBudget(FigCanvasBase):
     """
