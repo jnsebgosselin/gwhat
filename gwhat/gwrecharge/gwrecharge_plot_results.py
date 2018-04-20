@@ -578,8 +578,7 @@ class YAxisOptPanel(SetpPanelBase):
     def _yaxis_changed(self):
         self.figcanvas.set_ylimits(
             self._spb_ymin.value(), self._spb_ymax.value(),
-            self._spb_yscl.value(), self._spb_yscl_minor.value()
-        )
+            self._spb_yscl.value(), self._spb_yscl_minor.value())
 
 
 # ---- Figure managers
