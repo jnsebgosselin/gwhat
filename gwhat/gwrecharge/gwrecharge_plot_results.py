@@ -331,14 +331,17 @@ class TextOptPanel(SetpPanelBase):
     def _legend_changed(self):
         self.figcanvas.set_legend_fontsize(self._spb_legendsize.value())
 
+    @QSlot()
     def _axes_labels_changed(self):
         self.figcanvas.set_axes_labels_size(
             self._spb_xlabelsize.value(), self._spb_ylabelsize.value())
 
+    @QSlot()
     def _ticks_changed(self):
         self.figcanvas.set_tick_labels_size(
             self._spb_xticksize.value(), self._spb_yticksize.value())
 
+    @QSlot()
     def _notes_changed(self):
         self.figcanvas.set_notes_size(self._spb_notesize.value())
 
@@ -664,7 +667,7 @@ class FigManagerBase(QWidget):
     @QSlot()
     def _language_changed(self):
         """Handle when the language is changed by the user."""
-        self.figcanvas.set_fig_language(self.fig_language)
+        self.figcanvas.set_language(self.fig_language)
 
     def _select_savefig_path(self):
         """Open a dialog window to select a file to save the figure."""
@@ -717,31 +720,6 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
         self.sig_fig_changed.emit(self.figure)
 
-    def clear_ax(self, silent=True):
-        """Clear the main axe."""
-        self.ax0.clear()
-        self.xticklabels = []
-        self.notes = []
-        if not silent:
-            self.sig_fig_changed.emit(self.figure)
-
-    def clear_figure(self, silent=True):
-        """Clear the whole figure."""
-        self.figure.clear()
-        self.xticklabels = []
-        self.notes = []
-        self.ax0 = None
-        if not silent:
-            self.sig_fig_changed.emit(self.figure)
-
-    def setup_ax(self):
-        """Setup the main axe of the figure."""
-        self.ax0 = self.figure.add_axes([0, 0, 1, 1])
-        self.ax0.patch.set_visible(False)
-        for axis in ['top', 'bottom', 'left', 'right']:
-            self.ax0.spines[axis].set_linewidth(0.75)
-        self.refresh_margins(silent=True)
-
     def set_figure_setp(self, setp):
         self.setp = setp
         if 'language' not in self.setp.keys():
@@ -773,6 +751,48 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
         self.figure.set_size_inches(self.setp['fwidth'], self.setp['fheight'])
         self.refresh_margins()
+
+    def clear_ax(self, silent=True):
+        """Clear the main axe."""
+        self.ax0.clear()
+        self.xticklabels = []
+        self.notes = []
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
+
+    def clear_figure(self, silent=True):
+        """Clear the whole figure."""
+        self.figure.clear()
+        self.xticklabels = []
+        self.notes = []
+        self.ax0 = None
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
+
+    def plot(self):
+        """Plot the data."""
+        if self.ax0 is None:
+            self.setup_ax()
+        self.clear_ax()
+
+    def set_language(self, language):
+        """Set the language of the text shown in the figure."""
+        self.setp['language'] = language.lower()
+        if self.ax0 is not None:
+            self.setup_language()
+            self.sig_fig_changed.emit(self.figure)
+
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        pass
+
+    def setup_ax(self):
+        """Setup the main axe of the figure."""
+        self.ax0 = self.figure.add_axes([0, 0, 1, 1])
+        self.ax0.patch.set_visible(False)
+        for axis in ['top', 'bottom', 'left', 'right']:
+            self.ax0.spines[axis].set_linewidth(0.75)
+        self.refresh_margins(silent=True)
 
     def set_fig_size(self, fw, fh, units='IP'):
         """
@@ -806,20 +826,27 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
-    def set_fig_language(self, language):
-        """
-        Set the language of the text shown in the figure. This needs to be
-        impemented in the derived class.
-        """
-        pass
-
     def set_xlimits(self, xmin, xmax):
         """Set the limits of the xaxis to the provided values."""
         pass
 
-    def set_ylimits(self, ymin, ymax):
+    def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
         """Set the limits of the yaxis to the provided values."""
-        pass
+        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
+        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
+        if self.ax0 is not None:
+            self.setup_ylimits()
+            self.sig_fig_changed.emit(self.figure)
+
+    def setup_ylimits(self):
+        """Setup the limits of the yaxis"""
+        self.ax0.set_yticks(np.arange(self.setp['ymin'],
+                                      self.setp['ymax']+1,
+                                      self.setp['yscl']))
+        self.ax0.set_yticks(np.arange(self.setp['ymin'],
+                                      self.setp['ymax']+1,
+                                      self.setp['yscl minor']), minor=True)
+        self.ax0.axis(ymin=self.setp['ymin'], ymax=self.setp['ymax'])
 
     def set_legend_fontsize(self, fontsize):
         """Set the font size of the text in the legend in points."""
@@ -1060,26 +1087,15 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
             self.sig_fig_changed.emit(self.figure)
 
-    def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
-        """Set the limits of the yaxis to the provided values."""
-        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
-        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
-        if self.ax0 is not None:
-            self.setup_xticklabels()
-            self.ax0.set_yticks(np.arange(ymin, ymax+1, yscl))
-            self.ax0.set_yticks(
-                np.arange(ymin, ymax+1, yscl_minor), minor=True)
-            self.ax0.axis(ymin=ymin, ymax=ymax)
+    def setup_ylimits(self):
+        """Setup the limits of the yaxis."""
+        super(FigWaterBudgetGLUE, self).setup_ylimits()
+        self.setup_xticklabels()
 
-            self.sig_fig_changed.emit(self.figure)
-
-    def set_fig_language(self, language):
-        """Set the language of the text shown in the figure."""
-        self.setp['language'] = language.lower()
-        if self.ax0 is not None:
-            self.setup_axes_labels()
-            self.setup_legend()
-            self.sig_fig_changed.emit(self.figure)
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
+        self.setup_legend()
 
     def setup_axes_labels(self):
         """
@@ -1170,20 +1186,13 @@ class FigWaterLevelGLUE(FigCanvasBase):
         """Set the limits of the xaxis to the provided values."""
         pass
 
-    def set_ylimits(self, ymin, ymax, yscl=None, yscl_minor=None):
-        """Set the limits of the yaxis to the provided values."""
-        if self.ax0 is not None:
-            self.ax0.axis(ymin=ymin, ymax=ymax)
-            self.sig_fig_changed.emit(self.figure)
+    def setup_ylimits(self):
+        """Setup the limits of the yaxis."""
+        self.ax0.axis(ymin=self.setp['ymin'], ymax=self.setp['ymax'])
 
-    def set_fig_language(self, language):
-        """
-        Set the language of the text shown in the figure.
-        """
-        self.setp['language'] = language.lower()
-        if self.ax0 is not None:
-            self.setup_axes_labels()
-            self.sig_fig_changed.emit(self.figure)
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
 
     def setup_legend(self):
         """Setup the legend of the graph."""
@@ -1300,13 +1309,10 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.sig_fig_changed.emit(self.figure)
         self.sig_newfig_plotted.emit(self.setp)
 
-    def set_fig_language(self, language):
-        """Set the language of the text shown in the figure."""
-        self.setp['language'] = language.lower()
-        if self.ax0 is not None:
-            self.setup_axes_labels()
-            self.refresh_yearly_avg_legend_text()
-            self.sig_fig_changed.emit(self.figure)
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
+        self.refresh_yearly_avg_legend_text()
 
     def setup_xticklabels(self):
         """Setup the year labels of the xaxis."""
@@ -1347,16 +1353,10 @@ class FigYearlyRechgGLUE(FigCanvasBase):
             self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
             self.sig_fig_changed.emit(self.figure)
 
-    def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
-        """Set the limits of the yaxis to the provided values."""
-        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
-        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
-        if self.ax0 is not None:
-            self.setup_xticklabels()
-            self.ax0.set_yticks(np.arange(0, 2*ymax+1, yscl))
-            self.ax0.set_yticks(np.arange(0, 2*ymax, yscl_minor), minor=True)
-            self.ax0.axis(ymin=ymin, ymax=ymax)
-            self.sig_fig_changed.emit(self.figure)
+    def setup_ylimits(self):
+        """Setup the limits of the yaxis"""
+        super(FigYearlyRechgGLUE, self).setup_ylimits()
+        self.setup_xticklabels()
 
     def setup_axes_labels(self):
         """Set the text and position of the axes labels."""
