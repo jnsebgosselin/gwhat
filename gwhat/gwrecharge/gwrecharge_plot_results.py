@@ -236,46 +236,12 @@ class MarginSizePanel(SetpPanelBase):
 
 
 class TextOptPanel(SetpPanelBase):
-    def __init__(self, parent=None):
-        super(TextOptPanel, self).__init__(parent)
-        self.setup()
+    def __init__(self, **kwargs):
+        super(TextOptPanel, self).__init__(parent=None)
+        self.setup(**kwargs)
 
-    def setup(self):
-        """Setup the gui of the panel."""
-        self.layout().addWidget(self._setup_textprop_grpbox())
-        self.layout().setRowStretch(self.layout().rowCount(), 100)
-
-    @QSlot(dict)
-    def update_from_setp(self, setp):
-        self._spb_xlabelsize.blockSignals(True)
-        self._spb_xlabelsize.setValue(setp['xlabel size'])
-        self._spb_xlabelsize.blockSignals(False)
-
-        self._spb_xticksize.blockSignals(True)
-        self._spb_xticksize.setValue(setp['xticks size'])
-        self._spb_xticksize.blockSignals(False)
-
-        self._spb_ylabelsize.blockSignals(True)
-        self._spb_ylabelsize.setValue(setp['ylabel size'])
-        self._spb_ylabelsize.blockSignals(False)
-
-        self._spb_ylabelsize.blockSignals(True)
-        self._spb_ylabelsize.setValue(setp['ylabel size'])
-        self._spb_ylabelsize.blockSignals(False)
-
-        self._spb_yticksize.blockSignals(True)
-        self._spb_yticksize.setValue(setp['yticks size'])
-        self._spb_yticksize.blockSignals(False)
-
-        self._spb_yticksize.blockSignals(True)
-        self._spb_legendsize.setValue(setp['legend size'])
-        self._spb_yticksize.blockSignals(False)
-
-        self._spb_notesize.blockSignals(True)
-        self._spb_notesize.setValue(setp['notes size'])
-        self._spb_notesize.blockSignals(False)
-
-    def _setup_textprop_grpbox(self):
+    def setup(self, xlabelsize=True, xticksize=True, ylabelsize=True,
+              yticksize=True, legendsize=True, notesize=True):
         """
         Setup a group box with widgets that allows to set the figure
         text properties.
@@ -325,24 +291,68 @@ class TextOptPanel(SetpPanelBase):
         grpbox = QGroupBox("Text Properties :")
         layout = QGridLayout(grpbox)
 
-        layout.addWidget(QLabel('xlabel size:'), 0, 0)
-        layout.addWidget(self._spb_xlabelsize, 0, 2)
-        layout.addWidget(QLabel('xticks size:'), 1, 0)
-        layout.addWidget(self._spb_xticksize, 1, 2)
-        layout.addWidget(QLabel('ylabel size:'), 2, 0)
-        layout.addWidget(self._spb_ylabelsize, 2, 2)
-        layout.addWidget(QLabel('yticks size:'), 3, 0)
-        layout.addWidget(self._spb_yticksize, 3, 2)
-        layout.addWidget(QLabel('legend size:'), 4, 0)
-        layout.addWidget(self._spb_legendsize, 4, 2)
-        layout.addWidget(QLabel('notes size:'), 5, 0)
-        layout.addWidget(self._spb_notesize, 5, 2)
+        if xlabelsize:
+            layout.addWidget(QLabel('xlabel size:'), 0, 0)
+            layout.addWidget(self._spb_xlabelsize, 0, 2)
+        self._spb_xlabelsize.setVisible(xlabelsize)
+        if xticksize:
+            layout.addWidget(QLabel('xticks size:'), 1, 0)
+            layout.addWidget(self._spb_xticksize, 1, 2)
+        self._spb_xticksize.setVisible(xticksize)
+        if ylabelsize:
+            layout.addWidget(QLabel('ylabel size:'), 2, 0)
+            layout.addWidget(self._spb_ylabelsize, 2, 2)
+        self._spb_ylabelsize.setVisible(ylabelsize)
+        if yticksize:
+            layout.addWidget(QLabel('yticks size:'), 3, 0)
+            layout.addWidget(self._spb_yticksize, 3, 2)
+        self._spb_yticksize.setVisible(yticksize)
+        if legendsize:
+            layout.addWidget(QLabel('legend size:'), 4, 0)
+            layout.addWidget(self._spb_legendsize, 4, 2)
+        self._spb_legendsize.setVisible(legendsize)
+        if notesize:
+            layout.addWidget(QLabel('notes size:'), 5, 0)
+            layout.addWidget(self._spb_notesize, 5, 2)
+        self._spb_notesize.setVisible(notesize)
 
         layout.setColumnStretch(1, 100)
         layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
-        return grpbox
+        self.layout().addWidget(grpbox)
+        self.layout().setRowStretch(self.layout().rowCount(), 100)
 
+    @QSlot(dict)
+    def update_from_setp(self, setp):
+        self._spb_xlabelsize.blockSignals(True)
+        self._spb_xlabelsize.setValue(setp['xlabel size'])
+        self._spb_xlabelsize.blockSignals(False)
+
+        self._spb_xticksize.blockSignals(True)
+        self._spb_xticksize.setValue(setp['xticks size'])
+        self._spb_xticksize.blockSignals(False)
+
+        self._spb_ylabelsize.blockSignals(True)
+        self._spb_ylabelsize.setValue(setp['ylabel size'])
+        self._spb_ylabelsize.blockSignals(False)
+
+        self._spb_ylabelsize.blockSignals(True)
+        self._spb_ylabelsize.setValue(setp['ylabel size'])
+        self._spb_ylabelsize.blockSignals(False)
+
+        self._spb_yticksize.blockSignals(True)
+        self._spb_yticksize.setValue(setp['yticks size'])
+        self._spb_yticksize.blockSignals(False)
+
+        self._spb_yticksize.blockSignals(True)
+        self._spb_legendsize.setValue(setp['legend size'])
+        self._spb_yticksize.blockSignals(False)
+
+        self._spb_notesize.blockSignals(True)
+        self._spb_notesize.setValue(setp['notes size'])
+        self._spb_notesize.blockSignals(False)
+
+    @QSlot()
     def _legend_changed(self):
         self.figcanvas.set_legend_fontsize(self._spb_legendsize.value())
 
