@@ -899,7 +899,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
         """
         Calcul the vertical padding in points between the xaxis and its label.
         This corresponds to the sum of the xtick labels height and their
-        vertical padding.
+        vertical padding in points.
         """
         # Random text bbox height :
         renderer = self.get_renderer()
@@ -942,13 +942,11 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
     def __init__(self, setp={}):
         super(FigWaterBudgetGLUE, self).__init__(setp)
-        self._xticklabels_yt = -2/72
+        self._xticklabels_yt = 2
 
     def plot(self, glue_df):
-        if self.ax0 is None:
-            self.setup_ax()
+        super(FigWaterBudgetGLUE, self).plot()
         ax = self.ax0
-        self.clear_ax()
 
         glue_yrly = glue_df['hydrol yearly budget']
         years = glue_yrly['years']
@@ -975,10 +973,10 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.setp['ymin'] = 0
         self.setp['ymax'] = np.ceil(np.max(precip)/100)*100
         self.setp['yscl'] = 250
-        self.setp['yscl_minor'] = 50
+        self.setp['yscl minor'] = 50
 
         self.set_ylimits(self.setp['ymin'], self.setp['ymax'],
-                         self.setp['yscl'], self.setp['yscl_minor'])
+                         self.setp['yscl'], self.setp['yscl minor'])
         self.set_xlimits(self.setp['xmin'], self.setp['xmax'])
 
         self.setup_axes_labels()
@@ -1074,7 +1072,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
         xt = self._get_xlabel_xt(self.setp['xticks size'], 45)
         offset = mpl.transforms.ScaledTranslation(
-            xt, self._xticklabels_yt, self.figure.dpi_scale_trans)
+            xt, -self._xticklabels_yt/72, self.figure.dpi_scale_trans)
         for i in range(len(year_range)):
             self.xticklabels.append(self.ax0.text(
                 year_range[i], self.setp['ymin'], xlabels[i], rotation=45,
@@ -1161,9 +1159,7 @@ class FigWaterLevelGLUE(FigCanvasBase):
         super(FigWaterLevelGLUE, self).__init__(setp)
 
     def plot(self, glue_df):
-        if self.ax0 is None:
-            self.setup_ax()
-        self.clear_ax()
+        super(FigWaterLevelGLUE, self).plot()
         ax = self.ax0
 
         ax.grid(axis='x', color='0.35', ls=':', lw=1, zorder=200)
@@ -1242,15 +1238,13 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def __init__(self, setp={}):
         super(FigYearlyRechgGLUE, self).__init__(setp)
-        self._xticklabels_yt = -4/72
+        self._xticklabels_yt = 4
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
 
     def plot(self, glue_data):
-        if self.ax0 is None:
-            self.setup_ax()
+        super(FigYearlyRechgGLUE, self).plot()
         ax0 = self.ax0
-        self.clear_ax()
         self.ax0.set_axisbelow(True)
 
         year_range = glue_data['hydrol yearly budget']['years']
@@ -1289,10 +1283,10 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.setp['ymin'] = ymin0
         self.setp['ymax'] = ymax0
         self.setp['yscl'] = scale_yticks
-        self.setp['yscl_minor'] = scale_yticks_minor
+        self.setp['yscl minor'] = scale_yticks_minor
 
         self.set_ylimits(self.setp['ymin'], self.setp['ymax'],
-                         self.setp['yscl'], self.setp['yscl_minor'])
+                         self.setp['yscl'], self.setp['yscl minor'])
         self.set_xlimits(self.setp['xmin'], self.setp['xmax'])
 
         # ---- Plot results
@@ -1345,7 +1339,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         xt = self._get_xlabel_xt(self.setp['xticks size'], 45)
         offset = mpl.transforms.ScaledTranslation(
-            xt, self._xticklabels_yt, self.figure.dpi_scale_trans)
+            xt, -self._xticklabels_yt/72, self.figure.dpi_scale_trans)
         for i in range(len(year_range)):
             self.xticklabels.append(self.ax0.text(
                 year_range[i], self.setp['ymin'], xlabels[i], rotation=45,
