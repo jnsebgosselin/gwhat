@@ -52,7 +52,7 @@ class FigureStackManager(QWidget):
                             Qt.WindowMinimizeButtonHint |
                             Qt.WindowCloseButtonHint)
         self.setWindowIcon(icons.get_icon('master'))
-
+        self.figmanagers = []
         self.setup()
 
     def setup(self):
@@ -62,40 +62,55 @@ class FigureStackManager(QWidget):
         layout.addWidget(self.stack, 0, 0)
 
     def setup_stack(self):
-        self.fig_wl_glue = FigManagerBase(
+        fig_wl_glue = FigManagerBase(
             FigWaterLevelGLUE,
             setp_panels=[FigSizePanel(),
                          MarginSizePanel()])
-        self.fig_rechg_glue = FigManagerBase(
+        fig_rechg_glue = FigManagerBase(
             FigYearlyRechgGLUE,
             setp_panels=[FigSizePanel(),
                          MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
-        self.fig_watbudg_glue = FigManagerBase(
+        fig_watbudg_glue = FigManagerBase(
             FigWaterBudgetGLUE,
             setp_panels=[FigSizePanel(),
                          MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
+        fig_avg_yearly_budg = FigManagerBase(
+            FigAvgYearlyBudget,
+            setp_panels=[FigSizePanel(),
+                         MarginSizePanel(),
+                         YAxisOptPanel(),
+                         TextOptPanel(xlabelsize=False, legendsize=False)])
+        fig_avg_monthly_budg = FigManagerBase(
+            FigAvgMonthlyBudget,
+            setp_panels=[FigSizePanel(),
+                         MarginSizePanel(),
+                         YAxisOptPanel(),
+                         TextOptPanel(xlabelsize=False, notesize=False)])
+
+        self.figmanagers = [fig_wl_glue, fig_rechg_glue, fig_watbudg_glue,
+                            fig_avg_yearly_budg, fig_avg_monthly_budg]
 
         self.stack = QTabWidget()
-        self.stack.addTab(self.fig_wl_glue, 'Hydrograph')
-        self.stack.addTab(self.fig_rechg_glue, 'Recharge')
-        self.stack.addTab(self.fig_watbudg_glue, 'Water Budget')
+        self.stack.addTab(fig_wl_glue, 'Hydrograph')
+        self.stack.addTab(fig_rechg_glue, 'Recharge')
+        self.stack.addTab(fig_watbudg_glue, 'Yearly Budget')
+        self.stack.addTab(fig_avg_yearly_budg, 'Yearly Avg. Budget')
+        self.stack.addTab(fig_avg_monthly_budg, 'Monthly Avg. Budget')
 
     def plot_results(self, glue_df):
-        self.fig_wl_glue.figcanvas.plot(glue_df)
-        self.fig_rechg_glue.figcanvas.plot(glue_df)
-        self.fig_watbudg_glue.figcanvas.plot(glue_df)
+        for figmanager in self.figmanagers:
+            figmanager.figcanvas.plot(glue_df)
 
     def clear_figures(self):
         """Clear the figures of all figure canvas of the stack."""
-        self.fig_wl_glue.figcanvas.clear_figure(silent=False)
-        self.fig_rechg_glue.figcanvas.clear_figure(silent=False)
-        self.fig_watbudg_glue.figcanvas.clear_figure(silent=False)
+        for figmanager in self.figmanagers:
+            figmanager.figcanvas.clear_figure(silent=False)
 
 
 # ---- Figure setp panels
