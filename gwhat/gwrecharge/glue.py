@@ -208,7 +208,7 @@ def calcul_mly_budget(glue_dly):
                 continue
             for var in ['recharge', 'evapo', 'runoff']:
                 glue_mly[var][i, j, :] = np.sum(
-                    glue_dly['recharge'][indexes, :], axis=0)
+                    glue_dly[var][indexes, :], axis=0)
             glue_mly['precip'][i, j] = np.sum(glue_dly['precip'][indexes])
 
     return glue_mly

@@ -52,7 +52,7 @@ class FigureStackManager(QWidget):
                             Qt.WindowMinimizeButtonHint |
                             Qt.WindowCloseButtonHint)
         self.setWindowIcon(icons.get_icon('master'))
-
+        self.figmanagers = []
         self.setup()
 
     def setup(self):
@@ -62,40 +62,55 @@ class FigureStackManager(QWidget):
         layout.addWidget(self.stack, 0, 0)
 
     def setup_stack(self):
-        self.fig_wl_glue = FigManagerBase(
+        fig_wl_glue = FigManagerBase(
             FigWaterLevelGLUE,
             setp_panels=[FigSizePanel(),
                          MarginSizePanel()])
-        self.fig_rechg_glue = FigManagerBase(
+        fig_rechg_glue = FigManagerBase(
             FigYearlyRechgGLUE,
             setp_panels=[FigSizePanel(),
                          MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
-        self.fig_watbudg_glue = FigManagerBase(
+        fig_watbudg_glue = FigManagerBase(
             FigWaterBudgetGLUE,
             setp_panels=[FigSizePanel(),
                          MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
+        fig_avg_yearly_budg = FigManagerBase(
+            FigAvgYearlyBudget,
+            setp_panels=[FigSizePanel(),
+                         MarginSizePanel(),
+                         YAxisOptPanel(),
+                         TextOptPanel(xlabelsize=False, legendsize=False)])
+        fig_avg_monthly_budg = FigManagerBase(
+            FigAvgMonthlyBudget,
+            setp_panels=[FigSizePanel(),
+                         MarginSizePanel(),
+                         YAxisOptPanel(),
+                         TextOptPanel(xlabelsize=False, notesize=False)])
+
+        self.figmanagers = [fig_wl_glue, fig_rechg_glue, fig_watbudg_glue,
+                            fig_avg_yearly_budg, fig_avg_monthly_budg]
 
         self.stack = QTabWidget()
-        self.stack.addTab(self.fig_wl_glue, 'Hydrograph')
-        self.stack.addTab(self.fig_rechg_glue, 'Recharge')
-        self.stack.addTab(self.fig_watbudg_glue, 'Water Budget')
+        self.stack.addTab(fig_wl_glue, 'Hydrograph')
+        self.stack.addTab(fig_rechg_glue, 'Recharge')
+        self.stack.addTab(fig_watbudg_glue, 'Yearly Budget')
+        self.stack.addTab(fig_avg_yearly_budg, 'Yearly Avg. Budget')
+        self.stack.addTab(fig_avg_monthly_budg, 'Monthly Avg. Budget')
 
     def plot_results(self, glue_df):
-        self.fig_wl_glue.figcanvas.plot(glue_df)
-        self.fig_rechg_glue.figcanvas.plot(glue_df)
-        self.fig_watbudg_glue.figcanvas.plot(glue_df)
+        for figmanager in self.figmanagers:
+            figmanager.figcanvas.plot(glue_df)
 
     def clear_figures(self):
         """Clear the figures of all figure canvas of the stack."""
-        self.fig_wl_glue.figcanvas.clear_figure(silent=False)
-        self.fig_rechg_glue.figcanvas.clear_figure(silent=False)
-        self.fig_watbudg_glue.figcanvas.clear_figure(silent=False)
+        for figmanager in self.figmanagers:
+            figmanager.figcanvas.clear_figure(silent=False)
 
 
 # ---- Figure setp panels
@@ -221,46 +236,12 @@ class MarginSizePanel(SetpPanelBase):
 
 
 class TextOptPanel(SetpPanelBase):
-    def __init__(self, parent=None):
-        super(TextOptPanel, self).__init__(parent)
-        self.setup()
+    def __init__(self, **kwargs):
+        super(TextOptPanel, self).__init__(parent=None)
+        self.setup(**kwargs)
 
-    def setup(self):
-        """Setup the gui of the panel."""
-        self.layout().addWidget(self._setup_textprop_grpbox())
-        self.layout().setRowStretch(self.layout().rowCount(), 100)
-
-    @QSlot(dict)
-    def update_from_setp(self, setp):
-        self._spb_xlabelsize.blockSignals(True)
-        self._spb_xlabelsize.setValue(setp['xlabel size'])
-        self._spb_xlabelsize.blockSignals(False)
-
-        self._spb_xticksize.blockSignals(True)
-        self._spb_xticksize.setValue(setp['xticks size'])
-        self._spb_xticksize.blockSignals(False)
-
-        self._spb_ylabelsize.blockSignals(True)
-        self._spb_ylabelsize.setValue(setp['ylabel size'])
-        self._spb_ylabelsize.blockSignals(False)
-
-        self._spb_ylabelsize.blockSignals(True)
-        self._spb_ylabelsize.setValue(setp['ylabel size'])
-        self._spb_ylabelsize.blockSignals(False)
-
-        self._spb_yticksize.blockSignals(True)
-        self._spb_yticksize.setValue(setp['yticks size'])
-        self._spb_yticksize.blockSignals(False)
-
-        self._spb_yticksize.blockSignals(True)
-        self._spb_legendsize.setValue(setp['legend size'])
-        self._spb_yticksize.blockSignals(False)
-
-        self._spb_notesize.blockSignals(True)
-        self._spb_notesize.setValue(setp['notes size'])
-        self._spb_notesize.blockSignals(False)
-
-    def _setup_textprop_grpbox(self):
+    def setup(self, xlabelsize=True, xticksize=True, ylabelsize=True,
+              yticksize=True, legendsize=True, notesize=True):
         """
         Setup a group box with widgets that allows to set the figure
         text properties.
@@ -310,35 +291,82 @@ class TextOptPanel(SetpPanelBase):
         grpbox = QGroupBox("Text Properties :")
         layout = QGridLayout(grpbox)
 
-        layout.addWidget(QLabel('xlabel size:'), 0, 0)
-        layout.addWidget(self._spb_xlabelsize, 0, 2)
-        layout.addWidget(QLabel('xticks size:'), 1, 0)
-        layout.addWidget(self._spb_xticksize, 1, 2)
-        layout.addWidget(QLabel('ylabel size:'), 2, 0)
-        layout.addWidget(self._spb_ylabelsize, 2, 2)
-        layout.addWidget(QLabel('yticks size:'), 3, 0)
-        layout.addWidget(self._spb_yticksize, 3, 2)
-        layout.addWidget(QLabel('legend size:'), 4, 0)
-        layout.addWidget(self._spb_legendsize, 4, 2)
-        layout.addWidget(QLabel('notes size:'), 5, 0)
-        layout.addWidget(self._spb_notesize, 5, 2)
+        if xlabelsize:
+            layout.addWidget(QLabel('xlabel size:'), 0, 0)
+            layout.addWidget(self._spb_xlabelsize, 0, 2)
+        self._spb_xlabelsize.setVisible(xlabelsize)
+        if xticksize:
+            layout.addWidget(QLabel('xticks size:'), 1, 0)
+            layout.addWidget(self._spb_xticksize, 1, 2)
+        self._spb_xticksize.setVisible(xticksize)
+        if ylabelsize:
+            layout.addWidget(QLabel('ylabel size:'), 2, 0)
+            layout.addWidget(self._spb_ylabelsize, 2, 2)
+        self._spb_ylabelsize.setVisible(ylabelsize)
+        if yticksize:
+            layout.addWidget(QLabel('yticks size:'), 3, 0)
+            layout.addWidget(self._spb_yticksize, 3, 2)
+        self._spb_yticksize.setVisible(yticksize)
+        if legendsize:
+            layout.addWidget(QLabel('legend size:'), 4, 0)
+            layout.addWidget(self._spb_legendsize, 4, 2)
+        self._spb_legendsize.setVisible(legendsize)
+        if notesize:
+            layout.addWidget(QLabel('notes size:'), 5, 0)
+            layout.addWidget(self._spb_notesize, 5, 2)
+        self._spb_notesize.setVisible(notesize)
 
         layout.setColumnStretch(1, 100)
         layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
-        return grpbox
+        self.layout().addWidget(grpbox)
+        self.layout().setRowStretch(self.layout().rowCount(), 100)
 
+    @QSlot(dict)
+    def update_from_setp(self, setp):
+        self._spb_xlabelsize.blockSignals(True)
+        self._spb_xlabelsize.setValue(setp['xlabel size'])
+        self._spb_xlabelsize.blockSignals(False)
+
+        self._spb_xticksize.blockSignals(True)
+        self._spb_xticksize.setValue(setp['xticks size'])
+        self._spb_xticksize.blockSignals(False)
+
+        self._spb_ylabelsize.blockSignals(True)
+        self._spb_ylabelsize.setValue(setp['ylabel size'])
+        self._spb_ylabelsize.blockSignals(False)
+
+        self._spb_ylabelsize.blockSignals(True)
+        self._spb_ylabelsize.setValue(setp['ylabel size'])
+        self._spb_ylabelsize.blockSignals(False)
+
+        self._spb_yticksize.blockSignals(True)
+        self._spb_yticksize.setValue(setp['yticks size'])
+        self._spb_yticksize.blockSignals(False)
+
+        self._spb_yticksize.blockSignals(True)
+        self._spb_legendsize.setValue(setp['legend size'])
+        self._spb_yticksize.blockSignals(False)
+
+        self._spb_notesize.blockSignals(True)
+        self._spb_notesize.setValue(setp['notes size'])
+        self._spb_notesize.blockSignals(False)
+
+    @QSlot()
     def _legend_changed(self):
         self.figcanvas.set_legend_fontsize(self._spb_legendsize.value())
 
+    @QSlot()
     def _axes_labels_changed(self):
         self.figcanvas.set_axes_labels_size(
             self._spb_xlabelsize.value(), self._spb_ylabelsize.value())
 
+    @QSlot()
     def _ticks_changed(self):
         self.figcanvas.set_tick_labels_size(
             self._spb_xticksize.value(), self._spb_yticksize.value())
 
+    @QSlot()
     def _notes_changed(self):
         self.figcanvas.set_notes_size(self._spb_notesize.value())
 
@@ -550,8 +578,7 @@ class YAxisOptPanel(SetpPanelBase):
     def _yaxis_changed(self):
         self.figcanvas.set_ylimits(
             self._spb_ymin.value(), self._spb_ymax.value(),
-            self._spb_yscl.value(), self._spb_yscl_minor.value()
-        )
+            self._spb_yscl.value(), self._spb_yscl_minor.value())
 
 
 # ---- Figure managers
@@ -664,7 +691,7 @@ class FigManagerBase(QWidget):
     @QSlot()
     def _language_changed(self):
         """Handle when the language is changed by the user."""
-        self.figcanvas.set_fig_language(self.fig_language)
+        self.figcanvas.set_language(self.fig_language)
 
     def _select_savefig_path(self):
         """Open a dialog window to select a file to save the figure."""
@@ -717,31 +744,6 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
         self.sig_fig_changed.emit(self.figure)
 
-    def clear_ax(self, silent=True):
-        """Clear the main axe."""
-        self.ax0.clear()
-        self.xticklabels = []
-        self.notes = []
-        if not silent:
-            self.sig_fig_changed.emit(self.figure)
-
-    def clear_figure(self, silent=True):
-        """Clear the whole figure."""
-        self.figure.clear()
-        self.xticklabels = []
-        self.notes = []
-        self.ax0 = None
-        if not silent:
-            self.sig_fig_changed.emit(self.figure)
-
-    def setup_ax(self):
-        """Setup the main axe of the figure."""
-        self.ax0 = self.figure.add_axes([0, 0, 1, 1])
-        self.ax0.patch.set_visible(False)
-        for axis in ['top', 'bottom', 'left', 'right']:
-            self.ax0.spines[axis].set_linewidth(0.75)
-        self.refresh_margins(silent=True)
-
     def set_figure_setp(self, setp):
         self.setp = setp
         if 'language' not in self.setp.keys():
@@ -773,6 +775,48 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
         self.figure.set_size_inches(self.setp['fwidth'], self.setp['fheight'])
         self.refresh_margins()
+
+    def clear_ax(self, silent=True):
+        """Clear the main axe."""
+        self.ax0.clear()
+        self.xticklabels = []
+        self.notes = []
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
+
+    def clear_figure(self, silent=True):
+        """Clear the whole figure."""
+        self.figure.clear()
+        self.xticklabels = []
+        self.notes = []
+        self.ax0 = None
+        if not silent:
+            self.sig_fig_changed.emit(self.figure)
+
+    def plot(self):
+        """Plot the data."""
+        if self.ax0 is None:
+            self.setup_ax()
+        self.clear_ax()
+
+    def set_language(self, language):
+        """Set the language of the text shown in the figure."""
+        self.setp['language'] = language.lower()
+        if self.ax0 is not None:
+            self.setup_language()
+            self.sig_fig_changed.emit(self.figure)
+
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        pass
+
+    def setup_ax(self):
+        """Setup the main axe of the figure."""
+        self.ax0 = self.figure.add_axes([0, 0, 1, 1])
+        self.ax0.patch.set_visible(False)
+        for axis in ['top', 'bottom', 'left', 'right']:
+            self.ax0.spines[axis].set_linewidth(0.75)
+        self.refresh_margins(silent=True)
 
     def set_fig_size(self, fw, fh, units='IP'):
         """
@@ -806,20 +850,27 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
-    def set_fig_language(self, language):
-        """
-        Set the language of the text shown in the figure. This needs to be
-        impemented in the derived class.
-        """
-        pass
-
     def set_xlimits(self, xmin, xmax):
         """Set the limits of the xaxis to the provided values."""
         pass
 
-    def set_ylimits(self, ymin, ymax):
+    def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
         """Set the limits of the yaxis to the provided values."""
-        pass
+        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
+        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
+        if self.ax0 is not None:
+            self.setup_ylimits()
+            self.sig_fig_changed.emit(self.figure)
+
+    def setup_ylimits(self):
+        """Setup the limits of the yaxis"""
+        self.ax0.set_yticks(np.arange(self.setp['ymin'],
+                                      self.setp['ymax']+1,
+                                      self.setp['yscl']))
+        self.ax0.set_yticks(np.arange(self.setp['ymin'],
+                                      self.setp['ymax']+1,
+                                      self.setp['yscl minor']), minor=True)
+        self.ax0.axis(ymin=self.setp['ymin'], ymax=self.setp['ymax'])
 
     def set_legend_fontsize(self, fontsize):
         """Set the font size of the text in the legend in points."""
@@ -857,7 +908,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
         """
         Calcul the vertical padding in points between the xaxis and its label.
         This corresponds to the sum of the xtick labels height and their
-        vertical padding.
+        vertical padding in points.
         """
         # Random text bbox height :
         renderer = self.get_renderer()
@@ -900,13 +951,11 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
     def __init__(self, setp={}):
         super(FigWaterBudgetGLUE, self).__init__(setp)
-        self._xticklabels_yt = -2/72
+        self._xticklabels_yt = 2
 
     def plot(self, glue_df):
-        if self.ax0 is None:
-            self.setup_ax()
+        super(FigWaterBudgetGLUE, self).plot()
         ax = self.ax0
-        self.clear_ax()
 
         glue_yrly = glue_df['hydrol yearly budget']
         years = glue_yrly['years']
@@ -933,10 +982,10 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.setp['ymin'] = 0
         self.setp['ymax'] = np.ceil(np.max(precip)/100)*100
         self.setp['yscl'] = 250
-        self.setp['yscl_minor'] = 50
+        self.setp['yscl minor'] = 50
 
         self.set_ylimits(self.setp['ymin'], self.setp['ymax'],
-                         self.setp['yscl'], self.setp['yscl_minor'])
+                         self.setp['yscl'], self.setp['yscl minor'])
         self.set_xlimits(self.setp['xmin'], self.setp['xmax'])
 
         self.setup_axes_labels()
@@ -1032,7 +1081,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
         xt = self._get_xlabel_xt(self.setp['xticks size'], 45)
         offset = mpl.transforms.ScaledTranslation(
-            xt, self._xticklabels_yt, self.figure.dpi_scale_trans)
+            xt, -self._xticklabels_yt/72, self.figure.dpi_scale_trans)
         for i in range(len(year_range)):
             self.xticklabels.append(self.ax0.text(
                 year_range[i], self.setp['ymin'], xlabels[i], rotation=45,
@@ -1060,37 +1109,26 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
             self.sig_fig_changed.emit(self.figure)
 
-    def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
-        """Set the limits of the yaxis to the provided values."""
-        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
-        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
-        if self.ax0 is not None:
-            self.setup_xticklabels()
-            self.ax0.set_yticks(np.arange(ymin, ymax+1, yscl))
-            self.ax0.set_yticks(
-                np.arange(ymin, ymax+1, yscl_minor), minor=True)
-            self.ax0.axis(ymin=ymin, ymax=ymax)
+    def setup_ylimits(self):
+        """Setup the limits of the yaxis."""
+        super(FigWaterBudgetGLUE, self).setup_ylimits()
+        self.setup_xticklabels()
 
-            self.sig_fig_changed.emit(self.figure)
-
-    def set_fig_language(self, language):
-        """Set the language of the text shown in the figure."""
-        self.setp['language'] = language.lower()
-        if self.ax0 is not None:
-            self.setup_axes_labels()
-            self.setup_legend()
-            self.sig_fig_changed.emit(self.figure)
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
+        self.setup_legend()
 
     def setup_axes_labels(self):
         """
         Set the text and position of the axes labels.
         """
         if self.setp['language'] == 'french':
-            ylabel = "Colonne d'eau équivalente (mm)"
+            ylabel = "Colonne d'eau équivalente (mm/an)"
             xlabel = ("Année Hydrologique (1er octobre d'une"
                       " année au 30 septembre de l'année suivante)")
         else:
-            ylabel = 'Equivalent Water (mm)'
+            ylabel = 'Equivalent Water (mm/y)'
             xlabel = ("Hydrological Years (October 1st of one"
                       " year to September 30th of the next)")
 
@@ -1130,9 +1168,7 @@ class FigWaterLevelGLUE(FigCanvasBase):
         super(FigWaterLevelGLUE, self).__init__(setp)
 
     def plot(self, glue_df):
-        if self.ax0 is None:
-            self.setup_ax()
-        self.clear_ax()
+        super(FigWaterLevelGLUE, self).plot()
         ax = self.ax0
 
         ax.grid(axis='x', color='0.35', ls=':', lw=1, zorder=200)
@@ -1170,20 +1206,13 @@ class FigWaterLevelGLUE(FigCanvasBase):
         """Set the limits of the xaxis to the provided values."""
         pass
 
-    def set_ylimits(self, ymin, ymax, yscl=None, yscl_minor=None):
-        """Set the limits of the yaxis to the provided values."""
-        if self.ax0 is not None:
-            self.ax0.axis(ymin=ymin, ymax=ymax)
-            self.sig_fig_changed.emit(self.figure)
+    def setup_ylimits(self):
+        """Setup the limits of the yaxis."""
+        self.ax0.axis(ymin=self.setp['ymin'], ymax=self.setp['ymax'])
 
-    def set_fig_language(self, language):
-        """
-        Set the language of the text shown in the figure.
-        """
-        self.setp['language'] = language.lower()
-        if self.ax0 is not None:
-            self.setup_axes_labels()
-            self.sig_fig_changed.emit(self.figure)
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
 
     def setup_legend(self):
         """Setup the legend of the graph."""
@@ -1218,15 +1247,13 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def __init__(self, setp={}):
         super(FigYearlyRechgGLUE, self).__init__(setp)
-        self._xticklabels_yt = -4/72
+        self._xticklabels_yt = 4
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
 
     def plot(self, glue_data):
-        if self.ax0 is None:
-            self.setup_ax()
+        super(FigYearlyRechgGLUE, self).plot()
         ax0 = self.ax0
-        self.clear_ax()
         self.ax0.set_axisbelow(True)
 
         year_range = glue_data['hydrol yearly budget']['years']
@@ -1265,10 +1292,10 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.setp['ymin'] = ymin0
         self.setp['ymax'] = ymax0
         self.setp['yscl'] = scale_yticks
-        self.setp['yscl_minor'] = scale_yticks_minor
+        self.setp['yscl minor'] = scale_yticks_minor
 
         self.set_ylimits(self.setp['ymin'], self.setp['ymax'],
-                         self.setp['yscl'], self.setp['yscl_minor'])
+                         self.setp['yscl'], self.setp['yscl minor'])
         self.set_xlimits(self.setp['xmin'], self.setp['xmax'])
 
         # ---- Plot results
@@ -1300,13 +1327,10 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.sig_fig_changed.emit(self.figure)
         self.sig_newfig_plotted.emit(self.setp)
 
-    def set_fig_language(self, language):
-        """Set the language of the text shown in the figure."""
-        self.setp['language'] = language.lower()
-        if self.ax0 is not None:
-            self.setup_axes_labels()
-            self.refresh_yearly_avg_legend_text()
-            self.sig_fig_changed.emit(self.figure)
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
+        self.refresh_yearly_avg_legend_text()
 
     def setup_xticklabels(self):
         """Setup the year labels of the xaxis."""
@@ -1324,7 +1348,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
         xt = self._get_xlabel_xt(self.setp['xticks size'], 45)
         offset = mpl.transforms.ScaledTranslation(
-            xt, self._xticklabels_yt, self.figure.dpi_scale_trans)
+            xt, -self._xticklabels_yt/72, self.figure.dpi_scale_trans)
         for i in range(len(year_range)):
             self.xticklabels.append(self.ax0.text(
                 year_range[i], self.setp['ymin'], xlabels[i], rotation=45,
@@ -1347,16 +1371,10 @@ class FigYearlyRechgGLUE(FigCanvasBase):
             self.ax0.axis(xmin=xmin-0.5, xmax=xmax+0.5)
             self.sig_fig_changed.emit(self.figure)
 
-    def set_ylimits(self, ymin, ymax, yscl, yscl_minor):
-        """Set the limits of the yaxis to the provided values."""
-        self.setp['ymin'], self.setp['ymax'] = ymin, ymax
-        self.setp['yscl'], self.setp['yscl minor'] = yscl, yscl_minor
-        if self.ax0 is not None:
-            self.setup_xticklabels()
-            self.ax0.set_yticks(np.arange(0, 2*ymax+1, yscl))
-            self.ax0.set_yticks(np.arange(0, 2*ymax, yscl_minor), minor=True)
-            self.ax0.axis(ymin=ymin, ymax=ymax)
-            self.sig_fig_changed.emit(self.figure)
+    def setup_ylimits(self):
+        """Setup the limits of the yaxis"""
+        super(FigYearlyRechgGLUE, self).setup_ylimits()
+        self.setup_xticklabels()
 
     def setup_axes_labels(self):
         """Set the text and position of the axes labels."""
@@ -1416,6 +1434,253 @@ class FigYearlyRechgGLUE(FigCanvasBase):
             lg_handles, lg_labels, ncol=3, fontsize=self.setp['legend size'],
             frameon=False, handletextpad=0.2, borderaxespad=0.2, borderpad=0.2,
             numpoints=1, bbox_to_anchor=[0, 1], loc='upper left')
+
+
+class FigAvgYearlyBudget(FigCanvasBase):
+    """
+    This is a graph that shows average yearly values of the water budget
+    components calculated with GLUE at the 0.5 limit.
+    """
+    FIGNAME = "avg_yearly_water_budget"
+    FWIDTH, FHEIGHT = 8, 4.5
+    MARGINS = [1, 0.15, 0.15, 0.35]
+    COLOR = [[102/255, 178/255, 255/255],
+             [0/255, 128/255, 255/255],
+             [0/255, 76/255, 153/255],
+             [0/255, 25/255, 51/255]]
+
+    def __init__(self, setp={}):
+        super(FigAvgYearlyBudget, self).__init__(setp)
+        self._xticklabels_yt = 5
+        self.bar_handles = []
+        self.setp['xticks size'] = 12
+        self.setp['yticks size'] = 14
+        self.setp['notes size'] = 12
+        self.setp['ylabel size'] = 16
+
+    def plot(self, glue_df):
+        super(FigAvgYearlyBudget, self).plot()
+
+        avg_yrly_rechg = np.nanmean(glue_df['yearly budget']['recharge'])
+        avg_yrly_evapo = np.nanmean(glue_df['yearly budget']['evapo'])
+        avg_yrly_runoff = np.nanmean(glue_df['yearly budget']['runoff'])
+        avg_yrly_precip = np.nanmean(glue_df['yearly budget']['precip'])
+
+        avg_yrly = [np.nanmean(glue_df['yearly budget']['evapo']),
+                    np.nanmean(glue_df['yearly budget']['runoff']),
+                    np.nanmean(glue_df['yearly budget']['recharge']),
+                    np.nanmean(glue_df['yearly budget']['precip'])]
+
+        # Plot the results.
+        offset = mpl.transforms.ScaledTranslation(
+            0, 3/72, self.figure.dpi_scale_trans)
+        self.bar_handles = []
+        self.notes = []
+        for i, val in enumerate(avg_yrly):
+            l, = self.ax0.bar(i+1, val, 0.65, align='center',
+                              color=self.COLOR[i])
+            self.bar_handles.append(l)
+            self.notes.append(self.ax0.text(
+                i+1, val, "%d" % val, ha='center', va='bottom',
+                transform=self.ax0.transData + offset,
+                fontsize=self.setp['notes size']))
+
+        # Setup the axis limits.
+        if 'ymin' not in self.setp.keys():
+            self.setp['ymin'] = 0
+        if 'ymax' not in self.setp.keys():
+            self.setp['ymax'] = np.max(
+                [avg_yrly_rechg, avg_yrly_evapo,
+                 avg_yrly_runoff, avg_yrly_precip]) + 100
+        if 'yscl' not in self.setp.keys():
+            self.setp['yscl'] = 250
+        if 'yscl minor' not in self.setp.keys():
+            self.setp['yscl minor'] = 50
+        self.setup_ylimits()
+        self.ax0.axis(xmin=0.25, xmax=4.75)
+        self.ax0.set_xticks([1, 2, 3, 4])
+
+        # Setup ticks.
+        self.setup_xticklabels()
+        self.setup_yticklabels()
+
+        # Setup grid and axes labels.
+        self.ax0.grid(axis='y', color=[0.35, 0.35, 0.35], ls='-', lw=0.5)
+        self.ax0.set_axisbelow(True)
+        self.setup_axes_labels()
+
+        self.sig_fig_changed.emit(self.figure)
+        self.sig_newfig_plotted.emit(self.setp)
+
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
+        self.setup_xticklabels()
+
+    def setup_axes_labels(self):
+        """Set the text and position of the axes labels."""
+        if self.setp['language'] == 'french':
+            ylabel = "Colonne d'eau équivalente (mm/an)"
+        else:
+            ylabel = 'Equivalent Water (mm/y)'
+        self.ax0.set_ylabel(ylabel, fontsize=self.setp['ylabel size'],
+                            labelpad=10)
+
+    def setup_xticklabels(self):
+        """Setup the labels of the xaxis."""
+        if self.setp['language'] == 'french':
+            labels = ['Évapotranspiration', 'Ruissellement',
+                      'Recharge', 'Précipitations']
+        else:
+            labels = ['Evapotranspiration', 'Runoff',
+                      'Recharge', 'Precipitation']
+
+        self.ax0.tick_params(axis='x', gridOn=False, length=0)
+        self.ax0.xaxis.set_ticklabels([])
+        for label in self.xticklabels:
+            label.remove()
+        self.xticklabels = []
+
+        # Draw the labels anew.
+        for i, label in enumerate(labels):
+            self.xticklabels.append(self.ax0.text(
+                i+1, self.setp['ymin'], label, rotation=0,
+                va='bottom', ha='center', fontsize=self.setp['xticks size']))
+
+        # Calculate and set the transform of the xticklabels.
+        yt = self._get_xaxis_labelpad()
+        offset = mpl.transforms.ScaledTranslation(
+            0, -yt/72, self.figure.dpi_scale_trans)
+        for xticklabel in self.xticklabels:
+            xticklabel.set_transform(self.ax0.transData + offset)
+
+    def setup_yticklabels(self):
+        """Setup the labels of the yaxis."""
+        self.ax0.tick_params(axis='y', direction='out', gridOn=True,
+                             labelsize=self.setp['yticks size'])
+        self.ax0.tick_params(axis='y', direction='out', which='minor',
+                             gridOn=False)
+
+    def setup_legend(self):
+        """Setup the legend of the graph."""
+        pass
+
+
+class FigAvgMonthlyBudget(FigCanvasBase):
+    """
+    This is a graph that shows average monthly values of the water budget
+    components calculated with GLUE at the 0.5 limit.
+    """
+    FIGNAME = "avg_monthly_water_budget"
+    FWIDTH, FHEIGHT = 8, 4.5
+    MARGINS = [1, 0.35, 0.15, 0.35]
+    COLOR = [[102/255, 178/255, 255/255],
+             [0/255, 128/255, 255/255],
+             [0/255, 76/255, 153/255],
+             [0/255, 25/255, 51/255]]
+
+    def __init__(self, setp={}):
+        super(FigAvgMonthlyBudget, self).__init__(setp)
+        self._xticklabels_yt = 5
+        self.lg_handles = []
+        self.setp['xticks size'] = 14
+        self.setp['yticks size'] = 14
+        self.setp['notes size'] = 12
+        self.setp['ylabel size'] = 16
+        self.setp['legend size'] = 12
+
+    def plot(self, glue_df):
+        """Plot the results."""
+        super(FigAvgMonthlyBudget, self).plot()
+        avg_mly = [
+            np.nanmean(glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
+            np.nanmean(glue_df['monthly budget']['runoff'][:, :, 2], axis=0),
+            np.nanmean(glue_df['monthly budget']['recharge'][:, :, 2], axis=0),
+            np.nanmean(glue_df['monthly budget']['precip'], axis=0)]
+
+        # Plot the results.
+        months = np.arange(1, 13)
+        for i, ser in enumerate(avg_mly):
+            hl, = self.ax0.plot(months, ser, marker='o', mec='white',
+                                clip_on=False, lw=2, color=self.COLOR[i],
+                                zorder=3)
+            self.lg_handles.append(hl)
+
+        # Setup the axis limits.
+        if 'ymin' not in self.setp.keys():
+            self.setp['ymin'] = 0
+        if 'ymax' not in self.setp.keys():
+            self.setp['ymax'] = np.max(avg_mly) + 10
+        if 'yscl' not in self.setp.keys():
+            self.setp['yscl'] = 50
+        if 'yscl minor' not in self.setp.keys():
+            self.setp['yscl minor'] = 10
+        self.setup_ylimits()
+        self.ax0.axis(xmin=0.5, xmax=12.5)
+        self.ax0.set_xticks(months)
+
+        # Setup ticks.
+        self.setup_xticklabels()
+        self.setup_yticklabels()
+
+        # Setup grid and axes labels.
+        self.ax0.grid(axis='y', color=[0.35, 0.35, 0.35], ls='-', lw=0.5)
+        self.ax0.set_axisbelow(True)
+        self.setup_axes_labels()
+
+        self.setup_axes_labels()
+        self.setup_legend()
+
+        self.sig_fig_changed.emit(self.figure)
+        self.sig_newfig_plotted.emit(self.setp)
+
+    def setup_language(self):
+        """Setup the language of the text shown in the figure."""
+        self.setup_axes_labels()
+        self.setup_xticklabels()
+        self.setup_legend()
+
+    def setup_axes_labels(self):
+        """Set the text and position of the axes labels."""
+        if self.setp['language'] == 'french':
+            ylabel = "Colonne d'eau équivalente (mm/mois)"
+        else:
+            ylabel = 'Equivalent Water (mm/month)'
+        self.ax0.set_ylabel(ylabel, fontsize=self.setp['ylabel size'],
+                            labelpad=10)
+
+    def setup_yticklabels(self):
+        """Setup the labels of the yaxis."""
+        self.ax0.tick_params(axis='y', direction='out', gridOn=True,
+                             labelsize=self.setp['yticks size'])
+        self.ax0.tick_params(axis='y', direction='out', which='minor',
+                             gridOn=False)
+
+    def setup_xticklabels(self):
+        """Setup the labels of the xaxis."""
+        if self.setp['language'] == 'french':
+            labels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun',
+                      'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc']
+        else:
+            labels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+        self.ax0.set_xticklabels(labels)
+        self.ax0.tick_params(axis='x', gridOn=True, length=0, pad=6,
+                             labelsize=self.setp['xticks size'])
+
+    def setup_legend(self):
+        """Setup the legend of the graph."""
+        if self.setp['language'] == 'french':
+            labels = ['Évapotranspiration', 'Ruissellement',
+                      'Recharge', 'Précipitations']
+        else:
+            labels = ['Evapotranspiration', 'Runoff',
+                      'Recharge', 'Precipitation']
+        legend = self.ax0.legend(
+            self.lg_handles, labels, numpoints=1, borderaxespad=0,
+            loc='lower left', borderpad=0.5, bbox_to_anchor=(0, 1, 1, 1),
+            ncol=4, mode="expand", fontsize=self.setp['legend size'])
+        legend.draw_frame(False)
 
 
 # %% ---- if __name__ == '__main__'
