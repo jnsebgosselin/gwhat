@@ -330,6 +330,8 @@ class RechgEvalWidget(QFrameLayout):
             self.wldset.clear_glue()
             self.wldset.save_glue(glue_dataframe)
 
+            self.btn_save_glue.set_model(glue_dataframe)
+
             self.figstack.plot_results(glue_dataframe)
             self.figstack.show()
 
