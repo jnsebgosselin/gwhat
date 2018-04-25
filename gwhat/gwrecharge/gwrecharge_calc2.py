@@ -8,7 +8,6 @@
 
 # ---- Imports: standard libraries
 
-import os
 import os.path as osp
 import datetime
 from itertools import product
@@ -22,6 +21,7 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 
 # ---- Imports: local
 
+from gwhat.utils.math import clip_time_series
 from gwhat.gwrecharge.glue import GLUEDataFrame
 from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
                                                  calc_hydrograph_forward)
@@ -41,7 +41,6 @@ class RechgEvalWorker(QObject):
         self.A, self.B = None, None
         self.twlvl = []
         self.wlobs = []
-        self.wl_date = []
 
         self.TMELT = 0
         self.CM = 4
@@ -106,34 +105,18 @@ class RechgEvalWorker(QObject):
                      " master recession curve (MRC) must be defined first.")
             return error
 
-        # Check that the wldset and wxdset are not mutually exclusive.
-        time = np.unique(np.hstack([self.tweatr, self.twlvl]))
-        if len(time) == (len(self.tweatr) + len(self.twlvl)):
+        # Clip the observed water level time series to the weather data.
+        self.twlvl, self.wlobs = clip_time_series(
+            self.tweatr, self.twlvl, self.wlobs)
+
+        if len(self.twlvl) == 0:
+            # The wldset and wxdset are not mutually exclusive.
             error = ("Groundwater recharge cannot be computed because the"
                      " water level and weather datasets are mutually"
                      " exclusive in time.")
             return error
-
-        # Clip the observed water level time series to the weather data.
-        if self.twlvl[0] < self.tweatr[0]:
-            idx = np.where(self.twlvl == self.tweatr[0])[0][0]
-            self.twlvl = self.twlvl[idx:]
-            self.wlobs = self.wlobs[idx:]
-        if self.twlvl[-1] > self.tweatr[-1]:
-            idx = np.where(self.twlvl == self.tweatr[-1])[0][0]
-            self.twlvl = self.twlvl[:idx+1]
-            self.wlobs = self.wlobs[:idx+1]
-
-        # Compute time in a datetime format readable by matplotlib.
-        ts = np.where(self.twlvl[0] == self.tweatr)[0][0]
-        te = np.where(self.twlvl[-1] == self.tweatr)[0][0]
-
-        years = self.wxdset['Year'][ts:te+1]
-        months = self.wxdset['Month'][ts:te+1]
-        days = self.wxdset['Day'][ts:te+1]
-        self.wl_date = convert_date_to_strdate(years, months, days)
-
-        return None
+        else:
+            return None
 
     def make_data_daily(self, t, h):
         """
@@ -240,7 +223,6 @@ class RechgEvalWorker(QObject):
 
         glue_rawdata['water levels'] = {}
         glue_rawdata['water levels']['time'] = self.twlvl
-        glue_rawdata['water levels']['date'] = self.wl_date
         glue_rawdata['water levels']['observed'] = self.wlobs
 
         glue_rawdata['Weather'] = {'Tmax': self.wxdset['Tmax'],
@@ -250,6 +232,8 @@ class RechgEvalWorker(QObject):
                                    'Rain': self.wxdset['Rain'],
                                    'PET': self.wxdset['PET']}
 
+        # Save the water levels simulated with the mrc, as well as and values
+        # of the parameters that characterized this mrc.
         glue_rawdata['mrc'] = {}
         glue_rawdata['mrc']['params'] = self.wldset['mrc/params']
         glue_rawdata['mrc']['time'] = self.wldset['mrc/time']
@@ -531,17 +515,6 @@ def strdate_to_datetime(strdates):
     """Return a list of datetime objects created from a list of bytes."""
     return [datetime.datetime.strptime(s.decode('utf8'), '%Y-%m-%d')
             for s in strdates]
-
-
-def convert_date_to_datetime(years, months, days):
-    """
-    Produce datetime series from years, months, and days series.
-    """
-    dates = [0] * len(years)
-    for t in range(len(years)):
-        dates[t] = datetime.datetime(
-                int(years[t]), int(months[t]), int(days[t]), 0)
-    return dates
 
 
 def calcul_rmse(Xobs, Xpre):

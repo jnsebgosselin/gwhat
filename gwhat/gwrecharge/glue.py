@@ -12,12 +12,18 @@
 from calendar import monthrange
 from collections.abc import Mapping
 from abc import abstractmethod
+from time import strftime
 
 
 # ---- Third parties imports
 
 import numpy as np
 from xlrd import xldate_as_tuple
+
+# ---- Local imports
+
+from gwhat.common.utils import save_content_to_file
+from gwhat import __namever__
 
 
 class GLUEDataFrameBase(Mapping):
@@ -34,6 +40,137 @@ class GLUEDataFrameBase(Mapping):
     def __load_data__(self, data):
         """Load glue data and save it in a store."""
         pass
+
+    def save_mly_glue_budget_to_file(self, filename):
+        """
+        Save the montlhy water budget results evaluated with GLUE to a file.
+        The extension of the file determine in which file type the data will
+        be saved (xls or xlsx for Excel, csv for coma-separated values text
+        file, or tsv for tab-separated values text file).
+        """
+        fcontent = self._produce_file_header()
+        fcontent.extend(self._format_mly_glue_budget())
+        save_content_to_file(filename, fcontent)
+
+    def save_glue_waterlvl_to_file(self, filename):
+        """
+        Exports the daily water levels predicted with GLUE to file.
+        The extension of the file determine in which file type the data will
+        be saved (xls or xlsx for Excel, csv for coma-separated values text
+        file, or tsv for tab-separated values text file).
+        """
+        fcontent = self._produce_file_header()
+        fcontent.extend(self._format_glue_waterlvl())
+        save_content_to_file(filename, fcontent)
+
+    def _format_mly_glue_budget(self):
+        """
+        Format the montlhy results for each of the component of the water
+        budget and GLUE uncertainty limits in a single column format for each
+        monthly time series, so that it can be easily stored in a csv format.
+        """
+        year_range = self['monthly budget']['years']
+        years = np.repeat(year_range, 12).astype(int)
+        months = np.tile(np.arange(12)+1, len(year_range)).astype(int)
+
+        variables = ['recharge', 'evapo', 'runoff']
+        glue_limits = self['monthly budget']['GLUE limits']
+
+        data_header = ['year', 'month', 'precip']
+        data_header2 = ['', '', '']
+        data_header3 = ['', '', '(mm)']
+        data = np.zeros((len(years), len(variables)*len(glue_limits)+3))
+
+        # Add the years, months and precipitation data.
+        data[:, 0] = years
+        data[:, 1] = months
+        data[:, 2] = self['monthly budget']['precip'].flatten()
+
+        # Add the water budget component monthly values.
+        col = 3
+        for var in variables:
+            for i, lim in enumerate(glue_limits):
+                data_header.append(var)
+                data_header3.append('(mm)')
+                data_header2.append('GLUE%02d' % (lim*100))
+                data[:, col] = self['monthly budget'][var][:, :, i].flatten()
+                col += 1
+        data = np.round(data, 1)
+
+        # Merge the data header with the data. Also, convert float nan to text,
+        # so that it is possible to save to an Excel file.
+        dataf = [data_header, data_header3, data_header2]
+        if np.isnan(data).any():
+            m, n = np.shape(data)
+            for i in range(m):
+                dataf.append(['nan' if np.isnan(x) else x for x in data[i, :]])
+        else:
+            dataf.extend(data.tolist())
+
+        return dataf
+
+    def _format_glue_waterlvl(self):
+        """
+        Format the water levels predicted with GLUE for the 0.05, 0.5, and
+        0.95 GLUE uncertainty limits. Also add the observed water levels and
+        those predicted with the Master Recession Curve.
+        """
+        # Prepare the data header.
+        dataf = [['Time', 'Obs. WL', 'Pred. WL', 'Pred. WL', 'Pred. WL'],
+                 ['(days)', '(mbgs)', '(mbgs)', '(mbgs)', '(mbgs)'],
+                 ['', '', 'GLUE05', 'GLUE50', 'GLUE95']]
+
+        # Prepare the data.
+        wltime = self['water levels']['time']
+        data = np.zeros((len(wltime), 5)) * np.nan
+        data[:, 0] = self['water levels']['time']
+        data[:, 1] = self['water levels']['observed']
+        data[:, 2:5] = self['water levels']['predicted'] / 1000
+        data = np.round(data, 2)
+
+        # Merge the data header with the data. Also, convert float nan to text,
+        # so that it is possible to save to an Excel file.
+
+        if np.isnan(data).any():
+            m, n = np.shape(data)
+            for i in range(m):
+                dataf.append(['nan' if np.isnan(x) else x for x in data[i, :]])
+        else:
+            dataf.extend(data.tolist())
+
+        return dataf
+
+    def _produce_file_header(self):
+        """"
+        Produce a header for saving GLUE results to file. The header contains
+        information about the observation well, the weather station, and the
+        version of GWHAT and creation time of the file.
+        """
+        header = []
+
+        # Add the observation well infos.
+        keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
+                'Elevation', 'Municipality']
+        for key in keys:
+            header.append([key, self['wlinfo'][key]])
+        header.append([''])
+
+        # Add the weather station infos.
+        header.append(
+            ['Weather Station', self['wxinfo']['Station Name']])
+        keys = ['Climate Identifier', 'Province', 'Latitude',
+                'Longitude', 'Elevation']
+        for key in keys:
+            header.append([key, self['wxinfo'][key]])
+
+        # Add the GWHAT version and date of creation.
+        header.extend([
+            [''],
+            ['Created by', __namever__],
+            ['Created on', strftime("%d/%m/%Y")],
+            ['']])
+
+        return header
 
 
 class GLUEDataFrame(GLUEDataFrameBase):
@@ -94,7 +231,6 @@ class GLUEDataFrame(GLUEDataFrameBase):
         # along with the oberved values.
         grp = self.store['water levels'] = {}
         grp['time'] = data['water levels']['time']
-        grp['date'] = data['water levels']['date']
         grp['observed'] = data['water levels']['observed']
         grp['GLUE limits'] = [0.05, 0.5, 0.95]
         grp['predicted'] = calcul_glue(
@@ -110,14 +246,14 @@ def calcul_glue(data, glue_limits, varname='recharge'):
         raise ValueError("varname value must be",
                          ['recharge', 'etr', 'ru', 'hydrograph'])
     x = np.array(data[varname])
-    _, n = np.shape(x)
+    _, ntime = np.shape(x)
 
     rmse = np.array(data['RMSE'])
     # Rescale the RMSE so the sum of all values equal 1.
     rmse = rmse/np.sum(rmse)
 
-    glue = np.zeros((n, len(glue_limits)))
-    for i in range(n):
+    glue = np.zeros((ntime, len(glue_limits)))
+    for i in range(ntime):
         # Sort predicted values.
         isort = np.argsort(x[:, i])
         # Compute the Cumulative Density Function.
@@ -282,6 +418,10 @@ def calcul_hydro_yrly_budget(glue_dly):
 
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
-
     GLUE_DATA = load_glue_from_npy('glue_rawdata.npy')
     GLUE_DSET = GLUEDataFrame(GLUE_DATA)
+
+    GLUE_DSET.save_mly_glue_budget_to_file(
+        'C:\\Users\\User\\glue_water_budget.xlsx')
+    GLUE_DSET.save_glue_waterlvl_to_file(
+        'C:\\Users\\User\\glue_water_levels.xlsx')

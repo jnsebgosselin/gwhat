@@ -9,15 +9,26 @@
 # ---- Imports: Standard Libraries
 
 import sys
+import os
+import os.path as osp
+from abc import abstractmethod
 
 # ---- Imports: Third Parties
 
 import numpy as np
+from sip import wrappertype as pyqtWrapperType
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import (QApplication, QToolButton, QListWidget, QStyle,
-                             QWidget, QDoubleSpinBox)
+from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QFileDialog,
+                             QListWidget, QMenu, QMessageBox, QStyle,
+                             QToolButton, QWidget)
+
+# ---- Local imports
+
+from gwhat.common.icons import QToolButtonBase
+from gwhat.common import icons
+from gwhat.common.utils import find_unique_filename
 
 
 class SmartSpinBox(QDoubleSpinBox):
@@ -277,11 +288,76 @@ class DropDownList(QListWidget):
             self.hide()
 
 
+class ExportDataButton(QToolButtonBase):
+    """
+    A toolbutton with a popup menu that handles the export of the weather
+    dataset in various format.
+    """
+    MODELCLS = object
+    TOOLTIP = ''
+
+    def __init__(self, model=None, workdir=None, parent=None):
+        super(ExportDataButton, self).__init__(
+            icons.get_icon('export_data'), parent)
+        self.__ddir = os.getcwd() if workdir is None else workdir
+        self.setPopupMode(QToolButtonBase.InstantPopup)
+        self.setToolTip(self.TOOLTIP)
+        self.setStyleSheet("QToolButton::menu-indicator {image: none;}")
+
+        self.set_model(model)
+        self.setup_menu()
+
+    @abstractmethod
+    def setup_menu(self):
+        """Setup the menu of the button."""
+        menu = QMenu()
+        self.setMenu(menu)
+
+    @property
+    def dialog_dir(self):
+        return self.__ddir
+
+    @property
+    def model(self):
+        return self.__model
+
+    def set_model(self, model):
+        """Sets the weather dataset of the button."""
+        if model is None:
+            self.__model = None
+        else:
+            if isinstance(model, self.MODELCLS):
+                self.__model = model
+            else:
+                raise ValueError("The model must be an instance of %s" %
+                                 str(type(self.MODELCLS)))
+        self.setEnabled(self.__model is not None)
+
+    def select_savefilename(self, title, fname, ffmat):
+        """Open a dialog where the user can select a file name."""
+        fname = find_unique_filename(osp.join(self.__ddir, fname))
+        fname, ftype = QFileDialog.getSaveFileName(self, title, fname, ffmat)
+        if fname:
+            ftype = ftype.replace('*', '')
+            fname = fname if fname.endswith(ftype) else fname + ftype
+            self.__ddir = os.path.dirname(fname)
+            return fname
+        else:
+            return None
+
+    def show_permission_error(self):
+        """
+        Show a warning message telling the user that the saving operation
+        has failed.
+        """
+        QApplication.restoreOverrideCursor()
+        msg = "The file is in use by another application or user."
+        QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+
+
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
-    import sys
-
     app = QApplication(sys.argv)
     drop_button = DropDownButton()
     drop_button.addItems([str(i) for i in range(2017, 1899, -1)])
