@@ -69,12 +69,12 @@ class GLUEDataFrameBase(Mapping):
         budget and GLUE uncertainty limits in a single column format for each
         monthly time series, so that it can be easily stored in a csv format.
         """
-        year_range = self.store['monthly budget']['years']
+        year_range = self['monthly budget']['years']
         years = np.repeat(year_range, 12).astype(int)
         months = np.tile(np.arange(12)+1, len(year_range)).astype(int)
 
         variables = ['recharge', 'evapo', 'runoff']
-        glue_limits = self.store['monthly budget']['GLUE limits']
+        glue_limits = self['monthly budget']['GLUE limits']
 
         data_header = ['year', 'month', 'precip']
         data_header2 = ['', '', '']
@@ -84,7 +84,7 @@ class GLUEDataFrameBase(Mapping):
         # Add the years, months and precipitation data.
         data[:, 0] = years
         data[:, 1] = months
-        data[:, 2] = self.store['monthly budget']['precip'].flatten()
+        data[:, 2] = self['monthly budget']['precip'].flatten()
 
         # Add the water budget component monthly values.
         col = 3
@@ -93,8 +93,7 @@ class GLUEDataFrameBase(Mapping):
                 data_header.append(var)
                 data_header3.append('(mm)')
                 data_header2.append('GLUE%02d' % (lim*100))
-                data[:, col] = self.store[
-                    'monthly budget'][var][:, :, i].flatten()
+                data[:, col] = self['monthly budget'][var][:, :, i].flatten()
                 col += 1
         data = np.round(data, 1)
 
@@ -122,11 +121,11 @@ class GLUEDataFrameBase(Mapping):
                  ['', '', 'GLUE05', 'GLUE50', 'GLUE95']]
 
         # Prepare the data.
-        wltime = self.store['water levels']['time']
+        wltime = self['water levels']['time']
         data = np.zeros((len(wltime), 5)) * np.nan
-        data[:, 0] = self.store['water levels']['time']
-        data[:, 1] = self.store['water levels']['observed']
-        data[:, 2:5] = self.store['water levels']['predicted'] / 1000
+        data[:, 0] = self['water levels']['time']
+        data[:, 1] = self['water levels']['observed']
+        data[:, 2:5] = self['water levels']['predicted'] / 1000
         data = np.round(data, 2)
 
         # Merge the data header with the data. Also, convert float nan to text,
@@ -153,16 +152,16 @@ class GLUEDataFrameBase(Mapping):
         keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
                 'Elevation', 'Municipality']
         for key in keys:
-            header.append([key, self.store['wlinfo'][key]])
+            header.append([key, self['wlinfo'][key]])
         header.append([''])
 
         # Add the weather station infos.
         header.append(
-            ['Weather Station', self.store['wxinfo']['Station Name']])
+            ['Weather Station', self['wxinfo']['Station Name']])
         keys = ['Climate Identifier', 'Province', 'Latitude',
                 'Longitude', 'Elevation']
         for key in keys:
-            header.append([key, self.store['wxinfo'][key]])
+            header.append([key, self['wxinfo'][key]])
 
         # Add the GWHAT version and date of creation.
         header.extend([
