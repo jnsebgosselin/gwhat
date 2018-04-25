@@ -94,7 +94,6 @@ class GLUEDataFrame(GLUEDataFrameBase):
         # along with the oberved values.
         grp = self.store['water levels'] = {}
         grp['time'] = data['water levels']['time']
-        grp['date'] = data['water levels']['date']
         grp['observed'] = data['water levels']['observed']
         grp['GLUE limits'] = [0.05, 0.5, 0.95]
         grp['predicted'] = calcul_glue(
@@ -110,14 +109,14 @@ def calcul_glue(data, glue_limits, varname='recharge'):
         raise ValueError("varname value must be",
                          ['recharge', 'etr', 'ru', 'hydrograph'])
     x = np.array(data[varname])
-    _, n = np.shape(x)
+    _, ntime = np.shape(x)
 
     rmse = np.array(data['RMSE'])
     # Rescale the RMSE so the sum of all values equal 1.
     rmse = rmse/np.sum(rmse)
 
-    glue = np.zeros((n, len(glue_limits)))
-    for i in range(n):
+    glue = np.zeros((ntime, len(glue_limits)))
+    for i in range(ntime):
         # Sort predicted values.
         isort = np.argsort(x[:, i])
         # Compute the Cumulative Density Function.
@@ -282,6 +281,10 @@ def calcul_hydro_yrly_budget(glue_dly):
 
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
-
     GLUE_DATA = load_glue_from_npy('glue_rawdata.npy')
     GLUE_DSET = GLUEDataFrame(GLUE_DATA)
+
+    GLUE_DSET.save_mly_glue_budget_to_file(
+        'C:\\Users\\User\\glue_water_budget.xlsx')
+    GLUE_DSET.save_glue_waterlvl_to_file(
+        'C:\\Users\\User\\glue_water_levels.xlsx')
