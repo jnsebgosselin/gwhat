@@ -84,14 +84,14 @@ def save_content_to_excel(fname, fcontent):
     root, ext = os.path.splitext(fname)
     if ext == '.xls':
         wb = xlwt.Workbook()
-        ws = wb.add_sheet('Normals')
+        ws = wb.add_sheet('Data')
         for i, row in enumerate(fcontent):
             for j, cell in enumerate(row):
                 ws.write(i, j, cell)
         wb.save(root+'.xls')
     else:
-        with xlsxwriter.Workbook(root+'.xlsx') as wb:
-            ws = wb.add_worksheet('Normals')
+        with xlsxwriter.Workbook(root + '.xlsx') as wb:
+            ws = wb.add_worksheet('Data')
             for i, row in enumerate(fcontent):
                 ws.write_row(i, 0, row)
 
