@@ -42,6 +42,14 @@ LOCS = ['left', 'top', 'right', 'bottom']
 LANGUAGES = ['French', 'English']
 
 
+# Calcul the time delta between the datum of the matplotlib ax Excel time
+# system.
+
+t1 = xldate_from_date_tuple((2000, 1, 1), 0)  # time in Excel
+t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1))  # time in mpl format
+DT4XLS2MPL = t2-t1
+
+
 class FigureStackManager(QWidget):
     def __init__(self, parent=None):
         super(FigureStackManager, self).__init__(parent)
@@ -1181,19 +1189,23 @@ class FigWaterLevelGLUE(FigCanvasBase):
         ax.tick_params(axis='y', direction='out', labelsize=12)
         ax.xaxis.set_ticks_position('bottom')
         ax.tick_params(axis='x', direction='out')
-        self.figure.autofmt_xdate()
+
+        xloc = mpl.dates.AutoDateLocator()
+        ax.xaxis.set_major_locator(xloc)
+        xfmt = mpl.dates.AutoDateFormatter(xloc)
+        ax.xaxis.set_major_formatter(xfmt)
 
         # ---- Plot the observed and glue predicted water levels.
 
         wlobs = glue_df['water levels']['observed']
-        dates = strdate_to_datetime(glue_df['water levels']['date'])
+        xlstime = glue_df['water levels']['time'] + DT4XLS2MPL
         wl05 = glue_df['water levels']['predicted'][:, 0]/1000
         wl95 = glue_df['water levels']['predicted'][:, 2]/1000
 
         ax = self.figure.axes[0]
-        ax.plot(dates, wlobs, color='b', ls='None', marker='.', ms=3,
-                zorder=100)
-        ax.fill_between(dates, wl95, wl05, facecolor='0.85', lw=1,
+        ax.plot(xlstime, wlobs, color='b', ls='None',
+                marker='.', ms=3, zorder=100)
+        ax.fill_between(xlstime, wl95, wl05, facecolor='0.85', lw=1,
                         edgecolor='0.65', zorder=0)
 
         self.setup_axes_labels()
