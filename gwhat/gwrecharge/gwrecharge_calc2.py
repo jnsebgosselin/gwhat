@@ -8,6 +8,7 @@
 
 # ---- Imports: standard libraries
 
+import os
 import os.path as osp
 import datetime
 from itertools import product
@@ -262,8 +263,6 @@ class RechgEvalWorker(QObject):
                 'Longitude', 'Elevation']
         glue_rawdata['wxinfo'] = {k: self.wxdset[k] for k in keys}
 
-        self._save_glue_to_npy(glue_rawdata)
-
         # Calcul GLUE from the set of behavioural model and send the results
         # with a signal so that it can be handled on the UI side.
 
@@ -295,6 +294,8 @@ class RechgEvalWorker(QObject):
 
     def _save_glue_to_npy(self, glue_rawdata):
         """Save the last computed glue results in a numpy npy file."""
+        if osp.exists(osp.dirname(__file__)):
+            os.makedirs(osp.dirname(__file__))
         filename = osp.join(osp.dirname(__file__), 'glue_rawdata.npy')
         np.save(filename, glue_rawdata)
 
