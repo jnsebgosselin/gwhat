@@ -10,9 +10,11 @@
 
 import os
 import os.path as osp
+import datetime
 
 # ---- Imports: third parties
 
+from xlrd.xldate import xldate_from_date_tuple
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -29,9 +31,6 @@ from PyQt5.QtWidgets import (
 
 # ---- Imports: local
 
-from gwhat.gwrecharge.glue import (
-    calcul_glue, calcul_hydro_yrly_budget)
-from gwhat.gwrecharge.gwrecharge_calc2 import strdate_to_datetime
 from gwhat.common import icons, QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
 from gwhat.common.widgets import QFrameLayout
