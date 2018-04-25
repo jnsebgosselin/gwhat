@@ -14,18 +14,20 @@ import os.path as osp
 
 import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QThread
+from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
                              QLabel, QSizePolicy, QScrollArea, QApplication,
                              QMessageBox, QMenu, QFileDialog)
 
 # ---- Imports: local
 
+from gwhat.widgets.buttons import ExportDataButton
 from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
+from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.icons import QToolButtonBase, QToolButtonSmall
 from gwhat.common import icons
-from gwhat.common.utils import find_unique_filename
 
 
 class RechgEvalWidget(QFrameLayout):
@@ -191,11 +193,15 @@ class RechgEvalWidget(QFrameLayout):
         btn_calib.clicked.connect(self.btn_calibrate_isClicked)
 
         self.btn_show_result = QToolButtonSmall(icons.get_icon('search'))
-        self.btn_show_result .clicked.connect(self.figstack.show)
+        self.btn_show_result.clicked.connect(self.figstack.show)
+        self.btn_show_result.setToolTip("Show GLUE results.")
+
+        self.btn_save_glue = ExportGLUEButton(self.wxdset)
 
         layout = QGridLayout(toolbar)
         layout.addWidget(btn_calib, 0, 0)
         layout.addWidget(self.btn_show_result, 0, 1)
+        layout.addWidget(self.btn_save_glue, 0, 2)
         layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
 
         return toolbar
@@ -207,11 +213,13 @@ class RechgEvalWidget(QFrameLayout):
         """
         self.wldset = wldset
         if wldset is not None and self.wldset.glue_count():
-            self.figstack.plot_results(
-                self.wldset.get_glue(self.wldset.glue_idnums()[-1]))
+            gluedf = self.wldset.get_glue(self.wldset.glue_idnums()[-1])
+            self.figstack.plot_results(gluedf)
             self._setup_ranges_from_wldset()
+            self.btn_save_glue.set_model(gluedf)
         else:
             self.figstack.clear_figures()
+            self.btn_save_glue.set_model(None)
 
     def _setup_ranges_from_wldset(self):
         """
@@ -326,66 +334,77 @@ class RechgEvalWidget(QFrameLayout):
             self.figstack.show()
 
 
-class ExportDataButton(QToolButtonBase):
+class ExportGLUEButton(ExportDataButton):
     """
-    A toolbutton with a popup menu that handles the export of data to file.
+    A toolbutton with a popup menu that handles the export of GLUE data
+    to file.
     """
-    def __init__(self, workdir=None, data=None, *args, **kargs):
-        super(ExportDataButton, self).__init__(
-              icons.get_icon('export_data'), *args, **kargs)
-        self.__ddir = os.getcwd() if workdir is None else workdir
-        self.set_data(data)
+    MODEL_TYPE = GLUEDataFrameBase
+    TOOLTIP = "Export GLUE data."
 
-        self.setToolTip('Export time series')
-        self.setPopupMode(QToolButtonSmall.InstantPopup)
-        self.setStyleSheet("QToolButton::menu-indicator {image: none;}")
-        self.setEnabled(False)
+    def __init__(self, model=None, workdir=None, parent=None):
+        super(ExportGLUEButton, self).__init__(model, workdir, parent)
 
-        # Generate the menu of the button :
-
-        menu = QMenu()
-        menu.addAction('Export glue results as...',
-                       lambda: self.select_export_file('daily'))
-        self.setMenu(menu)
-
-    # ---- Set data
-
-    @property
-    def data(self):
-        return self.__data
-
-    def set_data(self, data):
-        """Sets the glue data."""
-        self.__data = data
-        self.setEnabled(self.__data is not None)
+    def setup_menu(self):
+        """Setup the menu of the button tailored to the model."""
+        super(ExportGLUEButton, self).setup_menu()
+        self.menu().addAction('Export GLUE water budget as...',
+                              self.save_water_budget_tofile)
+        self.menu().addAction('Export GLUE water levels as...',
+                              self.save_water_levels_tofile)
 
     # ---- Export data
 
-    def select_savefilename(self):
+    @QSlot()
+    def save_water_budget_tofile(self):
         """
-        Open a dialog where the user can select a file name to save the
-        glue results.
+        Prompt a dialog to select a file and save the GLUE water budget.
         """
-        if self.data is None:
-            return
-
-        ffmat = "*.xlsx;;*.xls;;*.csv"
-        fname = find_unique_filename(osp.join(self.__ddir, 'glue_results.csv'))
-        fname, ftype = QFileDialog.getSaveFileName(
-            self, "Save GLUE results", fname, ffmat)
+        fname = self.select_savefilename("Save GLUE water budget",
+                                         "glue_water_budget.xlsx",
+                                         "*.xlsx;;*.xls;;*.csv")
         if fname:
-            ftype = ftype.replace('*', '')
-            fname = fname if fname.endswith(ftype) else fname + ftype
-            self.__ddir = os.path.dirname(fname)
+            QApplication.setOverrideCursor(Qt.WaitCursor)
             try:
-                self.save_glue_tofile(fname)
+                self.model.save_mly_glue_budget_to_file(fname)
             except PermissionError:
-                msg = "The file is in use by another application or user."
-                QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
-                self.select_savefilename()
+                self.show_permission_error()
+                self.save_water_budget_tofile()
+            QApplication.restoreOverrideCursor()
 
-    def save_glue_tofile(self, fname):
-        if self.data is None:
-            return
-        QApplication.setOverrideCursor(Qt.WaitCursor)
-        QApplication.restoreOverrideCursor()
+    @QSlot()
+    def save_water_levels_tofile(self):
+        """
+        Prompt a dialog to select a file and save the GLUE water levels.
+        """
+        fname = self.select_savefilename("Save GLUE water levels",
+                                         "glue_water_levels.xlsx",
+                                         "*.xlsx;;*.xls;;*.csv")
+        if fname:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            try:
+                self.model.save_glue_waterlvl_to_file(fname)
+            except PermissionError:
+                self.show_permission_error()
+                self.save_water_levels_tofile()
+            QApplication.restoreOverrideCursor()
+
+
+# %% ---- if __name__ == '__main__'
+
+if __name__ == '__main__':
+    from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
+    from gwhat.gwrecharge.glue import GLUEDataFrame
+    import sys
+
+    app = QApplication(sys.argv)
+
+    GLUE_RAWDATA = load_glue_from_npy('glue_rawdata.npy')
+    GLUE_DF = GLUEDataFrame(GLUE_RAWDATA)
+    
+    print(GLUE_DF)
+
+    BTN_EXPORT_GLUE = ExportGLUEButton(GLUE_DF)
+    BTN_EXPORT_GLUE.show()
+
+    sys.exit(app.exec_())
