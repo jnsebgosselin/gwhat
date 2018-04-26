@@ -391,16 +391,21 @@ class DataManager(QWidget):
 
 
 class NewDatasetDialog(QDialog):
+    """
+    A dialog window where water level and weather datasets can be imported
+    into the project.
+    """
+
     ConsoleSignal = QSignal(str)
     sig_new_dataset_imported = QSignal(str, object)
+
+    DATATYPES = ['water level', 'daily weather']
 
     def __init__(self, datatype, parent=None, projet=None):
         super(NewDatasetDialog, self).__init__(parent)
 
-        if datatype.lower() not in ['water level', 'daily weather']:
-            print("ERROR: datatype value must be :",
-                  ['water level', 'daily weather'])
-            raise ValueError
+        if datatype.lower() not in self.DATATYPES:
+            raise ValueError("datatype value must be :", self.DATATYPES)
         self._datatype = datatype.lower()
 
         self.setWindowTitle('Import Dataset: %s' % datatype.title())
@@ -612,8 +617,8 @@ class NewDatasetDialog(QDialog):
             self.load_dataset(filename)
 
     def load_dataset(self, filename):
-        """Loads the dataset and displays the information in the UI."""
-        if not os.path.exists(filename):
+        """Load the dataset and display the information in the UI."""
+        if not osp.exists(filename):
             print('Path does not exist. Cannot open %s.' % filename)
             return
 
