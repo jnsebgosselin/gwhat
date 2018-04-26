@@ -496,6 +496,7 @@ class NewDatasetDialog(QDialog):
         # ----- Toolbar
 
         self._dset_name = QLineEdit()
+        self._dset_name.setEnabled(False)
 
         self.btn_ok = QPushButton('Import')
         self.btn_ok.setMinimumWidth(100)
@@ -625,19 +626,21 @@ class NewDatasetDialog(QDialog):
             self._dataset = wxrd.WXDataFrame(filename)
         QApplication.restoreOverrideCursor()
 
-        # Update the GUI :
-
         self.directory.setText(filename)
+        self.update_gui_with_dset_infos()
+
+    def update_gui_with_dset_infos(self):
+        """
+        Display the values store in the dataset. Disable the UI and write
+        an error message if the dataset is None.
+        """
+        self._msg.setVisible(self._dataset is None)
+        self.btn_ok.setEnabled(self._dataset is not None)
+        self.grp_info.setEnabled(self._dataset is not None)
+        self._dset_name.setEnabled(self._dataset is not None)
         if self._dataset is None:
-            self._msg.setVisible(True)
-            self.btn_ok.setEnabled(False)
-            self.grp_info.setEnabled(False)
             self.clear(clear_directory=False)
         else:
-            self.grp_info.setEnabled(True)
-            self._msg.setVisible(False)
-            self.btn_ok.setEnabled(True)
-
             if self._datatype == 'water level':
                 self._stn_name.setText(self._dataset['Well'])
                 self._sid.setText(self._dataset['Well ID'])
