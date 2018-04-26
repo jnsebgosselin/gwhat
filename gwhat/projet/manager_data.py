@@ -18,7 +18,8 @@ from PyQt5.QtCore import Qt, QCoreApplication, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
                              QLabel, QMessageBox, QLineEdit, QPushButton,
-                             QFileDialog, QApplication, QDialog, QMenu)
+                             QFileDialog, QApplication, QDialog, QMenu,
+                             QGroupBox)
 
 # ---- Imports: Local Libraries
 
@@ -475,9 +476,9 @@ class NewDatasetDialog(QDialog):
 
         # Info Groubox Layout
 
-        self.grp_info = myqt.QGroupWidget()
-        self.grp_info.setTitle("Dataset info")
+        self.grp_info = QGroupBox("Dataset info :")
         self.grp_info.setEnabled(False)
+        self.grp_info.setLayout(QGridLayout())
         self.grp_info.layout().setColumnStretch(2, 100)
         self.grp_info.layout().setSpacing(10)
 

@@ -237,39 +237,6 @@ class QFrameLayout(QFrame):
         return self.layout().columnCount()
 
 
-class QGroupWidget(QGroupBox):
-    def __init__(self, parent=None):
-        super(QGroupWidget, self).__init__(parent)
-
-        col = '#404040'
-        self.setStyleSheet('QGroupBox{'
-                           'font-weight: bold;'
-                           'font-size: 14px;'
-                           'color: %s;'
-                           'border: 1.5px solid %s;'
-                           'border-radius: 5px;'
-                           'subcontrol-position: bottom left;'
-                           'margin-top: 7px;'
-                           '}'
-                           'QGroupBox::title {'
-                           'subcontrol-position: top left;'
-                           'left: 10px; top: -10px;'
-                           'padding: 0 3px 0 3px;'
-                           '}' % (col, col))
-
-        self.setLayout(QGridLayout())
-        self.layout().setContentsMargins(10, 25, 10, 10)  # (l, t, r, b)
-
-    def addWidget(self, item, x, y, nx=1, ny=1):
-        self.layout().addWidget(item, x, y, nx, ny)
-
-    def addLayout(self, layout, x, y, nx=1, ny=1):
-        self.layout().addLayout(layout, x, y, nx, ny)
-
-    def rowCount(self):
-        return self.layout().rowCount()
-
-
 class DialogWindow(QDialog):
 
     def __init__(self, parent=None, resizable=False, maximize=True):
