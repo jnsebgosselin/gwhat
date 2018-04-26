@@ -620,10 +620,13 @@ class NewDatasetDialog(QDialog):
         for i in range(5):
             QCoreApplication.processEvents()
 
-        if self._datatype == 'water level':
-            self._dataset = wlrd.read_water_level_datafile(filename)
-        elif self._datatype == 'daily weather':
-            self._dataset = wxrd.WXDataFrame(filename)
+        try:
+            if self._datatype == 'water level':
+                self._dataset = wlrd.read_water_level_datafile(filename)
+            elif self._datatype == 'daily weather':
+                self._dataset = wxrd.WXDataFrame(filename)
+        except Exception:
+            self._dataset = None
         QApplication.restoreOverrideCursor()
 
         self.directory.setText(filename)
