@@ -431,11 +431,17 @@ class NewDatasetDialog(QDialog):
         self.btn_browse.setToolTip('Select a datafile...')
         self.btn_browse.clicked.connect(self.select_dataset)
 
-        msg = ('<font color=red size=2><i>Error : %s data file is '
-               'not formatted correctly.</i></font>'
-               ) % self._datatype.capitalize()
+        url_i = "https://gwhat.readthedocs.io/en/latest/manage_data.html"
+        msg = ("<font color=red size=2><i>"
+               "The %s data file is not formatted correctly.<br>"
+               "Please consult the <a href=\"%s\">documentation</a>"
+               " for detailed information<br>"
+               "on how to format your input data files correctly."
+               "</i></font>"
+               ) % (self._datatype.capitalize(), url_i)
         self._msg = QLabel(msg)
         self._msg.setVisible(False)
+        self._msg.setOpenExternalLinks(True)
 
         # Select Dataset Layout
 
