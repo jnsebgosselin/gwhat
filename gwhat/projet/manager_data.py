@@ -708,6 +708,7 @@ class NewDatasetDialog(QDialog):
     def close(self):
         super(NewDatasetDialog, self).close()
         self.clear()
+        self._msg.setVisible(False)
 
     def clear(self, clear_directory=True):
         if clear_directory:
