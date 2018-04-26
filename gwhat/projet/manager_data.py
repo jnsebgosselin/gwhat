@@ -797,8 +797,7 @@ class ExportWeatherButton(QToolButtonBase):
 if __name__ == '__main__':
     from reader_projet import ProjetReader
     import sys
-    projet = ProjetReader("C:/Users/jsgosselin/GWHAT/gwhat/"
-                          "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
+    projet = ProjetReader("C:/Users/User/gwhat/Projects/Example/Example.gwt")
 
     app = QApplication(sys.argv)
 
