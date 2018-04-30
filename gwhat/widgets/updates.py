@@ -155,7 +155,8 @@ class WorkerUpdates(QObject):
             self.error = ('Unable to retrieve information because the'
                           ' connection timed out.')
         except Exception:
-            self.error = ('Unable to check for updates.')
+            self.error = ('Unable to check for updates because of'
+                          ' an unexpected error.')
         self.sig_ready.emit()
 
 
