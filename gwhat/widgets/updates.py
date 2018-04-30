@@ -22,10 +22,7 @@
 
 # ---- Imports: standard libraries
 
-import json
-import ssl
 import re
-from urllib.request import urlopen
 from urllib.error import URLError, HTTPError
 from distutils.version import LooseVersion
 
@@ -36,8 +33,8 @@ from PyQt5.QtCore import QObject, Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QDialog, QApplication, QMessageBox
-
+from PyQt5.QtWidgets import QApplication, QMessageBox
+import requests
 
 # ---- Imports: local
 
@@ -140,25 +137,15 @@ class WorkerUpdates(QObject):
         self.latest_release = __version__
         self.error = None
         try:
-            if hasattr(ssl, '_create_unverified_context'):
-                # Fix for Spyder issue #2685.
-                context = ssl._create_unverified_context()
-                page = urlopen(__releases_api__, context=context)
-            else:
-                page = urlopen(__releases_api__)
-            try:
-                data = page.read().decode()
-                data = json.loads(data)
+            page = requests.get(__releases_api__)
+            data = page.json()
+            releases = [item['tag_name'].replace('gwhat-', '')
+                        for item in data
+                        if item['tag_name'].startswith("gwhat")]
+            version = __version__
 
-                releases = [item['tag_name'].replace('gwhat-', '')
-                            for item in data
-                            if item['tag_name'].startswith("gwhat")]
-                version = __version__
-
-                result = check_update_available(version, releases)
-                self.update_available, self.latest_release = result
-            except Exception:
-                self.error = ('Unable to retrieve information.')
+            result = check_update_available(version, releases)
+            self.update_available, self.latest_release = result
         except HTTPError:
             self.error = ('Unable to retrieve information.')
         except URLError:
@@ -166,7 +153,6 @@ class WorkerUpdates(QObject):
                           'sure the connection is working properly.')
         except Exception:
             self.error = ('Unable to check for updates.')
-
         self.sig_ready.emit()
 
 
