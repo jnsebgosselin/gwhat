@@ -155,6 +155,13 @@ def test_delete_waterlevel_data(data_manager_bot, mocker):
     data_manager, qtbot = data_manager_bot
     data_manager.show()
 
+    # Mock the QMessageBox to return No, try to delete the dataset and assert
+    # that the dataset was not removed from the project.
+    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.No)
+    qtbot.mouseClick(data_manager.btn_del_wldset, Qt.LeftButton)
+    assert data_manager.wldataset_count() == 1
+    assert data_manager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
+
     # Mock the QMessageBox to return Yes, delete the waterlevel dataset, and
     # assert that it was removed from the project.
     mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
