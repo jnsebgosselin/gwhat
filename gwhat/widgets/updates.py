@@ -72,6 +72,7 @@ class ManagerUpdates(QMessageBox):
         self.start_updates_check()
 
     def start_updates_check(self):
+        """Check if updates are available."""
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         self.thread_updates.start()
 
@@ -118,9 +119,6 @@ class ManagerUpdates(QMessageBox):
 class WorkerUpdates(QObject):
     """
     Worker that checks for releases using the Github API.
-
-    Copyright (c) Spyder Project Contributors
-    Licensed under the terms of the MIT License
     """
     sig_ready = QSignal()
 
@@ -141,9 +139,7 @@ class WorkerUpdates(QObject):
             releases = [item['tag_name'].replace('gwhat-', '')
                         for item in data
                         if item['tag_name'].startswith("gwhat")]
-            version = __version__
-
-            result = check_update_available(version, releases)
+            result = check_update_available(__version__, releases)
             self.update_available, self.latest_release = result
         except requests.exceptions.HTTPError:
             self.error = ('Unable to retrieve information because of.'
@@ -231,7 +227,7 @@ def is_stable_version(version):
     Stable version example: 1.2, 1.3.4, 1.0.5
     Not stable version: 1.2alpha, 1.3.4beta, 0.1.0rc1, 3.0.0dev
 
-    Copyright (c) Spyder Project Contributors
+    Copyright (c) 2017 Spyder Project Contributors
     Licensed under the terms of the MIT License
     """
     if not isinstance(version, tuple):
