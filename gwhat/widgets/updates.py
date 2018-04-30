@@ -22,11 +22,7 @@
 
 # ---- Imports: standard libraries
 
-import json
-import ssl
 import re
-from urllib.request import urlopen
-from urllib.error import URLError, HTTPError
 from distutils.version import LooseVersion
 
 
@@ -36,8 +32,8 @@ from PyQt5.QtCore import QObject, Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtGui import QCursor
-from PyQt5.QtWidgets import QDialog, QApplication, QMessageBox
-
+from PyQt5.QtWidgets import QApplication, QMessageBox
+import requests
 
 # ---- Imports: local
 
@@ -76,6 +72,7 @@ class ManagerUpdates(QMessageBox):
         self.start_updates_check()
 
     def start_updates_check(self):
+        """Check if updates are available."""
         QApplication.setOverrideCursor(QCursor(Qt.WaitCursor))
         self.thread_updates.start()
 
@@ -122,9 +119,6 @@ class ManagerUpdates(QMessageBox):
 class WorkerUpdates(QObject):
     """
     Worker that checks for releases using the Github API.
-
-    Copyright (c) Spyder Project Contributors
-    Licensed under the terms of the MIT License
     """
     sig_ready = QSignal()
 
@@ -140,33 +134,25 @@ class WorkerUpdates(QObject):
         self.latest_release = __version__
         self.error = None
         try:
-            if hasattr(ssl, '_create_unverified_context'):
-                # Fix for Spyder issue #2685.
-                context = ssl._create_unverified_context()
-                page = urlopen(__releases_api__, context=context)
-            else:
-                page = urlopen(__releases_api__)
-            try:
-                data = page.read().decode()
-                data = json.loads(data)
-
-                releases = [item['tag_name'].replace('gwhat-', '')
-                            for item in data
-                            if item['tag_name'].startswith("gwhat")]
-                version = __version__
-
-                result = check_update_available(version, releases)
-                self.update_available, self.latest_release = result
-            except Exception:
-                self.error = ('Unable to retrieve information.')
-        except HTTPError:
-            self.error = ('Unable to retrieve information.')
-        except URLError:
-            self.error = ('Unable to connect to the internet. <br><br>Make '
+            page = requests.get(__releases_api__)
+            data = page.json()
+            releases = [item['tag_name'].replace('gwhat-', '')
+                        for item in data
+                        if item['tag_name'].startswith("gwhat")]
+            result = check_update_available(__version__, releases)
+            self.update_available, self.latest_release = result
+        except requests.exceptions.HTTPError:
+            self.error = ('Unable to retrieve information because of.'
+                          ' an http error.')
+        except requests.exceptions.ConnectionError:
+            self.error = ('Unable to connect to the internet.<br><br>Make '
                           'sure the connection is working properly.')
+        except requests.exceptions.Timeout:
+            self.error = ('Unable to retrieve information because the'
+                          ' connection timed out.')
         except Exception:
-            self.error = ('Unable to check for updates.')
-
+            self.error = ('Unable to check for updates because of'
+                          ' an unexpected error.')
         self.sig_ready.emit()
 
 
@@ -241,7 +227,7 @@ def is_stable_version(version):
     Stable version example: 1.2, 1.3.4, 1.0.5
     Not stable version: 1.2alpha, 1.3.4beta, 0.1.0rc1, 3.0.0dev
 
-    Copyright (c) Spyder Project Contributors
+    Copyright (c) 2017 Spyder Project Contributors
     Licensed under the terms of the MIT License
     """
     if not isinstance(version, tuple):
