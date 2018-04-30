@@ -5,7 +5,8 @@ Plotting the Hydrographs
 
 This document shows how to produce publication quality figures of well hydrographs
 in GWHAT using the tools available under the tab :guilabel:`Plot Hydrograph` shown
-in :numref:`scs_plot_hydrograph`.
+in :numref:`scs_plot_hydrograph`. For detailed information on how to import the
+weather and water level data in GWHAT, please consult :numref:`chap_importing_data`.
 
 .. _scs_plot_hydrograph:
 .. figure:: img/demo/demo_plot_hydrograph.*
@@ -20,7 +21,8 @@ in :numref:`scs_plot_hydrograph`.
 The tab :guilabel:`Plot Hydrograph` consists mainly of an editor to produce a
 graph showing the groundwater level time series in relation to weather
 conditions. As shown in :numref:`fig_plot_hydrograph_annoted`, the editor
-consists of a toolbar, the panel :guilabel:`Input data`, the panel
+consists of a toolbar, the panel :guilabel:`Input data` 
+(documented in :numref:`chap_importing_data`), the panel
 :guilabel:`Axes settings`, and a canvas where the hydrograph figure is shown.
 
 A figure of the hydrograph is produced as soon as a water level and weather

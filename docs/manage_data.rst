@@ -107,10 +107,12 @@ omitted in the time series.
 Water level data files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-GWHAT can read water level data from either coma-separated text files with UTF-8 encoding
-or from an Excel spreadsheet (:file:`xls` or :file:`xlsx`).
+GWHAT can read water level data from either coma-separated text files (:file:`csv`)
+encoded in UTF-8 or from an Excel spreadsheet (:file:`xls` or :file:`xlsx`).
 An example of correctly formatted water level data file is presented in
-:numref:`water_level_datafile_example`.
+:numref:`water_level_datafile_example`. This file is also available in the
+folder of the project example that is distributed with GWHAT 
+(see :numref:`sec_installing_on_windows`).
 
 The file header contains information about the well name, identifier, province,
 latitude, longitude, and elevation. The first column of the data must contain
@@ -118,6 +120,9 @@ the time in excel numeric format. The second column must contain the water level
 given in metres below the ground surface. The third and fourth columns correspond,
 respectively, to the barometric pressure and the Earth tides.
 This will be discussed in more details in :numref:`chap_computing_the_brf`.
+Note that the name of the labels of the header and of the data columns 
+(e.g., Well Name, Well ID, Date) must be respected for the program
+to read the content of the file correctly.
 
 .. _water_level_datafile_example:
 .. figure:: img/files/water_level_datafile.*
