@@ -23,7 +23,6 @@
 # ---- Imports: standard libraries
 
 import re
-from urllib.error import URLError, HTTPError
 from distutils.version import LooseVersion
 
 
@@ -146,11 +145,15 @@ class WorkerUpdates(QObject):
 
             result = check_update_available(version, releases)
             self.update_available, self.latest_release = result
-        except HTTPError:
-            self.error = ('Unable to retrieve information.')
-        except URLError:
-            self.error = ('Unable to connect to the internet. <br><br>Make '
+        except requests.exceptions.HTTPError:
+            self.error = ('Unable to retrieve information because of.'
+                          ' an http error.')
+        except requests.exceptions.ConnectionError:
+            self.error = ('Unable to connect to the internet.<br><br>Make '
                           'sure the connection is working properly.')
+        except requests.exceptions.Timeout:
+            self.error = ('Unable to retrieve information because the'
+                          ' connection timed out.')
         except Exception:
             self.error = ('Unable to check for updates.')
         self.sig_ready.emit()
