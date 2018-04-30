@@ -18,7 +18,8 @@ from PyQt5.QtCore import Qt, QCoreApplication, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
                              QLabel, QMessageBox, QLineEdit, QPushButton,
-                             QFileDialog, QApplication, QDialog, QMenu)
+                             QFileDialog, QApplication, QDialog, QMenu,
+                             QGroupBox)
 
 # ---- Imports: Local Libraries
 
@@ -390,16 +391,21 @@ class DataManager(QWidget):
 
 
 class NewDatasetDialog(QDialog):
+    """
+    A dialog window where water level and weather datasets can be imported
+    into the project.
+    """
+
     ConsoleSignal = QSignal(str)
     sig_new_dataset_imported = QSignal(str, object)
+
+    DATATYPES = ['water level', 'daily weather']
 
     def __init__(self, datatype, parent=None, projet=None):
         super(NewDatasetDialog, self).__init__(parent)
 
-        if datatype.lower() not in ['water level', 'daily weather']:
-            print("ERROR: datatype value must be :",
-                  ['water level', 'daily weather'])
-            raise ValueError
+        if datatype.lower() not in self.DATATYPES:
+            raise ValueError("datatype value must be :", self.DATATYPES)
         self._datatype = datatype.lower()
 
         self.setWindowTitle('Import Dataset: %s' % datatype.title())
@@ -430,11 +436,17 @@ class NewDatasetDialog(QDialog):
         self.btn_browse.setToolTip('Select a datafile...')
         self.btn_browse.clicked.connect(self.select_dataset)
 
-        msg = ('<font color=red size=2><i>Error : %s data file is '
-               'not formatted correctly.</i></font>'
-               ) % self._datatype.capitalize()
+        url_i = "https://gwhat.readthedocs.io/en/latest/manage_data.html"
+        msg = ("<font color=red size=2><i>"
+               "The %s data file is not formatted correctly.<br>"
+               "Please consult the <a href=\"%s\">documentation</a>"
+               " for detailed information<br>"
+               "on how to format your input data files correctly."
+               "</i></font>"
+               ) % (self._datatype.capitalize(), url_i)
         self._msg = QLabel(msg)
         self._msg.setVisible(False)
+        self._msg.setOpenExternalLinks(True)
 
         # Select Dataset Layout
 
@@ -475,9 +487,9 @@ class NewDatasetDialog(QDialog):
 
         # Info Groubox Layout
 
-        self.grp_info = myqt.QGroupWidget()
-        self.grp_info.setTitle("Dataset info")
+        self.grp_info = QGroupBox("Dataset info :")
         self.grp_info.setEnabled(False)
+        self.grp_info.setLayout(QGridLayout())
         self.grp_info.layout().setColumnStretch(2, 100)
         self.grp_info.layout().setSpacing(10)
 
@@ -495,6 +507,7 @@ class NewDatasetDialog(QDialog):
         # ----- Toolbar
 
         self._dset_name = QLineEdit()
+        self._dset_name.setEnabled(False)
 
         self.btn_ok = QPushButton('Import')
         self.btn_ok.setMinimumWidth(100)
@@ -604,8 +617,8 @@ class NewDatasetDialog(QDialog):
             self.load_dataset(filename)
 
     def load_dataset(self, filename):
-        """Loads the dataset and displays the information in the UI."""
-        if not os.path.exists(filename):
+        """Load the dataset and display the information in the UI."""
+        if not osp.exists(filename):
             print('Path does not exist. Cannot open %s.' % filename)
             return
 
@@ -618,25 +631,30 @@ class NewDatasetDialog(QDialog):
         for i in range(5):
             QCoreApplication.processEvents()
 
-        if self._datatype == 'water level':
-            self._dataset = wlrd.read_water_level_datafile(filename)
-        elif self._datatype == 'daily weather':
-            self._dataset = wxrd.WXDataFrame(filename)
+        try:
+            if self._datatype == 'water level':
+                self._dataset = wlrd.read_water_level_datafile(filename)
+            elif self._datatype == 'daily weather':
+                self._dataset = wxrd.WXDataFrame(filename)
+        except Exception:
+            self._dataset = None
         QApplication.restoreOverrideCursor()
 
-        # Update the GUI :
-
         self.directory.setText(filename)
+        self.update_gui_with_dset_infos()
+
+    def update_gui_with_dset_infos(self):
+        """
+        Display the values store in the dataset. Disable the UI and write
+        an error message if the dataset is None.
+        """
+        self._msg.setVisible(self._dataset is None)
+        self.btn_ok.setEnabled(self._dataset is not None)
+        self.grp_info.setEnabled(self._dataset is not None)
+        self._dset_name.setEnabled(self._dataset is not None)
         if self._dataset is None:
-            self._msg.setVisible(True)
-            self.btn_ok.setEnabled(False)
-            self.grp_info.setEnabled(False)
             self.clear(clear_directory=False)
         else:
-            self.grp_info.setEnabled(True)
-            self._msg.setVisible(False)
-            self.btn_ok.setEnabled(True)
-
             if self._datatype == 'water level':
                 self._stn_name.setText(self._dataset['Well'])
                 self._sid.setText(self._dataset['Well ID'])
@@ -701,6 +719,7 @@ class NewDatasetDialog(QDialog):
     def close(self):
         super(NewDatasetDialog, self).close()
         self.clear()
+        self._msg.setVisible(False)
 
     def clear(self, clear_directory=True):
         if clear_directory:
@@ -789,8 +808,7 @@ class ExportWeatherButton(QToolButtonBase):
 if __name__ == '__main__':
     from reader_projet import ProjetReader
     import sys
-    projet = ProjetReader("C:/Users/jsgosselin/GWHAT/gwhat/"
-                          "tests/@ new-prô'jèt!/@ new-prô'jèt!.gwt")
+    projet = ProjetReader("C:/Users/User/gwhat/Projects/Example/Example.gwt")
 
     app = QApplication(sys.argv)
 

@@ -49,7 +49,6 @@ def read_water_level_datafile(filename):
     elif ext in ['.xls', '.xlsx']:
         with xlrd.open_workbook(filename, on_demand=True) as wb:
             sheet = wb.sheet_by_index(0)
-
             data = [sheet.row_values(rowx, start_colx=0, end_colx=None) for
                     rowx in range(sheet.nrows)]
 
@@ -58,8 +57,11 @@ def read_water_level_datafile(filename):
     for row, line in enumerate(data):
         if len(line) == 0:
             continue
+        try:
+            label = line[0].lower().replace(":", "").replace("=", "").strip()
+        except AttributeError:
+            continue
 
-        label = line[0].lower().replace(":", "").replace("=", "").strip()
         if label == 'well name':
             df['Well'] = str(line[1])
         elif label == 'well id':
