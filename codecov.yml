@@ -12,6 +12,8 @@ coverage:
   
   status:
     project: yes
+      default:
+        threshold: 1%
     patch: no
     changes: no
     
