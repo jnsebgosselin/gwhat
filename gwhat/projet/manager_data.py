@@ -682,8 +682,14 @@ class NewDatasetDialog(QDialog):
 
     def accept_dataset(self):
         """Accept and emit the dataset."""
-        if self.name == '':
-            msg = 'Please enter a valid name for the dataset.'
+        if not self._dsetname_isvalid():
+            msg = ('''
+                   <p>Please enter a valid name for the dataset.<\p>
+                   <p>A dataset name must be at least one charater long
+                   and can't contain any of the following special
+                   characters:<\p>
+                   <center>\ / : * ? " < > |<\center>
+                   ''')
             btn = QMessageBox.Ok
             QMessageBox.warning(self, 'Save dataset', msg, btn)
             return
