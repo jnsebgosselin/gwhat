@@ -672,6 +672,13 @@ class NewDatasetDialog(QDialog):
                 self._lon.setValue(self._dataset['Longitude'])
                 self._alt.setValue(self._dataset['Elevation'])
                 self._dset_name.setText(self._dataset['Station Name'])
+    def _dsetname_isvalid(self):
+        """
+        Check if the dataset name respect the established guidelines to avoid
+        problem with the hdf5 format.
+        """
+        return (self.name != '' and
+                not any(char in self.name for char in INVALID_CHARS))
 
     def accept_dataset(self):
         """Accept and emit the dataset."""
