@@ -293,7 +293,7 @@ class DataManager(QWidget):
 
     def new_wxdset_imported(self, name, dataset):
         """
-        Receives the new weather dataset, saves it in the project and
+        Receive the new weather dataset, save it in the project and
         update the GUI.
         """
         print("Saving the new weather dataset in the project.", end=" ")
@@ -717,6 +717,7 @@ class NewDatasetDialog(QDialog):
     # ---- Display Handlers
 
     def close(self):
+        """Qt method override."""
         super(NewDatasetDialog, self).close()
         self.clear()
         self._msg.setVisible(False)
