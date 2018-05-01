@@ -216,7 +216,7 @@ class DataManager(QWidget):
         """
         print("Saving the new water level dataset in the project...", end=" ")
         self.projet.add_wldset(name, dataset)
-        self.update_wldsets()
+        self.update_wldsets(name)
         self.update_wldset_info()
         self.wldset_changed()
         print("done")
@@ -298,7 +298,7 @@ class DataManager(QWidget):
         """
         print("Saving the new weather dataset in the project.", end=" ")
         self.projet.add_wxdset(name, dataset)
-        self.update_wxdsets()
+        self.update_wxdsets(name)
         self.update_wxdset_info()
         self.wxdset_changed()
         print("done")
