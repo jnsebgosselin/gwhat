@@ -182,15 +182,28 @@ class ProjetReader(object):
 
     @property
     def wldsets(self):
+        """
+        Return a list of the names of all the water level datasets stored in
+        the project hdf5 file.
+        """
         return list(self.db['wldsets'].keys())
 
     def get_wldset(self, name):
+        """
+        Return the water level dataset corresponding to the provided name.
+        """
         if name in self.wldsets:
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
             return None
 
     def add_wldset(self, name, df):
+        """
+        Add the water level dataset to the project hdf5 file.
+
+        A dataset name must be at least one charater long and can't contain
+        any of the following special characters: \ / : * ? " < > |
+        """
         try:
             grp = self.db['wldsets'].create_group(name)
 
@@ -252,15 +265,28 @@ class ProjetReader(object):
 
     @property
     def wxdsets(self):
+        """
+        Return a list of the names of all the weather datasets stored in
+        the project hdf5 file.
+        """
         return list(self.db['wxdsets'].keys())
 
     def get_wxdset(self, name):
+        """
+        Return the weather dataset corresponding to the provided name.
+        """
         if name in self.wxdsets:
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
             return None
 
     def add_wxdset(self, name, df):
+        """
+        Add the weather dataset to the project hdf5 file.
+
+        A dataset name must be at least one charater long and can't contain
+        any of the following special characters: \ / : * ? " < > |
+        """
         grp = self.db['wxdsets'].create_group(name)
 
         grp.attrs['filename'] = df['filename']
