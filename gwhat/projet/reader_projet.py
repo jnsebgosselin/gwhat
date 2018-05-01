@@ -204,6 +204,9 @@ class ProjetReader(object):
         A dataset name must be at least one charater long and can't contain
         any of the following special characters: \ / : * ? " < > |
         """
+        if not is_dsetname_valid(name):
+            raise ValueError("The name of the dataset is not valid.")
+
         try:
             grp = self.db['wldsets'].create_group(name)
 
@@ -287,6 +290,9 @@ class ProjetReader(object):
         A dataset name must be at least one charater long and can't contain
         any of the following special characters: \ / : * ? " < > |
         """
+        if not is_dsetname_valid(name):
+            raise ValueError("The name of the dataset is not valid.")
+
         grp = self.db['wxdsets'].create_group(name)
 
         grp.attrs['filename'] = df['filename']
