@@ -739,6 +739,7 @@ class NewDatasetDialog(QDialog):
         self._dataset['Longitude'] = self.longitude
         self._dataset['Elevation'] = self.altitude
 
+        self.hide()
         self.sig_new_dataset_imported.emit(self.name, self._dataset)
         self.close()
 
