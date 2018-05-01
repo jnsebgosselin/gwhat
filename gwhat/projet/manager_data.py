@@ -73,7 +73,7 @@ class DataManager(QWidget):
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
         self.btn_load_wl = QToolButtonSmall(icons.get_icon('importFile'))
-        self.btn_load_wl.setToolTip('Import a new WL dataset...')
+        self.btn_load_wl.setToolTip('Import a new water level dataset...')
         self.btn_load_wl.clicked.connect(self.import_wldataset)
 
         self.btn_del_wldset = QToolButtonSmall(icons.get_icon('clear'))
