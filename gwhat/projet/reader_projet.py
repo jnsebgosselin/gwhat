@@ -24,6 +24,8 @@ import numpy as np
 from gwhat.meteo.weather_reader import WXDataFrameBase
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 
+INVALID_CHARS = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+
 
 class ProjetReader(object):
     def __init__(self, filename):
