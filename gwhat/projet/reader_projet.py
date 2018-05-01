@@ -638,7 +638,7 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
         self.store = data
 
 
-def is_dsetname_valid(self, dsetname):
+def is_dsetname_valid(dsetname):
     """
     Check if the dataset name respect the established guidelines to avoid
     problem with the hdf5 format.
