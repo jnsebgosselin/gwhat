@@ -28,6 +28,7 @@ from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
 import gwhat.projet.reader_waterlvl as wlrd
+from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
 import gwhat.meteo.weather_reader as wxrd
 from gwhat.meteo.weather_reader import WXDataFrameBase
 
@@ -72,7 +73,7 @@ class DataManager(QWidget):
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
         self.btn_load_wl = QToolButtonSmall(icons.get_icon('importFile'))
-        self.btn_load_wl.setToolTip('Import a new WL dataset...')
+        self.btn_load_wl.setToolTip('Import a new water level dataset...')
         self.btn_load_wl.clicked.connect(self.import_wldataset)
 
         self.btn_del_wldset = QToolButtonSmall(icons.get_icon('clear'))
@@ -216,7 +217,7 @@ class DataManager(QWidget):
         """
         print("Saving the new water level dataset in the project...", end=" ")
         self.projet.add_wldset(name, dataset)
-        self.update_wldsets()
+        self.update_wldsets(name)
         self.update_wldset_info()
         self.wldset_changed()
         print("done")
@@ -293,12 +294,12 @@ class DataManager(QWidget):
 
     def new_wxdset_imported(self, name, dataset):
         """
-        Receives the new weather dataset, saves it in the project and
+        Receive the new weather dataset, save it in the project and
         update the GUI.
         """
         print("Saving the new weather dataset in the project.", end=" ")
         self.projet.add_wxdset(name, dataset)
-        self.update_wxdsets()
+        self.update_wxdsets(name)
         self.update_wxdset_info()
         self.wxdset_changed()
         print("done")
@@ -638,44 +639,63 @@ class NewDatasetDialog(QDialog):
                 self._dataset = wxrd.WXDataFrame(filename)
         except Exception:
             self._dataset = None
+
+        self.update_gui(filename)
         QApplication.restoreOverrideCursor()
 
-        self.directory.setText(filename)
-        self.update_gui_with_dset_infos()
-
-    def update_gui_with_dset_infos(self):
+    def update_gui(self, filename=None):
         """
-        Display the values store in the dataset. Disable the UI and write
-        an error message if the dataset is None.
+        Display the values stored in the dataset. Disable the UI and show
+        an error message if the dataset is not valid.
         """
-        self._msg.setVisible(self._dataset is None)
-        self.btn_ok.setEnabled(self._dataset is not None)
-        self.grp_info.setEnabled(self._dataset is not None)
-        self._dset_name.setEnabled(self._dataset is not None)
-        if self._dataset is None:
-            self.clear(clear_directory=False)
+        if filename is not None:
+            self.directory.setText(filename)
         else:
+            self.directory.clear()
+
+        if self._dataset is None:
+            self._dset_name.clear()
+            self._stn_name.clear()
+            self._prov.clear()
+            self._lat.setValue(0)
+            self._lon.setValue(0)
+            self._alt.setValue(0)
+            self._sid.clear()
+        else:
+            self._prov.setText(self._dataset['Province'])
+            self._lat.setValue(self._dataset['Latitude'])
+            self._lon.setValue(self._dataset['Longitude'])
+            self._alt.setValue(self._dataset['Elevation'])
             if self._datatype == 'water level':
                 self._stn_name.setText(self._dataset['Well'])
                 self._sid.setText(self._dataset['Well ID'])
-                self._prov.setText(self._dataset['Province'])
-                self._lat.setValue(self._dataset['Latitude'])
-                self._lon.setValue(self._dataset['Longitude'])
-                self._alt.setValue(self._dataset['Elevation'])
-                self._dset_name.setText(self._dataset['Well'])
+                dsetname = self._dataset['Well']
             elif self._datatype == 'daily weather':
                 self._stn_name.setText(self._dataset['Station Name'])
                 self._sid.setText(self._dataset['Climate Identifier'])
-                self._prov.setText(self._dataset['Province'])
-                self._lat.setValue(self._dataset['Latitude'])
-                self._lon.setValue(self._dataset['Longitude'])
-                self._alt.setValue(self._dataset['Elevation'])
-                self._dset_name.setText(self._dataset['Station Name'])
+                dsetname = self._dataset['Station Name']
+            # We replace the invalid characters to avoid problems when
+            # saving the dataset to the hdf5 format.
+            for char in INVALID_CHARS:
+                dsetname = dsetname.replace(char, '_')
+            self._dset_name.setText(dsetname)
+
+        self._msg.setVisible(
+            self._dataset is None and self.directory.text() != '')
+        self.btn_ok.setEnabled(self._dataset is not None)
+        self.grp_info.setEnabled(self._dataset is not None)
+        self._dset_name.setEnabled(self._dataset is not None)
 
     def accept_dataset(self):
         """Accept and emit the dataset."""
-        if self.name == '':
-            msg = 'Please enter a valid name for the dataset.'
+        if not is_dsetname_valid(self.name):
+            msg = ('''
+                   <p>Please enter a valid name for the dataset.<\p>
+                   <p>A dataset name must be at least one charater long
+                   and can't contain any of the following special
+                   characters:<\p>
+                   <center>\ / : * ? " < > |<\center>
+                   ''')
             btn = QMessageBox.Ok
             QMessageBox.warning(self, 'Save dataset', msg, btn)
             return
@@ -711,27 +731,18 @@ class NewDatasetDialog(QDialog):
         self._dataset['Longitude'] = self.longitude
         self._dataset['Elevation'] = self.altitude
 
+        self.hide()
         self.sig_new_dataset_imported.emit(self.name, self._dataset)
         self.close()
 
     # ---- Display Handlers
 
     def close(self):
+        """Qt method override."""
         super(NewDatasetDialog, self).close()
-        self.clear()
-        self._msg.setVisible(False)
-
-    def clear(self, clear_directory=True):
-        if clear_directory:
-            self.directory.clear()
         self._dataset = None
-        self._dset_name.clear()
-        self._stn_name.clear()
-        self._prov.clear()
-        self._lat.setValue(0)
-        self._lon.setValue(0)
-        self._alt.setValue(0)
-        self._sid.clear()
+        self.directory.clear()
+        self.update_gui()
 
     def show(self):
         """Qt method override."""
