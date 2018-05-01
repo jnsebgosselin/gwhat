@@ -28,7 +28,7 @@ from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
 import gwhat.projet.reader_waterlvl as wlrd
-from gwhat.projet.reader_projet import INVALID_CHARS
+from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
 import gwhat.meteo.weather_reader as wxrd
 from gwhat.meteo.weather_reader import WXDataFrameBase
 
@@ -686,17 +686,9 @@ class NewDatasetDialog(QDialog):
         self.grp_info.setEnabled(self._dataset is not None)
         self._dset_name.setEnabled(self._dataset is not None)
 
-    def _dsetname_isvalid(self):
-        """
-        Check if the dataset name respect the established guidelines to avoid
-        problem with the hdf5 format.
-        """
-        return (self.name != '' and
-                not any(char in self.name for char in INVALID_CHARS))
-
     def accept_dataset(self):
         """Accept and emit the dataset."""
-        if not self._dsetname_isvalid():
+        if not is_dsetname_valid(self.name):
             msg = ('''
                    <p>Please enter a valid name for the dataset.<\p>
                    <p>A dataset name must be at least one charater long

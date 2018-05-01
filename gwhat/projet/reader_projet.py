@@ -606,6 +606,15 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
         self.store = data
 
 
+def is_dsetname_valid(self, dsetname):
+    """
+    Check if the dataset name respect the established guidelines to avoid
+    problem with the hdf5 format.
+    """
+    return (dsetname != '' and
+            not any(char in dsetname for char in INVALID_CHARS))
+
+
 def save_dict_to_h5grp(h5grp, dic):
     """
     Save the content of a dictionay recursively in a hdf5.
