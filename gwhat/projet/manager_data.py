@@ -639,39 +639,53 @@ class NewDatasetDialog(QDialog):
                 self._dataset = wxrd.WXDataFrame(filename)
         except Exception:
             self._dataset = None
+
+        self.update_gui(filename)
         QApplication.restoreOverrideCursor()
 
-        self.directory.setText(filename)
-        self.update_gui_with_dset_infos()
-
-    def update_gui_with_dset_infos(self):
+    def update_gui(self, filename=None):
         """
-        Display the values store in the dataset. Disable the UI and write
-        an error message if the dataset is None.
+        Display the values stored in the dataset. Disable the UI and show
+        an error message if the dataset is not valid.
         """
-        self._msg.setVisible(self._dataset is None)
-        self.btn_ok.setEnabled(self._dataset is not None)
-        self.grp_info.setEnabled(self._dataset is not None)
-        self._dset_name.setEnabled(self._dataset is not None)
-        if self._dataset is None:
-            self.clear(clear_directory=False)
+        if filename is not None:
+            self.directory.setText(filename)
         else:
+            self.directory.clear()
+
+        if self._dataset is None:
+            self._dset_name.clear()
+            self._stn_name.clear()
+            self._prov.clear()
+            self._lat.setValue(0)
+            self._lon.setValue(0)
+            self._alt.setValue(0)
+            self._sid.clear()
+        else:
+            self._prov.setText(self._dataset['Province'])
+            self._lat.setValue(self._dataset['Latitude'])
+            self._lon.setValue(self._dataset['Longitude'])
+            self._alt.setValue(self._dataset['Elevation'])
             if self._datatype == 'water level':
                 self._stn_name.setText(self._dataset['Well'])
                 self._sid.setText(self._dataset['Well ID'])
-                self._prov.setText(self._dataset['Province'])
-                self._lat.setValue(self._dataset['Latitude'])
-                self._lon.setValue(self._dataset['Longitude'])
-                self._alt.setValue(self._dataset['Elevation'])
-                self._dset_name.setText(self._dataset['Well'])
+                dsetname = self._dataset['Well']
             elif self._datatype == 'daily weather':
                 self._stn_name.setText(self._dataset['Station Name'])
                 self._sid.setText(self._dataset['Climate Identifier'])
-                self._prov.setText(self._dataset['Province'])
-                self._lat.setValue(self._dataset['Latitude'])
-                self._lon.setValue(self._dataset['Longitude'])
-                self._alt.setValue(self._dataset['Elevation'])
-                self._dset_name.setText(self._dataset['Station Name'])
+                dsetname = self._dataset['Station Name']
+            # We replace the invalid characters to avoid problems when
+            # saving the dataset to the hdf5 format.
+            for char in INVALID_CHARS:
+                dsetname = dsetname.replace(char, '_')
+            self._dset_name.setText(dsetname)
+
+        self._msg.setVisible(
+            self._dataset is None and self.directory.text() != '')
+        self.btn_ok.setEnabled(self._dataset is not None)
+        self.grp_info.setEnabled(self._dataset is not None)
+        self._dset_name.setEnabled(self._dataset is not None)
+
     def _dsetname_isvalid(self):
         """
         Check if the dataset name respect the established guidelines to avoid
@@ -733,20 +747,9 @@ class NewDatasetDialog(QDialog):
     def close(self):
         """Qt method override."""
         super(NewDatasetDialog, self).close()
-        self.clear()
-        self._msg.setVisible(False)
-
-    def clear(self, clear_directory=True):
-        if clear_directory:
-            self.directory.clear()
         self._dataset = None
-        self._dset_name.clear()
-        self._stn_name.clear()
-        self._prov.clear()
-        self._lat.setValue(0)
-        self._lon.setValue(0)
-        self._alt.setValue(0)
-        self._sid.clear()
+        self.directory.clear()
+        self.update_gui()
 
     def show(self):
         """Qt method override."""
