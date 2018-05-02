@@ -835,6 +835,7 @@ class WLCalc(myqt.DialogWindow):
 
         # Update axes :
 
+        """Setup the margins of the main axe of the figure."""
         fheight = self.fig.get_figheight()
         fwidth = self.fig.get_figwidth()
 
@@ -1124,6 +1125,7 @@ class WLCalc(myqt.DialogWindow):
         self.draw()
 
     def mouse_vguide(self, event):
+        """Draw the vertical mouse guideline on the graph."""
         if self.isGraphExists is False:
             return
 
@@ -1218,7 +1220,7 @@ class WLCalc(myqt.DialogWindow):
         self.mouse_vguide(event)
 
     def onclick(self, event):
-        """Handles when the graph is clicked with the mouse."""
+        """Handle when the graph is clicked with the mouse."""
         x, y = event.x, event.y
         if x is None or y is None:
             return
