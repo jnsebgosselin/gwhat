@@ -1167,9 +1167,7 @@ class WLCalc(myqt.DialogWindow):
         if self.isGraphExists is False:
             return
 
-        # if not self.btn_pan.autoRaise():
-        #    return
-        if self.toolbar._active == "PAN":
+        if self.pan_is_active or self.zoom_is_active:
             return
 
         ax0 = self.fig.axes[0]
@@ -1244,15 +1242,9 @@ class WLCalc(myqt.DialogWindow):
         Handle when a button of the mouse is released after the graph has
         been clicked.
         """
-        if self.is_all_btn_raised():
-            if self.toolbar._active == 'PAN':
-                self.toolbar.pan()
-                self.draw()
-                QApplication.restoreOverrideCursor()
-        else:
+        if not self.is_all_btn_raised():
             if event.button != 1:
                 return
-
             self.__addPeakVisible = True
             self.plot_peak()
         self.mouse_vguide(event)
@@ -1343,14 +1335,6 @@ class WLCalc(myqt.DialogWindow):
                 self.config_brf.set_datarange(self.brfperiod)
             else:
                 raise ValueError('Something is wrong in the code')
-        else:
-            if self.toolbar._active is None:
-                self.toolbar.pan()
-                self.draw()
-                QApplication.setOverrideCursor(Qt.SizeAllCursor)
-                self.toolbar.press_pan(event)
-
-
 
 
 def local_extrema(x, Deltan):
