@@ -1173,8 +1173,8 @@ class WLCalc(myqt.DialogWindow):
         """
         if self.isGraphExists is False:
             return
-
-        if self.pan_is_active or self.zoom_is_active:
+        if ((self.pan_is_active or self.zoom_is_active) and
+                self.__mouse_btn_is_pressed):
             return
 
         ax0 = self.fig.axes[0]
@@ -1187,7 +1187,8 @@ class WLCalc(myqt.DialogWindow):
 
         x = event.xdata
         if x:
-            self.vguide.set_visible(True)
+            self.vguide.set_visible(
+                not self.pan_is_active and not self.zoom_is_active)
             self.vguide.set_xdata(x)
             ax0.draw_artist(self.vguide)
 
