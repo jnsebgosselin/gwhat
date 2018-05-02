@@ -226,17 +226,11 @@ class WLCalc(myqt.DialogWindow):
                                 zorder=20, marker='x', linestyle='None',
                                 markersize=15, markeredgewidth=3)
 
-
-    def __initUI__(self):
-
-        self.setWindowTitle('Hydrograph Analysis')
-
-        # -------------------------------------------------------- TOOLBAR ----
+    def _setup_toolbar(self):
+        """Setup the main toolbar of the water level calc tool."""
 
         self.toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self.toolbar.hide()
-
-        # Toolbar Buttons :
 
         self.btn_clearPeak = QToolButtonNormal(icons.get_icon('clear_search'))
         self.btn_clearPeak.setToolTip('Clear all extremum from the graph')
@@ -246,14 +240,16 @@ class WLCalc(myqt.DialogWindow):
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
 
-        # self.btn_pan = QToolButtonNormal(icons.get_icon('pan'))
-        # self.btn_pan.setToolTip('Pan axes with left mouse, zoom with right')
-        # self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_pan = QToolButtonNormal(icons.get_icon('pan'))
+        self.btn_pan.setToolTip(
+            'Pan axes with the left mouse button and zoom with the right')
+        self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
+        self.set_pan_is_active(False)
 
-        self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
-        self.btn_strati.setToolTip('Toggle on and off the display of the soil'
-                                   ' stratigraphic layers')
-        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
+        self.btn_zoom_to_rect = QToolButtonNormal(
+            icons.get_icon('zoom_to_rect'))
+        self.btn_zoom_to_rect.clicked.connect(self.aToolbarBtn_isClicked)
+        self.set_zoom_is_active(False)
 
         self.btn_Waterlvl_lineStyle = QToolButtonNormal(
                 icons.get_icon('showDataDots'))
@@ -261,35 +257,32 @@ class WLCalc(myqt.DialogWindow):
             '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
 
+        self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
+        self.btn_strati.setToolTip('Toggle on and off the display of the soil'
+                                   ' stratigraphic layers')
+        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
+
         self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
-        self.btn_dateFormat.setAutoRaise(1-self.dformat)
-        self.btn_dateFormat.setToolTip('x axis label time format: '
-                                       'date or MS Excel numeric')
+        self.btn_dateFormat.setToolTip(
+            'Show x-axis tick labels as Excel numeric format.')
         self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_dateFormat.setAutoRaise(False)
         # dformat: 0 -> Excel Numeric Date Format
         #          1 -> Matplotlib Date Format
 
-        # ---- BRF ----
+        toolbar = ToolBarWidget()
+        for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
+                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat]:
+            toolbar.addWidget(btn)
 
-        # Grid Layout :
+        return toolbar
 
-        btn_list = [self.btn_home,
-                    self.btn_Waterlvl_lineStyle,
-                    self.btn_dateFormat]
+    def __initUI__(self):
 
-        subgrid_toolbar = QGridLayout()
-        toolbar_widget = QWidget()
+        self.setWindowTitle('Hydrograph Analysis')
+        toolbar = self._setup_toolbar()
 
-        for col, btn in enumerate(btn_list):
-            subgrid_toolbar.addWidget(btn, 0, col)
-        subgrid_toolbar.setColumnStretch(col+1, 500)
-
-        subgrid_toolbar.setSpacing(5)
-        subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-
-        toolbar_widget.setLayout(subgrid_toolbar)
-
-        # ------------------------------------------------- MRC PARAMETERS ----
+        # ---- MRC parameters
 
         self.MRC_type = QComboBox()
         self.MRC_type.addItems(['Linear', 'Exponential'])
@@ -389,7 +382,7 @@ class WLCalc(myqt.DialogWindow):
 
         mainGrid = QGridLayout(self)
 
-        mainGrid.addWidget(toolbar_widget, 0, 0)
+        mainGrid.addWidget(toolbar, 0, 0)
         mainGrid.addWidget(self.fig_frame_widget, 1, 0, 2, 1)
         mainGrid.addWidget(myqt.VSep(), 0, 1, 3, 1)
         mainGrid.addWidget(self.right_panel, 0, 2, 2, 1)
