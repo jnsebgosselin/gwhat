@@ -837,6 +837,7 @@ class WLCalc(myqt.DialogWindow):
                 self.toolbar.pan()
 
     def home(self):
+        """Reset the orgininal view of the figure."""
         if self.isGraphExists is False:
             print('Graph is empty')
             return
@@ -866,7 +867,7 @@ class WLCalc(myqt.DialogWindow):
             print('undo')
         else:
             pass
-        
+
     # ---- Drawing methods
 
     def setup_ax_margins(self, event=None):
@@ -1177,12 +1178,9 @@ class WLCalc(myqt.DialogWindow):
 
         ax0 = self.fig.axes[0]
         fig = self.fig
-
-        # Restore background:
-
         fig.canvas.restore_region(self.__figbckground)
 
-        # ----- Draw vertical guide ----
+        # ---- Draw the vertical guide
 
         # Trace a red vertical guide (line) that folows the mouse marker :
 
@@ -1863,9 +1861,6 @@ class SoilProfil():
                 self.color[i] = reader[i][3]
             except:
                 self.color[i] = '#FFFFFF'
-
-
-# =============================================================================
 
 
 def mrc2rechg(t, ho, A, B, z, Sy):
