@@ -539,7 +539,7 @@ class WLCalc(myqt.DialogWindow):
         elif self.sender() == self.btn_zoom_to_rect:
             self.set_zoom_is_active(not self.zoom_is_active)
 
-    # ---- MRC
+    # ---- MRC handlers
 
     def btn_MRCalc_isClicked(self):
 
@@ -866,6 +866,8 @@ class WLCalc(myqt.DialogWindow):
             print('undo')
         else:
             pass
+        
+    # ---- Drawing methods
 
     def setup_ax_margins(self, event=None):
         """Setup the margins of the main axe of the figure."""
@@ -1151,7 +1153,7 @@ class WLCalc(myqt.DialogWindow):
 
     def is_all_btn_raised(self):
         """
-        Returns whether all of the tool buttons that can block the panning and
+        Return whether all of the tool buttons that can block the panning and
         zooming of the graph are raised.
         """
         return(self.btn_delPeak.autoRaise() and
@@ -1159,11 +1161,14 @@ class WLCalc(myqt.DialogWindow):
                self.config_brf.btn_seldata.autoRaise())
 
     def on_fig_leave(self, event):
-        """Handles when the mouse cursor leaves the graph."""
+        """Handle when the mouse cursor leaves the graph."""
         self.draw()
 
     def mouse_vguide(self, event):
-        """Draw the vertical mouse guideline on the graph."""
+        """
+        Draw the vertical mouse guideline and the x coordinate of the
+        mouse cursor on the graph.
+        """
         if self.isGraphExists is False:
             return
 
