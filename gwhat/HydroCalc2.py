@@ -885,7 +885,6 @@ class WLCalc(myqt.DialogWindow):
 
         for axe in self.fig.axes:
             axe.set_position([x0, y0, w, h])
-
         self.draw()
 
     def switch_date_format(self):
@@ -893,14 +892,20 @@ class WLCalc(myqt.DialogWindow):
 
         # Change UI and System Variable State :
 
-        if self.dformat == 0:    # 0 for Excel numeric date format
+        # 0 for Excel numeric date format
+        # 1 for Matplotlib format
+        if self.dformat == 0:
+            # Switch to matplotlib date format
             self.btn_dateFormat.setAutoRaise(False)
-            self.dformat = 1     # 1 for Matplotlib format
-            print('switching to matplotlib date format')
-        elif self.dformat == 1:  # 1 for Matplotlib format
+            self.btn_dateFormat.setToolTip(
+                'Show x-axis tick labels as Excel numeric format')
+            self.dformat = 1
+        elif self.dformat == 1:
+            # Switch to Excel numeric date format
             self.btn_dateFormat.setAutoRaise(True)
-            self.dformat = 0     # 0 for Excel numeric date format
-            print('switching to Excel numeric date format')
+            self.btn_dateFormat.setToolTip(
+                'Show x-axis tick labels as date')
+            self.dformat = 0
 
         # Change xtick Labels Date Format :
 
