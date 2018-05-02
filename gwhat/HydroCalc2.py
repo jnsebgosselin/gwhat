@@ -61,6 +61,7 @@ class WLCalc(myqt.DialogWindow):
         self.isGraphExists = False
         self.__figbckground = None  # figure background
         self.__addPeakVisible = True
+        self.__mouse_btn_is_pressed = False
 
         # Water Level Time series :
 
@@ -1246,6 +1247,7 @@ class WLCalc(myqt.DialogWindow):
         been clicked.
         """
         if not self.is_all_btn_raised():
+        self.__mouse_btn_is_pressed = False
             if event.button != 1:
                 return
             self.__addPeakVisible = True
@@ -1254,6 +1256,7 @@ class WLCalc(myqt.DialogWindow):
 
     def onclick(self, event):
         """Handle when the graph is clicked with the mouse."""
+        self.__mouse_btn_is_pressed = True
         x, y = event.x, event.y
         if x is None or y is None:
             return
