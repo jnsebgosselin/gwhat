@@ -24,6 +24,8 @@ import numpy as np
 from gwhat.meteo.weather_reader import WXDataFrameBase
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 
+INVALID_CHARS = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
+
 
 class ProjetReader(object):
     def __init__(self, filename):
@@ -180,15 +182,31 @@ class ProjetReader(object):
 
     @property
     def wldsets(self):
+        """
+        Return a list of the names of all the water level datasets stored in
+        the project hdf5 file.
+        """
         return list(self.db['wldsets'].keys())
 
     def get_wldset(self, name):
+        """
+        Return the water level dataset corresponding to the provided name.
+        """
         if name in self.wldsets:
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
             return None
 
     def add_wldset(self, name, df):
+        """
+        Add the water level dataset to the project hdf5 file.
+
+        A dataset name must be at least one charater long and can't contain
+        any of the following special characters: \ / : * ? " < > |
+        """
+        if not is_dsetname_valid(name):
+            raise ValueError("The name of the dataset is not valid.")
+
         try:
             grp = self.db['wldsets'].create_group(name)
 
@@ -250,15 +268,31 @@ class ProjetReader(object):
 
     @property
     def wxdsets(self):
+        """
+        Return a list of the names of all the weather datasets stored in
+        the project hdf5 file.
+        """
         return list(self.db['wxdsets'].keys())
 
     def get_wxdset(self, name):
+        """
+        Return the weather dataset corresponding to the provided name.
+        """
         if name in self.wxdsets:
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
             return None
 
     def add_wxdset(self, name, df):
+        """
+        Add the weather dataset to the project hdf5 file.
+
+        A dataset name must be at least one charater long and can't contain
+        any of the following special characters: \ / : * ? " < > |
+        """
+        if not is_dsetname_valid(name):
+            raise ValueError("The name of the dataset is not valid.")
+
         grp = self.db['wxdsets'].create_group(name)
 
         grp.attrs['filename'] = df['filename']
@@ -602,6 +636,15 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
     def __load_data__(self, data):
         """Saves the h5py glue data to the store."""
         self.store = data
+
+
+def is_dsetname_valid(dsetname):
+    """
+    Check if the dataset name respect the established guidelines to avoid
+    problem with the hdf5 format.
+    """
+    return (dsetname != '' and
+            not any(char in dsetname for char in INVALID_CHARS))
 
 
 def save_dict_to_h5grp(h5grp, dic):
