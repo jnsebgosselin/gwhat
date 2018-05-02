@@ -22,13 +22,35 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QFileDialog,
                              QListWidget, QMenu, QMessageBox, QStyle,
-                             QToolButton, QWidget)
+                             QToolButton, QWidget, QToolBar)
 
 # ---- Local imports
 
 from gwhat.common.icons import QToolButtonBase
 from gwhat.common import icons
 from gwhat.common.utils import find_unique_filename
+
+
+class ToolBarWidget(QToolBar):
+    """A standard toolbar with some layout specifics."""
+    def __init__(self, parent=None):
+        super(ToolBarWidget, self).__init__(parent)
+        self.setIconSize(QSize(28, 28))
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(5)
+
+    def addWidget(self, widget):
+        """Qt method override."""
+        if widget is None:
+            super(ToolBarWidget, self).addSeparator()
+        elif isinstance(widget, QToolButton):
+            # This is required because it seems that autoRaise is set to True
+            # automatically when adding a widget to the toolbar.
+            auto_raise = widget.autoRaise()
+            super(ToolBarWidget, self).addWidget(widget)
+            widget.setAutoRaise(auto_raise)
+        else:
+            super(ToolBarWidget, self).addWidget(widget)
 
 
 class SmartSpinBox(QDoubleSpinBox):
