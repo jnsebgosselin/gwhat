@@ -759,6 +759,8 @@ class WLCalc(myqt.DialogWindow):
         self.btn_addpeak.setAutoRaise(not self.btn_addpeak.autoRaise())
         self.btn_delPeak.setAutoRaise(True)
         self.config_brf.btn_seldata.setAutoRaise(True)
+        self.set_pan_is_active(False)
+        self.set_zoom_is_active(False)
         self.brfperiod = [None, None]
         self.__brfcount = 0
 
@@ -773,6 +775,8 @@ class WLCalc(myqt.DialogWindow):
         self.btn_delPeak.setAutoRaise(not self.btn_delPeak.autoRaise())
         self.btn_addpeak.setAutoRaise(True)
         self.config_brf.btn_seldata.setAutoRaise(True)
+        self.set_pan_is_active(False)
+        self.set_zoom_is_active(False)
         self.brfperiod = [None, None]
         self.__brfcount = 0
 
