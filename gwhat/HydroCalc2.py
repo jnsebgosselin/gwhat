@@ -226,7 +226,6 @@ class WLCalc(myqt.DialogWindow):
                                 zorder=20, marker='x', linestyle='None',
                                 markersize=15, markeredgewidth=3)
 
-    # =========================================================================
 
     def __initUI__(self):
 
@@ -308,7 +307,7 @@ class WLCalc(myqt.DialogWindow):
         sp = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.MRC_results.setSizePolicy(sp)
 
-        # ---- MRC Toolbar ----
+        # ---- MRC toolbar
 
         self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
         self.btn_undo.setToolTip('Undo')
@@ -516,15 +515,13 @@ class WLCalc(myqt.DialogWindow):
 
         self.draw()
 
-    # =========================================================================
-
     def aToolbarBtn_isClicked(self):
         """
         Handles and redirects all clicked actions from toolbar buttons.
         """
         if self.wldset is None:
             self.emit_warning(
-                    "Please import a valid water level dataset first.")
+                "Please import a valid water level dataset first.")
             return
 
         sender = self.sender()
@@ -800,7 +797,6 @@ class WLCalc(myqt.DialogWindow):
 
         self.plot_peak()
 
-    # =========================================================================
 
     def home(self):
         if self.isGraphExists is False:
@@ -834,7 +830,6 @@ class WLCalc(myqt.DialogWindow):
         else:
             pass
 
-    # =========================================================================
 
     def setup_ax_margins(self, event):
 
@@ -1206,7 +1201,7 @@ class WLCalc(myqt.DialogWindow):
 
     def onrelease(self, event):
         """
-        Handles when a button of the mouse is released after the graph has
+        Handle when a button of the mouse is released after the graph has
         been clicked.
         """
         if self.is_all_btn_raised():
@@ -1316,7 +1311,6 @@ class WLCalc(myqt.DialogWindow):
                 self.toolbar.press_pan(event)
 
 
-# =============================================================================
 
 
 def local_extrema(x, Deltan):
