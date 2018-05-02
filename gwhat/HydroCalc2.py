@@ -19,10 +19,9 @@ import datetime
 import numpy as np
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (QGridLayout, QWidget, QComboBox, QTextEdit,
+from PyQt5.QtWidgets import (QGridLayout, QComboBox, QTextEdit,
                              QSizePolicy, QPushButton, QLabel, QTabWidget,
-                             QApplication, QFileDialog, QFrame, QDoubleSpinBox,
-                             QScrollArea)
+                             QApplication, QFileDialog)
 
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -40,6 +39,7 @@ import gwhat.common.widgets as myqt
 from gwhat.common import StyleDB, QToolButtonNormal
 from gwhat.common import icons
 import gwhat.brf_mod as bm
+from gwhat.widgets.buttons import ToolBarWidget
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
