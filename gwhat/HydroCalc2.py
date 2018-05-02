@@ -1247,8 +1247,16 @@ class WLCalc(myqt.DialogWindow):
         Handle when a button of the mouse is released after the graph has
         been clicked.
         """
-        if not self.is_all_btn_raised():
         self.__mouse_btn_is_pressed = False
+        # Disconnect the pan and zoom callback before drawing the canvas again.
+        if self.pan_is_active:
+            self.toolbar.release_pan(event)
+        if self.zoom_is_active:
+            self.toolbar.release_zoom(event)
+
+        if self.is_all_btn_raised():
+            self.draw()
+        else:
             if event.button != 1:
                 return
             self.__addPeakVisible = True
@@ -1342,6 +1350,8 @@ class WLCalc(myqt.DialogWindow):
                 self.config_brf.set_datarange(self.brfperiod)
             else:
                 raise ValueError('Something is wrong in the code')
+        else:
+            self.draw()
 
 
 def local_extrema(x, Deltan):
