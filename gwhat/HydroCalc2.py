@@ -1954,6 +1954,8 @@ def mrc2rechg(t, ho, A, B, z, Sy):
     return RECHG
 
 
+# %% if __name__ == '__main__'
+
 if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
@@ -1966,9 +1968,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = ('C:/Users/jsgosselin/OneDrive/Research/'
-          'PostDoc - MDDELCC/Outils/BRF MontEst/'
-          'BRF MontEst.what')
+    pf = 'C:/Users/jsgosselin/GWHAT/Projects/Example/Example.gwt'
     pr = ProjetReader(pf)
     dm = DataManager()
 
@@ -1978,59 +1978,3 @@ if __name__ == '__main__':
     dm.set_projet(pr)
 
     sys.exit(app.exec_())
-
-#    import sys
-#    plt.rc('font', family='Arial')
-#
-#    app = QApplication(sys.argv)
-#
-#    ft = app.font()
-#    ft.setFamily('Segoe UI')
-#    ft.setPointSize(11)
-#    app.setFont(ft)
-#
-#    # Create and show widgets :
-#
-#    w = WLCalc()
-#    w.show()
-#    w.widget_MRCparam.show()
-#
-#    # ---- Pont Rouge ----
-#
-#    dirname = os.path.join(
-#        os.path.dirname(os.getcwd()), 'Projects', 'Pont-Rouge')
-#    fmeteo = os.path.join(
-#        dirname, 'Meteo', 'Output', 'STE CHRISTINE (7017000)_1960-2015.out')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', '5080001.xls')
-#
-#    # ---- IDM ----
-#
-#    dirname = os.path.dirname(os.getcwd())
-#    dirname = os.path.join(dirname, 'Projects', 'IDM')
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
-#                          'IDM (JSG2017)_1960-2016.out')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
-#
-#    # ---- Testing ----
-#
-#    dirname = os.path.dirname(os.getcwd())
-#    dirname = os.path.join(dirname, 'Projects', 'Project4Testing')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'F1.xlsx')
-#
-#    # ---- Valcartier ----
-#
-#    dirname = '../Projects/Valcartier'
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'Valcartier (9999999)',
-#                          'Valcartier (9999999)_1994-2015.out')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'valcartier2.xls')
-#
-#    # Load and plot data :
-#
-#    w.load_waterLvl_data(fwaterlvl)
-#    w.load_weather_data(fmeteo)
-#
-#    # Calcul recharge :
-#
-#    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
-#
-#    sys.exit(app.exec_())
