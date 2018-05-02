@@ -850,8 +850,7 @@ class WLCalc(myqt.DialogWindow):
 
             xlim = ax0.get_xlim()
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
-
-        self.draw()
+        self.setup_ax_margins()
 
     def undo(self):
         if self.isGraphExists is False:
@@ -868,11 +867,7 @@ class WLCalc(myqt.DialogWindow):
         else:
             pass
 
-
-    def setup_ax_margins(self, event):
-
-        # Update axes :
-
+    def setup_ax_margins(self, event=None):
         """Setup the margins of the main axe of the figure."""
         fheight = self.fig.get_figheight()
         fwidth = self.fig.get_figwidth()
