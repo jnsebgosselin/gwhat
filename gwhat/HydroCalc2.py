@@ -534,6 +534,10 @@ class WLCalc(myqt.DialogWindow):
             self.switch_date_format()
         elif sender == self.config_brf.btn_seldata:
             self.select_BRF()
+        elif self.sender() == self.btn_pan:
+            self.set_pan_is_active(not self.pan_is_active)
+        elif self.sender() == self.btn_zoom_to_rect:
+            self.set_zoom_is_active(not self.zoom_is_active)
 
     # ---- MRC
 
@@ -790,6 +794,43 @@ class WLCalc(myqt.DialogWindow):
 
         self.plot_peak()
 
+    # ---- Toolbar handlers
+
+    @property
+    def zoom_is_active(self):
+        """Return whether the zooming to rectangle tool is active or not."""
+        return not self.btn_zoom_to_rect.autoRaise()
+
+    def set_zoom_is_active(self, zoom_is_active):
+        """Set whether the zooming to rectangle tool is active or not."""
+        self.btn_zoom_to_rect.setAutoRaise(not zoom_is_active)
+        if self.zoom_is_active:
+            self.set_pan_is_active(False)
+            self.btn_delPeak.setAutoRaise(True)
+            self.btn_addpeak.setAutoRaise(True)
+            if self.toolbar._active is None:
+                self.toolbar.zoom()
+        else:
+            if self.toolbar._active == 'ZOOM':
+                self.toolbar.zoom()
+
+    @property
+    def pan_is_active(self):
+        """Return whether the panning of the graph is active or not."""
+        return not self.btn_pan.autoRaise()
+
+    def set_pan_is_active(self, pan_is_active):
+        """Set whether the panning of the graph is active or not."""
+        self.btn_pan.setAutoRaise(not pan_is_active)
+        if self.pan_is_active:
+            self.set_zoom_is_active(False)
+            self.btn_delPeak.setAutoRaise(True)
+            self.btn_addpeak.setAutoRaise(True)
+            if self.toolbar._active is None:
+                self.toolbar.pan()
+        else:
+            if self.toolbar._active == 'PAN':
+                self.toolbar.pan()
 
     def home(self):
         if self.isGraphExists is False:
