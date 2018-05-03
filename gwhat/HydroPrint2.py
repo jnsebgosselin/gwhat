@@ -778,6 +778,10 @@ class HydroprintGUI(myqt.DialogWindow):
         x = ['mbgs', 'masl'].index(layout['WLdatum'])
         self.datum_widget.setCurrentIndex(x)
 
+        self.qweather_bin.setCurrentIndex(layout['bwidth_indx'])
+        self.time_scale_label.setCurrentIndex(
+            self.time_scale_label.findText(layout['datemode']))
+
         # Language :
 
         index = max(0, self.language_box.findText(layout['language']))
