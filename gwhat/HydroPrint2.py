@@ -975,21 +975,35 @@ class PageSetupWin(QWidget):
         figSize_layout.setColumnStretch(1, 100)
         figSize_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
-        # ---- Graph Element Visibility GroupBox
+        # ---- Main Layout
 
+        main_layout = QGridLayout()
+        main_layout.addWidget(figsize_grpbox, 0, 0)
+        main_layout.addWidget(self._setup_element_visibility_grpbox(), 1, 0)
+        main_layout.setRowStretch(2, 100)
+        main_layout.setRowMinimumHeight(2, 15)
+        main_layout.addWidget(toolbar_widget, 3, 0)
+
+        self.setLayout(main_layout)
+
+    def _setup_element_visibility_grpbox(self):
+        """
+        Setup a groupbox containing all the options to set the visibility of
+        various elements of the graph.
+        """
         # Legend
 
         self.legend_on = QRadioButton('On')
         self.legend_on.toggle()
         self.legend_off = QRadioButton('Off')
 
-        legend_grpwidget = QWidget()
-        legend_layout = QGridLayout(legend_grpwidget)
+        legend = QWidget()
+        legend_layout = QGridLayout(legend)
         legend_layout.addWidget(QLabel('Legend :'), 0, 0)
         legend_layout.addWidget(self.legend_on, 0, 2)
         legend_layout.addWidget(self.legend_off, 0, 3)
         legend_layout.setColumnStretch(1, 100)
-        legend_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        legend_layout.setContentsMargins(0, 0, 0, 0)
 
         # Graph title
 
@@ -997,13 +1011,13 @@ class PageSetupWin(QWidget):
         self.title_on.toggle()
         self.title_off = QRadioButton('Off')
 
-        title_grpwidget = QWidget()
-        title_layout = QGridLayout(title_grpwidget)
+        title = QWidget()
+        title_layout = QGridLayout(title)
         title_layout.addWidget(QLabel('Graph Title :'), 0, 0)
         title_layout.addWidget(self.title_on, 0, 2)
         title_layout.addWidget(self.title_off, 0, 3)
         title_layout.setColumnStretch(1, 100)
-        title_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        title_layout.setContentsMargins(0, 0, 0, 0)
 
         # Trend Line
 
@@ -1011,34 +1025,21 @@ class PageSetupWin(QWidget):
         self.trend_off = QRadioButton('Off')
         self.trend_off.toggle()
 
-        trend_grpwidget = QWidget()
-        trend_layout = QGridLayout(trend_grpwidget)
+        trend = QWidget()
+        trend_layout = QGridLayout(trend)
         trend_layout.addWidget(QLabel('Water Level Trend :'), 0, 0)
         trend_layout.addWidget(self.trend_on, 0, 2)
         trend_layout.addWidget(self.trend_off, 0, 3)
         trend_layout.setColumnStretch(1, 100)
-        trend_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        trend_layout.setContentsMargins(0, 0, 0, 0)
 
-        # GroupBox Layout
+        grpbox = QGroupBox("Graph Components Visibility :")
+        layout = QGridLayout(grpbox)
+        for i, widget in enumerate([legend, title, trend]):
+            layout.addWidget(widget, i, 0)
+        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
-        eleviz_grpbox = QGroupBox("Graph Components Visibility :")
-        eleviz_layout = QGridLayout(eleviz_grpbox)
-        eleviz_layout.addWidget(legend_grpwidget, 0, 0)
-        eleviz_layout.addWidget(title_grpwidget, 1, 0)
-        eleviz_layout.addWidget(trend_grpwidget, 2, 0)
-
-        eleviz_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-
-        # ---- Main Layout
-
-        main_layout = QGridLayout()
-        main_layout.addWidget(figsize_grpbox, 0, 0)
-        main_layout.addWidget(eleviz_grpbox, 1, 0)
-        main_layout.setRowStretch(2, 100)
-        main_layout.setRowMinimumHeight(2, 15)
-        main_layout.addWidget(toolbar_widget, 3, 0)
-
-        self.setLayout(main_layout)
+        return grpbox
 
     # ---- Handlers
 
