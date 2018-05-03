@@ -249,6 +249,9 @@ class WLCalc(myqt.DialogWindow):
 
         self.btn_zoom_to_rect = QToolButtonNormal(
             icons.get_icon('zoom_to_rect'))
+        self.btn_pan.setToolTip(
+            "Zoom in to the rectangle with the left mouse button and zoom"
+            " out with the right mouse button.")
         self.btn_zoom_to_rect.clicked.connect(self.aToolbarBtn_isClicked)
         self.set_zoom_is_active(False)
 
