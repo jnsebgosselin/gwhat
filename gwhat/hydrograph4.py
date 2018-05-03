@@ -532,9 +532,9 @@ class Hydrograph(Figure):
         self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])
         self.draw_weather()
         self.set_legend()
-        """Update the size of the figure."""
-    def update_fig_size(self):
 
+    def update_fig_size(self):
+        """Update the size of the figure."""
         self.set_size_inches(self.fwidth, self.fheight)
         self.set_margins()
         self.draw_ylabels()
