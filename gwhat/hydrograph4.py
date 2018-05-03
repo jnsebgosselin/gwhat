@@ -170,12 +170,15 @@ class Hydrograph(Figure):
 
     @meteo_on.setter
     def meteo_on(self, x):
-        """Return whether meteo data are plotted or not."""
-        if type(x) is bool:
-            self.__meteo_on = x
-        else:
-            print('WARNING: "meteo_on" must be either True or False. '
-                  'Previous value of "meteo_on" is kept.')
+        self.__meteo_on = bool(x)
+
+    def set_meteo_on(self, x):
+        """Set whether the meteo data are plotted or not."""
+        self.__meteo_on = bool(x)
+        if self.__isHydrographExists:
+            self.ax3.set_visible(x)
+            self.ax4.set_visible(x)
+            self.setup_waterlvl_scale()
 
     @property
     def language(self):
@@ -295,7 +298,7 @@ class Hydrograph(Figure):
         self.axLow.tick_params(bottom=False, top=False, left=False,
                                right=False, labelbottom=False, labelleft=False)
 
-        self.update_waterlvl_scale()
+        self.setup_waterlvl_scale()
 
         # -------------------------------------------------- Remove Spines ----
 

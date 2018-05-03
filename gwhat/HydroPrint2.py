@@ -547,20 +547,16 @@ class HydroprintGUI(myqt.DialogWindow):
             self.hydrograph.draw_ylabels()
             self.hydrograph.draw_xlabels()
             self.hydrograph.set_legend()
-
         elif sender in [self.waterlvl_max, self.waterlvl_scale]:
-            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.setup_waterlvl_scale()
             self.hydrograph.draw_ylabels()
-
         elif sender == self.NZGridWL_spinBox:
-            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.setup_waterlvl_scale()
             self.hydrograph.update_precip_scale()
             self.hydrograph.draw_ylabels()
-
         elif sender == self.Ptot_scale:
             self.hydrograph.update_precip_scale()
             self.hydrograph.draw_ylabels()
-
         elif sender == self.datum_widget:
             yoffset = int(self.wldset['Elevation']/self.hydrograph.WLscale)
             yoffset *= self.hydrograph.WLscale
@@ -575,38 +571,31 @@ class HydroprintGUI(myqt.DialogWindow):
             # well is not carried to the y axis labels, so that they remain a
             # int multiple of *WLscale*.
 
-            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.setup_waterlvl_scale()
             self.hydrograph.draw_waterlvl()
             self.hydrograph.draw_ylabels()
-
         elif sender in [self.date_start_widget, self.date_end_widget]:
             self.hydrograph.set_time_scale()
             self.hydrograph.draw_weather()
             self.hydrograph.draw_figure_title()
-
         elif sender == self.dateDispFreq_spinBox:
             self.hydrograph.set_time_scale()
             self.hydrograph.draw_xlabels()
-
         elif sender == self.page_setup_win:
             self.hydrograph.update_fig_size()
             # Implicitly call : set_margins()
             #                   draw_ylabels()
             #                   set_time_scale()
             #                   draw_figure_title
-
             self.hydrograph.draw_waterlvl()
             self.hydrograph.set_legend()
-
         elif sender == self.qweather_bin:
             self.hydrograph.resample_bin()
             self.hydrograph.draw_weather()
             self.hydrograph.draw_ylabels()
-
         elif sender == self.time_scale_label:
             self.hydrograph.set_time_scale()
             self.hydrograph.draw_weather()
-
         else:
             print('No action for this widget yet.')
 
@@ -667,6 +656,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph.trend_line = self.page_setup_win.isTrendLine
         self.hydrograph.isLegend = self.page_setup_win.isLegend
         self.hydrograph.isGraphTitle = self.page_setup_win.isGraphTitle
+        self.hydrograph.set_meteo_on(self.page_setup_win.is_meteo_on)
 
         # Weather bins :
 
@@ -900,6 +890,7 @@ class PageSetupWin(QWidget):
         self.isLegend = True
         self.isGraphTitle = True
         self.isTrendLine = False
+        self.is_meteo_on = True
         self.va_ratio = 0.2
 
         self.__initUI__()
@@ -986,12 +977,12 @@ class PageSetupWin(QWidget):
         self.legend_on = OnOffToggleWidget('Legend', True)
         self.title_on = OnOffToggleWidget('Figure Title', True)
         self.wltrend_on = OnOffToggleWidget('Water Level Trend', True)
-        self.show_meteo = OnOffToggleWidget('Weather Data', True)
+        self.meteo_on = OnOffToggleWidget('Weather Data', True)
 
         grpbox = QGroupBox("Graph Components Visibility :")
         layout = QGridLayout(grpbox)
         for i, widget in enumerate([self.legend_on, self.title_on,
-                                    self.wltrend_on, self.show_meteo]):
+                                    self.wltrend_on, self.meteo_on]):
             layout.addWidget(widget, i, 0)
         layout.setContentsMargins(10, 10, 10, 10)
 
@@ -1000,14 +991,17 @@ class PageSetupWin(QWidget):
     # ---- Handlers
 
     def btn_OK_isClicked(self):
+        """Apply the selected settings and close the window."""
         self.btn_apply_isClicked()
         self.close()
 
     def btn_apply_isClicked(self):
+        """Apply the selected settings and emit a signal."""
         self.pageSize = (self.fwidth.value(), self.fheight.value())
         self.isLegend = self.legend_on.toggle
         self.isGraphTitle = self.title_on.toggle
         self.isTrendLine = self.wltrend_on.toggle
+        self.is_meteo_on = self.meteo_on.toggle
         self.va_ratio = self.va_ratio_spinBox.value()
 
         self.newPageSetupSent.emit(True)
@@ -1028,6 +1022,7 @@ class PageSetupWin(QWidget):
         self.legend_on.set_toggle(self.isLegend)
         self.title_on.set_toggle(self.isGraphTitle)
         self.wltrend_on.set_toggle(self.isTrendLine)
+        self.meteo_on.set_toggle(self.is_meteo_on)
 
     def show(self):
         super(PageSetupWin, self).show()
