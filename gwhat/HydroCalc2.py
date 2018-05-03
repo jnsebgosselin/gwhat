@@ -720,6 +720,8 @@ class WLCalc(myqt.DialogWindow):
 
             self.btn_addpeak.setAutoRaise(True)
             self.btn_delPeak.setAutoRaise(True)
+            self.set_zoom_is_active(False)
+            self.set_pan_is_active(False)
 
     # ---- Peaks handlers
 
