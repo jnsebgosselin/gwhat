@@ -82,7 +82,6 @@ class Hydrograph(Figure):
         self.set_canvas(FigureCanvas(self))
         self.canvas.get_renderer()
 
-        self.__language = 'english'
         self.__isHydrographExists = False
 
         # Fig Init :
@@ -309,8 +308,6 @@ class Hydrograph(Figure):
         self.set_margins()  # set margins for all the axes
 
         # --------------------------------------------------- FIGURE TITLE ----
-
-        # ---- Weather Station ----
 
         # Calculate horizontal distance between weather station and
         # observation well.
@@ -602,8 +599,6 @@ class Hydrograph(Figure):
             else:
                 axe.set_position([left_margin, bottom_margin, wtot, hlow])
 
-    # =========================================================================
-
     def draw_ylabels(self):
 
         labelDB = LabelDatabase(self.language)
@@ -693,11 +688,7 @@ class Hydrograph(Figure):
 
         self.ax3.yaxis.set_label_coords(ylabel3_xpos, ylabel3_ypos)
 
-        # ----------------------------------------------- Figure Title ----
-
         self.draw_figure_title()
-
-    # =========================================================================
 
     def best_fit_waterlvl(self):
         WL = self.wldset['WL']
@@ -865,12 +856,11 @@ class Hydrograph(Figure):
 
             self.h_WLmes.set_data(TIMEmes, WLmes)
 
-    def draw_weather(self):  # ================================================
+    def draw_weather(self):
         """
         This method is called the first time the graph is plotted and each
         time the time scale is changed.
         """
-
         if self.meteo_on is False:
             return
 
@@ -1040,8 +1030,8 @@ class Hydrograph(Figure):
         for i in range(len(self.xlabels)):
             self.xlabels[i].set_text(xticks_labels[i])
 
-    def draw_figure_title(self):  # ===========================================
-
+    def draw_figure_title(self):
+        """Draw the title of the figure."""
         labelDB = LabelDatabase(self.language)
 
         if self.isGraphTitle == 1:
@@ -1052,8 +1042,8 @@ class Hydrograph(Figure):
             self.text1.set_text('')
             self.figTitle.set_text('')
 
-    def update_waterlvl_scale(self):  # =======================================
 
+    def update_waterlvl_scale(self):
         if self.meteo_on:
             NZGrid = self.NZGrid
         else:
@@ -1092,7 +1082,7 @@ class Hydrograph(Figure):
             self.ax2.axis(ymin=WLmin, ymax=WLmax)
             self.ax2.invert_yaxis()
 
-    def update_precip_scale(self):  # =========================================
+    def update_precip_scale(self):
 
         if self.meteo_on is False:
             return
