@@ -542,10 +542,8 @@ class Hydrograph(Figure):
 
         self.canvas.draw()
 
-    def set_margins(self):  # =================================================
-
-        print('Setting up graph margins')
-
+    def set_margins(self):
+        """Set the margins of the axes in inches."""
         fheight = self.fheight
 
         # --- MARGINS (Inches / Fig. Dimension) --- #
@@ -1042,11 +1040,9 @@ class Hydrograph(Figure):
         self.text1.set_visible(self.meteo_on and self.isGraphTitle)
         self.figTitle.set_visible(self.isGraphTitle)
 
-    def update_waterlvl_scale(self):
-        if self.meteo_on:
-            NZGrid = self.NZGrid
-        else:
-            NZGrid = self.NZGrid - 2
+    def setup_waterlvl_scale(self):
+        """Update the y scale of the water levels."""
+        NZGrid = self.NZGrid if self.meteo_on else self.NZGrid - 2
 
         self.axLow.set_yticks(np.arange(1, self.NZGrid))
         self.axLow.axis(ymin=0, ymax=NZGrid)
