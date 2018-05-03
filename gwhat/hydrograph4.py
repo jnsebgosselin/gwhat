@@ -84,7 +84,6 @@ class Hydrograph(Figure):
         self.set_canvas(FigureCanvas(self))
         self.canvas.get_renderer()
 
-        self.__meteo_on = True
         self.__language = 'english'
         self.__isHydrographExists = False
 
@@ -128,7 +127,7 @@ class Hydrograph(Figure):
         self.trend_MAW = 30
         # trend_MAW = width of the Moving Average Window used to
         #             smooth the water level data
-        self.meteo_on = True  # controls wether meteo data are plotted or not
+        self.meteo_on = True
         self.gridLines = 2  # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'Month'  # 'month' or 'year'
         self.label_font_size = 14
@@ -166,14 +165,14 @@ class Hydrograph(Figure):
 
         self.NMissPtot = []
 
-    # =========================================================================
-
     @property
     def meteo_on(self):
+        """Controls whether meteo data are plotted or not."""
         return self.__meteo_on
 
     @meteo_on.setter
     def meteo_on(self, x):
+        """Return whether meteo data are plotted or not."""
         if type(x) is bool:
             self.__meteo_on = x
         else:
@@ -463,64 +462,51 @@ class Hydrograph(Figure):
 
         self.__isHydrographExists = True
 
-    # =========================================================================
-
     def set_legend(self):
+        """Setup the legend of the graph."""
         if self.isLegend == 1:
             labelDB = LabelDatabase(self.language).legend
             lg_handles = []
             lg_labels = []
             if self.meteo_on:
-
-                # ---- Snow ---- #
-
+                # Snow
                 rec1 = mpl.patches.Rectangle((0, 0), 1, 1,
                                              fc=self.colorsDB.rgb['Snow'],
                                              ec=self.colorsDB.rgb['Snow'])
-
                 lg_handles.append(rec1)
                 lg_labels.append(labelDB[0])
-                # Rain
 
+                # Rain
                 rec2 = mpl.patches.Rectangle((0, 0), 1, 1,
                                              fc=self.colorsDB.rgb['Rain'],
                                              ec=self.colorsDB.rgb['Rain'])
-
                 lg_handles.append(rec2)
                 lg_labels.append(labelDB[1])
 
-                # ---- Air Temperature ---- #
-
+                # Air Temperature
                 rec3 = mpl.patches.Rectangle((0, 0), 1, 1,
                                              fc=self.colorsDB.rgb['Tair'],
                                              ec='black')
-
                 lg_handles.append(rec3)
                 lg_labels.append(labelDB[2])
 
-                # ---- Missing Data Markers ---- #
-
+                # Missing Data Markers
                 lg_handles.append(self.lmiss_ax4)
                 lg_labels.append(labelDB[3])
 
-            # ---- Water Levels (continuous line) ---- #
-
-            # ---- Continuous Line Datalogger ---- #
-
+            # Continuous Line Datalogger
             lg_handles.append(self.l1_ax2)
             if self.trend_line == 1:
                 lg_labels.append(labelDB[4])
             else:
                 lg_labels.append(labelDB[5])
 
-            # ---- Water Levels (data points) ----
-
+            # Water Levels (data points)
             if self.trend_line == 1:
                 lg_handles.append(self.l2_ax2)
                 lg_labels.append(labelDB[6])
 
-            # ---- Manual Measures ----
-
+            # Manual Measures
             TIMEmes, WLmes = self.wldset.get_wlmeas()
             if len(TIMEmes) > 0:
                 lg_handles.append(self.h_WLmes)
@@ -533,17 +519,13 @@ class Hydrograph(Figure):
             if self.isGLUE:
                 dum1 = mpl.patches.Rectangle((0, 0), 1, 1,
                                              fc='0.65', ec='0.65')
-
                 lg_labels.append('GLUE 5/95')
                 lg_handles.append(dum1)
 
-            # ---- Position ---------------------------------------------------
-
-            # ---- Draw -------------------------------------------------------
-
-#            LOCS = ['right', 'center left', 'upper right', 'lower right',
-#                    'center', 'lower left', 'center right', 'upper left',
-#                    'upper center', 'lower center']
+            # Draw the legend
+            # LOCS = ['right', 'center left', 'upper right', 'lower right',
+            #         'center', 'lower left', 'center right', 'upper left',
+            #         'upper center', 'lower center']
             # ncol = int(np.ceil(len(lg_handles)/2.))
             self.ax0.legend(lg_handles, lg_labels, bbox_to_anchor=[1, 1],
                             loc='lower right', ncol=3,
@@ -553,20 +535,19 @@ class Hydrograph(Figure):
             if self.ax0.get_legend():
                 self.ax0.get_legend().set_visible(False)
 
-    def update_colors(self):  # ===============================================
-        self.colorsDB.load_colors_db()
-
+    def update_colors(self):
+        """Update the color scheme of the figure."""
         if not self.__isHydrographExists:
             return
 
+        self.colorsDB.load_colors_db()
         self.l1_ax2.set_color(self.colorsDB.rgb['WL solid'])
         self.l2_ax2.set_color(self.colorsDB.rgb['WL data'])
         self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])
         self.draw_weather()
-
         self.set_legend()
 
-    def update_fig_size(self):  # =============================================
+    def update_fig_size(self):
 
         self.set_size_inches(self.fwidth, self.fheight)
         self.set_margins()
