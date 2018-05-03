@@ -1004,7 +1004,7 @@ class Hydrograph(Figure):
 
         self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
 
-    def draw_xlabels(self):  # ================================================
+    def draw_xlabels(self):
 
         # Called when there is a change in language of the labels
         # of the graph

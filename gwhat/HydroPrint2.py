@@ -37,6 +37,7 @@ from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
+from gwhat.widgets.layout import OnOffToggleWidget
 
 
 class HydroprintGUI(myqt.DialogWindow):
@@ -793,20 +794,9 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.isGraphTitle = layout['title_on']
         self.page_setup_win.isTrendLine = layout['trend_line']
 
-        if layout['title_on'] is True:
-            self.page_setup_win.title_on.toggle()
-        else:
-            self.page_setup_win.title_off.toggle()
-
-        if layout['legend_on'] is True:
-            self.page_setup_win.legend_on.toggle()
-        else:
-            self.page_setup_win.legend_off.toggle()
-
-        if layout['trend_line'] is True:
-            self.page_setup_win.trend_on.toggle()
-        else:
-            self.page_setup_win.trend_off.toggle()
+        self.page_setup_win.legend_on.set_toggle(layout['legend_on'])
+        self.page_setup_win.title_on.set_toggle(layout['title_on'])
+        self.page_setup_win.wltrend_on.set_toggle(layout['trend_line'])
 
         self.page_setup_win.fwidth.setValue(layout['fwidth'])
         self.page_setup_win.fheight.setValue(layout['fheight'])
@@ -993,51 +983,17 @@ class PageSetupWin(QWidget):
         """
         # Legend
 
-        self.legend_on = QRadioButton('On')
-        self.legend_on.toggle()
-        self.legend_off = QRadioButton('Off')
-
-        legend = QWidget()
-        legend_layout = QGridLayout(legend)
-        legend_layout.addWidget(QLabel('Legend :'), 0, 0)
-        legend_layout.addWidget(self.legend_on, 0, 2)
-        legend_layout.addWidget(self.legend_off, 0, 3)
-        legend_layout.setColumnStretch(1, 100)
-        legend_layout.setContentsMargins(0, 0, 0, 0)
-
-        # Graph title
-
-        self.title_on = QRadioButton('On')
-        self.title_on.toggle()
-        self.title_off = QRadioButton('Off')
-
-        title = QWidget()
-        title_layout = QGridLayout(title)
-        title_layout.addWidget(QLabel('Graph Title :'), 0, 0)
-        title_layout.addWidget(self.title_on, 0, 2)
-        title_layout.addWidget(self.title_off, 0, 3)
-        title_layout.setColumnStretch(1, 100)
-        title_layout.setContentsMargins(0, 0, 0, 0)
-
-        # Trend Line
-
-        self.trend_on = QRadioButton('On')
-        self.trend_off = QRadioButton('Off')
-        self.trend_off.toggle()
-
-        trend = QWidget()
-        trend_layout = QGridLayout(trend)
-        trend_layout.addWidget(QLabel('Water Level Trend :'), 0, 0)
-        trend_layout.addWidget(self.trend_on, 0, 2)
-        trend_layout.addWidget(self.trend_off, 0, 3)
-        trend_layout.setColumnStretch(1, 100)
-        trend_layout.setContentsMargins(0, 0, 0, 0)
+        self.legend_on = OnOffToggleWidget('Legend', True)
+        self.title_on = OnOffToggleWidget('Figure Title', True)
+        self.wltrend_on = OnOffToggleWidget('Water Level Trend', True)
+        self.show_meteo = OnOffToggleWidget('Weather Data', True)
 
         grpbox = QGroupBox("Graph Components Visibility :")
         layout = QGridLayout(grpbox)
-        for i, widget in enumerate([legend, title, trend]):
+        for i, widget in enumerate([self.legend_on, self.title_on,
+                                    self.wltrend_on, self.show_meteo]):
             layout.addWidget(widget, i, 0)
-        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+        layout.setContentsMargins(10, 10, 10, 10)
 
         return grpbox
 
@@ -1049,9 +1005,9 @@ class PageSetupWin(QWidget):
 
     def btn_apply_isClicked(self):
         self.pageSize = (self.fwidth.value(), self.fheight.value())
-        self.isLegend = self.legend_on.isChecked()
-        self.isGraphTitle = self.title_on.isChecked()
-        self.isTrendLine = self.trend_on.isChecked()
+        self.isLegend = self.legend_on.toggle
+        self.isGraphTitle = self.title_on.toggle
+        self.isTrendLine = self.wltrend_on.toggle
         self.va_ratio = self.va_ratio_spinBox.value()
 
         self.newPageSetupSent.emit(True)
@@ -1069,20 +1025,9 @@ class PageSetupWin(QWidget):
         self.fheight.setValue(self.pageSize[1])
         self.va_ratio_spinBox.setValue(self.va_ratio)
 
-        if self.isLegend is True:
-            self.legend_on.toggle()
-        else:
-            self.legend_off.toggle()
-
-        if self.isGraphTitle is True:
-            self.title_on.toggle()
-        else:
-            self.title_off.toggle()
-
-        if self.isTrendLine is True:
-            self.trend_on.toggle()
-        else:
-            self.trend_off.toggle()
+        self.legend_on.set_toggle(self.isLegend)
+        self.title_on.set_toggle(self.isGraphTitle)
+        self.wltrend_on.set_toggle(self.isTrendLine)
 
     def show(self):
         super(PageSetupWin, self).show()
