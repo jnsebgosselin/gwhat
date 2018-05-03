@@ -10,8 +10,6 @@
 # StackOverflow user Alleo.
 # https://stackoverflow.com/a/27681394/4481445
 
-from __future__ import division, unicode_literals
-
 # ---- Standard library imports
 
 from calendar import monthrange

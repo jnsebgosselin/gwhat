@@ -6,8 +6,6 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from __future__ import division, unicode_literals
-
 # ---- Standard library imports
 
 import sys
