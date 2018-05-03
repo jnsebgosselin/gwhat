@@ -20,6 +20,7 @@ from math import sin, cos, sqrt, atan2, radians
 import numpy as np
 import matplotlib as mpl
 from matplotlib.figure import Figure
+from matplotlib.transforms import ScaledTranslation
 # import matplotlib.patches
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
@@ -311,26 +312,16 @@ class Hydrograph(Figure):
 
         # Calculate horizontal distance between weather station and
         # observation well.
-
         self.dist = LatLong2Dist(wldset['Latitude'], wldset['Longitude'],
                                  wxdset['Latitude'], wxdset['Longitude'])
 
-        # display text on figure
-
-        offset = mpl.transforms.ScaledTranslation(0, 7/72,
-                                                  self.dpi_scale_trans)
-
+        # Weather Station name and distance to the well
         self.text1 = self.ax0.text(0, 1, '', va='bottom', ha='left',
-                                   rotation=0, fontsize=10,
-                                   transform=self.ax0.transAxes+offset)
+                                   rotation=0, fontsize=10)
 
-        # ---- Well Name ----
-
-        offset = mpl.transforms.ScaledTranslation(0, 30/72,
-                                                  self.dpi_scale_trans)
+        # Well Name
         self.figTitle = self.ax0.text(0, 1, '', fontsize=18,
-                                      ha='left', va='bottom',
-                                      transform=self.ax0.transAxes+offset)
+                                      ha='left', va='bottom')
 
         self.draw_figure_title()
 
@@ -541,7 +532,7 @@ class Hydrograph(Figure):
         self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])
         self.draw_weather()
         self.set_legend()
-
+        """Update the size of the figure."""
     def update_fig_size(self):
 
         self.set_size_inches(self.fwidth, self.fheight)
@@ -646,6 +637,7 @@ class Hydrograph(Figure):
 
         if self.meteo_on is False:
             self.ax2.yaxis.set_label_coords(ylabel2_xpos, ylabel2_ypos)
+            self.draw_figure_title()
             return
 
         # ------------------------------------------------ Temperature ----
@@ -1033,15 +1025,22 @@ class Hydrograph(Figure):
     def draw_figure_title(self):
         """Draw the title of the figure."""
         labelDB = LabelDatabase(self.language)
+        if self.isGraphTitle:
+            # Set the text and position of the title.
+            if self.meteo_on:
+                offset = ScaledTranslation(0, 7/72, self.dpi_scale_trans)
+                self.text1.set_text(
+                    labelDB.station_meteo % (self.name_meteo, self.dist))
+                self.text1.set_transform(self.ax0.transAxes + offset)
 
-        if self.isGraphTitle == 1:
+            dy = 30 if self.meteo_on else 7
+            offset = ScaledTranslation(0, dy/72, self.dpi_scale_trans)
             self.figTitle.set_text(labelDB.title % self.wldset['Well'])
-            self.text1.set_text(labelDB.station_meteo % (self.name_meteo,
-                                                         self.dist))
-        else:
-            self.text1.set_text('')
-            self.figTitle.set_text('')
+            self.figTitle.set_transform(self.ax0.transAxes + offset)
 
+        # Set whether the title is visible or not.
+        self.text1.set_visible(self.meteo_on and self.isGraphTitle)
+        self.figTitle.set_visible(self.isGraphTitle)
 
     def update_waterlvl_scale(self):
         if self.meteo_on:
