@@ -368,27 +368,25 @@ class DataManager(QWidget):
 
     def set_closest_wxdset(self):
         if self.wldataset_count() == 0:
-            return None
-        elif self.wxdataset_count() == 0:
-            return None
-        else:
-            wldset = self.get_current_wldset()
-            lat1 = wldset['Latitude']
-            lon1 = wldset['Longitude']
+            return
 
-            mindist = 10**16
-            closest = None
-            for name in self.wxdsets:
-                wxdset = self.projet.get_wxdset(name)
-                lat2 = wxdset['Latitude']
-                lon2 = wxdset['Longitude']
-                newdist = LatLong2Dist(lat1, lon1, lat2, lon2)
+        wldset = self.get_current_wldset()
+        lat1 = wldset['Latitude']
+        lon1 = wldset['Longitude']
 
-                if newdist < mindist:
-                    closest = wxdset.name
-                    mindist = newdist
+        mindist = 10**16
+        closest = None
+        for name in self.wxdsets:
+            wxdset = self.projet.get_wxdset(name)
+            lat2 = wxdset['Latitude']
+            lon2 = wxdset['Longitude']
+            newdist = LatLong2Dist(lat1, lon1, lat2, lon2)
 
-            self.set_current_wxdset(closest)
+            if newdist < mindist:
+                closest = wxdset.name
+                mindist = newdist
+
+        self.set_current_wxdset(closest)
 
 
 class NewDatasetDialog(QDialog):
