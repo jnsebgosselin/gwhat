@@ -398,8 +398,6 @@ class WLCalc(myqt.DialogWindow):
         mainGrid.setColumnStretch(0, 100)
         mainGrid.setColumnMinimumWidth(2, 250)
 
-    # =========================================================================
-
     @property
     def wldset(self):
         return self.dmngr.get_current_wldset()
@@ -428,15 +426,14 @@ class WLCalc(myqt.DialogWindow):
             self.toolbar.update()
 
     def set_wxdset(self, wxdset):
+        """Set the weather dataset."""
         self.rechg_setup_win.wxdset = wxdset
-        if wxdset is None:
-            return
         self.plot_weather_data()
 
-    # =========================================================================
-
     def plot_weather_data(self):
+        """Plot the weather data."""
         if self.wxdset is None:
+            self.fig.axes[1].set_visible(False)
             return
 
         time = self.wxdset['Time'] + self.dt4xls2mpl*self.dformat
@@ -495,19 +492,18 @@ class WLCalc(myqt.DialogWindow):
         etp_bar[1::3] = etp_bin
         etp_bar[2::3] = np.nan
 
-        # -------------------------------------------------- Plot data ----
+        # ---- Plot the data
 
         ax = self.fig.axes[1]
+        ax.set_visible(True)
 
         self.h_rain.remove()
         self.h_ptot.remove()
 
-        self.h_rain = ax.fill_between(time_bar, 0., rain_bar,
-                                      color='0.65', lw=0, zorder=100)
-
-        self.h_ptot = ax.fill_between(time_bar, 0., ptot_bar,
-                                      color='0.85', lw=0, zorder=50)
-
+        self.h_rain = ax.fill_between(
+            time_bar, 0., rain_bar, color='0.65', lw=0, zorder=100)
+        self.h_ptot = ax.fill_between(
+            time_bar, 0., ptot_bar, color='0.85', lw=0, zorder=50)
         self.h_etp.set_data(time_bar2, etp_bar)
 
         self.draw()
@@ -877,12 +873,12 @@ class WLCalc(myqt.DialogWindow):
     # ---- Drawing methods
 
     def setup_ax_margins(self, event=None):
-        """Setup the margins of the main axe of the figure."""
+        """Setup the margins width of the axes in inches."""
         fheight = self.fig.get_figheight()
         fwidth = self.fig.get_figwidth()
 
-        left_margin = 1. / fwidth
-        right_margin = 1. / fwidth
+        left_margin = 1 / fwidth
+        right_margin = 1 / fwidth
         bottom_margin = 0.75 / fheight
         top_margin = 0.25 / fheight
 
