@@ -177,7 +177,7 @@ class DataManager(QWidget):
             self.update_wxdset_info()
 
             self.wldset_changed()
-            self.wxdset_changed()
+            self.btn_export_weather.set_wxdset(self.get_current_wxdset())
 
         self.new_waterlvl_win.set_projet(projet)
         self.new_weather_win.set_projet(projet)

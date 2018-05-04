@@ -78,7 +78,6 @@ class MplViewer(QFrame):
         self.img = QImage.rgbSwapped(self.img)
         self.img = QPixmap(self.img)
 
-        self.repaint()
 
     def paintEvent(self, event):  # ===========================================
         super(MplViewer, self).paintEvent(event)
@@ -247,6 +246,7 @@ class ImageViewer(QScrollArea):                           # ImageViewer #
     def load_mpl_figure(self, mplfig, view_dpi=150):  # =======================
         self.imageCanvas.load_mpl_figure(mplfig, view_dpi)
         self.scale_image()
+        self.imageCanvas.repaint()
 
     def reset_original_image(self):  # ========================================
         self.scaleFactor = 0
