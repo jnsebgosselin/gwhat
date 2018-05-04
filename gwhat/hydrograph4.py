@@ -949,12 +949,9 @@ class Hydrograph(Figure):
 
         self.update_precip_scale()
 
-    def set_time_scale(self):  # ==============================================
-
-        # ------------------------------------------------- time min and max --
-
+    def set_time_scale(self):
+        """Setup the time scale of the x-axis."""
         if self.datemode.lower() == 'year':
-
             year = xldate_as_tuple(self.TIMEmin, 0)[0]
             self.TIMEmin = xldate_from_date_tuple((year, 1, 1), 0)
 
@@ -967,69 +964,30 @@ class Hydrograph(Figure):
                 year = xldate_as_tuple(self.TIMEmax, 0)[0] + 1
                 self.TIMEmax = xldate_from_date_tuple((year, 1, 1), 0)
 
-        # ---------------------------------------------- xticks and labels ----
+        self.setup_xticklabels()
+        self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
 
-        # ---- compute parameters ---- #
+    def setup_xticklabels(self):
+        """Setup the xtick labels."""
 
-        xticks_info = self.make_xticks_info()
-
-        # ---- major ---- #
-
-        self.ax1.set_xticks(xticks_info[0])
-
-        # -------------------------------------------------------- xlabels ----
-
-        # labels are set using the minor ticks.
-
-        # labels are placed manually instead. This is around 25% faster than
+        # Labels are placed manually because this is around 25% faster than
         # using the minor ticks.
 
-#        self.ax1.set_xticks(xticks_info[1], minor=True)
-#        self.ax1.tick_params(which='minor', length=0)
-#        self.ax1.xaxis.set_ticklabels(xticks_info[2], minor=True, rotation=45,
-#                                      va='top', ha='right', fontsize=10)
-
-        # ---- Remove labels ---- #
+        xticks_info = self.make_xticks_info()
+        self.ax1.set_xticks(xticks_info[0])
 
         for i in range(len(self.xlabels)):
             self.xlabels[i].remove()
 
-        # ---- Redraw labels ---- #
-
-        padding = mpl.transforms.ScaledTranslation(0, -5/72.,
-                                                   self.dpi_scale_trans)
-        transform = self.ax1.transData + padding
+        padding = ScaledTranslation(0, -5/72, self.dpi_scale_trans)
 
         self.xlabels = []
         for i in range(len(xticks_info[1])):
-            new_label = self.ax1.text(xticks_info[1][i], 0,
-                                      xticks_info[2][i], rotation=45,
-                                      va='top', ha='right', fontsize=10.,
-                                      transform=transform)
-
+            new_label = self.ax1.text(
+                xticks_info[1][i], 0, xticks_info[2][i], rotation=45,
+                va='top', ha='right', fontsize=10,
+                transform=self.ax1.transData + padding)
             self.xlabels.append(new_label)
-
-        # ---------------------------------------------------- axis limits ----
-
-        self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
-
-    def draw_xlabels(self):
-
-        # Called when there is a change in language of the labels
-        # of the graph
-
-        _, _, xticks_labels = self.make_xticks_info()
-        self.ax1.xaxis.set_ticklabels([])
-
-        # ---- using minor ticks ---- #
-
-#        self.ax1.xaxis.set_ticklabels(xticks_labels, minor=True, rotation=45,
-#                                      va='top', ha='right', fontsize=10)
-
-        # ---- ploting manually the xlabels instead ---- #
-
-        for i in range(len(self.xlabels)):
-            self.xlabels[i].set_text(xticks_labels[i])
 
     def draw_figure_title(self):
         """Draw the title of the figure."""
