@@ -783,10 +783,10 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.isTrendLine = layout['trend_line']
         self.page_setup_win.is_meteo_on = layout['meteo_on']
 
-        self.page_setup_win.legend_on.set_toggle(layout['legend_on'])
-        self.page_setup_win.title_on.set_toggle(layout['title_on'])
-        self.page_setup_win.wltrend_on.set_toggle(layout['trend_line'])
-        self.page_setup_win.meteo_on.set_toggle(layout['meteo_on'])
+        self.page_setup_win.legend_on.set_value(layout['legend_on'])
+        self.page_setup_win.title_on.set_value(layout['title_on'])
+        self.page_setup_win.wltrend_on.set_value(layout['trend_line'])
+        self.page_setup_win.meteo_on.set_value(layout['meteo_on'])
 
         self.page_setup_win.fwidth.setValue(layout['fwidth'])
         self.page_setup_win.fheight.setValue(layout['fheight'])
@@ -999,10 +999,10 @@ class PageSetupWin(QWidget):
     def btn_apply_isClicked(self):
         """Apply the selected settings and emit a signal."""
         self.pageSize = (self.fwidth.value(), self.fheight.value())
-        self.isLegend = self.legend_on.toggle
-        self.isGraphTitle = self.title_on.toggle
-        self.isTrendLine = self.wltrend_on.toggle
-        self.is_meteo_on = self.meteo_on.toggle
+        self.isLegend = self.legend_on.value()
+        self.isGraphTitle = self.title_on.value()
+        self.isTrendLine = self.wltrend_on.value()
+        self.is_meteo_on = self.meteo_on.value()
         self.va_ratio = self.va_ratio_spinBox.value()
 
         self.newPageSetupSent.emit(True)
@@ -1020,10 +1020,10 @@ class PageSetupWin(QWidget):
         self.fheight.setValue(self.pageSize[1])
         self.va_ratio_spinBox.setValue(self.va_ratio)
 
-        self.legend_on.set_toggle(self.isLegend)
-        self.title_on.set_toggle(self.isGraphTitle)
-        self.wltrend_on.set_toggle(self.isTrendLine)
-        self.meteo_on.set_toggle(self.is_meteo_on)
+        self.legend_on.set_value(self.isLegend)
+        self.title_on.set_value(self.isGraphTitle)
+        self.wltrend_on.set_value(self.isTrendLine)
+        self.meteo_on.set_value(self.is_meteo_on)
 
     def show(self):
         super(PageSetupWin, self).show()

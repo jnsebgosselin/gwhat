@@ -18,15 +18,15 @@ class OnOffToggleWidget(QWidget):
     single horizontal row.
     """
 
-    def __init__(self, label='', toggle=True, parent=None):
+    def __init__(self, label='', value=True, parent=None):
         super(OnOffToggleWidget, self).__init__(parent)
-        self.setup(label, toggle)
+        self.setup(label, value)
 
-    def setup(self, label, toggle):
+    def setup(self, label, value):
         """Setup the widget with the provided options."""
         self.toggle_on = QRadioButton('On')
         self.toggle_off = QRadioButton('Off')
-        self.set_toggle(toggle)
+        self.set_value(value)
 
         layout = QGridLayout(self)
         layout.addWidget(QLabel(label + ' :'), 0, 0)
@@ -35,14 +35,13 @@ class OnOffToggleWidget(QWidget):
         layout.setColumnStretch(1, 100)
         layout.setContentsMargins(0, 0, 0, 0)
 
-    @property
-    def toggle(self):
+    def value(self):
         """Return True if the toggle is 'On' and False if it is 'Off'."""
         return self.toggle_on.isChecked()
 
-    def set_toggle(self, toggle):
-        """Set to 'On' if toggle is True and set to 'Off' if it is False."""
-        if toggle:
+    def set_value(self, value):
+        """Set to 'On' if value is True and set to 'Off' if it is False."""
+        if value:
             self.toggle_on.toggle()
         else:
             self.toggle_off.toggle()

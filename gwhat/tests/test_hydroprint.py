@@ -239,13 +239,13 @@ def test_pagesetup_defaults(pagesetup_bot):
     assert pagesetup_win.va_ratio_spinBox.value() == 0.2
     assert pagesetup_win.va_ratio == 0.2
 
-    assert pagesetup_win.legend_on.toggle is True
+    assert pagesetup_win.legend_on.value() is True
     assert pagesetup_win.isLegend is True
-    assert pagesetup_win.wltrend_on.toggle is False
+    assert pagesetup_win.wltrend_on.value() is False
     assert pagesetup_win.isTrendLine is False
-    assert pagesetup_win.title_on.toggle is True
+    assert pagesetup_win.title_on.value() is True
     assert pagesetup_win.isGraphTitle is True
-    assert pagesetup_win.meteo_on.toggle is True
+    assert pagesetup_win.meteo_on.value() is True
     assert pagesetup_win.is_meteo_on is True
 
 
@@ -260,10 +260,10 @@ def test_pagesetup_cancel(pagesetup_bot):
     pagesetup_win.fheight.setValue(8.5)
     pagesetup_win.va_ratio_spinBox.setValue(0.7)
 
-    pagesetup_win.legend_on.set_toggle(False)
-    pagesetup_win.wltrend_on.set_toggle(True)
-    pagesetup_win.title_on.set_toggle(False)
-    pagesetup_win.meteo_on.set_toggle(False)
+    pagesetup_win.legend_on.set_value(False)
+    pagesetup_win.wltrend_on.set_value(True)
+    pagesetup_win.title_on.set_value(False)
+    pagesetup_win.meteo_on.set_value(False)
 
     # Assert that previous values are kept when clicking on the button Cancel.
     qtbot.mouseClick(pagesetup_win.btn_cancel, Qt.LeftButton)
@@ -276,13 +276,13 @@ def test_pagesetup_cancel(pagesetup_bot):
     assert pagesetup_win.va_ratio_spinBox.value() == 0.2
     assert pagesetup_win.va_ratio == 0.2
 
-    assert pagesetup_win.legend_on.toggle is True
+    assert pagesetup_win.legend_on.value() is True
     assert pagesetup_win.isLegend is True
-    assert pagesetup_win.wltrend_on.toggle is False
+    assert pagesetup_win.wltrend_on.value() is False
     assert pagesetup_win.isTrendLine is False
-    assert pagesetup_win.title_on.toggle is True
+    assert pagesetup_win.title_on.value() is True
     assert pagesetup_win.isGraphTitle is True
-    assert pagesetup_win.meteo_on.toggle is True
+    assert pagesetup_win.meteo_on.value() is True
     assert pagesetup_win.is_meteo_on is True
 
     assert not pagesetup_win.isVisible()
@@ -300,10 +300,10 @@ def test_pagesetup_ok(pagesetup_bot):
     pagesetup_win.fheight.setValue(8.5)
     pagesetup_win.va_ratio_spinBox.setValue(0.7)
 
-    pagesetup_win.legend_on.set_toggle(False)
-    pagesetup_win.wltrend_on.set_toggle(True)
-    pagesetup_win.title_on.set_toggle(False)
-    pagesetup_win.meteo_on.set_toggle(False)
+    pagesetup_win.legend_on.set_value(False)
+    pagesetup_win.wltrend_on.set_value(True)
+    pagesetup_win.title_on.set_value(False)
+    pagesetup_win.meteo_on.set_value(False)
 
     # Assert that the values are updated correctly when clicking the button OK.
     qtbot.mouseClick(pagesetup_win.btn_OK, Qt.LeftButton)
@@ -316,13 +316,13 @@ def test_pagesetup_ok(pagesetup_bot):
     assert pagesetup_win.va_ratio_spinBox.value() == 0.7
     assert pagesetup_win.va_ratio == 0.7
 
-    assert pagesetup_win.legend_on.toggle is False
+    assert pagesetup_win.legend_on.value() is False
     assert pagesetup_win.isLegend is False
-    assert pagesetup_win.wltrend_on.toggle is True
+    assert pagesetup_win.wltrend_on.value() is True
     assert pagesetup_win.isTrendLine is True
-    assert pagesetup_win.title_on.toggle is False
+    assert pagesetup_win.title_on.value() is False
     assert pagesetup_win.isGraphTitle is False
-    assert pagesetup_win.meteo_on.toggle is False
+    assert pagesetup_win.meteo_on.value() is False
     assert pagesetup_win.is_meteo_on is False
 
     assert not pagesetup_win.isVisible()
