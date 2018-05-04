@@ -781,10 +781,12 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.isLegend = layout['legend_on']
         self.page_setup_win.isGraphTitle = layout['title_on']
         self.page_setup_win.isTrendLine = layout['trend_line']
+        self.page_setup_win.is_meteo_on = layout['meteo_on']
 
         self.page_setup_win.legend_on.set_toggle(layout['legend_on'])
         self.page_setup_win.title_on.set_toggle(layout['title_on'])
         self.page_setup_win.wltrend_on.set_toggle(layout['trend_line'])
+        self.page_setup_win.meteo_on.set_toggle(layout['meteo_on'])
 
         self.page_setup_win.fwidth.setValue(layout['fwidth'])
         self.page_setup_win.fheight.setValue(layout['fheight'])
@@ -835,8 +837,7 @@ class HydroprintGUI(myqt.DialogWindow):
                   'bwidth_indx': self.qweather_bin.currentIndex(),
                   'date_labels_pattern': self.dateDispFreq_spinBox.value(),
                   'datemode': self.time_scale_label.currentText()}
-        layout['wxdset'] = (
-            '__None__' if self.wxdset is None else self.wxdset.name)
+        layout['wxdset'] = None if self.wxdset is None else self.wxdset.name
 
         year = self.date_start_widget.date().year()
         month = self.date_start_widget.date().month()
@@ -851,10 +852,11 @@ class HydroprintGUI(myqt.DialogWindow):
         else:
             layout['WLdatum'] = 'masl'
 
-        layout['title_on'] = str(bool(self.page_setup_win.isGraphTitle))
-        layout['legend_on'] = str(bool(self.page_setup_win.isLegend))
+        layout['title_on'] = bool(self.page_setup_win.isGraphTitle)
+        layout['legend_on'] = bool(self.page_setup_win.isLegend)
         layout['language'] = self.language_box.currentText()
-        layout['trend_line'] = str(bool(self.page_setup_win.isTrendLine))
+        layout['trend_line'] = bool(self.page_setup_win.isTrendLine)
+        layout['meteo_on'] = bool(self.page_setup_win.is_meteo_on)
 
         # Save the colors :
 
@@ -1056,8 +1058,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
-          "@ new-prô'jèt!/@ new-prô'jèt!.gwt")
+    pf = "C:/Users/jsgosselin/Desktop/2018 ACFAS/ACFAS2018/ACFAS2018.gwt"
     pr = ProjetReader(pf)
     dm = DataManager()
     dm.set_projet(pr)

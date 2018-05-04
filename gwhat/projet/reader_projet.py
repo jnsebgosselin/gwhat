@@ -535,28 +535,33 @@ class WLDataFrameHDF5(dict):
             else:
                 if isinstance(layout[key], type(None)):
                     grp.attrs[key] = '__None__'
+                elif isinstance(layout[key], bool):
+                    grp.attrs[key] = '__' + str(layout[key]) + '__'
                 else:
                     grp.attrs[key] = layout[key]
 
     def get_layout(self):
-        """Return the layou dict that is saved in the project hdf5 file."""
+        """Return the layout dict that is saved in the project hdf5 file."""
         if 'TIMEmin' not in self.dset['layout'].attrs.keys():
             return None
-
         layout = {}
         for key in list(self.dset['layout'].attrs.keys()):
-            if key in ['legend_on', 'title_on', 'trend_line']:
-                layout[key] = (self.dset['layout'].attrs[key] == 'True')
-            else:
-                layout[key] = self.dset['layout'].attrs[key]
-
+            layout[key] = self.dset['layout'].attrs[key]
             if layout[key] == '__None__':
                 layout[key] = None
+            elif layout[key] == '__True__':
+                layout[key] = True
+            elif layout[key] == '__False__':
+                layout[key] = False
 
         layout['colors'] = {}
         grp_colors = self.dset['layout'].require_group('colors')
         for key in list(grp_colors.attrs.keys()):
             layout['colors'][key] = grp_colors.attrs[key].tolist()
+
+        if 'meteo_on' not in layout.keys():
+            # Added in version 0.3.2 (see PR #201)
+            layout['meteo_on'] = True
 
         return layout
 
