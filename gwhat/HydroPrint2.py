@@ -471,22 +471,22 @@ class HydroprintGUI(myqt.DialogWindow):
         return self.dmngr.get_current_wxdset()
 
     def wldset_changed(self):
-        """Handles when the water level dataset of the datamanager changed."""
-        if self.wxdset is None or self.wldset is None:
+        """Handle when the water level dataset of the datamanager changes."""
+        if self.wldset is None:
             self.clear_hydrograph()
             return
         else:
             wldset = self.wldset
             self.hydrograph.set_wldset(wldset)
 
-        # Load Manual Measures :
+        # Load the manual measurements.
 
         fname = os.path.join(self.workdir, "Water Levels",
                              'waterlvl_manual_measurements')
         tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
         wldset.set_wlmeas(tmeas, wlmeas)
 
-        # Hydrograph Layout :
+        # Setup the layout of the hydrograph.
 
         layout = wldset.get_layout()
         if layout is not None:
@@ -504,8 +504,8 @@ class HydroprintGUI(myqt.DialogWindow):
             self.__updateUI = True
 
     def wxdset_changed(self):
-        """Handles when the weather dataset of the datamanager changed."""
-        if self.wxdset is None or self.wldset is None:
+        """Handle when the weather dataset of the datamanager changes."""
+        if self.wldset is None:
             self.clear_hydrograph()
         else:
             self.hydrograph.set_wxdset(self.wxdset)
@@ -545,7 +545,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         if sender == self.language_box:
             self.hydrograph.draw_ylabels()
-            self.hydrograph.draw_xlabels()
+            self.hydrograph.setup_xticklabels()
             self.hydrograph.set_legend()
         elif sender in [self.waterlvl_max, self.waterlvl_scale]:
             self.hydrograph.setup_waterlvl_scale()
@@ -580,7 +580,7 @@ class HydroprintGUI(myqt.DialogWindow):
             self.hydrograph.draw_figure_title()
         elif sender == self.dateDispFreq_spinBox:
             self.hydrograph.set_time_scale()
-            self.hydrograph.draw_xlabels()
+            self.hydrograph.setup_xticklabels()
         elif sender == self.page_setup_win:
             self.hydrograph.update_fig_size()
             # Implicitly call : set_margins()
@@ -670,12 +670,6 @@ class HydroprintGUI(myqt.DialogWindow):
     def draw_hydrograph(self):
         if self.dmngr.wldataset_count() == 0:
             msg = 'Please import a valid water level data file first.'
-            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-            self.emit_warning(msg)
-            return
-
-        if self.dmngr.wxdataset_count() == 0:
-            msg = 'Please import a valid weather data file first.'
             self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
             self.emit_warning(msg)
             return
@@ -831,8 +825,7 @@ class HydroprintGUI(myqt.DialogWindow):
         print("Saving the graph layout for well %s..." % self.wldset['Well'],
               end=" ")
 
-        layout = {'wxdset': self.wxdset.name,
-                  'WLmin': self.waterlvl_max.value(),
+        layout = {'WLmin': self.waterlvl_max.value(),
                   'WLscale': self.waterlvl_scale.value(),
                   'RAINscale': self.Ptot_scale.value(),
                   'fwidth': self.page_setup_win.pageSize[0],
@@ -842,6 +835,8 @@ class HydroprintGUI(myqt.DialogWindow):
                   'bwidth_indx': self.qweather_bin.currentIndex(),
                   'date_labels_pattern': self.dateDispFreq_spinBox.value(),
                   'datemode': self.time_scale_label.currentText()}
+        layout['wxdset'] = (
+            '__None__' if self.wxdset is None else self.wxdset.name)
 
         year = self.date_start_widget.date().year()
         month = self.date_start_widget.date().month()
