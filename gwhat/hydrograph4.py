@@ -231,12 +231,18 @@ class Hydrograph(Figure):
 
         # Assign Weather Data :
 
-        self.name_meteo = wxdset['Station Name']
-
-        self.TIMEmeteo = wxdset['Time']  # Time in numeric format (days)
-        self.TMAX = wxdset['Tmax']       # Daily maximum temperature (deg C)
-        self.PTOT = wxdset['Ptot']       # Daily total precipitation (mm)
-        self.RAIN = wxdset['Rain']
+        if self.wxdset is None:
+            self.name_meteo = ''
+            self.TIMEmeteo = np.array([])
+            self.TMAX = np.array([])
+            self.PTOT = np.array([])
+            self.RAIN = np.array([])
+        else:
+            self.name_meteo = wxdset['Station Name']
+            self.TIMEmeteo = wxdset['Time']
+            self.TMAX = wxdset['Tmax']
+            self.PTOT = wxdset['Ptot']       # Daily total precipitation (mm)
+            self.RAIN = wxdset['Rain']
 
         # Resample Data in Bins :
 
@@ -317,8 +323,11 @@ class Hydrograph(Figure):
 
         # Calculate horizontal distance between weather station and
         # observation well.
-        self.dist = LatLong2Dist(wldset['Latitude'], wldset['Longitude'],
-                                 wxdset['Latitude'], wxdset['Longitude'])
+        if self.wxdset is not None:
+            self.dist = LatLong2Dist(wldset['Latitude'], wldset['Longitude'],
+                                     wxdset['Latitude'], wxdset['Longitude'])
+        else:
+            self.dist = 0
 
         # Weather Station name and distance to the well
         self.text1 = self.ax0.text(0, 1, '', va='bottom', ha='left',
