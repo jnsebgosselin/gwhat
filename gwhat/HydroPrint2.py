@@ -6,8 +6,6 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from __future__ import division, unicode_literals
-
 # ---- Standard library imports
 
 import sys
@@ -22,7 +20,7 @@ from PyQt5.QtWidgets import (QSpinBox, QDoubleSpinBox, QWidget, QDateEdit,
                              QAbstractSpinBox, QGridLayout, QFrame,
                              QMessageBox, QComboBox, QLabel, QTabWidget,
                              QFileDialog, QApplication, QPushButton,
-                             QRadioButton, QDesktopWidget, QGroupBox)
+                             QDesktopWidget, QGroupBox)
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -39,6 +37,7 @@ from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
+from gwhat.widgets.layout import OnOffToggleWidget
 
 
 class HydroprintGUI(myqt.DialogWindow):
@@ -472,22 +471,22 @@ class HydroprintGUI(myqt.DialogWindow):
         return self.dmngr.get_current_wxdset()
 
     def wldset_changed(self):
-        """Handles when the water level dataset of the datamanager changed."""
-        if self.wxdset is None or self.wldset is None:
+        """Handle when the water level dataset of the datamanager changes."""
+        if self.wldset is None:
             self.clear_hydrograph()
             return
         else:
             wldset = self.wldset
             self.hydrograph.set_wldset(wldset)
 
-        # Load Manual Measures :
+        # Load the manual measurements.
 
         fname = os.path.join(self.workdir, "Water Levels",
                              'waterlvl_manual_measurements')
         tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
         wldset.set_wlmeas(tmeas, wlmeas)
 
-        # Hydrograph Layout :
+        # Setup the layout of the hydrograph.
 
         layout = wldset.get_layout()
         if layout is not None:
@@ -505,8 +504,8 @@ class HydroprintGUI(myqt.DialogWindow):
             self.__updateUI = True
 
     def wxdset_changed(self):
-        """Handles when the weather dataset of the datamanager changed."""
-        if self.wxdset is None or self.wldset is None:
+        """Handle when the weather dataset of the datamanager changes."""
+        if self.wldset is None:
             self.clear_hydrograph()
         else:
             self.hydrograph.set_wxdset(self.wxdset)
@@ -546,22 +545,18 @@ class HydroprintGUI(myqt.DialogWindow):
 
         if sender == self.language_box:
             self.hydrograph.draw_ylabels()
-            self.hydrograph.draw_xlabels()
+            self.hydrograph.setup_xticklabels()
             self.hydrograph.set_legend()
-
         elif sender in [self.waterlvl_max, self.waterlvl_scale]:
-            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.setup_waterlvl_scale()
             self.hydrograph.draw_ylabels()
-
         elif sender == self.NZGridWL_spinBox:
-            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.setup_waterlvl_scale()
             self.hydrograph.update_precip_scale()
             self.hydrograph.draw_ylabels()
-
         elif sender == self.Ptot_scale:
             self.hydrograph.update_precip_scale()
             self.hydrograph.draw_ylabels()
-
         elif sender == self.datum_widget:
             yoffset = int(self.wldset['Elevation']/self.hydrograph.WLscale)
             yoffset *= self.hydrograph.WLscale
@@ -576,38 +571,31 @@ class HydroprintGUI(myqt.DialogWindow):
             # well is not carried to the y axis labels, so that they remain a
             # int multiple of *WLscale*.
 
-            self.hydrograph.update_waterlvl_scale()
+            self.hydrograph.setup_waterlvl_scale()
             self.hydrograph.draw_waterlvl()
             self.hydrograph.draw_ylabels()
-
         elif sender in [self.date_start_widget, self.date_end_widget]:
             self.hydrograph.set_time_scale()
             self.hydrograph.draw_weather()
             self.hydrograph.draw_figure_title()
-
         elif sender == self.dateDispFreq_spinBox:
             self.hydrograph.set_time_scale()
-            self.hydrograph.draw_xlabels()
-
+            self.hydrograph.setup_xticklabels()
         elif sender == self.page_setup_win:
             self.hydrograph.update_fig_size()
             # Implicitly call : set_margins()
             #                   draw_ylabels()
             #                   set_time_scale()
             #                   draw_figure_title
-
             self.hydrograph.draw_waterlvl()
             self.hydrograph.set_legend()
-
         elif sender == self.qweather_bin:
             self.hydrograph.resample_bin()
             self.hydrograph.draw_weather()
             self.hydrograph.draw_ylabels()
-
         elif sender == self.time_scale_label:
             self.hydrograph.set_time_scale()
             self.hydrograph.draw_weather()
-
         else:
             print('No action for this widget yet.')
 
@@ -668,6 +656,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph.trend_line = self.page_setup_win.isTrendLine
         self.hydrograph.isLegend = self.page_setup_win.isLegend
         self.hydrograph.isGraphTitle = self.page_setup_win.isGraphTitle
+        self.hydrograph.set_meteo_on(self.page_setup_win.is_meteo_on)
 
         # Weather bins :
 
@@ -681,12 +670,6 @@ class HydroprintGUI(myqt.DialogWindow):
     def draw_hydrograph(self):
         if self.dmngr.wldataset_count() == 0:
             msg = 'Please import a valid water level data file first.'
-            self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
-            self.emit_warning(msg)
-            return
-
-        if self.dmngr.wxdataset_count() == 0:
-            msg = 'Please import a valid weather data file first.'
             self.ConsoleSignal.emit('<font color=red>%s</font>' % msg)
             self.emit_warning(msg)
             return
@@ -798,21 +781,12 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.isLegend = layout['legend_on']
         self.page_setup_win.isGraphTitle = layout['title_on']
         self.page_setup_win.isTrendLine = layout['trend_line']
+        self.page_setup_win.is_meteo_on = layout['meteo_on']
 
-        if layout['title_on'] is True:
-            self.page_setup_win.title_on.toggle()
-        else:
-            self.page_setup_win.title_off.toggle()
-
-        if layout['legend_on'] is True:
-            self.page_setup_win.legend_on.toggle()
-        else:
-            self.page_setup_win.legend_off.toggle()
-
-        if layout['trend_line'] is True:
-            self.page_setup_win.trend_on.toggle()
-        else:
-            self.page_setup_win.trend_off.toggle()
+        self.page_setup_win.legend_on.set_value(layout['legend_on'])
+        self.page_setup_win.title_on.set_value(layout['title_on'])
+        self.page_setup_win.wltrend_on.set_value(layout['trend_line'])
+        self.page_setup_win.meteo_on.set_value(layout['meteo_on'])
 
         self.page_setup_win.fwidth.setValue(layout['fwidth'])
         self.page_setup_win.fheight.setValue(layout['fheight'])
@@ -853,8 +827,7 @@ class HydroprintGUI(myqt.DialogWindow):
         print("Saving the graph layout for well %s..." % self.wldset['Well'],
               end=" ")
 
-        layout = {'wxdset': self.wxdset.name,
-                  'WLmin': self.waterlvl_max.value(),
+        layout = {'WLmin': self.waterlvl_max.value(),
                   'WLscale': self.waterlvl_scale.value(),
                   'RAINscale': self.Ptot_scale.value(),
                   'fwidth': self.page_setup_win.pageSize[0],
@@ -864,6 +837,7 @@ class HydroprintGUI(myqt.DialogWindow):
                   'bwidth_indx': self.qweather_bin.currentIndex(),
                   'date_labels_pattern': self.dateDispFreq_spinBox.value(),
                   'datemode': self.time_scale_label.currentText()}
+        layout['wxdset'] = None if self.wxdset is None else self.wxdset.name
 
         year = self.date_start_widget.date().year()
         month = self.date_start_widget.date().month()
@@ -878,10 +852,11 @@ class HydroprintGUI(myqt.DialogWindow):
         else:
             layout['WLdatum'] = 'masl'
 
-        layout['title_on'] = str(bool(self.page_setup_win.isGraphTitle))
-        layout['legend_on'] = str(bool(self.page_setup_win.isLegend))
+        layout['title_on'] = bool(self.page_setup_win.isGraphTitle)
+        layout['legend_on'] = bool(self.page_setup_win.isLegend)
         layout['language'] = self.language_box.currentText()
-        layout['trend_line'] = str(bool(self.page_setup_win.isTrendLine))
+        layout['trend_line'] = bool(self.page_setup_win.isTrendLine)
+        layout['meteo_on'] = bool(self.page_setup_win.is_meteo_on)
 
         # Save the colors :
 
@@ -916,6 +891,7 @@ class PageSetupWin(QWidget):
         self.isLegend = True
         self.isGraphTitle = True
         self.isTrendLine = False
+        self.is_meteo_on = True
         self.va_ratio = 0.2
 
         self.__initUI__()
@@ -981,82 +957,52 @@ class PageSetupWin(QWidget):
         figSize_layout.setColumnStretch(1, 100)
         figSize_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
 
-        # ---- Graph Element Visibility GroupBox
-
-        # Legend
-
-        self.legend_on = QRadioButton('On')
-        self.legend_on.toggle()
-        self.legend_off = QRadioButton('Off')
-
-        legend_grpwidget = QWidget()
-        legend_layout = QGridLayout(legend_grpwidget)
-        legend_layout.addWidget(QLabel('Legend :'), 0, 0)
-        legend_layout.addWidget(self.legend_on, 0, 2)
-        legend_layout.addWidget(self.legend_off, 0, 3)
-        legend_layout.setColumnStretch(1, 100)
-        legend_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-
-        # Graph title
-
-        self.title_on = QRadioButton('On')
-        self.title_on.toggle()
-        self.title_off = QRadioButton('Off')
-
-        title_grpwidget = QWidget()
-        title_layout = QGridLayout(title_grpwidget)
-        title_layout.addWidget(QLabel('Graph Title :'), 0, 0)
-        title_layout.addWidget(self.title_on, 0, 2)
-        title_layout.addWidget(self.title_off, 0, 3)
-        title_layout.setColumnStretch(1, 100)
-        title_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-
-        # Trend Line
-
-        self.trend_on = QRadioButton('On')
-        self.trend_off = QRadioButton('Off')
-        self.trend_off.toggle()
-
-        trend_grpwidget = QWidget()
-        trend_layout = QGridLayout(trend_grpwidget)
-        trend_layout.addWidget(QLabel('Water Level Trend :'), 0, 0)
-        trend_layout.addWidget(self.trend_on, 0, 2)
-        trend_layout.addWidget(self.trend_off, 0, 3)
-        trend_layout.setColumnStretch(1, 100)
-        trend_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-
-        # GroupBox Layout
-
-        eleviz_grpbox = QGroupBox("Graph Components Visibility :")
-        eleviz_layout = QGridLayout(eleviz_grpbox)
-        eleviz_layout.addWidget(legend_grpwidget, 0, 0)
-        eleviz_layout.addWidget(title_grpwidget, 1, 0)
-        eleviz_layout.addWidget(trend_grpwidget, 2, 0)
-
-        eleviz_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-
         # ---- Main Layout
 
         main_layout = QGridLayout()
         main_layout.addWidget(figsize_grpbox, 0, 0)
-        main_layout.addWidget(eleviz_grpbox, 1, 0)
+        main_layout.addWidget(self._setup_element_visibility_grpbox(), 1, 0)
         main_layout.setRowStretch(2, 100)
         main_layout.setRowMinimumHeight(2, 15)
         main_layout.addWidget(toolbar_widget, 3, 0)
 
         self.setLayout(main_layout)
 
+    def _setup_element_visibility_grpbox(self):
+        """
+        Setup a groupbox containing all the options to set the visibility of
+        various elements of the graph.
+        """
+        # Legend
+
+        self.legend_on = OnOffToggleWidget('Legend', True)
+        self.title_on = OnOffToggleWidget('Figure Title', True)
+        self.wltrend_on = OnOffToggleWidget('Water Level Trend', False)
+        self.meteo_on = OnOffToggleWidget('Weather Data', True)
+
+        grpbox = QGroupBox("Graph Components Visibility :")
+        layout = QGridLayout(grpbox)
+        for i, widget in enumerate([self.legend_on, self.title_on,
+                                    self.wltrend_on, self.meteo_on]):
+            layout.addWidget(widget, i, 0)
+        layout.setContentsMargins(10, 10, 10, 10)
+
+        return grpbox
+
     # ---- Handlers
 
     def btn_OK_isClicked(self):
+        """Apply the selected settings and close the window."""
         self.btn_apply_isClicked()
         self.close()
 
     def btn_apply_isClicked(self):
+        """Apply the selected settings and emit a signal."""
         self.pageSize = (self.fwidth.value(), self.fheight.value())
-        self.isLegend = self.legend_on.isChecked()
-        self.isGraphTitle = self.title_on.isChecked()
-        self.isTrendLine = self.trend_on.isChecked()
+        self.isLegend = self.legend_on.value()
+        self.isGraphTitle = self.title_on.value()
+        self.isTrendLine = self.wltrend_on.value()
+        self.is_meteo_on = self.meteo_on.value()
         self.va_ratio = self.va_ratio_spinBox.value()
 
         self.newPageSetupSent.emit(True)
@@ -1074,20 +1020,10 @@ class PageSetupWin(QWidget):
         self.fheight.setValue(self.pageSize[1])
         self.va_ratio_spinBox.setValue(self.va_ratio)
 
-        if self.isLegend is True:
-            self.legend_on.toggle()
-        else:
-            self.legend_off.toggle()
-
-        if self.isGraphTitle is True:
-            self.title_on.toggle()
-        else:
-            self.title_off.toggle()
-
-        if self.isTrendLine is True:
-            self.trend_on.toggle()
-        else:
-            self.trend_off.toggle()
+        self.legend_on.set_value(self.isLegend)
+        self.title_on.set_value(self.isGraphTitle)
+        self.wltrend_on.set_value(self.isTrendLine)
+        self.meteo_on.set_value(self.is_meteo_on)
 
     def show(self):
         super(PageSetupWin, self).show()
@@ -1122,8 +1058,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
-          "@ new-prô'jèt!/@ new-prô'jèt!.gwt")
+    pf = "C:/Users/jsgosselin/Desktop/2018 ACFAS/ACFAS2018/ACFAS2018.gwt"
     pr = ProjetReader(pf)
     dm = DataManager()
     dm.set_projet(pr)

@@ -10,8 +10,6 @@
 # StackOverflow user Alleo.
 # https://stackoverflow.com/a/27681394/4481445
 
-from __future__ import division, unicode_literals
-
 # ---- Standard library imports
 
 from calendar import monthrange
@@ -21,7 +19,9 @@ from math import sin, cos, sqrt, atan2, radians
 
 import numpy as np
 import matplotlib as mpl
+from matplotlib.patches import Rectangle
 from matplotlib.figure import Figure
+from matplotlib.transforms import ScaledTranslation
 # import matplotlib.patches
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
@@ -84,8 +84,6 @@ class Hydrograph(Figure):
         self.set_canvas(FigureCanvas(self))
         self.canvas.get_renderer()
 
-        self.__meteo_on = True
-        self.__language = 'english'
         self.__isHydrographExists = False
 
         # Fig Init :
@@ -128,7 +126,7 @@ class Hydrograph(Figure):
         self.trend_MAW = 30
         # trend_MAW = width of the Moving Average Window used to
         #             smooth the water level data
-        self.meteo_on = True  # controls wether meteo data are plotted or not
+        self.meteo_on = True
         self.gridLines = 2  # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'Month'  # 'month' or 'year'
         self.label_font_size = 14
@@ -141,13 +139,15 @@ class Hydrograph(Figure):
 
         # Waterlvl & Meteo Obj :
 
-        self.wldset = {}
-        self.wxdset = {}
+        self.wldset = None
+        self.wxdset = None
 
         # Daily Weather :
 
-        self.TIMEmeteo = np.array([])
-        self.TMAX = np.array([])
+        self.dist = 0
+        self.name_meteo = ''
+        self.TIMEmeteo = np.array([])  # Time in Excel numeric format (days)
+        self.TMAX = np.array([])  # Daily maximum temperature (deg C)
         self.PTOT = np.array([])
         self.RAIN = np.array([])
 
@@ -166,19 +166,23 @@ class Hydrograph(Figure):
 
         self.NMissPtot = []
 
-    # =========================================================================
-
     @property
     def meteo_on(self):
-        return self.__meteo_on
+        """Controls whether meteo data are plotted or not."""
+        return (self.__meteo_on and self.wxdset is not None)
 
     @meteo_on.setter
     def meteo_on(self, x):
-        if type(x) is bool:
-            self.__meteo_on = x
-        else:
-            print('WARNING: "meteo_on" must be either True or False. '
-                  'Previous value of "meteo_on" is kept.')
+        self.__meteo_on = bool(x)
+
+    def set_meteo_on(self, x):
+        """Set whether the meteo data are plotted or not."""
+        self.__meteo_on = bool(x)
+        if self.__isHydrographExists:
+            self.ax3.set_visible(self.meteo_on)
+            self.ax4.set_visible(self.meteo_on)
+            self.setup_waterlvl_scale()
+            self.draw_weather()
 
     @property
     def language(self):
@@ -222,19 +226,22 @@ class Hydrograph(Figure):
         # Reinit Figure :
 
         self.clf()
-
-        fheight = self.fheight  # Figure height in inches
-        fwidth = self.fwidth  # Figure width in inches
-        self.set_size_inches(fwidth, fheight, forward=True)
+        self.set_size_inches(self.fwidth, self.fheight, forward=True)
 
         # Assign Weather Data :
 
-        self.name_meteo = wxdset['Station Name']
-
-        self.TIMEmeteo = wxdset['Time']  # Time in numeric format (days)
-        self.TMAX = wxdset['Tmax']       # Daily maximum temperature (deg C)
-        self.PTOT = wxdset['Ptot']       # Daily total precipitation (mm)
-        self.RAIN = wxdset['Rain']
+        if self.wxdset is None:
+            self.name_meteo = ''
+            self.TIMEmeteo = np.array([])
+            self.TMAX = np.array([])
+            self.PTOT = np.array([])
+            self.RAIN = np.array([])
+        else:
+            self.name_meteo = wxdset['Station Name']
+            self.TIMEmeteo = wxdset['Time']
+            self.TMAX = wxdset['Tmax']
+            self.PTOT = wxdset['Ptot']       # Daily total precipitation (mm)
+            self.RAIN = wxdset['Rain']
 
         # Resample Data in Bins :
 
@@ -298,7 +305,7 @@ class Hydrograph(Figure):
         self.axLow.tick_params(bottom=False, top=False, left=False,
                                right=False, labelbottom=False, labelleft=False)
 
-        self.update_waterlvl_scale()
+        self.setup_waterlvl_scale()
 
         # -------------------------------------------------- Remove Spines ----
 
@@ -313,36 +320,27 @@ class Hydrograph(Figure):
 
         # --------------------------------------------------- FIGURE TITLE ----
 
-        # ---- Weather Station ----
-
         # Calculate horizontal distance between weather station and
         # observation well.
+        if self.wxdset is not None:
+            self.dist = LatLong2Dist(wldset['Latitude'], wldset['Longitude'],
+                                     wxdset['Latitude'], wxdset['Longitude'])
+        else:
+            self.dist = 0
 
-        self.dist = LatLong2Dist(wldset['Latitude'], wldset['Longitude'],
-                                 wxdset['Latitude'], wxdset['Longitude'])
-
-        # display text on figure
-
-        offset = mpl.transforms.ScaledTranslation(0, 7/72,
-                                                  self.dpi_scale_trans)
-
+        # Weather Station name and distance to the well
         self.text1 = self.ax0.text(0, 1, '', va='bottom', ha='left',
-                                   rotation=0, fontsize=10,
-                                   transform=self.ax0.transAxes+offset)
+                                   rotation=0, fontsize=10)
 
-        # ---- Well Name ----
-
-        offset = mpl.transforms.ScaledTranslation(0, 30/72,
-                                                  self.dpi_scale_trans)
+        # Well Name
         self.figTitle = self.ax0.text(0, 1, '', fontsize=18,
-                                      ha='left', va='bottom',
-                                      transform=self.ax0.transAxes+offset)
+                                      ha='left', va='bottom')
 
         self.draw_figure_title()
 
         # ----------------------------------------------------------- TIME ----
 
-        self.xlabels = []  # Initiate variable
+        self.xlabels = []
         self.set_time_scale()
 
         self.ax1.xaxis.set_ticklabels([])
@@ -358,30 +356,26 @@ class Hydrograph(Figure):
 
         # ---- Continuous Line Datalogger ---- #
 
-#        self.l1_ax2, = self.ax2.plot([], [], '.', zorder=10, linewidth=1,
-#                                     color='blue', ms=3)
-
-        self.l1_ax2, = self.ax2.plot([], [], '-', zorder=10, linewidth=1,
-                                     color=self.colorsDB.rgb['WL solid'])
+        self.l1_ax2, = self.ax2.plot(
+            [], [], '-', zorder=10, lw=1, color=self.colorsDB.rgb['WL solid'])
 
         # ---- Data Point Datalogger ---- #
 
-        self.l2_ax2, = self.ax2.plot([], [], '.',
-                                     color=self.colorsDB.rgb['WL data'],
-                                     markersize=5)
+        self.l2_ax2, = self.ax2.plot(
+            [], [], '.', color=self.colorsDB.rgb['WL data'], markersize=5)
 
         # ---- Manual Mesures ---- #
 
         self.h_WLmes, = self.ax2.plot(
-                [], [], 'o', zorder=15, label='Manual measures',
-                markerfacecolor='none', markersize=5, markeredgewidth=1.5,
-                mec=self.colorsDB.rgb['WL obs'])
+            [], [], 'o', zorder=15, label='Manual measures',
+            markerfacecolor='none', markersize=5, markeredgewidth=1.5,
+            mec=self.colorsDB.rgb['WL obs'])
 
         # ---- Predicted Recession Curves ---- #
 
         self.plot_recess, = self.ax2.plot(
-                [], [], color='red', lw=1.5, dashes=[5, 3], zorder=100,
-                alpha=0.85)
+            [], [], color='red', lw=1.5, dashes=[5, 3], zorder=100,
+            alpha=0.85)
 
         self.draw_waterlvl()
 
@@ -395,8 +389,8 @@ class Hydrograph(Figure):
 
         self.PTOT_bar, = self.ax3.plot([], [])
         self.RAIN_bar, = self.ax3.plot([], [])
-        self.baseline, = self.ax3.plot([self.TIMEmin, self.TIMEmax],
-                                       [0, 0], 'k')
+        self.baseline, = self.ax3.plot(
+            [self.TIMEmin, self.TIMEmax], [0, 0], 'k')
 
         # ---- AIR TEMPERATURE -----
 
@@ -427,27 +421,26 @@ class Hydrograph(Figure):
         # Precipitation (v2):
 
         vshift = 5/72
-        offset = mpl.transforms.ScaledTranslation(
-                0, vshift, self.dpi_scale_trans)
-        transform = self.ax4.transData + offset
-
-        t = self.wxdset['Missing Ptot']
-        y = np.ones(len(t)) * self.ax4.get_ylim()[0]
+        offset = ScaledTranslation(0, vshift, self.dpi_scale_trans)
+        if self.wxdset is not None:
+            t = self.wxdset['Missing Ptot']
+            y = np.ones(len(t)) * self.ax4.get_ylim()[0]
+        else:
+            t, y = [], []
         self.lmiss_ax4, = self.ax4.plot(
-                t, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
-                transform=transform)
+            t, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
+            transform=self.ax4.transData + offset)
 
         # ---- Air Temperature (v2) ----
 
-        # vertical shift of 3 points downward
-        offset = mpl.transforms.ScaledTranslation(
-                0, -vshift, self.dpi_scale_trans)
-        transform = self.ax4.transData + offset
-
-        t = self.wxdset['Missing Tmax']
-        y = np.ones(len(t)) * self.ax4.get_ylim()[1]
+        offset = ScaledTranslation(0, -vshift, self.dpi_scale_trans)
+        if self.wxdset is not None:
+            t = self.wxdset['Missing Tmax']
+            y = np.ones(len(t)) * self.ax4.get_ylim()[1]
+        else:
+            t, y = [], []
         self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
-                      lw=1., c='red', transform=transform)
+                      lw=1., c='red', transform=self.ax4.transData + offset)
 
         self.draw_weather()
 
@@ -463,64 +456,46 @@ class Hydrograph(Figure):
 
         self.__isHydrographExists = True
 
-    # =========================================================================
-
     def set_legend(self):
+        """Setup the legend of the graph."""
         if self.isLegend == 1:
             labelDB = LabelDatabase(self.language).legend
             lg_handles = []
             lg_labels = []
             if self.meteo_on:
-
-                # ---- Snow ---- #
-
-                rec1 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                             fc=self.colorsDB.rgb['Snow'],
-                                             ec=self.colorsDB.rgb['Snow'])
-
-                lg_handles.append(rec1)
+                colors = self.colorsDB.rgb
+                # Snow
+                lg_handles.append(Rectangle(
+                    (0, 0), 1, 1, fc=colors['Snow'], ec=colors['Snow']))
                 lg_labels.append(labelDB[0])
+
                 # Rain
-
-                rec2 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                             fc=self.colorsDB.rgb['Rain'],
-                                             ec=self.colorsDB.rgb['Rain'])
-
-                lg_handles.append(rec2)
+                lg_handles.append(Rectangle(
+                    (0, 0), 1, 1, fc=colors['Rain'], ec=colors['Rain']))
                 lg_labels.append(labelDB[1])
 
-                # ---- Air Temperature ---- #
-
-                rec3 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                             fc=self.colorsDB.rgb['Tair'],
-                                             ec='black')
-
-                lg_handles.append(rec3)
+                # Air Temperature
+                lg_handles.append(Rectangle(
+                    (0, 0), 1, 1, fc=colors['Tair'], ec='black'))
                 lg_labels.append(labelDB[2])
 
-                # ---- Missing Data Markers ---- #
-
+                # Missing Data Markers
                 lg_handles.append(self.lmiss_ax4)
                 lg_labels.append(labelDB[3])
 
-            # ---- Water Levels (continuous line) ---- #
-
-            # ---- Continuous Line Datalogger ---- #
-
+            # Continuous Line Datalogger
             lg_handles.append(self.l1_ax2)
             if self.trend_line == 1:
                 lg_labels.append(labelDB[4])
             else:
                 lg_labels.append(labelDB[5])
 
-            # ---- Water Levels (data points) ----
-
+            # Water Levels (data points)
             if self.trend_line == 1:
                 lg_handles.append(self.l2_ax2)
                 lg_labels.append(labelDB[6])
 
-            # ---- Manual Measures ----
-
+            # Manual Measures
             TIMEmes, WLmes = self.wldset.get_wlmeas()
             if len(TIMEmes) > 0:
                 lg_handles.append(self.h_WLmes)
@@ -531,19 +506,14 @@ class Hydrograph(Figure):
                 lg_handles.append(self.plot_recess)
 
             if self.isGLUE:
-                dum1 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                             fc='0.65', ec='0.65')
-
                 lg_labels.append('GLUE 5/95')
-                lg_handles.append(dum1)
+                lg_handles.append(Rectangle(
+                    (0, 0), 1, 1, fc='0.65', ec='0.65'))
 
-            # ---- Position ---------------------------------------------------
-
-            # ---- Draw -------------------------------------------------------
-
-#            LOCS = ['right', 'center left', 'upper right', 'lower right',
-#                    'center', 'lower left', 'center right', 'upper left',
-#                    'upper center', 'lower center']
+            # Draw the legend
+            # LOCS = ['right', 'center left', 'upper right', 'lower right',
+            #         'center', 'lower left', 'center right', 'upper left',
+            #         'upper center', 'lower center']
             # ncol = int(np.ceil(len(lg_handles)/2.))
             self.ax0.legend(lg_handles, lg_labels, bbox_to_anchor=[1, 1],
                             loc='lower right', ncol=3,
@@ -553,21 +523,20 @@ class Hydrograph(Figure):
             if self.ax0.get_legend():
                 self.ax0.get_legend().set_visible(False)
 
-    def update_colors(self):  # ===============================================
-        self.colorsDB.load_colors_db()
-
+    def update_colors(self):
+        """Update the color scheme of the figure."""
         if not self.__isHydrographExists:
             return
 
+        self.colorsDB.load_colors_db()
         self.l1_ax2.set_color(self.colorsDB.rgb['WL solid'])
         self.l2_ax2.set_color(self.colorsDB.rgb['WL data'])
         self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])
         self.draw_weather()
-
         self.set_legend()
 
-    def update_fig_size(self):  # =============================================
-
+    def update_fig_size(self):
+        """Update the size of the figure."""
         self.set_size_inches(self.fwidth, self.fheight)
         self.set_margins()
         self.draw_ylabels()
@@ -575,10 +544,8 @@ class Hydrograph(Figure):
 
         self.canvas.draw()
 
-    def set_margins(self):  # =================================================
-
-        print('Setting up graph margins')
-
+    def set_margins(self):
+        """Set the margins of the axes in inches."""
         fheight = self.fheight
 
         # --- MARGINS (Inches / Fig. Dimension) --- #
@@ -622,8 +589,6 @@ class Hydrograph(Figure):
 
             else:
                 axe.set_position([left_margin, bottom_margin, wtot, hlow])
-
-    # =========================================================================
 
     def draw_ylabels(self):
 
@@ -672,6 +637,7 @@ class Hydrograph(Figure):
 
         if self.meteo_on is False:
             self.ax2.yaxis.set_label_coords(ylabel2_xpos, ylabel2_ypos)
+            self.draw_figure_title()
             return
 
         # ------------------------------------------------ Temperature ----
@@ -714,11 +680,7 @@ class Hydrograph(Figure):
 
         self.ax3.yaxis.set_label_coords(ylabel3_xpos, ylabel3_ypos)
 
-        # ----------------------------------------------- Figure Title ----
-
         self.draw_figure_title()
-
-    # =========================================================================
 
     def best_fit_waterlvl(self):
         WL = self.wldset['WL']
@@ -886,12 +848,11 @@ class Hydrograph(Figure):
 
             self.h_WLmes.set_data(TIMEmes, WLmes)
 
-    def draw_weather(self):  # ================================================
+    def draw_weather(self):
         """
         This method is called the first time the graph is plotted and each
         time the time scale is changed.
         """
-
         if self.meteo_on is False:
             return
 
@@ -979,12 +940,9 @@ class Hydrograph(Figure):
 
         self.update_precip_scale()
 
-    def set_time_scale(self):  # ==============================================
-
-        # ------------------------------------------------- time min and max --
-
+    def set_time_scale(self):
+        """Setup the time scale of the x-axis."""
         if self.datemode.lower() == 'year':
-
             year = xldate_as_tuple(self.TIMEmin, 0)[0]
             self.TIMEmin = xldate_from_date_tuple((year, 1, 1), 0)
 
@@ -997,88 +955,54 @@ class Hydrograph(Figure):
                 year = xldate_as_tuple(self.TIMEmax, 0)[0] + 1
                 self.TIMEmax = xldate_from_date_tuple((year, 1, 1), 0)
 
-        # ---------------------------------------------- xticks and labels ----
+        self.setup_xticklabels()
+        self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
 
-        # ---- compute parameters ---- #
+    def setup_xticklabels(self):
+        """Setup the xtick labels."""
 
-        xticks_info = self.make_xticks_info()
-
-        # ---- major ---- #
-
-        self.ax1.set_xticks(xticks_info[0])
-
-        # -------------------------------------------------------- xlabels ----
-
-        # labels are set using the minor ticks.
-
-        # labels are placed manually instead. This is around 25% faster than
+        # Labels are placed manually because this is around 25% faster than
         # using the minor ticks.
 
-#        self.ax1.set_xticks(xticks_info[1], minor=True)
-#        self.ax1.tick_params(which='minor', length=0)
-#        self.ax1.xaxis.set_ticklabels(xticks_info[2], minor=True, rotation=45,
-#                                      va='top', ha='right', fontsize=10)
-
-        # ---- Remove labels ---- #
+        xticks_info = self.make_xticks_info()
+        self.ax1.set_xticks(xticks_info[0])
 
         for i in range(len(self.xlabels)):
             self.xlabels[i].remove()
 
-        # ---- Redraw labels ---- #
-
-        padding = mpl.transforms.ScaledTranslation(0, -5/72.,
-                                                   self.dpi_scale_trans)
-        transform = self.ax1.transData + padding
+        padding = ScaledTranslation(0, -5/72, self.dpi_scale_trans)
 
         self.xlabels = []
         for i in range(len(xticks_info[1])):
-            new_label = self.ax1.text(xticks_info[1][i], 0,
-                                      xticks_info[2][i], rotation=45,
-                                      va='top', ha='right', fontsize=10.,
-                                      transform=transform)
-
+            new_label = self.ax1.text(
+                xticks_info[1][i], 0, xticks_info[2][i], rotation=45,
+                va='top', ha='right', fontsize=10,
+                transform=self.ax1.transData + padding)
             self.xlabels.append(new_label)
 
-        # ---------------------------------------------------- axis limits ----
-
-        self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
-
-    def draw_xlabels(self):  # ================================================
-
-        # Called when there is a change in language of the labels
-        # of the graph
-
-        _, _, xticks_labels = self.make_xticks_info()
-        self.ax1.xaxis.set_ticklabels([])
-
-        # ---- using minor ticks ---- #
-
-#        self.ax1.xaxis.set_ticklabels(xticks_labels, minor=True, rotation=45,
-#                                      va='top', ha='right', fontsize=10)
-
-        # ---- ploting manually the xlabels instead ---- #
-
-        for i in range(len(self.xlabels)):
-            self.xlabels[i].set_text(xticks_labels[i])
-
-    def draw_figure_title(self):  # ===========================================
-
+    def draw_figure_title(self):
+        """Draw the title of the figure."""
         labelDB = LabelDatabase(self.language)
+        if self.isGraphTitle:
+            # Set the text and position of the title.
+            if self.meteo_on:
+                offset = ScaledTranslation(0, 7/72, self.dpi_scale_trans)
+                self.text1.set_text(
+                    labelDB.station_meteo % (self.name_meteo, self.dist))
+                self.text1.set_transform(self.ax0.transAxes + offset)
 
-        if self.isGraphTitle == 1:
+            dy = 30 if self.meteo_on else 7
+            offset = ScaledTranslation(0, dy/72, self.dpi_scale_trans)
             self.figTitle.set_text(labelDB.title % self.wldset['Well'])
-            self.text1.set_text(labelDB.station_meteo % (self.name_meteo,
-                                                         self.dist))
-        else:
-            self.text1.set_text('')
-            self.figTitle.set_text('')
+            self.figTitle.set_transform(self.ax0.transAxes + offset)
 
-    def update_waterlvl_scale(self):  # =======================================
+        # Set whether the title is visible or not.
+        self.text1.set_visible(self.meteo_on and self.isGraphTitle)
+        self.figTitle.set_visible(self.isGraphTitle)
 
-        if self.meteo_on:
-            NZGrid = self.NZGrid
-        else:
-            NZGrid = self.NZGrid - 2
+    def setup_waterlvl_scale(self):
+        """Update the y scale of the water levels."""
+        NZGrid = self.NZGrid if self.meteo_on else self.NZGrid - 2
 
         self.axLow.set_yticks(np.arange(1, self.NZGrid))
         self.axLow.axis(ymin=0, ymax=NZGrid)
@@ -1113,7 +1037,7 @@ class Hydrograph(Figure):
             self.ax2.axis(ymin=WLmin, ymax=WLmax)
             self.ax2.invert_yaxis()
 
-    def update_precip_scale(self):  # =========================================
+    def update_precip_scale(self):
 
         if self.meteo_on is False:
             return
