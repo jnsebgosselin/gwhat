@@ -525,6 +525,7 @@ class WLDataFrameHDF5(dict):
     # ---- Hydrograph layout
 
     def save_layout(self, layout):
+        """Save the layout in the project hdf5 file."""
         grp = self.dset['layout']
         for key in list(layout.keys()):
             if key == 'colors':
@@ -532,9 +533,13 @@ class WLDataFrameHDF5(dict):
                 for color in layout['colors'].keys():
                     grp_colors.attrs[color] = layout['colors'][color]
             else:
-                grp.attrs[key] = layout[key]
+                if isinstance(layout[key], type(None)):
+                    grp.attrs[key] = '__None__'
+                else:
+                    grp.attrs[key] = layout[key]
 
     def get_layout(self):
+        """Return the layou dict that is saved in the project hdf5 file."""
         if 'TIMEmin' not in self.dset['layout'].attrs.keys():
             return None
 
@@ -544,6 +549,9 @@ class WLDataFrameHDF5(dict):
                 layout[key] = (self.dset['layout'].attrs[key] == 'True')
             else:
                 layout[key] = self.dset['layout'].attrs[key]
+
+            if layout[key] == '__None__':
+                layout[key] = None
 
         layout['colors'] = {}
         grp_colors = self.dset['layout'].require_group('colors')
