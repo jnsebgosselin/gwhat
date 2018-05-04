@@ -181,6 +181,7 @@ class Hydrograph(Figure):
             self.ax3.set_visible(x)
             self.ax4.set_visible(x)
             self.setup_waterlvl_scale()
+            self.draw_weather()
 
     @property
     def language(self):
