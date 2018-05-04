@@ -428,25 +428,25 @@ class Hydrograph(Figure):
         vshift = 5/72
         offset = mpl.transforms.ScaledTranslation(
                 0, vshift, self.dpi_scale_trans)
-        transform = self.ax4.transData + offset
-
-        t = self.wxdset['Missing Ptot']
-        y = np.ones(len(t)) * self.ax4.get_ylim()[0]
+        if self.wxdset is not None:
+            t = self.wxdset['Missing Ptot']
+            y = np.ones(len(t)) * self.ax4.get_ylim()[0]
+        else:
+            t, y = [], []
         self.lmiss_ax4, = self.ax4.plot(
-                t, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
-                transform=transform)
+            t, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
+            transform=self.ax4.transData + offset)
 
         # ---- Air Temperature (v2) ----
 
-        # vertical shift of 3 points downward
-        offset = mpl.transforms.ScaledTranslation(
-                0, -vshift, self.dpi_scale_trans)
-        transform = self.ax4.transData + offset
-
-        t = self.wxdset['Missing Tmax']
-        y = np.ones(len(t)) * self.ax4.get_ylim()[1]
+        offset = ScaledTranslation(0, -vshift, self.dpi_scale_trans)
+        if self.wxdset is not None:
+            t = self.wxdset['Missing Tmax']
+            y = np.ones(len(t)) * self.ax4.get_ylim()[1]
+        else:
+            t, y = [], []
         self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
-                      lw=1., c='red', transform=transform)
+                      lw=1., c='red', transform=self.ax4.transData + offset)
 
         self.draw_weather()
 
