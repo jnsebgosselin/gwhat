@@ -169,7 +169,7 @@ class Hydrograph(Figure):
     @property
     def meteo_on(self):
         """Controls whether meteo data are plotted or not."""
-        return self.__meteo_on
+        return (self.__meteo_on and self.wxdset is not None)
 
     @meteo_on.setter
     def meteo_on(self, x):
@@ -179,8 +179,8 @@ class Hydrograph(Figure):
         """Set whether the meteo data are plotted or not."""
         self.__meteo_on = bool(x)
         if self.__isHydrographExists:
-            self.ax3.set_visible(x)
-            self.ax4.set_visible(x)
+            self.ax3.set_visible(self.meteo_on)
+            self.ax4.set_visible(self.meteo_on)
             self.setup_waterlvl_scale()
             self.draw_weather()
 
