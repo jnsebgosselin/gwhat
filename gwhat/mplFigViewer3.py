@@ -18,10 +18,10 @@ from PyQt5.QtGui import QImage, QPixmap, QPainter
 from PyQt5.QtWidgets import QFrame, QScrollArea, QApplication, QWidget
 
 
-class MplViewer(QFrame):
+class FigureCanvas(QFrame):
 
     def __init__(self, parent=None):
-        super(MplViewer, self).__init__(parent)
+        super(FigureCanvas, self).__init__(parent)
 
         self.setLineWidth(2)
         self.setMidLineWidth(1)
@@ -30,7 +30,7 @@ class MplViewer(QFrame):
         self.img = []
         self.qpix_buff = []
 
-    def load_mpl_figure(self, mplfig, view_dpi):  # ===========================
+    def load_mpl_figure(self, mplfig, view_dpi):
 
         self.qpix_buff = []
 
@@ -78,9 +78,9 @@ class MplViewer(QFrame):
         self.img = QImage.rgbSwapped(self.img)
         self.img = QPixmap(self.img)
 
-
-    def paintEvent(self, event):  # ===========================================
-        super(MplViewer, self).paintEvent(event)
+    def paintEvent(self, event):
+        """Qt method override to paint a custom image on the Widget."""
+        super(FigureCanvas, self).paintEvent(event)
 
         qp = QPainter()
         qp.begin(self)
@@ -113,14 +113,10 @@ class MplViewer(QFrame):
         qp.end()
 
 
-# #############################################################################
-
-
 class ImageViewer(QScrollArea):                           # ImageViewer #
     """
-    This is a PySide widget class to display a matplotlib figure image in a
-    QScrollArea with zooming and panning capability with CTRL + Mouse_wheel
-    and Left-click event.
+    A scrollarea that displays a single FigureCanvas with zooming and panning
+    capability with CTRL + Mouse_wheel and Left-press mouse button event.
     """
 
     zoomChanged = pyqtSignal(float)
@@ -142,12 +138,13 @@ class ImageViewer(QScrollArea):                           # ImageViewer #
 
         # ---- image container Set Up ----
 
-        self.imageCanvas = MplViewer()
+        self.imageCanvas = FigureCanvas()
 
         self.imageCanvas.installEventFilter(self)
         self.setWidget(self.imageCanvas)
 
-    def eventFilter(self, widget, event):  # ==================================
+    def eventFilter(self, widget, event):
+        """A filter to control the zooming and panning of the figure canvas."""
 
         # http://stackoverflow.com/questions/17525608/
         # event-filter-cannot-intercept-wheel-event-from-qscrollarea
@@ -197,7 +194,7 @@ class ImageViewer(QScrollArea):                           # ImageViewer #
         # Move  ScrollBar:
 
         elif event.type() == QEvent.MouseMove:
-            if self.pan == True:
+            if self.pan is True:
                 dx = self.xclick - event.globalX()
                 self.xclick = event.globalX()
 
@@ -212,30 +209,28 @@ class ImageViewer(QScrollArea):                           # ImageViewer #
 
         return QWidget.eventFilter(self, widget, event)
 
-    # =========================================================================
-
     def zoomIn(self):
+        """Scale the image up by one scale step."""
         if self.scaleFactor < self.sfmax:
             self.scaleFactor += 1
             self.scale_image()
             self.adjust_scrollbar(self.scaleStep)
-
         self.zoomChanged.emit(self.get_scaling())
 
     def zoomOut(self):
+        """Scale the image down by one scale step."""
         if self.scaleFactor > self.sfmin:
             self.scaleFactor -= 1
             self.scale_image()
             self.adjust_scrollbar(1/self.scaleStep)
-
         self.zoomChanged.emit(self.get_scaling())
 
     def get_scaling(self):
+        """Return the current scaling of the figure in percent."""
         return self.scaleStep**self.scaleFactor*100
 
-    # =========================================================================
-
-    def scale_image(self):  # =================================================
+    def scale_image(self):
+        """Scale the image size."""
         new_width = int(self.imageCanvas.fwidth *
                         self.scaleStep ** self.scaleFactor)
         new_height = int(self.imageCanvas.fheight *
@@ -243,24 +238,26 @@ class ImageViewer(QScrollArea):                           # ImageViewer #
 
         self.imageCanvas.setFixedSize(new_width, new_height)
 
-    def load_mpl_figure(self, mplfig, view_dpi=150):  # =======================
+    def load_mpl_figure(self, mplfig, view_dpi=150):
         self.imageCanvas.load_mpl_figure(mplfig, view_dpi)
         self.scale_image()
         self.imageCanvas.repaint()
 
-    def reset_original_image(self):  # ========================================
+    def reset_original_image(self):
+        """Reset the image to its original size."""
         self.scaleFactor = 0
         self.scale_image()
 
-    def adjust_scrollbar(self, f):  # =========================================
-
-        # Adjust HScrollBar :
-
+    def adjust_scrollbar(self, f):
+        """
+        Adjust the scrollbar position to take into account the zooming of
+        the figure.
+        """
+        # Adjust horizontal scrollbar :
         hb = self.horizontalScrollBar()
         hb.setValue(int(f * hb.value() + ((f - 1) * hb.pageStep()/2)))
 
-        # Adjust VScrollBar :
-
+        # Adjust the vertical scrollbar :
         vb = self.verticalScrollBar()
         vb.setValue(int(f * vb.value() + ((f - 1) * vb.pageStep()/2)))
 
