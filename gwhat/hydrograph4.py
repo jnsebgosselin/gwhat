@@ -138,13 +138,15 @@ class Hydrograph(Figure):
 
         # Waterlvl & Meteo Obj :
 
-        self.wldset = {}
-        self.wxdset = {}
+        self.wldset = None
+        self.wxdset = None
 
         # Daily Weather :
 
-        self.TIMEmeteo = np.array([])
-        self.TMAX = np.array([])
+        self.dist = 0
+        self.name_meteo = ''
+        self.TIMEmeteo = np.array([])  # Time in Excel numeric format (days)
+        self.TMAX = np.array([])  # Daily maximum temperature (deg C)
         self.PTOT = np.array([])
         self.RAIN = np.array([])
 
