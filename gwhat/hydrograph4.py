@@ -338,7 +338,7 @@ class Hydrograph(Figure):
 
         # ----------------------------------------------------------- TIME ----
 
-        self.xlabels = []  # Initiate variable
+        self.xlabels = []
         self.set_time_scale()
 
         self.ax1.xaxis.set_ticklabels([])
@@ -354,30 +354,26 @@ class Hydrograph(Figure):
 
         # ---- Continuous Line Datalogger ---- #
 
-#        self.l1_ax2, = self.ax2.plot([], [], '.', zorder=10, linewidth=1,
-#                                     color='blue', ms=3)
-
-        self.l1_ax2, = self.ax2.plot([], [], '-', zorder=10, linewidth=1,
-                                     color=self.colorsDB.rgb['WL solid'])
+        self.l1_ax2, = self.ax2.plot(
+            [], [], '-', zorder=10, lw=1, color=self.colorsDB.rgb['WL solid'])
 
         # ---- Data Point Datalogger ---- #
 
-        self.l2_ax2, = self.ax2.plot([], [], '.',
-                                     color=self.colorsDB.rgb['WL data'],
-                                     markersize=5)
+        self.l2_ax2, = self.ax2.plot(
+            [], [], '.', color=self.colorsDB.rgb['WL data'], markersize=5)
 
         # ---- Manual Mesures ---- #
 
         self.h_WLmes, = self.ax2.plot(
-                [], [], 'o', zorder=15, label='Manual measures',
-                markerfacecolor='none', markersize=5, markeredgewidth=1.5,
-                mec=self.colorsDB.rgb['WL obs'])
+            [], [], 'o', zorder=15, label='Manual measures',
+            markerfacecolor='none', markersize=5, markeredgewidth=1.5,
+            mec=self.colorsDB.rgb['WL obs'])
 
         # ---- Predicted Recession Curves ---- #
 
         self.plot_recess, = self.ax2.plot(
-                [], [], color='red', lw=1.5, dashes=[5, 3], zorder=100,
-                alpha=0.85)
+            [], [], color='red', lw=1.5, dashes=[5, 3], zorder=100,
+            alpha=0.85)
 
         self.draw_waterlvl()
 
@@ -391,8 +387,8 @@ class Hydrograph(Figure):
 
         self.PTOT_bar, = self.ax3.plot([], [])
         self.RAIN_bar, = self.ax3.plot([], [])
-        self.baseline, = self.ax3.plot([self.TIMEmin, self.TIMEmax],
-                                       [0, 0], 'k')
+        self.baseline, = self.ax3.plot(
+            [self.TIMEmin, self.TIMEmax], [0, 0], 'k')
 
         # ---- AIR TEMPERATURE -----
 
