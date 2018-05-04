@@ -977,7 +977,7 @@ class PageSetupWin(QWidget):
 
         self.legend_on = OnOffToggleWidget('Legend', True)
         self.title_on = OnOffToggleWidget('Figure Title', True)
-        self.wltrend_on = OnOffToggleWidget('Water Level Trend', True)
+        self.wltrend_on = OnOffToggleWidget('Water Level Trend', False)
         self.meteo_on = OnOffToggleWidget('Weather Data', True)
 
         grpbox = QGroupBox("Graph Components Visibility :")

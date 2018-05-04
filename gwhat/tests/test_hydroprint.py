@@ -225,52 +225,108 @@ def test_clear_hydrograph(hydroprint_bot, mocker):
 # -------------------------------
 
 @pytest.mark.run(order=8)
-def test_pagesetup(pagesetup_bot):  
+def test_pagesetup_defaults(pagesetup_bot):
+    """Assert that the default values are as expected."""
     pagesetup_win, qtbot = pagesetup_bot
     pagesetup_win.show()
 
-    # Assert the default values.
-    assert pagesetup_win.fwidth.value() == pagesetup_win.pageSize[0] == 11
-    assert pagesetup_win.fheight.value() == pagesetup_win.pageSize[1] == 7
-    assert pagesetup_win.va_ratio_spinBox.value() == pagesetup_win.va_ratio == 0.2
-    assert pagesetup_win.legend_on.isChecked() == pagesetup_win.isLegend == True
-    assert pagesetup_win.trend_on.isChecked() == pagesetup_win.isTrendLine == False
-    assert pagesetup_win.title_on.isChecked() == pagesetup_win.isGraphTitle == True
+    assert pagesetup_win.fwidth.value() == 11
+    assert pagesetup_win.pageSize[0] == 11
 
-    # Test that previous values are kept when clicking on the button Cancel.
+    assert pagesetup_win.fheight.value() == 7
+    assert pagesetup_win.pageSize[1] == 7
+
+    assert pagesetup_win.va_ratio_spinBox.value() == 0.2
+    assert pagesetup_win.va_ratio == 0.2
+
+    assert pagesetup_win.legend_on.toggle is True
+    assert pagesetup_win.isLegend is True
+    assert pagesetup_win.wltrend_on.toggle is False
+    assert pagesetup_win.isTrendLine is False
+    assert pagesetup_win.title_on.toggle is True
+    assert pagesetup_win.isGraphTitle is True
+    assert pagesetup_win.meteo_on.toggle is True
+    assert pagesetup_win.is_meteo_on is True
+
+
+@pytest.mark.run(order=8)
+def test_pagesetup_cancel(pagesetup_bot):
+    """Test that the Cancel button is working as expected."""
+    pagesetup_win, qtbot = pagesetup_bot
+    pagesetup_win.show()
+
+    # Change the default values.
     pagesetup_win.fwidth.setValue(12.5)
     pagesetup_win.fheight.setValue(8.5)
     pagesetup_win.va_ratio_spinBox.setValue(0.7)
-    pagesetup_win.legend_off.toggle()
-    pagesetup_win.trend_on.toggle()
-    pagesetup_win.title_off.toggle()
 
+    pagesetup_win.legend_on.set_toggle(False)
+    pagesetup_win.wltrend_on.set_toggle(True)
+    pagesetup_win.title_on.set_toggle(False)
+    pagesetup_win.meteo_on.set_toggle(False)
+
+    # Assert that previous values are kept when clicking on the button Cancel.
     qtbot.mouseClick(pagesetup_win.btn_cancel, Qt.LeftButton)
-    assert pagesetup_win.fwidth.value() == pagesetup_win.pageSize[0] == 11
-    assert pagesetup_win.fheight.value() == pagesetup_win.pageSize[1] == 7
-    assert pagesetup_win.va_ratio_spinBox.value() == pagesetup_win.va_ratio == 0.2
-    assert pagesetup_win.legend_on.isChecked() == pagesetup_win.isLegend == True
-    assert pagesetup_win.trend_on.isChecked() == pagesetup_win.isTrendLine == False
-    assert pagesetup_win.title_on.isChecked() == pagesetup_win.isGraphTitle == True
+    assert pagesetup_win.fwidth.value() == 11
+    assert pagesetup_win.pageSize[0] == 11
+
+    assert pagesetup_win.fheight.value() == 7
+    assert pagesetup_win.pageSize[1] == 7
+
+    assert pagesetup_win.va_ratio_spinBox.value() == 0.2
+    assert pagesetup_win.va_ratio == 0.2
+
+    assert pagesetup_win.legend_on.toggle is True
+    assert pagesetup_win.isLegend is True
+    assert pagesetup_win.wltrend_on.toggle is False
+    assert pagesetup_win.isTrendLine is False
+    assert pagesetup_win.title_on.toggle is True
+    assert pagesetup_win.isGraphTitle is True
+    assert pagesetup_win.meteo_on.toggle is True
+    assert pagesetup_win.is_meteo_on is True
+
     assert not pagesetup_win.isVisible()
-    
-    # Test that the values are updated correctly when clicking the button OK.
+
+
+@pytest.mark.run(order=8)
+def test_pagesetup_ok(pagesetup_bot):
+    """Test that the OK button is working as expected."""
+    pagesetup_win, qtbot = pagesetup_bot
+    pagesetup_win.show()
+
+    # Change the default values.
     pagesetup_win.show()
     pagesetup_win.fwidth.setValue(12.5)
     pagesetup_win.fheight.setValue(8.5)
     pagesetup_win.va_ratio_spinBox.setValue(0.7)
-    pagesetup_win.legend_off.toggle()
-    pagesetup_win.trend_on.toggle()
-    pagesetup_win.title_off.toggle()
 
+    pagesetup_win.legend_on.set_toggle(False)
+    pagesetup_win.wltrend_on.set_toggle(True)
+    pagesetup_win.title_on.set_toggle(False)
+    pagesetup_win.meteo_on.set_toggle(False)
+
+    # Assert that the values are updated correctly when clicking the button OK.
     qtbot.mouseClick(pagesetup_win.btn_OK, Qt.LeftButton)
-    assert pagesetup_win.fwidth.value() == pagesetup_win.pageSize[0] == 12.5
-    assert pagesetup_win.fheight.value() == pagesetup_win.pageSize[1] == 8.5
-    assert pagesetup_win.va_ratio_spinBox.value() == pagesetup_win.va_ratio == 0.7
-    assert pagesetup_win.legend_on.isChecked() == pagesetup_win.isLegend == False
-    assert pagesetup_win.trend_on.isChecked() == pagesetup_win.isTrendLine == True
-    assert pagesetup_win.title_on.isChecked() == pagesetup_win.isGraphTitle == False
+    assert pagesetup_win.fwidth.value() == 12.5
+    assert pagesetup_win.pageSize[0] == 12.5
+
+    assert pagesetup_win.fheight.value() == 8.5
+    assert pagesetup_win.pageSize[1] == 8.5
+
+    assert pagesetup_win.va_ratio_spinBox.value() == 0.7
+    assert pagesetup_win.va_ratio == 0.7
+
+    assert pagesetup_win.legend_on.toggle is False
+    assert pagesetup_win.isLegend is False
+    assert pagesetup_win.wltrend_on.toggle is True
+    assert pagesetup_win.isTrendLine is True
+    assert pagesetup_win.title_on.toggle is False
+    assert pagesetup_win.isGraphTitle is False
+    assert pagesetup_win.meteo_on.toggle is False
+    assert pagesetup_win.is_meteo_on is False
+
     assert not pagesetup_win.isVisible()
+
 
 if __name__ == "__main__":
     pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
