@@ -19,6 +19,7 @@ from math import sin, cos, sqrt, atan2, radians
 
 import numpy as np
 import matplotlib as mpl
+from matplotlib.patches import Rectangle
 from matplotlib.figure import Figure
 from matplotlib.transforms import ScaledTranslation
 # import matplotlib.patches
@@ -420,8 +421,7 @@ class Hydrograph(Figure):
         # Precipitation (v2):
 
         vshift = 5/72
-        offset = mpl.transforms.ScaledTranslation(
-                0, vshift, self.dpi_scale_trans)
+        offset = ScaledTranslation(0, vshift, self.dpi_scale_trans)
         if self.wxdset is not None:
             t = self.wxdset['Missing Ptot']
             y = np.ones(len(t)) * self.ax4.get_ylim()[0]
@@ -463,25 +463,20 @@ class Hydrograph(Figure):
             lg_handles = []
             lg_labels = []
             if self.meteo_on:
+                colors = self.colorsDB.rgb
                 # Snow
-                rec1 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                             fc=self.colorsDB.rgb['Snow'],
-                                             ec=self.colorsDB.rgb['Snow'])
-                lg_handles.append(rec1)
+                lg_handles.append(Rectangle(
+                    (0, 0), 1, 1, fc=colors['Snow'], ec=colors['Snow']))
                 lg_labels.append(labelDB[0])
 
                 # Rain
-                rec2 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                             fc=self.colorsDB.rgb['Rain'],
-                                             ec=self.colorsDB.rgb['Rain'])
-                lg_handles.append(rec2)
+                lg_handles.append(Rectangle(
+                    (0, 0), 1, 1, fc=colors['Rain'], ec=colors['Rain']))
                 lg_labels.append(labelDB[1])
 
                 # Air Temperature
-                rec3 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                             fc=self.colorsDB.rgb['Tair'],
-                                             ec='black')
-                lg_handles.append(rec3)
+                lg_handles.append(Rectangle(
+                    (0, 0), 1, 1, fc=colors['Tair'], ec='black'))
                 lg_labels.append(labelDB[2])
 
                 # Missing Data Markers
@@ -511,10 +506,9 @@ class Hydrograph(Figure):
                 lg_handles.append(self.plot_recess)
 
             if self.isGLUE:
-                dum1 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                             fc='0.65', ec='0.65')
                 lg_labels.append('GLUE 5/95')
-                lg_handles.append(dum1)
+                lg_handles.append(Rectangle(
+                    (0, 0), 1, 1, fc='0.65', ec='0.65'))
 
             # Draw the legend
             # LOCS = ['right', 'center left', 'upper right', 'lower right',
