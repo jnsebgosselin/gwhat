@@ -224,10 +224,7 @@ class Hydrograph(Figure):
         # Reinit Figure :
 
         self.clf()
-
-        fheight = self.fheight  # Figure height in inches
-        fwidth = self.fwidth  # Figure width in inches
-        self.set_size_inches(fwidth, fheight, forward=True)
+        self.set_size_inches(self.fwidth, self.fheight, forward=True)
 
         # Assign Weather Data :
 
