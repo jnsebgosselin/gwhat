@@ -20,7 +20,7 @@ from PyQt5.QtWidgets import (QSpinBox, QDoubleSpinBox, QWidget, QDateEdit,
                              QAbstractSpinBox, QGridLayout, QFrame,
                              QMessageBox, QComboBox, QLabel, QTabWidget,
                              QFileDialog, QApplication, QPushButton,
-                             QRadioButton, QDesktopWidget, QGroupBox)
+                             QDesktopWidget, QGroupBox)
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
