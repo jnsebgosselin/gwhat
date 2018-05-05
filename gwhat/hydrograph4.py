@@ -141,6 +141,7 @@ class Hydrograph(Figure):
 
         self.wldset = None
         self.wxdset = None
+        self.gluedf = None
 
         # Daily Weather :
 
@@ -187,8 +188,7 @@ class Hydrograph(Figure):
     @property
     def glue_wl_on(self):
         """Controls whether glue water levels are plotted or not."""
-        glue_count = 0 if self.wldset is None else self.wldset.glue_count()
-        return self.__glue_wl_on and glue_count > 0
+        return (self.__glue_wl_on and self.gluedf is not None)
 
     @glue_wl_on.setter
     def glue_wl_on(self, x):
@@ -223,6 +223,12 @@ class Hydrograph(Figure):
 
     def set_wxdset(self, wxdset):
         self.wxdset = wxdset
+
+    def set_gluedf(self, gluedf):
+        """Set the namespace for the GLUE dataframe."""
+        self.gluedf = gluedf
+        self.draw_glue_wl()
+        self.set_legend()
 
     def clf(self, *args, **kargs):
         """Matplotlib override to set internal flag."""
@@ -796,17 +802,16 @@ class Hydrograph(Figure):
     # ---- Drawing data methods
 
     def draw_glue_wl(self):
-        """Draw the GLUE estimated water levels enveloppe."""
+        """Draw the GLUE estimated water levels envelope."""
         if self.glue_wl_on is False:
             self.glue_plt.set_visible(False)
             return
         else:
             self.glue_plt.set_visible(True)
 
-        gluedf = self.wldset.get_glue(self.wldset.glue_idnums()[-1])
-        xlstime = gluedf['water levels']['time']
-        wl05 = gluedf['water levels']['predicted'][:, 0]/1000
-        wl95 = gluedf['water levels']['predicted'][:, 2]/1000
+        xlstime = self.gluedf['water levels']['time']
+        wl05 = self.gluedf['water levels']['predicted'][:, 0]/1000
+        wl95 = self.gluedf['water levels']['predicted'][:, 2]/1000
 
         self.glue_plt.remove()
         self.glue_plt = self.ax2.fill_between(
