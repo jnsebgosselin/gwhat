@@ -572,6 +572,9 @@ class WLDataFrameHDF5(dict):
         if 'meteo_on' not in layout.keys():
             # Added in version 0.3.2 (see PR #201)
             layout['meteo_on'] = True
+        if 'glue_wl_on' not in layout.keys():
+            # Added in version 0.3.2 (see PR #202)
+            layout['glue_wl_on'] = False
 
         return layout
 
