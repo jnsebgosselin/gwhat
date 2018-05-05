@@ -282,6 +282,7 @@ class RechgEvalWorker(QObject):
         print('-'*78)
         if len(set_Sy) > 0:
             print('-'*78)
+            print('%d behavioural models were produced' % len(set_Sy))
             range_sy = (np.min(set_Sy), np.max(set_Sy))
             print('range Sy = %0.3f to %0.3f' % range_sy)
             range_rasmax = (np.min(set_RASmax), np.max(set_RASmax))
