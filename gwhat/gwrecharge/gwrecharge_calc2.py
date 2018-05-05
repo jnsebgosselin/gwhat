@@ -268,7 +268,7 @@ class RechgEvalWorker(QObject):
 
         if glue_rawdata['count'] > 0:
             glue_dataf = GLUEDataFrame(glue_rawdata)
-            self._save_glue_to_npy(glue_rawdata)
+            # self._save_glue_to_npy(glue_rawdata)
         else:
             glue_dataf = None
         self.sig_glue_finished.emit(glue_dataf)

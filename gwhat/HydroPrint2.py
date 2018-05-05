@@ -1044,6 +1044,7 @@ class PageSetupWin(QWidget):
         self.title_on.set_value(self.isGraphTitle)
         self.wltrend_on.set_value(self.isTrendLine)
         self.meteo_on.set_value(self.is_meteo_on)
+        self.glue_wl_on.set_value(self.is_glue_wl_on)
 
     def show(self):
         super(PageSetupWin, self).show()
