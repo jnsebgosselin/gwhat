@@ -296,7 +296,7 @@ class RechgEvalWorker(QObject):
 
     def _save_glue_to_npy(self, glue_rawdata):
         """Save the last computed glue results in a numpy npy file."""
-        if osp.exists(osp.dirname(__file__)):
+        if not osp.exists(osp.dirname(__file__)):
             os.makedirs(osp.dirname(__file__))
         filename = osp.join(osp.dirname(__file__), 'glue_rawdata.npy')
         np.save(filename, glue_rawdata)
