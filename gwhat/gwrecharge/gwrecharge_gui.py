@@ -24,11 +24,14 @@ from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
-from gwhat.common.icons import QToolButtonBase, QToolButtonSmall
+from gwhat.common.icons import QToolButtonSmall
 from gwhat.common import icons
 
 
 class RechgEvalWidget(QFrameLayout):
+
+    sig_new_gluedf = QSignal(GLUEDataFrameBase)
+
     def __init__(self, parent):
         super(RechgEvalWidget, self).__init__(parent)
         self.setWindowTitle('Recharge Calibration Setup')
@@ -321,6 +324,7 @@ class RechgEvalWidget(QFrameLayout):
         else:
             self.wldset.clear_glue()
             self.wldset.save_glue(glue_dataframe)
+            self.sig_new_gluedf.emit(glue_dataframe)
 
             self.btn_save_glue.set_model(glue_dataframe)
 
