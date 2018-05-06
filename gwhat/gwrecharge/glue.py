@@ -248,7 +248,7 @@ def calcul_glue(data, glue_limits, varname='recharge'):
     x = np.array(data[varname])
     _, ntime = np.shape(x)
 
-    rmse = np.array(data['RMSE'])
+    rmse = 1/np.array(data['RMSE'])
     # Rescale the RMSE so the sum of all values equal 1.
     rmse = rmse/np.sum(rmse)
 
