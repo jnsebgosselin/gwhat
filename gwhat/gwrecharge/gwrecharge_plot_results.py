@@ -69,10 +69,6 @@ class FigureStackManager(QWidget):
         layout.addWidget(self.stack, 0, 0)
 
     def setup_stack(self):
-        fig_wl_glue = FigManagerBase(
-            FigWaterLevelGLUE,
-            setp_panels=[FigSizePanel(),
-                         MarginSizePanel()])
         fig_rechg_glue = FigManagerBase(
             FigYearlyRechgGLUE,
             setp_panels=[FigSizePanel(),
@@ -100,11 +96,10 @@ class FigureStackManager(QWidget):
                          YAxisOptPanel(),
                          TextOptPanel(xlabelsize=False, notesize=False)])
 
-        self.figmanagers = [fig_wl_glue, fig_rechg_glue, fig_watbudg_glue,
+        self.figmanagers = [fig_rechg_glue, fig_watbudg_glue,
                             fig_avg_yearly_budg, fig_avg_monthly_budg]
 
         self.stack = QTabWidget()
-        self.stack.addTab(fig_wl_glue, 'Hydrograph')
         self.stack.addTab(fig_rechg_glue, 'Recharge')
         self.stack.addTab(fig_watbudg_glue, 'Yearly Budget')
         self.stack.addTab(fig_avg_yearly_budg, 'Yearly Avg. Budget')
@@ -1161,90 +1156,6 @@ class FigWaterBudgetGLUE(FigCanvasBase):
                         bbox_to_anchor=[0, 1], loc='upper left',
                         fontsize=self.setp['legend size'], frameon=False,
                         handletextpad=0.2, borderaxespad=0.2, borderpad=0.2)
-
-
-class FigWaterLevelGLUE(FigCanvasBase):
-    """
-    This is a graph that shows observed ground-water levels and GLUE 5/95
-    predicted water levels.
-    """
-
-    FIGNAME = "water_level_glue"
-
-    def __init__(self, setp={}):
-        super(FigWaterLevelGLUE, self).__init__(setp)
-
-    def plot(self, glue_df):
-        super(FigWaterLevelGLUE, self).plot()
-        ax = self.ax0
-
-        ax.grid(axis='x', color='0.35', ls=':', lw=1, zorder=200)
-        ax.grid(axis='y', color='0.35', ls=':', lw=1, zorder=200)
-        ax.invert_yaxis()
-
-        # ---- ticks format
-
-        ax.yaxis.set_ticks_position('left')
-        ax.tick_params(axis='y', direction='out', labelsize=12)
-        ax.xaxis.set_ticks_position('bottom')
-        ax.tick_params(axis='x', direction='out')
-
-        xloc = mpl.dates.AutoDateLocator()
-        ax.xaxis.set_major_locator(xloc)
-        xfmt = mpl.dates.AutoDateFormatter(xloc)
-        ax.xaxis.set_major_formatter(xfmt)
-
-        # ---- Plot the observed and glue predicted water levels.
-
-        wlobs = glue_df['water levels']['observed']
-        xlstime = glue_df['water levels']['time'] + DT4XLS2MPL
-        wl05 = glue_df['water levels']['predicted'][:, 0]/1000
-        wl95 = glue_df['water levels']['predicted'][:, 2]/1000
-
-        ax = self.figure.axes[0]
-        ax.plot(xlstime, wlobs, color='b', ls='None',
-                marker='.', ms=3, zorder=100)
-        ax.fill_between(xlstime, wl95, wl05, facecolor='0.85', lw=1,
-                        edgecolor='0.65', zorder=0)
-
-        self.setup_axes_labels()
-        self.setup_legend()
-
-        self.sig_fig_changed.emit(self.figure)
-        self.sig_newfig_plotted.emit(self.setp)
-
-    def set_xlimits(self, xmin, xmax):
-        """Set the limits of the xaxis to the provided values."""
-        pass
-
-    def setup_ylimits(self):
-        """Setup the limits of the yaxis."""
-        self.ax0.axis(ymin=self.setp['ymin'], ymax=self.setp['ymax'])
-
-    def setup_language(self):
-        """Setup the language of the text shown in the figure."""
-        self.setup_axes_labels()
-
-    def setup_legend(self):
-        """Setup the legend of the graph."""
-        dum1 = mpl.patches.Rectangle((0, 0), 1, 1, fc='0.85', ec='0.65')
-        dum2, = self.ax0.plot([], [], color='b', ls='None', marker='.', ms=10)
-
-        lg_handles = [dum2, dum1]
-        lg_labels = ['Observations', 'GLUE 5/95']
-
-        self.ax0.legend(lg_handles, lg_labels, ncol=2, fontsize=12,
-                        frameon=False, numpoints=1)
-
-    def setup_axes_labels(self):
-        """
-        Set the text and position of the axes labels.
-        """
-        if self.setp['language'] == 'french':
-            xlabel = "Niveau d'eau (m sous la surface)"
-        else:
-            xlabel = 'Water Level (mbgs)'
-        self.ax0.set_ylabel(xlabel, fontsize=16, labelpad=20)
 
 
 class FigYearlyRechgGLUE(FigCanvasBase):

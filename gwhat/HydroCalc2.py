@@ -38,8 +38,8 @@ from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 import gwhat.common.widgets as myqt
 from gwhat.common import StyleDB, QToolButtonNormal
 from gwhat.common import icons
-import gwhat.brf_mod as bm
 from gwhat.widgets.buttons import ToolBarWidget
+from gwhat.brf_mod import BRFManager
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -57,6 +57,11 @@ class WLCalc(myqt.DialogWindow):
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
+
+        self.rechg_eval_widget = RechgEvalWidget(parent=self)
+
+        self.config_brf = BRFManager(parent=self)
+        self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
 
         self.isGraphExists = False
         self.__figbckground = None  # figure background
@@ -96,18 +101,10 @@ class WLCalc(myqt.DialogWindow):
         self.brfperiod = [None, None]
         self.__brfcount = 0
 
-        # self.config_brf = ConfigBRF()
-        self.config_brf = bm.BRFManager(parent=self)
-        self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
-
         # Soil Profiles :
 
         self.soilFilename = []
         self.SOILPROFIL = SoilProfil()
-
-        # Recharge :
-
-        self.rechg_setup_win = RechgEvalWidget(parent=self)
 
         # ---- Initialize the GUI
         self.__initFig__()
@@ -366,7 +363,7 @@ class WLCalc(myqt.DialogWindow):
         tooltab.setTabPosition(tooltab.North)
 
         tooltab.addTab(self.widget_MRCparam, icons.get_icon('MRCalc'), '')
-        tooltab.addTab(self.rechg_setup_win, icons.get_icon('recharge'), '')
+        tooltab.addTab(self.rechg_eval_widget, icons.get_icon('recharge'), '')
         tooltab.addTab(self.config_brf, icons.get_icon('setup'), '')
 
         # ---------------------------------------------------- Right Panel ----
@@ -408,7 +405,7 @@ class WLCalc(myqt.DialogWindow):
 
     def set_wldset(self, wldset):
         self.config_brf.set_wldset(wldset)
-        self.rechg_setup_win.set_wldset(wldset)
+        self.rechg_eval_widget.set_wldset(wldset)
 
         if wldset is None:
             self.water_lvl = None
@@ -427,7 +424,7 @@ class WLCalc(myqt.DialogWindow):
 
     def set_wxdset(self, wxdset):
         """Set the weather dataset."""
-        self.rechg_setup_win.wxdset = wxdset
+        self.rechg_eval_widget.wxdset = wxdset
         self.plot_weather_data()
 
     def plot_weather_data(self):

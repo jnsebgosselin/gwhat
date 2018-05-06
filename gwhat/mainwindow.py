@@ -137,8 +137,11 @@ class MainWindow(QMainWindow):
 
         splash.showMessage("Initializing plot hydrograph.")
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
+
         splash.showMessage("Initializing analyse hydrograph.")
         self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
+        self.tab_hydrocalc.rechg_eval_widget.sig_new_gluedf.connect(
+            self.tab_hydrograph.glue_wl_changed)
 
         # ---- TABS ASSEMBLY
 
@@ -209,7 +212,7 @@ class MainWindow(QMainWindow):
         mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
         mainGrid.addWidget(self.tab_dwnld_data.pbar, 2, 0)
         mainGrid.addWidget(
-                self.tab_hydrocalc.rechg_setup_win.progressbar, 3, 0)
+            self.tab_hydrocalc.rechg_eval_widget.progressbar, 3, 0)
 
     def write2console(self, text):
         """

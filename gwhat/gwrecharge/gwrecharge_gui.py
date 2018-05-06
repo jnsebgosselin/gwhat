@@ -7,17 +7,15 @@
 # Licensed under the terms of the GNU General Public License.
 
 import time
-import os
-import os.path as osp
 
 # ---- Imports: third parties
 
-import matplotlib.pyplot as plt
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
+from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
                              QLabel, QSizePolicy, QScrollArea, QApplication,
-                             QMessageBox, QMenu, QFileDialog)
+                             QMessageBox)
 
 # ---- Imports: local
 
@@ -26,11 +24,14 @@ from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
-from gwhat.common.icons import QToolButtonBase, QToolButtonSmall
+from gwhat.common.icons import QToolButtonSmall
 from gwhat.common import icons
 
 
 class RechgEvalWidget(QFrameLayout):
+
+    sig_new_gluedf = QSignal(GLUEDataFrameBase)
+
     def __init__(self, parent):
         super(RechgEvalWidget, self).__init__(parent)
         self.setWindowTitle('Recharge Calibration Setup')
@@ -263,10 +264,6 @@ class RechgEvalWidget(QFrameLayout):
     def deltaT(self):
         return self._deltaT.value()
 
-    def closeEvent(self, event):
-        super(RechgEvalWidget, self).closeEvent(event)
-        print('Closing Window')
-
     def btn_calibrate_isClicked(self):
         """
         Handles when the button to compute recharge and its uncertainty is
@@ -279,8 +276,6 @@ class RechgEvalWidget(QFrameLayout):
         Start the method to evaluate ground-water recharge and its
         uncertainty.
         """
-        plt.close('all')
-
         # Set the parameter ranges.
 
         self.rechg_worker.Sy = self.get_Range('Sy')
@@ -329,6 +324,7 @@ class RechgEvalWidget(QFrameLayout):
         else:
             self.wldset.clear_glue()
             self.wldset.save_glue(glue_dataframe)
+            self.sig_new_gluedf.emit(glue_dataframe)
 
             self.btn_save_glue.set_model(glue_dataframe)
 
@@ -403,8 +399,6 @@ if __name__ == '__main__':
 
     GLUE_RAWDATA = load_glue_from_npy('glue_rawdata.npy')
     GLUE_DF = GLUEDataFrame(GLUE_RAWDATA)
-    
-    print(GLUE_DF)
 
     BTN_EXPORT_GLUE = ExportGLUEButton(GLUE_DF)
     BTN_EXPORT_GLUE.show()
