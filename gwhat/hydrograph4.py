@@ -127,6 +127,7 @@ class Hydrograph(Figure):
         # trend_MAW = width of the Moving Average Window used to
         #             smooth the water level data
         self.meteo_on = True
+        self.glue_wl_on = False
         self.gridLines = 2  # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'Month'  # 'month' or 'year'
         self.label_font_size = 14
@@ -135,12 +136,12 @@ class Hydrograph(Figure):
         # plot or not the estimated recession segment that
         # were used to estimate the MRC
         self.isMRC = False
-        self.isGLUE = False
 
         # Waterlvl & Meteo Obj :
 
         self.wldset = None
         self.wxdset = None
+        self.gluedf = None
 
         # Daily Weather :
 
@@ -177,12 +178,28 @@ class Hydrograph(Figure):
 
     def set_meteo_on(self, x):
         """Set whether the meteo data are plotted or not."""
-        self.__meteo_on = bool(x)
+        self.meteo_on = x
         if self.__isHydrographExists:
             self.ax3.set_visible(self.meteo_on)
             self.ax4.set_visible(self.meteo_on)
             self.setup_waterlvl_scale()
             self.draw_weather()
+
+    @property
+    def glue_wl_on(self):
+        """Controls whether glue water levels are plotted or not."""
+        return (self.__glue_wl_on and self.gluedf is not None)
+
+    @glue_wl_on.setter
+    def glue_wl_on(self, x):
+        self.__glue_wl_on = bool(x)
+
+    def set_glue_wl_on(self, x):
+        """Set whether the glue water levels data are plotted or not."""
+        self.glue_wl_on = x
+        if self.__isHydrographExists:
+            self.draw_glue_wl()
+            self.set_legend()
 
     @property
     def language(self):
@@ -206,6 +223,12 @@ class Hydrograph(Figure):
 
     def set_wxdset(self, wxdset):
         self.wxdset = wxdset
+
+    def set_gluedf(self, gluedf):
+        """Set the namespace for the GLUE dataframe."""
+        self.gluedf = gluedf
+        self.draw_glue_wl()
+        self.set_legend()
 
     def clf(self, *args, **kargs):
         """Matplotlib override to set internal flag."""
@@ -352,34 +375,34 @@ class Hydrograph(Figure):
 
         self.set_gridLines()
 
-        # ---------------------------------------------------- WATER LEVEL ----
+        # ---- Init water level artists
 
-        # ---- Continuous Line Datalogger ---- #
-
+        # Continuous Line Datalogger
         self.l1_ax2, = self.ax2.plot(
             [], [], '-', zorder=10, lw=1, color=self.colorsDB.rgb['WL solid'])
 
-        # ---- Data Point Datalogger ---- #
-
+        # Data Point Datalogger
         self.l2_ax2, = self.ax2.plot(
             [], [], '.', color=self.colorsDB.rgb['WL data'], markersize=5)
 
-        # ---- Manual Mesures ---- #
-
+        # Manual Mesures
         self.h_WLmes, = self.ax2.plot(
             [], [], 'o', zorder=15, label='Manual measures',
             markerfacecolor='none', markersize=5, markeredgewidth=1.5,
             mec=self.colorsDB.rgb['WL obs'])
 
-        # ---- Predicted Recession Curves ---- #
-
+        # Predicted Recession Curves
         self.plot_recess, = self.ax2.plot(
             [], [], color='red', lw=1.5, dashes=[5, 3], zorder=100,
             alpha=0.85)
 
-        self.draw_waterlvl()
+        # Predicted GLUE water levels
+        self.glue_plt, = self.ax2.plot([], [])
 
-        # -------------------------------------------------------- WEATHER ----
+        self.draw_waterlvl()
+        self.draw_glue_wl()
+
+        # ---- Init weather artists
 
         # ---- PRECIPITATION -----
 
@@ -505,7 +528,7 @@ class Hydrograph(Figure):
                 lg_labels.append(labelDB[8])
                 lg_handles.append(self.plot_recess)
 
-            if self.isGLUE:
+            if self.glue_wl_on:
                 lg_labels.append('GLUE 5/95')
                 lg_handles.append(Rectangle(
                     (0, 0), 1, 1, fc='0.65', ec='0.65'))
@@ -776,39 +799,26 @@ class Hydrograph(Figure):
 
         return bheight
 
-    def draw_GLUE(self):  # ===================================================
+    # ---- Drawing data methods
 
-        data = np.load('GLUE.npy').item()
-        hydrograph = np.array(data['hydrograph'])
-        tweatr = np.array(data['Time'])
-        RMSE = np.array(data['RMSE'])
-        twlvl = np.array(data['twlvl'])
+    def draw_glue_wl(self):
+        """Draw the GLUE estimated water levels envelope."""
+        if self.glue_wl_on is False:
+            self.glue_plt.set_visible(False)
+            return
+        else:
+            self.glue_plt.set_visible(True)
 
-        ts = np.where(twlvl[0] == tweatr)[0]
-        te = np.where(twlvl[-1] == tweatr)[0]
-        time = tweatr[ts:te+1]
+        xlstime = self.gluedf['water levels']['time']
+        wl05 = self.gluedf['water levels']['predicted'][:, 0]/1000
+        wl95 = self.gluedf['water levels']['predicted'][:, 2]/1000
 
-        RMSE = RMSE / np.sum(RMSE)
+        self.glue_plt.remove()
+        self.glue_plt = self.ax2.fill_between(
+            xlstime, wl95, wl05, facecolor='0.85', lw=1, edgecolor='0.65',
+            zorder=0)
 
-        hGLUE = []
-
-        for i in range(len(time)):
-            isort = np.argsort(hydrograph[:, i])
-            CDF = np.cumsum(RMSE[isort])
-            hGLUE.append(
-                np.interp([0.05, 0.5, 0.95], CDF, hydrograph[isort, i]))
-
-        hGLUE = np.array(hGLUE)
-        min_wlvl = hGLUE[:, 0] / 1000.
-        max_wlvl = hGLUE[:, 2] / 1000.
-
-        self.ax2.fill_between(time, min_wlvl, max_wlvl, edgecolor='0.65',
-                              color='0.65', zorder=0)
-
-        self.isGLUE = True
-        self.set_legend()
-
-    def draw_recession(self):  # ==============================================
+    def draw_recession(self):
         t = self.WaterLvlObj.trecess
         wl = self.WaterLvlObj.hrecess
         self.plot_recess.set_data(t, wl)
@@ -816,7 +826,7 @@ class Hydrograph(Figure):
         self.isMRC = True
         self.set_legend()
 
-    def draw_waterlvl(self):  # ===============================================
+    def draw_waterlvl(self):
         """
         This method is called the first time the graph is plotted and each
         time water level datum is changed.

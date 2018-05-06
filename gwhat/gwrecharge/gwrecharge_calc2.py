@@ -268,6 +268,7 @@ class RechgEvalWorker(QObject):
 
         if glue_rawdata['count'] > 0:
             glue_dataf = GLUEDataFrame(glue_rawdata)
+            # self._save_glue_to_npy(glue_rawdata)
         else:
             glue_dataf = None
         self.sig_glue_finished.emit(glue_dataf)
@@ -282,6 +283,7 @@ class RechgEvalWorker(QObject):
         print('-'*78)
         if len(set_Sy) > 0:
             print('-'*78)
+            print('%d behavioural models were produced' % len(set_Sy))
             range_sy = (np.min(set_Sy), np.max(set_Sy))
             print('range Sy = %0.3f to %0.3f' % range_sy)
             range_rasmax = (np.min(set_RASmax), np.max(set_RASmax))
@@ -294,7 +296,7 @@ class RechgEvalWorker(QObject):
 
     def _save_glue_to_npy(self, glue_rawdata):
         """Save the last computed glue results in a numpy npy file."""
-        if osp.exists(osp.dirname(__file__)):
+        if not osp.exists(osp.dirname(__file__)):
             os.makedirs(osp.dirname(__file__))
         filename = osp.join(osp.dirname(__file__), 'glue_rawdata.npy')
         np.save(filename, glue_rawdata)

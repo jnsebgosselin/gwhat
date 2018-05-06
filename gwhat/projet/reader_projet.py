@@ -460,6 +460,15 @@ class WLDataFrameHDF5(dict):
         if idnum in self.glue_idnums():
             return GLUEDataFrameHDF5(self.dset['glue'][idnum])
 
+    def get_glue_at(self, idx):
+        """Return GLUE results stored at the specified index."""
+        try:
+            idnum = self.glue_idnums()[idx]
+        except IndexError:
+            return None
+        else:
+            return self.get_glue(idnum)
+
     def del_glue(self, idnum):
         """Delete GLUE results at idnum."""
         if idnum in self.glue_idnums():
@@ -539,6 +548,7 @@ class WLDataFrameHDF5(dict):
                     grp.attrs[key] = '__' + str(layout[key]) + '__'
                 else:
                     grp.attrs[key] = layout[key]
+        self.dset.file.flush()
 
     def get_layout(self):
         """Return the layout dict that is saved in the project hdf5 file."""
@@ -562,6 +572,9 @@ class WLDataFrameHDF5(dict):
         if 'meteo_on' not in layout.keys():
             # Added in version 0.3.2 (see PR #201)
             layout['meteo_on'] = True
+        if 'glue_wl_on' not in layout.keys():
+            # Added in version 0.3.2 (see PR #202)
+            layout['glue_wl_on'] = False
 
         return layout
 
