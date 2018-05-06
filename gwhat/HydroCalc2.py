@@ -811,6 +811,7 @@ class WLCalc(myqt.DialogWindow):
             self.set_pan_is_active(False)
             self.btn_delPeak.setAutoRaise(True)
             self.btn_addpeak.setAutoRaise(True)
+            self.config_brf.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
                 self.toolbar.zoom()
         else:
@@ -829,6 +830,7 @@ class WLCalc(myqt.DialogWindow):
             self.set_zoom_is_active(False)
             self.btn_delPeak.setAutoRaise(True)
             self.btn_addpeak.setAutoRaise(True)
+            self.config_brf.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
                 self.toolbar.pan()
         else:
