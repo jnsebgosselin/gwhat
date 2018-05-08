@@ -19,16 +19,38 @@ import numpy as np
 from sip import wrappertype as pyqtWrapperType
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, QEvent
 from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QFileDialog,
                              QListWidget, QMenu, QMessageBox, QStyle,
-                             QToolButton, QWidget)
+                             QToolButton, QWidget, QToolBar)
 
 # ---- Local imports
 
 from gwhat.common.icons import QToolButtonBase
 from gwhat.common import icons
 from gwhat.common.utils import find_unique_filename
+
+
+class ToolBarWidget(QToolBar):
+    """A standard toolbar with some layout specifics."""
+    def __init__(self, parent=None):
+        super(ToolBarWidget, self).__init__(parent)
+        self.setIconSize(QSize(28, 28))
+        self.layout().setContentsMargins(0, 0, 0, 0)
+        self.layout().setSpacing(5)
+
+    def addWidget(self, widget):
+        """Qt method override."""
+        if widget is None:
+            super(ToolBarWidget, self).addSeparator()
+        elif isinstance(widget, QToolButton):
+            # This is required because it seems that autoRaise is set to True
+            # automatically when adding a widget to the toolbar.
+            auto_raise = widget.autoRaise()
+            super(ToolBarWidget, self).addWidget(widget)
+            widget.setAutoRaise(auto_raise)
+        else:
+            super(ToolBarWidget, self).addWidget(widget)
 
 
 class SmartSpinBox(QDoubleSpinBox):
@@ -355,11 +377,56 @@ class ExportDataButton(QToolButtonBase):
         QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
 
 
+class OnOffToolButton(QToolButtonBase):
+    """A tool button that can be toggled on or off by clicking on it."""
+    sig_value_changed = QSignal(bool)
+
+    def __init__(self, icon, icon_raised=None, size=None, parent=None):
+        self._icon = icons.get_icon(icon) if isinstance(icon, str) else icon
+        self._icon_raised = (icons.get_icon(icon_raised) if
+                             isinstance(icon_raised, str) else icon_raised)
+        super(OnOffToolButton, self).__init__(self._icon, parent)
+        self.installEventFilter(self)
+        if size is not None:
+            self.setIconSize(QSize(*size))
+
+    def eventFilter(self, widget, event):
+        if event.type() == QEvent.MouseButtonPress:
+            self.setValue(not self.value())
+        return super(OnOffToolButton, self).eventFilter(widget, event)
+
+    def value(self):
+        """Return True if autoRaise is False and False if True."""
+        return not self.autoRaise()
+
+    def setValue(self, value, silent=False):
+        """Set autoRaise to False if value is True and to True if False."""
+        self.setAutoRaise(not bool(value))
+        self._setup_icon()
+        if not silent:
+            self.sig_value_changed.emit(self.value())
+
+    def _setup_icon(self):
+        """Setup the icon of the button according to its auto raise state."""
+        if self._icon_raised is None:
+            return
+        icon = self._icon_raised if self.value() else self._icon
+        self.setIcon(icon)
+
+
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    drop_button = DropDownButton()
+    drop_button = DropDownButton(icon=icons.get_icon('todate'))
     drop_button.addItems([str(i) for i in range(2017, 1899, -1)])
     drop_button.show()
+
+    onoff_button = OnOffToolButton('play', 'stop')
+
+    toolbar = ToolBarWidget()
+    toolbar.addWidget(onoff_button)
+    toolbar.addWidget(drop_button)
+    toolbar.show()
+
     sys.exit(app.exec_())

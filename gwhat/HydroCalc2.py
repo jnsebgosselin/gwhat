@@ -19,10 +19,10 @@ import datetime
 import numpy as np
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (QGridLayout, QWidget, QComboBox, QTextEdit,
+from PyQt5.QtCore import pyqtSlot as QSlot
+from PyQt5.QtWidgets import (QGridLayout, QComboBox, QTextEdit,
                              QSizePolicy, QPushButton, QLabel, QTabWidget,
-                             QApplication, QFileDialog, QFrame, QDoubleSpinBox,
-                             QScrollArea)
+                             QApplication, QFileDialog)
 
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -39,7 +39,9 @@ from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 import gwhat.common.widgets as myqt
 from gwhat.common import StyleDB, QToolButtonNormal
 from gwhat.common import icons
+from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.brf_mod import BRFManager
+from gwhat.widgets.buttons import OnOffToolButton
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -66,6 +68,7 @@ class WLCalc(myqt.DialogWindow):
         self.isGraphExists = False
         self.__figbckground = None  # figure background
         self.__addPeakVisible = True
+        self.__mouse_btn_is_pressed = False
 
         # Water Level Time series :
 
@@ -108,6 +111,7 @@ class WLCalc(myqt.DialogWindow):
         # ---- Initialize the GUI
         self.__initFig__()
         self.__initUI__()
+        self.btn_pan.setValue(True)
         self.setup_ax_margins(None)
         self.set_wldset(self.dmngr.get_current_wldset())
         self.set_wxdset(self.dmngr.get_current_wxdset())
@@ -223,18 +227,11 @@ class WLCalc(myqt.DialogWindow):
                                 zorder=20, marker='x', linestyle='None',
                                 markersize=15, markeredgewidth=3)
 
-    # =========================================================================
-
-    def __initUI__(self):
-
-        self.setWindowTitle('Hydrograph Analysis')
-
-        # -------------------------------------------------------- TOOLBAR ----
+    def _setup_toolbar(self):
+        """Setup the main toolbar of the water level calc tool."""
 
         self.toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self.toolbar.hide()
-
-        # Toolbar Buttons :
 
         self.btn_clearPeak = QToolButtonNormal(icons.get_icon('clear_search'))
         self.btn_clearPeak.setToolTip('Clear all extremum from the graph')
@@ -244,14 +241,17 @@ class WLCalc(myqt.DialogWindow):
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
 
-        # self.btn_pan = QToolButtonNormal(icons.get_icon('pan'))
-        # self.btn_pan.setToolTip('Pan axes with left mouse, zoom with right')
-        # self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_pan = OnOffToolButton('pan')
+        self.btn_pan.setToolTip(
+            'Pan axes with the left mouse button and zoom with the right')
+        self.btn_pan.sig_value_changed.connect(self.pan_is_active_changed)
 
-        self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
-        self.btn_strati.setToolTip('Toggle on and off the display of the soil'
-                                   ' stratigraphic layers')
-        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
+        self.btn_zoom_to_rect = OnOffToolButton('zoom_to_rect')
+        self.btn_pan.setToolTip(
+            "Zoom in to the rectangle with the left mouse button and zoom"
+            " out with the right mouse button.")
+        self.btn_zoom_to_rect.sig_value_changed.connect(
+            self.zoom_is_active_changed)
 
         self.btn_Waterlvl_lineStyle = QToolButtonNormal(
                 icons.get_icon('showDataDots'))
@@ -259,35 +259,34 @@ class WLCalc(myqt.DialogWindow):
             '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
 
+        self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
+        self.btn_strati.setToolTip('Toggle on and off the display of the soil'
+                                   ' stratigraphic layers')
+        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
+
         self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
-        self.btn_dateFormat.setAutoRaise(1-self.dformat)
-        self.btn_dateFormat.setToolTip('x axis label time format: '
-                                       'date or MS Excel numeric')
+        self.btn_dateFormat.setToolTip(
+            'Show x-axis tick labels as Excel numeric format.')
         self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_dateFormat.setAutoRaise(False)
         # dformat: 0 -> Excel Numeric Date Format
         #          1 -> Matplotlib Date Format
 
-        # ---- BRF ----
+        # Setup the layout.
 
-        # Grid Layout :
+        toolbar = ToolBarWidget()
+        for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
+                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat]:
+            toolbar.addWidget(btn)
 
-        btn_list = [self.btn_home,
-                    self.btn_Waterlvl_lineStyle,
-                    self.btn_dateFormat]
+        return toolbar
 
-        subgrid_toolbar = QGridLayout()
-        toolbar_widget = QWidget()
+    def __initUI__(self):
 
-        for col, btn in enumerate(btn_list):
-            subgrid_toolbar.addWidget(btn, 0, col)
-        subgrid_toolbar.setColumnStretch(col+1, 500)
+        self.setWindowTitle('Hydrograph Analysis')
+        toolbar = self._setup_toolbar()
 
-        subgrid_toolbar.setSpacing(5)
-        subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-
-        toolbar_widget.setLayout(subgrid_toolbar)
-
-        # ------------------------------------------------- MRC PARAMETERS ----
+        # ---- MRC parameters
 
         self.MRC_type = QComboBox()
         self.MRC_type.addItems(['Linear', 'Exponential'])
@@ -305,7 +304,7 @@ class WLCalc(myqt.DialogWindow):
         sp = QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred)
         self.MRC_results.setSizePolicy(sp)
 
-        # ---- MRC Toolbar ----
+        # ---- MRC toolbar
 
         self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
         self.btn_undo.setToolTip('Undo')
@@ -387,7 +386,7 @@ class WLCalc(myqt.DialogWindow):
 
         mainGrid = QGridLayout(self)
 
-        mainGrid.addWidget(toolbar_widget, 0, 0)
+        mainGrid.addWidget(toolbar, 0, 0)
         mainGrid.addWidget(self.fig_frame_widget, 1, 0, 2, 1)
         mainGrid.addWidget(myqt.VSep(), 0, 1, 3, 1)
         mainGrid.addWidget(self.right_panel, 0, 2, 2, 1)
@@ -509,34 +508,7 @@ class WLCalc(myqt.DialogWindow):
 
         self.draw()
 
-    def aToolbarBtn_isClicked(self):
-        """
-        Handles and redirects all clicked actions from toolbar buttons.
-        """
-        if self.wldset is None:
-            self.emit_warning(
-                    "Please import a valid water level dataset first.")
-            return
-
-        sender = self.sender()
-        if sender == self.btn_MRCalc:
-            self.btn_MRCalc_isClicked()
-        elif sender == self.btn_Waterlvl_lineStyle:
-            self.change_waterlvl_lineStyle()
-        elif sender == self.btn_home:
-            self.home()
-        elif sender == self.btn_save_interp:
-            self.save_mrc_tofile()
-        elif sender == self.btn_addpeak:
-            self.btn_addpeak_isclicked()
-        elif sender == self.btn_delPeak:
-            self.btn_delPeak_isclicked()
-        elif sender == self.btn_dateFormat:
-            self.switch_date_format()
-        elif sender == self.config_brf.btn_seldata:
-            self.select_BRF()
-
-    # ---- MRC
+    # ---- MRC handlers
 
     def btn_MRCalc_isClicked(self):
 
@@ -713,6 +685,8 @@ class WLCalc(myqt.DialogWindow):
 
             self.btn_addpeak.setAutoRaise(True)
             self.btn_delPeak.setAutoRaise(True)
+            self.btn_zoom_to_rect.setValue(False)
+            self.btn_pan.setValue(False)
 
     # ---- Peaks handlers
 
@@ -756,6 +730,8 @@ class WLCalc(myqt.DialogWindow):
         self.btn_addpeak.setAutoRaise(not self.btn_addpeak.autoRaise())
         self.btn_delPeak.setAutoRaise(True)
         self.config_brf.btn_seldata.setAutoRaise(True)
+        self.btn_pan.setValue(False)
+        self.btn_zoom_to_rect.setValue(False)
         self.brfperiod = [None, None]
         self.__brfcount = 0
 
@@ -770,6 +746,8 @@ class WLCalc(myqt.DialogWindow):
         self.btn_delPeak.setAutoRaise(not self.btn_delPeak.autoRaise())
         self.btn_addpeak.setAutoRaise(True)
         self.config_brf.btn_seldata.setAutoRaise(True)
+        self.btn_pan.setValue(False)
+        self.btn_zoom_to_rect.setValue(False)
         self.brfperiod = [None, None]
         self.__brfcount = 0
 
@@ -791,9 +769,75 @@ class WLCalc(myqt.DialogWindow):
 
         self.plot_peak()
 
-    # =========================================================================
+    # ---- Toolbar handlers
+
+    def aToolbarBtn_isClicked(self):
+        """
+        Handles and redirects all clicked actions from toolbar buttons.
+        """
+        if self.wldset is None:
+            self.emit_warning(
+                "Please import a valid water level dataset first.")
+            return
+
+        sender = self.sender()
+        if sender == self.btn_MRCalc:
+            self.btn_MRCalc_isClicked()
+        elif sender == self.btn_Waterlvl_lineStyle:
+            self.change_waterlvl_lineStyle()
+        elif sender == self.btn_home:
+            self.home()
+        elif sender == self.btn_save_interp:
+            self.save_mrc_tofile()
+        elif sender == self.btn_addpeak:
+            self.btn_addpeak_isclicked()
+        elif sender == self.btn_delPeak:
+            self.btn_delPeak_isclicked()
+        elif sender == self.btn_dateFormat:
+            self.switch_date_format()
+        elif sender == self.config_brf.btn_seldata:
+            self.select_BRF()
+
+    @property
+    def zoom_is_active(self):
+        """Return whether the zooming to rectangle tool is active or not."""
+        return self.btn_zoom_to_rect.value()
+
+    @QSlot(bool)
+    def zoom_is_active_changed(self, zoom_is_active):
+        """Handle when the state of the button to zoom to rectangle changes."""
+        if self.zoom_is_active:
+            self.btn_pan.setValue(False)
+            self.btn_delPeak.setAutoRaise(True)
+            self.btn_addpeak.setAutoRaise(True)
+            self.config_brf.btn_seldata.setAutoRaise(True)
+            if self.toolbar._active is None:
+                self.toolbar.zoom()
+        else:
+            if self.toolbar._active == 'ZOOM':
+                self.toolbar.zoom()
+
+    @property
+    def pan_is_active(self):
+        """Return whether the panning of the graph is active or not."""
+        return self.btn_pan.value()
+
+    @QSlot(bool)
+    def pan_is_active_changed(self, pan_is_active):
+        """Handle when the state of the button to pan the graph changes."""
+        if self.pan_is_active:
+            self.btn_zoom_to_rect.setValue(False)
+            self.btn_delPeak.setAutoRaise(True)
+            self.btn_addpeak.setAutoRaise(True)
+            self.config_brf.btn_seldata.setAutoRaise(True)
+            if self.toolbar._active is None:
+                self.toolbar.pan()
+        else:
+            if self.toolbar._active == 'PAN':
+                self.toolbar.pan()
 
     def home(self):
+        """Reset the orgininal view of the figure."""
         if self.isGraphExists is False:
             print('Graph is empty')
             return
@@ -807,8 +851,7 @@ class WLCalc(myqt.DialogWindow):
 
             xlim = ax0.get_xlim()
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
-
-        self.draw()
+        self.setup_ax_margins()
 
     def undo(self):
         if self.isGraphExists is False:
@@ -825,9 +868,9 @@ class WLCalc(myqt.DialogWindow):
         else:
             pass
 
-    # =========================================================================
+    # ---- Drawing methods
 
-    def setup_ax_margins(self, event):
+    def setup_ax_margins(self, event=None):
         """Setup the margins width of the axes in inches."""
         fheight = self.fig.get_figheight()
         fwidth = self.fig.get_figwidth()
@@ -844,7 +887,6 @@ class WLCalc(myqt.DialogWindow):
 
         for axe in self.fig.axes:
             axe.set_position([x0, y0, w, h])
-
         self.draw()
 
     def switch_date_format(self):
@@ -852,14 +894,20 @@ class WLCalc(myqt.DialogWindow):
 
         # Change UI and System Variable State :
 
-        if self.dformat == 0:    # 0 for Excel numeric date format
+        # 0 for Excel numeric date format
+        # 1 for Matplotlib format
+        if self.dformat == 0:
+            # Switch to matplotlib date format
             self.btn_dateFormat.setAutoRaise(False)
-            self.dformat = 1     # 1 for Matplotlib format
-            print('switching to matplotlib date format')
-        elif self.dformat == 1:  # 1 for Matplotlib format
+            self.btn_dateFormat.setToolTip(
+                'Show x-axis tick labels as Excel numeric format')
+            self.dformat = 1
+        elif self.dformat == 1:
+            # Switch to Excel numeric date format
             self.btn_dateFormat.setAutoRaise(True)
-            self.dformat = 0     # 0 for Excel numeric date format
-            print('switching to Excel numeric date format')
+            self.btn_dateFormat.setToolTip(
+                'Show x-axis tick labels as date')
+            self.dformat = 0
 
         # Change xtick Labels Date Format :
 
@@ -1106,7 +1154,7 @@ class WLCalc(myqt.DialogWindow):
 
     def is_all_btn_raised(self):
         """
-        Returns whether all of the tool buttons that can block the panning and
+        Return whether all of the tool buttons that can block the panning and
         zooming of the graph are raised.
         """
         return(self.btn_delPeak.autoRaise() and
@@ -1114,32 +1162,32 @@ class WLCalc(myqt.DialogWindow):
                self.config_brf.btn_seldata.autoRaise())
 
     def on_fig_leave(self, event):
-        """Handles when the mouse cursor leaves the graph."""
+        """Handle when the mouse cursor leaves the graph."""
         self.draw()
 
     def mouse_vguide(self, event):
+        """
+        Draw the vertical mouse guideline and the x coordinate of the
+        mouse cursor on the graph.
+        """
         if self.isGraphExists is False:
             return
-
-        # if not self.btn_pan.autoRaise():
-        #    return
-        if self.toolbar._active == "PAN":
+        if ((self.pan_is_active or self.zoom_is_active) and
+                self.__mouse_btn_is_pressed):
             return
 
         ax0 = self.fig.axes[0]
         fig = self.fig
-
-        # Restore background:
-
         fig.canvas.restore_region(self.__figbckground)
 
-        # ----- Draw vertical guide ----
+        # ---- Draw the vertical guide
 
         # Trace a red vertical guide (line) that folows the mouse marker :
 
         x = event.xdata
         if x:
-            self.vguide.set_visible(True)
+            self.vguide.set_visible(
+                not self.pan_is_active and not self.zoom_is_active)
             self.vguide.set_xdata(x)
             ax0.draw_artist(self.vguide)
 
@@ -1195,24 +1243,28 @@ class WLCalc(myqt.DialogWindow):
 
     def onrelease(self, event):
         """
-        Handles when a button of the mouse is released after the graph has
+        Handle when a button of the mouse is released after the graph has
         been clicked.
         """
+        self.__mouse_btn_is_pressed = False
+        # Disconnect the pan and zoom callback before drawing the canvas again.
+        if self.pan_is_active:
+            self.toolbar.release_pan(event)
+        if self.zoom_is_active:
+            self.toolbar.release_zoom(event)
+
         if self.is_all_btn_raised():
-            if self.toolbar._active == 'PAN':
-                self.toolbar.pan()
-                self.draw()
-                QApplication.restoreOverrideCursor()
+            self.draw()
         else:
             if event.button != 1:
                 return
-
             self.__addPeakVisible = True
             self.plot_peak()
         self.mouse_vguide(event)
 
     def onclick(self, event):
-        """Handles when the graph is clicked with the mouse."""
+        """Handle when the graph is clicked with the mouse."""
+        self.__mouse_btn_is_pressed = True
         x, y = event.x, event.y
         if x is None or y is None:
             return
@@ -1298,14 +1350,7 @@ class WLCalc(myqt.DialogWindow):
             else:
                 raise ValueError('Something is wrong in the code')
         else:
-            if self.toolbar._active is None:
-                self.toolbar.pan()
-                self.draw()
-                QApplication.setOverrideCursor(Qt.SizeAllCursor)
-                self.toolbar.press_pan(event)
-
-
-# =============================================================================
+            self.draw()
 
 
 def local_extrema(x, Deltan):
@@ -1908,6 +1953,8 @@ def mrc2rechg(t, ho, A, B, z, Sy):
     return RECHG
 
 
+# %% if __name__ == '__main__'
+
 if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
@@ -1920,9 +1967,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = ('C:/Users/jsgosselin/OneDrive/Research/'
-          'PostDoc - MDDELCC/Outils/BRF MontEst/'
-          'BRF MontEst.what')
+    pf = 'C:/Users/jsgosselin/GWHAT/Projects/Example/Example.gwt'
     pr = ProjetReader(pf)
     dm = DataManager()
 
@@ -1932,59 +1977,3 @@ if __name__ == '__main__':
     dm.set_projet(pr)
 
     sys.exit(app.exec_())
-
-#    import sys
-#    plt.rc('font', family='Arial')
-#
-#    app = QApplication(sys.argv)
-#
-#    ft = app.font()
-#    ft.setFamily('Segoe UI')
-#    ft.setPointSize(11)
-#    app.setFont(ft)
-#
-#    # Create and show widgets :
-#
-#    w = WLCalc()
-#    w.show()
-#    w.widget_MRCparam.show()
-#
-#    # ---- Pont Rouge ----
-#
-#    dirname = os.path.join(
-#        os.path.dirname(os.getcwd()), 'Projects', 'Pont-Rouge')
-#    fmeteo = os.path.join(
-#        dirname, 'Meteo', 'Output', 'STE CHRISTINE (7017000)_1960-2015.out')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', '5080001.xls')
-#
-#    # ---- IDM ----
-#
-#    dirname = os.path.dirname(os.getcwd())
-#    dirname = os.path.join(dirname, 'Projects', 'IDM')
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'IDM (JSG2017)',
-#                          'IDM (JSG2017)_1960-2016.out')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'Boisville.xls')
-#
-#    # ---- Testing ----
-#
-#    dirname = os.path.dirname(os.getcwd())
-#    dirname = os.path.join(dirname, 'Projects', 'Project4Testing')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'F1.xlsx')
-#
-#    # ---- Valcartier ----
-#
-#    dirname = '../Projects/Valcartier'
-#    fmeteo = os.path.join(dirname, 'Meteo', 'Output', 'Valcartier (9999999)',
-#                          'Valcartier (9999999)_1994-2015.out')
-#    fwaterlvl = os.path.join(dirname, 'Water Levels', 'valcartier2.xls')
-#
-#    # Load and plot data :
-#
-#    w.load_waterLvl_data(fwaterlvl)
-#    w.load_weather_data(fmeteo)
-#
-#    # Calcul recharge :
-#
-#    w.synth_hydrograph.load_data(fmeteo, fwaterlvl)
-#
-#    sys.exit(app.exec_())

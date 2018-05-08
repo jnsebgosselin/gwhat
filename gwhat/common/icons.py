@@ -84,7 +84,8 @@ ICON_NAMES = {'master': 'WHAT',
               'fill_data': 'fill_data',
               'fill_all_data': 'fill_all_data',
               'showGrid': 'grid',
-              'export_data': 'export-data'}
+              'export_data': 'export-data',
+              'zoom_to_rect': 'zoom_to_rect'}
 
 ICON_SIZES = {'iconSize': (32, 32),
               'iconSize2': (20, 20)}
