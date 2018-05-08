@@ -19,7 +19,7 @@ import numpy as np
 from sip import wrappertype as pyqtWrapperType
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize, Qt, QEvent
 from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QFileDialog,
                              QListWidget, QMenu, QMessageBox, QStyle,
                              QToolButton, QWidget, QToolBar)
@@ -377,11 +377,42 @@ class ExportDataButton(QToolButtonBase):
         QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
 
 
+class OnOffToolButton(QToolButtonBase):
+    def __init__(self, icon_on, icon_off=None, size=None, parent=None):
+        self._icon_on = icons.get_icon(icon_on)
+        self._icon_off = None if icon_off is None else icons.get_icon(icon_off)
+        super(OnOffToolButton, self).__init__(self._icon_on, parent)
+        self.installEventFilter(self)
+        if size is not None:
+            self.setIconSize(QSize(*size))
+
+    def eventFilter(self, widget, event):
+        if event.type() == QEvent.MouseButtonPress:
+            self.setAutoRaise(not self.autoRaise())
+        return super(OnOffToolButton, self).eventFilter(widget, event)
+
+    def value(self):
+        """Return True if autoRaise is False and False if True."""
+        return not self.autoRaise()
+
+    def set_value(self, value):
+        """Set autoRaise to False if value is True and to True if False."""
+        self.setAutoRaise(not bool(value))
+
+
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    drop_button = DropDownButton()
+    drop_button = DropDownButton(icon=icons.get_icon('todate'))
     drop_button.addItems([str(i) for i in range(2017, 1899, -1)])
     drop_button.show()
+
+    onoff_button = OnOffToolButton('play')
+
+    toolbar = ToolBarWidget()
+    toolbar.addWidget(onoff_button)
+    toolbar.addWidget(drop_button)
+    toolbar.show()
+
     sys.exit(app.exec_())
