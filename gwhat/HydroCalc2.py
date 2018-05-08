@@ -279,6 +279,7 @@ class WLCalc(myqt.DialogWindow):
         self.btn_show_glue.setToolTip(
             """Show or hide GLUE water level 05/95 envelope.""")
         self.btn_show_glue.sig_value_changed.connect(self.draw_glue_wl)
+        self.btn_show_glue.setValue(True, silent=True)
 
         # Setup the layout.
 
