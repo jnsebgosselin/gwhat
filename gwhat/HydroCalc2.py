@@ -19,6 +19,7 @@ import datetime
 import numpy as np
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtWidgets import (QGridLayout, QComboBox, QTextEdit,
                              QSizePolicy, QPushButton, QLabel, QTabWidget,
                              QApplication, QFileDialog)
@@ -40,6 +41,7 @@ from gwhat.common import StyleDB, QToolButtonNormal
 from gwhat.common import icons
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.brf_mod import BRFManager
+from gwhat.widgets.buttons import OnOffToolButton
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -109,6 +111,7 @@ class WLCalc(myqt.DialogWindow):
         # ---- Initialize the GUI
         self.__initFig__()
         self.__initUI__()
+        self.btn_pan.setValue(True)
         self.setup_ax_margins(None)
         self.set_wldset(self.dmngr.get_current_wldset())
         self.set_wxdset(self.dmngr.get_current_wxdset())
@@ -238,19 +241,17 @@ class WLCalc(myqt.DialogWindow):
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
 
-        self.btn_pan = QToolButtonNormal(icons.get_icon('pan'))
+        self.btn_pan = OnOffToolButton('pan')
         self.btn_pan.setToolTip(
             'Pan axes with the left mouse button and zoom with the right')
-        self.btn_pan.clicked.connect(self.aToolbarBtn_isClicked)
-        self.set_pan_is_active(False)
+        self.btn_pan.sig_value_changed.connect(self.pan_is_active_changed)
 
-        self.btn_zoom_to_rect = QToolButtonNormal(
-            icons.get_icon('zoom_to_rect'))
+        self.btn_zoom_to_rect = OnOffToolButton('zoom_to_rect')
         self.btn_pan.setToolTip(
             "Zoom in to the rectangle with the left mouse button and zoom"
             " out with the right mouse button.")
-        self.btn_zoom_to_rect.clicked.connect(self.aToolbarBtn_isClicked)
-        self.set_zoom_is_active(False)
+        self.btn_zoom_to_rect.sig_value_changed.connect(
+            self.zoom_is_active_changed)
 
         self.btn_Waterlvl_lineStyle = QToolButtonNormal(
                 icons.get_icon('showDataDots'))
@@ -270,6 +271,8 @@ class WLCalc(myqt.DialogWindow):
         self.btn_dateFormat.setAutoRaise(False)
         # dformat: 0 -> Excel Numeric Date Format
         #          1 -> Matplotlib Date Format
+
+        # Setup the layout.
 
         toolbar = ToolBarWidget()
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
@@ -505,37 +508,6 @@ class WLCalc(myqt.DialogWindow):
 
         self.draw()
 
-    def aToolbarBtn_isClicked(self):
-        """
-        Handles and redirects all clicked actions from toolbar buttons.
-        """
-        if self.wldset is None:
-            self.emit_warning(
-                "Please import a valid water level dataset first.")
-            return
-
-        sender = self.sender()
-        if sender == self.btn_MRCalc:
-            self.btn_MRCalc_isClicked()
-        elif sender == self.btn_Waterlvl_lineStyle:
-            self.change_waterlvl_lineStyle()
-        elif sender == self.btn_home:
-            self.home()
-        elif sender == self.btn_save_interp:
-            self.save_mrc_tofile()
-        elif sender == self.btn_addpeak:
-            self.btn_addpeak_isclicked()
-        elif sender == self.btn_delPeak:
-            self.btn_delPeak_isclicked()
-        elif sender == self.btn_dateFormat:
-            self.switch_date_format()
-        elif sender == self.config_brf.btn_seldata:
-            self.select_BRF()
-        elif self.sender() == self.btn_pan:
-            self.set_pan_is_active(not self.pan_is_active)
-        elif self.sender() == self.btn_zoom_to_rect:
-            self.set_zoom_is_active(not self.zoom_is_active)
-
     # ---- MRC handlers
 
     def btn_MRCalc_isClicked(self):
@@ -713,8 +685,8 @@ class WLCalc(myqt.DialogWindow):
 
             self.btn_addpeak.setAutoRaise(True)
             self.btn_delPeak.setAutoRaise(True)
-            self.set_zoom_is_active(False)
-            self.set_pan_is_active(False)
+            self.btn_zoom_to_rect.setValue(False)
+            self.btn_pan.setValue(False)
 
     # ---- Peaks handlers
 
@@ -758,8 +730,8 @@ class WLCalc(myqt.DialogWindow):
         self.btn_addpeak.setAutoRaise(not self.btn_addpeak.autoRaise())
         self.btn_delPeak.setAutoRaise(True)
         self.config_brf.btn_seldata.setAutoRaise(True)
-        self.set_pan_is_active(False)
-        self.set_zoom_is_active(False)
+        self.btn_pan.setValue(False)
+        self.btn_zoom_to_rect.setValue(False)
         self.brfperiod = [None, None]
         self.__brfcount = 0
 
@@ -774,8 +746,8 @@ class WLCalc(myqt.DialogWindow):
         self.btn_delPeak.setAutoRaise(not self.btn_delPeak.autoRaise())
         self.btn_addpeak.setAutoRaise(True)
         self.config_brf.btn_seldata.setAutoRaise(True)
-        self.set_pan_is_active(False)
-        self.set_zoom_is_active(False)
+        self.btn_pan.setValue(False)
+        self.btn_zoom_to_rect.setValue(False)
         self.brfperiod = [None, None]
         self.__brfcount = 0
 
@@ -799,16 +771,43 @@ class WLCalc(myqt.DialogWindow):
 
     # ---- Toolbar handlers
 
+    def aToolbarBtn_isClicked(self):
+        """
+        Handles and redirects all clicked actions from toolbar buttons.
+        """
+        if self.wldset is None:
+            self.emit_warning(
+                "Please import a valid water level dataset first.")
+            return
+
+        sender = self.sender()
+        if sender == self.btn_MRCalc:
+            self.btn_MRCalc_isClicked()
+        elif sender == self.btn_Waterlvl_lineStyle:
+            self.change_waterlvl_lineStyle()
+        elif sender == self.btn_home:
+            self.home()
+        elif sender == self.btn_save_interp:
+            self.save_mrc_tofile()
+        elif sender == self.btn_addpeak:
+            self.btn_addpeak_isclicked()
+        elif sender == self.btn_delPeak:
+            self.btn_delPeak_isclicked()
+        elif sender == self.btn_dateFormat:
+            self.switch_date_format()
+        elif sender == self.config_brf.btn_seldata:
+            self.select_BRF()
+
     @property
     def zoom_is_active(self):
         """Return whether the zooming to rectangle tool is active or not."""
-        return not self.btn_zoom_to_rect.autoRaise()
+        return self.btn_zoom_to_rect.value()
 
-    def set_zoom_is_active(self, zoom_is_active):
-        """Set whether the zooming to rectangle tool is active or not."""
-        self.btn_zoom_to_rect.setAutoRaise(not zoom_is_active)
+    @QSlot(bool)
+    def zoom_is_active_changed(self, zoom_is_active):
+        """Handle when the state of the button to zoom to rectangle changes."""
         if self.zoom_is_active:
-            self.set_pan_is_active(False)
+            self.btn_pan.setValue(False)
             self.btn_delPeak.setAutoRaise(True)
             self.btn_addpeak.setAutoRaise(True)
             self.config_brf.btn_seldata.setAutoRaise(True)
@@ -821,13 +820,13 @@ class WLCalc(myqt.DialogWindow):
     @property
     def pan_is_active(self):
         """Return whether the panning of the graph is active or not."""
-        return not self.btn_pan.autoRaise()
+        return self.btn_pan.value()
 
-    def set_pan_is_active(self, pan_is_active):
-        """Set whether the panning of the graph is active or not."""
-        self.btn_pan.setAutoRaise(not pan_is_active)
+    @QSlot(bool)
+    def pan_is_active_changed(self, pan_is_active):
+        """Handle when the state of the button to pan the graph changes."""
         if self.pan_is_active:
-            self.set_zoom_is_active(False)
+            self.btn_zoom_to_rect.setValue(False)
             self.btn_delPeak.setAutoRaise(True)
             self.btn_addpeak.setAutoRaise(True)
             self.config_brf.btn_seldata.setAutoRaise(True)

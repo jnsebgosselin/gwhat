@@ -378,9 +378,13 @@ class ExportDataButton(QToolButtonBase):
 
 
 class OnOffToolButton(QToolButtonBase):
+    """A tool button that can be toggled on or off by clicking on it."""
+    sig_value_changed = QSignal(bool)
+
     def __init__(self, icon, icon_raised=None, size=None, parent=None):
-        self._icon = icon
-        self._icon_raised = icon_raised
+        self._icon = icons.get_icon(icon) if isinstance(icon, str) else icon
+        self._icon_raised = (icons.get_icon(icon_raised) if
+                             isinstance(icon_raised, str) else icon_raised)
         super(OnOffToolButton, self).__init__(self._icon, parent)
         self.installEventFilter(self)
         if size is not None:
@@ -388,22 +392,19 @@ class OnOffToolButton(QToolButtonBase):
 
     def eventFilter(self, widget, event):
         if event.type() == QEvent.MouseButtonPress:
-            self.setAutoRaise(not self.autoRaise())
-            self._setup_icon()
+            self.setValue(not self.value())
         return super(OnOffToolButton, self).eventFilter(widget, event)
 
     def value(self):
         """Return True if autoRaise is False and False if True."""
         return not self.autoRaise()
 
-    def setValue(self, value):
+    def setValue(self, value, silent=False):
         """Set autoRaise to False if value is True and to True if False."""
         self.setAutoRaise(not bool(value))
-
-    def setAutoRaise(self, state):
-        """Qt method override to match the icon with the auto raise state."""
-        super(OnOffToolButton, self).setAutoRaise(state)
         self._setup_icon()
+        if not silent:
+            self.sig_value_changed.emit(self.value())
 
     def _setup_icon(self):
         """Setup the icon of the button according to its auto raise state."""
