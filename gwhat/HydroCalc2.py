@@ -61,6 +61,7 @@ class WLCalc(myqt.DialogWindow):
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
 
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
+        self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
 
         self.config_brf = BRFManager(parent=self)
         self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
@@ -207,6 +208,9 @@ class WLCalc(myqt.DialogWindow):
         self.h_brf1 = ax0.axvline(0, color='orange')
         self.h_brf2 = ax0.axvline(0, color='orange')
 
+        # Predicted GLUE water levels
+        self.glue_plt, = ax0.plot([], [])
+
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
         self.vguide.set_visible(False)
@@ -272,11 +276,17 @@ class WLCalc(myqt.DialogWindow):
         # dformat: 0 -> Excel Numeric Date Format
         #          1 -> Matplotlib Date Format
 
+        self.btn_show_glue = OnOffToolButton('show_glue_wl')
+        self.btn_show_glue.setToolTip(
+            """Show or hide GLUE water level 05/95 envelope.""")
+        self.btn_show_glue.sig_value_changed.connect(self.draw_glue_wl)
+
         # Setup the layout.
 
         toolbar = ToolBarWidget()
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
-                    self.btn_Waterlvl_lineStyle, self.btn_dateFormat]:
+                    self.btn_wl_style, self.btn_dateFormat, None,
+                    self.btn_show_glue]:
             toolbar.addWidget(btn)
 
         return toolbar
@@ -422,7 +432,6 @@ class WLCalc(myqt.DialogWindow):
 
             # Reset UI :
 
-            self.btn_Waterlvl_lineStyle.setAutoRaise(True)
             self.toolbar.update()
 
     def set_wxdset(self, wxdset):
@@ -783,8 +792,6 @@ class WLCalc(myqt.DialogWindow):
         sender = self.sender()
         if sender == self.btn_MRCalc:
             self.btn_MRCalc_isClicked()
-        elif sender == self.btn_Waterlvl_lineStyle:
-            self.change_waterlvl_lineStyle()
         elif sender == self.btn_home:
             self.home()
         elif sender == self.btn_save_interp:
@@ -967,6 +974,7 @@ class WLCalc(myqt.DialogWindow):
 
         self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
                                    ls='-', zorder=10, marker='None')
+        self.draw_glue_wl()
 
         # Strati :
 
@@ -1124,20 +1132,18 @@ class WLCalc(myqt.DialogWindow):
 
         self.draw()
 
-    # ============================================== Water Level Linestyle ====
-
-    def change_waterlvl_lineStyle(self):
-        if self.btn_Waterlvl_lineStyle.autoRaise():
-            self.btn_Waterlvl_lineStyle.setAutoRaise(False)
-
+    def setup_wl_style(self):
+        """
+        Setup the line and marker style of the obeserved water level data.
+        """
+        if self.btn_wl_style.value():
             self.h1_ax0.set_linestyle('None')
             self.h1_ax0.set_marker('.')
             self.h1_ax0.set_markerfacecolor('blue')
-            self.h1_ax0.set_markeredgewidth(1.5)
             self.h1_ax0.set_markeredgecolor('blue')
+            self.h1_ax0.set_markeredgewidth(1.5)
             self.h1_ax0.set_markersize(5)
         else:
-            self.btn_Waterlvl_lineStyle.setAutoRaise(True)
             self.h1_ax0.set_linestyle('-')
             self.h1_ax0.set_marker('None')
         self.draw()
@@ -1149,6 +1155,27 @@ class WLCalc(myqt.DialogWindow):
 
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
+
+    def draw_glue_wl(self):
+        """Draw or hide the water level envelope estimated with GLUE."""
+        if self.wldset is not None and self.btn_show_glue.value():
+            gluedf = self.wldset.get_glue_at(-1)
+            if gluedf is not None:
+                self.glue_plt.set_visible(True)
+                xlstime = (gluedf['water levels']['time'] +
+                           self.dt4xls2mpl * self.dformat)
+                wl05 = gluedf['water levels']['predicted'][:, 0]/1000
+                wl95 = gluedf['water levels']['predicted'][:, 2]/1000
+
+                self.glue_plt.remove()
+                self.glue_plt = self.fig.axes[0].fill_between(
+                    xlstime, wl95, wl05, facecolor='0.85', lw=1,
+                    edgecolor='0.65', zorder=0)
+            else:
+                self.glue_plt.set_visible(False)
+        else:
+            self.glue_plt.set_visible(False)
+        self.draw()
 
     # ----- Handlers: Mouse events
 
