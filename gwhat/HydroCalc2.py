@@ -257,11 +257,10 @@ class WLCalc(myqt.DialogWindow):
         self.btn_zoom_to_rect.sig_value_changed.connect(
             self.zoom_is_active_changed)
 
-        self.btn_Waterlvl_lineStyle = QToolButtonNormal(
-                icons.get_icon('showDataDots'))
-        self.btn_Waterlvl_lineStyle.setToolTip(
+        self.btn_wl_style = OnOffToolButton('showDataDots')
+        self.btn_wl_style.setToolTip(
             '<p>Show water lvl data as dots instead of a continuous line</p>')
-        self.btn_Waterlvl_lineStyle.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_wl_style.sig_value_changed.connect(self.setup_wl_style)
 
         self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
         self.btn_strati.setToolTip('Toggle on and off the display of the soil'
