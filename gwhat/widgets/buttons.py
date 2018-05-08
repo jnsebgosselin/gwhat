@@ -378,10 +378,10 @@ class ExportDataButton(QToolButtonBase):
 
 
 class OnOffToolButton(QToolButtonBase):
-    def __init__(self, icon_on, icon_off=None, size=None, parent=None):
-        self._icon_on = icons.get_icon(icon_on)
-        self._icon_off = None if icon_off is None else icons.get_icon(icon_off)
-        super(OnOffToolButton, self).__init__(self._icon_on, parent)
+    def __init__(self, icon, icon_raised=None, size=None, parent=None):
+        self._icon = icon
+        self._icon_raised = icon_raised
+        super(OnOffToolButton, self).__init__(self._icon, parent)
         self.installEventFilter(self)
         if size is not None:
             self.setIconSize(QSize(*size))
@@ -389,15 +389,28 @@ class OnOffToolButton(QToolButtonBase):
     def eventFilter(self, widget, event):
         if event.type() == QEvent.MouseButtonPress:
             self.setAutoRaise(not self.autoRaise())
+            self._setup_icon()
         return super(OnOffToolButton, self).eventFilter(widget, event)
 
     def value(self):
         """Return True if autoRaise is False and False if True."""
         return not self.autoRaise()
 
-    def set_value(self, value):
+    def setValue(self, value):
         """Set autoRaise to False if value is True and to True if False."""
         self.setAutoRaise(not bool(value))
+
+    def setAutoRaise(self, state):
+        """Qt method override to match the icon with the auto raise state."""
+        super(OnOffToolButton, self).setAutoRaise(state)
+        self._setup_icon()
+
+    def _setup_icon(self):
+        """Setup the icon of the button according to its auto raise state."""
+        if self._icon_raised is None:
+            return
+        icon = self._icon_raised if self.value() else self._icon
+        self.setIcon(icon)
 
 
 # %% if __name__ == '__main__'
@@ -408,7 +421,7 @@ if __name__ == '__main__':
     drop_button.addItems([str(i) for i in range(2017, 1899, -1)])
     drop_button.show()
 
-    onoff_button = OnOffToolButton('play')
+    onoff_button = OnOffToolButton('play', 'stop')
 
     toolbar = ToolBarWidget()
     toolbar.addWidget(onoff_button)
