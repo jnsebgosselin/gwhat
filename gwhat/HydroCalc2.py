@@ -43,7 +43,7 @@ from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.brf_mod import BRFManager
 from gwhat.widgets.buttons import OnOffToolButton
 
-mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
+# mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
 class WLCalc(myqt.DialogWindow):
