@@ -86,7 +86,8 @@ ICON_NAMES = {'master': 'WHAT',
               'showGrid': 'grid',
               'export_data': 'export-data',
               'zoom_to_rect': 'zoom_to_rect',
-              'show_glue_wl': 'show_glue_wl'}
+              'show_glue_wl': 'show_glue_wl',
+              'show_meteo': 'show_meteo'}
 
 ICON_SIZES = {'iconSize': (32, 32),
               'iconSize2': (20, 20)}
