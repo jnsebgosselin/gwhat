@@ -903,7 +903,7 @@ class WLCalc(myqt.DialogWindow):
 
         # ---- Plot the Data
 
-        # Water Levels :
+        # Plot water levels and weather
 
         y = self.water_lvl
         t = self.time + self.dt4xls2mpl * self.dformat
@@ -913,7 +913,7 @@ class WLCalc(myqt.DialogWindow):
         self.draw_glue_wl()
         self.draw_weather()
 
-        # Strati :
+        # Plot stratigraphy.
 
         if not self.btn_strati.autoRaise():
             self.display_soil_layer()
@@ -921,19 +921,16 @@ class WLCalc(myqt.DialogWindow):
         self.setup_axis_range()
         self.setup_xticklabels_format()
 
-        # Draw the Graph :
+        # Draw the graph
 
         self.isGraphExists = True
         self.draw()
-
-    # =========================================================================
 
     def plot_synth_hydro(self, parameters):
         print(parameters)
         Cro = parameters['Cro']
         RASmax = parameters['RASmax']
         Sy = parameters['Sy']
-#        parameters['jack']
 
         # ----------------------------------------------- compute recharge ----
 
@@ -955,8 +952,6 @@ class WLCalc(myqt.DialogWindow):
         self.plt_wlpre.set_data(self.synth_hydrograph.DATE, WLpre/1000.)
 
         self.draw()
-
-    # =========================================================================
 
     def btn_strati_isClicked(self):
 
