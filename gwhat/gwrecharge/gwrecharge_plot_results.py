@@ -26,8 +26,7 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
     QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
-    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget, QStyle,
-    QMainWindow)
+    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget, QStyle)
 
 
 # ---- Imports: local
@@ -50,7 +49,7 @@ t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1))  # time in mpl format
 DT4XLS2MPL = t2-t1
 
 
-class FigureStackManager(QMainWindow):
+class FigureStackManager(QWidget):
     def __init__(self, parent=None):
         super(FigureStackManager, self).__init__(parent)
         self.setMinimumSize(1250, 650)
@@ -63,7 +62,8 @@ class FigureStackManager(QMainWindow):
     def setup(self):
         """Setup the FigureStackManager withthe provided options."""
         self.setup_stack()
-        self.setCentralWidget(self.stack)
+        layout = QGridLayout(self)
+        layout.addWidget(self.stack, 0, 0)
 
     def setup_stack(self):
         fig_rechg_glue = FigManagerBase(
