@@ -272,8 +272,8 @@ class WLCalc(myqt.DialogWindow):
             'Show x-axis tick labels as Excel numeric format.')
         self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
         self.btn_dateFormat.setAutoRaise(False)
-        # dformat: 0 -> Excel Numeric Date Format
-        #          1 -> Matplotlib Date Format
+        # dformat: False -> Excel Numeric Date Format
+        #          True -> Matplotlib Date Format
 
         self.btn_show_glue = OnOffToolButton('show_glue_wl')
         self.btn_show_glue.setToolTip(
@@ -1071,13 +1071,13 @@ class WLCalc(myqt.DialogWindow):
         self.draw()
 
     def draw(self):
+        """Draw the canvas and save a snapshot of the background figure."""
         self.vguide.set_visible(False)
         self.xcoord.set_visible(False)
         self.xcross.set_visible(False)
-
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
-        """Draw the canvas and save a snapshot of the background figure."""
+
     def draw_glue_wl(self):
         """Draw or hide the water level envelope estimated with GLUE."""
         if self.wldset is not None and self.btn_show_glue.value():
