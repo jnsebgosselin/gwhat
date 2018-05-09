@@ -211,8 +211,7 @@ class RechgEvalWidget(QFrameLayout):
         """Set the namespace for the water level dataset."""
         self.wldset = wldset
         gluedf = None if wldset is None else wldset.get_glue_at(-1)
-        if gluedf is not None:
-            self._setup_ranges_from_wldset(gluedf)
+        self._setup_ranges_from_wldset(gluedf)
         self.figstack.set_gluedf(gluedf)
         self.btn_save_glue.set_model(gluedf)
 
