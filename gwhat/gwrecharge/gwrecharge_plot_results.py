@@ -99,16 +99,42 @@ class FigureStackManager(QMainWindow):
 
         self.figmanagers = [fig_rechg_glue, fig_watbudg_glue,
                             fig_avg_yearly_budg, fig_avg_monthly_budg]
+        self.__pending_plot_results = [True] * len(self.figmanagers)
 
         self.stack = QTabWidget()
         self.stack.addTab(fig_rechg_glue, 'Recharge')
         self.stack.addTab(fig_watbudg_glue, 'Yearly Budget')
         self.stack.addTab(fig_avg_yearly_budg, 'Yearly Avg. Budget')
         self.stack.addTab(fig_avg_monthly_budg, 'Monthly Avg. Budget')
+        self.stack.currentChanged.connect(self.plot_results)
 
-    def plot_results(self, glue_df):
-        for figmanager in self.figmanagers:
-            figmanager.figcanvas.plot(glue_df)
+    def set_gluedf(self, gluedf):
+        """Set the namespace for the GLUE results dataset."""
+        self.gluedf = gluedf
+        if gluedf is None:
+            self.__pending_plot_results = [False] * len(self.figmanagers)
+            self.clear_figures()
+        else:
+            self.__pending_plot_results = [True] * len(self.figmanagers)
+            self.plot_results()
+
+    def plot_results(self):
+        """
+        Plot the results of the figure canvas that is currentlyvisible if
+        it is not already up-to-date.
+        """
+        if not self.isVisible():
+            return
+
+        index = self.stack.currentIndex()
+        if self.__pending_plot_results[index] is True:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            self.__pending_plot_results[index] = False
+            if self.gluedf is not None:
+                self.figmanagers[index].figcanvas.plot(self.gluedf)
+            else:
+                self.figmanagers[index].figcanvas.clear_figure(silent=False)
+            QApplication.restoreOverrideCursor()
 
     def clear_figures(self):
         """Clear the figures of all figure canvas of the stack."""
