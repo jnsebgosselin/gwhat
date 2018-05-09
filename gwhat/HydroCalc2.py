@@ -202,7 +202,8 @@ class WLCalc(myqt.DialogWindow):
         self.h_ptot, = ax1.plot([], [])
 
         # ETP :
-        self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500)
+        self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500,
+                               ls='-')
 
         # BRF :
         self.h_brf1 = ax0.axvline(0, color='orange')
