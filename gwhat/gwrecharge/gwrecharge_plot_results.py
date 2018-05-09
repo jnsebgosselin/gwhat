@@ -95,7 +95,7 @@ class FigureStackManager(QMainWindow):
 
         self.figmanagers = [fig_rechg_glue, fig_watbudg_glue,
                             fig_avg_yearly_budg, fig_avg_monthly_budg]
-        self.__pending_plot_results = [True] * len(self.figmanagers)
+        self.__plot_results_pending = [True] * len(self.figmanagers)
 
         self.stack = QTabWidget()
         self.stack.addTab(fig_rechg_glue, 'Recharge')
@@ -108,10 +108,10 @@ class FigureStackManager(QMainWindow):
         """Set the namespace for the GLUE results dataset."""
         self.gluedf = gluedf
         if gluedf is None:
-            self.__pending_plot_results = [False] * len(self.figmanagers)
+            self.__plot_results_pending = [False] * len(self.figmanagers)
             self.clear_figures()
         else:
-            self.__pending_plot_results = [True] * len(self.figmanagers)
+            self.__plot_results_pending = [True] * len(self.figmanagers)
             self.plot_results()
 
     def plot_results(self):
@@ -123,9 +123,9 @@ class FigureStackManager(QMainWindow):
             return
 
         index = self.stack.currentIndex()
-        if self.__pending_plot_results[index] is True:
+        if self.__plot_results_pending[index] is True:
             QApplication.setOverrideCursor(Qt.WaitCursor)
-            self.__pending_plot_results[index] = False
+            self.__plot_results_pending[index] = False
             if self.gluedf is not None:
                 self.figmanagers[index].figcanvas.plot(self.gluedf)
             else:
