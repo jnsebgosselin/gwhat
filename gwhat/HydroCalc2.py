@@ -282,12 +282,17 @@ class WLCalc(myqt.DialogWindow):
         self.btn_show_glue.sig_value_changed.connect(self.draw_glue_wl)
         self.btn_show_glue.setValue(True, silent=True)
 
+        self.btn_show_weather = OnOffToolButton('show_meteo')
+        self.btn_show_weather.setToolTip("""Show or hide weather data.""")
+        self.btn_show_weather.sig_value_changed.connect(self.draw_weather)
+        self.btn_show_weather.setValue(True, silent=True)
+
         # Setup the layout.
 
         toolbar = ToolBarWidget()
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
-                    self.btn_show_glue]:
+                    self.btn_show_glue, self.btn_show_weather]:
             toolbar.addWidget(btn)
 
         return toolbar
