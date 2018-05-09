@@ -437,85 +437,7 @@ class WLCalc(myqt.DialogWindow):
     def set_wxdset(self, wxdset):
         """Set the weather dataset."""
         self.rechg_eval_widget.wxdset = wxdset
-        self.plot_weather_data()
-
-    def plot_weather_data(self):
-        """Plot the weather data."""
-        if self.wxdset is None:
-            self.fig.axes[1].set_visible(False)
-            return
-
-        time = self.wxdset['Time'] + self.dt4xls2mpl*self.dformat
-        ptot = self.wxdset['Ptot']
-        rain = self.wxdset['Rain']
-        etp = self.wxdset['PET']
-
-        # ----------------------------------------------- Bin the Data ----
-
-        bw = 7
-        n = bw/2
-        f = 0.65  # Space between individual bar.
-
-        nbin = int(np.floor(len(time)/bw))
-
-        time_bin = time[:nbin*bw].reshape(nbin, bw)
-        time_bin = np.sum(time_bin, axis=1)/bw
-
-        rain_bin = rain[:nbin*bw].reshape(nbin, bw)
-        rain_bin = np.sum(rain_bin, axis=1)
-
-        ptot_bin = ptot[:nbin*bw].reshape(nbin, bw)
-        ptot_bin = np.sum(ptot_bin, axis=1)
-
-        etp_bin = etp[:nbin*bw].reshape(nbin, bw)
-        etp_bin = np.sum(etp_bin, axis=1)
-
-        # --------------------------------------------- Generate Shape ----
-
-        time_bar = np.zeros(len(time_bin) * 4)
-        rain_bar = np.zeros(len(rain_bin) * 4)
-        ptot_bar = np.zeros(len(ptot_bin) * 4)
-        etp_bar = np.zeros(len(ptot_bin) * 3)
-        time_bar2 = np.zeros(len(time_bin) * 3)
-
-        time_bar[0::4] = time_bin - (n * f)
-        time_bar[1::4] = time_bin - (n * f)
-        time_bar[2::4] = time_bin + (n * f)
-        time_bar[3::4] = time_bin + (n * f)
-
-        rain_bar[0::4] = 0
-        rain_bar[1::4] = rain_bin
-        rain_bar[2::4] = rain_bin
-        rain_bar[3::4] = 0
-
-        ptot_bar[0::4] = 0
-        ptot_bar[1::4] = ptot_bin
-        ptot_bar[2::4] = ptot_bin
-        ptot_bar[3::4] = 0
-
-        time_bar2[0::3] = time_bin
-        time_bar2[1::3] = time_bin
-        time_bar2[2::3] = np.nan
-
-        etp_bar[0::3] = 0
-        etp_bar[1::3] = etp_bin
-        etp_bar[2::3] = np.nan
-
-        # ---- Plot the data
-
-        ax = self.fig.axes[1]
-        ax.set_visible(True)
-
-        self.h_rain.remove()
-        self.h_ptot.remove()
-
-        self.h_rain = ax.fill_between(
-            time_bar, 0., rain_bar, color='0.65', lw=0, zorder=100)
-        self.h_ptot = ax.fill_between(
-            time_bar, 0., ptot_bar, color='0.85', lw=0, zorder=50)
-        self.h_etp.set_data(time_bar2, etp_bar)
-
-        self.draw()
+        self.draw_weather()
 
     # ---- MRC handlers
 
@@ -948,7 +870,7 @@ class WLCalc(myqt.DialogWindow):
             self.h2_ax0.set_xdata(self.time[self.peak_indx] +
                                   self.dt4xls2mpl * self.dformat)
 
-        self.plot_weather_data()
+        self.draw_weather()
         self.draw()
 
     # =========================================================================
@@ -1175,6 +1097,74 @@ class WLCalc(myqt.DialogWindow):
                 self.glue_plt.set_visible(False)
         else:
             self.glue_plt.set_visible(False)
+        self.draw()
+
+    def draw_weather(self):
+        """Plot the weather data."""
+        ax = self.fig.axes[1]
+        if self.wxdset is None or self.btn_show_weather.value() is False:
+            ax.set_visible(False)
+        else:
+            ax.set_visible(True)
+
+            time = self.wxdset['Time'] + self.dt4xls2mpl*self.dformat
+            ptot = self.wxdset['Ptot']
+            rain = self.wxdset['Rain']
+            etp = self.wxdset['PET']
+
+            # Calculate the bins
+
+            bw = 7
+            n = bw/2
+            f = 0.65  # Space between individual bar.
+
+            nbin = int(np.floor(len(time)/bw))
+
+            time_bin = time[:nbin*bw].reshape(nbin, bw)
+            time_bin = np.sum(time_bin, axis=1)/bw
+
+            rain_bin = rain[:nbin*bw].reshape(nbin, bw)
+            rain_bin = np.sum(rain_bin, axis=1)
+
+            ptot_bin = ptot[:nbin*bw].reshape(nbin, bw)
+            ptot_bin = np.sum(ptot_bin, axis=1)
+
+            etp_bin = etp[:nbin*bw].reshape(nbin, bw)
+            etp_bin = np.sum(etp_bin, axis=1)
+
+            # Generate the shapes for the fill_between
+
+            time_bar = np.zeros(len(time_bin) * 4)
+            rain_bar = np.zeros(len(rain_bin) * 4)
+            ptot_bar = np.zeros(len(ptot_bin) * 4)
+
+            time_bar[0::4] = time_bin - (n * f)
+            time_bar[1::4] = time_bin - (n * f)
+            time_bar[2::4] = time_bin + (n * f)
+            time_bar[3::4] = time_bin + (n * f)
+
+            rain_bar[0::4] = 0
+            rain_bar[1::4] = rain_bin
+            rain_bar[2::4] = rain_bin
+            rain_bar[3::4] = 0
+
+            ptot_bar[0::4] = 0
+            ptot_bar[1::4] = ptot_bin
+            ptot_bar[2::4] = ptot_bin
+            ptot_bar[3::4] = 0
+
+            # Plot the data
+
+            self.h_rain.remove()
+            self.h_ptot.remove()
+
+            self.h_rain = ax.fill_between(
+                time_bar, 0, rain_bar, color=[23/255, 52/255, 88/255],
+                zorder=100, linestyle='None')
+            self.h_ptot = ax.fill_between(
+                time_bar, 0, ptot_bar, color=[165/255, 165/255, 165/255], lw=0,
+                zorder=50, linestyle='None')
+            self.h_etp.set_data(time_bin, etp_bin)
         self.draw()
 
     # ----- Handlers: Mouse events
