@@ -64,10 +64,6 @@ class FigureStackManager(QMainWindow):
         """Setup the FigureStackManager withthe provided options."""
         self.setup_stack()
         self.setCentralWidget(self.stack)
-        # layout = QGridLayout(self)
-        # layout.addWidget(self.stack, 0, 0)
-        # layout.setRowStretch(0, 100)
-        # layout.setColumnStretch(0, 100)
 
     def setup_stack(self):
         fig_rechg_glue = FigManagerBase(
