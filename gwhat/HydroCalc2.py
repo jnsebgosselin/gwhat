@@ -1222,10 +1222,9 @@ class WLCalc(myqt.DialogWindow):
             self.vguide.set_visible(False)
             self.xcoord.set_visible(False)
 
-        # ---- Remove Peak Cursor ----
+        # ---- Remove Peak Cursor
 
         if not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
-
             # For deleting peak in the graph. Will put a cross on top of the
             # peak to delete if some proximity conditions are met.
 
@@ -1242,7 +1241,8 @@ class WLCalc(myqt.DialogWindow):
                 xt[i], yt[i] = ax0.transData.transform((xp, yp))
 
             d = ((xt - x)**2 + (yt - y)**2)**0.5
-            if np.min(d) < 15:  # put the cross over the nearest peak
+            if np.min(d) < 15:
+                # Put the cross over the nearest peak.
                 indx = np.argmin(d)
                 self.xcross.set_xdata(xpeak[indx])
                 self.xcross.set_ydata(ypeak[indx])
@@ -1254,8 +1254,7 @@ class WLCalc(myqt.DialogWindow):
 
         ax0.draw_artist(self.xcross)
 
-        # ---- Update Canvas ----
-
+        # Update the canvas
         self.fig.canvas.blit()
 
     def onrelease(self, event):
