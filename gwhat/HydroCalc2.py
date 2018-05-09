@@ -110,18 +110,16 @@ class WLCalc(myqt.DialogWindow):
         self.SOILPROFIL = SoilProfil()
 
         # ---- Initialize the GUI
-        self.__initFig__()
+        self.__init_figure__()
         self.__initUI__()
         self.btn_pan.setValue(True)
         self.setup_ax_margins(None)
         self.set_wldset(self.dmngr.get_current_wldset())
         self.set_wxdset(self.dmngr.get_current_wxdset())
 
-    def __initFig__(self):
+    def __init_figure__(self):
 
-        # ----------------------------------------------------------- CANVAS --
-
-        # Create a Qt figure canvas :
+        # ---- Setup the canvas
 
         self.fig = mpl.figure.Figure(facecolor='white')
         self.canvas = FigureCanvasQTAgg(self.fig)
@@ -132,7 +130,7 @@ class WLCalc(myqt.DialogWindow):
         self.canvas.mpl_connect('motion_notify_event', self.mouse_vguide)
         self.canvas.mpl_connect('figure_leave_event', self.on_fig_leave)
 
-        # ------------------------------------------------------------ FRAME --
+        # ---- Setup the canvas frame
 
         # Put figure canvas in a QFrame widget.
 
@@ -143,7 +141,7 @@ class WLCalc(myqt.DialogWindow):
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
 
-        # ------------------------------------------------------------- AXES --
+        # ----- Setup the axes
 
         # Water Level (Host) :
         ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
@@ -158,12 +156,10 @@ class WLCalc(myqt.DialogWindow):
         ax1.invert_yaxis()
         ax1.axis(ymin=250, ymax=0)
 
-        # --------------------------------------------------------- XTICKS ----
+        # ---- Setup ticks
 
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out')
-
-        # --------------------------------------------------------- YTICKS ----
 
         ax0.yaxis.set_ticks_position('left')
         ax0.tick_params(axis='y', direction='out')
@@ -171,7 +167,7 @@ class WLCalc(myqt.DialogWindow):
         ax1.yaxis.set_ticks_position('right')
         ax1.tick_params(axis='y', direction='out')
 
-        # --------------------------------------------------------- LABELS ----
+        # ---- Setup axis labels
 
         ax0.set_ylabel('Water level (mbgs)', fontsize=14, labelpad=25,
                        va='top', color='black')
@@ -180,16 +176,20 @@ class WLCalc(myqt.DialogWindow):
         ax1.set_ylabel('Precipitation (mm)', fontsize=14, labelpad=25,
                        va='top', color='black', rotation=270)
 
-        # ------------------------------------------------ Setup Gridlines ----
+        # ---- Setup gridlines
 
-#        ax0.grid(axis='x', color=[0.35, 0.35, 0.35], ls='--')
-#        ax0.set_axisbelow(True)
+        # ax0.grid(axis='x', color=[0.35, 0.35, 0.35], ls='--')
+        # ax0.set_axisbelow(True)
 
-        # -------------------------------------------------------- ARTISTS ----
+        # ---- Setup plot artists
 
         # Water level :
         self.h1_ax0, = ax0.plot([], [], color='blue', clip_on=True, ls='-',
                                 zorder=10, marker='None')
+
+        # Predicted water levels :
+        self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
+                                   ls='-', zorder=10, marker='None')
 
         # Recession :
         self.h3_ax0, = ax0.plot([], [], color='red', clip_on=True,
@@ -805,6 +805,21 @@ class WLCalc(myqt.DialogWindow):
 
     # ---- Drawing methods
 
+    def setup_axis_range(self, event=None):
+        """Setup the range of the x- and y-axis."""
+        y = self.water_lvl
+        t = self.time + self.dt4xls2mpl * self.dformat
+
+        delta = 0.05
+        Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
+        Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
+
+        indx = np.where(~np.isnan(y))[0]
+        Ymin0 = np.min(y[indx]) - (np.max(y[indx]) - np.min(y[indx])) * delta
+        Ymax0 = np.max(y[indx]) + (np.max(y[indx]) - np.min(y[indx])) * delta
+
+        self.fig.axes[0].axis([Xmin0, Xmax0, Ymax0, Ymin0])
+
     def setup_ax_margins(self, event=None):
         """Setup the margins width of the axes in inches."""
         fheight = self.fig.get_figheight()
@@ -824,14 +839,25 @@ class WLCalc(myqt.DialogWindow):
             axe.set_position([x0, y0, w, h])
         self.draw()
 
+    def setup_xticklabels_format(self):
+        """Setup the format of the xticklabels."""
+        ax0 = self.fig.axes[0]
+        if self.dformat == 1:
+            xloc = mpl.dates.AutoDateLocator()
+            ax0.xaxis.set_major_locator(xloc)
+            xfmt = mpl.dates.AutoDateFormatter(xloc)
+            ax0.xaxis.set_major_formatter(xfmt)
+        elif self.dformat == 0:
+            xfmt = mpl.ticker.ScalarFormatter()
+            ax0.xaxis.set_major_formatter(xfmt)
+            ax0.get_xaxis().get_major_formatter().set_useOffset(False)
+
     def switch_date_format(self):
         """
         Change the format of the xticklabels.
         - 0 is for Excel numeric date format.
         - 1 is for Matplotlib text format.
         """
-        # Update the UI and variable values.
-
         ax0 = self.fig.axes[0]
         if self.dformat == 0:
             # Switch to matplotlib date format
@@ -845,20 +871,9 @@ class WLCalc(myqt.DialogWindow):
             self.btn_dateFormat.setToolTip(
                 'Show x-axis tick labels as date')
             self.dformat = 0
+        self.setup_xticklabels_format()
 
-        # Setup the format of the xticklabels.
-
-        if self.dformat == 1:
-            xloc = mpl.dates.AutoDateLocator()
-            ax0.xaxis.set_major_locator(xloc)
-            xfmt = mpl.dates.AutoDateFormatter(xloc)
-            ax0.xaxis.set_major_formatter(xfmt)
-        elif self.dformat == 0:
-            xfmt = mpl.ticker.ScalarFormatter()
-            ax0.xaxis.set_major_formatter(xfmt)
-            ax0.get_xaxis().get_major_formatter().set_useOffset(False)
-
-        # Adjust Axis Range.
+        # Adjust the range of the axis.
 
         xlim = ax0.get_xlim()
         if self.dformat == 1:
@@ -866,7 +881,7 @@ class WLCalc(myqt.DialogWindow):
         elif self.dformat == 0:
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
 
-        # Adjust Water Levels, Peak, MRC ant weather time frame :
+        # Adjust the water levels, peak, MRC ant weather time frame.
 
         t = self.time + self.dt4xls2mpl * self.dformat
         self.h1_ax0.set_xdata(t)  # Water Levels
@@ -883,58 +898,31 @@ class WLCalc(myqt.DialogWindow):
 
     def init_hydrograph(self):
 
-        ax0 = self.fig.axes[0]
-
-        # ---- Reset UI ----
+        # ---- Reset the UI
 
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
 
-        # ---- PLot Data ----
+        # ---- Plot the Data
 
         # Water Levels :
 
         y = self.water_lvl
         t = self.time + self.dt4xls2mpl * self.dformat
-
         self.h1_ax0.set_data(t, y)
+        self.plt_wlpre.set_data([], [])
 
-        self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
-                                   ls='-', zorder=10, marker='None')
         self.draw_glue_wl()
+        self.draw_weather()
 
         # Strati :
 
         if not self.btn_strati.autoRaise():
             self.display_soil_layer()
 
-        # Setup Axis Range :
-
-        y = self.water_lvl
-        t = self.time + self.dt4xls2mpl * self.dformat
-
-        delta = 0.05
-        Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
-        Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
-
-        indx = np.where(~np.isnan(y))[0]
-        Ymin0 = np.min(y[indx]) - (np.max(y[indx]) - np.min(y[indx])) * delta
-        Ymax0 = np.max(y[indx]) + (np.max(y[indx]) - np.min(y[indx])) * delta
-
-        ax0.axis([Xmin0, Xmax0, Ymax0, Ymin0])
-
-        # Setup xtick Labels Date Format :
-
-        if self.dformat == 1:  # matplotlib format
-            xloc = mpl.dates.AutoDateLocator()
-            ax0.xaxis.set_major_locator(xloc)
-            xfmt = mpl.dates.AutoDateFormatter(xloc)
-            ax0.xaxis.set_major_formatter(xfmt)
-        elif self.dformat == 0:  # excel format
-            xfmt = mpl.ticker.ScalarFormatter()
-            ax0.xaxis.set_major_formatter(xfmt)
-            ax0.get_xaxis().get_major_formatter().set_useOffset(False)
+        self.setup_axis_range()
+        self.setup_xticklabels_format()
 
         # Draw the Graph :
 
