@@ -26,7 +26,8 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
     QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
-    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget, QStyle)
+    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget, QStyle,
+    QMainWindow)
 
 
 # ---- Imports: local
@@ -49,15 +50,12 @@ t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1))  # time in mpl format
 DT4XLS2MPL = t2-t1
 
 
-class FigureStackManager(QWidget):
+class FigureStackManager(QMainWindow):
     def __init__(self, parent=None):
         super(FigureStackManager, self).__init__(parent)
         self.setMinimumSize(1250, 650)
         self.setWindowTitle('Recharge Results')
-        self.setWindowFlags(Qt.Window |
-                            Qt.CustomizeWindowHint |
-                            Qt.WindowMinimizeButtonHint |
-                            Qt.WindowCloseButtonHint)
+        self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
         self.figmanagers = []
         self.setup()
@@ -65,8 +63,11 @@ class FigureStackManager(QWidget):
     def setup(self):
         """Setup the FigureStackManager withthe provided options."""
         self.setup_stack()
-        layout = QGridLayout(self)
-        layout.addWidget(self.stack, 0, 0)
+        self.setCentralWidget(self.stack)
+        # layout = QGridLayout(self)
+        # layout.addWidget(self.stack, 0, 0)
+        # layout.setRowStretch(0, 100)
+        # layout.setColumnStretch(0, 100)
 
     def setup_stack(self):
         fig_rechg_glue = FigManagerBase(
@@ -113,6 +114,15 @@ class FigureStackManager(QWidget):
         """Clear the figures of all figure canvas of the stack."""
         for figmanager in self.figmanagers:
             figmanager.figcanvas.clear_figure(silent=False)
+
+    def show(self):
+        """Qt method override."""
+        if self.isMinimized():
+            self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
+        else:
+            self.resize(self.size())
+            super(FigureStackManager, self).show()
+        self.plot_results()
 
 
 # ---- Figure setp panels
