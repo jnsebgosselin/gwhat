@@ -244,7 +244,7 @@ class WLCalc(myqt.DialogWindow):
 
         self.btn_home = QToolButtonNormal(icons.get_icon('home'))
         self.btn_home.setToolTip('Reset original view.')
-        self.btn_home.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_home.clicked.connect(self.home)
 
         self.btn_pan = OnOffToolButton('pan')
         self.btn_pan.setToolTip(
@@ -720,8 +720,6 @@ class WLCalc(myqt.DialogWindow):
         sender = self.sender()
         if sender == self.btn_MRCalc:
             self.btn_MRCalc_isClicked()
-        elif sender == self.btn_home:
-            self.home()
         elif sender == self.btn_save_interp:
             self.save_mrc_tofile()
         elif sender == self.btn_addpeak:
@@ -774,7 +772,6 @@ class WLCalc(myqt.DialogWindow):
     def home(self):
         """Reset the orgininal view of the figure."""
         if self.isGraphExists is False:
-            print('Graph is empty')
             return
 
         self.toolbar.home()
