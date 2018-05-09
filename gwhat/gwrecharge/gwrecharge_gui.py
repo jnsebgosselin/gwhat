@@ -208,39 +208,31 @@ class RechgEvalWidget(QFrameLayout):
         return toolbar
 
     def set_wldset(self, wldset):
-        """
-        Set the namespace for the water level dataset and plot the last
-        results saved in the project.
-        """
+        """Set the namespace for the water level dataset."""
         self.wldset = wldset
-        if wldset is not None and self.wldset.glue_count():
-            gluedf = self.wldset.get_glue(self.wldset.glue_idnums()[-1])
-            self.figstack.plot_results(gluedf)
-            self._setup_ranges_from_wldset()
-            self.btn_save_glue.set_model(gluedf)
-        else:
-            self.figstack.clear_figures()
-            self.btn_save_glue.set_model(None)
+        gluedf = None if wldset is None else wldset.get_glue_at(-1)
+        self._setup_ranges_from_wldset(gluedf)
+        self.figstack.set_gluedf(gluedf)
+        self.btn_save_glue.set_model(gluedf)
 
-    def _setup_ranges_from_wldset(self):
+    def _setup_ranges_from_wldset(self, gluedf):
         """
         Set the parameter range values from the last values that were used
         to produce the last GLUE results saved into the project.
         """
-        gluedf = self.wldset.get_glue(self.wldset.glue_idnums()[-1])
+        if gluedf is not None:
+            self.QSy_min.setValue(min(gluedf['ranges']['Sy']))
+            self.QSy_max.setValue(max(gluedf['ranges']['Sy']))
 
-        self.QSy_min.setValue(min(gluedf['ranges']['Sy']))
-        self.QSy_max.setValue(max(gluedf['ranges']['Sy']))
+            self.CRO_min.setValue(min(gluedf['ranges']['Cro']))
+            self.CRO_max.setValue(max(gluedf['ranges']['Cro']))
 
-        self.CRO_min.setValue(min(gluedf['ranges']['Cro']))
-        self.CRO_max.setValue(max(gluedf['ranges']['Cro']))
+            self.QRAS_min.setValue(min(gluedf['ranges']['RASmax']))
+            self.QRAS_max.setValue(max(gluedf['ranges']['RASmax']))
 
-        self.QRAS_min.setValue(min(gluedf['ranges']['RASmax']))
-        self.QRAS_max.setValue(max(gluedf['ranges']['RASmax']))
-
-        self._Tmelt.setValue(gluedf['params']['tmelt'])
-        self._CM.setValue(gluedf['params']['CM'])
-        self._deltaT.setValue(gluedf['params']['deltat'])
+            self._Tmelt.setValue(gluedf['params']['tmelt'])
+            self._CM.setValue(gluedf['params']['CM'])
+            self._deltaT.setValue(gluedf['params']['deltat'])
 
     def get_Range(self, name):
         if name == 'Sy':
@@ -327,9 +319,7 @@ class RechgEvalWidget(QFrameLayout):
             self.sig_new_gluedf.emit(glue_dataframe)
 
             self.btn_save_glue.set_model(glue_dataframe)
-
-            self.figstack.plot_results(glue_dataframe)
-            self.figstack.show()
+            self.figstack.set_gluedf(glue_dataframe)
 
 
 class ExportGLUEButton(ExportDataButton):
