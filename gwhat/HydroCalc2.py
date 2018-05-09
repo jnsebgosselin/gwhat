@@ -819,12 +819,14 @@ class WLCalc(myqt.DialogWindow):
         self.draw()
 
     def switch_date_format(self):
+        """
+        Change the format of the xticklabels.
+        - 0 is for Excel numeric date format.
+        - 1 is for Matplotlib text format.
+        """
+        # Update the UI and variable values.
+
         ax0 = self.fig.axes[0]
-
-        # Change UI and System Variable State :
-
-        # 0 for Excel numeric date format
-        # 1 for Matplotlib format
         if self.dformat == 0:
             # Switch to matplotlib date format
             self.btn_dateFormat.setAutoRaise(False)
@@ -838,7 +840,7 @@ class WLCalc(myqt.DialogWindow):
                 'Show x-axis tick labels as date')
             self.dformat = 0
 
-        # Change xtick Labels Date Format :
+        # Setup the format of the xticklabels.
 
         if self.dformat == 1:
             xloc = mpl.dates.AutoDateLocator()
@@ -850,7 +852,7 @@ class WLCalc(myqt.DialogWindow):
             ax0.xaxis.set_major_formatter(xfmt)
             ax0.get_xaxis().get_major_formatter().set_useOffset(False)
 
-        # Adjust Axis Range :
+        # Adjust Axis Range.
 
         xlim = ax0.get_xlim()
         if self.dformat == 1:
@@ -865,15 +867,13 @@ class WLCalc(myqt.DialogWindow):
 
         if len(self.hrecess) > 0:  # MRC
             self.h3_ax0.set_xdata(t)
-
         if len(self.peak_indx) > 0:  # Peaks
-            self.h2_ax0.set_xdata(self.time[self.peak_indx] +
-                                  self.dt4xls2mpl * self.dformat)
+            self.h2_ax0.set_xdata(
+                self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat)
 
         self.draw_weather()
+        self.draw_glue_wl()
         self.draw()
-
-    # =========================================================================
 
     def init_hydrograph(self):
 
@@ -1077,7 +1077,7 @@ class WLCalc(myqt.DialogWindow):
 
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
-
+        """Draw the canvas and save a snapshot of the background figure."""
     def draw_glue_wl(self):
         """Draw or hide the water level envelope estimated with GLUE."""
         if self.wldset is not None and self.btn_show_glue.value():
