@@ -1147,10 +1147,10 @@ class WLCalc(myqt.DialogWindow):
             self.h_ptot.remove()
 
             self.h_rain = ax.fill_between(
-                time_bar, 0, rain_bar, color=[23/255, 52/255, 88/255],
+                time_bar, 0, rain_bar, color='0.65',
                 zorder=100, linestyle='None')
             self.h_ptot = ax.fill_between(
-                time_bar, 0, ptot_bar, color=[165/255, 165/255, 165/255], lw=0,
+                time_bar, 0, ptot_bar, color='0.85', lw=0,
                 zorder=50, linestyle='None')
             self.h_etp.set_data(time_bin, etp_bin)
         self.draw()
