@@ -828,7 +828,7 @@ class WLCalc(myqt.DialogWindow):
         left_margin = 1 / fwidth
         right_margin = 1 / fwidth
         bottom_margin = 0.75 / fheight
-        top_margin = 0.25 / fheight
+        top_margin = 0.2 / fheight
 
         x0 = left_margin
         y0 = bottom_margin
@@ -1147,11 +1147,11 @@ class WLCalc(myqt.DialogWindow):
             self.h_ptot.remove()
 
             self.h_rain = ax.fill_between(
-                time_bar, 0, rain_bar, color='0.65',
-                zorder=100, linestyle='None')
+                time_bar, 0, rain_bar, color=[23/255, 52/255, 88/255],
+                zorder=100, linestyle='None', alpha=0.65, lw=0)
             self.h_ptot = ax.fill_between(
-                time_bar, 0, ptot_bar, color='0.85', lw=0,
-                zorder=50, linestyle='None')
+                time_bar, 0, ptot_bar, color=[165/255, 165/255, 165/255],
+                zorder=50, linestyle='None', alpha=0.65, lw=0)
             self.h_etp.set_data(time_bin, etp_bin)
         self.draw()
 
