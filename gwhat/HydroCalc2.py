@@ -110,6 +110,8 @@ class WLCalc(myqt.DialogWindow):
         self.SOILPROFIL = SoilProfil()
 
         # ---- Initialize the GUI
+
+        self.precip_bwidth = 7
         self.__init_figure__()
         self.__initUI__()
         self.btn_pan.setValue(True)
@@ -1101,10 +1103,9 @@ class WLCalc(myqt.DialogWindow):
 
             # Calculate the bins
 
-            bw = 7
+            bw = self.precip_bwidth
             n = bw/2
             f = 0.65  # Space between individual bar.
-
             nbin = int(np.floor(len(time)/bw))
 
             time_bin = time[:nbin*bw].reshape(nbin, bw)
