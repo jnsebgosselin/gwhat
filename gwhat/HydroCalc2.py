@@ -153,8 +153,6 @@ class WLCalc(myqt.DialogWindow):
         ax1.patch.set_visible(False)
         ax1.set_zorder(50)
         ax1.set_navigate(False)
-        ax1.invert_yaxis()
-        ax1.axis(ymin=250, ymax=0)
 
         # ---- Setup ticks
 
@@ -816,6 +814,9 @@ class WLCalc(myqt.DialogWindow):
         Ymax0 = np.max(y[indx]) + (np.max(y[indx]) - np.min(y[indx])) * delta
 
         self.fig.axes[0].axis([Xmin0, Xmax0, Ymax0, Ymin0])
+
+        # Setup the yaxis range for the weather.
+        self.fig.axes[1].axis(ymin=500, ymax=0)
 
     def setup_ax_margins(self, event=None):
         """Setup the margins width of the axes in inches."""
