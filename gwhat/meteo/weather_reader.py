@@ -28,6 +28,7 @@ from xlrd import xldate_as_tuple
 
 from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
 from gwhat.common.utils import save_content_to_csv, save_content_to_file
+from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
 
 
@@ -104,7 +105,7 @@ class WXDataFrameBase(Mapping):
         data = np.zeros((N, M))
         for j, vrb in enumerate(vrbs):
             data[:, j] = self[time_frame][vrb]
-        fcontent.extend(data.tolist())
+        fcontent.extend(nan_as_text_tolist(data))
 
         save_content_to_file(filename, fcontent)
 
