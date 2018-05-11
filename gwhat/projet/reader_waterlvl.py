@@ -125,6 +125,11 @@ def read_water_level_datafile(filename):
         print('Waterlvl time-series for well %s loaded successfully.' %
               df['Well'])
 
+    # The data are not monotically increasing in time.
+    if np.min(np.diff(df['Time'])) <= 0:
+        print("The data are not monotically increasing in time.")
+        return None
+
     # Read the barometric data
 
     try:
