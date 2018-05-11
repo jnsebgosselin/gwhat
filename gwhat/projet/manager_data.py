@@ -206,8 +206,7 @@ class DataManager(QWidget):
     def import_wldataset(self):
         """Open a dialog window to import a water level dataset from a file."""
         if self.projet is None:
-            msg = ('Please first select a valid WHAT project or '
-                   'create a new one.')
+            msg = ("Please first select a valid project or create a new one.")
             btn = QMessageBox.Ok
             QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
