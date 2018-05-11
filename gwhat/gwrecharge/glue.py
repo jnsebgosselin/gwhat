@@ -23,6 +23,7 @@ from xlrd import xldate_as_tuple
 # ---- Local imports
 
 from gwhat.common.utils import save_content_to_file
+from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
 
 
@@ -128,15 +129,8 @@ class GLUEDataFrameBase(Mapping):
         data[:, 2:5] = self['water levels']['predicted'] / 1000
         data = np.round(data, 2)
 
-        # Merge the data header with the data. Also, convert float nan to text,
-        # so that it is possible to save to an Excel file.
-
-        if np.isnan(data).any():
-            m, n = np.shape(data)
-            for i in range(m):
-                dataf.append(['nan' if np.isnan(x) else x for x in data[i, :]])
-        else:
-            dataf.extend(data.tolist())
+        # Merge the data header with the data.
+        dataf.extend(nan_as_text_tolist(data))
 
         return dataf
 
