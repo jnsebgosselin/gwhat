@@ -463,7 +463,7 @@ class NewDatasetDialog(QDialog):
         grp_dset.addWidget(self._error_lbl, row, 1, 1, 3)
 
         grp_dset.setContentsMargins(0, 0, 0, 15)
-        grp_dset.setColumnStretch(2, 100)
+        grp_dset.setColumnStretch(1, 100)
         grp_dset.setVerticalSpacing(15)
 
         # ----- Station Info Groupbox
@@ -541,6 +541,8 @@ class NewDatasetDialog(QDialog):
         layout.addLayout(toolbar, 2, 0)
 
         layout.setRowMinimumHeight(3, 15)
+        layout.setRowStretch(10, 100)
+        layout.setColumnStretch(0, 100)
 
     def _add_info_field(self, label, widget):
         """Add a new field to the Station Info group box."""
