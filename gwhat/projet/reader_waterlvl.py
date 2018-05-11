@@ -21,14 +21,31 @@ FILE_EXTS = ['.csv', '.xls', '.xlsx']
 
 # ---- Read and Load Water Level Datafiles
 
-def read_water_level_datafile(filename):
-    """Load a water level dataset from a csv or Excel file."""
+def open_water_level_datafile(filename):
+    """Open a water level data file and return the data."""
     root, ext = os.path.splitext(filename)
     if ext not in FILE_EXTS:
-        print("ERROR: supported file format are: ", FILE_EXTS)
-        return None
+        raise ValueError("Supported file format are: ", FILE_EXTS)
     else:
         print('Loading waterlvl time-series from %s file...' % ext[1:])
+
+    if ext == '.csv':
+        with open(filename, 'r', encoding='utf8') as f:
+            data = list(csv.reader(f, delimiter=','))
+    elif ext in ['.xls', '.xlsx']:
+        with xlrd.open_workbook(filename, on_demand=True) as wb:
+            sheet = wb.sheet_by_index(0)
+            data = [sheet.row_values(rowx, start_colx=0, end_colx=None) for
+                    rowx in range(sheet.nrows)]
+
+    return data
+
+
+def read_water_level_datafile(filename):
+    """Load a water level dataset from a csv or Excel file."""
+    data = open_water_level_datafile(filename)
+    if data is None:
+        return None
 
     df = {'filename': filename,
           'Well': '',
@@ -42,15 +59,6 @@ def read_water_level_datafile(filename):
           'WL': np.array([]),
           'BP': np.array([]),
           'ET': np.array([])}
-
-    if ext == '.csv':
-        with open(filename, 'r', encoding='utf8') as f:
-            data = list(csv.reader(f, delimiter=','))
-    elif ext in ['.xls', '.xlsx']:
-        with xlrd.open_workbook(filename, on_demand=True) as wb:
-            sheet = wb.sheet_by_index(0)
-            data = [sheet.row_values(rowx, start_colx=0, end_colx=None) for
-                    rowx in range(sheet.nrows)]
 
     # ---- Read the Header
 
