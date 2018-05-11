@@ -57,6 +57,7 @@ def read_water_level_datafile(filename):
     for row, line in enumerate(data):
         if len(line) == 0:
             continue
+
         try:
             label = line[0].lower().replace(":", "").replace("=", "").strip()
         except AttributeError:
@@ -110,7 +111,7 @@ def read_water_level_datafile(filename):
         df['Time'] = data[:, 0].astype(float)
         df['WL'] = data[:, 1].astype(float)
     except ValueError:
-        print('ERROR: The water level datafile is not formatted correctly')
+        print('The water level datafile is not formatted correctly')
         return None
     else:
         print('Waterlvl time-series for well %s loaded successfully.' %
@@ -137,9 +138,6 @@ def read_water_level_datafile(filename):
         print('No Earth tide data.')
 
     return df
-
-
-# =============================================================================
 
 
 def make_waterlvl_continuous(t, wl):
