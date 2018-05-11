@@ -198,6 +198,7 @@ class DataManager(QWidget):
         return len(self.projet.wldsets)
 
     def import_wldataset(self):
+        """Open a dialog window to import a water level dataset from a file."""
         if self.projet is None:
             msg = ('Please first select a valid WHAT project or '
                    'create a new one.')
@@ -281,6 +282,7 @@ class DataManager(QWidget):
         return len(self.projet.wxdsets)
 
     def import_wxdataset(self):
+        """Open a dialog window to import a weather dataset from a file."""
         if self.projet is None:
             msg = ("Please first select a valid project or create a new one.")
             btn = QMessageBox.Ok
@@ -443,9 +445,9 @@ class NewDatasetDialog(QDialog):
                "on how to format your input data files correctly."
                "</i></font>"
                ) % (self._datatype.capitalize(), url_i)
-        self._msg = QLabel(msg)
-        self._msg.setVisible(False)
-        self._msg.setOpenExternalLinks(True)
+        self._error_lbl = QLabel(msg)
+        self._error_lbl.setVisible(False)
+        self._error_lbl.setOpenExternalLinks(True)
 
         # Select Dataset Layout
 
@@ -458,10 +460,10 @@ class NewDatasetDialog(QDialog):
         grp_dset.addWidget(self.directory, row, 1)
         grp_dset.addWidget(self.btn_browse, row, 3)
         row += 1
-        grp_dset.addWidget(self._msg, row, 1, 1, 3)
+        grp_dset.addWidget(self._error_lbl, row, 1, 1, 3)
 
         grp_dset.setContentsMargins(0, 0, 0, 15)
-        grp_dset.setColumnStretch(2, 100)
+        grp_dset.setColumnStretch(1, 100)
         grp_dset.setVerticalSpacing(15)
 
         # ----- Station Info Groupbox
@@ -539,6 +541,8 @@ class NewDatasetDialog(QDialog):
         layout.addLayout(toolbar, 2, 0)
 
         layout.setRowMinimumHeight(3, 15)
+        layout.setRowStretch(10, 100)
+        layout.setColumnStretch(0, 100)
 
     def _add_info_field(self, label, widget):
         """Add a new field to the Station Info group box."""
@@ -624,9 +628,8 @@ class NewDatasetDialog(QDialog):
         # Load the Data :
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        msg = 'Loading %s data...' % self._datatype
-        print(msg)
-        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
+        self.ConsoleSignal.emit(
+            "<font color=black>Loading %s data...</font>" % self._datatype)
         for i in range(5):
             QCoreApplication.processEvents()
 
@@ -678,7 +681,7 @@ class NewDatasetDialog(QDialog):
                 dsetname = dsetname.replace(char, '_')
             self._dset_name.setText(dsetname)
 
-        self._msg.setVisible(
+        self._error_lbl.setVisible(
             self._dataset is None and self.directory.text() != '')
         self.btn_ok.setEnabled(self._dataset is not None)
         self.grp_info.setEnabled(self._dataset is not None)
@@ -741,11 +744,6 @@ class NewDatasetDialog(QDialog):
         self._dataset = None
         self.directory.clear()
         self.update_gui()
-
-    def show(self):
-        """Qt method override."""
-        super(NewDatasetDialog, self).show()
-        self.setFixedSize(self.size())
 
 
 class ExportWeatherButton(QToolButtonBase):
