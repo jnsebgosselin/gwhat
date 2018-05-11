@@ -626,9 +626,8 @@ class NewDatasetDialog(QDialog):
         # Load the Data :
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        msg = 'Loading %s data...' % self._datatype
-        print(msg)
-        self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
+        self.ConsoleSignal.emit(
+            "<font color=black>Loading %s data...</font>" % self._datatype)
         for i in range(5):
             QCoreApplication.processEvents()
 
@@ -743,11 +742,6 @@ class NewDatasetDialog(QDialog):
         self._dataset = None
         self.directory.clear()
         self.update_gui()
-
-    def show(self):
-        """Qt method override."""
-        super(NewDatasetDialog, self).show()
-        self.setFixedSize(self.size())
 
 
 class ExportWeatherButton(QToolButtonBase):
