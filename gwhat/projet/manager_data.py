@@ -445,9 +445,9 @@ class NewDatasetDialog(QDialog):
                "on how to format your input data files correctly."
                "</i></font>"
                ) % (self._datatype.capitalize(), url_i)
-        self._msg = QLabel(msg)
-        self._msg.setVisible(False)
-        self._msg.setOpenExternalLinks(True)
+        self._error_lbl = QLabel(msg)
+        self._error_lbl.setVisible(False)
+        self._error_lbl.setOpenExternalLinks(True)
 
         # Select Dataset Layout
 
@@ -460,7 +460,7 @@ class NewDatasetDialog(QDialog):
         grp_dset.addWidget(self.directory, row, 1)
         grp_dset.addWidget(self.btn_browse, row, 3)
         row += 1
-        grp_dset.addWidget(self._msg, row, 1, 1, 3)
+        grp_dset.addWidget(self._error_lbl, row, 1, 1, 3)
 
         grp_dset.setContentsMargins(0, 0, 0, 15)
         grp_dset.setColumnStretch(2, 100)
@@ -680,7 +680,7 @@ class NewDatasetDialog(QDialog):
                 dsetname = dsetname.replace(char, '_')
             self._dset_name.setText(dsetname)
 
-        self._msg.setVisible(
+        self._error_lbl.setVisible(
             self._dataset is None and self.directory.text() != '')
         self.btn_ok.setEnabled(self._dataset is not None)
         self.grp_info.setEnabled(self._dataset is not None)
