@@ -10,6 +10,21 @@ import numpy as np
 import datetime
 
 
+def nan_as_text_tolist(arr):
+    """
+    Convert the float nan are to text while converting a numpy 2d array to a
+    list, so that it is possible to save to an Excel file.
+    """
+    if np.isnan(arr).any():
+        m, n = np.shape(arr)
+        list_ = []
+        for i in range(m):
+            list_.append(['nan' if np.isnan(x) else x for x in arr[i, :]])
+    else:
+        list_ = arr.tolist()
+    return list_
+
+
 def clip_time_series(tclip, tp, xp):
     """
     Clip tp and xp on tclip. tclip and tp must be arrays of numerical
