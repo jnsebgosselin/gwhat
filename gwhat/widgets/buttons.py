@@ -343,6 +343,9 @@ class ExportDataButton(QToolButtonBase):
     def model(self):
         return self.__model
 
+    def set_workdir(self, workdir):
+        self.__ddir = os.getcwd() if workdir is None else workdir
+
     def set_model(self, model):
         """Sets the weather dataset of the button."""
         if model is None:
