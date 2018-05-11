@@ -170,7 +170,7 @@ class WeatherViewer(DialogWindow):
 
     def set_weather_dataset(self, wxdset):
         """
-        Generates the graph, updates the table, and updates the GUI for
+        Generate the graph, update the table, and update the GUI for
         the new weather dataset.
         """
         self.btn_export.set_wxdset(wxdset)

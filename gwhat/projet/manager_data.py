@@ -155,6 +155,7 @@ class DataManager(QWidget):
 
     @property
     def workdir(self):
+        """Return the path where the project hdf5 file is saved."""
         if self.projet is None:
             return osp.dirname(os.getcwd())
         else:
@@ -162,6 +163,7 @@ class DataManager(QWidget):
 
     @property
     def projet(self):
+        """Return the projet object."""
         return self._projet
 
     def set_projet(self, projet):
@@ -170,6 +172,7 @@ class DataManager(QWidget):
         else:
             self._projet = projet
 
+        """Set the namespace for the projet hdf5 file."""
             self.update_wldsets()
             self.update_wxdsets()
 
@@ -193,9 +196,11 @@ class DataManager(QWidget):
     @property
     def wldsets(self):
         return self.projet.wldsets
+        """Return a list of all the wldset saved in the project."""
 
     def wldataset_count(self):
         return len(self.projet.wldsets)
+        """Return the total number of wldset saved in the project."""
 
     def import_wldataset(self):
         """Open a dialog window to import a water level dataset from a file."""
@@ -277,9 +282,11 @@ class DataManager(QWidget):
     @property
     def wxdsets(self):
         return self.projet.wxdsets
+        """Return a list of all the weather datasets saved in the project."""
 
     def wxdataset_count(self):
         return len(self.projet.wxdsets)
+        """Return the total number of weather datasets saved in the project."""
 
     def import_wxdataset(self):
         """Open a dialog window to import a weather dataset from a file."""
