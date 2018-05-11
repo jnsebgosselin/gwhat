@@ -16,6 +16,7 @@ import os.path as osp
 
 from PyQt5.QtCore import Qt, QCoreApplication, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
                              QLabel, QMessageBox, QLineEdit, QPushButton,
                              QFileDialog, QApplication, QDialog, QMenu,
@@ -31,6 +32,7 @@ import gwhat.projet.reader_waterlvl as wlrd
 from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
 import gwhat.meteo.weather_reader as wxrd
 from gwhat.meteo.weather_reader import WXDataFrameBase
+from gwhat.widgets.buttons import ExportDataButton
 
 
 class DataManager(QWidget):
@@ -155,6 +157,7 @@ class DataManager(QWidget):
 
     @property
     def workdir(self):
+        """Return the path where the project hdf5 file is saved."""
         if self.projet is None:
             return osp.dirname(os.getcwd())
         else:
@@ -162,14 +165,13 @@ class DataManager(QWidget):
 
     @property
     def projet(self):
+        """Return the projet object."""
         return self._projet
 
     def set_projet(self, projet):
-        if projet is None:
-            self._projet = None
-        else:
-            self._projet = projet
-
+        """Set the namespace for the projet hdf5 file."""
+        self._projet = projet
+        if projet is not None:
             self.update_wldsets()
             self.update_wxdsets()
 
@@ -177,7 +179,9 @@ class DataManager(QWidget):
             self.update_wxdset_info()
 
             self.wldset_changed()
-            self.btn_export_weather.set_wxdset(self.get_current_wxdset())
+
+        self.btn_export_weather.set_model(self.get_current_wxdset())
+        self.btn_export_weather.set_workdir(self.workdir)
 
         self.new_waterlvl_win.set_projet(projet)
         self.new_weather_win.set_projet(projet)
@@ -192,16 +196,17 @@ class DataManager(QWidget):
 
     @property
     def wldsets(self):
-        return self.projet.wldsets
+        """Return a list of all the wldset saved in the project."""
+        return [] if self.projet is None else self.projet.wldsets
 
     def wldataset_count(self):
-        return len(self.projet.wldsets)
+        """Return the total number of wldset saved in the project."""
+        return len(self.wldsets)
 
     def import_wldataset(self):
         """Open a dialog window to import a water level dataset from a file."""
         if self.projet is None:
-            msg = ('Please first select a valid WHAT project or '
-                   'create a new one.')
+            msg = ("Please first select a valid project or create a new one.")
             btn = QMessageBox.Ok
             QMessageBox.warning(self, 'Create dataset', msg, btn)
             return
@@ -276,10 +281,12 @@ class DataManager(QWidget):
 
     @property
     def wxdsets(self):
-        return self.projet.wxdsets
+        """Return a list of all the weather datasets saved in the project."""
+        return [] if self.projet is None else self.projet.wxdsets
 
     def wxdataset_count(self):
-        return len(self.projet.wxdsets)
+        """Return the total number of weather datasets saved in the project."""
+        return len(self.wxdsets)
 
     def import_wxdataset(self):
         """Open a dialog window to import a weather dataset from a file."""
@@ -332,7 +339,7 @@ class DataManager(QWidget):
 
     def wxdset_changed(self):
         """Handles when the currently selected weather dataset changed."""
-        self.btn_export_weather.set_wxdset(self.get_current_wxdset())
+        self.btn_export_weather.set_model(self.get_current_wxdset())
         self.wxdsetChanged.emit(self.get_current_wxdset())
 
     def del_current_wxdset(self):
@@ -746,67 +753,48 @@ class NewDatasetDialog(QDialog):
         self.update_gui()
 
 
-class ExportWeatherButton(QToolButtonBase):
+class ExportWeatherButton(ExportDataButton):
     """
     A toolbutton with a popup menu that handles the export of the weather
     dataset in various format.
     """
-    def __init__(self, workdir=None, wxdset=None, *args, **kargs):
-        super(ExportWeatherButton, self).__init__(
-                icons.get_icon('export_data'), *args, **kargs)
-        self.__save_dialog_dir = os.getcwd() if workdir is None else workdir
-        self.set_wxdset(wxdset)
+    MODEL_TYPE = WXDataFrameBase
+    TOOLTIP = "Export weather data."
 
-        self.setToolTip('Export time series')
-        self.setPopupMode(QToolButtonSmall.InstantPopup)
-        self.setStyleSheet("QToolButton::menu-indicator {image: none;}")
+    def __init__(self, model=None, workdir=None, parent=None):
+        super(ExportWeatherButton, self).__init__(model, workdir, parent)
 
-        # Generate the menu of the button :
-
-        menu = QMenu()
-        menu.addAction('Export daily time series as...',
-                       lambda: self.select_export_file('daily'))
-        menu.addAction('Export monthly time series as...',
-                       lambda: self.select_export_file('monthly'))
-        menu.addAction('Export yearly time series as...',
-                       lambda: self.select_export_file('yearly'))
-        self.setMenu(menu)
-
-    # ---- Weather Dataset
-
-    @property
-    def wxdset(self):
-        return self.__wxdset
-
-    def set_wxdset(self, wxdset):
-        """Sets the weather dataset of the button."""
-        if wxdset is None:
-            self.__wxdset = None
-        else:
-            if isinstance(wxdset, WXDataFrameBase):
-                self.__wxdset = wxdset
-            else:
-                raise ValueError("wxdset must be a derived class"
-                                 " of WXDataFrameBase")
+    def setup_menu(self):
+        """Setup the menu of the button tailored to the model."""
+        super(ExportWeatherButton, self).setup_menu()
+        self.menu().addAction('Export daily time series as...',
+                              lambda: self.select_export_file('daily'))
+        self.menu().addAction('Export monthly time series as...',
+                              lambda: self.select_export_file('monthly'))
+        self.menu().addAction('Export yearly time series as...',
+                              lambda: self.select_export_file('yearly'))
 
     # ---- Export Time Series
 
+    @QSlot(str)
     def select_export_file(self, time_frame):
-        if isinstance(self.wxdset, WXDataFrameBase):
-            staname = self.wxdset['Station Name']
-            filename = 'Weather%s_%s' % (time_frame.capitalize(), staname)
-            dirname = os.path.join(self.__save_dialog_dir, filename)
-            winname = 'Export %s' % time_frame
-            filename, ftype = QFileDialog.getSaveFileName(
-                    self, winname, dirname, '*.xlsx;;*.xls;;*.csv')
-            if filename:
-                self.__save_dialog_dir = osp.dirname(filename)
-                self.export_series_tofile(filename, time_frame)
+        """
+        Prompt a dialog to select a file and save the weather data time series
+        to a file in the specified format and time frame.
+        """
+        fname = self.select_savefilename(
+            'Export %s' % time_frame,
+            'Weather%s_%s' % (time_frame.capitalize(),
+                              self.model['Station Name']),
+            '*.xlsx;;*.xls;;*.csv')
 
-    def export_series_tofile(self, filename, time_frame):
-        if isinstance(self.wxdset, WXDataFrameBase):
+        if fname:
             QApplication.setOverrideCursor(Qt.WaitCursor)
-            self.wxdset.export_dataset_to_file(filename, time_frame)
+            try:
+                self.model.export_dataset_to_file(fname, time_frame)
+            except PermissionError:
+                self.show_permission_error()
+                self.select_export_file(time_frame)
             QApplication.restoreOverrideCursor()
 
 

@@ -47,7 +47,7 @@ def data_manager_bot(qtbot):
 def export_weather_bot(qtbot):
     datafile = osp.join(OUTPUTDIR, "IBERVILLE (7023270)",
                         "IBERVILLE (7023270)_2000-2015.out")
-    export_btn = ExportWeatherButton(wxdset=WXDataFrame(datafile))
+    export_btn = ExportWeatherButton(model=WXDataFrame(datafile))
     qtbot.addWidget(export_btn)
 
     return export_btn, qtbot
