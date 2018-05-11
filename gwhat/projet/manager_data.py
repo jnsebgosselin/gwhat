@@ -196,12 +196,12 @@ class DataManager(QWidget):
 
     @property
     def wldsets(self):
-        return self.projet.wldsets
         """Return a list of all the wldset saved in the project."""
+        return [] if self.projet is None else self.projet.wldsets
 
     def wldataset_count(self):
-        return len(self.projet.wldsets)
         """Return the total number of wldset saved in the project."""
+        return len(self.wldsets)
 
     def import_wldataset(self):
         """Open a dialog window to import a water level dataset from a file."""
@@ -282,12 +282,12 @@ class DataManager(QWidget):
 
     @property
     def wxdsets(self):
-        return self.projet.wxdsets
         """Return a list of all the weather datasets saved in the project."""
+        return [] if self.projet is None else self.projet.wxdsets
 
     def wxdataset_count(self):
-        return len(self.projet.wxdsets)
         """Return the total number of weather datasets saved in the project."""
+        return len(self.wxdsets)
 
     def import_wxdataset(self):
         """Open a dialog window to import a weather dataset from a file."""
