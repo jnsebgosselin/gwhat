@@ -51,6 +51,10 @@ field :guilabel:`Dataset name`.
 
     Presentation of the :guilabel:`Import Dataset` windows to import
     water levels (to the left) and weather (to the right) data files.
+    
+.. important:: A valid dataset name is at least one charater long and
+    can't contain any of the following special characters:
+    |_| |_| \\ |_| \/ |_| \: |_| \* |_| \? |_| \" |_| \< |_| \> |_| \|
 
 .. _input_datafile_format:
 
@@ -76,9 +80,9 @@ of Quebec`_ [#url_rsesq]_  and for several Canadian provinces from the
 Weather data files
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-GWHAT can read weather data saved in comma-separated values (csv) or tab-separated
-values (tsv) text files with UTF-8 encoding. An example of correctly formatted data file is
-presented in :numref:`weather_datafile_example`.
+GWHAT can read weather data saved in comma-separated values (:file:`csv`) or
+tab-separated values (:file:`tsv`) text files with UTF-8 encoding. An example
+of correctly formatted data file is presented in :numref:`weather_datafile_example`.
 
 The file header contains information about the station name, province, latitude, longitude,
 elevation and climate identifier. The dataset is composed of daily maximum, minimum,
@@ -115,14 +119,14 @@ folder of the project example that is distributed with GWHAT
 (see :numref:`sec_installing_on_windows`).
 
 The file header contains information about the well name, identifier, province,
-latitude, longitude, and elevation. The first column of the data must contain
-the time in excel numeric format. The second column must contain the water level,
-given in metres below the ground surface. The third and fourth columns correspond,
-respectively, to the barometric pressure and the Earth tides.
-This will be discussed in more details in :numref:`chap_computing_the_brf`.
-Note that the name of the labels of the header and of the data columns 
-(e.g., Well Name, Well ID, Date) must be respected for the program
-to read the content of the file correctly.
+latitude, longitude, and elevation. The data must be saved in chronological order.
+The first column of the data must contain the time in excel numeric format. 
+The second column must contain the water level, given in metres below the 
+ground surface. The third and fourth columns correspond, respectively, to the 
+barometric pressure and the Earth tides.
+The use of barometric pressure and the Earth tides data will be discussed in
+more details in :numref:`chap_computing_the_brf`.
+
 
 .. _water_level_datafile_example:
 .. figure:: img/files/water_level_datafile.*
@@ -131,9 +135,14 @@ to read the content of the file correctly.
     :alt: water_level_datafile.png
     :figclass: align-center
 
-    Example of a correctly formatted water level data file.
+    Example of a correctly formatted water level data file. This file is
+    available in the folder of the project example that is distributed with
+    GWHAT.
 
 .. important:: Water levels must be in metres below the ground surface.
+    The name of the labels of the header and of the data columns 
+    (e.g., Well Name, Well ID, Date) must be respected for the program
+    to read the content of the file correctly.
 
 .. _sec_exporting_data:
 
@@ -180,3 +189,5 @@ the export of water level datasets is currently not available in GWHAT.
 .. [#url_cddc] http://climate.weather.gc.ca/
 .. [#url_rsesq] http://www.mddelcc.gouv.qc.ca/eau/piezo/
 .. [#url_gin] http://gin.gw-info.net/service/api_ngwds:gin2/en/gin.html
+
+.. |_| unicode:: 0020
