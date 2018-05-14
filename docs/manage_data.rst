@@ -51,6 +51,10 @@ field :guilabel:`Dataset name`.
 
     Presentation of the :guilabel:`Import Dataset` windows to import
     water levels (to the left) and weather (to the right) data files.
+    
+.. important:: A valid dataset name is at least one charater long and
+    can't contain any of the following special characters:
+    |_| |_| \\ |_| \/ |_| \: |_| \* |_| \? |_| \" |_| \< |_| \> |_| \|
 
 .. _input_datafile_format:
 
@@ -185,3 +189,5 @@ the export of water level datasets is currently not available in GWHAT.
 .. [#url_cddc] http://climate.weather.gc.ca/
 .. [#url_rsesq] http://www.mddelcc.gouv.qc.ca/eau/piezo/
 .. [#url_gin] http://gin.gw-info.net/service/api_ngwds:gin2/en/gin.html
+
+.. |_| unicode:: 0020
