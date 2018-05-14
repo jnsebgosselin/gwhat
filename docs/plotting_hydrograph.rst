@@ -55,8 +55,8 @@ Various parameters are available to customize the layout of the hydrograph:
 The layout for the currently selected water level dataset can be saved by
 clicking on the |icon_save_config| icon. The previously saved layout can be
 loaded back for the currently selected water level dataset by clicking on the
-|icon_load_config| icon. Finally, the hydrograph can be saved in a pdf or
-svg format by clicking on the |icon_save| icon.
+|icon_load_config| icon. Finally, the hydrograph can be saved in a :file:`pdf`,
+:file:`svg` or :file:`png` format by clicking on the |icon_save| icon.
 
 .. _fig_plot_hydrograph_annoted:
 .. figure:: img/scs/plot_hydrograph_annoted.*
@@ -115,7 +115,7 @@ As shown in :numref:`fig_wl_trend`, it is also possible to show the trend of
 the water level by setting the option :guilabel:`Water Level Trend` to 
 :guilabel:`On` in the :guilabel:`Page and Figure Setup` window
 (see :numref:`subsec_page_and_fig_settings`).
-The actual observed data are then plotted below the trend line as a scatter plot.
+The actual observed data are then plotted under the trend line as a scatter plot.
 The trend line is computed using a moving average window of 30 days.
 
 .. _fig_wl_trend:
