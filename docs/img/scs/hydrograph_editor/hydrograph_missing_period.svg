@@ -25,7 +25,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -38,14 +38,14 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1920"
-     inkscape:window-height="1058"
+     inkscape:window-width="1600"
+     inkscape:window-height="838"
      id="namedview1328"
      showgrid="false"
      showguides="false"
-     inkscape:zoom="0.81424417"
-     inkscape:cx="655.17044"
-     inkscape:cy="422.19649"
+     inkscape:zoom="0.40712209"
+     inkscape:cx="442.43694"
+     inkscape:cy="564.07644"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -58,6 +58,20 @@
   <defs
      id="defs4"
      style="stroke-linecap:butt;stroke-linejoin:round">
+    <marker
+       inkscape:stockid="Arrow1Mstart"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="Arrow1Mstart"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path1913"
+         d="M 0.0,0.0 L 5.0,-5.0 L -12.5,0.0 L 5.0,5.0 L 0.0,0.0 z "
+         style="fill-rule:evenodd;stroke:#c83737;stroke-width:1pt;stroke-opacity:1;fill:#c83737;fill-opacity:1"
+         transform="scale(0.4) translate(10,0)" />
+    </marker>
     <style
        type="text/css"
        id="style2">
@@ -184,6 +198,21 @@
          inkscape:connector-curvature="0"
          style="stroke-linecap:butt;stroke-linejoin:round" />
     </defs>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="Arrow1Mend-5-8-6-6-5-0-2-3"
+       refX="0"
+       refY="0"
+       orient="auto"
+       inkscape:stockid="Arrow1Mend">
+      <path
+         transform="matrix(-0.4,0,0,-0.4,-4,0)"
+         style="fill:#c83737;fill-opacity:1;fill-rule:evenodd;stroke:#c83737;stroke-width:1.00000003pt;stroke-opacity:1"
+         d="M 0,0 5,-5 -12.5,0 5,5 Z"
+         id="path826-2-0-6-18-4-7-7-8"
+         inkscape:connector-curvature="0" />
+    </marker>
   </defs>
   <g
      id="figure_1"
@@ -4591,6 +4620,28 @@
            id="path1310"
            inkscape:connector-curvature="0" />
       </g>
+      <path
+         sodipodi:nodetypes="cc"
+         inkscape:connector-curvature="0"
+         id="path815-3-4-0-3-4-5-4-4"
+         d="M 522.1938,361.62576 322.99853,339.05882"
+         style="fill:#c83737;fill-opacity:1;stroke:#c83737;stroke-width:3.75;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#Arrow1Mstart);marker-end:url(#Arrow1Mend-5-8-6-6-5-0-2-3)" />
+      <text
+         id="text1672-8-3-4-5-9-5-7-5-5-3-2-2"
+         y="311.2793"
+         x="435.31946"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:30px;line-height:0.80000001;font-family:'Liberation Sans';-inkscape-font-specification:'Liberation Sans';letter-spacing:0px;word-spacing:0px;fill:#c83737;fill-opacity:1;stroke:none;stroke-width:0.74999994;stroke-linecap:butt;stroke-linejoin:round"
+         xml:space="preserve"><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:0.80000001;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;text-anchor:middle;fill:#c83737;fill-opacity:1;stroke-width:0.74999994;stroke-linecap:butt;stroke-linejoin:round"
+           y="311.2793"
+           x="435.31946"
+           sodipodi:role="line"
+           id="tspan1753">Period where data</tspan><tspan
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:20px;line-height:0.80000001;font-family:Arial;-inkscape-font-specification:Arial;text-align:center;text-anchor:middle;fill:#c83737;fill-opacity:1;stroke-width:0.74999994;stroke-linecap:butt;stroke-linejoin:round"
+           y="335.2793"
+           x="435.31946"
+           sodipodi:role="line"
+           id="tspan1759">was missing</tspan></text>
     </g>
     <image
        style="stroke-linecap:butt;stroke-linejoin:round"
