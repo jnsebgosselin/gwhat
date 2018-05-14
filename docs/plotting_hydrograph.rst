@@ -25,8 +25,8 @@ consists of a toolbar, the panel :guilabel:`Input data`
 (documented in :numref:`chap_importing_data`), the panel
 :guilabel:`Axes settings`, and a canvas where the hydrograph figure is shown.
 
-A figure of the hydrograph is produced as soon as a water level and weather
-dataset have been selected in the :guilabel:`Input data` panel.
+A figure of the hydrograph is produced as soon as a water level dataset have
+been selected in the :guilabel:`Input data` panel.
 It is possible to zoom the figure canvas in or out by pressing the
 |icon_zoom_in| or |icon_zoom_out| icon or by rotating the mouse wheel while
 holdind the :kbd:`Ctrl` key.
@@ -52,12 +52,11 @@ Various parameters are available to customize the layout of the hydrograph:
   where are displayed the yearly and monthly normals of the weather dataset.
   This is covered in more details in :numref:`chap_weather_normals_viewer`.
 
-
 The layout for the currently selected water level dataset can be saved by
 clicking on the |icon_save_config| icon. The previously saved layout can be
 loaded back for the currently selected water level dataset by clicking on the
-|icon_load_config| icon. Finally, the hydrograph can be saved in a pdf or
-svg format by clicking on the |icon_save| icon.
+|icon_load_config| icon. Finally, the hydrograph can be saved in a :file:`pdf`,
+:file:`svg` or :file:`png` format by clicking on the |icon_save| icon.
 
 .. _fig_plot_hydrograph_annoted:
 .. figure:: img/scs/plot_hydrograph_annoted.*
@@ -77,7 +76,7 @@ Components of the Hydrograph
 Each of these are discussed in more details below.
 
 .. _fig_hydrograph_components:
-.. figure:: img/scs/hydrograph_components.*
+.. figure:: img/scs/hydrograph_editor/hydrograph_components.*
     :align: center
     :width: 100%
     :alt: hydrograph_components.svg
@@ -87,30 +86,23 @@ Each of these are discussed in more details below.
 
 .. _subsec_water_level_component:
 
-Groundwater levels
+Observed water levels
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-The groundwater levels are plotted on the bottom part of the hydrograph. 
+The observed water levels are plotted on the bottom part of the hydrograph. 
 By default, groundwater levels are represented by a continuous line that connects 
 to all available data.
 
-It is possible to ensure that the continuous line is not drawn over periods of time
-where data is missing by adding a nan value in the water levels time series before
-importing it in GWHAT.
-For example, in :numref:`fig_missing_water_level`, water level data
-were missing for the whole of 2012. A ``nan`` was thus added in the data file 
+It is possible to ensure that the continuous line is not drawn over periods
+where data is missing by marking the missing period in the water level time
+series with at least one ``nan`` value before importing the water level dataset in GWHAT.
+For example, in :numref:`fig_missing_water_level`, water levels were missing
+for the whole of 2012. A ``nan`` was thus added in the time series
 at one time during this period to avoid a line to be plotted between the
 31/12/2011 and the 01/01/2013.
 
-It is also possible to show the trend of the water level data with the option
-:guilabel:`Water Level Trend` that is available in the :guilabel:`Page and Figure Setup`
-window (see :numref:`subsec_page_and_fig_settings`). The actual data will then be
-plotted below the trend line as a scatter plot as shown in the hydrograph of 
-:numref:`fig_hydrograph_components`. The trend line is computed using a
-moving average window of 30 days.
-
 .. _fig_missing_water_level:
-.. figure:: img/scs/hydrograph_missing_period.*
+.. figure:: img/scs/hydrograph_editor/hydrograph_missing_period.*
     :align: center
     :width: 100%
     :alt: hydrograph_missing_period.png
@@ -118,7 +110,25 @@ moving average window of 30 days.
 
     Example of an hydrogaph with an extended period of time for which data is
     missing.
+    
+As shown in :numref:`fig_wl_trend`, it is also possible to show the trend of
+the water level by setting the option :guilabel:`Water Level Trend` to 
+:guilabel:`On` in the :guilabel:`Page and Figure Setup` window
+(see :numref:`subsec_page_and_fig_settings`).
+The actual observed data are then plotted under the trend line as a scatter plot.
+The trend line is computed using a moving average window of 30 days.
 
+.. _fig_wl_trend:
+.. figure:: img/scs/hydrograph_editor/hydrograph_wl_trend.*
+    :align: center
+    :width: 100%
+    :alt: hydrograph_wl_trend
+    :figclass: align-center
+    
+    Example of a hydrograph where the trend of the water level is shown as a
+    continuous blue line along with the real observations plotted as a series
+    of light gray dots.
+    
 .. _subsec_weather_data_component:
 
 Weather data
@@ -134,7 +144,12 @@ Cumulative precipitation, as rain and snow, is plotted in the bottom part of the
 hydrograph along with the water level data. For a given day, precipitation is
 assumed to fall as snow if the mean air temperature for that day is below 0ºC and
 as rain otherwise. As for air temperature, cumulative precipitation can be plotted on
-a daily, weekly, or monthly basis. 
+a daily, weekly, or monthly basis.
+
+As shown in :numref:`fig_wl_trend`, it is possible to plot the water level data
+alone, without the mean air temperature and cumulative precipitation, by setting
+the :guilabel:`Weather Data` component to :guilabel:`Off` in the 
+:guilabel:`Page and Figure Setup` window.
 
 Missing weather data
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -150,7 +165,7 @@ weather records with the tool presented in :numref:`chap_gapfilling_weather_data
           even if data are missing in the daily weather dataset.
 
 
-Water levels manual measurements
+Water level manual measurements
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 Water levels measured manually during field visits can also be plotted on the hydrograph.
@@ -180,19 +195,33 @@ the manual measurements, in metres below the ground surface.
           than one file named :file:`water_level_measurements` exists in the folder
           :file:`Water Levels`, but with different extension, GWHAT will always
           read the data from the csv file by default.
+          
+Water level envelope predicted with GLUE
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+Water levels predicted by optimizing a quasi-two-dimensional hydrologic model
+with the GLUE (Generalized Likelihood Uncertainty Estimation) methodology at
+the 05/95 uncertainty level can be plotted on the hydrograph once groundwater
+recharge have been evaluated with the tool presented in :numref:`chap_est_recharge`.
+
+As for many other elements of the hydrograph, the plotting of the GLUE
+predicted water level envelope can be turned on or off
+in the :guilabel:`Page and Figure Setup` window.
 
 .. _subsec_page_and_fig_settings:
 
 Page and figure settings
 -----------------------------------------------
 
-Several options are available to customize the size and visibility of various
+Several options are available to customize the size and visibility of the various
 components of the hydrograph in the :guilabel:`Page and Figure Setup` window,
 which is accessible by clicking on the |icon_page_setup| icon
 (see :numref:`fig_plot_hydrograph_annoted`).
 The :guilabel:`Page and Figure Setup` window is shown in
-:numref:`fig_hydroprint_page_settings`, as well as the components of the
-hydrograph for which the size or the visibility can be configured.
+:numref:`fig_hydroprint_page_settings`, along with an annoted figure where are
+presented the various components of the hydrograph layout that can be
+configured from this dialog.
+
 
 .. _fig_hydroprint_page_settings:
 .. figure:: img/scs/hydroprint_page_setting.*
