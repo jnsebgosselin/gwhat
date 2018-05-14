@@ -78,12 +78,12 @@ class GapFillWeatherGUI(QWidget):
 
         self.btn_fill = QPushButton('Fill Station')
         self.btn_fill.setIcon(icons.get_icon('fill_data'))
-        self.btn_fill.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_fill.setIconSize(icons.get_iconsize('small'))
         self.btn_fill.setToolTip('<p>Fill the gaps in the daily weather data '
                                  ' for the selected weather station.</p>')
 
         self.btn_fill_all = QPushButton('Fill All Stations')
-        self.btn_fill_all.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_fill_all.setIconSize(icons.get_iconsize('small'))
         self.btn_fill_all.setIcon(icons.get_icon('fill_all_data'))
         self.btn_fill_all.setToolTip('<p>Fill the gaps in the daily weather '
                                      ' data for all the weather stations' +

@@ -259,20 +259,20 @@ class WeatherStationBrowser(QWidget):
 
         self.btn_addSta = btn_addSta = QPushButton('Add')
         btn_addSta.setIcon(icons.get_icon('add2list'))
-        btn_addSta.setIconSize(icons.get_iconsize('iconSize2'))
+        btn_addSta.setIconSize(icons.get_iconsize('small'))
         btn_addSta.setToolTip('Add selected found weather stations to the '
                               'current list of weather stations.')
         btn_addSta.clicked.connect(self.btn_addSta_isClicked)
 
         btn_save = QPushButton('Save')
         btn_save.setIcon(icons.get_icon('save'))
-        btn_save.setIconSize(icons.get_iconsize('iconSize2'))
+        btn_save.setIconSize(icons.get_iconsize('small'))
         btn_save.setToolTip('Save current found stations info in a csv file.')
         btn_save.clicked.connect(self.btn_save_isClicked)
 
         self.btn_fetch = btn_fetch = QPushButton('Fetch')
         btn_fetch.setIcon(icons.get_icon('refresh'))
-        btn_fetch.setIconSize(icons.get_iconsize('iconSize2'))
+        btn_fetch.setIconSize(icons.get_iconsize('small'))
         btn_fetch.setToolTip("Updates the climate station database by"
                              " fetching it again from the ECCC ftp server.")
         btn_fetch.clicked.connect(self.btn_fetch_isClicked)

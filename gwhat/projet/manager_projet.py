@@ -239,7 +239,7 @@ class NewProject(QDialog):
         btn_browse = QToolButton()
         btn_browse.setAutoRaise(True)
         btn_browse.setIcon(icons.get_icon('openFolder'))
-        btn_browse.setIconSize(icons.get_iconsize('iconSize2'))
+        btn_browse.setIconSize(icons.get_iconsize('small'))
         btn_browse.setToolTip('Browse...')
         btn_browse.setFocusPolicy(Qt.NoFocus)
         btn_browse.clicked.connect(self.browse_saveIn_folder)

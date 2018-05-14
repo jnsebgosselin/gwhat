@@ -202,14 +202,14 @@ class DwnldWeatherWidget(QWidget):
         self.btn_selectRaw.setIcon(icons.get_icon('openFile'))
         self.btn_selectRaw.setToolTip(
                 "Select and concatenate raw weather data files.")
-        self.btn_selectRaw.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_selectRaw.setIconSize(icons.get_iconsize('small'))
         self.btn_selectRaw.clicked.connect(self.btn_selectRaw_isClicked)
 
         self.btn_saveMerge = QPushButton('Save')
         self.btn_saveMerge.setToolTip(
                 "Save the concatenated weather dataset in a csv file.")
         self.btn_saveMerge.setIcon(icons.get_icon('save'))
-        self.btn_saveMerge.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_saveMerge.setIconSize(icons.get_iconsize('small'))
         self.btn_saveMerge.clicked.connect(self.btn_saveMerge_isClicked)
 
         rightPanel_grid = QGridLayout()
