@@ -289,7 +289,7 @@ class WLCalc(myqt.DialogWindow):
 
         # Setup the layout.
 
-        toolbar = ToolBarWidget()
+        toolbar = ToolBarWidget(icons.get_iconsize('normal'))
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather]:

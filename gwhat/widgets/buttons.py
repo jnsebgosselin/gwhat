@@ -33,9 +33,10 @@ from gwhat.common.utils import find_unique_filename
 
 class ToolBarWidget(QToolBar):
     """A standard toolbar with some layout specifics."""
-    def __init__(self, parent=None):
+    def __init__(self, qsize=None, parent=None):
         super(ToolBarWidget, self).__init__(parent)
-        self.setIconSize(QSize(28, 28))
+        if qsize is not None:
+            self.setIconSize(qsize)
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().setSpacing(5)
 
