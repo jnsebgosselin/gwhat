@@ -25,8 +25,8 @@ consists of a toolbar, the panel :guilabel:`Input data`
 (documented in :numref:`chap_importing_data`), the panel
 :guilabel:`Axes settings`, and a canvas where the hydrograph figure is shown.
 
-A figure of the hydrograph is produced as soon as a water level and weather
-dataset have been selected in the :guilabel:`Input data` panel.
+A figure of the hydrograph is produced as soon as a water level dataset have
+been selected in the :guilabel:`Input data` panel.
 It is possible to zoom the figure canvas in or out by pressing the
 |icon_zoom_in| or |icon_zoom_out| icon or by rotating the mouse wheel while
 holdind the :kbd:`Ctrl` key.
