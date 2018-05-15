@@ -21,37 +21,32 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import QSize, Qt, QEvent
 from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QFileDialog,
-                             QListWidget, QMenu, QMessageBox, QStyle,
-                             QToolButton, QWidget, QToolBar)
+                             QGridLayout, QListWidget, QMenu, QMessageBox,
+                             QStyle, QToolButton, QWidget)
 
 # ---- Local imports
 
 from gwhat.common.icons import QToolButtonBase
 from gwhat.common import icons
 from gwhat.common.utils import find_unique_filename
+from gwhat.widgets.layout import VSep
 
 
-class ToolBarWidget(QToolBar):
+class ToolBarWidget(QWidget):
     """A standard toolbar with some layout specifics."""
-    def __init__(self, qsize=None, parent=None):
+    def __init__(self, parent=None):
         super(ToolBarWidget, self).__init__(parent)
-        if qsize is not None:
-            self.setIconSize(qsize)
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(5)
+        layout = QGridLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(5)
 
     def addWidget(self, widget):
         """Qt method override."""
         if widget is None:
-            super(ToolBarWidget, self).addSeparator()
-        elif isinstance(widget, QToolButton):
-            # This is required because it seems that autoRaise is set to True
-            # automatically when adding a widget to the toolbar.
-            auto_raise = widget.autoRaise()
-            super(ToolBarWidget, self).addWidget(widget)
-            widget.setAutoRaise(auto_raise)
-        else:
-            super(ToolBarWidget, self).addWidget(widget)
+            widget = VSep()
+        lay.setColumnStretch(lay.columnCount()-1, 0)
+        lay.addWidget(widget, 0, lay.columnCount())
+        lay.setColumnStretch(lay.columnCount(), 100)
 
 
 class SmartSpinBox(QDoubleSpinBox):
