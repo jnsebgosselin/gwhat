@@ -392,7 +392,7 @@ class OnOffToolButton(QToolButtonBase):
         super(OnOffToolButton, self).__init__(self._icon, parent)
         self.installEventFilter(self)
         if size is not None:
-            self.setIconSize(QSize(*size))
+            self.setIconSize(icons.get_iconsize(size))
 
     def eventFilter(self, widget, event):
         if event.type() == QEvent.MouseButtonPress:

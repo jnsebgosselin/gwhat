@@ -247,19 +247,19 @@ class WLCalc(myqt.DialogWindow):
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.home)
 
-        self.btn_pan = OnOffToolButton('pan')
+        self.btn_pan = OnOffToolButton('pan', size='normal')
         self.btn_pan.setToolTip(
             'Pan axes with the left mouse button and zoom with the right')
         self.btn_pan.sig_value_changed.connect(self.pan_is_active_changed)
 
-        self.btn_zoom_to_rect = OnOffToolButton('zoom_to_rect')
+        self.btn_zoom_to_rect = OnOffToolButton('zoom_to_rect', size='normal')
         self.btn_pan.setToolTip(
             "Zoom in to the rectangle with the left mouse button and zoom"
             " out with the right mouse button.")
         self.btn_zoom_to_rect.sig_value_changed.connect(
             self.zoom_is_active_changed)
 
-        self.btn_wl_style = OnOffToolButton('showDataDots')
+        self.btn_wl_style = OnOffToolButton('showDataDots', size='normal')
         self.btn_wl_style.setToolTip(
             '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_wl_style.sig_value_changed.connect(self.setup_wl_style)
@@ -277,13 +277,13 @@ class WLCalc(myqt.DialogWindow):
         # dformat: False -> Excel Numeric Date Format
         #          True -> Matplotlib Date Format
 
-        self.btn_show_glue = OnOffToolButton('show_glue_wl')
+        self.btn_show_glue = OnOffToolButton('show_glue_wl', size='normal')
         self.btn_show_glue.setToolTip(
             """Show or hide GLUE water level 05/95 envelope.""")
         self.btn_show_glue.sig_value_changed.connect(self.draw_glue_wl)
         self.btn_show_glue.setValue(True, silent=True)
 
-        self.btn_show_weather = OnOffToolButton('show_meteo')
+        self.btn_show_weather = OnOffToolButton('show_meteo', size='normal')
         self.btn_show_weather.setToolTip("""Show or hide weather data.""")
         self.btn_show_weather.sig_value_changed.connect(self.draw_weather)
         self.btn_show_weather.setValue(True, silent=True)
