@@ -16,23 +16,20 @@ import os.path as osp
 
 from PyQt5.QtCore import Qt, QCoreApplication, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
                              QLabel, QMessageBox, QLineEdit, QPushButton,
-                             QFileDialog, QApplication, QDialog, QMenu,
-                             QGroupBox)
+                             QFileDialog, QApplication, QDialog, QGroupBox)
 
-# ---- Imports: Local Libraries
+# ---- Local library imports
 
-from gwhat.common.icons import QToolButtonSmall, QToolButtonBase
+from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
+from gwhat.common.icons import QToolButtonSmall, QToolButtonNormal
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
 import gwhat.projet.reader_waterlvl as wlrd
 from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
 import gwhat.meteo.weather_reader as wxrd
-from gwhat.meteo.weather_reader import WXDataFrameBase
-from gwhat.widgets.buttons import ExportDataButton
 from gwhat.widgets.buttons import ToolBarWidget
 
 
@@ -750,51 +747,6 @@ class NewDatasetDialog(QDialog):
         self._dataset = None
         self.directory.clear()
         self.update_gui()
-
-
-class ExportWeatherButton(ExportDataButton):
-    """
-    A toolbutton with a popup menu that handles the export of the weather
-    dataset in various format.
-    """
-    MODEL_TYPE = WXDataFrameBase
-    TOOLTIP = "Export weather data."
-
-    def __init__(self, model=None, workdir=None, parent=None):
-        super(ExportWeatherButton, self).__init__(model, workdir, parent)
-
-    def setup_menu(self):
-        """Setup the menu of the button tailored to the model."""
-        super(ExportWeatherButton, self).setup_menu()
-        self.menu().addAction('Export daily time series as...',
-                              lambda: self.select_export_file('daily'))
-        self.menu().addAction('Export monthly time series as...',
-                              lambda: self.select_export_file('monthly'))
-        self.menu().addAction('Export yearly time series as...',
-                              lambda: self.select_export_file('yearly'))
-
-    # ---- Export Time Series
-
-    @QSlot(str)
-    def select_export_file(self, time_frame):
-        """
-        Prompt a dialog to select a file and save the weather data time series
-        to a file in the specified format and time frame.
-        """
-        fname = self.select_savefilename(
-            'Export %s' % time_frame,
-            'Weather%s_%s' % (time_frame.capitalize(),
-                              self.model['Station Name']),
-            '*.xlsx;;*.xls;;*.csv')
-
-        if fname:
-            QApplication.setOverrideCursor(Qt.WaitCursor)
-            try:
-                self.model.export_dataset_to_file(fname, time_frame)
-            except PermissionError:
-                self.show_permission_error()
-                self.select_export_file(time_frame)
-            QApplication.restoreOverrideCursor()
 
 
 # %% if __name__ == '__main__'
