@@ -47,6 +47,8 @@ class DataManager(QWidget):
         self.setWindowIcon(icons.get_icon('master'))
         self.setMinimumWidth(250)
 
+        self.weather_avg_graph = None
+
         self.new_waterlvl_win = NewDatasetDialog(
                 'water level', parent, projet)
         self.new_waterlvl_win.sig_new_dataset_imported.connect(
@@ -408,6 +410,17 @@ class DataManager(QWidget):
                 mindist = newdist
 
         self.set_current_wxdset(closest)
+
+    def show_weather_normals(self):
+        """Show the weather normals for the current weather dataset."""
+        if self.get_current_wxdset() is None:
+            return
+        if self.weather_avg_graph is None:
+            self.weather_avg_graph = WeatherViewer(self)
+
+        self.weather_avg_graph.save_fig_dir = self.workdir
+        self.weather_avg_graph.set_weather_dataset(self.get_current_wxdset())
+        self.weather_avg_graph.show()
 
 
 class NewDatasetDialog(QDialog):
