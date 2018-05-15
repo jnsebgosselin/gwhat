@@ -41,7 +41,8 @@ class ToolBarWidget(QWidget):
         layout.setSpacing(5)
 
     def addWidget(self, widget):
-        """Qt method override."""
+        """Add the widget to the toolbar layout."""
+        lay = self.layout()
         if widget is None:
             widget = VSep()
         lay.setColumnStretch(lay.columnCount()-1, 0)
