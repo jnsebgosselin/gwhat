@@ -399,7 +399,7 @@ class WLCalc(myqt.DialogWindow):
 
         self.right_panel.setSpacing(15)
 
-        # -------------------------------------------------------- MAIN GRID --
+        # ---- Setup the main layout
 
         mainGrid = QGridLayout(self)
 
