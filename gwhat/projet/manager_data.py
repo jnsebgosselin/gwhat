@@ -33,6 +33,7 @@ from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
 import gwhat.meteo.weather_reader as wxrd
 from gwhat.meteo.weather_reader import WXDataFrameBase
 from gwhat.widgets.buttons import ExportDataButton
+from gwhat.widgets.buttons import ToolBarWidget
 
 
 class DataManager(QWidget):
@@ -121,14 +122,12 @@ class DataManager(QWidget):
 
         # Generate the layout :
 
-        wxtb = QGridLayout()
-        wxtb.setContentsMargins(0, 0, 0, 0)
-
+        wx_toolbar = ToolBarWidget()
         widgets = [self.wxdsets_cbox, self.btn_load_meteo, self.btn_del_wxdset,
                    btn_closest_meteo, self.btn_export_weather]
 
         for col, widg in enumerate(widgets):
-            wxtb.addWidget(widg, 0, col)
+            wx_toolbar.addWidget(widg)
 
         # Weather Dataset Info Box
 
@@ -147,7 +146,7 @@ class DataManager(QWidget):
         layout.setRowMinimumHeight(4, 10)
 
         layout.addWidget(QLabel('Weather Dataset :'), 5, 0)
-        layout.addLayout(wxtb, 6, 0)
+        layout.addWidget(wx_toolbar, 6, 0)
         layout.addWidget(self.meteo_info_widget, 7, 0)
 
         layout.setSpacing(5)
