@@ -57,16 +57,26 @@ class DataManager(QWidget):
         self.new_weather_win.sig_new_dataset_imported.connect(
                 self.new_wxdset_imported)
 
-        self.__initUI__()
+        self.setup_manager()
 
         self.set_projet(projet)
         if pm:
             pm.currentProjetChanged.connect(self.set_projet)
             self.set_projet(pm.projet)
 
-    def __initUI__(self):
+    def setup_manager(self):
+        """Setup the layout of the manager."""
+        layout = QGridLayout(self)
+        layout.setSpacing(5)
+        layout.setContentsMargins(0, 0, 0, 0)
 
-        # ---- Water Level Dataset Toolbar
+        layout.addLayout(self.setup_wldset_mngr(), 0, 0)
+        layout.addLayout(self.setup_wxdset_mngr(), 1, 0)
+
+    def setup_wldset_mngr(self):
+        """Setup the manager for the water level datasets."""
+
+        # ---- Toolbar
 
         self.wldsets_cbox = QComboBox()
         self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
@@ -80,22 +90,34 @@ class DataManager(QWidget):
         self.btn_del_wldset.setToolTip('Delete current dataset.')
         self.btn_del_wldset.clicked.connect(self.del_current_wldset)
 
-        wltb = QGridLayout()
-        wltb.setContentsMargins(0, 0, 0, 0)
+        wl_toolbar = QGridLayout()
+        wl_toolbar.setContentsMargins(0, 0, 0, 0)
 
         widgets = [self.wldsets_cbox, self.btn_load_wl, self.btn_del_wldset]
         for col, widg in enumerate(widgets):
-            wltb.addWidget(widg, 0, col)
+            wl_toolbar.addWidget(widg, 0, col)
 
-        # ---- Water Level Dataset Info Box
+        # ---- Info Box
 
         self.well_info_widget = QTextEdit()
         self.well_info_widget.setReadOnly(True)
-        self.well_info_widget.setFixedHeight(100)
 
-        # ---- Weather Dataset Toolbar
+        # ---- Main Layout
 
-        # Generate the widgets :
+        layout = QGridLayout()
+        layout.setSpacing(5)
+        layout.setContentsMargins(0, 0, 0, 0)
+
+        layout.addWidget(QLabel('Water Level Dataset :'), 1, 0)
+        layout.addLayout(wl_toolbar, 2, 0)
+        layout.addWidget(self.well_info_widget, 3, 0)
+
+        return layout
+
+    def setup_wxdset_mngr(self):
+        """Setup the manager for the weather datasets."""
+
+        # ---- Toolbar
 
         self.wxdsets_cbox = QComboBox()
         self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
@@ -114,42 +136,36 @@ class DataManager(QWidget):
                                      ' from the observation well.</p>')
         btn_closest_meteo.clicked.connect(self.set_closest_wxdset)
 
+        btn_weather_normals = QToolButtonSmall(icons.get_icon('meteo'))
+        btn_weather_normals.setToolTip(
+            "Show the normals for the current weather dataset normals...")
+        btn_weather_normals.clicked.connect(self.show_weather_normals)
+
         self.btn_export_weather = ExportWeatherButton(workdir=self.workdir)
         self.btn_export_weather.setIconSize(QSize(20, 20))
 
-        # Generate the layout :
-
         wx_toolbar = ToolBarWidget()
-        widgets = [self.wxdsets_cbox, self.btn_load_meteo, self.btn_del_wxdset,
-                   btn_closest_meteo, self.btn_export_weather]
-
-        for col, widg in enumerate(widgets):
+        for widg in [self.wxdsets_cbox, self.btn_load_meteo,
+                     self.btn_del_wxdset, btn_closest_meteo,
+                     btn_weather_normals, self.btn_export_weather]:
             wx_toolbar.addWidget(widg)
 
-        # Weather Dataset Info Box
+        # ---- Info Box
 
         self.meteo_info_widget = QTextEdit()
         self.meteo_info_widget.setReadOnly(True)
-        self.meteo_info_widget.setFixedHeight(100)
 
         # ---- Main Layout
 
         layout = QGridLayout()
-
-        layout.addWidget(QLabel('Water Level Dataset :'), 1, 0)
-        layout.addLayout(wltb, 2, 0)
-        layout.addWidget(self.well_info_widget, 3, 0)
-
-        layout.setRowMinimumHeight(4, 10)
+        layout.setSpacing(5)
+        layout.setContentsMargins(0, 0, 0, 0)
 
         layout.addWidget(QLabel('Weather Dataset :'), 5, 0)
         layout.addWidget(wx_toolbar, 6, 0)
         layout.addWidget(self.meteo_info_widget, 7, 0)
 
-        layout.setSpacing(5)
-        layout.setContentsMargins(0, 0, 0, 0)
-
-        self.setLayout(layout)
+        return layout
 
     @property
     def workdir(self):
