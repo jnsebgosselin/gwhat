@@ -33,6 +33,7 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
+from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import DropDownButton
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.search_weather_data import WeatherStationBrowser
@@ -239,7 +240,7 @@ class DwnldWeatherWidget(QWidget):
 
         main_grid.addLayout(toolbar, 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
-        main_grid.addWidget(myqt.VSep(), 0, 1, 2, 1)
+        main_grid.addWidget(VSep(), 0, 1, 2, 1)
 
         main_grid.addWidget(display_label, 0, 2)
         main_grid.addWidget(rightPanel_widg, 1, 2)

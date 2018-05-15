@@ -38,7 +38,7 @@ from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
-from gwhat.widgets.layout import OnOffToggleWidget
+from gwhat.widgets.layout import OnOffToggleWidget, VSep
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 
 
@@ -143,13 +143,10 @@ class HydroprintGUI(myqt.DialogWindow):
         # LAYOUT :
 
         btn_list = [btn_save, btn_draw,
-                    self.btn_load_layout, self.btn_save_layout,
-                    myqt.VSep(),
-                    btn_bestfit_waterlvl, btn_bestfit_time,
-                    myqt.VSep(), btn_weather_normals, self.btn_page_setup,
-                    btn_color_pick,
-                    myqt.VSep(),
-                    zoom_pan]
+                    self.btn_load_layout, self.btn_save_layout, VSep(),
+                    btn_bestfit_waterlvl, btn_bestfit_time, VSep(),
+                    btn_weather_normals, self.btn_page_setup, btn_color_pick,
+                    VSep(), zoom_pan]
 
         subgrid_toolbar = QGridLayout()
         toolbar_widget = QWidget()
@@ -217,7 +214,7 @@ class HydroprintGUI(myqt.DialogWindow):
         mainGrid = QGridLayout()
 
         mainGrid.addWidget(self.grid_layout_widget, 0, 0)
-        mainGrid.addWidget(myqt.VSep(), 0, 1)
+        mainGrid.addWidget(VSep(), 0, 1)
         mainGrid.addWidget(self.right_panel, 0, 2)
 
         mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)

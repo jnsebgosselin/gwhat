@@ -46,6 +46,7 @@ from gwhat.common import StyleDB, QToolButtonSmall
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import delete_file
+from gwhat.widgets.layout import HSep
 
 
 class GapFillWeatherGUI(QWidget):
@@ -353,11 +354,11 @@ class GapFillWeatherGUI(QWidget):
         row += 1
         grid_leftPanel.addWidget(self.fillDates_widg, row, 0)
         row += 1
-        grid_leftPanel.addWidget(myqt.HSep(), row, 0)
+        grid_leftPanel.addWidget(HSep(), row, 0)
         row += 1
         grid_leftPanel.addWidget(self.stack_widget, row, 0)
         row += 2
-        grid_leftPanel.addWidget(myqt.HSep(), row, 0)
+        grid_leftPanel.addWidget(HSep(), row, 0)
         row += 1
         grid_leftPanel.addWidget(widget_toolbar, row, 0)
 

@@ -42,6 +42,7 @@ from gwhat.common import icons
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.brf_mod import BRFManager
 from gwhat.widgets.buttons import OnOffToolButton
+from gwhat.widgets.layout import VSep
 
 # mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -404,7 +405,7 @@ class WLCalc(myqt.DialogWindow):
 
         mainGrid.addWidget(toolbar, 0, 0)
         mainGrid.addWidget(self.fig_frame_widget, 1, 0, 2, 1)
-        mainGrid.addWidget(myqt.VSep(), 0, 1, 3, 1)
+        mainGrid.addWidget(VSep(), 0, 1, 3, 1)
         mainGrid.addWidget(self.right_panel, 0, 2, 2, 1)
 
         mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)

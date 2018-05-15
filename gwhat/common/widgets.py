@@ -87,21 +87,6 @@ class AlignHCenterLabel(QLabel):
                           Qt.AlignVCenter)
 
 
-# ============================================================ Separators =====
-
-
-class HSep(QFrame):                               # horizontal separators
-    def __init__(self, parent=None):
-        super(HSep, self).__init__(parent)
-        self.setFrameStyle(52)
-
-
-class VSep(QFrame):                                 # vertical separators
-    def __init__(self, parent=None):
-        super(VSep, self).__init__(parent)
-        self.setFrameStyle(53)
-
-
 # ========================================================= Messsage Box ======
 
 

@@ -33,7 +33,8 @@ from gwhat.colors2 import ColorsReader
 from gwhat.common import StyleDB
 from gwhat.common import icons
 from gwhat.common.icons import QToolButtonVRectSmall, QToolButtonNormal
-from gwhat.common.widgets import DialogWindow, VSep
+from gwhat.common.widgets import DialogWindow
+from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.meteo.weather_reader import calcul_monthly_normals
 from gwhat.common.utils import save_content_to_file
