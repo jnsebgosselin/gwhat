@@ -262,16 +262,18 @@ class DataManager(QWidget):
         self.well_info_widget.set_model(model)
 
     def wldset_changed(self):
-        """Handles when the currently selected water level dataset changed."""
+        """Handle when the currently selected water level dataset changed."""
         self.wldsetChanged.emit(self.get_current_wldset())
 
     def get_current_wldset(self):
+        """Return the currently selected water level dataset."""
         if self.wldsets_cbox.currentIndex() == -1:
             return None
         else:
             return self.projet.get_wldset(self.wldsets_cbox.currentText())
 
     def del_current_wldset(self):
+        """Delete the currently selected water level dataset."""
         if self.wldsets_cbox.count() > 0:
             name = self.wldsets_cbox.currentText()
             msg = ('Do you want to delete the dataset <i>%s</i>? ' +
@@ -348,11 +350,12 @@ class DataManager(QWidget):
         self.meteo_info_widget.set_model(model)
 
     def wxdset_changed(self):
-        """Handles when the currently selected weather dataset changed."""
+        """Handle when the currently selected weather dataset changed."""
         self.btn_export_weather.set_model(self.get_current_wxdset())
         self.wxdsetChanged.emit(self.get_current_wxdset())
 
     def del_current_wxdset(self):
+        """Delete the currently selected weather dataset."""
         if self.wxdsets_cbox.count() > 0:
             name = self.wxdsets_cbox.currentText()
             msg = ('Do you want to delete the weather dataset <i>%s</i>? ' +
