@@ -1056,7 +1056,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = "C:/Users/jsgosselin/Desktop/2018 ACFAS/ACFAS2018/ACFAS2018.gwt"
+    pf = 'C:/Users/jsgosselin/GWHAT/Projects/Example/Example.gwt'
     pr = ProjetReader(pf)
     dm = DataManager()
     dm.set_projet(pr)
