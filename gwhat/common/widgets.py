@@ -6,12 +6,9 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from __future__ import division, unicode_literals
-
 # Standard library imports :
 
 from copy import copy
-import os
 
 from gwhat.common import icons
 
@@ -25,9 +22,6 @@ from PyQt5.QtWidgets import (QGridLayout, QLabel, QFrame, QMessageBox,
                              QToolButton)
 
 
-# =============================================================================
-
-
 class MyQLineLayout(QGridLayout):
 
     def __init__(self, widgets, parent=None):
@@ -38,68 +32,6 @@ class MyQLineLayout(QGridLayout):
 
         self.setContentsMargins(0, 0, 0, 0)  # (l, t, r, b)
         self.setColumnStretch(self.columnCount(), 100)
-
-
-# ================================================================ Labels =====
-
-
-class QTitle(QLabel):
-
-    def __init__(self, text, parent=None):
-        super(QTitle, self).__init__(parent)
-
-        color = '#404040'
-        text = "<font color=%s>%s</font>" % (color, text)
-        self.setText(text)
-
-        ft = self.font()
-        ft.setPointSize(12)
-        ft.setBold(True)
-        self.setFont(ft)
-        self.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
-
-
-class QWarningLabel(QLabel):
-    def __init__(self, text, parent=None):
-        super(QWarningLabel, self).__init__(text, parent)
-        ft = self.font()
-        ft.setPointSize(8)
-        ft.setItalic(True)
-        self.setFont(ft)
-        self.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-
-
-class ModeLabel(QLabel):
-    def __init__(self, label, color):
-        super(ModeLabel, self).__init__()
-        self.setText('<font color=%s>%s</font>' % (color, label))
-        ft = self.font()
-        ft.setPointSize(10)
-        ft.setItalic(True)
-        self.setFont(ft)
-        self.setAlignment(Qt.AlignHCenter | Qt.AlignVCenter)
-
-
-class AlignHCenterLabel(QLabel):
-    def __init__(self, *args, **kargs):
-        super(AlignHCenterLabel, self).__init__(*args, **kargs)
-        self.setAlignment(Qt.AlignHCenter |
-                          Qt.AlignVCenter)
-
-
-# ========================================================= Messsage Box ======
-
-
-class MyQErrorMessageBox(QMessageBox):
-    def __init__(self, parent=None):
-        super(MyQErrorMessageBox, self).__init__(parent)
-
-#        self.setIcon(QMessageBox.Warning)
-        self.setWindowTitle('Error Message')
-        self.setWindowIcon(QIcon('Icons/versalogo.png'))
-
-
-# ================================================================== Boxes ====
 
 
 class MyQComboBox(QComboBox):
@@ -170,8 +102,6 @@ class QDoubleSpinBox(QDoubleSpinBox):
     def value(self):
         return self.__value
 
-
-# ================================================================ Layout =====
 
 class QFrameLayout(QFrame):
     def __init__(self, parent=None):
@@ -273,44 +203,6 @@ class DialogWindow(QDialog):
         self.raise_()
 
 
-class AboutWindow(DialogWindow):
-    def __init__(self, parent=None):
-        super(AboutWindow, self).__init__(parent, resizable=False)
-        self.setWindowTitle('About')
-        self.setWindowFlags(Qt.Window)
-        self.setWindowIcon(icons.get_icon('master'))
-
-        grid = QGridLayout()
-        self.setLayout(grid)
-
-        self.tb = QTextBrowser()
-        self.tb.setOpenExternalLinks(True)
-        self.tb.setMinimumSize(750, 550)
-
-        ok = QPushButton('Ok')
-        ok.clicked.connect(self.close)
-
-        grid.addWidget(self.tb, 0, 0, 1, 2)
-        grid.addWidget(ok, 1, 1)
-        grid.setColumnStretch(0, 100)
-        grid.setRowStretch(0, 100)
-
-        # ---- Add page to browser ----
-
-        dirname = os.path.dirname(os.path.realpath(__file__))
-        dirname = os.path.join(dirname, 'doc')
-        self.tb.setSearchPaths(dirname)
-
-    def setSource(self, filename):
-        dirname = os.path.dirname(os.path.realpath(__file__))
-        dirname = os.path.join(dirname, 'doc')
-        filename = os.path.join(dirname, filename)
-        self.tb.setSource(QUrl.fromLocalFile(filename))
-
-
-# -----------------------------------------------------------------------------
-
-
 class QToolPanel(QWidget):
     """
     A custom widget that mimicks the behavior of the "Tools" sidepanel in
@@ -393,104 +285,3 @@ class QToolPanel(QWidget):
                 # expanded at a time.
                 head.setIcon(self.__iclosed)
                 tool.hide()
-
-
-# =============================================================== Buttons =====
-
-
-class BtnBase(QWidget):
-
-    clicked = QSignal(bool)
-
-    def __init__(self, parent=None):
-        super(BtnBase, self).__init__(parent)
-
-        self._btn = QToolButton()
-        self._btn.setIconSize(QSize(16, 16))
-        self._btn.setAutoRaise(True)
-        self._btn.clicked.connect(self.btn_isClicked)
-
-        layout = QGridLayout()
-        self.setLayout(layout)
-        layout.setContentsMargins(10, 0, 0, 0)  # (l, t, r, b)
-        layout.addWidget(self._btn)
-
-    def btn_isClicked(self):
-        self.clicked.emit(True)
-
-    def setIcon(self, icon):
-        self._btn.setIcon(icon)
-
-    def setToolTip(self, text):
-        self._btn.setToolTip(text)
-
-
-class GetBtn(BtnBase):
-    def __init__(self, parent=None):
-        super(GetBtn, self).__init__(parent)
-        self.setIcon(icons.get_icon('getfrom'))
-
-
-class GuessBtn(BtnBase):
-    def __init__(self, parent=None):
-        super(GuessBtn, self).__init__(parent)
-        self.setIcon(icons.get_icon('calcul'))
-        self.setToolTip('Guesstimate values')
-
-
-class InfoBtn(QToolButton):
-    def __init__(self, parent=None):
-        super(InfoBtn, self).__init__(parent)
-        self.setIconSize(QSize(16, 16))
-        self.setAutoRaise(True)
-        self.setIcon(icons.get_icon('about'))
-
-        self.infopg = AboutWindow()
-
-        self.clicked.connect(self.show_info)
-
-    def show_info(self):
-        self.infopg.show()
-
-    def setSource(self, filename):
-        self.infopg.setSource(filename)
-
-    def setWindowTitle(self, title):
-        self.infopg.setWindowTitle(title)
-
-
-class LinkBtn(QToolButton):
-    def __init__(self, parent=None):
-        super(LinkBtn, self).__init__(parent)
-        self.setIconSize(QSize(16, 16))
-        self.setAutoRaise(True)
-        self.set_linked_state(True)
-
-        self.__state = True
-
-        self.clicked.connect(self.btn_clicked)
-
-    @property
-    def linked(self):
-        return self.__state
-
-    def btn_clicked(self):
-        state = not self.__state
-        self.set_linked_state(state)
-
-    def set_linked_state(self, state):
-        self.__state = state
-        if state is True:
-            self.setIcon(icons.get_icon('link'))
-            self.setToolTip('Link values')
-        else:
-            self.setIcon(icons.get_icon('notlink'))
-            self.setToolTip('Unlink values')
-
-
-class MyQToolButton(QToolButton):
-
-    def __init__(self, parent=None):
-        super(MyQToolButton, self).__init__(parent)
-        self.setIconSize(QSize(24, 24))
-        self.setAutoRaise(True)
