@@ -50,17 +50,16 @@ class WeatherViewer(DialogWindow):
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, workdir=None):
         super(WeatherViewer, self).__init__(parent, False, False)
 
         self.wxdset = None
         self.normals = None
-
-        self.save_fig_dir = os.getcwd()
         self.meteo_dir = os.getcwd()
         self.language = 'English'
 
         self.__initUI__()
+        self.set_workdir(workdir)
 
     def __initUI__(self):
         self.setWindowTitle('Weather Averages')
@@ -170,6 +169,11 @@ class WeatherViewer(DialogWindow):
         self.language = lang
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
+
+    def set_workdir(self, workdir):
+        """Set the working directory of the widget."""
+        self.save_fig_dir = os.getcwd() if workdir is None else workdir
+        self.btn_export.set_workdir(self.save_fig_dir)
 
     def set_weather_dataset(self, wxdset):
         """

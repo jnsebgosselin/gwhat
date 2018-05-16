@@ -412,9 +412,9 @@ class DataManager(QWidget):
         if self.get_current_wxdset() is None:
             return
         if self.weather_avg_graph is None:
-            self.weather_avg_graph = WeatherViewer(self)
+            self.weather_avg_graph = WeatherViewer()
 
-        self.weather_avg_graph.save_fig_dir = self.workdir
+        self.weather_avg_graph.set_workdir(self.workdir)
         self.weather_avg_graph.set_weather_dataset(self.get_current_wxdset())
         self.weather_avg_graph.show()
 
