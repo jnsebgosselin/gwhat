@@ -30,7 +30,7 @@ from gwhat.common.icons import QToolButtonBase
 from gwhat.common import icons
 from gwhat.common.utils import find_unique_filename
 from gwhat.widgets.layout import VSep
-from gwhat.utils.fileio import SaveFileMixin
+from gwhat.widgets.fileio import SaveFileMixin
 
 
 class ToolBarWidget(QWidget):
@@ -310,8 +310,8 @@ class DropDownList(QListWidget):
 
 class ExportDataButton(QToolButtonBase, SaveFileMixin):
     """
-    A toolbutton with a popup menu that handles the export of the weather
-    dataset in various format.
+    A toolbutton with a popup menu that handles the export of data
+    in various format.
     """
     MODELCLS = object
     TOOLTIP = ''
@@ -342,7 +342,7 @@ class ExportDataButton(QToolButtonBase, SaveFileMixin):
         self.set_dialog_dir(workdir)
 
     def set_model(self, model):
-        """Set the weather dataset of the button."""
+        """Set the data model of the button."""
         if model is None:
             self.__model = None
         else:
