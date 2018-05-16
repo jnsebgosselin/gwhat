@@ -38,6 +38,7 @@ class DataManager(QWidget):
 
     wldsetChanged = QSignal(object)
     wxdsetChanged = QSignal(object)
+    sig_workdir_changed = QSignal(str)
 
     def __init__(self, parent=None, projet=None, pm=None, pytesting=False):
         super(DataManager, self).__init__(parent)
@@ -195,6 +196,8 @@ class DataManager(QWidget):
 
         self.new_waterlvl_win.set_projet(projet)
         self.new_weather_win.set_projet(projet)
+
+        self.sig_workdir_changed.emit(self.workdir)
 
     # ---- Utilities
 
