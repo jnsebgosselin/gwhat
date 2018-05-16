@@ -375,17 +375,24 @@ class WLCalc(myqt.DialogWindow):
         self.widget_MRCparam.setSpacing(5)
         self.widget_MRCparam.setColumnStretch(2, 500)
 
-        # -------------------------------------------------- Tool Tab Area ----
+        # ---- Tool Tab Area
 
         tooltab = QTabWidget()
-        tooltab.setIconSize(QSize(28, 28))
-        tooltab.setTabPosition(tooltab.North)
+        tooltab.addTab(self.widget_MRCparam, 'MRC')
+        tooltab.setTabToolTip(
+            0, ("<p>A tool to evaluate the master recession curve"
+                " of the hydrograph.</p>"))
+        tooltab.addTab(self.rechg_eval_widget, 'Recharge')
+        tooltab.setTabToolTip(
+            1, ("<p>A tool to evaluate groundwater recharge and its"
+                " uncertainty from observed water levels and daily "
+                " weather data.</p>"))
+        tooltab.addTab(self.config_brf, 'BRF')
+        tooltab.setTabToolTip(
+            2, ("<p>A tool to evaluate the barometric response function of"
+                " the well.</p>"))
 
-        tooltab.addTab(self.widget_MRCparam, icons.get_icon('MRCalc'), '')
-        tooltab.addTab(self.rechg_eval_widget, icons.get_icon('recharge'), '')
-        tooltab.addTab(self.config_brf, icons.get_icon('setup'), '')
-
-        # ---------------------------------------------------- Right Panel ----
+        # ---- Right Panel
 
         self.right_panel = myqt.QFrameLayout()
 
