@@ -16,14 +16,14 @@ import os.path as osp
 
 from PyQt5.QtCore import Qt, QCoreApplication, QSize
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QTextEdit,
-                             QLabel, QMessageBox, QLineEdit, QPushButton,
+from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QLabel,
+                             QMessageBox, QLineEdit, QPushButton,
                              QFileDialog, QApplication, QDialog, QGroupBox)
 
 # ---- Local library imports
 
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
-from gwhat.common.icons import QToolButtonSmall, QToolButtonNormal
+from gwhat.common.icons import QToolButtonSmall
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
@@ -31,6 +31,7 @@ import gwhat.projet.reader_waterlvl as wlrd
 from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
 import gwhat.meteo.weather_reader as wxrd
 from gwhat.widgets.buttons import ToolBarWidget
+from gwhat.widgets.spinboxes import StrSpinBox
 
 
 class DataManager(QWidget):
@@ -72,8 +73,8 @@ class DataManager(QWidget):
         layout.setSpacing(5)
         layout.setContentsMargins(0, 0, 0, 0)
 
-        layout.addLayout(self.setup_wldset_mngr(), 0, 0)
-        layout.addLayout(self.setup_wxdset_mngr(), 1, 0)
+        layout.addWidget(self.setup_wldset_mngr(), 0, 0)
+        layout.addWidget(self.setup_wxdset_mngr(), 2, 0)
 
     def setup_wldset_mngr(self):
         """Setup the manager for the water level datasets."""
@@ -92,29 +93,25 @@ class DataManager(QWidget):
         self.btn_del_wldset.setToolTip('Delete current dataset.')
         self.btn_del_wldset.clicked.connect(self.del_current_wldset)
 
-        wl_toolbar = QGridLayout()
-        wl_toolbar.setContentsMargins(0, 0, 0, 0)
-
-        widgets = [self.wldsets_cbox, self.btn_load_wl, self.btn_del_wldset]
-        for col, widg in enumerate(widgets):
-            wl_toolbar.addWidget(widg, 0, col)
+        wl_toolbar = ToolBarWidget()
+        for widg in [self.btn_load_wl, self.btn_del_wldset]:
+            wl_toolbar.addWidget(widg)
 
         # ---- Info Box
 
-        self.well_info_widget = QTextEdit()
-        self.well_info_widget.setReadOnly(True)
+        self.well_info_widget = StrSpinBox()
 
         # ---- Main Layout
 
-        layout = QGridLayout()
+        grpbox = QGroupBox('Water Level Dataset : ')
+        layout = QGridLayout(grpbox)
         layout.setSpacing(5)
-        layout.setContentsMargins(0, 0, 0, 0)
 
-        layout.addWidget(QLabel('Water Level Dataset :'), 1, 0)
-        layout.addLayout(wl_toolbar, 2, 0)
-        layout.addWidget(self.well_info_widget, 3, 0)
+        layout.addWidget(self.wldsets_cbox, 1, 0)
+        layout.addWidget(self.well_info_widget, 2, 0)
+        layout.addWidget(wl_toolbar, 3, 0)
 
-        return layout
+        return grpbox
 
     def setup_wxdset_mngr(self):
         """Setup the manager for the weather datasets."""
@@ -140,34 +137,33 @@ class DataManager(QWidget):
 
         btn_weather_normals = QToolButtonSmall(icons.get_icon('meteo'))
         btn_weather_normals.setToolTip(
-            "Show the normals for the current weather dataset normals...")
+            "Show the normals for the current weather dataset.")
         btn_weather_normals.clicked.connect(self.show_weather_normals)
 
         self.btn_export_weather = ExportWeatherButton(workdir=self.workdir)
         self.btn_export_weather.setIconSize(QSize(20, 20))
 
         wx_toolbar = ToolBarWidget()
-        for widg in [self.wxdsets_cbox, self.btn_load_meteo,
+        for widg in [self.btn_load_meteo,
                      self.btn_del_wxdset, btn_closest_meteo,
                      btn_weather_normals, self.btn_export_weather]:
             wx_toolbar.addWidget(widg)
 
         # ---- Info Box
 
-        self.meteo_info_widget = QTextEdit()
-        self.meteo_info_widget.setReadOnly(True)
+        self.meteo_info_widget = StrSpinBox()
 
         # ---- Main Layout
 
-        layout = QGridLayout()
+        grpbox = QGroupBox('Weather Dataset : ')
+        layout = QGridLayout(grpbox)
         layout.setSpacing(5)
-        layout.setContentsMargins(0, 0, 0, 0)
 
-        layout.addWidget(QLabel('Weather Dataset :'), 5, 0)
-        layout.addWidget(wx_toolbar, 6, 0)
-        layout.addWidget(self.meteo_info_widget, 7, 0)
+        layout.addWidget(self.wxdsets_cbox, 1, 0)
+        layout.addWidget(self.meteo_info_widget, 2, 0)
+        layout.addWidget(wx_toolbar, 3, 0)
 
-        return layout
+        return grpbox
 
     @property
     def workdir(self):
@@ -251,17 +247,19 @@ class DataManager(QWidget):
         self.wldsets_cbox.blockSignals(False)
 
     def update_wldset_info(self):
-        self.well_info_widget.clear()
+        """Update the infos of the wldset."""
         wldset = self.get_current_wldset()
         if wldset is not None:
-            name = wldset['Well']
-            lat = wldset['Latitude']
-            lon = wldset['Longitude']
-            alt = wldset['Elevation']
-            mun = wldset['Municipality']
-
-            html = wlrd.generate_HTML_table(name, lat, lon, alt, mun)
-            self.well_info_widget.setText(html)
+            model = ["Well : %s" % wldset['Well'],
+                     "Well ID : %s" % wldset['Well ID'],
+                     "Latitude : %0.3f°" % wldset['Latitude'],
+                     "Longitude : %0.3f°" % wldset['Longitude'],
+                     "Elevation : %0.1f m" % wldset['Elevation'],
+                     "Municipality : %s" % wldset['Municipality'],
+                     "Province : %s" % wldset['Province']]
+        else:
+            model = None
+        self.well_info_widget.set_model(model)
 
     def wldset_changed(self):
         """Handles when the currently selected water level dataset changed."""
@@ -336,20 +334,18 @@ class DataManager(QWidget):
         self.wxdsets_cbox.blockSignals(False)
 
     def update_wxdset_info(self):
-        self.meteo_info_widget.clear()
-        if self.wxdsets_cbox.count() > 0:
-            wxdset = self.get_current_wxdset()
-
-            staname = wxdset['Station Name']
-            lat = wxdset['Latitude']
-            lon = wxdset['Longitude']
-            alt = wxdset['Elevation']
-            prov = wxdset['Province']
-            climID = wxdset['Climate Identifier']
-
-            html = wxrd.generate_weather_HTML(staname, prov, lat,
-                                              climID, lon, alt)
-            self.meteo_info_widget.setText(html)
+        """Update the infos of the wxdset."""
+        wxdset = self.get_current_wxdset()
+        if wxdset is not None:
+            model = ["Station : %s" % wxdset['Station Name'],
+                     "Climate ID : %s" % wxdset['Climate Identifier'],
+                     "Latitude : %0.3f°" % wxdset['Latitude'],
+                     "Longitude : %0.3f°" % wxdset['Longitude'],
+                     "Elevation : %0.1f m" % wxdset['Elevation'],
+                     "Province : %s" % wxdset['Province']]
+        else:
+            model = None
+        self.meteo_info_widget.set_model(model)
 
     def wxdset_changed(self):
         """Handles when the currently selected weather dataset changed."""
