@@ -8,21 +8,21 @@
 
 # ---- Standard library imports
 
-from time import clock, sleep
+from time import clock
 import csv
 import os
+import os.path as osp
 import datetime
 
 
 # ---- Third party imports
 
 import numpy as np
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtWidgets import (QGridLayout, QComboBox, QTextEdit,
                              QSizePolicy, QPushButton, QLabel, QTabWidget,
-                             QApplication, QFileDialog)
+                             QApplication)
 
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -30,24 +30,23 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
-import xlsxwriter
 
 
 # ---- Local imports
 
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 import gwhat.common.widgets as myqt
+from gwhat.common.widgets import DialogWindow
 from gwhat.common import StyleDB, QToolButtonNormal
 from gwhat.common import icons
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.brf_mod import BRFManager
 from gwhat.widgets.buttons import OnOffToolButton
 from gwhat.widgets.layout import VSep
+from gwhat.widgets.fileio import SaveFileMixin
 
-# mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
-
-class WLCalc(myqt.DialogWindow):
+class WLCalc(DialogWindow, SaveFileMixin):
     """
     This is the interface where are plotted the water level time series. It is
     possible to dynamically zoom and span the data, change the display,
@@ -56,10 +55,13 @@ class WLCalc(myqt.DialogWindow):
     """
 
     def __init__(self, datamanager, parent=None):
-        super(WLCalc, self).__init__(parent, maximize=True)
+        DialogWindow.__init__(self, parent, maximize=True)
+        SaveFileMixin.__init__(self)
+
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
+        self.dmngr.sig_workdir_changed.connect(self.set_dialog_dir)
 
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
         self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
@@ -68,7 +70,7 @@ class WLCalc(myqt.DialogWindow):
         self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
 
         self.isGraphExists = False
-        self.__figbckground = None  # figure background
+        self.__figbckground = None
         self.__addPeakVisible = True
         self.__mouse_btn_is_pressed = False
 
@@ -79,15 +81,14 @@ class WLCalc(myqt.DialogWindow):
         self.tmpl = []  # time in matplotlib format
         self.water_lvl = []
 
-        # Date System :
+        # Calcul the delta between the datum of Excel and Maplotlib numeric
+        # date system.
+        t_xls = xldate_from_date_tuple((2000, 1, 1), 0)
+        t_mpl = mpl.dates.date2num(datetime.datetime(2000, 1, 1))
+        self.dt4xls2mpl = t_mpl - t_xls
 
-        t1 = xldate_from_date_tuple((2000, 1, 1), 0)  # time in Excel
-        t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1))  # Time in
-        self.dt4xls2mpl = t2-t1  # Delta between the datum of both date system
-
-        # Date format: can either be 0 for Excel format or 1 for Matplotlib
+        # The date format can either be 0 for Excel format or 1 for Matplotlib
         # format.
-
         self.dformat = 1
 
         # Recession Curve Parameters :
@@ -527,62 +528,26 @@ class WLCalc(myqt.DialogWindow):
             self.RMSE = np.mean(err[~np.isnan(err)])**0.5
 
             self.plot_peak()
-            self.draw_MRC()
 
-    # -------------------------------------------------------------------------
+    def save_mrc_tofile(self, savefilename=None):
+        """Save the master recession curve results to a file."""
+        if savefilename is None:
+            savefilename = osp.join(
+                self.dialog_dir,
+                "Well_%s_mrc_results.xlsx" % self.wldset['Well'])
 
-    def save_mrc_tofile(self):
-        filename = self.wldset['Well'] + '.xlsx'
+        savefilename = self.select_savefilename(
+            "Save MRC results", savefilename, "*.xlsx;;*.xls;;*.csv")
 
-        # ---- get filename ----
-
-        dialog = QFileDialog()
-        filename, ftype = dialog.getSaveFileName(
-                self, "Save Results Summary", filename, '*.xlsx')
-
-        if not filename:
-            return
-
-        root, ext = os.path.splitext(filename)
-        if ext not in ['.xlsx', '.xls']:
-            filename += '.xlsx'
-
-        # ---- save MRC to file ----
-
-        with xlsxwriter.Workbook(filename) as wb:
-            ws = wb.add_worksheet()
-
-            ws.set_column('A:A', 35)
-            ws.set_column('B:B', 35)
-            ws.set_column('C:C', 35)
-
-            ws.write(0, 0, 'Well Name : %s' % self.wldset['Well'])
-            ws.write(1, 0, 'Latitude : %f' % self.wldset['Latitude'])
-            ws.write(2, 0, 'Longitude : %f' % self.wldset['Longitude'])
-            ws.write(3, 0, 'Altitude : %f' % self.wldset['Elevation'])
-            ws.write(4, 0, 'Municipality : %s' % self.wldset['Municipality'])
-
-            A, B = self.wldset['mrc/params']
-
-            ws.write(6, 0, 'dh/dt(mm/d) = -%f*h(mbgs) + %f' % (self.A, self.B))
-            ws.write(7, 0, 'A (1/d)')
-            ws.write(7, 1, self.A)
-            ws.write(8, 0, 'B (m/d)')
-            ws.write(8, 1, self.B)
-            ws.write(9, 0, 'RMSE (m)')
-            ws.write(9, 1, self.RMSE)
-
-            ws.write(11, 0, 'Observed and Predicted Water Level')
-            ws.write_row(12, 0, ['Time', 'hrecess(mbgs)', 'hobs(mbgs)'])
-            print(len(self.time), len(self.hrecess), len(self.water_lvl))
-            for i in range(len(self.time)):
-                if np.isnan(self.hrecess[i]):
-                    row = [self.time[i], 'nan', self.water_lvl[i]]
-                else:
-                    row = [self.time[i], self.hrecess[i], self.water_lvl[i]]
-                ws.write_row(i+13, 0, row)
-
-        print('MRC info saved sucessfully to file.')
+        if savefilename:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            QApplication.processEvents()
+            try:
+                self.wldset.save_mrc_tofile(savefilename)
+            except PermissionError:
+                self.show_permission_error()
+                self.save_mrc_tofile(savefilename)
+            QApplication.restoreOverrideCursor()
 
     def btn_mrc2rechg_isClicked(self):
         if not self.A and not self.B:
@@ -1019,7 +984,7 @@ class WLCalc(myqt.DialogWindow):
             try:
                 self.soilColor[i] = reader[i][3]
                 print(reader[i][3])
-            except:
+            except Exception:
                 self.soilColor[i] = '#FFFFFF'
 
         print(self.soilColor)
@@ -1043,7 +1008,7 @@ class WLCalc(myqt.DialogWindow):
             try:
                 self.layers[i] = self.ax0.fill_between(
                     [0, 99999], up, down, color=self.soilColor[i], zorder=0)
-            except:
+            except Exception:
                 self.layers[i] = self.ax0.fill_between(
                     [0, 99999], up, down, color='#FFFFFF', zorder=0)
 
@@ -1884,7 +1849,7 @@ class SoilProfil():
             self.Sy[i] = reader[i][2]
             try:
                 self.color[i] = reader[i][3]
-            except:
+            except Exception:
                 self.color[i] = '#FFFFFF'
 
 

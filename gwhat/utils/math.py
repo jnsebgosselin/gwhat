@@ -10,19 +10,9 @@ import numpy as np
 import datetime
 
 
-def nan_as_text_tolist(arr):
-    """
-    Convert the float nan are to text while converting a numpy 2d array to a
-    list, so that it is possible to save to an Excel file.
-    """
-    if np.isnan(arr).any():
-        m, n = np.shape(arr)
-        list_ = []
-        for i in range(m):
-            list_.append(['nan' if np.isnan(x) else x for x in arr[i, :]])
-    else:
-        list_ = arr.tolist()
-    return list_
+def calcul_rmse(Xobs, Xpre):
+    """Compute the root-mean square error."""
+    return (np.nanmean((Xobs - Xpre)**2))**0.5
 
 
 def clip_time_series(tclip, tp, xp):
@@ -56,3 +46,18 @@ def convert_date_to_datetime(years, months, days):
         dates[t] = datetime.datetime(
                 int(years[t]), int(months[t]), int(days[t]), 0)
     return dates
+
+
+def nan_as_text_tolist(arr):
+    """
+    Convert the float nan are to text while converting a numpy 2d array to a
+    list, so that it is possible to save to an Excel file.
+    """
+    if np.isnan(arr).any():
+        m, n = np.shape(arr)
+        list_ = []
+        for i in range(m):
+            list_.append(['nan' if np.isnan(x) else x for x in arr[i, :]])
+    else:
+        list_ = arr.tolist()
+    return list_

@@ -23,6 +23,8 @@ import numpy as np
 
 from gwhat.meteo.weather_reader import WXDataFrameBase
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
+from gwhat.common.utils import save_content_to_file
+from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
 
 INVALID_CHARS = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
 
@@ -47,9 +49,8 @@ class ProjetReader(object):
     def dirname(self):
         return os.path.dirname(self.filename)
 
-    # =========================================================================
-
     def load_projet(self, filename):
+        """Open the hdf5 project file."""
         self.close_projet()
 
         print('\nLoading "%s"...' % os.path.basename(filename))
@@ -61,7 +62,7 @@ class ProjetReader(object):
                 self.__db = h5py.File(filename, mode='a')
             else:
                 self.__db = h5py.File(filename, mode='w')
-        except:
+        except Exception:
             self.convert_projet_format(filename)
 
         # for newly created project and backward compatibility :
@@ -112,6 +113,7 @@ class ProjetReader(object):
             print('Projet converted to the new format successfully.')
 
     def close_projet(self):
+        """Close the project hdf5 file."""
         try:
             self.db.close()
         except AttributeError:
@@ -401,6 +403,7 @@ class WLDataFrameHDF5(dict):
     # ---- Master recession curve
 
     def set_mrc(self, A, B, peak_indx, time, recess):
+        """Save the mrc results to the hdf5 project file."""
         self.dset['mrc/params'][:] = (A, B)
 
         self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
@@ -416,9 +419,8 @@ class WLDataFrameHDF5(dict):
 
         self.dset.file.flush()
 
-        print(peak_indx)
-
     def mrc_exists(self):
+        """Return whether a mrc results is saved in the hdf5 project file."""
         if 'mrc' not in list(self.dset.keys()):
             mrc = self.dset.create_group('mrc')
             mrc.attrs['exists'] = 0
@@ -430,6 +432,36 @@ class WLDataFrameHDF5(dict):
             mrc.create_dataset('time', data=np.array([]),
                                dtype='float64', maxshape=(None,))
         return bool(self.dset['mrc'].attrs['exists'])
+
+    def save_mrc_tofile(self, filename):
+        """Save the master recession curve results to a file."""
+        fcontent = []
+
+        # Format the file header.
+        keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
+                'Elevation', 'Municipality']
+        for key in keys:
+            fcontent.append([key, self[key]])
+
+        # Format the mrc results summary.
+        A, B = self['mrc/params']
+        fcontent.extend([
+            [''],
+            ['dh/dt(mm/d) = -%f*h(mbgs) + %f' % (A, B)],
+            ['A (1/d)', A],
+            ['B (m/d)', B],
+            ['RMSE (m)', calcul_rmse(self['WL'], self['mrc/recess'])],
+            [''],
+            ['Observed and Predicted Water Level'],
+            ['Time', 'hrecess(mbgs)', 'hobs(mbgs)']
+            ])
+
+        # Format the observed and simulated data.
+        data = np.vstack([self['Time'], self['WL'], self['mrc/recess']])
+        data = nan_as_text_tolist(np.array(data).transpose())
+        fcontent.extend(data)
+
+        save_content_to_file(filename, fcontent)
 
     # ---- GLUE water budget and water level evaluation
 

@@ -909,24 +909,27 @@ class ExportWeatherButton(ExportDataButton):
     # ---- Export Time Series
 
     @QSlot(str)
-    def select_export_file(self, time_frame):
+    def select_export_file(self, time_frame, savefilename=None):
         """
         Prompt a dialog to select a file and save the weather data time series
         to a file in the specified format and time frame.
         """
-        fname = self.select_savefilename(
-            'Export %s' % time_frame,
-            'Weather%s_%s' % (time_frame.capitalize(),
-                              self.model['Station Name']),
-            '*.xlsx;;*.xls;;*.csv')
+        if savefilename is None:
+            savefilename = osp.join(
+                self.dialog_dir, 'Weather%s_%s' % (time_frame.capitalize(),
+                                                   self.model['Station Name']))
 
-        if fname:
+        savefilename = self.select_savefilename(
+            'Export %s' % time_frame, savefilename, '*.xlsx;;*.xls;;*.csv')
+
+        if savefilename:
             QApplication.setOverrideCursor(Qt.WaitCursor)
+            QApplication.processEvents()
             try:
-                self.model.export_dataset_to_file(fname, time_frame)
+                self.model.export_dataset_to_file(savefilename, time_frame)
             except PermissionError:
                 self.show_permission_error()
-                self.select_export_file(time_frame)
+                self.select_export_file(time_frame, savefilename)
             QApplication.restoreOverrideCursor()
 
 

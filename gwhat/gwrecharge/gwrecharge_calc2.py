@@ -22,7 +22,7 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 
 # ---- Imports: local
 
-from gwhat.utils.math import clip_time_series
+from gwhat.utils.math import clip_time_series, calcul_rmse
 from gwhat.gwrecharge.glue import GLUEDataFrame
 from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
                                                  calc_hydrograph_forward)
@@ -518,11 +518,6 @@ def strdate_to_datetime(strdates):
     """Return a list of datetime objects created from a list of bytes."""
     return [datetime.datetime.strptime(s.decode('utf8'), '%Y-%m-%d')
             for s in strdates]
-
-
-def calcul_rmse(Xobs, Xpre):
-    """Compute the root-mean square error."""
-    return (np.mean((Xobs - Xpre)**2))**0.5
 
 
 def calcul_nash_sutcliffe(Xobs, Xpre):
