@@ -7,6 +7,7 @@
 # Licensed under the terms of the GNU General Public License.
 
 import time
+import os.path as osp
 
 # ---- Imports: third parties
 
@@ -345,37 +346,45 @@ class ExportGLUEButton(ExportDataButton):
     # ---- Export data
 
     @QSlot()
-    def save_water_budget_tofile(self):
+    def save_water_budget_tofile(self, savefilename=None):
         """
         Prompt a dialog to select a file and save the GLUE water budget.
         """
-        fname = self.select_savefilename("Save GLUE water budget",
-                                         "glue_water_budget.xlsx",
-                                         "*.xlsx;;*.xls;;*.csv")
-        if fname:
+        if savefilename is None:
+            savefilename = osp.join(self.dialog_dir, "glue_water_budget.xlsx")
+
+        savefilename = self.select_savefilename(
+            "Save GLUE water budget", savefilename, "*.xlsx;;*.xls;;*.csv")
+
+        if savefilename:
             QApplication.setOverrideCursor(Qt.WaitCursor)
+            QApplication.processEvents()
             try:
-                self.model.save_mly_glue_budget_to_file(fname)
+                self.model.save_mly_glue_budget_to_file(savefilename)
             except PermissionError:
                 self.show_permission_error()
-                self.save_water_budget_tofile()
+                self.save_water_budget_tofile(savefilename)
             QApplication.restoreOverrideCursor()
 
     @QSlot()
-    def save_water_levels_tofile(self):
+    def save_water_levels_tofile(self, savefilename=None):
         """
         Prompt a dialog to select a file and save the GLUE water levels.
         """
-        fname = self.select_savefilename("Save GLUE water levels",
-                                         "glue_water_levels.xlsx",
-                                         "*.xlsx;;*.xls;;*.csv")
-        if fname:
+        if savefilename is None:
+            savefilename = osp.join(self.dialog_dir, "glue_water_levels.xlsx")
+
+        savefilename = self.select_savefilename(
+            "Save GLUE water levels", savefilename, "*.xlsx;;*.xls;;*.csv")
+
+        if savefilename:
             QApplication.setOverrideCursor(Qt.WaitCursor)
+            QApplication.processEvents()
             try:
-                self.model.save_glue_waterlvl_to_file(fname)
+                self.model.save_glue_waterlvl_to_file(savefilename)
             except PermissionError:
                 self.show_permission_error()
-                self.save_water_levels_tofile()
+                self.save_water_levels_tofile(savefilename)
             QApplication.restoreOverrideCursor()
 
 
