@@ -529,6 +529,26 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
             self.plot_peak()
 
+    def save_mrc_tofile(self, savefilename=None):
+        """Save the master recession curve results to a file."""
+        if savefilename is None:
+            savefilename = osp.join(
+                self.dialog_dir,
+                "Well_%s_mrc_results.xlsx" % self.wldset['Well'])
+
+        savefilename = self.select_savefilename(
+            "Save MRC results", savefilename, "*.xlsx;;*.xls;;*.csv")
+
+        if savefilename:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            QApplication.processEvents()
+            try:
+                self.wldset.save_mrc_tofile(savefilename)
+            except PermissionError:
+                self.show_permission_error()
+                self.save_mrc_tofile(savefilename)
+            QApplication.restoreOverrideCursor()
+
     def btn_mrc2rechg_isClicked(self):
         if not self.A and not self.B:
             print('Need to calculate MRC equation first.')
