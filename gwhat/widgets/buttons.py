@@ -30,6 +30,7 @@ from gwhat.common.icons import QToolButtonBase
 from gwhat.common import icons
 from gwhat.common.utils import find_unique_filename
 from gwhat.widgets.layout import VSep
+from gwhat.utils.fileio import SaveFileMixin
 
 
 class ToolBarWidget(QWidget):
@@ -307,7 +308,7 @@ class DropDownList(QListWidget):
             self.hide()
 
 
-class ExportDataButton(QToolButtonBase):
+class ExportDataButton(QToolButtonBase, SaveFileMixin):
     """
     A toolbutton with a popup menu that handles the export of the weather
     dataset in various format.
@@ -318,7 +319,7 @@ class ExportDataButton(QToolButtonBase):
     def __init__(self, model=None, workdir=None, parent=None):
         super(ExportDataButton, self).__init__(
             icons.get_icon('export_data'), parent)
-        self.__ddir = os.getcwd() if workdir is None else workdir
+        self.set_dialog_dir(workdir)
         self.setPopupMode(QToolButtonBase.InstantPopup)
         self.setToolTip(self.TOOLTIP)
         self.setStyleSheet("QToolButton::menu-indicator {image: none;}")
@@ -333,18 +334,15 @@ class ExportDataButton(QToolButtonBase):
         self.setMenu(menu)
 
     @property
-    def dialog_dir(self):
-        return self.__ddir
-
-    @property
     def model(self):
         return self.__model
 
     def set_workdir(self, workdir):
-        self.__ddir = os.getcwd() if workdir is None else workdir
+        """Set the working directory of the button."""
+        self.set_dialog_dir(workdir)
 
     def set_model(self, model):
-        """Sets the weather dataset of the button."""
+        """Set the weather dataset of the button."""
         if model is None:
             self.__model = None
         else:
@@ -354,27 +352,6 @@ class ExportDataButton(QToolButtonBase):
                 raise ValueError("The model must be an instance of %s" %
                                  str(type(self.MODELCLS)))
         self.setEnabled(self.__model is not None)
-
-    def select_savefilename(self, title, fname, ffmat):
-        """Open a dialog where the user can select a file name."""
-        fname = find_unique_filename(osp.join(self.__ddir, fname))
-        fname, ftype = QFileDialog.getSaveFileName(self, title, fname, ffmat)
-        if fname:
-            ftype = ftype.replace('*', '')
-            fname = fname if fname.endswith(ftype) else fname + ftype
-            self.__ddir = os.path.dirname(fname)
-            return fname
-        else:
-            return None
-
-    def show_permission_error(self):
-        """
-        Show a warning message telling the user that the saving operation
-        has failed.
-        """
-        QApplication.restoreOverrideCursor()
-        msg = "The file is in use by another application or user."
-        QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
 
 
 class OnOffToolButton(QToolButtonBase):
