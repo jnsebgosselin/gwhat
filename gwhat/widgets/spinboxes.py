@@ -15,6 +15,7 @@ from abc import abstractmethod
 
 # ---- Imports: Third Parties
 
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QFileDialog,
                              QGridLayout, QListWidget, QMenu, QMessageBox,
                              QStyle, QToolButton, QWidget, QSpinBox,
@@ -29,6 +30,8 @@ class StrSpinBox(QSpinBox):
         self.setValue(0)
         self.setWrapping(True)
         self.lineEdit().setReadOnly(True)
+        self.valueChanged.connect(
+            self.lineEdit().deselect, Qt.QueuedConnection)
 
     @property
     def model(self):
@@ -64,8 +67,8 @@ class StrSpinBox(QSpinBox):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
 
-    model = {'test': 'patate', 'test2': 'orange'}
-    text_sp = DictSpinBox(model)
+    model = ['test', 'patate', 'test2', 'orange']
+    text_sp = StrSpinBox(model)
     text_sp.show()
 
     sys.exit(app.exec_())
