@@ -365,13 +365,11 @@ class DataManager(QWidget):
                 self, 'Delete current dataset', msg,
                 QMessageBox.Yes | QMessageBox.No)
 
-            if reply == QMessageBox.No:
-                return
-
-            self.projet.del_wxdset(name)
-            self.update_wxdsets()
-            self.update_wxdset_info()
-            self.wxdset_changed()
+            if reply == QMessageBox.Yes:
+                self.projet.del_wxdset(name)
+                self.update_wxdsets()
+                self.update_wxdset_info()
+                self.wxdset_changed()
 
     def get_current_wxdset(self):
         """Return the currently selected weather dataset dataframe."""
