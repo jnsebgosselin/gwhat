@@ -36,7 +36,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # ---- Imports: Local
 
 import gwhat.common.widgets as myqt
-from gwhat.common.widgets import VSep
+from gwhat.widgets.layout import VSep, HSep
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 from gwhat import brf_mod as bm
@@ -473,7 +473,7 @@ class BRFViewer(QWidget):
                 self.tbar.addWidget(btn, 1, self.tbar.columnCount())
 
         row = self.tbar.columnCount()
-        self.tbar.addWidget(myqt.HSep(), 0, 0, 1, row+1)
+        self.tbar.addWidget(HSep(), 0, 0, 1, row+1)
         self.tbar.setColumnStretch(row, 100)
         self.tbar.setContentsMargins(10, 0, 10, 10)  # (l, t, r, b)
 
@@ -798,7 +798,7 @@ class BRFOptionsPanel(QWidget):
         layout.addWidget(self._markersize['label'], row, 1)
         layout.addWidget(self._markersize['widget'], row, 2)
         row += 1
-        layout.addWidget(myqt.HSep(), row, 1, 1, 2)
+        layout.addWidget(HSep(), row, 1, 1, 2)
         row += 1
         layout.addLayout(axlayout, row, 1, 1, 2)
         row += 1

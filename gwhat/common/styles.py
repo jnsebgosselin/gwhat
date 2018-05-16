@@ -19,20 +19,14 @@ from PyQt5.QtCore import QSize
 class StyleDB(object):
     def __init__(self):
 
-        # ---------------------------------------------------------- frame ----
+        # ---- frame
 
         self.frame = 22
         self.HLine = 52
         self.VLine = 53
-
-        self.size1 = 32
-
-        self.iconSize = QSize(32, 32)
-        self.iconSize2 = QSize(20, 20)
-
         self.sideBarWidth = 275
 
-        # --------------------------------------------------------- colors ----
+        # ----- colors
 
         self.red = '#C83737'
         self.lightgray = '#E6E6E6'
@@ -56,7 +50,6 @@ class StyleDB(object):
             self.fontfamily = "Segoe UI"  # "Cambria" #"Calibri" #"Segoe UI""
         elif platform.system() == 'Linux':
             self.fontfamily =  "Ubuntu"
-
 
 #        self.fontSize1.setPointSize(11)
 

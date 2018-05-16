@@ -33,6 +33,7 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
+from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import DropDownButton
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.search_weather_data import WeatherStationBrowser
@@ -202,14 +203,14 @@ class DwnldWeatherWidget(QWidget):
         self.btn_selectRaw.setIcon(icons.get_icon('openFile'))
         self.btn_selectRaw.setToolTip(
                 "Select and concatenate raw weather data files.")
-        self.btn_selectRaw.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_selectRaw.setIconSize(icons.get_iconsize('small'))
         self.btn_selectRaw.clicked.connect(self.btn_selectRaw_isClicked)
 
         self.btn_saveMerge = QPushButton('Save')
         self.btn_saveMerge.setToolTip(
                 "Save the concatenated weather dataset in a csv file.")
         self.btn_saveMerge.setIcon(icons.get_icon('save'))
-        self.btn_saveMerge.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_saveMerge.setIconSize(icons.get_iconsize('small'))
         self.btn_saveMerge.clicked.connect(self.btn_saveMerge_isClicked)
 
         rightPanel_grid = QGridLayout()
@@ -239,7 +240,7 @@ class DwnldWeatherWidget(QWidget):
 
         main_grid.addLayout(toolbar, 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
-        main_grid.addWidget(myqt.VSep(), 0, 1, 2, 1)
+        main_grid.addWidget(VSep(), 0, 1, 2, 1)
 
         main_grid.addWidget(display_label, 0, 2)
         main_grid.addWidget(rightPanel_widg, 1, 2)

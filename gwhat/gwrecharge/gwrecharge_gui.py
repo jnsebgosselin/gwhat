@@ -20,7 +20,8 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
 # ---- Imports: local
 
 from gwhat.widgets.buttons import ExportDataButton
-from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox, HSep
+from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox
+from gwhat.widgets.layout import HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase

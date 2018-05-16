@@ -89,8 +89,9 @@ ICON_NAMES = {'master': 'WHAT',
               'show_glue_wl': 'show_glue_wl',
               'show_meteo': 'show_meteo'}
 
-ICON_SIZES = {'iconSize': (32, 32),
-              'iconSize2': (20, 20)}
+ICON_SIZES = {'large': (32, 32),
+              'normal': (28, 28),
+              'small': (20, 20)}
 
 
 def get_icon(name):
@@ -98,8 +99,7 @@ def get_icon(name):
 
 
 def get_iconsize(size):
-    w, h = ICON_SIZES[size]
-    return QSize(w, h)
+    return QSize(*ICON_SIZES[size])
 
 
 class QToolButtonBase(QToolButton):
@@ -128,13 +128,13 @@ class QToolButtonBase(QToolButton):
 class QToolButtonNormal(QToolButtonBase):
     def __init__(self, Qicon, *args, **kargs):
         super(QToolButtonNormal, self).__init__(Qicon, *args, **kargs)
-        self.setIconSize(QSize(28, 28))
+        self.setIconSize(get_iconsize('normal'))
 
 
 class QToolButtonSmall(QToolButtonBase):
     def __init__(self, Qicon, *args, **kargs):
         super(QToolButtonSmall, self).__init__(Qicon, *args, **kargs)
-        self.setIconSize(QSize(20, 20))
+        self.setIconSize(get_iconsize('small'))
 
 
 class QToolButtonVRectSmall(QToolButtonBase):

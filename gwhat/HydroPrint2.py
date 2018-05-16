@@ -30,15 +30,13 @@ from xlrd import xldate_as_tuple
 
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
-from gwhat.meteo.weather_viewer import WeatherViewer
 from gwhat.colors2 import ColorsReader, ColorsSetupWin
-
 from gwhat.common import QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
-from gwhat.widgets.layout import OnOffToggleWidget
+from gwhat.widgets.layout import OnOffToggleWidget, VSep
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 
 
@@ -56,8 +54,6 @@ class HydroprintGUI(myqt.DialogWindow):
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.wldset_changed)
         self.dmngr.wxdsetChanged.connect(self.wxdset_changed)
-
-        self.weather_avg_graph = WeatherViewer(self)
 
         self.page_setup_win = PageSetupWin(self)
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
@@ -103,10 +99,6 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_bestfit_time = QToolButtonNormal(icons.get_icon('fit_x'))
         btn_bestfit_time.setToolTip('Best fit the time scale')
 
-        btn_weather_normals = QToolButtonNormal(icons.get_icon('meteo'))
-        btn_weather_normals.setToolTip(
-                'Show current weather dataset normals...')
-
         self.btn_page_setup = QToolButtonNormal(icons.get_icon('page_setup'))
         self.btn_page_setup.setToolTip('Show the page setup window')
         self.btn_page_setup.clicked.connect(self.page_setup_win.show)
@@ -143,13 +135,10 @@ class HydroprintGUI(myqt.DialogWindow):
         # LAYOUT :
 
         btn_list = [btn_save, btn_draw,
-                    self.btn_load_layout, self.btn_save_layout,
-                    myqt.VSep(),
-                    btn_bestfit_waterlvl, btn_bestfit_time,
-                    myqt.VSep(), btn_weather_normals, self.btn_page_setup,
-                    btn_color_pick,
-                    myqt.VSep(),
-                    zoom_pan]
+                    self.btn_load_layout, self.btn_save_layout, VSep(),
+                    btn_bestfit_waterlvl, btn_bestfit_time, VSep(),
+                    self.btn_page_setup, btn_color_pick,
+                    VSep(), zoom_pan]
 
         subgrid_toolbar = QGridLayout()
         toolbar_widget = QWidget()
@@ -217,7 +206,7 @@ class HydroprintGUI(myqt.DialogWindow):
         mainGrid = QGridLayout()
 
         mainGrid.addWidget(self.grid_layout_widget, 0, 0)
-        mainGrid.addWidget(myqt.VSep(), 0, 1)
+        mainGrid.addWidget(VSep(), 0, 1)
         mainGrid.addWidget(self.right_panel, 0, 2)
 
         mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
@@ -235,7 +224,6 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_bestfit_time.clicked.connect(self.best_fit_time)
         btn_draw.clicked.connect(self.draw_hydrograph)
         btn_save.clicked.connect(self.select_save_path)
-        btn_weather_normals.clicked.connect(self.show_weather_averages)
 
         # Hydrograph Layout :
 
@@ -452,16 +440,6 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph.update_colors()
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
-    def show_weather_averages(self):
-        if self.wxdset is None:
-            msg = 'Please import a valid weather data file first.'
-            self.emit_warning(msg)
-            return
-
-        self.weather_avg_graph.save_fig_dir = self.workdir
-        self.weather_avg_graph.set_weather_dataset(self.wxdset)
-        self.weather_avg_graph.show()
-
     # ---- Datasets Handlers
 
     @property
@@ -632,7 +610,6 @@ class HydroprintGUI(myqt.DialogWindow):
         # language :
 
         self.hydrograph.language = self.language_box.currentText()
-        self.weather_avg_graph.set_lang(self.language_box.currentText())
 
         # Scales :
 
@@ -1079,7 +1056,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = "C:/Users/jsgosselin/Desktop/2018 ACFAS/ACFAS2018/ACFAS2018.gwt"
+    pf = 'C:/Users/jsgosselin/GWHAT/Projects/Example/Example.gwt'
     pr = ProjetReader(pf)
     dm = DataManager()
     dm.set_projet(pr)

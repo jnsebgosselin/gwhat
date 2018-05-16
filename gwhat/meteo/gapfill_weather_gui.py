@@ -46,6 +46,7 @@ from gwhat.common import StyleDB, QToolButtonSmall
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import delete_file
+from gwhat.widgets.layout import HSep
 
 
 class GapFillWeatherGUI(QWidget):
@@ -78,12 +79,12 @@ class GapFillWeatherGUI(QWidget):
 
         self.btn_fill = QPushButton('Fill Station')
         self.btn_fill.setIcon(icons.get_icon('fill_data'))
-        self.btn_fill.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_fill.setIconSize(icons.get_iconsize('small'))
         self.btn_fill.setToolTip('<p>Fill the gaps in the daily weather data '
                                  ' for the selected weather station.</p>')
 
         self.btn_fill_all = QPushButton('Fill All Stations')
-        self.btn_fill_all.setIconSize(icons.get_iconsize('iconSize2'))
+        self.btn_fill_all.setIconSize(icons.get_iconsize('small'))
         self.btn_fill_all.setIcon(icons.get_icon('fill_all_data'))
         self.btn_fill_all.setToolTip('<p>Fill the gaps in the daily weather '
                                      ' data for all the weather stations' +
@@ -353,11 +354,11 @@ class GapFillWeatherGUI(QWidget):
         row += 1
         grid_leftPanel.addWidget(self.fillDates_widg, row, 0)
         row += 1
-        grid_leftPanel.addWidget(myqt.HSep(), row, 0)
+        grid_leftPanel.addWidget(HSep(), row, 0)
         row += 1
         grid_leftPanel.addWidget(self.stack_widget, row, 0)
         row += 2
-        grid_leftPanel.addWidget(myqt.HSep(), row, 0)
+        grid_leftPanel.addWidget(HSep(), row, 0)
         row += 1
         grid_leftPanel.addWidget(widget_toolbar, row, 0)
 

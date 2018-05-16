@@ -43,7 +43,7 @@ if platform.system() == 'Windows':
 app.setFont(ft)
 
 from gwhat import __namever__, __appname__
-splash.showMessage("Starting %s." % __namever__)
+splash.showMessage("Starting %s..." % __namever__)
 
 # ---- Standard library imports
 
@@ -97,10 +97,11 @@ class MainWindow(QMainWindow):
 
         # Setup the project and data managers :
 
-        splash.showMessage("Initializing project and data managers.")
+        splash.showMessage("Initializing project and data managers...")
         self.pmanager = ProjetManager(self)
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
+        self.dmanager.setMaximumWidth(250)
 
         # Generate the GUI :
 
@@ -123,22 +124,22 @@ class MainWindow(QMainWindow):
 
         # download weather data :
 
-        splash.showMessage("Initializing download weather data.")
+        splash.showMessage("Initializing download weather data...")
         self.tab_dwnld_data = DwnldWeatherWidget(self)
         self.tab_dwnld_data.set_workdir(self.projectdir)
 
         # gapfill weather data :
 
-        splash.showMessage("Initializing gapfill weather data.")
+        splash.showMessage("Initializing gapfill weather data...")
         self.tab_fill_weather_data = GapFillWeatherGUI(self)
         self.tab_fill_weather_data.set_workdir(self.projectdir)
 
         # hydrograph :
 
-        splash.showMessage("Initializing plot hydrograph.")
+        splash.showMessage("Initializing plot hydrograph...")
         self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
 
-        splash.showMessage("Initializing analyse hydrograph.")
+        splash.showMessage("Initializing analyse hydrograph...")
         self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
         self.tab_hydrocalc.rechg_eval_widget.sig_new_gluedf.connect(
             self.tab_hydrograph.glue_wl_changed)
@@ -156,7 +157,7 @@ class MainWindow(QMainWindow):
 
         # ---- Main Console
 
-        splash.showMessage("Initializing main window.")
+        splash.showMessage("Initializing main window...")
         self.main_console = QTextEdit()
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QTextEdit.NoWrap)

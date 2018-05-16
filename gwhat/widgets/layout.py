@@ -9,7 +9,8 @@
 
 # ---- Third party imports
 
-from PyQt5.QtWidgets import QGridLayout, QLabel, QWidget, QRadioButton
+from PyQt5.QtWidgets import (QGridLayout, QLabel, QWidget, QRadioButton,
+                             QFrame)
 
 
 class OnOffToggleWidget(QWidget):
@@ -45,3 +46,17 @@ class OnOffToggleWidget(QWidget):
             self.toggle_on.toggle()
         else:
             self.toggle_off.toggle()
+
+
+class HSep(QFrame):
+    """An horizontal frame separator."""
+    def __init__(self, parent=None):
+        super(HSep, self).__init__(parent)
+        self.setFrameStyle(52)
+
+
+class VSep(QFrame):
+    """A vertical frame separator."""
+    def __init__(self, parent=None):
+        super(VSep, self).__init__(parent)
+        self.setFrameStyle(53)

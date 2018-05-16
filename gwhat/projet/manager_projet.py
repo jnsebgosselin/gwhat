@@ -30,6 +30,7 @@ from gwhat.common import icons
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
+from gwhat.widgets.layout import VSep, HSep
 from gwhat import __namever__
 
 
@@ -213,7 +214,7 @@ class NewProject(QDialog):
         loc_coord.addWidget(QLabel('North'), row, 3)
         loc_coord.setColumnStretch(4, 100)
 
-        loc_coord.addWidget(myqt.VSep(), row, 5)
+        loc_coord.addWidget(VSep(), row, 5)
         loc_coord.setColumnStretch(6, 100)
 
         loc_coord.addWidget(QLabel('Longitude :'), row, 7)
@@ -239,7 +240,7 @@ class NewProject(QDialog):
         btn_browse = QToolButton()
         btn_browse.setAutoRaise(True)
         btn_browse.setIcon(icons.get_icon('openFolder'))
-        btn_browse.setIconSize(icons.get_iconsize('iconSize2'))
+        btn_browse.setIconSize(icons.get_iconsize('small'))
         btn_browse.setToolTip('Browse...')
         btn_browse.setFocusPolicy(Qt.NoFocus)
         btn_browse.clicked.connect(self.browse_saveIn_folder)
@@ -282,9 +283,9 @@ class NewProject(QDialog):
         main_layout = QGridLayout(self)
 
         main_layout.addLayout(projet_info, 0, 0)
-        main_layout.addWidget(myqt.HSep(), 1, 0)
+        main_layout.addWidget(HSep(), 1, 0)
         main_layout.addLayout(loc_coord, 2, 0)
-        main_layout.addWidget(myqt.HSep(), 3, 0)
+        main_layout.addWidget(HSep(), 3, 0)
         main_layout.addLayout(browse, 4, 0)
         main_layout.addLayout(toolbar, 5, 0)
 
