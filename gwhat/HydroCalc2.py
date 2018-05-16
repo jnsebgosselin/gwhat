@@ -81,15 +81,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.tmpl = []  # time in matplotlib format
         self.water_lvl = []
 
-        # Date System :
+        # Calcul the delta between the datum of Excel and Maplotlib numeric
+        # date system.
+        t_xls = xldate_from_date_tuple((2000, 1, 1), 0)
+        t_mpl = mpl.dates.date2num(datetime.datetime(2000, 1, 1))
+        self.dt4xls2mpl = t_mpl - t_xls
 
-        t1 = xldate_from_date_tuple((2000, 1, 1), 0)  # time in Excel
-        t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1))  # Time in
-        self.dt4xls2mpl = t2-t1  # Delta between the datum of both date system
-
-        # Date format: can either be 0 for Excel format or 1 for Matplotlib
+        # The date format can either be 0 for Excel format or 1 for Matplotlib
         # format.
-
         self.dformat = 1
 
         # Recession Curve Parameters :
@@ -965,7 +964,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             try:
                 self.soilColor[i] = reader[i][3]
                 print(reader[i][3])
-            except:
+            except Exception:
                 self.soilColor[i] = '#FFFFFF'
 
         print(self.soilColor)
@@ -989,7 +988,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             try:
                 self.layers[i] = self.ax0.fill_between(
                     [0, 99999], up, down, color=self.soilColor[i], zorder=0)
-            except:
+            except Exception:
                 self.layers[i] = self.ax0.fill_between(
                     [0, 99999], up, down, color='#FFFFFF', zorder=0)
 
@@ -1830,7 +1829,7 @@ class SoilProfil():
             self.Sy[i] = reader[i][2]
             try:
                 self.color[i] = reader[i][3]
-            except:
+            except Exception:
                 self.color[i] = '#FFFFFF'
 
 
