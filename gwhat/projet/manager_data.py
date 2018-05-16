@@ -782,7 +782,7 @@ class NewDatasetDialog(QDialog):
 if __name__ == '__main__':
     from reader_projet import ProjetReader
     import sys
-    projet = ProjetReader("C:/Users/User/gwhat/Projects/Example/Example.gwt")
+    projet = ProjetReader("C:/Users/jsgosselin/gwhat/Projects/Example/Example.gwt")
 
     app = QApplication(sys.argv)
 
