@@ -346,13 +346,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_MRCalc.setToolTip('<p>Calculate the Master Recession Curve'
                                    ' (MRC) for the selected time periods.</p>')
 
-        mrc_tb = myqt.QFrameLayout()
-        mrc_tb.addWidget(self.btn_undo, 0, 0)
-        mrc_tb.addWidget(self.btn_clearPeak, 0, 1)
-        mrc_tb.addWidget(self.btn_addpeak, 0, 2)
-        mrc_tb.addWidget(self.btn_delpeak, 0, 3)
-        mrc_tb.addWidget(self.btn_save_mrc, 0, 4)
-        mrc_tb.setColumnStretch(mrc_tb.columnCount(), 100)
+        mrc_tb = ToolBarWidget()
+        for btn in [self.btn_undo, self.btn_clearPeak, self.btn_addpeak,
+                    self.btn_delpeak, self.btn_save_mrc]:
+            mrc_tb.addWidget(btn)
 
         # ---- MRC Layout ----
 
