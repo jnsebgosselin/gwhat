@@ -268,6 +268,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # dformat: False -> Excel Numeric Date Format
         #          True -> Matplotlib Date Format
 
+        # ---- Show/Hide section
+
         self.btn_show_glue = OnOffToolButton('show_glue_wl', size='normal')
         self.btn_show_glue.setToolTip(
             """Show or hide GLUE water level 05/95 envelope.""")
@@ -280,7 +282,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_show_weather.setValue(True, silent=True)
 
         self.btn_show_mrc = OnOffToolButton('mrc_calc', size='normal')
-        self.btn_show_mrc.sig_value_changed.connect(self.draw_mrc)
+        self.btn_show_mrc.sig_value_changed.connect(
+            self.btn_show_mrc_isclicked)
         self.btn_show_mrc.setValue(True, silent=True)
 
         # Setup the layout.
@@ -456,6 +459,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     # ---- MRC handlers
 
+    def btn_show_mrc_isclicked(self):
+        """Handle when the button to draw of hide the mrc is clicked."""
+        if self.btn_show_mrc.value() is False:
+            self.btn_addpeak.setValue(False)
+            self.btn_delpeak.setValue(False)
+        self.draw_mrc()
+
     def btn_MRCalc_isClicked(self):
         if self.wldset is None:
             return
@@ -594,7 +604,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def btn_addpeak_isclicked(self):
         """Handle when the button add_peak is clicked."""
         if self.btn_addpeak.value():
-            self.btn_delpeak.setAutoRaise(True)
+            self.btn_show_mrc.setValue(True)
+            self.btn_delpeak.setValue(False)
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
             self.config_brf.btn_seldata.setAutoRaise(True)
@@ -605,6 +616,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def btn_delpeak_isclicked(self):
         """Handle when the button btn_delpeak is clicked."""
         if self.btn_delpeak.value():
+            self.btn_show_mrc.setValue(True)
             self.btn_addpeak.setValue(False)
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
