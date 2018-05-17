@@ -1128,6 +1128,37 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.h_etp.set_data(time_bin, etp_bin)
         self.draw()
 
+    def draw_mrc(self):
+        """
+        Draw the periods during which water levels recedes and draw the
+        water levels that were predicted with the MRC.
+        """
+        self._draw_mrc_wl()
+        self._draw_mrc_peaks()
+        self.draw()
+
+    def _draw_mrc_wl(self):
+        """Draw the water levels that were predicted with the MRC."""
+        if (self.wldset is not None and self.btn_show_mrc.value() and
+                self.wldset.mrc_exists()):
+            self._mrc_plt.set_visible(True)
+            self._mrc_plt.set_data(
+                self.wldset['mrc/time'] + self.dt4xls2mpl * self.dformat,
+                self.wldset['mrc/recess'])
+        else:
+            self._mrc_plt.set_visible(False)
+
+    def _draw_mrc_peaks(self):
+        """Draw the periods that will be used to compute the MRC."""
+        self.btn_undo.setEnabled(len(self.peak_memory) > 1)
+        if self.wldset is not None and self.btn_show_mrc.value():
+            self._peaks_plt.set_visible(True)
+            self._peaks_plt.set_data(
+                self.time[self.peak_indx] + (self.dt4xls2mpl * self.dformat),
+                self.water_lvl[self.peak_indx])
+        else:
+            self._peaks_plt.set_visible(False)
+
     # ----- Handlers: Mouse events
 
     def is_all_btn_raised(self):
