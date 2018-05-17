@@ -432,6 +432,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         return self.dmngr.get_current_wxdset()
 
     def set_wldset(self, wldset):
+        """Set the namespace for the water level dataset."""
         self.config_brf.set_wldset(wldset)
         self.rechg_eval_widget.set_wldset(wldset)
 
@@ -584,7 +585,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def select_BRF(self):
         """
-        Handles when the button to select a period to compute the BRF is
+        Handle when the button to select a period to compute the BRF is
         clicked.
         """
         btn = self.config_brf.btn_seldata
@@ -594,7 +595,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.plot_BRFperiod()
 
             self.btn_addpeak.setAutoRaise(True)
-            self.btn_delPeak.setAutoRaise(True)
+            self.btn_delpeak.setAutoRaise(True)
             self.btn_zoom_to_rect.setValue(False)
             self.btn_pan.setValue(False)
 
@@ -636,9 +637,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.plot_peak()
 
     def btn_addpeak_isclicked(self):
-        """Handles when the button add_peak is clicked."""
+        """Handle when the button add_peak is clicked."""
         self.btn_addpeak.setAutoRaise(not self.btn_addpeak.autoRaise())
-        self.btn_delPeak.setAutoRaise(True)
+        self.btn_delpeak.setAutoRaise(True)
         self.config_brf.btn_seldata.setAutoRaise(True)
         self.btn_pan.setValue(False)
         self.btn_zoom_to_rect.setValue(False)
@@ -651,9 +652,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
             QApplication.restoreOverrideCursor()
         self.draw()
 
-    def btn_delPeak_isclicked(self):
-        """Handles when the button btn_delPeak is clicked."""
-        self.btn_delPeak.setAutoRaise(not self.btn_delPeak.autoRaise())
+    def btn_delpeak_isclicked(self):
+        """Handle when the button btn_delpeak is clicked."""
+        self.btn_delpeak.setAutoRaise(not self.btn_delpeak.autoRaise())
         self.btn_addpeak.setAutoRaise(True)
         self.config_brf.btn_seldata.setAutoRaise(True)
         self.btn_pan.setValue(False)
@@ -661,7 +662,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.brfperiod = [None, None]
         self.__brfcount = 0
 
-        if not self.btn_delPeak.autoRaise():
+        if not self.btn_delpeak.autoRaise():
             QApplication.setOverrideCursor(Qt.PointingHandCursor)
         else:
             QApplication.restoreOverrideCursor()
@@ -714,7 +715,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the state of the button to zoom to rectangle changes."""
         if self.zoom_is_active:
             self.btn_pan.setValue(False)
-            self.btn_delPeak.setAutoRaise(True)
+            self.btn_delpeak.setAutoRaise(True)
             self.btn_addpeak.setAutoRaise(True)
             self.config_brf.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
@@ -733,7 +734,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the state of the button to pan the graph changes."""
         if self.pan_is_active:
             self.btn_zoom_to_rect.setValue(False)
-            self.btn_delPeak.setAutoRaise(True)
+            self.btn_delpeak.setAutoRaise(True)
             self.btn_addpeak.setAutoRaise(True)
             self.config_brf.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
@@ -1166,7 +1167,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         Return whether all of the tool buttons that can block the panning and
         zooming of the graph are raised.
         """
-        return(self.btn_delPeak.autoRaise() and
+        return(self.btn_delpeak.autoRaise() and
                self.btn_addpeak.autoRaise() and
                self.config_brf.btn_seldata.autoRaise())
 
@@ -1216,7 +1217,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # ---- Remove Peak Cursor
 
-        if not self.btn_delPeak.autoRaise() and len(self.peak_indx) > 0:
+        if not self.btn_delpeak.autoRaise() and len(self.peak_indx) > 0:
             # For deleting peak in the graph. Will put a cross on top of the
             # peak to delete if some proximity conditions are met.
 
@@ -1278,7 +1279,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             return
 
         ax0 = self.fig.axes[0]
-        if not self.btn_delPeak.autoRaise():
+        if not self.btn_delpeak.autoRaise():
             if len(self.peak_indx) == 0:
                 return
 
