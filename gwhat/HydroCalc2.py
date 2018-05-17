@@ -326,12 +326,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_clearPeak.setToolTip('Clear all extremum from the graph')
         self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
 
-        self.btn_addpeak = QToolButtonNormal(icons.get_icon('add_point'))
-        self.btn_addpeak.clicked.connect(self.btn_addpeak_isclicked)
+        self.btn_addpeak = OnOffToolButton('add_point', size='normal')
+        self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
         self.btn_addpeak.setToolTip(
             "<p>Toggle edit mode to manually add extremums to the graph</p>")
 
-        self.btn_delpeak = QToolButtonNormal(icons.get_icon('erase'))
+        self.btn_delpeak = OnOffToolButton('erase', size='normal')
         self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
         self.btn_delpeak.setToolTip(
             "<p>Toggle edit mode to manually remove extremums"
@@ -596,34 +596,24 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def btn_addpeak_isclicked(self):
         """Handle when the button add_peak is clicked."""
-        self.btn_addpeak.setAutoRaise(not self.btn_addpeak.autoRaise())
-        self.btn_delpeak.setAutoRaise(True)
-        self.config_brf.btn_seldata.setAutoRaise(True)
-        self.btn_pan.setValue(False)
-        self.btn_zoom_to_rect.setValue(False)
-        self.brfperiod = [None, None]
-        self.__brfcount = 0
-
-        if not self.btn_addpeak.autoRaise():
-            QApplication.setOverrideCursor(Qt.PointingHandCursor)
-        else:
-            QApplication.restoreOverrideCursor()
+        if self.btn_addpeak.value():
+            self.btn_delpeak.setAutoRaise(True)
+            self.btn_pan.setValue(False)
+            self.btn_zoom_to_rect.setValue(False)
+            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brfperiod = [None, None]
+            self.__brfcount = 0
         self.draw()
 
     def btn_delpeak_isclicked(self):
         """Handle when the button btn_delpeak is clicked."""
-        self.btn_delpeak.setAutoRaise(not self.btn_delpeak.autoRaise())
-        self.btn_addpeak.setAutoRaise(True)
-        self.config_brf.btn_seldata.setAutoRaise(True)
-        self.btn_pan.setValue(False)
-        self.btn_zoom_to_rect.setValue(False)
-        self.brfperiod = [None, None]
-        self.__brfcount = 0
-
-        if not self.btn_delpeak.autoRaise():
-            QApplication.setOverrideCursor(Qt.PointingHandCursor)
-        else:
-            QApplication.restoreOverrideCursor()
+        if self.btn_delpeak.value():
+            self.btn_addpeak.setValue(False)
+            self.btn_pan.setValue(False)
+            self.btn_zoom_to_rect.setValue(False)
+            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brfperiod = [None, None]
+            self.__brfcount = 0
         self.draw()
 
     def clear_all_peaks(self):
