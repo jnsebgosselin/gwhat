@@ -574,8 +574,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.brfperiod = [None, None]
             self.plot_BRFperiod()
 
-            self.btn_addpeak.setAutoRaise(True)
-            self.btn_delpeak.setAutoRaise(True)
+            self.btn_addpeak.setValue(False)
+            self.btn_delpeak.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
             self.btn_pan.setValue(False)
 
@@ -659,8 +659,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the state of the button to zoom to rectangle changes."""
         if self.zoom_is_active:
             self.btn_pan.setValue(False)
-            self.btn_delpeak.setAutoRaise(True)
-            self.btn_addpeak.setAutoRaise(True)
+            self.btn_delpeak.setValue(False)
+            self.btn_addpeak.setValue(False)
             self.config_brf.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
                 self.toolbar.zoom()
@@ -678,8 +678,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the state of the button to pan the graph changes."""
         if self.pan_is_active:
             self.btn_zoom_to_rect.setValue(False)
-            self.btn_delpeak.setAutoRaise(True)
-            self.btn_addpeak.setAutoRaise(True)
+            self.btn_delpeak.setValue(False)
+            self.btn_addpeak.setValue(False)
             self.config_brf.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
                 self.toolbar.pan()
