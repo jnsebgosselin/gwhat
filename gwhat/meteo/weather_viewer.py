@@ -80,7 +80,7 @@ class WeatherViewer(DialogWindow):
         btn_save.setStyleSheet("QToolButton::menu-indicator {image: none;}")
 
         self.btn_export = ExportWeatherButton()
-        self.btn_export.setIconSize(QSize(28, 28))
+        self.btn_export.setIconSize(icons.get_iconsize('normal'))
 
         btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
         btn_showStats.setToolTip(
