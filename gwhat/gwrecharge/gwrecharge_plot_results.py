@@ -35,10 +35,11 @@ from gwhat.common import icons, QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
 from gwhat.common.widgets import QFrameLayout
 from gwhat.mplFigViewer3 import ImageViewer
+from gwhat.widgets.buttons import LangToolButton, ToolBarWidget
+from gwhat.widgets.layout import VSep
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 LOCS = ['left', 'top', 'right', 'bottom']
-LANGUAGES = ['French', 'English']
 
 
 # Calcul the time delta between the datum of the matplotlib ax Excel time
@@ -635,12 +636,12 @@ class FigManagerBase(QWidget):
             self.figsetp_manager.add_figsetp_panel(setp_panel)
 
         layout = QGridLayout(self)
-        layout.addWidget(self.figviewer, 1, 0)
         layout.addWidget(self.toolbar, 0, 0, 1, 2)
+        layout.addWidget(self.figviewer, 1, 0)
         layout.addWidget(self.figsetp_manager, 1, 1)
 
         layout.setColumnStretch(0, 100)
-        layout.setRowStretch(0, 100)
+        layout.setRowStretch(1, 100)
 
     def resizeEvent(self, event):
         super(FigManagerBase, self).resizeEvent(event)
@@ -657,14 +658,18 @@ class FigManagerBase(QWidget):
         self.btn_save.setToolTip('Save current graph as...')
         self.btn_save.clicked.connect(self._select_savefig_path)
 
-        # Setup the layout of the toolbar
+        self.btn_language = LangToolButton()
+        self.btn_language.setToolTip(
+            "Set the language of the text shown in the graph.")
+        self.btn_language.sig_lang_changed.connect(self._language_changed)
+        self.btn_language.setIconSize(icons.get_iconsize('normal'))
 
-        self.toolbar = QToolBar()
-        self.toolbar.addWidget(self.btn_save)
-        self.toolbar.addSeparator()
-        self.toolbar.addWidget(self._setup_zoom_widget())
-        self.toolbar.addSeparator()
-        self.toolbar.addWidget(self._setup_language_widget())
+        zoom_widget = self._setup_zoom_widget()
+
+        self.toolbar = ToolBarWidget()
+        for btn in [self.btn_save, VSep(), zoom_widget, VSep(),
+                    self.btn_language]:
+            self.toolbar.addWidget(btn)
 
     def _setup_zoom_widget(self):
         """Setup a toolbar widget to zoom in and zoom out the figure."""
@@ -697,30 +702,7 @@ class FigManagerBase(QWidget):
 
     @property
     def fig_language(self):
-        return self._cbb_language.currentText()
-
-    def _setup_language_widget(self):
-        """
-        Setup a toolbar widget to change the language of the text shown in the
-        figure.
-        """
-        self._cbb_language = QComboBox()
-        self._cbb_language.setEditable(False)
-        self._cbb_language.setInsertPolicy(QComboBox.NoInsert)
-        self._cbb_language.addItems(LANGUAGES)
-        self._cbb_language.setCurrentIndex(1)
-        self._cbb_language.currentIndexChanged.connect(self._language_changed)
-        self._cbb_language.setToolTip(
-            "Set the language of the text shown in the figure.")
-
-        grp_lang = QWidget()
-        lay_lang = QGridLayout(grp_lang)
-        lay_lang.addWidget(QLabel('Language :'), 0, 0)
-        lay_lang.addWidget(self._cbb_language, 0, 1)
-        lay_lang.setSpacing(5)
-        lay_lang.setContentsMargins(5, 0, 5, 0)  # (L, T, R, B)
-
-        return grp_lang
+        return self.btn_language.language
 
     @QSlot()
     def _language_changed(self):
