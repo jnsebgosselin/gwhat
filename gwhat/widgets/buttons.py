@@ -9,26 +9,21 @@
 # ---- Imports: Standard Libraries
 
 import sys
-import os
-import os.path as osp
 from abc import abstractmethod
 
 # ---- Imports: Third Parties
 
 import numpy as np
-from sip import wrappertype as pyqtWrapperType
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import QSize, Qt, QEvent
-from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QFileDialog,
-                             QGridLayout, QListWidget, QMenu, QMessageBox,
-                             QStyle, QToolButton, QWidget)
+from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QGridLayout,
+                             QListWidget, QMenu, QStyle, QToolButton, QWidget)
 
 # ---- Local imports
 
 from gwhat.common.icons import QToolButtonBase
 from gwhat.common import icons
-from gwhat.common.utils import find_unique_filename
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
 
@@ -352,6 +347,7 @@ class LangToolButton(DropdownToolButton):
 
     def set_language(self, lang):
         """Set the namespace for the language."""
+        lang = lang.lower()
         lang = lang if lang in list(self.LANGUAGES.keys()) else 'english'
         if lang != self.__language:
             self.__language = lang
