@@ -103,10 +103,10 @@ def get_iconsize(size):
 
 
 class QToolButtonBase(QToolButton):
-    def __init__(self, Qicon, *args, **kargs):
+    def __init__(self, icon, *args, **kargs):
         super(QToolButtonBase, self).__init__(*args, **kargs)
-
-        self.setIcon(Qicon)
+        icon = get_icon(icon) if isinstance(icon, str) else icon
+        self.setIcon(icon)
         self.setAutoRaise(True)
         self.setFocusPolicy(Qt.NoFocus)
 
