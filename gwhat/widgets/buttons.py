@@ -9,26 +9,21 @@
 # ---- Imports: Standard Libraries
 
 import sys
-import os
-import os.path as osp
 from abc import abstractmethod
 
 # ---- Imports: Third Parties
 
 import numpy as np
-from sip import wrappertype as pyqtWrapperType
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import QSize, Qt, QEvent
-from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QFileDialog,
-                             QGridLayout, QListWidget, QMenu, QMessageBox,
-                             QStyle, QToolButton, QWidget)
+from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QGridLayout,
+                             QListWidget, QMenu, QStyle, QToolButton, QWidget)
 
 # ---- Local imports
 
 from gwhat.common.icons import QToolButtonBase
 from gwhat.common import icons
-from gwhat.common.utils import find_unique_filename
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
 
@@ -308,23 +303,15 @@ class DropDownList(QListWidget):
             self.hide()
 
 
-class ExportDataButton(QToolButtonBase, SaveFileMixin):
-    """
-    A toolbutton with a popup menu that handles the export of data
-    in various format.
-    """
-    MODELCLS = object
+class DropdownToolButton(QToolButtonBase):
+    """A toolbutton with a dropdown menu."""
     TOOLTIP = ''
 
-    def __init__(self, model=None, workdir=None, parent=None):
-        super(ExportDataButton, self).__init__(
-            icons.get_icon('export_data'), parent)
-        self.set_dialog_dir(workdir)
-        self.setPopupMode(QToolButtonBase.InstantPopup)
+    def __init__(self, icon, parent=None):
+        super(DropdownToolButton, self).__init__(icon, parent)
         self.setToolTip(self.TOOLTIP)
+        self.setPopupMode(QToolButtonBase.InstantPopup)
         self.setStyleSheet("QToolButton::menu-indicator {image: none;}")
-
-        self.set_model(model)
         self.setup_menu()
 
     @abstractmethod
@@ -332,6 +319,55 @@ class ExportDataButton(QToolButtonBase, SaveFileMixin):
         """Setup the menu of the button."""
         menu = QMenu()
         self.setMenu(menu)
+
+
+class LangToolButton(DropdownToolButton):
+    """A toolbutton that allow language selection."""
+    TOOLTIP = ""
+    LANGUAGES = {'french': 'FR',
+                 'english': 'EN'}
+    sig_lang_changed = QSignal(str)
+
+    def __init__(self, parent=None):
+        DropdownToolButton.__init__(self, 'language', parent)
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.__language = 'english'
+        self.setText(self.LANGUAGES[self.language])
+
+    def setup_menu(self):
+        """Setup the languages in the menu."""
+        super(LangToolButton, self).setup_menu()
+        self.menu().addAction('English', lambda: self.set_language('english'))
+        self.menu().addAction('French', lambda: self.set_language('french'))
+
+    @property
+    def language(self):
+        """Return the current language."""
+        return self.__language
+
+    def set_language(self, lang):
+        """Set the namespace for the language."""
+        lang = lang.lower()
+        lang = lang if lang in list(self.LANGUAGES.keys()) else 'english'
+        if lang != self.__language:
+            self.__language = lang
+            self.setText(self.LANGUAGES[lang])
+            self.sig_lang_changed.emit(lang)
+
+
+class ExportDataButton(DropdownToolButton, SaveFileMixin):
+    """
+    A toolbutton with a dropdown menu that handles the export of data
+    in various format.
+    """
+    MODELCLS = object
+
+    def __init__(self, model=None, workdir=None, parent=None):
+        DropdownToolButton.__init__(self, 'export_data', parent)
+        SaveFileMixin.__init__(self)
+
+        self.set_dialog_dir(workdir)
+        self.set_model(model)
 
     @property
     def model(self):
@@ -395,15 +431,20 @@ class OnOffToolButton(QToolButtonBase):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
     drop_button = DropDownButton(icon=icons.get_icon('todate'))
     drop_button.addItems([str(i) for i in range(2017, 1899, -1)])
-    drop_button.show()
 
     onoff_button = OnOffToolButton('play', 'stop')
+    onoff_button.setIconSize(icons.get_iconsize('normal'))
+
+    lang_button = LangToolButton()
+    lang_button.setIconSize(icons.get_iconsize('normal'))
 
     toolbar = ToolBarWidget()
     toolbar.addWidget(onoff_button)
     toolbar.addWidget(drop_button)
+    toolbar.addWidget(lang_button)
     toolbar.show()
 
     sys.exit(app.exec_())

@@ -37,6 +37,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
+from gwhat.widgets.buttons import LangToolButton
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
 from gwhat import brf_mod as bm
@@ -426,21 +427,13 @@ class BRFViewer(QWidget):
 
         self.total_brf = QLabel('/ 0')
 
-        # ---- Language Widget
+        # ---- Language button
 
-        self.cbb_language = QComboBox()
-        self.cbb_language.setEditable(False)
-        self.cbb_language.setInsertPolicy(QComboBox.NoInsert)
-        self.cbb_language.addItems(['French', 'English'])
-        self.cbb_language.setCurrentIndex(1)
-        self.cbb_language.currentIndexChanged.connect(self.plot_brf)
-        self.cbb_language.setToolTip("Graph label language.")
-
-        lay_language = QGridLayout()
-        lay_language.addWidget(QLabel('Label Language:'), 0, 0)
-        lay_language.addWidget(self.cbb_language, 0, 1)
-        lay_language.setSpacing(5)
-        lay_language.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        self.btn_language = LangToolButton()
+        self.btn_language.setToolTip(
+            "Set the language of the text shown in the graph.")
+        self.btn_language.sig_lang_changed.connect(self.plot_brf)
+        self.btn_language.setIconSize(icons.get_iconsize('normal'))
 
         # ---- Toolbar
 
@@ -464,7 +457,7 @@ class BRFViewer(QWidget):
 
         buttons = [btn_save, self.btn_del, VSep(), self.btn_prev,
                    self.current_brf, self.total_brf, self.btn_next, VSep(),
-                   lay_language, VSep(), self.btn_setp]
+                   self.btn_setp, self.btn_language]
 
         for btn in buttons:
             if isinstance(btn, QLayout):
@@ -595,7 +588,7 @@ class BRFViewer(QWidget):
             self.update_brfnavigate_state()
 
     def plot_brf(self):
-        self.brf_canvas.figure.set_language(self.cbb_language.currentText())
+        self.brf_canvas.figure.set_language(self.btn_language.language)
         if self.wldset.brf_count() == 0:
             self.brf_canvas.figure.empty_BRF()
         else:

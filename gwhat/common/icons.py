@@ -87,7 +87,8 @@ ICON_NAMES = {'master': 'WHAT',
               'export_data': 'export-data',
               'zoom_to_rect': 'zoom_to_rect',
               'show_glue_wl': 'show_glue_wl',
-              'show_meteo': 'show_meteo'}
+              'show_meteo': 'show_meteo',
+              'language': 'language'}
 
 ICON_SIZES = {'large': (32, 32),
               'normal': (28, 28),
@@ -103,10 +104,10 @@ def get_iconsize(size):
 
 
 class QToolButtonBase(QToolButton):
-    def __init__(self, Qicon, *args, **kargs):
+    def __init__(self, icon, *args, **kargs):
         super(QToolButtonBase, self).__init__(*args, **kargs)
-
-        self.setIcon(Qicon)
+        icon = get_icon(icon) if isinstance(icon, str) else icon
+        self.setIcon(icon)
         self.setAutoRaise(True)
         self.setFocusPolicy(Qt.NoFocus)
 

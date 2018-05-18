@@ -40,7 +40,8 @@ from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.meteo.weather_reader import calcul_monthly_normals
 from gwhat.common.utils import save_content_to_file
 from gwhat.meteo.weather_reader import WXDataFrameBase
-from gwhat.widgets.buttons import ExportDataButton
+from gwhat.widgets.buttons import (ExportDataButton, LangToolButton,
+                                   ToolBarWidget)
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -56,7 +57,6 @@ class WeatherViewer(DialogWindow):
         self.wxdset = None
         self.normals = None
         self.meteo_dir = os.getcwd()
-        self.language = 'English'
 
         self.__initUI__()
         self.set_workdir(workdir)
@@ -80,12 +80,18 @@ class WeatherViewer(DialogWindow):
         btn_save.setStyleSheet("QToolButton::menu-indicator {image: none;}")
 
         self.btn_export = ExportWeatherButton()
-        self.btn_export.setIconSize(QSize(28, 28))
+        self.btn_export.setIconSize(icons.get_iconsize('normal'))
 
         btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
         btn_showStats.setToolTip(
                 "Show the monthly weather normals data table.")
         btn_showStats.clicked.connect(self.show_monthly_grid)
+
+        btn_language = LangToolButton()
+        btn_language.setToolTip(
+            "Set the language of the text shown in the graph.")
+        btn_language.sig_lang_changed.connect(self.set_lang)
+        btn_language.setIconSize(icons.get_iconsize('normal'))
 
         # Instantiate and define a layout for the year range widget :
 
@@ -102,7 +108,7 @@ class WeatherViewer(DialogWindow):
         lay_expand.addWidget(btn_expand, 0, 1)
         lay_expand.setContentsMargins(0, 0, 0, 0)
         lay_expand.setSpacing(1)
-
+        
         qgrid = QHBoxLayout(self.year_rng)
         qgrid.setContentsMargins(0, 0, 0, 0)
         qgrid.addWidget(QLabel('Year Range :'))
@@ -112,17 +118,10 @@ class WeatherViewer(DialogWindow):
 
         # Generate the layout of the toolbar :
 
-        toolbar_widget = QWidget()
-        subgrid_toolbar = QGridLayout(toolbar_widget)
-
-        buttons = [btn_save, self.btn_export, btn_showStats, VSep(),
-                   self.year_rng]
-        for col, btn in enumerate(buttons):
-            subgrid_toolbar.addWidget(btn, 0, col)
-
-        subgrid_toolbar.setColumnStretch(subgrid_toolbar.columnCount(), 4)
-        subgrid_toolbar.setSpacing(5)
-        subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
+        toolbar_widget = ToolBarWidget()
+        for btn in [btn_save, self.btn_export, btn_showStats, btn_language,
+                    None, self.year_rng]:
+            toolbar_widget.addWidget(btn)
 
         # ---- Main Layout
 
@@ -166,7 +165,6 @@ class WeatherViewer(DialogWindow):
 
     def set_lang(self, lang):
         """Sets the language of all the labels in the figure."""
-        self.language = lang
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
 
@@ -944,7 +942,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    fmeteo = ("E:\\GWHAT\\Projects\\Example\\Meteo\\Output\\"
+    fmeteo = ("..\\..\\Projects\\Example\\Meteo\\Output\\"
               "MARIEVILLE (7024627)\MARIEVILLE (7024627)_1980-2017.out")
     wxdset = WXDataFrame(fmeteo)
 

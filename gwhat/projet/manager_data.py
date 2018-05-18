@@ -142,7 +142,7 @@ class DataManager(QWidget):
         btn_weather_normals.clicked.connect(self.show_weather_normals)
 
         self.btn_export_weather = ExportWeatherButton(workdir=self.workdir)
-        self.btn_export_weather.setIconSize(QSize(20, 20))
+        self.btn_export_weather.setIconSize(icons.get_iconsize('small'))
 
         wx_toolbar = ToolBarWidget()
         for widg in [self.btn_load_meteo,

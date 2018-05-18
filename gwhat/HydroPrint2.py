@@ -38,6 +38,7 @@ from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
 from gwhat.widgets.layout import OnOffToggleWidget, VSep
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
+from gwhat.widgets.buttons import LangToolButton
 
 
 class HydroprintGUI(myqt.DialogWindow):
@@ -108,6 +109,12 @@ class HydroprintGUI(myqt.DialogWindow):
                                   ' used to draw the hydrograph</p.')
         btn_color_pick.clicked.connect(self.color_palette_win.show)
 
+        self.btn_language = LangToolButton()
+        self.btn_language.setToolTip(
+            "Set the language of the text shown in the graph.")
+        self.btn_language.sig_lang_changed.connect(self.layout_changed)
+        self.btn_language.setIconSize(icons.get_iconsize('normal'))
+
         # ---- Zoom Panel
 
         btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
@@ -137,7 +144,7 @@ class HydroprintGUI(myqt.DialogWindow):
         btn_list = [btn_save, btn_draw,
                     self.btn_load_layout, self.btn_save_layout, VSep(),
                     btn_bestfit_waterlvl, btn_bestfit_time, VSep(),
-                    self.btn_page_setup, btn_color_pick,
+                    self.btn_page_setup, btn_color_pick, self.btn_language,
                     VSep(), zoom_pan]
 
         subgrid_toolbar = QGridLayout()
@@ -187,17 +194,11 @@ class HydroprintGUI(myqt.DialogWindow):
         # ---- Right Panel
 
         self.tabscales = self.__init_scalesTabWidget__()
-        self.qAxeLabelsLanguage = self.__init_labelLangWidget__()
 
         self.right_panel = myqt.QFrameLayout()
-        row = 0
-        self.right_panel.addWidget(self.dmngr, row, 0)
-        row += 1
-        self.right_panel.addWidget(self.tabscales, row, 0)
-        row += 1
-        self.right_panel.addWidget(self.qAxeLabelsLanguage, 2, 0)
-        row += 1
-        self.right_panel.setRowStretch(row, 100)
+        self.right_panel.addWidget(self.dmngr, 0, 0)
+        self.right_panel.addWidget(self.tabscales, 1, 0)
+        self.right_panel.setRowStretch(2, 100)
 
         self.right_panel.setSpacing(15)
 
@@ -227,15 +228,12 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Hydrograph Layout :
 
-        self.language_box.currentIndexChanged.connect(self.layout_changed)
         self.Ptot_scale.valueChanged.connect(self.layout_changed)
         self.qweather_bin.currentIndexChanged.connect(self.layout_changed)
 
         # ---- Init Image
 
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
-
-    # =========================================================================
 
     def __init_scalesTabWidget__(self):
 
@@ -401,29 +399,6 @@ class HydroprintGUI(myqt.DialogWindow):
 
         return tabscales
 
-    def __init_labelLangWidget__(self):  # ------------------------------------
-
-        # Widgets :
-
-        self.language_box = QComboBox()
-        self.language_box.setEditable(False)
-        self.language_box.setInsertPolicy(QComboBox.NoInsert)
-        self.language_box.addItems(['French', 'English'])
-        self.language_box.setCurrentIndex(1)
-
-        # Layout :
-
-        layout = QGridLayout()
-        layout.addWidget(QLabel('Label Language:'), 0, 0)
-        layout.addWidget(self.language_box, 0, 1)
-        layout.setSpacing(5)
-        layout.setContentsMargins(5, 5, 5, 5)  # (L, T, R, B)
-
-        qAxeLabelsLanguage = QFrame()
-        qAxeLabelsLanguage.setLayout(layout)
-
-        return qAxeLabelsLanguage
-
     @property
     def workdir(self):
         return self.dmngr.workdir
@@ -533,7 +508,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         sender = self.sender()
 
-        if sender == self.language_box:
+        if sender == self.btn_language:
             self.hydrograph.draw_ylabels()
             self.hydrograph.setup_xticklabels()
             self.hydrograph.set_legend()
@@ -609,7 +584,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # language :
 
-        self.hydrograph.language = self.language_box.currentText()
+        self.hydrograph.language = self.btn_language.language
 
         # Scales :
 
@@ -755,13 +730,8 @@ class HydroprintGUI(myqt.DialogWindow):
         self.time_scale_label.setCurrentIndex(
             self.time_scale_label.findText(layout['datemode']))
 
-        # Language :
-
-        index = max(0, self.language_box.findText(layout['language']))
-        self.language_box.setCurrentIndex(index)
-
-        # Color Palette :
-
+        # ---- Language and colors
+        self.btn_language.set_language(layout['language'])
         self.color_palette_win.load_colors()
 
         # Page Setup :
@@ -846,7 +816,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         layout['title_on'] = bool(self.page_setup_win.isGraphTitle)
         layout['legend_on'] = bool(self.page_setup_win.isLegend)
-        layout['language'] = self.language_box.currentText()
+        layout['language'] = self.btn_language.language
         layout['trend_line'] = bool(self.page_setup_win.isTrendLine)
         layout['meteo_on'] = bool(self.page_setup_win.is_meteo_on)
         layout['glue_wl_on'] = bool(self.page_setup_win.is_glue_wl_on)
