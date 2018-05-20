@@ -511,7 +511,7 @@ class HydroprintGUI(myqt.DialogWindow):
         if sender == self.btn_language:
             self.hydrograph.draw_ylabels()
             self.hydrograph.setup_xticklabels()
-            self.hydrograph.set_legend()
+            self.hydrograph.setup_legend()
         elif sender in [self.waterlvl_max, self.waterlvl_scale]:
             self.hydrograph.setup_waterlvl_scale()
             self.hydrograph.draw_ylabels()
@@ -553,7 +553,7 @@ class HydroprintGUI(myqt.DialogWindow):
             #                   set_time_scale()
             #                   draw_figure_title
             self.hydrograph.draw_waterlvl()
-            self.hydrograph.set_legend()
+            self.hydrograph.setup_legend()
         elif sender == self.qweather_bin:
             self.hydrograph.resample_bin()
             self.hydrograph.draw_weather()

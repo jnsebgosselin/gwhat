@@ -199,7 +199,7 @@ class Hydrograph(Figure):
         self.glue_wl_on = x
         if self.__isHydrographExists:
             self.draw_glue_wl()
-            self.set_legend()
+            self.setup_legend()
 
     @property
     def language(self):
@@ -228,7 +228,7 @@ class Hydrograph(Figure):
         """Set the namespace for the GLUE dataframe."""
         self.gluedf = gluedf
         self.draw_glue_wl()
-        self.set_legend()
+        self.setup_legend()
 
     def clf(self, *args, **kargs):
         """Matplotlib override to set internal flag."""
@@ -473,13 +473,13 @@ class Hydrograph(Figure):
 
         # --------------------------------------------------------- LEGEND ----
 
-        self.set_legend()
+        self.setup_legend()
 
         # ---------------------------------------------------- UPDATE FLAG ----
 
         self.__isHydrographExists = True
 
-    def set_legend(self):
+    def setup_legend(self):
         """Setup the legend of the graph."""
         if self.isLegend == 1:
             labelDB = LabelDatabase(self.language).legend
@@ -556,7 +556,7 @@ class Hydrograph(Figure):
         self.l2_ax2.set_color(self.colorsDB.rgb['WL data'])
         self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])
         self.draw_weather()
-        self.set_legend()
+        self.setup_legend()
 
     def update_fig_size(self):
         """Update the size of the figure."""
