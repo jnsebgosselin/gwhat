@@ -128,14 +128,11 @@ class Hydrograph(Figure):
         #             smooth the water level data
         self.meteo_on = True
         self.glue_wl_on = False
+        self.mrc_wl_on = False
         self.gridLines = 2  # 0 -> None, 1 -> "-" 2 -> ":"
         self.datemode = 'Month'  # 'month' or 'year'
         self.label_font_size = 14
         self.date_labels_pattern = 2
-
-        # plot or not the estimated recession segment that
-        # were used to estimate the MRC
-        self.isMRC = False
 
         # Waterlvl & Meteo Obj :
 
@@ -202,6 +199,23 @@ class Hydrograph(Figure):
             self.setup_legend()
 
     @property
+    def mrc_wl_on(self):
+        """Return whether the mrc water levels must be plotted or not."""
+        return self.__mrc_wl_on
+
+    @mrc_wl_on.setter
+    def mrc_wl_on(self, x):
+        """Set whether the mrc water levels data must plotted or not."""
+        self.__mrc_wl_on = bool(x)
+
+    def set_mrc_wl_on(self, x):
+        """Set whether the mrc water levels data must plotted or not."""
+        self.mrc_wl_on = x
+        if self.__isHydrographExists:
+            self.draw_mrc_wl()
+            self.setup_legend()
+
+    @property
     def language(self):
         return self.__language
 
@@ -228,6 +242,12 @@ class Hydrograph(Figure):
         """Set the namespace for the GLUE dataframe."""
         self.gluedf = gluedf
         self.draw_glue_wl()
+        self.setup_legend()
+
+    def set_mrcdf(self, mrcdf):
+        """Set the namespace for the MRC dataframe."""
+        self.mrcdf = mrcdf
+        self.draw_mrc_wl()
         self.setup_legend()
 
     def clf(self, *args, **kargs):
@@ -392,7 +412,7 @@ class Hydrograph(Figure):
             mec=self.colorsDB.rgb['WL obs'])
 
         # Predicted Recession Curves
-        self.plot_recess, = self.ax2.plot(
+        self._mrc_plt, = self.ax2.plot(
             [], [], color='red', lw=1.5, dashes=[5, 3], zorder=100,
             alpha=0.85)
 
@@ -401,6 +421,7 @@ class Hydrograph(Figure):
 
         self.draw_waterlvl()
         self.draw_glue_wl()
+        self.draw_mrc_wl()
 
         # ---- Init weather artists
 
@@ -524,9 +545,9 @@ class Hydrograph(Figure):
                 lg_handles.append(self.h_WLmes)
                 lg_labels.append(labelDB[7])
 
-            if self.isMRC:
+            if self.mrc_wl_on:
                 lg_labels.append(labelDB[8])
-                lg_handles.append(self.plot_recess)
+                lg_handles.append(self._mrc_plt)
 
             if self.glue_wl_on:
                 lg_labels.append('GLUE 5/95')
@@ -818,13 +839,16 @@ class Hydrograph(Figure):
             xlstime, wl95, wl05, facecolor='0.85', lw=1, edgecolor='0.65',
             zorder=0)
 
-    def draw_recession(self):
-        t = self.WaterLvlObj.trecess
-        wl = self.WaterLvlObj.hrecess
-        self.plot_recess.set_data(t, wl)
+    def draw_mrc_wl(self):
+        """Draw the water levels predicted with the MRC."""
+        if self.mrc_wl_on is False:
+            self._mrc_plt.set_visible(False)
+            return
+        else:
+            self._mrc_plt.set_visible(True)
 
-        self.isMRC = True
-        self.set_legend()
+        self._mrc_plt.set_data(
+            self.wldset['mrc/time'], self.wldset['mrc/recess'])
 
     def draw_waterlvl(self):
         """
@@ -1325,7 +1349,7 @@ if __name__ == '__main__':
 #        hg.best_fit_time(waterLvlObj.time)
 #        hg.generate_hydrograph(meteo_obj)
 #
-#        hg.draw_recession()
+#        hg.draw_mrc_wl()
 #        hg.savefig(dirname + '/MRC_hydrograph.pdf')
 #
 #        hg.isMRC = False
@@ -1360,7 +1384,7 @@ if __name__ == '__main__':
 ##        ax2.plot(wl2.time, wl2.lvl, color='green')
 #
 #        hg.draw_GLUE()
-#        hg.draw_recession()
+#        hg.draw_mrc_wl()
 #        hg.savefig(dirname + '/GLUE_hydrograph.pdf', dpi=300)
 #
     # ---- Show figure on-screen
