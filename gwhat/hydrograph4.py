@@ -838,12 +838,10 @@ class Hydrograph(Figure):
         """Draw the water levels predicted with the MRC."""
         if self.mrc_wl_on is False:
             self._mrc_plt.set_visible(False)
-            return
         else:
             self._mrc_plt.set_visible(True)
-
-        self._mrc_plt.set_data(
-            self.wldset['mrc/time'], self.wldset['mrc/recess'])
+            self._mrc_plt.set_data(
+                self.wldset['mrc/time'], self.wldset['mrc/recess'])
 
     def draw_waterlvl(self):
         """
