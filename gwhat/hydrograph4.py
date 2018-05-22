@@ -244,12 +244,6 @@ class Hydrograph(Figure):
         self.draw_glue_wl()
         self.setup_legend()
 
-    def set_mrcdf(self, mrcdf):
-        """Set the namespace for the MRC dataframe."""
-        self.mrcdf = mrcdf
-        self.draw_mrc_wl()
-        self.setup_legend()
-
     def clf(self, *args, **kargs):
         """Matplotlib override to set internal flag."""
         self.__isHydrographExists = False
