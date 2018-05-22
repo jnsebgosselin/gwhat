@@ -282,7 +282,7 @@ def test_download_data(downloader_bot, mocker):
 
     # Download the data for the selected stations.
     process_finished = wxdata_downloader.sig_download_process_ended
-    with qtbot.waitSignal(process_finished, raising=True, timeout=100000):
+    with qtbot.waitSignal(process_finished, raising=True, timeout=300000):
         qtbot.mouseClick(wxdata_downloader.btn_get, Qt.LeftButton)
 
     # Assert that data before 2000 were not downloaded

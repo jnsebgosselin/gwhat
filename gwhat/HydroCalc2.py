@@ -20,6 +20,7 @@ import datetime
 import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
+from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QGridLayout, QComboBox, QTextEdit,
                              QSizePolicy, QPushButton, QLabel, QTabWidget,
                              QApplication, QWidget)
@@ -53,6 +54,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     i.e. display the data as a continuous line or individual dot, perform a
     MRC and ultimately estimate groundwater recharge.
     """
+    sig_new_mrc = QSignal()
 
     def __init__(self, datamanager, parent=None):
         DialogWindow.__init__(self, parent, maximize=True)
@@ -495,6 +497,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.wldset.set_mrc(A, B, self.peak_indx, self.time, hp)
         self.btn_save_mrc.setEnabled(True)
         self.draw_mrc()
+        self.sig_new_mrc.emit()
 
         QApplication.restoreOverrideCursor()
 

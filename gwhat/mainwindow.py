@@ -141,6 +141,8 @@ class MainWindow(QMainWindow):
 
         splash.showMessage("Initializing analyse hydrograph...")
         self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
+        self.tab_hydrocalc.sig_new_mrc.connect(
+            self.tab_hydrograph.mrc_wl_changed)
         self.tab_hydrocalc.rechg_eval_widget.sig_new_gluedf.connect(
             self.tab_hydrograph.glue_wl_changed)
 

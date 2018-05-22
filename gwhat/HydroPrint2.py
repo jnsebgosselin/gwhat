@@ -484,6 +484,16 @@ class HydroprintGUI(myqt.DialogWindow):
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
 
+    @QSlot()
+    def mrc_wl_changed(self):
+        """
+        Force a redraw of the MRC water levels after the results have
+        changed for the dataset.
+        """
+        self.hydrograph.draw_mrc_wl()
+        self.hydrograph.setup_legend()
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+
     @QSlot(GLUEDataFrameBase)
     def glue_wl_changed(self, gluedf):
         """
@@ -511,7 +521,7 @@ class HydroprintGUI(myqt.DialogWindow):
         if sender == self.btn_language:
             self.hydrograph.draw_ylabels()
             self.hydrograph.setup_xticklabels()
-            self.hydrograph.set_legend()
+            self.hydrograph.setup_legend()
         elif sender in [self.waterlvl_max, self.waterlvl_scale]:
             self.hydrograph.setup_waterlvl_scale()
             self.hydrograph.draw_ylabels()
@@ -553,7 +563,7 @@ class HydroprintGUI(myqt.DialogWindow):
             #                   set_time_scale()
             #                   draw_figure_title
             self.hydrograph.draw_waterlvl()
-            self.hydrograph.set_legend()
+            self.hydrograph.setup_legend()
         elif sender == self.qweather_bin:
             self.hydrograph.resample_bin()
             self.hydrograph.draw_weather()
@@ -622,6 +632,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph.isGraphTitle = self.page_setup_win.isGraphTitle
         self.hydrograph.set_meteo_on(self.page_setup_win.is_meteo_on)
         self.hydrograph.set_glue_wl_on(self.page_setup_win.is_glue_wl_on)
+        self.hydrograph.set_mrc_wl_on(self.page_setup_win.is_mrc_wl_on)
 
         # Weather bins :
 
@@ -743,12 +754,14 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.isTrendLine = layout['trend_line']
         self.page_setup_win.is_meteo_on = layout['meteo_on']
         self.page_setup_win.is_glue_wl_on = layout['glue_wl_on']
+        self.page_setup_win.is_mrc_wl_on = layout['mrc_wl_on']
 
         self.page_setup_win.legend_on.set_value(layout['legend_on'])
         self.page_setup_win.title_on.set_value(layout['title_on'])
         self.page_setup_win.wltrend_on.set_value(layout['trend_line'])
         self.page_setup_win.meteo_on.set_value(layout['meteo_on'])
         self.page_setup_win.glue_wl_on.set_value(layout['glue_wl_on'])
+        self.page_setup_win.mrc_wl_on.set_value(layout['mrc_wl_on'])
 
         self.page_setup_win.fwidth.setValue(layout['fwidth'])
         self.page_setup_win.fheight.setValue(layout['fheight'])
@@ -820,6 +833,7 @@ class HydroprintGUI(myqt.DialogWindow):
         layout['trend_line'] = bool(self.page_setup_win.isTrendLine)
         layout['meteo_on'] = bool(self.page_setup_win.is_meteo_on)
         layout['glue_wl_on'] = bool(self.page_setup_win.is_glue_wl_on)
+        layout['mrc_wl_on'] = bool(self.page_setup_win.is_mrc_wl_on)
 
         # Save the colors :
 
@@ -856,6 +870,7 @@ class PageSetupWin(QWidget):
         self.isTrendLine = False
         self.is_meteo_on = True
         self.is_glue_wl_on = False
+        self.is_mrc_wl_on = False
         self.va_ratio = 0.2
 
         self.__initUI__()
@@ -944,12 +959,13 @@ class PageSetupWin(QWidget):
         self.wltrend_on = OnOffToggleWidget('Water Level Trend', False)
         self.meteo_on = OnOffToggleWidget('Weather Data', True)
         self.glue_wl_on = OnOffToggleWidget('GLUE Water Levels', False)
+        self.mrc_wl_on = OnOffToggleWidget('MRC Water Levels', False)
 
         grpbox = QGroupBox("Graph Components Visibility :")
         layout = QGridLayout(grpbox)
         for i, widget in enumerate([self.legend_on, self.title_on,
                                     self.wltrend_on, self.meteo_on,
-                                    self.glue_wl_on]):
+                                    self.glue_wl_on, self.mrc_wl_on]):
             layout.addWidget(widget, i, 0)
         layout.setContentsMargins(10, 10, 10, 10)
 
@@ -970,6 +986,7 @@ class PageSetupWin(QWidget):
         self.isTrendLine = self.wltrend_on.value()
         self.is_meteo_on = self.meteo_on.value()
         self.is_glue_wl_on = self.glue_wl_on.value()
+        self.is_mrc_wl_on = self.mrc_wl_on.value()
         self.va_ratio = self.va_ratio_spinBox.value()
 
         self.newPageSetupSent.emit(True)
@@ -992,6 +1009,7 @@ class PageSetupWin(QWidget):
         self.wltrend_on.set_value(self.isTrendLine)
         self.meteo_on.set_value(self.is_meteo_on)
         self.glue_wl_on.set_value(self.is_glue_wl_on)
+        self.mrc_wl_on.set_value(self.is_mrc_wl_on)
 
     def show(self):
         super(PageSetupWin, self).show()
