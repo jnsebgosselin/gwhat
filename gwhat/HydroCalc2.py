@@ -182,8 +182,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # ---- Setup plot artists
 
         # Water level :
-        self.h1_ax0, = ax0.plot([], [], color='blue', clip_on=True, ls='-',
-                                zorder=10, marker='None')
+        self._obs_wl_plt, = ax0.plot(
+            [], [], color='blue', clip_on=True, ls='-', zorder=10,
+            marker='None')
 
         # Predicted water levels :
         self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
@@ -799,7 +800,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Adjust the water levels, peak, MRC ant weather time frame.
 
         t = self.time + self.dt4xls2mpl * self.dformat
-        self.h1_ax0.set_xdata(t)  # Water Levels
+        self._obs_wl_plt.set_xdata(t)  # Water Levels
 
         if len(self.peak_indx) > 0:  # Peaks
             self._peaks_plt.set_xdata(
@@ -823,9 +824,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Plot water levels and weather
 
-        y = self.water_lvl
-        t = self.time + self.dt4xls2mpl * self.dformat
-        self.h1_ax0.set_data(t, y)
+        self._obs_wl_plt.set_data(
+            self.time + self.dt4xls2mpl * self.dformat, self.water_lvl)
         self.plt_wlpre.set_data([], [])
 
         self.draw_glue_wl()
@@ -963,15 +963,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
         Setup the line and marker style of the obeserved water level data.
         """
         if self.btn_wl_style.value():
-            self.h1_ax0.set_linestyle('None')
-            self.h1_ax0.set_marker('.')
-            self.h1_ax0.set_markerfacecolor('blue')
-            self.h1_ax0.set_markeredgecolor('blue')
-            self.h1_ax0.set_markeredgewidth(1.5)
-            self.h1_ax0.set_markersize(5)
+            self._obs_wl_plt.set_linestyle('None')
+            self._obs_wl_plt.set_marker('.')
+            self._obs_wl_plt.set_markerfacecolor('blue')
+            self._obs_wl_plt.set_markeredgecolor('blue')
+            self._obs_wl_plt.set_markeredgewidth(1.5)
+            self._obs_wl_plt.set_markersize(5)
         else:
-            self.h1_ax0.set_linestyle('-')
-            self.h1_ax0.set_marker('None')
+            self._obs_wl_plt.set_linestyle('-')
+            self._obs_wl_plt.set_marker('None')
         self.draw()
 
     def draw(self):
