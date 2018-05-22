@@ -450,7 +450,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         else:
             self.water_lvl = wldset['WL']
             self.time = wldset['Time']
-            self.init_hydrograph()
+            self.setup_hydrograph()
             self.toolbar.update()
         self.load_mrc_from_wldset()
 
@@ -810,7 +810,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.draw_glue_wl()
         self.draw()
 
-    def init_hydrograph(self):
+    def setup_hydrograph(self):
+        """Setup the hydrograph after a new wldset has been set."""
 
         # ---- Reset the UI
 
