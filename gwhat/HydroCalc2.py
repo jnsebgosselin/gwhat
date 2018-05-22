@@ -266,7 +266,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
         self.btn_dateFormat.setToolTip(
             'Show x-axis tick labels as Excel numeric format.')
-        self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_dateFormat.clicked.connect(self.switch_date_format)
         self.btn_dateFormat.setAutoRaise(False)
         # dformat: False -> Excel Numeric Date Format
         #          True -> Matplotlib Date Format
@@ -648,8 +648,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         sender = self.sender()
         if sender == self.btn_MRCalc:
             self.btn_MRCalc_isClicked()
-        elif sender == self.btn_dateFormat:
-            self.switch_date_format()
         elif sender == self.config_brf.btn_seldata:
             self.select_BRF()
 
