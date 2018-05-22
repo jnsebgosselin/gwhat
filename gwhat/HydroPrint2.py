@@ -484,6 +484,16 @@ class HydroprintGUI(myqt.DialogWindow):
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
 
+    @QSlot()
+    def mrc_wl_changed(self):
+        """
+        Force a redraw of the MRC water levels after the results have
+        changed for the dataset.
+        """
+        self.hydrograph.draw_mrc_wl()
+        self.hydrograph.setup_legend()
+        self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
+
     @QSlot(GLUEDataFrameBase)
     def glue_wl_changed(self, gluedf):
         """

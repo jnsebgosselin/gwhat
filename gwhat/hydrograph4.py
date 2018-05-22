@@ -201,7 +201,8 @@ class Hydrograph(Figure):
     @property
     def mrc_wl_on(self):
         """Return whether the mrc water levels must be plotted or not."""
-        return self.__mrc_wl_on
+        return (self.__mrc_wl_on and self.wldset is not None and
+                self.wldset.mrc_exists())
 
     @mrc_wl_on.setter
     def mrc_wl_on(self, x):
