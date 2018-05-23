@@ -72,7 +72,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.brf_eval_widget.btn_seldata.clicked.connect(
             self.aToolbarBtn_isClicked)
 
-        self.isGraphExists = False
         self.__figbckground = None
         self.__addPeakVisible = True
         self.__mouse_btn_is_pressed = False
@@ -632,7 +631,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def clear_all_peaks(self):
         """Clear all peaks from the graph."""
-        if self.isGraphExists and len(self.peak_indx) > 0:
+        if len(self.peak_indx) > 0:
             self.peak_indx = np.array([]).astype(int)
             self.peak_memory.append(self.peak_indx)
             self.draw_mrc()
@@ -692,9 +691,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def home(self):
         """Reset the orgininal view of the figure."""
-        if self.isGraphExists is False:
-            return
-
         self.toolbar.home()
         if self.dformat == 0:
             ax0 = self.fig.axes[0]
@@ -707,9 +703,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.setup_ax_margins()
 
     def undo(self):
-        if self.isGraphExists is False:
-            return
-
         if len(self.peak_memory) > 1:
             self.peak_indx = self.peak_memory[-2]
             del self.peak_memory[-1]
@@ -840,7 +833,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Draw the graph
 
-        self.isGraphExists = True
         self.draw()
 
     def plot_synth_hydro(self, parameters):
@@ -871,13 +863,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.draw()
 
     def btn_strati_isClicked(self):
-
-        # Checks :
-
-        if self.isGraphExists is False:
-            print('Graph is empty.')
-            self.btn_strati.setAutoRaise(True)
-            return
 
         # Attribute Action :
 
@@ -1120,8 +1105,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         Draw the vertical mouse guideline and the x coordinate of the
         mouse cursor on the graph.
         """
-        if self.isGraphExists is False:
-            return
         if ((self.pan_is_active or self.zoom_is_active) and
                 self.__mouse_btn_is_pressed):
             return
