@@ -272,22 +272,16 @@ class BRFManager(myqt.QFrameLayout):
         self.kgs_brf_installer.sig_kgs_brf_installed.disconnect()
         self.kgs_brf_installer = None
 
-    # =========================================================================
-
     def set_wldset(self, wldset):
+        """Set the namespace for the wldset in the widget."""
         self.wldset = wldset
         self.viewer.set_wldset(wldset)
-        if wldset is None:
-            self.setEnabled(False)
-        else:
-            self.setEnabled(True)
-
+        self.setEnabled(wldset is not None)
+        if wldset is not None:
             date_start, date_end = self.set_datarange(
                     self.wldset['Time'][[0, -1]])
             self._datastart.setMinimumDate(date_start)
             self._dataend.setMaximumDate(date_end)
-
-    # =========================================================================
 
     def get_datarange(self):
         child = self
