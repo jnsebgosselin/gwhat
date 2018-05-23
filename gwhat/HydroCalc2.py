@@ -457,7 +457,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def set_wxdset(self, wxdset):
         """Set the weather dataset."""
-        self.rechg_eval_widget.wxdset = wxdset
+        self.rechg_eval_widget.set_wxdset(wxdset)
         self.draw_weather()
 
     # ---- MRC handlers

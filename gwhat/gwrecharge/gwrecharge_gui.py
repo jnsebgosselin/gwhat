@@ -212,10 +212,16 @@ class RechgEvalWidget(QFrameLayout):
     def set_wldset(self, wldset):
         """Set the namespace for the water level dataset."""
         self.wldset = wldset
+        self.setEnabled(self.wldset is not None and self.wxdset is not None)
         gluedf = None if wldset is None else wldset.get_glue_at(-1)
         self._setup_ranges_from_wldset(gluedf)
         self.figstack.set_gluedf(gluedf)
         self.btn_save_glue.set_model(gluedf)
+
+    def set_wxdset(self, wxdset):
+        """Set the namespace for the weather dataset."""
+        self.wxdset = wxdset
+        self.setEnabled(self.wldset is not None and self.wxdset is not None)
 
     def _setup_ranges_from_wldset(self, gluedf):
         """
