@@ -896,14 +896,29 @@ class PageSetupWin(QWidget):
 
         toolbar_widget.setLayout(toolbar_layout)
 
-        # ---- Figure Size GroupBox
+        # ---- Main Layout
 
+        main_layout = QGridLayout()
+        main_layout.addWidget(self._setup_figure_layout_grpbox(), 0, 0)
+        main_layout.addWidget(self._setup_element_visibility_grpbox(), 1, 0)
+        main_layout.setRowStretch(2, 100)
+        main_layout.setRowMinimumHeight(2, 15)
+        main_layout.addWidget(toolbar_widget, 3, 0)
+
+        self.setLayout(main_layout)
+
+    def _setup_figure_layout_grpbox(self):
+        """
+        Setup a groupbox containing various widget to control the layout
+        of the figure.
+        """
         self.fwidth = QDoubleSpinBox()
         self.fwidth.setSingleStep(0.05)
         self.fwidth.setMinimum(5.)
         self.fwidth.setValue(self.pageSize[0])
         self.fwidth.setSuffix('  in')
         self.fwidth.setAlignment(Qt.AlignCenter)
+        self.fwidth.label = "Figure Width"
 
         self.fheight = QDoubleSpinBox()
         self.fheight.setSingleStep(0.05)
@@ -911,6 +926,7 @@ class PageSetupWin(QWidget):
         self.fheight.setValue(self.pageSize[1])
         self.fheight.setSuffix('  in')
         self.fheight.setAlignment(Qt.AlignCenter)
+        self.fheight.label = "Figure Heigh"
 
         self.va_ratio_spinBox = QDoubleSpinBox()
         self.va_ratio_spinBox.setSingleStep(0.01)
@@ -918,34 +934,31 @@ class PageSetupWin(QWidget):
         self.va_ratio_spinBox.setMaximum(0.95)
         self.va_ratio_spinBox.setValue(self.va_ratio)
         self.va_ratio_spinBox.setAlignment(Qt.AlignCenter)
+        self.va_ratio_spinBox.label = "Top/Bottom Axes Ratio"
 
-        # GroupBox Layout
+        self.fframe_lw_widg = QDoubleSpinBox()
+        self.fframe_lw_widg.setSingleStep(0.1)
+        self.fframe_lw_widg.setDecimals(1)
+        self.fframe_lw_widg.setMinimum(0)
+        self.fframe_lw_widg.setMaximum(99.9)
+        self.fframe_lw_widg.setSuffix('  pt')
+        self.fframe_lw_widg.setAlignment(Qt.AlignCenter)
+        self.fframe_lw_widg.label = "Frame Thickness"
+        self.fframe_lw_widg.setValue(self.figframe_lw)
 
-        figsize_grpbox = QGroupBox("Figure Size :")
-        figSize_layout = QGridLayout(figsize_grpbox)
-        row = 0
-        figSize_layout.addWidget(QLabel('Figure Width :'), row, 0)
-        figSize_layout.addWidget(self.fwidth, row, 2)
-        row += 1
-        figSize_layout.addWidget(QLabel('Figure Height :'), row, 0)
-        figSize_layout.addWidget(self.fheight, row, 2)
-        row += 1
-        figSize_layout.addWidget(QLabel('Top/Bottom Axes Ratio :'), row, 0)
-        figSize_layout.addWidget(self.va_ratio_spinBox, row, 2)
+        # Setup the layout of the groupbox.
 
-        figSize_layout.setColumnStretch(1, 100)
-        figSize_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+        grpbox = QGroupBox("Figure Size :")
+        layout = QGridLayout(grpbox)
+        widgets = [self.fwidth, self.fheight, self.va_ratio_spinBox,
+                   self.fframe_lw_widg]
+        for row, widget in enumerate(widgets):
+            layout.addWidget(QLabel("%s :" % widget.label), row, 0)
+            layout.addWidget(widget, row, 2)
 
-        # ---- Main Layout
-
-        main_layout = QGridLayout()
-        main_layout.addWidget(figsize_grpbox, 0, 0)
-        main_layout.addWidget(self._setup_element_visibility_grpbox(), 1, 0)
-        main_layout.setRowStretch(2, 100)
-        main_layout.setRowMinimumHeight(2, 15)
-        main_layout.addWidget(toolbar_widget, 3, 0)
-
-        self.setLayout(main_layout)
+        layout.setColumnStretch(1, 100)
+        layout.setContentsMargins(10, 10, 10, 10)
+        return grpbox
 
     def _setup_element_visibility_grpbox(self):
         """
@@ -988,10 +1001,12 @@ class PageSetupWin(QWidget):
         self.is_glue_wl_on = self.glue_wl_on.value()
         self.is_mrc_wl_on = self.mrc_wl_on.value()
         self.va_ratio = self.va_ratio_spinBox.value()
+        self.figframe_lw = self.fframe_lw_widg.value()
 
         self.newPageSetupSent.emit(True)
 
     def closeEvent(self, event):
+        """Qt method override."""
         super(PageSetupWin, self).closeEvent(event)
 
         # ---- Refresh UI ----
@@ -1003,6 +1018,7 @@ class PageSetupWin(QWidget):
         self.fwidth.setValue(self.pageSize[0])
         self.fheight.setValue(self.pageSize[1])
         self.va_ratio_spinBox.setValue(self.va_ratio)
+        self.fframe_lw_widg.setValue(self.figframe_lw)
 
         self.legend_on.set_value(self.isLegend)
         self.title_on.set_value(self.isGraphTitle)
@@ -1012,6 +1028,7 @@ class PageSetupWin(QWidget):
         self.mrc_wl_on.set_value(self.is_mrc_wl_on)
 
     def show(self):
+        """Qt method override."""
         super(PageSetupWin, self).show()
         self.activateWindow()
         self.raise_()
