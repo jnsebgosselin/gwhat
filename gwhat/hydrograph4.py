@@ -278,7 +278,7 @@ class Hydrograph(Figure):
             self.name_meteo = wxdset['Station Name']
             self.TIMEmeteo = wxdset['Time']
             self.TMAX = wxdset['Tmax']
-            self.PTOT = wxdset['Ptot']       # Daily total precipitation (mm)
+            self.PTOT = wxdset['Ptot']
             self.RAIN = wxdset['Rain']
 
         # Resample Data in Bins :
@@ -482,16 +482,8 @@ class Hydrograph(Figure):
                       lw=1., c='red', transform=self.ax4.transData + offset)
 
         self.draw_weather()
-
-        # --------------------------------------------------- DRAW YLABELS ----
-
         self.draw_ylabels()
-
-        # --------------------------------------------------------- LEGEND ----
-
         self.setup_legend()
-
-        # ---------------------------------------------------- UPDATE FLAG ----
 
         self.__isHydrographExists = True
 
@@ -1092,7 +1084,7 @@ class Hydrograph(Figure):
         self.ax3.set_yticks(np.arange(0, yticksmax, self.RAINscale))
         self.ax3.invert_yaxis()
 
-    def set_gridLines(self):  # ===============================================
+    def set_gridLines(self):
 
         # 0 -> None, 1 -> "-" 2 -> ":"
 
