@@ -359,8 +359,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # ---- MRC Layout ----
 
-        mrc_eval_widget = QWidget()
-        mrc_lay = QGridLayout(mrc_eval_widget)
+        self.mrc_eval_widget = QWidget()
+        mrc_lay = QGridLayout(self.mrc_eval_widget)
 
         row = 0
         mrc_lay.addWidget(QLabel('MRC Type :'), row, 0)
@@ -379,17 +379,17 @@ class WLCalc(DialogWindow, SaveFileMixin):
         mrc_lay.setSpacing(5)
         mrc_lay.setColumnStretch(2, 500)
 
-        return mrc_eval_widget
+        return self.mrc_eval_widget
 
     def __initUI__(self):
         self.setWindowTitle('Hydrograph Analysis')
         toolbar = self._setup_toolbar()
-        mrc_eval_widget = self._setup_mrc_tool()
+        self.mrc_eval_widget = self._setup_mrc_tool()
 
         # ---- Tool Tab Area
 
         tooltab = QTabWidget()
-        tooltab.addTab(mrc_eval_widget, 'MRC')
+        tooltab.addTab(self.mrc_eval_widget, 'MRC')
         tooltab.setTabToolTip(
             0, ("<p>A tool to evaluate the master recession curve"
                 " of the hydrograph.</p>"))
@@ -444,6 +444,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Set the namespace for the water level dataset."""
         self.brf_eval_widget.set_wldset(wldset)
         self.rechg_eval_widget.set_wldset(wldset)
+        self.mrc_eval_widget.setEnabled(self.wldset is not None)
 
         if wldset is None:
             self.water_lvl = np.array([])
@@ -1205,11 +1206,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the graph is clicked with the mouse."""
         self.__mouse_btn_is_pressed = True
         x, y = event.x, event.y
-        if x is None or y is None:
+        if x is None or y is None or self.wldset is None:
             return
 
         ax0 = self.fig.axes[0]
-        if not self.btn_delpeak.autoRaise():
+        if self.btn_delpeak.value():
             if len(self.peak_indx) == 0:
                 return
 
