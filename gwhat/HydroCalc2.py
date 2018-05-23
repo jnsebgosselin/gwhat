@@ -68,8 +68,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
         self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
 
-        self.config_brf = BRFManager(parent=self)
-        self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
+        self.brf_eval_widget = BRFManager(parent=self)
+        self.brf_eval_widget.btn_seldata.clicked.connect(
+            self.aToolbarBtn_isClicked)
 
         self.isGraphExists = False
         self.__figbckground = None
@@ -398,7 +399,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             1, ("<p>A tool to evaluate groundwater recharge and its"
                 " uncertainty from observed water levels and daily "
                 " weather data.</p>"))
-        tooltab.addTab(self.config_brf, 'BRF')
+        tooltab.addTab(self.brf_eval_widget, 'BRF')
         tooltab.setTabToolTip(
             2, ("<p>A tool to evaluate the barometric response function of"
                 " the well.</p>"))
@@ -442,7 +443,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def set_wldset(self, wldset):
         """Set the namespace for the water level dataset."""
-        self.config_brf.set_wldset(wldset)
+        self.brf_eval_widget.set_wldset(wldset)
         self.rechg_eval_widget.set_wldset(wldset)
 
         if wldset is None:
@@ -572,7 +573,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         Handle when the button to select a period to compute the BRF is
         clicked.
         """
-        btn = self.config_brf.btn_seldata
+        btn = self.brf_eval_widget.btn_seldata
         btn.setAutoRaise(not btn.autoRaise())
         if btn.autoRaise() is False:
             self.brfperiod = [None, None]
@@ -612,7 +613,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_delpeak.setValue(False)
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
-            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
             self.brfperiod = [None, None]
             self.__brfcount = 0
         self.draw()
@@ -624,7 +625,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_addpeak.setValue(False)
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
-            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
             self.brfperiod = [None, None]
             self.__brfcount = 0
         self.draw()
@@ -648,7 +649,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         sender = self.sender()
         if sender == self.btn_MRCalc:
             self.btn_MRCalc_isClicked()
-        elif sender == self.config_brf.btn_seldata:
+        elif sender == self.brf_eval_widget.btn_seldata:
             self.select_BRF()
 
     @property
@@ -663,7 +664,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_pan.setValue(False)
             self.btn_delpeak.setValue(False)
             self.btn_addpeak.setValue(False)
-            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
                 self.toolbar.zoom()
         else:
@@ -682,7 +683,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_zoom_to_rect.setValue(False)
             self.btn_delpeak.setValue(False)
             self.btn_addpeak.setValue(False)
-            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
                 self.toolbar.pan()
         else:
@@ -1108,7 +1109,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """
         return(self.btn_delpeak.autoRaise() and
                self.btn_addpeak.autoRaise() and
-               self.config_brf.btn_seldata.autoRaise())
+               self.brf_eval_widget.btn_seldata.autoRaise())
 
     def on_fig_leave(self, event):
         """Handle when the mouse cursor leaves the graph."""
@@ -1275,7 +1276,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
             self.__addPeakVisible = False
             self.draw()
-        elif not self.config_brf.btn_seldata.autoRaise():
+        elif not self.brf_eval_widget.btn_seldata.autoRaise():
             # Select the BRF period.
             xclic = event.xdata
             if xclic is None:
@@ -1293,7 +1294,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 self.__brfcount = 0
                 self.select_BRF()
                 self.plot_BRFperiod()
-                self.config_brf.set_datarange(self.brfperiod)
+                self.brf_eval_widget.set_datarange(self.brfperiod)
             else:
                 raise ValueError('Something is wrong in the code')
         else:
