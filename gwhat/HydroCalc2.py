@@ -712,17 +712,24 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def setup_axis_range(self, event=None):
         """Setup the range of the x- and y-axis."""
-        y = self.water_lvl
-        t = self.time + self.dt4xls2mpl * self.dformat
+        if self.wldset is not None:
+            y = self.water_lvl
+            t = self.time + self.dt4xls2mpl * self.dformat
+        elif self.wxdset is not None:
+            y = [-1, 1]
+            t = self.wxdset['Time'] + self.dt4xls2mpl * self.dformat
+        else:
+            y = [-1, 1]
+            t = np.array(
+                [xldate_from_date_tuple((1980, 1, 1), 0),
+                 xldate_from_date_tuple((2018, 1, 1), 0)]
+                ) + self.dt4xls2mpl * self.dformat
 
         delta = 0.05
         Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
         Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
-
-        indx = np.where(~np.isnan(y))[0]
-        Ymin0 = np.min(y[indx]) - (np.max(y[indx]) - np.min(y[indx])) * delta
-        Ymax0 = np.max(y[indx]) + (np.max(y[indx]) - np.min(y[indx])) * delta
-
+        Ymin0 = np.nanmin(y) - (np.nanmax(y) - np.nanmin(y)) * 0.25
+        Ymax0 = np.nanmax(y) + (np.nanmax(y) - np.nanmin(y)) * 0.25
         self.fig.axes[0].axis([Xmin0, Xmax0, Ymax0, Ymin0])
 
         # Setup the yaxis range for the weather.
