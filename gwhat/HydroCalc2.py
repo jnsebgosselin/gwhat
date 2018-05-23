@@ -1209,7 +1209,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         if x is None or y is None or self.wldset is None:
             return
 
-        ax0 = self.fig.axes[0]
         if self.btn_delpeak.value():
             if len(self.peak_indx) == 0:
                 return
@@ -1219,8 +1218,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
             xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
             ypeak = self.water_lvl[self.peak_indx]
 
+            ax = self.fig.axes[0]
             for i in range(len(self.peak_indx)):
-                xt[i], yt[i] = ax0.transData.transform((xpeak[i], ypeak[i]))
+                xt[i], yt[i] = ax.transData.transform((xpeak[i], ypeak[i]))
 
             r = ((xt - x)**2 + (yt - y)**2)**0.5
             if np.min(r) < 15:
