@@ -633,6 +633,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph.set_meteo_on(self.page_setup_win.is_meteo_on)
         self.hydrograph.set_glue_wl_on(self.page_setup_win.is_glue_wl_on)
         self.hydrograph.set_mrc_wl_on(self.page_setup_win.is_mrc_wl_on)
+        self.hydrograph.set_figframe_lw(self.page_setup_win.figframe_lw)
 
         # Weather bins :
 
@@ -872,6 +873,7 @@ class PageSetupWin(QWidget):
         self.is_glue_wl_on = False
         self.is_mrc_wl_on = False
         self.va_ratio = 0.2
+        self.figframe_lw = 0
 
         self.__initUI__()
 
