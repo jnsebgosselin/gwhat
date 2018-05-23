@@ -446,13 +446,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.rechg_eval_widget.set_wldset(wldset)
 
         if wldset is None:
-            self.water_lvl = None
-            self.time = None
+            self.water_lvl = np.array([])
+            self.time = np.array([])
         else:
             self.water_lvl = wldset['WL']
             self.time = wldset['Time']
-            self.setup_hydrograph()
-            self.toolbar.update()
+        self.setup_hydrograph()
+        self.toolbar.update()
         self.load_mrc_from_wldset()
 
     def set_wxdset(self, wxdset):
