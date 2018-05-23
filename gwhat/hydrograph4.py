@@ -90,7 +90,6 @@ class Hydrograph(Figure):
 
         self.fwidth = 11
         self.fheight = 7
-        self.patch.set_facecolor('white')
         self.NZGrid = 8  # Number of interval in the grid of the bottom part
 
         # Vertical height ratio between the top part  and the bottom part
@@ -133,6 +132,7 @@ class Hydrograph(Figure):
         self.datemode = 'Month'  # 'month' or 'year'
         self.label_font_size = 14
         self.date_labels_pattern = 2
+        self._figframe_lw = 0
 
         # Waterlvl & Meteo Obj :
 
@@ -216,6 +216,13 @@ class Hydrograph(Figure):
             self.draw_mrc_wl()
             self.setup_legend()
 
+    def set_figframe_lw(self, x):
+        """
+        Set the line thickness of the frame that encloses the entire figure.
+        """
+        self._figframe_lw = x
+        self.setup_figure_frame()
+
     @property
     def language(self):
         return self.__language
@@ -250,6 +257,11 @@ class Hydrograph(Figure):
         self.__isHydrographExists = False
         super(Hydrograph, self).clf(*args, **kargs)
 
+    def savefig(self, fname):
+        """Matplotlib override to set frameon when saving."""
+        super(Hydrograph, self).savefig(fname, frameon=True, facecolor='white',
+                                        edgecolor='black')
+
     def generate_hydrograph(self, wxdset=None, wldset=None):
         if wxdset is None:
             wxdset = self.wxdset
@@ -265,6 +277,7 @@ class Hydrograph(Figure):
 
         self.clf()
         self.set_size_inches(self.fwidth, self.fheight, forward=True)
+        self.setup_figure_frame()
 
         # Assign Weather Data :
 
@@ -384,7 +397,6 @@ class Hydrograph(Figure):
         self.ax1.xaxis.set_ticklabels([])
         self.ax1.xaxis.set_ticks_position('bottom')
         self.ax1.tick_params(axis='x', direction='out')
-        self.ax1.patch.set_facecolor('none')
         self.ax1.tick_params(top=False, left=False, right=False,
                              labeltop=False, labelleft=False, labelright=False)
 
@@ -1057,32 +1069,35 @@ class Hydrograph(Figure):
             self.ax2.invert_yaxis()
 
     def update_precip_scale(self):
-
+        """Update the scale of the axe where precipitation are plotter."""
         if self.meteo_on is False:
             return
 
         ymax = self.NZGrid * self.RAINscale
-
         try:
             p = self.PTOT_bar.get_paths()[0]
             v = p.vertices
             y = v[:, 1]
 
-            ymax = self.NZGrid * self.RAINscale
-
             yticksmax = 0
-            while 1:
+            while True:
                 if yticksmax > max(y):
                     break
                 yticksmax += self.RAINscale
-            yticksmax = min(ymax, yticksmax) + self.RAINscale/2.
-
-        except:
+            yticksmax = min(ymax, yticksmax) + self.RAINscale/2
+        except Exception:
             yticksmax = 3.9 * self.RAINscale
 
         self.ax3.axis(ymin=0, ymax=ymax)
         self.ax3.set_yticks(np.arange(0, yticksmax, self.RAINscale))
         self.ax3.invert_yaxis()
+
+    def setup_figure_frame(self):
+        """Draw a frame around the figure."""
+        self.set_frameon(self._figframe_lw > 0)
+        self.set_facecolor('white')
+        self.set_edgecolor('black')
+        self.patch.set_linewidth(self._figframe_lw)
 
     def set_gridLines(self):
 
@@ -1108,7 +1123,7 @@ class Hydrograph(Figure):
             self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle=':',
                           linewidth=0.5, dashes=[0.5, 5])
 
-    def make_xticks_info(self):  # ============================================
+    def make_xticks_info(self):
 
         # ---------------------------------------- horizontal text alignment --
 
