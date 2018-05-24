@@ -758,6 +758,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.is_meteo_on = layout['meteo_on']
         self.page_setup_win.is_glue_wl_on = layout['glue_wl_on']
         self.page_setup_win.is_mrc_wl_on = layout['mrc_wl_on']
+        self.page_setup_win.figframe_lw = layout['figframe_lw']
 
         self.page_setup_win.legend_on.set_value(layout['legend_on'])
         self.page_setup_win.title_on.set_value(layout['title_on'])
@@ -765,6 +766,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.meteo_on.set_value(layout['meteo_on'])
         self.page_setup_win.glue_wl_on.set_value(layout['glue_wl_on'])
         self.page_setup_win.mrc_wl_on.set_value(layout['mrc_wl_on'])
+        self.page_setup_win.fframe_lw_widg.setValue(layout['figframe_lw'])
 
         self.page_setup_win.fwidth.setValue(layout['fwidth'])
         self.page_setup_win.fheight.setValue(layout['fheight'])
@@ -839,6 +841,7 @@ class HydroprintGUI(myqt.DialogWindow):
         layout['meteo_on'] = bool(self.page_setup_win.is_meteo_on)
         layout['glue_wl_on'] = bool(self.page_setup_win.is_glue_wl_on)
         layout['mrc_wl_on'] = bool(self.page_setup_win.is_mrc_wl_on)
+        layout['figframe_lw'] = self.page_setup_win.figframe_lw
 
         # Save the colors :
 
