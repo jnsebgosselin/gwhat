@@ -702,19 +702,21 @@ class HydroprintGUI(myqt.DialogWindow):
     # ---- Graph Layout Handlers
 
     def load_layout_isClicked(self):
+        """Handle when the button to load the graph layout is clicked."""
         if self.wldset is None:
-            msg = 'Please import a valid water level data file first.'
-            self.emit_warning(msg)
+            self.emit_warning(
+                "Please import a valid water level data file first.")
             return
 
         layout = self.wldset.get_layout()
         if layout is None:
-            msg = 'No graph layout exists for well %s.' % self.wldset['Well']
-            self.emit_warning(msg)
+            self.emit_warning(
+                "No graph layout exists for well %s." % self.wldset['Well'])
         else:
             self.load_graph_layout(layout)
 
     def load_graph_layout(self, layout):
+        """Load the graph layout into the GUI."""
 
         self.__updateUI = False
 
@@ -746,7 +748,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.btn_language.set_language(layout['language'])
         self.color_palette_win.load_colors()
 
-        # Page Setup :
+        # ---- Page Setup
 
         self.page_setup_win.pageSize = (layout['fwidth'], layout['fheight'])
         self.page_setup_win.va_ratio = layout['va_ratio']
@@ -780,8 +782,8 @@ class HydroprintGUI(myqt.DialogWindow):
     def save_layout_isClicked(self):
         wldset = self.wldset
         if wldset is None:
-            msg = 'Please import a valid water level data file first.'
-            self.emit_warning(msg)
+            self.emit_warning(
+                "Please import a valid water level data file first.")
             return
 
         layout = wldset.get_layout()
@@ -799,7 +801,7 @@ class HydroprintGUI(myqt.DialogWindow):
             self.save_graph_layout()
 
     def save_graph_layout(self):
-        """Saves the graph layout in the project hdf5 file."""
+        """Save the graph layout in the project hdf5 file."""
         print("Saving the graph layout for well %s..." % self.wldset['Well'],
               end=" ")
 
@@ -827,6 +829,8 @@ class HydroprintGUI(myqt.DialogWindow):
             layout['WLdatum'] = 'mbgs'
         else:
             layout['WLdatum'] = 'masl'
+
+        # ---- Page Setup
 
         layout['title_on'] = bool(self.page_setup_win.isGraphTitle)
         layout['legend_on'] = bool(self.page_setup_win.isLegend)
