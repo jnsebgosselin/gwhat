@@ -68,10 +68,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
         self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
 
-        self.config_brf = BRFManager(parent=self)
-        self.config_brf.btn_seldata.clicked.connect(self.aToolbarBtn_isClicked)
+        self.brf_eval_widget = BRFManager(parent=self)
+        self.brf_eval_widget.btn_seldata.clicked.connect(
+            self.aToolbarBtn_isClicked)
 
-        self.isGraphExists = False
         self.__figbckground = None
         self.__addPeakVisible = True
         self.__mouse_btn_is_pressed = False
@@ -182,8 +182,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # ---- Setup plot artists
 
         # Water level :
-        self.h1_ax0, = ax0.plot([], [], color='blue', clip_on=True, ls='-',
-                                zorder=10, marker='None')
+        self._obs_wl_plt, = ax0.plot(
+            [], [], color='blue', clip_on=True, ls='-', zorder=10,
+            marker='None')
 
         # Predicted water levels :
         self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
@@ -265,7 +266,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
         self.btn_dateFormat.setToolTip(
             'Show x-axis tick labels as Excel numeric format.')
-        self.btn_dateFormat.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_dateFormat.clicked.connect(self.switch_date_format)
         self.btn_dateFormat.setAutoRaise(False)
         # dformat: False -> Excel Numeric Date Format
         #          True -> Matplotlib Date Format
@@ -358,8 +359,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # ---- MRC Layout ----
 
-        mrc_eval_widget = QWidget()
-        mrc_lay = QGridLayout(mrc_eval_widget)
+        self.mrc_eval_widget = QWidget()
+        mrc_lay = QGridLayout(self.mrc_eval_widget)
 
         row = 0
         mrc_lay.addWidget(QLabel('MRC Type :'), row, 0)
@@ -378,17 +379,17 @@ class WLCalc(DialogWindow, SaveFileMixin):
         mrc_lay.setSpacing(5)
         mrc_lay.setColumnStretch(2, 500)
 
-        return mrc_eval_widget
+        return self.mrc_eval_widget
 
     def __initUI__(self):
         self.setWindowTitle('Hydrograph Analysis')
         toolbar = self._setup_toolbar()
-        mrc_eval_widget = self._setup_mrc_tool()
+        self.mrc_eval_widget = self._setup_mrc_tool()
 
         # ---- Tool Tab Area
 
         tooltab = QTabWidget()
-        tooltab.addTab(mrc_eval_widget, 'MRC')
+        tooltab.addTab(self.mrc_eval_widget, 'MRC')
         tooltab.setTabToolTip(
             0, ("<p>A tool to evaluate the master recession curve"
                 " of the hydrograph.</p>"))
@@ -397,7 +398,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             1, ("<p>A tool to evaluate groundwater recharge and its"
                 " uncertainty from observed water levels and daily "
                 " weather data.</p>"))
-        tooltab.addTab(self.config_brf, 'BRF')
+        tooltab.addTab(self.brf_eval_widget, 'BRF')
         tooltab.setTabToolTip(
             2, ("<p>A tool to evaluate the barometric response function of"
                 " the well.</p>"))
@@ -441,22 +442,23 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def set_wldset(self, wldset):
         """Set the namespace for the water level dataset."""
-        self.config_brf.set_wldset(wldset)
+        self.brf_eval_widget.set_wldset(wldset)
         self.rechg_eval_widget.set_wldset(wldset)
+        self.mrc_eval_widget.setEnabled(self.wldset is not None)
 
         if wldset is None:
-            self.water_lvl = None
-            self.time = None
+            self.water_lvl = np.array([])
+            self.time = np.array([])
         else:
             self.water_lvl = wldset['WL']
             self.time = wldset['Time']
-            self.init_hydrograph()
-            self.toolbar.update()
+        self.setup_hydrograph()
+        self.toolbar.update()
         self.load_mrc_from_wldset()
 
     def set_wxdset(self, wxdset):
         """Set the weather dataset."""
-        self.rechg_eval_widget.wxdset = wxdset
+        self.rechg_eval_widget.set_wxdset(wxdset)
         self.draw_weather()
 
     # ---- MRC handlers
@@ -571,7 +573,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         Handle when the button to select a period to compute the BRF is
         clicked.
         """
-        btn = self.config_brf.btn_seldata
+        btn = self.brf_eval_widget.btn_seldata
         btn.setAutoRaise(not btn.autoRaise())
         if btn.autoRaise() is False:
             self.brfperiod = [None, None]
@@ -611,7 +613,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_delpeak.setValue(False)
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
-            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
             self.brfperiod = [None, None]
             self.__brfcount = 0
         self.draw()
@@ -623,14 +625,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_addpeak.setValue(False)
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
-            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
             self.brfperiod = [None, None]
             self.__brfcount = 0
         self.draw()
 
     def clear_all_peaks(self):
         """Clear all peaks from the graph."""
-        if self.isGraphExists and len(self.peak_indx) > 0:
+        if len(self.peak_indx) > 0:
             self.peak_indx = np.array([]).astype(int)
             self.peak_memory.append(self.peak_indx)
             self.draw_mrc()
@@ -647,9 +649,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         sender = self.sender()
         if sender == self.btn_MRCalc:
             self.btn_MRCalc_isClicked()
-        elif sender == self.btn_dateFormat:
-            self.switch_date_format()
-        elif sender == self.config_brf.btn_seldata:
+        elif sender == self.brf_eval_widget.btn_seldata:
             self.select_BRF()
 
     @property
@@ -664,7 +664,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_pan.setValue(False)
             self.btn_delpeak.setValue(False)
             self.btn_addpeak.setValue(False)
-            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
                 self.toolbar.zoom()
         else:
@@ -683,7 +683,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_zoom_to_rect.setValue(False)
             self.btn_delpeak.setValue(False)
             self.btn_addpeak.setValue(False)
-            self.config_brf.btn_seldata.setAutoRaise(True)
+            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
             if self.toolbar._active is None:
                 self.toolbar.pan()
         else:
@@ -692,9 +692,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def home(self):
         """Reset the orgininal view of the figure."""
-        if self.isGraphExists is False:
-            return
-
         self.toolbar.home()
         if self.dformat == 0:
             ax0 = self.fig.axes[0]
@@ -707,9 +704,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.setup_ax_margins()
 
     def undo(self):
-        if self.isGraphExists is False:
-            return
-
         if len(self.peak_memory) > 1:
             self.peak_indx = self.peak_memory[-2]
             del self.peak_memory[-1]
@@ -719,17 +713,24 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def setup_axis_range(self, event=None):
         """Setup the range of the x- and y-axis."""
-        y = self.water_lvl
-        t = self.time + self.dt4xls2mpl * self.dformat
+        if self.wldset is not None:
+            y = self.water_lvl
+            t = self.time + self.dt4xls2mpl * self.dformat
+        elif self.wxdset is not None:
+            y = [-1, 1]
+            t = self.wxdset['Time'] + self.dt4xls2mpl * self.dformat
+        else:
+            y = [-1, 1]
+            t = np.array(
+                [xldate_from_date_tuple((1980, 1, 1), 0),
+                 xldate_from_date_tuple((2018, 1, 1), 0)]
+                ) + self.dt4xls2mpl * self.dformat
 
         delta = 0.05
         Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
         Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
-
-        indx = np.where(~np.isnan(y))[0]
-        Ymin0 = np.min(y[indx]) - (np.max(y[indx]) - np.min(y[indx])) * delta
-        Ymax0 = np.max(y[indx]) + (np.max(y[indx]) - np.min(y[indx])) * delta
-
+        Ymin0 = np.nanmin(y) - (np.nanmax(y) - np.nanmin(y)) * 0.25
+        Ymax0 = np.nanmax(y) + (np.nanmax(y) - np.nanmin(y)) * 0.25
         self.fig.axes[0].axis([Xmin0, Xmax0, Ymax0, Ymin0])
 
         # Setup the yaxis range for the weather.
@@ -799,7 +800,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Adjust the water levels, peak, MRC ant weather time frame.
 
         t = self.time + self.dt4xls2mpl * self.dformat
-        self.h1_ax0.set_xdata(t)  # Water Levels
+        self._obs_wl_plt.set_xdata(t)  # Water Levels
 
         if len(self.peak_indx) > 0:  # Peaks
             self._peaks_plt.set_xdata(
@@ -810,7 +811,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.draw_glue_wl()
         self.draw()
 
-    def init_hydrograph(self):
+    def setup_hydrograph(self):
+        """Setup the hydrograph after a new wldset has been set."""
 
         # ---- Reset the UI
 
@@ -822,9 +824,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Plot water levels and weather
 
-        y = self.water_lvl
-        t = self.time + self.dt4xls2mpl * self.dformat
-        self.h1_ax0.set_data(t, y)
+        self._obs_wl_plt.set_data(
+            self.time + self.dt4xls2mpl * self.dformat, self.water_lvl)
         self.plt_wlpre.set_data([], [])
 
         self.draw_glue_wl()
@@ -840,7 +841,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Draw the graph
 
-        self.isGraphExists = True
         self.draw()
 
     def plot_synth_hydro(self, parameters):
@@ -871,13 +871,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.draw()
 
     def btn_strati_isClicked(self):
-
-        # Checks :
-
-        if self.isGraphExists is False:
-            print('Graph is empty.')
-            self.btn_strati.setAutoRaise(True)
-            return
 
         # Attribute Action :
 
@@ -962,15 +955,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
         Setup the line and marker style of the obeserved water level data.
         """
         if self.btn_wl_style.value():
-            self.h1_ax0.set_linestyle('None')
-            self.h1_ax0.set_marker('.')
-            self.h1_ax0.set_markerfacecolor('blue')
-            self.h1_ax0.set_markeredgecolor('blue')
-            self.h1_ax0.set_markeredgewidth(1.5)
-            self.h1_ax0.set_markersize(5)
+            self._obs_wl_plt.set_linestyle('None')
+            self._obs_wl_plt.set_marker('.')
+            self._obs_wl_plt.set_markerfacecolor('blue')
+            self._obs_wl_plt.set_markeredgecolor('blue')
+            self._obs_wl_plt.set_markeredgewidth(1.5)
+            self._obs_wl_plt.set_markersize(5)
         else:
-            self.h1_ax0.set_linestyle('-')
-            self.h1_ax0.set_marker('None')
+            self._obs_wl_plt.set_linestyle('-')
+            self._obs_wl_plt.set_marker('None')
         self.draw()
 
     def draw(self):
@@ -1109,7 +1102,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """
         return(self.btn_delpeak.autoRaise() and
                self.btn_addpeak.autoRaise() and
-               self.config_brf.btn_seldata.autoRaise())
+               self.brf_eval_widget.btn_seldata.autoRaise())
 
     def on_fig_leave(self, event):
         """Handle when the mouse cursor leaves the graph."""
@@ -1120,8 +1113,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         Draw the vertical mouse guideline and the x coordinate of the
         mouse cursor on the graph.
         """
-        if self.isGraphExists is False:
-            return
         if ((self.pan_is_active or self.zoom_is_active) and
                 self.__mouse_btn_is_pressed):
             return
@@ -1215,11 +1206,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the graph is clicked with the mouse."""
         self.__mouse_btn_is_pressed = True
         x, y = event.x, event.y
-        if x is None or y is None:
+        if x is None or y is None or self.wldset is None:
             return
 
-        ax0 = self.fig.axes[0]
-        if not self.btn_delpeak.autoRaise():
+        if self.btn_delpeak.value():
             if len(self.peak_indx) == 0:
                 return
 
@@ -1228,8 +1218,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
             xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
             ypeak = self.water_lvl[self.peak_indx]
 
+            ax = self.fig.axes[0]
             for i in range(len(self.peak_indx)):
-                xt[i], yt[i] = ax0.transData.transform((xpeak[i], ypeak[i]))
+                xt[i], yt[i] = ax.transData.transform((xpeak[i], ypeak[i]))
 
             r = ((xt - x)**2 + (yt - y)**2)**0.5
             if np.min(r) < 15:
@@ -1276,7 +1267,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
             self.__addPeakVisible = False
             self.draw()
-        elif not self.config_brf.btn_seldata.autoRaise():
+        elif not self.brf_eval_widget.btn_seldata.autoRaise():
             # Select the BRF period.
             xclic = event.xdata
             if xclic is None:
@@ -1294,7 +1285,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 self.__brfcount = 0
                 self.select_BRF()
                 self.plot_BRFperiod()
-                self.config_brf.set_datarange(self.brfperiod)
+                self.brf_eval_widget.set_datarange(self.brfperiod)
             else:
                 raise ValueError('Something is wrong in the code')
         else:
