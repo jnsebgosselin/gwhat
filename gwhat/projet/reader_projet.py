@@ -601,15 +601,19 @@ class WLDataFrameHDF5(dict):
         for key in list(grp_colors.attrs.keys()):
             layout['colors'][key] = grp_colors.attrs[key].tolist()
 
-        if 'meteo_on' not in layout.keys():
+        keys = list(layout.keys())
+        if 'meteo_on' not in keys:
             # Added in version 0.3.2 (see PR #201)
             layout['meteo_on'] = True
-        if 'glue_wl_on' not in layout.keys():
+        if 'glue_wl_on' not in keys:
             # Added in version 0.3.2 (see PR #202)
             layout['glue_wl_on'] = False
-        if 'mrc_wl_on' not in layout.keys():
+        if 'mrc_wl_on' not in keys:
             # Added in version 0.3.3 (see PR #225)
             layout['mrc_wl_on'] = False
+        if 'figframe_lw' not in keys:
+            # Added in version 0.3.3 (see PR #228)
+            layout['figframe_lw'] = 0
 
         return layout
 

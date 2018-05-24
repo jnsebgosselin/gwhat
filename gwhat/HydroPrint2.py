@@ -633,6 +633,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph.set_meteo_on(self.page_setup_win.is_meteo_on)
         self.hydrograph.set_glue_wl_on(self.page_setup_win.is_glue_wl_on)
         self.hydrograph.set_mrc_wl_on(self.page_setup_win.is_mrc_wl_on)
+        self.hydrograph.set_figframe_lw(self.page_setup_win.figframe_lw)
 
         # Weather bins :
 
@@ -701,19 +702,21 @@ class HydroprintGUI(myqt.DialogWindow):
     # ---- Graph Layout Handlers
 
     def load_layout_isClicked(self):
+        """Handle when the button to load the graph layout is clicked."""
         if self.wldset is None:
-            msg = 'Please import a valid water level data file first.'
-            self.emit_warning(msg)
+            self.emit_warning(
+                "Please import a valid water level data file first.")
             return
 
         layout = self.wldset.get_layout()
         if layout is None:
-            msg = 'No graph layout exists for well %s.' % self.wldset['Well']
-            self.emit_warning(msg)
+            self.emit_warning(
+                "No graph layout exists for well %s." % self.wldset['Well'])
         else:
             self.load_graph_layout(layout)
 
     def load_graph_layout(self, layout):
+        """Load the graph layout into the GUI."""
 
         self.__updateUI = False
 
@@ -745,7 +748,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.btn_language.set_language(layout['language'])
         self.color_palette_win.load_colors()
 
-        # Page Setup :
+        # ---- Page Setup
 
         self.page_setup_win.pageSize = (layout['fwidth'], layout['fheight'])
         self.page_setup_win.va_ratio = layout['va_ratio']
@@ -755,6 +758,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.is_meteo_on = layout['meteo_on']
         self.page_setup_win.is_glue_wl_on = layout['glue_wl_on']
         self.page_setup_win.is_mrc_wl_on = layout['mrc_wl_on']
+        self.page_setup_win.figframe_lw = layout['figframe_lw']
 
         self.page_setup_win.legend_on.set_value(layout['legend_on'])
         self.page_setup_win.title_on.set_value(layout['title_on'])
@@ -762,6 +766,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.meteo_on.set_value(layout['meteo_on'])
         self.page_setup_win.glue_wl_on.set_value(layout['glue_wl_on'])
         self.page_setup_win.mrc_wl_on.set_value(layout['mrc_wl_on'])
+        self.page_setup_win.fframe_lw_widg.setValue(layout['figframe_lw'])
 
         self.page_setup_win.fwidth.setValue(layout['fwidth'])
         self.page_setup_win.fheight.setValue(layout['fheight'])
@@ -779,8 +784,8 @@ class HydroprintGUI(myqt.DialogWindow):
     def save_layout_isClicked(self):
         wldset = self.wldset
         if wldset is None:
-            msg = 'Please import a valid water level data file first.'
-            self.emit_warning(msg)
+            self.emit_warning(
+                "Please import a valid water level data file first.")
             return
 
         layout = wldset.get_layout()
@@ -798,7 +803,7 @@ class HydroprintGUI(myqt.DialogWindow):
             self.save_graph_layout()
 
     def save_graph_layout(self):
-        """Saves the graph layout in the project hdf5 file."""
+        """Save the graph layout in the project hdf5 file."""
         print("Saving the graph layout for well %s..." % self.wldset['Well'],
               end=" ")
 
@@ -827,6 +832,8 @@ class HydroprintGUI(myqt.DialogWindow):
         else:
             layout['WLdatum'] = 'masl'
 
+        # ---- Page Setup
+
         layout['title_on'] = bool(self.page_setup_win.isGraphTitle)
         layout['legend_on'] = bool(self.page_setup_win.isLegend)
         layout['language'] = self.btn_language.language
@@ -834,6 +841,7 @@ class HydroprintGUI(myqt.DialogWindow):
         layout['meteo_on'] = bool(self.page_setup_win.is_meteo_on)
         layout['glue_wl_on'] = bool(self.page_setup_win.is_glue_wl_on)
         layout['mrc_wl_on'] = bool(self.page_setup_win.is_mrc_wl_on)
+        layout['figframe_lw'] = self.page_setup_win.figframe_lw
 
         # Save the colors :
 
@@ -872,6 +880,7 @@ class PageSetupWin(QWidget):
         self.is_glue_wl_on = False
         self.is_mrc_wl_on = False
         self.va_ratio = 0.2
+        self.figframe_lw = 0
 
         self.__initUI__()
 
@@ -896,14 +905,29 @@ class PageSetupWin(QWidget):
 
         toolbar_widget.setLayout(toolbar_layout)
 
-        # ---- Figure Size GroupBox
+        # ---- Main Layout
 
+        main_layout = QGridLayout()
+        main_layout.addWidget(self._setup_figure_layout_grpbox(), 0, 0)
+        main_layout.addWidget(self._setup_element_visibility_grpbox(), 1, 0)
+        main_layout.setRowStretch(2, 100)
+        main_layout.setRowMinimumHeight(2, 15)
+        main_layout.addWidget(toolbar_widget, 3, 0)
+
+        self.setLayout(main_layout)
+
+    def _setup_figure_layout_grpbox(self):
+        """
+        Setup a groupbox containing various widget to control the layout
+        of the figure.
+        """
         self.fwidth = QDoubleSpinBox()
         self.fwidth.setSingleStep(0.05)
         self.fwidth.setMinimum(5.)
         self.fwidth.setValue(self.pageSize[0])
         self.fwidth.setSuffix('  in')
         self.fwidth.setAlignment(Qt.AlignCenter)
+        self.fwidth.label = "Figure Width"
 
         self.fheight = QDoubleSpinBox()
         self.fheight.setSingleStep(0.05)
@@ -911,6 +935,7 @@ class PageSetupWin(QWidget):
         self.fheight.setValue(self.pageSize[1])
         self.fheight.setSuffix('  in')
         self.fheight.setAlignment(Qt.AlignCenter)
+        self.fheight.label = "Figure Heigh"
 
         self.va_ratio_spinBox = QDoubleSpinBox()
         self.va_ratio_spinBox.setSingleStep(0.01)
@@ -918,34 +943,31 @@ class PageSetupWin(QWidget):
         self.va_ratio_spinBox.setMaximum(0.95)
         self.va_ratio_spinBox.setValue(self.va_ratio)
         self.va_ratio_spinBox.setAlignment(Qt.AlignCenter)
+        self.va_ratio_spinBox.label = "Top/Bottom Axes Ratio"
 
-        # GroupBox Layout
+        self.fframe_lw_widg = QDoubleSpinBox()
+        self.fframe_lw_widg.setSingleStep(0.1)
+        self.fframe_lw_widg.setDecimals(1)
+        self.fframe_lw_widg.setMinimum(0)
+        self.fframe_lw_widg.setMaximum(99.9)
+        self.fframe_lw_widg.setSuffix('  pt')
+        self.fframe_lw_widg.setAlignment(Qt.AlignCenter)
+        self.fframe_lw_widg.label = "Frame Thickness"
+        self.fframe_lw_widg.setValue(self.figframe_lw)
 
-        figsize_grpbox = QGroupBox("Figure Size :")
-        figSize_layout = QGridLayout(figsize_grpbox)
-        row = 0
-        figSize_layout.addWidget(QLabel('Figure Width :'), row, 0)
-        figSize_layout.addWidget(self.fwidth, row, 2)
-        row += 1
-        figSize_layout.addWidget(QLabel('Figure Height :'), row, 0)
-        figSize_layout.addWidget(self.fheight, row, 2)
-        row += 1
-        figSize_layout.addWidget(QLabel('Top/Bottom Axes Ratio :'), row, 0)
-        figSize_layout.addWidget(self.va_ratio_spinBox, row, 2)
+        # Setup the layout of the groupbox.
 
-        figSize_layout.setColumnStretch(1, 100)
-        figSize_layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
+        grpbox = QGroupBox("Figure Size :")
+        layout = QGridLayout(grpbox)
+        widgets = [self.fwidth, self.fheight, self.va_ratio_spinBox,
+                   self.fframe_lw_widg]
+        for row, widget in enumerate(widgets):
+            layout.addWidget(QLabel("%s :" % widget.label), row, 0)
+            layout.addWidget(widget, row, 2)
 
-        # ---- Main Layout
-
-        main_layout = QGridLayout()
-        main_layout.addWidget(figsize_grpbox, 0, 0)
-        main_layout.addWidget(self._setup_element_visibility_grpbox(), 1, 0)
-        main_layout.setRowStretch(2, 100)
-        main_layout.setRowMinimumHeight(2, 15)
-        main_layout.addWidget(toolbar_widget, 3, 0)
-
-        self.setLayout(main_layout)
+        layout.setColumnStretch(1, 100)
+        layout.setContentsMargins(10, 10, 10, 10)
+        return grpbox
 
     def _setup_element_visibility_grpbox(self):
         """
@@ -988,10 +1010,12 @@ class PageSetupWin(QWidget):
         self.is_glue_wl_on = self.glue_wl_on.value()
         self.is_mrc_wl_on = self.mrc_wl_on.value()
         self.va_ratio = self.va_ratio_spinBox.value()
+        self.figframe_lw = self.fframe_lw_widg.value()
 
         self.newPageSetupSent.emit(True)
 
     def closeEvent(self, event):
+        """Qt method override."""
         super(PageSetupWin, self).closeEvent(event)
 
         # ---- Refresh UI ----
@@ -1003,6 +1027,7 @@ class PageSetupWin(QWidget):
         self.fwidth.setValue(self.pageSize[0])
         self.fheight.setValue(self.pageSize[1])
         self.va_ratio_spinBox.setValue(self.va_ratio)
+        self.fframe_lw_widg.setValue(self.figframe_lw)
 
         self.legend_on.set_value(self.isLegend)
         self.title_on.set_value(self.isGraphTitle)
@@ -1012,6 +1037,7 @@ class PageSetupWin(QWidget):
         self.mrc_wl_on.set_value(self.is_mrc_wl_on)
 
     def show(self):
+        """Qt method override."""
         super(PageSetupWin, self).show()
         self.activateWindow()
         self.raise_()
