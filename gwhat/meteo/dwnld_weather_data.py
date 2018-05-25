@@ -287,7 +287,7 @@ class DwnldWeatherWidget(QWidget):
             self.station_browser.set_lon(lat_lon_tuple[1])
 
     def btn_search4station_isclicked(self):
-        """Handles when the button search4station is clicked."""
+        """Handle when the button search4station is clicked."""
         if self.station_browser is None:
             # Initialize and register the station browser :
             self.station_browser = WeatherStationBrowser(self)
