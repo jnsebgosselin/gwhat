@@ -271,10 +271,9 @@ class DwnldWeatherWidget(QWidget):
         """Handle when the btn_fill_weather is clicked."""
         if self.fill_weather_widg is None:
             self.fill_weather_widg = GapFillWeatherGUI(self)
-            self.fill_weather_widg.set_workdir(self.workdir)
-            self.fill_weather_widg.load_data_dir_content()
             self.fill_weather_widg.ConsoleSignal.connect(
                 self.ConsoleSignal.emit)
+            self.fill_weather_widg.set_workdir(self.workdir)
         self.fill_weather_widg.show()
 
     # ---- Station Browser Handlers
@@ -313,8 +312,7 @@ class DwnldWeatherWidget(QWidget):
     def set_workdir(self, directory):
         self.__workdir = directory
         if self.fill_weather_widg is not None:
-            self.tab_fill_weather_data.set_workdir(directory)
-            self.tab_fill_weather_data.load_data_dir_content()
+            self.fill_weather_widg.set_workdir(directory)
 
     # ---- Station list
 
