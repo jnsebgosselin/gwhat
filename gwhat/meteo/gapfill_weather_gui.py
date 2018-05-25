@@ -13,6 +13,7 @@ from __future__ import division, unicode_literals
 # import csv
 from time import sleep  # ctime, strftime, sleep
 import os
+import os.path as osp
 
 # ---- Third party imports
 
@@ -69,9 +70,9 @@ class GapFillWeatherGUI(DialogWindow):
         self.gapfill_worker = GapFillWeather()
         self.gapfill_thread = QThread()
         self.gapfill_worker.moveToThread(self.gapfill_thread)
-        self.set_workdir(os.getcwd())
 
         self.__initUI__()
+        self.set_workdir(os.getcwd())
 
     def __initUI__(self):
         self.setWindowIcon(icons.get_icon('master'))
@@ -455,19 +456,21 @@ class GapFillWeatherGUI(DialogWindow):
         self.btn_fill.clicked.connect(self.gap_fill_btn_clicked)
         self.btn_fill_all.clicked.connect(self.gap_fill_btn_clicked)
 
-    # =========================================================================
-
     @property
     def workdir(self):
+        """Return the working directory of the tool."""
         return self.__workdir
 
     def set_workdir(self, dirname):
+        """
+        Set the working directory and the input and output directories of the
+        tool.
+        """
         self.__workdir = dirname
-        self.gapfill_worker.inputDir = os.path.join(dirname, 'Meteo', 'Input')
-        self.gapfill_worker.outputDir = os.path.join(
-                                             dirname, 'Meteo', 'Output')
-
-        self.wxdata_merger.set_workdir(os.path.join(dirname, 'Meteo', 'Input'))
+        self.gapfill_worker.inputDir = osp.join(dirname, 'Meteo', 'Input')
+        self.gapfill_worker.outputDir = osp.join(dirname, 'Meteo', 'Output')
+        self.wxdata_merger.set_workdir(osp.join(dirname, 'Meteo', 'Input'))
+        self.load_data_dir_content()
 
     def delete_current_dataset(self):
         """
@@ -515,15 +518,16 @@ class GapFillWeatherGUI(DialogWindow):
         stanames = [] if stanames is None else stanames
 
         self.target_station.addItems(stanames)
-        self.target_station.setCurrentIndex(-1)
+        self.target_station.setCurrentIndex(0)
         self.sta_display_summary.setHtml(self.gapfill_worker.read_summary())
 
         if len(stanames) > 0:
             self.set_fill_and_save_dates()
 
         self.CORRFLAG = 'on'
+        self.target_station_changed(self.target_station.currentIndex())
 
-    def set_fill_and_save_dates(self):  # =====================================
+    def set_fill_and_save_dates(self):
         """
         Set first and last dates of the data serie in the boxes of the
         *Fill and Save* area.
