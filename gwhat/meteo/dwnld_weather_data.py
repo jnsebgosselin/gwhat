@@ -32,12 +32,13 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 
 from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
 from gwhat.common import icons
-import gwhat.common.widgets as myqt
+from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import DropDownButton
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.search_weather_data import WeatherStationBrowser
 from gwhat.meteo.weather_stationlist import WeatherSationList
+from gwhat.meteo.gapfill_weather_gui import GapFillWeatherGUI
 
 
 class DwnldWeatherWidget(QWidget):
@@ -53,6 +54,8 @@ class DwnldWeatherWidget(QWidget):
     def __init__(self, parent=None):
         super(DwnldWeatherWidget, self).__init__(parent)
         self.__station_browser_latlon_buffer = None
+
+        self.fill_weather_widg = None
 
         self.set_workdir(getcwd())
 
@@ -85,68 +88,11 @@ class DwnldWeatherWidget(QWidget):
 
     def __initUI__(self):
 
-        # ---- Main Window ----
+        # ---- Main Window
 
         self.setWindowIcon(icons.get_icon('master'))
 
-        # ---- TOOLBAR ----
-
-        btn_save_menu = QMenu()
-        btn_save_menu.addAction('Save As...',
-                                self.btn_saveAs_staList_isClicked)
-
-        self.btn_save_staList = QToolButtonNormal(icons.get_icon('save'))
-        self.btn_save_staList.setToolTip('Save current station list.')
-        self.btn_save_staList.setMenu(btn_save_menu)
-        self.btn_save_staList.setPopupMode(QToolButton.MenuButtonPopup)
-
-        btn_search4station = QToolButtonNormal(icons.get_icon('search'))
-        btn_search4station.setToolTip('Search for weather stations in the ' +
-                                      'Canadian Daily Climate Database (CDCD)')
-
-        btn_browse_staList = QToolButtonNormal(icons.get_icon('openFile'))
-        btn_browse_staList.setToolTip('Load an existing weather station list')
-
-        btn_delSta = QToolButtonNormal(icons.get_icon('erase'))
-        btn_delSta.setToolTip('Remove selected weather stations from the list')
-
-        self.btn_get = QToolButtonNormal(icons.get_icon('download'))
-        self.btn_get.setToolTip(
-                "Download data for the selected weather stations.")
-        self.btn_get.clicked.connect(self.btn_get_isClicked)
-
-        yearlabels = [str(i) for i in range(2017, 1899, -1)]
-        btn_fromdate = DropDownButton(icon=icons.get_icon('fromdate'))
-        btn_fromdate.addItems(yearlabels)
-        btn_fromdate.sig_year_selected.connect(self.station_table.set_fromyear)
-
-        btn_todate = DropDownButton(icon=icons.get_icon('todate'))
-        btn_todate.addItems(yearlabels)
-        btn_todate.sig_year_selected.connect(self.station_table.set_toyear)
-
-        grid_fromtodate = QGridLayout()
-        grid_fromtodate.setContentsMargins(0, 0, 0, 0)
-        grid_fromtodate.setSpacing(0)
-        grid_fromtodate.addWidget(btn_fromdate, 0, 0)
-        grid_fromtodate.addWidget(btn_todate, 0, 1)
-
-        toolbar = QGridLayout()
-        col = 0
-        buttons = [btn_search4station, btn_browse_staList,
-                   self.btn_save_staList, btn_delSta, grid_fromtodate,
-                   self.btn_get]
-        for button in buttons:
-            col += 1
-            if isinstance(button, QGridLayout):
-                toolbar.addLayout(button, 0, col)
-            else:
-                toolbar.addWidget(button, 0, col)
-
-        toolbar.setColumnStretch(toolbar.columnCount(), 100)
-        toolbar.setSpacing(5)
-        toolbar.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
-
-        # ---- Progress Bar ----
+        # ---- Progress Bar
 
         self.pbar = QProgressBar()
         self.pbar.setValue(0)
@@ -238,7 +184,7 @@ class DwnldWeatherWidget(QWidget):
 
         main_grid = QGridLayout()
 
-        main_grid.addLayout(toolbar, 0, 0)
+        main_grid.addWidget(self._setup_toolbar(), 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
         main_grid.addWidget(VSep(), 0, 1, 2, 1)
 
@@ -255,22 +201,81 @@ class DwnldWeatherWidget(QWidget):
 
         # ---- Events
 
-        # concatenate raw data
-
         self.btn_goLast.clicked.connect(self.display_mergeHistory)
         self.btn_goFirst.clicked.connect(self.display_mergeHistory)
         self.btn_goNext.clicked.connect(self.display_mergeHistory)
         self.btn_goPrevious.clicked.connect(self.display_mergeHistory)
 
-        # weather station list
+    def _setup_toolbar(self):
+        """Setup the toolbar of the widget."""
 
-        btn_delSta.clicked.connect(self.btn_delSta_isClicked)
-        btn_browse_staList.clicked.connect(self.btn_browse_staList_isClicked)
+        btn_save_menu = QMenu()
+        btn_save_menu.addAction(
+            'Save As...', self.btn_saveAs_staList_isClicked)
+
+        self.btn_save_staList = QToolButtonNormal(icons.get_icon('save'))
+        self.btn_save_staList.setToolTip('Save current station list.')
+        self.btn_save_staList.setMenu(btn_save_menu)
+        self.btn_save_staList.setPopupMode(QToolButton.MenuButtonPopup)
         self.btn_save_staList.clicked.connect(self.btn_save_staList_isClicked)
 
-        # station_browser
-
+        btn_search4station = QToolButtonNormal(icons.get_icon('search'))
+        btn_search4station.setToolTip("Search for weather stations in the"
+                                      "Canadian Daily Climate Database (CDCD)")
         btn_search4station.clicked.connect(self.btn_search4station_isclicked)
+
+        btn_browse_staList = QToolButtonNormal(icons.get_icon('openFile'))
+        btn_browse_staList.setToolTip('Load an existing weather station list')
+        btn_browse_staList.clicked.connect(self.btn_browse_staList_isClicked)
+
+        btn_delSta = QToolButtonNormal(icons.get_icon('erase'))
+        btn_delSta.setToolTip('Remove selected weather stations from the list')
+        btn_delSta.clicked.connect(self.btn_delSta_isClicked)
+
+        self.btn_get = QToolButtonNormal(icons.get_icon('download'))
+        self.btn_get.setToolTip(
+                "Download data for the selected weather stations.")
+        self.btn_get.clicked.connect(self.btn_get_isClicked)
+
+        yearlabels = [str(i) for i in range(2017, 1899, -1)]
+        btn_fromdate = DropDownButton(icon=icons.get_icon('fromdate'))
+        btn_fromdate.addItems(yearlabels)
+        btn_fromdate.sig_year_selected.connect(self.station_table.set_fromyear)
+
+        btn_todate = DropDownButton(icon=icons.get_icon('todate'))
+        btn_todate.addItems(yearlabels)
+        btn_todate.sig_year_selected.connect(self.station_table.set_toyear)
+
+        widg_fromtodate = QWidget()
+        grid_fromtodate = QGridLayout(widg_fromtodate)
+        grid_fromtodate.setContentsMargins(0, 0, 0, 0)
+        grid_fromtodate.setSpacing(0)
+        grid_fromtodate.addWidget(btn_fromdate, 0, 0)
+        grid_fromtodate.addWidget(btn_todate, 0, 1)
+
+        btn_fill_weather = QToolButtonNormal(icons.get_icon('fill_weather'))
+        btn_fill_weather.setToolTip(
+            "Open the tool to fill the gaps in daily weather data records.")
+        btn_fill_weather.clicked.connect(self.btn_fill_weather_isclicked)
+
+        toolbar = ToolBarWidget()
+        widgets = [btn_search4station, btn_browse_staList,
+                   self.btn_save_staList, btn_delSta, widg_fromtodate,
+                   self.btn_get, btn_fill_weather]
+        for widget in widgets:
+            toolbar.addWidget(widget)
+
+        return toolbar
+
+    def btn_fill_weather_isclicked(self):
+        """Handle when the btn_fill_weather is clicked."""
+        if self.fill_weather_widg is None:
+            self.fill_weather_widg = GapFillWeatherGUI(self)
+            self.fill_weather_widg.set_workdir(self.workdir)
+            self.fill_weather_widg.load_data_dir_content()
+            self.fill_weather_widg.ConsoleSignal.connect(
+                self.ConsoleSignal.emit)
+        self.fill_weather_widg.show()
 
     # ---- Station Browser Handlers
 
@@ -307,6 +312,9 @@ class DwnldWeatherWidget(QWidget):
 
     def set_workdir(self, directory):
         self.__workdir = directory
+        if self.fill_weather_widg is not None:
+            self.tab_fill_weather_data.set_workdir(directory)
+            self.tab_fill_weather_data.load_data_dir_content()
 
     # ---- Station list
 
