@@ -142,11 +142,10 @@ class MainWindow(QMainWindow):
         # ---- TABS ASSEMBLY
 
         self.tab_widget = TabWidget()
-        self.tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
+        self.tab_widget.addTab(self.tab_dwnld_data, 'Get Data')
         self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
         self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         self.tab_widget.setCornerWidget(self.pmanager)
-
         self.tab_widget.currentChanged.connect(self.sync_datamanagers)
 
         # ---- Main Console
