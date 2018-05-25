@@ -43,13 +43,14 @@ from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
 from gwhat.meteo.merge_weather_data import WXDataMergerWidget
 from gwhat.meteo.weather_reader import add_PET_to_weather_datafile
 from gwhat.common import StyleDB, QToolButtonSmall
+from gwhat.common.widgets import DialogWindow
 from gwhat.common import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import delete_file
 from gwhat.widgets.layout import HSep
 
 
-class GapFillWeatherGUI(QWidget):
+class GapFillWeatherGUI(DialogWindow):
 
     ConsoleSignal = QSignal(str)
 
@@ -74,6 +75,7 @@ class GapFillWeatherGUI(QWidget):
 
     def __initUI__(self):
         self.setWindowIcon(icons.get_icon('master'))
+        self.setWindowTitle("Gapfill Weather")
 
         # ---- Toolbar at the bottom
 
