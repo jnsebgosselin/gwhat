@@ -88,7 +88,8 @@ ICON_NAMES = {'master': 'WHAT',
               'zoom_to_rect': 'zoom_to_rect',
               'show_glue_wl': 'show_glue_wl',
               'show_meteo': 'show_meteo',
-              'language': 'language'}
+              'language': 'language',
+              'fill_weather': 'fill_weather'}
 
 ICON_SIZES = {'large': (32, 32),
               'normal': (28, 28),
