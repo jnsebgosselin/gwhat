@@ -114,7 +114,6 @@ class MainWindow(QMainWindow):
         result = self.pmanager.load_project(self.projectfile)
         if result is False:
             self.tab_dwnld_data.setEnabled(False)
-            self.tab_fill_weather_data.setEnabled(False)
             self.tab_hydrograph.setEnabled(False)
             self.tab_hydrocalc.setEnabled(False)
 
@@ -127,12 +126,6 @@ class MainWindow(QMainWindow):
         splash.showMessage("Initializing download weather data...")
         self.tab_dwnld_data = DwnldWeatherWidget(self)
         self.tab_dwnld_data.set_workdir(self.projectdir)
-
-        # gapfill weather data :
-
-        splash.showMessage("Initializing gapfill weather data...")
-        self.tab_fill_weather_data = GapFillWeatherGUI(self)
-        self.tab_fill_weather_data.set_workdir(self.projectdir)
 
         # hydrograph :
 
@@ -150,7 +143,6 @@ class MainWindow(QMainWindow):
 
         self.tab_widget = TabWidget()
         self.tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
-        self.tab_widget.addTab(self.tab_fill_weather_data, 'Gapfill Weather')
         self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
         self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         self.tab_widget.setCornerWidget(self.pmanager)
@@ -185,9 +177,6 @@ class MainWindow(QMainWindow):
         issuer = self.tab_dwnld_data
         issuer.ConsoleSignal.connect(self.write2console)
 
-        issuer = self.tab_fill_weather_data
-        issuer.ConsoleSignal.connect(self.write2console)
-
         issuer = self.tab_hydrograph
         issuer.ConsoleSignal.connect(self.write2console)
 
@@ -212,7 +201,6 @@ class MainWindow(QMainWindow):
         mainGrid = QGridLayout(main_widget)
 
         mainGrid.addWidget(splitter, 0, 0)
-        mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
         mainGrid.addWidget(self.tab_dwnld_data.pbar, 2, 0)
         mainGrid.addWidget(
             self.tab_hydrocalc.rechg_eval_widget.progressbar, 3, 0)
@@ -231,9 +219,9 @@ class MainWindow(QMainWindow):
         _Analyze Hydrograph_ and vice-versa.
         """
         current = self.tab_widget.tabBar().currentIndex()
-        if current == 3:
+        if current == 2:
             self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
-        elif current == 2:
+        elif current == 1:
             self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
 
     def new_project_loaded(self):
@@ -250,7 +238,6 @@ class MainWindow(QMainWindow):
         # Update UI :
 
         self.tab_dwnld_data.setEnabled(True)
-        self.tab_fill_weather_data.setEnabled(True)
         self.tab_hydrograph.setEnabled(True)
         self.tab_hydrocalc.setEnabled(True)
 
@@ -261,10 +248,6 @@ class MainWindow(QMainWindow):
         lon = self.pmanager.projet.lon
         self.tab_dwnld_data.set_workdir(dirname)
         self.tab_dwnld_data.set_station_browser_latlon((lat, lon))
-
-        # fill_weather_data
-        self.tab_fill_weather_data.set_workdir(dirname)
-        self.tab_fill_weather_data.load_data_dir_content()
 
     def show(self):
         """Qt method override to center the app on the screen."""
