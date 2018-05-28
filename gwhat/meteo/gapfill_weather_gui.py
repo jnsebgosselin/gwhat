@@ -414,26 +414,24 @@ class GapFillWeatherGUI(DialogWindow):
 #        RIGHT_widget.addTab(self.gafill_display_table,
 #                            'New Table (Work-in-Progress)')
 
-        # ---- Main grid
-
-        grid_MAIN = QGridLayout()
-
-        row = 0
-        grid_MAIN.addWidget(self.LEFT_widget, row, 0)
-        grid_MAIN.addWidget(RIGHT_widget, row, 1)
-
-        grid_MAIN.setColumnStretch(1, 500)
-        grid_MAIN.setRowStretch(0, 500)
-        grid_MAIN.setSpacing(15)
-        grid_MAIN.setContentsMargins(15, 15, 15, 15)  # L, T, R, B
-
-        self.setLayout(grid_MAIN)
-
         # ---- Progress Bar
 
         self.pbar = QProgressBar()
         self.pbar.setValue(0)
         self.pbar.hide()
+
+        # ---- Main grid
+
+        lay_main = QGridLayout(self)
+
+        lay_main.addWidget(self.LEFT_widget, 0, 0)
+        lay_main.addWidget(RIGHT_widget, 0, 1)
+        lay_main.addWidget(self.pbar, 1, 0, 1, 2)
+
+        lay_main.setColumnStretch(1, 500)
+        lay_main.setRowStretch(0, 500)
+        lay_main.setSpacing(15)
+        lay_main.setContentsMargins(15, 15, 15, 15)
 
         # ---- Events
 
@@ -449,8 +447,7 @@ class GapFillWeatherGUI(DialogWindow):
         # GAPFILL :
 
         self.gapfill_worker.ProgBarSignal.connect(self.pbar.setValue)
-        self.gapfill_worker.GapFillFinished.connect(
-                                                   self.gapfill_worker_return)
+        self.gapfill_worker.GapFillFinished.connect(self.gapfill_worker_return)
         self.gapfill_worker.ConsoleSignal.connect(self.ConsoleSignal.emit)
 
         self.btn_fill.clicked.connect(self.gap_fill_btn_clicked)
