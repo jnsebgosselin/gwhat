@@ -291,9 +291,18 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_show_weather.setValue(True, silent=True)
 
         self.btn_show_mrc = OnOffToolButton('mrc_calc', size='normal')
+        self.btn_show_mrc.setToolTip(
+            """Show or hide water levels predicted with the MRC.""")
         self.btn_show_mrc.sig_value_changed.connect(
             self.btn_show_mrc_isclicked)
         self.btn_show_mrc.setValue(True, silent=True)
+
+        self.btn_show_meas_wl = OnOffToolButton(
+            'manual_measures', size='normal')
+        self.btn_show_meas_wl.setToolTip(
+            """Show or hide water levels measured manually in the well.""")
+        self.btn_show_meas_wl.setValue(True, silent=True)
+        self.btn_show_meas_wl.sig_value_changed.connect(self.draw_meas_wl)
 
         # Setup the layout.
 
@@ -301,7 +310,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
-                    self.btn_show_mrc]:
+                    self.btn_show_mrc, self.btn_show_meas_wl]:
             toolbar.addWidget(btn)
 
         return toolbar
