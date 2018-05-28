@@ -381,6 +381,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         return self.mrc_eval_widget
 
+    def setup_datamanager(self, datamanager):
+        """Add the datamanager to the layout of the right panel."""
+        self.right_panel.addWidget(datamanager, 0, 0)
+
     def __initUI__(self):
         self.setWindowTitle('Hydrograph Analysis')
         toolbar = self._setup_toolbar()

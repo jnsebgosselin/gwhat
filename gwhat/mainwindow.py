@@ -108,6 +108,7 @@ class MainWindow(QMainWindow):
         self.__initUI__()
         splash.finish(self)
         self.showMaximized()
+        self.sync_datamanagers()
 
         # Load the last opened project :
 
@@ -213,15 +214,11 @@ class MainWindow(QMainWindow):
         self.main_console.append(textime + text)
 
     def sync_datamanagers(self):
-        """
-        Move the data manager from tab _Plot Hydrograph_ to tab
-        _Analyze Hydrograph_ and vice-versa.
-        """
-        current = self.tab_widget.tabBar().currentIndex()
-        if current == 2:
-            self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
-        elif current == 1:
-            self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
+        """Move the data manager the the currently selected tool."""
+        try:
+            self.tab_widget.currentWidget().setup_datamanager(self.dmanager)
+        except AttributeError:
+            pass
 
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""

@@ -235,6 +235,10 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
+    def setup_datamanager(self, datamanager):
+        """Add the datamanager to the layout of the right panel."""
+        self.right_panel.addWidget(datamanager, 0, 0)
+
     def __init_scalesTabWidget__(self):
 
         class QRowLayout(QGridLayout):
