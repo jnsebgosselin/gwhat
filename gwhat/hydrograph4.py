@@ -853,7 +853,7 @@ class Hydrograph(Figure):
         time water level datum is changed.
         """
 
-        # -------------------------------------------------- Logger Measures --
+        # ---- Logger Measures
 
         time = self.wldset['Time']
         if self.WLdatum == 1:  # masl
@@ -870,14 +870,14 @@ class Hydrograph(Figure):
             self.l1_ax2.set_data(time, water_lvl)
             self.l2_ax2.set_data([], [])
 
-        # -------------------------------------------------- Manual Measures --
+        # ---- Manual Measures
 
-        TIMEmes, WLmes = self.wldset.get_wlmeas()
-        if len(WLmes) > 0:
-            if self.WLdatum == 1:   # masl
-                WLmes = self.wldset['Elevation']-WLmes
-
-            self.h_WLmes.set_data(TIMEmes, WLmes)
+        time_wl_meas, wl_meas = self.wldset.get_wlmeas()
+        if len(wl_meas) > 0:
+            if self.WLdatum == 1:
+                # The datum is meter above see level.
+                wl_meas = self.wldset['Elevation'] - wl_meas
+            self.h_WLmes.set_data(time_wl_meas, wl_meas)
 
     def draw_weather(self):
         """
