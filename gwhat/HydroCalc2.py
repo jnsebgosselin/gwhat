@@ -186,6 +186,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
             [], [], color='blue', clip_on=True, ls='-', zorder=10,
             marker='None')
 
+        # Water levels measured manually
+
+        self._meas_wl_plt, = ax0.plot(
+            [], [], clip_on=True, ls='none', zorder=10, marker='+', ms=8,
+            mec='red', mew=2, mfc='red')
+
         # Predicted water levels :
         self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
                                    ls='-', zorder=10, marker='None')
@@ -973,6 +979,20 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.xcross.set_visible(False)
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
+
+    def draw_meas_wl(self):
+        """Draw the water level measured manually in the well."""
+        if self.wldset is not None and self.btn_show_meas_wl.value():
+            time_wl_meas, wl_meas = self.wldset.get_wlmeas()
+            if len(wl_meas) > 0:
+                self._meas_wl_plt.set_visible(True)
+                self._meas_wl_plt.set_data(
+                    time_wl_meas + self.dt4xls2mpl * self.dformat, wl_meas)
+            else:
+                self._meas_wl_plt.set_visible(False)
+        else:
+            self._meas_wl_plt.set_visible(False)
+        self.draw()
 
     def draw_glue_wl(self):
         """Draw or hide the water level envelope estimated with GLUE."""
