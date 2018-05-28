@@ -23,10 +23,11 @@ from PyQt5.QtCore import Qt, QThread, QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import QEvent
 from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
-                             QToolButton, QGridLayout, QLabel, QCheckBox,
+                             QToolButton, QGridLayout, QCheckBox,
                              QFrame, QTextEdit, QPushButton, QFileDialog,
                              QMessageBox, QProgressBar, QTableWidgetItem,
-                             QTableWidget, QHeaderView, QStyle, QComboBox)
+                             QTableWidget, QHeaderView, QStyle, QComboBox,
+                             QGroupBox, QSizePolicy)
 
 # ---- Imports: local
 
@@ -73,7 +74,7 @@ class DwnldWeatherWidget(QWidget):
 
         self.station_browser = None
         self.station_table = WeatherStationDisplayTable(1, self)
-        self.__initUI__()
+        self._setup_gui()
 
         # Setup downloader worker and thread.
 
@@ -86,7 +87,8 @@ class DwnldWeatherWidget(QWidget):
         self.dwnld_worker.sig_update_pbar.connect(self.pbar.setValue)
         self.dwnld_worker.ConsoleSignal.connect(self.ConsoleSignal.emit)
 
-    def __initUI__(self):
+    def _setup_gui(self):
+        """Setup the layout of the widget."""
 
         # ---- Main Window
 
@@ -98,113 +100,117 @@ class DwnldWeatherWidget(QWidget):
         self.pbar.setValue(0)
         self.pbar.hide()
 
-        # ---- Right Panel ----
-
-        display_label = QLabel('<b>Formatted Weather Data Info :</b>')
-
-        self.saveAuto_checkbox = QCheckBox(
-            'Automatically save formatted\nweather data')
-        self.saveAuto_checkbox.setCheckState(Qt.Checked)
-        self.saveAuto_checkbox.setStyleSheet(
-                          'QCheckBox::indicator{subcontrol-position:top left}')
-
-        # ---- Go Toolbar ----
-
-        self.btn_goNext = QToolButtonSmall(icons.get_icon('go_next'))
-        self.btn_goNext.setEnabled(False)
-
-        self.btn_goPrevious = QToolButtonSmall(icons.get_icon('go_previous'))
-        self.btn_goPrevious.setEnabled(False)
-
-        self.btn_goLast = QToolButtonSmall(icons.get_icon('go_last'))
-        self.btn_goLast.setEnabled(False)
-
-        self.btn_goFirst = QToolButtonSmall(icons.get_icon('go_first'))
-        self.btn_goFirst.setEnabled(False)
-
-        goToolbar_grid = QGridLayout()
-        goToolbar_widg = QFrame()
-
-        col = 0
-        goToolbar_grid.addWidget(self.btn_goFirst, 0, col)
-        col += 1
-        goToolbar_grid.addWidget(self.btn_goPrevious, 0, col)
-        col += 1
-        goToolbar_grid.addWidget(self.btn_goNext, 0, col)
-        col += 1
-        goToolbar_grid.addWidget(self.btn_goLast, 0, col)
-
-        goToolbar_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
-        goToolbar_grid.setSpacing(5)
-
-        goToolbar_widg.setLayout(goToolbar_grid)
-
-        # ---- Right Panel Assembly ----
-
-        self.mergeDisplay = QTextEdit()
-        self.mergeDisplay.setReadOnly(True)
-        self.mergeDisplay.setMinimumHeight(250)
-
-        self.btn_selectRaw = QPushButton('Select')
-        self.btn_selectRaw.setIcon(icons.get_icon('openFile'))
-        self.btn_selectRaw.setToolTip(
-                "Select and concatenate raw weather data files.")
-        self.btn_selectRaw.setIconSize(icons.get_iconsize('small'))
-        self.btn_selectRaw.clicked.connect(self.btn_selectRaw_isClicked)
-
-        self.btn_saveMerge = QPushButton('Save')
-        self.btn_saveMerge.setToolTip(
-                "Save the concatenated weather dataset in a csv file.")
-        self.btn_saveMerge.setIcon(icons.get_icon('save'))
-        self.btn_saveMerge.setIconSize(icons.get_iconsize('small'))
-        self.btn_saveMerge.clicked.connect(self.btn_saveMerge_isClicked)
-
-        rightPanel_grid = QGridLayout()
-        rightPanel_widg = QFrame()
-
-        row = 0
-        rightPanel_grid.addWidget(self.btn_selectRaw, row, 0)
-        rightPanel_grid.addWidget(self.btn_saveMerge, row, 1)
-        row += 1
-        rightPanel_grid.addWidget(self.mergeDisplay, row, 0, 1, 3)
-        row += 1
-        rightPanel_grid.addWidget(goToolbar_widg, row, 0, 1, 3)
-        row += 1
-        rightPanel_grid.addWidget(QLabel(''), row, 0, 1, 3)
-        row += 1
-        rightPanel_grid.addWidget(self.saveAuto_checkbox, row, 0, 1, 3)
-
-        rightPanel_grid.setContentsMargins(0, 0, 0, 0)  # [L, T, R, B]
-        rightPanel_grid.setRowStretch(row+1, 100)
-        rightPanel_grid.setColumnStretch(2, 100)
-
-        rightPanel_widg.setLayout(rightPanel_grid)
-
         # ---- Main Grid
 
-        main_grid = QGridLayout()
+        main_grid = QGridLayout(self)
 
         main_grid.addWidget(self._setup_toolbar(), 0, 0)
         main_grid.addWidget(self.station_table, 1, 0)
         main_grid.addWidget(VSep(), 0, 1, 2, 1)
+        main_grid.addLayout(self._setup_rightpanel_lay(), 0, 2, 2, 1)
 
-        main_grid.addWidget(display_label, 0, 2)
-        main_grid.addWidget(rightPanel_widg, 1, 2)
-
-        main_grid.setContentsMargins(10, 10, 10, 10)  # [L, T, R, B]
+        main_grid.setContentsMargins(10, 10, 10, 10)
         main_grid.setColumnStretch(0, 500)
         main_grid.setRowStretch(1, 500)
         main_grid.setVerticalSpacing(5)
         main_grid.setHorizontalSpacing(15)
 
-        self.setLayout(main_grid)
+    def _setup_rightpanel_lay(self):
+        """Setup the layout for the right panel."""
+        self._right_panel_lay = QGridLayout()
+        self._right_panel_lay.addWidget(self._setup_rawdata_widg(), 1, 0)
+        self._right_panel_lay.setContentsMargins(0, 0, 0, 0)
+        self._right_panel_lay.setRowStretch(2, 100)
+        self._right_panel_lay.setSpacing(15)
+        return self._right_panel_lay
 
-        # ---- Events
+    def setup_datamanager(self, datamanager):
+        """Add the datamanager to the layout of the right panel."""
+        self._right_panel_lay.addWidget(datamanager, 0, 0)
 
-        self.btn_goLast.clicked.connect(self.display_mergeHistory)
-        self.btn_goFirst.clicked.connect(self.display_mergeHistory)
+    def _setup_rawdata_widg(self):
+        """Setup the widget to visualize the stats and format the raw data."""
+
+        self.saveAuto_checkbox = QCheckBox(
+            'Automatically save formatted\nweather data')
+        self.saveAuto_checkbox.setCheckState(Qt.Checked)
+        self.saveAuto_checkbox.setStyleSheet(
+            'QCheckBox::indicator{subcontrol-position:top left}')
+
+        self.mergeDisplay = QTextEdit()
+        self.mergeDisplay.setReadOnly(True)
+        self.mergeDisplay.setMinimumWidth(100)
+        self.mergeDisplay.setSizePolicy(
+            QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
+
+        self.btn_selectRaw = QPushButton('Select')
+        self.btn_selectRaw.setIcon(icons.get_icon('openFile'))
+        self.btn_selectRaw.setToolTip(
+            "Select and concatenate raw weather data files.")
+        self.btn_selectRaw.setIconSize(icons.get_iconsize('small'))
+        self.btn_selectRaw.clicked.connect(self.btn_selectRaw_isClicked)
+
+        self.btn_saveMerge = QPushButton('Save')
+        self.btn_saveMerge.setToolTip(
+            "Save the concatenated weather dataset in a csv file.")
+        self.btn_saveMerge.setIcon(icons.get_icon('save'))
+        self.btn_saveMerge.setIconSize(icons.get_iconsize('small'))
+        self.btn_saveMerge.clicked.connect(self.btn_saveMerge_isClicked)
+
+        # ---- Toolbar
+
+        toolbar = ToolBarWidget()
+        toolbar.addWidget(self.btn_selectRaw)
+        toolbar.addWidget(self.btn_saveMerge)
+
+        # ---- Navigation Toolbar
+
+        self.btn_goNext = QToolButtonSmall(icons.get_icon('go_next'))
         self.btn_goNext.clicked.connect(self.display_mergeHistory)
+        self.btn_goNext.setEnabled(False)
+
+        self.btn_goPrevious = QToolButtonSmall(icons.get_icon('go_previous'))
         self.btn_goPrevious.clicked.connect(self.display_mergeHistory)
+        self.btn_goPrevious.setEnabled(False)
+
+        self.btn_goLast = QToolButtonSmall(icons.get_icon('go_last'))
+        self.btn_goLast.clicked.connect(self.display_mergeHistory)
+        self.btn_goLast.setEnabled(False)
+
+        self.btn_goFirst = QToolButtonSmall(icons.get_icon('go_first'))
+        self.btn_goFirst.clicked.connect(self.display_mergeHistory)
+        self.btn_goFirst.setEnabled(False)
+
+        goToolbar_widg = QFrame()
+        goToolbar_grid = QGridLayout(goToolbar_widg)
+
+        goToolbar_grid.addWidget(self.btn_goFirst, 0, 0)
+        goToolbar_grid.addWidget(self.btn_goPrevious, 0, 1)
+        goToolbar_grid.addWidget(self.btn_goNext, 0, 2)
+        goToolbar_grid.addWidget(self.btn_goLast, 0, 3)
+
+        goToolbar_grid.setContentsMargins(0, 0, 0, 0)
+        goToolbar_grid.setSpacing(5)
+
+        # ---- Setup main layout
+
+        grpbox = QGroupBox('Formatted Weather Data Info :')
+        grpbox_lay = QGridLayout(grpbox)
+
+        row = 0
+        grpbox_lay.addWidget(toolbar, row, 0)
+        row += 1
+        grpbox_lay.addWidget(self.mergeDisplay, row, 0)
+        row += 1
+        grpbox_lay.addWidget(goToolbar_widg, row, 0)
+        row += 1
+        grpbox_lay.setRowMinimumHeight(row, 15)
+        row += 1
+        grpbox_lay.addWidget(self.saveAuto_checkbox, row, 0)
+
+        grpbox_lay.setRowStretch(row+1, 100)
+
+        return grpbox
 
     def _setup_toolbar(self):
         """Setup the toolbar of the widget."""
@@ -266,6 +272,8 @@ class DwnldWeatherWidget(QWidget):
             toolbar.addWidget(widget)
 
         return toolbar
+
+    # ---- Toolbar Handlers
 
     def btn_fill_weather_isclicked(self):
         """Handle when the btn_fill_weather is clicked."""
