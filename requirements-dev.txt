@@ -1,0 +1,9 @@
+-r requirements.txt
+pytest
+pytest-qt
+pytest-xvfb
+pytest-mock
+pytest-cov
+pytest-ordering
+flaky
+codecov

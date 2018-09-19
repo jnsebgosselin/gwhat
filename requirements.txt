@@ -1,0 +1,11 @@
+sip
+pyqt5==5.9
+xlsxwriter
+xlrd
+xlwt
+cython>=0.25.2
+numpy
+matplotlib>=2.0.2
+scipy
+requests
+h5py
