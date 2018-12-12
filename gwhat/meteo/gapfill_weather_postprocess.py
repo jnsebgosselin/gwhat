@@ -468,7 +468,7 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
         if label >= 1:
             ylabels.append('%d' % label)
         elif label <= 10**-3:
-            ylabels.append('$\mathdefault{10^{%d}}$' % np.log10(label))
+            ylabels.append('$\\mathdefault{10^{%d}}$' % np.log10(label))
         else:
             ylabels.append(str(label))
     ax0.set_yticklabels(ylabels)
