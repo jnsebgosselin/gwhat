@@ -204,7 +204,7 @@ class ProjetReader(object):
         Add the water level dataset to the project hdf5 file.
 
         A dataset name must be at least one charater long and can't contain
-        any of the following special characters: \ / : * ? " < > |
+        any of the following special characters: \\ / : * ? " < > |
         """
         if not is_dsetname_valid(name):
             raise ValueError("The name of the dataset is not valid.")
@@ -290,7 +290,7 @@ class ProjetReader(object):
         Add the weather dataset to the project hdf5 file.
 
         A dataset name must be at least one charater long and can't contain
-        any of the following special characters: \ / : * ? " < > |
+        any of the following special characters: \\ / : * ? " < > |
         """
         if not is_dsetname_valid(name):
             raise ValueError("The name of the dataset is not valid.")

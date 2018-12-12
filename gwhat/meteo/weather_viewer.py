@@ -943,7 +943,7 @@ if __name__ == '__main__':
     app.setFont(ft)
 
     fmeteo = ("..\\..\\Projects\\Example\\Meteo\\Output\\"
-              "MARIEVILLE (7024627)\MARIEVILLE (7024627)_1980-2017.out")
+              "MARIEVILLE (7024627)\\MARIEVILLE (7024627)_1980-2017.out")
     wxdset = WXDataFrame(fmeteo)
 
     w = WeatherViewer()
