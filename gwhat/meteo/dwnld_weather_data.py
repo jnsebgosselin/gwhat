@@ -623,8 +623,8 @@ class DwnldWeatherWidget(QWidget):
         min_year = cdf['Minimum Year']
         max_year = cdf['Maximum Year']
 
-        fields = ['T<sub>max<\sub>', 'T<sub>min<\sub>', 'T<sub>mean<\sub>',
-                  'P<sub>tot<\sub>']
+        fields = ['T<sub>max</sub>', 'T<sub>min</sub>', 'T<sub>mean</sub>',
+                  'P<sub>tot</sub>']
 
         html = """
                <p align="center">
