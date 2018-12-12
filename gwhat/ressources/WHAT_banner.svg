@@ -17,7 +17,7 @@
    version="1.1"
    inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
    sodipodi:docname="WHAT_banner.svg"
-   inkscape:export-filename="C:\Users\jsgosselin\gwhat\gwhat\ressources\WHAT_banner_750px.png"
+   inkscape:export-filename="C:\Users\User\gwhat\gwhat\ressources\WHAT_banner_750px.png"
    inkscape:export-xdpi="37.954659"
    inkscape:export-ydpi="37.954659">
   <sodipodi:namedview
@@ -29,16 +29,16 @@
      guidetolerance="10"
      inkscape:pageopacity="0"
      inkscape:pageshadow="2"
-     inkscape:window-width="1600"
-     inkscape:window-height="838"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
-     inkscape:zoom="0.59936735"
-     inkscape:cx="948.50012"
-     inkscape:cy="401.46956"
-     inkscape:window-x="140"
-     inkscape:window-y="1072"
+     inkscape:zoom="0.61185238"
+     inkscape:cx="-90.36852"
+     inkscape:cy="615.31501"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
      inkscape:window-maximized="1"
      inkscape:current-layer="g4559"
      fit-margin-top="0"
@@ -361,6 +361,6 @@
          id="tspan3092-0"
          y="-404.06998"
          x="-110.26708"
-         sodipodi:role="line">Version 0.3.2</tspan></text>
+         sodipodi:role="line">Version 0.3.3</tspan></text>
   </g>
 </svg>
