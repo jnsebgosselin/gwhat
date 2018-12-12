@@ -1,2 +1,2 @@
-..\environment\Scripts\python.exe ..\..\PyInstaller\pyinstaller.py gwhat.spec
+..\environment\Scripts\pyinstaller.exe gwhat.spec
 pause
