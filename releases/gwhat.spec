@@ -11,7 +11,7 @@ added_files = [('../gwhat/ressources/splash.png', 'ressources'),
                ]
 
 a = Analysis(['../gwhat/mainwindow.py'],
-             pathex=[],
+             pathex=['C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\\DLLs\\x64'],
              binaries=[],
              datas=added_files ,
              hiddenimports=['h5py.defs', 'h5py.utils', 'h5py.h5ac', 'h5py._proxy', 'scipy.stats._continuous_distns', 'scipy._lib.messagestream'],
