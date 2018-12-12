@@ -725,11 +725,11 @@ class NewDatasetDialog(QDialog):
         """Accept and emit the dataset."""
         if not is_dsetname_valid(self.name):
             msg = ('''
-                   <p>Please enter a valid name for the dataset.<\p>
+                   <p>Please enter a valid name for the dataset.</p>
                    <p>A dataset name must be at least one charater long
                    and can't contain any of the following special
-                   characters:<\p>
-                   <center>\ / : * ? " < > |<\center>
+                   characters:</p>
+                   <center>\\ / : * ? " < > |</center>
                    ''')
             btn = QMessageBox.Ok
             QMessageBox.warning(self, 'Save dataset', msg, btn)
@@ -744,7 +744,7 @@ class NewDatasetDialog(QDialog):
 
         if is_dsetname_exists:
             msg = ('The dataset <i>%s</i> already exists.'
-                   ' Do you want tho replace the existing dataset?'
+                   ' Do you want to replace the existing dataset?'
                    ' All data will be lost.') % self.name
             btn = QMessageBox.Yes | QMessageBox.No
             reply = QMessageBox.question(self, 'Save dataset', msg, btn)
