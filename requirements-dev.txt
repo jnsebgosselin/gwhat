@@ -4,6 +4,6 @@ pytest-qt
 pytest-xvfb
 pytest-mock
 pytest-cov
-pytest-ordering==0.5.*
+pytest-ordering
 flaky
 codecov
