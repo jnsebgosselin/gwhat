@@ -39,6 +39,6 @@ coll = COLLECT(exe,
                upx=True,
                name='GWHAT')
 
-shutil.copyfile("LICENSE", "dist/LICENSE")
+shutil.copyfile("../LICENSE", "dist/LICENSE")
 shutil.copytree("Projects", "dist/Projects")
 os.rename('dist', 'gwhat_'+__version__+'_win_amd64')
