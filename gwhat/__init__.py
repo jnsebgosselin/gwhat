@@ -53,7 +53,7 @@ import os
 import sys
 
 
-version_info = (0, 3, 3)
+version_info = (0, 3, 4, 'dev0')
 __version__ = '.'.join(map(str, version_info))
 __appname__ = 'GWHAT'
 __namever__ = __appname__ + " " + __version__
