@@ -1159,7 +1159,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Trace a red vertical guide (line) that folows the mouse marker :
 
-        x = event.xdata
+        x, y = event.xdata, event.ydata
         if x:
             self.vguide.set_visible(
                 not self.pan_is_active and not self.zoom_is_active)
@@ -1168,13 +1168,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
             self.xycoord.set_visible(True)
             if self.dformat == 0:
-                self.xycoord.set_text('%d' % x)
+                self.xycoord.set_text('{:0.3f} mbgs\n{:0.1f} days'.format(y, x))
             else:
                 date = xldate_as_tuple(x-self.dt4xls2mpl, 0)
-                yyyy = date[0]
-                mm = date[1]
-                dd = date[2]
-                self.xycoord.set_text('%02d/%02d/%d' % (dd, mm, yyyy))
+                self.xycoord.set_text('{:0.3f} mbgs\n{}/{}/{}'.format(
+                    y, date[2], date[1], date[0]))
             ax0.draw_artist(self.xycoord)
         else:
             self.vguide.set_visible(False)
