@@ -112,20 +112,6 @@ class QToolButtonBase(QToolButton):
         self.setAutoRaise(True)
         self.setFocusPolicy(Qt.NoFocus)
 
-#        name = str(id(self))
-#        self.setObjectName(name)
-#        ss = ("#%s {"
-#              "background-color: transparent;"
-#              "}"
-#              "#%s:hover {"
-#              "background-color: rgba(0, 0, 0, 35);"
-#              "}"
-#              "#%s:pressed {"
-#              "background-color: rgba(0, 0, 0, 85);"
-#              "}") % (name, name, name)
-#
-#        self.setStyleSheet(ss)
-
 
 class QToolButtonNormal(QToolButtonBase):
     def __init__(self, Qicon, *args, **kargs):
