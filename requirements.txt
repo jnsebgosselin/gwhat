@@ -9,3 +9,4 @@ matplotlib>=2.0.2
 scipy
 requests
 h5py
+qtawesome
