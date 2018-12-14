@@ -25,8 +25,8 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
 # ---- Local imports
 
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.common import QToolButtonSmall
-from gwhat.common import icons
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonSmall
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt

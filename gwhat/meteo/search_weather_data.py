@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import (QWidget, QLabel, QDoubleSpinBox, QComboBox,
 # ---- Imports: Local
 
 from gwhat.common import StyleDB
-from gwhat.common import icons
+from gwhat.utils import icons
 from gwhat.widgets.waitingspinner import QWaitingSpinner
 from gwhat.meteo.weather_stationlist import WeatherSationView
 from gwhat.meteo.weather_station_finder import (WeatherStationFinder,

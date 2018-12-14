@@ -20,8 +20,8 @@ from PyQt5.QtWidgets import (QApplication, QTabWidget, QWidget, QTabBar,
 # ---- Local imports
 
 from gwhat.widgets.about import AboutWhat
-from gwhat.common import QToolButtonBase
-from gwhat.common import icons
+from gwhat.utils.icons import QToolButtonBase
+from gwhat.utils import icons
 
 
 class TabWidget(QTabWidget):

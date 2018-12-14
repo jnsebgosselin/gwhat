@@ -10,7 +10,7 @@
 
 from copy import copy
 
-from gwhat.common import icons
+from gwhat.utils import icons
 
 from PyQt5.QtCore import Qt, QSize, QPoint, QUrl
 from PyQt5.QtCore import pyqtSignal as QSignal

@@ -26,8 +26,8 @@ from gwhat.widgets.layout import HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
-from gwhat.common.icons import QToolButtonSmall
-from gwhat.common import icons
+from gwhat.utils.icons import QToolButtonSmall
+from gwhat.utils import icons
 
 
 class RechgEvalWidget(QFrameLayout):

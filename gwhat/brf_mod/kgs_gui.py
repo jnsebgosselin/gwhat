@@ -38,8 +38,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
 from gwhat.widgets.buttons import LangToolButton
-from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
-from gwhat.common import icons
+from gwhat.common import StyleDB
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
 from gwhat.brf_mod.kgs_plot import BRFFigure

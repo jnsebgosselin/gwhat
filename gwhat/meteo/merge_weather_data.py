@@ -24,8 +24,8 @@ from PyQt5.QtWidgets import (QDialog, QApplication, QGridLayout,
 
 # ---- Imports: local
 
-from gwhat.common import QToolButtonSmall
-from gwhat.common import icons
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonSmall
 from gwhat.meteo.weather_reader import read_weather_datafile
 
 

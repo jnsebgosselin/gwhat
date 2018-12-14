@@ -22,8 +22,8 @@ from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QGridLayout,
 
 # ---- Local imports
 
-from gwhat.common.icons import QToolButtonBase
-from gwhat.common import icons
+from gwhat.utils.icons import QToolButtonBase
+from gwhat.utils import icons
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
 

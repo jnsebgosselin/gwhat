@@ -31,7 +31,8 @@ from PyQt5.QtWidgets import (
 
 # ---- Imports: local
 
-from gwhat.common import icons, QToolButtonNormal, QToolButtonSmall
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
 from gwhat.common.widgets import QFrameLayout
 from gwhat.mplFigViewer3 import ImageViewer

@@ -30,8 +30,9 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 
 # ---- Imports: local
 
-from gwhat.common import StyleDB, QToolButtonNormal, QToolButtonSmall
-from gwhat.common import icons
+from gwhat.common import StyleDB
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import DropDownButton
