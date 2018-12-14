@@ -223,9 +223,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         offset = mpl.transforms.ScaledTranslation(-5/72, 5/72,
                                                   self.fig.dpi_scale_trans)
-        self.xcoord = ax0.text(1, 0, '', ha='right',
-                               transform=ax0.transAxes + offset)
-        self.xcoord.set_visible(False)
+
+        # x and y coorrdinate labels displayed at the right-bottom corner
+        # of the graph
+        self.xycoord = ax0.text(
+            1, 0, '', ha='right', transform=ax0.transAxes + offset)
+        self.xycoord.set_visible(False)
 
         # Peaks :
         self._peaks_plt, = ax0.plot(
@@ -986,7 +989,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def draw(self):
         """Draw the canvas and save a snapshot of the background figure."""
         self.vguide.set_visible(False)
-        self.xcoord.set_visible(False)
+        self.xycoord.set_visible(False)
         self.xcross.set_visible(False)
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
@@ -1141,7 +1144,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def mouse_vguide(self, event):
         """
-        Draw the vertical mouse guideline and the x coordinate of the
+        Draw the vertical mouse guideline and the x and y coordinates of the
         mouse cursor on the graph.
         """
         if ((self.pan_is_active or self.zoom_is_active) and
@@ -1156,26 +1159,25 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Trace a red vertical guide (line) that folows the mouse marker :
 
-        x = event.xdata
+        x, y = event.xdata, event.ydata
         if x:
             self.vguide.set_visible(
                 not self.pan_is_active and not self.zoom_is_active)
             self.vguide.set_xdata(x)
             ax0.draw_artist(self.vguide)
 
-            self.xcoord.set_visible(True)
+            self.xycoord.set_visible(True)
             if self.dformat == 0:
-                self.xcoord.set_text('%d' % x)
+                self.xycoord.set_text(
+                    '{:0.3f} mbgs\n{:0.1f} days'.format(y, x))
             else:
                 date = xldate_as_tuple(x-self.dt4xls2mpl, 0)
-                yyyy = date[0]
-                mm = date[1]
-                dd = date[2]
-                self.xcoord.set_text('%02d/%02d/%d' % (dd, mm, yyyy))
-            ax0.draw_artist(self.xcoord)
+                self.xycoord.set_text('{:0.3f} mbgs\n{}/{}/{}'.format(
+                    y, date[2], date[1], date[0]))
+            ax0.draw_artist(self.xycoord)
         else:
             self.vguide.set_visible(False)
-            self.xcoord.set_visible(False)
+            self.xycoord.set_visible(False)
 
         # ---- Remove Peak Cursor
 
