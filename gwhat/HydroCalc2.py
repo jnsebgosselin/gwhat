@@ -223,7 +223,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         offset = mpl.transforms.ScaledTranslation(-5/72, 5/72,
                                                   self.fig.dpi_scale_trans)
-        
+
         # x and y coorrdinate labels displayed at the right-bottom corner
         # of the graph
         self.xycoord = ax0.text(
@@ -1168,7 +1168,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
             self.xycoord.set_visible(True)
             if self.dformat == 0:
-                self.xycoord.set_text('{:0.3f} mbgs\n{:0.1f} days'.format(y, x))
+                self.xycoord.set_text(
+                    '{:0.3f} mbgs\n{:0.1f} days'.format(y, x))
             else:
                 date = xldate_as_tuple(x-self.dt4xls2mpl, 0)
                 self.xycoord.set_text('{:0.3f} mbgs\n{}/{}/{}'.format(
