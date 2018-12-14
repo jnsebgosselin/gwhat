@@ -154,3 +154,18 @@ class QToolButtonVRectSmall(QToolButtonBase):
     def __init__(self, Qicon, *args, **kargs):
         super(QToolButtonVRectSmall, self).__init__(Qicon, *args, **kargs)
         self.setIconSize(QSize(8, 20))
+
+
+if __name__ == '__main__':
+    import sys
+    from PyQt5.QtWidgets import QApplication, QWidget, QGridLayout
+
+    app = QApplication(sys.argv)
+
+    window = QWidget()
+    layout = QGridLayout(window)
+    layout.addWidget(QToolButtonNormal(get_icon('download')), 0, 0)
+    layout.addWidget(QToolButtonNormal(get_icon('close_all')), 0, 1)
+    window.show()
+
+    sys.exit(app.exec_())
