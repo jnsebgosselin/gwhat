@@ -23,8 +23,8 @@ from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QLabel,
 # ---- Local library imports
 
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
-from gwhat.common.icons import QToolButtonSmall
-from gwhat.common import icons
+from gwhat.utils.icons import QToolButtonSmall
+from gwhat.utils import icons
 import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
 import gwhat.projet.reader_waterlvl as wlrd

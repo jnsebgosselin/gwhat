@@ -39,7 +39,7 @@ import requests
 
 from gwhat import (__version__, __releases_url__, __releases_api__,
                    __appname__, __namever__)
-from gwhat.common import icons
+from gwhat.utils import icons
 
 
 class ManagerUpdates(QMessageBox):

@@ -42,8 +42,9 @@ from gwhat.meteo.gapfill_weather_algorithm2 import GapFillWeather
 from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
 from gwhat.meteo.merge_weather_data import WXDataMergerWidget
 from gwhat.meteo.weather_reader import add_PET_to_weather_datafile
-from gwhat.common import StyleDB, QToolButtonSmall
-from gwhat.common import icons
+from gwhat.common import StyleDB
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonSmall
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import delete_file
 from gwhat.widgets.layout import HSep

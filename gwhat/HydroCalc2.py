@@ -38,8 +38,9 @@ from xlrd.xldate import xldate_from_date_tuple
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 import gwhat.common.widgets as myqt
 from gwhat.common.widgets import DialogWindow
-from gwhat.common import StyleDB, QToolButtonNormal
-from gwhat.common import icons
+from gwhat.common import StyleDB
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonNormal
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.brf_mod import BRFManager
 from gwhat.widgets.buttons import OnOffToolButton

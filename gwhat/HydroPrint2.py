@@ -31,8 +31,8 @@ from xlrd import xldate_as_tuple
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
 from gwhat.colors2 import ColorsReader, ColorsSetupWin
-from gwhat.common import QToolButtonNormal, QToolButtonSmall
-from gwhat.common import icons
+from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
+from gwhat.utils import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures

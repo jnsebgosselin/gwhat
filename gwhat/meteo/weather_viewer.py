@@ -32,8 +32,8 @@ from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
 
 from gwhat.colors2 import ColorsReader
 from gwhat.common import StyleDB
-from gwhat.common import icons
-from gwhat.common.icons import QToolButtonVRectSmall, QToolButtonNormal
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
 from gwhat.common.widgets import DialogWindow
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import RangeSpinBoxes

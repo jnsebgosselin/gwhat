@@ -69,8 +69,9 @@ from gwhat.widgets.tabwidget import TabWidget
 
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
-from gwhat.common import StyleDB, QToolButtonBase
-from gwhat.common import icons
+from gwhat.common import StyleDB
+from gwhat.utils import icons
+from gwhat.utils.icons import QToolButtonBase
 
 freeze_support()
 

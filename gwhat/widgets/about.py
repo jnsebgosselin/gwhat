@@ -22,7 +22,7 @@ from PyQt5.QtWidgets import (QDialog, QTextBrowser, QPushButton, QGridLayout,
 
 from gwhat import (__version__, __appname__, __date__, __project_url__,
                    __namever__, __rootdir__)
-from gwhat.common import icons
+from gwhat.utils import icons
 from gwhat.widgets.updates import ManagerUpdates
 
 
