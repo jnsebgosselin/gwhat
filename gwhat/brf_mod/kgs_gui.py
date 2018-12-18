@@ -295,6 +295,10 @@ class BRFManager(myqt.QFrameLayout):
                 child = child.parent()
 
     def set_datarange(self, times):
+        """
+        Set the date of the start and end date widgets used to define the
+        period over which the BRF is evaluated.
+        """
         date_start = xldate_as_tuple(times[0], 0)
         date_start = QDate(date_start[0], date_start[1], date_start[2])
         self.date_start_edit.setDate(date_start)
