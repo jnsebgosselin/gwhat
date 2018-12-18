@@ -280,8 +280,6 @@ class BRFManager(myqt.QFrameLayout):
         self.viewer.set_wldset(wldset)
         self.setEnabled(wldset is not None)
         if wldset is not None:
-            date_start, date_end = self.set_datarange(
-                    self.wldset['Time'][[0, -1]])
             self.date_start_edit.setMinimumDate(
                 qdate_from_xldate(self.wldset['Time'][0]))
             self.date_end_edit.setMaximumDate(
