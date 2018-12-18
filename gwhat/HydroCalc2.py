@@ -471,6 +471,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         else:
             self.water_lvl = wldset['WL']
             self.time = wldset['Time']
+            self.make_brf_period_valid()
+
         self.setup_hydrograph()
         self.toolbar.update()
         self.load_mrc_from_wldset()
@@ -569,6 +571,22 @@ class WLCalc(DialogWindow, SaveFileMixin):
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
 
     # ---- BRF handlers
+    def make_brf_period_valid(self):
+        """
+        Ensure that the period that is defined for evaluating the BRF is
+        valid.
+        """
+        if self.wldset is not None:
+            tstart = self.time[0]
+            tend = self.time[-1]
+            new_brfperiod = [
+                min(max(self.brfperiod[0] or tstart, tstart), tend),
+                max(min(self.brfperiod[1] or tend, tend), tstart)]
+            if new_brfperiod != self.brfperiod:
+                self.brfperiod = new_brfperiod
+                self.plot_brf_period()
+                self.brf_eval_widget.set_daterange(self.brfperiod)
+
     def plot_brf_period(self):
         """
         Plot on the graph the vertical lines that are used to define the period
