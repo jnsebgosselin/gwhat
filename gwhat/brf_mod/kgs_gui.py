@@ -154,9 +154,9 @@ class BRFManager(myqt.QFrameLayout):
         self.date_start_edit.setCalendarPopup(True)
         self.date_start_edit.setDisplayFormat('dd/MM/yyyy')
 
-        self._dataend = QDateTimeEdit()
-        self._dataend.setCalendarPopup(True)
-        self._dataend.setDisplayFormat('dd/MM/yyyy')
+        self.date_end_edit = QDateTimeEdit()
+        self.date_end_edit.setCalendarPopup(True)
+        self.date_end_edit.setDisplayFormat('dd/MM/yyyy')
 
         self.btn_seldata = QToolButtonSmall(icons.get_icon('select_range'))
         self.btn_seldata.clicked.connect(self.get_datarange)
@@ -201,7 +201,7 @@ class BRFManager(myqt.QFrameLayout):
         self.addWidget(self.btn_seldata, row, 2)
         row += 1
         self.addWidget(QLabel('BRF End :'), row, 0)
-        self.addWidget(self._dataend, row, 1)
+        self.addWidget(self.date_end_edit, row, 1)
         row += 1
         self.setRowMinimumHeight(row, 15)
         row += 1
@@ -247,7 +247,7 @@ class BRFManager(myqt.QFrameLayout):
         y, m, d = self.date_start_edit.date().getDate()
         dstart = xldate_from_date_tuple((y, m, d), 0)
 
-        y, m, d = self._dataend.date().getDate()
+        y, m, d = self.date_end_edit.date().getDate()
         dend = xldate_from_date_tuple((y, m, d), 0)
 
         return (dstart, dend)
@@ -301,7 +301,7 @@ class BRFManager(myqt.QFrameLayout):
 
         date_end = xldate_as_tuple(times[1], 0)
         date_end = QDate(date_end[0], date_end[1], date_end[2])
-        self._dataend.setDate(date_end)
+        self.date_end_edit.setDate(date_end)
 
         return date_start, date_end
 
@@ -370,7 +370,7 @@ class BRFManager(myqt.QFrameLayout):
         try:
             lag, A, err = bm.read_BRFOutput()
             date_start = self.date_start_edit.date().getDate()
-            date_end = self._dataend.date().getDate()
+            date_end = self.date_end_edit.date().getDate()
             self.wldset.save_brf(lag, A, err, date_start, date_end)
             self.viewer.new_brf_added()
             self.viewer.show()
