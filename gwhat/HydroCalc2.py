@@ -464,7 +464,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.brf_eval_widget.set_wldset(wldset)
         self.rechg_eval_widget.set_wldset(wldset)
         self.mrc_eval_widget.setEnabled(self.wldset is not None)
-
+        
         if wldset is None:
             self.water_lvl = np.array([])
             self.time = np.array([])
