@@ -569,8 +569,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
 
     # ---- BRF handlers
-
-    def plot_BRFperiod(self):
+    def plot_brf_period(self):
+        """
+        Plot on the graph the vertical lines that are used to define the period
+        over which the BRF is evaluated.
+        """
         if self.brfperiod[0]:
             x = self.brfperiod[0] + self.dt4xls2mpl*self.dformat
             self.h_brf1.set_xdata(x)
@@ -596,7 +599,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         btn.setAutoRaise(not btn.autoRaise())
         if btn.autoRaise() is False:
             self.brfperiod = [None, None]
-            self.plot_BRFperiod()
+            self.plot_brf_period()
 
             self.btn_addpeak.setValue(False)
             self.btn_delpeak.setValue(False)
@@ -1314,12 +1317,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.brfperiod[self.__brfcount] = self.time[indx]
             if self.__brfcount == 0:
                 self.__brfcount += 1
-                self.plot_BRFperiod()
+                self.plot_brf_period()
             elif self.__brfcount == 1:
                 self.__brfcount = 0
                 self.select_brf_period()
-                self.plot_BRFperiod()
-                self.brf_eval_widget.set_datarange(self.brfperiod)
+                self.plot_brf_period()
+                self.brf_eval_widget.set_daterange(self.brfperiod)
             else:
                 raise ValueError('Something is wrong in the code')
         else:
