@@ -587,7 +587,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         self.draw()
 
-    def select_BRF(self):
+    def select_brf_period(self):
         """
         Handle when the button to select a period to compute the BRF is
         clicked.
@@ -669,7 +669,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         if sender == self.btn_MRCalc:
             self.btn_MRCalc_isClicked()
         elif sender == self.brf_eval_widget.btn_seldata:
-            self.select_BRF()
+            self.select_brf_period()
 
     @property
     def zoom_is_active(self):
@@ -1317,7 +1317,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 self.plot_BRFperiod()
             elif self.__brfcount == 1:
                 self.__brfcount = 0
-                self.select_BRF()
+                self.select_brf_period()
                 self.plot_BRFperiod()
                 self.brf_eval_widget.set_datarange(self.brfperiod)
             else:
