@@ -150,9 +150,9 @@ class BRFManager(myqt.QFrameLayout):
 
         # ---- BRF Data Range ----
 
-        self._datastart = QDateTimeEdit()
-        self._datastart.setCalendarPopup(True)
-        self._datastart.setDisplayFormat('dd/MM/yyyy')
+        self.date_start_edit = QDateTimeEdit()
+        self.date_start_edit.setCalendarPopup(True)
+        self.date_start_edit.setDisplayFormat('dd/MM/yyyy')
 
         self._dataend = QDateTimeEdit()
         self._dataend.setCalendarPopup(True)
@@ -197,7 +197,7 @@ class BRFManager(myqt.QFrameLayout):
         self.setRowMinimumHeight(row, 15)
         row += 1
         self.addWidget(QLabel('BRF Start :'), row, 0)
-        self.addWidget(self._datastart, row, 1)
+        self.addWidget(self.date_start_edit, row, 1)
         self.addWidget(self.btn_seldata, row, 2)
         row += 1
         self.addWidget(QLabel('BRF End :'), row, 0)
@@ -244,7 +244,7 @@ class BRFManager(myqt.QFrameLayout):
 
     @property
     def brfperiod(self):
-        y, m, d = self._datastart.date().getDate()
+        y, m, d = self.date_start_edit.date().getDate()
         dstart = xldate_from_date_tuple((y, m, d), 0)
 
         y, m, d = self._dataend.date().getDate()
@@ -281,8 +281,8 @@ class BRFManager(myqt.QFrameLayout):
         if wldset is not None:
             date_start, date_end = self.set_datarange(
                     self.wldset['Time'][[0, -1]])
-            self._datastart.setMinimumDate(date_start)
-            self._dataend.setMaximumDate(date_end)
+            self.date_start_edit.setMinimumDate(date_start)
+            self.date_end_edit.setMaximumDate(date_end)
 
     def get_datarange(self):
         child = self
@@ -297,7 +297,7 @@ class BRFManager(myqt.QFrameLayout):
     def set_datarange(self, times):
         date_start = xldate_as_tuple(times[0], 0)
         date_start = QDate(date_start[0], date_start[1], date_start[2])
-        self._datastart.setDate(date_start)
+        self.date_start_edit.setDate(date_start)
 
         date_end = xldate_as_tuple(times[1], 0)
         date_end = QDate(date_end[0], date_end[1], date_end[2])
@@ -369,7 +369,7 @@ class BRFManager(myqt.QFrameLayout):
 
         try:
             lag, A, err = bm.read_BRFOutput()
-            date_start = self._datastart.date().getDate()
+            date_start = self.date_start_edit.date().getDate()
             date_end = self._dataend.date().getDate()
             self.wldset.save_brf(lag, A, err, date_start, date_end)
             self.viewer.new_brf_added()
