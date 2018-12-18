@@ -41,6 +41,7 @@ from gwhat.widgets.buttons import LangToolButton
 from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
+from gwhat.utils.dates import qdate_from_xldate
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
 from gwhat.brf_mod.kgs_plot import BRFFigure
@@ -281,8 +282,10 @@ class BRFManager(myqt.QFrameLayout):
         if wldset is not None:
             date_start, date_end = self.set_datarange(
                     self.wldset['Time'][[0, -1]])
-            self.date_start_edit.setMinimumDate(date_start)
-            self.date_end_edit.setMaximumDate(date_end)
+            self.date_start_edit.setMinimumDate(
+                qdate_from_xldate(self.wldset['Time'][0]))
+            self.date_end_edit.setMaximumDate(
+                qdate_from_xldate(self.wldset['Time'][-1]))
 
     def get_datarange(self):
         child = self
@@ -294,20 +297,13 @@ class BRFManager(myqt.QFrameLayout):
             else:
                 child = child.parent()
 
-    def set_datarange(self, times):
+    def set_daterange(self, times):
         """
-        Set the date of the start and end date widgets used to define the
-        period over which the BRF is evaluated.
+        Set the value of date_start_edit and date_end_edit widgets used to
+        define the period over which the BRF is evaluated.
         """
-        date_start = xldate_as_tuple(times[0], 0)
-        date_start = QDate(date_start[0], date_start[1], date_start[2])
-        self.date_start_edit.setDate(date_start)
-
-        date_end = xldate_as_tuple(times[1], 0)
-        date_end = QDate(date_end[0], date_end[1], date_end[2])
-        self.date_end_edit.setDate(date_end)
-
-        return date_start, date_end
+        self.date_start_edit.setDate(qdate_from_xldate(times[0]))
+        self.date_end_edit.setDate(qdate_from_xldate(times[1]))
 
     def calc_brf(self):
         """Prepare the data, calcul the brf, and save and plot the results."""
