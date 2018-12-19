@@ -18,7 +18,7 @@ import io
 
 # ---- Imports: Third Parties
 
-from PyQt5.QtCore import Qt, QDate, QPoint
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
@@ -26,7 +26,6 @@ from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QDesktopWidget, QMessageBox, QFileDialog,
                              QComboBox, QLayout)
 
-from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
 import numpy as np
 import matplotlib as mpl
