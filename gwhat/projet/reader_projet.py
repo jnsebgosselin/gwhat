@@ -518,10 +518,15 @@ class WLDataFrameHDF5(dict):
     # ---- Barometric response function
 
     def saved_brf(self):
+        """
+        Return the list of ids referencing to the BRF evaluations saved for
+        this dataset.
+        """
         grp = self.dset.require_group('brf')
         return list(grp.keys())
 
     def brf_count(self):
+        """Return the number of BRF evaluation saved for this datased."""
         return len(list(self.dset['brf'].keys()))
 
     def get_brfAt(self, index):
