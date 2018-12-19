@@ -7,41 +7,55 @@
 # Licensed under the terms of the GNU General Public License.
 
 # Standard library imports
-import sys
 import os
 import os.path as osp
-from shutil import copy2
 
 # Third party imports
 import pytest
 from PyQt5.QtCore import Qt
 
 # Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from gwhat.brf_mod.kgs_gui import (BRFManager, KGSBRFInstaller, QMessageBox,
                                    QFileDialog)
 from gwhat.projet.reader_projet import ProjetReader
+from gwhat.projet.reader_waterlvl import read_water_level_datafile
 
 
-# ---- Qt Test Fixtures
+# ---- Pytest Fixtures
+
+@pytest.fixture(scope="module")
+def project(tmp_path_factory):
+    # Create a project and add add the wldset to it.
+    basetemp = tmp_path_factory.getbasetemp()
+    return ProjetReader(osp.join(basetemp, "brf_test.gwt"))
+
+
+@pytest.fixture(scope="module")
+def wldataset(project):
+    """Return a water level dataset object that is saved in a GWHAT project."""
+    # Create a wldset object from a file.
+    rootpath = osp.dirname(osp.realpath(__file__))
+    filepath = osp.join(rootpath, 'data', 'sample_water_level_datafile.xlsx')
+    wldset = read_water_level_datafile(filepath)
+
+    # Add the wldset to the project.
+    project.add_wldset('test_brf_wldset', wldset)
+
+    return project.get_wldset(project.wldsets[0])
+
 
 @pytest.fixture
-def brf_manager_bot(qtbot):
-    brf_manager = BRFManager(None)
-
-    qtbot.addWidget(brf_manager)
-    qtbot.addWidget(brf_manager.viewer)
-
-    return brf_manager, qtbot
+def brfmanager(qtbot):
+    brfmanager = BRFManager(None)
+    qtbot.addWidget(brfmanager)
+    qtbot.addWidget(brfmanager.viewer)
+    return brfmanager
 
 
-# ---- Test BRFManager
-
-@pytest.mark.run(order=9)
+# ---- Tests BRFManager
 @pytest.mark.skipif(os.environ.get('CI', None) is None,
                     reason="We do not want to run this locally")
-def test_install_kgs_brf(brf_manager_bot, mocker):
-    brf_manager, qtbot = brf_manager_bot
+def test_install_kgs_brf(brf_manager, mocker, qtbot):
     brf_manager.show()
     assert brf_manager
     assert brf_manager.kgs_brf_installer
@@ -61,92 +75,96 @@ def test_install_kgs_brf(brf_manager_bot, mocker):
         assert not KGSBRFInstaller().kgsbrf_is_installed()
 
 
-@pytest.mark.run(order=9)
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
-def test_run_kgs_brf(brf_manager_bot):
-    brf_manager, qtbot = brf_manager_bot
-    brf_manager.show()
+def test_kgs_brf_defaults(brfmanager, wldataset, qtbot):
+    """
+    Assert that the default values are set as expected when setting
+    the water level dataset.
+    """
+    assert wldataset.get_brf_period() == (None, None)
+    brfmanager.set_wldset(wldataset)
+    assert wldataset.get_brf_period() == (41241.0, 41584.0)
 
-    # Set the water level dataset and assert the expected values are displayed
-    # correctly in the GUI.
-    ppath = osp.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
-    projet = ProjetReader(ppath)
-    wldset = projet.get_wldset(projet.wldsets[0])
-    brf_manager.set_wldset(wldset)
-
-    assert brf_manager.lagBP == 300
-    assert brf_manager.lagET == 300
-    assert brf_manager.detrend == 'Yes'
-    assert brf_manager.correct_WL == 'No'
-    assert brf_manager.brfperiod == (41241.0, 41584.0)
-
-    brf_manager.set_datarange((41300.0, 41400.0))
-    assert brf_manager.brfperiod == (41300.0, 41400.0)
-
-    # Calcul the brf and assert the the results are plotted as expected.
-    assert brf_manager.viewer.tbar.isEnabled() is False
-    assert brf_manager.viewer.current_brf.value() == 0
-    brf_manager.calc_brf()
-    assert brf_manager.viewer.current_brf.value() == 1
-    assert brf_manager.viewer.tbar.isEnabled()
+    assert brfmanager.lagBP == 300
+    assert brfmanager.lagET == 300
+    assert brfmanager.detrend == 'Yes'
+    assert brfmanager.correct_WL == 'No'
+    assert brfmanager.get_brf_period() == (41241.0, 41584.0)
 
 
-# ---- Test BRFViewer
-
-@pytest.mark.run(order=9)
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
-def test_save_brf_figure(brf_manager_bot, mocker):
+def test_set_brf_period(brfmanager, wldataset, qtbot):
     """
-    Test that the BRF figures are saved correctly from the GUI.
+    Test that setting the period in the manager correctly set the values
+    in the GUI and save them in the dataset HDF5 file.
     """
-    brf_manager, qtbot = brf_manager_bot
-    brf_manager.show()
+    brfmanager.set_wldset(wldataset)
 
-    # Set the water level dataset.
-    ppath = osp.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
-    projet = ProjetReader(ppath)
-    wldset = projet.get_wldset(projet.wldsets[0])
-    brf_manager.set_wldset(wldset)
+    # Set the period of which the BRF will be evaluated.
+    brfmanager.set_brf_period((41300.0, 41400.0))
+    assert brfmanager.get_brf_period() == (41300.0, 41400.0)
+    assert wldataset.get_brf_period() == (41300.0, 41400.0)
 
-    qtbot.mouseClick(brf_manager.btn_show, Qt.LeftButton)
-    qtbot.waitExposed(brf_manager.viewer)
+
+@pytest.mark.skipif(os.name == 'posix',
+                    reason="This feature is not supported on Linux")
+def test_calcul_brf(brfmanager, wldataset, qtbot):
+    """
+    Calcul the brf and assert the the results are plotted as expected.
+    """
+    brfmanager.show()
+    brfmanager.set_wldset(wldataset)
+    assert brfmanager.get_brf_period() == (41300.0, 41400.0)
+
+    assert brfmanager.viewer.tbar.isEnabled() is False
+    assert brfmanager.viewer.current_brf.value() == 0
+    brfmanager.calc_brf()
+    assert brfmanager.viewer.current_brf.value() == 1
+    assert brfmanager.viewer.tbar.isEnabled()
+
+
+# ---- Tests BRFViewer
+
+@pytest.mark.skipif(os.name == 'posix',
+                    reason="This feature is not supported on Linux")
+def test_save_brf_figure(brfmanager, wldataset, mocker, qtbot,
+                         tmp_path_factory):
+    """Test that the BRF figures are saved correctly from the GUI."""
+    brfmanager.show()
+    brfmanager.set_wldset(wldataset)
+
+    qtbot.mouseClick(brfmanager.btn_show, Qt.LeftButton)
+    qtbot.waitExposed(brfmanager.viewer)
 
     # Save the figure in the file system.
-    filename = "brf_fig1.pdf"
-    mocker.patch.object(QFileDialog, 'getSaveFileName',
-                        return_value=(filename, "*.pdf"))
+    filename = osp.join(tmp_path_factory.getbasetemp(), "brf_fig1.pdf")
+    mocker.patch.object(
+        QFileDialog, 'getSaveFileName', return_value=(filename, "*.pdf"))
 
-    qtbot.mouseClick(brf_manager.viewer.btn_save, Qt.LeftButton)
+    qtbot.mouseClick(brfmanager.viewer.btn_save, Qt.LeftButton)
     qtbot.waitUntil(lambda: osp.exists(filename))
     os.remove(filename)
 
 
-@pytest.mark.run(order=9)
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
-def test_graph_panel(brf_manager_bot, mocker):
-    brf_manager, qtbot = brf_manager_bot
-    brf_manager.show()
-    graph_opt_panel = brf_manager.viewer.graph_opt_panel
+def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
+    brfmanager.show()
+    brfmanager.set_wldset(wldataset)
 
-    # Set the water level dataset.
-    ppath = osp.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
-    projet = ProjetReader(ppath)
-    wldset = projet.get_wldset(projet.wldsets[0])
-    brf_manager.set_wldset(wldset)
+    graph_opt_panel = brfmanager.viewer.graph_opt_panel
 
-    qtbot.mouseClick(brf_manager.btn_show, Qt.LeftButton)
-    qtbot.waitExposed(brf_manager.viewer)
+    qtbot.mouseClick(brfmanager.btn_show, Qt.LeftButton)
+    qtbot.waitExposed(brfmanager.viewer)
 
     # Toggle on the panel and assert it is shown correctly.
     assert(graph_opt_panel.isVisible() is False)
-    qtbot.mouseClick(brf_manager.viewer.btn_setp, Qt.LeftButton)
+    qtbot.mouseClick(brfmanager.viewer.btn_setp, Qt.LeftButton)
     assert(graph_opt_panel.isVisible())
 
-    # Assert the default values for the y-axis :
-
+    # Assert the default values for the y-axis.
     assert(graph_opt_panel.ymin is None)
     assert(graph_opt_panel.ymax is None)
     assert(graph_opt_panel.yscale is None)
@@ -155,8 +173,7 @@ def test_graph_panel(brf_manager_bot, mocker):
     assert(graph_opt_panel.ymin == 0)
     assert(graph_opt_panel.ymax == 1)
 
-    # Assert the default values for the x-axis :
-
+    # Assert the default values for the x-axis.
     assert(graph_opt_panel.xmin is None)
     assert(graph_opt_panel.xmax is None)
     assert(graph_opt_panel.xscale is None)
@@ -171,8 +188,7 @@ def test_graph_panel(brf_manager_bot, mocker):
     assert(graph_opt_panel._xlim['scale'].value() == 1)
     assert(graph_opt_panel.time_units == 'days')
 
-    # Assert when the value of time_units change :
-
+    # Assert when the value of time_units change.
     graph_opt_panel._xlim['units'].setCurrentIndex(0)
     assert(graph_opt_panel.time_units == 'hours')
     assert(graph_opt_panel.xmin == 0)
@@ -182,38 +198,28 @@ def test_graph_panel(brf_manager_bot, mocker):
     assert(graph_opt_panel.xscale == 1)
     assert(graph_opt_panel._xlim['scale'].value() == 24)
 
-    # Assert the default values for the artists :
-
+    # Assert the default values for the artists.
     assert graph_opt_panel.show_ebar is True
     assert graph_opt_panel.draw_line is False
     assert graph_opt_panel.markersize == 5
 
     # Toggle off the panel and assert it is hidden correctly.
-    qtbot.mouseClick(brf_manager.viewer.btn_setp, Qt.LeftButton)
-    assert(brf_manager.viewer.graph_opt_panel.isVisible() is False)
+    qtbot.mouseClick(brfmanager.viewer.btn_setp, Qt.LeftButton)
+    assert(brfmanager.viewer.graph_opt_panel.isVisible() is False)
 
 
-@pytest.mark.run(order=9)
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
-def test_del_brf_result(brf_manager_bot, mocker):
-    """
-    Test that the BRF figures are saved correctly from the GUI.
-    """
-    brf_manager, qtbot = brf_manager_bot
-    brf_manager.show()
-
-    # Set the water level dataset.
-    ppath = osp.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
-    projet = ProjetReader(ppath)
-    wldset = projet.get_wldset(projet.wldsets[0])
-    brf_manager.set_wldset(wldset)
+def test_del_brf_result(brfmanager, wldataset, mocker, qtbot):
+    """Test that the BRF results are deleted correctly."""
+    brfmanager.show()
+    brfmanager.set_wldset(wldataset)
 
     # Delete the brf and assert the GUI is updated as expected.
-    assert brf_manager.viewer.current_brf.value() == 1
-    qtbot.mouseClick(brf_manager.viewer.btn_del, Qt.LeftButton)
-    assert brf_manager.viewer.current_brf.value() == 0
-    assert brf_manager.viewer.tbar.isEnabled() is False
+    assert brfmanager.viewer.current_brf.value() == 1
+    qtbot.mouseClick(brfmanager.viewer.btn_del, Qt.LeftButton)
+    assert brfmanager.viewer.current_brf.value() == 0
+    assert brfmanager.viewer.tbar.isEnabled() is False
 
 
 if __name__ == "__main__":
