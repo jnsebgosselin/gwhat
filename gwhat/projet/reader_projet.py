@@ -584,6 +584,7 @@ class WLDataFrameHDF5(dict):
         print('BRF results saved successfully')
 
     def del_brf(self, name):
+        """Delete the BRF evaluation saved with the specified name."""
         if name in list(self.dset['brf'].keys()):
             del self.dset['brf'][name]
             self.dset.file.flush()
