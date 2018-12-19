@@ -35,7 +35,7 @@ def wldataset(project):
     """Return a water level dataset object that is saved in a GWHAT project."""
     # Create a wldset object from a file.
     rootpath = osp.dirname(osp.realpath(__file__))
-    filepath = osp.join(rootpath, 'data', 'sample_water_level_datafile.xlsx')
+    filepath = osp.join(rootpath, 'data', 'sample_water_level_datafile.csv')
     wldset = read_water_level_datafile(filepath)
 
     # Add the wldset to the project.
@@ -83,15 +83,15 @@ def test_kgs_brf_defaults(brfmanager, wldataset, qtbot):
     Assert that the default values are set as expected when setting
     the water level dataset.
     """
-    assert wldataset.get_brfperiod() == (None, None)
+    assert wldataset.get_brfperiod() == [None, None]
     brfmanager.set_wldset(wldataset)
-    assert wldataset.get_brfperiod() == (41241.0, 41584.0)
+    assert wldataset.get_brfperiod() == [41334.0, 41425.0]
 
     assert brfmanager.lagBP == 300
     assert brfmanager.lagET == 300
     assert brfmanager.detrend == 'Yes'
     assert brfmanager.correct_WL == 'No'
-    assert brfmanager.get_brfperiod() == (41241.0, 41584.0)
+    assert brfmanager.get_brfperiod() == [41334.0, 41425.0]
 
 
 @pytest.mark.skipif(os.name == 'posix',
@@ -104,9 +104,10 @@ def test_set_brfperiod(brfmanager, wldataset, qtbot):
     brfmanager.set_wldset(wldataset)
 
     # Set the period of which the BRF will be evaluated.
-    brfmanager.set_brfperiod((41300.0, 41400.0))
-    assert brfmanager.get_brfperiod() == (41300.0, 41400.0)
-    assert wldataset.get_brfperiod() == (41300.0, 41400.0)
+    expected_brfperiod = [41384.0, 41416.0]
+    brfmanager.set_brfperiod(expected_brfperiod)
+    assert brfmanager.get_brfperiod() == expected_brfperiod
+    assert wldataset.get_brfperiod() == expected_brfperiod
 
 
 @pytest.mark.skipif(os.name == 'posix',
@@ -115,7 +116,7 @@ def test_calcul_brf(brfmanager, wldataset, qtbot):
     """Calcul the brf and assert the the results are plotted as expected."""
     brfmanager.show()
     brfmanager.set_wldset(wldataset)
-    assert brfmanager.get_brfperiod() == (41300.0, 41400.0)
+    assert brfmanager.get_brfperiod() == [41384.0, 41416.0]
 
     assert brfmanager.viewer.tbar.isEnabled() is False
     assert brfmanager.viewer.current_brf.value() == 0
