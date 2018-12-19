@@ -124,6 +124,8 @@ class KGSBRFInstaller(myqt.QFrameLayout):
 
 
 class BRFManager(myqt.QFrameLayout):
+    sig_brfperiod_changed = QSignal(list)
+
     def __init__(self, wldset=None, parent=None):
         super(BRFManager, self).__init__(parent)
 
@@ -153,10 +155,14 @@ class BRFManager(myqt.QFrameLayout):
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
         self.date_start_edit.setDisplayFormat('dd/MM/yyyy')
+        self.date_start_edit.dateChanged.connect(
+            lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
 
         self.date_end_edit = QDateTimeEdit()
         self.date_end_edit.setCalendarPopup(True)
         self.date_end_edit.setDisplayFormat('dd/MM/yyyy')
+        self.date_end_edit.dateChanged.connect(
+            lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
 
         self.btn_seldata = QToolButtonSmall(icons.get_icon('select_range'))
         self.btn_seldata.clicked.connect(self.get_datarange)
@@ -313,15 +319,17 @@ class BRFManager(myqt.QFrameLayout):
             else:
                 child = child.parent()
 
-    def set_daterange(self, times):
+    def set_daterange(self, xldates):
         """
-        Set the value of date_start_edit and date_end_edit widgets used to
-        define the period over which the BRF is evaluated.
+        Set the value of date_start_edit and date_end_edit widgets from the
+        specified list of Excel numeric dates.
         """
-        if times[0] is not None:
-            self.date_start_edit.setDate(qdate_from_xldate(times[0]))
-        if times[1] is not None:
-            self.date_end_edit.setDate(qdate_from_xldate(times[1]))
+        widgets = (self.date_start_edit, self.date_end_edit)
+        for xldate, widget in zip(xldates, widgets):
+            if xldate is not None:
+                widget.blockSignals(True)
+                widget.setDate(qdate_from_xldate(xldate))
+                widget.blockSignals(False)
 
     def calc_brf(self):
         """Prepare the data, calcul the brf, and save and plot the results."""
