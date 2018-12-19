@@ -294,6 +294,7 @@ class BRFManager(myqt.QFrameLayout):
         """Set the namespace for the wldset in the widget."""
         self.wldset = wldset
         self.viewer.set_wldset(wldset)
+        self.btn_seldata.setAutoRaise(True)
         self.setEnabled(wldset is not None)
         if wldset is not None:
             self.date_start_edit.setMinimumDate(
