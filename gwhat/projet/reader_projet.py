@@ -525,6 +525,29 @@ class WLDataFrameHDF5(dict):
         return len(list(self.dset['brf'].keys()))
 
     def get_brfAt(self, index):
+    def save_brf_period(self, period):
+        """
+        Save the specified period as a tuple containing a start and end date
+        in the Excel numerical date format.
+        """
+        period = tuple(float(val) for val in period)
+        if len(period) != 2:
+            raise ValueError("The size of the specified 'period' must be 2.")
+        grp = self.dset.require_group('brf')
+        grp.attrs['period'] = period
+
+    def get_brf_period(self):
+        """
+        Return a tuple with the start and end date of the last period
+        saved by the user to evaluate the BRF.
+        """
+        grp = self.dset.require_group('brf')
+        if 'period' not in list(grp.attrs.keys()):
+            # Added in version 0.3.4 (see PR #240).
+            return (None, None)
+        else:
+            return tuple(grp.attrs['period'])
+
         if index < self.brf_count():
             names = list(self.dset['brf'].keys())
             names = np.array(names).astype(int)
