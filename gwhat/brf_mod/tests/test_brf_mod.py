@@ -56,6 +56,7 @@ def brfmanager(qtbot):
 @pytest.mark.skipif(os.environ.get('CI', None) is None,
                     reason="We do not want to run this locally")
 def test_install_kgs_brf(brf_manager, mocker, qtbot):
+    """Test the installation of the kgs_brf software."""
     brf_manager.show()
     assert brf_manager
     assert brf_manager.kgs_brf_installer
@@ -111,9 +112,7 @@ def test_set_brfperiod(brfmanager, wldataset, qtbot):
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
 def test_calcul_brf(brfmanager, wldataset, qtbot):
-    """
-    Calcul the brf and assert the the results are plotted as expected.
-    """
+    """Calcul the brf and assert the the results are plotted as expected."""
     brfmanager.show()
     brfmanager.set_wldset(wldataset)
     assert brfmanager.get_brfperiod() == (41300.0, 41400.0)
