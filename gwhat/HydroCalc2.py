@@ -65,10 +65,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
         self.dmngr.sig_workdir_changed.connect(self.set_dialog_dir)
+
         # Setup the calculation tools.
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
         self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
-
         self.brf_eval_widget = BRFManager(parent=self)
         self.brf_eval_widget.btn_seldata.clicked.connect(
             self.toggle_brfperiod_selection)
@@ -581,7 +581,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         Plot on the graph the vertical lines that are used to define the period
         over which the BRF is evaluated.
         """
-        period = self.selected_brfperiod
+        period = (self.selected_brfperiod if
+                  self.brf_eval_widget.isVisible() else [None, None])
         for x, vline in zip(period, [self.h_brf1, self.h_brf2]):
             vline.set_visible(x is not None)
             if x is not None:
