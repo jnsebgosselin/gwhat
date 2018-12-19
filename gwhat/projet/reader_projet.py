@@ -529,7 +529,7 @@ class WLDataFrameHDF5(dict):
         """Return the number of BRF evaluation saved for this datased."""
         return len(list(self.dset['brf'].keys()))
 
-    def save_brf_period(self, period):
+    def save_brfperiod(self, period):
         """
         Save the specified period as a tuple containing a start and end date
         in the Excel numerical date format.
@@ -540,7 +540,7 @@ class WLDataFrameHDF5(dict):
         grp = self.dset.require_group('brf')
         grp.attrs['period'] = period
 
-    def get_brf_period(self):
+    def get_brfperiod(self):
         """
         Return a tuple with the start and end date of the last period
         saved by the user to evaluate the BRF.

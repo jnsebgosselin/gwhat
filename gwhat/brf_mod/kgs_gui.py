@@ -242,7 +242,7 @@ class BRFManager(myqt.QFrameLayout):
     def correct_WL(self):
         return 'No'
 
-    def get_brf_period(self):
+    def get_brfperiod(self):
         """
         Get the period over which the BRF would be evaluated as a tuple of
         two numerical Excel date values.
@@ -255,14 +255,14 @@ class BRFManager(myqt.QFrameLayout):
 
         return (dstart, dend)
 
-    def set_brf_period(self, period):
+    def set_brfperiod(self, period):
         """
         Set the value of the date_start_edit and date_end_edit widgets used to
         define the period over which the BRF is evaluated. Also save the
         period to the waterlevel dataset.
         """
         self.set_daterange(period)
-        self.wldset.save_brf_period(period)
+        self.wldset.save_brfperiod(period)
 
     # ---- KGS BRF installer
 
@@ -297,8 +297,8 @@ class BRFManager(myqt.QFrameLayout):
                 qdate_from_xldate(self.wldset['Time'][-1]))
 
             # Set the period over which the BRF would be evaluated.
-            saved_daterange = wldset.get_brf_period()
-            self.set_brf_period(
+            saved_daterange = wldset.get_brfperiod()
+            self.set_brfperiod(
                 (saved_daterange[0] or np.floor(self.wldset['Time'][0]),
                  saved_daterange[1] or np.floor(self.wldset['Time'][-1])
                  ))
@@ -330,7 +330,7 @@ class BRFManager(myqt.QFrameLayout):
 
         well = self.wldset['Well']
 
-        brfperiod = self.get_brf_period()
+        brfperiod = self.get_brfperiod()
         t1 = min(brfperiod)
         i1 = np.where(self.wldset['Time'] >= t1)[0][0]
         t2 = max(brfperiod)

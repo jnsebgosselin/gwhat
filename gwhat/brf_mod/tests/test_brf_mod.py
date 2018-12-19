@@ -82,20 +82,20 @@ def test_kgs_brf_defaults(brfmanager, wldataset, qtbot):
     Assert that the default values are set as expected when setting
     the water level dataset.
     """
-    assert wldataset.get_brf_period() == (None, None)
+    assert wldataset.get_brfperiod() == (None, None)
     brfmanager.set_wldset(wldataset)
-    assert wldataset.get_brf_period() == (41241.0, 41584.0)
+    assert wldataset.get_brfperiod() == (41241.0, 41584.0)
 
     assert brfmanager.lagBP == 300
     assert brfmanager.lagET == 300
     assert brfmanager.detrend == 'Yes'
     assert brfmanager.correct_WL == 'No'
-    assert brfmanager.get_brf_period() == (41241.0, 41584.0)
+    assert brfmanager.get_brfperiod() == (41241.0, 41584.0)
 
 
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
-def test_set_brf_period(brfmanager, wldataset, qtbot):
+def test_set_brfperiod(brfmanager, wldataset, qtbot):
     """
     Test that setting the period in the manager correctly set the values
     in the GUI and save them in the dataset HDF5 file.
@@ -103,9 +103,9 @@ def test_set_brf_period(brfmanager, wldataset, qtbot):
     brfmanager.set_wldset(wldataset)
 
     # Set the period of which the BRF will be evaluated.
-    brfmanager.set_brf_period((41300.0, 41400.0))
-    assert brfmanager.get_brf_period() == (41300.0, 41400.0)
-    assert wldataset.get_brf_period() == (41300.0, 41400.0)
+    brfmanager.set_brfperiod((41300.0, 41400.0))
+    assert brfmanager.get_brfperiod() == (41300.0, 41400.0)
+    assert wldataset.get_brfperiod() == (41300.0, 41400.0)
 
 
 @pytest.mark.skipif(os.name == 'posix',
@@ -116,7 +116,7 @@ def test_calcul_brf(brfmanager, wldataset, qtbot):
     """
     brfmanager.show()
     brfmanager.set_wldset(wldataset)
-    assert brfmanager.get_brf_period() == (41300.0, 41400.0)
+    assert brfmanager.get_brfperiod() == (41300.0, 41400.0)
 
     assert brfmanager.viewer.tbar.isEnabled() is False
     assert brfmanager.viewer.current_brf.value() == 0
