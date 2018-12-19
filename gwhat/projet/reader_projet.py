@@ -529,7 +529,6 @@ class WLDataFrameHDF5(dict):
         """Return the number of BRF evaluation saved for this datased."""
         return len(list(self.dset['brf'].keys()))
 
-    def get_brfAt(self, index):
     def save_brf_period(self, period):
         """
         Save the specified period as a tuple containing a start and end date
@@ -553,6 +552,7 @@ class WLDataFrameHDF5(dict):
         else:
             return tuple(grp.attrs['period'])
 
+    def get_brfname_at(self, index):
         if index < self.brf_count():
             names = list(self.dset['brf'].keys())
             names = np.array(names).astype(int)
