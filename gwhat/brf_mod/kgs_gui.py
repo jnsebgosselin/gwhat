@@ -243,8 +243,11 @@ class BRFManager(myqt.QFrameLayout):
     def correct_WL(self):
         return 'No'
 
-    @property
-    def brfperiod(self):
+    def get_brf_period(self):
+        """
+        Get the period over which the BRF would be evaluated as a tuple of
+        two numerical Excel date values.
+        """
         y, m, d = self.date_start_edit.date().getDate()
         dstart = xldate_from_date_tuple((y, m, d), 0)
 
@@ -252,6 +255,15 @@ class BRFManager(myqt.QFrameLayout):
         dend = xldate_from_date_tuple((y, m, d), 0)
 
         return (dstart, dend)
+
+    def set_brf_period(self, period):
+        """
+        Set the value of the date_start_edit and date_end_edit widgets used to
+        define the period over which the BRF is evaluated. Also save the
+        period to the waterlevel dataset.
+        """
+        self.set_daterange(period)
+        self.wldset.save_brf_period(period)
 
     # ---- KGS BRF installer
 
@@ -284,6 +296,13 @@ class BRFManager(myqt.QFrameLayout):
                 qdate_from_xldate(self.wldset['Time'][0]))
             self.date_end_edit.setMaximumDate(
                 qdate_from_xldate(self.wldset['Time'][-1]))
+            
+            # Set the period over which the BRF would be evaluated.
+            saved_daterange = wldset.get_brf_period()
+            self.set_brf_period(
+                (saved_daterange[0] or np.floor(self.wldset['Time'][0]), 
+                 saved_daterange[1] or np.floor(self.wldset['Time'][-1])
+                 ))
 
     def get_datarange(self):
         child = self
@@ -300,8 +319,10 @@ class BRFManager(myqt.QFrameLayout):
         Set the value of date_start_edit and date_end_edit widgets used to
         define the period over which the BRF is evaluated.
         """
-        self.date_start_edit.setDate(qdate_from_xldate(times[0]))
-        self.date_end_edit.setDate(qdate_from_xldate(times[1]))
+        if times[0] is not None:
+            self.date_start_edit.setDate(qdate_from_xldate(times[0]))
+        if times[1] is not None:
+            self.date_end_edit.setDate(qdate_from_xldate(times[1]))
 
     def calc_brf(self):
         """Prepare the data, calcul the brf, and save and plot the results."""
@@ -309,11 +330,11 @@ class BRFManager(myqt.QFrameLayout):
         # Prepare the datasets.
 
         well = self.wldset['Well']
-
-        t1 = min(self.brfperiod)
+        
+        brfperiod = self.get_brf_period()
+        t1 = min(brfperiod)
         i1 = np.where(self.wldset['Time'] >= t1)[0][0]
-
-        t2 = max(self.brfperiod)
+        t2 = max(brfperiod)
         i2 = np.where(self.wldset['Time'] <= t2)[0][-1]
 
         time = np.copy(self.wldset['Time'][i1:i2+1])
@@ -525,7 +546,7 @@ class BRFViewer(QWidget):
     def del_brf(self):
         """Delete the graph and data of the currently selected result."""
         index = self.current_brf.value()-1
-        name = self.wldset.get_brfAt(index)
+        name = self.wldset.get_brfname_at(index)
         self.wldset.del_brf(name)
         self.update_brfnavigate_state()
 
@@ -585,7 +606,7 @@ class BRFViewer(QWidget):
         if self.wldset.brf_count() == 0:
             self.brf_canvas.figure.empty_BRF()
         else:
-            name = self.wldset.get_brfAt(self.current_brf.value()-1)
+            name = self.wldset.get_brfname_at(self.current_brf.value()-1)
             lag, A, err, date_start, date_end = self.wldset.get_brf(name)
             well = self.wldset['Well']
 
