@@ -250,7 +250,7 @@ class BRFManager(myqt.QFrameLayout):
 
     def get_brfperiod(self):
         """
-        Get the period over which the BRF would be evaluated as a tuple of
+        Get the period over which the BRF would be evaluated as a list of
         two numerical Excel date values.
         """
         y, m, d = self.date_start_edit.date().getDate()
@@ -259,7 +259,7 @@ class BRFManager(myqt.QFrameLayout):
         y, m, d = self.date_end_edit.date().getDate()
         dend = xldate_from_date_tuple((y, m, d), 0)
 
-        return (dstart, dend)
+        return [dstart, dend]
 
     def set_brfperiod(self, period):
         """
@@ -271,7 +271,6 @@ class BRFManager(myqt.QFrameLayout):
         self.wldset.save_brfperiod(period)
 
     # ---- KGS BRF installer
-
     def __install_kgs_brf_installer(self):
         """
         Installs a KGSBRFInstaller that overlays the whole brf tool
