@@ -65,7 +65,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
         self.dmngr.sig_workdir_changed.connect(self.set_dialog_dir)
-
+        # Setup the calculation tools.
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
         self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
 
@@ -418,6 +418,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         tooltab.setTabToolTip(
             2, ("<p>A tool to evaluate the barometric response function of"
                 " the well.</p>"))
+
+        tooltab.currentChanged.connect(self.plot_brfperiod)
 
         # ---- Right Panel
 
