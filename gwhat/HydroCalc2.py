@@ -71,7 +71,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         self.brf_eval_widget = BRFManager(parent=self)
         self.brf_eval_widget.btn_seldata.clicked.connect(
-            self.aToolbarBtn_isClicked)
+            self.toggle_brfperiod_selection)
 
         self.__figbckground = None
         self.__addPeakVisible = True
@@ -99,12 +99,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.peak_memory = [np.array([]).astype(int)]
 
         # Barometric Response Function :
-
-        self.brfperiod = [None, None]
-        self.__brfcount = 0
+        self.selected_brfperiod = [None, None]
 
         # Soil Profiles :
-
         self.soilFilename = []
         self.SOILPROFIL = SoilProfil()
 
@@ -461,17 +458,18 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def set_wldset(self, wldset):
         """Set the namespace for the water level dataset."""
-        self.brf_eval_widget.set_wldset(wldset)
-        self.rechg_eval_widget.set_wldset(wldset)
-        self.mrc_eval_widget.setEnabled(self.wldset is not None)
-        
         if wldset is None:
             self.water_lvl = np.array([])
             self.time = np.array([])
         else:
             self.water_lvl = wldset['WL']
             self.time = wldset['Time']
-            self.make_brf_period_valid()
+        self.rechg_eval_widget.set_wldset(wldset)
+        self.mrc_eval_widget.setEnabled(self.wldset is not None)
+
+        # Setup BRF widget.
+        self.brf_eval_widget.set_wldset(wldset)
+        self.set_brfperiod(self.brf_eval_widget.get_brfperiod())
 
         self.setup_hydrograph()
         self.toolbar.update()
@@ -571,58 +569,43 @@ class WLCalc(DialogWindow, SaveFileMixin):
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
 
     # ---- BRF handlers
-    def make_brf_period_valid(self):
-        """
-        Ensure that the period that is defined for evaluating the BRF is
-        valid.
-        """
-        if self.wldset is not None:
-            tstart = self.time[0]
-            tend = self.time[-1]
-            new_brfperiod = [
-                min(max(self.brfperiod[0] or tstart, tstart), tend),
-                max(min(self.brfperiod[1] or tend, tend), tstart)]
-            if new_brfperiod != self.brfperiod:
-                self.brfperiod = new_brfperiod
-                self.plot_brf_period()
-                self.brf_eval_widget.set_daterange(self.brfperiod)
+    def set_brfperiod(self, period):
+        """Set and plot the value of the BRF calculation period."""
+        self.selected_brfperiod = period
+        self.plot_brfperiod()
 
-    def plot_brf_period(self):
+    def plot_brfperiod(self):
         """
         Plot on the graph the vertical lines that are used to define the period
         over which the BRF is evaluated.
         """
-        if self.brfperiod[0]:
-            x = self.brfperiod[0] + self.dt4xls2mpl*self.dformat
-            self.h_brf1.set_xdata(x)
-            self.h_brf1.set_visible(True)
-        else:
-            self.h_brf1.set_visible(False)
-
-        if self.brfperiod[1]:
-            x = self.brfperiod[1] + self.dt4xls2mpl*self.dformat
-            self.h_brf2.set_xdata(x)
-            self.h_brf2.set_visible(True)
-        else:
-            self.h_brf2.set_visible(False)
-
+        period = self.selected_brfperiod
+        for x, vline in zip(period, [self.h_brf1, self.h_brf2]):
+            vline.set_visible(x is not None)
+            if x is not None:
+                x = x + self.dt4xls2mpl*self.dformat
+                vline.set_xdata(x)
         self.draw()
 
-    def select_brf_period(self):
+    def toggle_brfperiod_selection(self):
         """
         Handle when the button to select a period to compute the BRF is
         clicked.
         """
-        btn = self.brf_eval_widget.btn_seldata
-        btn.setAutoRaise(not btn.autoRaise())
-        if btn.autoRaise() is False:
-            self.brfperiod = [None, None]
-            self.plot_brf_period()
-
-            self.btn_addpeak.setValue(False)
-            self.btn_delpeak.setValue(False)
-            self.btn_zoom_to_rect.setValue(False)
-            self.btn_pan.setValue(False)
+        if self.wldset is not None:
+            btn = self.brf_eval_widget.btn_seldata
+            btn.setAutoRaise(not btn.autoRaise())
+            if btn.autoRaise() is False:
+                # Toggle on the selection of the BRF calculation period.
+                self.btn_addpeak.setValue(False)
+                self.btn_delpeak.setValue(False)
+                self.btn_zoom_to_rect.setValue(False)
+                self.btn_pan.setValue(False)
+                self.selected_brfperiod = [None, None]
+                self.plot_brfperiod()
+        else:
+            self.emit_warning("Please import a valid water level "
+                              "dataset first.")
 
     # ---- Peaks handlers
 
@@ -654,8 +637,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
             self.brf_eval_widget.btn_seldata.setAutoRaise(True)
-            self.brfperiod = [None, None]
-            self.__brfcount = 0
         self.draw()
 
     def btn_delpeak_isclicked(self):
@@ -666,8 +647,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
             self.brf_eval_widget.btn_seldata.setAutoRaise(True)
-            self.brfperiod = [None, None]
-            self.__brfcount = 0
         self.draw()
 
     def clear_all_peaks(self):
@@ -689,8 +668,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         sender = self.sender()
         if sender == self.btn_MRCalc:
             self.btn_MRCalc_isClicked()
-        elif sender == self.brf_eval_widget.btn_seldata:
-            self.select_brf_period()
 
     @property
     def zoom_is_active(self):
@@ -1323,26 +1300,21 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.__addPeakVisible = False
             self.draw()
         elif not self.brf_eval_widget.btn_seldata.autoRaise():
-            # Select the BRF period.
+            # Select the BRF calculation period.
             xclic = event.xdata
             if xclic is None:
                 return
-            x = self.time + self.dt4xls2mpl*self.dformat
-            y = self.water_lvl
 
-            d = np.abs(xclic - x)
-            indx = np.argmin(d)
-            self.brfperiod[self.__brfcount] = self.time[indx]
-            if self.__brfcount == 0:
-                self.__brfcount += 1
-                self.plot_brf_period()
-            elif self.__brfcount == 1:
-                self.__brfcount = 0
-                self.select_brf_period()
-                self.plot_brf_period()
-                self.brf_eval_widget.set_daterange(self.brfperiod)
-            else:
-                raise ValueError('Something is wrong in the code')
+            xclic = xclic - self.dt4xls2mpl*self.dformat
+            argmin = np.argmin(np.abs(xclic - self.time))
+            i = 0 if self.selected_brfperiod[0] is None else 1
+            self.selected_brfperiod[i] = self.time[argmin]
+
+            if all(self.selected_brfperiod):
+                # Toggle off the selection of the BRF evaluation period.
+                self.toggle_brfperiod_selection()
+                self.brf_eval_widget.set_brfperiod(self.selected_brfperiod)
+            self.plot_brfperiod()
         else:
             self.draw()
 
