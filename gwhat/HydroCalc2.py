@@ -72,6 +72,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.brf_eval_widget = BRFManager(parent=self)
         self.brf_eval_widget.btn_seldata.clicked.connect(
             self.toggle_brfperiod_selection)
+        self.brf_eval_widget.sig_brfperiod_changed.connect(
+            self.set_brfperiod)
 
         self.__figbckground = None
         self.__addPeakVisible = True
@@ -606,6 +608,16 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 self.btn_pan.setValue(False)
                 self.selected_brfperiod = [None, None]
                 self.plot_brfperiod()
+            else:
+                # Toggle off the selection of the BRF calculation period.
+                if all(self.selected_brfperiod):
+                    # The selection of the BRF calculation period was
+                    # completed successfully.
+                    self.brf_eval_widget.set_brfperiod(self.selected_brfperiod)
+                else:
+                    # The selection of the BRF calculation period was
+                    # cancelled.
+                    self.set_brfperiod(self.brf_eval_widget.get_brfperiod())
         else:
             self.emit_warning("Please import a valid water level "
                               "dataset first.")
