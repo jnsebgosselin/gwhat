@@ -296,11 +296,11 @@ class BRFManager(myqt.QFrameLayout):
                 qdate_from_xldate(self.wldset['Time'][0]))
             self.date_end_edit.setMaximumDate(
                 qdate_from_xldate(self.wldset['Time'][-1]))
-            
+
             # Set the period over which the BRF would be evaluated.
             saved_daterange = wldset.get_brf_period()
             self.set_brf_period(
-                (saved_daterange[0] or np.floor(self.wldset['Time'][0]), 
+                (saved_daterange[0] or np.floor(self.wldset['Time'][0]),
                  saved_daterange[1] or np.floor(self.wldset['Time'][-1])
                  ))
 
@@ -330,7 +330,7 @@ class BRFManager(myqt.QFrameLayout):
         # Prepare the datasets.
 
         well = self.wldset['Well']
-        
+
         brfperiod = self.get_brf_period()
         t1 = min(brfperiod)
         i1 = np.where(self.wldset['Time'] >= t1)[0][0]
