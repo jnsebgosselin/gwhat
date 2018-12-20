@@ -518,13 +518,42 @@ class WLDataFrameHDF5(dict):
     # ---- Barometric response function
 
     def saved_brf(self):
+        """
+        Return the list of ids referencing to the BRF evaluations saved for
+        this dataset.
+        """
         grp = self.dset.require_group('brf')
         return list(grp.keys())
 
     def brf_count(self):
+        """Return the number of BRF evaluation saved for this datased."""
         return len(list(self.dset['brf'].keys()))
 
-    def get_brfAt(self, index):
+    def save_brfperiod(self, period):
+        """
+        Save the specified period as a list containing a start and end date
+        in the Excel numerical date format.
+        """
+        period = [float(val) for val in period]
+        if len(period) != 2:
+            raise ValueError("The size of the specified 'period' must be 2.")
+        grp = self.dset.require_group('brf')
+        grp.attrs['period'] = period
+        self.dset.file.flush()
+
+    def get_brfperiod(self):
+        """
+        Return a list with the start and end date of the last period
+        saved by the user to evaluate the BRF.
+        """
+        grp = self.dset.require_group('brf')
+        if 'period' not in list(grp.attrs.keys()):
+            # Added in version 0.3.4 (see PR #240).
+            return [None, None]
+        else:
+            return list(grp.attrs['period'])
+
+    def get_brfname_at(self, index):
         if index < self.brf_count():
             names = list(self.dset['brf'].keys())
             names = np.array(names).astype(int)
@@ -556,6 +585,7 @@ class WLDataFrameHDF5(dict):
         print('BRF results saved successfully')
 
     def del_brf(self, name):
+        """Delete the BRF evaluation saved with the specified name."""
         if name in list(self.dset['brf'].keys()):
             del self.dset['brf'][name]
             self.dset.file.flush()
