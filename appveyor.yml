@@ -43,6 +43,7 @@ test_script:
   - python runtests.py
 
 after_test:
+  - cmd: set PYTHONPATH=C:\projects\gwhat;%PYTHONPATH%
   - cd ./releases
   - pyinstaller.exe gwhat.spec
   - cd ..
