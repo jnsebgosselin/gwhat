@@ -272,7 +272,12 @@ class BRFManager(myqt.QFrameLayout):
         define the period over which the BRF is evaluated. Also save the
         period to the waterlevel dataset.
         """
-        self.set_daterange(period)
+        widgets = (self.date_start_edit, self.date_end_edit)
+        for xldate, widget in zip(period, widgets):
+            if xldate is not None:
+                widget.blockSignals(True)
+                widget.setDate(qdate_from_xldate(xldate))
+                widget.blockSignals(False)
         self.wldset.save_brfperiod(period)
 
     # ---- KGS BRF installer
@@ -302,29 +307,26 @@ class BRFManager(myqt.QFrameLayout):
         self.btn_seldata.setAutoRaise(True)
         self.setEnabled(wldset is not None)
         if wldset is not None:
-            self.date_start_edit.setMinimumDate(
-                qdate_from_xldate(self.wldset['Time'][0]))
-            self.date_end_edit.setMaximumDate(
-                qdate_from_xldate(self.wldset['Time'][-1]))
+            self.set_daterange((self.wldset['Time'][0],
+                                self.wldset['Time'][-1]))
 
             # Set the period over which the BRF would be evaluated.
-            saved_daterange = wldset.get_brfperiod()
+            saved_brfperiod = wldset.get_brfperiod()
             self.set_brfperiod(
-                (saved_daterange[0] or np.floor(self.wldset['Time'][0]),
-                 saved_daterange[1] or np.floor(self.wldset['Time'][-1])
+                (saved_brfperiod[0] or np.floor(self.wldset['Time'][0]),
+                 saved_brfperiod[1] or np.floor(self.wldset['Time'][-1])
                  ))
 
-    def set_daterange(self, xldates):
+    def set_daterange(self, daterange):
         """
-        Set the value of date_start_edit and date_end_edit widgets from the
-        specified list of Excel numeric dates.
+        Set the minimum and maximum value of date_start_edit and date_end_edit
+        widgets from the specified list of Excel numeric dates.
         """
-        widgets = (self.date_start_edit, self.date_end_edit)
-        for xldate, widget in zip(xldates, widgets):
-            if xldate is not None:
-                widget.blockSignals(True)
-                widget.setDate(qdate_from_xldate(xldate))
-                widget.blockSignals(False)
+        for widget in (self.date_start_edit, self.date_end_edit):
+            widget.blockSignals(True)
+            widget.setMinimumDate(qdate_from_xldate(daterange[0]))
+            widget.setMaximumDate(qdate_from_xldate(daterange[1]))
+            widget.blockSignals(False)
 
     def calc_brf(self):
         """Prepare the data, calcul the brf, and save and plot the results."""
