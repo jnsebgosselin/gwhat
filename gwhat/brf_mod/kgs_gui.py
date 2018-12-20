@@ -157,12 +157,16 @@ class BRFManager(myqt.QFrameLayout):
         self.date_start_edit.setDisplayFormat('dd/MM/yyyy')
         self.date_start_edit.dateChanged.connect(
             lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
+        self.date_start_edit.dateChanged.connect(
+            lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
 
         self.date_end_edit = QDateTimeEdit()
         self.date_end_edit.setCalendarPopup(True)
         self.date_end_edit.setDisplayFormat('dd/MM/yyyy')
         self.date_end_edit.dateChanged.connect(
             lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
+        self.date_end_edit.dateChanged.connect(
+            lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
 
         self.btn_seldata = QToolButtonSmall(icons.get_icon('select_range'))
 
