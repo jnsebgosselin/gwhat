@@ -70,10 +70,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
         self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
         self.brf_eval_widget = BRFManager(parent=self)
-        self.brf_eval_widget.btn_seldata.clicked.connect(
-            self.toggle_brfperiod_selection)
-        self.brf_eval_widget.sig_brfperiod_changed.connect(
-            self.set_brfperiod)
+        self.brf_eval_widget.btn_seldata.sig_value_changed.connect(
+            lambda: self.toggle_brfperiod_selection(
+                self.brf_eval_widget.btn_seldata.value())
+            )
 
         self.__figbckground = None
         self.__addPeakVisible = True

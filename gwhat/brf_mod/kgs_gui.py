@@ -36,7 +36,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
-from gwhat.widgets.buttons import LangToolButton
+from gwhat.widgets.buttons import LangToolButton, OnOffToolButton
 from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
@@ -168,9 +168,9 @@ class BRFManager(myqt.QFrameLayout):
         self.date_end_edit.dateChanged.connect(
             lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
 
-        self.btn_seldata = QToolButtonSmall(icons.get_icon('select_range'))
-        self.btn_seldata.setToolTip("Toggle the selectin of a BRF calculation "
-                                    "period with the mouse on the graph.")
+        self.btn_seldata = OnOffToolButton('select_range', size='small')
+        self.btn_seldata.setToolTip("Select a BRF calculation period with "
+                                    "the mouse cursor on the graph.")
 
         # ---- Detrend and Correct Options ----
 
