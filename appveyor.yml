@@ -33,6 +33,7 @@ install:
   - cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
   - python -m pip install -r requirements-dev.txt
   - python -m pip install pyinstaller
+  - python -m pip install pywin32
 
   # Build the extensions.
   - python setup.py build_ext --inplace
