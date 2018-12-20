@@ -169,6 +169,8 @@ class BRFManager(myqt.QFrameLayout):
             lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
 
         self.btn_seldata = QToolButtonSmall(icons.get_icon('select_range'))
+        self.btn_seldata.setToolTip("Toggle the selectin of a BRF calculation "
+                                    "period with the mouse on the graph.")
 
         # ---- Detrend and Correct Options ----
 
