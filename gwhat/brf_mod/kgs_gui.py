@@ -555,6 +555,21 @@ class BRFViewer(QWidget):
         self.wldset.del_brf(name)
         self.update_brfnavigate_state()
 
+    def del_all_brf(self):
+        """Delete all the graphs and BRF results for the current dataset."""
+        msg = ("Do you want to delete all BRF results that were evaluated "
+               "for dataset <i>{}</i>?"
+               "<br><br>"
+               "All data will be lost permanently."
+               ).format(self.wldset.name)
+        btn = QMessageBox.Yes | QMessageBox.No
+        reply = QMessageBox.question(self, 'Delete all BRF results', msg, btn)
+
+        if reply == QMessageBox.Yes:
+            for name in self.wldset.saved_brf():
+                self.wldset.del_brf(name)
+            self.update_brfnavigate_state()
+
     def new_brf_added(self):
         self.current_brf.setMaximum(self.wldset.brf_count())
         self.current_brf.setValue(self.wldset.brf_count())
