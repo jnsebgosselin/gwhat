@@ -66,9 +66,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
         self.dmngr.sig_workdir_changed.connect(self.set_dialog_dir)
 
-        # Setup the calculation tools.
+        # Setup recharge calculation tool.
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
         self.rechg_eval_widget.sig_new_gluedf.connect(self.draw_glue_wl)
+
+        # Setup BRF calculation tool.
         self.brf_eval_widget = BRFManager(parent=self)
         self.brf_eval_widget.btn_seldata.sig_value_changed.connect(
             lambda: self.toggle_brfperiod_selection(
@@ -102,6 +104,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Barometric Response Function :
         self.selected_brfperiod = [None, None]
+        self._select_brfperiod_flag = False
 
         # Soil Profiles :
         self.soilFilename = []
@@ -421,7 +424,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
             2, ("<p>A tool to evaluate the barometric response function of"
                 " the well.</p>"))
 
-        tooltab.currentChanged.connect(self.plot_brfperiod)
+        tooltab.currentChanged.connect(
+            lambda: self.toggle_brfperiod_selection(False))
 
         # ---- Right Panel
 
@@ -592,38 +596,35 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 vline.set_xdata(x)
         self.draw()
 
-    def toggle_brfperiod_selection(self):
+    def toggle_brfperiod_selection(self, value):
         """
-        Handle when the button to select a period to compute the BRF is
-        clicked.
+        Toggle on or off the option to select the BRF calculation period on
+        the graph.
         """
-        if self.wldset is not None:
-            btn = self.brf_eval_widget.btn_seldata
-            btn.setAutoRaise(not btn.autoRaise())
-            if btn.autoRaise() is False:
-                # Toggle on the selection of the BRF calculation period.
-                self.btn_addpeak.setValue(False)
-                self.btn_delpeak.setValue(False)
-                self.btn_zoom_to_rect.setValue(False)
-                self.btn_pan.setValue(False)
-                self.selected_brfperiod = [None, None]
-                self.plot_brfperiod()
-            else:
-                # Toggle off the selection of the BRF calculation period.
-                if all(self.selected_brfperiod):
-                    # The selection of the BRF calculation period was
-                    # completed successfully.
-                    self.brf_eval_widget.set_brfperiod(self.selected_brfperiod)
-                else:
-                    # The selection of the BRF calculation period was
-                    # cancelled.
-                    self.set_brfperiod(self.brf_eval_widget.get_brfperiod())
-        else:
-            self.emit_warning("Please import a valid water level "
-                              "dataset first.")
+        if self.wldset is None:
+            self._select_brfperiod_flag = False
+            self.brf_eval_widget.btn_seldata.setValue(False, silent=True)
+            if value is True:
+                self.emit_warning("Please import a valid water "
+                                  "level dataset first.")
+            return
+
+        self.brf_eval_widget.btn_seldata.setValue(value, silent=True)
+        self._select_brfperiod_flag = value
+        if value is True:
+            self.btn_addpeak.setValue(False)
+            self.btn_delpeak.setValue(False)
+            self.btn_zoom_to_rect.setValue(False)
+            self.btn_pan.setValue(False)
+            self.selected_brfperiod = [None, None]
+        elif value is False:
+            if not all(self.selected_brfperiod):
+                # The selection of the BRF calculation period was cancelled,
+                # we reset the period to its previous value.
+                self.selected_brfperiod = self.brf_eval_widget.get_brfperiod()
+        self.plot_brfperiod()
 
     # ---- Peaks handlers
-
     def find_peak(self):
 
         n_j, n_add = local_extrema(self.water_lvl, 4 * 5)
@@ -651,7 +652,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_delpeak.setValue(False)
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
-            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
+            self.toggle_brfperiod_selection(False)
         self.draw()
 
     def btn_delpeak_isclicked(self):
@@ -661,7 +662,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_addpeak.setValue(False)
             self.btn_pan.setValue(False)
             self.btn_zoom_to_rect.setValue(False)
-            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
+            self.toggle_brfperiod_selection(False)
         self.draw()
 
     def clear_all_peaks(self):
@@ -696,7 +697,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_pan.setValue(False)
             self.btn_delpeak.setValue(False)
             self.btn_addpeak.setValue(False)
-            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
+            self.toggle_brfperiod_selection(False)
             if self.toolbar._active is None:
                 self.toolbar.zoom()
         else:
@@ -715,7 +716,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.btn_zoom_to_rect.setValue(False)
             self.btn_delpeak.setValue(False)
             self.btn_addpeak.setValue(False)
-            self.brf_eval_widget.btn_seldata.setAutoRaise(True)
+            self.toggle_brfperiod_selection(False)
             if self.toolbar._active is None:
                 self.toolbar.pan()
         else:
@@ -1314,7 +1315,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
             self.__addPeakVisible = False
             self.draw()
-        elif not self.brf_eval_widget.btn_seldata.autoRaise():
+        elif self.brf_eval_widget.btn_seldata.value() is True:
             # Select the BRF calculation period.
             xclic = event.xdata
             if xclic is None:
@@ -1326,10 +1327,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.selected_brfperiod[i] = self.time[argmin]
 
             if all(self.selected_brfperiod):
-                # Toggle off the selection of the BRF evaluation period.
-                self.toggle_brfperiod_selection()
+                # Toggle off the selection of the BRF evaluation period and
+                # send the values to the BRF eval widget.
                 self.brf_eval_widget.set_brfperiod(self.selected_brfperiod)
-            self.plot_brfperiod()
+                self.toggle_brfperiod_selection(False)
+            else:
+                self.plot_brfperiod()
         else:
             self.draw()
 
