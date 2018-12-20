@@ -30,6 +30,7 @@ install:
         throw "There are newer queued builds for this pull request, failing early." }
 
   # Setup Python with pip.
+  - cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
   - python -m pip install -r requirements-dev.txt
   - python -m pip install pyinstaller
 
