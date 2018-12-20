@@ -74,6 +74,7 @@ def test_tabwidget_and_about_window(tabwidget_bot):
 
 
 @flaky(max_runs=3)
+@pytest.mark.skipif(not os.name == 'nt', reason="It fails often on Travis")
 def test_worker_updates(worker_updates_bot):
     """
     Assert that the worker to check for updates on the GitHub API is
