@@ -59,7 +59,11 @@ def save_content_to_file(fname, fcontent):
     Smart function that checks the extension and save the content in the
     appropriate file format.
     """
-    root, ext = os.path.splitext(fname)
+    dirname = osp.dirname(fname)
+    if not osp.exists(dirname):
+        os.makedirs(dirname)
+
+    root, ext = osp.splitext(fname)
     if ext in ['.xlsx', '.xls']:
         save_content_to_excel(fname, fcontent)
     elif ext == '.tsv':
