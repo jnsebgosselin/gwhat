@@ -222,6 +222,31 @@ def test_del_brf_result(brfmanager, wldataset, mocker, qtbot):
     assert brfmanager.viewer.tbar.isEnabled() is False
 
 
+@pytest.mark.skipif(os.name == 'posix',
+                    reason="This feature is not supported on Linux")
+def test_del_all_brf_result(brfmanager, wldataset, mocker, qtbot):
+    """Test that the BRF results are deleted correctly."""
+    brfmanager.show()
+    brfmanager.set_wldset(wldataset)
+
+    # Create BRF results X2.
+    assert brfmanager.viewer.current_brf.value() == 0
+    brfmanager.calc_brf()
+    brfmanager.calc_brf()
+    assert brfmanager.viewer.current_brf.value() == 2
+
+    # Click to delete all BRF results, but answer No.
+    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.No)
+    qtbot.mouseClick(brfmanager.viewer.btn_del_all, Qt.LeftButton)
+    assert brfmanager.viewer.current_brf.value() == 2
+
+    # Click to delete all BRF results and answer Yes.
+    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
+    qtbot.mouseClick(brfmanager.viewer.btn_del_all, Qt.LeftButton)
+    assert brfmanager.viewer.current_brf.value() == 0
+    assert brfmanager.viewer.tbar.isEnabled() is False
+
+
 if __name__ == "__main__":
     pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
     # pytest.main()
