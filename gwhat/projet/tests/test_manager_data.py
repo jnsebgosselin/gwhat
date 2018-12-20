@@ -144,8 +144,8 @@ def test_import_waterlevel_data(data_manager_bot, mocker):
     # Import the waterlevel dataset.
     qtbot.mouseClick(data_manager.new_waterlvl_win.btn_ok, Qt.LeftButton)
 
-    # Assert that a weather dataset was added to the project and is currently
-    # selected.
+    # Assert that a water level dataset was added to the project and
+    # is currently selected.
     assert data_manager.wldataset_count() == 1
     assert data_manager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
 
