@@ -272,6 +272,7 @@ class BRFManager(myqt.QFrameLayout):
         define the period over which the BRF is evaluated. Also save the
         period to the waterlevel dataset.
         """
+        period = np.sort(period).tolist()
         widgets = (self.date_start_edit, self.date_end_edit)
         for xldate, widget in zip(period, widgets):
             if xldate is not None:
