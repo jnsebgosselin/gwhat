@@ -38,6 +38,7 @@ install:
   # Setup requirements for packaging GWHAT.
   - python -m pip install pyinstaller
   - python -m pip install pywin32
+  - python -m pip install tornado
 
   # Build the extensions.
   - python setup.py build_ext --inplace
