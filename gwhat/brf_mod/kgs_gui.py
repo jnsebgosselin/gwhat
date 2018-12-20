@@ -462,6 +462,11 @@ class BRFViewer(QWidget):
         self.btn_del.setToolTip('Delete current BRF results')
         self.btn_del.clicked.connect(self.del_brf)
 
+        self.btn_del_all = QToolButtonNormal(icons.get_icon('close_all'))
+        self.btn_del_all.setToolTip(
+            'Delete all BRF results for the current water level dataset.')
+        self.btn_del_all.clicked.connect(self.del_all_brf)
+
         self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save current BRF graph...')
         btn_save.clicked.connect(self.select_savefig_path)
@@ -474,9 +479,9 @@ class BRFViewer(QWidget):
 
         self.tbar = myqt.QFrameLayout()
 
-        buttons = [btn_save, self.btn_del, VSep(), self.btn_prev,
-                   self.current_brf, self.total_brf, self.btn_next, VSep(),
-                   self.btn_setp, self.btn_language]
+        buttons = [btn_save, self.btn_del,  self.btn_del_all, VSep(),
+                   self.btn_prev, self.current_brf, self.total_brf,
+                   self.btn_next, VSep(), self.btn_setp, self.btn_language]
 
         for btn in buttons:
             if isinstance(btn, QLayout):
