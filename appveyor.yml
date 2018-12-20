@@ -28,10 +28,14 @@ install:
       https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
       Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
         throw "There are newer queued builds for this pull request, failing early." }
-
-  # Setup Python with pip.
+      
+  # Setup SYS PATH.
   - cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
+
+  # Setup GWHAT dev requirements.
   - python -m pip install -r requirements-dev.txt
+
+  # Setup requirements for packaging GWHAT.
   - python -m pip install pyinstaller
   - python -m pip install pywin32
 
