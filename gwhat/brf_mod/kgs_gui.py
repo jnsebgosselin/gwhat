@@ -165,7 +165,6 @@ class BRFManager(myqt.QFrameLayout):
             lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
 
         self.btn_seldata = QToolButtonSmall(icons.get_icon('select_range'))
-        self.btn_seldata.clicked.connect(self.get_datarange)
 
         # ---- Detrend and Correct Options ----
 
@@ -308,16 +307,6 @@ class BRFManager(myqt.QFrameLayout):
                 (saved_daterange[0] or np.floor(self.wldset['Time'][0]),
                  saved_daterange[1] or np.floor(self.wldset['Time'][-1])
                  ))
-
-    def get_datarange(self):
-        child = self
-        while True:
-            try:
-                child.parent().raise_()
-            except Exception:
-                break
-            else:
-                child = child.parent()
 
     def set_daterange(self, xldates):
         """
