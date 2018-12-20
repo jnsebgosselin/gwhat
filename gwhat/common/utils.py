@@ -59,10 +59,6 @@ def save_content_to_file(fname, fcontent):
     Smart function that checks the extension and save the content in the
     appropriate file format.
     """
-    dirname = osp.dirname(fname)
-    if not osp.exists(dirname):
-        os.makedirs(dirname)
-
     root, ext = osp.splitext(fname)
     if ext in ['.xlsx', '.xls']:
         save_content_to_excel(fname, fcontent)
@@ -78,6 +74,7 @@ def save_content_to_csv(fname, fcontent, mode='w', delimiter=',',
     Save content in a csv file with the specifications provided
     in arguments.
     """
+    create_dirname(fname)
     with open(fname, mode, encoding='utf8') as csvfile:
         writer = csv.writer(csvfile, delimiter=delimiter, lineterminator='\n')
         writer.writerows(fcontent)
@@ -85,6 +82,7 @@ def save_content_to_csv(fname, fcontent, mode='w', delimiter=',',
 
 def save_content_to_excel(fname, fcontent):
     """Save content in a xls or xlsx file."""
+    create_dirname(fname)
     root, ext = os.path.splitext(fname)
     if ext == '.xls':
         wb = xlwt.Workbook()
