@@ -100,6 +100,13 @@ def save_content_to_excel(fname, fcontent):
                 ws.write_row(i, 0, row)
 
 
+def create_dirname(fname):
+    """Create the dirname of a file if it doesn't exists."""
+    dirname = osp.dirname(fname)
+    if dirname and not osp.exists(dirname):
+        os.makedirs(dirname)
+
+
 def delete_file(filename):
     """Try to delete a file on the disk and return the error if any."""
     try:
