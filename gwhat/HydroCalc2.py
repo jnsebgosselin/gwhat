@@ -72,6 +72,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Setup BRF calculation tool.
         self.brf_eval_widget = BRFManager(parent=self)
+        self.brf_eval_widget.sig_brfperiod_changed.connect(self.set_brfperiod)
         self.brf_eval_widget.btn_seldata.sig_value_changed.connect(
             lambda: self.toggle_brfperiod_selection(
                 self.brf_eval_widget.btn_seldata.value())
