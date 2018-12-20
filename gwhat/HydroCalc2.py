@@ -110,14 +110,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # ---- Initialize the GUI
 
         self.precip_bwidth = 7
-        self.__init_figure__()
+        self._setup_mpl_canvas()
         self.__initUI__()
         self.btn_pan.setValue(True)
         self.setup_ax_margins(None)
         self.set_wldset(self.dmngr.get_current_wldset())
         self.set_wxdset(self.dmngr.get_current_wxdset())
 
-    def __init_figure__(self):
+    def _setup_mpl_canvas(self):
 
         # ---- Setup the canvas
 
