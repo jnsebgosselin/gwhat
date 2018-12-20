@@ -53,6 +53,7 @@ after_test:
   - cd ./releases
   - pyinstaller.exe gwhat.spec
   - 7z a -tzip ../dist/%GWHAT_VERSION%_win_amd64.zip %GWHAT_VERSION%_win_amd64
+  - cd ..
 
 artifacts:
   - path: 'dist/%GWHAT_VERSION%_win_amd64.zip'
