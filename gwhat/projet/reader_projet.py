@@ -539,6 +539,7 @@ class WLDataFrameHDF5(dict):
             raise ValueError("The size of the specified 'period' must be 2.")
         grp = self.dset.require_group('brf')
         grp.attrs['period'] = period
+        self.dset.file.flush()
 
     def get_brfperiod(self):
         """
