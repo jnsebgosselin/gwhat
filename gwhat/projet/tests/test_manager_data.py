@@ -21,9 +21,9 @@ from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.manager_data import DataManager, QFileDialog, QMessageBox
 
-DATADIR = osp.dirname(osp.realpath(__file__))
-WXFILENAME = osp.join(DATADIR, 'data', 'sample_weather_datafile.out')
-WLFILENAME = osp.join(DATADIR, 'data', 'sample_water_level_datafile.csv')
+DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
+WXFILENAME = osp.join(DATADIR, 'sample_weather_datafile.out')
+WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 
 
 # ---- Pytest Fixtures
