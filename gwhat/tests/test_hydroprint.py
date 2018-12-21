@@ -49,7 +49,7 @@ def project(tmp_path_factory):
     return project
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def datamanager(project):
     datamanager = DataManager()
     datamanager.set_projet(project)
