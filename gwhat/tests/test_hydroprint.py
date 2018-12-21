@@ -33,10 +33,15 @@ WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 
 # ---- Pytest Fixtures
 @pytest.fixture(scope="module")
-def project(tmp_path_factory):
+def projectpath(tmp_path_factory):
+    return tmp_path_factory.mktemp("project_test_hydroprint")
+
+
+@pytest.fixture(scope="module")
+def project(projectpath):
     # Create a project and add add the wldset to it.
     project = ProjetReader(
-        osp.join(tmp_path_factory.getbasetemp(), "hydroprint_test.gwt"))
+        osp.join(projectpath, "project_test_hydroprint.gwt"))
 
     # Add the weather datasets to the project.
     for wxfilename in WXFILENAMES:
@@ -75,10 +80,10 @@ def pagesetup(qtbot):
 
 
 # ---- Test HydroprintGUI
-def test_hydroprint_init(hydroprint, mocker, qtbot, tmp_path_factory):
+def test_hydroprint_init(hydroprint, mocker, qtbot, projectpath):
     """Test the initialization of the hydroprint plugin."""
     # Assert that the water_level_measurement file was initialize correctly.
-    output_dir = os.path.join(tmp_path_factory.getbasetemp(), "Water Levels")
+    output_dir = os.path.join(projectpath, "Water Levels")
     filename = os.path.join(output_dir, "waterlvl_manual_measurements.csv")
     assert os.path.exists(filename)
 
@@ -122,12 +127,11 @@ def test_zoomin_zoomout(hydroprint):
         hydroprint.zoom_out()
 
 
-def test_save_hydrograph_fig(hydroprint, mocker, qtbot, tmp_path_factory):
+def test_save_hydrograph_fig(hydroprint, mocker, qtbot, projectpath):
     """Test saving the hydrograph figure to disk."""
     # Save the hydrograph in the pdf and svg format.
     for fformat in ['pdf', 'svg']:
-        fname = os.path.join(
-            tmp_path_factory.getbasetemp(), "test_hydrograph." + fformat)
+        fname = os.path.join(projectpath, "test_hydrograph." + fformat)
         mocker.patch.object(
             QFileDialog,
             'getSaveFileName',

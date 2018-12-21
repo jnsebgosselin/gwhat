@@ -30,10 +30,14 @@ WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 
 # ---- Pytest Fixtures
 @pytest.fixture(scope="module")
-def project(tmp_path_factory):
+def projectpath(tmp_path_factory):
+    return tmp_path_factory.mktemp("project_test_hydrocalc")
+
+
+@pytest.fixture(scope="module")
+def project(projectpath):
     # Create a project and add add the wldset to it.
-    project = ProjetReader(
-        osp.join(tmp_path_factory.getbasetemp(), "hydroprint_test.gwt"))
+    project = ProjetReader(osp.join(projectpath, "project_test_hydrocalc.gwt"))
 
     # Add the weather dataset to the project.
     wxdset = WXDataFrame(WXFILENAME)
@@ -45,7 +49,7 @@ def project(tmp_path_factory):
     return project
 
 
-@pytest.fixture(scope="module")
+@pytest.fixture
 def datamanager(project):
     datamanager = DataManager()
     datamanager.set_projet(project)
