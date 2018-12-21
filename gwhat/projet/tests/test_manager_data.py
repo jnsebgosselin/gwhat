@@ -7,19 +7,19 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: Standard Libraries
+# ---- Standard Libraries Imports
 
 import sys
 import os.path
 import os.path as osp
 
-# ---- Imports: Third Party Libraries
+# ---- Third Party Libraries Imports
 
 import pytest
 from PyQt5.QtCore import Qt
 
 
-# ---- Imports: Local Libraries
+# ---- Local Libraries Imports
 
 from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.projet.reader_projet import ProjetReader
@@ -30,7 +30,7 @@ projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt
 OUTPUTDIR = osp.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
 
 
-# ---- Qt Test Fixtures
+# ---- Pytest Fixtures
 
 @pytest.fixture
 def data_manager_bot(qtbot):
