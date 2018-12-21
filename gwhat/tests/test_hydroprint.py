@@ -6,64 +6,84 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# Standard library imports
-import sys
+# ---- Standard Libraries Imports
 import os
+import os.path as osp
 
-# Third party imports
+# ---- Third Party Libraries Imports
 import pytest
 from PyQt5.QtCore import Qt
 
-# Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+# ---- Local Libraries Imports
+from gwhat.meteo.weather_reader import WXDataFrame
+from gwhat.projet.reader_waterlvl import read_water_level_datafile
 from gwhat.HydroPrint2 import (HydroprintGUI, PageSetupWin, QFileDialog,
                                QMessageBox)
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_projet import ProjetReader
 
+DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
+WXFILENAMES = (
+    osp.join(DATADIR, "IBERVILLE (7023270)_2000-2015.out"),
+    osp.join(DATADIR, "L'ACADIE (702LED4)_2000-2015.out"),
+    osp.join(DATADIR, "MARIEVILLE (7024627)_2000-2015.out")
+    )
+WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 
-# Qt Test Fixtures
-# --------------------------------
+
+# ---- Pytest Fixtures
+@pytest.fixture(scope="module")
+def projectpath(tmp_path_factory):
+    return tmp_path_factory.mktemp("project_test_hydroprint")
 
 
-working_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!")
-output_dir = os.path.join(working_dir, "Water Levels")
+@pytest.fixture(scope="module")
+def project(projectpath):
+    # Create a project and add add the wldset to it.
+    project = ProjetReader(
+        osp.join(projectpath, "project_test_hydroprint.gwt"))
+
+    # Add the weather datasets to the project.
+    for wxfilename in WXFILENAMES:
+        wxdset = WXDataFrame(wxfilename)
+        project.add_wxdset(wxdset['Station Name'], wxdset)
+
+    # Add the water level dataset to the project.
+    wldset = read_water_level_datafile(WLFILENAME)
+    project.add_wldset(wldset['Well'], wldset)
+    return project
 
 
 @pytest.fixture
-def hydroprint_bot(qtbot):
-    pf = os.path.join(working_dir, "@ new-prô'jèt!.gwt")
-    pr = ProjetReader(pf)
+def datamanager(project):
+    datamanager = DataManager()
+    datamanager.set_projet(project)
+    return datamanager
 
-    dm = DataManager()
-    dm.set_projet(pr)
 
-    hydroprint = HydroprintGUI(dm)
+@pytest.fixture
+def hydroprint(datamanager, qtbot):
+    hydroprint = HydroprintGUI(datamanager)
     qtbot.addWidget(hydroprint)
     qtbot.addWidget(hydroprint.page_setup_win)
-
-    return hydroprint, qtbot
+    hydroprint.wldset_changed()
+    hydroprint.show()
+    return hydroprint
 
 
 @pytest.fixture
-def pagesetup_bot(qtbot):
-    pagesetup_win = PageSetupWin()
-    qtbot.addWidget(pagesetup_win)
-
-    return pagesetup_win, qtbot
-
-
-# Test HydroprintGUI
-# -------------------------------
+def pagesetup(qtbot):
+    pagesetup = PageSetupWin()
+    qtbot.addWidget(pagesetup)
+    pagesetup.show()
+    return pagesetup
 
 
-@pytest.mark.run(order=8)
-def test_hydroprint_init(hydroprint_bot, mocker):
-    hydroprint, qtbot = hydroprint_bot
-    hydroprint.show()
-    assert hydroprint
-
+# ---- Test HydroprintGUI
+def test_hydroprint_init(hydroprint, mocker, qtbot, projectpath):
+    """Test the initialization of the hydroprint plugin."""
     # Assert that the water_level_measurement file was initialize correctly.
+    output_dir = os.path.join(projectpath, "Water Levels")
     filename = os.path.join(output_dir, "waterlvl_manual_measurements.csv")
     assert os.path.exists(filename)
 
@@ -72,18 +92,10 @@ def test_hydroprint_init(hydroprint_bot, mocker):
     qtbot.waitForWindowShown(hydroprint.page_setup_win)
 
 
-@pytest.mark.run(order=8)
-def test_autoplot_hydroprint(hydroprint_bot):
-    hydroprint, qtbot = hydroprint_bot
-    hydroprint.show()
-
-    assert hydroprint.dmngr.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
-    assert hydroprint.dmngr.wxdsets_cbox.currentText() == "IBERVILLE"
-
-    # Forces a refresh of the graph and check that the automatic values
-    # set for the axis is correct.
-
-    hydroprint.wldset_changed()
+def test_autoplot_hydroprint(hydroprint):
+    """Test the default values set when autoplotting the data."""
+    assert (hydroprint.dmngr.wldsets_cbox.currentText() ==
+            "PO01 - Calixa-Lavallée")
     assert hydroprint.dmngr.wxdsets_cbox.currentText() == "MARIEVILLE"
     assert hydroprint.waterlvl_scale.value() == 0.25
     assert hydroprint.waterlvl_max.value() == 3.75
@@ -100,48 +112,36 @@ def test_autoplot_hydroprint(hydroprint_bot):
     assert hydroprint.time_scale_label.currentText() == "Month"
 
 
-@pytest.mark.run(order=8)
-def test_zoomin_zoomout(hydroprint_bot):
-    hydroprint, qtbot = hydroprint_bot
-    hydroprint.show()
-    hydroprint.wldset_changed()
-
+def test_zoomin_zoomout(hydroprint):
+    """Test zooming in and out the graph."""
+    # Test zoom in.
     expected_values = [100, 120, 144, 172, 172]
     for expected_value in expected_values:
         assert hydroprint.zoom_disp.value() == expected_value
         hydroprint.zoom_in()
+
+    # Test zoom out.
     expected_values = [172, 144, 120, 100, 83, 69, 57, 57]
     for expected_value in expected_values:
         assert hydroprint.zoom_disp.value() == expected_value
         hydroprint.zoom_out()
 
 
-@pytest.mark.run(order=8)
-def test_save_figure(hydroprint_bot, mocker):
-    hydroprint, qtbot = hydroprint_bot
-    hydroprint.show()
-    hydroprint.wldset_changed()
-
-    # Assert that the hydrograph is saved correctly.
-    fname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "test_hydrograph.pdf")
-    mocker.patch.object(QFileDialog, 'getSaveFileName',
-                        return_value=(fname, '*.pdf'))
-    qtbot.mouseClick(hydroprint.btn_save, Qt.LeftButton)
-    qtbot.waitUntil(lambda: os.path.exists(fname))
-
-    fname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "test_hydrograph.svg")
-    mocker.patch.object(QFileDialog, 'getSaveFileName',
-                        return_value=(fname, '*.svg'))
-    qtbot.mouseClick(hydroprint.btn_save, Qt.LeftButton)
-    qtbot.waitUntil(lambda: os.path.exists(fname))
+def test_save_hydrograph_fig(hydroprint, mocker, qtbot, projectpath):
+    """Test saving the hydrograph figure to disk."""
+    # Save the hydrograph in the pdf and svg format.
+    for fformat in ['pdf', 'svg']:
+        fname = os.path.join(projectpath, "test_hydrograph." + fformat)
+        mocker.patch.object(
+            QFileDialog,
+            'getSaveFileName',
+            return_value=(fname, '*.' + fformat))
+        qtbot.mouseClick(hydroprint.btn_save, Qt.LeftButton)
+        qtbot.waitUntil(lambda: os.path.exists(fname))
 
 
-@pytest.mark.run(order=8)
-def test_graph_layout(hydroprint_bot, mocker):
-    hydroprint, qtbot = hydroprint_bot
-    hydroprint.show()
-    hydroprint.wldset_changed()
-
+def test_graph_layout(hydroprint, mocker, qtbot):
+    """Test saving and loading hydrograph layout to and from the project."""
     # Save the graph layout.
     mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
     qtbot.mouseClick(hydroprint.btn_save_layout, Qt.LeftButton)
@@ -186,145 +186,128 @@ def test_graph_layout(hydroprint_bot, mocker):
     assert layout['legend_on'] is True
     assert layout['title_on'] is True
     assert layout['trend_line'] is False
-    assert layout['wxdset'] == hydroprint.dmngr.wxdsets_cbox.currentText() == "MARIEVILLE"
-    assert layout['WLmin'] == hydroprint.waterlvl_max.value() == 3.75
-    assert layout['WLscale'] == hydroprint.waterlvl_scale.value() == 0.25
+    assert layout['wxdset'] == "MARIEVILLE"
+    assert hydroprint.dmngr.wxdsets_cbox.currentText() == "MARIEVILLE"
+    assert layout['WLmin'] == 3.75
+    assert hydroprint.waterlvl_max.value() == 3.75
+    assert layout['WLscale'] == 0.25
+    assert hydroprint.waterlvl_scale.value() == 0.25
     assert layout['RAINscale'] == 20
     assert layout['fwidth'] == 11
     assert layout['fheight'] == 7
     assert layout['va_ratio'] == 0.2
-    assert layout['NZGrid'] == hydroprint.NZGridWL_spinBox.value() == 8
+    assert layout['NZGrid'] == 8
+    assert hydroprint.NZGridWL_spinBox.value() == 8
     assert layout['bwidth_indx'] == 1
     assert layout['date_labels_pattern'] == 2
     assert layout['datemode'] == 'Month'
-    assert layout['language'] == hydroprint.btn_language.language == 'english'
+    assert layout['language'] == 'english'
+    assert hydroprint.btn_language.language == 'english'
     assert hydroprint.datum_widget.currentText() == 'Ground Surface'
 
 
-@pytest.mark.run(order=8)
-def test_clear_hydrograph(hydroprint_bot, mocker):
+def test_clear_hydrograph(hydroprint, mocker, tmp_path):
     """
     Test that the hydrograph is cleared correctly when the water level or
     weather dataset become None at some point.
     """
-    hydroprint, qtbot = hydroprint_bot
-    hydroprint.show()
-    assert hydroprint.hydrograph.isHydrographExists is False
-
-    hydroprint.wldset_changed()
     assert hydroprint.hydrograph.isHydrographExists is True
-
-    empty_project = ProjetReader('empty_project.gwt')
+    empty_project = ProjetReader(osp.join(tmp_path, "empty_project.gwt"))
     hydroprint.dmngr.set_projet(empty_project)
-
     assert hydroprint.hydrograph.isHydrographExists is False
 
 
-# Test PageSetupWin
-# -------------------------------
-
-@pytest.mark.run(order=8)
-def test_pagesetup_defaults(pagesetup_bot):
+# ---- Test PageSetupWin
+def test_pagesetup_defaults(pagesetup):
     """Assert that the default values are as expected."""
-    pagesetup_win, qtbot = pagesetup_bot
-    pagesetup_win.show()
+    assert pagesetup.fwidth.value() == 11
+    assert pagesetup.pageSize[0] == 11
 
-    assert pagesetup_win.fwidth.value() == 11
-    assert pagesetup_win.pageSize[0] == 11
+    assert pagesetup.fheight.value() == 7
+    assert pagesetup.pageSize[1] == 7
 
-    assert pagesetup_win.fheight.value() == 7
-    assert pagesetup_win.pageSize[1] == 7
+    assert pagesetup.va_ratio_spinBox.value() == 0.2
+    assert pagesetup.va_ratio == 0.2
 
-    assert pagesetup_win.va_ratio_spinBox.value() == 0.2
-    assert pagesetup_win.va_ratio == 0.2
-
-    assert pagesetup_win.legend_on.value() is True
-    assert pagesetup_win.isLegend is True
-    assert pagesetup_win.wltrend_on.value() is False
-    assert pagesetup_win.isTrendLine is False
-    assert pagesetup_win.title_on.value() is True
-    assert pagesetup_win.isGraphTitle is True
-    assert pagesetup_win.meteo_on.value() is True
-    assert pagesetup_win.is_meteo_on is True
+    assert pagesetup.legend_on.value() is True
+    assert pagesetup.isLegend is True
+    assert pagesetup.wltrend_on.value() is False
+    assert pagesetup.isTrendLine is False
+    assert pagesetup.title_on.value() is True
+    assert pagesetup.isGraphTitle is True
+    assert pagesetup.meteo_on.value() is True
+    assert pagesetup.is_meteo_on is True
 
 
-@pytest.mark.run(order=8)
-def test_pagesetup_cancel(pagesetup_bot):
+def test_pagesetup_cancel(pagesetup, qtbot):
     """Test that the Cancel button is working as expected."""
-    pagesetup_win, qtbot = pagesetup_bot
-    pagesetup_win.show()
-
     # Change the default values.
-    pagesetup_win.fwidth.setValue(12.5)
-    pagesetup_win.fheight.setValue(8.5)
-    pagesetup_win.va_ratio_spinBox.setValue(0.7)
+    pagesetup.fwidth.setValue(12.5)
+    pagesetup.fheight.setValue(8.5)
+    pagesetup.va_ratio_spinBox.setValue(0.7)
 
-    pagesetup_win.legend_on.set_value(False)
-    pagesetup_win.wltrend_on.set_value(True)
-    pagesetup_win.title_on.set_value(False)
-    pagesetup_win.meteo_on.set_value(False)
+    pagesetup.legend_on.set_value(False)
+    pagesetup.wltrend_on.set_value(True)
+    pagesetup.title_on.set_value(False)
+    pagesetup.meteo_on.set_value(False)
 
     # Assert that previous values are kept when clicking on the button Cancel.
-    qtbot.mouseClick(pagesetup_win.btn_cancel, Qt.LeftButton)
-    assert pagesetup_win.fwidth.value() == 11
-    assert pagesetup_win.pageSize[0] == 11
+    qtbot.mouseClick(pagesetup.btn_cancel, Qt.LeftButton)
+    assert pagesetup.fwidth.value() == 11
+    assert pagesetup.pageSize[0] == 11
 
-    assert pagesetup_win.fheight.value() == 7
-    assert pagesetup_win.pageSize[1] == 7
+    assert pagesetup.fheight.value() == 7
+    assert pagesetup.pageSize[1] == 7
 
-    assert pagesetup_win.va_ratio_spinBox.value() == 0.2
-    assert pagesetup_win.va_ratio == 0.2
+    assert pagesetup.va_ratio_spinBox.value() == 0.2
+    assert pagesetup.va_ratio == 0.2
 
-    assert pagesetup_win.legend_on.value() is True
-    assert pagesetup_win.isLegend is True
-    assert pagesetup_win.wltrend_on.value() is False
-    assert pagesetup_win.isTrendLine is False
-    assert pagesetup_win.title_on.value() is True
-    assert pagesetup_win.isGraphTitle is True
-    assert pagesetup_win.meteo_on.value() is True
-    assert pagesetup_win.is_meteo_on is True
+    assert pagesetup.legend_on.value() is True
+    assert pagesetup.isLegend is True
+    assert pagesetup.wltrend_on.value() is False
+    assert pagesetup.isTrendLine is False
+    assert pagesetup.title_on.value() is True
+    assert pagesetup.isGraphTitle is True
+    assert pagesetup.meteo_on.value() is True
+    assert pagesetup.is_meteo_on is True
 
-    assert not pagesetup_win.isVisible()
+    assert not pagesetup.isVisible()
 
 
-@pytest.mark.run(order=8)
-def test_pagesetup_ok(pagesetup_bot):
+def test_pagesetup_ok(pagesetup, qtbot):
     """Test that the OK button is working as expected."""
-    pagesetup_win, qtbot = pagesetup_bot
-    pagesetup_win.show()
-
     # Change the default values.
-    pagesetup_win.show()
-    pagesetup_win.fwidth.setValue(12.5)
-    pagesetup_win.fheight.setValue(8.5)
-    pagesetup_win.va_ratio_spinBox.setValue(0.7)
+    pagesetup.show()
+    pagesetup.fwidth.setValue(12.5)
+    pagesetup.fheight.setValue(8.5)
+    pagesetup.va_ratio_spinBox.setValue(0.7)
 
-    pagesetup_win.legend_on.set_value(False)
-    pagesetup_win.wltrend_on.set_value(True)
-    pagesetup_win.title_on.set_value(False)
-    pagesetup_win.meteo_on.set_value(False)
+    pagesetup.legend_on.set_value(False)
+    pagesetup.wltrend_on.set_value(True)
+    pagesetup.title_on.set_value(False)
+    pagesetup.meteo_on.set_value(False)
 
     # Assert that the values are updated correctly when clicking the button OK.
-    qtbot.mouseClick(pagesetup_win.btn_OK, Qt.LeftButton)
-    assert pagesetup_win.fwidth.value() == 12.5
-    assert pagesetup_win.pageSize[0] == 12.5
+    qtbot.mouseClick(pagesetup.btn_OK, Qt.LeftButton)
+    assert pagesetup.fwidth.value() == 12.5
+    assert pagesetup.pageSize[0] == 12.5
 
-    assert pagesetup_win.fheight.value() == 8.5
-    assert pagesetup_win.pageSize[1] == 8.5
+    assert pagesetup.fheight.value() == 8.5
+    assert pagesetup.pageSize[1] == 8.5
 
-    assert pagesetup_win.va_ratio_spinBox.value() == 0.7
-    assert pagesetup_win.va_ratio == 0.7
+    assert pagesetup.va_ratio_spinBox.value() == 0.7
+    assert pagesetup.va_ratio == 0.7
 
-    assert pagesetup_win.legend_on.value() is False
-    assert pagesetup_win.isLegend is False
-    assert pagesetup_win.wltrend_on.value() is True
-    assert pagesetup_win.isTrendLine is True
-    assert pagesetup_win.title_on.value() is False
-    assert pagesetup_win.isGraphTitle is False
-    assert pagesetup_win.meteo_on.value() is False
-    assert pagesetup_win.is_meteo_on is False
+    assert pagesetup.legend_on.value() is False
+    assert pagesetup.isLegend is False
+    assert pagesetup.wltrend_on.value() is True
+    assert pagesetup.isTrendLine is True
+    assert pagesetup.title_on.value() is False
+    assert pagesetup.isGraphTitle is False
+    assert pagesetup.meteo_on.value() is False
+    assert pagesetup.is_meteo_on is False
 
-    assert not pagesetup_win.isVisible()
+    assert not pagesetup.isVisible()
 
 
 if __name__ == "__main__":

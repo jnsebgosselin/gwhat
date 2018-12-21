@@ -6,51 +6,67 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# Standard library imports
-import sys
+# ---- Standard Libraries Imports
 import os
+import os.path as osp
 
-# Third party imports
+# ---- Third Party Libraries Imports
 import pytest
 from PyQt5.QtCore import Qt
 
-# Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+# ---- Local Libraries Imports
+from gwhat.meteo.weather_reader import WXDataFrame
+from gwhat.projet.reader_waterlvl import read_water_level_datafile
 from gwhat.HydroCalc2 import WLCalc
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_projet import ProjetReader
 
 
-# Qt Test Fixtures
-# --------------------------------
+# ---- Pytest Fixtures
+DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
+WXFILENAME = osp.join(DATADIR, "MARIEVILLE (7024627)_2000-2015.out")
+WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 
 
-working_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!")
-output_dir = os.path.join(working_dir, "Water Levels")
+# ---- Pytest Fixtures
+@pytest.fixture(scope="module")
+def projectpath(tmp_path_factory):
+    return tmp_path_factory.mktemp("project_test_hydrocalc")
+
+
+@pytest.fixture(scope="module")
+def project(projectpath):
+    # Create a project and add add the wldset to it.
+    project = ProjetReader(osp.join(projectpath, "project_test_hydrocalc.gwt"))
+
+    # Add the weather dataset to the project.
+    wxdset = WXDataFrame(WXFILENAME)
+    project.add_wxdset(wxdset['Station Name'], wxdset)
+
+    # Add the water level dataset to the project.
+    wldset = read_water_level_datafile(WLFILENAME)
+    project.add_wldset(wldset['Well'], wldset)
+    return project
 
 
 @pytest.fixture
-def hydrocalc_bot(qtbot):
-    pf = os.path.join(working_dir, "@ new-prô'jèt!.gwt")
-    pr = ProjetReader(pf)
+def datamanager(project):
+    datamanager = DataManager()
+    datamanager.set_projet(project)
+    return datamanager
 
-    dm = DataManager()
-    dm.set_projet(pr)
 
-    hydrocalc = WLCalc(dm)
+@pytest.fixture
+def hydrocalc(datamanager, qtbot):
+    hydrocalc = WLCalc(datamanager)
     qtbot.addWidget(hydrocalc)
-
-    return hydrocalc, qtbot
-
-
-# Test WLCalc
-# -------------------------------
-
-
-@pytest.mark.run(order=9)
-def test_hydrocalc_init(hydrocalc_bot, mocker):
-    hydrocalc, qtbot = hydrocalc_bot
     hydrocalc.show()
+    return hydrocalc
+
+
+# ---- Test WLCalc
+@pytest.mark.run(order=9)
+def test_hydrocalc_init(hydrocalc, mocker):
     assert hydrocalc
 
 
