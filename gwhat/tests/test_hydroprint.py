@@ -22,9 +22,6 @@ from gwhat.HydroPrint2 import (HydroprintGUI, PageSetupWin, QFileDialog,
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_projet import ProjetReader
 
-working_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!")
-output_dir = os.path.join(working_dir, "Water Levels")
-
 DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
 WXFILENAMES = (
     osp.join(DATADIR, "IBERVILLE (7023270)_2000-2015.out"),
