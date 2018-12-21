@@ -377,7 +377,7 @@ class WLDataFrameHDF5(dict):
 
     @property
     def name(self):
-        return self.dset.name
+        return osp.basename(self.dset.name)
 
     # ---- Manual measurents
 
