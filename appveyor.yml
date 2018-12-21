@@ -8,11 +8,13 @@ branches:
     - master
 
 environment:
-  COVERALLS_REPO_TOKEN:
-    secure: EWOwdKViJaHUARUcX4FHynz8eAlQxwWYLgWFg7C+MH1vgVlkBkMPYOSH4ysxs3kT
+  global:
+    GWHAT_VERSION: "gwhat_0.3.4.dev0"
 
   matrix:
-    - PYTHON_VERSION: "3.6"
+    - PYTHON: "C:\Python36-x64"
+      PYTHON_VERSION: "3.6"
+      PYTHON_ARCH: "64"
 
 platform:
   -x64
@@ -20,23 +22,41 @@ platform:
 skip_branch_with_pr: true
 
 install:
-  # If there is a newer build queued for the same PR, cancel this one.
-  # The AppVeyor 'rollout builds' option is supposed to serve the same
-  # purpose but it is problematic because it tends to cancel builds pushed
-  # directly to master instead of just PR builds (or the converse).
-  # credits: JuliaLang developers.
+  # Cancel older builds for the same PR.
+  # Credits: JuliaLang developers.
   - ps: if ($env:APPVEYOR_PULL_REQUEST_NUMBER -and $env:APPVEYOR_BUILD_NUMBER -ne ((Invoke-RestMethod `
       https://ci.appveyor.com/api/projects/$env:APPVEYOR_ACCOUNT_NAME/$env:APPVEYOR_PROJECT_SLUG/history?recordsNumber=50).builds | `
       Where-Object pullRequestId -eq $env:APPVEYOR_PULL_REQUEST_NUMBER)[0].buildNumber) { `
         throw "There are newer queued builds for this pull request, failing early." }
+      
+  # Setup SYS PATH.
   - cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
+
+  # Setup GWHAT dev requirements.
   - python -m pip install -r requirements-dev.txt
+
+  # Setup requirements for packaging GWHAT.
+  - python -m pip install pyinstaller
+  - python -m pip install pywin32
+  - python -m pip install tornado
+
+  # Build the extensions.
+  - python setup.py build_ext --inplace
 
 build: false
 
 test_script:
-  - python setup.py build_ext --inplace
   - python runtests.py
+
+after_test:
+  - cmd: set PYTHONPATH=C:\projects\gwhat;%PYTHONPATH%
+  - cd ./releases
+  - pyinstaller.exe gwhat.spec
+  - 7z a -tzip ../dist/%GWHAT_VERSION%_win_amd64.zip %GWHAT_VERSION%_win_amd64
+  - cd ..
+
+artifacts:
+  - path: 'dist/%GWHAT_VERSION%_win_amd64.zip'
 
 on_success:
   - codecov
