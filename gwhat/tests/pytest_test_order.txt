@@ -4,8 +4,6 @@
  4 - test_merge_weather_data.py
  5 - test_gapfill_weather_gui.py
  6 - test_gapfill_weather_algorithm.py
- 8 - test_hydroprint.py
- 9 - test_hydrocalc.py
 11 - test_mainwindow.py
 
 test_tabwidget.py
