@@ -8,209 +8,154 @@
 
 
 # ---- Standard Libraries Imports
-
-import sys
-import os.path
+import os
 import os.path as osp
 
 # ---- Third Party Libraries Imports
-
 import pytest
 from PyQt5.QtCore import Qt
 
 
 # ---- Local Libraries Imports
-
 from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.projet.manager_data import (DataManager, QFileDialog, QMessageBox,
-                                       ExportWeatherButton)
+from gwhat.projet.manager_data import DataManager, QFileDialog, QMessageBox
 
-projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
-OUTPUTDIR = osp.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
+DATADIR = osp.dirname(osp.realpath(__file__))
+WXFILENAME = osp.join(DATADIR, 'data', 'sample_weather_datafile.out')
+WLFILENAME = osp.join(DATADIR, 'data', 'sample_water_level_datafile.csv')
 
 
 # ---- Pytest Fixtures
-
-@pytest.fixture
-def data_manager_bot(qtbot):
-    data_manager = DataManager(projet=ProjetReader(projetpath),
-                               pytesting=True)
-    qtbot.addWidget(data_manager)
-    qtbot.addWidget(data_manager.new_waterlvl_win)
-    qtbot.addWidget(data_manager.new_weather_win)
-
-    return data_manager, qtbot
+@pytest.fixture(scope="module")
+def project(tmp_path_factory):
+    # Create a project and add add the wldset to it.
+    basetemp = tmp_path_factory.getbasetemp()
+    return ProjetReader(osp.join(basetemp, "data_manager_test.gwt"))
 
 
 @pytest.fixture
-def export_weather_bot(qtbot):
-    datafile = osp.join(OUTPUTDIR, "IBERVILLE (7023270)",
-                        "IBERVILLE (7023270)_2000-2015.out")
-    export_btn = ExportWeatherButton(model=WXDataFrame(datafile))
-    qtbot.addWidget(export_btn)
+def datamanager(project, qtbot):
+    datamanager = DataManager(projet=project, pytesting=True)
+    qtbot.addWidget(datamanager)
+    qtbot.addWidget(datamanager.new_waterlvl_win)
+    qtbot.addWidget(datamanager.new_weather_win)
 
-    return export_btn, qtbot
+    return datamanager
 
 
 # ---- Tests DataManager
+def test_import_weather_data(datamanager, mocker, qtbot):
+    """Test importing and saving weather data to the project."""
+    datamanager.new_weather_win.setModal(False)
+    datamanager.show()
 
-
-@pytest.mark.run(order=7)
-def test_load_projet(data_manager_bot):
-    data_manager, qtbot = data_manager_bot
-    data_manager.show()
-    assert data_manager
-
-
-@pytest.mark.run(order=7)
-def test_import_weather_data(data_manager_bot, mocker):
-    data_manager, qtbot = data_manager_bot
-    data_manager.new_weather_win.setModal(False)
-    data_manager.show()
-
-    # Assert that the weather datafile exists.
-    output_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
-    filename = os.path.join(output_dir, "IBERVILLE (7023270)",
-                            "IBERVILLE (7023270)_2000-2015.out")
-    assert os.path.exists(filename)
-
-    # Mock the QFileDialog to return the path of the file.
-    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
-    mocker.patch.object(QFileDialog, 'getOpenFileName',
-                        return_value=(filename, '*.out'))
+    # Mock the file dialog to return the path of the weather datafile.
+    mocker.patch.object(
+        QFileDialog, 'getOpenFileName', return_value=(WXFILENAME, '*.out'))
 
     # Open the dialog window and select a weather dataset.
-    qtbot.mouseClick(data_manager.btn_load_meteo, Qt.LeftButton)
-    qtbot.mouseClick(data_manager.new_weather_win.btn_browse, Qt.LeftButton)
+    qtbot.mouseClick(datamanager.btn_load_meteo, Qt.LeftButton)
+    qtbot.mouseClick(datamanager.new_weather_win.btn_browse, Qt.LeftButton)
 
-    assert data_manager.new_weather_win.name == "IBERVILLE"
-    assert data_manager.new_weather_win.station_name == "IBERVILLE"
-    assert data_manager.new_weather_win.station_id == "7023270"
-    assert data_manager.new_weather_win.province == "QUEBEC"
-    assert data_manager.new_weather_win.latitude == 45.33
-    assert data_manager.new_weather_win.longitude == -73.25
-    assert data_manager.new_weather_win.altitude == 30.5
+    assert datamanager.new_weather_win.name == "IBERVILLE"
+    assert datamanager.new_weather_win.station_name == "IBERVILLE"
+    assert datamanager.new_weather_win.station_id == "7023270"
+    assert datamanager.new_weather_win.province == "QUEBEC"
+    assert datamanager.new_weather_win.latitude == 45.33
+    assert datamanager.new_weather_win.longitude == -73.25
+    assert datamanager.new_weather_win.altitude == 30.5
 
-    # Import the weather dataset.
-    qtbot.mouseClick(data_manager.new_weather_win.btn_ok, Qt.LeftButton)
-
-    # Assert that a weather dataset was added to the project and is currently
-    # selected.
-    assert data_manager.wxdataset_count() == 1
-    assert data_manager.wxdsets_cbox.currentText() == "IBERVILLE"
+    # Import the weather dataset into the project.
+    qtbot.mouseClick(datamanager.new_weather_win.btn_ok, Qt.LeftButton)
+    assert datamanager.wxdataset_count() == 1
+    assert datamanager.wxdsets_cbox.currentText() == "IBERVILLE"
+    assert datamanager.get_current_wxdset().name == "IBERVILLE"
 
 
-@pytest.mark.run(order=7)
-def test_delete_weather_data(data_manager_bot, mocker):
-    data_manager, qtbot = data_manager_bot
-    data_manager.show()
+def test_delete_weather_data(datamanager, mocker, qtbot):
+    """Test deleting weather datasets from the project."""
+    datamanager.show()
 
-    # Mock the QMessageBox to return Yes, delete the weather dataset, and
-    # assert that it was removed from the project.
-    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
-    qtbot.mouseClick(data_manager.btn_del_wxdset, Qt.LeftButton)
-    assert data_manager.wxdataset_count() == 0
-
-
-@pytest.mark.run(order=7)
-def test_import_waterlevel_data(data_manager_bot, mocker):
-    data_manager, qtbot = data_manager_bot
-    data_manager.new_weather_win.setModal(False)
-    data_manager.show()
-
-    # Assert that the water level datafile exists.
-    dirname = os.path.dirname(__file__)
-    filename = os.path.join(dirname, "sample_water_level_datafile.xlsx")
-    assert os.path.exists(filename)
-
-    # Mock the QFileDialog to return the path of the file.
-    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
-    mocker.patch.object(QFileDialog, 'getOpenFileName',
-                        return_value=(filename, '*.xlsx'))
-
-    # Open the dialog window and select a waterlevel dataset.
-    qtbot.mouseClick(data_manager.btn_load_wl, Qt.LeftButton)
-    qtbot.mouseClick(data_manager.new_waterlvl_win.btn_browse, Qt.LeftButton)
-
-    assert data_manager.new_waterlvl_win.name == "PO01 - Calixa-Lavallée"
-    assert data_manager.new_waterlvl_win.station_name == "PO01 - Calixa-Lavallée"
-    assert data_manager.new_waterlvl_win.station_id == "3040002"
-    assert data_manager.new_waterlvl_win.province == "QC"
-    assert data_manager.new_waterlvl_win.latitude == 45.74581
-    assert data_manager.new_waterlvl_win.longitude == -73.28024
-    assert data_manager.new_waterlvl_win.altitude == 19.51
-
-    # Import the waterlevel dataset.
-    qtbot.mouseClick(data_manager.new_waterlvl_win.btn_ok, Qt.LeftButton)
-
-    # Assert that a water level dataset was added to the project and
-    # is currently selected.
-    assert data_manager.wldataset_count() == 1
-    assert data_manager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
-
-
-@pytest.mark.run(order=7)
-def test_delete_waterlevel_data(data_manager_bot, mocker):
-    data_manager, qtbot = data_manager_bot
-    data_manager.show()
-
-    # Mock the QMessageBox to return No, try to delete the dataset and assert
-    # that the dataset was not removed from the project.
+    # Click on the button to delete the weather dataset from the project, but
+    # answer no.
+    assert datamanager.wxdataset_count() == 1
     mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.No)
-    qtbot.mouseClick(data_manager.btn_del_wldset, Qt.LeftButton)
-    assert data_manager.wldataset_count() == 1
-    assert data_manager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
+    qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
+    assert datamanager.wxdataset_count() == 1
 
-    # Mock the QMessageBox to return Yes, delete the waterlevel dataset, and
-    # assert that it was removed from the project.
+    # Click on the button to delete the weather dataset from the project and
+    # answer yes.
     mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
-    qtbot.mouseClick(data_manager.btn_del_wldset, Qt.LeftButton)
-    assert data_manager.wldataset_count() == 0
+    qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
+    assert datamanager.wxdataset_count() == 0
 
 
-@pytest.mark.run(order=7)
-def test_import_back_alldata(data_manager_bot):
-    data_manager, qtbot = data_manager_bot
-    data_manager.show()
+def test_import_waterlevel_data(datamanager, mocker, qtbot):
+    """Test importing and saving water level data to the project."""
+    datamanager.new_weather_win.setModal(False)
+    datamanager.show()
 
-    # Import the weather data again since we will need it for another test.
-    output_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Output")
-    filenames = [os.path.join(output_dir, "IBERVILLE (7023270)",
-                              "IBERVILLE (7023270)_2000-2015.out"),
-                 os.path.join(output_dir, "L'ACADIE (702LED4)",
-                              "L'ACADIE (702LED4)_2000-2015.out"),
-                 os.path.join(output_dir, "MARIEVILLE (7024627)",
-                              "MARIEVILLE (7024627)_2000-2015.out")
-                 ]
-    for filename in filenames:
-        data_manager.new_weather_win.load_dataset(filename)
-        data_manager.new_weather_win.accept_dataset()
-    assert data_manager.wxdataset_count() == 3
+    # Mock the file dialog to return the path of the weather datafile.
+    mocker.patch.object(
+        QFileDialog, 'getOpenFileName', return_value=(WLFILENAME, '*.out'))
 
-    # Import the water level again since we will need it for another test.
-    dirname = os.path.dirname(__file__)
-    filename = os.path.join(dirname, "sample_water_level_datafile.xlsx")
-    data_manager.new_waterlvl_win.load_dataset(filename)
-    data_manager.new_waterlvl_win.accept_dataset()
-    assert data_manager.wldataset_count() == 1
+    # Open the dialog window and select a water level dataset.
+    qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
+    qtbot.mouseClick(datamanager.new_waterlvl_win.btn_browse, Qt.LeftButton)
+
+    new_waterlvl_win = datamanager.new_waterlvl_win
+    assert new_waterlvl_win.name == "PO01 - Calixa-Lavallée"
+    assert new_waterlvl_win.station_name == "PO01 - Calixa-Lavallée"
+    assert new_waterlvl_win.station_id == "3040002"
+    assert new_waterlvl_win.province == "QC"
+    assert new_waterlvl_win.latitude == 45.74581
+    assert new_waterlvl_win.longitude == -73.28024
+    assert new_waterlvl_win.altitude == 19.51
+
+    # Import the water level dataset into the project.
+    qtbot.mouseClick(new_waterlvl_win.btn_ok, Qt.LeftButton)
+    assert datamanager.wldataset_count() == 1
+    assert datamanager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
+    assert datamanager.get_current_wldset().name == "PO01 - Calixa-Lavallée"
+
+
+def test_delete_waterlevel_data(datamanager, mocker, qtbot):
+    """Test deleting water level datasets from the project."""
+    datamanager.show()
+
+    # Click on the button to delete the water level dataset from the project,
+    # but answer no.
+    assert datamanager.wldataset_count() == 1
+    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.No)
+    qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
+    assert datamanager.wldataset_count() == 1
+
+    # Click on the button to delete the water level dataset from the project
+    # and answer yes.
+    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
+    qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
+    assert datamanager.wldataset_count() == 0
 
 
 # ---- Tests ExportWeatherButton
-
-@pytest.mark.run(order=7)
-def test_export_yearly_monthly_daily(export_weather_bot, mocker):
-    export_btn, qtbot = export_weather_bot
-    # export_btn.show()
+def test_export_yearly_monthly_daily(datamanager, mocker, qtbot, tmp_path):
+    """
+    Test exporting a weather dataset to various file format and time frame.
+    """
+    datamanager.show()
+    wxdset = WXDataFrame(WXFILENAME)
+    datamanager.new_wxdset_imported(wxdset['Station Name'], wxdset)
 
     for ftype in ['xlsx', 'csv', 'xls']:
         for time_frame in ['daily', 'monthly', 'yearly']:
-            filename = "export_%s_weather.%s" % (time_frame, ftype)
-            if osp.exists(filename):
-                os.remove(filename)
-            mocker.patch.object(QFileDialog, 'getSaveFileName',
-                                return_value=(filename, '*.'+ftype))
-            export_btn.select_export_file(time_frame)
+            filename = osp.join(
+                tmp_path, "export_{}_weather.{}".format(time_frame, ftype))
+            mocker.patch.object(
+                QFileDialog,
+                'getSaveFileName',
+                return_value=(filename, '*.'+ftype))
+            datamanager.btn_export_weather.select_export_file(time_frame)
             assert osp.exists(filename)
 
 
