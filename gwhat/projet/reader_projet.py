@@ -373,7 +373,7 @@ class WLDataFrameHDF5(dict):
         if key in list(self.dset.attrs.keys()):
             return self.dset.attrs[key]
         else:
-            return self.dset[key].value
+            return self.dset[key][...]
 
     @property
     def name(self):
@@ -398,7 +398,7 @@ class WLDataFrameHDF5(dict):
     def get_wlmeas(self):
         """Get the water level measurements for this dataset."""
         grp = self.dset.require_group('manual')
-        return grp['Time'].value, grp['WL'].value
+        return grp['Time'][...], grp['WL'][...]
 
     # ---- Master recession curve
 
@@ -564,8 +564,8 @@ class WLDataFrameHDF5(dict):
 
     def get_brf(self, name):
         grp = self.dset['brf'][name]
-        return (grp['lag'].value, grp['A'].value, grp['err'].value,
-                grp['date start'].value, grp['date end'].value)
+        return (grp['lag'][...], grp['A'][...], grp['err'][...],
+                grp['date start'][...], grp['date end'][...])
 
     def save_brf(self, lag, A, err, date_start, date_end):
         if list(self.dset['brf'].keys()):
@@ -663,7 +663,7 @@ class WXDataFrameHDF5(WXDataFrameBase):
         elif key in ['normals', 'yearly', 'monthly']:
             x = {}
             for vrb in self.store[key].keys():
-                x[vrb] = self.store[key][vrb].value
+                x[vrb] = self.store[key][vrb][...]
             if key == 'normals' and 'Period' not in x.keys():
                 # This is needed for backward compatibility with
                 # gwhat < 0.2.3 (see PR#142).
@@ -675,10 +675,10 @@ class WXDataFrameHDF5(WXDataFrameBase):
                     'Rain', 'Snow', 'Ptot', 'PET']
             x = {}
             for vrb in vrbs:
-                x[vrb] = self.store[vrb].value
+                x[vrb] = self.store[vrb][...]
             return x
         else:
-            return self.store[key].value
+            return self.store[key][...]
 
     def __setitem__(self, key, value):
         return NotImplementedError
@@ -713,7 +713,7 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
             raise KeyError(key)
 
         if isinstance(self.store[key], h5py._hl.dataset.Dataset):
-            return self.store[key].value
+            return self.store[key][...]
         elif isinstance(self.store[key], h5py._hl.group.Group):
             return load_dict_from_h5grp(self.store[key])
         else:
@@ -764,7 +764,7 @@ def load_dict_from_h5grp(h5grp):
     dic = {}
     for key, item in h5grp.items():
         if isinstance(item, h5py._hl.dataset.Dataset):
-            dic[key] = item.value
+            dic[key] = item[...]
         elif isinstance(item, h5py._hl.group.Group):
             dic[key] = load_dict_from_h5grp(item)
     return dic
