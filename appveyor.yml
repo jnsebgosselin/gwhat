@@ -9,7 +9,7 @@ branches:
 
 environment:
   global:
-    GWHAT_VERSION: "gwhat_0.3.4.dev0"
+    GWHAT_VERSION: "gwhat_0.3.4"
 
   matrix:
     - PYTHON: "C:\Python36-x64"
