@@ -6,9 +6,9 @@
 # This file is part of GWHAT (GroundWater Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-from distutils.core import setup
-from Cython.Build import cythonize
 import numpy
+from numpy.distutils.core import setup, Extension
+from Cython.Build import cythonize
 
 
 setup(ext_modules=cythonize("gwhat/gwrecharge/gwrecharge_calculs.pyx"),
