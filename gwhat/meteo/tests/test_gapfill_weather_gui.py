@@ -36,7 +36,7 @@ def workdir(tmp_path_factory):
 
     # Copy the input data files into the temp input directory.
     inputdir = osp.join(workdir, "Meteo", "Input")
-    os.makedirs(inputdir)
+    os.makedirs(inputdir, exist_ok=True)
     for file in INPUTFILES:
         copyfile(osp.join(DATADIR, file), osp.join(inputdir, file))
 
