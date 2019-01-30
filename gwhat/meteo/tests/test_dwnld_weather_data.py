@@ -40,16 +40,13 @@ def downloader_bot(qtbot):
 
 
 # ---- Test RawDataDownloader
-
-
 @pytest.mark.run(order=3)
-def test_download_raw_data(raw_downloader_bot):
-    dwnld_worker, qtbot = raw_downloader_bot
+def test_download_raw_data(projectdir):
+    dwnld_worker = RawDataDownloader()
     now = datetime.now()
 
     # Set attributes of the data downloader.
-    projetpath = os.path.join(os.getcwd(), "@ new-prô'jèt!")
-    dwnld_worker.dirname = os.path.join(projetpath, 'Meteo', 'Raw')
+    dwnld_worker.dirname = os.path.join(projectdir, 'Meteo', 'Raw')
     dwnld_worker.StaName = "MARIEVILLE"
     dwnld_worker.stationID = "5406"
     dwnld_worker.yr_start = str(now.year-5)
@@ -62,12 +59,17 @@ def test_download_raw_data(raw_downloader_bot):
     # Download data again to test when raw data files are already present
     dwnld_worker.download_data()
 
-    # Assert the stopping of the downloading process
+    # Test the stopping of the downloading process
     dwnld_worker.stop_download()
     dwnld_worker.download_data()
 
-
-# ---- Test DwnldWeatherWidget
+    # Assert that the raw data files were downloaded.
+    expected_files = ["eng-daily-0101{}-1231{}.csv".format(year, year) for
+                      year in range(now.year-5, now.year+1)]
+    subfolder = "{} ({})".format(dwnld_worker.StaName, dwnld_worker.climateID)
+    for file in expected_files:
+        assert osp.exists(os.path.join(
+            dwnld_worker.dirname, subfolder, file))
 
 
 @pytest.mark.run(order=3)
