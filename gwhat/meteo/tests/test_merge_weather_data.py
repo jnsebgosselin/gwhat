@@ -111,8 +111,10 @@ def wxdata_merger(qtbot):
 
 # ---- Tests
 def test_merge_data(workdir, datafiles):
-    # Combine the two input weather data files and assert the resulting
-    # combined dataset is as expected.
+    """
+    Combine the two input weather data files and assert the resulting
+    combined dataset is as expected.
+    """
     wxdata_merger = WXDataMerger(datafiles)
 
     np.testing.assert_equal(wxdata_merger['Combined Dataset'], expected_result)
@@ -138,6 +140,9 @@ def test_merge_data(workdir, datafiles):
 
 
 def test_merge_data_widget(wxdata_merger, workdir, datafiles, qtbot, mocker):
+    """
+    Test the GUI to merge datasets.
+    """
     wxdata_merger.show()
     wxdata_merger.set_workdir(workdir)
     fname1, fname2 = datafiles
