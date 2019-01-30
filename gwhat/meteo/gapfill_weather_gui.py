@@ -626,6 +626,14 @@ class GapFillWeatherGUI(QWidget):
 
         self.pbar.hide()
 
+    def get_dataset_names(self):
+        """
+        Return a list of the names of the dataset that are loaded in
+        memory and listed in the target station dropdown menu.
+        """
+        return [self.target_station.itemText(i) for i in
+                range(self.target_station.count())]
+
     def get_time_from_qdatedit(self, obj):
 
         y = obj.date().year()

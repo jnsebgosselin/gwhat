@@ -1,9 +1,7 @@
 -r requirements.txt
 pytest>=3.9
 pytest-qt
-pytest-xvfb
 pytest-mock
 pytest-cov
-pytest-ordering
 flaky
 codecov

@@ -6,45 +6,31 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# ---- Imports: Standard Libraries
-
-import sys
+# ---- Standard library imports
 import os
 import os.path as osp
 
-# ---- Imports: Tird Party Imports
-
+# ---- Third party imports
 import pytest
-from PyQt5.QtCore import Qt
 
-# ---- Imports: Local Imports
-
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+# ---- Local imports
 from gwhat.mainwindow import MainWindow
 from gwhat.projet.manager_projet import QMessageBox
+from gwhat.projet.reader_projet import ProjetReader
 
-
-# Qt Test Fixtures
-# --------------------------------
-
-
-PROJETPATH = osp.join(os.getcwd(), "@ new-prô'jèt!", "@ new-prô'jèt!.gwt")
 WORKDIR = os.getcwd()
 
 
-@pytest.fixture
-def mainwindow_bot(qtbot):
-    mainwindow = MainWindow()
-    qtbot.addWidget(mainwindow)
+# ---- Pytest Fixtures
+@pytest.fixture(scope="module")
+def project(tmp_path_factory):
+    # Create a project and add add the wldset to it.
+    basetemp = tmp_path_factory.getbasetemp()
+    return ProjetReader(osp.join(basetemp, "mainwindow_test.gwt"))
 
-    return mainwindow, qtbot
 
-
-# Test MainWindow
-# -------------------------------
-
-@pytest.mark.run(order=11)
-def test_mainwindow_init(qtbot, mocker):
+# ---- Test MainWindow
+def test_mainwindow_init(qtbot, mocker, project):
     """
     Tests that the MainWindow opens correctly and throws an error message
     since the project Example does not exist. Asserts that GWHAT throws an
@@ -69,18 +55,17 @@ def test_mainwindow_init(qtbot, mocker):
     # Load a project file that is not valid. For the puspose of this test, we
     # will use water_level_datafile.xlsx.
     mainwindow.pmanager.load_project(
-            osp.join(WORKDIR, 'water_level_datafile.xlsx'))
+        osp.join(WORKDIR, 'water_level_datafile.xlsx'))
     assert mainwindow.whatPref.projectfile == default_project_path
     assert mainwindow.pmanager.projet is None
 
     # Load the valid project file that was created in the previous tests.
-    mainwindow.pmanager.load_project(PROJETPATH)
+    mainwindow.pmanager.load_project(project.filename)
     assert mainwindow.pmanager.projet is not None
-    assert mainwindow.whatPref.projectfile == PROJETPATH
+    assert mainwindow.whatPref.projectfile == project.filename
 
 
-@pytest.mark.run(order=11)
-def test_restart_mainwindow(qtbot, mocker):
+def test_restart_mainwindow(qtbot, mocker, project):
     """
     Tests that the last opened valid project in the last session is loaded
     correctly from the config file.
@@ -88,12 +73,12 @@ def test_restart_mainwindow(qtbot, mocker):
     mainwindow = MainWindow()
     qtbot.addWidget(mainwindow)
 
-    assert osp.abspath(mainwindow.whatPref.projectfile) == PROJETPATH
+    assert osp.abspath(mainwindow.whatPref.projectfile) == project.filename
     assert mainwindow.pmanager.projet is not None
-    assert osp.abspath(mainwindow.pmanager.projet.filename) == PROJETPATH
-    assert osp.abspath(mainwindow.pmanager.projet.dirname) == osp.dirname(PROJETPATH)
+    assert osp.abspath(mainwindow.pmanager.projet.filename) == project.filename
+    assert osp.abspath(mainwindow.pmanager.projet.dirname) == (
+        osp.dirname(project.filename))
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-#     pytest.main()
+    pytest.main(['-x', osp.basename(__file__), '-v', '-rw'])
