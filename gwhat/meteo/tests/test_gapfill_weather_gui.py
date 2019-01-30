@@ -7,19 +7,15 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-import sys
 import os
 import os.path as osp
 from shutil import copyfile
 
 # ---- Third party imports
-import numpy as np
-from numpy import nan
 import pytest
 from PyQt5.QtCore import Qt
 
 # Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from gwhat.meteo.gapfill_weather_gui import (GapFillWeatherGUI, QFileDialog,
                                              QMessageBox)
 from gwhat.common.utils import delete_folder_recursively
@@ -27,15 +23,10 @@ from gwhat.meteo.weather_reader import read_weather_datafile
 
 
 # ---- Pytest Fixtures
-
 DATADIR = os.path.join(osp.dirname(osp.realpath(__file__)), "data")
 INPUTFILES = ["IBERVILLE (7023270)_2000-2015.csv",
               "L'ACADIE (702LED4)_2000-2015.csv",
               "MARIEVILLE (7024627)_2000-2015.csv"]
-
-# output_dir = os.path.join(working_dir, "Meteo", "Output")
-# input_dir = os.path.join(working_dir, "Meteo", "Input")
-
 
 @pytest.fixture(scope="module")
 def workdir(tmp_path_factory):
