@@ -35,7 +35,7 @@ def database_filepath(tmp_path_factory):
 
 
 @pytest.fixture
-def station_finder_bot(qtbot):
+def station_browser(qtbot):
     station_browser = WeatherStationBrowser()
     station_browser.set_yearmin(1960)
     station_browser.set_yearmax(2015)
@@ -45,7 +45,7 @@ def station_finder_bot(qtbot):
 
     qtbot.addWidget(station_browser)
 
-    return station_browser, qtbot
+    return station_browser
 
 
 # ---- Expected Results
