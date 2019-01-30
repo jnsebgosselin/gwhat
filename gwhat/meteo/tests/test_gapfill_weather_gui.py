@@ -28,6 +28,7 @@ INPUTFILES = ["IBERVILLE (7023270)_2000-2015.csv",
               "L'ACADIE (702LED4)_2000-2015.csv",
               "MARIEVILLE (7024627)_2000-2015.csv"]
 
+
 @pytest.fixture(scope="module")
 def workdir(tmp_path_factory):
     basetemp = tmp_path_factory.getbasetemp()
