@@ -75,48 +75,53 @@ EXPECTED_RESULTS = [
 
 
 # ---- Tests
-
 @flaky(max_runs=3)
-@pytest.mark.run(order=2)
-def test_load_database(qtbot, mocker):
+def test_load_database(database_filepath, qtbot):
+    """
+    Test that is is possible to fetch the database from the server and
+    save it on disk.
+    """
     station_finder = WeatherStationFinder()
 
-    # Delete the climate station database file if it exists.
-    if os.path.exists(DATABASE_FILEPATH):
-        os.remove(DATABASE_FILEPATH)
-    assert not os.path.exists(DATABASE_FILEPATH)
+    assert not os.path.exists(database_filepath)
     assert station_finder.data is None
 
     # Load the climate station database from ECCC server.
     station_finder.load_database()
-    qtbot.waitUntil(lambda: os.path.exists(DATABASE_FILEPATH))
+    qtbot.waitUntil(lambda: os.path.exists(database_filepath))
     assert station_finder.data is not None
 
 
-@pytest.mark.run(order=2)
-def test_failed_fetch_database(qtbot, mocker):
+def test_failed_fetch_database(database_filepath, qtbot, mocker):
+    """
+    Test that the weather station finder works as expected when fetching the
+    database from the server fails.
+    """
     station_finder = WeatherStationFinder()
     station_finder.load_database()
     assert station_finder.data is not None
 
     # Test loading the database when the fetching fails.
     mocker.patch(
-            'gwhat.meteo.weather_station_finder.read_stationlist_from_tor',
-            return_value=None)
+        'gwhat.meteo.weather_station_finder.read_stationlist_from_tor',
+        return_value=None)
     station_finder.fetch_database()
     qtbot.waitSignal(station_finder.sig_load_database_finished)
     assert station_finder.data is None
-    assert os.path.exists(DATABASE_FILEPATH)
+    assert os.path.exists(database_filepath)
 
 
-@pytest.mark.run(order=2)
-def test_search_weather_station(station_finder_bot, mocker):
-    station_browser, qtbot = station_finder_bot
+def test_search_weather_station(database_filepath, station_browser,
+                                qtbot, mocker):
+    """
+    Test that searching for weather station with various criteria
+    works as expected.
+    """
     station_browser.show()
-    assert station_browser
 
     qtbot.waitSignal(station_browser.stn_finder_thread.started)
-    qtbot.waitSignal(station_browser.stn_finder_worker.sig_load_database_finished)
+    qtbot.waitSignal(
+        station_browser.stn_finder_worker.sig_load_database_finished)
     qtbot.waitSignal(station_browser.stn_finder_thread.finished)
     qtbot.waitUntil(lambda: not station_browser.stn_finder_thread.isRunning(),
                     timeout=60*1000)
@@ -134,32 +139,37 @@ def test_search_weather_station(station_finder_bot, mocker):
     prox_data = station_browser.station_table.get_prox_data()
     assert np.max(prox_data) <= 25
 
-    # Assert that the search returns the expected results.
+    # Assert that the search returned the expected results.
     results = station_browser.stationlist
-    assert results == expected_results
+    for data, expected_data in zip(results, EXPECTED_RESULTS):
+        # Assert station info.
+        for i in (0, 1, 4, 5):
+            assert data[i] == expected_data[i]
+        # Assert start and end date.
+        assert int(data[2]) == int(expected_data[2])
+        assert int(data[3]) >= int(expected_data[3])
+        # Assert lat, lon, and elevation.
+        for i in (6, 7, 8):
+            assert float(data[i]) == float(expected_data[i])
 
-    # Mock the dialog window and answer to specify the file name and type.
-    fname = os.path.join(os.getcwd(), "@ new-prô'jèt!",
-                         "weather_station_list.lst")
-    mocker.patch.object(QFileDialog, 'getSaveFileName',
-                        return_value=(fname, '*.csv'))
-
-    # Delete file if it exists.
-    if os.path.exists(fname):
-        os.remove(fname)
+    # Save the results in a csv file.
+    fname = os.path.join(
+        osp.dirname(database_filepath), "weather_station_list.lst")
+    mocker.patch.object(
+        QFileDialog, 'getSaveFileName', return_value=(fname, '*.csv'))
 
     # Save the file and assert it was created correctly.
     station_browser.btn_save_isClicked()
     assert os.path.exists(fname)
 
 
-@pytest.mark.run(order=2)
-def test_refreshes_database_and_fails(station_finder_bot, mocker):
-    station_browser, qtbot = station_finder_bot
+def test_refreshes_database_and_fails(station_browser, qtbot, mocker):
+    """Test refreshing the database when the fetching fails."""
     station_browser.show()
 
     qtbot.waitSignal(station_browser.stn_finder_thread.started)
-    qtbot.waitSignal(station_browser.stn_finder_worker.sig_load_database_finished)
+    qtbot.waitSignal(
+        station_browser.stn_finder_worker.sig_load_database_finished)
     qtbot.waitSignal(station_browser.stn_finder_thread.finished)
     qtbot.waitUntil(lambda: not station_browser.stn_finder_thread.isRunning(),
                     timeout=60*1000)
@@ -167,16 +177,16 @@ def test_refreshes_database_and_fails(station_finder_bot, mocker):
     assert station_browser.stn_finder_worker._data is not None
 
     # Patch the function to fetch the database so that it fails.
-    # Test loading the database when the fetching fails.
     mocker.patch(
-            'gwhat.meteo.weather_station_finder.read_stationlist_from_tor',
-            return_value=None)
+        'gwhat.meteo.weather_station_finder.read_stationlist_from_tor',
+        return_value=None)
 
     # Force an update of the database from the GUI.
     qtbot.mouseClick(station_browser.btn_fetch, Qt.LeftButton)
 
     qtbot.waitSignal(station_browser.stn_finder_thread.started)
-    qtbot.waitSignal(station_browser.stn_finder_worker.sig_load_database_finished)
+    qtbot.waitSignal(
+        station_browser.stn_finder_worker.sig_load_database_finished)
     qtbot.waitSignal(station_browser.stn_finder_thread.finished)
     qtbot.waitUntil(lambda: not station_browser.stn_finder_thread.isRunning(),
                     timeout=60*1000)
