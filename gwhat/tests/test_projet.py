@@ -7,7 +7,6 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-import sys
 import os
 import os.path as osp
 
@@ -19,7 +18,7 @@ from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.manager_projet import (ProjetManager, QFileDialog)
 
 
-INPUTDATA = {'name': "@ new-prô'jèt!", 'latitude': 45.40, 'longitude': 73.15}
+INPUTDATA = {'name': "test @ prô'jèt!", 'latitude': 45.40, 'longitude': 73.15}
 
 
 # ---- Pytest Fixtures
