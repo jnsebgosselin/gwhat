@@ -24,13 +24,12 @@ from gwhat.meteo.dwnld_weather_data import (
         DwnldWeatherWidget, RawDataDownloader, QFileDialog, QMessageBox)
 
 
-# ---- Qt Test Fixtures
-
-
-@pytest.fixture
-def raw_downloader_bot(qtbot):
-    dwnld_worker = RawDataDownloader()
-    return dwnld_worker, qtbot
+# ---- Pytest Fixtures
+@pytest.fixture(scope="module")
+def projectdir(tmp_path_factory):
+    # Create a project and add add the wldset to it.
+    basetemp = tmp_path_factory.getbasetemp()
+    return osp.join(basetemp, "@ tèst-dôwn'loaddätèt!")
 
 
 @pytest.fixture
