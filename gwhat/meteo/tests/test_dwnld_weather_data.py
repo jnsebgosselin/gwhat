@@ -36,7 +36,6 @@ gwhat.meteo.search_weather_data.URL_TOR = urljoin(
 # ---- Pytest Fixtures
 @pytest.fixture(scope="module")
 def workdir(tmp_path_factory):
-    # Create a project and add add the wldset to it.
     basetemp = tmp_path_factory.getbasetemp()
     return osp.join(basetemp, "@ tèst-dôwn'loaddätèt!")
 
