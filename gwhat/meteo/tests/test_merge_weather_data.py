@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Fri Aug  4 01:50:50 2017
-@author: jsgosselin
-"""
+
+# Copyright © GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
+#
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
 
 # Standard library imports
-import sys
 import os
+import os.path as osp
 
 # Third party imports
 import numpy as np
@@ -15,30 +17,13 @@ import pytest
 from PyQt5.QtCore import Qt
 
 # Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from gwhat.meteo.dwnld_weather_data import ConcatenatedDataFrame
 from gwhat.meteo.weather_reader import read_weather_datafile
 from gwhat.meteo.merge_weather_data import (WXDataMerger, WXDataMergerWidget,
                                             QFileDialog)
 
 
-# Qt Test Fixtures
-# --------------------------------
-
-
-@pytest.fixture
-def wxdata_merger_bot(qtbot):
-    wxdata_merger = WXDataMergerWidget()
-    qtbot.addWidget(wxdata_merger)
-
-    return wxdata_merger, qtbot
-
-
-# Test RawDataDownloader
-# -------------------------------
-
-working_dir = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
-
+# ---- Tests data
 file1 = ConcatenatedDataFrame()
 file1['Station Name'] = 'Station 1'
 file1['Province'] = 'QUEBEC'
@@ -93,17 +78,42 @@ expected_result = np.array([
         ])
 
 
-@pytest.mark.run(order=4)
-def test_merge_data():
-    # Generate synthetic input weather data files.
-    files = [os.path.join(working_dir, "Station 1 (7020561)_1960-1974.csv"),
-             os.path.join(working_dir, "Station 2 (7020562)_1974-1990.csv")]
+# ---- Pytest Fixtures
+@pytest.fixture(scope="module")
+def workdir(tmp_path_factory):
+    # Create a project and add add the wldset to it.
+    basetemp = tmp_path_factory.getbasetemp()
+    return osp.join(basetemp, "@ new-prô'jèt!")
+
+
+@pytest.fixture(scope="module")
+def datafiles(workdir):
+    """
+    Fixture that generates synthetic input weather data files and returns a
+    list of paths to these files.
+    """
+    files = [osp.join(workdir, "Station 1 (7020561)_1960-1974.csv"),
+             osp.join(workdir, "Station 2 (7020562)_1974-1990.csv")]
     file1.save_to_csv(files[0])
     file2.save_to_csv(files[1])
 
-    # Combine the two input weather data files and assert the resulting
-    # combined dataset is as expected.
-    wxdata_merger = WXDataMerger(files)
+    return files
+
+
+@pytest.fixture
+def wxdata_merger(qtbot):
+    wxdata_merger = WXDataMergerWidget()
+    qtbot.addWidget(wxdata_merger)
+    return wxdata_merger
+
+
+# ---- Tests
+def test_merge_data(workdir, datafiles):
+    """
+    Combine the two input weather data files and assert the resulting
+    combined dataset is as expected.
+    """
+    wxdata_merger = WXDataMerger(datafiles)
 
     np.testing.assert_equal(wxdata_merger['Combined Dataset'], expected_result)
 
@@ -112,13 +122,13 @@ def test_merge_data():
     assert wxdata_merger.get_proposed_saved_filename() == file12_expected_name
 
     # Save the resulting combined dataset to file.
-    file12_path = os.path.join(working_dir, file12_expected_name)
+    file12_path = os.path.join(workdir, file12_expected_name)
     wxdata_merger.setDeleteInputFiles(False)
     wxdata_merger.save_to_csv(file12_path)
 
     # Assert that the original input weather datafile were not deleted.
-    for file in files:
-        assert os.path.exists(file)
+    for file in datafiles:
+        assert osp.exists(file)
 
     # Assert that the content of the combined dataset file is as expected.
     df12 = read_weather_datafile(file12_path)
@@ -127,23 +137,21 @@ def test_merge_data():
         np.testing.assert_equal(wxdata_merger[key], df12[key])
 
 
-@pytest.mark.run(order=4)
-def test_merge_data_widget(wxdata_merger_bot, mocker):
-    dirname = os.path.join(os.getcwd(), "@ new-prô'jèt!", "Meteo", "Input")
-
-    wxdata_merger, qtbot = wxdata_merger_bot
+def test_merge_data_widget(wxdata_merger, workdir, datafiles, qtbot, mocker):
+    """
+    Test the GUI to merge datasets.
+    """
     wxdata_merger.show()
-    wxdata_merger.set_workdir(dirname)
+    wxdata_merger.set_workdir(workdir)
+    fname1, fname2 = datafiles
 
     # Select and load the first input file.
-    fname1 = os.path.join(dirname, "Station 1 (7020561)_1960-1974.csv")
     mocker.patch.object(QFileDialog, 'getOpenFileName',
                         return_value=(fname1, '*.csv'))
 
     qtbot.mouseClick(wxdata_merger.btn_get_file1, Qt.LeftButton)
 
     # Select and load the second input file.
-    fname2 = os.path.join(dirname, "Station 2 (7020562)_1974-1990.csv")
     mocker.patch.object(QFileDialog, 'getOpenFileName',
                         return_value=(fname2, '*.csv'))
 
@@ -153,7 +161,7 @@ def test_merge_data_widget(wxdata_merger_bot, mocker):
     wxdata_merger._del_input_files_ckbox.setChecked(True)
 
     # Save the combined dataset to file.
-    fname12 = os.path.join(dirname, "Station 12 (7020562)_1960-1990.csv")
+    fname12 = os.path.join(workdir, "Station 12 (7020562)_1960-1990.csv")
     mocker.patch.object(QFileDialog, 'getSaveFileName',
                         return_value=(fname12, '*.csv'))
 
@@ -177,6 +185,5 @@ def test_merge_data_widget(wxdata_merger_bot, mocker):
     assert os.path.exists(fname12)
 
 
-if __name__ == "__main__":                                   # pragma: no cover
-    pytest.main([os.path.basename(__file__)])
-    # pytest.main()
+if __name__ == "__main__":
+    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])

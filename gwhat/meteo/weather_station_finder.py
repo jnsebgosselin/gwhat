@@ -47,13 +47,14 @@ PROV_NAME_ABB = [('ALBERTA', 'AB'),
 
 # ---- Base functions
 
+URL_TOR = ("ftp://client_climate@ftp.tor.ec.gc.ca/" +
+           "Pub/Get_More_Data_Plus_de_donnees/Station%20Inventory%20EN.csv")
+
+
 def read_stationlist_from_tor():
     """"Read and format the `Station Inventory En.csv` file from Tor ftp."""
-
-    url = "ftp://client_climate@ftp.tor.ec.gc.ca/"
-    url += "Pub/Get_More_Data_Plus_de_donnees/Station%20Inventory%20EN.csv"
     try:
-        data = urlopen(url).read()
+        data = urlopen(URL_TOR).read()
     except (HTTPError, URLError):
         return None
     try:
