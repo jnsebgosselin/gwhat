@@ -38,6 +38,9 @@ install:
   - conda install pyqt xlsxwriter xlrd xlwt cython scipy matplotlib requests h5py qtawesome pytest pytest-mock pytest-cov flaky pywin32 tornado pip m2w64-toolchain
   - python -m pip install pytest-ordering pytest-qt pyinstaller codecov
 
+  # Add mingw-w64 to SYS PATH.
+  - set "PATH=%PYTHON%/Library/mingw-w64/bin;%PATH%"
+
   # Build the extensions.
   - python setup.py build_ext --inplace
 
