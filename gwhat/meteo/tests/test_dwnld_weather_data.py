@@ -307,11 +307,8 @@ def test_merge_widget(dwnld_weather_widget, qtbot, mocker, workdir):
 
     # Assert that the concatenated files were not saved.
     dirname = os.path.join(workdir, "Meteo", "Input")
-    filenames = ["MARIEVILLE (7024627)_2000-2002.csv",
-                 "IBERVILLE (7023270)_2000-2002.csv",
-                 "L'ACADIE (702LED4)_2000-2002.csv"]
-
-    filepaths = [os.path.join(dirname, f) for f in filenames]
+    filenames = ["{}_2000-2002.csv".format(s) for s in stations]
+    filepaths = [osp.join(dirname, f) for f in filenames]
     for path in filepaths:
         assert not os.path.exists(path)
 
