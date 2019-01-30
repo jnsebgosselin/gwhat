@@ -83,9 +83,7 @@ expected_result = np.array([
 def workdir(tmp_path_factory):
     # Create a project and add add the wldset to it.
     basetemp = tmp_path_factory.getbasetemp()
-    workdir = osp.join(basetemp, "@ new-prô'jèt!")
-    os.makedirs(workdir)
-    return workdir
+    return osp.join(basetemp, "@ new-prô'jèt!")
 
 
 @pytest.fixture(scope="module")
