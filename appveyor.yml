@@ -35,11 +35,12 @@ install:
   # Setup Conda.
   - conda config --set always_yes yes
   - conda config --set auto_update_conda no
-  - conda install pyqt5 xlsxwriter xlrd xlwt cython scipy matplotlib requests `
+  - conda install pyqt xlsxwriter xlrd xlwt cython scipy matplotlib requests `
     h5py qtawesome pytest pytest-mock pytest-cov flaky pyinstaller pywin32 `
     tornado pip m2w64-toolchain
   - python -m pip install pytest-ordering
   - python -m pip install pytest-qt
+  - python -m pip install pyinstaller
   - python -m pip install codecov
 
   # Build the extensions.
