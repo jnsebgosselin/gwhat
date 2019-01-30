@@ -9,24 +9,30 @@
 import pytest
 from flaky import flaky
 
-import sys
 import os
+import os.path as osp
 from PyQt5.QtCore import Qt
 import numpy as np
 
 # Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
 from gwhat.meteo.search_weather_data import WeatherStationBrowser
 from gwhat.meteo.search_weather_data import QFileDialog
 import gwhat.meteo.weather_station_finder
 from gwhat.meteo.weather_station_finder import WeatherStationFinder
 
-# Mock the path of the database resource file.
-DATABASE_FILEPATH = 'climate_station_database.npy'
-gwhat.meteo.weather_station_finder.DATABASE_FILEPATH = DATABASE_FILEPATH
 
+# ---- Pytest fixtures
+@pytest.fixture(scope="module")
+def database_filepath(tmp_path_factory):
+    # Create a project and add add the wldset to it.
+    basetemp = tmp_path_factory.getbasetemp()
+    database_filepath = osp.join(basetemp, 'climate_station_database.npy')
 
-# ---- Qt Test Fixtures
+    # Mock the path of the database resource file.
+    gwhat.meteo.weather_station_finder.DATABASE_FILEPATH = database_filepath
+
+    return database_filepath
+
 
 @pytest.fixture
 def station_finder_bot(qtbot):
