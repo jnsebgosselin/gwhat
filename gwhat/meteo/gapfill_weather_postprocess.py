@@ -420,7 +420,7 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
 
     # Histogram
 
-    ax0.hist(Ymes, bins=20, color=c1, histtype='stepfilled', normed=True,
+    ax0.hist(Ymes, bins=20, color=c1, histtype='stepfilled', density=True,
              alpha=0.25, ec=c1, label=lg_labels[0])
 
     # Measured Gamma PDF
