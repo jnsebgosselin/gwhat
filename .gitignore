@@ -72,6 +72,7 @@ releases/gwhat_*
 run_cython.bat
 environment/
 
+gwrecharge_calculs.c
 Colors.db
 kgs_brf.exe
 WHAT.pref
