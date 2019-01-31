@@ -10,11 +10,15 @@ added_files = [('../gwhat/ressources/splash.png', 'ressources'),
                ('../gwhat/ressources/icons_png/*.png', 'ressources/icons_png')
                ]
 
+HIDDENIMPORTS = ['h5py.defs', 'h5py.utils', 'h5py.h5ac', 'h5py._proxy',
+                 'scipy.stats._continuous_distns', 'scipy._lib.messagestream',
+                 'numpy.core._dtype_ctypes']
+
 a = Analysis(['../gwhat/mainwindow.py'],
              pathex=['C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\\DLLs\\x64'],
              binaries=[],
              datas=added_files ,
-             hiddenimports=['h5py.defs', 'h5py.utils', 'h5py.h5ac', 'h5py._proxy', 'scipy.stats._continuous_distns', 'scipy._lib.messagestream'],
+             hiddenimports=HIDDENIMPORTS,
              hookspath=[],
              runtime_hooks=[],
              excludes=['PySide', 'PyQt4'],
