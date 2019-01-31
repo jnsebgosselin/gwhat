@@ -12,7 +12,7 @@ environment:
     GWHAT_VERSION: "gwhat_0.4.0.dev0"
 
   matrix:
-    - PYTHON: "C:\Python36-x64"
+    - PYTHON: "C:\\Python36-x64"
       PYTHON_VERSION: "3.6"
       PYTHON_ARCH: "64"
 
@@ -30,7 +30,7 @@ install:
         throw "There are newer queued builds for this pull request, failing early." }
       
   # Setup SYS PATH.
-  - cmd: set PATH=C:\Python36-x64;C:\Python36-x64\Scripts;%PATH%
+  - cmd: set PATH=%PYTHON%;%PYTHON%\Scripts;%PATH%
 
   # Setup GWHAT dev requirements.
   - python -m pip install -r requirements-dev.txt
