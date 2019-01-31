@@ -29,7 +29,7 @@ DATADIR = os.path.join(osp.dirname(osp.realpath(__file__)), "data")
 STATIONDB = os.path.join(DATADIR, "Station Inventory EN.csv")
 STATIONLIST = os.path.join(DATADIR, "weather_station_list.lst")
 
-gwhat.meteo.search_weather_data.URL_TOR = urljoin(
+gwhat.meteo.weather_station_finder.URL_TOR = urljoin(
     'file:', pathname2url(STATIONDB))
 
 
