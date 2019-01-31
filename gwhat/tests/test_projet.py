@@ -6,105 +6,97 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
+# ---- Standard library imports
+import os
+import os.path as osp
+
+# ---- Third party imports
 import pytest
 
-import sys
-import os.path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
-
-# Local imports
-from gwhat.projet.reader_projet import ProjetReader                    # nopep8
-from gwhat.projet.manager_projet import (ProjetManager, QFileDialog)   # nopep8
+# ---- Local imports
+from gwhat.projet.reader_projet import ProjetReader
+from gwhat.projet.manager_projet import (ProjetManager, QFileDialog)
 
 
-# Qt Test Fixtures
-# --------------------------------
+INPUTDATA = {'name': "test @ prô'jèt!", 'latitude': 45.40, 'longitude': 73.15}
+
+
+# ---- Pytest Fixtures
+@pytest.fixture(scope="module")
+def projectpath(tmp_path_factory):
+    basetemp = tmp_path_factory.getbasetemp()
+    return osp.join(
+        basetemp, INPUTDATA['name'], INPUTDATA['name'] + '.gwt')
 
 
 @pytest.fixture
-def projet_manager_bot(qtbot):
-    manager = ProjetManager()
-    manager.new_projet_dialog.setModal(False)
-    qtbot.addWidget(manager)
-    qtbot.addWidget(manager.new_projet_dialog)
-    data_input = {'name': "@ new-prô'jèt!",
-                  'latitude': 45.40,
-                  'longitude': 73.15}
+def project_manager(qtbot):
+    project_manager = ProjetManager()
+    project_manager.new_projet_dialog.setModal(False)
+    qtbot.addWidget(project_manager)
+    qtbot.addWidget(project_manager.new_projet_dialog)
 
-    return manager, data_input, qtbot
-
-# Tests
-# -------------------------------
+    return project_manager
 
 
-@pytest.mark.run(order=1)
-def test_create_new_projet(projet_manager_bot, mocker):
-    manager, data_input, qtbot = projet_manager_bot
-    manager.show()
-
-    projetpath = os.path.join(
-            os.getcwd(), data_input['name'], data_input['name']+'.gwt')
-
-    # Delete project folder and its content if it already exist.
-    if os.path.exists(os.path.join(os.getcwd(), data_input['name'])):
-        import shutil
-        shutil.rmtree(os.path.join(os.getcwd(), data_input['name']))
+# ---- Tests
+def test_create_new_projet(project_manager, mocker, projectpath):
+    """Test the creation of a new project."""
+    project_manager.show()
 
     # Show new project dialog windows and fill the fields.
-    manager.show_newproject_dialog()
-    manager.new_projet_dialog.name.setText(data_input['name'])
-    manager.new_projet_dialog.author.setText(data_input['name'])
-    manager.new_projet_dialog.lat_spinbox.setValue(data_input['latitude'])
-    manager.new_projet_dialog.lon_spinbox.setValue(data_input['longitude'])
+    project_manager.show_newproject_dialog()
+    new_projet_dialog = project_manager.new_projet_dialog
+
+    # Fill the project dialog fields.
+    new_projet_dialog.name.setText(INPUTDATA['name'])
+    new_projet_dialog.author.setText(INPUTDATA['name'])
+    new_projet_dialog.lat_spinbox.setValue(INPUTDATA['latitude'])
+    new_projet_dialog.lon_spinbox.setValue(INPUTDATA['longitude'])
 
     # Mock the file dialog window so that we can specify programmatically
     # the path where the project will be saved.
-    mocker.patch.object(QFileDialog, 'getExistingDirectory',
-                        return_value=os.getcwd())
+    mocker.patch.object(
+        QFileDialog, 'getExistingDirectory',
+        return_value=osp.dirname(osp.dirname(projectpath)))
 
     # Select the path where the project will be saved.
-    manager.new_projet_dialog.browse_saveIn_folder()
+    project_manager.new_projet_dialog.browse_saveIn_folder()
 
     # Create and save the new project and asser that its name is correctly
     # displayed in the UI and that the project file has been created.
-    manager.new_projet_dialog.save_project()
+    project_manager.new_projet_dialog.save_project()
 
-    assert manager.project_display.text() == data_input['name']
-    assert os.path.exists(projetpath)
+    assert project_manager.project_display.text() == INPUTDATA['name']
+    assert osp.exists(projectpath)
 
-    manager.close_projet()
+    project_manager.close_projet()
 
 
-@pytest.mark.run(order=1)
-def test_load_projet(projet_manager_bot, mocker):
-    manager, data_input, qtbot = projet_manager_bot
-    manager.show()
-    manager.show_newproject_dialog()
-
-    projetpath = os.path.join(
-            os.getcwd(), data_input['name'], data_input['name']+'.gwt')
+def test_load_projet(project_manager, mocker, projectpath):
+    project_manager.show()
+    project_manager.show_newproject_dialog()
 
     # Mock the file dialog window so that we can specify programmatically
     # the path of the project.
     mocker.patch.object(QFileDialog, 'getOpenFileName',
-                        return_value=(projetpath, '*.gwt'))
+                        return_value=(projectpath, '*.gwt'))
 
     # Select and load the project.
-    manager.select_project()
+    project_manager.select_project()
 
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
 
-    assert manager.project_display.text() == data_input['name']
-    assert type(manager.projet) is ProjetReader
-    assert manager.projet.name == data_input['name']
-    assert manager.projet.author == data_input['name']
-    assert manager.projet.lat == data_input['latitude']
-    assert manager.projet.lon == data_input['longitude']
+    assert project_manager.project_display.text() == INPUTDATA['name']
+    assert type(project_manager.projet) is ProjetReader
+    assert project_manager.projet.name == INPUTDATA['name']
+    assert project_manager.projet.author == INPUTDATA['name']
+    assert project_manager.projet.lat == INPUTDATA['latitude']
+    assert project_manager.projet.lon == INPUTDATA['longitude']
 
-    manager.close_projet()
+    project_manager.close_projet()
 
 
 if __name__ == "__main__":
-    # pytest.main([os.path.basename(__file__)])
-    pytest.main()
+    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])

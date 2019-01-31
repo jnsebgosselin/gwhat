@@ -84,8 +84,6 @@ GLUE.npy
 url.txt
 urlsinglestation.txt
 
-weather_station_list.lst
-weather_station_list.csv
 climate_station_database.npy
 
 Organigram.svg

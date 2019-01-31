@@ -11,6 +11,7 @@
 from urllib.request import URLError, urlopen
 import sys
 import os
+import os.path as osp
 from os import getcwd, path, makedirs
 from time import gmtime, sleep
 import csv
@@ -33,7 +34,6 @@ from PyQt5.QtWidgets import (QApplication, QDesktopWidget, QWidget, QMenu,
 from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
-import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import DropDownButton
 from gwhat.common.utils import calc_dist_from_coord
@@ -1399,7 +1399,11 @@ class ConcatenatedDataFrame(dict):
 
         if filepath is None:
             filename = self.get_proposed_saved_filename()
-            filepath = os.path.join(os.getcwd(), filename)
+            filepath = osp.join(os.getcwd(), filename)
+
+        # Create the directory tree if it doesn't exist.
+        if not osp.exists(osp.dirname(filepath)):
+            os.makedirs(osp.dirname(filepath))
 
         with open(filepath, 'w', encoding='utf-8') as f:
             writer = csv.writer(f, delimiter=',', lineterminator='\n')
