@@ -15,8 +15,7 @@ from gwhat import __version__, __project_url__
 RECHGEXT = Extension(
     name='gwhat.gwrecharge.gwrecharge_calculs',
     sources=['gwhat/gwrecharge/gwrecharge_calculs.pyx'],
-    include_dirs=[numpy.get_include()],
-    extra_link_args=["-static", "-static-libgcc"]
+    include_dirs=[numpy.get_include()]
     )
 
 setup(name='GWHAT',
