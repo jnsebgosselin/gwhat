@@ -1068,7 +1068,7 @@ class GapFillWeather(QObject):
             # A = results.params
 
             # Using Numpy function:
-            A = np.linalg.lstsq(X, Y)[0]
+            A = np.linalg.lstsq(X, Y, rcond=None)[0]
 
         else:  # Least Absolute Deviations regression
 
@@ -1832,7 +1832,7 @@ def L1LinearRegression(X, Y):
     n, m = np.shape(X)
 
     # Initialize with least-squares fit.
-    B = np.linalg.lstsq(X, Y)[0]
+    B = np.linalg.lstsq(X, Y, rcond=None)[0]
     BOld = np.copy(B)
 
     # Force divergence.
@@ -1854,7 +1854,7 @@ def L1LinearRegression(X, Y):
         Xb = np.tile(weight, (m, 1)).transpose() * X
         Yb = weight * Y
 
-        B = np.linalg.lstsq(Xb, Yb)[0]
+        B = np.linalg.lstsq(Xb, Yb, rcond=None)[0]
 
     return B
 
