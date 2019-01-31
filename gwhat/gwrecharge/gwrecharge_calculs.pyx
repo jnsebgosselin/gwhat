@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+#cython: language_level=3
 
 # Copyright © 2014-2018 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
