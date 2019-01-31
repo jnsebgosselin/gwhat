@@ -41,6 +41,9 @@ install:
   # Add mingw-w64 to SYS PATH.
   - set "PATH=%PYTHON%/Library/mingw-w64/bin;%PATH%"
 
+  # Add path to PyQt5 library plugins for PyInstaller.
+  - set "PATH=%PYTHON%/Library/plugins/PyQt5;%PATH%"
+
   # Build the extensions.
   - python setup.py build_ext --inplace
 
