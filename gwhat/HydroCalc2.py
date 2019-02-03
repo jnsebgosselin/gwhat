@@ -21,9 +21,9 @@ import numpy as np
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (QGridLayout, QComboBox, QTextEdit,
-                             QSizePolicy, QPushButton, QLabel, QTabWidget,
-                             QApplication, QWidget)
+from PyQt5.QtWidgets import (
+    QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
+    QTabWidget, QApplication, QWidget)
 
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
