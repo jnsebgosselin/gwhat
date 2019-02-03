@@ -89,8 +89,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Water Level Time series :
 
         self.time = []
-        self.txls = []  # time in Excel format
-        self.tmpl = []  # time in matplotlib format
         self.water_lvl = []
 
         # Calcul the delta between the datum of Excel and Maplotlib numeric
@@ -115,8 +113,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.soilFilename = []
         self.SOILPROFIL = SoilProfil()
 
-        # ---- Initialize the GUI
-
+        # Initialize the GUI
         self.precip_bwidth = 7
         self._setup_mpl_canvas()
         self.__initUI__()
@@ -139,7 +136,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.canvas.mpl_connect('figure_leave_event', self.on_fig_leave)
         self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
         self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
-        
+
         # ---- Setup the canvas frame
 
         # Put figure canvas in a QFrame widget.
@@ -189,34 +186,34 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # ax0.grid(axis='x', color=[0.35, 0.35, 0.35], ls='--')
         # ax0.set_axisbelow(True)
 
-        # ---- Setup plot artists
+        # ---- Setup the artists
 
-        # Water level :
+        # Water level data.
         self._obs_wl_plt, = ax0.plot(
             [], [], color='blue', clip_on=True, ls='-', zorder=10,
             marker='None')
 
-        # Water levels measured manually
 
+        # Water levels measured manually.
         self._meas_wl_plt, = ax0.plot(
             [], [], clip_on=True, ls='none', zorder=10, marker='+', ms=8,
             mec='red', mew=2, mfc='red')
 
-        # Predicted water levels :
+        # Predicted water levels.
         self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
                                    ls='-', zorder=10, marker='None')
 
-        # Recession :
+        # Recession.
         self._mrc_plt, = ax0.plot([], [], color='red', clip_on=True,
                                   zorder=15, marker='None', linestyle='--')
 
-        # Rain :
+        # Rain.
         self.h_rain, = ax1.plot([], [])
 
-        # Ptot :
+        # Precipitation.
         self.h_ptot, = ax1.plot([], [])
 
-        # ETP :
+        # Evapotranspiration.
         self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500,
                                ls='-')
 
@@ -260,6 +257,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def _setup_toolbar(self):
         """Setup the main toolbar of the water level calc tool."""
 
+        # ---- Navigate data.
         self.toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self.toolbar.hide()
 
@@ -300,7 +298,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         #          True -> Matplotlib Date Format
 
         # ---- Show/Hide section
-
         self.btn_show_glue = OnOffToolButton('show_glue_wl', size='normal')
         self.btn_show_glue.setToolTip(
             """Show or hide GLUE water level 05/95 envelope.""")
@@ -326,6 +323,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_show_meas_wl.setValue(True, silent=True)
         self.btn_show_meas_wl.sig_value_changed.connect(self.draw_meas_wl)
 
+        # ---- Select and transform data.
         self.btn_rect_select = OnOffToolButton('rect_select', size='normal')
         self.btn_rect_select.setToolTip(
             "Select water level data by clicking with the mouse and dragging "
@@ -339,7 +337,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
-                    self.btn_show_mrc, self.btn_show_meas_wl,
+                    self.btn_show_mrc, self.btn_show_meas_wl, None,
                     self.btn_rect_select]:
             toolbar.addWidget(btn)
 
