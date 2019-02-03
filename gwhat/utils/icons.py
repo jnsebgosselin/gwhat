@@ -91,7 +91,9 @@ GWHAT_ICONS = {
     'show_glue_wl': 'show_glue_wl',
     'show_meteo': 'show_meteo',
     'language': 'language',
-    'manual_measures': 'manual_measures'
+    'manual_measures': 'manual_measures',
+    'rect_select': 'rect_select',
+    'rect_select_clear': 'rect_select_clear'
     }
 
 COLOR = '#4d4d4d'
@@ -107,10 +109,6 @@ FA_ICONS = {
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
                       'color': COLOR}]}],
-    'rect_select': [
-        ('mdi.select-drag',), {'color': COLOR, 'scale_factor': 1.3}],
-    'rect_select_off': [
-        ('mdi.select-off',), {'color': COLOR, 'scale_factor': 1.1}]
     }
 
 
