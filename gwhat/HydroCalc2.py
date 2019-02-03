@@ -1943,6 +1943,7 @@ if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
+    from gwhat import __rootdir__
 
     app = QApplication(sys.argv)
 
@@ -1951,7 +1952,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = 'C:/Users/jsgosselin/GWHAT/Projects/Example/Example.gwt'
+    pf = osp.join(__rootdir__, '../Projects/Example/Example.gwt')
     pr = ProjetReader(pf)
     dm = DataManager()
 
