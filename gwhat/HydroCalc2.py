@@ -137,6 +137,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.canvas.mpl_connect('resize_event', self.setup_ax_margins)
         self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.canvas.mpl_connect('figure_leave_event', self.on_fig_leave)
+        self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
+        self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
+        
         # ---- Setup the canvas frame
 
         # Put figure canvas in a QFrame widget.
@@ -1217,6 +1220,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def on_fig_leave(self, event):
         """Handle when the mouse cursor leaves the graph."""
         self.draw()
+
+    def on_axes_enter(self, event):
+        """Handle when the mouse cursor enters a new axe."""
+        if self.rect_select_is_active:
+            self.toolbar.set_cursor(2)
+
+    def on_axes_leave(self, event):
+        """Handle when the mouse cursor leaves an axe."""
+        self.toolbar.set_cursor(1)
 
     def on_mouse_move(self, event):
         """
