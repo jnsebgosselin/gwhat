@@ -1158,6 +1158,19 @@ class WLCalc(DialogWindow, SaveFileMixin):
         else:
             self._peaks_plt.set_visible(False)
 
+    def _draw_rect_selection(self, x2, y2):
+        """Draw the rectangle of the rectangular selection tool."""
+        x1, y1 = self._rect_selection[0]
+        if not all((x1, y1, x2, y2)):
+            self._rect_selector.set_visible(False)
+        else:
+            self._rect_selector.set_xy((min(x1, x2), min(y1, y2)))
+            self._rect_selector.set_height(abs(y1 - y2))
+            self._rect_selector.set_width(abs(x1 - x2))
+            self._rect_selector.set_visible(True)
+    
+            self.fig.axes[0].draw_artist(self._rect_selector)
+            
     def _draw_mouse_cursor(self, x, y):
         """Draw a vertical and horizontal line at the specified xy position."""
         if not all((x, y)):
