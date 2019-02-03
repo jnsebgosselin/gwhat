@@ -1195,8 +1195,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.xycoord.set_visible(False)
 
         # ---- Remove Peak Cursor
-
-        if not self.btn_delpeak.autoRaise() and len(self.peak_indx) > 0:
+        if self.btn_delpeak.value() and len(self.peak_indx) > 0:
             # For deleting peak in the graph. Will put a cross on top of the
             # peak to delete if some proximity conditions are met.
 
