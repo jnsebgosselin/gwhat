@@ -692,6 +692,19 @@ class WLCalc(DialogWindow, SaveFileMixin):
         if tool not in self._navig_and_select_tools:
             self._navig_and_select_tools.append(tool)
 
+    def toggle_navig_and_select_tools(self, keep_toggled=None):
+        """
+        Toggle off all navigation and selection tool, but the ones listed
+        in the keep_toggled.
+        """
+        try:
+            iter(keep_toggled)
+        except TypeError:
+            keep_toggled = [keep_toggled]
+
+        for tool in self._navig_and_select_tools:
+            if tool not in keep_toggled:
+                tool.setValue(False)
 
     @property
     def zoom_is_active(self):
