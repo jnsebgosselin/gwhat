@@ -105,6 +105,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
 
+        # Selected water level data.
+        self.wl_selected_i = []
+
         # Barometric Response Function :
         self.selected_brfperiod = [None, None]
         self._select_brfperiod_flag = False
@@ -193,6 +196,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
             [], [], color='blue', clip_on=True, ls='-', zorder=10,
             marker='None')
 
+        self._select_wl_plt, = ax0.plot(
+            [], [], color='orange', clip_on=True, ls='None', zorder=10,
+            marker='.', mfc='orange', mec='orange', ms=5, mew=1.5)
 
         # Water levels measured manually.
         self._meas_wl_plt, = ax0.plot(
@@ -1061,6 +1067,16 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self._meas_wl_plt.set_visible(False)
         self.draw()
 
+    def draw_select_wl(self):
+        """Draw the selected water level data points."""
+        if self.wldset is not None:
+            self._select_wl_plt.set_data(
+                self.time[self.wl_selected_i] +
+                (self.dt4xls2mpl * self.dformat),
+                self.water_lvl[self.wl_selected_i]
+                )
+        self.draw()
+
     def draw_glue_wl(self):
         """Draw or hide the water level envelope estimated with GLUE."""
         if self.wldset is not None and self.btn_show_glue.value():
@@ -1250,6 +1266,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 (self.water_lvl >= min(y_click, y_rel)) &
                 (self.water_lvl <= max(y_click, y_rel))
                 )[0].tolist()
+            self.draw_select_wl()
+
     def on_mouse_move(self, event):
         """
         Draw the vertical mouse guideline and the x and y coordinates of the
