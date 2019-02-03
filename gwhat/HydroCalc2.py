@@ -271,8 +271,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.register_navig_and_select_tool(self.btn_pan)
 
         self.btn_zoom_to_rect = OnOffToolButton('zoom_to_rect', size='normal')
-        self.btn_pan.setToolTip(
-            "Zoom in to the rectangle with the left mouse button and zoom"
+        self.btn_zoom_to_rect.setToolTip(
+            "Zoom into the rectangle with the left mouse button and zoom"
             " out with the right mouse button.")
         self.btn_zoom_to_rect.sig_value_changed.connect(
             self.zoom_is_active_changed)
