@@ -62,6 +62,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         DialogWindow.__init__(self, parent, maximize=True)
         SaveFileMixin.__init__(self)
 
+        self._navig_and_select_tools = []
+
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
@@ -78,6 +80,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             lambda: self.toggle_brfperiod_selection(
                 self.brf_eval_widget.btn_seldata.value())
             )
+        self.register_navig_and_select_tool(self.brf_eval_widget.btn_seldata)
 
         self.__figbckground = None
         self.__addPeakVisible = True
@@ -265,6 +268,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_pan.setToolTip(
             'Pan axes with the left mouse button and zoom with the right')
         self.btn_pan.sig_value_changed.connect(self.pan_is_active_changed)
+        self.register_navig_and_select_tool(self.btn_pan)
 
         self.btn_zoom_to_rect = OnOffToolButton('zoom_to_rect', size='normal')
         self.btn_pan.setToolTip(
@@ -272,6 +276,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             " out with the right mouse button.")
         self.btn_zoom_to_rect.sig_value_changed.connect(
             self.zoom_is_active_changed)
+        self.register_navig_and_select_tool(self.btn_zoom_to_rect)
 
         self.btn_wl_style = OnOffToolButton('showDataDots', size='normal')
         self.btn_wl_style.setToolTip(
@@ -365,12 +370,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
         self.btn_addpeak.setToolTip(
             "<p>Toggle edit mode to manually add extremums to the graph</p>")
+        self.register_navig_and_select_tool(self.btn_addpeak)
 
         self.btn_delpeak = OnOffToolButton('erase', size='normal')
         self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
         self.btn_delpeak.setToolTip(
             "<p>Toggle edit mode to manually remove extremums"
             " from the graph</p>")
+        self.register_navig_and_select_tool(self.btn_delpeak)
 
         self.btn_save_mrc = QToolButtonNormal(icons.get_icon('save'))
         self.btn_save_mrc.setToolTip('Save calculated MRC to file.')
@@ -620,10 +627,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.brf_eval_widget.btn_seldata.setValue(value, silent=True)
         self._select_brfperiod_flag = value
         if value is True:
-            self.btn_addpeak.setValue(False)
-            self.btn_delpeak.setValue(False)
-            self.btn_zoom_to_rect.setValue(False)
-            self.btn_pan.setValue(False)
+            self.toggle_navig_and_select_tools(
+                self.brf_eval_widget.btn_seldata)
             self.selected_brfperiod = [None, None]
         elif value is False:
             if not all(self.selected_brfperiod):
@@ -656,21 +661,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def btn_addpeak_isclicked(self):
         """Handle when the button add_peak is clicked."""
         if self.btn_addpeak.value():
+            self.toggle_navig_and_select_tools(self.btn_addpeak)
             self.btn_show_mrc.setValue(True)
-            self.btn_delpeak.setValue(False)
-            self.btn_pan.setValue(False)
-            self.btn_zoom_to_rect.setValue(False)
-            self.toggle_brfperiod_selection(False)
         self.draw()
 
     def btn_delpeak_isclicked(self):
         """Handle when the button btn_delpeak is clicked."""
         if self.btn_delpeak.value():
+            self.toggle_navig_and_select_tools(self.btn_addpeak)
             self.btn_show_mrc.setValue(True)
-            self.btn_addpeak.setValue(False)
-            self.btn_pan.setValue(False)
-            self.btn_zoom_to_rect.setValue(False)
-            self.toggle_brfperiod_selection(False)
         self.draw()
 
     def clear_all_peaks(self):
@@ -682,6 +681,16 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     # ---- Navig and selec tools
 
+    def register_navig_and_select_tool(self, tool):
+        """
+        Add the tool to the list of tools that are available to interactively
+        navigate and select the data.
+        """
+        if not isinstance(tool, OnOffToolButton):
+            raise TypeError
+
+        if tool not in self._navig_and_select_tools:
+            self._navig_and_select_tools.append(tool)
 
 
     @property
@@ -693,10 +702,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def zoom_is_active_changed(self, zoom_is_active):
         """Handle when the state of the button to zoom to rectangle changes."""
         if self.zoom_is_active:
-            self.btn_pan.setValue(False)
-            self.btn_delpeak.setValue(False)
-            self.btn_addpeak.setValue(False)
-            self.toggle_brfperiod_selection(False)
+            self.toggle_navig_and_select_tools(self.btn_zoom_to_rect)
             if self.toolbar._active is None:
                 self.toolbar.zoom()
         else:
@@ -712,10 +718,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def pan_is_active_changed(self, pan_is_active):
         """Handle when the state of the button to pan the graph changes."""
         if self.pan_is_active:
-            self.btn_zoom_to_rect.setValue(False)
-            self.btn_delpeak.setValue(False)
-            self.btn_addpeak.setValue(False)
-            self.toggle_brfperiod_selection(False)
+            self.toggle_navig_and_select_tools(self.btn_pan)
             if self.toolbar._active is None:
                 self.toolbar.pan()
         else:
