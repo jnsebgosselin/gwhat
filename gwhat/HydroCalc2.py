@@ -18,6 +18,7 @@ import datetime
 # ---- Third party imports
 
 import numpy as np
+from matplotlib.patches import Rectangle
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -219,6 +220,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Predicted GLUE water levels
         self.glue_plt, = ax0.plot([], [])
+
+        # Rectangular selection box.
+        self._rect_selection = [(None, None), (None, None)]
+        self._rect_selector = Rectangle(
+            (0, 0), 0, 0, edgecolor='black', facecolor='red', linestyle=':',
+            fill=True, alpha=0.15, visible=False)
+        ax0.add_patch(self._rect_selector)
 
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
