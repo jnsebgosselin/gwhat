@@ -332,13 +332,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # ---- Select and transform data.
         self.btn_rect_select = OnOffToolButton('rect_select', size='normal')
         self.btn_rect_select.setToolTip(
-            "Select water level data by clicking with the mouse and dragging "
-            "the cursor over a rectangular region of the graph.")
+            "<p>Select water level data by clicking with the mouse and "
+            "dragging the cursor over a rectangular region of the graph.</p>")
         self.btn_rect_select.sig_value_changed.connect(
             self.rect_select_is_active_changed)
         self.register_navig_and_select_tool(self.btn_rect_select)
 
-        self.btn_clear_select = QToolButtonNormal('rect_select_off')
+        self.btn_clear_select = QToolButtonNormal('rect_select_clear')
         self.btn_clear_select.setToolTip("Clear selected water levels.")
         self.btn_clear_select.clicked.connect(self.clear_selected_wl)
 
