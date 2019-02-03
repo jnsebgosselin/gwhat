@@ -332,8 +332,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # ---- Select and transform data.
         self.btn_rect_select = OnOffToolButton('rect_select', size='normal')
         self.btn_rect_select.setToolTip(
-            "Select water level data by clicking with the mouse and dragging "
-            "the cursor over a rectangular region of the graph.")
+            "<p>Select water level data by clicking with the mouse and "
+            "dragging the cursor over a rectangular region of the graph.</p>")
         self.btn_rect_select.sig_value_changed.connect(
             self.rect_select_is_active_changed)
         self.register_navig_and_select_tool(self.btn_rect_select)
