@@ -1189,24 +1189,22 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self._rect_selector.set_height(abs(y1 - y2))
             self._rect_selector.set_width(abs(x1 - x2))
             self._rect_selector.set_visible(True)
-    
+
             self.fig.axes[0].draw_artist(self._rect_selector)
-            
+
     def _draw_mouse_cursor(self, x, y):
         """Draw a vertical and horizontal line at the specified xy position."""
         if not all((x, y)):
             self.vguide.set_visible(False)
         elif (self.pan_is_active or self.zoom_is_active or
-                  self.rect_select_is_active):
+              self.rect_select_is_active):
             self.vguide.set_visible(False)
         else:
             self.vguide.set_visible(True)
             self.vguide.set_xdata(x)
             self.fig.axes[0].draw_artist(self.vguide)
-            
-            
-    # ----- Handlers: Mouse events
 
+    # ----- Handlers: Mouse events
     def is_all_btn_raised(self):
         """
         Return whether all of the tool buttons that can block the panning and
@@ -1252,7 +1250,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         else:
             self.vguide.set_visible(False)
             self.xycoord.set_visible(False)
-            
+
         if self.rect_select_is_active and self.__mouse_btn_is_pressed:
             self._draw_rect_selection(x, y)
 
