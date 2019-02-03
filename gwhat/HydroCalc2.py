@@ -131,9 +131,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.canvas.mpl_connect('button_press_event', self.onclick)
         self.canvas.mpl_connect('button_release_event', self.onrelease)
         self.canvas.mpl_connect('resize_event', self.setup_ax_margins)
-        self.canvas.mpl_connect('motion_notify_event', self.mouse_vguide)
+        self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.canvas.mpl_connect('figure_leave_event', self.on_fig_leave)
-
         # ---- Setup the canvas frame
 
         # Put figure canvas in a QFrame widget.
@@ -1158,7 +1157,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the mouse cursor leaves the graph."""
         self.draw()
 
-    def mouse_vguide(self, event):
+    def on_mouse_move(self, event):
         """
         Draw the vertical mouse guideline and the x and y coordinates of the
         mouse cursor on the graph.
@@ -1249,7 +1248,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 return
             self.__addPeakVisible = True
             self.draw_mrc()
-        self.mouse_vguide(event)
+        self.on_mouse_move(event)
 
     def onclick(self, event):
         """Handle when the graph is clicked with the mouse."""
