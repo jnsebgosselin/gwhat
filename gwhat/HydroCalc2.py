@@ -338,13 +338,17 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.rect_select_is_active_changed)
         self.register_navig_and_select_tool(self.btn_rect_select)
 
+        self.btn_clear_select = QToolButtonNormal('rect_select_off')
+        self.btn_clear_select.setToolTip("Clear selected water levels.")
+        self.btn_clear_select.clicked.connect(self.clear_selected_wl)
+
         # Setup the layout.
         toolbar = ToolBarWidget()
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
                     self.btn_show_mrc, self.btn_show_meas_wl, None,
-                    self.btn_rect_select]:
+                    self.btn_rect_select, self.btn_clear_select]:
             toolbar.addWidget(btn)
 
         return toolbar
@@ -766,6 +770,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle the rectangular selection tool is toggled on or off."""
         if self.rect_select_is_active:
             self.toggle_navig_and_select_tools(self.btn_rect_select)
+
+    def clear_selected_wl(self):
+        """Clear the selecte water level data."""
+        self.wl_selected_i = []
+        self.draw_select_wl()
 
     def home(self):
         """Reset the orgininal view of the figure."""

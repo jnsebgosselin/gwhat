@@ -108,8 +108,9 @@ FA_ICONS = {
                       'offset': (0.3, 0.3),
                       'color': COLOR}]}],
     'rect_select': [
-        ('mdi.selection-drag',),
-        {'color': COLOR, 'scale_factor': 1.3}]
+        ('mdi.select-drag',), {'color': COLOR, 'scale_factor': 1.3}],
+    'rect_select_off': [
+        ('mdi.select-off',), {'color': COLOR, 'scale_factor': 1.1}]
     }
 
 
