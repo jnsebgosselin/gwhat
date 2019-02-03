@@ -369,7 +369,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_save_mrc.clicked.connect(self.save_mrc_tofile)
 
         self.btn_MRCalc = QPushButton('Compute MRC')
-        self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
         self.btn_MRCalc.setToolTip('<p>Calculate the Master Recession Curve'
                                    ' (MRC) for the selected time periods.</p>')
 
@@ -672,18 +672,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.peak_memory.append(self.peak_indx)
             self.draw_mrc()
 
-    # ---- Toolbar handlers
+    # ---- Navig and selec tools
 
-    def aToolbarBtn_isClicked(self):
-        """Handle and redirect all clicked actions from the toolbar."""
-        if self.wldset is None:
-            self.emit_warning(
-                "Please import a valid water level dataset first.")
-            return
 
-        sender = self.sender()
-        if sender == self.btn_MRCalc:
-            self.btn_MRCalc_isClicked()
 
     @property
     def zoom_is_active(self):
