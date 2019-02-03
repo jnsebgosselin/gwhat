@@ -1231,6 +1231,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         else:
             self.vguide.set_visible(False)
             self.xycoord.set_visible(False)
+            
+        if self.rect_select_is_active and self.__mouse_btn_is_pressed:
+            self._draw_rect_selection(x, y)
 
         # ---- Remove Peak Cursor
         if self.btn_delpeak.value() and len(self.peak_indx) > 0:
@@ -1277,6 +1280,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.toolbar.release_pan(event)
         if self.zoom_is_active:
             self.toolbar.release_zoom(event)
+        if self.rect_select_is_active:
+            self._rect_selection[1] = (event.xdata, event.ydata)
+            self._rect_selector.set_visible(False)
 
         if self.is_all_btn_raised():
             self.draw()
@@ -1370,6 +1376,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 self.toggle_brfperiod_selection(False)
             else:
                 self.plot_brfperiod()
+        elif self.rect_select_is_active:
+            self._rect_selection[0] = (event.xdata, event.ydata)
         else:
             self.draw()
 
