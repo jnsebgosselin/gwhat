@@ -1321,7 +1321,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             if xclic is None:
                 return
 
-            xclic = xclic - self.dt4xls2mpl*self.dformat
+            xclic = xclic - (self.dt4xls2mpl * self.dformat)
             argmin = np.argmin(np.abs(xclic - self.time))
             i = 0 if self.selected_brfperiod[0] is None else 1
             self.selected_brfperiod[i] = self.time[argmin]
