@@ -725,6 +725,20 @@ class WLCalc(DialogWindow, SaveFileMixin):
             if self.toolbar._active == 'PAN':
                 self.toolbar.pan()
 
+    @property
+    def rect_select_is_active(self):
+        """
+        Return whether the rectangle selection of water level data is
+        active or not.
+        """
+        return self.btn_rect_select.value()
+
+    @QSlot(bool)
+    def rect_select_is_active_changed(self, value):
+        """Handle the rectangular selection tool is toggled on or off."""
+        if self.rect_select_is_active:
+            self.toggle_navig_and_select_tools(self.btn_rect_select)
+
     def home(self):
         """Reset the orgininal view of the figure."""
         self.toolbar.home()
