@@ -1144,6 +1144,19 @@ class WLCalc(DialogWindow, SaveFileMixin):
         else:
             self._peaks_plt.set_visible(False)
 
+    def _draw_mouse_cursor(self, x, y):
+        """Draw a vertical and horizontal line at the specified xy position."""
+        if not all((x, y)):
+            self.vguide.set_visible(False)
+        elif (self.pan_is_active or self.zoom_is_active or
+                  self.rect_select_is_active):
+            self.vguide.set_visible(False)
+        else:
+            self.vguide.set_visible(True)
+            self.vguide.set_xdata(x)
+            self.fig.axes[0].draw_artist(self.vguide)
+            
+            
     # ----- Handlers: Mouse events
 
     def is_all_btn_raised(self):
@@ -1172,17 +1185,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         fig = self.fig
         fig.canvas.restore_region(self.__figbckground)
 
-        # ---- Draw the vertical guide
+        # ---- Draw the cursor guide and the xy coordinates on the graph.
 
         # Trace a red vertical guide (line) that folows the mouse marker :
 
         x, y = event.xdata, event.ydata
-        if x:
-            self.vguide.set_visible(
-                not self.pan_is_active and not self.zoom_is_active)
-            self.vguide.set_xdata(x)
-            ax0.draw_artist(self.vguide)
-
+        self._draw_mouse_cursor(x, y)
+        if all((x, y)):
             self.xycoord.set_visible(True)
             if self.dformat == 0:
                 self.xycoord.set_text(
