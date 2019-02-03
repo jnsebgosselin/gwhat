@@ -1228,6 +1228,28 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the mouse cursor leaves an axe."""
         self.toolbar.set_cursor(1)
 
+    def on_rect_select(self):
+        """
+        Handle when a rectangular area to select water level data has been
+        selected.
+        """
+        xy_click, xy_release = self._rect_selection
+        if not all(xy_click + xy_release):
+            # The selection area is not valid.
+            return
+        else:
+            x_click, y_click = xy_click
+            x_click = x_click - (self.dt4xls2mpl * self.dformat)
+
+            x_rel, y_rel = xy_release
+            x_rel = x_rel - (self.dt4xls2mpl * self.dformat)
+
+            self.wl_selected_i += np.where(
+                (self.time >= min(x_click, x_rel)) &
+                (self.time <= max(x_click, x_rel)) &
+                (self.water_lvl >= min(y_click, y_rel)) &
+                (self.water_lvl <= max(y_click, y_rel))
+                )[0].tolist()
     def on_mouse_move(self, event):
         """
         Draw the vertical mouse guideline and the x and y coordinates of the
@@ -1312,6 +1334,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         if self.rect_select_is_active:
             self._rect_selection[1] = (event.xdata, event.ydata)
             self._rect_selector.set_visible(False)
+            self.on_rect_select()
 
         if self.is_all_btn_raised():
             self.draw()
