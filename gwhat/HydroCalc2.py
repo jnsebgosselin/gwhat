@@ -18,12 +18,13 @@ import datetime
 # ---- Third party imports
 
 import numpy as np
+from matplotlib.patches import Rectangle
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (QGridLayout, QComboBox, QTextEdit,
-                             QSizePolicy, QPushButton, QLabel, QTabWidget,
-                             QApplication, QWidget)
+from PyQt5.QtWidgets import (
+    QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
+    QTabWidget, QApplication, QWidget)
 
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -61,6 +62,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         DialogWindow.__init__(self, parent, maximize=True)
         SaveFileMixin.__init__(self)
 
+        self._navig_and_select_tools = []
+
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
@@ -77,6 +80,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             lambda: self.toggle_brfperiod_selection(
                 self.brf_eval_widget.btn_seldata.value())
             )
+        self.register_navig_and_select_tool(self.brf_eval_widget.btn_seldata)
 
         self.__figbckground = None
         self.__addPeakVisible = True
@@ -85,8 +89,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Water Level Time series :
 
         self.time = []
-        self.txls = []  # time in Excel format
-        self.tmpl = []  # time in matplotlib format
         self.water_lvl = []
 
         # Calcul the delta between the datum of Excel and Maplotlib numeric
@@ -103,6 +105,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
 
+        # Selected water level data.
+        self.wl_selected_i = []
+
         # Barometric Response Function :
         self.selected_brfperiod = [None, None]
         self._select_brfperiod_flag = False
@@ -111,8 +116,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.soilFilename = []
         self.SOILPROFIL = SoilProfil()
 
-        # ---- Initialize the GUI
-
+        # Initialize the GUI
         self.precip_bwidth = 7
         self._setup_mpl_canvas()
         self.__initUI__()
@@ -131,8 +135,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.canvas.mpl_connect('button_press_event', self.onclick)
         self.canvas.mpl_connect('button_release_event', self.onrelease)
         self.canvas.mpl_connect('resize_event', self.setup_ax_margins)
-        self.canvas.mpl_connect('motion_notify_event', self.mouse_vguide)
+        self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
         self.canvas.mpl_connect('figure_leave_event', self.on_fig_leave)
+        self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
+        self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
 
         # ---- Setup the canvas frame
 
@@ -183,34 +189,37 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # ax0.grid(axis='x', color=[0.35, 0.35, 0.35], ls='--')
         # ax0.set_axisbelow(True)
 
-        # ---- Setup plot artists
+        # ---- Setup the artists
 
-        # Water level :
+        # Water level data.
         self._obs_wl_plt, = ax0.plot(
             [], [], color='blue', clip_on=True, ls='-', zorder=10,
             marker='None')
 
-        # Water levels measured manually
+        self._select_wl_plt, = ax0.plot(
+            [], [], color='orange', clip_on=True, ls='None', zorder=10,
+            marker='.', mfc='orange', mec='orange', ms=5, mew=1.5)
 
+        # Water levels measured manually.
         self._meas_wl_plt, = ax0.plot(
             [], [], clip_on=True, ls='none', zorder=10, marker='+', ms=8,
             mec='red', mew=2, mfc='red')
 
-        # Predicted water levels :
+        # Predicted water levels.
         self.plt_wlpre, = ax0.plot([], [], color='red', clip_on=True,
                                    ls='-', zorder=10, marker='None')
 
-        # Recession :
+        # Recession.
         self._mrc_plt, = ax0.plot([], [], color='red', clip_on=True,
                                   zorder=15, marker='None', linestyle='--')
 
-        # Rain :
+        # Rain.
         self.h_rain, = ax1.plot([], [])
 
-        # Ptot :
+        # Precipitation.
         self.h_ptot, = ax1.plot([], [])
 
-        # ETP :
+        # Evapotranspiration.
         self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500,
                                ls='-')
 
@@ -220,6 +229,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Predicted GLUE water levels
         self.glue_plt, = ax0.plot([], [])
+
+        # Rectangular selection box.
+        self._rect_selection = [(None, None), (None, None)]
+        self._rect_selector = Rectangle(
+            (0, 0), 0, 0, edgecolor='black', facecolor='red', linestyle=':',
+            fill=True, alpha=0.15, visible=False)
+        ax0.add_patch(self._rect_selector)
 
         # Vertical guide line under cursor :
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
@@ -247,6 +263,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def _setup_toolbar(self):
         """Setup the main toolbar of the water level calc tool."""
 
+        # ---- Navigate data.
         self.toolbar = NavigationToolbar2QT(self.canvas, parent=self)
         self.toolbar.hide()
 
@@ -258,13 +275,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_pan.setToolTip(
             'Pan axes with the left mouse button and zoom with the right')
         self.btn_pan.sig_value_changed.connect(self.pan_is_active_changed)
+        self.register_navig_and_select_tool(self.btn_pan)
 
         self.btn_zoom_to_rect = OnOffToolButton('zoom_to_rect', size='normal')
-        self.btn_pan.setToolTip(
-            "Zoom in to the rectangle with the left mouse button and zoom"
+        self.btn_zoom_to_rect.setToolTip(
+            "Zoom into the rectangle with the left mouse button and zoom"
             " out with the right mouse button.")
         self.btn_zoom_to_rect.sig_value_changed.connect(
             self.zoom_is_active_changed)
+        self.register_navig_and_select_tool(self.btn_zoom_to_rect)
 
         self.btn_wl_style = OnOffToolButton('showDataDots', size='normal')
         self.btn_wl_style.setToolTip(
@@ -285,7 +304,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         #          True -> Matplotlib Date Format
 
         # ---- Show/Hide section
-
         self.btn_show_glue = OnOffToolButton('show_glue_wl', size='normal')
         self.btn_show_glue.setToolTip(
             """Show or hide GLUE water level 05/95 envelope.""")
@@ -311,13 +329,26 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_show_meas_wl.setValue(True, silent=True)
         self.btn_show_meas_wl.sig_value_changed.connect(self.draw_meas_wl)
 
-        # Setup the layout.
+        # ---- Select and transform data.
+        self.btn_rect_select = OnOffToolButton('rect_select', size='normal')
+        self.btn_rect_select.setToolTip(
+            "Select water level data by clicking with the mouse and dragging "
+            "the cursor over a rectangular region of the graph.")
+        self.btn_rect_select.sig_value_changed.connect(
+            self.rect_select_is_active_changed)
+        self.register_navig_and_select_tool(self.btn_rect_select)
 
+        self.btn_clear_select = QToolButtonNormal('rect_select_off')
+        self.btn_clear_select.setToolTip("Clear selected water levels.")
+        self.btn_clear_select.clicked.connect(self.clear_selected_wl)
+
+        # Setup the layout.
         toolbar = ToolBarWidget()
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
-                    self.btn_show_mrc, self.btn_show_meas_wl]:
+                    self.btn_show_mrc, self.btn_show_meas_wl, None,
+                    self.btn_rect_select, self.btn_clear_select]:
             toolbar.addWidget(btn)
 
         return toolbar
@@ -358,19 +389,21 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
         self.btn_addpeak.setToolTip(
             "<p>Toggle edit mode to manually add extremums to the graph</p>")
+        self.register_navig_and_select_tool(self.btn_addpeak)
 
         self.btn_delpeak = OnOffToolButton('erase', size='normal')
         self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
         self.btn_delpeak.setToolTip(
             "<p>Toggle edit mode to manually remove extremums"
             " from the graph</p>")
+        self.register_navig_and_select_tool(self.btn_delpeak)
 
         self.btn_save_mrc = QToolButtonNormal(icons.get_icon('save'))
         self.btn_save_mrc.setToolTip('Save calculated MRC to file.')
         self.btn_save_mrc.clicked.connect(self.save_mrc_tofile)
 
         self.btn_MRCalc = QPushButton('Compute MRC')
-        self.btn_MRCalc.clicked.connect(self.aToolbarBtn_isClicked)
+        self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
         self.btn_MRCalc.setToolTip('<p>Calculate the Master Recession Curve'
                                    ' (MRC) for the selected time periods.</p>')
 
@@ -613,10 +646,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.brf_eval_widget.btn_seldata.setValue(value, silent=True)
         self._select_brfperiod_flag = value
         if value is True:
-            self.btn_addpeak.setValue(False)
-            self.btn_delpeak.setValue(False)
-            self.btn_zoom_to_rect.setValue(False)
-            self.btn_pan.setValue(False)
+            self.toggle_navig_and_select_tools(
+                self.brf_eval_widget.btn_seldata)
             self.selected_brfperiod = [None, None]
         elif value is False:
             if not all(self.selected_brfperiod):
@@ -649,21 +680,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def btn_addpeak_isclicked(self):
         """Handle when the button add_peak is clicked."""
         if self.btn_addpeak.value():
+            self.toggle_navig_and_select_tools(self.btn_addpeak)
             self.btn_show_mrc.setValue(True)
-            self.btn_delpeak.setValue(False)
-            self.btn_pan.setValue(False)
-            self.btn_zoom_to_rect.setValue(False)
-            self.toggle_brfperiod_selection(False)
         self.draw()
 
     def btn_delpeak_isclicked(self):
         """Handle when the button btn_delpeak is clicked."""
         if self.btn_delpeak.value():
+            self.toggle_navig_and_select_tools(self.btn_addpeak)
             self.btn_show_mrc.setValue(True)
-            self.btn_addpeak.setValue(False)
-            self.btn_pan.setValue(False)
-            self.btn_zoom_to_rect.setValue(False)
-            self.toggle_brfperiod_selection(False)
         self.draw()
 
     def clear_all_peaks(self):
@@ -673,18 +698,32 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.peak_memory.append(self.peak_indx)
             self.draw_mrc()
 
-    # ---- Toolbar handlers
+    # ---- Navig and selec tools
 
-    def aToolbarBtn_isClicked(self):
-        """Handle and redirect all clicked actions from the toolbar."""
-        if self.wldset is None:
-            self.emit_warning(
-                "Please import a valid water level dataset first.")
-            return
+    def register_navig_and_select_tool(self, tool):
+        """
+        Add the tool to the list of tools that are available to interactively
+        navigate and select the data.
+        """
+        if not isinstance(tool, OnOffToolButton):
+            raise TypeError
 
-        sender = self.sender()
-        if sender == self.btn_MRCalc:
-            self.btn_MRCalc_isClicked()
+        if tool not in self._navig_and_select_tools:
+            self._navig_and_select_tools.append(tool)
+
+    def toggle_navig_and_select_tools(self, keep_toggled=None):
+        """
+        Toggle off all navigation and selection tool, but the ones listed
+        in the keep_toggled.
+        """
+        try:
+            iter(keep_toggled)
+        except TypeError:
+            keep_toggled = [keep_toggled]
+
+        for tool in self._navig_and_select_tools:
+            if tool not in keep_toggled:
+                tool.setValue(False)
 
     @property
     def zoom_is_active(self):
@@ -695,10 +734,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def zoom_is_active_changed(self, zoom_is_active):
         """Handle when the state of the button to zoom to rectangle changes."""
         if self.zoom_is_active:
-            self.btn_pan.setValue(False)
-            self.btn_delpeak.setValue(False)
-            self.btn_addpeak.setValue(False)
-            self.toggle_brfperiod_selection(False)
+            self.toggle_navig_and_select_tools(self.btn_zoom_to_rect)
             if self.toolbar._active is None:
                 self.toolbar.zoom()
         else:
@@ -714,15 +750,31 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def pan_is_active_changed(self, pan_is_active):
         """Handle when the state of the button to pan the graph changes."""
         if self.pan_is_active:
-            self.btn_zoom_to_rect.setValue(False)
-            self.btn_delpeak.setValue(False)
-            self.btn_addpeak.setValue(False)
-            self.toggle_brfperiod_selection(False)
+            self.toggle_navig_and_select_tools(self.btn_pan)
             if self.toolbar._active is None:
                 self.toolbar.pan()
         else:
             if self.toolbar._active == 'PAN':
                 self.toolbar.pan()
+
+    @property
+    def rect_select_is_active(self):
+        """
+        Return whether the rectangle selection of water level data is
+        active or not.
+        """
+        return self.btn_rect_select.value()
+
+    @QSlot(bool)
+    def rect_select_is_active_changed(self, value):
+        """Handle the rectangular selection tool is toggled on or off."""
+        if self.rect_select_is_active:
+            self.toggle_navig_and_select_tools(self.btn_rect_select)
+
+    def clear_selected_wl(self):
+        """Clear the selecte water level data."""
+        self.wl_selected_i = []
+        self.draw_select_wl()
 
     def home(self):
         """Reset the orgininal view of the figure."""
@@ -1024,6 +1076,16 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self._meas_wl_plt.set_visible(False)
         self.draw()
 
+    def draw_select_wl(self):
+        """Draw the selected water level data points."""
+        if self.wldset is not None:
+            self._select_wl_plt.set_data(
+                self.time[self.wl_selected_i] +
+                (self.dt4xls2mpl * self.dformat),
+                self.water_lvl[self.wl_selected_i]
+                )
+        self.draw()
+
     def draw_glue_wl(self):
         """Draw or hide the water level envelope estimated with GLUE."""
         if self.wldset is not None and self.btn_show_glue.value():
@@ -1143,8 +1205,32 @@ class WLCalc(DialogWindow, SaveFileMixin):
         else:
             self._peaks_plt.set_visible(False)
 
-    # ----- Handlers: Mouse events
+    def _draw_rect_selection(self, x2, y2):
+        """Draw the rectangle of the rectangular selection tool."""
+        x1, y1 = self._rect_selection[0]
+        if not all((x1, y1, x2, y2)):
+            self._rect_selector.set_visible(False)
+        else:
+            self._rect_selector.set_xy((min(x1, x2), min(y1, y2)))
+            self._rect_selector.set_height(abs(y1 - y2))
+            self._rect_selector.set_width(abs(x1 - x2))
+            self._rect_selector.set_visible(True)
 
+            self.fig.axes[0].draw_artist(self._rect_selector)
+
+    def _draw_mouse_cursor(self, x, y):
+        """Draw a vertical and horizontal line at the specified xy position."""
+        if not all((x, y)):
+            self.vguide.set_visible(False)
+        elif (self.pan_is_active or self.zoom_is_active or
+              self.rect_select_is_active):
+            self.vguide.set_visible(False)
+        else:
+            self.vguide.set_visible(True)
+            self.vguide.set_xdata(x)
+            self.fig.axes[0].draw_artist(self.vguide)
+
+    # ----- Handlers: Mouse events
     def is_all_btn_raised(self):
         """
         Return whether all of the tool buttons that can block the panning and
@@ -1158,7 +1244,40 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """Handle when the mouse cursor leaves the graph."""
         self.draw()
 
-    def mouse_vguide(self, event):
+    def on_axes_enter(self, event):
+        """Handle when the mouse cursor enters a new axe."""
+        if self.rect_select_is_active:
+            self.toolbar.set_cursor(2)
+
+    def on_axes_leave(self, event):
+        """Handle when the mouse cursor leaves an axe."""
+        self.toolbar.set_cursor(1)
+
+    def on_rect_select(self):
+        """
+        Handle when a rectangular area to select water level data has been
+        selected.
+        """
+        xy_click, xy_release = self._rect_selection
+        if not all(xy_click + xy_release):
+            # The selection area is not valid.
+            return
+        else:
+            x_click, y_click = xy_click
+            x_click = x_click - (self.dt4xls2mpl * self.dformat)
+
+            x_rel, y_rel = xy_release
+            x_rel = x_rel - (self.dt4xls2mpl * self.dformat)
+
+            self.wl_selected_i += np.where(
+                (self.time >= min(x_click, x_rel)) &
+                (self.time <= max(x_click, x_rel)) &
+                (self.water_lvl >= min(y_click, y_rel)) &
+                (self.water_lvl <= max(y_click, y_rel))
+                )[0].tolist()
+            self.draw_select_wl()
+
+    def on_mouse_move(self, event):
         """
         Draw the vertical mouse guideline and the x and y coordinates of the
         mouse cursor on the graph.
@@ -1171,17 +1290,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         fig = self.fig
         fig.canvas.restore_region(self.__figbckground)
 
-        # ---- Draw the vertical guide
+        # ---- Draw the cursor guide and the xy coordinates on the graph.
 
         # Trace a red vertical guide (line) that folows the mouse marker :
 
         x, y = event.xdata, event.ydata
-        if x:
-            self.vguide.set_visible(
-                not self.pan_is_active and not self.zoom_is_active)
-            self.vguide.set_xdata(x)
-            ax0.draw_artist(self.vguide)
-
+        self._draw_mouse_cursor(x, y)
+        if all((x, y)):
             self.xycoord.set_visible(True)
             if self.dformat == 0:
                 self.xycoord.set_text(
@@ -1195,9 +1310,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.vguide.set_visible(False)
             self.xycoord.set_visible(False)
 
-        # ---- Remove Peak Cursor
+        if self.rect_select_is_active and self.__mouse_btn_is_pressed:
+            self._draw_rect_selection(x, y)
 
-        if not self.btn_delpeak.autoRaise() and len(self.peak_indx) > 0:
+        # ---- Remove Peak Cursor
+        if self.btn_delpeak.value() and len(self.peak_indx) > 0:
             # For deleting peak in the graph. Will put a cross on top of the
             # peak to delete if some proximity conditions are met.
 
@@ -1241,6 +1358,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.toolbar.release_pan(event)
         if self.zoom_is_active:
             self.toolbar.release_zoom(event)
+        if self.rect_select_is_active:
+            self._rect_selection[1] = (event.xdata, event.ydata)
+            self._rect_selector.set_visible(False)
+            self.on_rect_select()
 
         if self.is_all_btn_raised():
             self.draw()
@@ -1249,7 +1370,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 return
             self.__addPeakVisible = True
             self.draw_mrc()
-        self.mouse_vguide(event)
+        self.on_mouse_move(event)
 
     def onclick(self, event):
         """Handle when the graph is clicked with the mouse."""
@@ -1322,7 +1443,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             if xclic is None:
                 return
 
-            xclic = xclic - self.dt4xls2mpl*self.dformat
+            xclic = xclic - (self.dt4xls2mpl * self.dformat)
             argmin = np.argmin(np.abs(xclic - self.time))
             i = 0 if self.selected_brfperiod[0] is None else 1
             self.selected_brfperiod[i] = self.time[argmin]
@@ -1334,6 +1455,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 self.toggle_brfperiod_selection(False)
             else:
                 self.plot_brfperiod()
+        elif self.rect_select_is_active:
+            self._rect_selection[0] = (event.xdata, event.ydata)
         else:
             self.draw()
 
@@ -1944,6 +2067,7 @@ if __name__ == '__main__':
     import sys
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
+    from gwhat import __rootdir__
 
     app = QApplication(sys.argv)
 
@@ -1952,7 +2076,7 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    pf = 'C:/Users/jsgosselin/GWHAT/Projects/Example/Example.gwt'
+    pf = osp.join(__rootdir__, '../Projects/Example/Example.gwt')
     pr = ProjetReader(pf)
     dm = DataManager()
 
