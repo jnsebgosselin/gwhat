@@ -323,13 +323,21 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_show_meas_wl.setValue(True, silent=True)
         self.btn_show_meas_wl.sig_value_changed.connect(self.draw_meas_wl)
 
-        # Setup the layout.
+        self.btn_rect_select = OnOffToolButton('rect_select', size='normal')
+        self.btn_rect_select.setToolTip(
+            "Select water level data by clicking with the mouse and dragging "
+            "the cursor over a rectangular region of the graph.")
+        self.btn_rect_select.sig_value_changed.connect(
+            self.rect_select_is_active_changed)
+        self.register_navig_and_select_tool(self.btn_rect_select)
 
+        # Setup the layout.
         toolbar = ToolBarWidget()
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
-                    self.btn_show_mrc, self.btn_show_meas_wl]:
+                    self.btn_show_mrc, self.btn_show_meas_wl,
+                    self.btn_rect_select]:
             toolbar.addWidget(btn)
 
         return toolbar

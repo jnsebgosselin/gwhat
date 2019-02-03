@@ -96,16 +96,20 @@ GWHAT_ICONS = {
 
 COLOR = '#4d4d4d'
 FA_ICONS = {
-    'close_all': [('fa.close', 'fa.close', 'fa.close'),
-                  {'options': [{'scale_factor': 0.6,
-                                'offset': (0.3, -0.3),
-                                'color': COLOR},
-                               {'scale_factor': 0.6,
-                                'offset': (-0.3, -0.3),
-                                'color': COLOR},
-                               {'scale_factor': 0.6,
-                                'offset': (0.3, 0.3),
-                                'color': COLOR}]}]
+    'close_all': [
+        ('fa.close', 'fa.close', 'fa.close'),
+        {'options': [{'scale_factor': 0.6,
+                      'offset': (0.3, -0.3),
+                      'color': COLOR},
+                     {'scale_factor': 0.6,
+                      'offset': (-0.3, -0.3),
+                      'color': COLOR},
+                     {'scale_factor': 0.6,
+                      'offset': (0.3, 0.3),
+                      'color': COLOR}]}],
+    'rect_select': [
+        ('mdi.selection-drag',),
+        {'color': COLOR, 'scale_factor': 1.3}]
     }
 
 
