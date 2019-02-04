@@ -776,6 +776,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.wl_selected_i = []
         self.draw_select_wl()
 
+    def delete_selected_wl(self):
+        """Delete the selecte water level data."""
+        self.water_lvl[self.wl_selected_i] = np.nan
+        self._obs_wl_plt.set_ydata(self.water_lvl)
+        self.clear_selected_wl()
+
     def home(self):
         """Reset the orgininal view of the figure."""
         self.toolbar.home()
