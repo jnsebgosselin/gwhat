@@ -812,17 +812,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def setup_hydrograph(self):
         """Setup the hydrograph after a new wldset has been set."""
-
-        # ---- Reset the UI
-
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
 
-        # ---- Plot the Data
-
-        # Plot water levels and weather
-
+        # Plot observed and predicted water levels
         self._obs_wl_plt.set_data(
             self.time + self.dt4xls2mpl * self.dformat, self.water_lvl)
         self.plt_wlpre.set_data([], [])
@@ -830,17 +824,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.draw_meas_wl()
         self.draw_glue_wl()
         self.draw_weather()
-
-        # Plot stratigraphy.
-
         if not self.btn_strati.autoRaise():
+            # Plot stratigraphy.
             self.display_soil_layer()
 
         self.setup_axis_range()
         self.setup_xticklabels_format()
-
-        # Draw the graph
-
         self.draw()
 
     def setup_axis_range(self, event=None):
