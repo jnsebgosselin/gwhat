@@ -782,6 +782,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self._obs_wl_plt.set_ydata(self.water_lvl)
         self.clear_selected_wl()
 
+    def commit_wl_changes(self):
+        """Commit the changes made to the water level data to the project."""
+        if self.wldset is not None:
+            self.wldset.dset['WL'][:] = self.water_lvl
+            self.wldset.dset.file.flush()
+            print('commit_wl_changes')
+
     def home(self):
         """Reset the orgininal view of the figure."""
         self.toolbar.home()
