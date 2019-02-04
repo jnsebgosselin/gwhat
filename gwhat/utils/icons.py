@@ -109,6 +109,9 @@ FA_ICONS = {
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
                       'color': COLOR}]}],
+    'delete_data': [
+        ('mdi.delete-forever',),
+        {'color': COLOR, 'scale_factor': 1.4}],
     }
 
 
