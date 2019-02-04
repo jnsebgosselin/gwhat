@@ -7,21 +7,18 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: Standard Libraries
-
+# ---- Standard Library imports
 import os
 import os.path as osp
 
-# ---- Import: Third Party Libraries
-
-from PyQt5.QtCore import Qt, QCoreApplication, QSize
+# ---- Third party imports
+from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QLabel,
                              QMessageBox, QLineEdit, QPushButton,
                              QFileDialog, QApplication, QDialog, QGroupBox)
 
 # ---- Local library imports
-
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
 from gwhat.utils.icons import QToolButtonSmall
 from gwhat.utils import icons
