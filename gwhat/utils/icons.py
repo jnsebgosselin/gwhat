@@ -114,7 +114,6 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1.4}],
     }
 
-
 ICON_SIZES = {'large': (32, 32),
               'normal': (28, 28),
               'small': (20, 20)}
