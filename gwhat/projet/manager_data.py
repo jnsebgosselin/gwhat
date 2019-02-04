@@ -87,7 +87,7 @@ class DataManager(QWidget):
         self.btn_load_wl.setToolTip('Import a new water level dataset...')
         self.btn_load_wl.clicked.connect(self.import_wldataset)
 
-        self.btn_del_wldset = QToolButtonSmall(icons.get_icon('clear'))
+        self.btn_del_wldset = QToolButtonSmall('delete_data')
         self.btn_del_wldset.setToolTip('Delete current dataset.')
         self.btn_del_wldset.clicked.connect(self.del_current_wldset)
 
@@ -124,7 +124,7 @@ class DataManager(QWidget):
         self.btn_load_meteo.setToolTip('Import a new weather dataset...')
         self.btn_load_meteo.clicked.connect(self.import_wxdataset)
 
-        self.btn_del_wxdset = QToolButtonSmall(icons.get_icon('clear'))
+        self.btn_del_wxdset = QToolButtonSmall('delete_data')
         self.btn_del_wxdset.setToolTip('Delete current dataset.')
         self.btn_del_wxdset.clicked.connect(self.del_current_wxdset)
 
