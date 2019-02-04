@@ -815,6 +815,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
+        self.clear_selected_wl()
 
         # Plot observed and predicted water levels
         self._obs_wl_plt.set_data(
