@@ -14,9 +14,9 @@ import os.path as osp
 # ---- Third party imports
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QLabel,
-                             QMessageBox, QLineEdit, QPushButton,
-                             QFileDialog, QApplication, QDialog, QGroupBox)
+from PyQt5.QtWidgets import (
+    QWidget, QCheckBox, QComboBox, QGridLayout, QLabel, QMessageBox,
+    QLineEdit, QPushButton, QFileDialog, QApplication, QDialog, QGroupBox)
 
 # ---- Local library imports
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
@@ -36,11 +36,13 @@ class DataManager(QWidget):
     wldsetChanged = QSignal(object)
     wxdsetChanged = QSignal(object)
     sig_workdir_changed = QSignal(str)
+    sig_new_console_msg = QSignal(str)
 
     def __init__(self, parent=None, projet=None, pm=None, pytesting=False):
         super(DataManager, self).__init__(parent)
         self._pytesting = pytesting
         self._projet = projet
+        self._confirm_before_deleting_dset = True
 
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
@@ -202,8 +204,28 @@ class DataManager(QWidget):
         btn = QMessageBox.Ok
         QMessageBox.warning(self, 'Warning', msg, btn)
 
-    # ---- WL Dataset
+    def confirm_del_dataset(self, dsetname, dsettype):
+        """
+        Show a message box asking the user confirmation before deleting
+        a dataset. Return the user's answer and whether the
+        'do not show this message again' checkbox has been checked or not.
+        """
+        msg_box = QMessageBox(
+            QMessageBox.Question,
+            "Delete {} dataset '{}'".format(dsettype, dsetname),
+            ("Do you want to delete the {} dataset <i>{}</i>?<br><br>"
+             "All data will be deleted from the project, but the "
+             "original data files will be preserved.<br>"
+             ).format(dsettype, dsetname),
+            buttons=QMessageBox.Yes | QMessageBox.Cancel,
+            parent=self)
+        checkbox = QCheckBox("Don't show this message again.")
+        msg_box.setCheckBox(checkbox)
 
+        reply = msg_box.exec_()
+        return reply, not checkbox.isChecked()
+
+    # ---- WL Dataset
     @property
     def wldsets(self):
         """Return a list of all the wldset saved in the project."""
@@ -275,25 +297,20 @@ class DataManager(QWidget):
     def del_current_wldset(self):
         """Delete the currently selected water level dataset."""
         if self.wldsets_cbox.count() > 0:
-            name = self.wldsets_cbox.currentText()
-            msg = ('Do you want to delete the dataset <i>%s</i>?'
-                   '<br><br>'
-                   'All data will be deleted from the project database, '
-                   'but the original data files will be preserved') % name
-            reply = QMessageBox.question(
-                self, 'Delete current dataset', msg,
-                QMessageBox.Yes | QMessageBox.No)
-
-            if reply == QMessageBox.No:
-                return
-
-            self.projet.del_wldset(name)
+            dsetname = self.wldsets_cbox.currentText()
+            if self._confirm_before_deleting_dset:
+                reply, dont_show_again = self.confirm_del_dataset(
+                    dsetname, 'water level')
+                if reply == QMessageBox.Cancel:
+                    return
+                elif reply == QMessageBox.Yes:
+                    self._confirm_before_deleting_dset = dont_show_again
+            self.projet.del_wldset(dsetname)
             self.update_wldsets()
             self.update_wldset_info()
             self.wldset_changed()
 
     # ---- WX Dataset
-
     @property
     def wxdsets(self):
         """Return a list of all the weather datasets saved in the project."""
@@ -358,20 +375,18 @@ class DataManager(QWidget):
     def del_current_wxdset(self):
         """Delete the currently selected weather dataset."""
         if self.wxdsets_cbox.count() > 0:
-            name = self.wxdsets_cbox.currentText()
-            msg = ('Do you want to delete the weather dataset <i>%s</i>?'
-                   '<br><br>'
-                   'All data will be deleted from the project database, '
-                   'but the original data files will be preserved') % name
-            reply = QMessageBox.question(
-                self, 'Delete current dataset', msg,
-                QMessageBox.Yes | QMessageBox.No)
-
-            if reply == QMessageBox.Yes:
-                self.projet.del_wxdset(name)
-                self.update_wxdsets()
-                self.update_wxdset_info()
-                self.wxdset_changed()
+            dsetname = self.wxdsets_cbox.currentText()
+            if self._confirm_before_deleting_dset:
+                reply, dont_show_again = self.confirm_del_dataset(
+                    dsetname, 'weather')
+                if reply == QMessageBox.Cancel:
+                    return
+                elif reply == QMessageBox.Yes:
+                    self._confirm_before_deleting_dset = dont_show_again
+            self.projet.del_wxdset(dsetname)
+            self.update_wxdsets()
+            self.update_wxdset_info()
+            self.wxdset_changed()
 
     def get_current_wxdset(self):
         """Return the currently selected weather dataset dataframe."""

@@ -96,16 +96,15 @@ class MainWindow(QMainWindow):
         self.projectfile = self.whatPref.projectfile
         self.projectdir = osp.dirname(self.projectfile)
 
-        # Setup the project and data managers :
-
+        # Setup the project and data managers.
         splash.showMessage("Initializing project and data managers...")
         self.pmanager = ProjetManager(self)
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
         self.dmanager.setMaximumWidth(250)
+        self.dmanager.sig_new_console_msg.connect(self.write2console)
 
-        # Generate the GUI :
-
+        # Generate the GUI.
         self.__initUI__()
         splash.finish(self)
         self.showMaximized()

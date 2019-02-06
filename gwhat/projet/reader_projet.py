@@ -264,7 +264,9 @@ class ProjetReader(object):
         return WLDataFrameHDF5(grp)
 
     def del_wldset(self, name):
+        """Delete the specified water level dataset."""
         del self.db['wldsets/%s' % name]
+        self.db.flush()
 
     # ---- Weather Dataset Handlers
 
@@ -339,7 +341,9 @@ class ProjetReader(object):
         self.db.flush()
 
     def del_wxdset(self, name):
+        """Delete the specified weather dataset."""
         del self.db['wxdsets/%s' % name]
+        self.db.flush()
 
 
 class WLDataFrameHDF5(dict):

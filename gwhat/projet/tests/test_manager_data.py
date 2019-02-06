@@ -18,8 +18,10 @@ from PyQt5.QtCore import Qt
 
 # ---- Local Libraries Imports
 from gwhat.meteo.weather_reader import WXDataFrame
+from gwhat.projet.reader_waterlvl import read_water_level_datafile
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.projet.manager_data import DataManager, QFileDialog, QMessageBox
+from gwhat.projet.manager_data import (DataManager, QFileDialog, QMessageBox,
+                                       QCheckBox)
 
 DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
 WXFILENAME = osp.join(DATADIR, 'sample_weather_datafile.out')
@@ -27,11 +29,10 @@ WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 
 
 # ---- Pytest Fixtures
-@pytest.fixture(scope="module")
-def project(tmp_path_factory):
+@pytest.fixture
+def project(tmpdir):
     # Create a project and add add the wldset to it.
-    basetemp = tmp_path_factory.getbasetemp()
-    return ProjetReader(osp.join(basetemp, "data_manager_test.gwt"))
+    return ProjetReader(osp.join(str(tmpdir), "data_manager_test.gwt"))
 
 
 @pytest.fixture
@@ -77,18 +78,32 @@ def test_delete_weather_data(datamanager, mocker, qtbot):
     """Test deleting weather datasets from the project."""
     datamanager.show()
 
-    # Click on the button to delete the weather dataset from the project, but
-    # answer no.
-    assert datamanager.wxdataset_count() == 1
-    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.No)
+    datamanager.new_wxdset_imported('wxdset1', WXDataFrame(WXFILENAME))
+    datamanager.new_wxdset_imported('wxdset2', WXDataFrame(WXFILENAME))
+    assert datamanager.wxdataset_count() == 2
+
+    # Click to delete the current weather dataset, but cancel.
+    mock_exec_ = mocker.patch.object(
+        QMessageBox, 'exec_', return_value=QMessageBox.Cancel)
+    qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
+    assert datamanager.wxdataset_count() == 2
+    assert datamanager._confirm_before_deleting_dset is True
+    assert mock_exec_.call_count == 1
+
+    # Click to delete the current weather dataset, check the
+    # 'Don't show this message again' option and answer Yes.
+    mock_exec_.return_value = QMessageBox.Yes
+    mocker.patch.object(QCheckBox, 'isChecked', return_value=True)
     qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
     assert datamanager.wxdataset_count() == 1
+    assert datamanager._confirm_before_deleting_dset is False
+    assert mock_exec_.call_count == 2
 
-    # Click on the button to delete the weather dataset from the project and
-    # answer yes.
-    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
+    # Click to delete the current weather dataset.
     qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
     assert datamanager.wxdataset_count() == 0
+    assert datamanager._confirm_before_deleting_dset is False
+    assert mock_exec_.call_count == 2
 
 
 def test_import_waterlevel_data(datamanager, mocker, qtbot):
@@ -124,18 +139,34 @@ def test_delete_waterlevel_data(datamanager, mocker, qtbot):
     """Test deleting water level datasets from the project."""
     datamanager.show()
 
-    # Click on the button to delete the water level dataset from the project,
-    # but answer no.
-    assert datamanager.wldataset_count() == 1
-    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.No)
+    datamanager.new_wldset_imported(
+        'wldset1', read_water_level_datafile(WLFILENAME))
+    datamanager.new_wldset_imported(
+        'wldset2', read_water_level_datafile(WLFILENAME))
+    assert datamanager.wldataset_count() == 2
+
+    # Click to delete the current water level dataset, but cancel.
+    mock_exec_ = mocker.patch.object(
+        QMessageBox, 'exec_', return_value=QMessageBox.Cancel)
+    qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
+    assert datamanager.wldataset_count() == 2
+    assert datamanager._confirm_before_deleting_dset is True
+    assert mock_exec_.call_count == 1
+
+    # Click to delete the current water level dataset, check the
+    # 'Don't show this message again' option and answer Yes.
+    mock_exec_.return_value = QMessageBox.Yes
+    mocker.patch.object(QCheckBox, 'isChecked', return_value=True)
     qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
     assert datamanager.wldataset_count() == 1
+    assert datamanager._confirm_before_deleting_dset is False
+    assert mock_exec_.call_count == 2
 
-    # Click on the button to delete the water level dataset from the project
-    # and answer yes.
-    mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
+    # Click to delete the current weather dataset.
     qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
     assert datamanager.wldataset_count() == 0
+    assert datamanager._confirm_before_deleting_dset is False
+    assert mock_exec_.call_count == 2
 
 
 # ---- Tests ExportWeatherButton
