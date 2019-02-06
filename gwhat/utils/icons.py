@@ -97,6 +97,7 @@ GWHAT_ICONS = {
     }
 
 COLOR = '#4d4d4d'
+GREEN = '#00aa00'
 FA_ICONS = {
     'close_all': [
         ('fa.close', 'fa.close', 'fa.close'),
@@ -109,9 +110,15 @@ FA_ICONS = {
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
                       'color': COLOR}]}],
+    'erase_data': [
+        ('mdi.eraser',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'delete_data': [
         ('mdi.delete-forever',),
         {'color': COLOR, 'scale_factor': 1.4}],
+    'commit_changes': [
+        ('mdi.check-circle-outline',),
+        {'color': GREEN, 'scale_factor': 1.3}],
     }
 
 ICON_SIZES = {'large': (32, 32),

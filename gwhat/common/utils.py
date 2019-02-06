@@ -7,16 +7,14 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: standard libraries
-
+# ---- Standard lirary imports
 import csv
 import os
 import os.path as osp
 from shutil import rmtree
 
 
-# ---- Imports: third party
-
+# ---- Third party imports
 import numpy as np
 import xlsxwriter
 import xlwt

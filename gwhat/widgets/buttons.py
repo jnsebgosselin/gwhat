@@ -30,11 +30,12 @@ from gwhat.widgets.fileio import SaveFileMixin
 
 class ToolBarWidget(QWidget):
     """A standard toolbar with some layout specifics."""
+
     def __init__(self, parent=None):
         super(ToolBarWidget, self).__init__(parent)
         layout = QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.setSpacing(5)
+        layout.setSpacing(2)
 
     def addWidget(self, widget):
         """Add the widget to the toolbar layout."""
