@@ -41,6 +41,7 @@ class DataManager(QWidget):
         super(DataManager, self).__init__(parent)
         self._pytesting = pytesting
         self._projet = projet
+        self._confirm_before_deleting_dset = True
 
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
