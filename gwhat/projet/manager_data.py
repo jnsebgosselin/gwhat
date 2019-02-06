@@ -374,20 +374,18 @@ class DataManager(QWidget):
     def del_current_wxdset(self):
         """Delete the currently selected weather dataset."""
         if self.wxdsets_cbox.count() > 0:
-            name = self.wxdsets_cbox.currentText()
-            msg = ('Do you want to delete the weather dataset <i>%s</i>?'
-                   '<br><br>'
-                   'All data will be deleted from the project database, '
-                   'but the original data files will be preserved') % name
-            reply = QMessageBox.question(
-                self, 'Delete current dataset', msg,
-                QMessageBox.Yes | QMessageBox.No)
-
-            if reply == QMessageBox.Yes:
-                self.projet.del_wxdset(name)
-                self.update_wxdsets()
-                self.update_wxdset_info()
-                self.wxdset_changed()
+            dsetname = self.wxdsets_cbox.currentText()
+            if self._confirm_before_deleting_dset:
+                reply, dont_show_again = self.confirm_del_dataset(
+                    dsetname, 'weather')
+                if reply == QMessageBox.Cancel:
+                    return
+                elif reply == QMessageBox.Yes:
+                    self._confirm_before_deleting_dset = dont_show_again
+            self.projet.del_wxdset(dsetname)
+            self.update_wxdsets()
+            self.update_wxdset_info()
+            self.wxdset_changed()
 
     def get_current_wxdset(self):
         """Return the currently selected weather dataset dataframe."""
