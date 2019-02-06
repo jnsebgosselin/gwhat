@@ -94,13 +94,15 @@ def test_delete_weather_data(datamanager, mocker, qtbot):
     # 'Don't show this message again' option and answer Yes.
     mock_exec_.return_value = QMessageBox.Yes
     mocker.patch.object(QCheckBox, 'isChecked', return_value=True)
-    qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
+    with qtbot.waitSignal(datamanager.sig_new_console_msg, raising=True):
+        qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
     assert datamanager.wxdataset_count() == 1
     assert datamanager._confirm_before_deleting_dset is False
     assert mock_exec_.call_count == 2
 
     # Click to delete the current weather dataset.
-    qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
+    with qtbot.waitSignal(datamanager.sig_new_console_msg, raising=True):
+        qtbot.mouseClick(datamanager.btn_del_wxdset, Qt.LeftButton)
     assert datamanager.wxdataset_count() == 0
     assert datamanager._confirm_before_deleting_dset is False
     assert mock_exec_.call_count == 2
@@ -157,13 +159,15 @@ def test_delete_waterlevel_data(datamanager, mocker, qtbot):
     # 'Don't show this message again' option and answer Yes.
     mock_exec_.return_value = QMessageBox.Yes
     mocker.patch.object(QCheckBox, 'isChecked', return_value=True)
-    qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
+    with qtbot.waitSignal(datamanager.sig_new_console_msg, raising=True):
+        qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
     assert datamanager.wldataset_count() == 1
     assert datamanager._confirm_before_deleting_dset is False
     assert mock_exec_.call_count == 2
 
     # Click to delete the current weather dataset.
-    qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
+    with qtbot.waitSignal(datamanager.sig_new_console_msg, raising=True):
+        qtbot.mouseClick(datamanager.btn_del_wldset, Qt.LeftButton)
     assert datamanager.wldataset_count() == 0
     assert datamanager._confirm_before_deleting_dset is False
     assert mock_exec_.call_count == 2
