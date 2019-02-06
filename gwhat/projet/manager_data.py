@@ -215,7 +215,7 @@ class DataManager(QWidget):
             "Delete {} dataset '{}'".format(dsettype, dsetname),
             ("Do you want to delete the {} dataset <i>{}</i>?<br><br>"
              "All data will be deleted from the project, but the "
-             "original data files will be preserved.<br><br>"
+             "original data files will be preserved.<br>"
              ).format(dsettype, dsetname),
             buttons=QMessageBox.Yes | QMessageBox.Cancel,
             parent=self)
