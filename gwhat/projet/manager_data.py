@@ -36,6 +36,7 @@ class DataManager(QWidget):
     wldsetChanged = QSignal(object)
     wxdsetChanged = QSignal(object)
     sig_workdir_changed = QSignal(str)
+    sig_new_console_msg = QSignal(str)
 
     def __init__(self, parent=None, projet=None, pm=None, pytesting=False):
         super(DataManager, self).__init__(parent)
