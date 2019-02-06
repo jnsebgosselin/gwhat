@@ -309,6 +309,9 @@ class DataManager(QWidget):
             self.update_wldsets()
             self.update_wldset_info()
             self.wldset_changed()
+            self.sig_new_console_msg.emit((
+                "<font color=black>Water level dataset <i>{}</i> deleted "
+                "successfully.</font>").format(dsetname))
 
     # ---- WX Dataset
     @property
@@ -387,6 +390,9 @@ class DataManager(QWidget):
             self.update_wxdsets()
             self.update_wxdset_info()
             self.wxdset_changed()
+            self.sig_new_console_msg.emit((
+                "<font color=black>Weather dataset <i>{}</i> deleted "
+                "successfully.</font>").format(dsetname))
 
     def get_current_wxdset(self):
         """Return the currently selected weather dataset dataframe."""
