@@ -14,9 +14,9 @@ import os.path as osp
 # ---- Third party imports
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtWidgets import (QWidget, QComboBox, QGridLayout, QLabel,
-                             QMessageBox, QLineEdit, QPushButton,
-                             QFileDialog, QApplication, QDialog, QGroupBox)
+from PyQt5.QtWidgets import (
+    QWidget, QCheckBox, QComboBox, QGridLayout, QLabel, QMessageBox,
+    QLineEdit, QPushButton, QFileDialog, QApplication, QDialog, QGroupBox)
 
 # ---- Local library imports
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
