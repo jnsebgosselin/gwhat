@@ -202,8 +202,28 @@ class DataManager(QWidget):
         btn = QMessageBox.Ok
         QMessageBox.warning(self, 'Warning', msg, btn)
 
-    # ---- WL Dataset
+    def confirm_del_dataset(self, dsetname, dsettype):
+        """
+        Show a message box asking the user confirmation before deleting
+        a dataset. Return the user's answer and whether the
+        'do not show this message again' checkbox has been checked or not.
+        """
+        msg_box = QMessageBox(
+            QMessageBox.Question,
+            "Delete {} dataset '{}'".format(dsettype, dsetname),
+            ("Do you want to delete the {} dataset <i>{}</i>?<br><br>"
+             "All data will be deleted from the project, but the "
+             "original data files will be preserved.<br><br>"
+             ).format(dsettype, dsetname),
+            buttons=QMessageBox.Yes | QMessageBox.Cancel,
+            parent=self)
+        checkbox = QCheckBox("Don't show this message again.")
+        msg_box.setCheckBox(checkbox)
 
+        reply = msg_box.exec_()
+        return reply, not checkbox.isChecked()
+
+    # ---- WL Dataset
     @property
     def wldsets(self):
         """Return a list of all the wldset saved in the project."""
