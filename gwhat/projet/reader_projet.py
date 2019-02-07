@@ -53,12 +53,7 @@ class ProjetReader(object):
         print('\nLoading "%s"...' % os.path.basename(filename))
 
         try:
-            # The condition below is required to circumvent a bug of h5py
-            # https://github.com/h5py/h5py/issues/896
-            if os.path.exists(filename):
-                self.__db = h5py.File(filename, mode='a')
-            else:
-                self.__db = h5py.File(filename, mode='w')
+            self.__db = h5py.File(filename, mode='a')
         except Exception:
             self.convert_projet_format(filename)
 
