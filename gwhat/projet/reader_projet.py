@@ -113,6 +113,15 @@ class ProjetReader(object):
             pass
 
     # ---- Project Properties
+    def check_project_file(self):
+        """Check to ensure that the project hdf5 file is not corrupted."""
+        item_names = []
+        try:
+            self.__db.visit(item_names.append)
+        except RuntimeError:
+            return False
+        else:
+            return True
 
     @property
     def name(self):
