@@ -8,19 +8,16 @@
 
 from __future__ import division, unicode_literals
 
-# ---- Import: Standard Libraries
-
+# ---- Standard library imports
 import os
 import csv
 import os.path as osp
 
-# ---- Imports: Third Parties
-
+# ---- Third party imports
 import h5py
 import numpy as np
 
-# ---- Imports: Local Librairies
-
+# ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
