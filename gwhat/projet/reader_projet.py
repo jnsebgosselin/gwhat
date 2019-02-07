@@ -123,6 +123,12 @@ class ProjetReader(object):
         else:
             return True
 
+    def backup_project_file(self):
+        """Copy the project hdf5 file in a file with a .bak extension."""
+        bak_filename = self.filename + '.bak'
+        copyfile(self.filename, bak_filename)
+
+    # ---- Project Properties
     @property
     def name(self):
         return self.db.attrs['name']
