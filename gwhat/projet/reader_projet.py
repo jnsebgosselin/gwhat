@@ -12,6 +12,7 @@ from __future__ import division, unicode_literals
 import os
 import csv
 import os.path as osp
+from shutil import copyfile
 
 # ---- Third party imports
 import h5py
@@ -112,7 +113,6 @@ class ProjetReader(object):
             # projet is None or already closed.
             pass
 
-    # ---- Project Properties
     def check_project_file(self):
         """Check to ensure that the project hdf5 file is not corrupted."""
         item_names = []
@@ -168,8 +168,6 @@ class ProjetReader(object):
     @version.setter
     def version(self, x):
         self.db.attrs['version'] = x
-
-    # -------------------------------------------------------------------------
 
     @property
     def lat(self):
