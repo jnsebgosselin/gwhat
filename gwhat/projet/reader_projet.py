@@ -60,6 +60,7 @@ class ProjetReader(object):
         except Exception:
             self.__db = None
             print('failed')
+            raise ValueError('Project file is not valid!')
 
         # For newly created project and backward compatibility.
         for key in ['name', 'author', 'created', 'modified', 'version']:
