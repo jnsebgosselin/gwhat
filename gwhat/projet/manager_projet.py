@@ -89,6 +89,8 @@ class ProjetManager(QWidget):
         """
         Load the project from the specified filename.
         """
+        self.close_projet()
+
         # If the project doesn't exist.
         if not osp.exists(filename):
             msg_box = QMessageBox(
@@ -101,12 +103,11 @@ class ProjetManager(QWidget):
                 buttons=QMessageBox.Ok,
                 parent=self)
             msg_box.exec_()
-            self.projet = None
             return False
 
         # If the project fails to load.
         try:
-            self.projet = ProjetReader(filename)
+            projet = ProjetReader(filename)
         except Exception:
             if osp.exists(filename + '.bak'):
                 msg_box = QMessageBox(
@@ -122,7 +123,6 @@ class ProjetManager(QWidget):
                 if reply == QMessageBox.Yes:
                     return self.restore_from_backup(filename)
                 else:
-                    self.projet = None
                     return False
             else:
                 msg_box = QMessageBox(
@@ -135,8 +135,9 @@ class ProjetManager(QWidget):
                     buttons=QMessageBox.Ok,
                     parent=self)
                 msg_box.exec_()
-                self.projet = None
                 return False
+        else:
+            self.projet = projet
 
         # If the project is corrupt.
         if self.projet.check_project_file() is True:
@@ -164,7 +165,6 @@ class ProjetManager(QWidget):
                     pass
                 else:
                     self.close_projet()
-                    self.projet = None
                     return False
             else:
                 msg_box = QMessageBox(
@@ -180,7 +180,6 @@ class ProjetManager(QWidget):
                     pass
                 else:
                     self.close_projet()
-                    self.projet = None
                     return False
 
         init_waterlvl_measures(osp.join(self.projet.dirname, "Water Levels"))
