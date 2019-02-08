@@ -77,6 +77,7 @@ class ProjetReader(object):
         """Close the project hdf5 file."""
         try:
             self.db.close()
+            self.__db = None
         except AttributeError:
             # projet is None or already closed.
             pass
