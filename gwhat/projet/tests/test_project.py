@@ -26,12 +26,13 @@ LON = 73.15
 # ---- Pytest Fixtures
 @pytest.fixture
 def projectpath(tmpdir):
+    """A path to a non existing project file."""
     return osp.join(str(tmpdir), NAME, NAME + '.gwt')
 
 
 @pytest.fixture
-def project(projectpath):
-    """Create a generic GWHAT project at the specified path."""
+def projectfile(projectpath):
+    """A path to a valid existing project file."""
     project = ProjetReader(projectpath)
     assert osp.exists(projectpath)
 
@@ -39,6 +40,26 @@ def project(projectpath):
     project.author = NAME
     project.lat = LAT
     project.lon = LON
+
+    project.close_projet()
+
+    return projectpath
+
+
+@pytest.fixture
+def bakfile(projectfile):
+    """A path to a valid project backup file."""
+    project = ProjetReader(projectfile)
+    project.backup_project_file()
+    project.close_projet()
+    assert osp.exists(projectfile + '.bak')
+    return projectfile + '.bak'
+
+
+@pytest.fixture
+def project(projectfile):
+    """Create a generic GWHAT project at the specified path."""
+    project = ProjetReader(projectfile)
     return project
 
 
@@ -89,19 +110,16 @@ def test_create_new_projet(projmanager, mocker, projectpath):
     projmanager.close_projet()
 
 
-def test_load_projet(projmanager, mocker, project):
+def test_load_projet(projmanager, mocker, projectfile):
     """
     Test loading a valid existing project.
     """
-    projectpath = project.filename
-    project.close_projet()
-
     # Select and load the project.
-    assert not osp.exists(projectpath + '.bak')
+    assert not osp.exists(projectfile + '.bak')
     mocker.patch.object(
-        QFileDialog, 'getOpenFileName', return_value=(projectpath, '*.gwt'))
+        QFileDialog, 'getOpenFileName', return_value=(projectfile, '*.gwt'))
     projmanager.select_project()
-    assert osp.exists(projectpath + '.bak')
+    assert osp.exists(projectfile + '.bak')
 
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
@@ -115,34 +133,104 @@ def test_load_projet(projmanager, mocker, project):
     projmanager.close_projet()
 
 
-def test_load_non_existing_project(projmanager, mocker):
-    """Test trying to open a project when the .gwt file does not exist."""
-    mock_qmsgbox = mocker.patch.object(
-        QMessageBox, 'exec_', return_value=QMessageBox.Ok)
-    result = projmanager.load_project("non_existing_project.gwt")
+def test_load_non_existing_project(projmanager, mocker, projectpath):
+    """
+    Test trying to open a project when the .gwt file does not exist.
+    """
+    assert not osp.exists(projectpath)
+    mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
+    mock_qmsgbox.return_value = QMessageBox.Ok
+    result = projmanager.load_project(projectpath)
 
     assert mock_qmsgbox.call_count == 1
     assert result is False
     assert projmanager.projet is None
 
 
-def test_restore_project_from_backup(projmanager, mocker, project):
+def test_load_invalid_project(projmanager, mocker, projectpath):
     """
-    Test restoring from backup when the project failed to open.
+    Test loading an invalid project when no backup exists.
     """
-    projectpath = project.filename
-    project.backup_project_file()
-    assert osp.exists(projectpath + '.bak')
-    project.close_projet()
-
-    # Corrupt the project file.
+    # Create an invalid project file.
+    os.makedirs(osp.dirname(projectpath))
     with open(projectpath, 'w') as f:
         f.write('empty file')
+    assert osp.exists(projectpath)
 
-    # Try loading the corrupt project and Cancel restore from backup.
+    mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
+    mock_qmsgbox.return_value = QMessageBox.Ok
+    result = projmanager.load_project(projectpath)
+
+    assert mock_qmsgbox.call_count == 1
+    assert result is False
+    assert projmanager.projet is None
+
+
+def test_load_corrupt_project_continue(projmanager, mocker, projectfile):
+    """
+    Test loading a corrupt project when no backup exists and click to
+    load it anyway.
+    """
+    assert osp.exists(projectfile)
+    assert not osp.exists(projectfile + '.bak')
+
+    mock_checkproj = mocker.patch.object(
+        ProjetReader, 'check_project_file', return_value=False)
+    mock_qmsgbox = mocker.patch.object(
+        QMessageBox, 'exec_', return_value=QMessageBox.Yes)
+
+    result = projmanager.load_project(projectfile)
+    assert mock_checkproj.call_count == 1
+    assert mock_qmsgbox.call_count == 1
+
+    assert result is True
+    assert projmanager.project_display.text() == NAME
+    assert isinstance(projmanager.projet, ProjetReader)
+    assert projmanager.projet.name == NAME
+    assert projmanager.projet.author == NAME
+    assert projmanager.projet.lat == LAT
+    assert projmanager.projet.lon == LON
+
+    # Backup file are not generated when the project is corrupt.
+    assert not osp.exists(projectfile + '.bak')
+
+
+def test_load_corrupt_project_cancel(projmanager, mocker, projectfile):
+    """
+    Test loading a corrupt project when no backup exists and click to
+    cancel the operation so that no project is loaded.
+    """
+    assert osp.exists(projectfile)
+    assert not osp.exists(projectfile + '.bak')
+
+    mock_checkproj = mocker.patch.object(
+        ProjetReader, 'check_project_file', return_value=False)
+    mock_qmsgbox = mocker.patch.object(
+        QMessageBox, 'exec_', return_value=QMessageBox.Cancel)
+
+    result = projmanager.load_project(projectfile)
+    assert mock_checkproj.call_count == 1
+    assert mock_qmsgbox.call_count == 1
+
+    assert result is False
+    assert projmanager.projet is None
+
+    # Backup file are not generated when the project is corrupt.
+    assert not osp.exists(projectfile + '.bak')
+
+
+def test_restore_invalid_project(projmanager, mocker, projectfile, bakfile):
+    """
+    Test restoring an invalid project from backup.
+    """
+    # Override the project file with an invalid project file.
+    with open(projectfile, 'w') as f:
+        f.write('empty file')
+
+    # Try loading the invalid project and Cancel restore from backup.
     mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
     mock_qmsgbox.return_value = QMessageBox.Cancel
-    result = projmanager.load_project(projectpath)
+    result = projmanager.load_project(projectfile)
 
     assert mock_qmsgbox.call_count == 1
     assert result is False
@@ -150,7 +238,7 @@ def test_restore_project_from_backup(projmanager, mocker, project):
 
     # Try loading the corrupt project and accept to restore from backup.
     mock_qmsgbox.return_value = QMessageBox.Yes
-    result = projmanager.load_project(projectpath)
+    result = projmanager.load_project(projectfile)
 
     assert mock_qmsgbox.call_count == 2
     assert result is True
@@ -162,18 +250,20 @@ def test_restore_project_from_backup(projmanager, mocker, project):
     assert projmanager.projet.lon == LON
 
 
-def test_restore_from_failed_backup(projmanager, mocker, projectpath):
+def test_restore_invalid_project_from_invalid_backup(projmanager, mocker,
+                                                     projectpath):
     """
-    Test restoring from a failed backup when the project failed to open.
+    Test restoring an invalid project when the backup is also invalid.
     """
-    # Create a corrupt project and backup files.
+    # Create an invalid project file and backup file.
     os.makedirs(osp.dirname(projectpath))
     with open(projectpath, 'w') as f:
         f.write('empty file')
     with open(projectpath + '.bak', 'w') as f:
         f.write('empty backup file')
 
-    # Try loading the corrupt project and accept to restore from backup.
+    # Try loading the invalid project and accept to restore from the
+    # invalid backup.
     mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
     mock_qmsgbox.return_value = QMessageBox.Yes
     result = projmanager.load_project(projectpath)
@@ -181,6 +271,44 @@ def test_restore_from_failed_backup(projmanager, mocker, projectpath):
     assert mock_qmsgbox.call_count == 2
     assert result is False
     assert projmanager.projet is None
+
+
+def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
+    """
+    Test restoring a corrupt project from backup.
+    """
+    mock_checkproj = mocker.patch.object(ProjetReader, 'check_project_file')
+    mock_checkproj.side_effect = [False, True, True]
+    mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
+
+    # Try loading the corrupt project and click Cancel.
+    mock_qmsgbox.return_value = QMessageBox.Cancel
+
+    result = projmanager.load_project(projectfile)
+    assert mock_qmsgbox.call_count == 1
+    assert result is False
+    assert projmanager.project_display.text() == ''
+    assert projmanager.projet is None
+
+    # Try loading the corrupt project and click Ignore.
+    mock_checkproj.reset_mock()
+    mock_qmsgbox.return_value = QMessageBox.Ignore
+
+    result = projmanager.load_project(projectfile)
+    assert mock_qmsgbox.call_count == 1
+    assert result is True
+    assert projmanager.project_display.text() == NAME
+    assert isinstance(projmanager.projet, ProjetReader)
+
+    # Try loading the corrupt project and click Yes.
+    mock_checkproj.reset_mock()
+    mock_qmsgbox.return_value = QMessageBox.Yes
+
+    result = projmanager.load_project(projectfile)
+    assert mock_qmsgbox.call_count == 1
+    assert result is True
+    assert projmanager.project_display.text() == NAME
+    assert isinstance(projmanager.projet, ProjetReader)
 
 
 if __name__ == "__main__":
