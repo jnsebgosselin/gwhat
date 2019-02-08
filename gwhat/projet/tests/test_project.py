@@ -16,6 +16,7 @@ import pytest
 # ---- Local imports
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.manager_projet import (ProjetManager, QFileDialog)
+from gwhat.projet.manager_projet import QMessageBox
 
 
 INPUTDATA = {'name': "test @ prô'jèt!", 'latitude': 45.40, 'longitude': 73.15}
@@ -98,6 +99,16 @@ def test_load_projet(projmanager, mocker, projectpath):
     assert projmanager.projet.lon == INPUTDATA['longitude']
 
     projmanager.close_projet()
+
+
+def test_load_non_existing_project(projmanager, mocker, projectpath):
+    """Test trying to open a project when the .gwt file does not exist."""
+    mock_qmsgbox_ = mocker.patch.object(
+        QMessageBox, 'exec_', return_value=QMessageBox.Ok)
+    projmanager.load_project("non_existing_project.gwt")
+
+    assert mock_qmsgbox_.call_count == 1
+    assert projmanager.projet is None
 
 
 if __name__ == "__main__":
