@@ -69,6 +69,7 @@ def test_create_new_projet(project_manager, mocker, projectpath):
 
     assert project_manager.project_display.text() == INPUTDATA['name']
     assert osp.exists(projectpath)
+    assert osp.exists(projectpath + '.bak')
 
     project_manager.close_projet()
 
