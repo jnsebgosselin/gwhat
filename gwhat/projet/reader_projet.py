@@ -96,8 +96,21 @@ class ProjetReader(object):
 
     def backup_project_file(self):
         """Copy the project hdf5 file in a file with a .bak extension."""
-        bak_filename = self.filename + '.bak'
-        print("Creating a backup of the project hdf5 file... ", end='')
+        if self.db is not None:
+            filename = self.filename
+            self.db.close()
+            print("Creating a backup of the project hdf5 file... ", end='')
+            try:
+                copyfile(filename, filename + '.bak')
+            except (OSError, PermissionError):
+                print('failed')
+                return False
+            else:
+                print('done')
+                return True
+            finally:
+                self.load_projet(filename)
+
         try:
             copyfile(self.filename, bak_filename)
         except (OSError, PermissionError):
