@@ -124,6 +124,19 @@ class ProjetManager(QWidget):
                 else:
                     self.projet = None
                     return False
+            else:
+                msg_box = QMessageBox(
+                    QMessageBox.Warning,
+                    "Open project warning",
+                    ("<b>Failed to open the project.</b><br><br>"
+                     "The project file is not valid. Please open an existing "
+                     "valid project or create a new one."
+                     "<br><br><i>{}</i>").format(osp.abspath(filename)),
+                    buttons=QMessageBox.Ok,
+                    parent=self)
+                msg_box.exec_()
+                self.projet = None
+                return False
 
         # If the project is corrupt.
         if self.projet.check_project_file() is True:
