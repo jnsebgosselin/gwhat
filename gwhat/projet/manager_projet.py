@@ -130,7 +130,7 @@ class ProjetManager(QWidget):
             return True
 
     def close_projet(self):
-        """Closes the currently opened hdf5 project file."""
+        """Close the currently opened hdf5 project file."""
         if self.__projet is not None:
             self.__projet.close_projet()
 
