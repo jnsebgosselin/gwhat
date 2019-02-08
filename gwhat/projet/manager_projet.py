@@ -194,22 +194,34 @@ class ProjetManager(QWidget):
         Try to restore the project from its backup file.
         """
         self.close_projet()
+        msg_box = QMessageBox(
+            QMessageBox.Warning,
+            "Restore project warning",
+            ("<b>Failed to restore the project.</b><br><br>"
+             "We are very sorry for the inconvenience. "
+             "Please submit a bug report on our GitHub issue tracker."),
+            buttons=QMessageBox.Ok,
+            parent=self)
+
+        # First we check that the backup is ok.
+        try:
+            backup = ProjetReader(filename + '.bak')
+            assert backup.check_project_file() is True
+            backup.close_projet()
+        except Exception:
+            msg_box.exec_()
+            return False
+
+        # Then we try to restore the project from the backup.
+        print("Restoring project from backup... ", end='')
         try:
             os.remove(filename)
             copyfile(filename + '.bak', filename)
         except (OSError, PermissionError):
-            msg_box = QMessageBox(
-                QMessageBox.Warning,
-                "Restore project warning",
-                ("<b>Failed to restore the project.</b><br><br>"
-                 "We are very sorry for the inconvenience. "
-                 "Please submit a bug report on our GitHub issue tracker."),
-                buttons=QMessageBox.Ok,
-                parent=self)
-            msg_box.exec_()
-            self.projet = None
+            print('failed')
             return False
         else:
+            print('done')
             return self.load_project(filename)
 
     def close_projet(self):
