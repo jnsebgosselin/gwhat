@@ -63,18 +63,20 @@ def test_create_new_projet(project_manager, mocker, projectpath):
     # Select the path where the project will be saved.
     project_manager.new_projet_dialog.browse_saveIn_folder()
 
-    # Create and save the new project and asser that its name is correctly
-    # displayed in the UI and that the project file has been created.
+    # Create and save the new project, assert that its name is correctly
+    # displayed in the UI, and check that the project file and a backup file
+    # have been created.
     project_manager.new_projet_dialog.save_project()
-
     assert project_manager.project_display.text() == INPUTDATA['name']
     assert osp.exists(projectpath)
     assert osp.exists(projectpath + '.bak')
 
+    # Close the project.
     project_manager.close_projet()
 
 
 def test_load_projet(project_manager, mocker, projectpath):
+    """Test loading and existing project."""
     project_manager.show()
     project_manager.show_newproject_dialog()
 
@@ -88,7 +90,6 @@ def test_load_projet(project_manager, mocker, projectpath):
 
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
-
     assert project_manager.project_display.text() == INPUTDATA['name']
     assert type(project_manager.projet) is ProjetReader
     assert project_manager.projet.name == INPUTDATA['name']
