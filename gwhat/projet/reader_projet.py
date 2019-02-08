@@ -53,6 +53,8 @@ class ProjetReader(object):
         print("Loading project from '{}'... ".format(osp.basename(filename)),
               end='')
         try:
+            if not osp.exists(osp.dirname(filename)):
+                os.makedirs(osp.dirname(filename))
             self.__db = h5py.File(filename, mode='a')
             print('done')
         except Exception:
