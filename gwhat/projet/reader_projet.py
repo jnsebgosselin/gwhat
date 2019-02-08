@@ -82,7 +82,7 @@ class ProjetReader(object):
             pass
 
     def check_project_file(self):
-        """Check to ensure that the project hdf5 file is not corrupted."""
+        """Check to ensure that the project hdf5 file is not corrupt."""
         item_names = []
         try:
             self.__db.visit(item_names.append)
