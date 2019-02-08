@@ -34,12 +34,12 @@ def test_mainwindow_init(qtbot, mocker, project):
     """
     Tests that the MainWindow opens correctly and throws an error message
     since the project Example does not exist. Asserts that GWHAT throws an
-    error message correctly when the project file is not valide. Finally,
+    error message correctly when the project file is not valid. Finally,
     tests that a valid project is loaded correctly.
     """
     # Since the project Example does not exist, we need to mock QMessageBox
     # to close the warning message that will appears on startup.
-    mocker.patch.object(QMessageBox, 'warning', return_value=QMessageBox.Ok)
+    mocker.patch.object(QMessageBox, 'exec_', return_value=QMessageBox.Ok)
     default_project_path = osp.join('..', 'Projects', 'Example', 'Example.gwt')
     if osp.exists(osp.join(WORKDIR, 'WHAT.pref')):
         os.remove(osp.join(WORKDIR, 'WHAT.pref'))
