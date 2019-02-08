@@ -279,6 +279,7 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     """
     mock_checkproj = mocker.patch.object(ProjetReader, 'check_project_file')
     mock_checkproj.side_effect = [False, True, True]
+
     mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
 
     # Try loading the corrupt project and click Cancel.
@@ -286,26 +287,31 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
 
     result = projmanager.load_project(projectfile)
     assert mock_qmsgbox.call_count == 1
+    assert mock_checkproj.call_count == 1
     assert result is False
     assert projmanager.project_display.text() == ''
     assert projmanager.projet is None
 
     # Try loading the corrupt project and click Ignore.
     mock_checkproj.reset_mock()
+    mock_checkproj.side_effect = [False, True, True]
     mock_qmsgbox.return_value = QMessageBox.Ignore
 
     result = projmanager.load_project(projectfile)
-    assert mock_qmsgbox.call_count == 1
+    assert mock_qmsgbox.call_count == 2
+    assert mock_checkproj.call_count == 1
     assert result is True
     assert projmanager.project_display.text() == NAME
     assert isinstance(projmanager.projet, ProjetReader)
 
     # Try loading the corrupt project and click Yes.
     mock_checkproj.reset_mock()
+    mock_checkproj.side_effect = [False, True, True]
     mock_qmsgbox.return_value = QMessageBox.Yes
 
     result = projmanager.load_project(projectfile)
-    assert mock_qmsgbox.call_count == 1
+    assert mock_qmsgbox.call_count == 3
+    assert mock_checkproj.call_count == 3
     assert result is True
     assert projmanager.project_display.text() == NAME
     assert isinstance(projmanager.projet, ProjetReader)
