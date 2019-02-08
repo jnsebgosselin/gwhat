@@ -89,17 +89,22 @@ class ProjetManager(QWidget):
             self.load_project(filename)
 
     def load_project(self, filename):
+        """
+        Load the project from the specified filename.
+        """
+        # If the project doesn't exist.
         if not osp.exists(filename):
+            msg_box = QMessageBox(
+                QMessageBox.Warning,
+                "Open project warning",
+                ("<b>Failed to open the project.</b><br><br>"
+                 "The project file does not exist. Please open an existing "
+                 "project or create a new one."
+                 "<br><br><i>{}</i>").format(osp.abspath(filename)),
+                buttons=QMessageBox.Ok,
+                parent=self)
+            msg_box.exec_()
             self.__projet = None
-            msg = """
-                  <p>
-                    <b>Failed to load the project.</b><br><br>
-                    The project file<br>%s<br>
-                    does not exist.<br><br>
-                    Please open an existing project or create a new one.
-                  </p>
-                """ % osp.abspath(filename)
-            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return False
 
         try:
