@@ -8,19 +8,17 @@
 
 from __future__ import division, unicode_literals
 
-# ---- Import: Standard Libraries
-
+# ---- Standard library imports
 import os
 import csv
 import os.path as osp
+from shutil import copyfile
 
-# ---- Imports: Third Parties
-
+# ---- Third party imports
 import h5py
 import numpy as np
 
-# ---- Imports: Local Librairies
-
+# ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
@@ -52,21 +50,19 @@ class ProjetReader(object):
     def load_projet(self, filename):
         """Open the hdf5 project file."""
         self.close_projet()
-
-        print('\nLoading "%s"...' % os.path.basename(filename))
-
+        print("Loading project from '{}'... ".format(osp.basename(filename)),
+              end='')
         try:
-            # The condition below is required to circumvent a bug of h5py
-            # https://github.com/h5py/h5py/issues/896
-            if os.path.exists(filename):
-                self.__db = h5py.File(filename, mode='a')
-            else:
-                self.__db = h5py.File(filename, mode='w')
+            if not osp.exists(osp.dirname(filename)):
+                os.makedirs(osp.dirname(filename))
+            self.__db = h5py.File(filename, mode='a')
+            print('done')
         except Exception:
-            self.convert_projet_format(filename)
+            self.__db = None
+            print('failed')
+            raise ValueError('Project file is not valid!')
 
-        # for newly created project and backward compatibility :
-
+        # For newly created project and backward compatibility.
         for key in ['name', 'author', 'created', 'modified', 'version']:
             if key not in list(self.db.attrs.keys()):
                 self.db.attrs[key] = 'None'
@@ -79,49 +75,53 @@ class ProjetReader(object):
             if key not in list(self.db.keys()):
                 self.db.create_group(key)
 
-        print('Project "%s" loaded succesfully\n' % self.name)
-
-    def convert_projet_format(self, filename):
-        try:
-            print('Old file format. Converting to the new format...')
-            with open(filename, 'r', encoding='utf-8') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
-
-                name = reader[0][1]
-                author = reader[1][1]
-                created = reader[2][1]
-                modified = reader[3][1]
-                version = reader[4][1]
-                lat = float(reader[6][1])
-                lon = float(reader[7][1])
-        except Exception:
-            self.__db = None
-            raise ValueError('Project file is not valid!')
-        else:
-            os.remove(filename)
-
-            self.__db = db = h5py.File(filename, mode='w')
-
-            db.attrs['name'] = name
-            db.attrs['author'] = author
-            db.attrs['created'] = created
-            db.attrs['modified'] = modified
-            db.attrs['version'] = version
-            db.attrs['latitude'] = lat
-            db.attrs['longitude'] = lon
-
-            print('Projet converted to the new format successfully.')
-
     def close_projet(self):
         """Close the project hdf5 file."""
         try:
             self.db.close()
+            self.__db = None
         except AttributeError:
             # projet is None or already closed.
             pass
 
-    # ---- Project Properties
+    def check_project_file(self):
+        """Check to ensure that the project hdf5 file is not corrupt."""
+        item_names = []
+        try:
+            self.__db.visit(item_names.append)
+        except RuntimeError:
+            return False
+        else:
+            return True
 
+    def backup_project_file(self):
+        """Copy the project hdf5 file in a file with a .bak extension."""
+        if self.db is not None:
+            filename = self.filename
+            self.db.close()
+            print("Creating a backup of the project hdf5 file... ", end='')
+            try:
+                copyfile(filename, filename + '.bak')
+            except (OSError, PermissionError):
+                print('failed')
+                return False
+            else:
+                print('done')
+                return True
+            finally:
+                self.load_projet(filename)
+
+        try:
+            copyfile(self.filename, bak_filename)
+        except (OSError, PermissionError):
+            print('failed')
+            return False
+        else:
+            print('done')
+            return True
+
+
+    # ---- Project Properties
     @property
     def name(self):
         return self.db.attrs['name']
@@ -161,8 +161,6 @@ class ProjetReader(object):
     @version.setter
     def version(self, x):
         self.db.attrs['version'] = x
-
-    # -------------------------------------------------------------------------
 
     @property
     def lat(self):

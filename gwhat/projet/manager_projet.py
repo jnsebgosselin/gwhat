@@ -13,6 +13,7 @@ from __future__ import division, unicode_literals
 import os
 import os.path as osp
 from datetime import datetime
+from shutil import copyfile
 
 # ---- Third party imports
 
@@ -43,7 +44,7 @@ class ProjetManager(QWidget):
         self.new_projet_dialog = NewProject(parent)
         self.new_projet_dialog.sig_new_project.connect(self.load_project)
 
-        self.__projet = None
+        self.projet = None
         self.__initGUI__()
         if projet:
             self.load_project(projet)
@@ -62,7 +63,7 @@ class ProjetManager(QWidget):
         new_btn.setToolTip('Create a new project...')
         new_btn.clicked.connect(self.show_newproject_dialog)
 
-        # ---- layout ----
+        # ---- layout
 
         layout = QGridLayout(self)
 
@@ -75,12 +76,6 @@ class ProjetManager(QWidget):
         layout.setColumnStretch(0, 500)
         layout.setRowMinimumHeight(0, 28)
 
-    # =========================================================================
-
-    @property
-    def projet(self):
-        return self.__projet
-
     def select_project(self):
         directory = os.path.abspath(os.path.join('..', 'Projects'))
         filename, _ = QFileDialog.getOpenFileName(
@@ -91,47 +86,151 @@ class ProjetManager(QWidget):
             self.load_project(filename)
 
     def load_project(self, filename):
+        """
+        Load the project from the specified filename.
+        """
+        self.close_projet()
+
+        # If the project doesn't exist.
         if not osp.exists(filename):
-            self.__projet = None
-            msg = """
-                  <p>
-                    <b>Failed to load the project.</b><br><br>
-                    The project file<br>%s<br>
-                    does not exist.<br><br>
-                    Please open an existing project or create a new one.
-                  </p>
-                """ % osp.abspath(filename)
-            QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
+            msg_box = QMessageBox(
+                QMessageBox.Warning,
+                "Open project warning",
+                ("<b>Failed to open the project.</b><br><br>"
+                 "The project file does not exist. Please open an existing "
+                 "project or create a new one."
+                 "<br><br><i>{}</i>").format(osp.abspath(filename)),
+                buttons=QMessageBox.Ok,
+                parent=self)
+            msg_box.exec_()
             return False
 
+        # If the project fails to load.
         try:
-            self.__projet = projet = ProjetReader(filename)
+            projet = ProjetReader(filename)
         except Exception:
-            self.__projet = None
-            msg = """
-                  <p>
-                    <b>Failed to load the project.</b><br><br>
-                    The project file<br>%s<br>
-                    is not valid.<br><br>
-                    Please open a valid project or create a new one.
-                  </p>
-                """ % osp.abspath(filename)
-            QMessageBox.warning(self, 'Warning', msg,  QMessageBox.Ok)
+            if osp.exists(filename + '.bak'):
+                msg_box = QMessageBox(
+                    QMessageBox.Question,
+                    "Open project warning",
+                    ("<b>Failed to open the project.</b><br><br>"
+                     "The project file may be corrupt. Do you want to "
+                     "restore the project from the last project backup?"
+                     "<br><br><i>{}</i>").format(osp.abspath(filename)),
+                    buttons=QMessageBox.Yes | QMessageBox.Cancel,
+                    parent=self)
+                reply = msg_box.exec_()
+                if reply == QMessageBox.Yes:
+                    return self.restore_from_backup(filename)
+                else:
+                    return False
+            else:
+                msg_box = QMessageBox(
+                    QMessageBox.Warning,
+                    "Open project warning",
+                    ("<b>Failed to open the project.</b><br><br>"
+                     "The project file is not valid. Please open an existing "
+                     "valid project or create a new one."
+                     "<br><br><i>{}</i>").format(osp.abspath(filename)),
+                    buttons=QMessageBox.Ok,
+                    parent=self)
+                msg_box.exec_()
+                return False
+        else:
+            self.projet = projet
+
+        # If the project is corrupt.
+        if self.projet.check_project_file() is True:
+            self.projet.backup_project_file()
+        else:
+            if osp.exists(filename + '.bak'):
+                msg_box = QMessageBox(
+                    QMessageBox.Question,
+                    "Open project warning",
+                    ("<b>The project file may be corrupt.</b><br><br>"
+                     "Would you like to restore the project from the last "
+                     "project backup?<br><br>"
+                     "Click <i>Yes</i> to restore the project, click "
+                     "<i>Ignore</i> to open the project anyway, "
+                     "or click <i>Cancel</i> to not open any project."
+                     "<br><br><i>{}</i>").format(osp.abspath(filename)),
+                    buttons=(QMessageBox.Yes |
+                             QMessageBox.Ignore |
+                             QMessageBox.Cancel),
+                    parent=self)
+                reply = msg_box.exec_()
+                if reply == QMessageBox.Yes:
+                    return self.restore_from_backup(filename)
+                if reply == QMessageBox.Ignore:
+                    pass
+                else:
+                    self.close_projet()
+                    return False
+            else:
+                msg_box = QMessageBox(
+                    QMessageBox.Question,
+                    "Open project warning",
+                    ("<b>The project file appears to be corrupt.</b><br><br>"
+                     "Do you want open the project anyway?"
+                     "<br><br><i>{}</i>").format(osp.abspath(filename)),
+                    buttons=QMessageBox.Yes | QMessageBox.Cancel,
+                    parent=self)
+                reply = msg_box.exec_()
+                if reply == QMessageBox.Yes:
+                    pass
+                else:
+                    self.close_projet()
+                    return False
+
+        init_waterlvl_measures(osp.join(self.projet.dirname, "Water Levels"))
+        self.project_display.setText(self.projet.name)
+        self.project_display.adjustSize()
+        self.currentProjetChanged.emit(self.projet)
+        return True
+
+    def restore_from_backup(self, filename):
+        """
+        Try to restore the project from its backup file.
+        """
+        self.close_projet()
+        msg_box = QMessageBox(
+            QMessageBox.Warning,
+            "Restore project warning",
+            ("<b>Failed to restore the project.</b><br><br>"
+             "We are very sorry for the inconvenience. "
+             "Please submit a bug report on our GitHub issue tracker."),
+            buttons=QMessageBox.Ok,
+            parent=self)
+
+        # First we check that the backup is ok.
+        try:
+            backup = ProjetReader(filename + '.bak')
+            assert backup.check_project_file() is True
+            backup.close_projet()
+        except Exception:
+            msg_box.exec_()
+            return False
+
+        # Then we try to restore the project from the backup.
+        print("Restoring project from backup... ", end='')
+        try:
+            os.remove(filename)
+            copyfile(filename + '.bak', filename)
+        except (OSError, PermissionError):
+            print('failed')
             return False
         else:
-            wldir = os.path.join(projet.dirname, "Water Levels")
-            init_waterlvl_measures(wldir)
-            self.project_display.setText(projet.name)
-            self.project_display.adjustSize()
-            self.currentProjetChanged.emit(projet)
-            return True
+            print('done')
+            return self.load_project(filename)
 
     def close_projet(self):
-        """Closes the currently opened hdf5 project file."""
-        if self.__projet is not None:
-            self.__projet.close_projet()
+        """Close the currently opened hdf5 project file."""
+        if self.projet is not None:
+            self.projet.close_projet()
+            self.projet = None
 
     def show_newproject_dialog(self):
+        """Show the dialog to create a new project."""
         self.new_projet_dialog.reset_UI()
         self.new_projet_dialog.show()
 
