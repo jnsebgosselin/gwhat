@@ -30,6 +30,19 @@ def projectpath(tmpdir):
 
 
 @pytest.fixture
+def project(projectpath):
+    """Create a generic GWHAT project at the specified path."""
+    project = ProjetReader(projectpath)
+    assert osp.exists(projectpath)
+
+    project.name = NAME
+    project.author = NAME
+    project.lat = LAT
+    project.lon = LON
+    return project
+
+
+@pytest.fixture
 def projmanager(qtbot):
     projmanager = ProjetManager()
     projmanager.new_projet_dialog.setModal(False)
@@ -38,17 +51,6 @@ def projmanager(qtbot):
     projmanager.show()
 
     return projmanager
-
-
-# ---- Helpers
-def create_project_at(projectpath):
-    """Create a generic GWHAT project at the specified path."""
-    project = ProjetReader(projectpath)
-    project.name = NAME
-    project.author = NAME
-    project.lat = LAT
-    project.lon = LON
-    project.close_projet()
 
 
 # ---- Tests
@@ -87,13 +89,15 @@ def test_create_new_projet(projmanager, mocker, projectpath):
     projmanager.close_projet()
 
 
-def test_load_projet(projmanager, mocker, projectpath):
+def test_load_projet(projmanager, mocker, project):
     """
     Test loading a valid existing project.
     """
-    create_project_at(projectpath)
+    projectpath = project.filename
+    project.close_projet()
 
     # Select and load the project.
+    assert not osp.exists(projectpath + '.bak')
     mocker.patch.object(
         QFileDialog, 'getOpenFileName', return_value=(projectpath, '*.gwt'))
     projmanager.select_project()
@@ -102,7 +106,7 @@ def test_load_projet(projmanager, mocker, projectpath):
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
     assert projmanager.project_display.text() == NAME
-    assert type(projmanager.projet) is ProjetReader
+    assert isinstance(projmanager.projet, ProjetReader)
     assert projmanager.projet.name == NAME
     assert projmanager.projet.author == NAME
     assert projmanager.projet.lat == LAT
@@ -113,11 +117,69 @@ def test_load_projet(projmanager, mocker, projectpath):
 
 def test_load_non_existing_project(projmanager, mocker):
     """Test trying to open a project when the .gwt file does not exist."""
-    mock_qmsgbox_ = mocker.patch.object(
+    mock_qmsgbox = mocker.patch.object(
         QMessageBox, 'exec_', return_value=QMessageBox.Ok)
-    projmanager.load_project("non_existing_project.gwt")
+    result = projmanager.load_project("non_existing_project.gwt")
 
-    assert mock_qmsgbox_.call_count == 1
+    assert mock_qmsgbox.call_count == 1
+    assert result is False
+    assert projmanager.projet is None
+
+
+def test_restore_project_from_backup(projmanager, mocker, project):
+    """
+    Test restoring from backup when the project failed to open.
+    """
+    projectpath = project.filename
+    project.backup_project_file()
+    assert osp.exists(projectpath + '.bak')
+    project.close_projet()
+
+    # Corrupt the project file.
+    with open(projectpath, 'w') as f:
+        f.write('empty file')
+
+    # Try loading the corrupt project and Cancel restore from backup.
+    mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
+    mock_qmsgbox.return_value = QMessageBox.Cancel
+    result = projmanager.load_project(projectpath)
+
+    assert mock_qmsgbox.call_count == 1
+    assert result is False
+    assert projmanager.projet is None
+
+    # Try loading the corrupt project and accept to restore from backup.
+    mock_qmsgbox.return_value = QMessageBox.Yes
+    result = projmanager.load_project(projectpath)
+
+    assert mock_qmsgbox.call_count == 2
+    assert result is True
+    assert projmanager.project_display.text() == NAME
+    assert isinstance(projmanager.projet, ProjetReader)
+    assert projmanager.projet.name == NAME
+    assert projmanager.projet.author == NAME
+    assert projmanager.projet.lat == LAT
+    assert projmanager.projet.lon == LON
+
+
+def test_restore_from_failed_backup(projmanager, mocker, projectpath):
+    """
+    Test restoring from a failed backup when the project failed to open.
+    """
+    # Create a corrupt project and backup files.
+    os.makedirs(osp.dirname(projectpath))
+    with open(projectpath, 'w') as f:
+        f.write('empty file')
+    with open(projectpath + '.bak', 'w') as f:
+        f.write('empty backup file')
+
+    # Try loading the corrupt project and accept to restore from backup.
+    mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
+    mock_qmsgbox.return_value = QMessageBox.Yes
+    result = projmanager.load_project(projectpath)
+
+    assert mock_qmsgbox.call_count == 2
+    assert result is False
     assert projmanager.projet is None
 
 
