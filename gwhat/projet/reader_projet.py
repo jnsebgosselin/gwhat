@@ -50,16 +50,17 @@ class ProjetReader(object):
     def load_projet(self, filename):
         """Open the hdf5 project file."""
         self.close_projet()
-
-        print('\nLoading "%s"...' % os.path.basename(filename))
-
+        print("Loading project from '{}'... ".format(osp.basename(filename)),
+              end='')
         try:
             self.__db = h5py.File(filename, mode='a')
+            print('done')
         except Exception:
-            self.convert_projet_format(filename)
+            self.__db = None
+            raise ValueError('Project file is not valid!')
+            print('failed')
 
-        # for newly created project and backward compatibility :
-
+        # For newly created project and backward compatibility.
         for key in ['name', 'author', 'created', 'modified', 'version']:
             if key not in list(self.db.attrs.keys()):
                 self.db.attrs[key] = 'None'
@@ -71,39 +72,6 @@ class ProjetReader(object):
         for key in ['wldsets', 'wxdsets']:
             if key not in list(self.db.keys()):
                 self.db.create_group(key)
-
-        print('Project "%s" loaded succesfully\n' % self.name)
-
-    def convert_projet_format(self, filename):
-        try:
-            print('Old file format. Converting to the new format...')
-            with open(filename, 'r', encoding='utf-8') as f:
-                reader = list(csv.reader(f, delimiter='\t'))
-
-                name = reader[0][1]
-                author = reader[1][1]
-                created = reader[2][1]
-                modified = reader[3][1]
-                version = reader[4][1]
-                lat = float(reader[6][1])
-                lon = float(reader[7][1])
-        except Exception:
-            self.__db = None
-            raise ValueError('Project file is not valid!')
-        else:
-            os.remove(filename)
-
-            self.__db = db = h5py.File(filename, mode='w')
-
-            db.attrs['name'] = name
-            db.attrs['author'] = author
-            db.attrs['created'] = created
-            db.attrs['modified'] = modified
-            db.attrs['version'] = version
-            db.attrs['latitude'] = lat
-            db.attrs['longitude'] = lon
-
-            print('Projet converted to the new format successfully.')
 
     def close_projet(self):
         """Close the project hdf5 file."""
