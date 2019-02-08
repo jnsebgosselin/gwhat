@@ -13,6 +13,7 @@ from __future__ import division, unicode_literals
 import os
 import os.path as osp
 from datetime import datetime
+from shutil import copyfile
 
 # ---- Third party imports
 
@@ -208,6 +209,7 @@ class ProjetManager(QWidget):
             self.__projet.close_projet()
 
     def show_newproject_dialog(self):
+        """Show the dialog to create a new project."""
         self.new_projet_dialog.reset_UI()
         self.new_projet_dialog.show()
 
