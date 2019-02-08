@@ -89,7 +89,7 @@ def test_create_new_projet(projmanager, mocker, projectpath):
 
 def test_load_projet(projmanager, mocker, projectpath):
     """
-    Test loading and existing project.
+    Test loading a valid existing project.
     """
     create_project_at(projectpath)
 
@@ -97,6 +97,7 @@ def test_load_projet(projmanager, mocker, projectpath):
     mocker.patch.object(
         QFileDialog, 'getOpenFileName', return_value=(projectpath, '*.gwt'))
     projmanager.select_project()
+    assert osp.exists(projectpath + '.bak')
 
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
