@@ -227,6 +227,7 @@ class ProjetManager(QWidget):
         """Close the currently opened hdf5 project file."""
         if self.projet is not None:
             self.projet.close_projet()
+            self.projet = None
 
     def show_newproject_dialog(self):
         """Show the dialog to create a new project."""
