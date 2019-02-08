@@ -18,16 +18,15 @@ from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.manager_projet import (ProjetManager, QFileDialog)
 from gwhat.projet.manager_projet import QMessageBox
 
-
-INPUTDATA = {'name': "test @ prô'jèt!", 'latitude': 45.40, 'longitude': 73.15}
+NAME = "test @ prô'jèt!"
+LAT = 45.40
+LON = 73.15
 
 
 # ---- Pytest Fixtures
-@pytest.fixture(scope="module")
-def projectpath(tmp_path_factory):
-    basetemp = tmp_path_factory.getbasetemp()
-    return osp.join(
-        basetemp, INPUTDATA['name'], INPUTDATA['name'] + '.gwt')
+@pytest.fixture
+def projectpath(tmpdir):
+    return osp.join(str(tmpdir), NAME, NAME + '.gwt')
 
 
 @pytest.fixture
@@ -36,24 +35,36 @@ def projmanager(qtbot):
     projmanager.new_projet_dialog.setModal(False)
     qtbot.addWidget(projmanager)
     qtbot.addWidget(projmanager.new_projet_dialog)
+    projmanager.show()
 
     return projmanager
 
 
+# ---- Helpers
+def create_project_at(projectpath):
+    """Create a generic GWHAT project at the specified path."""
+    project = ProjetReader(projectpath)
+    project.name = NAME
+    project.author = NAME
+    project.lat = LAT
+    project.lon = LON
+    project.close_projet()
+
+
 # ---- Tests
 def test_create_new_projet(projmanager, mocker, projectpath):
-    """Test the creation of a new project."""
-    projmanager.show()
-
+    """
+    Test the creation of a new project.
+    """
     # Show new project dialog windows and fill the fields.
     projmanager.show_newproject_dialog()
     new_projet_dialog = projmanager.new_projet_dialog
 
     # Fill the project dialog fields.
-    new_projet_dialog.name.setText(INPUTDATA['name'])
-    new_projet_dialog.author.setText(INPUTDATA['name'])
-    new_projet_dialog.lat_spinbox.setValue(INPUTDATA['latitude'])
-    new_projet_dialog.lon_spinbox.setValue(INPUTDATA['longitude'])
+    new_projet_dialog.name.setText(NAME)
+    new_projet_dialog.author.setText(NAME)
+    new_projet_dialog.lat_spinbox.setValue(LAT)
+    new_projet_dialog.lon_spinbox.setValue(LON)
 
     # Mock the file dialog window so that we can specify programmatically
     # the path where the project will be saved.
@@ -68,7 +79,7 @@ def test_create_new_projet(projmanager, mocker, projectpath):
     # displayed in the UI, and check that the project file and a backup file
     # have been created.
     projmanager.new_projet_dialog.save_project()
-    assert projmanager.project_display.text() == INPUTDATA['name']
+    assert projmanager.project_display.text() == NAME
     assert osp.exists(projectpath)
     assert osp.exists(projectpath + '.bak')
 
@@ -77,31 +88,29 @@ def test_create_new_projet(projmanager, mocker, projectpath):
 
 
 def test_load_projet(projmanager, mocker, projectpath):
-    """Test loading and existing project."""
-    projmanager.show()
-    projmanager.show_newproject_dialog()
-
-    # Mock the file dialog window so that we can specify programmatically
-    # the path of the project.
-    mocker.patch.object(QFileDialog, 'getOpenFileName',
-                        return_value=(projectpath, '*.gwt'))
+    """
+    Test loading and existing project.
+    """
+    create_project_at(projectpath)
 
     # Select and load the project.
+    mocker.patch.object(
+        QFileDialog, 'getOpenFileName', return_value=(projectpath, '*.gwt'))
     projmanager.select_project()
 
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
-    assert projmanager.project_display.text() == INPUTDATA['name']
+    assert projmanager.project_display.text() == NAME
     assert type(projmanager.projet) is ProjetReader
-    assert projmanager.projet.name == INPUTDATA['name']
-    assert projmanager.projet.author == INPUTDATA['name']
-    assert projmanager.projet.lat == INPUTDATA['latitude']
-    assert projmanager.projet.lon == INPUTDATA['longitude']
+    assert projmanager.projet.name == NAME
+    assert projmanager.projet.author == NAME
+    assert projmanager.projet.lat == LAT
+    assert projmanager.projet.lon == LON
 
     projmanager.close_projet()
 
 
-def test_load_non_existing_project(projmanager, mocker, projectpath):
+def test_load_non_existing_project(projmanager, mocker):
     """Test trying to open a project when the .gwt file does not exist."""
     mock_qmsgbox_ = mocker.patch.object(
         QMessageBox, 'exec_', return_value=QMessageBox.Ok)
