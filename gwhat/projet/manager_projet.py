@@ -44,7 +44,7 @@ class ProjetManager(QWidget):
         self.new_projet_dialog = NewProject(parent)
         self.new_projet_dialog.sig_new_project.connect(self.load_project)
 
-        self.__projet = None
+        self.projet = None
         self.__initGUI__()
         if projet:
             self.load_project(projet)
@@ -76,10 +76,6 @@ class ProjetManager(QWidget):
         layout.setColumnStretch(0, 500)
         layout.setRowMinimumHeight(0, 28)
 
-    @property
-    def projet(self):
-        return self.__projet
-
     def select_project(self):
         directory = os.path.abspath(os.path.join('..', 'Projects'))
         filename, _ = QFileDialog.getOpenFileName(
@@ -105,12 +101,12 @@ class ProjetManager(QWidget):
                 buttons=QMessageBox.Ok,
                 parent=self)
             msg_box.exec_()
-            self.__projet = None
+            self.projet = None
             return False
 
         # If the project fails to load.
         try:
-            self.__projet = projet = ProjetReader(filename)
+            self.projet = ProjetReader(filename)
         except Exception:
             if osp.exists(filename + '.bak'):
                 msg_box = QMessageBox(
@@ -126,12 +122,12 @@ class ProjetManager(QWidget):
                 if reply == QMessageBox.Yes:
                     return self.restore_from_backup(filename)
                 else:
-                    self.__projet = None
+                    self.projet = None
                     return False
 
         # If the project is corrupt.
-        if projet.check_project_file() is True:
-            projet.backup_project_file()
+        if self.projet.check_project_file() is True:
+            self.projet.backup_project_file()
         else:
             if osp.exists(filename + '.bak'):
                 msg_box = QMessageBox(
@@ -155,7 +151,7 @@ class ProjetManager(QWidget):
                     pass
                 else:
                     self.close_projet()
-                    self.__projet = None
+                    self.projet = None
                     return False
             else:
                 msg_box = QMessageBox(
@@ -171,13 +167,13 @@ class ProjetManager(QWidget):
                     pass
                 else:
                     self.close_projet()
-                    self.__projet = None
+                    self.projet = None
                     return False
 
-        init_waterlvl_measures(osp.join(projet.dirname, "Water Levels"))
-        self.project_display.setText(projet.name)
+        init_waterlvl_measures(osp.join(self.projet.dirname, "Water Levels"))
+        self.project_display.setText(self.projet.name)
         self.project_display.adjustSize()
-        self.currentProjetChanged.emit(projet)
+        self.currentProjetChanged.emit(self.projet)
         return True
 
     def restore_from_backup(self, filename):
@@ -198,15 +194,15 @@ class ProjetManager(QWidget):
                 buttons=QMessageBox.Ok,
                 parent=self)
             msg_box.exec_()
-            self.__projet = None
+            self.projet = None
             return False
         else:
             return self.load_project(filename)
 
     def close_projet(self):
         """Close the currently opened hdf5 project file."""
-        if self.__projet is not None:
-            self.__projet.close_projet()
+        if self.projet is not None:
+            self.projet.close_projet()
 
     def show_newproject_dialog(self):
         """Show the dialog to create a new project."""
