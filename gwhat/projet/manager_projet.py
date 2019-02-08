@@ -62,7 +62,7 @@ class ProjetManager(QWidget):
         new_btn.setToolTip('Create a new project...')
         new_btn.clicked.connect(self.show_newproject_dialog)
 
-        # ---- layout ----
+        # ---- layout
 
         layout = QGridLayout(self)
 
@@ -74,8 +74,6 @@ class ProjetManager(QWidget):
         layout.setContentsMargins(0, 0, 0, 5)  # (L, T, R, B)
         layout.setColumnStretch(0, 500)
         layout.setRowMinimumHeight(0, 28)
-
-    # =========================================================================
 
     @property
     def projet(self):
