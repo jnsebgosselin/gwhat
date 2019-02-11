@@ -144,8 +144,10 @@ class BRFManager(myqt.QFrameLayout):
         self._bplag['widget'].setValue(300)
         self._bplag['widget'].setKeyboardTracking(True)
 
-        self.correct_earthtides_cbox = QCheckBox('Correct for Earth tides')
-        self.correct_earthtides_cbox.setChecked(True)
+        self.earthtides_spinbox = myqt.QDoubleSpinBox(100, 0)
+        self.earthtides_spinbox.setRange(-1, 9999)
+        self.earthtides_spinbox.setValue(300)
+        self.earthtides_spinbox.setKeyboardTracking(True)
 
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
         self.detrend_waterlevels_cbox.setChecked(True)
@@ -190,6 +192,9 @@ class BRFManager(myqt.QFrameLayout):
         self.addWidget(self._bplag['label'], row, 0)
         self.addWidget(self._bplag['widget'], row, 1)
         row += 1
+        self.addWidget(QLabel('ET Lags Nbr:'), row, 0)
+        self.addWidget(self._bplag['widget'], row, 1)
+        
         self.addWidget(self.correct_earthtides_cbox, row, 0, 1, 2)
         row += 1
         self.addWidget(self.detrend_waterlevels_cbox, row, 0, 1, 2)
@@ -220,8 +225,8 @@ class BRFManager(myqt.QFrameLayout):
         return self._bplag['widget'].value()
 
     @property
-    def correct_earthtides(self):
-        return self.correct_earthtides_cbox.isChecked()
+    def nlag_earthtides(self):
+        return self.earthtides_spinbox.value()
 
     @property
     def detrend_waterlevels(self):
@@ -354,13 +359,13 @@ class BRFManager(myqt.QFrameLayout):
         bm.produce_BRFInputtxt(well, time, wl, bp, et)
         msg = 'Not enough data. Try enlarging the selected period'
         msg += ' or reduce the number of BP lags.'
-        if self.lagBP >= len(time):
+        if self.nlag_baro >= len(time) or self.nlag_earthtides >= len(time):
             QApplication.restoreOverrideCursor()
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
 
         bm.produce_par_file(
-            self.lagBP, self.correct_earthtides, self.detrend_waterlevels,
+            self.nlag_baro, self.nlag_earthtides, self.detrend_waterlevels,
             self.correct_waterlevels)
         bm.run_kgsbrf()
 
