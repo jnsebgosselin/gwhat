@@ -221,7 +221,7 @@ class BRFManager(myqt.QFrameLayout):
     # ---- Properties
 
     @property
-    def lagBP(self):
+    def nlag_baro(self):
         return self._bplag['widget'].value()
 
     @property
