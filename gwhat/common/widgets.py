@@ -58,7 +58,7 @@ class MyQComboBox(QComboBox):
 
 class QDoubleSpinBox(QDoubleSpinBox):
     def __init__(self, val, dec=0, step=None, units=None,
-                 parent=None, read_only=False):
+                 parent=None, read_only=False, show_buttons=False):
         super(QDoubleSpinBox, self).__init__(parent)
 
         self.__value = 0
@@ -80,7 +80,8 @@ class QDoubleSpinBox(QDoubleSpinBox):
         if units is not None:
             self.setSuffix(units)
 
-        self.setButtonSymbols(QAbstractSpinBox.NoButtons)
+        if show_buttons is False:
+            self.setButtonSymbols(QAbstractSpinBox.NoButtons)
         if read_only is True:
             self.setSpecialValueText('\u2014')
             self.setReadOnly(True)
