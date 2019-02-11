@@ -170,9 +170,6 @@ class BRFManager(myqt.QFrameLayout):
         self.btn_seldata.setToolTip("Select a BRF calculation period with "
                                     "the mouse cursor on the graph.")
 
-        self._correct = QCheckBox('Correct WL')
-        self._correct.setEnabled(False)
-
         # ---- Toolbar
 
         btn_comp = QPushButton('Compute BRF')
@@ -208,13 +205,6 @@ class BRFManager(myqt.QFrameLayout):
         self.addWidget(QLabel('BRF End :'), row, 0)
         self.addWidget(self.date_end_edit, row, 1)
         row += 1
-        self.setRowMinimumHeight(row, 15)
-        row += 1
-        self.addWidget(self._detrend, row, 0, 1, 2)
-        row += 1
-        self.addWidget(self._correct, row, 0, 1, 2)
-        row += 1
-        self.setRowMinimumHeight(row, 5)
         self.setRowStretch(row, 100)
         row += 1
         self.addWidget(tbar, row, 0, 1, 3)
@@ -241,8 +231,8 @@ class BRFManager(myqt.QFrameLayout):
         return self.detrend_waterlevels_cbox.isChecked()
 
     @property
-    def correct_WL(self):
-        return 'No'
+    def correct_waterlevels(self):
+        return True
 
     def get_brfperiod(self):
         """
