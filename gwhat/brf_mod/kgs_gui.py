@@ -136,22 +136,26 @@ class BRFManager(myqt.QFrameLayout):
     def __initGUI__(self):
         self.setContentsMargins(10, 10, 10, 10)
 
-        self._bplag = {}
-        self._bplag['label'] = QLabel('BP Lags Nbr:')
-        self._bplag['widget'] = myqt.QDoubleSpinBox(100, 0)
-        self._bplag['widget'].setRange(1, 9999)
-        self._bplag['widget'].setValue(300)
-        self._bplag['widget'].setKeyboardTracking(True)
+        # ---- Detrend and Correct Options
+        self.baro_spinbox = myqt.QDoubleSpinBox(100, 0, show_buttons=True)
+        self.baro_spinbox.setRange(0, 9999)
+        self.baro_spinbox.setKeyboardTracking(True)
 
-        self._etlag = {}
-        self._etlag['label'] = QLabel('ET Lags Nbr:')
-        self._etlag['widget'] = myqt.QDoubleSpinBox(300, 0)
-        self._etlag['widget'].setRange(-1, 9999)
-        self._etlag['widget'].setValue(300)
-        self._etlag['widget'].setKeyboardTracking(True)
+        self.earthtides_spinbox = myqt.QDoubleSpinBox(
+            100, 0, show_buttons=True)
+        self.earthtides_spinbox.setRange(0, 9999)
+        self.earthtides_spinbox.setKeyboardTracking(True)
 
-        # ---- BRF Data Range ----
+        self.earthtides_cbox = QCheckBox('Nbr of ET lags :')
+        self.earthtides_cbox.setChecked(True)
+        self.earthtides_cbox.stateChanged.connect(
+            lambda: self.earthtides_spinbox.setEnabled(
+                self.earthtides_cbox.isChecked()))
 
+        self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
+        self.detrend_waterlevels_cbox.setChecked(True)
+
+        # ---- BRF date range
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
         self.date_start_edit.setDisplayFormat('dd/MM/yyyy')
@@ -172,16 +176,7 @@ class BRFManager(myqt.QFrameLayout):
         self.btn_seldata.setToolTip("Select a BRF calculation period with "
                                     "the mouse cursor on the graph.")
 
-        # ---- Detrend and Correct Options ----
-
-        self._detrend = QCheckBox('Detrend')
-        self._detrend.setCheckState(Qt.Checked)
-
-        self._correct = QCheckBox('Correct WL')
-        self._correct.setEnabled(False)
-
         # ---- Toolbar
-
         btn_comp = QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
@@ -190,23 +185,13 @@ class BRFManager(myqt.QFrameLayout):
         btn_show.clicked.connect(self.viewer.show)
 
         # Layout
-
         tbar = myqt.QFrameLayout()
         tbar.addWidget(btn_comp, 0, 0)
         tbar.addWidget(btn_show, 0, 1)
         tbar.setColumnStretch(0, 100)
 
         # ---- Main Layout
-
         row = 0
-        self.addWidget(self._bplag['label'], row, 0)
-        self.addWidget(self._bplag['widget'], row, 1)
-        row += 1
-        self.addWidget(self._etlag['label'], row, 0)
-        self.addWidget(self._etlag['widget'], row, 1)
-        row += 1
-        self.setRowMinimumHeight(row, 15)
-        row += 1
         self.addWidget(QLabel('BRF Start :'), row, 0)
         self.addWidget(self.date_start_edit, row, 1)
         self.addWidget(self.btn_seldata, row, 2)
@@ -216,11 +201,14 @@ class BRFManager(myqt.QFrameLayout):
         row += 1
         self.setRowMinimumHeight(row, 15)
         row += 1
-        self.addWidget(self._detrend, row, 0, 1, 2)
+        self.addWidget(QLabel('Nbr of BP lags :'), row, 0)
+        self.addWidget(self.baro_spinbox, row, 1)
         row += 1
-        self.addWidget(self._correct, row, 0, 1, 2)
+        self.addWidget(self.earthtides_cbox, row, 0)
+        self.addWidget(self.earthtides_spinbox, row, 1)
         row += 1
-        self.setRowMinimumHeight(row, 5)
+        self.addWidget(self.detrend_waterlevels_cbox, row, 0, 1, 3)
+        row += 1
         self.setRowStretch(row, 100)
         row += 1
         self.addWidget(tbar, row, 0, 1, 3)
@@ -228,30 +216,29 @@ class BRFManager(myqt.QFrameLayout):
         self.setColumnStretch(self.columnCount(), 100)
 
         # ---- Install Panel
-
         if not KGSBRFInstaller().kgsbrf_is_installed():
             self.__install_kgs_brf_installer()
 
     # ---- Properties
 
     @property
-    def lagBP(self):
-        return self._bplag['widget'].value()
+    def nlag_baro(self):
+        """Return the number of lags to use for barometric correction."""
+        return self.baro_spinbox.value()
 
     @property
-    def lagET(self):
-        return self._etlag['widget'].value()
+    def nlag_earthtides(self):
+        """Return the number of lags to use for Earth tides correction."""
+        return (self.earthtides_spinbox.value() if
+                self.earthtides_cbox.isChecked() else -1)
 
     @property
-    def detrend(self):
-        if self._detrend.checkState():
-            return 'Yes'
-        else:
-            return 'No'
+    def detrend_waterlevels(self):
+        return self.detrend_waterlevels_cbox.isChecked()
 
     @property
-    def correct_WL(self):
-        return 'No'
+    def correct_waterlevels(self):
+        return True
 
     def get_brfperiod(self):
         """
@@ -333,7 +320,6 @@ class BRFManager(myqt.QFrameLayout):
         """Prepare the data, calcul the brf, and save and plot the results."""
 
         # Prepare the datasets.
-
         well = self.wldset['Well']
 
         brfperiod = self.get_brfperiod()
@@ -355,13 +341,7 @@ class BRFManager(myqt.QFrameLayout):
         if len(et) == 0:
             et = np.zeros(len(wl))
 
-        lagBP = self.lagBP
-        lagET = self.lagET
-        detrend = self.detrend
-        correct = self.correct_WL
-
         # Fill the gaps in the dataset.
-
         dt = np.min(np.diff(time))
         tc = np.arange(t1, t2+dt/2, dt)
         if len(tc) != len(time):
@@ -378,21 +358,23 @@ class BRFManager(myqt.QFrameLayout):
             time = tc
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        print('calculating BRF')
+        print('calculating the BRF')
 
         bm.produce_BRFInputtxt(well, time, wl, bp, et)
-        msg = 'Not enough data. Try enlarging the selected period'
-        msg += ' or reduce the number of BP and ET lags.'
-        if lagBP >= len(time) or lagET >= len(time):
+        msg = ("Not enough data. Try enlarging the selected period "
+               "or reduce the number of BP lags.")
+        if self.nlag_baro >= len(time) or self.nlag_earthtides >= len(time):
             QApplication.restoreOverrideCursor()
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
 
-        bm.produce_par_file(lagBP, lagET, detrend, correct)
+        bm.produce_par_file(
+            self.nlag_baro, self.nlag_earthtides, self.detrend_waterlevels,
+            self.correct_waterlevels)
         bm.run_kgsbrf()
 
         try:
-            lag, A, err = bm.read_BRFOutput()
+            lag, A, err = bm.read_brf_output()
             date_start = self.date_start_edit.date().getDate()
             date_end = self.date_end_edit.date().getDate()
             self.wldset.save_brf(lag, A, err, date_start, date_end)

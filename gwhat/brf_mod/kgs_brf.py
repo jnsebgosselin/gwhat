@@ -7,18 +7,15 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-
 import os
 import csv
 import sys
 
 # ---- Third party imports
-
 import numpy as np
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
-
 from gwhat.brf_mod import __install_dir__
 
 
@@ -53,12 +50,11 @@ def produce_BRFInputtxt(well, time, wl, bp, et):
     fcontent.append(['Number of Data: %d' % N])
     fcontent.append(['Time WL BP ET'])
 
-    wl = (100-wl)*3.28084
-    bp = bp*3.28084
-    t = time-time[0]
-
-    for i in range(N):
-        fcontent.append([time[i], wl[i], bp[i], et[i]])
+    # Add the data to the file content.
+    wl = (100 - wl) * 3.28084
+    bp = bp * 3.28084
+    t = time - time[0]
+    fcontent.extend([[time[i], wl[i], bp[i], et[i]] for i in range(N)])
 
     filename = os.path.join(__install_dir__, 'BRFInput.txt')
     with open(filename, 'w', encoding='utf8') as f:
@@ -66,11 +62,18 @@ def produce_BRFInputtxt(well, time, wl, bp, et):
         writer.writerows(fcontent)
 
 
-def produce_par_file(lagBP, lagET, detrend, correct):
+def produce_par_file(lagBP, lagET, detrend_waterlevels=True,
+                     correct_waterlevels=True):
+    """
+    Create the parameter file requires by the KGS_BRF program.
+    """
     brfinput = os.path.join(__install_dir__, 'BRFInput.txt')
     brfoutput = os.path.join(__install_dir__, 'BRFOutput.txt')
     wlcinput = os.path.join(__install_dir__, 'WLCInput.txt')
     wlcoutput = os.path.join(__install_dir__, 'WLCOutput.txt')
+
+    detrend = 'Yes' if detrend_waterlevels else 'No'
+    correct = 'Yes' if correct_waterlevels else 'No'
 
     par = []
     par.append(['BRF Option (C[ompute] or R[ead]): Compute'])
@@ -97,7 +100,12 @@ def run_kgsbrf():
             os.system('""%s" < "%s""' % (exename, parname))
 
 
-def read_BRFOutput():
+
+def read_brf_output():
+    """
+    Read the barometric response function from the output file produced
+    by kgs_brf.exe.
+    """
     filename = os.path.join(__install_dir__, 'BRFOutput.txt')
     with open(filename, 'r') as f:
         reader = list(csv.reader(f))
@@ -126,8 +134,11 @@ def read_BRFOutput():
             dataf[-1].extend([float(i) for i in row[0].split()])
             count = 1
 
-    dataf = np.array(dataf)
+    # Remove non valid data.
+    dataf = [row for row in dataf if row[4] > -999]
 
+    # Format data into numpy arrays
+    dataf = np.array(dataf)
     lag = dataf[:, 1]
     A = dataf[:, 4]
     err = dataf[:, 5]

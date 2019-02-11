@@ -11,5 +11,5 @@ from gwhat import __rootdir__
 __install_dir__ = os.path.join(__rootdir__, 'brf_mod')
 
 from gwhat.brf_mod.kgs_brf import (produce_BRFInputtxt, produce_par_file,
-                                   run_kgsbrf, read_BRFOutput)
+                                   run_kgsbrf, read_brf_output)
 from gwhat.brf_mod.kgs_gui import BRFManager
