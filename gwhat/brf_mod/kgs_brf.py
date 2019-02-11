@@ -53,13 +53,12 @@ def produce_BRFInputtxt(well, time, wl, bp, et):
     fcontent.append(['Number of Data: %d' % N])
     fcontent.append(['Time WL BP ET'])
 
-    wl = (100-wl)*3.28084
-    bp = bp*3.28084
-    t = time-time[0]
-
-    for i in range(N):
-        fcontent.append([time[i], wl[i], bp[i], et[i]])
-
+    # Add the data to the file content.
+    wl = (100 - wl) * 3.28084
+    bp = bp * 3.28084
+    t = time - time[0]
+    fcontent.extend([[time[i], wl[i], bp[i], et[i]] for i in range(N)])
+    
     filename = os.path.join(__install_dir__, 'BRFInput.txt')
     with open(filename, 'w', encoding='utf8') as f:
         writer = writer = csv.writer(f, delimiter='\t', lineterminator='\n')
