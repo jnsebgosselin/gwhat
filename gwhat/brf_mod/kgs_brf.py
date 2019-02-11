@@ -67,6 +67,9 @@ def produce_BRFInputtxt(well, time, wl, bp, et):
 
 def produce_par_file(lagBP, correct_earthtides=True,
                      detrend_waterlevels=True, correct_waterlevels=True):
+    """
+    Create the parameter file requires by the KGS_BRF program.
+    """
     brfinput = os.path.join(__install_dir__, 'BRFInput.txt')
     brfoutput = os.path.join(__install_dir__, 'BRFOutput.txt')
     wlcinput = os.path.join(__install_dir__, 'WLCInput.txt')
