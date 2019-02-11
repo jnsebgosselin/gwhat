@@ -35,9 +35,6 @@ install:
   # Setup GWHAT dev requirements.
   - python -m pip install -r requirements-dev.txt
 
-  # Setup requirements for packaging GWHAT.
-  - python -m pip install pyinstaller pywin32 tornado
-
   # Build the extensions.
   - python setup.py build_ext --inplace
 
@@ -47,6 +44,10 @@ test_script:
   - python runtests.py
 
 after_test:
+  # Install requirements for packaging GWHAT.
+  - python -m pip install pyinstaller pywin32 tornado
+
+  # Package GWHAT with PyInstaller.
   - cmd: set PYTHONPATH=C:\projects\gwhat;%PYTHONPATH%
   - cd ./releases
   - pyinstaller.exe gwhat.spec
