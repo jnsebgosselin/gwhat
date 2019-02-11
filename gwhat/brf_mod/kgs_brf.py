@@ -104,6 +104,10 @@ def run_kgsbrf():
 
 
 def read_BRFOutput():
+    """
+    Read the barometric response function from the output file produced
+    by kgs_brf.exe.
+    """
     filename = os.path.join(__install_dir__, 'BRFOutput.txt')
     with open(filename, 'r') as f:
         reader = list(csv.reader(f))
