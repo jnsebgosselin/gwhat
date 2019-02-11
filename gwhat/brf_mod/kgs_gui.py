@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QDesktopWidget, QMessageBox, QFileDialog,
                              QComboBox, QLayout)
 
-from xlrd.xldate import xldate_from_date_tuple
+from xlrd.xldate import xldate_from_datetime_tuple
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -40,7 +40,7 @@ from gwhat.widgets.buttons import LangToolButton, OnOffToolButton
 from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
-from gwhat.utils.dates import qdate_from_xldate
+from gwhat.utils.dates import qdatetime_from_xldate
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
 from gwhat.brf_mod.kgs_plot import BRFFigure
@@ -249,11 +249,17 @@ class BRFManager(myqt.QFrameLayout):
         Get the period over which the BRF would be evaluated as a list of
         two numerical Excel date values.
         """
-        y, m, d = self.date_start_edit.date().getDate()
-        dstart = xldate_from_date_tuple((y, m, d), 0)
+        year, month, day = self.date_start_edit.date().getDate()
+        hour = self.date_start_edit.time().hour()
+        minute = self.date_start_edit.time().minute()
+        dstart = xldate_from_datetime_tuple(
+            (year, month, day, hour, minute, 0), 0)
 
-        y, m, d = self.date_end_edit.date().getDate()
-        dend = xldate_from_date_tuple((y, m, d), 0)
+        year, month, day = self.date_end_edit.date().getDate()
+        hour = self.date_end_edit.time().hour()
+        minute = self.date_end_edit.time().minute()
+        dend = xldate_from_datetime_tuple(
+            (year, month, day, hour, minute, 0), 0)
 
         return [dstart, dend]
 
@@ -268,7 +274,7 @@ class BRFManager(myqt.QFrameLayout):
         for xldate, widget in zip(period, widgets):
             if xldate is not None:
                 widget.blockSignals(True)
-                widget.setDate(qdate_from_xldate(xldate))
+                widget.setDateTime(qdatetime_from_xldate(xldate))
                 widget.blockSignals(False)
         self.wldset.save_brfperiod(period)
 
@@ -316,8 +322,8 @@ class BRFManager(myqt.QFrameLayout):
         """
         for widget in (self.date_start_edit, self.date_end_edit):
             widget.blockSignals(True)
-            widget.setMinimumDate(qdate_from_xldate(daterange[0]))
-            widget.setMaximumDate(qdate_from_xldate(daterange[1]))
+            widget.setMinimumDateTime(qdatetime_from_xldate(daterange[0]))
+            widget.setMaximumDateTime(qdatetime_from_xldate(daterange[1]))
             widget.blockSignals(False)
 
     def calc_brf(self):
