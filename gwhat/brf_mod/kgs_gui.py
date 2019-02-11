@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QDesktopWidget, QMessageBox, QFileDialog,
                              QComboBox, QLayout)
 
-from xlrd.xldate import xldate_from_date_tuple
+from xlrd.xldate import xldate_from_datetime_tuple
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -40,7 +40,7 @@ from gwhat.widgets.buttons import LangToolButton, OnOffToolButton
 from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
-from gwhat.utils.dates import qdate_from_xldate
+from gwhat.utils.dates import qdatetime_from_xldate
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
 from gwhat.brf_mod.kgs_plot import BRFFigure
@@ -155,10 +155,20 @@ class BRFManager(myqt.QFrameLayout):
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
         self.detrend_waterlevels_cbox.setChecked(True)
 
+        # Setup options layout.
+        options_layout = QGridLayout()
+        options_layout.addWidget(QLabel('Nbr of BP lags :'), 0, 0)
+        options_layout.addWidget(self.baro_spinbox, 0, 2)
+        options_layout.addWidget(self.earthtides_cbox, 1, 0)
+        options_layout.addWidget(self.earthtides_spinbox, 1, 2)
+        options_layout.addWidget(self.detrend_waterlevels_cbox, 2, 0, 1, 3)
+        options_layout.setColumnStretch(1, 100)
+        options_layout.setContentsMargins(0, 0, 0, 0)
+
         # ---- BRF date range
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
-        self.date_start_edit.setDisplayFormat('dd/MM/yyyy')
+        self.date_start_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
         self.date_start_edit.dateChanged.connect(
             lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
         self.date_start_edit.dateChanged.connect(
@@ -166,7 +176,7 @@ class BRFManager(myqt.QFrameLayout):
 
         self.date_end_edit = QDateTimeEdit()
         self.date_end_edit.setCalendarPopup(True)
-        self.date_end_edit.setDisplayFormat('dd/MM/yyyy')
+        self.date_end_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
         self.date_end_edit.dateChanged.connect(
             lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
         self.date_end_edit.dateChanged.connect(
@@ -176,44 +186,38 @@ class BRFManager(myqt.QFrameLayout):
         self.btn_seldata.setToolTip("Select a BRF calculation period with "
                                     "the mouse cursor on the graph.")
 
+        # Setup BRF date range layout.
+        daterange_layout = QGridLayout()
+        daterange_layout.addWidget(QLabel('BRF Start :'), 0, 0)
+        daterange_layout.addWidget(self.date_start_edit, 0, 2)
+        daterange_layout.addWidget(QLabel('BRF End :'), 1, 0)
+        daterange_layout.addWidget(self.date_end_edit, 1, 2)
+        daterange_layout.setColumnStretch(1, 100)
+        daterange_layout.setContentsMargins(0, 0, 0, 0)
+
+        seldata_layout = QGridLayout()
+        seldata_layout.addWidget(self.btn_seldata, 0, 0)
+        seldata_layout.setRowStretch(1, 100)
+        seldata_layout.setContentsMargins(0, 0, 0, 0)
+
         # ---- Toolbar
         btn_comp = QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
 
-        self.btn_show = btn_show = QToolButtonSmall(icons.get_icon('search'))
-        btn_show.clicked.connect(self.viewer.show)
-
-        # Layout
-        tbar = myqt.QFrameLayout()
-        tbar.addWidget(btn_comp, 0, 0)
-        tbar.addWidget(btn_show, 0, 1)
-        tbar.setColumnStretch(0, 100)
+        self.btn_show = QToolButtonSmall(icons.get_icon('search'))
+        self.btn_show.clicked.connect(self.viewer.show)
 
         # ---- Main Layout
-        row = 0
-        self.addWidget(QLabel('BRF Start :'), row, 0)
-        self.addWidget(self.date_start_edit, row, 1)
-        self.addWidget(self.btn_seldata, row, 2)
-        row += 1
-        self.addWidget(QLabel('BRF End :'), row, 0)
-        self.addWidget(self.date_end_edit, row, 1)
-        row += 1
-        self.setRowMinimumHeight(row, 15)
-        row += 1
-        self.addWidget(QLabel('Nbr of BP lags :'), row, 0)
-        self.addWidget(self.baro_spinbox, row, 1)
-        row += 1
-        self.addWidget(self.earthtides_cbox, row, 0)
-        self.addWidget(self.earthtides_spinbox, row, 1)
-        row += 1
-        self.addWidget(self.detrend_waterlevels_cbox, row, 0, 1, 3)
-        row += 1
-        self.setRowStretch(row, 100)
-        row += 1
-        self.addWidget(tbar, row, 0, 1, 3)
-
-        self.setColumnStretch(self.columnCount(), 100)
+        self.addLayout(daterange_layout, 0, 0)
+        self.addLayout(seldata_layout, 0, 1)
+        self.setRowMinimumHeight(1, 15)
+        self.addLayout(options_layout, 2, 0)
+        self.setRowMinimumHeight(3, 15)
+        self.setRowStretch(3, 100)
+        self.addWidget(btn_comp, 4, 0)
+        self.addWidget(self.btn_show, 4, 1)
+        self.setColumnStretch(0, 100)
 
         # ---- Install Panel
         if not KGSBRFInstaller().kgsbrf_is_installed():
@@ -245,11 +249,17 @@ class BRFManager(myqt.QFrameLayout):
         Get the period over which the BRF would be evaluated as a list of
         two numerical Excel date values.
         """
-        y, m, d = self.date_start_edit.date().getDate()
-        dstart = xldate_from_date_tuple((y, m, d), 0)
+        year, month, day = self.date_start_edit.date().getDate()
+        hour = self.date_start_edit.time().hour()
+        minute = self.date_start_edit.time().minute()
+        dstart = xldate_from_datetime_tuple(
+            (year, month, day, hour, minute, 0), 0)
 
-        y, m, d = self.date_end_edit.date().getDate()
-        dend = xldate_from_date_tuple((y, m, d), 0)
+        year, month, day = self.date_end_edit.date().getDate()
+        hour = self.date_end_edit.time().hour()
+        minute = self.date_end_edit.time().minute()
+        dend = xldate_from_datetime_tuple(
+            (year, month, day, hour, minute, 0), 0)
 
         return [dstart, dend]
 
@@ -264,7 +274,7 @@ class BRFManager(myqt.QFrameLayout):
         for xldate, widget in zip(period, widgets):
             if xldate is not None:
                 widget.blockSignals(True)
-                widget.setDate(qdate_from_xldate(xldate))
+                widget.setDateTime(qdatetime_from_xldate(xldate))
                 widget.blockSignals(False)
         self.wldset.save_brfperiod(period)
 
@@ -312,8 +322,8 @@ class BRFManager(myqt.QFrameLayout):
         """
         for widget in (self.date_start_edit, self.date_end_edit):
             widget.blockSignals(True)
-            widget.setMinimumDate(qdate_from_xldate(daterange[0]))
-            widget.setMaximumDate(qdate_from_xldate(daterange[1]))
+            widget.setMinimumDateTime(qdatetime_from_xldate(daterange[0]))
+            widget.setMaximumDateTime(qdatetime_from_xldate(daterange[1]))
             widget.blockSignals(False)
 
     def calc_brf(self):
