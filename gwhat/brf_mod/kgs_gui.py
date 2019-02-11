@@ -358,7 +358,7 @@ class BRFManager(myqt.QFrameLayout):
             time = tc
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
-        print('calculating BRF')
+        print('calculating the BRF')
 
         bm.produce_BRFInputtxt(well, time, wl, bp, et)
         msg = ("Not enough data. Try enlarging the selected period "
@@ -374,7 +374,7 @@ class BRFManager(myqt.QFrameLayout):
         bm.run_kgsbrf()
 
         try:
-            lag, A, err = bm.read_BRFOutput()
+            lag, A, err = bm.read_brf_output()
             date_start = self.date_start_edit.date().getDate()
             date_end = self.date_end_edit.date().getDate()
             self.wldset.save_brf(lag, A, err, date_start, date_end)

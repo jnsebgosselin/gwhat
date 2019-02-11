@@ -103,7 +103,8 @@ def run_kgsbrf():
             os.system('""%s" < "%s""' % (exename, parname))
 
 
-def read_BRFOutput():
+
+def read_brf_output():
     """
     Read the barometric response function from the output file produced
     by kgs_brf.exe.
