@@ -137,8 +137,11 @@ def read_brf_output():
             dataf[-1].extend([float(i) for i in row[0].split()])
             count = 1
 
-    dataf = np.array(dataf)
+    # Remove non valid data.
+    dataf = [row for row in dataf if row[4] > -999]
 
+    # Format data into numpy arrays
+    dataf = np.array(dataf)
     lag = dataf[:, 1]
     A = dataf[:, 4]
     err = dataf[:, 5]
