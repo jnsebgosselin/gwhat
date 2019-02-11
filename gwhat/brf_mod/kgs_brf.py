@@ -7,18 +7,15 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-
 import os
 import csv
 import sys
 
 # ---- Third party imports
-
 import numpy as np
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
-
 from gwhat.brf_mod import __install_dir__
 
 
