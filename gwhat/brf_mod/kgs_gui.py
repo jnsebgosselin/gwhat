@@ -136,6 +136,7 @@ class BRFManager(myqt.QFrameLayout):
     def __initGUI__(self):
         self.setContentsMargins(10, 10, 10, 10)
 
+        # ---- Detrend and Correct Options
         self._bplag = {}
         self._bplag['label'] = QLabel('BP Lags Nbr:')
         self._bplag['widget'] = myqt.QDoubleSpinBox(100, 0)
@@ -143,12 +144,8 @@ class BRFManager(myqt.QFrameLayout):
         self._bplag['widget'].setValue(300)
         self._bplag['widget'].setKeyboardTracking(True)
 
-        self._etlag = {}
-        self._etlag['label'] = QLabel('ET Lags Nbr:')
-        self._etlag['widget'] = myqt.QDoubleSpinBox(300, 0)
-        self._etlag['widget'].setRange(-1, 9999)
-        self._etlag['widget'].setValue(300)
-        self._etlag['widget'].setKeyboardTracking(True)
+        self.correct_earthtides_cbox = QCheckBox('Correct for Earth tides')
+        self.correct_earthtides_cbox.setChecked(True)
 
         # ---- BRF Data Range ----
 
@@ -202,8 +199,7 @@ class BRFManager(myqt.QFrameLayout):
         self.addWidget(self._bplag['label'], row, 0)
         self.addWidget(self._bplag['widget'], row, 1)
         row += 1
-        self.addWidget(self._etlag['label'], row, 0)
-        self.addWidget(self._etlag['widget'], row, 1)
+        self.addWidget(self.correct_earthtides_cbox, row, 0, 1, 2)
         row += 1
         self.setRowMinimumHeight(row, 15)
         row += 1
@@ -239,8 +235,8 @@ class BRFManager(myqt.QFrameLayout):
         return self._bplag['widget'].value()
 
     @property
-    def lagET(self):
-        return self._etlag['widget'].value()
+    def correct_earthtides(self):
+        return self.correct_earthtides_cbox.isChecked()
 
     @property
     def detrend(self):
@@ -382,13 +378,15 @@ class BRFManager(myqt.QFrameLayout):
 
         bm.produce_BRFInputtxt(well, time, wl, bp, et)
         msg = 'Not enough data. Try enlarging the selected period'
-        msg += ' or reduce the number of BP and ET lags.'
-        if lagBP >= len(time) or lagET >= len(time):
+        msg += ' or reduce the number of BP lags.'
+        if self.lagBP >= len(time):
             QApplication.restoreOverrideCursor()
             QMessageBox.warning(self, 'Warning', msg, QMessageBox.Ok)
             return
 
-        bm.produce_par_file(lagBP, lagET, detrend, correct)
+        bm.produce_par_file(
+            self.lagBP, self.correct_earthtides, self.detrend_waterlevels,
+            self.correct_waterlevels)
         bm.run_kgsbrf()
 
         try:
