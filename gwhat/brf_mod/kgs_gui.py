@@ -150,6 +150,7 @@ class BRFManager(myqt.QFrameLayout):
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
         self.detrend_waterlevels_cbox.setChecked(True)
 
+        # ---- BRF date range
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
         self.date_start_edit.setDisplayFormat('dd/MM/yyyy')
@@ -171,7 +172,6 @@ class BRFManager(myqt.QFrameLayout):
                                     "the mouse cursor on the graph.")
 
         # ---- Toolbar
-
         btn_comp = QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
@@ -180,14 +180,12 @@ class BRFManager(myqt.QFrameLayout):
         btn_show.clicked.connect(self.viewer.show)
 
         # Layout
-
         tbar = myqt.QFrameLayout()
         tbar.addWidget(btn_comp, 0, 0)
         tbar.addWidget(btn_show, 0, 1)
         tbar.setColumnStretch(0, 100)
 
         # ---- Main Layout
-
         row = 0
         self.addWidget(self._bplag['label'], row, 0)
         self.addWidget(self._bplag['widget'], row, 1)
@@ -212,7 +210,6 @@ class BRFManager(myqt.QFrameLayout):
         self.setColumnStretch(self.columnCount(), 100)
 
         # ---- Install Panel
-
         if not KGSBRFInstaller().kgsbrf_is_installed():
             self.__install_kgs_brf_installer()
 
