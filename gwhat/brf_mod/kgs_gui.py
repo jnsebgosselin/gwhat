@@ -168,7 +168,7 @@ class BRFManager(myqt.QFrameLayout):
         # ---- BRF date range
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
-        self.date_start_edit.setDisplayFormat('dd/MM/yyyy')
+        self.date_start_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
         self.date_start_edit.dateChanged.connect(
             lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
         self.date_start_edit.dateChanged.connect(
@@ -176,7 +176,7 @@ class BRFManager(myqt.QFrameLayout):
 
         self.date_end_edit = QDateTimeEdit()
         self.date_end_edit.setCalendarPopup(True)
-        self.date_end_edit.setDisplayFormat('dd/MM/yyyy')
+        self.date_end_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
         self.date_end_edit.dateChanged.connect(
             lambda: self.sig_brfperiod_changed.emit(self.get_brfperiod()))
         self.date_end_edit.dateChanged.connect(
