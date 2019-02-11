@@ -217,12 +217,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
                                ls='-')
 
         # Barometric response function (BRF).
-        self.h_brf1 = ax0.axvline(0, color='orange')
-        self.h_brf2 = ax0.axvline(0, color='orange')
+        self.h_brf1 = ax0.axvline(0, color='red', lw=1)
+        self.h_brf2 = ax0.axvline(0, color='red', lw=1)
 
         self._selected_brfperiod = [None, None]
         self._brf_selector = ax0.axvspan(
-            0, 0, edgecolor='black', facecolor='orange', linestyle=':',
+            0, 0, edgecolor='black', facecolor='red', linestyle=':',
             fill=True, alpha=0.15, visible=False)
 
         # Predicted GLUE water levels
