@@ -87,10 +87,10 @@ def test_kgs_brf_defaults(brfmanager, wldataset, qtbot):
     brfmanager.set_wldset(wldataset)
     assert wldataset.get_brfperiod() == [41334.0, 41425.0]
 
-    assert brfmanager.lagBP == 300
-    assert brfmanager.lagET == 300
-    assert brfmanager.detrend == 'Yes'
-    assert brfmanager.correct_WL == 'No'
+    assert brfmanager.nlag_baro == 100
+    assert brfmanager.nlag_earthtides == 100
+    assert brfmanager.detrend_waterlevels is True
+    assert brfmanager.correct_waterlevels is True
     assert brfmanager.get_brfperiod() == [41334.0, 41425.0]
 
 
