@@ -235,9 +235,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
             fill=True, alpha=0.15, visible=False)
         ax0.add_patch(self._rect_selector)
 
-        # Vertical guide line under cursor :
-        self.vguide = ax0.axvline(-1, color='red', zorder=40)
-        self.vguide.set_visible(False)
+        # Vertical guide line under cursor.
+        self.vguide = ax0.axvline(
+            -1, color='black', zorder=40,  linestyle='--', lw=1, visible=False)
 
 
         # x and y coorrdinate labels displayed at the right-bottom corner
