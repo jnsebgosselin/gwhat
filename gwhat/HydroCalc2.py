@@ -220,9 +220,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.h_etp, = ax1.plot([], [], color='#FF6666', lw=1.5, zorder=500,
                                ls='-')
 
-        # BRF :
+        # Barometric response function (BRF).
         self.h_brf1 = ax0.axvline(0, color='orange')
         self.h_brf2 = ax0.axvline(0, color='orange')
+
+        self._selected_brfperiod = [None, None]
+        self._brf_selector = ax0.axvspan(
+            0, 0, edgecolor='black', facecolor='orange', linestyle=':',
+            fill=True, alpha=0.15, visible=False)
 
         # Predicted GLUE water levels
         self.glue_plt, = ax0.plot([], [])
