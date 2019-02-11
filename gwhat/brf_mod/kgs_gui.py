@@ -147,7 +147,8 @@ class BRFManager(myqt.QFrameLayout):
         self.correct_earthtides_cbox = QCheckBox('Correct for Earth tides')
         self.correct_earthtides_cbox.setChecked(True)
 
-        # ---- BRF Data Range ----
+        self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
+        self.detrend_waterlevels_cbox.setChecked(True)
 
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
@@ -168,11 +169,6 @@ class BRFManager(myqt.QFrameLayout):
         self.btn_seldata = OnOffToolButton('select_range', size='small')
         self.btn_seldata.setToolTip("Select a BRF calculation period with "
                                     "the mouse cursor on the graph.")
-
-        # ---- Detrend and Correct Options ----
-
-        self._detrend = QCheckBox('Detrend')
-        self._detrend.setCheckState(Qt.Checked)
 
         self._correct = QCheckBox('Correct WL')
         self._correct.setEnabled(False)
@@ -200,6 +196,8 @@ class BRFManager(myqt.QFrameLayout):
         self.addWidget(self._bplag['widget'], row, 1)
         row += 1
         self.addWidget(self.correct_earthtides_cbox, row, 0, 1, 2)
+        row += 1
+        self.addWidget(self.detrend_waterlevels_cbox, row, 0, 1, 2)
         row += 1
         self.setRowMinimumHeight(row, 15)
         row += 1
@@ -239,11 +237,8 @@ class BRFManager(myqt.QFrameLayout):
         return self.correct_earthtides_cbox.isChecked()
 
     @property
-    def detrend(self):
-        if self._detrend.checkState():
-            return 'Yes'
-        else:
-            return 'No'
+    def detrend_waterlevels(self):
+        return self.detrend_waterlevels_cbox.isChecked()
 
     @property
     def correct_WL(self):
@@ -329,7 +324,6 @@ class BRFManager(myqt.QFrameLayout):
         """Prepare the data, calcul the brf, and save and plot the results."""
 
         # Prepare the datasets.
-
         well = self.wldset['Well']
 
         brfperiod = self.get_brfperiod()
@@ -351,13 +345,7 @@ class BRFManager(myqt.QFrameLayout):
         if len(et) == 0:
             et = np.zeros(len(wl))
 
-        lagBP = self.lagBP
-        lagET = self.lagET
-        detrend = self.detrend
-        correct = self.correct_WL
-
         # Fill the gaps in the dataset.
-
         dt = np.min(np.diff(time))
         tc = np.arange(t1, t2+dt/2, dt)
         if len(tc) != len(time):
