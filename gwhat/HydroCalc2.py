@@ -239,7 +239,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.vguide = ax0.axvline(
             -1, color='black', zorder=40,  linestyle='--', lw=1, visible=False)
 
-
         # x and y coorrdinate labels displayed at the right-bottom corner
         # of the graph
         offset = mpl.transforms.ScaledTranslation(
@@ -340,13 +339,20 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_clear_select.setToolTip("Clear selected water levels.")
         self.btn_clear_select.clicked.connect(self.clear_selected_wl)
 
+        self.btn_del_select = QToolButtonNormal('erase_data')
+        self.btn_del_select.clicked.connect(self.delete_selected_wl)
+
+        self.btn_commit_changes = QToolButtonNormal('commit_changes')
+        self.btn_commit_changes.clicked.connect(self.commit_wl_changes)
+
         # Setup the layout.
         toolbar = ToolBarWidget()
         for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
                     self.btn_show_mrc, self.btn_show_meas_wl, None,
-                    self.btn_rect_select, self.btn_clear_select]:
+                    self.btn_rect_select, self.btn_clear_select,
+                    self.btn_del_select, self.btn_commit_changes]:
             toolbar.addWidget(btn)
 
         return toolbar
