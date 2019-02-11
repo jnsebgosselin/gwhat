@@ -155,6 +155,16 @@ class BRFManager(myqt.QFrameLayout):
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
         self.detrend_waterlevels_cbox.setChecked(True)
 
+        # Setup options layout.
+        options_layout = QGridLayout()
+        options_layout.addWidget(QLabel('Nbr of BP lags :'), 0, 0)
+        options_layout.addWidget(self.baro_spinbox, 0, 2)
+        options_layout.addWidget(self.earthtides_cbox, 1, 0)
+        options_layout.addWidget(self.earthtides_spinbox, 1, 2)
+        options_layout.addWidget(self.detrend_waterlevels_cbox, 2, 0, 1, 3)
+        options_layout.setColumnStretch(1, 100)
+        options_layout.setContentsMargins(0, 0, 0, 0)
+
         # ---- BRF date range
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
@@ -176,44 +186,38 @@ class BRFManager(myqt.QFrameLayout):
         self.btn_seldata.setToolTip("Select a BRF calculation period with "
                                     "the mouse cursor on the graph.")
 
+        # Setup BRF date range layout.
+        daterange_layout = QGridLayout()
+        daterange_layout.addWidget(QLabel('BRF Start :'), 0, 0)
+        daterange_layout.addWidget(self.date_start_edit, 0, 2)
+        daterange_layout.addWidget(QLabel('BRF End :'), 1, 0)
+        daterange_layout.addWidget(self.date_end_edit, 1, 2)
+        daterange_layout.setColumnStretch(1, 100)
+        daterange_layout.setContentsMargins(0, 0, 0, 0)
+
+        seldata_layout = QGridLayout()
+        seldata_layout.addWidget(self.btn_seldata, 0, 0)
+        seldata_layout.setRowStretch(1, 100)
+        seldata_layout.setContentsMargins(0, 0, 0, 0)
+
         # ---- Toolbar
         btn_comp = QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
 
-        self.btn_show = btn_show = QToolButtonSmall(icons.get_icon('search'))
-        btn_show.clicked.connect(self.viewer.show)
-
-        # Layout
-        tbar = myqt.QFrameLayout()
-        tbar.addWidget(btn_comp, 0, 0)
-        tbar.addWidget(btn_show, 0, 1)
-        tbar.setColumnStretch(0, 100)
+        self.btn_show = QToolButtonSmall(icons.get_icon('search'))
+        self.btn_show.clicked.connect(self.viewer.show)
 
         # ---- Main Layout
-        row = 0
-        self.addWidget(QLabel('BRF Start :'), row, 0)
-        self.addWidget(self.date_start_edit, row, 1)
-        self.addWidget(self.btn_seldata, row, 2)
-        row += 1
-        self.addWidget(QLabel('BRF End :'), row, 0)
-        self.addWidget(self.date_end_edit, row, 1)
-        row += 1
-        self.setRowMinimumHeight(row, 15)
-        row += 1
-        self.addWidget(QLabel('Nbr of BP lags :'), row, 0)
-        self.addWidget(self.baro_spinbox, row, 1)
-        row += 1
-        self.addWidget(self.earthtides_cbox, row, 0)
-        self.addWidget(self.earthtides_spinbox, row, 1)
-        row += 1
-        self.addWidget(self.detrend_waterlevels_cbox, row, 0, 1, 3)
-        row += 1
-        self.setRowStretch(row, 100)
-        row += 1
-        self.addWidget(tbar, row, 0, 1, 3)
-
-        self.setColumnStretch(self.columnCount(), 100)
+        self.addLayout(daterange_layout, 0, 0)
+        self.addLayout(seldata_layout, 0, 1)
+        self.setRowMinimumHeight(1, 15)
+        self.addLayout(options_layout, 2, 0)
+        self.setRowMinimumHeight(3, 15)
+        self.setRowStretch(3, 100)
+        self.addWidget(btn_comp, 4, 0)
+        self.addWidget(self.btn_show, 4, 1)
+        self.setColumnStretch(0, 100)
 
         # ---- Install Panel
         if not KGSBRFInstaller().kgsbrf_is_installed():
