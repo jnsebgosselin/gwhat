@@ -243,11 +243,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.vguide = ax0.axvline(-1, color='red', zorder=40)
         self.vguide.set_visible(False)
 
-        offset = mpl.transforms.ScaledTranslation(-5/72, 5/72,
-                                                  self.fig.dpi_scale_trans)
 
         # x and y coorrdinate labels displayed at the right-bottom corner
         # of the graph
+        offset = mpl.transforms.ScaledTranslation(
+            -5/72, 5/72, self.fig.dpi_scale_trans)
         self.xycoord = ax0.text(
             1, 0, '', ha='right', transform=ax0.transAxes + offset)
         self.xycoord.set_visible(False)
