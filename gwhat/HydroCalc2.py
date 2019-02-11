@@ -7,7 +7,6 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-
 from time import clock
 import csv
 import os
@@ -16,7 +15,6 @@ import datetime
 
 
 # ---- Third party imports
-
 import numpy as np
 from matplotlib.patches import Rectangle
 from PyQt5.QtCore import Qt
@@ -35,7 +33,6 @@ from xlrd.xldate import xldate_from_date_tuple
 
 
 # ---- Local imports
-
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 import gwhat.common.widgets as myqt
 from gwhat.common.widgets import DialogWindow
