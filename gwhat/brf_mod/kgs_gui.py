@@ -354,7 +354,7 @@ class BRFManager(myqt.QFrameLayout):
         # Fill the gaps in the waterlevel data.
         dt = np.min(np.diff(time))
         tc = np.arange(t1, t2+dt/2, dt)
-        if len(tc) != len(time):
+        if len(tc) != len(time) or np.any(np.isnan(wl)):
             print('Filling gaps in data with linear interpolation.')
             indx = np.where(~np.isnan(wl))[0]
             wl = np.interp(tc, time[indx], wl[indx])
