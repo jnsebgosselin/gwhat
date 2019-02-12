@@ -779,12 +779,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.wl_selected_i = []
         self.draw_select_wl()
 
-    def delete_selected_wl(self):
-        """Delete the selecte water level data."""
-        self.water_lvl[self.wl_selected_i] = np.nan
-        self._obs_wl_plt.set_ydata(self.water_lvl)
-        self.clear_selected_wl()
-
     def commit_wl_changes(self):
         """Commit the changes made to the water level data to the project."""
         if self.wldset is not None:
@@ -811,7 +805,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
             del self.peak_memory[-1]
             self.draw_mrc()
 
-    # ---- Drawing methods
+    # ---- Water level edit tools
+    def delete_selected_wl(self):
+        """Delete the selecte water level data."""
+        if len(self.wl_selected_i):
+            self._add_to_undo_stack(self.wl_selected_i)
+            self.water_lvl[self.wl_selected_i] = np.nan
+            self._obs_wl_plt.set_ydata(self.water_lvl)
+        self.clear_selected_wl()
+
     def clear_all_changes(self):
         """Clear all changes that were made to the wldset."""
         for change in self._wldset_undo_stack:
@@ -834,6 +836,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_commit_changes.setEnabled(len(self._wldset_undo_stack))
         self.btn_clear_changes.setEnabled(len(self._wldset_undo_stack))
 
+    # ---- Drawing methods
     def setup_hydrograph(self):
         """Setup the hydrograph after a new wldset has been set."""
         self.peak_indx = np.array([]).astype(int)
