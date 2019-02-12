@@ -351,7 +351,7 @@ class BRFManager(myqt.QFrameLayout):
         if len(et) == 0:
             et = np.zeros(len(wl))
 
-        # Fill the gaps in the dataset.
+        # Fill the gaps in the waterlevel data.
         dt = np.min(np.diff(time))
         tc = np.arange(t1, t2+dt/2, dt)
         if len(tc) != len(time):
