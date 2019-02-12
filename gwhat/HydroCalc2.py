@@ -813,6 +813,17 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     # ---- Drawing methods
 
+    def _add_to_undo_stack(self, indexes):
+        """
+        Store the old water level values at the specified indexes in a stack
+        before changing or deleting them. This allow to undo or cancel any
+        changes made to the water level data before commiting them.
+        """
+        if len(indexes):
+            self._wldset_undo_stack.append((indexes, self.water_lvl[indexes]))
+        self.btn_commit_changes.setEnabled(len(self._wldset_undo_stack))
+        self.btn_clear_changes.setEnabled(len(self._wldset_undo_stack))
+
     def setup_hydrograph(self):
         """Setup the hydrograph after a new wldset has been set."""
         self.peak_indx = np.array([]).astype(int)
