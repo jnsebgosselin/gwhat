@@ -349,6 +349,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         self.btn_commit_changes = QToolButtonNormal('commit_changes')
         self.btn_commit_changes.clicked.connect(self.commit_wl_changes)
+        self.btn_commit_changes.setEnabled(False)
 
         # Setup the layout.
         toolbar = ToolBarWidget()
