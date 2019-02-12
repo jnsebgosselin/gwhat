@@ -75,6 +75,7 @@ class ProjetReader(object):
             if key not in list(self.db.keys()):
                 self.db.create_group(key)
             if 'last_opened' not in list(self.db[key].attrs.keys()):
+                # Added in version 0.4.0 (see PR #267)
                 self.db[key].attrs['last_opened'] = 'None'
 
     def close_projet(self):
