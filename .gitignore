@@ -79,6 +79,8 @@ kgs_brf.exe
 WHAT.pref
 BRFInput.txt
 BRFOutput.txt
+WLCInput.txt
+WLCOutput.txt
 GLUE.npy
 *.par
 *.wif
