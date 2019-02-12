@@ -764,6 +764,13 @@ def is_dsetname_valid(dsetname):
             not any(char in dsetname for char in INVALID_CHARS))
 
 
+def make_dsetname_valid(dsetname):
+    """Replace all invalid characters in the name by an underscore."""
+    for char in INVALID_CHARS:
+        dsetname = dsetname.replace(char, '_')
+    return dsetname
+
+
 def save_dict_to_h5grp(h5grp, dic):
     """
     Save the content of a dictionay recursively in a hdf5.
