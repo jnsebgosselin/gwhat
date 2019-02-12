@@ -74,6 +74,9 @@ class ProjetReader(object):
         for key in ['wldsets', 'wxdsets']:
             if key not in list(self.db.keys()):
                 self.db.create_group(key)
+            if 'last_opened' not in list(self.db[key].attrs.keys()):
+                # Added in version 0.4.0 (see PR #267)
+                self.db[key].attrs['last_opened'] = 'None'
 
     def close_projet(self):
         """Close the project hdf5 file."""
@@ -188,11 +191,20 @@ class ProjetReader(object):
         """
         return list(self.db['wldsets'].keys())
 
+    def get_last_opened_wldset(self):
+        """
+        Return the name of the last opened water level dataset in the project
+        if any.
+        """
+        name = self.db['wldsets'].attrs['last_opened']
+        return None if name == 'None' else name
+
     def get_wldset(self, name):
         """
         Return the water level dataset corresponding to the provided name.
         """
         if name in self.wldsets:
+            self.db['wldsets'].attrs['last_opened'] = name
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
             return None
@@ -276,11 +288,20 @@ class ProjetReader(object):
         """
         return list(self.db['wxdsets'].keys())
 
+    def get_last_opened_wxdset(self):
+        """
+        Return the name of the last opened weather dataset in the project
+        if any.
+        """
+        name = self.db['wxdsets'].attrs['last_opened']
+        return None if name == 'None' else name
+
     def get_wxdset(self, name):
         """
         Return the weather dataset corresponding to the provided name.
         """
         if name in self.wxdsets:
+            self.db['wxdsets'].attrs['last_opened'] = name
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
             return None
@@ -742,6 +763,13 @@ def is_dsetname_valid(dsetname):
     """
     return (dsetname != '' and
             not any(char in dsetname for char in INVALID_CHARS))
+
+
+def make_dsetname_valid(dsetname):
+    """Replace all invalid characters in the name by an underscore."""
+    for char in INVALID_CHARS:
+        dsetname = dsetname.replace(char, '_')
+    return dsetname
 
 
 def save_dict_to_h5grp(h5grp, dic):
