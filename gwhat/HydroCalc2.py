@@ -812,6 +812,16 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.draw_mrc()
 
     # ---- Drawing methods
+    def clear_all_changes(self):
+        """Clear all changes that were made to the wldset."""
+        for change in self._wldset_undo_stack:
+            self.water_lvl[change[0]] = change[1]
+        self._wldset_undo_stack = []
+        self._obs_wl_plt.set_ydata(self.water_lvl)
+        self.clear_selected_wl()
+        self.btn_commit_changes.setEnabled(False)
+        self.btn_clear_changes.setEnabled(False)
+
 
     def _add_to_undo_stack(self, indexes):
         """
