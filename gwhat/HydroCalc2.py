@@ -858,6 +858,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Setup the yaxis range for the weather.
         self.fig.axes[1].axis(ymin=500, ymax=0)
+        self.draw()
 
     def setup_ax_margins(self, event=None):
         """Setup the margins width of the axes in inches."""
