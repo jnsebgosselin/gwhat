@@ -502,6 +502,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     @property
     def wldset(self):
+        """Return the water level dataset."""
         return self.dmngr.get_current_wldset()
 
     @property
