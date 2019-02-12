@@ -268,6 +268,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.home)
 
+        self.btn_fit_waterlevels = QToolButtonNormal('expand_all')
+        self.btn_fit_waterlevels.setToolTip(
+            "<p>Best fit the water level data along the x and y axis.</p>")
+        self.btn_fit_waterlevels.clicked.connect(self.setup_axis_range)
+
         self.btn_pan = OnOffToolButton('pan', size='normal')
         self.btn_pan.setToolTip(
             'Pan axes with the left mouse button and zoom with the right')
@@ -347,7 +352,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Setup the layout.
         toolbar = ToolBarWidget()
-        for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
+        for btn in [self.btn_home, self.btn_fit_waterlevels, self.btn_pan,
+                    self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
                     self.btn_show_mrc, self.btn_show_meas_wl, None,
@@ -842,15 +848,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
                  xldate_from_date_tuple((2018, 1, 1), 0)]
                 ) + self.dt4xls2mpl * self.dformat
 
-        delta = 0.05
-        Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
-        Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
+        Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * 0.05
+        Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * 0.05
         Ymin0 = np.nanmin(y) - (np.nanmax(y) - np.nanmin(y)) * 0.25
         Ymax0 = np.nanmax(y) + (np.nanmax(y) - np.nanmin(y)) * 0.25
         self.fig.axes[0].axis([Xmin0, Xmax0, Ymax0, Ymin0])
 
         # Setup the yaxis range for the weather.
         self.fig.axes[1].axis(ymin=500, ymax=0)
+        self.draw()
 
     def setup_ax_margins(self, event=None):
         """Setup the margins width of the axes in inches."""
