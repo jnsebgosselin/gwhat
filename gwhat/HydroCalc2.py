@@ -268,6 +268,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_home.setToolTip('Reset original view.')
         self.btn_home.clicked.connect(self.home)
 
+        self.btn_fit_waterlevels = QToolButtonNormal('expand_all')
+        self.btn_fit_waterlevels.setToolTip(
+            "<p>Best fit the water level data in the horizontal and vertical "
+            "axis.</p>")
+        self.btn_fit_waterlevels.clicked.connect(self.setup_axis_range)
+
         self.btn_pan = OnOffToolButton('pan', size='normal')
         self.btn_pan.setToolTip(
             'Pan axes with the left mouse button and zoom with the right')
@@ -347,7 +353,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # Setup the layout.
         toolbar = ToolBarWidget()
-        for btn in [self.btn_home, self.btn_pan, self.btn_zoom_to_rect, None,
+        for btn in [self.btn_home, self.btn_fit_waterlevels, self.btn_pan,
+                    self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
                     self.btn_show_glue, self.btn_show_weather,
                     self.btn_show_mrc, self.btn_show_meas_wl, None,
