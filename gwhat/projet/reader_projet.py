@@ -287,6 +287,14 @@ class ProjetReader(object):
         """
         return list(self.db['wxdsets'].keys())
 
+    def get_last_opened_wxdset(self):
+        """
+        Return the name of the last opened weather dataset in the project
+        if any.
+        """
+        name = self.db['wxdsets'].attrs['last_opened']
+        return None if name == 'None' else name
+
     def get_wxdset(self, name):
         """
         Return the weather dataset corresponding to the provided name.
