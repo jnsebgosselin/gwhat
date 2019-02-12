@@ -779,13 +779,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.wl_selected_i = []
         self.draw_select_wl()
 
-    def commit_wl_changes(self):
-        """Commit the changes made to the water level data to the project."""
-        if self.wldset is not None:
-            self.wldset.dset['WL'][:] = self.water_lvl
-            self.wldset.dset.file.flush()
-            print('commit_wl_changes')
-
     def home(self):
         """Reset the orgininal view of the figure."""
         self.toolbar.home()
@@ -824,6 +817,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_commit_changes.setEnabled(False)
         self.btn_clear_changes.setEnabled(False)
 
+    def commit_wl_changes(self):
+        """Commit the changes made to the water level data to the project."""
+        if self.wldset is not None:
+            self.wldset.dset['WL'][:] = self.water_lvl
+            self.wldset.dset.file.flush()
+            self.btn_commit_changes.setEnabled(False)
+            self.btn_clear_changes.setEnabled(False)
+            print('Changes commited successfully.')
 
     def _add_to_undo_stack(self, indexes):
         """
