@@ -412,6 +412,7 @@ class DataManager(QWidget):
             return self.projet.get_wxdset(self.wxdsets_cbox.currentText())
 
     def set_current_wxdset(self, name):
+        """Set the current weather dataset from its name."""
         self.wxdsets_cbox.blockSignals(True)
         self.wxdsets_cbox.setCurrentIndex(self.wxdsets_cbox.findText(name))
         self.wxdsets_cbox.blockSignals(False)
