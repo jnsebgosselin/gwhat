@@ -270,8 +270,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         self.btn_fit_waterlevels = QToolButtonNormal('expand_all')
         self.btn_fit_waterlevels.setToolTip(
-            "<p>Best fit the water level data in the horizontal and vertical "
-            "axis.</p>")
+            "<p>Best fit the water level data along the x and y axis.</p>")
         self.btn_fit_waterlevels.clicked.connect(self.setup_axis_range)
 
         self.btn_pan = OnOffToolButton('pan', size='normal')
