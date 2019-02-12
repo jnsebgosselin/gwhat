@@ -190,6 +190,14 @@ class ProjetReader(object):
         """
         return list(self.db['wldsets'].keys())
 
+    def get_last_opened_wldset(self):
+        """
+        Return the name of the last opened water level dataset in the project
+        if any.
+        """
+        name = self.db['wldsets'].attrs['last_opened']
+        return None if name == 'None' else name
+
     def get_wldset(self, name):
         """
         Return the water level dataset corresponding to the provided name.
