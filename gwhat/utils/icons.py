@@ -61,7 +61,6 @@ GWHAT_ICONS = {
     'home': 'home',
     'mrc_calc': 'MRCalc',
     'edit': 'edit',
-    'pan': 'pan',
     'add_point': 'add_point',
     'erase': 'erase',
     'erase2': 'erase2',
@@ -121,6 +120,9 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1.3}],
     'expand_all': [
         ('mdi.arrow-expand-all',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'pan': [
+        ('mdi.pan',),
         {'color': COLOR, 'scale_factor': 1.3}],
     }
 
