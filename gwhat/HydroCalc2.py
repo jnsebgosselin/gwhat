@@ -348,6 +348,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_del_select = QToolButtonNormal('erase_data')
         self.btn_del_select.clicked.connect(self.delete_selected_wl)
 
+        self.btn_clear_changes = QToolButtonNormal('clear_changes')
+        self.btn_clear_changes.setToolTip(
+            "Clear all changes made to the water level data since the last "
+            "commit.")
+        self.btn_clear_changes.clicked.connect(self.clear_all_changes)
+        self.btn_clear_changes.setEnabled(False)
+
         self.btn_commit_changes = QToolButtonNormal('commit_changes')
         self.btn_commit_changes.clicked.connect(self.commit_wl_changes)
         self.btn_commit_changes.setEnabled(False)
@@ -360,7 +367,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     self.btn_show_glue, self.btn_show_weather,
                     self.btn_show_mrc, self.btn_show_meas_wl, None,
                     self.btn_rect_select, self.btn_clear_select,
-                    self.btn_del_select, self.btn_commit_changes]:
+                    self.btn_del_select, self.btn_clear_changes,
+                    self.btn_commit_changes]:
             toolbar.addWidget(btn)
 
         return toolbar
