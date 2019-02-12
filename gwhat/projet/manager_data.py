@@ -295,6 +295,15 @@ class DataManager(QWidget):
         else:
             return self.projet.get_wldset(self.wldsets_cbox.currentText())
 
+    def set_current_wldset(self, name):
+        """Set the current water level from its name."""
+        self.wldsets_cbox.blockSignals(True)
+        self.wldsets_cbox.setCurrentIndex(self.wldsets_cbox.findText(name))
+        self.wldsets_cbox.blockSignals(False)
+
+        self.update_wldset_info()
+        self.wldset_changed()
+
     def del_current_wldset(self):
         """Delete the currently selected water level dataset."""
         if self.wldsets_cbox.count() > 0:
