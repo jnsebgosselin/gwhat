@@ -74,6 +74,8 @@ class ProjetReader(object):
         for key in ['wldsets', 'wxdsets']:
             if key not in list(self.db.keys()):
                 self.db.create_group(key)
+            if 'last_opened' not in list(self.db[key].attrs.keys()):
+                self.db[key].attrs['last_opened'] = 'None'
 
     def close_projet(self):
         """Close the project hdf5 file."""
