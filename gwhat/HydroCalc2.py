@@ -849,9 +849,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
                  xldate_from_date_tuple((2018, 1, 1), 0)]
                 ) + self.dt4xls2mpl * self.dformat
 
-        delta = 0.05
-        Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * delta
-        Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * delta
+        Xmin0 = np.min(t) - (np.max(t) - np.min(t)) * 0.05
+        Xmax0 = np.max(t) + (np.max(t) - np.min(t)) * 0.05
         Ymin0 = np.nanmin(y) - (np.nanmax(y) - np.nanmin(y)) * 0.25
         Ymax0 = np.nanmax(y) + (np.nanmax(y) - np.nanmin(y)) * 0.25
         self.fig.axes[0].axis([Xmin0, Xmax0, Ymax0, Ymin0])
