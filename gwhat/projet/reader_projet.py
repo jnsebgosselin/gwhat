@@ -195,6 +195,7 @@ class ProjetReader(object):
         Return the water level dataset corresponding to the provided name.
         """
         if name in self.wldsets:
+            self.db['wldsets'].attrs['last_opened'] = name
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
             return None
@@ -283,6 +284,7 @@ class ProjetReader(object):
         Return the weather dataset corresponding to the provided name.
         """
         if name in self.wxdsets:
+            self.db['wxdsets'].attrs['last_opened'] = name
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
             return None
