@@ -87,6 +87,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         self.time = []
         self.water_lvl = []
+        self._wldset_undo_stack = []
 
         # Calcul the delta between the datum of Excel and Maplotlib numeric
         # date system.
