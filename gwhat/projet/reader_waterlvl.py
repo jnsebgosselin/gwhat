@@ -264,6 +264,31 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     return table
 
 
+class WLDataFrameBase(Mapping):
+    """
+    A water level data frame base class.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dset = None
+        self._undo_stack = []
+        self._waterlevels = np.array([])
+        self._datetimes = np.array([])
+
+    def __load_dataset__(self):
+        """Loads the dataset and save it in a store."""
+        raise NotImplementedError
+
+    def __len__(self, key):
+        return len(self._datetimes)
+
+    def __setitem__(self, key, value):
+        return NotImplementedError
+
+    def __iter__(self):
+        return NotImplementedError
+
 
 if __name__ == "__main__":
     df = read_water_level_datafile("PO01_15min.xlsx")
