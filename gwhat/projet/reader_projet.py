@@ -98,6 +98,19 @@ class ProjetReader(object):
         else:
             return True
 
+    def get_project_items(self):
+        """
+        Return a list of addresses for all the items contained in the
+        project hdf5 file.
+        """
+        item_names = []
+        try:
+            self.__db.visit(item_names.append)
+        except RuntimeError:
+            return []
+        else:
+            return item_names
+
     def backup_project_file(self):
         """Copy the project hdf5 file in a file with a .bak extension."""
         if self.db is not None:
