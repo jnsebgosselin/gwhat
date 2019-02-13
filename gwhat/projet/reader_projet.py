@@ -20,6 +20,7 @@ import numpy as np
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase
+from gwhat.projet.reader_waterlvl import WLDataFrameBase
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
@@ -365,7 +366,7 @@ class ProjetReader(object):
         self.db.flush()
 
 
-class WLDataFrameHDF5(dict):
+class WLDataFrameHDF5(WLDataFrameBase):
     """
     This is a wrapper around the h5py group that is used to store
     water level datasets. It mimick the structure of the DataFrame that
@@ -373,19 +374,24 @@ class WLDataFrameHDF5(dict):
     reader_waterlvl module.
     """
 
-    def __init__(self, dset, *args, **kwargs):
+    def __init__(self, hdf5group, *args, **kwargs):
         super(WLDataFrameHDF5, self).__init__(*args, **kwargs)
-        self.dset = dset
+        self.__load_dataset__(hdf5group)
 
-        # Make older datasets compatible with newer format :
+    def __load_dataset__(self, hdf5group):
+        self.dset = hdf5group
+        self._undo_stack = []
+        self._waterlevels = self.dset['WL'][...]
+        self._datetimes = self.dset['Time'][...]
 
+        # Make older datasets compatible with newer format.
         if 'Well ID' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
-            dset.attrs['Well ID'] = ""
+            self.dset.attrs['Well ID'] = ""
             self.dset.file.flush()
         if 'Province' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
-            dset.attrs['Province'] = ""
+            self.dset.attrs['Province'] = ""
             self.dset.file.flush()
         if 'glue' not in list(self.dset.keys()):
             # Added in version 0.3.1 (see PR #184)
@@ -402,8 +408,16 @@ class WLDataFrameHDF5(dict):
     def name(self):
         return osp.basename(self.dset.name)
 
-    # ---- Manual measurents
+    # ---- Water levels
+    def commit(self):
+        """Commit the changes made to the water level data to the project."""
+        if self.has_uncommited_changes:
+            self.dset['WL'][:] = np.copy(self.waterlevels)
+            self.dset.file.flush()
+            self._undo_stack = []
+            print('Changes commited successfully.')
 
+    # ---- Manual measurements
     def set_wlmeas(self, time, wl):
         """Overwrite the water level measurements for this dataset."""
         try:

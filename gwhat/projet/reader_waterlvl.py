@@ -6,21 +6,23 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
+
+# ---- Standard library imports
 import os
+import os.path as osp
 import numpy as np
 import xlrd
 import csv
+from collections.abc import Mapping
 
 
-# ---- Imports: local
-
+# ---- Local library imports
 from gwhat.common.utils import save_content_to_csv
 
 FILE_EXTS = ['.csv', '.xls', '.xlsx']
 
 
 # ---- Read and Load Water Level Datafiles
-
 def open_water_level_datafile(filename):
     """Open a water level data file and return the data."""
     root, ext = os.path.splitext(filename)
@@ -61,9 +63,8 @@ def read_water_level_datafile(filename):
           'ET': np.array([])}
 
     # ---- Read the Header
-
     for row, line in enumerate(data):
-        if len(line) == 0:
+        if not len(line):
             continue
 
         try:
@@ -106,7 +107,6 @@ def read_water_level_datafile(filename):
         return None
 
     # ---- Read the Data
-
     try:
         data = np.array(data[row+1:])
     except IndexError:
@@ -114,7 +114,6 @@ def read_water_level_datafile(filename):
         return df
 
     # Read the water level data :
-
     try:
         df['Time'] = data[:, 0].astype(float)
         df['WL'] = data[:, 1].astype(float)
@@ -130,49 +129,45 @@ def read_water_level_datafile(filename):
         print("The data are not monotically increasing in time.")
         return None
 
-    # Read the barometric data
-
+    # Read the barometric data.
     try:
         if column_labels[2] == 'BP(m)':
             df['BP'] = data[:, 2].astype(float)
         else:
             print('No barometric data.')
-    except:
+    except IndexError:
         print('No barometric data.')
 
-    # Read the earth tide data :
-
+    # Read the Earth tides data.
     try:
         if column_labels[3] == 'ET':
             df['ET'] = data[:, 3].astype(float)
         else:
             print('No Earth tide data.')
-    except:
+    except IndexError:
         print('No Earth tide data.')
 
     return df
 
 
 def make_waterlvl_continuous(t, wl):
-    # This method produce a continuous daily water level time series.
-    # Missing data are filled with nan values.
-
+    """
+    This method produce a continuous daily water level time series.
+    Missing data are filled with nan values.
+    """
     print('Making water level continuous...')
-
     i = 1
     while i < len(t)-1:
         if t[i+1]-t[i] > 1:
             wl = np.insert(wl, i+1, np.nan, 0)
             t = np.insert(t, i+1, t[i]+1, 0)
         i += 1
-
     print('Making water level continuous done.')
 
     return t, wl
 
 
 # ---- Water Level Manual Measurements
-
 def init_waterlvl_measures(dirname):
     """
     Create an empty waterlvl_manual_measurements.csv file with headers
@@ -270,9 +265,104 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     return table
 
 
-# ---- if __name__ == "__main__"
+class WLDataFrameBase(Mapping):
+    """
+    A water level data frame base class.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.dset = None
+        self._undo_stack = []
+        self._waterlevels = np.array([])
+        self._datetimes = np.array([])
+
+    def __load_dataset__(self):
+        """Loads the dataset and save it in a store."""
+        raise NotImplementedError
+
+    def __len__(self, key):
+        return len(self._datetimes)
+
+    def __setitem__(self, key, value):
+        return NotImplementedError
+
+    def __iter__(self):
+        return NotImplementedError
+
+    # ---- Water levels
+    @property
+    def datetimes(self):
+        return self._datetimes
+
+    @property
+    def waterlevels(self):
+        return self._waterlevels
+
+    @property
+    def has_uncommited_changes(self):
+        """"
+        Return whether there is uncommited changes to the water level data.
+        """
+        return bool(len(self._undo_stack))
+
+    def commit(self):
+        """Commit the changes made to the water level data to the project."""
+        raise NotImplementedError
+
+    def undo(self):
+        """Undo the last changes made to the water level data."""
+        if self.has_uncommited_changes:
+            change = self._undo_stack.pop(-1)
+            self._waterlevels[change[0]] = change[1]
+
+    def clear_all_changes(self):
+        """
+        Clear all changes that were made to the water level data since the
+        last commit.
+        """
+        while self.has_uncommited_changes:
+            self.undo()
+
+    def delete_waterlevels_at(self, indexes):
+        """Delete the water level data at the specified indexes."""
+        if len(indexes):
+            self._add_to_undo_stack(indexes)
+            self._waterlevels[indexes] = np.nan
+
+    def _add_to_undo_stack(self, indexes):
+        """
+        Store the old water level values at the specified indexes in a stack
+        before changing or deleting them. This allow to undo or cancel any
+        changes made to the water level data before commiting them.
+        """
+        if len(indexes):
+            self._undo_stack.append((indexes, self.waterlevels[indexes]))
+
+
+class WLDataFrame(WLDataFrameBase):
+    """A water level dataset container that loads its data from a file."""
+
+    def __init__(self, filename, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__load_dataset__(filename)
+
+    def __getitem__(self, key):
+        """Returns the value saved in the store at key."""
+        return self.dset.__getitem__(key)
+
+    def __load_dataset__(self, filename):
+        """Loads the dataset from a file and saves it in the store."""
+        self.dset = read_water_level_datafile(filename)
+        self._waterlevels = self.dset['WL']
+        self._datetimes = self.dset['Time']
+
 
 if __name__ == "__main__":
-    df = read_water_level_datafile("PO01_15min.xlsx")
-    df2 = read_water_level_datafile("PO01_15min.xls")
-    df3 = read_water_level_datafile("PO01_15min.csv")
+    from gwhat import __rootdir__
+    df = WLDataFrame(
+        osp.join(__rootdir__, 'tests', "water_level_datafile.csv"))
+    df2 = WLDataFrame(
+        osp.join(__rootdir__, 'tests', "water_level_datafile.xls"))
+    df3 = WLDataFrame(
+        osp.join(__rootdir__, 'tests', "water_level_datafile.xlsx"))

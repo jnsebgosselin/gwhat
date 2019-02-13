@@ -97,7 +97,12 @@ GWHAT_ICONS = {
 
 COLOR = '#4d4d4d'
 GREEN = '#00aa00'
+RED = '#aa0000'
+
 FA_ICONS = {
+    'clear_changes': [
+        ('mdi.close-circle-outline',),
+        {'color': RED, 'scale_factor': 1.3}],
     'close_all': [
         ('fa.close', 'fa.close', 'fa.close'),
         {'options': [{'scale_factor': 0.6,
@@ -123,6 +128,9 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1.3}],
     'pan': [
         ('mdi.pan',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'undo_changes': [
+        ('mdi.undo-variant',),
         {'color': COLOR, 'scale_factor': 1.3}],
     }
 

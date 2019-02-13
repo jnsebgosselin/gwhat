@@ -26,7 +26,7 @@ import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
 import gwhat.projet.reader_waterlvl as wlrd
 from gwhat.projet.reader_projet import (INVALID_CHARS, is_dsetname_valid,
-                                        make_dsetname_valid, ProjetReader)
+                                        make_dsetname_valid)
 import gwhat.meteo.weather_reader as wxrd
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.widgets.spinboxes import StrSpinBox
@@ -182,7 +182,7 @@ class DataManager(QWidget):
     def set_projet(self, projet):
         """Set the namespace for the projet hdf5 file."""
         self._projet = projet
-        if isinstance(projet, ProjetReader):
+        if projet is not None:
             self.update_wldsets(projet.get_last_opened_wldset())
             self.update_wxdsets(projet.get_last_opened_wxdset())
 
@@ -809,12 +809,11 @@ class NewDatasetDialog(QDialog):
         self.update_gui()
 
 
-# %% if __name__ == '__main__'
-
 if __name__ == '__main__':
-    from reader_projet import ProjetReader
     import sys
-    projet = ProjetReader("C:/Users/jsgosselin/gwhat/Projects/Example/Example.gwt")
+    from gwhat.projet.reader_projet import ProjetReader
+    projet = ProjetReader(
+        "C:/Users/jsgosselin/gwhat/Projects/Example/Example.gwt")
 
     app = QApplication(sys.argv)
 
