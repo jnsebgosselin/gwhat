@@ -129,6 +129,9 @@ FA_ICONS = {
     'pan': [
         ('mdi.pan',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'undo_changes': [
+        ('mdi.undo-variant',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     }
 
 ICON_SIZES = {'large': (32, 32),
