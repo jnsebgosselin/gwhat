@@ -18,7 +18,7 @@ from PyQt5.QtCore import Qt
 from gwhat.brf_mod.kgs_gui import (BRFManager, KGSBRFInstaller, QMessageBox,
                                    QFileDialog)
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.projet.reader_waterlvl import read_water_level_datafile
+from gwhat.projet.reader_waterlvl import WLDataFrame
 
 
 # ---- Pytest Fixtures
@@ -36,7 +36,7 @@ def wldataset(project):
     # Create a wldset object from a file.
     rootpath = osp.dirname(osp.realpath(__file__))
     filepath = osp.join(rootpath, 'data', 'sample_water_level_datafile.csv')
-    wldset = read_water_level_datafile(filepath)
+    wldset = WLDataFrame(filepath)
 
     # Add the wldset to the project.
     project.add_wldset('test_brf_wldset', wldset)

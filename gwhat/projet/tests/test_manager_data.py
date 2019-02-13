@@ -18,7 +18,7 @@ from PyQt5.QtCore import Qt
 
 # ---- Local Libraries Imports
 from gwhat.meteo.weather_reader import WXDataFrame
-from gwhat.projet.reader_waterlvl import read_water_level_datafile
+from gwhat.projet.reader_waterlvl import WLDataFrame
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.manager_data import (DataManager, QFileDialog, QMessageBox,
                                        QCheckBox)
@@ -145,10 +145,8 @@ def test_delete_waterlevel_data(datamanager, mocker, qtbot):
     """
     Test deleting water level datasets from the project.
     """
-    datamanager.new_wldset_imported(
-        'wldset1', read_water_level_datafile(WLFILENAME))
-    datamanager.new_wldset_imported(
-        'wldset2', read_water_level_datafile(WLFILENAME))
+    datamanager.new_wldset_imported('wldset1', WLDataFrame(WLFILENAME))
+    datamanager.new_wldset_imported('wldset2', WLDataFrame(WLFILENAME))
     assert datamanager.wldataset_count() == 2
 
     # Click to delete the current water level dataset, but cancel.
@@ -190,8 +188,7 @@ def test_last_opened_datasets(qtbot, projectpath):
 
     # Add some water level dataset.
     for name in ['wldset1', 'wldset2', 'wldset3']:
-        datamanager.new_wldset_imported(
-            name, read_water_level_datafile(WLFILENAME))
+        datamanager.new_wldset_imported(name, WLDataFrame(WLFILENAME))
     assert datamanager.get_current_wldset().name == 'wldset3'
 
     # Add some weather dataset.
