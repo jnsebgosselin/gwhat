@@ -290,6 +290,55 @@ class WLDataFrameBase(Mapping):
     def __iter__(self):
         return NotImplementedError
 
+    # ---- Water levels
+    @property
+    def datetimes(self):
+        return np.copy(self._datetimes)
+
+    @property
+    def waterlevels(self):
+        return np.copy(self._waterlevels)
+
+    @property
+    def has_uncommited_changes(self):
+        """"
+        Return whether there is uncommited changes to the water level data.
+        """
+        return bool(len(self._undo_stack))
+
+    def commit(self):
+        """Commit the changes made to the water level data to the project."""
+        raise NotImplementedError
+
+    def undo(self):
+        """Undo the last changes made to the water level data."""
+        if self.has_uncommited_changes:
+            change = self._undo_stack.pop(-1)
+            self._waterlevels[change[0]] = change[1]
+
+    def clear_all_changes(self):
+        """
+        Clear all changes that were made to the water level data since the
+        last commit.
+        """
+        while self.has_uncommited_changes:
+            self.undo()
+
+    def delete_waterlevels_at(self, indexes):
+        """Delete the water level data at the specified indexes."""
+        if len(indexes):
+            self._add_to_undo_stack(indexes)
+            self._waterlevels[indexes] = np.nan
+
+    def _add_to_undo_stack(self, indexes):
+        """
+        Store the old water level values at the specified indexes in a stack
+        before changing or deleting them. This allow to undo or cancel any
+        changes made to the water level data before commiting them.
+        """
+        if len(indexes):
+            self._undo_stack.append((indexes, self.waterlevels[indexes]))
+
 
 class WLDataFrame(WLDataFrameBase):
     """A water level dataset container that loads its data from a file."""
