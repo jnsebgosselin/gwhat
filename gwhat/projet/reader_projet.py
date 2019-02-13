@@ -408,8 +408,16 @@ class WLDataFrameHDF5(WLDataFrameBase):
     def name(self):
         return osp.basename(self.dset.name)
 
-    # ---- Manual measurents
+    # ---- Water levels
+    def commit(self):
+        """Commit the changes made to the water level data to the project."""
+        if self.has_uncommited_changes:
+            self.dset['WL'][:] = self.__waterlevels
+            self.dset.file.flush()
+            self._undo_stack = []
+            print('Changes commited successfully.')
 
+    # ---- Manual measurements
     def set_wlmeas(self, time, wl):
         """Overwrite the water level measurements for this dataset."""
         try:
