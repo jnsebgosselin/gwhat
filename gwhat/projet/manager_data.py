@@ -182,7 +182,7 @@ class DataManager(QWidget):
     def set_projet(self, projet):
         """Set the namespace for the projet hdf5 file."""
         self._projet = projet
-        if isinstance(projet, ProjetReader):
+        if projet is not None:
             self.update_wldsets(projet.get_last_opened_wldset())
             self.update_wxdsets(projet.get_last_opened_wxdset())
 
