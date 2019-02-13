@@ -129,10 +129,6 @@ class ProjetReader(object):
             finally:
                 self.load_projet(filename)
 
-        try:
-            copyfile(self.filename, bak_filename)
-        except (OSError, PermissionError):
-            print('failed')
     def repack_project_file(self, reload=True):
         """
         Repack the project hdf5 file to reclaim free space from deleted data.
@@ -166,9 +162,6 @@ class ProjetReader(object):
             if reload is True:
                 self.load_projet(filename)
             return False
-        else:
-            print('done')
-            return True
 
         # Check that the structure of the repacked project file was
         # preserved.
