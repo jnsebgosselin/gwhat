@@ -60,6 +60,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         SaveFileMixin.__init__(self)
 
         self._navig_and_select_tools = []
+        self._wldset = None
 
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.set_wldset)
@@ -82,12 +83,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.__figbckground = None
         self.__addPeakVisible = True
         self.__mouse_btn_is_pressed = False
-
-        # Water Level Time series :
-
-        self.time = []
-        self.water_lvl = []
-        self._wldset_undo_stack = []
 
         # Calcul the delta between the datum of Excel and Maplotlib numeric
         # date system.
@@ -346,7 +341,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_clear_select.clicked.connect(self.clear_selected_wl)
 
         self.btn_del_select = QToolButtonNormal('erase_data')
+        self.btn_del_select.setToolTip(
+            "Remove the selected water level data from the dataset.")
         self.btn_del_select.clicked.connect(self.delete_selected_wl)
+
+        self.btn_undo_changes = QToolButtonNormal('undo_changes')
+        self.btn_undo_changes.setToolTip(
+            "Undo the last changes made to the water level data.")
+        self.btn_undo_changes.setEnabled(False)
 
         self.btn_clear_changes = QToolButtonNormal('clear_changes')
         self.btn_clear_changes.setToolTip(
@@ -367,8 +369,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     self.btn_show_glue, self.btn_show_weather,
                     self.btn_show_mrc, self.btn_show_meas_wl, None,
                     self.btn_rect_select, self.btn_clear_select,
-                    self.btn_del_select, self.btn_clear_changes,
-                    self.btn_commit_changes]:
+                    self.btn_del_select, self.btn_undo_changes,
+                    self.btn_clear_changes, self.btn_commit_changes]:
             toolbar.addWidget(btn)
 
         return toolbar
@@ -511,9 +513,16 @@ class WLCalc(DialogWindow, SaveFileMixin):
         mainGrid.setColumnMinimumWidth(2, 250)
 
     @property
+    def water_lvl(self):
+        return np.array([]) if self.wldset is None else self.wldset.waterlevels
+
+    @property
+    def time(self):
+        return np.array([]) if self.wldset is None else self.wldset.datetimes
+
+    @property
     def wldset(self):
-        """Return the water level dataset."""
-        return self.dmngr.get_current_wldset()
+        return self._wldset
 
     @property
     def wxdset(self):
@@ -521,12 +530,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def set_wldset(self, wldset):
         """Set the namespace for the water level dataset."""
-        if wldset is None:
-            self.water_lvl = np.array([])
-            self.time = np.array([])
-        else:
-            self.water_lvl = wldset['WL']
-            self.time = wldset['Time']
+        self._wldset = wldset
         self.rechg_eval_widget.set_wldset(wldset)
         self.mrc_eval_widget.setEnabled(self.wldset is not None)
 
@@ -782,10 +786,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         if self.rect_select_is_active:
             self.toggle_navig_and_select_tools(self.btn_rect_select)
 
-    def clear_selected_wl(self):
+    def clear_selected_wl(self, draw=True):
         """Clear the selecte water level data."""
         self.wl_selected_i = []
-        self.draw_select_wl()
+        self.draw_select_wl(draw)
 
     def home(self):
         """Reset the orgininal view of the figure."""
@@ -809,41 +813,38 @@ class WLCalc(DialogWindow, SaveFileMixin):
     # ---- Water level edit tools
     def delete_selected_wl(self):
         """Delete the selecte water level data."""
-        if len(self.wl_selected_i):
-            self._add_to_undo_stack(self.wl_selected_i)
-            self.water_lvl[self.wl_selected_i] = np.nan
-            self._obs_wl_plt.set_ydata(self.water_lvl)
-        self.clear_selected_wl()
+        if len(self.wl_selected_i) and self.wldset is not None:
+            self.wldset.delete_waterlevels_at(self.wl_selected_i)
+            self._draw_obs_wl()
+
+    def undo_wl_changes(self):
+        """Undo the last changes made to the water level data."""
+        if self.wldset is not None:
+            self.wldset.undo()
+            self._draw_obs_wl()
+            self._update_edit_toolbar_state()
 
     def clear_all_changes(self):
         """Clear all changes that were made to the wldset."""
-        for change in self._wldset_undo_stack:
-            self.water_lvl[change[0]] = change[1]
-        self._wldset_undo_stack = []
-        self._obs_wl_plt.set_ydata(self.water_lvl)
-        self.clear_selected_wl()
-        self.btn_commit_changes.setEnabled(False)
-        self.btn_clear_changes.setEnabled(False)
+        if self.wldset is not None:
+            self.clear_all_changes.clear_all_changes()
+            self._draw_obs_wl()
+            self._update_edit_toolbar_state()
 
     def commit_wl_changes(self):
         """Commit the changes made to the water level data to the project."""
         if self.wldset is not None:
-            self.wldset.dset['WL'][:] = self.water_lvl
-            self.wldset.dset.file.flush()
-            self.btn_commit_changes.setEnabled(False)
-            self.btn_clear_changes.setEnabled(False)
-            print('Changes commited successfully.')
+            self.wldset.commit()
+            self._update_edit_toolbar_state()
 
-    def _add_to_undo_stack(self, indexes):
-        """
-        Store the old water level values at the specified indexes in a stack
-        before changing or deleting them. This allow to undo or cancel any
-        changes made to the water level data before commiting them.
-        """
-        if len(indexes):
-            self._wldset_undo_stack.append((indexes, self.water_lvl[indexes]))
-        self.btn_commit_changes.setEnabled(len(self._wldset_undo_stack))
-        self.btn_clear_changes.setEnabled(len(self._wldset_undo_stack))
+    def _update_edit_toolbar_state(self):
+        """Update the state of the edit toolbar."""
+        buttons = [self.btn_commit_changes,
+                   self.btn_clear_changes,
+                   self.btn_undo_changes]
+        for btn in buttons:
+            btn.setEnabled(False if self.wldset is None else
+                           self.wldset.has_uncommited_changes)
 
     # ---- Drawing methods
     def setup_hydrograph(self):
@@ -851,13 +852,12 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.peak_indx = np.array([]).astype(int)
         self.peak_memory = [np.array([]).astype(int)]
         self.btn_undo.setEnabled(False)
+
         self.clear_selected_wl()
-        self.btn_commit_changes.setEnabled(False)
-        self.btn_clear_changes.setEnabled(False)
+        self._update_edit_toolbar_state()
 
         # Plot observed and predicted water levels
-        self._obs_wl_plt.set_data(
-            self.time + self.dt4xls2mpl * self.dformat, self.water_lvl)
+        self._draw_obs_wl()
         self.plt_wlpre.set_data([], [])
 
         self.draw_meas_wl()
@@ -949,8 +949,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.dformat = 0
         self.setup_xticklabels_format()
 
-        # Adjust the range of the axis.
-
+        # Adjust the range of the x-axis.
         xlim = ax0.get_xlim()
         if self.dformat == 1:
             ax0.set_xlim(xlim[0] + self.dt4xls2mpl, xlim[1] + self.dt4xls2mpl)
@@ -958,14 +957,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
 
         # Adjust the water levels, peak, MRC ant weather time frame.
-
-        t = self.time + self.dt4xls2mpl * self.dformat
-        self._obs_wl_plt.set_xdata(t)  # Water Levels
-
         if len(self.peak_indx) > 0:  # Peaks
             self._peaks_plt.set_xdata(
                 self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat)
 
+        self._draw_obs_wl()
         self.draw_meas_wl()
         self.draw_mrc()
         self.draw_weather()
@@ -1117,7 +1113,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self._meas_wl_plt.set_visible(False)
         self.draw()
 
-    def draw_select_wl(self):
+    def draw_select_wl(self, draw=True):
         """Draw the selected water level data points."""
         if self.wldset is not None:
             self._select_wl_plt.set_data(
@@ -1125,7 +1121,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
                 (self.dt4xls2mpl * self.dformat),
                 self.water_lvl[self.wl_selected_i]
                 )
-        self.draw()
+        if draw:
+            self.draw()
 
     def draw_glue_wl(self):
         """Draw or hide the water level envelope estimated with GLUE."""
@@ -1223,6 +1220,17 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self._draw_mrc_wl()
         self._draw_mrc_peaks()
         self.draw()
+
+    def _draw_obs_wl(self, draw=True):
+        """Draw the observed water level data on the graph."""
+        self.clear_selected_wl(draw=False)
+        if self.wldset is not None:
+            self._obs_wl_plt.set_data(
+                self.wldset.datetimes + (self.dt4xls2mpl * self.dformat),
+                self.wldset.waterlevels)
+        self._obs_wl_plt.set_visible(self.wldset is not None)
+        if draw:
+            self.draw()
 
     def _draw_mrc_wl(self):
         """Draw the water levels that were predicted with the MRC."""
