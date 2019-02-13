@@ -310,6 +310,10 @@ class WLDataFrame(WLDataFrameBase):
 
 
 if __name__ == "__main__":
-    df = read_water_level_datafile("PO01_15min.xlsx")
-    df2 = read_water_level_datafile("PO01_15min.xls")
-    df3 = read_water_level_datafile("PO01_15min.csv")
+    from gwhat import __rootdir__
+    df = WLDataFrame(
+        osp.join(__rootdir__, 'tests', "water_level_datafile.csv"))
+    df2 = WLDataFrame(
+        osp.join(__rootdir__, 'tests', "water_level_datafile.xls"))
+    df3 = WLDataFrame(
+        osp.join(__rootdir__, 'tests', "water_level_datafile.xlsx"))
