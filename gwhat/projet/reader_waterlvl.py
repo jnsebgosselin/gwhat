@@ -291,6 +291,24 @@ class WLDataFrameBase(Mapping):
         return NotImplementedError
 
 
+class WLDataFrame(WLDataFrameBase):
+    """A water level dataset container that loads its data from a file."""
+
+    def __init__(self, filename, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__load_dataset__(filename)
+
+    def __getitem__(self, key):
+        """Returns the value saved in the store at key."""
+        return self.dset.__getitem__(key)
+
+    def __load_dataset__(self, filename):
+        """Loads the dataset from a file and saves it in the store."""
+        self.dset = read_water_level_datafile(filename)
+        self._waterlevels = self.dset['WL']
+        self._datetimes = self.dset['Time']
+
+
 if __name__ == "__main__":
     df = read_water_level_datafile("PO01_15min.xlsx")
     df2 = read_water_level_datafile("PO01_15min.xls")
