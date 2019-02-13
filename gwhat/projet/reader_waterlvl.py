@@ -293,11 +293,11 @@ class WLDataFrameBase(Mapping):
     # ---- Water levels
     @property
     def datetimes(self):
-        return np.copy(self._datetimes)
+        return self._datetimes
 
     @property
     def waterlevels(self):
-        return np.copy(self._waterlevels)
+        return self._waterlevels
 
     @property
     def has_uncommited_changes(self):
