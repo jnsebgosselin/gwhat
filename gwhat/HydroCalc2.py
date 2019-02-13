@@ -304,7 +304,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # ---- Show/Hide section
         self.btn_show_glue = OnOffToolButton('show_glue_wl', size='normal')
         self.btn_show_glue.setToolTip(
-            """Show or hide GLUE water level 05/95 envelope.""")
+            "Show or hide GLUE water level 05/95 envelope.")
         self.btn_show_glue.sig_value_changed.connect(self.draw_glue_wl)
         self.btn_show_glue.setValue(True, silent=True)
 
@@ -315,7 +315,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         self.btn_show_mrc = OnOffToolButton('mrc_calc', size='normal')
         self.btn_show_mrc.setToolTip(
-            """Show or hide water levels predicted with the MRC.""")
+            "Show or hide water levels predicted with the MRC.")
         self.btn_show_mrc.sig_value_changed.connect(
             self.btn_show_mrc_isclicked)
         self.btn_show_mrc.setValue(True, silent=True)
@@ -323,15 +323,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_show_meas_wl = OnOffToolButton(
             'manual_measures', size='normal')
         self.btn_show_meas_wl.setToolTip(
-            """Show or hide water levels measured manually in the well.""")
+            "Show or hide water levels measured manually in the well.")
         self.btn_show_meas_wl.setValue(True, silent=True)
         self.btn_show_meas_wl.sig_value_changed.connect(self.draw_meas_wl)
 
         # ---- Select and transform data.
         self.btn_rect_select = OnOffToolButton('rect_select', size='normal')
         self.btn_rect_select.setToolTip(
-            "<p>Select water level data by clicking with the mouse and "
-            "dragging the cursor over a rectangular region of the graph.</p>")
+            "Select water level data by clicking with the mouse and "
+            "dragging the cursor over a rectangular region of the graph.")
         self.btn_rect_select.sig_value_changed.connect(
             self.rect_select_is_active_changed)
         self.register_navig_and_select_tool(self.btn_rect_select)
