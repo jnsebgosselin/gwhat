@@ -412,7 +412,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
     def commit(self):
         """Commit the changes made to the water level data to the project."""
         if self.has_uncommited_changes:
-            self.dset['WL'][:] = self.__waterlevels
+            self.dset['WL'][:] = np.copy(self.waterlevels)
             self.dset.file.flush()
             self._undo_stack = []
             print('Changes commited successfully.')
