@@ -817,6 +817,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         if len(self.wl_selected_i) and self.wldset is not None:
             self.wldset.delete_waterlevels_at(self.wl_selected_i)
             self._draw_obs_wl()
+            self._update_edit_toolbar_state()
 
     def undo_wl_changes(self):
         """Undo the last changes made to the water level data."""
@@ -828,7 +829,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def clear_all_changes(self):
         """Clear all changes that were made to the wldset."""
         if self.wldset is not None:
-            self.clear_all_changes.clear_all_changes()
+            self.wldset.clear_all_changes()
             self._draw_obs_wl()
             self._update_edit_toolbar_state()
 
