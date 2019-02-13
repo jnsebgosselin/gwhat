@@ -13,6 +13,7 @@ import os.path as osp
 import numpy as np
 import xlrd
 import csv
+from collections.abc import Mapping
 
 
 # ---- Local library imports
