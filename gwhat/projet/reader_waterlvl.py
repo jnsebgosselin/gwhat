@@ -6,21 +6,22 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
+
+# ---- Standard library imports
 import os
+import os.path as osp
 import numpy as np
 import xlrd
 import csv
 
 
-# ---- Imports: local
-
+# ---- Local library imports
 from gwhat.common.utils import save_content_to_csv
 
 FILE_EXTS = ['.csv', '.xls', '.xlsx']
 
 
 # ---- Read and Load Water Level Datafiles
-
 def open_water_level_datafile(filename):
     """Open a water level data file and return the data."""
     root, ext = os.path.splitext(filename)
@@ -61,9 +62,8 @@ def read_water_level_datafile(filename):
           'ET': np.array([])}
 
     # ---- Read the Header
-
     for row, line in enumerate(data):
-        if len(line) == 0:
+        if not len(line):
             continue
 
         try:
@@ -106,7 +106,6 @@ def read_water_level_datafile(filename):
         return None
 
     # ---- Read the Data
-
     try:
         data = np.array(data[row+1:])
     except IndexError:
@@ -114,7 +113,6 @@ def read_water_level_datafile(filename):
         return df
 
     # Read the water level data :
-
     try:
         df['Time'] = data[:, 0].astype(float)
         df['WL'] = data[:, 1].astype(float)
@@ -130,49 +128,45 @@ def read_water_level_datafile(filename):
         print("The data are not monotically increasing in time.")
         return None
 
-    # Read the barometric data
-
+    # Read the barometric data.
     try:
         if column_labels[2] == 'BP(m)':
             df['BP'] = data[:, 2].astype(float)
         else:
             print('No barometric data.')
-    except:
+    except IndexError:
         print('No barometric data.')
 
-    # Read the earth tide data :
-
+    # Read the Earth tides data.
     try:
         if column_labels[3] == 'ET':
             df['ET'] = data[:, 3].astype(float)
         else:
             print('No Earth tide data.')
-    except:
+    except IndexError:
         print('No Earth tide data.')
 
     return df
 
 
 def make_waterlvl_continuous(t, wl):
-    # This method produce a continuous daily water level time series.
-    # Missing data are filled with nan values.
-
+    """
+    This method produce a continuous daily water level time series.
+    Missing data are filled with nan values.
+    """
     print('Making water level continuous...')
-
     i = 1
     while i < len(t)-1:
         if t[i+1]-t[i] > 1:
             wl = np.insert(wl, i+1, np.nan, 0)
             t = np.insert(t, i+1, t[i]+1, 0)
         i += 1
-
     print('Making water level continuous done.')
 
     return t, wl
 
 
 # ---- Water Level Manual Measurements
-
 def init_waterlvl_measures(dirname):
     """
     Create an empty waterlvl_manual_measurements.csv file with headers
@@ -270,7 +264,6 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     return table
 
 
-# ---- if __name__ == "__main__"
 
 if __name__ == "__main__":
     df = read_water_level_datafile("PO01_15min.xlsx")
