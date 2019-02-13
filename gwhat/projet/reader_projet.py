@@ -381,8 +381,8 @@ class WLDataFrameHDF5(WLDataFrameBase):
     def __load_dataset__(self, hdf5group):
         self.dset = hdf5group
         self._undo_stack = []
-        self._waterlevels = self.dset['WL']
-        self._datetimes = self.dset['Time']
+        self._waterlevels = self.dset['WL'][...]
+        self._datetimes = self.dset['Time'][...]
 
         # Make older datasets compatible with newer format.
         if 'Well ID' not in list(self.dset.attrs.keys()):
