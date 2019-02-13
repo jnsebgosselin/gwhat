@@ -349,6 +349,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_undo_changes.setToolTip(
             "Undo the last changes made to the water level data.")
         self.btn_undo_changes.setEnabled(False)
+        self.btn_undo_changes.clicked.connect(self.undo_wl_changes)
 
         self.btn_clear_changes = QToolButtonNormal('clear_changes')
         self.btn_clear_changes.setToolTip(
