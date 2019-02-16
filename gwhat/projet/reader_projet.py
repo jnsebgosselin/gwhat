@@ -138,7 +138,7 @@ class ProjetReader(object):
         self.db.flush()
         filename = self.filename
         proj_items = self.get_project_items()
-        self.close_projet()
+        self.close()
 
         # Try to delete the .repack file from the disk first.
         if osp.exists(filename + '.repack'):
@@ -167,7 +167,7 @@ class ProjetReader(object):
         # preserved.
         repack_proj = ProjetReader(filename + '.repack')
         repack_proj_items = repack_proj.get_project_items()
-        repack_proj.close_projet()
+        repack_proj.close()
 
         if proj_items == repack_proj_items:
             # Replace the old project with the repacked one.
