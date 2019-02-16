@@ -218,6 +218,7 @@ class ProjetManager(QWidget):
             copyfile(filename + '.bak', filename)
         except (OSError, PermissionError):
             print('failed')
+            msg_box.exec_()
             return False
         else:
             print('done')
