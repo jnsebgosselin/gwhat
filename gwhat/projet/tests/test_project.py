@@ -41,7 +41,7 @@ def projectfile(projectpath):
     project.lat = LAT
     project.lon = LON
 
-    project.close_projet()
+    project.close()
 
     return projectpath
 
@@ -51,7 +51,7 @@ def bakfile(projectfile):
     """A path to a valid project backup file."""
     project = ProjetReader(projectfile)
     project.backup_project_file()
-    project.close_projet()
+    project.close()
     assert osp.exists(projectfile + '.bak')
     return projectfile + '.bak'
 
