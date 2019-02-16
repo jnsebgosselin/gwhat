@@ -203,7 +203,7 @@ def test_last_opened_datasets(qtbot, projectpath):
     assert datamanager.get_current_wxdset().name == 'wxdset2'
 
     # Close the datamanager and its project.
-    datamanager.projet.close_projet()
+    datamanager.projet.close()
     datamanager.close()
 
     # Create a new datamanager and assert that the last opened water level

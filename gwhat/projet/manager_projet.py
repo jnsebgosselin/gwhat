@@ -206,7 +206,7 @@ class ProjetManager(QWidget):
         try:
             backup = ProjetReader(filename + '.bak')
             assert backup.check_project_file() is True
-            backup.close_projet()
+            backup.close()
         except Exception:
             msg_box.exec_()
             return False

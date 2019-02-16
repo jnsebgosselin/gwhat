@@ -35,7 +35,7 @@ class ProjetReader(object):
         self.load_projet(filename)
 
     def __del__(self):
-        self.close_projet()
+        self.close()
 
     @property
     def db(self):  # project data base
@@ -51,7 +51,7 @@ class ProjetReader(object):
 
     def load_projet(self, filename):
         """Open the hdf5 project file."""
-        self.close_projet()
+        self.close()
         print("Loading project from '{}'... ".format(osp.basename(filename)),
               end='')
         try:
@@ -80,7 +80,7 @@ class ProjetReader(object):
                 # Added in version 0.4.0 (see PR #267)
                 self.db[key].attrs['last_opened'] = 'None'
 
-    def close_projet(self):
+    def close(self):
         """Close the project hdf5 file."""
         try:
             self.db.close()
