@@ -460,7 +460,7 @@ class BRFViewer(QWidget):
         self.btn_del_all.clicked.connect(self.del_all_brf)
 
         self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
-        btn_save.setToolTip('Save current BRF graph...')
+        btn_save.setToolTip('Save current BRF graph as...')
         btn_save.clicked.connect(self.select_savefig_path)
 
         self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
