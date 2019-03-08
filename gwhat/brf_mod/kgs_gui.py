@@ -20,6 +20,7 @@ import io
 
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
                              QGridLayout, QDoubleSpinBox, QFrame, QWidget,
@@ -460,8 +461,12 @@ class BRFViewer(QWidget):
         self.btn_del_all.clicked.connect(self.del_all_brf)
 
         self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
-        btn_save.setToolTip('Save current BRF graph...')
+        btn_save.setToolTip('Save current BRF graph as...')
         btn_save.clicked.connect(self.select_savefig_path)
+
+        self.btn_copy = QToolButtonNormal('copy_clipboard')
+        self.btn_copy.setToolTip('Copy figure to clipboard as image.')
+        self.btn_copy.clicked.connect(self.copyfig_to_clipboard)
 
         self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
         self.btn_setp.setToolTip('Show graph layout parameters...')
@@ -471,8 +476,8 @@ class BRFViewer(QWidget):
 
         self.tbar = myqt.QFrameLayout()
 
-        buttons = [btn_save, self.btn_del,  self.btn_del_all, VSep(),
-                   self.btn_prev, self.current_brf, self.total_brf,
+        buttons = [btn_save, self.btn_copy, self.btn_del,  self.btn_del_all,
+                   VSep(), self.btn_prev, self.current_brf, self.total_brf,
                    self.btn_next, VSep(), self.btn_setp, self.btn_language]
 
         for btn in buttons:
@@ -607,6 +612,13 @@ class BRFViewer(QWidget):
     def save_brf_fig(self, fname):
         """Saves the current BRF figure to fname."""
         self.brf_canvas.figure.savefig(fname)
+
+    def copyfig_to_clipboard(self):
+        """Saves the current BRF figure to the clipboard."""
+        buf = io.BytesIO()
+        self.save_brf_fig(buf)
+        QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
+        buf.close()
 
     # ---- Others
 

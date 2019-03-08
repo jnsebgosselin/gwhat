@@ -132,6 +132,9 @@ FA_ICONS = {
     'undo_changes': [
         ('mdi.undo-variant',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'copy_clipboard': [
+        ('mdi.content-copy',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     }
 
 ICON_SIZES = {'large': (32, 32),
