@@ -464,6 +464,10 @@ class BRFViewer(QWidget):
         btn_save.setToolTip('Save current BRF graph as...')
         btn_save.clicked.connect(self.select_savefig_path)
 
+        self.btn_copy = QToolButtonNormal('copy_clipboard')
+        self.btn_copy.setToolTip('Copy figure to clipboard as image.')
+        self.btn_copy.clicked.connect(self.copyfig_to_clipboard)
+
         self.btn_setp = QToolButtonNormal(icons.get_icon('page_setup'))
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
@@ -472,8 +476,8 @@ class BRFViewer(QWidget):
 
         self.tbar = myqt.QFrameLayout()
 
-        buttons = [btn_save, self.btn_del,  self.btn_del_all, VSep(),
-                   self.btn_prev, self.current_brf, self.total_brf,
+        buttons = [btn_save, self.btn_copy, self.btn_del,  self.btn_del_all,
+                   VSep(), self.btn_prev, self.current_brf, self.total_brf,
                    self.btn_next, VSep(), self.btn_setp, self.btn_language]
 
         for btn in buttons:
