@@ -703,7 +703,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def btn_delpeak_isclicked(self):
         """Handle when the button btn_delpeak is clicked."""
         if self.btn_delpeak.value():
-            self.toggle_navig_and_select_tools(self.btn_addpeak)
+            self.toggle_navig_and_select_tools(self.btn_delpeak)
             self.btn_show_mrc.setValue(True)
         self.draw()
 
