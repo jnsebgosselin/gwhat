@@ -29,7 +29,8 @@ def open_water_level_datafile(filename):
     if ext not in FILE_EXTS:
         raise ValueError("Supported file format are: ", FILE_EXTS)
     else:
-        print('Loading waterlvl time-series from %s file...' % ext[1:])
+        print('Loading waterlvl time-series from "%s"...' %
+              osp.basename(filename))
 
     if ext == '.csv':
         with open(filename, 'r', encoding='utf8') as f:
