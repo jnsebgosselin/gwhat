@@ -84,17 +84,14 @@ def read_water_level_datafile(filename):
         return None
     reader = open_water_level_datafile(filename)
 
-    # Fetch the header.
-    header = {'name': '', 'id': '', 'province': '', 'municipality': '',
-              'latitude': 0, 'longitude': 0, 'elevation': 0}
+    # Fetch the metadata from the header.
+    header = deepcopy(HEADER)
     for i, row in enumerate(reader):
         if not len(row):
             continue
-        label = str(row[0])
-        for key in header.keys():
-            regex = r'(?<!\S)' + key + r'(:|=)?(?!\S)'
-            key = 'elevation' if key == 'altitude' else key
-            if re.search(regex, label, re.IGNORECASE):
+        label = str(row[0]).replace(" ", "").replace("_", "")
+        for key in HEADER.keys():
+            if re.search(HEADER_REGEX[key], label, re.IGNORECASE):
                 if isinstance(header[key], (float, int)):
                     try:
                         header[key] = float(row[1])
@@ -104,7 +101,7 @@ def read_water_level_datafile(filename):
                     header[key] = str(row[1])
                 break
         else:
-            if re.search(r'(?<!\S)date(:|=)?(?!\S)', label, re.IGNORECASE):
+            if re.search(COL_REGEX[INDEX], label, re.IGNORECASE):
                 break
     else:
         print("ERROR: the water level datafile is not formatted correctly.")
