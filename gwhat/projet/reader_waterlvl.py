@@ -109,49 +109,47 @@ def read_water_level_datafile(filename):
 
     # Cast the data into a Pandas dataframe.
     dataf = pd.DataFrame(reader[i+1:], columns=row)
-    colnames = {'Date': 'Date',
-                'BP': 'BP(m)',
-                'WL': 'WL(mbgs)',
-                'ET': 'ET(nm/s2)'}
     for column in dataf.columns:
-        for key, name in colnames.items():
-            if key in column:
+        for name, regex in COL_REGEX.items():
+            str_ = column.replace(" ", "").replace("_", "")
+            if re.search(regex, str_, re.IGNORECASE):
                 if name != column:
                     dataf.rename(columns={column: name}, inplace=True)
                 break
         else:
             del dataf[column]
 
-    # Check that Date and WL(mbgs) date were found in the datafile.
-    for colname in ['Date', 'WL(mbgs)']:
+    # Check that Time and WL data were found in the datafile.
+    for colname in [INDEX, 'WL']:
         if colname not in dataf.columns:
             print('ERROR: no "%s" data found in the datafile.' % colname)
             return None
 
     # Format the data to floats.
-    for colname in ['BP(m)', 'WL(mbgs)', 'ET(nm/s2)']:
+    for colname in COLUMNS[1:]:
         if colname in dataf.columns:
             dataf[colname] = pd.to_numeric(dataf[colname], errors='coerce')
 
     # Format the dates to datetimes.
     try:
-        # Assume first that the dates are stored in the Excel numeric format.
-        datetimes = dataf['Date'].astype('float64')
+        # We assume first that the dates are stored in the
+        # Excel numeric format.
+        datetimes = dataf['Time'].astype('float64', errors='raise')
         datetimes = pd.to_datetime(datetimes.apply(
             lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
     except ValueError:
         try:
             # Try converting the strings to datetime objects.
             datetimes = pd.to_datetime(
-                dataf['Date'], format="%Y-%m-%d %H:%M:%S")
+                dataf['Time'], format="%Y-%m-%d %H:%M:%S")
         except ValueError:
             print('ERROR: the dates are not formatted correctly.')
             return None
     finally:
-        dataf['Date'] = datetimes
-        dataf.set_index(['Date'], drop=True, inplace=True)
+        dataf['Time'] = datetimes
+        dataf.set_index(['Time'], drop=True, inplace=True)
 
-    # Check for duplicate dates.
+    # Check and remove duplicate data.
     if any(dataf.index.duplicated(keep='first')):
         print("WARNING: Duplicated values were found in the datafile. "
               "Only the first entries for each date were kept.")
