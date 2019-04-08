@@ -251,9 +251,6 @@ def load_waterlvl_measures(filename, well):
     return time_mes, wl_mes
 
 
-# =========================================================================
-
-
 def generate_HTML_table(name, lat, lon, alt, mun):
 
     FIELDS = [['Well Name', name],
