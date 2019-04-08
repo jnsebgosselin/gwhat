@@ -8,6 +8,7 @@
 
 
 # ---- Standard library imports
+import re
 import os
 import os.path as osp
 import numpy as np
@@ -15,6 +16,8 @@ import xlrd
 import csv
 from collections.abc import Mapping
 
+# ---- Third party imports
+import pandas as pd
 
 # ---- Local library imports
 from gwhat.common.utils import save_content_to_csv
@@ -45,110 +48,93 @@ def open_water_level_datafile(filename):
 
 
 def read_water_level_datafile(filename):
-    """Load a water level dataset from a csv or Excel file."""
-    data = open_water_level_datafile(filename)
-    if data is None:
-        return None
+    """
+    Load a water level dataset from a csv or an Excel file and format the
+    data in a Pandas dataframe with the dates used as index.
+    """
+    reader = open_water_level_datafile(filename)
 
-    df = {'filename': filename,
-          'Well': '',
-          'Well ID': '',
-          'Province': '',
-          'Latitude': 0,
-          'Longitude': 0,
-          'Elevation': 0,
-          'Municipality': '',
-          'Time': np.array([]),
-          'WL': np.array([]),
-          'BP': np.array([]),
-          'ET': np.array([])}
-
-    # ---- Read the Header
-    for row, line in enumerate(data):
-        if not len(line):
+    # Fetch the header.
+    header = {'name': '', 'id': '', 'province': '', 'municipality': '',
+              'latitude': 0, 'longitude': 0, 'elevation': 0}
+    for i, row in enumerate(reader):
+        if not len(row):
             continue
-
-        try:
-            label = line[0].lower().replace(":", "").replace("=", "").strip()
-        except AttributeError:
-            continue
-
-        if label == 'well name':
-            df['Well'] = str(line[1])
-        elif label == 'well id':
-            df['Well ID'] = str(line[1])
-        elif label == 'province':
-            df['Province'] = str(line[1])
-        elif label == 'latitude':
-            try:
-                df['Latitude'] = float(line[1])
-            except ValueError:
-                print('Wrong format for entry "Latitude".')
-                df['Latitude'] = 0
-        elif label == 'longitude':
-            try:
-                df['Longitude'] = float(line[1])
-            except ValueError:
-                print('Wrong format for entry "Longitude".')
-                df['Longitude'] = 0
-        elif label in ['altitude', 'elevation']:
-            try:
-                df['Elevation'] = float(line[1])
-            except ValueError:
-                print('Wrong format for entry "Altitude".')
-                df['Elevation'] = 0
-        elif label == 'municipality':
-            df['Municipality'] = str(line[1])
-        elif label == 'date':
-            column_labels = line
-            break
+        label = str(row[0])
+        for key in header.keys():
+            regex = r'(?<!\S)' + key + r'(:|=)?(?!\S)'
+            key = 'elevation' if key == 'altitude' else key
+            if re.search(regex, label, re.IGNORECASE):
+                if isinstance(header[key], (float, int)):
+                    try:
+                        header[key] = float(row[1])
+                    except ValueError:
+                        print('Wrong format for entry "{}".'.format(key))
+                else:
+                    header[key] = str(row[1])
+                break
+        else:
+            if re.search(r'(?<!\S)date(:|=)?(?!\S)', label, re.IGNORECASE):
+                break
     else:
-        print("ERROR: the water level datafile is not"
-              " formatted correctly.")
+        print("ERROR: the water level datafile is not formatted correctly.")
         return None
 
-    # ---- Read the Data
-    try:
-        data = np.array(data[row+1:])
-    except IndexError:
-        # The file is correctly formatted but there is no data.
-        return df
+    # Cast the data into a Pandas dataframe.
+    dataf = pd.DataFrame(reader[i+1:], columns=row)
+    colnames = {'Date': 'Date',
+                'BP': 'BP(m)',
+                'WL': 'WL(mbgs)',
+                'ET': 'ET(nm/s2)'}
+    for column in dataf.columns:
+        for key, name in colnames.items():
+            if key in column:
+                if name != column:
+                    dataf.rename(columns={column: name}, inplace=True)
+                break
+        else:
+            del dataf[column]
 
-    # Read the water level data :
+    # Check that Date and WL(mbgs) date were found in the datafile.
+    for colname in ['Date', 'WL(mbgs)']:
+        if colname not in dataf.columns:
+            print('ERROR: no "%s" data found in the datafile.' % colname)
+            return None
+
+    # Format the data to floats.
+    for colname in ['BP(m)', 'WL(mbgs)', 'ET(nm/s2)']:
+        if colname in dataf.columns:
+            dataf[colname] = dataf[colname].astype('float64', errors='ignore')
+
+    # Format the dates to datetimes.
     try:
-        df['Time'] = data[:, 0].astype(float)
-        df['WL'] = data[:, 1].astype(float)
+        # Assume first that the dates are stored in the Excel numeric format.
+        datetimes = dataf['Date'].astype('float64')
+        datetimes = pd.to_datetime(datetimes.apply(
+            lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
     except ValueError:
-        print('The water level datafile is not formatted correctly')
-        return None
-    else:
-        print('Waterlvl time-series for well %s loaded successfully.' %
-              df['Well'])
+        try:
+            # Try converting the strings to datetime objects.
+            datetimes = pd.to_datetime(
+                dataf['Date'], format="%Y-%m-%d %H:%M:%S")
+        except ValueError:
+            print('ERROR: the dates are not formatted correctly.')
+            return None
+    finally:
+        dataf['Date'] = datetimes
+        dataf.set_index(['Date'], drop=True, inplace=True)
 
-    # The data are not monotically increasing in time.
-    if np.min(np.diff(df['Time'])) <= 0:
-        print("The data are not monotically increasing in time.")
-        return None
+    # Check for duplicate dates.
+    if any(dataf.index.duplicated(keep='first')):
+        print("WARNING: Duplicated values were found in the datafile. "
+              "Only the first entries for each date were kept.")
+        dataf = dataf[~dataf.index.duplicated(keep='first')]
 
-    # Read the barometric data.
-    try:
-        if column_labels[2] == 'BP(m)':
-            df['BP'] = data[:, 2].astype(float)
-        else:
-            print('No barometric data.')
-    except IndexError:
-        print('No barometric data.')
+    # Add the metadata to the dataframe.
+    for key in header.keys():
+        setattr(dataf, key, header[key])
 
-    # Read the Earth tides data.
-    try:
-        if column_labels[3] == 'ET':
-            df['ET'] = data[:, 3].astype(float)
-        else:
-            print('No Earth tide data.')
-    except IndexError:
-        print('No Earth tide data.')
-
-    return df
+    return dataf
 
 
 def make_waterlvl_continuous(t, wl):
