@@ -104,7 +104,7 @@ def read_water_level_datafile(filename):
     # Format the data to floats.
     for colname in ['BP(m)', 'WL(mbgs)', 'ET(nm/s2)']:
         if colname in dataf.columns:
-            dataf[colname] = dataf[colname].astype('float64', errors='ignore')
+            dataf[colname] = pd.to_numeric(dataf[colname], errors='coerce')
 
     # Format the dates to datetimes.
     try:
