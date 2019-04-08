@@ -80,6 +80,8 @@ def read_water_level_datafile(filename):
     Load a water level dataset from a csv or an Excel file and format the
     data in a Pandas dataframe with the dates used as index.
     """
+    if filename is None or not osp.exists(filename):
+        return None
     reader = open_water_level_datafile(filename)
 
     # Fetch the header.
