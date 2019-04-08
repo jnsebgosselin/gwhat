@@ -8,12 +8,16 @@
 
 
 # ---- Standard library imports
+from copy import deepcopy
 import re
 import os
 import os.path as osp
 import numpy as np
 import xlrd
+from xlrd.xldate import xldate_from_datetime_tuple
+from xlrd import xldate_as_tuple
 import csv
+from collections import OrderedDict
 from collections.abc import Mapping
 
 # ---- Third party imports
@@ -26,6 +30,30 @@ FILE_EXTS = ['.csv', '.xls', '.xlsx']
 
 
 # ---- Read and Load Water Level Datafiles
+INDEX = 'Time'
+
+COL_REGEX = OrderedDict([
+    (INDEX, r'(date|time|datetime)'),
+    ('BP', r'(bp|baro|patm)'),
+    ('WL', r'(wl|waterlevels)'),
+    ('ET', r'(et|earthtides)')
+    ])
+COLUMNS = list(COL_REGEX.keys())
+
+HEADER = {'Well Name': '', 'Well ID': '',
+          'Province': '', 'Municipality': '',
+          'Latitude': 0, 'Longitude': 0, 'Elevation': 0}
+HEADER_REGEX = {
+    'Well Name': r'(?<!\S)(wellname|name)(:|=)?(?!\S)',
+    'Well ID': r'(?<!\S)(wellid|id)(:|=)?(?!\S)',
+    'Province': r'(?<!\S)(province|prov)(:|=)?(?!\S)',
+    'Municipality': r'(?<!\S)municipality(:|=)?(?!\S)',
+    'Latitude': r'(?<!\S)(latitude|lat)(:|=)?(?!\S)',
+    'Longitude': r'(?<!\S)(longitude|lon)(:|=)?(?!\S)',
+    'Elevation': r'(?<!\S)(elevation|elev|altitude|alt)(:|=)?(?!\S)'
+    }
+
+
 def open_water_level_datafile(filename):
     """Open a water level data file and return the data."""
     root, ext = os.path.splitext(filename)
