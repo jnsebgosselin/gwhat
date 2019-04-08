@@ -130,7 +130,7 @@ def read_water_level_datafile(filename):
         if colname in dataf.columns:
             dataf[colname] = pd.to_numeric(dataf[colname], errors='coerce')
 
-    # Format the dates to datetimes.
+    # Format the dates to datetimes and set it as index.
     try:
         # We assume first that the dates are stored in the
         # Excel numeric format.
@@ -275,6 +275,12 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     table += '</table>'
 
     return table
+
+
+class EmptyWLDataset(pd.DataFrame):
+    def __init__(self):
+        super().__init__(np.empty((0, len(COLUMNS))), columns=COLUMNS)
+        self.set_index([INDEX], drop=True, inplace=True)
 
 
 class WLDataFrameBase(Mapping):
