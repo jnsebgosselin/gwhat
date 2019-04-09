@@ -124,7 +124,6 @@ class ProjetReader(object):
             print('done')
             return True
 
-
     # ---- Project Properties
     @property
     def name(self):
@@ -183,7 +182,6 @@ class ProjetReader(object):
         self.db.attrs['longitude'] = x
 
     # ---- Water Levels Dataset Handlers
-
     @property
     def wldsets(self):
         """
@@ -280,7 +278,6 @@ class ProjetReader(object):
         self.db.flush()
 
     # ---- Weather Dataset Handlers
-
     @property
     def wxdsets(self):
         """
