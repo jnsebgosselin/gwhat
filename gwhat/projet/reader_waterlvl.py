@@ -384,7 +384,10 @@ class WLDataFrameBase(Mapping):
 
 
 class WLDataFrame(WLDataFrameBase):
-    """A water level dataset container that loads its data from a file."""
+    """
+    A water level dataset container that loads its data from a csv
+    or an Excel file.
+    """
 
     def __init__(self, filename, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -392,6 +395,15 @@ class WLDataFrame(WLDataFrameBase):
 
     def __getitem__(self, key):
         """Returns the value saved in the store at key."""
+        if key == INDEX:
+            return self.strftime
+        elif key in COLUMNS:
+            return self.data[key].values
+        elif key in list(HEADER.keys()):
+            return getattr(self._dataf, key, HEADER[key])
+        elif key == 'filename':
+            return self._dataf.filename
+
         return self.dset.__getitem__(key)
 
     def __load_dataset__(self, filename):
