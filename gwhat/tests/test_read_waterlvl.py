@@ -10,6 +10,7 @@
 import sys
 import os
 import os.path as osp
+import csv
 
 # ---- Third party imports
 import pytest
@@ -65,7 +66,7 @@ def test_reading_waterlvl(ext):
     keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
             'Elevation', 'Municipality']
     for key in keys:
-        assert df1[key] == expected_results[key]
+        assert df[key] == expected_results[key]
 
 
 # Test water_level_measurements.*
