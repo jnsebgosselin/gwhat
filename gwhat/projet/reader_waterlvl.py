@@ -40,11 +40,11 @@ COL_REGEX = OrderedDict([
     ])
 COLUMNS = list(COL_REGEX.keys())
 
-HEADER = {'Well Name': '', 'Well ID': '',
+HEADER = {'Well': '', 'Well ID': '',
           'Province': '', 'Municipality': '',
           'Latitude': 0, 'Longitude': 0, 'Elevation': 0}
 HEADER_REGEX = {
-    'Well Name': r'(?<!\S)(wellname|name)(:|=)?(?!\S)',
+    'Well': r'(?<!\S)(wellname|name)(:|=)?(?!\S)',
     'Well ID': r'(?<!\S)(wellid|id)(:|=)?(?!\S)',
     'Province': r'(?<!\S)(province|prov)(:|=)?(?!\S)',
     'Municipality': r'(?<!\S)municipality(:|=)?(?!\S)',
