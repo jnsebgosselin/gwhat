@@ -339,8 +339,9 @@ class WLDataFrameBase(Mapping):
 
     @property
     def waterlevels(self):
-        return self._waterlevels
+        return self.data['WL'].values
 
+    # ---- Versionning
     @property
     def has_uncommited_changes(self):
         """"
@@ -355,8 +356,8 @@ class WLDataFrameBase(Mapping):
     def undo(self):
         """Undo the last changes made to the water level data."""
         if self.has_uncommited_changes:
-            change = self._undo_stack.pop(-1)
-            self._waterlevels[change[0]] = change[1]
+            changes = self._undo_stack.pop(-1)
+            self._dataf['WL'][changes.index] = changes
 
     def clear_all_changes(self):
         """
@@ -370,7 +371,7 @@ class WLDataFrameBase(Mapping):
         """Delete the water level data at the specified indexes."""
         if len(indexes):
             self._add_to_undo_stack(indexes)
-            self._waterlevels[indexes] = np.nan
+            self._dataf['WL'].iloc[indexes] = np.nan
 
     def _add_to_undo_stack(self, indexes):
         """
@@ -379,7 +380,7 @@ class WLDataFrameBase(Mapping):
         changes made to the water level data before commiting them.
         """
         if len(indexes):
-            self._undo_stack.append((indexes, self.waterlevels[indexes]))
+            self._undo_stack.append(self._dataf['WL'].iloc[indexes].copy())
 
 
 class WLDataFrame(WLDataFrameBase):
