@@ -54,6 +54,11 @@ HEADER_REGEX = {
     }
 
 
+class EmptyWLDataset(pd.DataFrame):
+    def __init__(self):
+        super().__init__(np.empty((0, len(COLUMNS))), columns=COLUMNS)
+        self.set_index([INDEX], drop=True, inplace=True)
+
 def open_water_level_datafile(filename):
     """Open a water level data file and return the data."""
     root, ext = os.path.splitext(filename)
@@ -272,12 +277,6 @@ def generate_HTML_table(name, lat, lon, alt, mun):
     table += '</table>'
 
     return table
-
-
-class EmptyWLDataset(pd.DataFrame):
-    def __init__(self):
-        super().__init__(np.empty((0, len(COLUMNS))), columns=COLUMNS)
-        self.set_index([INDEX], drop=True, inplace=True)
 
 
 class WLDataFrameBase(Mapping):
