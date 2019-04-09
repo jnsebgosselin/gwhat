@@ -6,28 +6,27 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# Standard library imports
+# ---- Standard library imports
 import sys
 import os
-import csv
+import os.path as osp
 
-# Third party imports
+# ---- Third party imports
 import pytest
 import numpy as np
 import xlsxwriter
 
-# Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+# ---- Local library imports
 from gwhat.common.utils import (save_content_to_excel, save_content_to_csv,
                                 delete_file)
 from gwhat.projet.reader_waterlvl import (
-        load_waterlvl_measures, init_waterlvl_measures,
-        read_water_level_datafile)
+        load_waterlvl_measures, init_waterlvl_measures, WLDataFrame)
 
 
 # Test reading water level datafiles
 # ----------------------------------
 
+DATADIR = osp.join(osp.dirname(osp.realpath(__file__)))
 DATA = [['Well name = ', "êi!@':i*"],
         ['well id : ', '1234ABC'],
         ['Province', 'Qc'],
@@ -41,18 +40,14 @@ DATA = [['Well name = ', "êi!@':i*"],
         [41241.70833, 3.665777025, 10.33127437, 387.7404819],
         [41241.71875, 3.665277031, 10.33097437, 396.9950643]
         ]
-save_content_to_csv("water_level_datafile.csv", DATA)
-save_content_to_excel("water_level_datafile.xls", DATA)
-save_content_to_excel("water_level_datafile.xlsx", DATA)
+save_content_to_csv(osp.join(DATADIR, "water_level_datafile.csv"), DATA)
+save_content_to_excel(osp.join(DATADIR, "water_level_datafile.xls"), DATA)
+save_content_to_excel(osp.join(DATADIR, "water_level_datafile.xlsx"), DATA)
 
 
-def test_reading_waterlvl():
-    df1 = read_water_level_datafile("water_level_datafile.csv")
-    df2 = read_water_level_datafile("water_level_datafile.xls")
-    df3 = read_water_level_datafile("water_level_datafile.xlsx")
-
-    assert list(df1.keys()) == list(df2.keys())
-    assert list(df2.keys()) == list(df3.keys())
+@pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
+def test_reading_waterlvl(ext):
+    df = WLDataFrame(osp.join(DATADIR, "water_level_datafile" + ext))
 
     expected_results = {
           'Well': "êi!@':i*",
