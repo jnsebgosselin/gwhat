@@ -59,6 +59,60 @@ class EmptyWLDataset(pd.DataFrame):
         super().__init__(np.empty((0, len(COLUMNS))), columns=COLUMNS)
         self.set_index([INDEX], drop=True, inplace=True)
 
+
+class WLDataset(EmptyWLDataset):
+    def __init__(self, data, columns):
+        super().__init__()
+        df = pd.DataFrame(data, columns=columns)
+        for column in columns:
+            for colname, regex in COL_REGEX.items():
+                str_ = column.replace(" ", "").replace("_", "")
+                if re.search(regex, str_, re.IGNORECASE):
+                    self[colname] = df[column].copy()
+                    break
+        del df
+        self.format_numeric_data()
+        self.format_datetime_data()
+
+    def format_numeric_data(self):
+        """Format the data to floats type."""
+        for colname in COLUMNS:
+            if colname == INDEX:
+                pass
+            elif colname in self.columns:
+                self[colname] = pd.to_numeric(self[colname], errors='coerce')
+            else:
+                print('WARNING: no "%s" data found in the datafile.' % colname)
+
+    def format_datetime_data(self):
+        """Format the dates to datetimes and set it as index."""
+        if INDEX in self.columns:
+            try:
+                # We assume first that the dates are stored in the
+                # Excel numeric format.
+                datetimes = self['Time'].astype('float64', errors='raise')
+                datetimes = pd.to_datetime(datetimes.apply(
+                    lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
+            except ValueError:
+                try:
+                    # Try converting the strings to datetime objects.
+                    datetimes = pd.to_datetime(
+                        self['Time'], format="%Y-%m-%d %H:%M:%S")
+                except ValueError:
+                    print('WARNING: the dates are not formatted correctly.')
+            finally:
+                self['Time'] = datetimes
+                self.set_index(['Time'], drop=True, inplace=True)
+        else:
+            print('WARNING: no "Time" data found in the datafile.')
+
+        # Check and remove duplicate data.
+        if any(self.index.duplicated(keep='first')):
+            print("WARNING: Duplicated values were found in the datafile. "
+                  "Only the first entries for each date were kept.")
+            self.drop_duplicates(keep='first', inplace=True)
+
+
 def open_water_level_datafile(filename):
     """Open a water level data file and return the data."""
     root, ext = os.path.splitext(filename)
@@ -113,56 +167,12 @@ def read_water_level_datafile(filename):
         return None
 
     # Cast the data into a Pandas dataframe.
-    dataf = pd.DataFrame(reader[i+1:], columns=row)
-    for column in dataf.columns:
-        for name, regex in COL_REGEX.items():
-            str_ = column.replace(" ", "").replace("_", "")
-            if re.search(regex, str_, re.IGNORECASE):
-                if name != column:
-                    dataf.rename(columns={column: name}, inplace=True)
-                break
-        else:
-            del dataf[column]
-
-    # Check that Time and WL data were found in the datafile.
-    for colname in [INDEX, 'WL']:
-        if colname not in dataf.columns:
-            print('ERROR: no "%s" data found in the datafile.' % colname)
-            return None
-
-    # Format the data to floats.
-    for colname in COLUMNS[1:]:
-        if colname in dataf.columns:
-            dataf[colname] = pd.to_numeric(dataf[colname], errors='coerce')
-
-    # Format the dates to datetimes and set it as index.
-    try:
-        # We assume first that the dates are stored in the
-        # Excel numeric format.
-        datetimes = dataf['Time'].astype('float64', errors='raise')
-        datetimes = pd.to_datetime(datetimes.apply(
-            lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
-    except ValueError:
-        try:
-            # Try converting the strings to datetime objects.
-            datetimes = pd.to_datetime(
-                dataf['Time'], format="%Y-%m-%d %H:%M:%S")
-        except ValueError:
-            print('ERROR: the dates are not formatted correctly.')
-            return None
-    finally:
-        dataf['Time'] = datetimes
-        dataf.set_index(['Time'], drop=True, inplace=True)
-
-    # Check and remove duplicate data.
-    if any(dataf.index.duplicated(keep='first')):
-        print("WARNING: Duplicated values were found in the datafile. "
-              "Only the first entries for each date were kept.")
-        dataf = dataf[~dataf.index.duplicated(keep='first')]
+    dataf = WLDataset(reader[i+1:], columns=row)
 
     # Add the metadata to the dataframe.
     for key in header.keys():
         setattr(dataf, key, header[key])
+    dataf.filename = filename
 
     return dataf
 
