@@ -298,8 +298,7 @@ class WLDataFrameBase(Mapping):
         super().__init__(*args, **kwargs)
         self.dset = None
         self._undo_stack = []
-        self._waterlevels = np.array([])
-        self._datetimes = np.array([])
+        self._dataf = EmptyWLDataset()
 
     def __load_dataset__(self):
         """Loads the dataset and save it in a store."""
@@ -314,10 +313,29 @@ class WLDataFrameBase(Mapping):
     def __iter__(self):
         return NotImplementedError
 
-    # ---- Water levels
+    # ---- Attributes
     @property
-    def datetimes(self):
-        return self._datetimes
+    def data(self):
+        return self._dataf
+
+    @property
+    def xldates(self):
+        """
+        Return a numpy array containing the Excel numerical dates
+        corresponding to the dates of the dataset.
+        """
+        return np.array(
+            [xldate_from_datetime_tuple(date.timetuple()[:6], 0) for
+             date in self._dataf.index]
+            )
+
+    @property
+    def dates(self):
+        return self.data.index.values
+
+    @property
+    def strftime(self):
+        return self.data.index.strftime("%Y-%m-%dT%H:%M:%S").values.tolist()
 
     @property
     def waterlevels(self):
