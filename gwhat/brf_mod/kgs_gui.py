@@ -306,15 +306,13 @@ class BRFManager(myqt.QFrameLayout):
         self.btn_seldata.setAutoRaise(True)
         self.setEnabled(wldset is not None)
         if wldset is not None:
-            self.set_daterange((self.wldset['Time'][0],
-                                self.wldset['Time'][-1]))
+            xldates = self.wldset.xldates
+            self.set_daterange((xldates[0], xldates[-1]))
 
             # Set the period over which the BRF would be evaluated.
             saved_brfperiod = wldset.get_brfperiod()
-            self.set_brfperiod(
-                (saved_brfperiod[0] or np.floor(self.wldset['Time'][0]),
-                 saved_brfperiod[1] or np.floor(self.wldset['Time'][-1])
-                 ))
+            self.set_brfperiod((saved_brfperiod[0] or np.floor(xldates[0]),
+                                saved_brfperiod[1] or np.floor(xldates[-1])))
 
     def set_daterange(self, daterange):
         """
@@ -335,11 +333,11 @@ class BRFManager(myqt.QFrameLayout):
 
         brfperiod = self.get_brfperiod()
         t1 = min(brfperiod)
-        i1 = np.where(self.wldset['Time'] >= t1)[0][0]
+        i1 = np.where(self.wldset.xldates >= t1)[0][0]
         t2 = max(brfperiod)
-        i2 = np.where(self.wldset['Time'] <= t2)[0][-1]
+        i2 = np.where(self.wldset.xldates <= t2)[0][-1]
 
-        time = np.copy(self.wldset['Time'][i1:i2+1])
+        time = np.copy(self.wldset.xldates[i1:i2+1])
         wl = np.copy(self.wldset['WL'][i1:i2+1])
         bp = np.copy(self.wldset['BP'][i1:i2+1])
         if len(bp) == 0:
