@@ -408,9 +408,7 @@ class WLDataFrame(WLDataFrameBase):
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
-        self.dset = read_water_level_datafile(filename)
-        self._waterlevels = self.dset['WL']
-        self._datetimes = self.dset['Time']
+        self._dataf = read_water_level_datafile(filename)
 
 
 if __name__ == "__main__":
