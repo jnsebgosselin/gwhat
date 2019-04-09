@@ -855,7 +855,7 @@ class Hydrograph(Figure):
 
         # ---- Logger Measures
 
-        time = self.wldset['Time']
+        time = self.wldset.xldates
         if self.WLdatum == 1:  # masl
             water_lvl = self.wldset['Elevation']-self.wldset['WL']
         else:  # mbgs -> yaxis is inverted
