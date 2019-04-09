@@ -23,11 +23,6 @@ from gwhat.common.utils import (save_content_to_excel, save_content_to_csv,
 from gwhat.projet.reader_waterlvl import (
         load_waterlvl_measures, init_waterlvl_measures, WLDataFrame)
 
-
-# Test reading water level datafiles
-# ----------------------------------
-
-DATADIR = osp.join(osp.dirname(osp.realpath(__file__)))
 DATA = [['Well name = ', "êi!@':i*"],
         ['well id : ', '1234ABC'],
         ['Province', 'Qc'],
@@ -41,14 +36,27 @@ DATA = [['Well name = ', "êi!@':i*"],
         [41241.70833, 3.665777025, 10.33127437, 387.7404819],
         [41241.71875, 3.665277031, 10.33097437, 396.9950643]
         ]
-save_content_to_csv(osp.join(DATADIR, "water_level_datafile.csv"), DATA)
-save_content_to_excel(osp.join(DATADIR, "water_level_datafile.xls"), DATA)
-save_content_to_excel(osp.join(DATADIR, "water_level_datafile.xlsx"), DATA)
+FILENAME = "water_level_datafile"
 
 
+# ---- Pytest Fixtures
+@pytest.fixture
+def datatmpdir(tmpdir):
+    """Create a set of water level datafile in various format."""
+    save_content_to_csv(
+        osp.join(str(tmpdir), FILENAME + '.csv'), DATA)
+    save_content_to_excel(
+        osp.join(str(tmpdir), FILENAME + '.xls'), DATA)
+    save_content_to_excel(
+        osp.join(str(tmpdir), FILENAME + '.xlsx'), DATA)
+
+    return str(tmpdir)
+
+
+# ---- Test reading water level datafiles
 @pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
-def test_reading_waterlvl(ext):
-    df = WLDataFrame(osp.join(DATADIR, "water_level_datafile" + ext))
+def test_reading_waterlvl(datatmpdir, ext):
+    df = WLDataFrame(osp.join(datatmpdir, FILENAME + ext))
 
     expected_results = {
           'Well': "êi!@':i*",
@@ -68,8 +76,12 @@ def test_reading_waterlvl(ext):
     for key in keys:
         assert df[key] == expected_results[key]
 
+    for key in ['WL', 'BP', 'ET']:
+        assert np.abs(np.min(df[key] - expected_results[key])) < 10e-6
+    assert np.abs(np.min(df.xldates - expected_results['Time'])) < 10e-6
 
-# Test water_level_measurements.*
+
+# Test water_level_measurements.
 # -------------------------------
 
 delete_file("waterlvl_manual_measurements.csv")
