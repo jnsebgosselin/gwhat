@@ -395,6 +395,18 @@ class WLDataFrameHDF5(WLDataFrameBase):
         self._dataf = WLDataset(data, columns)
 
         # Make older datasets compatible with newer format.
+        if isinstance(self.dset['Time'][0], (int, float)):
+            # Time needs to be converted from Excel numeric dates
+            # to ISO date strings (see PR #276).
+            print('Saving time as ISO date strings instead of Excel dates...',
+                  end=' ')
+            del self.dset['Time']
+            self.dset.create_dataset(
+                'Time',
+                data=np.array(self.strftime,
+                              dtype=h5py.special_dtype(vlen=str)))
+            self.dset.file.flush()
+            print('done')
         if 'Well ID' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
             self.dset.attrs['Well ID'] = ""
