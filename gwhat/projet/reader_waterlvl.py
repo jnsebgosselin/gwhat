@@ -324,10 +324,14 @@ class WLDataFrameBase(Mapping):
         Return a numpy array containing the Excel numerical dates
         corresponding to the dates of the dataset.
         """
-        return np.array(
-            [xldate_from_datetime_tuple(date.timetuple()[:6], 0) for
-             date in self._dataf.index]
-            )
+        if 'XLDATES' not in self._dataf.columns:
+            print('Converting datetimes to xldates...', end=' ')
+            timedeltas = (
+                self._dataf.index - xlrd.xldate.xldate_as_datetime(4000, 0))
+            self._dataf['XLDATES'] = (
+                timedeltas.total_seconds()/(3600 * 24) + 4000)
+            print('done')
+        return self._dataf['XLDATES'].values
 
     @property
     def dates(self):
