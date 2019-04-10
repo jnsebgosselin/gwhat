@@ -855,7 +855,7 @@ class Hydrograph(Figure):
 
         # ---- Logger Measures
 
-        time = self.wldset['Time']
+        time = self.wldset.xldates
         if self.WLdatum == 1:  # masl
             water_lvl = self.wldset['Elevation']-self.wldset['WL']
         else:  # mbgs -> yaxis is inverted
@@ -1333,7 +1333,7 @@ if __name__ == '__main__':
         # 0: daily | 1: weekly | 2: monthly | 3: yearly
         hydrograph.RAINscale = 100
 
-        hydrograph.best_fit_time(wldset['Time'])
+        hydrograph.best_fit_time(wldset.xldate)
         hydrograph.best_fit_waterlvl()
         hydrograph.generate_hydrograph()
 #

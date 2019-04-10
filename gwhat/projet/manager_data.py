@@ -24,10 +24,10 @@ from gwhat.utils.icons import QToolButtonSmall
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
 from gwhat.hydrograph4 import LatLong2Dist
-import gwhat.projet.reader_waterlvl as wlrd
+from gwhat.projet.reader_waterlvl import WLDataFrame
 from gwhat.projet.reader_projet import (INVALID_CHARS, is_dsetname_valid,
                                         make_dsetname_valid)
-import gwhat.meteo.weather_reader as wxrd
+from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.widgets.spinboxes import StrSpinBox
 
@@ -698,9 +698,9 @@ class NewDatasetDialog(QDialog):
 
         try:
             if self._datatype == 'water level':
-                self._dataset = wlrd.read_water_level_datafile(filename)
+                self._dataset = WLDataFrame(filename)
             elif self._datatype == 'daily weather':
-                self._dataset = wxrd.WXDataFrame(filename)
+                self._dataset = WXDataFrame(filename)
         except Exception:
             self._dataset = None
 

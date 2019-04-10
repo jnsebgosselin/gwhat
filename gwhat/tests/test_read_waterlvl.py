@@ -6,27 +6,22 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# Standard library imports
+# ---- Standard library imports
 import sys
 import os
+import os.path as osp
 import csv
 
-# Third party imports
+# ---- Third party imports
 import pytest
 import numpy as np
 import xlsxwriter
 
-# Local imports
-sys.path.append(os.path.dirname(os.path.dirname(os.path.realpath(__file__))))
+# ---- Local library imports
 from gwhat.common.utils import (save_content_to_excel, save_content_to_csv,
                                 delete_file)
 from gwhat.projet.reader_waterlvl import (
-        load_waterlvl_measures, init_waterlvl_measures,
-        read_water_level_datafile)
-
-
-# Test reading water level datafiles
-# ----------------------------------
+        load_waterlvl_measures, init_waterlvl_measures, WLDataFrame)
 
 DATA = [['Well name = ', "êi!@':i*"],
         ['well id : ', '1234ABC'],
@@ -41,18 +36,27 @@ DATA = [['Well name = ', "êi!@':i*"],
         [41241.70833, 3.665777025, 10.33127437, 387.7404819],
         [41241.71875, 3.665277031, 10.33097437, 396.9950643]
         ]
-save_content_to_csv("water_level_datafile.csv", DATA)
-save_content_to_excel("water_level_datafile.xls", DATA)
-save_content_to_excel("water_level_datafile.xlsx", DATA)
+FILENAME = "water_level_datafile"
 
 
-def test_reading_waterlvl():
-    df1 = read_water_level_datafile("water_level_datafile.csv")
-    df2 = read_water_level_datafile("water_level_datafile.xls")
-    df3 = read_water_level_datafile("water_level_datafile.xlsx")
+# ---- Pytest Fixtures
+@pytest.fixture
+def datatmpdir(tmpdir):
+    """Create a set of water level datafile in various format."""
+    save_content_to_csv(
+        osp.join(str(tmpdir), FILENAME + '.csv'), DATA)
+    save_content_to_excel(
+        osp.join(str(tmpdir), FILENAME + '.xls'), DATA)
+    save_content_to_excel(
+        osp.join(str(tmpdir), FILENAME + '.xlsx'), DATA)
 
-    assert list(df1.keys()) == list(df2.keys())
-    assert list(df2.keys()) == list(df3.keys())
+    return str(tmpdir)
+
+
+# ---- Test reading water level datafiles
+@pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
+def test_reading_waterlvl(datatmpdir, ext):
+    df = WLDataFrame(osp.join(datatmpdir, FILENAME + ext))
 
     expected_results = {
           'Well': "êi!@':i*",
@@ -70,10 +74,14 @@ def test_reading_waterlvl():
     keys = ['Well', 'Well ID', 'Province', 'Latitude', 'Longitude',
             'Elevation', 'Municipality']
     for key in keys:
-        assert df1[key] == expected_results[key]
+        assert df[key] == expected_results[key]
+
+    for key in ['WL', 'BP', 'ET']:
+        assert np.abs(np.min(df[key] - expected_results[key])) < 10e-6
+    assert np.abs(np.min(df.xldates - expected_results['Time'])) < 10e-6
 
 
-# Test water_level_measurements.*
+# Test water_level_measurements.
 # -------------------------------
 
 delete_file("waterlvl_manual_measurements.csv")

@@ -519,7 +519,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     @property
     def time(self):
-        return np.array([]) if self.wldset is None else self.wldset.datetimes
+        return np.array([]) if self.wldset is None else self.wldset.xldates
 
     @property
     def wldset(self):
@@ -1228,8 +1228,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.clear_selected_wl(draw=False)
         if self.wldset is not None:
             self._obs_wl_plt.set_data(
-                self.wldset.datetimes + (self.dt4xls2mpl * self.dformat),
-                self.wldset.waterlevels)
+                self.time + (self.dt4xls2mpl * self.dformat),
+                self.water_lvl)
         self._obs_wl_plt.set_visible(self.wldset is not None)
         if draw:
             self.draw()

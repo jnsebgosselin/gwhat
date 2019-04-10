@@ -10,7 +10,6 @@ from __future__ import division, unicode_literals
 
 # ---- Standard library imports
 import os
-import csv
 import os.path as osp
 from shutil import copyfile
 
@@ -20,7 +19,7 @@ import numpy as np
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase
-from gwhat.projet.reader_waterlvl import WLDataFrameBase
+from gwhat.projet.reader_waterlvl import WLDataFrameBase, WLDataset
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
@@ -124,7 +123,6 @@ class ProjetReader(object):
             print('done')
             return True
 
-
     # ---- Project Properties
     @property
     def name(self):
@@ -183,7 +181,6 @@ class ProjetReader(object):
         self.db.attrs['longitude'] = x
 
     # ---- Water Levels Dataset Handlers
-
     @property
     def wldsets(self):
         """
@@ -224,10 +221,16 @@ class ProjetReader(object):
             grp = self.db['wldsets'].create_group(name)
 
             # Water level data
-            grp.create_dataset('Time', data=df['Time'])
-            grp.create_dataset('WL', data=df['WL'])
-            grp.create_dataset('BP', data=df['BP'])
-            grp.create_dataset('ET', data=df['ET'])
+            grp.create_dataset(
+                'Time',
+                data=np.array(df['Time'], dtype=h5py.special_dtype(vlen=str)))
+            # See http://docs.h5py.org/en/latest/strings.html as to why this
+            # is necessary to do this in order to save a list of strings in
+            # a dataset with h5py.
+
+            grp.create_dataset('WL', data=np.copy(df['WL']))
+            grp.create_dataset('BP', data=np.copy(df['BP']))
+            grp.create_dataset('ET', data=np.copy(df['ET']))
 
             # Piezometric well info
             grp.attrs['filename'] = df['filename']
@@ -280,7 +283,6 @@ class ProjetReader(object):
         self.db.flush()
 
     # ---- Weather Dataset Handlers
-
     @property
     def wxdsets(self):
         """
@@ -381,8 +383,16 @@ class WLDataFrameHDF5(WLDataFrameBase):
     def __load_dataset__(self, hdf5group):
         self.dset = hdf5group
         self._undo_stack = []
-        self._waterlevels = self.dset['WL'][...]
-        self._datetimes = self.dset['Time'][...]
+
+        columns = []
+        data = []
+        for colname in ['Time', 'WL', 'BP', 'ET']:
+            if len(self.dset[colname][...]):
+                data.append(self.dset[colname][...])
+                columns.append(colname)
+        data = np.vstack(tuple(data)).transpose()
+        columns = tuple(columns)
+        self._dataf = WLDataset(data, columns)
 
         # Make older datasets compatible with newer format.
         if 'Well ID' not in list(self.dset.attrs.keys()):

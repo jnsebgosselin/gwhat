@@ -480,7 +480,7 @@ class HydroprintGUI(myqt.DialogWindow):
     def best_fit_time(self):
         wldset = self.dmngr.get_current_wldset()
         if wldset is not None:
-            date0, date1 = self.hydrograph.best_fit_time(wldset['Time'])
+            date0, date1 = self.hydrograph.best_fit_time(wldset.xldates)
             self.date_start_widget.setDate(QDate(date0[0], date0[1], date0[2]))
             self.date_end_widget.setDate(QDate(date1[0], date1[1], date1[2]))
 
