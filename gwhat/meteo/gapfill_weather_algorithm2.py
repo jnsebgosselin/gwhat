@@ -35,7 +35,7 @@ from PyQt5.QtCore import QObject
 # ---- Local imports
 
 from gwhat.common.utils import save_content_to_csv
-from gwhat.hydrograph4 import LatLong2Dist
+from gwhat.common.utils import calc_dist_from_coord
 from gwhat.meteo.weather_viewer import FigWeatherNormals
 from gwhat.meteo.gapfill_weather_postprocess import PostProcessErr
 import gwhat.meteo.weather_reader as wxrd
@@ -1234,37 +1234,26 @@ class TargetStationInfo(object):
         # a 0 value at index <index>
 
 
-# =============================================================================
-
-
 def alt_and_dist_calc(WEATHER, index):
     """
-    Computes the horizontal distance in km and the altitude difference
-    in m between the target station and each neighboring stations
+    Compute the horizontal distances in km and the altitude differences
+    in m between the target station and each neighboring station.
 
     index: Target Station Index
     """
+    alt = np.array(WEATHER.ALT)
+    lat = np.array(WEATHER.LAT)
+    lon = np.array(WEATHER.LON)
 
-    ALT = WEATHER.ALT
-    LAT = WEATHER.LAT
-    LON = WEATHER.LON
+    # Calcul horizontal and vertical distances of neighboring stations
+    # from target.
+    hordist = calc_dist_from_coord(lat[index], lon[index], lat, lon)
+    altdiff = alt - alt[index]
 
-    nSTA = len(ALT)  # number of stations including target
+    hordist = np.round(hordist, 1)
+    altdiff = np.round(altdiff, 1)
 
-    HORDIST = np.zeros(nSTA)  # distances of neighboring station from target
-    ALTDIFF = np.zeros(nSTA)  # altitude differences
-
-    for i in range(nSTA):
-        HORDIST[i] = LatLong2Dist(LAT[index], LON[index], LAT[i], LON[i])
-        ALTDIFF[i] = ALT[i] - ALT[index]
-
-    HORDIST = np.round(HORDIST, 1)
-    ALTDIFF = np.round(ALTDIFF, 1)
-
-    return HORDIST, ALTDIFF
-
-
-# =============================================================================
+    return hordist, altdiff
 
 
 class WeatherData(object):
