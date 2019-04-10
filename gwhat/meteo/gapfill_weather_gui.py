@@ -1609,11 +1609,6 @@ if __name__ == '__main__':
 #    stamap.plot_obswells(GWSU24[0], GWSU24[1], 'GW-SU-24')
 #    stamap.plot_obswells(GWSU34[0], GWSU34[1], 'GW-SU-34')
 #    stamap.show()
-#
-#    print()
-#    from hydrograph3 import LatLong2Dist
-#    for x, y, n, a in zip(lat, lon, name, alt):
-#        print(n, LatLong2Dist(x, y, GWSU16[0], GWSU16[1]))
 
     # ---- Show and Move Center ----
 
