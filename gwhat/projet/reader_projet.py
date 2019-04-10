@@ -320,10 +320,13 @@ class ProjetReader(object):
         """
         Return the weather dataset corresponding to the provided name.
         """
+        print("Getting wxdset {}...".format(name), end=' ')
         if name in self.wxdsets:
+            print('done')
             self.db['wxdsets'].attrs['last_opened'] = name
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
+            print('failed')
             return None
 
     def add_wxdset(self, name, df):
