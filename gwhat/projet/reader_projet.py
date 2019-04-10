@@ -294,6 +294,13 @@ class ProjetReader(object):
         """
         return list(self.db['wxdsets'].keys())
 
+    def get_wxdsets_lat(self):
+        """
+        Return a list with the latitude coordinates of the weather datasets.
+        """
+        return [self.db['wxdsets/%s' % name].attrs['Latitude'] for
+                name in self.wxdsets]
+
     def get_last_opened_wxdset(self):
         """
         Return the name of the last opened weather dataset in the project
