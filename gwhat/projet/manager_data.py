@@ -322,6 +322,7 @@ class DataManager(QWidget):
                     return
                 elif reply == QMessageBox.Yes:
                     self._confirm_before_deleting_dset = dont_show_again
+            self._wldset = None
             self.projet.del_wldset(dsetname)
             self.update_wldsets()
             self.update_wldset_info()
@@ -403,6 +404,7 @@ class DataManager(QWidget):
                     return
                 elif reply == QMessageBox.Yes:
                     self._confirm_before_deleting_dset = dont_show_again
+            self._wxdset = None
             self.projet.del_wxdset(dsetname)
             self.update_wxdsets()
             self.update_wxdset_info()
