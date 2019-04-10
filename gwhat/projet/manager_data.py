@@ -46,6 +46,7 @@ class DataManager(QWidget):
         self._confirm_before_deleting_dset = True
 
         self._wldset = None
+        self._wxdset = None
 
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
@@ -412,9 +413,12 @@ class DataManager(QWidget):
     def get_current_wxdset(self):
         """Return the currently selected weather dataset dataframe."""
         if self.wxdsets_cbox.currentIndex() == -1:
-            return None
+            self._wxdset = None
         else:
-            return self.projet.get_wxdset(self.wxdsets_cbox.currentText())
+            cbox_text = self.wxdsets_cbox.currentText()
+            if self._wxdset is None or self._wxdset.name != cbox_text:
+                self._wxdset = self.projet.get_wxdset(cbox_text)
+        return self._wxdset
 
     def set_current_wxdset(self, name):
         """Set the current weather dataset from its name."""
