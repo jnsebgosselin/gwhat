@@ -96,8 +96,10 @@ class WLDataset(EmptyWLDataset):
             except ValueError:
                 try:
                     # Try converting the strings to datetime objects.
+                    # The format of the datetime strings must be
+                    # "%Y-%m-%d %H:%M:%S"
                     datetimes = pd.to_datetime(
-                        self['Time'], format="%Y-%m-%d %H:%M:%S")
+                        self['Time'], infer_datetime_format=True)
                 except ValueError:
                     print('WARNING: the dates are not formatted correctly.')
             finally:

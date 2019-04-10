@@ -201,10 +201,13 @@ class ProjetReader(object):
         """
         Return the water level dataset corresponding to the provided name.
         """
+        print("Getting wldset {}...".format(name), end=' ')
         if name in self.wldsets:
             self.db['wldsets'].attrs['last_opened'] = name
+            print('done')
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
+            print('failed')
             return None
 
     def add_wldset(self, name, df):
@@ -291,6 +294,20 @@ class ProjetReader(object):
         """
         return list(self.db['wxdsets'].keys())
 
+    def get_wxdsets_lat(self):
+        """
+        Return a list with the latitude coordinates of the weather datasets.
+        """
+        return [self.db['wxdsets/%s' % name].attrs['Latitude'] for
+                name in self.wxdsets]
+
+    def get_wxdsets_lon(self):
+        """
+        Return a list with the longitude coordinates of the weather datasets.
+        """
+        return [self.db['wxdsets/%s' % name].attrs['Longitude'] for
+                name in self.wxdsets]
+
     def get_last_opened_wxdset(self):
         """
         Return the name of the last opened weather dataset in the project
@@ -303,10 +320,13 @@ class ProjetReader(object):
         """
         Return the weather dataset corresponding to the provided name.
         """
+        print("Getting wxdset {}...".format(name), end=' ')
         if name in self.wxdsets:
+            print('done')
             self.db['wxdsets'].attrs['last_opened'] = name
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
+            print('failed')
             return None
 
     def add_wxdset(self, name, df):
@@ -395,6 +415,18 @@ class WLDataFrameHDF5(WLDataFrameBase):
         self._dataf = WLDataset(data, columns)
 
         # Make older datasets compatible with newer format.
+        if isinstance(self.dset['Time'][0], (int, float)):
+            # Time needs to be converted from Excel numeric dates
+            # to ISO date strings (see PR #276).
+            print('Saving time as ISO date strings instead of Excel dates...',
+                  end=' ')
+            del self.dset['Time']
+            self.dset.create_dataset(
+                'Time',
+                data=np.array(self.strftime,
+                              dtype=h5py.special_dtype(vlen=str)))
+            self.dset.file.flush()
+            print('done')
         if 'Well ID' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
             self.dset.attrs['Well ID'] = ""
@@ -828,11 +860,13 @@ if __name__ == '__main__':
     FNAME = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
     PROJET = ProjetReader(FNAME)
 
-    WLDSET = PROJET.get_wldset('3040002.0')
+    WLDSET = PROJET.get_wldset('3040002_15min')
     print(WLDSET.glue_idnums())
 
-    GLUEDF = WLDSET.get_glue('1')
-    glue_count = GLUEDF['count']
-    dly_glue = GLUEDF['daily budget']
+    data = WLDSET.data
+
+    # GLUEDF = WLDSET.get_glue('1')
+    # glue_count = GLUEDF['count']
+    # dly_glue = GLUEDF['daily budget']
 
     PROJET.db.close()

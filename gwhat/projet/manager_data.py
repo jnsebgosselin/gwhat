@@ -12,6 +12,7 @@ import os
 import os.path as osp
 
 # ---- Third party imports
+import numpy as np
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
@@ -23,7 +24,7 @@ from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
 from gwhat.utils.icons import QToolButtonSmall
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
-from gwhat.hydrograph4 import LatLong2Dist
+from gwhat.common.utils import calc_dist_from_coord
 from gwhat.projet.reader_waterlvl import WLDataFrame
 from gwhat.projet.reader_projet import (INVALID_CHARS, is_dsetname_valid,
                                         make_dsetname_valid)
@@ -44,6 +45,9 @@ class DataManager(QWidget):
         self._pytesting = pytesting
         self._projet = projet
         self._confirm_before_deleting_dset = True
+
+        self._wldset = None
+        self._wxdset = None
 
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
@@ -291,9 +295,12 @@ class DataManager(QWidget):
     def get_current_wldset(self):
         """Return the currently selected water level dataset."""
         if self.wldsets_cbox.currentIndex() == -1:
-            return None
+            self._wldset = None
         else:
-            return self.projet.get_wldset(self.wldsets_cbox.currentText())
+            cbox_text = self.wldsets_cbox.currentText()
+            if self._wldset is None or self._wldset.name != cbox_text:
+                self._wldset = self.projet.get_wldset(cbox_text)
+        return self._wldset
 
     def set_current_wldset(self, name):
         """Set the current water level from its name."""
@@ -315,6 +322,7 @@ class DataManager(QWidget):
                     return
                 elif reply == QMessageBox.Yes:
                     self._confirm_before_deleting_dset = dont_show_again
+            self._wldset = None
             self.projet.del_wldset(dsetname)
             self.update_wldsets()
             self.update_wldset_info()
@@ -396,6 +404,7 @@ class DataManager(QWidget):
                     return
                 elif reply == QMessageBox.Yes:
                     self._confirm_before_deleting_dset = dont_show_again
+            self._wxdset = None
             self.projet.del_wxdset(dsetname)
             self.update_wxdsets()
             self.update_wxdset_info()
@@ -407,9 +416,12 @@ class DataManager(QWidget):
     def get_current_wxdset(self):
         """Return the currently selected weather dataset dataframe."""
         if self.wxdsets_cbox.currentIndex() == -1:
-            return None
+            self._wxdset = None
         else:
-            return self.projet.get_wxdset(self.wxdsets_cbox.currentText())
+            cbox_text = self.wxdsets_cbox.currentText()
+            if self._wxdset is None or self._wxdset.name != cbox_text:
+                self._wxdset = self.projet.get_wxdset(cbox_text)
+        return self._wxdset
 
     def set_current_wxdset(self, name):
         """Set the current weather dataset from its name."""
@@ -421,26 +433,18 @@ class DataManager(QWidget):
         self.wxdset_changed()
 
     def set_closest_wxdset(self):
+        """
+        Set the weather dataset of the station that is closest to the
+        groundwater observation well.
+        """
         if self.wldataset_count() == 0:
             return
 
-        wldset = self.get_current_wldset()
-        lat1 = wldset['Latitude']
-        lon1 = wldset['Longitude']
-
-        mindist = 10**16
-        closest = None
-        for name in self.wxdsets:
-            wxdset = self.projet.get_wxdset(name)
-            lat2 = wxdset['Latitude']
-            lon2 = wxdset['Longitude']
-            newdist = LatLong2Dist(lat1, lon1, lat2, lon2)
-
-            if newdist < mindist:
-                closest = wxdset.name
-                mindist = newdist
-
-        self.set_current_wxdset(closest)
+        dist = calc_dist_from_coord(self._wldset['Latitude'],
+                                    self._wldset['Longitude'],
+                                    self.projet.get_wxdsets_lat(),
+                                    self.projet.get_wxdsets_lon())
+        self.set_current_wxdset(self.wxdsets[np.argmin(dist)])
 
     def show_weather_normals(self):
         """Show the weather normals for the current weather dataset."""
