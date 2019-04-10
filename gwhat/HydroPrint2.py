@@ -431,27 +431,27 @@ class HydroprintGUI(myqt.DialogWindow):
             self.clear_hydrograph()
             return
         else:
-            wldset = self.wldset
-            self.hydrograph.set_wldset(wldset)
+            self.hydrograph.set_wldset(self.wldset)
             self.hydrograph.gluedf = self.wldset.get_glue_at(-1)
 
         # Load the manual measurements.
 
-        fname = os.path.join(self.workdir, "Water Levels",
-                             'waterlvl_manual_measurements')
-        tmeas, wlmeas = load_waterlvl_measures(fname, wldset['Well'])
-        wldset.set_wlmeas(tmeas, wlmeas)
+        fname = os.path.join(
+            self.workdir, "Water Levels", 'waterlvl_manual_measurements')
+        tmeas, wlmeas = load_waterlvl_measures(fname, self.wldset['Well'])
+        self.wldset.set_wlmeas(tmeas, wlmeas)
 
         # Setup the layout of the hydrograph.
 
-        layout = wldset.get_layout()
+        layout = self.wldset.get_layout()
         if layout is not None:
-            msg = 'Loading existing graph layout for well %s.' % wldset['Well']
+            msg = ("Loading existing graph layout for well %s." %
+                   self.wldset['Well'])
             print(msg)
             self.ConsoleSignal.emit('<font color=black>%s</font>' % msg)
             self.load_graph_layout(layout)
         else:
-            print('No graph layout exists for well %s.' % wldset['Well'])
+            print('No graph layout exists for well %s.' % self.wldset['Well'])
             # Fit Water Level in Layout :
             self.__updateUI = False
             self.best_fit_waterlvl()
