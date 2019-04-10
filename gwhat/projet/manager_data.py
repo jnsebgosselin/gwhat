@@ -12,6 +12,7 @@ import os
 import os.path as osp
 
 # ---- Third party imports
+import numpy as np
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
@@ -23,7 +24,7 @@ from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
 from gwhat.utils.icons import QToolButtonSmall
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
-from gwhat.hydrograph4 import LatLong2Dist
+from gwhat.common.utils import calc_dist_from_coord
 from gwhat.projet.reader_waterlvl import WLDataFrame
 from gwhat.projet.reader_projet import (INVALID_CHARS, is_dsetname_valid,
                                         make_dsetname_valid)
@@ -430,26 +431,18 @@ class DataManager(QWidget):
         self.wxdset_changed()
 
     def set_closest_wxdset(self):
+        """
+        Set the weather dataset of the station that is closest to the
+        groundwater observation well.
+        """
         if self.wldataset_count() == 0:
             return
 
-        wldset = self.get_current_wldset()
-        lat1 = wldset['Latitude']
-        lon1 = wldset['Longitude']
-
-        mindist = 10**16
-        closest = None
-        for name in self.wxdsets:
-            wxdset = self.projet.get_wxdset(name)
-            lat2 = wxdset['Latitude']
-            lon2 = wxdset['Longitude']
-            newdist = LatLong2Dist(lat1, lon1, lat2, lon2)
-
-            if newdist < mindist:
-                closest = wxdset.name
-                mindist = newdist
-
-        self.set_current_wxdset(closest)
+        dist = calc_dist_from_coord(self._wldset['Latitude'],
+                                    self._wldset['Longitude'],
+                                    self.projet.get_wxdsets_lat(),
+                                    self.projet.get_wxdsets_lon())
+        self.set_current_wxdset(self.wxdsets[np.argmin(dist)])
 
     def show_weather_normals(self):
         """Show the weather normals for the current weather dataset."""
