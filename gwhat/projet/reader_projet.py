@@ -732,6 +732,7 @@ class WXDataFrameHDF5(WXDataFrameBase):
     This is a wrapper around the h5py group to read the weather data
     from the project.
     """
+
     def __init__(self, dataset, *args, **kwargs):
         super(WXDataFrameHDF5, self).__init__(*args, **kwargs)
         self.__load_dataset__(dataset)
@@ -782,6 +783,7 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
     This is a wrapper around the h5py group to read the GLUE results
     from the project.
     """
+
     def __init__(self, data, *args, **kwargs):
         super(GLUEDataFrameHDF5, self).__init__(*args, **kwargs)
         self.__load_data__(data)
