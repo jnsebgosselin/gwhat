@@ -860,11 +860,13 @@ if __name__ == '__main__':
     FNAME = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
     PROJET = ProjetReader(FNAME)
 
-    WLDSET = PROJET.get_wldset('3040002.0')
+    WLDSET = PROJET.get_wldset('3040002_15min')
     print(WLDSET.glue_idnums())
 
-    GLUEDF = WLDSET.get_glue('1')
-    glue_count = GLUEDF['count']
-    dly_glue = GLUEDF['daily budget']
+    data = WLDSET.data
+
+    # GLUEDF = WLDSET.get_glue('1')
+    # glue_count = GLUEDF['count']
+    # dly_glue = GLUEDF['daily budget']
 
     PROJET.db.close()
