@@ -201,10 +201,13 @@ class ProjetReader(object):
         """
         Return the water level dataset corresponding to the provided name.
         """
+        print("Getting wldset {}...".format(name), end=' ')
         if name in self.wldsets:
             self.db['wldsets'].attrs['last_opened'] = name
+            print('done')
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
+            print('failed')
             return None
 
     def add_wldset(self, name, df):
