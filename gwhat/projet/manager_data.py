@@ -294,12 +294,11 @@ class DataManager(QWidget):
         """Return the currently selected water level dataset."""
         if self.wldsets_cbox.currentIndex() == -1:
             self._wldset = None
-            return None
         else:
             cbox_text = self.wldsets_cbox.currentText()
             if self._wldset is None or self._wldset.name != cbox_text:
                 self._wldset = self.projet.get_wldset(cbox_text)
-            return self._wldset
+        return self._wldset
 
     def set_current_wldset(self, name):
         """Set the current water level from its name."""
