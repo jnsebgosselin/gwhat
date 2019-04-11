@@ -353,13 +353,5 @@ class WHATPref(object):
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
-    import logging
-
-    logging.basicConfig(filename='WHAT.log', level=logging.DEBUG,
-                        format='%(asctime)s - %(levelname)s:%(message)s')
-    try:
-        main = MainWindow()
-        sys.exit(app.exec_())
-    except Exception as e:
-        logging.exception(str(e))
-        raise e
+    main = MainWindow()
+    sys.exit(app.exec_())
