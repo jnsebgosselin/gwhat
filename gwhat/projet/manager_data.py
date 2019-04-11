@@ -87,7 +87,6 @@ class DataManager(QWidget):
         # ---- Toolbar
 
         self.wldsets_cbox = QComboBox()
-        self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
         self.btn_load_wl = QToolButtonSmall(icons.get_icon('importFile'))
@@ -189,8 +188,6 @@ class DataManager(QWidget):
         if projet is not None:
             self.update_wldsets(projet.get_last_opened_wldset())
             self.update_wxdsets(projet.get_last_opened_wxdset())
-
-            self.update_wldset_info()
             self.update_wxdset_info()
 
             self.wldset_changed()
@@ -261,7 +258,6 @@ class DataManager(QWidget):
         print("Saving the new water level dataset in the project...", end=" ")
         self.projet.add_wldset(name, dataset)
         self.update_wldsets(name)
-        self.update_wldset_info()
         self.wldset_changed()
         print("done")
 
@@ -290,6 +286,8 @@ class DataManager(QWidget):
 
     def wldset_changed(self):
         """Handle when the currently selected water level dataset changed."""
+        QApplication.processEvents()
+        self.update_wldset_info()
         self.wldsetChanged.emit(self.get_current_wldset())
 
     def get_current_wldset(self):
@@ -307,8 +305,6 @@ class DataManager(QWidget):
         self.wldsets_cbox.blockSignals(True)
         self.wldsets_cbox.setCurrentIndex(self.wldsets_cbox.findText(name))
         self.wldsets_cbox.blockSignals(False)
-
-        self.update_wldset_info()
         self.wldset_changed()
 
     def del_current_wldset(self):
@@ -325,7 +321,6 @@ class DataManager(QWidget):
             self._wldset = None
             self.projet.del_wldset(dsetname)
             self.update_wldsets()
-            self.update_wldset_info()
             self.wldset_changed()
             self.sig_new_console_msg.emit((
                 "<font color=black>Water level dataset <i>{}</i> deleted "
