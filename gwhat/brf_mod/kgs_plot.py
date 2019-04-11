@@ -143,6 +143,7 @@ class BRFFigure(mpl.figure.Figure):
                 ymin = min(np.floor(np.min(A)/0.2)*0.2, 0)
         else:
             ymin = ylim[0]
+        ymin = max(-10, ymin)
 
         if ylim[1] is None:
             if len(err) > 0:
@@ -151,9 +152,9 @@ class BRFFigure(mpl.figure.Figure):
                 ymax = max(np.ceil(np.max(A)/0.2)*0.2, 1)
         else:
             ymax = ylim[1]
+        ymax = min(10, ymax)
 
-        # ---- Xticks ans Yticks Setup
-
+        # ---- Setup xticks and yticks
         yscl = 0.2 if yscl is None else yscl
         ax.set_yticks(np.arange(ymin, ymax+yscl, yscl))
 
