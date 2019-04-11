@@ -123,7 +123,6 @@ class DataManager(QWidget):
         # ---- Toolbar
 
         self.wxdsets_cbox = QComboBox()
-        self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
         self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
 
         self.btn_load_meteo = QToolButtonSmall(icons.get_icon('importFile'))
@@ -188,8 +187,6 @@ class DataManager(QWidget):
         if projet is not None:
             self.update_wldsets(projet.get_last_opened_wldset())
             self.update_wxdsets(projet.get_last_opened_wxdset())
-            self.update_wxdset_info()
-
             self.wldset_changed()
 
         self.btn_export_weather.set_model(self.get_current_wxdset())
@@ -357,7 +354,6 @@ class DataManager(QWidget):
         print("Saving the new weather dataset in the project.", end=" ")
         self.projet.add_wxdset(name, dataset)
         self.update_wxdsets(name)
-        self.update_wxdset_info()
         self.wxdset_changed()
         print("done")
 
@@ -385,6 +381,8 @@ class DataManager(QWidget):
 
     def wxdset_changed(self):
         """Handle when the currently selected weather dataset changed."""
+        QApplication.processEvents()
+        self.update_wxdset_info()
         self.btn_export_weather.set_model(self.get_current_wxdset())
         self.wxdsetChanged.emit(self.get_current_wxdset())
 
@@ -402,7 +400,6 @@ class DataManager(QWidget):
             self._wxdset = None
             self.projet.del_wxdset(dsetname)
             self.update_wxdsets()
-            self.update_wxdset_info()
             self.wxdset_changed()
             self.sig_new_console_msg.emit((
                 "<font color=black>Weather dataset <i>{}</i> deleted "
@@ -423,8 +420,6 @@ class DataManager(QWidget):
         self.wxdsets_cbox.blockSignals(True)
         self.wxdsets_cbox.setCurrentIndex(self.wxdsets_cbox.findText(name))
         self.wxdsets_cbox.blockSignals(False)
-
-        self.update_wxdset_info()
         self.wxdset_changed()
 
     def set_closest_wxdset(self):
