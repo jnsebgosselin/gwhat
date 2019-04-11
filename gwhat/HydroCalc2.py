@@ -338,7 +338,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         self.btn_clear_select = QToolButtonNormal('rect_select_clear')
         self.btn_clear_select.setToolTip("Clear selected water levels.")
-        self.btn_clear_select.clicked.connect(self.clear_selected_wl)
+        self.btn_clear_select.clicked.connect(
+            lambda: self.clear_selected_wl(draw=True))
 
         self.btn_del_select = QToolButtonNormal('erase_data')
         self.btn_del_select.setToolTip(
