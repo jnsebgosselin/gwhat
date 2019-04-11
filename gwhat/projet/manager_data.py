@@ -437,7 +437,7 @@ class DataManager(QWidget):
         Set the weather dataset of the station that is closest to the
         groundwater observation well.
         """
-        if self.wldataset_count() == 0:
+        if self._wldset is None or self.wxdataset_count() == 0:
             return
 
         dist = calc_dist_from_coord(self._wldset['Latitude'],
