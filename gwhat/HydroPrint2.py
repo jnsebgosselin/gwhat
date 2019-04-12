@@ -777,8 +777,8 @@ class HydroprintGUI(myqt.DialogWindow):
         if layout['wxdset'] in self.dmngr.wxdsets:
             self.dmngr.set_current_wxdset(layout['wxdset'])
         else:
-            self.dmngr.set_closest_wxdset()
-
+            if self.dmngr.set_closest_wxdset() is None:
+                self.draw_hydrograph()
         self.__updateUI = True
 
     def save_layout_isClicked(self):
