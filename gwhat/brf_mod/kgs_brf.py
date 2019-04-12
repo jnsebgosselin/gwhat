@@ -52,9 +52,8 @@ def produce_BRFInputtxt(well, time, wl, bp, et):
     fcontent.append(['Time WL BP ET'])
 
     # Add the data to the file content.
-    wl = (100 - wl) * 3.28084
+    wl = (np.max(wl) - wl) * 3.28084
     bp = bp * 3.28084
-    t = time - time[0]
     fcontent.extend([[time[i], wl[i], bp[i], et[i]] for i in range(N)])
 
     filename = os.path.join(__install_dir__, 'BRFInput.txt')
