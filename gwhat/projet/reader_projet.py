@@ -595,7 +595,6 @@ class WLDataFrameHDF5(WLDataFrameBase):
             self.del_glue(self.glue_idnums()[0])
 
     # ---- Barometric response function
-
     def saved_brf(self):
         """
         Return the list of ids referencing to the BRF evaluations saved for
@@ -642,9 +641,41 @@ class WLDataFrameHDF5(WLDataFrameBase):
             return None
 
     def get_brf(self, name):
+        """
+        Get the BRF results for the data stored at the specified name.
+        """
         grp = self.dset['brf'][name]
-        return (grp['lag'][...], grp['A'][...], grp['err'][...],
-                grp['date start'][...], grp['date end'][...])
+
+        # Make older datasets compatible with newer format (see PR#).
+        flush = False
+        if 'err' in grp.keys():
+            grp['sdA'] = grp['err']
+            del grp['err']
+            flush = True
+        if 'SumA' not in grp.keys():
+            grp['SumA'] = grp['A']
+            del grp['A']
+            flush = True
+        if 'lag' in grp.keys():
+            grp['Lag'] = grp['lag']
+            del grp['lag']
+            flush = True
+        for key in ['date start', 'date end']:
+            if key in grp.keys():
+                grp.attrs[key] = (
+                    datetime.datetime(*grp[key][...], 0).isoformat())
+                del grp[key]
+                flush = True
+        if flush:
+            self.dset.file.flush()
+
+        # Cast the data into a pandas dataframe.
+        dataf = pd.DataFrame({key: grp[key][...] for key in grp.keys()})
+        dataf.date_start = datetime.datetime.strptime(
+            grp.attrs['date start'], "%Y-%m-%dT%H:%M:%S")
+        dataf.date_end = datetime.datetime.strptime(
+            grp.attrs['date end'], "%Y-%m-%dT%H:%M:%S")
+        return dataf
 
     def save_brf(self, dataf, date_start, date_end):
         """
