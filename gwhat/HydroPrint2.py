@@ -456,7 +456,8 @@ class HydroprintGUI(myqt.DialogWindow):
             self.__updateUI = False
             self.best_fit_waterlvl()
             self.best_fit_time()
-            self.dmngr.set_closest_wxdset()
+            if self.dmngr.set_closest_wxdset() is None:
+                self.draw_hydrograph()
             self.__updateUI = True
 
     def wxdset_changed(self):
@@ -469,7 +470,6 @@ class HydroprintGUI(myqt.DialogWindow):
             self.draw_hydrograph()
 
     # ---- Draw Hydrograph Handlers
-
     def best_fit_waterlvl(self):
         wldset = self.dmngr.get_current_wldset()
         if wldset is not None:
@@ -777,8 +777,8 @@ class HydroprintGUI(myqt.DialogWindow):
         if layout['wxdset'] in self.dmngr.wxdsets:
             self.dmngr.set_current_wxdset(layout['wxdset'])
         else:
-            self.dmngr.set_closest_wxdset()
-
+            if self.dmngr.set_closest_wxdset() is None:
+                self.draw_hydrograph()
         self.__updateUI = True
 
     def save_layout_isClicked(self):
