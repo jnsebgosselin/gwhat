@@ -430,13 +430,15 @@ class DataManager(QWidget):
         groundwater observation well.
         """
         if self._wldset is None or self.wxdataset_count() == 0:
-            return
+            return None
 
         dist = calc_dist_from_coord(self._wldset['Latitude'],
                                     self._wldset['Longitude'],
                                     self.projet.get_wxdsets_lat(),
                                     self.projet.get_wxdsets_lon())
-        self.set_current_wxdset(self.wxdsets[np.argmin(dist)])
+        closest_station = self.wxdsets[np.argmin(dist)]
+        self.set_current_wxdset(closest_station)
+        return closest_station
 
     def show_weather_normals(self):
         """Show the weather normals for the current weather dataset."""
