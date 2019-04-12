@@ -8,10 +8,11 @@
 
 # ---- Standard library imports
 import os
+import os.path as osp
 import csv
-import sys
 
 # ---- Third party imports
+import pandas as pd
 import numpy as np
 from xlrd import xldate_as_tuple
 
@@ -101,49 +102,43 @@ def run_kgsbrf():
 
 
 
-def read_brf_output():
+
+def read_brf_output(filename=None):
     """
     Read the barometric response function from the output file produced
     by kgs_brf.exe.
     """
-    filename = os.path.join(__install_dir__, 'BRFOutput.txt')
+    if filename is None:
+        filename = osp.join(__install_dir__, 'BRFOutput.txt')
+
     with open(filename, 'r') as f:
         reader = list(csv.reader(f))
 
-    header = []
-    for row in reader:
-        header.append(row)
+    for i, row in enumerate(reader):
         if 'LagNo Lag A sdA SumA sdSumA B sdB SumB sdSumB' in row[0]:
+            columns = row[0].split()
             break
 
-    # well = header[2][0].split()[-1]
-    # date0 = header[8][0].split()[-1]
-    # date1 = header[9][0].split()[-1]
-
-    data = reader[len(header):]
-    dataf = []
+    data = []
     count = 1
-    for row in data:
+    for row in reader[i+1:]:
         if count == 1:
-            dataf.append([float(i) for i in row[0].split()])
+            data.append([float(i) for i in row[0].split()])
             count += 1
         elif count in [2, 3]:
-            dataf[-1].extend([float(i) for i in row[0].split()])
+            data[-1].extend([float(i) for i in row[0].split()])
             count += 1
         elif count == 4:
-            dataf[-1].extend([float(i) for i in row[0].split()])
+            data[-1].extend([float(i) for i in row[0].split()])
             count = 1
 
-    # Remove non valid data.
-    dataf = [row for row in dataf if row[4] > -999]
+    # Cast the data into a pandas dataframe.
+    dataf = pd.DataFrame(data, columns=columns)
+    dataf['LagNo'] = dataf['LagNo'].astype(int)
+    dataf.set_index(['LagNo'], drop=True, inplace=True)
+    dataf[dataf <= -999] = np.nan
 
-    # Format data into numpy arrays
-    dataf = np.array(dataf)
-    lag = dataf[:, 1]
-    A = dataf[:, 4]
-    err = dataf[:, 5]
-
-    return lag, A, err
+    return dataf
 
 
 if __name__ == "__main__":
