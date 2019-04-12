@@ -16,6 +16,8 @@ from shutil import copyfile
 # ---- Third party imports
 import h5py
 import numpy as np
+import pandas as pd
+import datetime
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase
