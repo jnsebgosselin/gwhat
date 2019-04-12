@@ -449,7 +449,7 @@ class BRFViewer(QWidget):
 
         # Generate the buttons :
 
-        self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
+        self.btn_del = QToolButtonNormal(icons.get_icon('delete_data'))
         self.btn_del.setToolTip('Delete current BRF results')
         self.btn_del.clicked.connect(self.del_brf)
 
