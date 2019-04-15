@@ -946,7 +946,10 @@ if __name__ == '__main__':
 
     data = WLDSET.data
 
-    # GLUEDF = WLDSET.get_glue('1')
+    WLDSET.brf_count()
+    
+    filename = 'C:/Users/User/Desktop/brf_test.csv'
+    WLDSET.export_brf_to_csv(filename, 0)
     # glue_count = GLUEDF['count']
     # dly_glue = GLUEDF['daily budget']
 
