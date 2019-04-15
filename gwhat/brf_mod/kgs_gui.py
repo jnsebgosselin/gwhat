@@ -650,7 +650,7 @@ class BRFViewer(QWidget):
             xmax = self.graph_opt_panel.xmax
             xscale = self.graph_opt_panel.xscale
             time_units = self.graph_opt_panel.time_units
-   
+
             date0 = databrf.date_start.strftime(format='%d/%m/%y %H:%M')
             date1 = databrf.date_end.strftime(format='%d/%m/%y %H:%M')
             self.brf_canvas.figure.plot_BRF(
