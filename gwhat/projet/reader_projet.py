@@ -721,8 +721,38 @@ class WLDataFrameHDF5(WLDataFrameBase):
         else:
             print('BRF does not exist')
 
-    # ---- Hydrograph layout
+    def export_brf_to_csv(self, filename, index):
+        """
+        Export the BRF results saved at the specified index in a CSV or
+        Excel file.
+        """
+        databrf = self.get_brf(self.get_brfname_at(index))
+        databrf.insert(0, 'LagNo', databrf.index.astype(int))
 
+        fcontent = [
+            ['Well Name :', self['Well']],
+            ['Well ID :', self['Well ID']],
+            ['Latitude :', self['Latitude']],
+            ['Longitude :', self['Longitude']],
+            ['Elevation :', self['Elevation']],
+            ['Municipality :', self['Municipality']],
+            ['Province :', self['Province']],
+            [],
+            ['BRF Start Time :',
+             databrf.date_start.strftime(format='%d/%m/%y %H:%M')],
+            ['BRF End Time :',
+             databrf.date_end.strftime(format='%d/%m/%y %H:%M')],
+            ['Number of BP Lags :', len(databrf['A']) - 1],
+            ['Number of ET Lags :',
+             len(databrf['B'].dropna(inplace=False)) - 1],
+            ['Developed with detrending :', databrf.detrending],
+            []]
+        fcontent.append(list(databrf.columns))
+        fcontent.extend(nan_as_text_tolist(databrf.values))
+
+        save_content_to_file(filename, fcontent)
+
+    # ---- Hydrograph layout
     def save_layout(self, layout):
         """Save the layout in the project hdf5 file."""
         grp = self.dset['layout']
