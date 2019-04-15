@@ -668,18 +668,25 @@ class WLDataFrameHDF5(WLDataFrameBase):
                     datetime.datetime(*grp[key][...], 0).isoformat())
                 del grp[key]
                 flush = True
+        if 'detrending' not in grp.attrs.keys():
+            grp.attrs['detrending'] = ''
+            flush = True
         if flush:
             self.dset.file.flush()
 
         # Cast the data into a pandas dataframe.
-        dataf = pd.DataFrame({key: grp[key][...] for key in grp.keys()})
+        keys = ['Lag', 'A', 'sdA', 'SumA', 'sdSumA', 'B',
+                'sdB', 'SumB', 'sdSumB']
+        dataf = pd.DataFrame({key: grp[key][...] for key in keys})
         dataf.date_start = datetime.datetime.strptime(
             grp.attrs['date start'], "%Y-%m-%dT%H:%M:%S")
         dataf.date_end = datetime.datetime.strptime(
             grp.attrs['date end'], "%Y-%m-%dT%H:%M:%S")
+        dataf.detrending = grp.attrs['detrending']
+
         return dataf
 
-    def save_brf(self, dataf, date_start, date_end):
+    def save_brf(self, dataf, date_start, date_end, detrending=None):
         """
         Save the BRF results.
         """
@@ -699,6 +706,8 @@ class WLDataFrameHDF5(WLDataFrameBase):
                 column, data=dataf[column].values, dtype='float64')
         grp.attrs['date start'] = date_start.isoformat()
         grp.attrs['date end'] = date_end.isoformat()
+        grp.attrs['detrending'] = {
+            True: 'Yes', False: 'No', None: ''}[detrending]
 
         self.dset.file.flush()
         print('done')
