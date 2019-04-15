@@ -37,7 +37,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
-from gwhat.widgets.buttons import LangToolButton, OnOffToolButton
+from gwhat.widgets.buttons import (LangToolButton, OnOffToolButton,
+                                   ExportDataButton)
 from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
@@ -463,6 +464,10 @@ class BRFViewer(QWidget):
         btn_save.setToolTip('Save current BRF graph as...')
         btn_save.clicked.connect(self.select_savefig_path)
 
+        self.btn_export = QToolButtonNormal(icons.get_icon('export_data'))
+        self.btn_export.setToolTip('Export data to file.')
+        self.btn_export.clicked.connect(self.select_export_brfdata_filepath)
+
         self.btn_copy = QToolButtonNormal('copy_clipboard')
         self.btn_copy.setToolTip('Copy figure to clipboard as image.')
         self.btn_copy.clicked.connect(self.copyfig_to_clipboard)
@@ -475,9 +480,10 @@ class BRFViewer(QWidget):
 
         self.tbar = myqt.QFrameLayout()
 
-        buttons = [btn_save, self.btn_copy, self.btn_del,  self.btn_del_all,
-                   VSep(), self.btn_prev, self.current_brf, self.total_brf,
-                   self.btn_next, VSep(), self.btn_setp, self.btn_language]
+        buttons = [btn_save, self.btn_copy, self.btn_export, self.btn_del,
+                   self.btn_del_all, VSep(), self.btn_prev, self.current_brf,
+                   self.total_brf, self.btn_next, VSep(), self.btn_setp,
+                   self.btn_language]
 
         for btn in buttons:
             if isinstance(btn, QLayout):
@@ -619,8 +625,30 @@ class BRFViewer(QWidget):
         QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
         buf.close()
 
-    # ---- Others
+    def select_export_brfdata_filepath(self):
+        """
+        Open a dialog to select a file path where to save the brf data.
+        """
+        fname = 'brf_' + self.wldset['Well']
+        if self.wldset['Well ID']:
+            fname += '_%s' % self.wldset['Well ID']
+        ddir = osp.join(self.__save_ddir, fname)
 
+        dialog = QFileDialog()
+        fname, ftype = dialog.getSaveFileName(
+                self, "Export Data", ddir, "*.xlsx;;*.xls;;*.csv")
+        ftype = ftype.replace('*', '')
+        if fname:
+            self.__save_ddir = osp.dirname(fname)
+            if not fname.endswith(ftype):
+                fname = fname + ftype
+            self.export_brf_data(fname)
+
+    def export_brf_data(self, fname):
+        """Export the current BRF data to to file."""
+        self.wldset.export_brf_to_csv(fname, self.current_brf.value()-1)
+
+    # ---- Others
     def set_wldset(self, wldset):
         self.wldset = wldset
         if wldset is None:
