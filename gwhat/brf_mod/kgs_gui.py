@@ -386,7 +386,8 @@ class BRFManager(myqt.QFrameLayout):
             dataf = bm.read_brf_output()
             date_start, date_end = (xldate_as_datetime(xldate, 0) for
                                     xldate in self.get_brfperiod())
-            self.wldset.save_brf(dataf, date_start, date_end)
+            self.wldset.save_brf(dataf, date_start, date_end,
+                                 self.detrend_waterlevels)
             self.viewer.new_brf_added()
             self.viewer.show()
             QApplication.restoreOverrideCursor()
