@@ -27,7 +27,7 @@ from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QDesktopWidget, QMessageBox, QFileDialog,
                              QComboBox, QLayout)
 
-from xlrd.xldate import xldate_from_datetime_tuple
+from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -383,10 +383,10 @@ class BRFManager(myqt.QFrameLayout):
         bm.run_kgsbrf()
 
         try:
-            lag, A, err = bm.read_brf_output()
-            date_start = self.date_start_edit.date().getDate()
-            date_end = self.date_end_edit.date().getDate()
-            self.wldset.save_brf(lag, A, err, date_start, date_end)
+            dataf = bm.read_brf_output()
+            date_start, date_end = (xldate_as_datetime(xldate, 0) for
+                                    xldate in self.get_brfperiod())
+            self.wldset.save_brf(dataf, date_start, date_end)
             self.viewer.new_brf_added()
             self.viewer.show()
             QApplication.restoreOverrideCursor()
@@ -449,7 +449,7 @@ class BRFViewer(QWidget):
 
         # Generate the buttons :
 
-        self.btn_del = QToolButtonNormal(icons.get_icon('clear_search'))
+        self.btn_del = QToolButtonNormal(icons.get_icon('delete_data'))
         self.btn_del.setToolTip('Delete current BRF results')
         self.btn_del.clicked.connect(self.del_brf)
 
@@ -634,7 +634,7 @@ class BRFViewer(QWidget):
             self.brf_canvas.figure.empty_BRF()
         else:
             name = self.wldset.get_brfname_at(self.current_brf.value()-1)
-            lag, A, err, date_start, date_end = self.wldset.get_brf(name)
+            databrf = self.wldset.get_brf(name)
             well = self.wldset['Well']
 
             if self.graph_opt_panel.show_ebar is False:
@@ -649,20 +649,14 @@ class BRFViewer(QWidget):
             xmin = self.graph_opt_panel.xmin
             xmax = self.graph_opt_panel.xmax
             xscale = self.graph_opt_panel.xscale
-
             time_units = self.graph_opt_panel.time_units
-
-            date0 = '%02d/%02d/%04d' % (date_start[2],
-                                        date_start[1],
-                                        date_start[0])
-
-            date1 = '%02d/%02d/%04d' % (date_end[2],
-                                        date_end[1],
-                                        date_end[0])
-
+   
+            date0 = databrf.date_start.strftime(format='%d/%m/%y %H:%M')
+            date1 = databrf.date_end.strftime(format='%d/%m/%y %H:%M')
             self.brf_canvas.figure.plot_BRF(
-                    lag, A, err, date0, date1, well, msize, draw_line,
-                    [ymin, ymax], [xmin, xmax], time_units, xscale, yscale)
+                databrf['Lag'].values, databrf['SumA'].values,
+                databrf['sdA'].values, date0, date1, well, msize, draw_line,
+                [ymin, ymax], [xmin, xmax], time_units, xscale, yscale)
         self.brf_canvas.draw()
 
     def show(self):

@@ -16,6 +16,8 @@ from shutil import copyfile
 # ---- Third party imports
 import h5py
 import numpy as np
+import pandas as pd
+import datetime
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase
@@ -595,7 +597,6 @@ class WLDataFrameHDF5(WLDataFrameBase):
             self.del_glue(self.glue_idnums()[0])
 
     # ---- Barometric response function
-
     def saved_brf(self):
         """
         Return the list of ids referencing to the BRF evaluations saved for
@@ -642,26 +643,65 @@ class WLDataFrameHDF5(WLDataFrameBase):
             return None
 
     def get_brf(self, name):
+        """
+        Get the BRF results for the data stored at the specified name.
+        """
         grp = self.dset['brf'][name]
-        return (grp['lag'][...], grp['A'][...], grp['err'][...],
-                grp['date start'][...], grp['date end'][...])
 
-    def save_brf(self, lag, A, err, date_start, date_end):
+        # Make older datasets compatible with newer format (see PR#).
+        flush = False
+        if 'err' in grp.keys():
+            grp['sdA'] = grp['err']
+            del grp['err']
+            flush = True
+        if 'SumA' not in grp.keys():
+            grp['SumA'] = grp['A']
+            del grp['A']
+            flush = True
+        if 'lag' in grp.keys():
+            grp['Lag'] = grp['lag']
+            del grp['lag']
+            flush = True
+        for key in ['date start', 'date end']:
+            if key in grp.keys():
+                grp.attrs[key] = (
+                    datetime.datetime(*grp[key][...], 0).isoformat())
+                del grp[key]
+                flush = True
+        if flush:
+            self.dset.file.flush()
+
+        # Cast the data into a pandas dataframe.
+        dataf = pd.DataFrame({key: grp[key][...] for key in grp.keys()})
+        dataf.date_start = datetime.datetime.strptime(
+            grp.attrs['date start'], "%Y-%m-%dT%H:%M:%S")
+        dataf.date_end = datetime.datetime.strptime(
+            grp.attrs['date end'], "%Y-%m-%dT%H:%M:%S")
+        return dataf
+
+    def save_brf(self, dataf, date_start, date_end):
+        """
+        Save the BRF results.
+        """
+        print('Saving BRF results...', end=' ')
+        # Create a new h5py group to save the data.
         if list(self.dset['brf'].keys()):
             idnum = np.array(list(self.dset['brf'].keys())).astype(int)
             idnum = np.max(idnum) + 1
         else:
             idnum = 1
         idnum = str(idnum)
-
         grp = self.dset['brf'].require_group(idnum)
-        grp.create_dataset('lag', data=lag, dtype='float64')
-        grp.create_dataset('A', data=A, dtype='float64')
-        grp.create_dataset('err', data=err, dtype='float64')
-        grp.create_dataset('date start', data=date_start, dtype='int16')
-        grp.create_dataset('date end', data=date_end, dtype='int16')
+
+        # Save the data in the h5py group.
+        for column in dataf.columns:
+            grp.create_dataset(
+                column, data=dataf[column].values, dtype='float64')
+        grp.attrs['date start'] = date_start.isoformat()
+        grp.attrs['date end'] = date_end.isoformat()
+
         self.dset.file.flush()
-        print('BRF results saved successfully')
+        print('done')
 
     def del_brf(self, name):
         """Delete the BRF evaluation saved with the specified name."""
