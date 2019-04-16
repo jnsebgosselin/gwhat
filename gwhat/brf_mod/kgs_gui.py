@@ -406,7 +406,7 @@ class BRFViewer(QWidget):
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
-        self.__save_ddir = osp.dirname(__rootdir__)
+        self.__save_ddir = None
 
         self.setWindowTitle('BRF Results Viewer')
         self.setWindowIcon(icons.get_icon('master'))
@@ -523,9 +523,21 @@ class BRFViewer(QWidget):
         ml.addWidget(self.graph_opt_panel, 0, 3)
 
         ml.setColumnStretch(1, 100)
-
+        
+    @property
+    def savedir(self):
+        """Return a path where figures and files are saved by default."""
+        if self.__save_ddir is None or not osp.exists(self.__save_ddir):
+            try:
+                savedir = self.wldset.dirname
+            except AttributeError:
+                savedir = osp.dirname(__rootdir__)
+            finally:
+                return savedir
+        else:
+            return self.__save_ddir
+    
     # ---- Toolbar Handlers
-
     def toggle_graphpannel(self):
         if self.graph_opt_panel.isVisible() is True:
             # Hide the panel.
@@ -601,15 +613,15 @@ class BRFViewer(QWidget):
         """
         Opens a dialog to select a file path where to save the brf figure.
         """
-        ddir = osp.join(self.__save_ddir,
-                        'brf_%s' % self.wldset['Well'])
+        ddir = osp.join(self.savedir, 'brf_%s' % self.wldset['Well'])
 
         dialog = QFileDialog()
         fname, ftype = dialog.getSaveFileName(
                 self, "Save Figure", ddir, '*.pdf;;*.svg')
         ftype = ftype.replace('*', '')
         if fname:
-            self.__save_ddir = osp.dirname(fname)
+            if not osp.samefile(osp.dirname(ddir), osp.dirname(fname)):
+                self.__save_ddir = osp.dirname(fname)
             if not fname.endswith(ftype):
                 fname = fname + ftype
             self.save_brf_fig(fname)
@@ -632,14 +644,15 @@ class BRFViewer(QWidget):
         fname = 'brf_' + self.wldset['Well']
         if self.wldset['Well ID']:
             fname += '_%s' % self.wldset['Well ID']
-        ddir = osp.join(self.__save_ddir, fname)
+        ddir = osp.join(self.savedir, fname)
 
         dialog = QFileDialog()
         fname, ftype = dialog.getSaveFileName(
                 self, "Export Data", ddir, "*.xlsx;;*.xls;;*.csv")
         ftype = ftype.replace('*', '')
         if fname:
-            self.__save_ddir = osp.dirname(fname)
+            if not osp.samefile(osp.dirname(ddir), osp.dirname(fname)):
+                self.__save_ddir = osp.dirname(fname)
             if not fname.endswith(ftype):
                 fname = fname + ftype
             self.export_brf_data(fname)
@@ -651,10 +664,8 @@ class BRFViewer(QWidget):
     # ---- Others
     def set_wldset(self, wldset):
         self.wldset = wldset
-        if wldset is None:
-            self.setEnabled(False)
-        else:
-            self.setEnabled(True)
+        self.setEnabled(wldset is not None)
+        if wldset is not None:
             self.update_brfnavigate_state()
 
     def plot_brf(self):
