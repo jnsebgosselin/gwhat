@@ -449,6 +449,10 @@ class WLDataFrameHDF5(WLDataFrameBase):
             return self.dset[key][...]
 
     @property
+    def dirname(self):
+        return os.path.dirname(self.dset.file.filename)
+
+    @property
     def name(self):
         return osp.basename(self.dset.name)
 
