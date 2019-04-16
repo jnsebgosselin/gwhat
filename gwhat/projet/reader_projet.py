@@ -668,18 +668,25 @@ class WLDataFrameHDF5(WLDataFrameBase):
                     datetime.datetime(*grp[key][...], 0).isoformat())
                 del grp[key]
                 flush = True
+        if 'detrending' not in grp.attrs.keys():
+            grp.attrs['detrending'] = ''
+            flush = True
         if flush:
             self.dset.file.flush()
 
         # Cast the data into a pandas dataframe.
-        dataf = pd.DataFrame({key: grp[key][...] for key in grp.keys()})
+        keys = ['Lag', 'A', 'sdA', 'SumA', 'sdSumA', 'B',
+                'sdB', 'SumB', 'sdSumB']
+        dataf = pd.DataFrame({key: grp[key][...] for key in keys})
         dataf.date_start = datetime.datetime.strptime(
             grp.attrs['date start'], "%Y-%m-%dT%H:%M:%S")
         dataf.date_end = datetime.datetime.strptime(
             grp.attrs['date end'], "%Y-%m-%dT%H:%M:%S")
+        dataf.detrending = grp.attrs['detrending']
+
         return dataf
 
-    def save_brf(self, dataf, date_start, date_end):
+    def save_brf(self, dataf, date_start, date_end, detrending=None):
         """
         Save the BRF results.
         """
@@ -699,6 +706,8 @@ class WLDataFrameHDF5(WLDataFrameBase):
                 column, data=dataf[column].values, dtype='float64')
         grp.attrs['date start'] = date_start.isoformat()
         grp.attrs['date end'] = date_end.isoformat()
+        grp.attrs['detrending'] = {
+            True: 'Yes', False: 'No', None: ''}[detrending]
 
         self.dset.file.flush()
         print('done')
@@ -712,8 +721,38 @@ class WLDataFrameHDF5(WLDataFrameBase):
         else:
             print('BRF does not exist')
 
-    # ---- Hydrograph layout
+    def export_brf_to_csv(self, filename, index):
+        """
+        Export the BRF results saved at the specified index in a CSV or
+        Excel file.
+        """
+        databrf = self.get_brf(self.get_brfname_at(index))
+        databrf.insert(0, 'LagNo', databrf.index.astype(int))
 
+        fcontent = [
+            ['Well Name :', self['Well']],
+            ['Well ID :', self['Well ID']],
+            ['Latitude :', self['Latitude']],
+            ['Longitude :', self['Longitude']],
+            ['Elevation :', self['Elevation']],
+            ['Municipality :', self['Municipality']],
+            ['Province :', self['Province']],
+            [],
+            ['BRF Start Time :',
+             databrf.date_start.strftime(format='%d/%m/%y %H:%M')],
+            ['BRF End Time :',
+             databrf.date_end.strftime(format='%d/%m/%y %H:%M')],
+            ['Number of BP Lags :', len(databrf['A']) - 1],
+            ['Number of ET Lags :',
+             len(databrf['B'].dropna(inplace=False)) - 1],
+            ['Developed with detrending :', databrf.detrending],
+            []]
+        fcontent.append(list(databrf.columns))
+        fcontent.extend(nan_as_text_tolist(databrf.values))
+
+        save_content_to_file(filename, fcontent)
+
+    # ---- Hydrograph layout
     def save_layout(self, layout):
         """Save the layout in the project hdf5 file."""
         grp = self.dset['layout']
@@ -907,7 +946,10 @@ if __name__ == '__main__':
 
     data = WLDSET.data
 
-    # GLUEDF = WLDSET.get_glue('1')
+    WLDSET.brf_count()
+
+    filename = 'C:/Users/User/Desktop/brf_test.csv'
+    WLDSET.export_brf_to_csv(filename, 0)
     # glue_count = GLUEDF['count']
     # dly_glue = GLUEDF['daily budget']
 
