@@ -677,8 +677,6 @@ class BRFViewer(QWidget):
             databrf = self.wldset.get_brf(name)
             well = self.wldset['Well']
 
-            if self.graph_opt_panel.show_ebar is False:
-                err = []
             msize = self.graph_opt_panel.markersize
             draw_line = self.graph_opt_panel.draw_line
 
