@@ -681,7 +681,8 @@ class WLDataFrameHDF5(WLDataFrameBase):
         # Cast the data into a pandas dataframe.
         keys = ['Lag', 'A', 'sdA', 'SumA', 'sdSumA', 'B',
                 'sdB', 'SumB', 'sdSumB']
-        dataf = pd.DataFrame({key: grp[key][...] for key in keys})
+        dataf = pd.DataFrame({key: grp[key][...] for key in keys if
+                              key in grp.keys()})
         dataf.date_start = datetime.datetime.strptime(
             grp.attrs['date start'], "%Y-%m-%dT%H:%M:%S")
         dataf.date_end = datetime.datetime.strptime(
