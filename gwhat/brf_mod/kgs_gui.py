@@ -523,7 +523,7 @@ class BRFViewer(QWidget):
         ml.addWidget(self.graph_opt_panel, 0, 3)
 
         ml.setColumnStretch(1, 100)
-        
+
     @property
     def savedir(self):
         """Return a path where figures and files are saved by default."""
@@ -536,7 +536,7 @@ class BRFViewer(QWidget):
                 return savedir
         else:
             return self.__save_ddir
-    
+
     # ---- Toolbar Handlers
     def toggle_graphpannel(self):
         if self.graph_opt_panel.isVisible() is True:
