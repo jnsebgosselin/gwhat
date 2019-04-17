@@ -734,6 +734,13 @@ class WLDataFrameHDF5(WLDataFrameBase):
         databrf = self.get_brf(self.get_brfname_at(index))
         databrf.insert(0, 'LagNo', databrf.index.astype(int))
 
+        brf_date_start = databrf.date_start.strftime(format='%d/%m/%y %H:%M')
+        brf_date_end = databrf.date_end.strftime(format='%d/%m/%y %H:%M')
+
+        nbr_bp_lags = len(databrf['SumA'].dropna(inplace=False)) - 1
+        nbr_et_lags = ('N/A' if 'SumB' not in databrf.columns else
+                       len(databrf['SumB'].dropna(inplace=False)) - 1)
+
         fcontent = [
             ['Well Name :', self['Well']],
             ['Well ID :', self['Well ID']],
@@ -743,15 +750,13 @@ class WLDataFrameHDF5(WLDataFrameBase):
             ['Municipality :', self['Municipality']],
             ['Province :', self['Province']],
             [],
-            ['BRF Start Time :',
-             databrf.date_start.strftime(format='%d/%m/%y %H:%M')],
-            ['BRF End Time :',
-             databrf.date_end.strftime(format='%d/%m/%y %H:%M')],
-            ['Number of BP Lags :', len(databrf['A']) - 1],
-            ['Number of ET Lags :',
-             len(databrf['B'].dropna(inplace=False)) - 1],
+            ['BRF Start Time :', brf_date_start],
+            ['BRF End Time :', brf_date_end],
+            ['Number of BP Lags :', nbr_bp_lags],
+            ['Number of ET Lags :', nbr_et_lags],
             ['Developed with detrending :', databrf.detrending],
-            []]
+            []
+            ]
         fcontent.append(list(databrf.columns))
         fcontent.extend(nan_as_text_tolist(databrf.values))
 
