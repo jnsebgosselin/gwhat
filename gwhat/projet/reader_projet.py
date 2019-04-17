@@ -946,15 +946,16 @@ if __name__ == '__main__':
     FNAME = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
     PROJET = ProjetReader(FNAME)
 
-    WLDSET = PROJET.get_wldset('3040002_15min')
-    print(WLDSET.glue_idnums())
+    wldset = PROJET.get_wldset('3040002_15min')
+    print(wldset.glue_idnums())
+    print(wldset.dirname)
 
-    data = WLDSET.data
+    data = wldset.data
 
-    WLDSET.brf_count()
+    wldset.brf_count()
 
     filename = 'C:/Users/User/Desktop/brf_test.csv'
-    WLDSET.export_brf_to_csv(filename, 0)
+    wldset.export_brf_to_csv(filename, 0)
     # glue_count = GLUEDF['count']
     # dly_glue = GLUEDF['daily budget']
 
