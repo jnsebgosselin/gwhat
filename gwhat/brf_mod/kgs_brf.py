@@ -135,7 +135,7 @@ def read_brf_output(filename=None):
     dataf = pd.DataFrame(data, columns=columns)
     dataf['LagNo'] = dataf['LagNo'].astype(int)
     dataf.set_index(['LagNo'], drop=True, inplace=True)
-    dataf[dataf <= -999] = np.nan
+    dataf[(dataf <= -999.999) & (dataf >= -999.9999)] = np.nan
 
     return dataf
 
