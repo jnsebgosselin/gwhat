@@ -307,7 +307,15 @@ class WHATPref(object):
 
     def save_pref_file(self):
         print('\nSaving WHAT preferences to file...')
-        fcontent = [['Project File:', os.path.relpath(self.projectfile)],
+        try:
+            fpath = osp.relpath(self.projectfile)
+        except ValueError:
+            # This probably means that the gwhat project is not saved on the
+            # same drive as the one where GHWAT is installed.
+            # See jnsebgosselin/gwhat#289.
+            fpath = osp.abspath(self.projectfile)
+
+        fcontent = [['Project File:', fpath],
                     ['Language:', self.language],
                     ['Font-Size-General:', self.fontsize_general],
                     ['Font-Size-Console:', self.fontsize_console],
