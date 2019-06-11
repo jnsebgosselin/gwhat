@@ -24,7 +24,7 @@ from matplotlib.figure import Figure as MplFigure
 from matplotlib.transforms import ScaledTranslation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QFileDialog, QApplication, QTableWidget,
@@ -38,7 +38,6 @@ from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
 from gwhat.common.widgets import DialogWindow
-from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.meteo.weather_reader import calcul_monthly_normals
 from gwhat.common.utils import save_content_to_file
@@ -54,6 +53,7 @@ class WeatherViewer(DialogWindow):
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
+
     def __init__(self, parent=None, workdir=None):
         super(WeatherViewer, self).__init__(parent, False, False)
 
