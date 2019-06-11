@@ -142,7 +142,7 @@ class WeatherStationFinder(QObject):
             self.sig_progress_msg.emit(
                     "Loading the climate station database from file.")
             ts = time.time()
-            self._data = np.load(DATABASE_FILEPATH).item()
+            self._data = np.load(DATABASE_FILEPATH, allow_pickle=True).item()
             te = time.time()
             print("Station list loaded sucessfully in %0.2f sec." % (te-ts))
             self.sig_load_database_finished.emit(True)
