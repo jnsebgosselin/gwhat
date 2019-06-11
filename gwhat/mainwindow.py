@@ -294,7 +294,7 @@ class WHATPref(object):
               of graphs).
     """
 
-    def __init__(self, parent=None):  # =======================================
+    def __init__(self, parent=None):
 
         self.projectfile = os.path.join(
             '..', 'Projects', 'Example', 'Example.gwt')
@@ -306,7 +306,7 @@ class WHATPref(object):
         self.load_pref_file()
 
     def save_pref_file(self):
-        print('\nSaving WHAT preferences to file...')
+        print('\n\rSaving WHAT preferences to file...', end=' ')
         try:
             fpath = osp.relpath(self.projectfile)
         except ValueError:
@@ -321,7 +321,7 @@ class WHATPref(object):
                     ['Font-Size-Console:', self.fontsize_console],
                     ['Font-Size-Menubar:', self.fontsize_menubar]]
         save_content_to_csv('WHAT.pref', fcontent)
-        print('WHAT preferences saved.')
+        print('done')
 
     def load_pref_file(self, circloop=False):
 
