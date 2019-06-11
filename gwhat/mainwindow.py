@@ -294,7 +294,7 @@ class WHATPref(object):
               of graphs).
     """
 
-    def __init__(self, parent=None):  # =======================================
+    def __init__(self, parent=None):
 
         self.projectfile = os.path.join(
             '..', 'Projects', 'Example', 'Example.gwt')
@@ -306,14 +306,25 @@ class WHATPref(object):
         self.load_pref_file()
 
     def save_pref_file(self):
-        print('\nSaving WHAT preferences to file...')
-        fcontent = [['Project File:', os.path.relpath(self.projectfile)],
+        """
+        Save the GWHAT user preferences to file.
+        """
+        print('\n\rSaving WHAT preferences to file...', end=' ')
+        try:
+            fpath = osp.relpath(self.projectfile)
+        except ValueError:
+            # This probably means that the gwhat project is not saved on the
+            # same drive as the one where GHWAT is installed.
+            # See jnsebgosselin/gwhat#289.
+            fpath = osp.abspath(self.projectfile)
+
+        fcontent = [['Project File:', fpath],
                     ['Language:', self.language],
                     ['Font-Size-General:', self.fontsize_general],
                     ['Font-Size-Console:', self.fontsize_console],
                     ['Font-Size-Menubar:', self.fontsize_menubar]]
         save_content_to_csv('WHAT.pref', fcontent)
-        print('WHAT preferences saved.')
+        print('done')
 
     def load_pref_file(self, circloop=False):
 
