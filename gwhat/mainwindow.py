@@ -306,6 +306,9 @@ class WHATPref(object):
         self.load_pref_file()
 
     def save_pref_file(self):
+        """
+        Save the GWHAT user preferences to file.
+        """
         print('\n\rSaving WHAT preferences to file...', end=' ')
         try:
             fpath = osp.relpath(self.projectfile)
