@@ -11,7 +11,8 @@
 
 # ---- Imports: third parties
 
-import matplotlib as mpl
+from matplotlib.transforms import ScaledTranslation
+from matplotlib.figure import Figure
 import numpy as np
 
 
@@ -31,7 +32,7 @@ class FigureLabels(object):
             self.title = ('Well %s from %s to %s')
 
 
-class BRFFigure(mpl.figure.Figure):
+class BRFFigure(Figure):
     def __init__(self, lang='English'):
         super(BRFFigure, self).__init__()
         lang = lang if lang.lower() in FigureLabels.LANGUAGES else 'English'
@@ -77,8 +78,7 @@ class BRFFigure(mpl.figure.Figure):
 
         self.errbar, = ax.plot([], [])
 
-        offset = mpl.transforms.ScaledTranslation(
-                0, -5/72, self.dpi_scale_trans)
+        offset = ScaledTranslation(0, -5/72, self.dpi_scale_trans)
 
         self.title = ax.text(0.5, 1, '', ha='center', va='top', fontsize=14,
                              transform=ax.transAxes+offset)

@@ -19,9 +19,12 @@ from datetime import datetime
 
 import numpy as np
 import matplotlib as mpl
+from matplotlib.patches import Rectangle
+from matplotlib.figure import Figure as MplFigure
+from matplotlib.transforms import ScaledTranslation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QFileDialog, QApplication, QTableWidget,
@@ -35,7 +38,6 @@ from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
 from gwhat.common.widgets import DialogWindow
-from gwhat.widgets.layout import VSep
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.meteo.weather_reader import calcul_monthly_normals
 from gwhat.common.utils import save_content_to_file
@@ -51,6 +53,7 @@ class WeatherViewer(DialogWindow):
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
+
     def __init__(self, parent=None, workdir=None):
         super(WeatherViewer, self).__init__(parent, False, False)
 
@@ -350,7 +353,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.normals = None
 
         fw, fh = 8.5, 5.
-        fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
+        fig = MplFigure(figsize=(fw, fh), facecolor='white')
         super(FigWeatherNormals, self).__init__(fig)
 
         # Define the Margins :
@@ -379,7 +382,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # padding of 5 points and downward padding of 3 points.
 
         dx, dy = 5/72., -3/72.
-        padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
+        padding = ScaledTranslation(dx, dy, fig.dpi_scale_trans)
         transform = ax3.transAxes + padding
 
         ax3.text(0., 1., 'Mean Annual Air Temperature',
@@ -531,8 +534,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # bbox transform :
 
-        padding = mpl.transforms.ScaledTranslation(5/72, -5/72,
-                                                   self.figure.dpi_scale_trans)
+        padding = ScaledTranslation(5/72, -5/72, self.figure.dpi_scale_trans)
         transform = ax.transAxes + padding
 
         # Define proxy artists :
@@ -540,10 +542,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         colors = ColorsReader()
         colors.load_colors_db()
 
-        rec1 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                     fc=colors.rgb['Snow'], ec='none')
-        rec2 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                     fc=colors.rgb['Rain'], ec='none')
+        rec1 = Rectangle((0, 0), 1, 1, fc=colors.rgb['Snow'], ec='none')
+        rec2 = Rectangle((0, 0), 1, 1, fc=colors.rgb['Rain'], ec='none')
 
         # Define the legend labels and markers :
 

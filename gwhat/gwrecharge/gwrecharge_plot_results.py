@@ -18,7 +18,7 @@ from xlrd.xldate import xldate_from_date_tuple
 import numpy as np
 import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
-from matplotlib.figure import Figure as MPLFigure
+from matplotlib.figure import Figure as MplFigure
 
 from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtCore import pyqtSlot as QSlot
@@ -741,7 +741,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
     This is the base figure format to plot GLUE results.
     """
     FIGNAME = "figure_name"
-    sig_fig_changed = QSignal(MPLFigure)
+    sig_fig_changed = QSignal(MplFigure)
     sig_newfig_plotted = QSignal(dict)
 
     colors = {'dark grey': '0.65',
@@ -751,7 +751,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
     MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
 
     def __init__(self, setp={}):
-        super(FigCanvasBase, self).__init__(mpl.figure.Figure())
+        super(FigCanvasBase, self).__init__(MplFigure())
         self.xticklabels = []
         self.notes = []
         self._xticklabels_yt = 0
