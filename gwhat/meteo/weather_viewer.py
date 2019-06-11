@@ -19,6 +19,9 @@ from datetime import datetime
 
 import numpy as np
 import matplotlib as mpl
+from matplotlib.patches import Rectangle
+from matplotlib.figure import Figure as MplFigure
+from matplotlib.transforms import ScaledTranslation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 from PyQt5.QtCore import Qt, QSize
@@ -350,7 +353,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.normals = None
 
         fw, fh = 8.5, 5.
-        fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
+        fig = MplFigure(figsize=(fw, fh), facecolor='white')
         super(FigWeatherNormals, self).__init__(fig)
 
         # Define the Margins :
@@ -379,7 +382,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # padding of 5 points and downward padding of 3 points.
 
         dx, dy = 5/72., -3/72.
-        padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
+        padding = ScaledTranslation(dx, dy, fig.dpi_scale_trans)
         transform = ax3.transAxes + padding
 
         ax3.text(0., 1., 'Mean Annual Air Temperature',
@@ -531,8 +534,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # bbox transform :
 
-        padding = mpl.transforms.ScaledTranslation(5/72, -5/72,
-                                                   self.figure.dpi_scale_trans)
+        padding = ScaledTranslation(5/72, -5/72, self.figure.dpi_scale_trans)
         transform = ax.transAxes + padding
 
         # Define proxy artists :
@@ -540,10 +542,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         colors = ColorsReader()
         colors.load_colors_db()
 
-        rec1 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                     fc=colors.rgb['Snow'], ec='none')
-        rec2 = mpl.patches.Rectangle((0, 0), 1, 1,
-                                     fc=colors.rgb['Rain'], ec='none')
+        rec1 = Rectangle((0, 0), 1, 1, fc=colors.rgb['Snow'], ec='none')
+        rec2 = Rectangle((0, 0), 1, 1, fc=colors.rgb['Rain'], ec='none')
 
         # Define the legend labels and markers :
 
