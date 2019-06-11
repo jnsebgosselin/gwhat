@@ -25,7 +25,7 @@ from PyQt5.QtWidgets import (
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
-from matplotlib.figure import Figure
+from matplotlib.figure import Figure as MplFigure
 from matplotlib.patches import Rectangle
 from matplotlib.transforms import ScaledTranslation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
@@ -121,7 +121,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # ---- Setup the canvas
 
-        self.fig = Figure(facecolor='white')
+        self.fig = MplFigure(facecolor='white')
         self.canvas = FigureCanvasQTAgg(self.fig)
 
         self.canvas.mpl_connect('button_press_event', self.onclick)
