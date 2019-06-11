@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import (QWidget, QPushButton, QGridLayout, QFrame,
 import numpy as np
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
-import matplotlib as mpl
+from matplotlib.figure import Figure as MplFigure
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
@@ -826,7 +826,7 @@ class StaLocManager(QWidget):
     def __init__(self, *args, **kwargs):
         super(StaLocManager, self).__init__(*args, **kwargs)
 
-        self.figure = mpl.figure.Figure()
+        self.figure = MplFigure()
         self.canvas = FigureCanvasQTAgg(self.figure)
         toolbar = NavigationToolbar2QT(self.canvas, self)
 

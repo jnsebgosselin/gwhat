@@ -16,7 +16,6 @@ import datetime
 
 # ---- Third party imports
 import numpy as np
-from matplotlib.patches import Rectangle
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -25,6 +24,10 @@ from PyQt5.QtWidgets import (
     QTabWidget, QApplication, QWidget)
 
 import matplotlib as mpl
+import matplotlib.dates as mdates
+from matplotlib.figure import Figure as MplFigure
+from matplotlib.patches import Rectangle
+from matplotlib.transforms import ScaledTranslation
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
@@ -118,7 +121,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # ---- Setup the canvas
 
-        self.fig = mpl.figure.Figure(facecolor='white')
+        self.fig = MplFigure(facecolor='white')
         self.canvas = FigureCanvasQTAgg(self.fig)
 
         self.canvas.mpl_connect('button_press_event', self.onclick)
@@ -237,8 +240,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # x and y coorrdinate labels displayed at the right-bottom corner
         # of the graph
-        offset = mpl.transforms.ScaledTranslation(
-            -5/72, 5/72, self.fig.dpi_scale_trans)
+        offset = ScaledTranslation(-5/72, 5/72, self.fig.dpi_scale_trans)
         self.xycoord = ax0.text(
             1, 0, '', ha='right', transform=ax0.transAxes + offset)
         self.xycoord.set_visible(False)

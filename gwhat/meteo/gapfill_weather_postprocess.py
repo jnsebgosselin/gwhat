@@ -8,13 +8,12 @@
 
 
 # ---- Standard Library Imports
-
 import csv
 import os
 
 # ---- Third Party Imports
-
-import matplotlib as mpl
+from matplotlib.figure import Figure as MplFigure
+from matplotlib.transforms import ScaledTranslation
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 
 import numpy as np
@@ -23,7 +22,6 @@ from scipy.stats._continuous_distns import gamma
 from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local Library Imports
-
 from gwhat.common.utils import save_content_to_csv
 
 
@@ -231,7 +229,7 @@ def plot_est_err(Ymes, Ypre, varName, fname, language='English'):
     Ymin = np.floor(np.min(Ymes)/10)*10
 
     fw, fh = 6, 6
-    fig = mpl.figure.Figure(figsize=(fw, fh))
+    fig = MplFigure(figsize=(fw, fh))
     canvas = FigureCanvas(fig)
 
     # ---- Create Axes
@@ -303,8 +301,7 @@ def plot_est_err(Ymes, Ypre, varName, fname, language='English'):
     tcontent = list(reversed(tcontent))
     for i in range(len(tcontent)):
         dx, dy = -10 / 72., 10 * (i+1) / 72.
-        padding = mpl.transforms.ScaledTranslation(dx, dy,
-                                                   fig.dpi_scale_trans)
+        padding = ScaledTranslation(dx, dy, fig.dpi_scale_trans)
         transform = ax0.transAxes + padding
         ax0.text(0, 0, tcontent[i], ha='left', va='bottom', fontsize=16,
                  transform=transform)
@@ -387,7 +384,7 @@ def plot_est_err(Ymes, Ypre, varName, fname, language='English'):
 def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
 
     fw, fh = 6, 6
-    fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
+    fig = MplFigure(figsize=(fw, fh), facecolor='white')
     canvas = FigureCanvas(fig)
 
     # ---- Create Axes
@@ -504,7 +501,7 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
     bbox = bbox.transformed(ax0.transAxes.inverted())
 
     dx, dy = 5/72., 5/72.
-    padding = mpl.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
+    padding = ScaledTranslation(dx, dy, fig.dpi_scale_trans)
     transform = ax0.transAxes + padding
 
     ax0.text(0., 0., msg, transform=transform, va='bottom', ha='left')
@@ -518,7 +515,7 @@ def plot_gamma_dist(Ymes, Ypre, fname, language='English'):
 def plot_rmse_vs_time(Ymes, Ypre, Time, Date, name):
 
     fw, fh = 6, 6
-    fig = mpl.figure.Figure(figsize=(fw, fh), facecolor='white')
+    fig = MplFigure(figsize=(fw, fh), facecolor='white')
     canvas = FigureCanvas(fig)
 
     # ---- Create Axes
