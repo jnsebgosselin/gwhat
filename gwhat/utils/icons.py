@@ -61,7 +61,6 @@ GWHAT_ICONS = {
     'home': 'home',
     'mrc_calc': 'MRCalc',
     'edit': 'edit',
-    'pan': 'pan',
     'add_point': 'add_point',
     'erase': 'erase',
     'erase2': 'erase2',
@@ -98,7 +97,12 @@ GWHAT_ICONS = {
 
 COLOR = '#4d4d4d'
 GREEN = '#00aa00'
+RED = '#aa0000'
+
 FA_ICONS = {
+    'clear_changes': [
+        ('mdi.close-circle-outline',),
+        {'color': RED, 'scale_factor': 1.3}],
     'close_all': [
         ('fa.close', 'fa.close', 'fa.close'),
         {'options': [{'scale_factor': 0.6,
@@ -110,15 +114,27 @@ FA_ICONS = {
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
                       'color': COLOR}]}],
-    'erase_data': [
-        ('mdi.eraser',),
-        {'color': COLOR, 'scale_factor': 1.3}],
-    'delete_data': [
-        ('mdi.delete-forever',),
-        {'color': COLOR, 'scale_factor': 1.4}],
     'commit_changes': [
         ('mdi.check-circle-outline',),
         {'color': GREEN, 'scale_factor': 1.3}],
+    'delete_data': [
+        ('mdi.delete-forever',),
+        {'color': COLOR, 'scale_factor': 1.4}],
+    'erase_data': [
+        ('mdi.eraser',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'expand_all': [
+        ('mdi.arrow-expand-all',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'pan': [
+        ('mdi.pan',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'undo_changes': [
+        ('mdi.undo-variant',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'copy_clipboard': [
+        ('mdi.content-copy',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     }
 
 ICON_SIZES = {'large': (32, 32),
@@ -142,12 +158,23 @@ def get_iconsize(size):
 
 
 class QToolButtonBase(QToolButton):
+    """A basic tool button."""
+
     def __init__(self, icon, *args, **kargs):
         super(QToolButtonBase, self).__init__(*args, **kargs)
         icon = get_icon(icon) if isinstance(icon, str) else icon
         self.setIcon(icon)
         self.setAutoRaise(True)
         self.setFocusPolicy(Qt.NoFocus)
+
+    def setToolTip(self, ttip):
+        """
+        Qt method override to ensure tooltips are enclosed in <p></p> so
+        that they wraps correctly.
+        """
+        ttip = ttip if ttip.startswith('<p>') else '<p>' + ttip
+        ttip = ttip if ttip.endswith('</p>') else ttip + '</p>'
+        super().setToolTip(ttip)
 
 
 class QToolButtonNormal(QToolButtonBase):

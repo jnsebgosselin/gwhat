@@ -206,7 +206,7 @@ class ProjetManager(QWidget):
         try:
             backup = ProjetReader(filename + '.bak')
             assert backup.check_project_file() is True
-            backup.close_projet()
+            backup.close()
         except Exception:
             msg_box.exec_()
             return False
@@ -218,6 +218,7 @@ class ProjetManager(QWidget):
             copyfile(filename + '.bak', filename)
         except (OSError, PermissionError):
             print('failed')
+            msg_box.exec_()
             return False
         else:
             print('done')
@@ -226,7 +227,7 @@ class ProjetManager(QWidget):
     def close_projet(self):
         """Close the currently opened hdf5 project file."""
         if self.projet is not None:
-            self.projet.close_projet()
+            self.projet.close()
             self.projet = None
 
     def show_newproject_dialog(self):

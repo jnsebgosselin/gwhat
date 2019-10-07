@@ -16,7 +16,7 @@ from PyQt5.QtCore import Qt
 
 # ---- Local Libraries Imports
 from gwhat.meteo.weather_reader import WXDataFrame
-from gwhat.projet.reader_waterlvl import read_water_level_datafile
+from gwhat.projet.reader_waterlvl import WLDataFrame
 from gwhat.HydroPrint2 import (HydroprintGUI, PageSetupWin, QFileDialog,
                                QMessageBox)
 from gwhat.projet.manager_data import DataManager
@@ -49,7 +49,7 @@ def project(projectpath):
         project.add_wxdset(wxdset['Station Name'], wxdset)
 
     # Add the water level dataset to the project.
-    wldset = read_water_level_datafile(WLFILENAME)
+    wldset = WLDataFrame(WLFILENAME)
     project.add_wldset(wldset['Well'], wldset)
     return project
 

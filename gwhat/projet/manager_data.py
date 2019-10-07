@@ -12,6 +12,7 @@ import os
 import os.path as osp
 
 # ---- Third party imports
+import numpy as np
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
@@ -23,10 +24,11 @@ from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
 from gwhat.utils.icons import QToolButtonSmall
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
-from gwhat.hydrograph4 import LatLong2Dist
-import gwhat.projet.reader_waterlvl as wlrd
-from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
-import gwhat.meteo.weather_reader as wxrd
+from gwhat.common.utils import calc_dist_from_coord
+from gwhat.projet.reader_waterlvl import WLDataFrame
+from gwhat.projet.reader_projet import (INVALID_CHARS, is_dsetname_valid,
+                                        make_dsetname_valid)
+from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.widgets.spinboxes import StrSpinBox
 
@@ -43,6 +45,9 @@ class DataManager(QWidget):
         self._pytesting = pytesting
         self._projet = projet
         self._confirm_before_deleting_dset = True
+
+        self._wldset = None
+        self._wxdset = None
 
         self.setWindowFlags(Qt.Window)
         self.setWindowIcon(icons.get_icon('master'))
@@ -82,7 +87,6 @@ class DataManager(QWidget):
         # ---- Toolbar
 
         self.wldsets_cbox = QComboBox()
-        self.wldsets_cbox.currentIndexChanged.connect(self.update_wldset_info)
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
         self.btn_load_wl = QToolButtonSmall(icons.get_icon('importFile'))
@@ -119,7 +123,6 @@ class DataManager(QWidget):
         # ---- Toolbar
 
         self.wxdsets_cbox = QComboBox()
-        self.wxdsets_cbox.currentIndexChanged.connect(self.update_wxdset_info)
         self.wxdsets_cbox.currentIndexChanged.connect(self.wxdset_changed)
 
         self.btn_load_meteo = QToolButtonSmall(icons.get_icon('importFile'))
@@ -181,13 +184,11 @@ class DataManager(QWidget):
     def set_projet(self, projet):
         """Set the namespace for the projet hdf5 file."""
         self._projet = projet
+        self._wldset = None
+        self._wxdset = None
         if projet is not None:
-            self.update_wldsets()
-            self.update_wxdsets()
-
-            self.update_wldset_info()
-            self.update_wxdset_info()
-
+            self.update_wldsets(projet.get_last_opened_wldset())
+            self.update_wxdsets(projet.get_last_opened_wxdset())
             self.wldset_changed()
 
         self.btn_export_weather.set_model(self.get_current_wxdset())
@@ -256,7 +257,6 @@ class DataManager(QWidget):
         print("Saving the new water level dataset in the project...", end=" ")
         self.projet.add_wldset(name, dataset)
         self.update_wldsets(name)
-        self.update_wldset_info()
         self.wldset_changed()
         print("done")
 
@@ -285,14 +285,26 @@ class DataManager(QWidget):
 
     def wldset_changed(self):
         """Handle when the currently selected water level dataset changed."""
+        QApplication.processEvents()
+        self.update_wldset_info()
         self.wldsetChanged.emit(self.get_current_wldset())
 
     def get_current_wldset(self):
         """Return the currently selected water level dataset."""
         if self.wldsets_cbox.currentIndex() == -1:
-            return None
+            self._wldset = None
         else:
-            return self.projet.get_wldset(self.wldsets_cbox.currentText())
+            cbox_text = self.wldsets_cbox.currentText()
+            if self._wldset is None or self._wldset.name != cbox_text:
+                self._wldset = self.projet.get_wldset(cbox_text)
+        return self._wldset
+
+    def set_current_wldset(self, name):
+        """Set the current water level from its name."""
+        self.wldsets_cbox.blockSignals(True)
+        self.wldsets_cbox.setCurrentIndex(self.wldsets_cbox.findText(name))
+        self.wldsets_cbox.blockSignals(False)
+        self.wldset_changed()
 
     def del_current_wldset(self):
         """Delete the currently selected water level dataset."""
@@ -305,9 +317,9 @@ class DataManager(QWidget):
                     return
                 elif reply == QMessageBox.Yes:
                     self._confirm_before_deleting_dset = dont_show_again
+            self._wldset = None
             self.projet.del_wldset(dsetname)
             self.update_wldsets()
-            self.update_wldset_info()
             self.wldset_changed()
             self.sig_new_console_msg.emit((
                 "<font color=black>Water level dataset <i>{}</i> deleted "
@@ -344,7 +356,6 @@ class DataManager(QWidget):
         print("Saving the new weather dataset in the project.", end=" ")
         self.projet.add_wxdset(name, dataset)
         self.update_wxdsets(name)
-        self.update_wxdset_info()
         self.wxdset_changed()
         print("done")
 
@@ -372,6 +383,8 @@ class DataManager(QWidget):
 
     def wxdset_changed(self):
         """Handle when the currently selected weather dataset changed."""
+        QApplication.processEvents()
+        self.update_wxdset_info()
         self.btn_export_weather.set_model(self.get_current_wxdset())
         self.wxdsetChanged.emit(self.get_current_wxdset())
 
@@ -386,9 +399,9 @@ class DataManager(QWidget):
                     return
                 elif reply == QMessageBox.Yes:
                     self._confirm_before_deleting_dset = dont_show_again
+            self._wxdset = None
             self.projet.del_wxdset(dsetname)
             self.update_wxdsets()
-            self.update_wxdset_info()
             self.wxdset_changed()
             self.sig_new_console_msg.emit((
                 "<font color=black>Weather dataset <i>{}</i> deleted "
@@ -397,39 +410,35 @@ class DataManager(QWidget):
     def get_current_wxdset(self):
         """Return the currently selected weather dataset dataframe."""
         if self.wxdsets_cbox.currentIndex() == -1:
-            return None
+            self._wxdset = None
         else:
-            return self.projet.get_wxdset(self.wxdsets_cbox.currentText())
+            cbox_text = self.wxdsets_cbox.currentText()
+            if self._wxdset is None or self._wxdset.name != cbox_text:
+                self._wxdset = self.projet.get_wxdset(cbox_text)
+        return self._wxdset
 
     def set_current_wxdset(self, name):
+        """Set the current weather dataset from its name."""
         self.wxdsets_cbox.blockSignals(True)
         self.wxdsets_cbox.setCurrentIndex(self.wxdsets_cbox.findText(name))
         self.wxdsets_cbox.blockSignals(False)
-
-        self.update_wxdset_info()
         self.wxdset_changed()
 
     def set_closest_wxdset(self):
-        if self.wldataset_count() == 0:
-            return
+        """
+        Set the weather dataset of the station that is closest to the
+        groundwater observation well.
+        """
+        if self._wldset is None or self.wxdataset_count() == 0:
+            return None
 
-        wldset = self.get_current_wldset()
-        lat1 = wldset['Latitude']
-        lon1 = wldset['Longitude']
-
-        mindist = 10**16
-        closest = None
-        for name in self.wxdsets:
-            wxdset = self.projet.get_wxdset(name)
-            lat2 = wxdset['Latitude']
-            lon2 = wxdset['Longitude']
-            newdist = LatLong2Dist(lat1, lon1, lat2, lon2)
-
-            if newdist < mindist:
-                closest = wxdset.name
-                mindist = newdist
-
-        self.set_current_wxdset(closest)
+        dist = calc_dist_from_coord(self._wldset['Latitude'],
+                                    self._wldset['Longitude'],
+                                    self.projet.get_wxdsets_lat(),
+                                    self.projet.get_wxdsets_lon())
+        closest_station = self.wxdsets[np.argmin(dist)]
+        self.set_current_wxdset(closest_station)
+        return closest_station
 
     def show_weather_normals(self):
         """Show the weather normals for the current weather dataset."""
@@ -687,9 +696,9 @@ class NewDatasetDialog(QDialog):
 
         try:
             if self._datatype == 'water level':
-                self._dataset = wlrd.read_water_level_datafile(filename)
+                self._dataset = WLDataFrame(filename)
             elif self._datatype == 'daily weather':
-                self._dataset = wxrd.WXDataFrame(filename)
+                self._dataset = WXDataFrame(filename)
         except Exception:
             self._dataset = None
 
@@ -798,12 +807,11 @@ class NewDatasetDialog(QDialog):
         self.update_gui()
 
 
-# %% if __name__ == '__main__'
-
 if __name__ == '__main__':
-    from reader_projet import ProjetReader
     import sys
-    projet = ProjetReader("C:/Users/jsgosselin/gwhat/Projects/Example/Example.gwt")
+    from gwhat.projet.reader_projet import ProjetReader
+    projet = ProjetReader(
+        "C:/Users/jsgosselin/gwhat/Projects/Example/Example.gwt")
 
     app = QApplication(sys.argv)
 

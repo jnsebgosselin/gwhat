@@ -29,7 +29,7 @@ from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
-
+from gwhat.common.utils import calc_dist_from_coord
 from gwhat.colors2 import ColorsReader
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
@@ -374,8 +374,9 @@ class Hydrograph(Figure):
         # Calculate horizontal distance between weather station and
         # observation well.
         if self.wxdset is not None:
-            self.dist = LatLong2Dist(wldset['Latitude'], wldset['Longitude'],
-                                     wxdset['Latitude'], wxdset['Longitude'])
+            self.dist = calc_dist_from_coord(
+                wldset['Latitude'], wldset['Longitude'],
+                wxdset['Latitude'], wxdset['Longitude'])
         else:
             self.dist = 0
 
@@ -855,7 +856,7 @@ class Hydrograph(Figure):
 
         # ---- Logger Measures
 
-        time = self.wldset['Time']
+        time = self.wldset.xldates
         if self.WLdatum == 1:  # masl
             water_lvl = self.wldset['Elevation']-self.wldset['WL']
         else:  # mbgs -> yaxis is inverted
@@ -1242,46 +1243,6 @@ def filt_data(time, waterlvl, N):
     return tf, wlf
 
 
-def LatLong2Dist(LAT1, LON1, LAT2, LON2):
-    """
-    Computes the horizontal distance in km between 2 points from geographic
-    coordinates given in decimal degrees.
-
-    ---- INPUT ----
-
-    LAT1 = latitute coordinate of first point
-    LON1 = longitude coordinate of first point
-    LAT2 = latitude coordinate of second point
-    LON2 = longitude coordinate of second point
-
-    ---- OUTPUT ----
-
-    DIST = horizontal distance between the two points in km
-
-    ---- SOURCE ----
-
-    www.stackoverflow.com/questions/19412462 (last accessed on 17/01/2014)
-    """
-
-    R = 6373.0  # R = Earth radius in km
-
-    # Convert decimal degrees to radians.
-    LAT1 = radians(LAT1)
-    LON1 = radians(LON1)
-    LAT2 = radians(LAT2)
-    LON2 = radians(LON2)
-
-    # Compute the horizontal distance between the two points in km.
-    dLON = LON2 - LON1
-    dLAT = LAT2 - LAT1
-    a = (sin(dLAT/2))**2 + cos(LAT1) * cos(LAT2) * (sin(dLON/2))**2
-    c = 2 * atan2(sqrt(a), sqrt(1-a))
-
-    DIST = R * c
-
-    return DIST
-
-
 if __name__ == '__main__':
 
     from PyQt5.QtWidgets import QApplication
@@ -1333,7 +1294,7 @@ if __name__ == '__main__':
         # 0: daily | 1: weekly | 2: monthly | 3: yearly
         hydrograph.RAINscale = 100
 
-        hydrograph.best_fit_time(wldset['Time'])
+        hydrograph.best_fit_time(wldset.xldate)
         hydrograph.best_fit_waterlvl()
         hydrograph.generate_hydrograph()
 #

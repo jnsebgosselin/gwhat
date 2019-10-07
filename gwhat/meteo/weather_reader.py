@@ -7,7 +7,7 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Standard Library imports
+# ---- Standard library imports
 
 import os
 import os.path as osp
@@ -17,14 +17,14 @@ from time import strftime
 from collections.abc import Mapping
 from abc import abstractmethod
 
-# ---- Third Party imports
+# ---- Third party imports
 
 import numpy as np
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 
-# ---- Local Library imports
+# ---- Local library imports
 
 from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
 from gwhat.common.utils import save_content_to_csv, save_content_to_file

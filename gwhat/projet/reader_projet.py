@@ -10,16 +10,18 @@ from __future__ import division, unicode_literals
 
 # ---- Standard library imports
 import os
-import csv
 import os.path as osp
 from shutil import copyfile
 
 # ---- Third party imports
 import h5py
 import numpy as np
+import pandas as pd
+import datetime
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrameBase
+from gwhat.projet.reader_waterlvl import WLDataFrameBase, WLDataset
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
@@ -33,7 +35,7 @@ class ProjetReader(object):
         self.load_projet(filename)
 
     def __del__(self):
-        self.close_projet()
+        self.close()
 
     @property
     def db(self):  # project data base
@@ -49,7 +51,7 @@ class ProjetReader(object):
 
     def load_projet(self, filename):
         """Open the hdf5 project file."""
-        self.close_projet()
+        self.close()
         print("Loading project from '{}'... ".format(osp.basename(filename)),
               end='')
         try:
@@ -74,8 +76,11 @@ class ProjetReader(object):
         for key in ['wldsets', 'wxdsets']:
             if key not in list(self.db.keys()):
                 self.db.create_group(key)
+            if 'last_opened' not in list(self.db[key].attrs.keys()):
+                # Added in version 0.4.0 (see PR #267)
+                self.db[key].attrs['last_opened'] = 'None'
 
-    def close_projet(self):
+    def close(self):
         """Close the project hdf5 file."""
         try:
             self.db.close()
@@ -119,7 +124,6 @@ class ProjetReader(object):
         else:
             print('done')
             return True
-
 
     # ---- Project Properties
     @property
@@ -179,7 +183,6 @@ class ProjetReader(object):
         self.db.attrs['longitude'] = x
 
     # ---- Water Levels Dataset Handlers
-
     @property
     def wldsets(self):
         """
@@ -188,13 +191,25 @@ class ProjetReader(object):
         """
         return list(self.db['wldsets'].keys())
 
+    def get_last_opened_wldset(self):
+        """
+        Return the name of the last opened water level dataset in the project
+        if any.
+        """
+        name = self.db['wldsets'].attrs['last_opened']
+        return None if name == 'None' else name
+
     def get_wldset(self, name):
         """
         Return the water level dataset corresponding to the provided name.
         """
+        print("Getting wldset {}...".format(name), end=' ')
         if name in self.wldsets:
+            self.db['wldsets'].attrs['last_opened'] = name
+            print('done')
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
+            print('failed')
             return None
 
     def add_wldset(self, name, df):
@@ -211,10 +226,16 @@ class ProjetReader(object):
             grp = self.db['wldsets'].create_group(name)
 
             # Water level data
-            grp.create_dataset('Time', data=df['Time'])
-            grp.create_dataset('WL', data=df['WL'])
-            grp.create_dataset('BP', data=df['BP'])
-            grp.create_dataset('ET', data=df['ET'])
+            grp.create_dataset(
+                'Time',
+                data=np.array(df['Time'], dtype=h5py.special_dtype(vlen=str)))
+            # See http://docs.h5py.org/en/latest/strings.html as to why this
+            # is necessary to do this in order to save a list of strings in
+            # a dataset with h5py.
+
+            grp.create_dataset('WL', data=np.copy(df['WL']))
+            grp.create_dataset('BP', data=np.copy(df['BP']))
+            grp.create_dataset('ET', data=np.copy(df['ET']))
 
             # Piezometric well info
             grp.attrs['filename'] = df['filename']
@@ -267,7 +288,6 @@ class ProjetReader(object):
         self.db.flush()
 
     # ---- Weather Dataset Handlers
-
     @property
     def wxdsets(self):
         """
@@ -276,13 +296,39 @@ class ProjetReader(object):
         """
         return list(self.db['wxdsets'].keys())
 
+    def get_wxdsets_lat(self):
+        """
+        Return a list with the latitude coordinates of the weather datasets.
+        """
+        return [self.db['wxdsets/%s' % name].attrs['Latitude'] for
+                name in self.wxdsets]
+
+    def get_wxdsets_lon(self):
+        """
+        Return a list with the longitude coordinates of the weather datasets.
+        """
+        return [self.db['wxdsets/%s' % name].attrs['Longitude'] for
+                name in self.wxdsets]
+
+    def get_last_opened_wxdset(self):
+        """
+        Return the name of the last opened weather dataset in the project
+        if any.
+        """
+        name = self.db['wxdsets'].attrs['last_opened']
+        return None if name == 'None' else name
+
     def get_wxdset(self, name):
         """
         Return the weather dataset corresponding to the provided name.
         """
+        print("Getting wxdset {}...".format(name), end=' ')
         if name in self.wxdsets:
+            print('done')
+            self.db['wxdsets'].attrs['last_opened'] = name
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
+            print('failed')
             return None
 
     def add_wxdset(self, name, df):
@@ -344,7 +390,7 @@ class ProjetReader(object):
         self.db.flush()
 
 
-class WLDataFrameHDF5(dict):
+class WLDataFrameHDF5(WLDataFrameBase):
     """
     This is a wrapper around the h5py group that is used to store
     water level datasets. It mimick the structure of the DataFrame that
@@ -352,19 +398,44 @@ class WLDataFrameHDF5(dict):
     reader_waterlvl module.
     """
 
-    def __init__(self, dset, *args, **kwargs):
+    def __init__(self, hdf5group, *args, **kwargs):
         super(WLDataFrameHDF5, self).__init__(*args, **kwargs)
-        self.dset = dset
+        self.__load_dataset__(hdf5group)
 
-        # Make older datasets compatible with newer format :
+    def __load_dataset__(self, hdf5group):
+        self.dset = hdf5group
+        self._undo_stack = []
 
+        columns = []
+        data = []
+        for colname in ['Time', 'WL', 'BP', 'ET']:
+            if len(self.dset[colname][...]):
+                data.append(self.dset[colname][...])
+                columns.append(colname)
+        data = np.vstack(tuple(data)).transpose()
+        columns = tuple(columns)
+        self._dataf = WLDataset(data, columns)
+
+        # Make older datasets compatible with newer format.
+        if isinstance(self.dset['Time'][0], (int, float)):
+            # Time needs to be converted from Excel numeric dates
+            # to ISO date strings (see PR #276).
+            print('Saving time as ISO date strings instead of Excel dates...',
+                  end=' ')
+            del self.dset['Time']
+            self.dset.create_dataset(
+                'Time',
+                data=np.array(self.strftime,
+                              dtype=h5py.special_dtype(vlen=str)))
+            self.dset.file.flush()
+            print('done')
         if 'Well ID' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
-            dset.attrs['Well ID'] = ""
+            self.dset.attrs['Well ID'] = ""
             self.dset.file.flush()
         if 'Province' not in list(self.dset.attrs.keys()):
             # Added in version 0.2.1 (see PR #124).
-            dset.attrs['Province'] = ""
+            self.dset.attrs['Province'] = ""
             self.dset.file.flush()
         if 'glue' not in list(self.dset.keys()):
             # Added in version 0.3.1 (see PR #184)
@@ -378,11 +449,23 @@ class WLDataFrameHDF5(dict):
             return self.dset[key][...]
 
     @property
+    def dirname(self):
+        return os.path.dirname(self.dset.file.filename)
+
+    @property
     def name(self):
         return osp.basename(self.dset.name)
 
-    # ---- Manual measurents
+    # ---- Water levels
+    def commit(self):
+        """Commit the changes made to the water level data to the project."""
+        if self.has_uncommited_changes:
+            self.dset['WL'][:] = np.copy(self.waterlevels)
+            self.dset.file.flush()
+            self._undo_stack = []
+            print('Changes commited successfully.')
 
+    # ---- Manual measurements
     def set_wlmeas(self, time, wl):
         """Overwrite the water level measurements for this dataset."""
         try:
@@ -518,7 +601,6 @@ class WLDataFrameHDF5(dict):
             self.del_glue(self.glue_idnums()[0])
 
     # ---- Barometric response function
-
     def saved_brf(self):
         """
         Return the list of ids referencing to the BRF evaluations saved for
@@ -565,26 +647,75 @@ class WLDataFrameHDF5(dict):
             return None
 
     def get_brf(self, name):
+        """
+        Get the BRF results for the data stored at the specified name.
+        """
         grp = self.dset['brf'][name]
-        return (grp['lag'][...], grp['A'][...], grp['err'][...],
-                grp['date start'][...], grp['date end'][...])
 
-    def save_brf(self, lag, A, err, date_start, date_end):
+        # Make older datasets compatible with newer format (see PR#).
+        flush = False
+        if 'err' in grp.keys():
+            grp['sdA'] = grp['err']
+            del grp['err']
+            flush = True
+        if 'SumA' not in grp.keys():
+            grp['SumA'] = grp['A']
+            del grp['A']
+            flush = True
+        if 'lag' in grp.keys():
+            grp['Lag'] = grp['lag']
+            del grp['lag']
+            flush = True
+        for key in ['date start', 'date end']:
+            if key in grp.keys():
+                grp.attrs[key] = (
+                    datetime.datetime(*grp[key][...], 0).isoformat())
+                del grp[key]
+                flush = True
+        if 'detrending' not in grp.attrs.keys():
+            grp.attrs['detrending'] = ''
+            flush = True
+        if flush:
+            self.dset.file.flush()
+
+        # Cast the data into a pandas dataframe.
+        keys = ['Lag', 'A', 'sdA', 'SumA', 'sdSumA', 'B',
+                'sdB', 'SumB', 'sdSumB']
+        dataf = pd.DataFrame({key: grp[key][...] for key in keys if
+                              key in grp.keys()})
+        dataf.date_start = datetime.datetime.strptime(
+            grp.attrs['date start'], "%Y-%m-%dT%H:%M:%S")
+        dataf.date_end = datetime.datetime.strptime(
+            grp.attrs['date end'], "%Y-%m-%dT%H:%M:%S")
+        dataf.detrending = grp.attrs['detrending']
+
+        return dataf
+
+    def save_brf(self, dataf, date_start, date_end, detrending=None):
+        """
+        Save the BRF results.
+        """
+        print('Saving BRF results...', end=' ')
+        # Create a new h5py group to save the data.
         if list(self.dset['brf'].keys()):
             idnum = np.array(list(self.dset['brf'].keys())).astype(int)
             idnum = np.max(idnum) + 1
         else:
             idnum = 1
         idnum = str(idnum)
-
         grp = self.dset['brf'].require_group(idnum)
-        grp.create_dataset('lag', data=lag, dtype='float64')
-        grp.create_dataset('A', data=A, dtype='float64')
-        grp.create_dataset('err', data=err, dtype='float64')
-        grp.create_dataset('date start', data=date_start, dtype='int16')
-        grp.create_dataset('date end', data=date_end, dtype='int16')
+
+        # Save the data in the h5py group.
+        for column in dataf.columns:
+            grp.create_dataset(
+                column, data=dataf[column].values, dtype='float64')
+        grp.attrs['date start'] = date_start.isoformat()
+        grp.attrs['date end'] = date_end.isoformat()
+        grp.attrs['detrending'] = {
+            True: 'Yes', False: 'No', None: ''}[detrending]
+
         self.dset.file.flush()
-        print('BRF results saved successfully')
+        print('done')
 
     def del_brf(self, name):
         """Delete the BRF evaluation saved with the specified name."""
@@ -595,8 +726,43 @@ class WLDataFrameHDF5(dict):
         else:
             print('BRF does not exist')
 
-    # ---- Hydrograph layout
+    def export_brf_to_csv(self, filename, index):
+        """
+        Export the BRF results saved at the specified index in a CSV or
+        Excel file.
+        """
+        databrf = self.get_brf(self.get_brfname_at(index))
+        databrf.insert(0, 'LagNo', databrf.index.astype(int))
 
+        brf_date_start = databrf.date_start.strftime(format='%d/%m/%y %H:%M')
+        brf_date_end = databrf.date_end.strftime(format='%d/%m/%y %H:%M')
+
+        nbr_bp_lags = len(databrf['SumA'].dropna(inplace=False)) - 1
+        nbr_et_lags = ('N/A' if 'SumB' not in databrf.columns else
+                       len(databrf['SumB'].dropna(inplace=False)) - 1)
+
+        fcontent = [
+            ['Well Name :', self['Well']],
+            ['Well ID :', self['Well ID']],
+            ['Latitude :', self['Latitude']],
+            ['Longitude :', self['Longitude']],
+            ['Elevation :', self['Elevation']],
+            ['Municipality :', self['Municipality']],
+            ['Province :', self['Province']],
+            [],
+            ['BRF Start Time :', brf_date_start],
+            ['BRF End Time :', brf_date_end],
+            ['Number of BP Lags :', nbr_bp_lags],
+            ['Number of ET Lags :', nbr_et_lags],
+            ['Developed with detrending :', databrf.detrending],
+            []
+            ]
+        fcontent.append(list(databrf.columns))
+        fcontent.extend(nan_as_text_tolist(databrf.values))
+
+        save_content_to_file(filename, fcontent)
+
+    # ---- Hydrograph layout
     def save_layout(self, layout):
         """Save the layout in the project hdf5 file."""
         grp = self.dset['layout']
@@ -655,6 +821,7 @@ class WXDataFrameHDF5(WXDataFrameBase):
     This is a wrapper around the h5py group to read the weather data
     from the project.
     """
+
     def __init__(self, dataset, *args, **kwargs):
         super(WXDataFrameHDF5, self).__init__(*args, **kwargs)
         self.__load_dataset__(dataset)
@@ -705,6 +872,7 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
     This is a wrapper around the h5py group to read the GLUE results
     from the project.
     """
+
     def __init__(self, data, *args, **kwargs):
         super(GLUEDataFrameHDF5, self).__init__(*args, **kwargs)
         self.__load_data__(data)
@@ -744,6 +912,13 @@ def is_dsetname_valid(dsetname):
             not any(char in dsetname for char in INVALID_CHARS))
 
 
+def make_dsetname_valid(dsetname):
+    """Replace all invalid characters in the name by an underscore."""
+    for char in INVALID_CHARS:
+        dsetname = dsetname.replace(char, '_')
+    return dsetname
+
+
 def save_dict_to_h5grp(h5grp, dic):
     """
     Save the content of a dictionay recursively in a hdf5.
@@ -776,11 +951,17 @@ if __name__ == '__main__':
     FNAME = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
     PROJET = ProjetReader(FNAME)
 
-    WLDSET = PROJET.get_wldset('3040002.0')
-    print(WLDSET.glue_idnums())
+    wldset = PROJET.get_wldset('3040002_15min')
+    print(wldset.glue_idnums())
+    print(wldset.dirname)
 
-    GLUEDF = WLDSET.get_glue('1')
-    glue_count = GLUEDF['count']
-    dly_glue = GLUEDF['daily budget']
+    data = wldset.data
+
+    wldset.brf_count()
+
+    filename = 'C:/Users/User/Desktop/brf_test.csv'
+    wldset.export_brf_to_csv(filename, 0)
+    # glue_count = GLUEDF['count']
+    # dly_glue = GLUEDF['daily budget']
 
     PROJET.db.close()

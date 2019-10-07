@@ -11,7 +11,8 @@
 
 # ---- Imports: third parties
 
-import matplotlib as mpl
+from matplotlib.transforms import ScaledTranslation
+from matplotlib.figure import Figure
 import numpy as np
 
 
@@ -31,7 +32,7 @@ class FigureLabels(object):
             self.title = ('Well %s from %s to %s')
 
 
-class BRFFigure(mpl.figure.Figure):
+class BRFFigure(Figure):
     def __init__(self, lang='English'):
         super(BRFFigure, self).__init__()
         lang = lang if lang.lower() in FigureLabels.LANGUAGES else 'English'
@@ -77,8 +78,7 @@ class BRFFigure(mpl.figure.Figure):
 
         self.errbar, = ax.plot([], [])
 
-        offset = mpl.transforms.ScaledTranslation(
-                0, -5/72, self.dpi_scale_trans)
+        offset = ScaledTranslation(0, -5/72, self.dpi_scale_trans)
 
         self.title = ax.text(0.5, 1, '', ha='center', va='top', fontsize=14,
                              transform=ax.transAxes+offset)
@@ -143,6 +143,7 @@ class BRFFigure(mpl.figure.Figure):
                 ymin = min(np.floor(np.min(A)/0.2)*0.2, 0)
         else:
             ymin = ylim[0]
+        ymin = max(-10, ymin)
 
         if ylim[1] is None:
             if len(err) > 0:
@@ -151,9 +152,9 @@ class BRFFigure(mpl.figure.Figure):
                 ymax = max(np.ceil(np.max(A)/0.2)*0.2, 1)
         else:
             ymax = ylim[1]
+        ymax = min(10, ymax)
 
-        # ---- Xticks ans Yticks Setup
-
+        # ---- Setup xticks and yticks
         yscl = 0.2 if yscl is None else yscl
         ax.set_yticks(np.arange(ymin, ymax+yscl, yscl))
 
