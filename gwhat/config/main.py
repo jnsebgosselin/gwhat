@@ -1,10 +1,15 @@
 # -*- coding: utf-8 -*-
-
+# -----------------------------------------------------------------------------
 # Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
+
+
+# ---- Standard imports
+import os
 
 # ---- Third party imports
 from appconfigs.user import UserConfig
@@ -14,11 +19,21 @@ from appconfigs.base import get_config_dir
 from gwhat import __appname__
 
 
+CONFIG_DIR = get_config_dir(__appname__)
+if bool(os.environ.get('GWHAT_PYTEST')):
+    CONFIG_DIR += '_pytest'
+
 DEFAULTS = [
     ('main',
-        {'fontsize_global': '14px'}
-     )
+        {'fontsize_global': '14px',
+         'fontsize_console': '12px',
+         'fontsize_menubar': '12px',
+         'last_project_path': ''
+
+         }
+     ),
 ]
+
 
 # =============================================================================
 # Config instance
@@ -32,21 +47,13 @@ DEFAULTS = [
 # 3. You don't need to touch this value if you're just adding a new option
 CONF_VERSION = '1.0.0'
 
-# Main configuration instance
+# Setup the main configuration instance.
+LOAD = False if bool(os.environ.get('GWHAT_PYTEST')) else True
 try:
-    CONF = UserConfig('gwhat', defaults=DEFAULTS, load=True,
-                      version=CONF_VERSION, path=get_config_dir(__appname__),
+    CONF = UserConfig('gwhat', defaults=DEFAULTS, load=LOAD,
+                      version=CONF_VERSION, path=CONFIG_DIR,
                       backup=True, raw_mode=True)
 except Exception:
     CONF = UserConfig('gwhat', defaults=DEFAULTS, load=False,
-                      version=CONF_VERSION, path=get_config_dir(__appname__),
+                      version=CONF_VERSION, path=CONFIG_DIR,
                       backup=True, raw_mode=True)
-
-if __name__ == "__main__":
-    pass
-    # CONF.reset_to_defaults()
-    # print(CONF.get_default('main', 'fontsize_global'))
-    # print(CONF.get('main', 'fontsize_global'))
-    # CONF.set('main', 'fontsize_global', '12px')
-    # print(CONF.get('main', 'fontsize_global'))
-    # CONF.set('patate', 'orange', 'café')
