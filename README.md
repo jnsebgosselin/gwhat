@@ -1,6 +1,6 @@
 ![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_banner_lowres(150).png)
 ====
-Copyright 2014-2018 © GWHAT Project Contributors.<br>
+Copyright 2014-2019 © GWHAT Project Contributors.<br>
 Licensed under the terms of the GNU-GPLv3
 
 # Project details and build status
@@ -20,8 +20,7 @@ The roadmap of the project can be consulted [here](https://github.com/jnsebgosse
 
 # About GWHAT
 
-GWHAT (GroundWater Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
-* the preparation of a gapless daily weather time-series (precipitation and air temperature) representative of the well location. For this purpose, an interface to the online [Canadian Daily Climate Database](http://climate.weather.gc.ca/) (CDCD) is provided that allows to query stations interactively by location coordinates, download the available data, and automatically rearranged the data in a format compatible with WHAT. Furthermore, missing data for a given station can be quickly filled with data from selected neighboring weather stations using a multiple linear regression model
+GWHAT (Ground-Water Hydrograph Analysis Toolbox) is a free, open source, and cross-platform interactive computer program whose main focus is the interpretation of observation well hydrographs, including:
 * the generation of various publication-quality figures from the weather and water level data;
 
 * the exploration, manipulation, and validation of the data within a user-friendly dynamic graphical environment;
@@ -36,31 +35,5 @@ GWHAT is written in the Python 3 programming language and is currently maintaine
 
 If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve GWHAT, please contact Jean-Sébastien Gosselin at [jean-sebastien.gosselin@ete.inrs.ca](mailto:jean-sebastien.gosselin@ete.inrs.ca) or open an issue in our issues tracker [here](https://github.com/jnsebgosselin/gwhat/issues).
 
-# Screenshots
 
-<table>
-  <tr>
-    <td align="center" bgcolor=white><img width="300" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot000.png"></td>
-    <td align="center"><img width="300" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot001.png"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Conveniently download and format daily weather data of canadian stations</b></td>
-    <td align="center"><b>Quickly estimate and fill missing weather data for all the stations in your study area</b></td>
-  </tr>
-    <td align="center"><br><br><img width="300" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot002.png"></td>
-    <td align="center"><br><br><img width="300" src="https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_Screenshot003.png"></td>
-  </tr>
-  <tr>
-    <td align="center"><b>Easily prepare publication-quality figures with your data</b></td>
-    <td align="center"><b>Explore and analyse your data within a user-friendly dynamic graphical environment</b></td>
-  </tr>
-  <tr>
-</table>
-
-# Output Samples
-
-![Weather yearly and monthly averages](https://github.com/jnsebgosselin/WHAT/blob/master/Images/weather_normals_sample.png)
-
-![Well hydrograph and weekly weather data](https://github.com/jnsebgosselin/WHAT/blob/master/Images/hydrograph_PO07.png)
-
-Last edited: 08/01/2018
+Last edited: 07/10/2019
