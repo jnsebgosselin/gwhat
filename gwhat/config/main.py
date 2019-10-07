@@ -25,11 +25,10 @@ if bool(os.environ.get('GWHAT_PYTEST')):
 
 DEFAULTS = [
     ('main',
-        {'fontsize_global': '14px',
-         'fontsize_console': '12px',
-         'fontsize_menubar': '12px',
-         'last_project_path': ''
-
+        {'fontsize_global': 14,
+         'fontsize_console': 12,
+         'fontsize_menubar': 12,
+         'last_project_filepath': '../Projects/Example/Example.gwt'
          }
      ),
 ]
