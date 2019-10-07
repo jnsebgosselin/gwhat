@@ -8,10 +8,12 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard imports
+import os
 import os.path as osp
 
 # ---- Third party imports
 from gwhat.config.main import CONF
+from gwhat import __rootdir__
 
 
 def save_path_to_configs(section, option, path):
@@ -27,4 +29,10 @@ def get_path_from_configs(section, option):
     """
     Return a path saved in the config file at the specified section and option.
     """
-    return osp.abspath(osp.normpath(CONF.get(section, option)))
+    # We need to change the working directory in case this function is not
+    # called from mainwindow.py.
+    cwd = os.getcwd()
+    os.chdir(__rootdir__)
+    abspath = osp.abspath(osp.normpath(CONF.get(section, option)))
+    os.chdir(cwd)
+    return abspath

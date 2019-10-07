@@ -1,16 +1,21 @@
 # -*- coding: utf-8 -*-
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
+# https://github.com/jnsebgosselin/gwhat
 #
-# Copyright © Spyder Project Contributors
-# Licensed under the terms of the MIT License
-#
+# This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
+# Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 """
 File for running tests programmatically.
 """
 
+import os
 import pytest
 import matplotlib as mpl
 mpl.use('Qt5Agg')
+os.environ['GWHAT_PYTEST'] = 'True'
 
 
 def main():
