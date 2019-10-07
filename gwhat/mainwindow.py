@@ -20,12 +20,9 @@ print('Starting GWHAT...')
 import matplotlib as mpl
 mpl.use('Qt5Agg')
 
-from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtGui import QPixmap, QResizeEvent
-from PyQt5.QtWidgets import (QApplication, QSplashScreen, QMainWindow,
-                             QMessageBox, QTabWidget, QTextEdit, QSplitter,
-                             QWidget, QGridLayout, QDesktopWidget, QTabBar)
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QSplitter,
+                             QWidget, QGridLayout, QDesktopWidget)
 import sys
 app = QApplication(sys.argv)
 
@@ -34,7 +31,6 @@ splash = SplashScrn()
 
 import platform
 import os
-import numpy as np
 
 ft = app.font()
 ft.setPointSize(11)
@@ -49,7 +45,6 @@ splash.showMessage("Starting %s..." % __namever__)
 
 import csv
 from time import ctime
-from os import makedirs, path
 import os.path as osp
 
 from multiprocessing import freeze_support
@@ -62,7 +57,6 @@ import tkinter.messagebox
 from gwhat.common.utils import save_content_to_csv
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
-from gwhat.meteo import dwnld_weather_data
 from gwhat.meteo.gapfill_weather_gui import GapFillWeatherGUI
 from gwhat.meteo.dwnld_weather_data import DwnldWeatherWidget
 from gwhat.widgets.tabwidget import TabWidget
@@ -71,7 +65,6 @@ from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
 from gwhat.common import StyleDB
 from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonBase
 
 freeze_support()
 
