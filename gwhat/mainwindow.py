@@ -22,7 +22,7 @@ mpl.use('Qt5Agg')
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QSplitter,
-                             QWidget, QGridLayout, QDesktopWidget)
+                             QWidget, QGridLayout)
 import sys
 app = QApplication(sys.argv)
 
@@ -30,7 +30,6 @@ from gwhat.widgets.splash import SplashScrn
 splash = SplashScrn()
 
 import platform
-import os
 
 ft = app.font()
 ft.setPointSize(11)
@@ -42,7 +41,6 @@ from gwhat import __namever__, __appname__
 splash.showMessage("Starting %s..." % __namever__)
 
 # ---- Standard library imports
-import csv
 from time import ctime
 import os.path as osp
 
@@ -52,7 +50,9 @@ import tkinter.filedialog
 import tkinter.messagebox
 
 # ---- Local imports
-from gwhat.common.utils import save_content_to_csv
+from gwhat.config.main import CONF
+from gwhat.config.ospath import save_path_to_configs, get_path_from_configs
+
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
 from gwhat.widgets.tabwidget import TabWidget
@@ -78,15 +78,12 @@ class MainWindow(QMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 myappid)
 
-        # Setup the preferences.
-        self.whatPref = WHATPref(self)
-        self.projectfile = self.whatPref.projectfile
-        self.projectdir = osp.dirname(self.projectfile)
-
-        # Setup the project and data managers.
+        # Setup the project manager. and data managers.
         splash.showMessage("Initializing project and data managers...")
         self.pmanager = ProjetManager(self)
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
+
+        # Setup the data manager.
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
         self.dmanager.setMaximumWidth(250)
         self.dmanager.sig_new_console_msg.connect(self.write2console)
@@ -96,9 +93,9 @@ class MainWindow(QMainWindow):
         splash.finish(self)
         self.showMaximized()
 
-        # Load the last opened project :
-
-        result = self.pmanager.load_project(self.projectfile)
+        # Load the last opened project.
+        projectfile = get_path_from_configs('main', 'last_project_filepath')
+        result = self.pmanager.load_project(projectfile)
         if result is False:
             self.tab_hydrograph.setEnabled(False)
             self.tab_hydrocalc.setEnabled(False)
@@ -115,7 +112,7 @@ class MainWindow(QMainWindow):
 
         style = 'Regular'
         family = StyleDB().fontfamily
-        size = self.whatPref.fontsize_console
+        size = CONF.get('main', 'fontsize_console')
         fontSS = ('font-style: %s;'
                   'font-size: %s;'
                   'font-family: %s;'
@@ -192,23 +189,13 @@ class MainWindow(QMainWindow):
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""
 
-        filename = self.pmanager.projet.filename
-
-        # Update the  WHAT.pref file.
-        self.whatPref.projectfile = filename
-        self.whatPref.save_pref_file()
+        # Save the project file path in the configs.
+        save_path_to_configs('main', 'last_project_filepath',
+                             self.pmanager.projet.filename)
 
         # Update the GUI.
         self.tab_hydrograph.setEnabled(True)
         self.tab_hydrocalc.setEnabled(True)
-
-    def show(self):
-        """Qt method override to center the app on the screen."""
-        super(MainWindow, self).show()
-        qr = self.frameGeometry()
-        cp = QDesktopWidget().availableGeometry().center()
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
 
     def closeEvent(self, event):
         """Qt method override to close the project before close the app."""
@@ -216,85 +203,6 @@ class MainWindow(QMainWindow):
         self.pmanager.close_projet()
         print('Closing GWHAT')
         event.accept()
-
-
-class WHATPref(object):
-    """
-    This class contains all the preferences relative to the WHAT interface,
-    including:
-
-    projectfile: Path of the project that was opened when last time
-                 the program was closed.
-
-    language: Language in which the GUI is displayed (not the labels
-              of graphs).
-    """
-
-    def __init__(self, parent=None):
-
-        self.projectfile = os.path.join(
-            '..', 'Projects', 'Example', 'Example.gwt')
-        self.language = 'English'
-        self.fontsize_general = '14px'
-        self.fontsize_console = '12px'
-        self.fontsize_menubar = '12px'
-
-        self.load_pref_file()
-
-    def save_pref_file(self):
-        """
-        Save the GWHAT user preferences to file.
-        """
-        print('\n\rSaving WHAT preferences to file...', end=' ')
-        try:
-            fpath = osp.relpath(self.projectfile)
-        except ValueError:
-            # This probably means that the gwhat project is not saved on the
-            # same drive as the one where GHWAT is installed.
-            # See jnsebgosselin/gwhat#289.
-            fpath = osp.abspath(self.projectfile)
-
-        fcontent = [['Project File:', fpath],
-                    ['Language:', self.language],
-                    ['Font-Size-General:', self.fontsize_general],
-                    ['Font-Size-Console:', self.fontsize_console],
-                    ['Font-Size-Menubar:', self.fontsize_menubar]]
-        save_content_to_csv('WHAT.pref', fcontent)
-        print('done')
-
-    def load_pref_file(self, circloop=False):
-
-        # cicrcloop argument is a protection to prevent a circular loop
-        # in case something goes wrong.
-
-        try:
-            with open('WHAT.pref', 'r', encoding='utf-8') as f:
-                reader = list(csv.reader(f, delimiter=','))
-
-            self.projectfile = reader[0][1]
-            if platform.system() == 'Linux':
-                self.projectfile = self.projectfile.replace('\\', '/')
-
-            self.language = reader[1][1]
-            self.fontsize_general = reader[2][1]
-            self.fontsize_console = reader[3][1]
-            self.fontsize_menubar = reader[4][1]
-
-        except Exception as e:
-            print(e)
-
-            # Default values will be kept and a new .pref file will be
-            # generated :
-
-            print(('No valid "WHAT.pref" file found. '
-                   'A new one has been created from default.'))
-            self.save_pref_file()
-
-            if circloop is False:
-                # Rerun method to load default file :
-                self.load_pref_file(circloop=True)
-            else:
-                raise e
 
 
 def except_hook(cls, exception, traceback):
