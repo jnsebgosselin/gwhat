@@ -115,11 +115,11 @@ def test_delete_weather_data(datamanager, mocker, qtbot):
 
 def test_import_waterlevel_data(datamanager, mocker, qtbot):
     """Test importing and saving water level data to the project."""
-    datamanager.new_weather_win.setModal(False)
+    datamanager.new_waterlvl_win.setModal(False)
 
     # Mock the file dialog to return the path of the weather datafile.
     mocker.patch.object(
-        QFileDialog, 'getOpenFileName', return_value=(WLFILENAME, '*.out'))
+        QFileDialog, 'getOpenFileName', return_value=(WLFILENAME, '*.csv'))
 
     # Open the dialog window and select a water level dataset.
     qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
