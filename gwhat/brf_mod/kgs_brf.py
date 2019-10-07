@@ -73,7 +73,7 @@ def produce_par_file(lagBP, lagET, detrend_waterlevels=True,
     wlcoutput = os.path.join(__install_dir__, 'WLCOutput.txt')
 
     detrend = 'Yes' if detrend_waterlevels else 'No'
-    correct = 'Yes' if correct_waterlevels else 'No'
+    correct = 'No'
 
     par = []
     par.append(['BRF Option (C[ompute] or R[ead]): Compute'])
@@ -98,8 +98,6 @@ def run_kgsbrf():
     if os.path.exists(exename) and os.path.exists(parname):
         if os.name == 'nt':
             os.system('""%s" < "%s""' % (exename, parname))
-
-
 
 
 def read_brf_output(filename=None):
