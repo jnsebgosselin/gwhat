@@ -297,8 +297,21 @@ class WHATPref(object):
                 raise e
 
 
+def except_hook(cls, exception, traceback):
+    """
+    Used to override the default sys except hook so that this application
+    doesn't automatically exit when an unhandled exception occurs.
+
+    See this StackOverflow answer for more details :
+    https://stackoverflow.com/a/33741755/4481445
+    """
+    sys.__excepthook__(cls, exception, traceback)
+
+
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
+    sys.excepthook = except_hook
     main = MainWindow()
+    main.show()
     sys.exit(app.exec_())
