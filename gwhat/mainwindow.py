@@ -78,16 +78,12 @@ class MainWindow(QMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 myappid)
 
-        # Setup the preferences.
-
-        self.projectfile = get_path_from_configs(
-            'main', 'last_project_filepath')
-        self.projectdir = osp.dirname(self.projectfile)
-
-        # Setup the project and data managers.
+        # Setup the project manager. and data managers.
         splash.showMessage("Initializing project and data managers...")
         self.pmanager = ProjetManager(self)
         self.pmanager.currentProjetChanged.connect(self.new_project_loaded)
+
+        # Setup the data manager.
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
         self.dmanager.setMaximumWidth(250)
         self.dmanager.sig_new_console_msg.connect(self.write2console)
@@ -97,9 +93,9 @@ class MainWindow(QMainWindow):
         splash.finish(self)
         self.showMaximized()
 
-        # Load the last opened project :
-
-        result = self.pmanager.load_project(self.projectfile)
+        # Load the last opened project.
+        projectfile = get_path_from_configs('main', 'last_project_filepath')
+        result = self.pmanager.load_project(projectfile)
         if result is False:
             self.tab_hydrograph.setEnabled(False)
             self.tab_hydrocalc.setEnabled(False)
