@@ -42,7 +42,6 @@ from gwhat import __namever__, __appname__
 splash.showMessage("Starting %s..." % __namever__)
 
 # ---- Standard library imports
-
 import csv
 from time import ctime
 import os.path as osp
@@ -53,14 +52,10 @@ import tkinter.filedialog
 import tkinter.messagebox
 
 # ---- Local imports
-
 from gwhat.common.utils import save_content_to_csv
 import gwhat.HydroPrint2 as HydroPrint
 import gwhat.HydroCalc2 as HydroCalc
-from gwhat.meteo.gapfill_weather_gui import GapFillWeatherGUI
-from gwhat.meteo.dwnld_weather_data import DwnldWeatherWidget
 from gwhat.widgets.tabwidget import TabWidget
-
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
 from gwhat.common import StyleDB
@@ -83,8 +78,7 @@ class MainWindow(QMainWindow):
             ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
                 myappid)
 
-        # Setup preferences :
-
+        # Setup the preferences.
         self.whatPref = WHATPref(self)
         self.projectfile = self.whatPref.projectfile
         self.projectdir = osp.dirname(self.projectfile)
@@ -106,52 +100,14 @@ class MainWindow(QMainWindow):
 
         result = self.pmanager.load_project(self.projectfile)
         if result is False:
-            self.tab_dwnld_data.setEnabled(False)
-            self.tab_fill_weather_data.setEnabled(False)
             self.tab_hydrograph.setEnabled(False)
             self.tab_hydrocalc.setEnabled(False)
 
     def __initUI__(self):
-
-        # ---- TAB WIDGET
-
-        # download weather data :
-
-        splash.showMessage("Initializing download weather data...")
-        self.tab_dwnld_data = DwnldWeatherWidget(self)
-        self.tab_dwnld_data.set_workdir(self.projectdir)
-
-        # gapfill weather data :
-
-        splash.showMessage("Initializing gapfill weather data...")
-        self.tab_fill_weather_data = GapFillWeatherGUI(self)
-        self.tab_fill_weather_data.set_workdir(self.projectdir)
-
-        # hydrograph :
-
-        splash.showMessage("Initializing plot hydrograph...")
-        self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
-
-        splash.showMessage("Initializing analyse hydrograph...")
-        self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
-        self.tab_hydrocalc.sig_new_mrc.connect(
-            self.tab_hydrograph.mrc_wl_changed)
-        self.tab_hydrocalc.rechg_eval_widget.sig_new_gluedf.connect(
-            self.tab_hydrograph.glue_wl_changed)
-
-        # ---- TABS ASSEMBLY
-
-        self.tab_widget = TabWidget()
-        self.tab_widget.addTab(self.tab_dwnld_data, 'Download Weather')
-        self.tab_widget.addTab(self.tab_fill_weather_data, 'Gapfill Weather')
-        self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
-        self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
-        self.tab_widget.setCornerWidget(self.pmanager)
-
-        self.tab_widget.currentChanged.connect(self.sync_datamanagers)
-
-        # ---- Main Console
-
+        """
+        Setup the GUI of the main window.
+        """
+        # Setup the main console.
         splash.showMessage("Initializing main window...")
         self.main_console = QTextEdit()
         self.main_console.setReadOnly(True)
@@ -173,22 +129,29 @@ class MainWindow(QMainWindow):
                            ' jean-sebastien.gosselin@ete.inrs.ca.'
                            '</font>')
 
-        # ---- Signal Piping
+        # Setup the tab plot hydrograph.
+        splash.showMessage("Initializing plot hydrograph...")
+        self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
+        self.tab_hydrograph.ConsoleSignal.connect(self.write2console)
 
-        issuer = self.tab_dwnld_data
-        issuer.ConsoleSignal.connect(self.write2console)
+        # Setup the tab analyse hydrograph.
+        splash.showMessage("Initializing analyse hydrograph...")
+        self.tab_hydrocalc = HydroCalc.WLCalc(self.dmanager)
+        self.tab_hydrocalc.sig_new_mrc.connect(
+            self.tab_hydrograph.mrc_wl_changed)
+        self.tab_hydrocalc.rechg_eval_widget.sig_new_gluedf.connect(
+            self.tab_hydrograph.glue_wl_changed)
 
-        issuer = self.tab_fill_weather_data
-        issuer.ConsoleSignal.connect(self.write2console)
+        # Add each tab to the tab widget.
+        self.tab_widget = TabWidget()
+        self.tab_widget.addTab(self.tab_hydrograph, 'Plot Hydrograph')
+        self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
+        self.tab_widget.setCornerWidget(self.pmanager)
+        self.tab_widget.currentChanged.connect(self.sync_datamanagers)
+        self.sync_datamanagers()
 
-        issuer = self.tab_hydrograph
-        issuer.ConsoleSignal.connect(self.write2console)
-
-        # ---- Splitter Widget
-
-        splitter = QSplitter(self)
-        splitter.setOrientation(Qt.Vertical)
-
+        # Setup the splitter widget.
+        splitter = QSplitter(Qt.Vertical, parent=self)
         splitter.addWidget(self.tab_widget)
         splitter.addWidget(self.main_console)
 
@@ -197,16 +160,13 @@ class MainWindow(QMainWindow):
         # Forces initially the main_console to its minimal height:
         splitter.setSizes([100, 1])
 
-        # ---- Main Grid
-
+        # Setup the layout of the main widget.
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
 
         mainGrid = QGridLayout(main_widget)
 
         mainGrid.addWidget(splitter, 0, 0)
-        mainGrid.addWidget(self.tab_fill_weather_data.pbar, 1, 0)
-        mainGrid.addWidget(self.tab_dwnld_data.pbar, 2, 0)
         mainGrid.addWidget(
             self.tab_hydrocalc.rechg_eval_widget.progressbar, 3, 0)
 
@@ -224,40 +184,23 @@ class MainWindow(QMainWindow):
         _Analyze Hydrograph_ and vice-versa.
         """
         current = self.tab_widget.tabBar().currentIndex()
-        if current == 3:
-            self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
-        elif current == 2:
+        if current == 0:
             self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
+        elif current == 1:
+            self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
 
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""
 
         filename = self.pmanager.projet.filename
-        dirname = os.path.dirname(filename)
 
-        # Update WHAT.pref file :
-
+        # Update the  WHAT.pref file.
         self.whatPref.projectfile = filename
         self.whatPref.save_pref_file()
 
-        # Update UI :
-
-        self.tab_dwnld_data.setEnabled(True)
-        self.tab_fill_weather_data.setEnabled(True)
+        # Update the GUI.
         self.tab_hydrograph.setEnabled(True)
         self.tab_hydrocalc.setEnabled(True)
-
-        # Update the child widgets :
-
-        # dwnld_weather_data
-        lat = self.pmanager.projet.lat
-        lon = self.pmanager.projet.lon
-        self.tab_dwnld_data.set_workdir(dirname)
-        self.tab_dwnld_data.set_station_browser_latlon((lat, lon))
-
-        # fill_weather_data
-        self.tab_fill_weather_data.set_workdir(dirname)
-        self.tab_fill_weather_data.load_data_dir_content()
 
     def show(self):
         """Qt method override to center the app on the screen."""
