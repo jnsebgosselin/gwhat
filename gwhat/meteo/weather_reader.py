@@ -13,12 +13,15 @@ import os
 import os.path as osp
 import csv
 from calendar import monthrange
+import re
 from time import strftime
+from collections import OrderedDict
 from collections.abc import Mapping
 from abc import abstractmethod
 
 # ---- Third party imports
 import numpy as np
+import pandas as pd
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
@@ -39,7 +42,16 @@ class WXDataFrameBase(Mapping):
 
     def __init__(self, *args, **kwargs):
         super(WXDataFrameBase, self).__init__(*args, **kwargs)
-        self.store = None
+        self.metadata = {
+            'filename': '',
+            'Station Name': '',
+            'Station ID': '',
+            'Location': '',
+            'Latitude': 0,
+            'Longitude': 0,
+            'Elevation': 0}
+        self.data = None
+        self.missing_value_indexes = {}
 
     @abstractmethod
     def __load_dataset__(self):
@@ -139,28 +151,6 @@ class WXDataFrame(WXDataFrameBase):
 
     def __init_store__(self, filename):
         """Initializes the store."""
-        self.store = dict()
-        self.store['filename'] = filename
-        self.store['Station Name'] = ''
-        self.store['Latitude'] = 0
-        self.store['Longitude'] = 0
-        self.store['Province'] = ''
-        self.store['Elevation'] = 0
-        self.store['Climate Identifier'] = ''
-
-        self.store['Year'] = np.array([])
-        self.store['Month'] = np.array([])
-        self.store['Day'] = np.array([])
-        self.store['Time'] = np.array([])
-
-        self.store['Tmax'] = np.array([])
-        self.store['Tavg'] = np.array([])
-        self.store['Tmin'] = np.array([])
-        self.store['Ptot'] = np.array([])
-        self.store['Rain'] = None
-        self.store['Snow'] = None
-        self.store['PET'] = None
-
         self.store['Missing Tmax'] = []
         self.store['Missing Tmin'] = []
         self.store['Missing Tavg'] = []
@@ -199,54 +189,44 @@ class WXDataFrame(WXDataFrameBase):
         print('-' * 78)
         print('Reading weather data from "%s"...' % os.path.basename(filename))
 
-        self.__init_store__(filename)
+        # Import data.
+        self.metadata, self.data = read_weather_datafile(filename)
 
-        # ---- Import primary data
+        # Make the daily time series continuous.
+        self.data = self.data.resample('1D').asfreq()
 
-        data = read_weather_datafile(filename)
-        for key in data.keys():
-            self.store[key] = data[key]
+        # Store the time indexes where data are missing.
+        for var in ['Tmax', 'Tavg', 'Tmin', 'PET', 'Ptot', 'Rain', 'Snow']:
+            if var in self.data.columns:
+                self.missing_value_indexes[var] = (
+                    self.data.index[pd.isnull(self.data[var])])
 
-        # ---- Format Data
+        # Fill missing with values with in-stations linear interpolation for
+        # temperature based variables.
+        for var in ['Tmax', 'Tavg', 'Tmin', 'PET']:
+            if var in self.data.columns:
+                self.data[var] = self.data[var].interpolate()
 
-        # Make the daily time series continuous :
+        # We fill the remaining missing value with 0.
+        self.data = self.data.fillna(0)
 
-        date = [self['Year'], self['Month'], self['Day']]
-        vrbs = ['Tmax', 'Tavg', 'Tmin', 'Ptot', 'Rain', 'PET']
-        data = [self[vrb] for vrb in vrbs]
-        time, date, data = make_timeserie_continuous(self['Time'], date, data)
-
-        self.store['Time'] = time
-        self.store['Year'], self.store['Month'], self.store['Day'] = date
-        for i, vrb in enumerate(vrbs):
-            self.store[vrb] = data[i]
-
-        # Fill missing with estimated values :
-
-        for vbr in ['Tmax', 'Tavg', 'Tmin', 'PET']:
-            self.store[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'interp')
-
-        for vbr in ['Ptot', 'Rain', 'Snow']:
-            self.store[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'zeros')
-
-        # ---- Rain & Snow
+        if not self.data.isnull().any().any():
+            raise Warning("There is still missing values remaining in the "
+                          "time series.")
+        return
 
         # Generate rain and snow daily series if it was not present in the
         # datafile.
-
-        # Rain
         if self['Rain'] is None:
             self.store['Rain'] = calcul_rain_from_ptot(
                 self['Tavg'], self['Ptot'], Tcrit=0)
             print("Rain estimated from Ptot.")
 
-        # Snow
         if self['Snow'] is None:
             self.store['Snow'] = self['Ptot'] - self['Rain']
             print("Snow estimated from Ptot.")
 
-        # ---- Missing data
-
+        # Missing data.
         root, ext = osp.splitext(filename)
         finfo = root + '.log'
         if os.path.exists(finfo):
@@ -258,8 +238,7 @@ class WXDataFrame(WXDataFrameBase):
             for key, label in keys_labels:
                 self.store[key] = load_weather_log(finfo, label)
 
-        # ---- Monthly & Normals
-
+        # Calcul monthly & normals values.
         self.store['normals']['Period'] = (np.min(self['Year']),
                                            np.max(self['Year']))
 
@@ -514,83 +493,6 @@ def clean_endsof_file(data):
         print('%d empty' % (n - len(data[:, 0])) +
               ' rows of data removed at the end of the dataset.')
 
-    return data
-
-
-def make_timeserie_continuous(time, date, data):
-    """
-    Scans the entire daily time series, inserts a row with nan values whenever
-    there is a gap in the data, and returns the continuous daily data set.
-
-    time = 1d numpy array containing the time in Excel numeric format.
-    date = tuple containg the time series for year, month and days.
-    data = tuple containing the data series.
-    """
-    # Initialize the arrays in which the continuous time series will be saved :
-
-    ctime = np.arange(time[0], time[-1] + 1)
-    if np.array_equal(ctime, time):
-        # The dataset is already continuous.
-        return time, date, data
-    cdate = [np.empty(len(ctime)) * np.nan for item in date]
-    cdata = []
-    for item in data:
-        if item is not None:
-            cdata.append(np.empty(len(ctime)) * np.nan)
-        else:
-            cdata.append(None)
-
-    # Fill the continuous arrays :
-
-    indexes = np.digitize(time, ctime, right=True)
-    for i in range(len(date)):
-        cdate[i][indexes] = date[i]
-    for i in range(len(data)):
-        if data[i] is not None:
-            cdata[i][indexes] = data[i]
-
-    # Complete the dates for the lines that where missing and convert to
-    # integers :
-
-    nan_indexes = np.where(np.isnan(cdate[0]))[0]
-    for idx in nan_indexes:
-        new_date = xldate_as_tuple(ctime[idx], 0)
-        cdate[0][idx] = new_date[0]
-        cdate[1][idx] = new_date[1]
-        cdate[2][idx] = new_date[2]
-    cdate[0] = cdate[0].astype(int)
-    cdate[1] = cdate[1].astype(int)
-    cdate[2] = cdate[2].astype(int)
-
-    return ctime, cdate, cdata
-
-
-def fill_nan(time, data, name='data', fill_mode='zeros'):
-    """
-    Fills the nan values in data with zeros if fill_mode value is 'zeros' or
-    using linear interpolation if fill_mode value is 'interp'.
-    """
-    if fill_mode not in ['zeros', 'interp']:
-        raise ValueError('fill_mode must be either "zeros" or "interp"')
-
-    if data is None:
-        return None
-
-    nbr_nan = len(np.where(np.isnan(data))[0])
-    if nbr_nan == 0:
-        # There is no missing value in the dataset.
-        return data
-
-    if fill_mode == 'interp':
-        indx = np.where(~np.isnan(data))[0]
-        data = np.interp(time, time[indx], data[indx])
-        print("%d missing values were estimated by linear interpolation"
-              " in %s." % (nbr_nan, name))
-    elif fill_mode == 'zeros':
-        indx = np.where(np.isnan(data))[0]
-        data[indx] = 0
-        print("%d missing values were assigned a value of 0"
-              " in %s." % (nbr_nan, name))
     return data
 
 
