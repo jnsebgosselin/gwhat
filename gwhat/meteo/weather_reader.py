@@ -108,9 +108,6 @@ class WXDataFrameBase(Mapping):
 
         save_content_to_file(filename, fcontent)
 
-    def export_dataset_to_HELP(self):
-        raise NotImplementedError
-
 
 class WXDataFrame(WXDataFrameBase):
     """A daily weather dataset container that loads its data from a file."""
