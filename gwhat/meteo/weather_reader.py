@@ -327,88 +327,110 @@ def open_weather_datafile(filename):
 
 
 def read_weather_datafile(filename):
-    df = {'filename': filename,
-          'Station Name': '',
-          'Latitude': 0,
-          'Longitude': 0,
-          'Province': '',
-          'Elevation': 0,
-          'Climate Identifier': '',
-          'Year': np.array([]),
-          'Month': np.array([]),
-          'Day': np.array([]),
-          'Time': np.array([]),
-          'Tmax': np.array([]),
-          'Tavg': np.array([]),
-          'Tmin': np.array([]),
-          'Ptot': np.array([]),
-          'Rain': None,
-          'Snow': None,
-          'PET': None,
-          }
+    metadata = {'filename': filename,
+                'Station Name': '',
+                'Station ID': '',
+                'Location': '',
+                'Latitude': 0,
+                'Longitude': 0,
+                'Elevation': 0,
+                }
+    # Data is a pandas dataframe with the following required columns:
+    # (1) Tmax, (2) Tavg, (3) Tmin, (4) Ptot.
+    # The dataframe can also have these optional columns:
+    # (5) Rain, (6) Snow, (7) PET
+    # The dataframe must use a datetime index.
 
     # Get info from header and grab the data from the file.
     reader = open_weather_datafile(filename)
-    if reader is None:                                       # pragma: no cover
-        return
-    else:
-        for i, row in enumerate(reader):
-            if len(row) == 0:
-                continue
-            if row[0] in ['Station Name', 'Province', 'Climate Identifier']:
-                df[row[0]] = str(row[1])
-            elif row[0] in ['Latitude', 'Longitude', 'Elevation']:
+    if reader is None:
+        return None, None
+
+    HEADER_REGEX = {
+        'Station Name': r'(?<!\S)(wellname|name)(:|=)?(?!\S)',
+        'Station ID': r'(stationid|id|climateidentifier)',
+        'Latitude': r'(?<!\S)(latitude|lat)(:|=)?(?!\S)',
+        'Longitude': r'(?<!\S)(longitude|lon)(:|=)?(?!\S)',
+        'Location': r'(?<!\S)(location|prov)(:|=)?(?!\S)',
+        'Elevation': r'(?<!\S)(elev|alt)'
+        }
+    HEADER_TYPE = {
+        'Station Name': str,
+        'Station ID': str,
+        'Location': str,
+        'Latitude': float,
+        'Longitude': float,
+        'Elevation': float
+        }
+
+    for i, row in enumerate(reader):
+        if len(row) == 0:
+            continue
+
+        label = row[0].replace(" ", "").replace("_", "")
+        for key, regex in HEADER_REGEX.items():
+            if re.search(regex, label, re.IGNORECASE):
                 try:
-                    df[row[0]] = float(row[1])
+                    metadata[key] = HEADER_TYPE[key](row[1])
                 except ValueError:
-                    print('Wrong format for entry "%s".' % row[0])
-                    df[row[0]] = 0
-            elif row[0] == 'Year':
-                istart = i+1
-                var = row
-                data = np.array(reader[istart:]).astype('float')
+                    # The default value will be kept.
+                    print('Wrong format for entry "%s".' % key)
+        else:
+            if re.search(r'(time|datetime|year)', label, re.IGNORECASE):
+                istart = i + 1
                 break
 
+    # Fetch the valid columns from the data header.
+    COL_REGEX = OrderedDict([
+        ('Year', r'(year)'),
+        ('Month', r'(month)'),
+        ('Day', r'(day)'),
+        ('Tmax', r'(maxtemp)'),
+        ('Tmin', r'(mintemp)'),
+        ('Tavg', r'(meantemp)'),
+        ('Ptot', r'(totalprecip)'),
+        ('PET', r'(etp|evapo)'),
+        ('Rain', r'(rain)'),
+        ('Snow', r'(snow)')
+        ])
+    columns = []
+    indexes = []
+    for i, label in enumerate(row):
+        label = label.replace(" ", "").replace("_", "")
+        for column, regex in COL_REGEX.items():
+            if re.search(regex, label, re.IGNORECASE):
+                columns.append(column)
+                indexes.append(i)
+                break
+
+    # Format the numerical data.
+    data = np.array(reader[istart:])[:, indexes]
+    data = np.char.strip(data, ' ')
+    data[data == ''] = np.nan
+    data = np.char.replace(data, ',', '.')
+    data = data.astype('float')
     data = clean_endsof_file(data)
 
-    df['Year'] = data[:, var.index('Year')].astype(int)
-    df['Month'] = data[:, var.index('Month')].astype(int)
-    df['Day'] = data[:, var.index('Day')].astype(int)
+    # Format the data into a pandas dataframe.
+    data = pd.DataFrame(data, columns=columns)
+    for col in ['Year', 'Month', 'Day']:
+        data[col] = data[col].astype(int)
+    for col in ['Tmax', 'Tmin', 'Tavg', 'Ptot']:
+        data[col] = data[col].astype(float)
 
-    df['Tmax'] = data[:, var.index('Max Temp (deg C)')].astype(float)
-    df['Tmin'] = data[:, var.index('Min Temp (deg C)')].astype(float)
-    df['Tavg'] = data[:, var.index('Mean Temp (deg C)')].astype(float)
-    df['Ptot'] = data[:, var.index('Total Precip (mm)')].astype(float)
+    # We now create the time indexes for the dataframe form the year,
+    # month, and day data.
+    data = data.set_index(pd.to_datetime(dict(
+        year=data['Year'], month=data['Month'], day=data['Day'])))
+    data.drop(labels=['Year', 'Month', 'Day'], axis=1, inplace=True)
 
-    try:
-        df['Time'] = data[:, var.index('Time')]
-    except ValueError:
-        # The time is not saved in the datafile. We need to calculate it from
-        # the Year, Month, and Day arrays.
-        df['Time'] = np.zeros(len(df['Year']))
-        for i in range(len(df['Year'])):
-            dtuple = (df['Year'][i], df['Month'][i], df['Day'][i])
-            df['Time'][i] = xldate_from_date_tuple(dtuple, 0)
-
-    try:
-        df['PET'] = data[:, var.index('ETP (mm)')]
+    # We print some comment if optional data was loaded from the file.
+    if 'PET' in columns:
         print('Potential evapotranspiration imported from datafile.')
-    except ValueError:
-        pass
-
-    try:
-        df['Rain'] = data[:, var.index('Rain (mm)')]
+    if 'Rain' in columns:
         print('Rain data imported from datafile.')
-    except ValueError:
-        pass
-
-    try:
-        df['Snow'] = data[:, var.index('Snow (mm)')]
+    if 'Snow' in columns:
         print('Snow data imported from datafile.')
-    except ValueError:
-        pass
-
-    return df
 
 
 def add_PET_to_weather_datafile(filename):
