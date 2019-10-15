@@ -200,7 +200,7 @@ class WXDataFrame(WXDataFrameBase):
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
-        print('-'*78)
+        print('-' * 78)
         print('Reading weather data from "%s"...' % os.path.basename(filename))
 
         self.__init_store__(filename)
@@ -241,7 +241,7 @@ class WXDataFrame(WXDataFrameBase):
         # Rain
         if self['Rain'] is None:
             self.store['Rain'] = calcul_rain_from_ptot(
-                    self['Tavg'], self['Ptot'], Tcrit=0)
+                self['Tavg'], self['Ptot'], Tcrit=0)
             print("Rain estimated from Ptot.")
 
         # Snow
@@ -314,7 +314,6 @@ class WXDataFrame(WXDataFrameBase):
 
 
 # ---- Base functions: file and data manipulation
-
 def open_weather_datafile(filename):
     """
     Open the csv datafile and try to guess the delimiter.
