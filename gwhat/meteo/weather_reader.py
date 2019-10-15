@@ -432,52 +432,7 @@ def read_weather_datafile(filename):
     if 'Snow' in columns:
         print('Snow data imported from datafile.')
 
-
-def add_PET_to_weather_datafile(filename):
-    """Add PET to weather data file."""
-    print('Adding PET to %s...' % os.path.basename(filename), end=' ')
-
-    # Load and store original data.
-    reader = open_weather_datafile(filename)
-    if reader is None:                                       # pragma: no cover
-        print('failed')
-        return
-    else:
-        for i, row in enumerate(reader):
-            if len(row) == 0:
-                continue
-            if row[0] == 'Latitude':
-                lat = float(row[1])
-            elif row[0] == 'Year':
-                istart = i + 1
-                vrbs = row
-                data = np.array(reader[istart:]).astype('float')
-                break
-
-    Year = data[:, vrbs.index('Year')].astype(int)
-    Month = data[:, vrbs.index('Month')].astype(int)
-    Day = data[:, vrbs.index('Day')].astype(int)
-    Dates = [Year, Month, Day]
-
-    Tavg = data[:, vrbs.index('Mean Temp (deg C)')]
-    x = calc_monthly_mean(Year, Month, Tavg)
-    Ta = calcul_monthly_normals(x[0], x[1], x[2])
-
-    PET = calcul_Thornthwaite(Dates, Tavg, lat, Ta)
-
-    # Extend dataset with PET and save the dataset to csv.
-    if 'ETP (mm)' in vrbs:
-        indx = vrbs.index('ETP (mm)')
-        for i in range(len(PET)):
-            reader[i + istart][indx] = PET[i]
-    else:
-        reader[istart - 1].append('ETP (mm)')
-        for i in range(len(PET)):
-            reader[i + istart].append(PET[i])
-
-    # Save data.
-    save_content_to_csv(filename, reader)
-    print('done')
+    return metadata, data
 
 
 def open_weather_log(fname):
