@@ -8,7 +8,6 @@
 
 
 # ---- Standard library imports
-
 import os
 import os.path as osp
 import csv
@@ -18,7 +17,6 @@ from collections.abc import Mapping
 from abc import abstractmethod
 
 # ---- Third party imports
-
 import numpy as np
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -38,6 +36,7 @@ class WXDataFrameBase(Mapping):
     """
     A daily weather data frame base class.
     """
+
     def __init__(self, *args, **kwargs):
         super(WXDataFrameBase, self).__init__(*args, **kwargs)
         self.store = None
@@ -80,9 +79,9 @@ class WXDataFrameBase(Mapping):
                      'PET (mm)'])
 
         startdate = '%02d/%02d/%d' % (
-                self['Day'][0], self['Month'][0], self['Year'][0])
+            self['Day'][0], self['Month'][0], self['Year'][0])
         enddate = '%02d/%02d/%d' % (
-                self['Day'][-1], self['Month'][-1], self['Year'][-1])
+            self['Day'][-1], self['Month'][-1], self['Year'][-1])
 
         fcontent = [['Station Name', self['Station Name']],
                     ['Province', self['Province']],
@@ -239,14 +238,12 @@ class WXDataFrame(WXDataFrameBase):
         # datafile.
 
         # Rain
-
         if self['Rain'] is None:
             self.store['Rain'] = calcul_rain_from_ptot(
                     self['Tavg'], self['Ptot'], Tcrit=0)
             print("Rain estimated from Ptot.")
 
         # Snow
-
         if self['Snow'] is None:
             self.store['Snow'] = self['Ptot'] - self['Rain']
             print("Snow estimated from Ptot.")
@@ -269,8 +266,7 @@ class WXDataFrame(WXDataFrameBase):
         self.store['normals']['Period'] = (np.min(self['Year']),
                                            np.max(self['Year']))
 
-        # Temperature based variables :
-
+        # Temperature based variables.
         for vrb in ['Tmax', 'Tmin', 'Tavg']:
             x_yr = calc_yearly_mean(self['Year'], self[vrb])
             self.store['yearly'][vrb] = x_yr[1]
@@ -279,10 +275,9 @@ class WXDataFrame(WXDataFrameBase):
             self.store['monthly'][vrb] = x_mt[2]
 
             self.store['normals'][vrb] = calcul_monthly_normals(
-                    x_mt[0], x_mt[1], x_mt[2])
+                x_mt[0], x_mt[1], x_mt[2])
 
-        # Precipitation based variables :
-
+        # Precipitation based variables.
         for vrb in ['Ptot', 'Rain', 'Snow']:
             x_yr = calc_yearly_sum(self['Year'], self[vrb])
             self.store['yearly'][vrb] = x_yr[1]
@@ -291,14 +286,13 @@ class WXDataFrame(WXDataFrameBase):
             self.store['monthly'][vrb] = x_mt[2]
 
             self.store['normals'][vrb] = calcul_monthly_normals(
-                    x_mt[0], x_mt[1], x_mt[2])
+                x_mt[0], x_mt[1], x_mt[2])
 
         self.store['yearly']['Year'] = x_yr[0]
         self.store['monthly']['Year'] = x_mt[0]
         self.store['monthly']['Month'] = x_mt[1]
 
-        # ---- Potential Evapotranspiration
-
+        # Potential Evapotranspiration.
         if self['PET'] is None:
             dates = [self['Year'], self['Month'], self['Day']]
             Tavg = self['Tavg']
@@ -314,9 +308,8 @@ class WXDataFrame(WXDataFrameBase):
         self.store['monthly']['PET'] = x_mt[2]
 
         self.store['normals']['PET'] = calcul_monthly_normals(
-                x_mt[0], x_mt[1], x_mt[2])
-
-        print('-'*78)
+            x_mt[0], x_mt[1], x_mt[2])
+        print('-' * 78)
 
 
 # ---- Base functions: file and data manipulation
@@ -332,7 +325,7 @@ def open_weather_datafile(filename):
         for line in reader:
             if line and line[0] == 'Station Name':
                 return reader
-    else:                                                    # pragma: no cover
+    else:
         print("Failed to open %s." % os.path.basename(filename))
         return None
 
@@ -359,7 +352,6 @@ def read_weather_datafile(filename):
           }
 
     # Get info from header and grab the data from the file.
-
     reader = open_weather_datafile(filename)
     if reader is None:                                       # pragma: no cover
         return
