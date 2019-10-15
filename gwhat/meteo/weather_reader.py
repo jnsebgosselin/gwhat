@@ -431,7 +431,7 @@ def add_PET_to_weather_datafile(filename):
             if row[0] == 'Latitude':
                 lat = float(row[1])
             elif row[0] == 'Year':
-                istart = i+1
+                istart = i + 1
                 vrbs = row
                 data = np.array(reader[istart:]).astype('float')
                 break
@@ -451,11 +451,11 @@ def add_PET_to_weather_datafile(filename):
     if 'ETP (mm)' in vrbs:
         indx = vrbs.index('ETP (mm)')
         for i in range(len(PET)):
-            reader[i+istart][indx] = PET[i]
+            reader[i + istart][indx] = PET[i]
     else:
-        reader[istart-1].append('ETP (mm)')
+        reader[istart - 1].append('ETP (mm)')
         for i in range(len(PET)):
-            reader[i+istart].append(PET[i])
+            reader[i + istart].append(PET[i])
 
     # Save data.
     save_content_to_csv(filename, reader)
@@ -487,7 +487,7 @@ def load_weather_log(fname, varname):
             xldates.append(xldate_from_date_tuple((year, month, day), 0))
 
     time = []
-    tseg = [np.nan, xldates[0], xldates[0]+1]
+    tseg = [np.nan, xldates[0], xldates[0] + 1]
     for xldate in xldates:
         if tseg[2] == xldate:
             if xldate == xldates[-1]:
@@ -555,15 +555,15 @@ def make_timeserie_continuous(time, date, data):
     """
     # Initialize the arrays in which the continuous time series will be saved :
 
-    ctime = np.arange(time[0], time[-1]+1)
+    ctime = np.arange(time[0], time[-1] + 1)
     if np.array_equal(ctime, time):
         # The dataset is already continuous.
         return time, date, data
-    cdate = [np.empty(len(ctime))*np.nan for item in date]
+    cdate = [np.empty(len(ctime)) * np.nan for item in date]
     cdata = []
     for item in data:
         if item is not None:
-            cdata.append(np.empty(len(ctime))*np.nan)
+            cdata.append(np.empty(len(ctime)) * np.nan)
         else:
             cdata.append(None)
 
@@ -675,20 +675,20 @@ def read_cweeds_file(filename, format_to_daily=True):
         hourly_df['Days'][i] = day = int(line[0][char_offset:][12:14])
         hourly_df['Hours'][i] = hour = int(line[0][char_offset:][14:16]) - 1
         # The global horizontal irradiance is converted from kJ/m² to MJ/m².
-        hourly_df['Irradiance'][i] = float(line[0][char_offset:][20:24])/1000
+        hourly_df['Irradiance'][i] = float(line[0][char_offset:][20:24]) / 1000
 
         # Compute time in Excel numeric format :
         hourly_df['Time'][i] = xldate_from_datetime_tuple(
-                (year, month, day, hour, 0, 0), 0)
+            (year, month, day, hour, 0, 0), 0)
 
     if format_to_daily:
         # Convert the hourly data to daily format.
         assert len(hourly_df['Irradiance']) % 24 == 0
-        new_shape = (len(hourly_df['Irradiance'])//24, 24)
+        new_shape = (len(hourly_df['Irradiance']) // 24, 24)
 
         daily_df = {}
         daily_df['Irradiance'] = np.sum(
-                hourly_df['Irradiance'].reshape(new_shape), axis=1)
+            hourly_df['Irradiance'].reshape(new_shape), axis=1)
         for key in ['Years', 'Months', 'Days', 'Time']:
             daily_df[key] = hourly_df[key].reshape(new_shape)[:, 0]
         daily_df['Hours'] = np.zeros(len(daily_df['Irradiance']))
@@ -769,9 +769,9 @@ def calc_monthly(yy_dly, mm_dly, x_dly, func):
 
     yy_mly = np.repeat(yy, len(mm))
     mm_mly = np.tile(mm, len(yy))
-    x_mly = np.zeros(len(mm)*len(yy))
+    x_mly = np.zeros(len(mm) * len(yy))
 
-    for i in range(len(mm)*len(yy)):
+    for i in range(len(mm) * len(yy)):
         indx = np.where((yy_dly == yy_mly[i]) & (mm_dly == mm_mly[i]))[0]
         if len(indx) < monthrange(yy_mly[i], mm_mly[i])[1]:
             x_mly[i] = np.nan  # incomplete dataset for this month
