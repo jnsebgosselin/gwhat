@@ -32,7 +32,6 @@ from gwhat import __namever__
 
 
 # ---- API
-
 class WXDataFrameBase(Mapping):
     """
     A daily weather data frame base class.
@@ -319,7 +318,7 @@ def open_weather_datafile(filename):
     Open the csv datafile and try to guess the delimiter.
     Return None if this fails.
     """
-    for dlm in ['\t', ',']:
+    for dlm in ['\t', ',', ';']:
         with open(filename, 'r') as csvfile:
             reader = list(csv.reader(csvfile, delimiter=dlm))
         for line in reader:
