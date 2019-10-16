@@ -1,76 +1,62 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
-from __future__ import division, unicode_literals
-
-#----  Standard library imports
-
-import os
-import csv
-from calendar import monthrange
-import copy
-import datetime
 
 # ---- Third party imports
-
 import numpy as np
 from numpy import pi, sin, cos, arccos, arcsin
 import pandas as pd
-from xlrd.xldate import xldate_from_date_tuple
-from xlrd import xldate_as_tuple
 
 
-def calcul_Thornthwaite(Date, Tavg, lat, Ta):
-    """ Calcul reference PET0(mm/d) with  Thornwaite (1948).
+def calcul_thornthwaite(Tavg, latitude):
+    """
+    Calcul reference potential evapotranspiration, PET0(mm/d) with
+    the method of Thornwaite (1948).
 
-    # Keyword arguments:
+    Parameters
+    ----------
+    Tavg: :class:`pandas.Series`
+        A pandas time series containing average daily air temperatures in
+        Celcius.
+    latitude: float
+        The latitude in decimal degrees where we want to calculate the
+        evapotranspiration.
 
-    {Tuple}   dates -- Contains daily time series of the year, month, and day.
-    {1d array} Tavg -- Daily temperature average (deg C)
-    {float}     lat -- Latitude in degrees
-    {1d array}   Ta -- Monthly normals of air temperature
-
-    # Return:
-
-    {1d array} PET0 -- Daily Reference Potential Evapotranspiration (mm/d)
-
-    # References:
+    Returns
+    -------
+    PET0:
+        A :class:`pandas.Series` containing the corresponding reference
+        daily potential evapotranspiration values in mm/d.
 
     Pereira, A.R. and W.O. Pruitt. 2004. Adaptation of the Thornthwaite scheme
         for estimating daily reference evapotranspiration. Agricultural Water
         Management, 66, 251-257.
     """
-
-    Ta = copy.copy(Ta)
+    Ta = Tavg.groupby(Tavg.index.month).mean()
     Ta[Ta < 0] = 0
-    I = np.sum((0.2*Ta)**1.514)  # Heat index
-    a = (6.75e-7*I**3) - (7.71e-5*I**2) + (1.7912e-2*I) + 0.49239
 
-    inan = np.where(~np.isnan(Tavg))[0]
-    N = len(Tavg)
-    Tavg = copy.copy(Tavg)
-    Tavg = Tavg[inan]
-    Tavg[Tavg < 0] = 0
+    I = np.sum((0.2 * Ta)**1.514)  # Heat index
+    a = (6.75e-7 * I**3) - (7.71e-5 * I**2) + (1.7912e-2 * I) + 0.49239
 
-    # Calcul photoperiod in hour/day :
+    # Calcul photoperiod in hours per day.
+    day_length = calcul_daylength(Tavg.index, latitude)
 
-    DAYLEN = calcul_daylength(Date, lat)
+    # Calcul the reference evapotranspiration.
 
-    # Calcul reference evapotranspiration :
-
-    PET0 = np.zeros(N) * np.nan
-    PET0[inan] = 16*(10*Tavg/I)**a * (DAYLEN[inan]/(12*30))
+    # Note that we need to force all negative values to zeros in the
+    # average air temperature time series.
+    Tavg_corr = Tavg.copy(deep=True)
+    Tavg_corr[Tavg_corr < 0] = 0
+    PET0 = 16 * (10 * Tavg_corr / I)**a * (day_length / (12 * 30))
 
     return PET0
 
-
-# =============================================================================
-    
 
 def calcul_daylength(dtimes, latitude):
     """Calculate the photoperiod for the given latitude and dates
