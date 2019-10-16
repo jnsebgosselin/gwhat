@@ -12,16 +12,16 @@ from copy import deepcopy
 import re
 import os
 import os.path as osp
-import numpy as np
-import xlrd
-from xlrd.xldate import xldate_from_datetime_tuple
-from xlrd import xldate_as_tuple
 import csv
 from collections import OrderedDict
 from collections.abc import Mapping
 
 # ---- Third party imports
+import numpy as np
 import pandas as pd
+import xlrd
+from xlrd.xldate import xldate_from_datetime_tuple
+from xlrd import xldate_as_tuple
 
 # ---- Local library imports
 from gwhat.common.utils import save_content_to_csv
