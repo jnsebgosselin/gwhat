@@ -55,8 +55,7 @@ class WXDataFrameBase(Mapping):
             'Latitude': 0,
             'Longitude': 0,
             'Elevation': 0}
-        self.data = None
-        self.normals = {}
+        self.data = pd.DataFrame([], columns=METEO_VARIABLES)
         self.missing_value_indexes = {}
 
     @abstractmethod
@@ -197,13 +196,6 @@ class WXDataFrame(WXDataFrameBase):
 
     def __len__(self, key):
         return NotImplementedError
-
-    def __init_store__(self, filename):
-        """Initializes the store."""
-        self.store['Missing Tmax'] = []
-        self.store['Missing Tmin'] = []
-        self.store['Missing Tavg'] = []
-        self.store['Missing Ptot'] = []
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
