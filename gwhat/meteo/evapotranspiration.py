@@ -19,6 +19,8 @@ import datetime
 # ---- Third party imports
 
 import numpy as np
+from numpy import pi, sin, cos, arccos, arcsin
+import pandas as pd
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
@@ -70,61 +72,63 @@ def calcul_Thornthwaite(Date, Tavg, lat, Ta):
 # =============================================================================
     
 
-def calcul_daylength(DATE, LAT):
+def calcul_daylength(dtimes, latitude):
     """Calculate the photoperiod for the given latitude and dates
 
-    # Keyword arguments:
+    Parameters
+    ----------
+    dtimes: :class:`pandas.DatetimeIndex`
+        A :class:`pandas.DatetimeIndex` containing a series of dates for which
+        we want to calculate the photoperiod for the specified latitude.
+    latitude: float
+        The latitude in decimal degrees where we want to calculate the
+        photoperiod for the specified dates.
 
-    {1D array} time -- Excel numeric time in days
-    {float}     lat -- latitude in decimal degrees
-
-    # Return :
-
-    {1D array} DAYLEN -- photoperiod in hr.
+    Returns
+    -------
+    daylength:
+        A :class:`pandas.DatetimeIndex` containing the photoperiod for the
+        specified dates and latitude.
     """
+    latitude = np.radians(latitude)
 
-    Year = copy.deepcopy(DATE[0])
-    Month = copy.deepcopy(DATE[1])
-    Day = copy.deepcopy(DATE[2])
-
-    pi = np.pi
-    LAT = np.radians(LAT)
-
-    # ----- Convert date in day format -----
-
-    # http://stackoverflow.com/questions/13943062
-
-    N = len(Year)
-    DAY365 = np.zeros(N)
-    for i in range(N):
-        date = datetime.date(Year[i], Month[i], Day[i])
-        DAY365[i] = int(date.timetuple().tm_yday)
-
-    # --------------------------------------------- DECLINATION OF THE SUN ----
-
+    # Calculate sun declination.
     # http://en.wikipedia.org/wiki/Position_of_the_Sun#Calculations
 
-    N = DAY365-1
+    # N is the number of days since midnight UT as January 1 begins (
+    # i.e. the days part of the ordinal date −1)
+    N = dtimes.dayofyear.values - 1
+    A = 2 * pi / 365.24 * (N - 2)
+    B = 2 * pi / pi * 0.0167
+    C = 2 * pi / 365.24 * (N + 10)
+    D = -23.44 * pi / 180
+    sun_declination = arcsin(sin(D) * cos(C + B * sin(A)))
 
-    A = 2*pi/365.24 * (N - 2)
-    B = 2*pi/pi * 0.0167
-    C = 2*pi/365.24 * (N + 10)
+    # Solve the sunrise equation.
+    # https://en.wikipedia.org/wiki/Sunrise_equation
 
-    D = -23.44 * pi/180
+    # We take the equation that take into account corrections for
+    # astronomical refraction and solar disc diameter.
+    num = sin(-0.83 * pi / 180) - sin(latitude) * sin(sun_declination)
+    denum = cos(latitude) * cos(sun_declination)
+    hour_angle = arccos(num / denum)
 
-    SUNDEC = np.arcsin(np.sin(D) * np.cos(C + B * np.sin(A)))
+    daylen = 2 * hour_angle * 24 / (2 * pi)
 
-    # --------------------------------------------------- SUNRISE EQUATION ----
+    return pd.Series(daylen, index=dtimes)
 
-    # http:/Omega/en.wikipedia.org/wiki/Sunrise_equation
 
-    OMEGA = np.arccos(-np.tan(LAT) * np.tan(SUNDEC))
+if __name__ == '__main__':
+    dtimes = pd.DatetimeIndex([
+        '2019-01-01', '2019-02-01', '2019-03-01', '2019-04-01',
+        '2019-05-01', '2019-06-01', '2019-07-01', '2019-08-01',
+        '2019-09-01', '2019-10-01', '2019-11-01', '2019-12-01'])
+    daylength = calcul_daylength(dtimes, 46.82).to_frame('calculated')
+    daylength['expected'] = np.array([8.62, 9.64, 11.09, 12.82, 14.41, 15.61,
+                                      15.80, 14.88, 13.35, 11.70, 10.04, 8.83])
+    print(daylength)
 
-    # ----------------------------------------------------- HOURS OF LIGHT ----
-
-    # http://physics.stackexchange.com/questions/28563/
-    # hours-of-light-per-day-based-on-latitude-longitude-formula
-
-    DAYLEN = OMEGA * 2 * 24 / (2 * np.pi)  # Day length in hours
-
-    return DAYLEN
+    # The expected day lenghts were calculated for the city of Quebec
+    # (latitude=46.82 ddec) with a tool available on the Government of
+    # Canada website at:
+    # https://www.nrc-cnrc.gc.ca/eng/services/sunrise/index.html
