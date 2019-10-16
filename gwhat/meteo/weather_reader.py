@@ -64,13 +64,6 @@ class WXDataFrameBase(Mapping):
         """Loads the dataset and save it in a store."""
         pass
 
-    def get_monthly_normals(self, yearmin=None, yearmax=None):
-        """
-        Returns a dict with the normal values of the weather dataset
-        for the period defined by yearmin and yearmax.
-        """
-        raise NotImplementedError
-
     def export_dataset_to_file(self, filename, time_frame):
         """
         Exports the dataset to file using a daily, monthly or yearly format.
@@ -125,6 +118,56 @@ class WXDataFrameBase(Mapping):
         fcontent.extend(nan_as_text_tolist(data))
 
         save_content_to_file(filename, fcontent)
+
+    def get_data_period(self):
+        """
+        Return the year range for which data are available for this
+        dataset.
+        """
+        return (data.index.min().year, data.index.max().year)
+
+    # ---- Monthly and yearly values
+    def get_monthly_values(self):
+        """
+        Return the monthly mean or cummulative values for the weather
+        variables saved in this data frame.
+        """
+        group = self.data.groupby(
+            [self.data.index.year, self.data.index.month])
+        df = pd.concat(
+            [group[PRECIP_VARIABLES].sum(), group[TEMP_VARIABLES].mean()],
+            axis=1)
+        df.index.rename(['Year', 'Month'], inplace=True)
+        return df
+
+    def get_yearly_values(self):
+        """
+        Return the yearly mean or cummulative values for the weather
+        variables saved in this data frame.
+        """
+        group = self.data.groupby(self.data.index.year)
+        df = pd.concat(
+            [group[PRECIP_VARIABLES].sum(), group[TEMP_VARIABLES].mean()],
+            axis=1)
+        df.index.rename('Year', inplace=True)
+        return df
+
+    # ---- Normals
+    def get_monthly_normals(self):
+        """
+        Return the monthly normals for the weather variables saved in this
+        data frame.
+        """
+        df = self.get_monthly_values().groupby(level=[1]).mean()
+        df.index.rename('Month', inplace=True)
+        return df
+
+    def get_yearly_normals(self):
+        """
+        Return the yearly normals for the weather variables saved in this
+        data frame.
+        """
+        return self.get_yearly_values().mean()
 
 
 class WXDataFrame(WXDataFrameBase):
