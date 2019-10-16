@@ -699,7 +699,8 @@ class NewDatasetDialog(QDialog):
                 self._dataset = WLDataFrame(filename)
             elif self._datatype == 'daily weather':
                 self._dataset = WXDataFrame(filename)
-        except Exception:
+        except Exception as e:
+            print(e)
             self._dataset = None
 
         self.update_gui(filename)
