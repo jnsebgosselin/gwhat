@@ -28,10 +28,15 @@ from xlrd import xldate_as_tuple
 
 # ---- Local library imports
 
-from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
+from gwhat.meteo.evapotranspiration import calcul_thornthwaite
 from gwhat.common.utils import save_content_to_csv, save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
+
+
+PRECIP_VARIABLES = ['Ptot', 'Rain', 'Snow']
+TEMP_VARIABLES = ['Tmax', 'Tavg', 'Tmin', 'PET']
+METEO_VARIABLES = PRECIP_VARIABLES + TEMP_VARIABLES
 
 
 # ---- API
@@ -51,6 +56,7 @@ class WXDataFrameBase(Mapping):
             'Longitude': 0,
             'Elevation': 0}
         self.data = None
+        self.normals = {}
         self.missing_value_indexes = {}
 
     @abstractmethod
@@ -156,34 +162,6 @@ class WXDataFrame(WXDataFrameBase):
         self.store['Missing Tavg'] = []
         self.store['Missing Ptot'] = []
 
-        self.store['monthly'] = {'Year': np.array([]),
-                                 'Month': np.array([]),
-                                 'Tmax': np.array([]),
-                                 'Tmin': np.array([]),
-                                 'Tavg': np.array([]),
-                                 'Ptot': np.array([]),
-                                 'Rain': None,
-                                 'Snow': None,
-                                 'PET': None}
-
-        self.store['yearly'] = {'Year': np.array([]),
-                                'Tmax': np.array([]),
-                                'Tmin': np.array([]),
-                                'Tavg': np.array([]),
-                                'Ptot': np.array([]),
-                                'Rain': None,
-                                'Snow': None,
-                                'PET': None}
-
-        self.store['normals'] = {'Tmax': np.array([]),
-                                 'Tmin': np.array([]),
-                                 'Tavg': np.array([]),
-                                 'Ptot': np.array([]),
-                                 'Rain': None,
-                                 'Snow': None,
-                                 'PET': None,
-                                 'Period': (None, None)}
-
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
         print('-' * 78)
@@ -210,82 +188,40 @@ class WXDataFrame(WXDataFrameBase):
         # We fill the remaining missing value with 0.
         self.data = self.data.fillna(0)
 
-        if not self.data.isnull().any().any():
-            raise Warning("There is still missing values remaining in the "
-                          "time series.")
-        return
-
         # Generate rain and snow daily series if it was not present in the
         # datafile.
-        if self['Rain'] is None:
-            self.store['Rain'] = calcul_rain_from_ptot(
-                self['Tavg'], self['Ptot'], Tcrit=0)
-            print("Rain estimated from Ptot.")
+        if 'Rain' not in self.data.columns:
+            self.data['Rain'] = calcul_rain_from_ptot(
+                self.data['Tavg'], self.data['Ptot'], Tcrit=0)
+            self.data['Snow'] = self.data['Ptot'] - self.data['Rain']
+            print("Rain and snow estimated from Ptot.")
 
-        if self['Snow'] is None:
-            self.store['Snow'] = self['Ptot'] - self['Rain']
-            print("Snow estimated from Ptot.")
-
-        # Missing data.
-        root, ext = osp.splitext(filename)
-        finfo = root + '.log'
-        if os.path.exists(finfo):
-            print('Reading gapfill data from "%s"...' % osp.basename(finfo))
-            keys_labels = [('Missing Tmax', 'Max Temp (deg C)'),
-                           ('Missing Tmin', 'Min Temp (deg C)'),
-                           ('Missing Tavg', 'Mean Temp (deg C)'),
-                           ('Missing Ptot', 'Total Precip (mm)')]
-            for key, label in keys_labels:
-                self.store[key] = load_weather_log(finfo, label)
-
-        # Calcul monthly & normals values.
-        self.store['normals']['Period'] = (np.min(self['Year']),
-                                           np.max(self['Year']))
-
-        # Temperature based variables.
-        for vrb in ['Tmax', 'Tmin', 'Tavg']:
-            x_yr = calc_yearly_mean(self['Year'], self[vrb])
-            self.store['yearly'][vrb] = x_yr[1]
-
-            x_mt = calc_monthly_mean(self['Year'], self['Month'], self[vrb])
-            self.store['monthly'][vrb] = x_mt[2]
-
-            self.store['normals'][vrb] = calcul_monthly_normals(
-                x_mt[0], x_mt[1], x_mt[2])
-
-        # Precipitation based variables.
-        for vrb in ['Ptot', 'Rain', 'Snow']:
-            x_yr = calc_yearly_sum(self['Year'], self[vrb])
-            self.store['yearly'][vrb] = x_yr[1]
-
-            x_mt = calc_monthly_sum(self['Year'], self['Month'], self[vrb])
-            self.store['monthly'][vrb] = x_mt[2]
-
-            self.store['normals'][vrb] = calcul_monthly_normals(
-                x_mt[0], x_mt[1], x_mt[2])
-
-        self.store['yearly']['Year'] = x_yr[0]
-        self.store['monthly']['Year'] = x_mt[0]
-        self.store['monthly']['Month'] = x_mt[1]
-
-        # Potential Evapotranspiration.
-        if self['PET'] is None:
-            dates = [self['Year'], self['Month'], self['Day']]
-            Tavg = self['Tavg']
-            lat = self['Latitude']
-            Ta = self['normals']['Tavg']
-            self.store['PET'] = calcul_Thornthwaite(dates, Tavg, lat, Ta)
+        # Calculate potential evapotranspiration if missing.
+        if 'PET' not in self.data.columns:
+            self.data['PET'] = calcul_thornthwaite(
+                self.data['Tavg'], self.metadata['Latitude'])
             print("Potential evapotranspiration evaluated with Thornthwaite.")
 
-        x_yr = calc_yearly_sum(self['Year'], self['PET'])
-        self['yearly']['PET'] = x_yr[1]
-
-        x_mt = calc_monthly_sum(self['Year'], self['Month'], self['PET'])
-        self.store['monthly']['PET'] = x_mt[2]
-
-        self.store['normals']['PET'] = calcul_monthly_normals(
-            x_mt[0], x_mt[1], x_mt[2])
+        isnull = self.data.isnull().any()
+        if isnull.any():
+            print("Warning: There is missing values remaining in the data "
+                  "for {}.".format(', '.join(isnull[isnull].index.tolist())))
         print('-' * 78)
+
+        # TODO: see what need to be done here to still support this
+        # functionality.
+
+        # # Missing data.
+        # root, ext = osp.splitext(filename)
+        # finfo = root + '.log'
+        # if os.path.exists(finfo):
+        #     print('Reading gapfill data from "%s"...' % osp.basename(finfo))
+        #     keys_labels = [('Missing Tmax', 'Max Temp (deg C)'),
+        #                    ('Missing Tmin', 'Min Temp (deg C)'),
+        #                    ('Missing Tavg', 'Mean Temp (deg C)'),
+        #                    ('Missing Ptot', 'Total Precip (mm)')]
+        #     for key, label in keys_labels:
+        #         self.store[key] = load_weather_log(finfo, label)
 
 
 # ---- Base functions: file and data manipulation
@@ -715,8 +651,11 @@ def calc_yearly(yy_dly, x_dly, func):
 # ----- Base functions: secondary variables
 
 def calcul_rain_from_ptot(Tavg, Ptot, Tcrit=0):
-    rain = np.copy(Ptot)
-    rain[np.where(Tavg < Tcrit)[0]] = 0
+    rain = Ptot.copy(deep=True)
+    rain[Tavg < Tcrit] = 0
+
+    # np.copy(Ptot)
+    # rain[np.where(Tavg < Tcrit)[0]] = 0
     return rain
 
 
