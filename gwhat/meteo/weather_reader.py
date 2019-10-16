@@ -599,100 +599,7 @@ def join_daily_cweeds_wy2_and_wy3(wy2_df, wy3_df):
     return wy23_df
 
 
-# ----- Base functions: monthly downscaling
-
-def calc_monthly_sum(yy_dly, mm_dly, x_dly):
-    """
-    Calcul monthly cumulative values from daily values, where yy_dly are the
-    years, mm_dly are the months (1 to 12), and x_dly are the daily values.
-    """
-    return calc_monthly(yy_dly, mm_dly, x_dly, np.sum)
-
-
-def calc_monthly_mean(yy_dly, mm_dly, x_dly):
-    """
-    Calcul monthly mean values from daily values, where yy_dly are the
-    years, mm_dly are the months (1 to 12), and x_dly are the daily values.
-    """
-    return calc_monthly(yy_dly, mm_dly, x_dly, np.mean)
-
-
-def calc_monthly(yy_dly, mm_dly, x_dly, func):
-    yy = np.unique(yy_dly)
-    mm = range(1, 13)
-
-    yy_mly = np.repeat(yy, len(mm))
-    mm_mly = np.tile(mm, len(yy))
-    x_mly = np.zeros(len(mm) * len(yy))
-
-    for i in range(len(mm) * len(yy)):
-        indx = np.where((yy_dly == yy_mly[i]) & (mm_dly == mm_mly[i]))[0]
-        if len(indx) < monthrange(yy_mly[i], mm_mly[i])[1]:
-            x_mly[i] = np.nan  # incomplete dataset for this month
-        else:
-            x_mly[i] = func(x_dly[indx])
-
-    return yy_mly, mm_mly, x_mly
-
-
-def calcul_monthly_normals(years, months, x_mly, yearmin=None, yearmax=None):
-    """Calcul the monthly normals from monthly values."""
-    if len(years) != len(months) != len(x_mly):
-        raise ValueError("The dimension of the years, months, and x_mly array"
-                         " must match exactly.")
-    if np.min(months) < 1 or np.max(months) > 12:
-        raise ValueError("Months values must be between 1 and 12.")
-
-    # Mark as nan monthly values that are outside the year range that is
-    # defined by yearmin and yearmax :
-    x_mly = np.copy(x_mly)
-    if yearmin is not None:
-        x_mly[years < yearmin] = np.nan
-    if yearmax is not None:
-        x_mly[years > yearmax] = np.nan
-
-    # Calcul the monthly normals :
-    x_norm = np.zeros(12)
-    for i, mm in enumerate(range(1, 13)):
-        indx = np.where((months == mm) & (~np.isnan(x_mly)))[0]
-        if len(indx) > 0:
-            x_norm[i] = np.mean(x_mly[indx])
-        else:
-            x_norm[i] = np.nan
-
-    return x_norm
-
-
-# ----- Base functions: yearly downscaling
-
-def calc_yearly_sum(yy_dly, x_dly):
-    """
-    Calcul yearly cumulative values from daily values, where yy_dly are the
-    years and x_dly are the daily values.
-    """
-    return calc_yearly(yy_dly, x_dly, np.sum)
-
-
-def calc_yearly_mean(yy_dly, x_dly):
-    """
-    Calcul yearly mean values from daily values, where yy_dly are the years
-    and x_dly are the daily values.
-    """
-    return calc_yearly(yy_dly, x_dly, np.mean)
-
-
-def calc_yearly(yy_dly, x_dly, func):
-    yy_yrly = np.unique(yy_dly)
-    x_yrly = np.zeros(len(yy_yrly))
-    for i in range(len(yy_yrly)):
-        indx = np.where(yy_dly == yy_yrly[i])[0]
-        x_yrly[i] = func(x_dly[indx])
-
-    return yy_yrly, x_yrly
-
-
 # ----- Base functions: secondary variables
-
 def calcul_rain_from_ptot(Tavg, Ptot, Tcrit=0):
     rain = Ptot.copy(deep=True)
     rain[Tavg < Tcrit] = 0
@@ -703,7 +610,6 @@ def calcul_rain_from_ptot(Tavg, Ptot, Tcrit=0):
 
 
 # ---- Utility functions
-
 def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
     # HTML table with the info related to the weather station.
