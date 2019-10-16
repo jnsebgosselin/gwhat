@@ -632,14 +632,15 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
-    fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
-              "sample_weather_datafile.csv")
+    fmeteo = ("D:/Desktop/Meteo_station_1973a2019.csv")
     wxdset = WXDataFrame(fmeteo)
+    data = wxdset.data
 
-    filename = "C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY2"
-    daily_wy2 = read_cweeds_file(filename, format_to_daily=True)
+    monthly_values = wxdset.get_monthly_values()
+    yearly_values = wxdset.get_yearly_values()
 
-    filename = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY3")
-    daily_wy3 = read_cweeds_file(filename, format_to_daily=True)
+    monthly_normals = wxdset.get_monthly_normals()
+    yearly_normals = wxdset.get_yearly_normals()
 
-    wy23_df = join_daily_cweeds_wy2_and_wy3(daily_wy2, daily_wy3)
+    print(monthly_normals, end='\n\n')
+    print(yearly_normals)
