@@ -12,7 +12,6 @@
 import os
 import os.path as osp
 import csv
-from calendar import monthrange
 import re
 from time import strftime
 from collections import OrderedDict
@@ -23,7 +22,6 @@ from abc import abstractmethod
 import numpy as np
 import pandas as pd
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_from_date_tuple
-from xlrd import xldate_as_tuple
 
 
 # ---- Local library imports
