@@ -178,24 +178,6 @@ def read_water_level_datafile(filename):
 
     return dataf
 
-
-def make_waterlvl_continuous(t, wl):
-    """
-    This method produce a continuous daily water level time series.
-    Missing data are filled with nan values.
-    """
-    print('Making water level continuous...')
-    i = 1
-    while i < len(t)-1:
-        if t[i+1]-t[i] > 1:
-            wl = np.insert(wl, i+1, np.nan, 0)
-            t = np.insert(t, i+1, t[i]+1, 0)
-        i += 1
-    print('Making water level continuous done.')
-
-    return t, wl
-
-
 # ---- Water Level Manual Measurements
 def init_waterlvl_measures(dirname):
     """
