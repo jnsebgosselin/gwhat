@@ -1,14 +1,29 @@
 # -*- coding: utf-8 -*-
-
+# -----------------------------------------------------------------------------
 # Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
-# ---- Imports: third parties
+
+# ---- Third party imports
+import pandas as pd
+import xlrd
 from xlrd import xldate_as_tuple
+from xlrd.xldate import xldate_as_datetime
 from PyQt5.QtCore import QDate, QDateTime
+
+
+
+def xldate_to_datetimeindex(xldates):
+    """
+    Format a list or numpy array of Excel numeric dates into a
+    pandas datetime index.
+    """
+    return pd.to_datetime(
+        [xlrd.xldate.xldate_as_datetime(xldate, 0) for xldate in xldates])
 
 
 def qdate_from_xldate(xldate, datemode=0):
