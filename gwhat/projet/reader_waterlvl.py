@@ -178,6 +178,7 @@ def read_water_level_datafile(filename):
 
     return dataf
 
+
 # ---- Water Level Manual Measurements
 def init_waterlvl_measures(dirname):
     """
@@ -185,7 +186,7 @@ def init_waterlvl_measures(dirname):
     if it does not already exist.
     """
     for ext in FILE_EXTS:
-        fname = os.path.join(dirname, "waterlvl_manual_measurements"+ext)
+        fname = os.path.join(dirname, "waterlvl_manual_measurements" + ext)
         if os.path.exists(fname):
             return
     else:
