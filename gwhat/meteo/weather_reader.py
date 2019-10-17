@@ -207,14 +207,14 @@ class WXDataFrame(WXDataFrameBase):
         self.data = self.data.resample('1D').asfreq()
 
         # Store the time indexes where data are missing.
-        for var in ['Tmax', 'Tavg', 'Tmin', 'PET', 'Ptot', 'Rain', 'Snow']:
+        for var in METEO_VARIABLES:
             if var in self.data.columns:
                 self.missing_value_indexes[var] = (
                     self.data.index[pd.isnull(self.data[var])])
 
         # Fill missing with values with in-stations linear interpolation for
         # temperature based variables.
-        for var in ['Tmax', 'Tavg', 'Tmin', 'PET']:
+        for var in TEMP_VARIABLES:
             if var in self.data.columns:
                 self.data[var] = self.data[var].interpolate()
 
