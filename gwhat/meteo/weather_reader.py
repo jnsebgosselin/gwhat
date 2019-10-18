@@ -399,32 +399,14 @@ def open_weather_log(fname):
 
 def load_weather_log(fname, varname):
     reader = open_weather_log(fname)
-    xldates = []
+    datetimes = []
     for i in range(len(reader)):
         if reader[i][0] == varname:
             year = int(float(reader[i][1]))
             month = int(float(reader[i][2]))
             day = int(float(reader[i][3]))
-            xldates.append(xldate_from_date_tuple((year, month, day), 0))
-
-    time = []
-    tseg = [np.nan, xldates[0], xldates[0] + 1]
-    for xldate in xldates:
-        if tseg[2] == xldate:
-            if xldate == xldates[-1]:
-                # the last data of the series is missing
-                time.extend(tseg)
-            else:
-                tseg[2] += 1
-        else:
-            time.extend(tseg)
-            tseg[1] = xldate
-            tseg[2] = xldate + 1
-
-    time.append(np.nan)
-    time = np.array(time)
-
-    return time
+            datetimes.append(dt.datetime(year, month, day))
+    return pd.DatetimeIndex(datetimes)
 
 
 def clean_endsof_file(data):
