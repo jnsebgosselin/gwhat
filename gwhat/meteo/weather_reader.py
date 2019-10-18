@@ -125,6 +125,14 @@ class WXDataFrameBase(Mapping):
         """
         return (data.index.min().year, data.index.max().year)
 
+    # ---- utilities
+    def strftime(self):
+        """
+        Return a list of formatted strings corresponding to the datetime
+        indexes of this dataset.
+        """
+        return self.data.index.strftime("%Y-%m-%dT%H:%M:%S").values.tolist()
+
     # ---- Monthly and yearly values
     def get_monthly_values(self):
         """
