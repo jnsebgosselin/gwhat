@@ -20,11 +20,12 @@ import pandas as pd
 import datetime
 
 # ---- Local library imports
-from gwhat.meteo.weather_reader import WXDataFrameBase
+from gwhat.meteo.weather_reader import WXDataFrameBase, METEO_VARIABLES
 from gwhat.projet.reader_waterlvl import WLDataFrameBase, WLDataset
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist, calcul_rmse
+from gwhat.utils.dates import xldates_to_datetimeindex, xldates_to_strftimes
 
 INVALID_CHARS = ['\\', '/', ':', '*', '?', '"', '<', '>', '|']
 
@@ -331,7 +332,7 @@ class ProjetReader(object):
             print('failed')
             return None
 
-    def add_wxdset(self, name, df):
+    def add_wxdset(self, name, wxdset):
         """
         Add the weather dataset to the project hdf5 file.
 
@@ -340,48 +341,36 @@ class ProjetReader(object):
         """
         if not is_dsetname_valid(name):
             raise ValueError("The name of the dataset is not valid.")
-
         grp = self.db['wxdsets'].create_group(name)
 
-        grp.attrs['filename'] = df['filename']
-        grp.attrs['Station Name'] = df['Station Name']
-        grp.attrs['Latitude'] = df['Latitude']
-        grp.attrs['Longitude'] = df['Longitude']
-        grp.attrs['Elevation'] = df['Elevation']
-        grp.attrs['Province'] = df['Province']
-        grp.attrs['Climate Identifier'] = df['Climate Identifier']
+        # Save the metadata.
+        for key, value in wxdset.metadata.items():
+            grp.attrs[key] = value
 
-        grp.create_dataset('Time', data=df['Time'])
-        grp.create_dataset('Year', data=df['Year'])
-        grp.create_dataset('Month', data=df['Month'])
-        grp.create_dataset('Day', data=df['Day'])
-        grp.create_dataset('Tmax', data=df['Tmax'])
-        grp.create_dataset('Tavg', data=df['Tavg'])
-        grp.create_dataset('Tmin', data=df['Tmin'])
-        grp.create_dataset('Ptot', data=df['Ptot'])
-        grp.create_dataset('Rain', data=df['Rain'])
-        grp.create_dataset('Snow', data=df['Snow'])
-        grp.create_dataset('PET', data=df['PET'])
+        # Save time.
+        strtimes = np.array(
+            wxdset.strftime(), dtype=h5py.special_dtype(vlen=str))
+        grp.create_dataset('Time', data=strtimes)
+        # See http://docs.h5py.org/en/latest/strings.html as to why this
+        # is necessary to do this in order to save a list of strings in
+        # a dataset with h5py.
 
-        grp.create_dataset('Missing Tmax', data=df['Missing Tmax'])
-        grp.create_dataset('Missing Tmin', data=df['Missing Tmin'])
-        grp.create_dataset('Missing Tavg', data=df['Missing Tavg'])
-        grp.create_dataset('Missing Ptot', data=df['Missing Ptot'])
+        # Save timeseries data
+        for variable in METEO_VARIABLES:
+            grp.create_dataset(
+                variable, data=np.copy(wxdset.data[variable].values))
 
-        grp_yrly = grp.create_group('yearly')
-        for vbr in df['yearly'].keys():
-            grp_yrly.create_dataset(vbr, data=df['yearly'][vbr])
+        # Save times where data was missing.
+        for variable in METEO_VARIABLES:
+            datetimeindex = wxdset.missing_value_indexes[variable]
+            strtimes = np.array(
+                datetimeindex.strftime("%Y-%m-%dT%H:%M:%S").values.tolist(),
+                dtype=h5py.special_dtype(vlen=str)
+                )
+            grp.create_dataset(
+                'Missing {}'.format(variable), data=strtimes)
 
-        grp_mtly = grp.create_group('monthly')
-        for vbr in df['monthly'].keys():
-            grp_mtly.create_dataset(vbr, data=df['monthly'][vbr])
-
-        grp_norm = grp.create_group('normals')
-        for vbr in df['normals'].keys():
-            grp_norm.create_dataset(vbr, data=df['normals'][vbr])
-
-        print('New dataset created sucessfully')
-
+        print('Dataset {} created sucessfully.'.format(name))
         self.db.flush()
 
     def del_wxdset(self, name):
@@ -860,7 +849,91 @@ class WXDataFrameHDF5(WXDataFrameBase):
 
     def __load_dataset__(self, dataset):
         """Saves the h5py dataset to the store."""
-        self.store = dataset
+        self._dataset = dataset
+
+        # Make older datasets compatible with newer format.
+        if isinstance(dataset['Time'][0], (int, float)):
+            # Time needs to be converted from Excel numeric dates
+            # to ISO date strings (see jnsebgosselin/gwhat#297).
+            print('Saving time as ISO date strings instead of Excel dates...',
+                  end=' ')
+            strtimes = xldates_to_strftimes(dataset['Time'])
+            del dataset['Time']
+            dataset.create_dataset('Time', data=strtimes)
+            dataset.file.flush()
+            print('done')
+        if 'Location' not in list(dataset.attrs.keys()):
+            # Added in version 0.4.0 (see jnsebgosselin/gwhat#297).
+            if 'Province' in dataset.attrs.keys():
+                dataset.attrs['Location'] = dataset.attrs['Province']
+                del dataset.attrs['Province']
+            else:
+                dataset.attrs['Location'] = ''
+            dataset.file.flush()
+        if 'Station ID' not in list(dataset.attrs.keys()):
+            # Added in version 0.4.0 (see jnsebgosselin/gwhat#297).
+            if 'Climate Identifier' in dataset.attrs.keys():
+                dataset.attrs['Station ID'] = (
+                    dataset.attrs['Climate Identifier'])
+                del dataset.attrs['Climate Identifier']
+            else:
+                dataset.attrs['Station ID'] = ''
+            dataset.file.flush()
+        for key in ['yearly', 'monthly', 'normals', 'Period']:
+            # Removed in version 0.4.0 (see jnsebgosselin/gwhat#297).
+            if key in dataset.keys():
+                del dataset[key]
+                print(("Removing '{}' from project data because it is "
+                       "not needed anymore.").format(key))
+        for variable in METEO_VARIABLES:
+            key = 'Missing {}'.format(variable)
+            if (key in dataset.keys() and
+                    isinstance(dataset[key][0], (int, float))):
+                print(("Saving missing {} data time as ISO date strings "
+                       "instead of Excel dates...").format(variable),
+                      end=' ')
+                # The missing data were previously saved as a list
+                # of xldate periods separated by a nan value. To convert to
+                # the new format, we need to expand the datetimes values
+                # within each period and remove the nan values.
+                try:
+                    missing_idx = dataset[key][:-1]
+                    missing_idx = np.reshape(
+                        missing_idx, (len(missing_idx) // 3, 3))[:, 1:]
+
+                    restruct_missing_idx = []
+                    for period in missing_idx:
+                        restruct_missing_idx.extend(np.arange(*period))
+
+                    del dataset[key]
+                except ValueError:
+                    pass
+                else:
+                    strtimes = xldates_to_strftimes(restruct_missing_idx)
+                    dataset.create_dataset(key, data=strtimes)
+                dataset.file.flush()
+                print('done')
+
+        # Get the metadata.
+        for key in dataset.attrs.keys():
+            self.metadata[key] = dataset.attrs[key]
+
+        # Get and format the timeseries data.
+        self.data = pd.DataFrame(
+            [],
+            columns=METEO_VARIABLES,
+            index=pd.to_datetime(dataset['Time'], infer_datetime_format=True)
+            )
+        for variable in METEO_VARIABLES:
+            self.data[variable] = np.copy(dataset[variable])
+
+        # Get and format the missing value time indexes.
+        self.missing_value_indexes = {}
+        for variable in METEO_VARIABLES:
+            key = 'Missing {}'.format(variable)
+            if key in dataset.keys():
+                self.missing_value_indexes[variable] = (
+                    pd.to_datetime(dataset[key], infer_datetime_format=True))
 
     @property
     def name(self):
