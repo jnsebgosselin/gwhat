@@ -9,9 +9,10 @@
 
 
 # ---- Standard library imports
+import csv
+import datetime as dt
 import os
 import os.path as osp
-import csv
 import re
 from time import strftime
 from collections import OrderedDict
@@ -54,7 +55,8 @@ class WXDataFrameBase(Mapping):
             'Longitude': 0,
             'Elevation': 0}
         self.data = pd.DataFrame([], columns=METEO_VARIABLES)
-        self.missing_value_indexes = {}
+        self.missing_value_indexes = {
+            var: pd.DatetimeIndex([]) for var in METEO_VARIABLES}
 
     @abstractmethod
     def __load_dataset__(self):
@@ -203,6 +205,22 @@ class WXDataFrame(WXDataFrameBase):
         # Import data.
         self.metadata, self.data = read_weather_datafile(filename)
 
+        # Import the missing data log if it exist.
+        root, ext = osp.splitext(filename)
+        finfo = root + '.log'
+        if os.path.exists(finfo):
+            print('Reading gapfill data from "%s"...' % osp.basename(finfo))
+            keys_labels = [('Missing Tmax', 'Max Temp (deg C)'),
+                           ('Missing Tmin', 'Min Temp (deg C)'),
+                           ('Missing Tavg', 'Mean Temp (deg C)'),
+                           ('Missing Ptot', 'Total Precip (mm)')]
+            for var, label in keys_labels:
+                self.missing_value_indexes[var] = (
+                    self.missing_value_indexes[var]
+                    .append(load_weather_log(finfo, label))
+                    .drop_duplicates()
+                    )
+
         # Make the daily time series continuous.
         self.data = self.data.resample('1D').asfreq()
 
@@ -210,7 +228,10 @@ class WXDataFrame(WXDataFrameBase):
         for var in METEO_VARIABLES:
             if var in self.data.columns:
                 self.missing_value_indexes[var] = (
-                    self.data.index[pd.isnull(self.data[var])])
+                    self.missing_value_indexes[var]
+                    .append(self.data.index[pd.isnull(self.data[var])])
+                    .drop_duplicates()
+                    )
 
         # Fill missing with values with in-stations linear interpolation for
         # temperature based variables.
@@ -240,21 +261,6 @@ class WXDataFrame(WXDataFrameBase):
             print("Warning: There is missing values remaining in the data "
                   "for {}.".format(', '.join(isnull[isnull].index.tolist())))
         print('-' * 78)
-
-        # TODO: see what need to be done here to still support this
-        # functionality.
-
-        # # Missing data.
-        # root, ext = osp.splitext(filename)
-        # finfo = root + '.log'
-        # if os.path.exists(finfo):
-        #     print('Reading gapfill data from "%s"...' % osp.basename(finfo))
-        #     keys_labels = [('Missing Tmax', 'Max Temp (deg C)'),
-        #                    ('Missing Tmin', 'Min Temp (deg C)'),
-        #                    ('Missing Tavg', 'Mean Temp (deg C)'),
-        #                    ('Missing Ptot', 'Total Precip (mm)')]
-        #     for key, label in keys_labels:
-        #         self.store[key] = load_weather_log(finfo, label)
 
 
 # ---- Base functions: file and data manipulation
