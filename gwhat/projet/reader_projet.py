@@ -1006,7 +1006,8 @@ if __name__ == '__main__':
     project = ProjetReader(fname)
     print(project.wxdsets)
 
-    wxdset = project.get_wxdset('192 (Lorient)')
+    wxdset = project.get_wxdset('Marieville')
+    wldset = project.get_wldset('3040002_15min')
     # missing_idx = wxdset.missing_value_indexes['Tmax']
 
     project.db.close()
