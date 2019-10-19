@@ -22,7 +22,7 @@ from abc import abstractmethod
 # ---- Third party imports
 import numpy as np
 import pandas as pd
-from xlrd.xldate import xldate_from_datetime_tuple
+from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 
 # ---- Local library imports
 from gwhat.meteo.evapotranspiration import calcul_thornthwaite
@@ -116,6 +116,17 @@ class WXDataFrameBase(Mapping):
         dataset.
         """
         return (self.data.index.min().year, self.data.index.max().year)
+
+    def get_xldates(self):
+        """
+        Return a numpy array containing the Excel numerical dates
+        corresponding to the dates of the dataset.
+        """
+        print('Converting datetimes to xldates...', end=' ')
+        timedeltas = self.data.index - xldate_as_datetime(4000, 0)
+        xldates = timedeltas.total_seconds() / (3600 * 24) + 4000
+        print('done')
+        return xldates.values
 
     # ---- utilities
     def strftime(self):
