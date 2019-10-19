@@ -1069,7 +1069,7 @@ if __name__ == '__main__':
     ft.setFamily('Segoe UI')
     ft.setPointSize(11)
     app.setFont(ft)
-    
+
     pf = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
     pr = ProjetReader(pf)
     dm = DataManager()
