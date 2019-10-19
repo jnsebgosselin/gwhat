@@ -57,14 +57,14 @@ class DataManager(QWidget):
         self.weather_avg_graph = None
 
         self.new_waterlvl_win = NewDatasetDialog(
-                'water level', parent, projet)
+            'water level', parent, projet)
         self.new_waterlvl_win.sig_new_dataset_imported.connect(
-                self.new_wldset_imported)
+            self.new_wldset_imported)
 
         self.new_weather_win = NewDatasetDialog(
-                'daily weather', parent, projet)
+            'daily weather', parent, projet)
         self.new_weather_win.sig_new_dataset_imported.connect(
-                self.new_wxdset_imported)
+            self.new_wxdset_imported)
 
         self.setup_manager()
 
@@ -557,11 +557,11 @@ class NewDatasetDialog(QDialog):
         self.grp_info.layout().setSpacing(10)
 
         if self._datatype == 'water level':
-            labels = ['Well name :', 'Well ID :']
+            labels = ['Well name :', 'Well ID :', 'Latitude :', 'Longitude :',
+                      'Altitude :', 'Province :']
         else:
-            labels = ['Station name :', 'Station ID :']
-        labels.extend(['Latitude :', 'Longitude :',
-                       'Altitude :', 'Province :'])
+            labels = ['Station name :', 'Station ID :', 'Latitude :',
+                      'Longitude :', 'Altitude :', 'Location :']
         widgets = [self._stn_name, self._sid, self._lat,
                    self._lon, self._alt, self._prov]
         for label, widget in zip(labels, widgets):
