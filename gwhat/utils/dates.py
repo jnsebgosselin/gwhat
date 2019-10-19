@@ -47,6 +47,15 @@ def format_time_data(self, timedata):
     return datetimes
 
 
+def datetimeindex_to_xldates(datetimeindex):
+    """
+    Convert a datetime index to a numpy array of Excel numerical date format.
+    """
+    timedeltas = datetimeindex - xldate_as_datetime(4000, 0)
+    xldates = timedeltas.total_seconds() / (3600 * 24) + 4000
+    return xldates.values
+
+
 def xldates_to_datetimeindex(xldates):
     """
     Format a list or numpy array of Excel numeric dates into a
