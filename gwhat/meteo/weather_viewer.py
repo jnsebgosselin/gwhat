@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
-from __future__ import division, unicode_literals
-
-# ---- Imports: Standard Libraries
-
+# ---- Standard library imports
 import sys
 import os
 import os.path as osp
 from datetime import datetime
 
-# ---- Imports: Third Parties
-
+# ---- Third party imports
 import numpy as np
 import matplotlib as mpl
 from matplotlib.patches import Rectangle
@@ -31,8 +28,7 @@ from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
                              QTableWidgetItem, QLabel, QHBoxLayout,
                              QHeaderView)
 
-# ---- Imports: Local
-
+# ---- Local library imports
 from gwhat.colors2 import ColorsReader
 from gwhat.common import StyleDB
 from gwhat.utils import icons
@@ -87,7 +83,7 @@ class WeatherViewer(DialogWindow):
 
         btn_showStats = QToolButtonNormal(icons.get_icon('showGrid'))
         btn_showStats.setToolTip(
-                "Show the monthly weather normals data table.")
+            "Show the monthly weather normals data table.")
         btn_showStats.clicked.connect(self.show_monthly_grid)
 
         btn_language = LangToolButton()
@@ -111,7 +107,7 @@ class WeatherViewer(DialogWindow):
         lay_expand.addWidget(btn_expand, 0, 1)
         lay_expand.setContentsMargins(0, 0, 0, 0)
         lay_expand.setSpacing(1)
-        
+
         qgrid = QHBoxLayout(self.year_rng)
         qgrid.setContentsMargins(0, 0, 0, 0)
         qgrid.addWidget(QLabel('Year Range :'))
@@ -572,7 +568,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         Ptot_norm = normals['Ptot']
         Rain_norm = normals['Rain']
         Snow_norm = Ptot_norm - Rain_norm
-
+        
         # Define the range of the axis :
 
         Yscale0 = 10 if np.sum(Ptot_norm) < 500 else 20  # Precipitation (mm)
@@ -736,7 +732,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
     def plot_air_temp(self, Tmax_norm, Tavg_norm, Tmin_norm):
         for i, Tnorm in enumerate([Tmax_norm, Tavg_norm, Tmin_norm]):
-            T0 = (Tnorm[-1]+Tnorm[0])/2
+            T0 = (Tnorm[-1] + Tnorm[0]) / 2
             T = np.hstack((T0, Tnorm, T0))
             self.figure.axes[2].lines[i].set_ydata(T)
         self.figure.axes[2].lines[3].set_ydata(Tavg_norm)
