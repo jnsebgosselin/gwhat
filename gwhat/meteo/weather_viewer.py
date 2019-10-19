@@ -23,10 +23,9 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
-from PyQt5.QtWidgets import (QMenu, QToolButton, QGridLayout, QWidget,
-                             QFileDialog, QApplication, QTableWidget,
-                             QTableWidgetItem, QLabel, QHBoxLayout,
-                             QHeaderView)
+from PyQt5.QtWidgets import (
+    QMenu, QToolButton, QGridLayout, QFileDialog, QApplication, QTableWidget,
+    QTableWidgetItem, QLabel, QHBoxLayout, QHeaderView)
 
 # ---- Local library imports
 from gwhat.colors2 import ColorsReader
@@ -333,12 +332,11 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         fig = MplFigure(figsize=(fw, fh), facecolor='white')
         super(FigWeatherNormals, self).__init__(fig)
 
-        # Define the Margins :
-
-        left_margin = 1/fw
-        right_margin = 1/fw
-        bottom_margin = 0.7/fh
-        top_margin = 0.1/fh
+        # Define the margins.
+        left_margin = 1 / fw
+        right_margin = 1 / fw
+        bottom_margin = 0.7 / fh
+        top_margin = 0.1 / fh
 
         # ---- Yearly Avg Labels
 
@@ -447,7 +445,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
                         labelbottom=False)
 
         # Minor ticks
-        ax0.set_xticks(np.arange(Xmin0+0.5, Xmax0+0.49, 1), minor=True)
+        ax0.set_xticks(np.arange(Xmin0 + 0.5, Xmax0 + 0.49, 1), minor=True)
         ax0.tick_params(axis='x', which='minor', direction='out',
                         length=0, labelsize=13)
         ax0.xaxis.set_ticklabels(self.fig_labels.month_names, minor=True)
@@ -500,7 +498,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # Update the labels in the plot :
         self.plot_legend()
         self.figure.axes[1].xaxis.set_ticklabels(
-                self.fig_labels.month_names, minor=True)
+            self.fig_labels.month_names, minor=True)
         if self.normals is not None:
             self.set_axes_labels()
             self.update_yearly_avg()
@@ -549,9 +547,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         Ptot_norm = normals['data']['Ptot'].values
         Rain_norm = normals['data']['Rain'].values
         Snow_norm = Ptot_norm - Rain_norm
-        
-        # Define the range of the axis :
 
+        # Define the range of the axis.
         Yscale0 = 10 if np.sum(Ptot_norm) < 500 else 20  # Precipitation (mm)
         Yscale1 = 5  # Temperature (deg C)
 
@@ -561,7 +558,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # ---- Precipitation ----
 
         indx = np.where(SCA0 > np.max(Ptot_norm))[0][0]
-        Ymax0 = SCA0[indx+1]
+        Ymax0 = SCA0[indx + 1]
 
         indx = np.where(SCA0 <= np.min(Snow_norm))[0][-1]
         Ymin0 = SCA0[indx]
@@ -605,7 +602,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # ---- Precip (host) ----
 
-        yticks = np.arange(Ymin0, Ymax0 + Yscale0/10, Yscale0)
+        yticks = np.arange(Ymin0, Ymax0 + Yscale0 / 10, Yscale0)
         ax0.set_yticks(yticks)
 
         yticks_minor = np.arange(yticks[0], yticks[-1], 5)
@@ -613,10 +610,10 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # ---- Air Temp ----
 
-        yticks1 = np.arange(Ymin1, Ymax1 + Yscale1/10., Yscale1)
+        yticks1 = np.arange(Ymin1, Ymax1 + Yscale1 / 10., Yscale1)
         ax1.set_yticks(yticks1)
 
-        yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1/5.)
+        yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1 / 5.)
         ax1.set_yticks(yticks1_minor, minor=True)
 
         # Set the range of the axis :
@@ -643,7 +640,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         x0, x1 = ax1.get_position().x0, ax1.get_position().x1
         y0, y1 = ax1.get_position().y0, ax3.get_position().y1
 
-        dummy_ax = self.figure.add_axes([x0, y0, x1-x0, y1-y0], label='dummy')
+        dummy_ax = self.figure.add_axes(
+            [x0, y0, x1 - x0, y1 - y0], label='dummy')
         dummy_ax.patch.set_visible(False)
         dummy_ax.axis('off')
 
