@@ -152,21 +152,29 @@ class WXDataFrameBase(Mapping):
         return df
 
     # ---- Normals
-    def get_monthly_normals(self):
+    def get_monthly_normals(self, year_range=None):
         """
         Return the monthly normals for the weather variables saved in this
         data frame.
         """
-        df = self.get_monthly_values().groupby(level=[1]).mean()
+        df = self.get_monthly_values()
+        if year_range:
+            df = df.loc[(df.index.get_level_values(0) >= year_range[0]) &
+                        (df.index.get_level_values(0) <= year_range[1])]
+        df = df.groupby(level=[1]).mean()
         df.index.rename('Month', inplace=True)
         return df
 
-    def get_yearly_normals(self):
+    def get_yearly_normals(self, year_range=None):
         """
         Return the yearly normals for the weather variables saved in this
         data frame.
         """
-        return self.get_yearly_values().mean()
+        df = self.get_yearly_values()
+        if year_range:
+            df = df.loc[(df.index >= year_range[0]) &
+                        (df.index <= year_range[1])]
+        return df.mean()
 
 
 class WXDataFrame(WXDataFrameBase):
