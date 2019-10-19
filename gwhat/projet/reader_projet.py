@@ -816,36 +816,16 @@ class WXDataFrameHDF5(WXDataFrameBase):
         self.__load_dataset__(dataset)
 
     def __getitem__(self, key):
-        if key in list(self.store.attrs.keys()):
-            return self.store.attrs[key]
-        elif key in ['normals', 'yearly', 'monthly']:
-            x = {}
-            for vrb in self.store[key].keys():
-                x[vrb] = self.store[key][vrb][...]
-            if key == 'normals' and 'Period' not in x.keys():
-                # This is needed for backward compatibility with
-                # gwhat < 0.2.3 (see PR#142).
-                x['Period'] = (np.min(self.store['Year']),
-                               np.max(self.store['Year']))
-            return x
-        elif key == 'daily':
-            vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
-                    'Rain', 'Snow', 'Ptot', 'PET']
-            x = {}
-            for vrb in vrbs:
-                x[vrb] = self.store[vrb][...]
-            return x
-        else:
-            return self.store[key][...]
+        raise NotImplementedError
 
     def __setitem__(self, key, value):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __iter__(self):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __len__(self, key):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __load_dataset__(self, dataset):
         """Saves the h5py dataset to the store."""

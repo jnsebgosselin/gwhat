@@ -185,25 +185,16 @@ class WXDataFrame(WXDataFrameBase):
         self.__load_dataset__(filename)
 
     def __getitem__(self, key):
-        """Returns the value saved in the store at key."""
-        if key == 'daily':
-            vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
-                    'Rain', 'Snow', 'Ptot', 'PET']
-            x = {}
-            for vrb in vrbs:
-                x[vrb] = self[vrb]
-            return x
-        else:
-            return self.store.__getitem__(key)
+        raise NotImplementedError
 
     def __setitem__(self, key, value):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __iter__(self):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __len__(self, key):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
