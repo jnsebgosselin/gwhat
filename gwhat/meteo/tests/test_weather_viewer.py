@@ -59,12 +59,27 @@ def test_save_graph_weather_normals(weather_viewer, mocker, tmpdir):
     Test that saving the weather normal graph to a file is working as
     expected.
     """
-    filepath = osp.join(str(tmpdir), 'weather_normals.pdf')
+    filepath = osp.join(str(tmpdir), 'weather_normals')
     mocker.patch.object(QFileDialog, 'getSaveFileName',
                         return_value=(filepath, '*.pdf'))
+    filepath += '.pdf'
 
     assert not osp.exists(filepath)
     weather_viewer.save_graph()
+    assert osp.exists(filepath)
+
+
+def test_save_normals_to_file(weather_viewer, mocker, tmpdir):
+    """
+    Test that saving the weather normals to a file is working as
+    expected.
+    """
+    filepath = osp.join(str(tmpdir), 'weather_normals.csv')
+    mocker.patch.object(QFileDialog, 'getSaveFileName',
+                        return_value=(filepath, '*.csv'))
+
+    assert not osp.exists(filepath)
+    weather_viewer.save_normals()
     assert osp.exists(filepath)
 
 
