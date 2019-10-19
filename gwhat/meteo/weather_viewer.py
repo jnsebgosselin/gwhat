@@ -35,7 +35,6 @@ from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
 from gwhat.common.widgets import DialogWindow
 from gwhat.widgets.buttons import RangeSpinBoxes
-from gwhat.meteo.weather_reader import calcul_monthly_normals
 from gwhat.common.utils import save_content_to_file
 from gwhat.meteo.weather_reader import WXDataFrameBase
 from gwhat.widgets.buttons import (ExportDataButton, LangToolButton,
@@ -181,17 +180,16 @@ class WeatherViewer(DialogWindow):
         self.wxdset = wxdset
 
         # Update the GUI :
-        self.setWindowTitle('Weather Averages for %s' % wxdset['Station Name'])
-        self.year_rng.setRange(np.min(wxdset['monthly']['Year']),
-                               np.max(wxdset['monthly']['Year']))
+        self.setWindowTitle('Weather Averages for {}'.format(
+                            wxdset.metadata['Station Name']))
+        self.year_rng.setRange(*wxdset.get_data_period())
         self.update_normals()
 
     def expands_year_range(self):
         """Sets the maximal possible year range."""
-        self.year_rng.spb_upper.setValueSilently(
-                np.max(self.wxdset['monthly']['Year']))
-        self.year_rng.spb_lower.setValueSilently(
-                np.min(self.wxdset['monthly']['Year']))
+        year_range = self.wxdset.get_data_period()
+        self.year_rng.spb_lower.setValueSilently(min(year_range))
+        self.year_rng.spb_upper.setValueSilently(max(year_range))
         self.update_normals()
 
     # ---- Normals
@@ -213,20 +211,9 @@ class WeatherViewer(DialogWindow):
         Calcul the normal values of the weather dataset for the currently
         defined period in the year range widget.
         """
-        keys = ['Tmax', 'Tmin', 'Tavg', 'Ptot', 'Rain', 'Snow', 'PET']
-        monthly = self.wxdset['monthly']
-        normals = {}
-        for key in keys:
-            if monthly[key] is None:
-                normals[key] = None
-            else:
-                normals[key] = calcul_monthly_normals(
-                        monthly['Year'], monthly['Month'], monthly[key],
-                        self.year_rng.lower_bound, self.year_rng.upper_bound)
-
-        normals['Period'] = (self.year_rng.lower_bound,
-                             self.year_rng.upper_bound)
-
+        period = (self.year_rng.lower_bound, self.year_rng.upper_bound)
+        normals = {'data': self.wxdset.get_monthly_normals(period),
+                   'period': period}
         return normals
 
     def save_graph(self):
@@ -562,11 +549,11 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # Assign local variables :
 
-        Tmax_norm = normals['Tmax']
-        Tmin_norm = normals['Tmin']
-        Tavg_norm = normals['Tavg']
-        Ptot_norm = normals['Ptot']
-        Rain_norm = normals['Rain']
+        Tmax_norm = normals['data']['Tmax'].values
+        Tmin_norm = normals['data']['Tmin'].values
+        Tavg_norm = normals['data']['Tavg'].values
+        Ptot_norm = normals['data']['Ptot'].values
+        Rain_norm = normals['data']['Rain'].values
         Snow_norm = Ptot_norm - Rain_norm
         
         # Define the range of the axis :
@@ -690,7 +677,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         """Sets the year range label that is displayed below the x axis."""
         if self.normals is not None:
             ax0 = self.figure.axes[1]
-            yearmin, yearmax = self.normals['Period']
+            yearmin, yearmax = self.normals['period']
             if yearmin == yearmax:
                 ax0.set_xlabel("%d" % yearmin, fontsize=16, labelpad=10)
             else:
@@ -738,19 +725,16 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.figure.axes[2].lines[3].set_ydata(Tavg_norm)
 
     def update_yearly_avg(self):
-
-        Tavg_norm = self.normals['Tavg']
-        Ptot_norm = self.normals['Ptot']
+        Tavg_norm = self.normals['data']['Tavg'].values
+        Ptot_norm = self.normals['data']['Ptot'].values
         ax = self.figure.axes[0]
 
-        # Update the position of the labels :
-
+        # Update the position of the labels.
         bbox = ax.texts[0].get_window_extent(self.get_renderer())
         bbox = bbox.transformed(ax.transAxes.inverted())
         ax.texts[1].set_position((0, bbox.y0))
 
-        # Update the text of the labels :
-
+        # Update the text of the labels.
         ax.texts[0].set_text(self.fig_labels.Tyrly % np.mean(Tavg_norm))
         ax.texts[1].set_text(self.fig_labels.Pyrly % np.sum(Ptot_norm))
 
@@ -786,94 +770,93 @@ class GridWeatherNormals(QTableWidget):
         self.verticalHeader().setSectionResizeMode(QHeaderView.Fixed)
         self.verticalHeader().setHighlightSections(False)
 
-    def populate_table(self, NORMALS):
+    def populate_table(self, normals):
 
         # ---- Air Temperature
-
         for row, key in enumerate(['Tmax', 'Tmin', 'Tavg']):
             # Months
             for col in range(12):
-                item = QTableWidgetItem('%0.1f' % NORMALS[key][col])
+                value = normals['data'][key].values[col]
+                item = QTableWidgetItem('%0.1f' % value)
                 item.setFlags(item.flags() & ~Qt.ItemIsEditable)
                 item.setTextAlignment(item.flags() & Qt.AlignCenter)
                 self.setItem(row, col, item)
 
             # Year
-            yearVal = np.mean(NORMALS[key])
+            yearVal = np.mean(normals['data'][key])
             item = QTableWidgetItem('%0.1f' % yearVal)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, 12, item)
 
         # ---- Rain
-
         row = 3
         # Months
         for col in range(12):
-            item = QTableWidgetItem('%0.1f' % NORMALS['Rain'][col])
+            value = normals['data']['Rain'].values[col]
+            item = QTableWidgetItem('%0.1f' % value)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
 
         # Year
-        yearVal = np.sum(NORMALS['Rain'])
+        yearVal = np.sum(normals['data']['Rain'].values)
         item = QTableWidgetItem('%0.1f' % yearVal)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
         # ---- Snow
-
         row = 4
         # Months
         for col in range(12):
-            snow4cell = NORMALS['Ptot'][col] - NORMALS['Rain'][col]
-            item = QTableWidgetItem('%0.1f' % snow4cell)
+            value = normals['data']['Snow'].values[col]
+            item = QTableWidgetItem('%0.1f' % value)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
 
         # Year
-        yearVal = np.sum(NORMALS['Ptot'] - NORMALS['Rain'])
+        yearVal = np.sum(normals['data']['Snow'].values[col])
         item = QTableWidgetItem('%0.1f' % yearVal)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
         # ---- Total Precip
-
         row = 5
         # Months
         for col in range(12):
-            item = QTableWidgetItem('%0.1f' % NORMALS['Ptot'][col])
+            value = normals['data']['Ptot'].values[col]
+            item = QTableWidgetItem('%0.1f' % value)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
         # Year
-        yearVal = np.sum(NORMALS['Ptot'])
+        yearVal = np.sum(normals['data']['Ptot'].values)
         item = QTableWidgetItem('%0.1f' % yearVal)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
         # ---- ETP
-
         row = 6
         # Months
         for col in range(12):
-            item = QTableWidgetItem('%0.1f' % NORMALS['PET'][col])
+            value = normals['data']['PET'].values[col]
+            item = QTableWidgetItem('%0.1f' % value)
             item.setFlags(item.flags() & ~Qt.ItemIsEditable)
             item.setTextAlignment(Qt.AlignCenter)
             self.setItem(row, col, item)
         # Year
-        yearVal = np.sum(NORMALS['PET'])
+        yearVal = np.sum(normals['data']['PET'].values)
         item = QTableWidgetItem('%0.1f' % yearVal)
         item.setFlags(item.flags() & ~Qt.ItemIsEditable)
         item.setTextAlignment(Qt.AlignCenter)
         self.setItem(row, 12, item)
 
     def calcul_height(self):
-        h = self.horizontalHeader().height() + 2*self.frameWidth()
+        h = self.horizontalHeader().height() + 2 * self.frameWidth()
         for i in range(self.rowCount()):
             h += self.rowHeight(i)
         return h
@@ -901,7 +884,6 @@ class ExportWeatherButton(ExportDataButton):
                               lambda: self.select_export_file('yearly'))
 
     # ---- Export Time Series
-
     @QSlot(str)
     def select_export_file(self, time_frame, savefilename=None):
         """
@@ -910,11 +892,15 @@ class ExportWeatherButton(ExportDataButton):
         """
         if savefilename is None:
             savefilename = osp.join(
-                self.dialog_dir, 'Weather%s_%s' % (time_frame.capitalize(),
-                                                   self.model['Station Name']))
+                self.dialog_dir,
+                'Weather{}_{}'.format(time_frame.capitalize(),
+                                      self.model.metadata['Station Name'])
+                )
 
         savefilename = self.select_savefilename(
-            'Export %s' % time_frame, savefilename, '*.xlsx;;*.xls;;*.csv')
+            'Export {}'.format(time_frame),
+            savefilename,
+            '*.xlsx;;*.xls;;*.csv')
 
         if savefilename:
             QApplication.setOverrideCursor(Qt.WaitCursor)
@@ -925,12 +911,13 @@ class ExportWeatherButton(ExportDataButton):
                 self.show_permission_error()
                 self.select_export_file(time_frame, savefilename)
             QApplication.restoreOverrideCursor()
+            print('DONE')
 
 
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
-    from gwhat.meteo.weather_reader import WXDataFrame
+    from gwhat.projet.reader_projet import ProjetReader
     app = QApplication(sys.argv)
 
     ft = app.font()
@@ -938,9 +925,9 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    fmeteo = ("..\\..\\Projects\\Example\\Meteo\\Output\\"
-              "MARIEVILLE (7024627)\\MARIEVILLE (7024627)_1980-2017.out")
-    wxdset = WXDataFrame(fmeteo)
+    fname = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
+    project = ProjetReader(fname)
+    wxdset = project.get_wxdset('Marieville')
 
     w = WeatherViewer()
     w.save_fig_dir = os.getcwd()
