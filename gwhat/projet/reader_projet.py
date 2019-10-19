@@ -828,8 +828,8 @@ class WXDataFrameHDF5(WXDataFrameBase):
         raise NotImplementedError
 
     def __load_dataset__(self, dataset):
-        """Saves the h5py dataset to the store."""
-        self._dataset = dataset
+        """Load and format the data from the h5py group."""
+        self.dataset = dataset
 
         # Make older datasets compatible with newer format.
         if isinstance(dataset['Time'][0], (int, float)):
@@ -867,7 +867,7 @@ class WXDataFrameHDF5(WXDataFrameBase):
                        "not needed anymore.").format(key))
         for variable in METEO_VARIABLES:
             key = 'Missing {}'.format(variable)
-            if (key in dataset.keys() and
+            if (key in dataset.keys() and len(dataset[key]) > 0 and
                     isinstance(dataset[key][0], (int, float))):
                 print(("Saving missing {} data time as ISO date strings "
                        "instead of Excel dates...").format(variable),
@@ -912,12 +912,12 @@ class WXDataFrameHDF5(WXDataFrameBase):
         for variable in METEO_VARIABLES:
             key = 'Missing {}'.format(variable)
             if key in dataset.keys():
-                self.missing_value_indexes[variable] = (
-                    pd.to_datetime(dataset[key], infer_datetime_format=True))
+                self.missing_value_indexes[variable] = pd.to_datetime(
+                    dataset[key][:], infer_datetime_format=True)
 
     @property
     def name(self):
-        return osp.basename(self.store.name)
+        return osp.basename(self.dataset.name)
 
 
 class GLUEDataFrameHDF5(GLUEDataFrameBase):
@@ -1001,20 +1001,12 @@ def load_dict_from_h5grp(h5grp):
 
 
 if __name__ == '__main__':
-    FNAME = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
-    PROJET = ProjetReader(FNAME)
+    fname = ("C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt")
+    # fname = ("D:\\Data\\Guidel\\Guidel.gwt")
+    project = ProjetReader(fname)
+    print(project.wxdsets)
 
-    wldset = PROJET.get_wldset('3040002_15min')
-    print(wldset.glue_idnums())
-    print(wldset.dirname)
+    wxdset = project.get_wxdset('192 (Lorient)')
+    # missing_idx = wxdset.missing_value_indexes['Tmax']
 
-    data = wldset.data
-
-    wldset.brf_count()
-
-    filename = 'C:/Users/User/Desktop/brf_test.csv'
-    wldset.export_brf_to_csv(filename, 0)
-    # glue_count = GLUEDF['count']
-    # dly_glue = GLUEDF['daily budget']
-
-    PROJET.db.close()
+    project.db.close()
