@@ -263,24 +263,15 @@ class Hydrograph(Figure):
                                         edgecolor='black')
 
     def generate_hydrograph(self, wxdset=None, wldset=None):
-        if wxdset is None:
-            wxdset = self.wxdset
-        else:
-            self.wxdset = wxdset
+        wxdset = self.wxdset if wxdset is None else wxdset
+        wldset = self.wldset if wldset is None else wldset
 
-        if wldset is None:
-            wldset = self.wldset
-        else:
-            self.wldset = wldset
-
-        # Reinit Figure :
-
+        # Reinit the figure.
         self.clf()
         self.set_size_inches(self.fwidth, self.fheight, forward=True)
         self.setup_figure_frame()
 
-        # Assign Weather Data :
-
+        # Assign Weather Data.
         if self.wxdset is None:
             self.name_meteo = ''
             self.TIMEmeteo = np.array([])
@@ -453,8 +444,8 @@ class Hydrograph(Figure):
         self.ax4.axis(ymin=TEMPmin, ymax=TEMPmax)
 
         yticks_position = np.array([TEMPmin, 0, TEMPmax])
-        yticks_position = np.arange(TEMPmin, TEMPmax + TEMPscale/2,
-                                    TEMPscale)
+        yticks_position = np.arange(
+            TEMPmin, TEMPmax + TEMPscale / 2, TEMPscale)
         self.ax4.set_yticks(yticks_position)
         self.ax4.yaxis.set_ticks_position('left')
         self.ax4.tick_params(axis='y', direction='out', labelsize=10)
@@ -465,14 +456,13 @@ class Hydrograph(Figure):
         self.ax4.xaxis.set_ticklabels([], minor=True)
 
         self.l1_ax4, = self.ax4.plot([], [])  # fill shape
-        self.l2_ax4, = self.ax4.plot([], [],  # contour line
-                                     color='black', lw=1)
+        self.l2_ax4, = self.ax4.plot(
+            [], [], color='black', lw=1)  # contour line
 
-        # ---- MISSING VALUES MARKERS ----
+        # ---- MISSING VALUES MARKERS
 
-        # Precipitation (v2):
-
-        vshift = 5/72
+        # Precipitation.
+        vshift = 5 / 72
         offset = ScaledTranslation(0, vshift, self.dpi_scale_trans)
         if self.wxdset is not None:
             t = self.wxdset['Missing Ptot']
