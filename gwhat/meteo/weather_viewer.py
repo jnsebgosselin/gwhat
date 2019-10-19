@@ -217,22 +217,20 @@ class WeatherViewer(DialogWindow):
         return normals
 
     def save_graph(self):
-        yrmin = np.min(self.wxdset['Year'])
-        yrmax = np.max(self.wxdset['Year'])
-        staname = self.wxdset['Station Name']
+        yrmin = self.year_rng.lower_bound
+        yrmax = self.year_rng.upper_bound
+        staname = self.wxdset.metadata['Station Name']
 
         defaultname = 'WeatherAverages_%s (%d-%d)' % (staname, yrmin, yrmax)
         ddir = os.path.join(self.save_fig_dir, defaultname)
 
         dialog = QFileDialog()
         filename, ftype = dialog.getSaveFileName(
-                self, 'Save graph', ddir, '*.pdf;;*.svg')
+            self, 'Save graph', ddir, '*.pdf;;*.svg')
 
         if filename:
-            if filename[-4:] != ftype[1:]:
-                # Add a file extension if there is none.
+            if not filename.endswith(ftype[1:]):
                 filename = filename + ftype[1:]
-
             self.save_fig_dir = os.path.dirname(filename)
             self.fig_weather_normals.figure.savefig(filename)
 
