@@ -223,7 +223,7 @@ def test_export_yearly_monthly_daily(datamanager, mocker, qtbot, tmp_path):
     """
     datamanager.show()
     wxdset = WXDataFrame(WXFILENAME)
-    datamanager.new_wxdset_imported(wxdset['Station Name'], wxdset)
+    datamanager.new_wxdset_imported(wxdset.metadata['Station Name'], wxdset)
 
     for ftype in ['xlsx', 'csv', 'xls']:
         for time_frame in ['daily', 'monthly', 'yearly']:
@@ -232,7 +232,7 @@ def test_export_yearly_monthly_daily(datamanager, mocker, qtbot, tmp_path):
             mocker.patch.object(
                 QFileDialog,
                 'getSaveFileName',
-                return_value=(filename, '*.'+ftype))
+                return_value=(filename, '*.' + ftype))
             datamanager.btn_export_weather.select_export_file(time_frame)
             assert osp.exists(filename)
 

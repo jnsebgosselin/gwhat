@@ -725,18 +725,22 @@ class NewDatasetDialog(QDialog):
             self._alt.setValue(0)
             self._sid.clear()
         else:
-            self._prov.setText(self._dataset['Province'])
-            self._lat.setValue(self._dataset['Latitude'])
-            self._lon.setValue(self._dataset['Longitude'])
-            self._alt.setValue(self._dataset['Elevation'])
             if self._datatype == 'water level':
+                self._prov.setText(self._dataset['Province'])
+                self._lat.setValue(self._dataset['Latitude'])
+                self._lon.setValue(self._dataset['Longitude'])
+                self._alt.setValue(self._dataset['Elevation'])
                 self._stn_name.setText(self._dataset['Well'])
                 self._sid.setText(self._dataset['Well ID'])
                 dsetname = self._dataset['Well']
             elif self._datatype == 'daily weather':
-                self._stn_name.setText(self._dataset['Station Name'])
-                self._sid.setText(self._dataset['Climate Identifier'])
-                dsetname = self._dataset['Station Name']
+                self._prov.setText(self._dataset.metadata['Location'])
+                self._lat.setValue(self._dataset.metadata['Latitude'])
+                self._lon.setValue(self._dataset.metadata['Longitude'])
+                self._alt.setValue(self._dataset.metadata['Elevation'])
+                self._stn_name.setText(self._dataset.metadata['Station Name'])
+                self._sid.setText(self._dataset.metadata['Station ID'])
+                dsetname = self._dataset.metadata['Station Name']
             # We replace the invalid characters to avoid problems when
             # saving the dataset to the hdf5 format.
             for char in INVALID_CHARS:
@@ -781,19 +785,21 @@ class NewDatasetDialog(QDialog):
             else:
                 del_dset(self.name)
 
-        # Update dataset attributes from UI and emit dataset :
-
+        # Update dataset attributes from UI and emit dataset.
         if self._datatype == 'water level':
             self._dataset['Well'] = self.station_name
             self._dataset['Well ID'] = self.station_id
+            self._dataset['Province'] = self.province
+            self._dataset['Latitude'] = self.latitude
+            self._dataset['Longitude'] = self.longitude
+            self._dataset['Elevation'] = self.altitude
         elif self._datatype == 'daily weather':
-            self._dataset['Station Name'] = self.station_name
-            self._dataset['Climate Identifier'] = self.station_id
-        self._dataset['Province'] = self.province
-        self._dataset['Latitude'] = self.latitude
-        self._dataset['Longitude'] = self.longitude
-        self._dataset['Elevation'] = self.altitude
-
+            self._dataset.metadata['Station Name'] = self.station_name
+            self._dataset.metadata['Station ID'] = self.station_id
+            self._dataset.metadata['Location'] = self.province
+            self._dataset.metadata['Latitude'] = self.latitude
+            self._dataset.metadata['Longitude'] = self.longitude
+            self._dataset.metadata['Elevation'] = self.altitude
         self.hide()
         self.sig_new_dataset_imported.emit(self.name, self._dataset)
         self.close()

@@ -300,12 +300,12 @@ def read_weather_datafile(filename):
         return None, None
 
     HEADER_REGEX = {
-        'Station Name': r'(?<!\S)(wellname|name)(:|=)?(?!\S)',
+        'Station Name': r'(stationname|name)',
         'Station ID': r'(stationid|id|climateidentifier)',
-        'Latitude': r'(?<!\S)(latitude|lat)(:|=)?(?!\S)',
-        'Longitude': r'(?<!\S)(longitude|lon)(:|=)?(?!\S)',
-        'Location': r'(?<!\S)(location|prov)(:|=)?(?!\S)',
-        'Elevation': r'(?<!\S)(elev|alt)'
+        'Latitude': r'(latitude)',
+        'Longitude': r'(longitude)',
+        'Location': r'(location|province)',
+        'Elevation': r'(elevation|altitude)'
         }
     HEADER_TYPE = {
         'Station Name': str,
