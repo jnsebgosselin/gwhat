@@ -19,6 +19,7 @@ import pytest
 # ---- Local library imports
 from gwhat.meteo.weather_reader import (WXDataFrame, read_cweeds_file,
                                         join_daily_cweeds_wy2_and_wy3)
+from gwhat.utils.dates import datetimeindex_to_xldates
 
 
 def test_read_weather_data():
@@ -33,6 +34,8 @@ def test_read_weather_data():
     assert np.all(np.diff(wxdset.data.index) == np.timedelta64(1, 'D'))
     assert wxdset.get_data_period() == (2010, 2015)
 
+    assert np.array_equal(datetimeindex_to_xldates(wxdset.data.index),
+                          np.arange(40179, 42369 + 1))
     assert np.array_equal(wxdset.data.index,
                           pd.date_range(start=dt.datetime(2010, 1, 1),
                                         end=dt.datetime(2015, 12, 31),
