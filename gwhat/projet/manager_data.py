@@ -371,12 +371,12 @@ class DataManager(QWidget):
         """Update the infos of the wxdset."""
         wxdset = self.get_current_wxdset()
         if wxdset is not None:
-            model = ["Station : %s" % wxdset['Station Name'],
-                     "Climate ID : %s" % wxdset['Climate Identifier'],
-                     "Latitude : %0.3f°" % wxdset['Latitude'],
-                     "Longitude : %0.3f°" % wxdset['Longitude'],
-                     "Elevation : %0.1f m" % wxdset['Elevation'],
-                     "Province : %s" % wxdset['Province']]
+            model = ["Station : %s" % wxdset.metadata['Station Name'],
+                     "Station ID : %s" % wxdset.metadata['Station ID'],
+                     "Latitude : %0.3f°" % wxdset.metadata['Latitude'],
+                     "Longitude : %0.3f°" % wxdset.metadata['Longitude'],
+                     "Elevation : %0.1f m" % wxdset.metadata['Elevation'],
+                     "Location : %s" % wxdset.metadata['Location']]
         else:
             model = None
         self.meteo_info_widget.set_model(model)
@@ -811,8 +811,6 @@ class NewDatasetDialog(QDialog):
 if __name__ == '__main__':
     import sys
     from gwhat.projet.reader_projet import ProjetReader
-    projet = ProjetReader(
-        "C:/Users/jsgosselin/gwhat/Projects/Example/Example.gwt")
 
     app = QApplication(sys.argv)
 
@@ -821,10 +819,8 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    # pm = ProjetManager(projet=f)
-    # pm.show()
-
-    dm = DataManager(projet=projet)
+    dm = DataManager(projet=ProjetReader(
+        "C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt"))
     dm.show()
 
     app.exec_()
