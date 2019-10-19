@@ -254,9 +254,7 @@ class WeatherViewer(DialogWindow):
             # Organise the content to save to file.
             hheader = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
                        'AUG', 'SEP', 'OCT', 'NOV', 'DEC', 'YEAR']
-
             vrbs = ['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET']
-
             lbls = ['Daily Tmin (\u00B0C)', 'Daily Tavg (\u00B0C)',
                     'Daily Tmax (\u00B0C)', 'Rain (mm)', 'Snow (mm)',
                     'Total Precip. (mm)', 'ETP (mm)']
