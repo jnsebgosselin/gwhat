@@ -279,11 +279,11 @@ class Hydrograph(Figure):
             self.PTOT = np.array([])
             self.RAIN = np.array([])
         else:
-            self.name_meteo = wxdset['Station Name']
-            self.TIMEmeteo = wxdset['Time']
-            self.TMAX = wxdset['Tmax']
-            self.PTOT = wxdset['Ptot']
-            self.RAIN = wxdset['Rain']
+            self.name_meteo = wxdset.metadata['Station Name']
+            self.TIMEmeteo = datetimeindex_to_xldates(wxdset.data.index)
+            self.TMAX = wxdset.data['Tmax'].values
+            self.PTOT = wxdset.data['Ptot'].values
+            self.RAIN = wxdset.data['Rain'].values
 
         # Resample Data in Bins :
 
@@ -367,7 +367,7 @@ class Hydrograph(Figure):
         if self.wxdset is not None:
             self.dist = calc_dist_from_coord(
                 wldset['Latitude'], wldset['Longitude'],
-                wxdset['Latitude'], wxdset['Longitude'])
+                wxdset.metadata['Latitude'], wxdset.metadata['Longitude'])
         else:
             self.dist = 0
 
@@ -465,23 +465,50 @@ class Hydrograph(Figure):
         vshift = 5 / 72
         offset = ScaledTranslation(0, vshift, self.dpi_scale_trans)
         if self.wxdset is not None:
-            t = self.wxdset['Missing Ptot']
-            y = np.ones(len(t)) * self.ax4.get_ylim()[0]
+            t1 = pd.DataFrame(self.wxdset.missing_value_indexes['Ptot'],
+                              index=self.wxdset.missing_value_indexes['Ptot'],
+                              columns=['datetime'])
+            t2 = pd.DataFrame(self.wxdset.missing_value_indexes['Ptot'] +
+                              pd.Timedelta('1 days'),
+                              self.wxdset.missing_value_indexes['Ptot'] +
+                              pd.Timedelta('1 days'),
+                              columns=['datetime'])
+            time = datetimeindex_to_xldates(pd.DatetimeIndex(
+                pd.concat([t1, t2], axis=0)
+                .drop_duplicates()
+                .resample('1D')
+                .asfreq()
+                ['datetime']
+                ))
+            y = np.ones(len(time)) * self.ax4.get_ylim()[0]
         else:
-            t, y = [], []
+            time, y = [], []
         self.lmiss_ax4, = self.ax4.plot(
-            t, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
+            time, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
             transform=self.ax4.transData + offset)
 
-        # ---- Air Temperature (v2) ----
-
+        # Air Temperature.
         offset = ScaledTranslation(0, -vshift, self.dpi_scale_trans)
         if self.wxdset is not None:
-            t = self.wxdset['Missing Tmax']
-            y = np.ones(len(t)) * self.ax4.get_ylim()[1]
+            t1 = pd.DataFrame(self.wxdset.missing_value_indexes['Tmax'],
+                              index=self.wxdset.missing_value_indexes['Tmax'],
+                              columns=['datetime'])
+            t2 = pd.DataFrame(self.wxdset.missing_value_indexes['Tmax'] +
+                              pd.Timedelta('1 days'),
+                              self.wxdset.missing_value_indexes['Tmax'] +
+                              pd.Timedelta('1 days'),
+                              columns=['datetime'])
+            time = datetimeindex_to_xldates(pd.DatetimeIndex(
+                pd.concat([t1, t2], axis=0)
+                .drop_duplicates()
+                .resample('1D')
+                .asfreq()
+                ['datetime']
+                ))
+            y = np.ones(len(time)) * self.ax4.get_ylim()[1]
         else:
-            t, y = [], []
-        self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
+            time, y = [], []
+        self.ax4.plot(time, y, ls='-', solid_capstyle='projecting',
                       lw=1., c='red', transform=self.ax4.transData + offset)
 
         self.draw_weather()
