@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
@@ -9,14 +9,12 @@
 # The function filt_data is based on the codes provided by
 # StackOverflow user Alleo.
 # https://stackoverflow.com/a/27681394/4481445
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
-
 from calendar import monthrange
-from math import sin, cos, sqrt, atan2, radians
 
 # ---- Third party imports
-
 import numpy as np
 import matplotlib as mpl
 from matplotlib.patches import Rectangle
@@ -24,11 +22,13 @@ from matplotlib.figure import Figure
 from matplotlib.transforms import ScaledTranslation
 # import matplotlib.patches
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import pandas as pd
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
+from gwhat.utils.dates import datetimeindex_to_xldates
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.colors2 import ColorsReader
 
