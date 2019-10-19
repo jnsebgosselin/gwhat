@@ -9,6 +9,8 @@
 
 
 # ---- Third party imports
+import h5py
+import numpy as np
 import pandas as pd
 import xlrd
 from xlrd import xldate_as_tuple
@@ -16,14 +18,54 @@ from xlrd.xldate import xldate_as_datetime
 from PyQt5.QtCore import QDate, QDateTime
 
 
+def format_time_data(self, timedata):
+    """
+    Format a numpy array containing time data, either in a string or Excel
+    numeric format, and return a pandas datetime index.
+    """
+    datetimes = pd.DatetimeIndex([])
+    try:
+        # We first assume that the dates are stored in the
+        # Excel numeric format.
+        timedata = timedata.astype('float64', errors='raise')
+    except ValueError:
+        try:
+            # Try converting the strings to datetime objects.
+            # The format of the datetime strings must be
+            # "%Y-%m-%d %H:%M:%S"
+            datetimes = pd.to_datetime(timedata, infer_datetime_format=True)
+        except ValueError:
+            print('WARNING: the dates are not formatted correctly.')
+    else:
+        try:
+            # Try converting the Excel numeric dates to pandas
+            # datetime objects.
+            datetimes = pd.to_datetime(datetimes.apply(
+                lambda date: xlrd.xldate.xldate_as_datetime(date, 0)))
+        except Exception:
+            print('Warning: the dates are not formatted correctly.')
+    return datetimes
 
-def xldate_to_datetimeindex(xldates):
+
+def xldates_to_datetimeindex(xldates):
     """
     Format a list or numpy array of Excel numeric dates into a
     pandas datetime index.
     """
     return pd.to_datetime(
         [xlrd.xldate.xldate_as_datetime(xldate, 0) for xldate in xldates])
+
+
+def xldates_to_strftimes(xldates):
+    """
+    Format a a list or numpy array of Excel numeric dates into a numpy array
+    of ISO date strings that can be saved in a hdf5 file.
+    """
+    dtimeindex = xldates_to_datetimeindex(xldates)
+    return np.array(
+        dtimeindex.strftime("%Y-%m-%dT%H:%M:%S").values.tolist(),
+        dtype=h5py.special_dtype(vlen=str)
+        )
 
 
 def qdate_from_xldate(xldate, datemode=0):
