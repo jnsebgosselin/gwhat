@@ -22,13 +22,11 @@ from abc import abstractmethod
 # ---- Third party imports
 import numpy as np
 import pandas as pd
-from xlrd.xldate import xldate_from_datetime_tuple, xldate_from_date_tuple
-
+from xlrd.xldate import xldate_from_datetime_tuple
 
 # ---- Local library imports
-
 from gwhat.meteo.evapotranspiration import calcul_thornthwaite
-from gwhat.common.utils import save_content_to_csv, save_content_to_file
+from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
 
@@ -36,6 +34,13 @@ from gwhat import __namever__
 PRECIP_VARIABLES = ['Ptot', 'Rain', 'Snow']
 TEMP_VARIABLES = ['Tmax', 'Tavg', 'Tmin', 'PET']
 METEO_VARIABLES = PRECIP_VARIABLES + TEMP_VARIABLES
+VARLABELS_MAP = {'Ptot': 'Ptot (mm)',
+                 'Rain': 'Rain (mm)',
+                 'Snow': 'Snow (mm)',
+                 'Tmax': 'Tmax (\u00B0C)',
+                 'Tavg': 'Tavg (\u00B0C)',
+                 'Tmin': 'Tmin (\u00B0C)',
+                 'PET': 'PET (mm)'}
 
 
 # ---- API
@@ -71,51 +76,38 @@ class WXDataFrameBase(Mapping):
         file, or tsv for tab-separated values text file).
         """
         if time_frame == 'daily':
-            vrbs = ['Year', 'Month', 'Day']
-            lbls = ['Year', 'Month', 'Day']
+            data = self.data.copy()
+            data.insert(0, 'Year', data.index.year)
+            data.insert(1, 'Month', data.index.month)
+            data.insert(2, 'Day', data.index.day)
         elif time_frame == 'monthly':
-            vrbs = ['Year', 'Month']
-            lbls = ['Year', 'Month']
+            data = self.get_monthly_values()
+            data.insert(0, 'Year', data.index.get_level_values(0))
+            data.insert(1, 'Month', data.index.get_level_values(1))
         elif time_frame == 'yearly':
-            vrbs = ['Year']
-            lbls = ['Year']
+            data = self.get_yearly_values()
+            data.insert(0, 'Year', data.index)
         else:
             raise ValueError('"time_frame" must be either "yearly", "monthly"'
                              ' or "daily".')
 
-        vrbs.extend(['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET'])
-        lbls.extend(['Tmin (\u00B0C)', 'Tavg (\u00B0C)', 'Tmax (\u00B0C)',
-                     'Rain (mm)', 'Snow (mm)', 'Ptot (mm)',
-                     'PET (mm)'])
-
-        startdate = '%02d/%02d/%d' % (
-            self['Day'][0], self['Month'][0], self['Year'][0])
-        enddate = '%02d/%02d/%d' % (
-            self['Day'][-1], self['Month'][-1], self['Year'][-1])
-
-        fcontent = [['Station Name', self['Station Name']],
-                    ['Province', self['Province']],
-                    ['Latitude', self['Longitude']],
-                    ['Longitude', self['Longitude']],
-                    ['Elevation', self['Elevation']],
-                    ['Climate Identifier', self['Climate Identifier']],
+        fcontent = [['Station Name', self.metadata['Station Name']],
+                    ['Station ID', self.metadata['Station ID']],
+                    ['Location', self.metadata['Location']],
+                    ['Latitude (\u00B0)', self.metadata['Latitude']],
+                    ['Longitude (\u00B0)', self.metadata['Longitude']],
+                    ['Elevation (m)', self.metadata['Elevation']],
                     ['', ''],
-                    ['Start Date ', startdate],
-                    ['End Date ', enddate],
+                    ['Start Date ', self.data.index[0].strftime("%Y-%m-%d")],
+                    ['End Date ', self.data.index[-1].strftime("%Y-%m-%d")],
                     ['', ''],
                     ['Created by', __namever__],
-                    ['Created on', strftime("%d/%m/%Y")],
+                    ['Created on', strftime("%Y-%m-%d")],
                     ['', '']
                     ]
-        fcontent.append(lbls)
-
-        N = len(self[time_frame]['Year'])
-        M = len(vrbs)
-        data = np.zeros((N, M))
-        for j, vrb in enumerate(vrbs):
-            data[:, j] = self[time_frame][vrb]
-        fcontent.extend(nan_as_text_tolist(data))
-
+        fcontent.append(
+            [VARLABELS_MAP.get(col, col) for col in data.columns])
+        fcontent.extend(nan_as_text_tolist(data.values))
         save_content_to_file(filename, fcontent)
 
     def get_data_period(self):
@@ -123,7 +115,7 @@ class WXDataFrameBase(Mapping):
         Return the year range for which data are available for this
         dataset.
         """
-        return (data.index.min().year, data.index.max().year)
+        return (self.data.index.min().year, self.data.index.max().year)
 
     # ---- utilities
     def strftime(self):
@@ -218,11 +210,11 @@ class WXDataFrame(WXDataFrameBase):
         finfo = root + '.log'
         if os.path.exists(finfo):
             print('Reading gapfill data from "%s"...' % osp.basename(finfo))
-            keys_labels = [('Missing Tmax', 'Max Temp (deg C)'),
-                           ('Missing Tmin', 'Min Temp (deg C)'),
-                           ('Missing Tavg', 'Mean Temp (deg C)'),
-                           ('Missing Ptot', 'Total Precip (mm)')]
-            for var, label in keys_labels:
+            var_labels = [('Tmax', 'Max Temp (deg C)'),
+                          ('Tmin', 'Min Temp (deg C)'),
+                          ('Tavg', 'Mean Temp (deg C)'),
+                          ('Ptot', 'Total Precip (mm)')]
+            for var, label in var_labels:
                 self.missing_value_indexes[var] = (
                     self.missing_value_indexes[var]
                     .append(load_weather_log(finfo, label))
