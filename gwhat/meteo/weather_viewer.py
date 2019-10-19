@@ -911,10 +911,7 @@ class ExportWeatherButton(ExportDataButton):
                 self.show_permission_error()
                 self.select_export_file(time_frame, savefilename)
             QApplication.restoreOverrideCursor()
-            print('DONE')
 
-
-# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     from gwhat.projet.reader_projet import ProjetReader
