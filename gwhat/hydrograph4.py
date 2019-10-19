@@ -1234,115 +1234,53 @@ def filt_data(time, waterlvl, N):
 
 
 if __name__ == '__main__':
-
     from PyQt5.QtWidgets import QApplication
     import sys
     from mplFigViewer3 import ImageViewer
-    from gwhat.projet.reader_waterlvl import read_water_level_datafile
     from gwhat.meteo.weather_reader import WXDataFrame
     from gwhat.projet.reader_projet import ProjetReader
 
     app = QApplication(sys.argv)
 
-    # ---- load data
-
-    path_projet = "E:\\GWHAT\\Projects\\Pont-Rouge\\Pont-Rouge.what"
+    # ---- Load the data
+    path_projet = "C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt"
     projet = ProjetReader(path_projet)
 
-    # projname = "E:\\GWHAT\\Projects\\Pont-Rouge\\Pont-Rouge.what"
-    # dirname = '../Projects/Pont-Rouge'
-    # fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    # finfo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.log'
-    # fwaterlvl = dirname + '/Water Levels/5080001.xls'
+    wldset = projet.get_wldset('3040002_15min')
+    wxdset = projet.get_wxdset('Marieville')
 
-    wldset = projet.get_wldset('#5080001')
-    wxdset = projet.get_wxdset('STE CHRISTINE')
-
-    # ---------------------------------------------------- set up hydrograph --
+    # ---- Setup the hydrograph
 
     hydrograph = Hydrograph()
     hydrograph.set_wldset(wldset)
     hydrograph.set_wxdset(wxdset)
     hydrograph.language = 'english'
 
-    what = ['normal', 'MRC', 'GLUE'][0]
+    hydrograph.fwidth = 11.  # Width of the figure in inches
+    hydrograph.fheight = 8.5
 
-    if what == 'normal':
-        hydrograph.fwidth = 11.  # Width of the figure in inches
-        hydrograph.fheight = 8.5
+    hydrograph.WLdatum = 0  # 0 -> mbgs ; 1 -> masl
+    hydrograph.trend_line = False
+    hydrograph.gridLines = 2  # Gridlines Style
+    hydrograph.isGraphTitle = 1  # 1 -> title ; 0 -> no title
+    hydrograph.isLegend = 1
 
-        hydrograph.WLdatum = 0  # 0 -> mbgs ; 1 -> masl
-        hydrograph.trend_line = False
-        hydrograph.gridLines = 2  # Gridlines Style
-        hydrograph.isGraphTitle = 1  # 1 -> title ; 0 -> no title
-        hydrograph.isLegend = 1
+    hydrograph.meteo_on = True  # True or False
+    hydrograph.datemode = 'year'  # 'month' or 'year'
+    hydrograph.date_labels_pattern = 1
+    hydrograph.bwidth_indx = 2  # Meteo Bin Width
+    # 0: daily | 1: weekly | 2: monthly | 3: yearly
+    hydrograph.RAINscale = 100
 
-        hydrograph.meteo_on = True  # True or False
-        hydrograph.datemode = 'year'  # 'month' or 'year'
-        hydrograph.date_labels_pattern = 1
-        hydrograph.bwidth_indx = 2  # Meteo Bin Width
-        # 0: daily | 1: weekly | 2: monthly | 3: yearly
-        hydrograph.RAINscale = 100
+    hydrograph.best_fit_time(wldset.xldates)
+    hydrograph.best_fit_waterlvl()
+    hydrograph.generate_hydrograph()
 
-        hydrograph.best_fit_time(wldset.xldate)
-        hydrograph.best_fit_waterlvl()
-        hydrograph.generate_hydrograph()
-#
-#    elif what == 'MRC':
-#
-#        hg.fheight = 5.
-#        hg.isGraphTitle = 0
-#
-#        hg.NZGrid = 11
-#        hg.WLmin = 10.75
-#        hg.WLscale = 0.25
-#
-#        hg.best_fit_time(waterLvlObj.time)
-#        hg.generate_hydrograph(meteo_obj)
-#
-#        hg.draw_mrc_wl()
-#        hg.savefig(dirname + '/MRC_hydrograph.pdf')
-#
-#        hg.isMRC = False
-#
-#    elif what == 'GLUE':
-#
-#        hg.fwidth = 11
-#        hg.fheight = 6
-#
-#        hg.NZGrid = 10
-#        hg.WLmin = 9
-#        hg.WLscale = 1
-#
-#        hg.isGraphTitle = 1  # 1 -> title ; 0 -> no title
-#        hg.isLegend = 1
-#        hg.meteo_on = True
-#        hg.datemode = 'month'  # 'month' or 'year'
-#        hg.date_labels_pattern = 1
-#
-#        hg.best_fit_time(waterLvlObj.time)
-#        hg.generate_hydrograph(meteo_obj)
-#
-#        # hg.l1_ax2.setp(zorder=10, linewidth=1, color='blue', ms=2,
-#        #                linestyle='none', marker='.')
-#
-#        # hg.l1_ax2.set_rasterized(True)
-#
-#        # plot a hydrograph friend
-##        wl2 = WaterlvlData()
-##        wl2.load(dirname + '/Water Levels/5080001.xls')
-##        ax2 = hydrograph.ax2
-##        ax2.plot(wl2.time, wl2.lvl, color='green')
-#
-#        hg.draw_GLUE()
-#        hg.draw_mrc_wl()
-#        hg.savefig(dirname + '/GLUE_hydrograph.pdf', dpi=300)
-#
     # ---- Show figure on-screen
-
     imgview = ImageViewer()
     imgview.sfmax = 10
     imgview.load_mpl_figure(hydrograph)
     imgview.show()
 
+    projet.close()
     sys.exit(app.exec_())
