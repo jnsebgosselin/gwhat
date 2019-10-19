@@ -224,13 +224,11 @@ class WeatherViewer(DialogWindow):
         defaultname = 'WeatherAverages_%s (%d-%d)' % (staname, yrmin, yrmax)
         ddir = os.path.join(self.save_fig_dir, defaultname)
 
-        dialog = QFileDialog()
-        filename, ftype = dialog.getSaveFileName(
+        filename, ftype = QFileDialog.getSaveFileName(
             self, 'Save graph', ddir, '*.pdf;;*.svg')
-
         if filename:
             if not filename.endswith(ftype[1:]):
-                filename = filename + ftype[1:]
+                filename += ftype[1:]
             self.save_fig_dir = os.path.dirname(filename)
             self.fig_weather_normals.figure.savefig(filename)
 
@@ -238,19 +236,19 @@ class WeatherViewer(DialogWindow):
         """
         Save the montly and yearly normals in a file.
         """
-        # Define a default name for the file :
-        yrmin = self.normals['Period'][0]
-        yrmax = self.normals['Period'][1]
-        staname = self.wxdset['Station Name']
-
-        defaultname = 'WeatherNormals_%s (%d-%d)' % (staname, yrmin, yrmax)
+        # Define a default name for the file.
+        defaultname = 'WeatherNormals_{} ({}-{})'.format(
+            self.wxdset.metadata['Station Name'],
+            self.year_rng.lower_bound,
+            self.year_rng.upper_bound)
         ddir = osp.join(self.save_fig_dir, defaultname)
 
-        # Open a dialog to get a save file name :
-        dialog = QFileDialog()
-        filename, ftype = dialog.getSaveFileName(
-                self, 'Save normals', ddir, '*.xlsx;;*.xls;;*.csv')
+        # Open a dialog to get a save file name.
+        filename, ftype = QFileDialog.getSaveFileName(
+            self, 'Save normals', ddir, '*.xlsx;;*.xls;;*.csv')
         if filename:
+            if not filename.endswith(ftype[1:]):
+                filename += ftype[1:]
             self.save_fig_dir = osp.dirname(filename)
 
             # Organise the content to save to file.
@@ -266,11 +264,11 @@ class WeatherViewer(DialogWindow):
             fcontent = [hheader]
             for i, (vrb, lbl) in enumerate(zip(vrbs, lbls)):
                 fcontent.append([lbl])
-                fcontent[-1].extend(self.normals[vrb].tolist())
+                fcontent[-1].extend(self.normals['data'][vrb].tolist())
                 if vrb in ['Tmin', 'Tavg', 'Tmax']:
-                    fcontent[-1].append(np.mean(self.normals[vrb]))
+                    fcontent[-1].append(self.normals['data'][vrb].mean())
                 else:
-                    fcontent[-1].append(np.sum(self.normals[vrb]))
+                    fcontent[-1].append(self.normals['data'][vrb].sum())
             save_content_to_file(filename, fcontent)
 
 
