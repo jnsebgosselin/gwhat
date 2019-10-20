@@ -994,7 +994,12 @@ def load_dict_from_h5grp(h5grp):
     dic = {}
     for key, item in h5grp.items():
         if isinstance(item, h5py._hl.dataset.Dataset):
-            dic[key] = item[...]
+            values = item[...]
+            try:
+                len(values)
+            except TypeError:
+                values = np.asscalar(values)
+            dic[key] = values
         elif isinstance(item, h5py._hl.group.Group):
             dic[key] = load_dict_from_h5grp(item)
     return dic
