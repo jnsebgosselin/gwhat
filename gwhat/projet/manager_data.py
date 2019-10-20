@@ -669,7 +669,7 @@ class NewDatasetDialog(QDialog):
         if self._datatype == 'water level':
             exts = '(*.csv;*.xls;*.xlsx)'
         elif self._datatype == 'daily weather':
-            exts = '(*.csv;*.out)'
+            exts = '(*.csv;*.out;*.xls;*.xlsx)'
         filename, _ = QFileDialog.getOpenFileName(
             self, 'Select a %s data file' % self._datatype,
             self.workdir, exts)
