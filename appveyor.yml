@@ -9,7 +9,7 @@ branches:
 
 environment:
   global:
-    GWHAT_VERSION: "gwhat_0.4.0.dev0"
+    GWHAT_VERSION: "gwhat_0.4.0"
 
   matrix:
     - PYTHON: "C:\\Python36-x64"
@@ -45,7 +45,7 @@ test_script:
 
 after_test:
   # Install requirements for packaging GWHAT.
-  - python -m pip install pyinstaller pywin32 tornado
+  - python -m pip install pyinstaller==3.4 pywin32 tornado
 
   # Package GWHAT with PyInstaller.
   - cmd: set PYTHONPATH=C:\projects\gwhat;%PYTHONPATH%
