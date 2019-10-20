@@ -99,7 +99,7 @@ class RechgEvalWorker(QObject):
         self.wldset = wldset
         self.A, self.B = wldset['mrc/params']
         self.twlvl, self.wlobs = self.make_data_daily(
-            wldset.xldate, wldset['WL'])
+            wldset.xldates, wldset['WL'])
 
         if not self.A and not self.B:
             error = ("Groundwater recharge cannot be computed because a"
