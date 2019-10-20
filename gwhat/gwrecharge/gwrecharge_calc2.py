@@ -87,10 +87,10 @@ class RechgEvalWorker(QObject):
         # Setup weather data.
 
         self.wxdset = wxdset
-        self.ETP = self.wxdset['PET']
-        self.PTOT = self.wxdset['Ptot']
-        self.TAVG = self.wxdset['Tavg']
-        self.tweatr = self.wxdset['Time'] + self.deltat
+        self.ETP = self.wxdset.data['PET'].values
+        self.PTOT = self.wxdset.data['Ptot'].values
+        self.TAVG = self.wxdset.data['Tavg'].values
+        self.tweatr = self.wxdset.get_xldates() + self.deltat
         # We introduce a time lag here to take into account the travel time
         # through the unsaturated zone.
 
@@ -99,7 +99,7 @@ class RechgEvalWorker(QObject):
         self.wldset = wldset
         self.A, self.B = wldset['mrc/params']
         self.twlvl, self.wlobs = self.make_data_daily(
-            wldset.xldate, wldset['WL'])
+            wldset.xldates, wldset['WL'])
 
         if not self.A and not self.B:
             error = ("Groundwater recharge cannot be computed because a"
@@ -226,12 +226,12 @@ class RechgEvalWorker(QObject):
         glue_rawdata['water levels']['time'] = self.twlvl
         glue_rawdata['water levels']['observed'] = self.wlobs
 
-        glue_rawdata['Weather'] = {'Tmax': self.wxdset['Tmax'],
-                                   'Tmin': self.wxdset['Tmin'],
-                                   'Tavg': self.wxdset['Tavg'],
-                                   'Ptot': self.wxdset['Ptot'],
-                                   'Rain': self.wxdset['Rain'],
-                                   'PET': self.wxdset['PET']}
+        glue_rawdata['Weather'] = {'Tmax': self.wxdset.data['Tmax'].values,
+                                   'Tmin': self.wxdset.data['Tmin'].values,
+                                   'Tavg': self.wxdset.data['Tavg'].values,
+                                   'Ptot': self.wxdset.data['Ptot'].values,
+                                   'Rain': self.wxdset.data['Rain'].values,
+                                   'PET': self.wxdset.data['PET'].values}
 
         # Save the water levels simulated with the mrc, as well as and values
         # of the parameters that characterized this mrc.
@@ -246,10 +246,10 @@ class RechgEvalWorker(QObject):
         glue_rawdata['recharge'] = set_recharge
         glue_rawdata['etr'] = set_evapo
         glue_rawdata['ru'] = set_runoff
-        glue_rawdata['Time'] = self.wxdset['Time']
-        glue_rawdata['Year'] = self.wxdset['Year']
-        glue_rawdata['Month'] = self.wxdset['Month']
-        glue_rawdata['Day'] = self.wxdset['Day']
+        glue_rawdata['Time'] = self.wxdset.get_xldates()
+        glue_rawdata['Year'] = self.wxdset.data.index.year.values
+        glue_rawdata['Month'] = self.wxdset.data.index.month.values
+        glue_rawdata['Day'] = self.wxdset.data.index.day.values
 
         # Save infos about the piezometric station.
 
@@ -259,9 +259,9 @@ class RechgEvalWorker(QObject):
 
         # Save infos about the weather station.
 
-        keys = ['Station Name', 'Climate Identifier', 'Province', 'Latitude',
+        keys = ['Station Name', 'Station ID', 'Location', 'Latitude',
                 'Longitude', 'Elevation']
-        glue_rawdata['wxinfo'] = {k: self.wxdset[k] for k in keys}
+        glue_rawdata['wxinfo'] = {k: self.wxdset.metadata[k] for k in keys}
 
         # Calcul GLUE from the set of behavioural model and send the results
         # with a signal so that it can be handled on the UI side.

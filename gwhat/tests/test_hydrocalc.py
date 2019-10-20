@@ -41,7 +41,7 @@ def project(projectpath):
 
     # Add the weather dataset to the project.
     wxdset = WXDataFrame(WXFILENAME)
-    project.add_wxdset(wxdset['Station Name'], wxdset)
+    project.add_wxdset(wxdset.metadata['Station Name'], wxdset)
 
     # Add the water level dataset to the project.
     wldset = WLDataFrame(WLFILENAME)

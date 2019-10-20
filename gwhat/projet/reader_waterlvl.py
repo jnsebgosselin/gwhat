@@ -12,16 +12,16 @@ from copy import deepcopy
 import re
 import os
 import os.path as osp
-import numpy as np
-import xlrd
-from xlrd.xldate import xldate_from_datetime_tuple
-from xlrd import xldate_as_tuple
 import csv
 from collections import OrderedDict
 from collections.abc import Mapping
 
 # ---- Third party imports
+import numpy as np
 import pandas as pd
+import xlrd
+from xlrd.xldate import xldate_from_datetime_tuple
+from xlrd import xldate_as_tuple
 
 # ---- Local library imports
 from gwhat.common.utils import save_content_to_csv
@@ -179,23 +179,6 @@ def read_water_level_datafile(filename):
     return dataf
 
 
-def make_waterlvl_continuous(t, wl):
-    """
-    This method produce a continuous daily water level time series.
-    Missing data are filled with nan values.
-    """
-    print('Making water level continuous...')
-    i = 1
-    while i < len(t)-1:
-        if t[i+1]-t[i] > 1:
-            wl = np.insert(wl, i+1, np.nan, 0)
-            t = np.insert(t, i+1, t[i]+1, 0)
-        i += 1
-    print('Making water level continuous done.')
-
-    return t, wl
-
-
 # ---- Water Level Manual Measurements
 def init_waterlvl_measures(dirname):
     """
@@ -203,7 +186,7 @@ def init_waterlvl_measures(dirname):
     if it does not already exist.
     """
     for ext in FILE_EXTS:
-        fname = os.path.join(dirname, "waterlvl_manual_measurements"+ext)
+        fname = os.path.join(dirname, "waterlvl_manual_measurements" + ext)
         if os.path.exists(fname):
             return
     else:

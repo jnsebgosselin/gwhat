@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
@@ -9,14 +9,12 @@
 # The function filt_data is based on the codes provided by
 # StackOverflow user Alleo.
 # https://stackoverflow.com/a/27681394/4481445
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
-
 from calendar import monthrange
-from math import sin, cos, sqrt, atan2, radians
 
 # ---- Third party imports
-
 import numpy as np
 import matplotlib as mpl
 from matplotlib.patches import Rectangle
@@ -24,11 +22,13 @@ from matplotlib.figure import Figure
 from matplotlib.transforms import ScaledTranslation
 # import matplotlib.patches
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import pandas as pd
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
+from gwhat.utils.dates import datetimeindex_to_xldates
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.colors2 import ColorsReader
 
@@ -263,24 +263,15 @@ class Hydrograph(Figure):
                                         edgecolor='black')
 
     def generate_hydrograph(self, wxdset=None, wldset=None):
-        if wxdset is None:
-            wxdset = self.wxdset
-        else:
-            self.wxdset = wxdset
+        wxdset = self.wxdset if wxdset is None else wxdset
+        wldset = self.wldset if wldset is None else wldset
 
-        if wldset is None:
-            wldset = self.wldset
-        else:
-            self.wldset = wldset
-
-        # Reinit Figure :
-
+        # Reinit the figure.
         self.clf()
         self.set_size_inches(self.fwidth, self.fheight, forward=True)
         self.setup_figure_frame()
 
-        # Assign Weather Data :
-
+        # Assign Weather Data.
         if self.wxdset is None:
             self.name_meteo = ''
             self.TIMEmeteo = np.array([])
@@ -288,11 +279,11 @@ class Hydrograph(Figure):
             self.PTOT = np.array([])
             self.RAIN = np.array([])
         else:
-            self.name_meteo = wxdset['Station Name']
-            self.TIMEmeteo = wxdset['Time']
-            self.TMAX = wxdset['Tmax']
-            self.PTOT = wxdset['Ptot']
-            self.RAIN = wxdset['Rain']
+            self.name_meteo = wxdset.metadata['Station Name']
+            self.TIMEmeteo = datetimeindex_to_xldates(wxdset.data.index)
+            self.TMAX = wxdset.data['Tmax'].values
+            self.PTOT = wxdset.data['Ptot'].values
+            self.RAIN = wxdset.data['Rain'].values
 
         # Resample Data in Bins :
 
@@ -376,7 +367,7 @@ class Hydrograph(Figure):
         if self.wxdset is not None:
             self.dist = calc_dist_from_coord(
                 wldset['Latitude'], wldset['Longitude'],
-                wxdset['Latitude'], wxdset['Longitude'])
+                wxdset.metadata['Latitude'], wxdset.metadata['Longitude'])
         else:
             self.dist = 0
 
@@ -453,8 +444,8 @@ class Hydrograph(Figure):
         self.ax4.axis(ymin=TEMPmin, ymax=TEMPmax)
 
         yticks_position = np.array([TEMPmin, 0, TEMPmax])
-        yticks_position = np.arange(TEMPmin, TEMPmax + TEMPscale/2,
-                                    TEMPscale)
+        yticks_position = np.arange(
+            TEMPmin, TEMPmax + TEMPscale / 2, TEMPscale)
         self.ax4.set_yticks(yticks_position)
         self.ax4.yaxis.set_ticks_position('left')
         self.ax4.tick_params(axis='y', direction='out', labelsize=10)
@@ -465,33 +456,59 @@ class Hydrograph(Figure):
         self.ax4.xaxis.set_ticklabels([], minor=True)
 
         self.l1_ax4, = self.ax4.plot([], [])  # fill shape
-        self.l2_ax4, = self.ax4.plot([], [],  # contour line
-                                     color='black', lw=1)
+        self.l2_ax4, = self.ax4.plot(
+            [], [], color='black', lw=1)  # contour line
 
-        # ---- MISSING VALUES MARKERS ----
+        # ---- MISSING VALUES MARKERS
 
-        # Precipitation (v2):
-
-        vshift = 5/72
+        # Precipitation.
+        vshift = 5 / 72
         offset = ScaledTranslation(0, vshift, self.dpi_scale_trans)
         if self.wxdset is not None:
-            t = self.wxdset['Missing Ptot']
-            y = np.ones(len(t)) * self.ax4.get_ylim()[0]
+            t1 = pd.DataFrame(self.wxdset.missing_value_indexes['Ptot'],
+                              index=self.wxdset.missing_value_indexes['Ptot'],
+                              columns=['datetime'])
+            t2 = pd.DataFrame(self.wxdset.missing_value_indexes['Ptot'] +
+                              pd.Timedelta('1 days'),
+                              self.wxdset.missing_value_indexes['Ptot'] +
+                              pd.Timedelta('1 days'),
+                              columns=['datetime'])
+            time = datetimeindex_to_xldates(pd.DatetimeIndex(
+                pd.concat([t1, t2], axis=0)
+                .drop_duplicates()
+                .resample('1D')
+                .asfreq()
+                ['datetime']
+                ))
+            y = np.ones(len(time)) * self.ax4.get_ylim()[0]
         else:
-            t, y = [], []
+            time, y = [], []
         self.lmiss_ax4, = self.ax4.plot(
-            t, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
+            time, y, ls='-', solid_capstyle='projecting', lw=1, c='red',
             transform=self.ax4.transData + offset)
 
-        # ---- Air Temperature (v2) ----
-
+        # Air Temperature.
         offset = ScaledTranslation(0, -vshift, self.dpi_scale_trans)
         if self.wxdset is not None:
-            t = self.wxdset['Missing Tmax']
-            y = np.ones(len(t)) * self.ax4.get_ylim()[1]
+            t1 = pd.DataFrame(self.wxdset.missing_value_indexes['Tmax'],
+                              index=self.wxdset.missing_value_indexes['Tmax'],
+                              columns=['datetime'])
+            t2 = pd.DataFrame(self.wxdset.missing_value_indexes['Tmax'] +
+                              pd.Timedelta('1 days'),
+                              self.wxdset.missing_value_indexes['Tmax'] +
+                              pd.Timedelta('1 days'),
+                              columns=['datetime'])
+            time = datetimeindex_to_xldates(pd.DatetimeIndex(
+                pd.concat([t1, t2], axis=0)
+                .drop_duplicates()
+                .resample('1D')
+                .asfreq()
+                ['datetime']
+                ))
+            y = np.ones(len(time)) * self.ax4.get_ylim()[1]
         else:
-            t, y = [], []
-        self.ax4.plot(t, y, ls='-', solid_capstyle='projecting',
+            time, y = [], []
+        self.ax4.plot(time, y, ls='-', solid_capstyle='projecting',
                       lw=1., c='red', transform=self.ax4.transData + offset)
 
         self.draw_weather()
@@ -1244,115 +1261,53 @@ def filt_data(time, waterlvl, N):
 
 
 if __name__ == '__main__':
-
     from PyQt5.QtWidgets import QApplication
     import sys
     from mplFigViewer3 import ImageViewer
-    from gwhat.projet.reader_waterlvl import read_water_level_datafile
     from gwhat.meteo.weather_reader import WXDataFrame
     from gwhat.projet.reader_projet import ProjetReader
 
     app = QApplication(sys.argv)
 
-    # ---- load data
-
-    path_projet = "E:\\GWHAT\\Projects\\Pont-Rouge\\Pont-Rouge.what"
+    # ---- Load the data
+    path_projet = "C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt"
     projet = ProjetReader(path_projet)
 
-    # projname = "E:\\GWHAT\\Projects\\Pont-Rouge\\Pont-Rouge.what"
-    # dirname = '../Projects/Pont-Rouge'
-    # fmeteo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.out'
-    # finfo = dirname + '/Meteo/Output/STE CHRISTINE (7017000)_1960-2015.log'
-    # fwaterlvl = dirname + '/Water Levels/5080001.xls'
+    wldset = projet.get_wldset('3040002_15min')
+    wxdset = projet.get_wxdset('Marieville')
 
-    wldset = projet.get_wldset('#5080001')
-    wxdset = projet.get_wxdset('STE CHRISTINE')
-
-    # ---------------------------------------------------- set up hydrograph --
+    # ---- Setup the hydrograph
 
     hydrograph = Hydrograph()
     hydrograph.set_wldset(wldset)
     hydrograph.set_wxdset(wxdset)
     hydrograph.language = 'english'
 
-    what = ['normal', 'MRC', 'GLUE'][0]
+    hydrograph.fwidth = 11.  # Width of the figure in inches
+    hydrograph.fheight = 8.5
 
-    if what == 'normal':
-        hydrograph.fwidth = 11.  # Width of the figure in inches
-        hydrograph.fheight = 8.5
+    hydrograph.WLdatum = 0  # 0 -> mbgs ; 1 -> masl
+    hydrograph.trend_line = False
+    hydrograph.gridLines = 2  # Gridlines Style
+    hydrograph.isGraphTitle = 1  # 1 -> title ; 0 -> no title
+    hydrograph.isLegend = 1
 
-        hydrograph.WLdatum = 0  # 0 -> mbgs ; 1 -> masl
-        hydrograph.trend_line = False
-        hydrograph.gridLines = 2  # Gridlines Style
-        hydrograph.isGraphTitle = 1  # 1 -> title ; 0 -> no title
-        hydrograph.isLegend = 1
+    hydrograph.meteo_on = True  # True or False
+    hydrograph.datemode = 'year'  # 'month' or 'year'
+    hydrograph.date_labels_pattern = 1
+    hydrograph.bwidth_indx = 2  # Meteo Bin Width
+    # 0: daily | 1: weekly | 2: monthly | 3: yearly
+    hydrograph.RAINscale = 100
 
-        hydrograph.meteo_on = True  # True or False
-        hydrograph.datemode = 'year'  # 'month' or 'year'
-        hydrograph.date_labels_pattern = 1
-        hydrograph.bwidth_indx = 2  # Meteo Bin Width
-        # 0: daily | 1: weekly | 2: monthly | 3: yearly
-        hydrograph.RAINscale = 100
+    hydrograph.best_fit_time(wldset.xldates)
+    hydrograph.best_fit_waterlvl()
+    hydrograph.generate_hydrograph()
 
-        hydrograph.best_fit_time(wldset.xldate)
-        hydrograph.best_fit_waterlvl()
-        hydrograph.generate_hydrograph()
-#
-#    elif what == 'MRC':
-#
-#        hg.fheight = 5.
-#        hg.isGraphTitle = 0
-#
-#        hg.NZGrid = 11
-#        hg.WLmin = 10.75
-#        hg.WLscale = 0.25
-#
-#        hg.best_fit_time(waterLvlObj.time)
-#        hg.generate_hydrograph(meteo_obj)
-#
-#        hg.draw_mrc_wl()
-#        hg.savefig(dirname + '/MRC_hydrograph.pdf')
-#
-#        hg.isMRC = False
-#
-#    elif what == 'GLUE':
-#
-#        hg.fwidth = 11
-#        hg.fheight = 6
-#
-#        hg.NZGrid = 10
-#        hg.WLmin = 9
-#        hg.WLscale = 1
-#
-#        hg.isGraphTitle = 1  # 1 -> title ; 0 -> no title
-#        hg.isLegend = 1
-#        hg.meteo_on = True
-#        hg.datemode = 'month'  # 'month' or 'year'
-#        hg.date_labels_pattern = 1
-#
-#        hg.best_fit_time(waterLvlObj.time)
-#        hg.generate_hydrograph(meteo_obj)
-#
-#        # hg.l1_ax2.setp(zorder=10, linewidth=1, color='blue', ms=2,
-#        #                linestyle='none', marker='.')
-#
-#        # hg.l1_ax2.set_rasterized(True)
-#
-#        # plot a hydrograph friend
-##        wl2 = WaterlvlData()
-##        wl2.load(dirname + '/Water Levels/5080001.xls')
-##        ax2 = hydrograph.ax2
-##        ax2.plot(wl2.time, wl2.lvl, color='green')
-#
-#        hg.draw_GLUE()
-#        hg.draw_mrc_wl()
-#        hg.savefig(dirname + '/GLUE_hydrograph.pdf', dpi=300)
-#
     # ---- Show figure on-screen
-
     imgview = ImageViewer()
     imgview.sfmax = 10
     imgview.load_mpl_figure(hydrograph)
     imgview.show()
 
+    projet.close()
     sys.exit(app.exec_())

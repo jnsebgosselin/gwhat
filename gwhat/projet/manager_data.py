@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 
 # ---- Standard Library imports
@@ -56,14 +57,14 @@ class DataManager(QWidget):
         self.weather_avg_graph = None
 
         self.new_waterlvl_win = NewDatasetDialog(
-                'water level', parent, projet)
+            'water level', parent, projet)
         self.new_waterlvl_win.sig_new_dataset_imported.connect(
-                self.new_wldset_imported)
+            self.new_wldset_imported)
 
         self.new_weather_win = NewDatasetDialog(
-                'daily weather', parent, projet)
+            'daily weather', parent, projet)
         self.new_weather_win.sig_new_dataset_imported.connect(
-                self.new_wxdset_imported)
+            self.new_wxdset_imported)
 
         self.setup_manager()
 
@@ -371,12 +372,12 @@ class DataManager(QWidget):
         """Update the infos of the wxdset."""
         wxdset = self.get_current_wxdset()
         if wxdset is not None:
-            model = ["Station : %s" % wxdset['Station Name'],
-                     "Climate ID : %s" % wxdset['Climate Identifier'],
-                     "Latitude : %0.3f°" % wxdset['Latitude'],
-                     "Longitude : %0.3f°" % wxdset['Longitude'],
-                     "Elevation : %0.1f m" % wxdset['Elevation'],
-                     "Province : %s" % wxdset['Province']]
+            model = ["Station : %s" % wxdset.metadata['Station Name'],
+                     "Station ID : %s" % wxdset.metadata['Station ID'],
+                     "Latitude : %0.3f°" % wxdset.metadata['Latitude'],
+                     "Longitude : %0.3f°" % wxdset.metadata['Longitude'],
+                     "Elevation : %0.1f m" % wxdset.metadata['Elevation'],
+                     "Location : %s" % wxdset.metadata['Location']]
         else:
             model = None
         self.meteo_info_widget.set_model(model)
@@ -556,11 +557,11 @@ class NewDatasetDialog(QDialog):
         self.grp_info.layout().setSpacing(10)
 
         if self._datatype == 'water level':
-            labels = ['Well name :', 'Well ID :']
+            labels = ['Well name :', 'Well ID :', 'Latitude :', 'Longitude :',
+                      'Altitude :', 'Province :']
         else:
-            labels = ['Station name :', 'Station ID :']
-        labels.extend(['Latitude :', 'Longitude :',
-                       'Altitude :', 'Province :'])
+            labels = ['Station name :', 'Station ID :', 'Latitude :',
+                      'Longitude :', 'Altitude :', 'Location :']
         widgets = [self._stn_name, self._sid, self._lat,
                    self._lon, self._alt, self._prov]
         for label, widget in zip(labels, widgets):
@@ -699,7 +700,8 @@ class NewDatasetDialog(QDialog):
                 self._dataset = WLDataFrame(filename)
             elif self._datatype == 'daily weather':
                 self._dataset = WXDataFrame(filename)
-        except Exception:
+        except Exception as e:
+            print(e)
             self._dataset = None
 
         self.update_gui(filename)
@@ -724,18 +726,22 @@ class NewDatasetDialog(QDialog):
             self._alt.setValue(0)
             self._sid.clear()
         else:
-            self._prov.setText(self._dataset['Province'])
-            self._lat.setValue(self._dataset['Latitude'])
-            self._lon.setValue(self._dataset['Longitude'])
-            self._alt.setValue(self._dataset['Elevation'])
             if self._datatype == 'water level':
+                self._prov.setText(self._dataset['Province'])
+                self._lat.setValue(self._dataset['Latitude'])
+                self._lon.setValue(self._dataset['Longitude'])
+                self._alt.setValue(self._dataset['Elevation'])
                 self._stn_name.setText(self._dataset['Well'])
                 self._sid.setText(self._dataset['Well ID'])
                 dsetname = self._dataset['Well']
             elif self._datatype == 'daily weather':
-                self._stn_name.setText(self._dataset['Station Name'])
-                self._sid.setText(self._dataset['Climate Identifier'])
-                dsetname = self._dataset['Station Name']
+                self._prov.setText(self._dataset.metadata['Location'])
+                self._lat.setValue(self._dataset.metadata['Latitude'])
+                self._lon.setValue(self._dataset.metadata['Longitude'])
+                self._alt.setValue(self._dataset.metadata['Elevation'])
+                self._stn_name.setText(self._dataset.metadata['Station Name'])
+                self._sid.setText(self._dataset.metadata['Station ID'])
+                dsetname = self._dataset.metadata['Station Name']
             # We replace the invalid characters to avoid problems when
             # saving the dataset to the hdf5 format.
             for char in INVALID_CHARS:
@@ -780,19 +786,21 @@ class NewDatasetDialog(QDialog):
             else:
                 del_dset(self.name)
 
-        # Update dataset attributes from UI and emit dataset :
-
+        # Update dataset attributes from UI and emit dataset.
         if self._datatype == 'water level':
             self._dataset['Well'] = self.station_name
             self._dataset['Well ID'] = self.station_id
+            self._dataset['Province'] = self.province
+            self._dataset['Latitude'] = self.latitude
+            self._dataset['Longitude'] = self.longitude
+            self._dataset['Elevation'] = self.altitude
         elif self._datatype == 'daily weather':
-            self._dataset['Station Name'] = self.station_name
-            self._dataset['Climate Identifier'] = self.station_id
-        self._dataset['Province'] = self.province
-        self._dataset['Latitude'] = self.latitude
-        self._dataset['Longitude'] = self.longitude
-        self._dataset['Elevation'] = self.altitude
-
+            self._dataset.metadata['Station Name'] = self.station_name
+            self._dataset.metadata['Station ID'] = self.station_id
+            self._dataset.metadata['Location'] = self.province
+            self._dataset.metadata['Latitude'] = self.latitude
+            self._dataset.metadata['Longitude'] = self.longitude
+            self._dataset.metadata['Elevation'] = self.altitude
         self.hide()
         self.sig_new_dataset_imported.emit(self.name, self._dataset)
         self.close()
@@ -810,8 +818,6 @@ class NewDatasetDialog(QDialog):
 if __name__ == '__main__':
     import sys
     from gwhat.projet.reader_projet import ProjetReader
-    projet = ProjetReader(
-        "C:/Users/jsgosselin/gwhat/Projects/Example/Example.gwt")
 
     app = QApplication(sys.argv)
 
@@ -820,10 +826,8 @@ if __name__ == '__main__':
     ft.setPointSize(11)
     app.setFont(ft)
 
-    # pm = ProjetManager(projet=f)
-    # pm.show()
-
-    dm = DataManager(projet=projet)
+    dm = DataManager(projet=ProjetReader(
+        "C:\\Users\\User\\gwhat\\Projects\\Example\\Example.gwt"))
     dm.show()
 
     app.exec_()

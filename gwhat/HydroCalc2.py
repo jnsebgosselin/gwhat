@@ -883,7 +883,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             t = self.time + self.dt4xls2mpl * self.dformat
         elif self.wxdset is not None:
             y = [-1, 1]
-            t = self.wxdset['Time'] + self.dt4xls2mpl * self.dformat
+            t = self.wxdset.get_xldates() + self.dt4xls2mpl * self.dformat
         else:
             y = [-1, 1]
             t = np.array(
@@ -986,7 +986,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         # ------------------------------------------- compute water levels ----
 
-        tweatr = self.wxdset['Time'] + 0  # Here we introduce the time lag
+        # We introduce the time lag here.
+        tweatr = self.wxdset.get_xldates() + 0
         twlvl = self.time
 
         ts = np.where(twlvl[0] == tweatr)[0][0]
@@ -1158,10 +1159,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         else:
             ax.set_visible(True)
 
-            time = self.wxdset['Time'] + self.dt4xls2mpl*self.dformat
-            ptot = self.wxdset['Ptot']
-            rain = self.wxdset['Rain']
-            etp = self.wxdset['PET']
+            time = self.wxdset.get_xldates() + self.dt4xls2mpl * self.dformat
+            ptot = self.wxdset.data['Ptot'].values
+            rain = self.wxdset.data['Rain'].values
+            etp = self.wxdset.data['PET'].values
 
             # Calculate the bins
 

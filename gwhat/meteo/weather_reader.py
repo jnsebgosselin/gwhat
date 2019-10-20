@@ -1,37 +1,49 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 
 # ---- Standard library imports
+import csv
+import datetime as dt
 import os
 import os.path as osp
-import csv
-from calendar import monthrange
+import re
 from time import strftime
+from collections import OrderedDict
 from collections.abc import Mapping
 from abc import abstractmethod
 
 # ---- Third party imports
 import numpy as np
-from xlrd.xldate import xldate_from_datetime_tuple, xldate_from_date_tuple
-from xlrd import xldate_as_tuple
-
+import pandas as pd
+from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 
 # ---- Local library imports
-
-from gwhat.meteo.evapotranspiration import calcul_Thornthwaite
-from gwhat.common.utils import save_content_to_csv, save_content_to_file
+from gwhat.meteo.evapotranspiration import calcul_thornthwaite
+from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
 
 
-# ---- API
+PRECIP_VARIABLES = ['Ptot', 'Rain', 'Snow']
+TEMP_VARIABLES = ['Tmax', 'Tavg', 'Tmin', 'PET']
+METEO_VARIABLES = PRECIP_VARIABLES + TEMP_VARIABLES
+VARLABELS_MAP = {'Ptot': 'Ptot (mm)',
+                 'Rain': 'Rain (mm)',
+                 'Snow': 'Snow (mm)',
+                 'Tmax': 'Tmax (\u00B0C)',
+                 'Tavg': 'Tavg (\u00B0C)',
+                 'Tmin': 'Tmin (\u00B0C)',
+                 'PET': 'PET (mm)'}
 
+
+# ---- API
 class WXDataFrameBase(Mapping):
     """
     A daily weather data frame base class.
@@ -39,19 +51,22 @@ class WXDataFrameBase(Mapping):
 
     def __init__(self, *args, **kwargs):
         super(WXDataFrameBase, self).__init__(*args, **kwargs)
-        self.store = None
+        self.metadata = {
+            'filename': '',
+            'Station Name': '',
+            'Station ID': '',
+            'Location': '',
+            'Latitude': 0,
+            'Longitude': 0,
+            'Elevation': 0}
+        self.data = pd.DataFrame([], columns=METEO_VARIABLES)
+        self.missing_value_indexes = {
+            var: pd.DatetimeIndex([]) for var in METEO_VARIABLES}
 
     @abstractmethod
     def __load_dataset__(self):
         """Loads the dataset and save it in a store."""
         pass
-
-    def get_monthly_normals(self, yearmin=None, yearmax=None):
-        """
-        Returns a dict with the normal values of the weather dataset
-        for the period defined by yearmin and yearmax.
-        """
-        raise NotImplementedError
 
     def export_dataset_to_file(self, filename, time_frame):
         """
@@ -61,55 +76,116 @@ class WXDataFrameBase(Mapping):
         file, or tsv for tab-separated values text file).
         """
         if time_frame == 'daily':
-            vrbs = ['Year', 'Month', 'Day']
-            lbls = ['Year', 'Month', 'Day']
+            data = self.data.copy()
+            data.insert(0, 'Year', data.index.year)
+            data.insert(1, 'Month', data.index.month)
+            data.insert(2, 'Day', data.index.day)
         elif time_frame == 'monthly':
-            vrbs = ['Year', 'Month']
-            lbls = ['Year', 'Month']
+            data = self.get_monthly_values()
+            data.insert(0, 'Year', data.index.get_level_values(0))
+            data.insert(1, 'Month', data.index.get_level_values(1))
         elif time_frame == 'yearly':
-            vrbs = ['Year']
-            lbls = ['Year']
+            data = self.get_yearly_values()
+            data.insert(0, 'Year', data.index)
         else:
             raise ValueError('"time_frame" must be either "yearly", "monthly"'
                              ' or "daily".')
 
-        vrbs.extend(['Tmin', 'Tavg', 'Tmax', 'Rain', 'Snow', 'Ptot', 'PET'])
-        lbls.extend(['Tmin (\u00B0C)', 'Tavg (\u00B0C)', 'Tmax (\u00B0C)',
-                     'Rain (mm)', 'Snow (mm)', 'Ptot (mm)',
-                     'PET (mm)'])
-
-        startdate = '%02d/%02d/%d' % (
-            self['Day'][0], self['Month'][0], self['Year'][0])
-        enddate = '%02d/%02d/%d' % (
-            self['Day'][-1], self['Month'][-1], self['Year'][-1])
-
-        fcontent = [['Station Name', self['Station Name']],
-                    ['Province', self['Province']],
-                    ['Latitude', self['Longitude']],
-                    ['Longitude', self['Longitude']],
-                    ['Elevation', self['Elevation']],
-                    ['Climate Identifier', self['Climate Identifier']],
+        fcontent = [['Station Name', self.metadata['Station Name']],
+                    ['Station ID', self.metadata['Station ID']],
+                    ['Location', self.metadata['Location']],
+                    ['Latitude (\u00B0)', self.metadata['Latitude']],
+                    ['Longitude (\u00B0)', self.metadata['Longitude']],
+                    ['Elevation (m)', self.metadata['Elevation']],
                     ['', ''],
-                    ['Start Date ', startdate],
-                    ['End Date ', enddate],
+                    ['Start Date ', self.data.index[0].strftime("%Y-%m-%d")],
+                    ['End Date ', self.data.index[-1].strftime("%Y-%m-%d")],
                     ['', ''],
                     ['Created by', __namever__],
-                    ['Created on', strftime("%d/%m/%Y")],
+                    ['Created on', strftime("%Y-%m-%d")],
                     ['', '']
                     ]
-        fcontent.append(lbls)
-
-        N = len(self[time_frame]['Year'])
-        M = len(vrbs)
-        data = np.zeros((N, M))
-        for j, vrb in enumerate(vrbs):
-            data[:, j] = self[time_frame][vrb]
-        fcontent.extend(nan_as_text_tolist(data))
-
+        fcontent.append(
+            [VARLABELS_MAP.get(col, col) for col in data.columns])
+        fcontent.extend(nan_as_text_tolist(data.values))
         save_content_to_file(filename, fcontent)
 
-    def export_dataset_to_HELP(self):
-        raise NotImplementedError
+    def get_data_period(self):
+        """
+        Return the year range for which data are available for this
+        dataset.
+        """
+        return (self.data.index.min().year, self.data.index.max().year)
+
+    def get_xldates(self):
+        """
+        Return a numpy array containing the Excel numerical dates
+        corresponding to the dates of the dataset.
+        """
+        print('Converting datetimes to xldates...', end=' ')
+        timedeltas = self.data.index - xldate_as_datetime(4000, 0)
+        xldates = timedeltas.total_seconds() / (3600 * 24) + 4000
+        print('done')
+        return xldates.values
+
+    # ---- utilities
+    def strftime(self):
+        """
+        Return a list of formatted strings corresponding to the datetime
+        indexes of this dataset.
+        """
+        return self.data.index.strftime("%Y-%m-%dT%H:%M:%S").values.tolist()
+
+    # ---- Monthly and yearly values
+    def get_monthly_values(self):
+        """
+        Return the monthly mean or cummulative values for the weather
+        variables saved in this data frame.
+        """
+        group = self.data.groupby(
+            [self.data.index.year, self.data.index.month])
+        df = pd.concat(
+            [group[PRECIP_VARIABLES].sum(), group[TEMP_VARIABLES].mean()],
+            axis=1)
+        df.index.rename(['Year', 'Month'], inplace=True)
+        return df
+
+    def get_yearly_values(self):
+        """
+        Return the yearly mean or cummulative values for the weather
+        variables saved in this data frame.
+        """
+        group = self.data.groupby(self.data.index.year)
+        df = pd.concat(
+            [group[PRECIP_VARIABLES].sum(), group[TEMP_VARIABLES].mean()],
+            axis=1)
+        df.index.rename('Year', inplace=True)
+        return df
+
+    # ---- Normals
+    def get_monthly_normals(self, year_range=None):
+        """
+        Return the monthly normals for the weather variables saved in this
+        data frame.
+        """
+        df = self.get_monthly_values()
+        if year_range:
+            df = df.loc[(df.index.get_level_values(0) >= year_range[0]) &
+                        (df.index.get_level_values(0) <= year_range[1])]
+        df = df.groupby(level=[1]).mean()
+        df.index.rename('Month', inplace=True)
+        return df
+
+    def get_yearly_normals(self, year_range=None):
+        """
+        Return the yearly normals for the weather variables saved in this
+        data frame.
+        """
+        df = self.get_yearly_values()
+        if year_range:
+            df = df.loc[(df.index >= year_range[0]) &
+                        (df.index <= year_range[1])]
+        return df.mean()
 
 
 class WXDataFrame(WXDataFrameBase):
@@ -120,206 +196,90 @@ class WXDataFrame(WXDataFrameBase):
         self.__load_dataset__(filename)
 
     def __getitem__(self, key):
-        """Returns the value saved in the store at key."""
-        if key == 'daily':
-            vrbs = ['Year', 'Month', 'Day', 'Tmin', 'Tavg', 'Tmax',
-                    'Rain', 'Snow', 'Ptot', 'PET']
-            x = {}
-            for vrb in vrbs:
-                x[vrb] = self[vrb]
-            return x
-        else:
-            return self.store.__getitem__(key)
+        raise NotImplementedError
 
     def __setitem__(self, key, value):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __iter__(self):
-        return NotImplementedError
+        raise NotImplementedError
 
     def __len__(self, key):
-        return NotImplementedError
-
-    def __init_store__(self, filename):
-        """Initializes the store."""
-        self.store = dict()
-        self.store['filename'] = filename
-        self.store['Station Name'] = ''
-        self.store['Latitude'] = 0
-        self.store['Longitude'] = 0
-        self.store['Province'] = ''
-        self.store['Elevation'] = 0
-        self.store['Climate Identifier'] = ''
-
-        self.store['Year'] = np.array([])
-        self.store['Month'] = np.array([])
-        self.store['Day'] = np.array([])
-        self.store['Time'] = np.array([])
-
-        self.store['Tmax'] = np.array([])
-        self.store['Tavg'] = np.array([])
-        self.store['Tmin'] = np.array([])
-        self.store['Ptot'] = np.array([])
-        self.store['Rain'] = None
-        self.store['Snow'] = None
-        self.store['PET'] = None
-
-        self.store['Missing Tmax'] = []
-        self.store['Missing Tmin'] = []
-        self.store['Missing Tavg'] = []
-        self.store['Missing Ptot'] = []
-
-        self.store['monthly'] = {'Year': np.array([]),
-                                 'Month': np.array([]),
-                                 'Tmax': np.array([]),
-                                 'Tmin': np.array([]),
-                                 'Tavg': np.array([]),
-                                 'Ptot': np.array([]),
-                                 'Rain': None,
-                                 'Snow': None,
-                                 'PET': None}
-
-        self.store['yearly'] = {'Year': np.array([]),
-                                'Tmax': np.array([]),
-                                'Tmin': np.array([]),
-                                'Tavg': np.array([]),
-                                'Ptot': np.array([]),
-                                'Rain': None,
-                                'Snow': None,
-                                'PET': None}
-
-        self.store['normals'] = {'Tmax': np.array([]),
-                                 'Tmin': np.array([]),
-                                 'Tavg': np.array([]),
-                                 'Ptot': np.array([]),
-                                 'Rain': None,
-                                 'Snow': None,
-                                 'PET': None,
-                                 'Period': (None, None)}
+        raise NotImplementedError
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
-        print('-'*78)
+        print('-' * 78)
         print('Reading weather data from "%s"...' % os.path.basename(filename))
 
-        self.__init_store__(filename)
+        # Import data.
+        self.metadata, self.data = read_weather_datafile(filename)
 
-        # ---- Import primary data
-
-        data = read_weather_datafile(filename)
-        for key in data.keys():
-            self.store[key] = data[key]
-
-        # ---- Format Data
-
-        # Make the daily time series continuous :
-
-        date = [self['Year'], self['Month'], self['Day']]
-        vrbs = ['Tmax', 'Tavg', 'Tmin', 'Ptot', 'Rain', 'PET']
-        data = [self[vrb] for vrb in vrbs]
-        time, date, data = make_timeserie_continuous(self['Time'], date, data)
-
-        self.store['Time'] = time
-        self.store['Year'], self.store['Month'], self.store['Day'] = date
-        for i, vrb in enumerate(vrbs):
-            self.store[vrb] = data[i]
-
-        # Fill missing with estimated values :
-
-        for vbr in ['Tmax', 'Tavg', 'Tmin', 'PET']:
-            self.store[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'interp')
-
-        for vbr in ['Ptot', 'Rain', 'Snow']:
-            self.store[vbr] = fill_nan(self['Time'], self[vbr], vbr, 'zeros')
-
-        # ---- Rain & Snow
-
-        # Generate rain and snow daily series if it was not present in the
-        # datafile.
-
-        # Rain
-        if self['Rain'] is None:
-            self.store['Rain'] = calcul_rain_from_ptot(
-                    self['Tavg'], self['Ptot'], Tcrit=0)
-            print("Rain estimated from Ptot.")
-
-        # Snow
-        if self['Snow'] is None:
-            self.store['Snow'] = self['Ptot'] - self['Rain']
-            print("Snow estimated from Ptot.")
-
-        # ---- Missing data
-
+        # Import the missing data log if it exist.
         root, ext = osp.splitext(filename)
         finfo = root + '.log'
         if os.path.exists(finfo):
             print('Reading gapfill data from "%s"...' % osp.basename(finfo))
-            keys_labels = [('Missing Tmax', 'Max Temp (deg C)'),
-                           ('Missing Tmin', 'Min Temp (deg C)'),
-                           ('Missing Tavg', 'Mean Temp (deg C)'),
-                           ('Missing Ptot', 'Total Precip (mm)')]
-            for key, label in keys_labels:
-                self.store[key] = load_weather_log(finfo, label)
+            var_labels = [('Tmax', 'Max Temp (deg C)'),
+                          ('Tmin', 'Min Temp (deg C)'),
+                          ('Tavg', 'Mean Temp (deg C)'),
+                          ('Ptot', 'Total Precip (mm)')]
+            for var, label in var_labels:
+                self.missing_value_indexes[var] = (
+                    self.missing_value_indexes[var]
+                    .append(load_weather_log(finfo, label))
+                    .drop_duplicates()
+                    )
 
-        # ---- Monthly & Normals
+        # Make the daily time series continuous.
+        self.data = self.data.resample('1D').asfreq()
 
-        self.store['normals']['Period'] = (np.min(self['Year']),
-                                           np.max(self['Year']))
+        # Store the time indexes where data are missing.
+        for var in METEO_VARIABLES:
+            if var in self.data.columns:
+                self.missing_value_indexes[var] = (
+                    self.missing_value_indexes[var]
+                    .append(self.data.index[pd.isnull(self.data[var])])
+                    .drop_duplicates()
+                    )
 
-        # Temperature based variables.
-        for vrb in ['Tmax', 'Tmin', 'Tavg']:
-            x_yr = calc_yearly_mean(self['Year'], self[vrb])
-            self.store['yearly'][vrb] = x_yr[1]
+        # Fill missing with values with in-stations linear interpolation for
+        # temperature based variables.
+        for var in TEMP_VARIABLES:
+            if var in self.data.columns:
+                self.data[var] = self.data[var].interpolate()
 
-            x_mt = calc_monthly_mean(self['Year'], self['Month'], self[vrb])
-            self.store['monthly'][vrb] = x_mt[2]
+        # We fill the remaining missing value with 0.
+        self.data = self.data.fillna(0)
 
-            self.store['normals'][vrb] = calcul_monthly_normals(
-                x_mt[0], x_mt[1], x_mt[2])
+        # Generate rain and snow daily series if it was not present in the
+        # datafile.
+        if 'Rain' not in self.data.columns:
+            self.data['Rain'] = calcul_rain_from_ptot(
+                self.data['Tavg'], self.data['Ptot'], Tcrit=0)
+            self.data['Snow'] = self.data['Ptot'] - self.data['Rain']
+            print("Rain and snow estimated from Ptot.")
 
-        # Precipitation based variables.
-        for vrb in ['Ptot', 'Rain', 'Snow']:
-            x_yr = calc_yearly_sum(self['Year'], self[vrb])
-            self.store['yearly'][vrb] = x_yr[1]
-
-            x_mt = calc_monthly_sum(self['Year'], self['Month'], self[vrb])
-            self.store['monthly'][vrb] = x_mt[2]
-
-            self.store['normals'][vrb] = calcul_monthly_normals(
-                x_mt[0], x_mt[1], x_mt[2])
-
-        self.store['yearly']['Year'] = x_yr[0]
-        self.store['monthly']['Year'] = x_mt[0]
-        self.store['monthly']['Month'] = x_mt[1]
-
-        # Potential Evapotranspiration.
-        if self['PET'] is None:
-            dates = [self['Year'], self['Month'], self['Day']]
-            Tavg = self['Tavg']
-            lat = self['Latitude']
-            Ta = self['normals']['Tavg']
-            self.store['PET'] = calcul_Thornthwaite(dates, Tavg, lat, Ta)
+        # Calculate potential evapotranspiration if missing.
+        if 'PET' not in self.data.columns:
+            self.data['PET'] = calcul_thornthwaite(
+                self.data['Tavg'], self.metadata['Latitude'])
             print("Potential evapotranspiration evaluated with Thornthwaite.")
 
-        x_yr = calc_yearly_sum(self['Year'], self['PET'])
-        self['yearly']['PET'] = x_yr[1]
-
-        x_mt = calc_monthly_sum(self['Year'], self['Month'], self['PET'])
-        self.store['monthly']['PET'] = x_mt[2]
-
-        self.store['normals']['PET'] = calcul_monthly_normals(
-            x_mt[0], x_mt[1], x_mt[2])
+        isnull = self.data.isnull().any()
+        if isnull.any():
+            print("Warning: There is missing values remaining in the data "
+                  "for {}.".format(', '.join(isnull[isnull].index.tolist())))
         print('-' * 78)
 
 
 # ---- Base functions: file and data manipulation
-
 def open_weather_datafile(filename):
     """
     Open the csv datafile and try to guess the delimiter.
     Return None if this fails.
     """
-    for dlm in ['\t', ',']:
+    for dlm in ['\t', ',', ';']:
         with open(filename, 'r') as csvfile:
             reader = list(csv.reader(csvfile, delimiter=dlm))
         for line in reader:
@@ -331,135 +291,112 @@ def open_weather_datafile(filename):
 
 
 def read_weather_datafile(filename):
-    df = {'filename': filename,
-          'Station Name': '',
-          'Latitude': 0,
-          'Longitude': 0,
-          'Province': '',
-          'Elevation': 0,
-          'Climate Identifier': '',
-          'Year': np.array([]),
-          'Month': np.array([]),
-          'Day': np.array([]),
-          'Time': np.array([]),
-          'Tmax': np.array([]),
-          'Tavg': np.array([]),
-          'Tmin': np.array([]),
-          'Ptot': np.array([]),
-          'Rain': None,
-          'Snow': None,
-          'PET': None,
-          }
+    metadata = {'filename': filename,
+                'Station Name': '',
+                'Station ID': '',
+                'Location': '',
+                'Latitude': 0,
+                'Longitude': 0,
+                'Elevation': 0,
+                }
+    # Data is a pandas dataframe with the following required columns:
+    # (1) Tmax, (2) Tavg, (3) Tmin, (4) Ptot.
+    # The dataframe can also have these optional columns:
+    # (5) Rain, (6) Snow, (7) PET
+    # The dataframe must use a datetime index.
 
     # Get info from header and grab the data from the file.
     reader = open_weather_datafile(filename)
-    if reader is None:                                       # pragma: no cover
-        return
-    else:
-        for i, row in enumerate(reader):
-            if len(row) == 0:
-                continue
-            if row[0] in ['Station Name', 'Province', 'Climate Identifier']:
-                df[row[0]] = str(row[1])
-            elif row[0] in ['Latitude', 'Longitude', 'Elevation']:
+    if reader is None:
+        return None, None
+
+    HEADER_REGEX = {
+        'Station Name': r'(stationname|name)',
+        'Station ID': r'(stationid|id|climateidentifier)',
+        'Latitude': r'(latitude)',
+        'Longitude': r'(longitude)',
+        'Location': r'(location|province)',
+        'Elevation': r'(elevation|altitude)'
+        }
+    HEADER_TYPE = {
+        'Station Name': str,
+        'Station ID': str,
+        'Location': str,
+        'Latitude': float,
+        'Longitude': float,
+        'Elevation': float
+        }
+
+    for i, row in enumerate(reader):
+        if len(row) == 0:
+            continue
+
+        label = row[0].replace(" ", "").replace("_", "")
+        for key, regex in HEADER_REGEX.items():
+            if re.search(regex, label, re.IGNORECASE):
                 try:
-                    df[row[0]] = float(row[1])
+                    metadata[key] = HEADER_TYPE[key](row[1])
                 except ValueError:
-                    print('Wrong format for entry "%s".' % row[0])
-                    df[row[0]] = 0
-            elif row[0] == 'Year':
-                istart = i+1
-                var = row
-                data = np.array(reader[istart:]).astype('float')
+                    # The default value will be kept.
+                    print('Wrong format for entry "%s".' % key)
+        else:
+            if re.search(r'(time|datetime|year)', label, re.IGNORECASE):
+                istart = i + 1
                 break
 
+    # Fetch the valid columns from the data header.
+    COL_REGEX = OrderedDict([
+        ('Year', r'(year)'),
+        ('Month', r'(month)'),
+        ('Day', r'(day)'),
+        ('Tmax', r'(maxtemp)'),
+        ('Tmin', r'(mintemp)'),
+        ('Tavg', r'(meantemp)'),
+        ('Ptot', r'(totalprecip)'),
+        ('PET', r'(etp|evapo)'),
+        ('Rain', r'(rain)'),
+        ('Snow', r'(snow)')
+        ])
+    columns = []
+    indexes = []
+    for i, label in enumerate(row):
+        label = label.replace(" ", "").replace("_", "")
+        for column, regex in COL_REGEX.items():
+            if re.search(regex, label, re.IGNORECASE):
+                columns.append(column)
+                indexes.append(i)
+                break
+
+    # Format the numerical data.
+    data = np.array(reader[istart:])[:, indexes]
+    data = np.char.strip(data, ' ')
+    data[data == ''] = np.nan
+    data = np.char.replace(data, ',', '.')
+    data = data.astype('float')
     data = clean_endsof_file(data)
 
-    df['Year'] = data[:, var.index('Year')].astype(int)
-    df['Month'] = data[:, var.index('Month')].astype(int)
-    df['Day'] = data[:, var.index('Day')].astype(int)
+    # Format the data into a pandas dataframe.
+    data = pd.DataFrame(data, columns=columns)
+    for col in ['Year', 'Month', 'Day']:
+        data[col] = data[col].astype(int)
+    for col in ['Tmax', 'Tmin', 'Tavg', 'Ptot']:
+        data[col] = data[col].astype(float)
 
-    df['Tmax'] = data[:, var.index('Max Temp (deg C)')].astype(float)
-    df['Tmin'] = data[:, var.index('Min Temp (deg C)')].astype(float)
-    df['Tavg'] = data[:, var.index('Mean Temp (deg C)')].astype(float)
-    df['Ptot'] = data[:, var.index('Total Precip (mm)')].astype(float)
+    # We now create the time indexes for the dataframe form the year,
+    # month, and day data.
+    data = data.set_index(pd.to_datetime(dict(
+        year=data['Year'], month=data['Month'], day=data['Day'])))
+    data.drop(labels=['Year', 'Month', 'Day'], axis=1, inplace=True)
 
-    try:
-        df['Time'] = data[:, var.index('Time')]
-    except ValueError:
-        # The time is not saved in the datafile. We need to calculate it from
-        # the Year, Month, and Day arrays.
-        df['Time'] = np.zeros(len(df['Year']))
-        for i in range(len(df['Year'])):
-            dtuple = (df['Year'][i], df['Month'][i], df['Day'][i])
-            df['Time'][i] = xldate_from_date_tuple(dtuple, 0)
-
-    try:
-        df['PET'] = data[:, var.index('ETP (mm)')]
+    # We print some comment if optional data was loaded from the file.
+    if 'PET' in columns:
         print('Potential evapotranspiration imported from datafile.')
-    except ValueError:
-        pass
-
-    try:
-        df['Rain'] = data[:, var.index('Rain (mm)')]
+    if 'Rain' in columns:
         print('Rain data imported from datafile.')
-    except ValueError:
-        pass
-
-    try:
-        df['Snow'] = data[:, var.index('Snow (mm)')]
+    if 'Snow' in columns:
         print('Snow data imported from datafile.')
-    except ValueError:
-        pass
 
-    return df
-
-
-def add_PET_to_weather_datafile(filename):
-    """Add PET to weather data file."""
-    print('Adding PET to %s...' % os.path.basename(filename), end=' ')
-
-    # Load and store original data.
-    reader = open_weather_datafile(filename)
-    if reader is None:                                       # pragma: no cover
-        print('failed')
-        return
-    else:
-        for i, row in enumerate(reader):
-            if len(row) == 0:
-                continue
-            if row[0] == 'Latitude':
-                lat = float(row[1])
-            elif row[0] == 'Year':
-                istart = i+1
-                vrbs = row
-                data = np.array(reader[istart:]).astype('float')
-                break
-
-    Year = data[:, vrbs.index('Year')].astype(int)
-    Month = data[:, vrbs.index('Month')].astype(int)
-    Day = data[:, vrbs.index('Day')].astype(int)
-    Dates = [Year, Month, Day]
-
-    Tavg = data[:, vrbs.index('Mean Temp (deg C)')]
-    x = calc_monthly_mean(Year, Month, Tavg)
-    Ta = calcul_monthly_normals(x[0], x[1], x[2])
-
-    PET = calcul_Thornthwaite(Dates, Tavg, lat, Ta)
-
-    # Extend dataset with PET and save the dataset to csv.
-    if 'ETP (mm)' in vrbs:
-        indx = vrbs.index('ETP (mm)')
-        for i in range(len(PET)):
-            reader[i+istart][indx] = PET[i]
-    else:
-        reader[istart-1].append('ETP (mm)')
-        for i in range(len(PET)):
-            reader[i+istart].append(PET[i])
-
-    # Save data.
-    save_content_to_csv(filename, reader)
-    print('done')
+    return metadata, data
 
 
 def open_weather_log(fname):
@@ -478,32 +415,14 @@ def open_weather_log(fname):
 
 def load_weather_log(fname, varname):
     reader = open_weather_log(fname)
-    xldates = []
+    datetimes = []
     for i in range(len(reader)):
         if reader[i][0] == varname:
             year = int(float(reader[i][1]))
             month = int(float(reader[i][2]))
             day = int(float(reader[i][3]))
-            xldates.append(xldate_from_date_tuple((year, month, day), 0))
-
-    time = []
-    tseg = [np.nan, xldates[0], xldates[0]+1]
-    for xldate in xldates:
-        if tseg[2] == xldate:
-            if xldate == xldates[-1]:
-                # the last data of the series is missing
-                time.extend(tseg)
-            else:
-                tseg[2] += 1
-        else:
-            time.extend(tseg)
-            tseg[1] = xldate
-            tseg[2] = xldate + 1
-
-    time.append(np.nan)
-    time = np.array(time)
-
-    return time
+            datetimes.append(dt.datetime(year, month, day))
+    return pd.DatetimeIndex(datetimes)
 
 
 def clean_endsof_file(data):
@@ -541,83 +460,6 @@ def clean_endsof_file(data):
         print('%d empty' % (n - len(data[:, 0])) +
               ' rows of data removed at the end of the dataset.')
 
-    return data
-
-
-def make_timeserie_continuous(time, date, data):
-    """
-    Scans the entire daily time series, inserts a row with nan values whenever
-    there is a gap in the data, and returns the continuous daily data set.
-
-    time = 1d numpy array containing the time in Excel numeric format.
-    date = tuple containg the time series for year, month and days.
-    data = tuple containing the data series.
-    """
-    # Initialize the arrays in which the continuous time series will be saved :
-
-    ctime = np.arange(time[0], time[-1]+1)
-    if np.array_equal(ctime, time):
-        # The dataset is already continuous.
-        return time, date, data
-    cdate = [np.empty(len(ctime))*np.nan for item in date]
-    cdata = []
-    for item in data:
-        if item is not None:
-            cdata.append(np.empty(len(ctime))*np.nan)
-        else:
-            cdata.append(None)
-
-    # Fill the continuous arrays :
-
-    indexes = np.digitize(time, ctime, right=True)
-    for i in range(len(date)):
-        cdate[i][indexes] = date[i]
-    for i in range(len(data)):
-        if data[i] is not None:
-            cdata[i][indexes] = data[i]
-
-    # Complete the dates for the lines that where missing and convert to
-    # integers :
-
-    nan_indexes = np.where(np.isnan(cdate[0]))[0]
-    for idx in nan_indexes:
-        new_date = xldate_as_tuple(ctime[idx], 0)
-        cdate[0][idx] = new_date[0]
-        cdate[1][idx] = new_date[1]
-        cdate[2][idx] = new_date[2]
-    cdate[0] = cdate[0].astype(int)
-    cdate[1] = cdate[1].astype(int)
-    cdate[2] = cdate[2].astype(int)
-
-    return ctime, cdate, cdata
-
-
-def fill_nan(time, data, name='data', fill_mode='zeros'):
-    """
-    Fills the nan values in data with zeros if fill_mode value is 'zeros' or
-    using linear interpolation if fill_mode value is 'interp'.
-    """
-    if fill_mode not in ['zeros', 'interp']:
-        raise ValueError('fill_mode must be either "zeros" or "interp"')
-
-    if data is None:
-        return None
-
-    nbr_nan = len(np.where(np.isnan(data))[0])
-    if nbr_nan == 0:
-        # There is no missing value in the dataset.
-        return data
-
-    if fill_mode == 'interp':
-        indx = np.where(~np.isnan(data))[0]
-        data = np.interp(time, time[indx], data[indx])
-        print("%d missing values were estimated by linear interpolation"
-              " in %s." % (nbr_nan, name))
-    elif fill_mode == 'zeros':
-        indx = np.where(np.isnan(data))[0]
-        data[indx] = 0
-        print("%d missing values were assigned a value of 0"
-              " in %s." % (nbr_nan, name))
     return data
 
 
@@ -675,20 +517,20 @@ def read_cweeds_file(filename, format_to_daily=True):
         hourly_df['Days'][i] = day = int(line[0][char_offset:][12:14])
         hourly_df['Hours'][i] = hour = int(line[0][char_offset:][14:16]) - 1
         # The global horizontal irradiance is converted from kJ/m² to MJ/m².
-        hourly_df['Irradiance'][i] = float(line[0][char_offset:][20:24])/1000
+        hourly_df['Irradiance'][i] = float(line[0][char_offset:][20:24]) / 1000
 
         # Compute time in Excel numeric format :
         hourly_df['Time'][i] = xldate_from_datetime_tuple(
-                (year, month, day, hour, 0, 0), 0)
+            (year, month, day, hour, 0, 0), 0)
 
     if format_to_daily:
         # Convert the hourly data to daily format.
         assert len(hourly_df['Irradiance']) % 24 == 0
-        new_shape = (len(hourly_df['Irradiance'])//24, 24)
+        new_shape = (len(hourly_df['Irradiance']) // 24, 24)
 
         daily_df = {}
         daily_df['Irradiance'] = np.sum(
-                hourly_df['Irradiance'].reshape(new_shape), axis=1)
+            hourly_df['Irradiance'].reshape(new_shape), axis=1)
         for key in ['Years', 'Months', 'Days', 'Time']:
             daily_df[key] = hourly_df[key].reshape(new_shape)[:, 0]
         daily_df['Hours'] = np.zeros(len(daily_df['Irradiance']))
@@ -745,108 +587,17 @@ def join_daily_cweeds_wy2_and_wy3(wy2_df, wy3_df):
     return wy23_df
 
 
-# ----- Base functions: monthly downscaling
-
-def calc_monthly_sum(yy_dly, mm_dly, x_dly):
-    """
-    Calcul monthly cumulative values from daily values, where yy_dly are the
-    years, mm_dly are the months (1 to 12), and x_dly are the daily values.
-    """
-    return calc_monthly(yy_dly, mm_dly, x_dly, np.sum)
-
-
-def calc_monthly_mean(yy_dly, mm_dly, x_dly):
-    """
-    Calcul monthly mean values from daily values, where yy_dly are the
-    years, mm_dly are the months (1 to 12), and x_dly are the daily values.
-    """
-    return calc_monthly(yy_dly, mm_dly, x_dly, np.mean)
-
-
-def calc_monthly(yy_dly, mm_dly, x_dly, func):
-    yy = np.unique(yy_dly)
-    mm = range(1, 13)
-
-    yy_mly = np.repeat(yy, len(mm))
-    mm_mly = np.tile(mm, len(yy))
-    x_mly = np.zeros(len(mm)*len(yy))
-
-    for i in range(len(mm)*len(yy)):
-        indx = np.where((yy_dly == yy_mly[i]) & (mm_dly == mm_mly[i]))[0]
-        if len(indx) < monthrange(yy_mly[i], mm_mly[i])[1]:
-            x_mly[i] = np.nan  # incomplete dataset for this month
-        else:
-            x_mly[i] = func(x_dly[indx])
-
-    return yy_mly, mm_mly, x_mly
-
-
-def calcul_monthly_normals(years, months, x_mly, yearmin=None, yearmax=None):
-    """Calcul the monthly normals from monthly values."""
-    if len(years) != len(months) != len(x_mly):
-        raise ValueError("The dimension of the years, months, and x_mly array"
-                         " must match exactly.")
-    if np.min(months) < 1 or np.max(months) > 12:
-        raise ValueError("Months values must be between 1 and 12.")
-
-    # Mark as nan monthly values that are outside the year range that is
-    # defined by yearmin and yearmax :
-    x_mly = np.copy(x_mly)
-    if yearmin is not None:
-        x_mly[years < yearmin] = np.nan
-    if yearmax is not None:
-        x_mly[years > yearmax] = np.nan
-
-    # Calcul the monthly normals :
-    x_norm = np.zeros(12)
-    for i, mm in enumerate(range(1, 13)):
-        indx = np.where((months == mm) & (~np.isnan(x_mly)))[0]
-        if len(indx) > 0:
-            x_norm[i] = np.mean(x_mly[indx])
-        else:
-            x_norm[i] = np.nan
-
-    return x_norm
-
-
-# ----- Base functions: yearly downscaling
-
-def calc_yearly_sum(yy_dly, x_dly):
-    """
-    Calcul yearly cumulative values from daily values, where yy_dly are the
-    years and x_dly are the daily values.
-    """
-    return calc_yearly(yy_dly, x_dly, np.sum)
-
-
-def calc_yearly_mean(yy_dly, x_dly):
-    """
-    Calcul yearly mean values from daily values, where yy_dly are the years
-    and x_dly are the daily values.
-    """
-    return calc_yearly(yy_dly, x_dly, np.mean)
-
-
-def calc_yearly(yy_dly, x_dly, func):
-    yy_yrly = np.unique(yy_dly)
-    x_yrly = np.zeros(len(yy_yrly))
-    for i in range(len(yy_yrly)):
-        indx = np.where(yy_dly == yy_yrly[i])[0]
-        x_yrly[i] = func(x_dly[indx])
-
-    return yy_yrly, x_yrly
-
-
 # ----- Base functions: secondary variables
-
 def calcul_rain_from_ptot(Tavg, Ptot, Tcrit=0):
-    rain = np.copy(Ptot)
-    rain[np.where(Tavg < Tcrit)[0]] = 0
+    rain = Ptot.copy(deep=True)
+    rain[Tavg < Tcrit] = 0
+
+    # np.copy(Ptot)
+    # rain[np.where(Tavg < Tcrit)[0]] = 0
     return rain
 
 
 # ---- Utility functions
-
 def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 
     # HTML table with the info related to the weather station.
@@ -877,14 +628,15 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
-    fmeteo = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/"
-              "sample_weather_datafile.csv")
+    fmeteo = ("D:/Desktop/Meteo_station_1973a2019.csv")
     wxdset = WXDataFrame(fmeteo)
+    data = wxdset.data
 
-    filename = "C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY2"
-    daily_wy2 = read_cweeds_file(filename, format_to_daily=True)
+    monthly_values = wxdset.get_monthly_values()
+    yearly_values = wxdset.get_yearly_values()
 
-    filename = ("C:/Users/jsgosselin/GWHAT/gwhat/tests/cweed_sample.WY3")
-    daily_wy3 = read_cweeds_file(filename, format_to_daily=True)
+    monthly_normals = wxdset.get_monthly_normals()
+    yearly_normals = wxdset.get_yearly_normals()
 
-    wy23_df = join_daily_cweeds_wy2_and_wy3(daily_wy2, daily_wy3)
+    print(monthly_normals, end='\n\n')
+    print(yearly_normals)

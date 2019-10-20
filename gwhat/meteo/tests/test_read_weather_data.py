@@ -7,19 +7,19 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-
 import os
+import datetime as dt
 import os.path as osp
 
 # ---- Third party imports
-
 import numpy as np
+import pandas as pd
 import pytest
 
 # ---- Local library imports
-
 from gwhat.meteo.weather_reader import (WXDataFrame, read_cweeds_file,
                                         join_daily_cweeds_wy2_and_wy3)
+from gwhat.utils.dates import datetimeindex_to_xldates
 
 
 def test_read_weather_data():
@@ -30,36 +30,34 @@ def test_read_weather_data():
     # were removed manually from the dataset were added back. The lines were
     # removed for december 18, 19, and 20 of 2017.
 
-    assert len(wxdset['Time']) == 2188 + 3
-    assert np.all(np.diff(wxdset['Time']) == 1)
+    assert len(wxdset.data) == 2188 + 3
+    assert np.all(np.diff(wxdset.data.index) == np.timedelta64(1, 'D'))
+    assert wxdset.get_data_period() == (2010, 2015)
 
-    expected_times = np.arange(40179, 42369+1)
-    assert np.array_equal(wxdset['Time'], expected_times)
-
-    expected_years = np.arange(2010, 2015+1)
-    assert np.array_equal(np.unique(wxdset['Year']), expected_years)
-
-    expected_months = np.arange(1, 13)
-    assert np.array_equal(np.unique(wxdset['Month']), expected_months)
+    assert np.array_equal(datetimeindex_to_xldates(wxdset.data.index),
+                          np.arange(40179, 42369 + 1))
+    assert np.array_equal(wxdset.data.index,
+                          pd.date_range(start=dt.datetime(2010, 1, 1),
+                                        end=dt.datetime(2015, 12, 31),
+                                        freq='D'))
+    assert np.array_equal(wxdset.data.index.year.unique(),
+                          np.arange(2010, 2015 + 1))
+    assert np.array_equal(wxdset.data.index.month.unique(),
+                          np.arange(1, 13))
 
     # Assert the data for a sample of the dataset.
-
-    expected_results = np.array([14, 0, 0, 0, 8.5])
-    assert np.array_equal(wxdset['Ptot'][-15:-10], expected_results)
-    expected_results = np.array([14, 0, 0, 0, 0])
-    assert np.array_equal(wxdset['Rain'][-15:-10], expected_results)
-    expected_results = np.array([0, 0, 0, 0, 8.5])
-    assert np.array_equal(wxdset['Snow'][-15:-10], expected_results)
-
-    expected_results = np.array([4.300, 3.100, 1.900, 0.700, -0.500])
-    assert np.array_equal(np.round(wxdset['Tavg'][-15:-10], 3),
-                          expected_results)
-    expected_results = np.array([9.000, 7.750, 6.500, 5.250, 4.000])
-    assert np.array_equal(np.round(wxdset['Tmax'][-15:-10], 3),
-                          expected_results)
-    expected_results = np.array([-0.500, -1.125, -1.750, -2.375, -3.00])
-    assert np.array_equal(np.round(wxdset['Tmin'][-15:-10], 3),
-                          expected_results)
+    assert np.array_equal(wxdset.data['Ptot'][-15:-10],
+                          np.array([14, 0, 0, 0, 8.5]))
+    assert np.array_equal(wxdset.data['Rain'][-15:-10],
+                          np.array([14, 0, 0, 0, 0]))
+    assert np.array_equal(wxdset.data['Snow'][-15:-10],
+                          np.array([0, 0, 0, 0, 8.5]))
+    assert np.array_equal(np.round(wxdset.data['Tavg'][-15:-10], 3),
+                          np.array([4.300, 3.100, 1.900, 0.700, -0.500]))
+    assert np.array_equal(np.round(wxdset.data['Tmax'][-15:-10], 3),
+                          np.array([9.000, 7.750, 6.500, 5.250, 4.000]))
+    assert np.array_equal(np.round(wxdset.data['Tmin'][-15:-10], 3),
+                          np.array([-0.500, -1.125, -1.750, -2.375, -3.00]))
 
 
 # ---- Test read_cweeds_file
@@ -200,5 +198,4 @@ def test_join_cweeds_wy2_wy3_datasets():
 
 
 if __name__ == "__main__":
-    pytest.main([os.path.basename(__file__)])
-    # pytest.main()
+    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
