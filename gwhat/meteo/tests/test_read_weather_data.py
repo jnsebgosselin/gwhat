@@ -22,8 +22,9 @@ from gwhat.meteo.weather_reader import (WXDataFrame, read_cweeds_file,
 from gwhat.utils.dates import datetimeindex_to_xldates
 
 
-def test_read_weather_data():
-    fmeteo = osp.join(osp.dirname(__file__), "sample_weather_datafile.csv")
+@pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
+def test_read_weather_data(ext):
+    fmeteo = osp.join(osp.dirname(__file__), "sample_weather_datafile" + ext)
     wxdset = WXDataFrame(fmeteo)
 
     # Assert that the dataset was loaded correctly and that the 3 lines that

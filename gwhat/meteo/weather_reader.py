@@ -22,6 +22,7 @@ from abc import abstractmethod
 # ---- Third party imports
 import numpy as np
 import pandas as pd
+import xlrd
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 
 # ---- Local library imports
@@ -41,6 +42,7 @@ VARLABELS_MAP = {'Ptot': 'Ptot (mm)',
                  'Tavg': 'Tavg (\u00B0C)',
                  'Tmin': 'Tmin (\u00B0C)',
                  'PET': 'PET (mm)'}
+FILE_EXTS = ['.out', '.csv', '.xls', '.xlsx']
 
 
 # ---- API
@@ -279,15 +281,34 @@ def open_weather_datafile(filename):
     Open the csv datafile and try to guess the delimiter.
     Return None if this fails.
     """
-    for dlm in ['\t', ',', ';']:
-        with open(filename, 'r') as csvfile:
-            reader = list(csv.reader(csvfile, delimiter=dlm))
-        for line in reader:
-            if line and line[0] == 'Station Name':
-                return reader
+    root, ext = os.path.splitext(filename)
+    if ext not in FILE_EXTS:
+        raise ValueError("Supported file format are: ", FILE_EXTS)
     else:
-        print("Failed to open %s." % os.path.basename(filename))
-        return None
+        print('Loading daily weather time series from "%s"...' %
+              osp.basename(filename))
+
+    if ext in ['.csv', '.out']:
+        for dlm in ['\t', ',', ';']:
+            with open(filename, 'r') as csvfile:
+                reader = list(csv.reader(csvfile, delimiter=dlm))
+            for row in reader:
+                if re.search(r'(time|datetime|year)',
+                             ''.join(row).replace(" ", "").replace("_", ""),
+                             re.IGNORECASE):
+                    if len(row) >= 2:
+                        return reader
+                    else:
+                        break
+        else:
+            print("Failed to open %s." % os.path.basename(filename))
+            return None
+    elif ext in ['.xls', '.xlsx']:
+        with xlrd.open_workbook(filename, on_demand=True) as wb:
+            sheet = wb.sheet_by_index(0)
+            reader = [sheet.row_values(rowx, start_colx=0, end_colx=None) for
+                      rowx in range(sheet.nrows)]
+            return reader
 
 
 def read_weather_datafile(filename):
