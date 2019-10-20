@@ -17,8 +17,7 @@ import pandas as pd
 import pytest
 
 # ---- Local library imports
-from gwhat.meteo.weather_reader import (WXDataFrame, read_cweeds_file,
-                                        join_daily_cweeds_wy2_and_wy3)
+from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.utils.dates import datetimeindex_to_xldates
 
 
