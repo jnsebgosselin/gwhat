@@ -42,7 +42,7 @@ VARLABELS_MAP = {'Ptot': 'Ptot (mm)',
                  'Tavg': 'Tavg (\u00B0C)',
                  'Tmin': 'Tmin (\u00B0C)',
                  'PET': 'PET (mm)'}
-FILE_EXTS = ['.csv', '.xls', '.xlsx']
+FILE_EXTS = ['.out', '.csv', '.xls', '.xlsx']
 
 
 # ---- API
@@ -288,7 +288,7 @@ def open_weather_datafile(filename):
         print('Loading daily weather time series from "%s"...' %
               osp.basename(filename))
 
-    if ext == '.csv':
+    if ext in ['.csv', '.out']:
         for dlm in ['\t', ',', ';']:
             with open(filename, 'r') as csvfile:
                 reader = list(csv.reader(csvfile, delimiter=dlm))
