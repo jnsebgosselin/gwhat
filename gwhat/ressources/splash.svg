@@ -15,7 +15,7 @@
    height="806.96411"
    width="1958.3138"
    version="1.1"
-   inkscape:version="0.92.2 (5c3e80d, 2017-08-06)"
+   inkscape:version="0.92.4 (5da689c313, 2019-01-14)"
    sodipodi:docname="splash.svg"
    inkscape:export-filename="C:\Users\User\gwhat\gwhat\ressources\splash.png"
    inkscape:export-xdpi="31.663383"
@@ -34,9 +34,9 @@
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
-     inkscape:zoom="1.5317385"
-     inkscape:cx="699.17695"
-     inkscape:cy="825.353"
+     inkscape:zoom="0.46909769"
+     inkscape:cx="732.54485"
+     inkscape:cy="714.60738"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -362,6 +362,6 @@
          id="tspan3092-0"
          y="-404.06998"
          x="-110.26708"
-         sodipodi:role="line">Version 0.3.4</tspan></text>
+         sodipodi:role="line">Version 0.4.0</tspan></text>
   </g>
 </svg>
