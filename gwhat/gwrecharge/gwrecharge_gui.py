@@ -26,7 +26,7 @@ from gwhat.widgets.layout import HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
-from gwhat.utils.icons import QToolButtonSmall
+from gwhat.utils.icons import QToolButtonSmall, get_iconsize
 from gwhat.utils import icons
 
 
@@ -340,6 +340,7 @@ class ExportGLUEButton(ExportDataButton):
 
     def __init__(self, model=None, workdir=None, parent=None):
         super(ExportGLUEButton, self).__init__(model, workdir, parent)
+        self.setIconSize(get_iconsize('small'))
 
     def setup_menu(self):
         """Setup the menu of the button tailored to the model."""
