@@ -152,7 +152,7 @@ class GLUEDataFrameBase(Mapping):
         # Add the weather station infos.
         header.append(
             ['Weather Station', self['wxinfo']['Station Name']])
-        keys = ['Climate Identifier', 'Province', 'Latitude',
+        keys = ['Station ID', 'Location', 'Latitude',
                 'Longitude', 'Elevation']
         for key in keys:
             header.append([key, self['wxinfo'][key]])
