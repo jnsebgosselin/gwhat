@@ -156,6 +156,8 @@ class GLUEDataFrameBase(Mapping):
                 'Longitude', 'Elevation']
         for key in keys:
             try:
+                # We need to do this for backward compatibility with
+                # older version of GWHAT. See jnsebgosselin/gwhat#305.
                 header.append([key, self['wxinfo'][key]])
             except KeyError:
                 if key == 'Station ID':
