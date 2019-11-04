@@ -155,7 +155,17 @@ class GLUEDataFrameBase(Mapping):
         keys = ['Station ID', 'Location', 'Latitude',
                 'Longitude', 'Elevation']
         for key in keys:
-            header.append([key, self['wxinfo'][key]])
+            try:
+                # We need to do this for backward compatibility with
+                # older version of GWHAT. See jnsebgosselin/gwhat#305.
+                header.append([key, self['wxinfo'][key]])
+            except KeyError:
+                if key == 'Station ID':
+                    try:
+                        header.append(
+                            [key, self['wxinfo']['Climate Identifier']])
+                    except KeyError:
+                        continue
 
         # Add the GWHAT version and date of creation.
         header.extend([
