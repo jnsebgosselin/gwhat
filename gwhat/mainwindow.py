@@ -22,7 +22,7 @@ mpl.use('Qt5Agg')
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QSplitter,
-                             QWidget, QGridLayout)
+                             QWidget, QGridLayout, QTextBrowser)
 import sys
 app = QApplication(sys.argv)
 
@@ -106,9 +106,10 @@ class MainWindow(QMainWindow):
         """
         # Setup the main console.
         splash.showMessage("Initializing main window...")
-        self.main_console = QTextEdit()
+        self.main_console = QTextBrowser()
         self.main_console.setReadOnly(True)
         self.main_console.setLineWrapMode(QTextEdit.NoWrap)
+        self.main_console.setOpenExternalLinks(True)
 
         style = 'Regular'
         family = StyleDB().fontfamily
