@@ -1,27 +1,29 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
-
 import copy
 
-# ---- Third parties imports
-
+# ---- Third party imports
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import QUrl, QSize
+from PyQt5.QtGui import QDesktopServices
 from PyQt5.QtWidgets import (QApplication, QTabWidget, QWidget, QTabBar,
-                             QDesktopWidget)
+                             QDesktopWidget, QHBoxLayout)
 
 # ---- Local imports
-
+from gwhat import __project_url__
 from gwhat.widgets.about import AboutWhat
 from gwhat.utils.icons import QToolButtonBase
 from gwhat.utils import icons
+
+GITHUB_ISSUES_URL = __project_url__ + "/issues"
 
 
 class TabWidget(QTabWidget):
@@ -35,13 +37,26 @@ class TabWidget(QTabWidget):
         self.about_btn.setIconSize(icons.get_iconsize('small'))
         self.about_btn.setFixedSize(32, 32)
         self.about_btn.setToolTip('About GWHAT...')
-        self.about_btn.setParent(self)
         self.about_btn.clicked.connect(self._about_btn_isclicked)
+
+        self.bug_btn = QToolButtonBase(icons.get_icon('report_bug'))
+        self.bug_btn.setIconSize(icons.get_iconsize('small'))
+        self.bug_btn.setFixedSize(32, 32)
+        self.bug_btn.setToolTip('Report issue...')
+        self.bug_btn.clicked.connect(
+            lambda: QDesktopServices.openUrl(QUrl(GITHUB_ISSUES_URL)))
+
+        self._button_box = QWidget(self)
+        layout = QHBoxLayout(self._button_box)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(1)
+        layout.addWidget(self.about_btn)
+        layout.addWidget(self.bug_btn)
 
         tab_bar = TabBar(self, parent)
         self.setTabBar(tab_bar)
-        tab_bar.sig_resized.connect(self.__move_about_btn)
-        tab_bar.sig_tab_layout_changed.connect(self.__move_about_btn)
+        tab_bar.sig_resized.connect(self._move_about_btn)
+        tab_bar.sig_tab_layout_changed.connect(self._move_about_btn)
 
         self.about_btn.raise_()
 
@@ -60,9 +75,9 @@ class TabWidget(QTabWidget):
     def resizeEvent(self, event):
         """Qt method override."""
         super().resizeEvent(event)
-        self.__move_about_btn()
+        self._move_about_btn()
 
-    def __move_about_btn(self):
+    def _move_about_btn(self):
         """
         Move the buton to show the About dialog window to the right
         side of the tab bar.
@@ -70,7 +85,7 @@ class TabWidget(QTabWidget):
         x = 0
         for i in range(self.count()):
             x += self.tabBar().tabRect(i).width()
-        self.about_btn.move(x, 0)
+        self._button_box.move(x, 0)
 
 
 class TabBar(QTabBar):
@@ -115,7 +130,7 @@ class TabBar(QTabBar):
         return self.__oldIndex
 
 
-if __name__ == '__main__':                                   # pragma: no cover
+if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)

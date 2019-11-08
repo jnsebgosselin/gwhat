@@ -1,31 +1,28 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
-from __future__ import division, unicode_literals
-
-# ---- Imports: standard libraries
-
+# ---- Standard library imports
 import os
 
-# ---- Imports: third parties
-
+# ---- Third party imports
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolButton
 import qtawesome as qta
 
+# ---- Local imports
 from gwhat import __rootdir__
 
 DIRNAME = os.path.join(__rootdir__, 'ressources', 'icons_png')
 GWHAT_ICONS = {
     'master': 'WHAT',
     'expand_range_vert': 'expand_range_vert',
-    'info': 'info',
     'calc_brf': 'start',
     'setup': 'page_setup',
     'new_project': 'new_project',
@@ -126,6 +123,9 @@ FA_ICONS = {
     'expand_all': [
         ('mdi.arrow-expand-all',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'info': [
+        ('mdi.information-outline',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'pan': [
         ('mdi.pan',),
         {'color': COLOR, 'scale_factor': 1.3}],
@@ -135,6 +135,9 @@ FA_ICONS = {
     'copy_clipboard': [
         ('mdi.content-copy',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'report_bug': [
+        ('mdi.bug',),
+        {'color': COLOR, 'scale_factor': 1.4}],
     }
 
 ICON_SIZES = {'large': (32, 32),
