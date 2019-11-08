@@ -133,6 +133,9 @@ FA_ICONS = {
     'copy_clipboard': [
         ('mdi.content-copy',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'report_bug': [
+        ('mdi.bug',),
+        {'color': COLOR, 'scale_factor': 1.4}],
     }
 
 ICON_SIZES = {'large': (32, 32),
