@@ -23,7 +23,6 @@ DIRNAME = os.path.join(__rootdir__, 'ressources', 'icons_png')
 GWHAT_ICONS = {
     'master': 'WHAT',
     'expand_range_vert': 'expand_range_vert',
-    'info': 'info',
     'calc_brf': 'start',
     'setup': 'page_setup',
     'new_project': 'new_project',
@@ -123,6 +122,9 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1.3}],
     'expand_all': [
         ('mdi.arrow-expand-all',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'info': [
+        ('mdi.information-outline',),
         {'color': COLOR, 'scale_factor': 1.3}],
     'pan': [
         ('mdi.pan',),
