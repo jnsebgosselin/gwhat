@@ -122,10 +122,10 @@ class MainWindow(QMainWindow):
 
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
-        self.write2console('<font color=black>'
-                           'Please report any bug or wishful feature at'
-                           ' jean-sebastien.gosselin@ete.inrs.ca.'
-                           '</font>')
+        msg = ('Please help GWHAT by reporting bugs on our '
+               '<a href="https://github.com/jnsebgosselin/gwhat/issues">'
+               'Issues Tracker</a>.')
+        self.write2console('<font color=black>%s</font>' % msg)
 
         # Setup the tab plot hydrograph.
         splash.showMessage("Initializing plot hydrograph...")
