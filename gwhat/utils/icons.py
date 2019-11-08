@@ -1,24 +1,22 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
-from __future__ import division, unicode_literals
-
-# ---- Imports: standard libraries
-
+# ---- Standard library imports
 import os
 
-# ---- Imports: third parties
-
+# ---- Third party imports
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolButton
 import qtawesome as qta
 
+# ---- Local imports
 from gwhat import __rootdir__
 
 DIRNAME = os.path.join(__rootdir__, 'ressources', 'icons_png')
