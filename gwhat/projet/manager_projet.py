@@ -176,38 +176,46 @@ class ProjetManager(QWidget):
             self.load_project(projet)
 
     def __initGUI__(self):
-        self.project_display = QPushButton()
-        self.project_display.setFocusPolicy(Qt.NoFocus)
-        self.project_display.setMinimumWidth(100)
-        self.project_display.clicked.connect(self.select_project)
-
         ft = QApplication.instance().font()
         ft.setPointSize(ft.pointSize()-1)
-        self.project_display.setFont(ft)
 
-        new_btn = QToolButtonSmall(icons.get_icon('new_project'))
-        new_btn.setToolTip('Create a new project...')
-        new_btn.clicked.connect(self.show_newproject_dialog)
+        self.project_selector = ProjectSelector(
+            parent=self,
+            recent_projects=CONF.get('project', 'recent_projects', None))
+        self.project_selector.setFont(ft)
+        self.project_selector.menu.setFont(ft)
 
-        # ---- layout
+        self.project_selector.sig_request_new_project.connect(
+            self.show_newproject_dialog)
+        self.project_selector.sig_request_open_project.connect(
+            self.select_project)
+        self.project_selector.sig_request_load_project.connect(
+            self.load_project)
 
+        # Setup the layout.
         layout = QGridLayout(self)
 
         layout.addWidget(QLabel('Project :'), 0, 1)
-        layout.addWidget(self.project_display, 0, 2)
-        layout.addWidget(new_btn, 0, 3)
+        layout.addWidget(self.project_selector, 0, 2)
 
         layout.setSpacing(3)
-        layout.setContentsMargins(0, 0, 0, 5)  # (L, T, R, B)
+        layout.setContentsMargins(0, 0, 0, 5)
         layout.setColumnStretch(0, 500)
         layout.setRowMinimumHeight(0, 28)
 
     def select_project(self):
-        directory = os.path.abspath(os.path.join('..', 'Projects'))
+        """
+        Show a dialog that allows users to select an existing GWHAT
+        project file.
+        """
+        directory = CONF.get('main', 'select_file_dialog_dir', get_home_dir())
         filename, _ = QFileDialog.getOpenFileName(
-            self, 'Open Project', directory, '*.gwt ; *.what')
+            self.parent(), 'Open Project', directory,
+            'Gwhat Project (*.gwt ; *.what)')
 
         if filename:
+            filename = osp.abspath(filename)
+            CONF.set('main', 'select_file_dialog_dir', osp.dirname(filename))
             self.projectfile = filename
             self.load_project(filename)
 
@@ -265,7 +273,7 @@ class ProjetManager(QWidget):
         else:
             self.projet = projet
 
-        # If the project is corrupt.
+        # If the project is corrupted.
         if self.projet.check_project_file() is True:
             self.projet.backup_project_file()
         else:
@@ -309,9 +317,11 @@ class ProjetManager(QWidget):
                     return False
 
         init_waterlvl_measures(osp.join(self.projet.dirname, "Water Levels"))
-        self.project_display.setText(self.projet.name)
-        self.project_display.adjustSize()
+        self.project_selector.add_project(self.projet.filename)
+        self.project_selector.set_current_project(self.projet.filename)
+        self.project_selector.adjustSize()
         self.currentProjetChanged.emit(self.projet)
+
         return True
 
     def restore_from_backup(self, filename):
@@ -354,12 +364,19 @@ class ProjetManager(QWidget):
         """Close the currently opened hdf5 project file."""
         if self.projet is not None:
             self.projet.close()
-            self.projet = None
+        self.projet = None
+        self.project_selector.set_current_project(None)
 
     def show_newproject_dialog(self):
         """Show the dialog to create a new project."""
         self.new_projet_dialog.reset_UI()
+        self.new_projet_dialog.set_directory(
+            CONF.get('project', 'new_project_dialog_dir', get_home_dir()))
         self.new_projet_dialog.show()
+        if self.new_projet_dialog.result():
+            CONF.set('project', 'new_project_dialog_dir',
+                     self.new_projet_dialog.directory())
+
 
 
 class NewProject(QDialog):
