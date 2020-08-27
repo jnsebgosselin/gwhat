@@ -101,11 +101,11 @@ class ProjectSelector(QPushButton):
             The QAction corresponding to the project that was removed from
             the list of recent projects.
         """
-        if filename in self._recent_project_filenames:
-            index = self._recent_project_filenames.index(filename)
-            self._recent_project_filenames.remove(filename)
-            removed_action = self._recent_project_actions.pop(index)
-            self.menu.removeAction(removed_action)
+        for idx, recent_filename in enumerate(self._recent_project_filenames):
+            if osp.samefile(filename, recent_filename):
+                self._recent_project_filenames.remove(recent_filename)
+                removed_action = self._recent_project_actions.pop(idx)
+                self.menu.removeAction(removed_action)
             return removed_action
 
     def add_recent_project(self, filename):
