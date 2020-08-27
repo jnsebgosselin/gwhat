@@ -389,21 +389,32 @@ class NewProject(QDialog):
 
     sig_new_project = QSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, directory=None):
         super(NewProject, self).__init__(parent)
-
-        self.setWindowFlags(Qt.Window)
         self.setModal(True)
+        self.setResult(False)
 
         self.setWindowTitle('New Project')
         self.setWindowIcon(icons.get_icon('master'))
 
         self.__initUI__()
+        self.set_directory(directory)
+
+    def directory(self):
+        """Return the directory currently being displayed in the dialog."""
+        return self._directory
+
+    def set_directory(self, directory):
+        """Set the directory to display in the dialog."""
+        if directory is None or not osp.exists(directory):
+            self._directory = get_home_dir()
+        else:
+            self._directory = directory
+        self.directory_lineedit.setText(self._directory)
 
     def __initUI__(self):
 
-        # ---- Current Date ----
-
+        # Setup current date
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
 
@@ -473,17 +484,14 @@ class NewProject(QDialog):
         loc_coord.setSpacing(10)
         loc_coord.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
-        # --------------------------------------------------------- Browse ----
-
-        # ---- widgets ----
-
+        # Setup browse widgets.
         save_in_folder = os.path.abspath(os.path.join('..', 'Projects'))
 
         directory_label = QLabel('Save in Folder:')
-        self.directory = QLineEdit()
-        self.directory.setReadOnly(True)
-        self.directory.setText(save_in_folder)
-        self.directory.setMinimumWidth(350)
+        self.directory_lineedit = QLineEdit()
+        self.directory_lineedit.setReadOnly(True)
+        self.directory_lineedit.setText(save_in_folder)
+        self.directory_lineedit.setMinimumWidth(350)
 
         btn_browse = QToolButton()
         btn_browse.setAutoRaise(True)
@@ -496,10 +504,10 @@ class NewProject(QDialog):
         browse = QGridLayout()
 
         browse.addWidget(directory_label, 0, 0)
-        browse.addWidget(self.directory, 0, 1)
+        browse.addWidget(self.directory_lineedit, 0, 1)
         browse.addWidget(btn_browse, 0, 2)
 
-        browse.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        browse.setContentsMargins(0, 0, 0, 0)
         browse.setColumnStretch(1, 100)
         browse.setSpacing(10)
 
@@ -526,8 +534,7 @@ class NewProject(QDialog):
         toolbar.setColumnStretch(0, 100)
         toolbar.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
-        # ------------------------------------------------------------- MAIN --
-
+        # Setup the main layout.
         main_layout = QGridLayout(self)
 
         main_layout.addLayout(projet_info, 0, 0)
@@ -540,13 +547,12 @@ class NewProject(QDialog):
         main_layout.setVerticalSpacing(25)
         main_layout.setContentsMargins(15, 15, 15, 15)  # (L, T, R, B)
 
-    # =========================================================================
-
     def browse_saveIn_folder(self):
         folder = QFileDialog.getExistingDirectory(
-                self, 'Save in Folder', '../Projects')
+            self, 'Save in Folder', self.directory())
         if folder:
-            self.directory.setText(folder)
+            folder = osp.abspath(folder)
+            self.directory_lineedit.setText(folder)
 
     def save_project(self):
         name = self.name.text()
@@ -573,17 +579,6 @@ class NewProject(QDialog):
 
         os.makedirs(dirname)
 
-        # ---- folder architecture ----
-
-        folders = [os.path.join(dirname, 'Meteo', 'Raw'),
-                   os.path.join(dirname, 'Meteo', 'Input'),
-                   os.path.join(dirname, 'Meteo', 'Output'),
-                   os.path.join(dirname, 'Water Levels')]
-
-        for f in folders:
-            if not os.path.exists(f):
-                os.makedirs(f)
-
         # ---- project.what ----
 
         fname = os.path.join(dirname, '%s.gwt' % name)
@@ -603,17 +598,14 @@ class NewProject(QDialog):
         print('---------------')
 
         self.close()
+        self.setResult(True)
         self.sig_new_project.emit(fname)
 
-    # =========================================================================
-
     def reset_UI(self):
+        self.setResult(False)
 
         self.name.clear()
         self.author.clear()
-
-        save_in_folder = os.path.abspath(os.path.join('..', 'Projects'))
-        self.directory.setText(save_in_folder)
 
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
@@ -638,11 +630,7 @@ class NewProject(QDialog):
         self.setFixedSize(self.size())
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-if __name__ == '__main__':                                   # pragma: no cover
-
+if __name__ == '__main__':
     import sys
 
     f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
