@@ -146,12 +146,12 @@ class ProjectSelector(QPushButton):
             action.triggered.connect(
                 lambda: self.sig_request_load_project.emit(filename))
             action.setToolTip(filename)
+            action.setData(filename)
 
         if len(self._recent_project_actions):
             self.menu.insertAction(self._recent_project_actions[0], action)
         else:
             self.menu.addAction(action)
-            action.setData(filename)
         self._recent_project_actions.insert(0, action)
 
     def set_current_project(self, filename):
