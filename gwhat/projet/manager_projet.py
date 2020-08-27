@@ -14,7 +14,6 @@ import os
 import os.path as osp
 from datetime import datetime
 from shutil import copyfile
-import math
 
 # ---- Third party imports
 from appconfigs.base import get_home_dir
@@ -28,7 +27,6 @@ from PyQt5.QtWidgets import (
 from gwhat.config.main import CONF
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonSmall
 from gwhat.projet.manager_data import DataManager
 from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
