@@ -123,8 +123,10 @@ class ProjectSelector(QPushButton):
         if len(self.menu.actions()) == 2:
             self.menu.addSeparator()
 
-        if filename in self._project_filenames:
-            action = self.remove_project(filename)
+        for recent_filename in self._project_filenames:
+            if osp.samefile(filename, recent_filename):
+                action = self.remove_project(recent_filename)
+                break
         else:
             action = QAction(
                 text=osp.basename(filename),
