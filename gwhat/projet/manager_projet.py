@@ -10,22 +10,22 @@
 from __future__ import division, unicode_literals
 
 # ---- Standard library imports
-
 import os
 import os.path as osp
 from datetime import datetime
 from shutil import copyfile
+import math
 
 # ---- Third party imports
-
+from appconfigs.base import get_home_dir
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
-                             QApplication, QGridLayout, QMessageBox, QDialog,
-                             QLineEdit, QToolButton, QFileDialog)
+from PyQt5.QtWidgets import (
+    QWidget, QLabel, QDesktopWidget, QPushButton, QApplication, QGridLayout,
+    QMessageBox, QDialog, QLineEdit, QToolButton, QFileDialog, QMenu, QAction)
 
 # ---- Local imports
-
+from gwhat.config.main import CONF
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonSmall
@@ -34,6 +34,131 @@ from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
 from gwhat import __namever__
+
+
+class ProjectSelector(QPushButton):
+    """
+    A pushbutton that provides a graphical interface for the user to
+    create and open projects.
+    """
+    sig_current_project_changed = QSignal(str)
+    sig_request_open_project = QSignal()
+    sig_request_new_project = QSignal()
+    sig_request_load_project = QSignal(str)
+
+    def __init__(self, parent=None, recent_projects=None):
+        super().__init__(parent)
+        self.setMinimumWidth(125)
+
+        self._project_filenames = []
+        self._project_actions = []
+
+        self.menu = QMenu()
+        self.setMenu(self.menu)
+        self.menu.aboutToShow.connect(self.validate)
+        self.menu.setToolTipsVisible(True)
+
+        self._new_project_action = QAction(
+            text='New Project...', parent=self.parent())
+        self._new_project_action.triggered.connect(
+            lambda: self.sig_request_new_project.emit())
+        self.menu.addAction(self._new_project_action)
+        self._new_project_action.setToolTip("Create a new project.")
+
+        self._open_project_action = QAction(
+            text='Open Project...', parent=self.parent())
+        self._open_project_action.triggered.connect(
+            lambda: self.sig_request_open_project.emit())
+        self.menu.addAction(self._open_project_action)
+        self._open_project_action.setToolTip("Open an existing project.")
+
+        # Setup recent projects.
+        for project in reversed(recent_projects or []):
+            self.add_project(project)
+
+    def validate(self):
+        """
+        Validate that each project currently added to this project selector's
+        menu is available and remove it if it is not.
+        """
+        for filename in self._project_filenames:
+            if not osp.exists(filename):
+                self.remove_project(filename)
+
+    def remove_project(self, filename):
+        """
+        Remove the project corresponding to filename from this
+        project selector's menu.
+
+        Parameters
+        ----------
+        filename : str
+            The absolute path of the project that needs to be removed from
+            this project selector's menu.
+
+        Returns
+        -------
+        removed_action : QAction
+            The QAction corresponding to the project that was removed from this
+            project selector's menu.
+        """
+        if filename in self._project_filenames:
+            index = self._project_filenames.index(filename)
+            self._project_filenames.remove(filename)
+            removed_action = self._project_actions.pop(index)
+            self.menu.removeAction(removed_action)
+            return removed_action
+
+    def add_project(self, filename):
+        """
+        Add the project corresponding to filename to this
+        project selector's menu.
+
+        The project is always added at the top of the projects list.
+
+        Parameters
+        ----------
+        filename : str
+            The absolute path of the project that needs to be added to
+            this project selector's menu.
+        """
+        if len(self.menu.actions()) == 2:
+            self.menu.addSeparator()
+
+        if filename in self._project_filenames:
+            action = self.remove_project(filename)
+        else:
+            action = QAction(
+                text=osp.basename(filename),
+                icon=icons.get_icon('folder_open'),
+                parent=self.parent())
+            action.triggered.connect(
+                lambda: self.sig_request_load_project.emit(filename))
+            action.setToolTip(filename)
+
+        if len(self._project_actions):
+            self.menu.insertAction(self._project_actions[0], action)
+        else:
+            self.menu.addAction(action)
+        self._project_filenames.insert(0, filename)
+        self._project_actions.insert(0, action)
+
+    def set_current_project(self, filename):
+        """
+        Set the current project to filename.
+
+        name
+        ----------
+        filename : str, optional
+            The absolute path of the filename of the current project.
+        """
+        if filename is None:
+            self.setText('')
+            self.setToolTip(None)
+        else:
+            self.setText(osp.basename(filename))
+            self.setToolTip(filename)
+        self.sig_current_project_changed.emit(filename)
 
 
 class ProjetManager(QWidget):
