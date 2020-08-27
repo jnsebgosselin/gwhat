@@ -17,8 +17,8 @@ import pytest
 
 # ---- Local imports
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.projet.manager_projet import (ProjetManager, QFileDialog)
-from gwhat.projet.manager_projet import QMessageBox
+from gwhat.projet.manager_projet import (
+    ProjetManager, QFileDialog, QMessageBox, CONF)
 
 NAME = "test @ prô'jèt!"
 LAT = 45.40
@@ -67,6 +67,10 @@ def project(projectfile):
 
 @pytest.fixture
 def projmanager(qtbot):
+    # We need to reset the configs to defaults after each test to make sure
+    # they can be run independently one from another.
+    CONF.reset_to_defaults()
+
     projmanager = ProjetManager()
     projmanager.new_projet_dialog.setModal(False)
     qtbot.addWidget(projmanager)
@@ -140,8 +144,8 @@ def test_load_non_existing_project(projmanager, mocker, projectpath):
     Test trying to open a project when the .gwt file does not exist.
     """
     assert not osp.exists(projectpath)
-    mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
-    mock_qmsgbox.return_value = QMessageBox.Ok
+    mock_qmsgbox = mocker.patch.object(
+        QMessageBox, 'exec_', returned_value=QMessageBox.Ok)
     result = projmanager.load_project(projectpath)
 
     assert mock_qmsgbox.call_count == 1
