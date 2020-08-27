@@ -104,7 +104,7 @@ def test_create_new_projet(projmanager, mocker, projectpath):
     # displayed in the UI, and check that the project file and a backup file
     # have been created.
     projmanager.new_projet_dialog.save_project()
-    assert projmanager.project_display.text() == NAME
+    assert projmanager.project_selector.text() == NAME + '.gwt'
     assert osp.exists(projectpath)
     assert osp.exists(projectpath + '.bak')
 
@@ -125,7 +125,7 @@ def test_load_projet(projmanager, mocker, projectfile):
 
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
-    assert projmanager.project_display.text() == NAME
+    assert projmanager.project_selector.text() == NAME + '.gwt'
     assert isinstance(projmanager.projet, ProjetReader)
     assert projmanager.projet.name == NAME
     assert projmanager.projet.author == NAME
@@ -186,7 +186,7 @@ def test_load_corrupt_project_continue(projmanager, mocker, projectfile):
     assert mock_qmsgbox.call_count == 1
 
     assert result is True
-    assert projmanager.project_display.text() == NAME
+    assert projmanager.project_selector.text() == NAME + '.gwt'
     assert isinstance(projmanager.projet, ProjetReader)
     assert projmanager.projet.name == NAME
     assert projmanager.projet.author == NAME
@@ -244,7 +244,7 @@ def test_restore_invalid_project(projmanager, mocker, projectfile, bakfile):
 
     assert mock_qmsgbox.call_count == 2
     assert result is True
-    assert projmanager.project_display.text() == NAME
+    assert projmanager.project_selector.text() == NAME + '.gwt'
     assert isinstance(projmanager.projet, ProjetReader)
     assert projmanager.projet.name == NAME
     assert projmanager.projet.author == NAME
@@ -291,7 +291,7 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert mock_qmsgbox.call_count == 1
     assert mock_checkproj.call_count == 1
     assert result is False
-    assert projmanager.project_display.text() == ''
+    assert projmanager.project_selector.text() == ''
     assert projmanager.projet is None
 
     # Try loading the corrupt project and click Ignore.
@@ -303,7 +303,7 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert mock_qmsgbox.call_count == 2
     assert mock_checkproj.call_count == 1
     assert result is True
-    assert projmanager.project_display.text() == NAME
+    assert projmanager.project_selector.text() == NAME + '.gwt'
     assert isinstance(projmanager.projet, ProjetReader)
 
     # Try loading the corrupt project and click Yes.
@@ -315,7 +315,7 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert mock_qmsgbox.call_count == 3
     assert mock_checkproj.call_count == 3
     assert result is True
-    assert projmanager.project_display.text() == NAME
+    assert projmanager.project_selector.text() == NAME + '.gwt'
     assert isinstance(projmanager.projet, ProjetReader)
 
 
