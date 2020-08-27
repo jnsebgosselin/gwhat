@@ -10,7 +10,7 @@
 # ---- Standard library imports
 import os
 import os.path as osp
-os.environ['GWIRE_PYTEST'] = 'True'
+os.environ['GWHAT_PYTEST'] = 'True'
 
 # ---- Third party imports
 import pytest
