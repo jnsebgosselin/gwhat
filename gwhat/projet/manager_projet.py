@@ -377,6 +377,11 @@ class ProjetManager(QWidget):
             CONF.set('project', 'new_project_dialog_dir',
                      self.new_projet_dialog.directory())
 
+    def close(self):
+        """Close this project manager."""
+        self.close_projet()
+        CONF.set('project', 'recent_projects',
+                 self.project_selector._project_filenames)
 
 
 class NewProject(QDialog):
