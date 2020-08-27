@@ -82,7 +82,7 @@ class ProjectSelector(QPushButton):
         Returns
         -------
         list of str
-            The list of absolute paths of recent projects.
+            The list of recent projects absolute paths.
         """
         return [action.data() for action in self._recent_project_actions]
 
