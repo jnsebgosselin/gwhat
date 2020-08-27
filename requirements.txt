@@ -1,5 +1,5 @@
 appconfigs
-pyqt5==5.9.*
+pyqt5 == 5.12.*
 xlsxwriter
 xlrd
 xlwt
