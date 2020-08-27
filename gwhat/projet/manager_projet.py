@@ -560,28 +560,19 @@ class NewProject(QDialog):
             print('Please enter a valid Project name')
             return
 
-        rootname = self.directory.text()
+        rootname = self.directory_lineedit.text()
         dirname = os.path.join(rootname, name)
 
-        # If directory already exist, a number is added at the end within ().
-
+        # If directory already exist, a number is added at the end.
         count = 1
-        while os.path.exists(dirname):
+        while osp.exists(dirname):
             dirname = os.path.join(rootname, '%s (%d)' % (name, count))
             count += 1
-
-        print('\n---------------')
-        print('Creating files and folder achitecture for the new project in:')
-        print(dirname)
-        print
-
-        # ---- Create Files and Folders ----
-
         os.makedirs(dirname)
 
         # ---- project.what ----
 
-        fname = os.path.join(dirname, '%s.gwt' % name)
+        fname = osp.join(dirname, '%s.gwt' % name)
 
         projet = ProjetReader(fname)
         projet.name = self.name.text()
@@ -597,8 +588,8 @@ class NewProject(QDialog):
         print('Creating file %s.gwt' % name)
         print('---------------')
 
-        self.close()
         self.setResult(True)
+        self.close()
         self.sig_new_project.emit(fname)
 
     def reset_UI(self):
