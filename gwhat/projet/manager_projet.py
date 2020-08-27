@@ -48,8 +48,9 @@ class ProjectSelector(QPushButton):
         super().__init__(parent)
         self.setMinimumWidth(125)
 
-        self._project_filenames = []
-        self._project_actions = []
+        self._recent_project_filenames = []
+        self._recent_project_actions = []
+        self._current_project = None
 
         self.menu = QMenu()
         self.setMenu(self.menu)
@@ -72,60 +73,60 @@ class ProjectSelector(QPushButton):
 
         # Setup recent projects.
         for project in reversed(recent_projects or []):
-            self.add_project(project)
+            self.add_recent_project(project)
 
     def validate(self):
         """
         Validate that each project currently added to this project selector's
         menu is available and remove it if it is not.
         """
-        for filename in self._project_filenames:
+        for filename in self._recent_project_filenames:
             if not osp.exists(filename):
-                self.remove_project(filename)
+                self.remove_recent_project(filename)
 
-    def remove_project(self, filename):
+    def remove_recent_project(self, filename):
         """
-        Remove the project corresponding to filename from this
-        project selector's menu.
+        Remove the project corresponding to filename from the list
+        of recent projects.
 
         Parameters
         ----------
         filename : str
             The absolute path of the project that needs to be removed from
-            this project selector's menu.
+            the list of recent projects.
 
         Returns
         -------
         removed_action : QAction
-            The QAction corresponding to the project that was removed from this
-            project selector's menu.
+            The QAction corresponding to the project that was removed from
+            the list of recent projects.
         """
-        if filename in self._project_filenames:
-            index = self._project_filenames.index(filename)
-            self._project_filenames.remove(filename)
-            removed_action = self._project_actions.pop(index)
+        if filename in self._recent_project_filenames:
+            index = self._recent_project_filenames.index(filename)
+            self._recent_project_filenames.remove(filename)
+            removed_action = self._recent_project_actions.pop(index)
             self.menu.removeAction(removed_action)
             return removed_action
 
-    def add_project(self, filename):
+    def add_recent_project(self, filename):
         """
-        Add the project corresponding to filename to this
-        project selector's menu.
+        Add the project corresponding to filename to the list
+        of recent projects.
 
-        The project is always added at the top of the projects list.
+        The project is always added at the top of the recent projects list.
 
         Parameters
         ----------
         filename : str
             The absolute path of the project that needs to be added to
-            this project selector's menu.
+            the list of recent projects.
         """
         if len(self.menu.actions()) == 2:
             self.menu.addSeparator()
 
-        for recent_filename in self._project_filenames:
+        for recent_filename in self._recent_project_filenames:
             if osp.samefile(filename, recent_filename):
-                action = self.remove_project(recent_filename)
+                action = self.remove_recent_project(recent_filename)
                 break
         else:
             action = QAction(
@@ -136,12 +137,12 @@ class ProjectSelector(QPushButton):
                 lambda: self.sig_request_load_project.emit(filename))
             action.setToolTip(filename)
 
-        if len(self._project_actions):
-            self.menu.insertAction(self._project_actions[0], action)
+        if len(self._recent_project_actions):
+            self.menu.insertAction(self._recent_project_actions[0], action)
         else:
             self.menu.addAction(action)
-        self._project_filenames.insert(0, filename)
-        self._project_actions.insert(0, action)
+        self._recent_project_filenames.insert(0, filename)
+        self._recent_project_actions.insert(0, action)
 
     def set_current_project(self, filename):
         """
@@ -155,10 +156,13 @@ class ProjectSelector(QPushButton):
         if filename is None:
             self.setText('')
             self.setToolTip(None)
+            self._current_project = None
         else:
             self.setText(osp.basename(filename))
             self.setToolTip(filename)
-        self.sig_current_project_changed.emit(filename)
+            self._current_project = filename
+        self.sig_current_project_changed.emit(self._current_project)
+
 
 
 class ProjetManager(QWidget):
@@ -317,7 +321,7 @@ class ProjetManager(QWidget):
                     return False
 
         init_waterlvl_measures(osp.join(self.projet.dirname, "Water Levels"))
-        self.project_selector.add_project(self.projet.filename)
+        self.project_selector.add_recent_project(self.projet.filename)
         self.project_selector.set_current_project(self.projet.filename)
         self.project_selector.adjustSize()
         self.currentProjetChanged.emit(self.projet)
@@ -381,7 +385,7 @@ class ProjetManager(QWidget):
         """Close this project manager."""
         self.close_projet()
         CONF.set('project', 'recent_projects',
-                 self.project_selector._project_filenames)
+                 self.project_selector._recent_project_filenames)
 
 
 class NewProject(QDialog):
