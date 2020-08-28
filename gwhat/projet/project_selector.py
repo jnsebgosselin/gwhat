@@ -10,16 +10,13 @@
 from __future__ import division, unicode_literals
 
 # ---- Standard library imports
-import os
 import os.path as osp
 
 # ---- Third party imports
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt, QPoint, QEvent
+from PyQt5.QtCore import Qt, QEvent
 from PyQt5.QtGui import QCursor, QIcon
-from PyQt5.QtWidgets import (
-    QWidget, QDesktopWidget, QPushButton, QApplication, QGridLayout,
-    QMessageBox, QDialog, QLineEdit, QToolButton, QFileDialog, QMenu, QAction)
+from PyQt5.QtWidgets import QPushButton, QMenu, QAction
 
 
 class ProjectSelector(QPushButton):

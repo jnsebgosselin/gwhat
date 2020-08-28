@@ -18,18 +18,17 @@ from shutil import copyfile
 # ---- Third party imports
 from appconfigs.base import get_home_dir
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt, QPoint, QEvent
-from PyQt5.QtGui import QCursor
+from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QDesktopWidget, QPushButton, QApplication, QGridLayout,
-    QMessageBox, QDialog, QLineEdit, QToolButton, QFileDialog, QMenu, QAction)
+    QMessageBox, QDialog, QLineEdit, QToolButton, QFileDialog)
 
 # ---- Local imports
 from gwhat.config.main import CONF
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.utils import icons
 from gwhat.projet.manager_data import DataManager
-from gwhat.projet.projectselector import ProjectSelector
+from gwhat.projet.project_selector import ProjectSelector
 from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
