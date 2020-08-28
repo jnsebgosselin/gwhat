@@ -120,7 +120,7 @@ class ProjectSelector(QPushButton):
             the list of recent projects.
         """
         self._validate()
-        if not osp.exists(filename):
+        if filename is None or not osp.exists(filename):
             return
 
         for action in self._recent_project_actions:
@@ -143,7 +143,7 @@ class ProjectSelector(QPushButton):
             the list of recent projects.
         """
         self._validate()
-        if not osp.exists(filename):
+        if filename is None or not osp.exists(filename):
             return
 
         for action in self._recent_project_actions:
