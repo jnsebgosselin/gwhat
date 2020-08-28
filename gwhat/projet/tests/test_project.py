@@ -113,6 +113,7 @@ def test_create_new_projet(projmanager, mocker, projectpath):
     assert projmanager.project_selector.text() == NAME + '.gwt'
     assert projmanager.project_selector.recent_projects() == [
         projectpath]
+    assert len(projmanager.project_selector.menu.actions()) == 4
 
     # Close the project.
     projmanager.close_projet()
@@ -139,6 +140,7 @@ def test_load_projet(projmanager, mocker, projectfile):
     assert projmanager.project_selector.text() == NAME + '.gwt'
     assert projmanager.project_selector.recent_projects() == [
         projectfile]
+    assert len(projmanager.project_selector.menu.actions()) == 4
 
     projmanager.close_projet()
 
@@ -157,6 +159,7 @@ def test_load_non_existing_project(projmanager, mocker, projectpath):
     assert projmanager.projet is None
     assert projmanager.project_selector.text() == ''
     assert projmanager.project_selector.recent_projects() == []
+    assert len(projmanager.project_selector.menu.actions()) == 3
 
 
 def test_load_invalid_project(projmanager, mocker, projectpath):
@@ -178,6 +181,7 @@ def test_load_invalid_project(projmanager, mocker, projectpath):
     assert projmanager.projet is None
     assert projmanager.project_selector.text() == ''
     assert projmanager.project_selector.recent_projects() == []
+    assert len(projmanager.project_selector.menu.actions()) == 3
 
 
 def test_load_corrupt_project_continue(projmanager, mocker, projectfile):
@@ -206,6 +210,7 @@ def test_load_corrupt_project_continue(projmanager, mocker, projectfile):
     assert projmanager.project_selector.text() == NAME + '.gwt'
     assert projmanager.project_selector.recent_projects() == [
         projectfile]
+    assert len(projmanager.project_selector.menu.actions()) == 4
 
     # Backup file are not generated when the project is corrupt.
     assert not osp.exists(projectfile + '.bak')
@@ -232,6 +237,7 @@ def test_load_corrupt_project_cancel(projmanager, mocker, projectfile):
     assert projmanager.projet is None
     assert projmanager.project_selector.text() == ''
     assert projmanager.project_selector.recent_projects() == []
+    assert len(projmanager.project_selector.menu.actions()) == 3
 
     # Backup file are not generated when the project is corrupt.
     assert not osp.exists(projectfile + '.bak')
@@ -255,6 +261,7 @@ def test_restore_invalid_project(projmanager, mocker, projectfile, bakfile):
     assert projmanager.projet is None
     assert projmanager.project_selector.text() == ''
     assert projmanager.project_selector.recent_projects() == []
+    assert len(projmanager.project_selector.menu.actions()) == 3
 
     # Try loading the corrupt project and accept to restore from backup.
     mock_qmsgbox.return_value = QMessageBox.Yes
@@ -270,6 +277,7 @@ def test_restore_invalid_project(projmanager, mocker, projectfile, bakfile):
     assert projmanager.project_selector.text() == NAME + '.gwt'
     assert projmanager.project_selector.recent_projects() == [
         projectfile]
+    assert len(projmanager.project_selector.menu.actions()) == 4
 
 
 def test_restore_invalid_project_from_invalid_backup(projmanager, mocker,
@@ -295,6 +303,7 @@ def test_restore_invalid_project_from_invalid_backup(projmanager, mocker,
     assert projmanager.projet is None
     assert projmanager.project_selector.text() == ''
     assert projmanager.project_selector.recent_projects() == []
+    assert len(projmanager.project_selector.menu.actions()) == 3
 
 
 def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
@@ -316,6 +325,7 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert projmanager.projet is None
     assert projmanager.project_selector.text() == ''
     assert projmanager.project_selector.recent_projects() == []
+    assert len(projmanager.project_selector.menu.actions()) == 3
 
     # Try loading the corrupt project and click Ignore.
     mock_checkproj.reset_mock()
@@ -330,6 +340,7 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert projmanager.project_selector.text() == NAME + '.gwt'
     assert projmanager.project_selector.recent_projects() == [
         projectfile]
+    assert len(projmanager.project_selector.menu.actions()) == 4
 
     # Try loading the corrupt project and click Yes.
     mock_checkproj.reset_mock()
@@ -344,6 +355,7 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert projmanager.project_selector.text() == NAME + '.gwt'
     assert projmanager.project_selector.recent_projects() == [
         projectfile]
+    assert len(projmanager.project_selector.menu.actions()) == 4
 
 
 if __name__ == "__main__":
