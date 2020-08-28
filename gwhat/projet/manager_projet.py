@@ -18,7 +18,8 @@ from shutil import copyfile
 # ---- Third party imports
 from appconfigs.base import get_home_dir
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt, QPoint, QEvent
+from PyQt5.QtGui import QCursor
 from PyQt5.QtWidgets import (
     QWidget, QLabel, QDesktopWidget, QPushButton, QApplication, QGridLayout,
     QMessageBox, QDialog, QLineEdit, QToolButton, QFileDialog, QMenu, QAction)
@@ -48,14 +49,15 @@ class ProjectSelector(QPushButton):
         super().__init__(parent)
         self.setMinimumWidth(125)
 
-        self._protected_actions = []
         self._recent_project_actions = []
+        self._protected_actions = []
         self._current_project = None
 
         self.menu = QMenu()
         self.setMenu(self.menu)
         self.menu.aboutToShow.connect(self.validate)
         self.menu.setToolTipsVisible(True)
+        self.menu.installEventFilter(self)
 
         self._new_project_action = QAction(
             text='New Project...', parent=self.parent())
@@ -63,6 +65,7 @@ class ProjectSelector(QPushButton):
             lambda: self.sig_request_new_project.emit())
         self.menu.addAction(self._new_project_action)
         self._new_project_action.setToolTip("Create a new project.")
+        self._protected_actions.append(self._new_project_action)
 
         self._open_project_action = QAction(
             text='Open Project...', parent=self.parent())
@@ -70,6 +73,9 @@ class ProjectSelector(QPushButton):
             lambda: self.sig_request_open_project.emit())
         self.menu.addAction(self._open_project_action)
         self._open_project_action.setToolTip("Open an existing project.")
+        self._protected_actions.append(self._open_project_action)
+
+        self._protected_actions.append(self.menu.addSeparator())
 
         # Setup recent projects.
         for project in reversed(recent_projects or []):
@@ -137,8 +143,6 @@ class ProjectSelector(QPushButton):
             The absolute path of the project that needs to be added to
             the list of recent projects.
         """
-        if len(self.menu.actions()) == 2:
-            self.menu.addSeparator()
         self.validate()
         if not osp.exists(filename):
             return
@@ -182,6 +186,15 @@ class ProjectSelector(QPushButton):
             self._current_project = filename
         self.sig_current_project_changed.emit(self._current_project)
 
+    def eventFilter(self, widget, event):
+        """Handle key events on the QMenu of this ProjectSelector."""
+        if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Delete:
+            # Remove hovered item from the list of recent projects.
+            action = self.menu.actionAt(
+                self.menu.mapFromGlobal(QCursor.pos()))
+            if action not in self._protected_actions:
+                self.remove_recent_project(action.data())
+        return super().eventFilter(widget, event)
 
 
 class ProjetManager(QWidget):
