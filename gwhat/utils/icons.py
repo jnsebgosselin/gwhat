@@ -123,6 +123,9 @@ FA_ICONS = {
     'expand_all': [
         ('mdi.arrow-expand-all',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'folder_open': [
+        ('mdi.folder-open-outline',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'info': [
         ('mdi.information-outline',),
         {'color': COLOR, 'scale_factor': 1.3}],

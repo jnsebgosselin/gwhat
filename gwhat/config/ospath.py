@@ -21,7 +21,6 @@ def save_path_to_configs(section, option, path):
     Save a path in the config file for the specified section and option.
     """
     path = osp.abspath(path)
-    path = path.replace('\\', '/')
     CONF.set(section, option, path)
 
 
@@ -33,6 +32,6 @@ def get_path_from_configs(section, option):
     # called from mainwindow.py.
     cwd = os.getcwd()
     os.chdir(__rootdir__)
-    abspath = osp.abspath(osp.normpath(CONF.get(section, option)))
+    path = osp.abspath(CONF.get(section, option))
     os.chdir(cwd)
-    return abspath
+    return path

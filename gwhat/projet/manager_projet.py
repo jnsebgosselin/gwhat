@@ -1,34 +1,34 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 from __future__ import division, unicode_literals
 
 # ---- Standard library imports
-
 import os
 import os.path as osp
 from datetime import datetime
 from shutil import copyfile
 
 # ---- Third party imports
-
+from appconfigs.base import get_home_dir
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtWidgets import (QWidget, QLabel, QDesktopWidget, QPushButton,
-                             QApplication, QGridLayout, QMessageBox, QDialog,
-                             QLineEdit, QToolButton, QFileDialog)
+from PyQt5.QtWidgets import (
+    QWidget, QLabel, QDesktopWidget, QPushButton, QApplication, QGridLayout,
+    QMessageBox, QDialog, QLineEdit, QToolButton, QFileDialog)
 
 # ---- Local imports
-
+from gwhat.config.main import CONF
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonSmall
 from gwhat.projet.manager_data import DataManager
+from gwhat.projet.project_selector import ProjectSelector
 from gwhat.projet.reader_waterlvl import init_waterlvl_measures
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
@@ -50,38 +50,47 @@ class ProjetManager(QWidget):
             self.load_project(projet)
 
     def __initGUI__(self):
-        self.project_display = QPushButton()
-        self.project_display.setFocusPolicy(Qt.NoFocus)
-        self.project_display.setMinimumWidth(100)
-        self.project_display.clicked.connect(self.select_project)
-
         ft = QApplication.instance().font()
         ft.setPointSize(ft.pointSize()-1)
-        self.project_display.setFont(ft)
 
-        new_btn = QToolButtonSmall(icons.get_icon('new_project'))
-        new_btn.setToolTip('Create a new project...')
-        new_btn.clicked.connect(self.show_newproject_dialog)
+        self.project_selector = ProjectSelector(
+            parent=self,
+            recent_projects=CONF.get('project', 'recent_projects', None),
+            recent_projects_icon=icons.get_icon('folder_open'))
+        self.project_selector.setFont(ft)
+        self.project_selector.menu.setFont(ft)
 
-        # ---- layout
+        self.project_selector.sig_request_new_project.connect(
+            self.show_newproject_dialog)
+        self.project_selector.sig_request_open_project.connect(
+            self.select_project)
+        self.project_selector.sig_request_load_project.connect(
+            self.load_project)
 
+        # Setup the layout.
         layout = QGridLayout(self)
 
         layout.addWidget(QLabel('Project :'), 0, 1)
-        layout.addWidget(self.project_display, 0, 2)
-        layout.addWidget(new_btn, 0, 3)
+        layout.addWidget(self.project_selector, 0, 2)
 
         layout.setSpacing(3)
-        layout.setContentsMargins(0, 0, 0, 5)  # (L, T, R, B)
+        layout.setContentsMargins(0, 0, 0, 5)
         layout.setColumnStretch(0, 500)
         layout.setRowMinimumHeight(0, 28)
 
     def select_project(self):
-        directory = os.path.abspath(os.path.join('..', 'Projects'))
+        """
+        Show a dialog that allows users to select an existing GWHAT
+        project file.
+        """
+        directory = CONF.get('main', 'select_file_dialog_dir', get_home_dir())
         filename, _ = QFileDialog.getOpenFileName(
-            self, 'Open Project', directory, '*.gwt ; *.what')
+            self.parent(), 'Open Project', directory,
+            'Gwhat Project (*.gwt ; *.what)')
 
         if filename:
+            filename = osp.abspath(filename)
+            CONF.set('main', 'select_file_dialog_dir', osp.dirname(filename))
             self.projectfile = filename
             self.load_project(filename)
 
@@ -139,7 +148,7 @@ class ProjetManager(QWidget):
         else:
             self.projet = projet
 
-        # If the project is corrupt.
+        # If the project is corrupted.
         if self.projet.check_project_file() is True:
             self.projet.backup_project_file()
         else:
@@ -183,9 +192,11 @@ class ProjetManager(QWidget):
                     return False
 
         init_waterlvl_measures(osp.join(self.projet.dirname, "Water Levels"))
-        self.project_display.setText(self.projet.name)
-        self.project_display.adjustSize()
+        self.project_selector.add_recent_project(self.projet.filename)
+        self.project_selector.set_current_project(self.projet.filename)
+        self.project_selector.adjustSize()
         self.currentProjetChanged.emit(self.projet)
+
         return True
 
     def restore_from_backup(self, filename):
@@ -228,12 +239,24 @@ class ProjetManager(QWidget):
         """Close the currently opened hdf5 project file."""
         if self.projet is not None:
             self.projet.close()
-            self.projet = None
+        self.projet = None
+        self.project_selector.set_current_project(None)
 
     def show_newproject_dialog(self):
         """Show the dialog to create a new project."""
         self.new_projet_dialog.reset_UI()
+        self.new_projet_dialog.set_directory(
+            CONF.get('project', 'new_project_dialog_dir', get_home_dir()))
         self.new_projet_dialog.show()
+        if self.new_projet_dialog.result():
+            CONF.set('project', 'new_project_dialog_dir',
+                     self.new_projet_dialog.directory())
+
+    def close(self):
+        """Close this project manager."""
+        self.close_projet()
+        CONF.set('project', 'recent_projects',
+                 self.project_selector.recent_projects())
 
 
 class NewProject(QDialog):
@@ -241,21 +264,32 @@ class NewProject(QDialog):
 
     sig_new_project = QSignal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, parent=None, directory=None):
         super(NewProject, self).__init__(parent)
-
-        self.setWindowFlags(Qt.Window)
         self.setModal(True)
+        self.setResult(False)
 
         self.setWindowTitle('New Project')
         self.setWindowIcon(icons.get_icon('master'))
 
         self.__initUI__()
+        self.set_directory(directory)
+
+    def directory(self):
+        """Return the directory currently being displayed in the dialog."""
+        return self._directory
+
+    def set_directory(self, directory):
+        """Set the directory to display in the dialog."""
+        if directory is None or not osp.exists(directory):
+            self._directory = get_home_dir()
+        else:
+            self._directory = directory
+        self.directory_lineedit.setText(self._directory)
 
     def __initUI__(self):
 
-        # ---- Current Date ----
-
+        # Setup current date
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
 
@@ -325,17 +359,14 @@ class NewProject(QDialog):
         loc_coord.setSpacing(10)
         loc_coord.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
-        # --------------------------------------------------------- Browse ----
-
-        # ---- widgets ----
-
+        # Setup browse widgets.
         save_in_folder = os.path.abspath(os.path.join('..', 'Projects'))
 
         directory_label = QLabel('Save in Folder:')
-        self.directory = QLineEdit()
-        self.directory.setReadOnly(True)
-        self.directory.setText(save_in_folder)
-        self.directory.setMinimumWidth(350)
+        self.directory_lineedit = QLineEdit()
+        self.directory_lineedit.setReadOnly(True)
+        self.directory_lineedit.setText(save_in_folder)
+        self.directory_lineedit.setMinimumWidth(350)
 
         btn_browse = QToolButton()
         btn_browse.setAutoRaise(True)
@@ -348,10 +379,10 @@ class NewProject(QDialog):
         browse = QGridLayout()
 
         browse.addWidget(directory_label, 0, 0)
-        browse.addWidget(self.directory, 0, 1)
+        browse.addWidget(self.directory_lineedit, 0, 1)
         browse.addWidget(btn_browse, 0, 2)
 
-        browse.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        browse.setContentsMargins(0, 0, 0, 0)
         browse.setColumnStretch(1, 100)
         browse.setSpacing(10)
 
@@ -378,8 +409,7 @@ class NewProject(QDialog):
         toolbar.setColumnStretch(0, 100)
         toolbar.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
 
-        # ------------------------------------------------------------- MAIN --
-
+        # Setup the main layout.
         main_layout = QGridLayout(self)
 
         main_layout.addLayout(projet_info, 0, 0)
@@ -392,13 +422,12 @@ class NewProject(QDialog):
         main_layout.setVerticalSpacing(25)
         main_layout.setContentsMargins(15, 15, 15, 15)  # (L, T, R, B)
 
-    # =========================================================================
-
     def browse_saveIn_folder(self):
         folder = QFileDialog.getExistingDirectory(
-                self, 'Save in Folder', '../Projects')
+            self, 'Save in Folder', self.directory())
         if folder:
-            self.directory.setText(folder)
+            folder = osp.abspath(folder)
+            self.directory_lineedit.setText(folder)
 
     def save_project(self):
         name = self.name.text()
@@ -406,39 +435,19 @@ class NewProject(QDialog):
             print('Please enter a valid Project name')
             return
 
-        rootname = self.directory.text()
+        rootname = self.directory_lineedit.text()
         dirname = os.path.join(rootname, name)
 
-        # If directory already exist, a number is added at the end within ().
-
+        # If directory already exist, a number is added at the end.
         count = 1
-        while os.path.exists(dirname):
+        while osp.exists(dirname):
             dirname = os.path.join(rootname, '%s (%d)' % (name, count))
             count += 1
-
-        print('\n---------------')
-        print('Creating files and folder achitecture for the new project in:')
-        print(dirname)
-        print
-
-        # ---- Create Files and Folders ----
-
         os.makedirs(dirname)
-
-        # ---- folder architecture ----
-
-        folders = [os.path.join(dirname, 'Meteo', 'Raw'),
-                   os.path.join(dirname, 'Meteo', 'Input'),
-                   os.path.join(dirname, 'Meteo', 'Output'),
-                   os.path.join(dirname, 'Water Levels')]
-
-        for f in folders:
-            if not os.path.exists(f):
-                os.makedirs(f)
 
         # ---- project.what ----
 
-        fname = os.path.join(dirname, '%s.gwt' % name)
+        fname = osp.join(dirname, '%s.gwt' % name)
 
         projet = ProjetReader(fname)
         projet.name = self.name.text()
@@ -454,18 +463,15 @@ class NewProject(QDialog):
         print('Creating file %s.gwt' % name)
         print('---------------')
 
+        self.setResult(True)
         self.close()
         self.sig_new_project.emit(fname)
 
-    # =========================================================================
-
     def reset_UI(self):
+        self.setResult(False)
 
         self.name.clear()
         self.author.clear()
-
-        save_in_folder = os.path.abspath(os.path.join('..', 'Projects'))
-        self.directory.setText(save_in_folder)
 
         now = datetime.now()
         now = (now.day, now.month, now.year, now.hour, now.minute)
@@ -490,11 +496,7 @@ class NewProject(QDialog):
         self.setFixedSize(self.size())
 
 
-# :::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-
-
-if __name__ == '__main__':                                   # pragma: no cover
-
+if __name__ == '__main__':
     import sys
 
     f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'

@@ -1,22 +1,24 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
 import os
 import os.path as osp
+os.environ['GWHAT_PYTEST'] = 'True'
 
 # ---- Third party imports
 import pytest
 
 # ---- Local imports
 from gwhat.projet.reader_projet import ProjetReader
-from gwhat.projet.manager_projet import (ProjetManager, QFileDialog)
-from gwhat.projet.manager_projet import QMessageBox
+from gwhat.projet.manager_projet import (
+    ProjetManager, QFileDialog, QMessageBox, CONF)
 
 NAME = "test @ prô'jèt!"
 LAT = 45.40
@@ -65,6 +67,10 @@ def project(projectfile):
 
 @pytest.fixture
 def projmanager(qtbot):
+    # We need to reset the configs to defaults after each test to make sure
+    # they can be run independently one from another.
+    CONF.reset_to_defaults()
+
     projmanager = ProjetManager()
     projmanager.new_projet_dialog.setModal(False)
     qtbot.addWidget(projmanager)
@@ -102,9 +108,11 @@ def test_create_new_projet(projmanager, mocker, projectpath):
     # displayed in the UI, and check that the project file and a backup file
     # have been created.
     projmanager.new_projet_dialog.save_project()
-    assert projmanager.project_display.text() == NAME
     assert osp.exists(projectpath)
     assert osp.exists(projectpath + '.bak')
+    assert projmanager.project_selector.text() == NAME + '.gwt'
+    assert projmanager.project_selector.recent_projects() == [
+        projectpath]
 
     # Close the project.
     projmanager.close_projet()
@@ -123,12 +131,14 @@ def test_load_projet(projmanager, mocker, projectfile):
 
     # Assert that the project has been loaded correctly and that its name is
     # displayed correctly in the UI.
-    assert projmanager.project_display.text() == NAME
     assert isinstance(projmanager.projet, ProjetReader)
     assert projmanager.projet.name == NAME
     assert projmanager.projet.author == NAME
     assert projmanager.projet.lat == LAT
     assert projmanager.projet.lon == LON
+    assert projmanager.project_selector.text() == NAME + '.gwt'
+    assert projmanager.project_selector.recent_projects() == [
+        projectfile]
 
     projmanager.close_projet()
 
@@ -138,13 +148,15 @@ def test_load_non_existing_project(projmanager, mocker, projectpath):
     Test trying to open a project when the .gwt file does not exist.
     """
     assert not osp.exists(projectpath)
-    mock_qmsgbox = mocker.patch.object(QMessageBox, 'exec_')
-    mock_qmsgbox.return_value = QMessageBox.Ok
+    mock_qmsgbox = mocker.patch.object(
+        QMessageBox, 'exec_', returned_value=QMessageBox.Ok)
     result = projmanager.load_project(projectpath)
 
     assert mock_qmsgbox.call_count == 1
     assert result is False
     assert projmanager.projet is None
+    assert projmanager.project_selector.text() == ''
+    assert projmanager.project_selector.recent_projects() == []
 
 
 def test_load_invalid_project(projmanager, mocker, projectpath):
@@ -164,6 +176,8 @@ def test_load_invalid_project(projmanager, mocker, projectpath):
     assert mock_qmsgbox.call_count == 1
     assert result is False
     assert projmanager.projet is None
+    assert projmanager.project_selector.text() == ''
+    assert projmanager.project_selector.recent_projects() == []
 
 
 def test_load_corrupt_project_continue(projmanager, mocker, projectfile):
@@ -184,12 +198,14 @@ def test_load_corrupt_project_continue(projmanager, mocker, projectfile):
     assert mock_qmsgbox.call_count == 1
 
     assert result is True
-    assert projmanager.project_display.text() == NAME
     assert isinstance(projmanager.projet, ProjetReader)
     assert projmanager.projet.name == NAME
     assert projmanager.projet.author == NAME
     assert projmanager.projet.lat == LAT
     assert projmanager.projet.lon == LON
+    assert projmanager.project_selector.text() == NAME + '.gwt'
+    assert projmanager.project_selector.recent_projects() == [
+        projectfile]
 
     # Backup file are not generated when the project is corrupt.
     assert not osp.exists(projectfile + '.bak')
@@ -214,6 +230,8 @@ def test_load_corrupt_project_cancel(projmanager, mocker, projectfile):
 
     assert result is False
     assert projmanager.projet is None
+    assert projmanager.project_selector.text() == ''
+    assert projmanager.project_selector.recent_projects() == []
 
     # Backup file are not generated when the project is corrupt.
     assert not osp.exists(projectfile + '.bak')
@@ -235,6 +253,8 @@ def test_restore_invalid_project(projmanager, mocker, projectfile, bakfile):
     assert mock_qmsgbox.call_count == 1
     assert result is False
     assert projmanager.projet is None
+    assert projmanager.project_selector.text() == ''
+    assert projmanager.project_selector.recent_projects() == []
 
     # Try loading the corrupt project and accept to restore from backup.
     mock_qmsgbox.return_value = QMessageBox.Yes
@@ -242,12 +262,14 @@ def test_restore_invalid_project(projmanager, mocker, projectfile, bakfile):
 
     assert mock_qmsgbox.call_count == 2
     assert result is True
-    assert projmanager.project_display.text() == NAME
     assert isinstance(projmanager.projet, ProjetReader)
     assert projmanager.projet.name == NAME
     assert projmanager.projet.author == NAME
     assert projmanager.projet.lat == LAT
     assert projmanager.projet.lon == LON
+    assert projmanager.project_selector.text() == NAME + '.gwt'
+    assert projmanager.project_selector.recent_projects() == [
+        projectfile]
 
 
 def test_restore_invalid_project_from_invalid_backup(projmanager, mocker,
@@ -271,6 +293,8 @@ def test_restore_invalid_project_from_invalid_backup(projmanager, mocker,
     assert mock_qmsgbox.call_count == 2
     assert result is False
     assert projmanager.projet is None
+    assert projmanager.project_selector.text() == ''
+    assert projmanager.project_selector.recent_projects() == []
 
 
 def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
@@ -289,8 +313,9 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert mock_qmsgbox.call_count == 1
     assert mock_checkproj.call_count == 1
     assert result is False
-    assert projmanager.project_display.text() == ''
     assert projmanager.projet is None
+    assert projmanager.project_selector.text() == ''
+    assert projmanager.project_selector.recent_projects() == []
 
     # Try loading the corrupt project and click Ignore.
     mock_checkproj.reset_mock()
@@ -301,8 +326,10 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert mock_qmsgbox.call_count == 2
     assert mock_checkproj.call_count == 1
     assert result is True
-    assert projmanager.project_display.text() == NAME
     assert isinstance(projmanager.projet, ProjetReader)
+    assert projmanager.project_selector.text() == NAME + '.gwt'
+    assert projmanager.project_selector.recent_projects() == [
+        projectfile]
 
     # Try loading the corrupt project and click Yes.
     mock_checkproj.reset_mock()
@@ -313,8 +340,10 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert mock_qmsgbox.call_count == 3
     assert mock_checkproj.call_count == 3
     assert result is True
-    assert projmanager.project_display.text() == NAME
     assert isinstance(projmanager.projet, ProjetReader)
+    assert projmanager.project_selector.text() == NAME + '.gwt'
+    assert projmanager.project_selector.recent_projects() == [
+        projectfile]
 
 
 if __name__ == "__main__":

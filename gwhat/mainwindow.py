@@ -201,7 +201,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         """Qt method override to close the project before close the app."""
         print('Closing projet')
-        self.pmanager.close_projet()
+        self.pmanager.close()
         print('Closing GWHAT')
         event.accept()
 
