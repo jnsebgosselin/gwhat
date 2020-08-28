@@ -84,6 +84,7 @@ class ProjectSelector(QPushButton):
         list of str
             The list of recent projects absolute paths.
         """
+        self.validate()
         return [action.data() for action in self._recent_project_actions]
 
     def validate(self):
@@ -93,7 +94,8 @@ class ProjectSelector(QPushButton):
         """
         for action in self._recent_project_actions:
             if not osp.exists(action.data()):
-                self.remove_recent_project(action.data())
+                self._recent_project_actions.remove(action)
+                self.menu.removeAction(action)
 
     def remove_recent_project(self, filename):
         """
@@ -112,6 +114,10 @@ class ProjectSelector(QPushButton):
             The QAction corresponding to the project that was removed from
             the list of recent projects.
         """
+        self.validate()
+        if not osp.exists(filename):
+            return
+
         for action in self._recent_project_actions:
             if osp.samefile(filename, action.data()):
                 self._recent_project_actions.remove(action)
@@ -133,6 +139,9 @@ class ProjectSelector(QPushButton):
         """
         if len(self.menu.actions()) == 2:
             self.menu.addSeparator()
+        self.validate()
+        if not osp.exists(filename):
+            return
 
         for action in self._recent_project_actions:
             if osp.samefile(filename, action.data()):
@@ -163,7 +172,7 @@ class ProjectSelector(QPushButton):
         filename : str, optional
             The absolute path of the filename of the current project.
         """
-        if filename is None:
+        if filename is None or not osp.exists(filename):
             self.setText('')
             self.setToolTip(None)
             self._current_project = None
