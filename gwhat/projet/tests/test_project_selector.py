@@ -46,6 +46,7 @@ def project_selector(qtbot, projectfiles):
 
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 2, 3]])
+    assert len(project_selector.menu.actions()) == 6
     assert project_selector._current_project is None
     assert project_selector.text() == ''
 
@@ -82,21 +83,25 @@ def test_add_recent_project(project_selector, projectfiles):
     project_selector.add_recent_project(None)
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 2, 3]])
+    assert len(project_selector.menu.actions()) == 6
 
     # Test adding a project whose file is NOT accessible.
     project_selector.add_recent_project(projectfiles[1])
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 2, 3]])
+    assert len(project_selector.menu.actions()) == 6
 
     # Test adding a project that is already in the list of recent projects.
     project_selector.add_recent_project(projectfiles[2])
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [2, 0, 3]])
+    assert len(project_selector.menu.actions()) == 6
 
     # Test adding a project that is not in the list of recent projects.
     project_selector.add_recent_project(projectfiles[4])
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [4, 2, 0]])
+    assert len(project_selector.menu.actions()) == 6
 
 
 def test_remove_recent_project(project_selector, projectfiles):
@@ -107,21 +112,25 @@ def test_remove_recent_project(project_selector, projectfiles):
     project_selector.remove_recent_project(None)
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 2, 3]])
+    assert len(project_selector.menu.actions()) == 6
 
     # Test removing a project whose file is NOT accessible.
     project_selector.remove_recent_project(projectfiles[1])
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 2, 3]])
+    assert len(project_selector.menu.actions()) == 6
 
     # Test removing a project that is NOT in the list of recent projects.
     project_selector.remove_recent_project(projectfiles[4])
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 2, 3]])
+    assert len(project_selector.menu.actions()) == 6
 
     # Test removing a project that is in the list of recent projects.
     project_selector.remove_recent_project(projectfiles[2])
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 3]])
+    assert len(project_selector.menu.actions()) == 5
 
 
 def test_delete_recent_project(project_selector, projectfiles, qtbot):
@@ -134,6 +143,7 @@ def test_delete_recent_project(project_selector, projectfiles, qtbot):
     assert len(project_selector.menu.actions()) == 3 + 3
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 2, 3]])
+    assert len(project_selector.menu.actions()) == 6
 
     # Try to remove a protected action.
     pos = project_selector.menu.actionGeometry(
@@ -143,6 +153,7 @@ def test_delete_recent_project(project_selector, projectfiles, qtbot):
     assert len(project_selector.menu.actions()) == 3 + 3
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 2, 3]])
+    assert len(project_selector.menu.actions()) == 6
 
     # Try to remove a recent project.
     pos = project_selector.menu.actionGeometry(
@@ -152,6 +163,7 @@ def test_delete_recent_project(project_selector, projectfiles, qtbot):
     assert len(project_selector.menu.actions()) == 3 + 2
     assert project_selector.recent_projects() == (
         [projectfiles[i] for i in [0, 3]])
+    assert len(project_selector.menu.actions()) == 5
 
     project_selector.menu.close()
 
