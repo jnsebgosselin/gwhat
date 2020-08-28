@@ -7,6 +7,8 @@
 # Licensed under the terms of the MIT License.
 # -----------------------------------------------------------------------------
 
+"""Tests for the ProjectSelector"""
+
 from __future__ import division, unicode_literals
 
 # ---- Standard library imports
