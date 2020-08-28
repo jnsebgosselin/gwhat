@@ -29,10 +29,8 @@ class ProjectSelector(QPushButton):
     sig_request_new_project = QSignal()
     sig_request_load_project = QSignal(str)
 
-    MAX_RECENT_PROJECTS = 15
-
     def __init__(self, parent=None, recent_projects=None,
-                 recent_projects_icon=None):
+                 recent_projects_icon=None, max_recent_projects=15):
         super().__init__(parent)
         self.setMinimumWidth(125)
 
@@ -40,6 +38,7 @@ class ProjectSelector(QPushButton):
         self._protected_actions = []
         self._current_project = None
         self._recent_project_icon = recent_projects_icon or QIcon()
+        self._max_recent_projects = max_recent_projects
 
         self.menu = QMenu()
         self.setMenu(self.menu)
@@ -162,7 +161,7 @@ class ProjectSelector(QPushButton):
 
         # Make sure the number of recent projet does not exceed the
         # maximum value.
-        while len(self._recent_project_actions) >= self.MAX_RECENT_PROJECTS:
+        while len(self._recent_project_actions) >= self._max_recent_projects:
             self.menu.removeAction(self._recent_project_actions.pop(-1))
 
         if len(self._recent_project_actions):
