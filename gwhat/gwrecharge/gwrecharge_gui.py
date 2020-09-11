@@ -350,8 +350,7 @@ class ExportGLUEButton(ExportDataButton):
         self.menu().addAction('Export GLUE water levels as...',
                               self.save_water_levels_tofile)
 
-    # ---- Export data
-
+    # ---- Save data
     @QSlot()
     def save_water_budget_tofile(self, savefilename=None):
         """
