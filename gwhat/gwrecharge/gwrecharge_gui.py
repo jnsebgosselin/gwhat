@@ -6,11 +6,11 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
+# ---- Stantard imports
 import time
 import os.path as osp
 
-# ---- Imports: third parties
-
+# ---- Third party imports
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -18,8 +18,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
                              QLabel, QSizePolicy, QScrollArea, QApplication,
                              QMessageBox)
 
-# ---- Imports: local
-
+# ---- Local imports
 from gwhat.widgets.buttons import ExportDataButton
 from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox
 from gwhat.widgets.layout import HSep

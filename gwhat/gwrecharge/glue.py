@@ -7,21 +7,18 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Standard library imports
-
+# ---- Stantard imports
 from calendar import monthrange
 from collections.abc import Mapping
 from abc import abstractmethod
 from time import strftime
 
 
-# ---- Third parties imports
-
+# ---- Third party imports
 import numpy as np
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
-
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
@@ -218,6 +215,7 @@ class GLUEDataFrame(GLUEDataFrameBase):
     A class for calculating GLUE from a set of behavioural models and to store
     the results in a standardized way.
     """
+
     def __init__(self, data, *args, **kwargs):
         super(GLUEDataFrame, self).__init__(*args, **kwargs)
         self.__load_data__(data)

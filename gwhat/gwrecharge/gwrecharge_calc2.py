@@ -6,22 +6,19 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# ---- Imports: standard libraries
-
+# ---- Stantard imports
 import os
 import os.path as osp
 import datetime
 from itertools import product
 import time
 
-# ---- Imports: third parties
-
+# ---- Third party imports
 import numpy as np
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 
-# ---- Imports: local
-
+# ---- Local imports
 from gwhat.utils.math import clip_time_series, calcul_rmse
 from gwhat.gwrecharge.glue import GLUEDataFrame
 from gwhat.gwrecharge.gwrecharge_calculs import (calcul_surf_water_budget,
