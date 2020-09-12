@@ -11,7 +11,7 @@ import os
 import os.path as osp
 import datetime
 from itertools import product
-import time
+from time import perf_counter
 
 # ---- Third party imports
 import numpy as np
@@ -165,7 +165,6 @@ class RechgEvalWorker(QObject):
         te = np.where(self.twlvl[-1] == self.tweatr)[0][0]
 
         # ---- Produce realizations
-
         set_RMSE = []
 
         set_Sy = []
@@ -178,7 +177,7 @@ class RechgEvalWorker(QObject):
         set_evapo = []
 
         Sy0 = np.mean(self.Sy)
-        time_start = time.clock()
+        time_start = perf_counter()
         N = sum(1 for p in product(U_Cro, U_RAS))
         self.sig_glue_progress.emit(0)
         for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
@@ -198,12 +197,10 @@ class RechgEvalWorker(QObject):
                 set_runoff.append(ru)
 
             self.sig_glue_progress.emit((it+1)/N*100)
-
-        print("GLUE computed in : %0.1f s" % (time.clock()-time_start))
+        print("GLUE computed in {:0.1f} sec".format(perf_counter()-time_start))
         self._print_model_params_summary(set_Sy, set_Cru, set_RASmax)
 
         # ---- Format results
-
         glue_rawdata = {}
         glue_rawdata['count'] = len(set_RMSE)
         glue_rawdata['RMSE'] = set_RMSE
@@ -275,10 +272,9 @@ class RechgEvalWorker(QObject):
         Print a summary of the range of parameter values that were used to
         produce the set of behavioural models.
         """
-        print('-'*78)
         if len(set_Sy) > 0:
-            print('-'*78)
             print('%d behavioural models were produced' % len(set_Sy))
+            print('-'*78)
             range_sy = (np.min(set_Sy), np.max(set_Sy))
             print('range Sy = %0.3f to %0.3f' % range_sy)
             range_rasmax = (np.min(set_RASmax), np.max(set_RASmax))
