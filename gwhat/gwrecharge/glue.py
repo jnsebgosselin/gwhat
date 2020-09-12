@@ -92,7 +92,7 @@ class GLUEDataFrameBase(Mapping):
         data = np.vstack([
             self['params']['Cru'],
             self['params']['RASmax'],
-            self['params']['Sy'],
+            np.round(self['params']['Sy'], 5),
             np.round(self['RMSE'], 1)
             ]).transpose()
 
