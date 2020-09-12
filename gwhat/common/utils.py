@@ -90,10 +90,13 @@ def save_content_to_excel(fname, fcontent):
                 ws.write(i, j, cell)
         wb.save(root+'.xls')
     else:
-        with xlsxwriter.Workbook(root + '.xlsx') as wb:
-            ws = wb.add_worksheet('Data')
-            for i, row in enumerate(fcontent):
-                ws.write_row(i, 0, row)
+        try:
+            with xlsxwriter.Workbook(root + '.xlsx') as wb:
+                ws = wb.add_worksheet('Data')
+                for i, row in enumerate(fcontent):
+                    ws.write_row(i, 0, row)
+        except xlsxwriter.exceptions.FileCreateError:
+            raise PermissionError
 
 
 def create_dirname(fname):

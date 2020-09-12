@@ -7,21 +7,18 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Standard library imports
-
+# ---- Stantard imports
 from calendar import monthrange
 from collections.abc import Mapping
 from abc import abstractmethod
 from time import strftime
 
 
-# ---- Third parties imports
-
+# ---- Third party imports
 import numpy as np
 from xlrd import xldate_as_tuple
 
 # ---- Local imports
-
 from gwhat.common.utils import save_content_to_file
 from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
@@ -42,9 +39,23 @@ class GLUEDataFrameBase(Mapping):
         """Load glue data and save it in a store."""
         pass
 
+    def save_glue_likelyhood_measures(self, filename):
+        """
+        Save the models likelyhood measures that are used to compute
+        groundwater levels and recharge rates with GLUE.
+
+        The extension of the file determine in which file type the data will
+        be saved (xls or xlsx for Excel, csv for coma-separated values text
+        file, or tsv for tab-separated values text file).
+        """
+        fcontent = self._produce_file_header()
+        fcontent.extend(self._format_glue_models_calibration())
+        save_content_to_file(filename, fcontent)
+
     def save_mly_glue_budget_to_file(self, filename):
         """
         Save the montlhy water budget results evaluated with GLUE to a file.
+
         The extension of the file determine in which file type the data will
         be saved (xls or xlsx for Excel, csv for coma-separated values text
         file, or tsv for tab-separated values text file).
@@ -56,6 +67,7 @@ class GLUEDataFrameBase(Mapping):
     def save_glue_waterlvl_to_file(self, filename):
         """
         Exports the daily water levels predicted with GLUE to file.
+
         The extension of the file determine in which file type the data will
         be saved (xls or xlsx for Excel, csv for coma-separated values text
         file, or tsv for tab-separated values text file).
@@ -63,6 +75,27 @@ class GLUEDataFrameBase(Mapping):
         fcontent = self._produce_file_header()
         fcontent.extend(self._format_glue_waterlvl())
         save_content_to_file(filename, fcontent)
+
+    def _format_glue_models_calibration(self):
+        """
+        Format the models likelyhood measures that were used to evaluate
+        water levels and groundwater recharge with GLUE.
+        """
+
+        # Prepare the data header.
+        fdata = [['Cru', 'RASmax (mm)', 'Sy', 'RMSE (mmbgs)']]
+
+        # Prepare the data.
+        data = np.vstack([
+            self['params']['Cru'],
+            self['params']['RASmax'],
+            np.round(self['params']['Sy'], 5),
+            np.round(self['RMSE'], 1)
+            ]).transpose()
+
+        # Merge the data header with the data.
+        fdata.extend(nan_as_text_tolist(data))
+        return fdata
 
     def _format_mly_glue_budget(self):
         """
@@ -182,6 +215,7 @@ class GLUEDataFrame(GLUEDataFrameBase):
     A class for calculating GLUE from a set of behavioural models and to store
     the results in a standardized way.
     """
+
     def __init__(self, data, *args, **kwargs):
         super(GLUEDataFrame, self).__init__(*args, **kwargs)
         self.__load_data__(data)

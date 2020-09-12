@@ -6,11 +6,11 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
+# ---- Stantard imports
 import time
 import os.path as osp
 
-# ---- Imports: third parties
-
+# ---- Third party imports
 from PyQt5.QtCore import Qt, QThread
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -18,8 +18,7 @@ from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
                              QLabel, QSizePolicy, QScrollArea, QApplication,
                              QMessageBox)
 
-# ---- Imports: local
-
+# ---- Local imports
 from gwhat.widgets.buttons import ExportDataButton
 from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox
 from gwhat.widgets.layout import HSep
@@ -349,8 +348,32 @@ class ExportGLUEButton(ExportDataButton):
                               self.save_water_budget_tofile)
         self.menu().addAction('Export GLUE water levels as...',
                               self.save_water_levels_tofile)
+        self.menu().addAction('Export GLUE likelyhood measures...',
+                              self.save_likelyhood_measures)
 
-    # ---- Export data
+    # ---- Save data
+    @QSlot()
+    def save_likelyhood_measures(self, savefilename=None):
+        """
+        Prompt a dialog to select a file and save the models likelyhood
+        measures that are used to compute groundwater levels and recharge
+        rates with GLUE.
+        """
+        if savefilename is None:
+            savefilename = osp.join(
+                self.dialog_dir, "glue_likelyhood_measures.xlsx")
+        savefilename = self.select_savefilename(
+            "Save GLUE likelyhood measures",
+            savefilename, "*.xlsx;;*.xls;;*.csv")
+        if savefilename:
+            QApplication.setOverrideCursor(Qt.WaitCursor)
+            QApplication.processEvents()
+            try:
+                self.model.save_glue_likelyhood_measures(savefilename)
+            except PermissionError:
+                self.show_permission_error()
+                self.save_likelyhood_measures(savefilename)
+            QApplication.restoreOverrideCursor()
 
     @QSlot()
     def save_water_budget_tofile(self, savefilename=None):

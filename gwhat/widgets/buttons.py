@@ -6,13 +6,11 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# ---- Imports: Standard Libraries
-
+# ---- Stantard imports
 import sys
 from abc import abstractmethod
 
-# ---- Imports: Third Parties
-
+# ---- Third party imports
 import numpy as np
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
@@ -21,7 +19,6 @@ from PyQt5.QtWidgets import (QApplication, QDoubleSpinBox, QGridLayout,
                              QListWidget, QMenu, QStyle, QToolButton, QWidget)
 
 # ---- Local imports
-
 from gwhat.utils.icons import QToolButtonBase
 from gwhat.utils import icons
 from gwhat.widgets.layout import VSep
