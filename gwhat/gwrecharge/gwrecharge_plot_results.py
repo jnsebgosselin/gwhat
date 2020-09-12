@@ -49,6 +49,10 @@ LOCS = ['left', 'top', 'right', 'bottom']
 t1 = xldate_from_date_tuple((2000, 1, 1), 0)  # time in Excel
 t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1))  # time in mpl format
 DT4XLS2MPL = t2-t1
+COLORS = {'precip': [0/255, 25/255, 51/255],
+          'recharge': [0/255, 76/255, 153/255],
+          'runoff': [0/255, 128/255, 255/255],
+          'evapo': [102/255, 178/255, 255/255]}
 
 
 class FigureStackManager(QWidget):
