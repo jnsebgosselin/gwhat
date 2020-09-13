@@ -34,9 +34,9 @@
      id="namedview88"
      showgrid="false"
      inkscape:snap-bbox="true"
-     inkscape:zoom="0.49776645"
-     inkscape:cx="1130.2379"
-     inkscape:cy="253.64503"
+     inkscape:zoom="0.30488376"
+     inkscape:cx="856.74634"
+     inkscape:cy="-9.7216931"
      inkscape:window-x="-8"
      inkscape:window-y="-8"
      inkscape:window-maximized="1"
@@ -181,7 +181,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title />
+        <dc:title></dc:title>
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -362,6 +362,6 @@
          id="tspan3092-0"
          y="-404.06998"
          x="-110.26708"
-         sodipodi:role="line">Version 0.4.2.dev0</tspan></text>
+         sodipodi:role="line">Version 0.4.2</tspan></text>
   </g>
 </svg>
