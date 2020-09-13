@@ -965,10 +965,6 @@ class FigWaterBudgetGLUE(FigCanvasBase):
     FIGNAME = "water_budget_glue"
     FWIDTH, FHEIGHT = 15, 7
     MARGINS = [1, 0.15, 0.15, 1.1]
-    COLOR = [[0/255, 25/255, 51/255],
-             [0/255, 76/255, 153/255],
-             [0/255, 128/255, 255/255],
-             [102/255, 178/255, 255/255]]
 
     def __init__(self, setp={}):
         super(FigWaterBudgetGLUE, self).__init__(setp)
@@ -1023,25 +1019,25 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
         # Plot precipitation.
         ax.bar(years-bwidth/2, precip, align='center', width=bwidth,
-               color=self.COLOR[0], edgecolor=None,
+               color=COLORS['precip'], edgecolor=None,
                transform=ax.transData + xpad_left)
 
         # Plot runoff.
         var2plot = rechg + evapo + runoff
         ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
-               color=self.COLOR[3], edgecolor=None,
+               color=COLORS['runoff'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
         # Plot evapotranspiration.
         var2plot = rechg + evapo
         ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
-               color=self.COLOR[2], edgecolor=None,
+               color=COLORS['evapo'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
         # Plot recharge.
         var2plot = rechg
         ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
-               color=self.COLOR[1], edgecolor=None,
+               color=COLORS['recharge'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
         # Plot the text.
@@ -1163,8 +1159,8 @@ class FigWaterBudgetGLUE(FigCanvasBase):
     def setup_legend(self,):
         """Setup the legend of the graph."""
         lg_handles = [
-            mpl.patches.Rectangle((0, 0), 1, 1, fc=self.COLOR[i], ec='none')
-            for i in range(4)]
+            mpl.patches.Rectangle((0, 0), 1, 1, fc=COLORS[var], ec='none')
+            for var in ['precip', 'recharge', 'runoff', 'evapo']]
         if self.setp['language'] == 'french':
             lg_labels = ['Précipitations totales', 'Recharge', 'Ruissellement',
                          'Évapotranspiration réelle']
