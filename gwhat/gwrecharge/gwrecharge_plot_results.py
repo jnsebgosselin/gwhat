@@ -1505,10 +1505,6 @@ class FigAvgMonthlyBudget(FigCanvasBase):
     FIGNAME = "avg_monthly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
     MARGINS = [1, 0.35, 0.15, 0.35]
-    COLOR = [[102/255, 178/255, 255/255],
-             [0/255, 128/255, 255/255],
-             [0/255, 76/255, 153/255],
-             [0/255, 25/255, 51/255]]
 
     def __init__(self, setp={}):
         super(FigAvgMonthlyBudget, self).__init__(setp)
@@ -1523,18 +1519,22 @@ class FigAvgMonthlyBudget(FigCanvasBase):
     def plot(self, glue_df):
         """Plot the results."""
         super(FigAvgMonthlyBudget, self).plot()
-        avg_mly = [
-            np.nanmean(glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
-            np.nanmean(glue_df['monthly budget']['runoff'][:, :, 2], axis=0),
-            np.nanmean(glue_df['monthly budget']['recharge'][:, :, 2], axis=0),
-            np.nanmean(glue_df['monthly budget']['precip'], axis=0)]
+        avg_mly = {
+            'evapo': np.nanmean(
+                glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
+            'runoff': np.nanmean(
+                glue_df['monthly budget']['runoff'][:, :, 2], axis=0),
+            'recharge': np.nanmean(
+                glue_df['monthly budget']['recharge'][:, :, 2], axis=0),
+            'precip': np.nanmean(glue_df['monthly budget']['precip'], axis=0)
+            }
 
         # Plot the results.
         months = np.arange(1, 13)
-        for i, ser in enumerate(avg_mly):
-            hl, = self.ax0.plot(months, ser, marker='o', mec='white',
-                                clip_on=False, lw=2, color=self.COLOR[i],
-                                zorder=3)
+        for i, varname in enumerate(avg_mly.keys()):
+            hl, = self.ax0.plot(
+                months, avg_mly[varname], marker='o', mec='white',
+                clip_on=False, lw=2, color=COLORS[varname], zorder=3)
             self.lg_handles.append(hl)
 
         # Setup the axis limits.
