@@ -11,7 +11,6 @@ added_files = [('../gwhat/ressources/splash.png', 'ressources'),
                ]
 
 HIDDENIMPORTS = ['h5py.defs', 'h5py.utils', 'h5py.h5ac', 'h5py._proxy',
-                 'scipy.stats._continuous_distns', 'scipy._lib.messagestream',
                  'numpy.core._dtype_ctypes']
 
 a = Analysis(['../gwhat/mainwindow.py'],
