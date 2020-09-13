@@ -1381,10 +1381,6 @@ class FigAvgYearlyBudget(FigCanvasBase):
     FIGNAME = "avg_yearly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
     MARGINS = [1, 0.15, 0.15, 0.35]
-    COLOR = [[102/255, 178/255, 255/255],
-             [0/255, 128/255, 255/255],
-             [0/255, 76/255, 153/255],
-             [0/255, 25/255, 51/255]]
 
     def __init__(self, setp={}):
         super(FigAvgYearlyBudget, self).__init__(setp)
@@ -1398,27 +1394,24 @@ class FigAvgYearlyBudget(FigCanvasBase):
     def plot(self, glue_df):
         super(FigAvgYearlyBudget, self).plot()
 
-        avg_yrly_rechg = np.nanmean(glue_df['yearly budget']['recharge'])
-        avg_yrly_evapo = np.nanmean(glue_df['yearly budget']['evapo'])
-        avg_yrly_runoff = np.nanmean(glue_df['yearly budget']['runoff'])
-        avg_yrly_precip = np.nanmean(glue_df['yearly budget']['precip'])
-
-        avg_yrly = [np.nanmean(glue_df['yearly budget']['evapo']),
-                    np.nanmean(glue_df['yearly budget']['runoff']),
-                    np.nanmean(glue_df['yearly budget']['recharge']),
-                    np.nanmean(glue_df['yearly budget']['precip'])]
+        avg_yrly = {
+            'evapo': np.nanmean(glue_df['yearly budget']['evapo']),
+            'runoff': np.nanmean(glue_df['yearly budget']['runoff']),
+            'recharge': np.nanmean(glue_df['yearly budget']['recharge']),
+            'precip': np.nanmean(glue_df['yearly budget']['precip'])}
 
         # Plot the results.
         offset = mpl.transforms.ScaledTranslation(
             0, 3/72, self.figure.dpi_scale_trans)
         self.bar_handles = []
         self.notes = []
-        for i, val in enumerate(avg_yrly):
-            l, = self.ax0.bar(i+1, val, 0.65, align='center',
-                              color=self.COLOR[i])
+        for i, varname in enumerate(avg_yrly.keys()):
+            l, = self.ax0.bar(i+1, avg_yrly[varname], 0.65, align='center',
+                              color=COLORS[varname])
             self.bar_handles.append(l)
             self.notes.append(self.ax0.text(
-                i+1, val, "%d" % val, ha='center', va='bottom',
+                i+1, avg_yrly[varname], "%d" % avg_yrly[varname],
+                ha='center', va='bottom',
                 transform=self.ax0.transData + offset,
                 fontsize=self.setp['notes size']))
 
@@ -1426,9 +1419,10 @@ class FigAvgYearlyBudget(FigCanvasBase):
         if 'ymin' not in self.setp.keys():
             self.setp['ymin'] = 0
         if 'ymax' not in self.setp.keys():
-            self.setp['ymax'] = np.max(
-                [avg_yrly_rechg, avg_yrly_evapo,
-                 avg_yrly_runoff, avg_yrly_precip]) + 100
+            self.setp['ymax'] = np.max([
+                avg_yrly['recharge'], avg_yrly['evapo'],
+                avg_yrly['runoff'], avg_yrly['precip']
+                ]) + 100
         if 'yscl' not in self.setp.keys():
             self.setp['yscl'] = 250
         if 'yscl minor' not in self.setp.keys():
