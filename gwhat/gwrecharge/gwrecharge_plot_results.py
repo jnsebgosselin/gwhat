@@ -49,6 +49,10 @@ LOCS = ['left', 'top', 'right', 'bottom']
 t1 = xldate_from_date_tuple((2000, 1, 1), 0)  # time in Excel
 t2 = mpl.dates.date2num(datetime.datetime(2000, 1, 1))  # time in mpl format
 DT4XLS2MPL = t2-t1
+COLORS = {'precip': [0/255, 25/255, 51/255],
+          'recharge': [0/255, 76/255, 153/255],
+          'runoff': [0/255, 128/255, 255/255],
+          'evapo': [102/255, 178/255, 255/255]}
 
 
 class FigureStackManager(QWidget):
@@ -961,10 +965,6 @@ class FigWaterBudgetGLUE(FigCanvasBase):
     FIGNAME = "water_budget_glue"
     FWIDTH, FHEIGHT = 15, 7
     MARGINS = [1, 0.15, 0.15, 1.1]
-    COLOR = [[0/255, 25/255, 51/255],
-             [0/255, 76/255, 153/255],
-             [0/255, 128/255, 255/255],
-             [102/255, 178/255, 255/255]]
 
     def __init__(self, setp={}):
         super(FigWaterBudgetGLUE, self).__init__(setp)
@@ -1009,7 +1009,6 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.setup_legend()
 
         # Plot the data.
-
         bwidth = 0.35
         xpad = 1
         xpad_left = mpl.transforms.ScaledTranslation(
@@ -1018,35 +1017,34 @@ class FigWaterBudgetGLUE(FigCanvasBase):
             xpad/72, 0, self.figure.dpi_scale_trans)
 
         # Plot precipitation.
-        ax.bar(years-bwidth/2, precip, align='center', width=bwidth,
-               color=self.COLOR[0], edgecolor=None,
+        ax.bar(years - bwidth/2, precip, align='center', width=bwidth,
+               color=COLORS['precip'], edgecolor=None,
                transform=ax.transData + xpad_left)
 
-        # Plot runoff.
-        var2plot = rechg + evapo + runoff
-        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
-               color=self.COLOR[3], edgecolor=None,
+        # Plot evapotranspiration.
+        var2plot = rechg + runoff + evapo
+        ax.bar(years + bwidth/2, var2plot, align='center', width=bwidth,
+               color=COLORS['evapo'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
-        # Plot evapotranspiration.
-        var2plot = rechg + evapo
-        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
-               color=self.COLOR[2], edgecolor=None,
+        # Plot runoff.
+        var2plot = rechg + runoff
+        ax.bar(years + bwidth/2, var2plot, align='center', width=bwidth,
+               color=COLORS['runoff'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
         # Plot recharge.
         var2plot = rechg
-        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
-               color=self.COLOR[1], edgecolor=None,
+        ax.bar(years + bwidth/2, var2plot, align='center', width=bwidth,
+               color=COLORS['recharge'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
         # Plot the text.
-
         xpad_right = mpl.transforms.ScaledTranslation(
             2*xpad/72, 0, self.figure.dpi_scale_trans)
-
         self.notes = []
         for i in range(len(years)):
+            # Write precipitation values.
             y = precip[i]/2
             x = years[i] - bwidth/2
             txt = '%d' % precip[i]
@@ -1055,6 +1053,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
                 rotation=90, fontsize=self.setp['notes size'], clip_on=True,
                 transform=ax.transData + xpad_left))
 
+            # Write recharge values.
             y = rechg[i]/2
             x = years[i] + bwidth/2
             txt = '%d' % rechg[i]
@@ -1063,17 +1062,19 @@ class FigWaterBudgetGLUE(FigCanvasBase):
                 rotation=90, fontsize=self.setp['notes size'], clip_on=True,
                 transform=ax.transData + xpad_right))
 
-            y = evapo[i]/2 + rechg[i]
+            # Write runoff values.
+            y = rechg[i] + runoff[i]/2
             x = years[i] + bwidth/2
-            txt = '%d' % evapo[i]
+            txt = '%d' % runoff[i]
             self.notes.append(self.ax0.text(
                 x, y, txt, color='black', va='center', ha='center',
                 rotation=90, fontsize=self.setp['notes size'], clip_on=True,
                 transform=ax.transData + xpad_right))
 
-            y = runoff[i]/2 + rechg[i] + evapo[i]
+            # Write evapotranspiration values.
+            y = rechg[i] + runoff[i] + evapo[i]/2
             x = years[i] + bwidth/2
-            txt = '%d' % runoff[i]
+            txt = '%d' % evapo[i]
             self.notes.append(self.ax0.text(
                 x, y, txt, color='black', va='center', ha='center',
                 rotation=90, fontsize=self.setp['notes size'], clip_on=True,
@@ -1159,8 +1160,8 @@ class FigWaterBudgetGLUE(FigCanvasBase):
     def setup_legend(self,):
         """Setup the legend of the graph."""
         lg_handles = [
-            mpl.patches.Rectangle((0, 0), 1, 1, fc=self.COLOR[i], ec='none')
-            for i in range(4)]
+            mpl.patches.Rectangle((0, 0), 1, 1, fc=COLORS[var], ec='none')
+            for var in ['precip', 'recharge', 'runoff', 'evapo']]
         if self.setp['language'] == 'french':
             lg_labels = ['Précipitations totales', 'Recharge', 'Ruissellement',
                          'Évapotranspiration réelle']
@@ -1381,10 +1382,6 @@ class FigAvgYearlyBudget(FigCanvasBase):
     FIGNAME = "avg_yearly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
     MARGINS = [1, 0.15, 0.15, 0.35]
-    COLOR = [[102/255, 178/255, 255/255],
-             [0/255, 128/255, 255/255],
-             [0/255, 76/255, 153/255],
-             [0/255, 25/255, 51/255]]
 
     def __init__(self, setp={}):
         super(FigAvgYearlyBudget, self).__init__(setp)
@@ -1398,27 +1395,24 @@ class FigAvgYearlyBudget(FigCanvasBase):
     def plot(self, glue_df):
         super(FigAvgYearlyBudget, self).plot()
 
-        avg_yrly_rechg = np.nanmean(glue_df['yearly budget']['recharge'])
-        avg_yrly_evapo = np.nanmean(glue_df['yearly budget']['evapo'])
-        avg_yrly_runoff = np.nanmean(glue_df['yearly budget']['runoff'])
-        avg_yrly_precip = np.nanmean(glue_df['yearly budget']['precip'])
-
-        avg_yrly = [np.nanmean(glue_df['yearly budget']['evapo']),
-                    np.nanmean(glue_df['yearly budget']['runoff']),
-                    np.nanmean(glue_df['yearly budget']['recharge']),
-                    np.nanmean(glue_df['yearly budget']['precip'])]
+        avg_yrly = {
+            'evapo': np.nanmean(glue_df['yearly budget']['evapo']),
+            'runoff': np.nanmean(glue_df['yearly budget']['runoff']),
+            'recharge': np.nanmean(glue_df['yearly budget']['recharge']),
+            'precip': np.nanmean(glue_df['yearly budget']['precip'])}
 
         # Plot the results.
         offset = mpl.transforms.ScaledTranslation(
             0, 3/72, self.figure.dpi_scale_trans)
         self.bar_handles = []
         self.notes = []
-        for i, val in enumerate(avg_yrly):
-            l, = self.ax0.bar(i+1, val, 0.65, align='center',
-                              color=self.COLOR[i])
+        for i, varname in enumerate(avg_yrly.keys()):
+            l, = self.ax0.bar(i+1, avg_yrly[varname], 0.65, align='center',
+                              color=COLORS[varname])
             self.bar_handles.append(l)
             self.notes.append(self.ax0.text(
-                i+1, val, "%d" % val, ha='center', va='bottom',
+                i+1, avg_yrly[varname], "%d" % avg_yrly[varname],
+                ha='center', va='bottom',
                 transform=self.ax0.transData + offset,
                 fontsize=self.setp['notes size']))
 
@@ -1426,9 +1420,10 @@ class FigAvgYearlyBudget(FigCanvasBase):
         if 'ymin' not in self.setp.keys():
             self.setp['ymin'] = 0
         if 'ymax' not in self.setp.keys():
-            self.setp['ymax'] = np.max(
-                [avg_yrly_rechg, avg_yrly_evapo,
-                 avg_yrly_runoff, avg_yrly_precip]) + 100
+            self.setp['ymax'] = np.max([
+                avg_yrly['recharge'], avg_yrly['evapo'],
+                avg_yrly['runoff'], avg_yrly['precip']
+                ]) + 100
         if 'yscl' not in self.setp.keys():
             self.setp['yscl'] = 250
         if 'yscl minor' not in self.setp.keys():
@@ -1511,10 +1506,6 @@ class FigAvgMonthlyBudget(FigCanvasBase):
     FIGNAME = "avg_monthly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
     MARGINS = [1, 0.35, 0.15, 0.35]
-    COLOR = [[102/255, 178/255, 255/255],
-             [0/255, 128/255, 255/255],
-             [0/255, 76/255, 153/255],
-             [0/255, 25/255, 51/255]]
 
     def __init__(self, setp={}):
         super(FigAvgMonthlyBudget, self).__init__(setp)
@@ -1529,18 +1520,22 @@ class FigAvgMonthlyBudget(FigCanvasBase):
     def plot(self, glue_df):
         """Plot the results."""
         super(FigAvgMonthlyBudget, self).plot()
-        avg_mly = [
-            np.nanmean(glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
-            np.nanmean(glue_df['monthly budget']['runoff'][:, :, 2], axis=0),
-            np.nanmean(glue_df['monthly budget']['recharge'][:, :, 2], axis=0),
-            np.nanmean(glue_df['monthly budget']['precip'], axis=0)]
+        avg_mly = {
+            'evapo': np.nanmean(
+                glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
+            'runoff': np.nanmean(
+                glue_df['monthly budget']['runoff'][:, :, 2], axis=0),
+            'recharge': np.nanmean(
+                glue_df['monthly budget']['recharge'][:, :, 2], axis=0),
+            'precip': np.nanmean(glue_df['monthly budget']['precip'], axis=0)
+            }
 
         # Plot the results.
         months = np.arange(1, 13)
-        for i, ser in enumerate(avg_mly):
-            hl, = self.ax0.plot(months, ser, marker='o', mec='white',
-                                clip_on=False, lw=2, color=self.COLOR[i],
-                                zorder=3)
+        for i, varname in enumerate(avg_mly.keys()):
+            hl, = self.ax0.plot(
+                months, avg_mly[varname], marker='o', mec='white',
+                clip_on=False, lw=2, color=COLORS[varname], zorder=3)
             self.lg_handles.append(hl)
 
         # Setup the axis limits.
