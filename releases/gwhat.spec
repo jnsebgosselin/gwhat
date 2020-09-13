@@ -16,7 +16,7 @@ HIDDENIMPORTS = ['h5py.defs', 'h5py.utils', 'h5py.h5ac', 'h5py._proxy',
 
 a = Analysis(['../gwhat/mainwindow.py'],
              pathex=['C:\\Program Files (x86)\\Windows Kits\\10\\Redist\\ucrt\\DLLs\\x64'],
-             binaries=[],
+             binaries=[('C:\\Windows\\System32\\vcruntime140_1.dll', '.')],
              datas=added_files ,
              hiddenimports=HIDDENIMPORTS,
              hookspath=[],
