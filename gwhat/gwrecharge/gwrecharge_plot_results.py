@@ -1009,7 +1009,6 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self.setup_legend()
 
         # Plot the data.
-
         bwidth = 0.35
         xpad = 1
         xpad_left = mpl.transforms.ScaledTranslation(
@@ -1018,35 +1017,34 @@ class FigWaterBudgetGLUE(FigCanvasBase):
             xpad/72, 0, self.figure.dpi_scale_trans)
 
         # Plot precipitation.
-        ax.bar(years-bwidth/2, precip, align='center', width=bwidth,
+        ax.bar(years - bwidth/2, precip, align='center', width=bwidth,
                color=COLORS['precip'], edgecolor=None,
                transform=ax.transData + xpad_left)
 
-        # Plot runoff.
-        var2plot = rechg + evapo + runoff
-        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
-               color=COLORS['runoff'], edgecolor=None,
+        # Plot evapotranspiration.
+        var2plot = rechg + runoff + evapo
+        ax.bar(years + bwidth/2, var2plot, align='center', width=bwidth,
+               color=COLORS['evapo'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
-        # Plot evapotranspiration.
-        var2plot = rechg + evapo
-        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
-               color=COLORS['evapo'], edgecolor=None,
+        # Plot runoff.
+        var2plot = rechg + runoff
+        ax.bar(years + bwidth/2, var2plot, align='center', width=bwidth,
+               color=COLORS['runoff'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
         # Plot recharge.
         var2plot = rechg
-        ax.bar(years+bwidth/2, var2plot, align='center', width=bwidth,
+        ax.bar(years + bwidth/2, var2plot, align='center', width=bwidth,
                color=COLORS['recharge'], edgecolor=None,
                transform=ax.transData + xpad_right)
 
         # Plot the text.
-
         xpad_right = mpl.transforms.ScaledTranslation(
             2*xpad/72, 0, self.figure.dpi_scale_trans)
-
         self.notes = []
         for i in range(len(years)):
+            # Write precipitation values.
             y = precip[i]/2
             x = years[i] - bwidth/2
             txt = '%d' % precip[i]
@@ -1055,6 +1053,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
                 rotation=90, fontsize=self.setp['notes size'], clip_on=True,
                 transform=ax.transData + xpad_left))
 
+            # Write recharge values.
             y = rechg[i]/2
             x = years[i] + bwidth/2
             txt = '%d' % rechg[i]
@@ -1063,17 +1062,19 @@ class FigWaterBudgetGLUE(FigCanvasBase):
                 rotation=90, fontsize=self.setp['notes size'], clip_on=True,
                 transform=ax.transData + xpad_right))
 
-            y = evapo[i]/2 + rechg[i]
+            # Write runoff values.
+            y = rechg[i] + runoff[i]/2
             x = years[i] + bwidth/2
-            txt = '%d' % evapo[i]
+            txt = '%d' % runoff[i]
             self.notes.append(self.ax0.text(
                 x, y, txt, color='black', va='center', ha='center',
                 rotation=90, fontsize=self.setp['notes size'], clip_on=True,
                 transform=ax.transData + xpad_right))
 
-            y = runoff[i]/2 + rechg[i] + evapo[i]
+            # Write evapotranspiration values.
+            y = rechg[i] + runoff[i] + evapo[i]/2
             x = years[i] + bwidth/2
-            txt = '%d' % runoff[i]
+            txt = '%d' % evapo[i]
             self.notes.append(self.ax0.text(
                 x, y, txt, color='black', va='center', ha='center',
                 rotation=90, fontsize=self.setp['notes size'], clip_on=True,
