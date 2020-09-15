@@ -33,13 +33,12 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 
-# ---- Imports: Local
-
+# ---- Local imports
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
-from gwhat.widgets.buttons import (LangToolButton, OnOffToolButton,
-                                   ExportDataButton)
+from gwhat.widgets.buttons import LangToolButton, OnOffToolButton
 from gwhat.common import StyleDB
+from gwhat.config.main import CONF
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
 from gwhat.utils.dates import qdatetime_from_xldate
