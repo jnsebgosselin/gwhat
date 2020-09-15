@@ -31,6 +31,9 @@ DEFAULTS = [
          'last_project_filepath': '../Projects/Example/Example.gwt'
          }
      ),
+    ('brf',
+        {'graphs_labels_language': 'english'}
+     ),
 ]
 
 
