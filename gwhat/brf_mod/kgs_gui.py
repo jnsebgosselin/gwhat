@@ -678,7 +678,7 @@ class BRFViewer(QWidget):
 
     def plot_brf(self):
         self.brf_canvas.figure.set_language(self.btn_language.language)
-        if self.wldset.brf_count() == 0:
+        if self.wldset is None or self.wldset.brf_count() == 0:
             self.brf_canvas.figure.empty_BRF()
         else:
             name = self.wldset.get_brfname_at(self.current_brf.value()-1)
