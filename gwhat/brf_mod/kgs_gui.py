@@ -130,7 +130,11 @@ class BRFManager(myqt.QFrameLayout):
     def __init__(self, wldset=None, parent=None):
         super(BRFManager, self).__init__(parent)
 
+        # Setup the BRF results viewer.
         self.viewer = BRFViewer(wldset, parent)
+        self.viewer.btn_language.set_language(
+            CONF.get('brf', 'graphs_labels_language'))
+
         self.kgs_brf_installer = None
         self.__initGUI__()
 
@@ -225,6 +229,11 @@ class BRFManager(myqt.QFrameLayout):
             self.__install_kgs_brf_installer()
 
     # ---- Public API
+    def close(self):
+        """"Clos this brf manager"""
+        CONF.set('brf', 'graphs_labels_language',
+                 self.viewer.btn_language.language)
+        super().close()
 
     @property
     def nlag_baro(self):
