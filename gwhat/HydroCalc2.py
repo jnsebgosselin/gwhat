@@ -551,6 +551,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.rechg_eval_widget.set_wxdset(wxdset)
         self.draw_weather()
 
+    def close(self):
+        """Close this groundwater level calc window."""
+        self.brf_eval_widget.close()
+        super().close()
+
     # ---- MRC handlers
 
     def btn_show_mrc_isclicked(self):
