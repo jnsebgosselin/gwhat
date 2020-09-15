@@ -202,6 +202,7 @@ class MainWindow(QMainWindow):
         """Qt method override to close the project before close the app."""
         print('Closing projet')
         self.pmanager.close()
+        self.tab_hydrocalc.close()
         print('Closing GWHAT')
         event.accept()
 
