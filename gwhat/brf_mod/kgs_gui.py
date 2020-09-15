@@ -137,7 +137,7 @@ class BRFManager(myqt.QFrameLayout):
     def __initGUI__(self):
         self.setContentsMargins(10, 10, 10, 10)
 
-        # ---- Detrend and Correct Options
+        # Detrend and Correct Options
         self.baro_spinbox = myqt.QDoubleSpinBox(100, 0, show_buttons=True)
         self.baro_spinbox.setRange(0, 9999)
         self.baro_spinbox.setKeyboardTracking(True)
@@ -166,7 +166,7 @@ class BRFManager(myqt.QFrameLayout):
         options_layout.setColumnStretch(1, 100)
         options_layout.setContentsMargins(0, 0, 0, 0)
 
-        # ---- BRF date range
+        # Setup BRF date range widgets.
         self.date_start_edit = QDateTimeEdit()
         self.date_start_edit.setCalendarPopup(True)
         self.date_start_edit.setDisplayFormat('dd/MM/yyyy hh:mm')
@@ -201,7 +201,7 @@ class BRFManager(myqt.QFrameLayout):
         seldata_layout.setRowStretch(1, 100)
         seldata_layout.setContentsMargins(0, 0, 0, 0)
 
-        # ---- Toolbar
+        # Setup the toolbar.
         btn_comp = QPushButton('Compute BRF')
         btn_comp.clicked.connect(self.calc_brf)
         btn_comp.setFocusPolicy(Qt.NoFocus)
@@ -209,7 +209,7 @@ class BRFManager(myqt.QFrameLayout):
         self.btn_show = QToolButtonSmall(icons.get_icon('search'))
         self.btn_show.clicked.connect(self.viewer.show)
 
-        # ---- Main Layout
+        # Setup the main Layout.
         self.addLayout(daterange_layout, 0, 0)
         self.addLayout(seldata_layout, 0, 1)
         self.setRowMinimumHeight(1, 15)
@@ -224,7 +224,7 @@ class BRFManager(myqt.QFrameLayout):
         if not KGSBRFInstaller().kgsbrf_is_installed():
             self.__install_kgs_brf_installer()
 
-    # ---- Properties
+    # ---- Public API
 
     @property
     def nlag_baro(self):
@@ -279,26 +279,6 @@ class BRFManager(myqt.QFrameLayout):
                 widget.blockSignals(False)
         self.wldset.save_brfperiod(period)
 
-    # ---- KGS BRF installer
-    def __install_kgs_brf_installer(self):
-        """
-        Installs a KGSBRFInstaller that overlays the whole brf tool
-        layout until the KGS_BRF program is installed correctly.
-        """
-        self.kgs_brf_installer = KGSBRFInstaller()
-        self.kgs_brf_installer.sig_kgs_brf_installed.connect(
-                self.__uninstall_kgs_brf_installer)
-        self.addWidget(self.kgs_brf_installer, 0, 0,
-                       self.rowCount(), self.columnCount())
-
-    def __uninstall_kgs_brf_installer(self):
-        """
-        Uninstall the KGSBRFInstaller after the KGS_BRF program has been
-        installed properly.
-        """
-        self.kgs_brf_installer.sig_kgs_brf_installed.disconnect()
-        self.kgs_brf_installer = None
-
     def set_wldset(self, wldset):
         """Set the namespace for the wldset in the widget."""
         self.wldset = wldset
@@ -325,6 +305,27 @@ class BRFManager(myqt.QFrameLayout):
             widget.setMaximumDateTime(qdatetime_from_xldate(daterange[1]))
             widget.blockSignals(False)
 
+    # ---- KGS BRF installer
+    def __install_kgs_brf_installer(self):
+        """
+        Installs a KGSBRFInstaller that overlays the whole brf tool
+        layout until the KGS_BRF program is installed correctly.
+        """
+        self.kgs_brf_installer = KGSBRFInstaller()
+        self.kgs_brf_installer.sig_kgs_brf_installed.connect(
+                self.__uninstall_kgs_brf_installer)
+        self.addWidget(self.kgs_brf_installer, 0, 0,
+                       self.rowCount(), self.columnCount())
+
+    def __uninstall_kgs_brf_installer(self):
+        """
+        Uninstall the KGSBRFInstaller after the KGS_BRF program has been
+        installed properly.
+        """
+        self.kgs_brf_installer.sig_kgs_brf_installed.disconnect()
+        self.kgs_brf_installer = None
+
+    # ---- Calculations
     def calc_brf(self):
         """Prepare the data, calcul the brf, and save and plot the results."""
 
@@ -438,8 +439,7 @@ class BRFViewer(QWidget):
 
         self.total_brf = QLabel('/ 0')
 
-        # ---- Language button
-
+        # Setup the language button.
         self.btn_language = LangToolButton()
         self.btn_language.setToolTip(
             "Set the language of the text shown in the graph.")
