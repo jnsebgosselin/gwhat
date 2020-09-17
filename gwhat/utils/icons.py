@@ -27,7 +27,6 @@ GWHAT_ICONS = {
     'setup': 'page_setup',
     'new_project': 'new_project',
     'openFolder': 'folder',
-    'openFile': 'open_file',
     'clear': 'clear-search',
     'importFile': 'open_project',
     'download': 'download',
@@ -124,7 +123,7 @@ FA_ICONS = {
         ('mdi.arrow-expand-all',),
         {'color': COLOR, 'scale_factor': 1.3}],
     'folder_open': [
-        ('mdi.folder-open-outline',),
+        ('mdi.folder-open',),
         {'color': COLOR, 'scale_factor': 1.3}],
     'info': [
         ('mdi.information-outline',),
