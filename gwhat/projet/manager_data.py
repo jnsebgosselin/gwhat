@@ -506,7 +506,7 @@ class NewDatasetDialog(QDialog):
         self.__initUI__()
 
     def __initUI__(self):
-        # ---- Select Dataset
+        # Setup the guid to select an input dataset file.
         self.directory = QLineEdit()
         self.directory.setReadOnly(True)
         self.directory.setMinimumWidth(400)
@@ -517,22 +517,23 @@ class NewDatasetDialog(QDialog):
 
         url_i = "https://gwhat.readthedocs.io/en/latest/manage_data.html"
         msg = ("<font color=red size=2><i>"
-               "The %s data file is not formatted correctly.<br>"
-               "Please consult the <a href=\"%s\">documentation</a>"
-               " for detailed information<br>"
-               "on how to format your input data files correctly."
+               "This %s data file is not formatted correctly. "
+               "Please consult the <a href=\"%s\">documentation</a> "
+               "for detailed information on how to format your input "
+               "data files correctly."
                "</i></font>"
-               ) % (self._datatype.capitalize(), url_i)
+               ) % (self._datatype.lower(), url_i)
         self._error_lbl = QLabel(msg)
         self._error_lbl.setVisible(False)
+        self._error_lbl.setWordWrap(True)
         self._error_lbl.setOpenExternalLinks(True)
 
         # Select Dataset Layout.
         grp_dset = QGridLayout()
         grp_dset.addWidget(QLabel("File name :"), 1, 0)
         grp_dset.addWidget(self.directory, 1, 1)
-        grp_dset.addWidget(self.btn_browse, 1, 3)
-        grp_dset.addWidget(self._error_lbl, 2, 1, 1, 3)
+        grp_dset.addWidget(self.btn_browse, 1, 2)
+        grp_dset.addWidget(self._error_lbl, 2, 1)
 
         grp_dset.setContentsMargins(0, 0, 0, 15)
         grp_dset.setColumnStretch(1, 100)
@@ -560,9 +561,8 @@ class NewDatasetDialog(QDialog):
         # Setup the info groubox layout.
         self.grp_info = QGroupBox("Dataset info :")
         self.grp_info.setEnabled(False)
-        self.grp_info.setLayout(QGridLayout())
-        self.grp_info.layout().setColumnStretch(2, 100)
-        self.grp_info.layout().setSpacing(10)
+        grp_info_layout = QGridLayout(self.grp_info)
+        grp_info_layout.setColumnStretch(2, 100)
 
         if self._datatype == 'water level':
             labels = ['Well name :', 'Well ID :', 'Latitude :', 'Longitude :',
@@ -580,9 +580,9 @@ class NewDatasetDialog(QDialog):
         self._dset_name.setEnabled(False)
 
         dataset_name_layout = QGridLayout()
-        dataset_name_layout.setContentsMargins(0, 0, 0, 0)
+        dataset_name_layout.setContentsMargins(0, 15, 0, 0)
         dataset_name_layout.setColumnStretch(1, 1)
-        dataset_name_layout.addWidget(QLabel('Dataset name:'), 0, 0)
+        dataset_name_layout.addWidget(QLabel('Dataset name :'), 0, 0)
         dataset_name_layout.addWidget(self._dset_name, 0, 1)
 
         # Setup the toolbar.
@@ -601,7 +601,7 @@ class NewDatasetDialog(QDialog):
         btn_cancel.clicked.connect(self.close)
 
         toolbar = QGridLayout()
-        toolbar.setContentsMargins(0, 15, 0, 0)
+        toolbar.setContentsMargins(0, 0, 0, 0)
         toolbar.addWidget(self._progress_label, 0, 0)
         toolbar.setColumnStretch(1, 100)
         toolbar.addWidget(self.btn_ok, 0, 2)
@@ -613,11 +613,9 @@ class NewDatasetDialog(QDialog):
 
         layout.addLayout(grp_dset, 0, 0)
         layout.addWidget(self.grp_info, 1, 0)
-        layout.addLayout(toolbar, 2, 0)
-
-        layout.setRowMinimumHeight(3, 15)
-        layout.setRowStretch(10, 100)
-        layout.setColumnStretch(0, 100)
+        layout.setRowStretch(2, 100)
+        layout.addLayout(dataset_name_layout, 3, 0)
+        layout.addLayout(toolbar, 4, 0)
 
     def _add_info_field(self, label, widget):
         """Add a new field to the Station Info group box."""
@@ -771,8 +769,8 @@ class NewDatasetDialog(QDialog):
                 dsetname = dsetname.replace(char, '_')
             self._dset_name.setText(dsetname)
 
-        self._error_lbl.setVisible(
-            self._dataset is None and self.directory.text() != '')
+        # self._error_lbl.setVisible(
+        #     self._dataset is None and self.directory.text() != '')
         self.btn_ok.setEnabled(self._dataset is not None)
         self.grp_info.setEnabled(self._dataset is not None)
         self._dset_name.setEnabled(self._dataset is not None)
