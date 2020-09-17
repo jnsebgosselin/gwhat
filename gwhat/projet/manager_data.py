@@ -13,6 +13,7 @@ import os
 import os.path as osp
 
 # ---- Third party imports
+from appconfigs.base import get_home_dir
 import numpy as np
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -21,6 +22,7 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QFileDialog, QApplication, QDialog, QGroupBox)
 
 # ---- Local library imports
+from gwhat.config.main import CONF
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
 from gwhat.utils.icons import QToolButtonSmall
 from gwhat.utils import icons
@@ -85,14 +87,13 @@ class DataManager(QWidget):
     def setup_wldset_mngr(self):
         """Setup the manager for the water level datasets."""
 
-        # ---- Toolbar
-
+        # Setup the toolbar.
         self.wldsets_cbox = QComboBox()
         self.wldsets_cbox.currentIndexChanged.connect(self.wldset_changed)
 
         self.btn_load_wl = QToolButtonSmall(icons.get_icon('importFile'))
         self.btn_load_wl.setToolTip('Import a new water level dataset...')
-        self.btn_load_wl.clicked.connect(self.import_wldataset)
+        self.btn_load_wl.clicked.connect(self.select_wldatasets)
 
         self.btn_del_wldset = QToolButtonSmall('delete_data')
         self.btn_del_wldset.setToolTip('Delete current dataset.')
@@ -102,12 +103,10 @@ class DataManager(QWidget):
         for widg in [self.btn_load_wl, self.btn_del_wldset]:
             wl_toolbar.addWidget(widg)
 
-        # ---- Info Box
-
+        # Setup the dataset information box.
         self.well_info_widget = StrSpinBox()
 
-        # ---- Main Layout
-
+        # ---- Setup the main layout.
         grpbox = QGroupBox('Water Level Dataset : ')
         layout = QGridLayout(grpbox)
         layout.setSpacing(5)
@@ -237,18 +236,38 @@ class DataManager(QWidget):
         """Return the total number of wldset saved in the project."""
         return len(self.wldsets)
 
-    def import_wldataset(self):
-        """Open a dialog window to import a water level dataset from a file."""
+    def select_wldatasets(self):
+        """
+        Open a file dialog to allow the user to select one or more input
+        water level datafiles.
+        """
         if self.projet is None:
-            msg = ("Please first select a valid project or create a new one.")
-            btn = QMessageBox.Ok
-            QMessageBox.warning(self, 'Create dataset', msg, btn)
+            QMessageBox.warning(
+                self, 'Import Dataset Error',
+                "Please first select a valid project or create a new one.",
+                QMessageBox.Ok)
             return
+
+        dialog = QFileDialog(self)
+        dialog.setWindowTitle('Select Water Level Data Files')
+        dialog.setNameFilters(['(*.csv;*.xls;*.xlsx)'])
+        directory = CONF.get('main', 'select_file_dialog_dir', get_home_dir())
+        dialog.setDirectory(
+            directory if osp.exists(directory) else get_home_dir())
+        dialog.setFileMode(QFileDialog.ExistingFiles)
+        if dialog.exec_():
+            CONF.set('main', 'select_file_dialog_dir',
+                     dialog.directory().absolutePath())
+            filenames = dialog.selectedFiles()
+            self.import_wldatasets(filenames)
+
+    def import_wldatasets(self, filenames):
+        """Open a dialog window to import a water level dataset from a file."""
+        self.new_waterlvl_win.load_datasets(filenames)
+        if self._pytesting:
+            self.new_waterlvl_win.show()
         else:
-            if self._pytesting:
-                self.new_waterlvl_win.show()
-            else:
-                self.new_waterlvl_win.exec_()
+            self.new_waterlvl_win.exec_()
 
     def new_wldset_imported(self, name, dataset):
         """
