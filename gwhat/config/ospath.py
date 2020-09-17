@@ -28,6 +28,17 @@ def get_select_file_dialog_dir():
     directory = directory if osp.exists(directory) else get_home_dir()
     return directory
 
+
+def set_select_file_dialog_dir(directory):
+    """"
+    Save in the user configs the directory that should be displayed
+    by default in file dialogs.
+    """
+    if directory is None or not osp.exists(directory):
+        directory = get_home_dir()
+    CONF.set('main', 'select_file_dialog_dir', directory)
+
+
 def save_path_to_configs(section, option, path):
     """
     Save a path in the config file for the specified section and option.
