@@ -244,7 +244,7 @@ class DataManager(QWidget):
         if self.projet is None:
             QMessageBox.warning(
                 self, 'Import Dataset Error',
-                "Please first select a valid project or create a new one.",
+                "Please select a valid project first or create a new one.",
                 QMessageBox.Ok)
             return
 
@@ -262,7 +262,7 @@ class DataManager(QWidget):
             self.import_wldatasets(filenames)
 
     def import_wldatasets(self, filenames):
-        """Open a dialog window to import a water level dataset from a file."""
+        """Import water level datasets from a list of files."""
         self.new_waterlvl_win.load_datasets(filenames)
         if self._pytesting:
             self.new_waterlvl_win.show()
@@ -355,18 +355,38 @@ class DataManager(QWidget):
         """Return the total number of weather datasets saved in the project."""
         return len(self.wxdsets)
 
-    def import_wxdataset(self):
-        """Open a dialog window to import a weather dataset from a file."""
+    def select_wxdatasets(self):
+        """
+        Open a file dialog to allow the user to select one or more input
+        weather datafiles.
+        """
         if self.projet is None:
-            msg = ("Please first select a valid project or create a new one.")
-            btn = QMessageBox.Ok
-            QMessageBox.warning(self, 'Create dataset', msg, btn)
+            QMessageBox.warning(
+                self, 'Import Dataset Error',
+                "Please select a valid project first or create a new one.",
+                QMessageBox.Ok)
             return
+
+        dialog = QFileDialog(self)
+        dialog.setWindowTitle('Select Weather Data Files')
+        dialog.setNameFilters(['(*.csv;*.xls;*.xlsx)'])
+        directory = CONF.get('main', 'select_file_dialog_dir', get_home_dir())
+        dialog.setDirectory(
+            directory if osp.exists(directory) else get_home_dir())
+        dialog.setFileMode(QFileDialog.ExistingFiles)
+        if dialog.exec_():
+            CONF.set('main', 'select_file_dialog_dir',
+                     dialog.directory().absolutePath())
+            filenames = dialog.selectedFiles()
+            self.import_wxdatasets(filenames)
+
+    def import_wxdataset(self, filenames):
+        """Import weather datasets from a list of files."""
+        self.new_weather_win.load_datasets(filenames)
+        if self._pytesting:
+            self.new_weather_win.show()
         else:
-            if self._pytesting:
-                self.new_weather_win.show()
-            else:
-                self.new_weather_win.exec_()
+            self.new_weather_win.exec_()
 
     def new_wxdset_imported(self, name, dataset):
         """
