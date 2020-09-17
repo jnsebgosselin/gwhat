@@ -25,7 +25,7 @@ from gwhat.projet.manager_data import (DataManager, QFileDialog, QMessageBox,
                                        QCheckBox)
 
 DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
-WXFILENAME = osp.join(DATADIR, 'sample_weather_datafile.out')
+WXFILENAME = osp.join(DATADIR, 'sample_weather_datafile.csv')
 WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
 
 
@@ -37,7 +37,6 @@ def projectpath(tmpdir):
 
 @pytest.fixture
 def project(projectpath):
-    # Create a project and add add the wldset to it.
     return ProjetReader(projectpath)
 
 
@@ -54,27 +53,34 @@ def datamanager(project, qtbot):
 
 # ---- Tests DataManager
 def test_import_weather_data(datamanager, mocker, qtbot):
-    """Test importing and saving weather data to the project."""
+    """
+    Test that importing data in gwhat projects is working as
+    expected.
+    """
     datamanager.new_weather_win.setModal(False)
+    new_weather_dialog = datamanager.new_weather_win
 
     # Mock the file dialog to return the path of the weather datafile.
     mocker.patch.object(
-        QFileDialog, 'getOpenFileName', return_value=(WXFILENAME, '*.out'))
+        QFileDialog, 'exec_', return_value=True)
+    mocker.patch.object(
+        QFileDialog, 'selectedFiles', return_value=[WXFILENAME])
 
     # Open the dialog window and select a weather dataset.
-    qtbot.mouseClick(datamanager.btn_load_meteo, Qt.LeftButton)
-    qtbot.mouseClick(datamanager.new_weather_win.btn_browse, Qt.LeftButton)
+    with qtbot.waitSignal(new_weather_dialog.sig_new_dataset_loaded):
+        qtbot.mouseClick(datamanager.btn_load_meteo, Qt.LeftButton)
 
-    assert datamanager.new_weather_win.name == "IBERVILLE"
-    assert datamanager.new_weather_win.station_name == "IBERVILLE"
-    assert datamanager.new_weather_win.station_id == "7023270"
-    assert datamanager.new_weather_win.province == "QUEBEC"
-    assert datamanager.new_weather_win.latitude == 45.33
-    assert datamanager.new_weather_win.longitude == -73.25
-    assert datamanager.new_weather_win.altitude == 30.5
+    assert new_weather_dialog.name == "IBERVILLE"
+    assert new_weather_dialog.station_name == "IBERVILLE"
+    assert new_weather_dialog.station_id == "7023270"
+    assert new_weather_dialog.province == "QUEBEC"
+    assert new_weather_dialog.latitude == 45.33
+    assert new_weather_dialog.longitude == -73.25
+    assert new_weather_dialog.altitude == 30.5
 
     # Import the weather dataset into the project.
-    qtbot.mouseClick(datamanager.new_weather_win.btn_ok, Qt.LeftButton)
+    with qtbot.waitSignal(new_weather_dialog.sig_new_dataset_imported):
+        qtbot.mouseClick(new_weather_dialog.btn_ok, Qt.LeftButton)
     assert datamanager.wxdataset_count() == 1
     assert datamanager.wxdsets_cbox.currentText() == "IBERVILLE"
     assert datamanager.get_current_wxdset().name == "IBERVILLE"
@@ -82,7 +88,8 @@ def test_import_weather_data(datamanager, mocker, qtbot):
 
 def test_delete_weather_data(datamanager, mocker, qtbot):
     """
-    Test deleting weather datasets from the project.
+    Test that deleting weather datasets from gwhat projects is working
+    as expected.
     """
     datamanager.new_wxdset_imported('wxdset1', WXDataFrame(WXFILENAME))
     datamanager.new_wxdset_imported('wxdset2', WXDataFrame(WXFILENAME))
@@ -115,28 +122,32 @@ def test_delete_weather_data(datamanager, mocker, qtbot):
 
 
 def test_import_waterlevel_data(datamanager, mocker, qtbot):
-    """Test importing and saving water level data to the project."""
+    """
+    Test that importing water level data in gwhat projects is
+    working as expected."""
     datamanager.new_waterlvl_win.setModal(False)
+    new_waterlvl_dialog = datamanager.new_waterlvl_win
 
     # Mock the file dialog to return the path of the weather datafile.
     mocker.patch.object(
-        QFileDialog, 'getOpenFileName', return_value=(WLFILENAME, '*.csv'))
+        QFileDialog, 'exec_', return_value=True)
+    mocker.patch.object(
+        QFileDialog, 'selectedFiles', return_value=[WLFILENAME])
 
-    # Open the dialog window and select a water level dataset.
-    qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
-    qtbot.mouseClick(datamanager.new_waterlvl_win.btn_browse, Qt.LeftButton)
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_loaded):
+        qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
 
-    new_waterlvl_win = datamanager.new_waterlvl_win
-    assert new_waterlvl_win.name == "PO01 - Calixa-Lavallée"
-    assert new_waterlvl_win.station_name == "PO01 - Calixa-Lavallée"
-    assert new_waterlvl_win.station_id == "3040002"
-    assert new_waterlvl_win.province == "QC"
-    assert new_waterlvl_win.latitude == 45.74581
-    assert new_waterlvl_win.longitude == -73.28024
-    assert new_waterlvl_win.altitude == 19.51
+    assert new_waterlvl_dialog.name == "PO01 - Calixa-Lavallée"
+    assert new_waterlvl_dialog.station_name == "PO01 - Calixa-Lavallée"
+    assert new_waterlvl_dialog.station_id == "3040002"
+    assert new_waterlvl_dialog.province == "QC"
+    assert new_waterlvl_dialog.latitude == 45.74581
+    assert new_waterlvl_dialog.longitude == -73.28024
+    assert new_waterlvl_dialog.altitude == 19.51
 
     # Import the water level dataset into the project.
-    qtbot.mouseClick(new_waterlvl_win.btn_ok, Qt.LeftButton)
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_imported):
+        qtbot.mouseClick(new_waterlvl_dialog.btn_ok, Qt.LeftButton)
     assert datamanager.wldataset_count() == 1
     assert datamanager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
     assert datamanager.get_current_wldset().name == "PO01 - Calixa-Lavallée"
@@ -239,5 +250,4 @@ def test_export_yearly_monthly_daily(datamanager, mocker, qtbot, tmp_path):
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-    # pytest.main()
+    pytest.main(['-x', __file__, '-v', '-rw', '-s'])

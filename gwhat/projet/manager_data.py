@@ -127,7 +127,7 @@ class DataManager(QWidget):
 
         self.btn_load_meteo = QToolButtonSmall(icons.get_icon('importFile'))
         self.btn_load_meteo.setToolTip('Import a new weather dataset...')
-        self.btn_load_meteo.clicked.connect(self.import_wxdataset)
+        self.btn_load_meteo.clicked.connect(self.select_wxdatasets)
 
         self.btn_del_wxdset = QToolButtonSmall('delete_data')
         self.btn_del_wxdset.setToolTip('Delete current dataset.')
@@ -380,7 +380,7 @@ class DataManager(QWidget):
             filenames = dialog.selectedFiles()
             self.import_wxdatasets(filenames)
 
-    def import_wxdataset(self, filenames):
+    def import_wxdatasets(self, filenames):
         """Import weather datasets from a list of files."""
         self.new_weather_win.load_datasets(filenames)
         if self._pytesting:
@@ -500,6 +500,7 @@ class NewDatasetDialog(QDialog):
 
     ConsoleSignal = QSignal(str)
     sig_new_dataset_imported = QSignal(str, object)
+    sig_new_dataset_loaded = QSignal(str)
 
     DATATYPES = ['water level', 'daily weather']
 
@@ -734,6 +735,7 @@ class NewDatasetDialog(QDialog):
 
         self.update_gui(filename)
         QApplication.restoreOverrideCursor()
+        self.sig_new_dataset_loaded.emit(filename)
 
     def load_datasets(self, filenames):
         """Start the process of loading datasets from a list of file names."""
