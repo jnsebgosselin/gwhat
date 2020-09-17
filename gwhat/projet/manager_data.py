@@ -471,7 +471,7 @@ class NewDatasetDialog(QDialog):
             raise ValueError("datatype value must be :", self.DATATYPES)
         self._datatype = datatype.lower()
 
-        self.setWindowTitle('Import Dataset: %s' % datatype.title())
+        self.setWindowTitle('Import {} Datasets'.format(datatype.title()))
         self.setWindowIcon(icons.get_icon('master'))
         self.setWindowFlags(Qt.Window |
                             Qt.CustomizeWindowHint |
@@ -480,22 +480,19 @@ class NewDatasetDialog(QDialog):
         self.set_projet(projet)
         self.workdir = os.path.dirname(os.getcwd())
         self._dataset = None
+        self._len_filenames = 0
+        self._queued_filenames = []
+        self._import_progress = 0
 
         self.__initUI__()
-        if datatype == 'water level':
-            warning = ('<i>Warning : Water levels must be in meter below '
-                       'ground surface (mbgs)</i>')
-            self.layout().addWidget(QLabel(warning), 4, 0)
 
     def __initUI__(self):
-
         # ---- Select Dataset
-
         self.directory = QLineEdit()
         self.directory.setReadOnly(True)
         self.directory.setMinimumWidth(400)
 
-        self.btn_browse = QToolButtonSmall(icons.get_icon('openFile'))
+        self.btn_browse = QToolButtonSmall(icons.get_icon('folder_open'))
         self.btn_browse.setToolTip('Select a datafile...')
         self.btn_browse.clicked.connect(self.select_dataset)
 
@@ -511,25 +508,18 @@ class NewDatasetDialog(QDialog):
         self._error_lbl.setVisible(False)
         self._error_lbl.setOpenExternalLinks(True)
 
-        # Select Dataset Layout
-
+        # Select Dataset Layout.
         grp_dset = QGridLayout()
-        row = 0
-        text = "Select a valid %s datafile :" % self._datatype.lower()
-        grp_dset.addWidget(QLabel(text), row, 0, 1, 3)
-        row += 1
-        grp_dset.addWidget(QLabel("File name :"), row, 0)
-        grp_dset.addWidget(self.directory, row, 1)
-        grp_dset.addWidget(self.btn_browse, row, 3)
-        row += 1
-        grp_dset.addWidget(self._error_lbl, row, 1, 1, 3)
+        grp_dset.addWidget(QLabel("File name :"), 1, 0)
+        grp_dset.addWidget(self.directory, 1, 1)
+        grp_dset.addWidget(self.btn_browse, 1, 3)
+        grp_dset.addWidget(self._error_lbl, 2, 1, 1, 3)
 
         grp_dset.setContentsMargins(0, 0, 0, 15)
         grp_dset.setColumnStretch(1, 100)
         grp_dset.setVerticalSpacing(15)
 
-        # ----- Station Info Groupbox
-
+        # Set the station info groupbox.
         self._stn_name = QLineEdit()
         self._stn_name.setAlignment(Qt.AlignCenter)
 
@@ -548,8 +538,7 @@ class NewDatasetDialog(QDialog):
         self._prov = QLineEdit()
         self._prov.setAlignment(Qt.AlignCenter)
 
-        # Info Groubox Layout
-
+        # Setup the info groubox layout.
         self.grp_info = QGroupBox("Dataset info :")
         self.grp_info.setEnabled(False)
         self.grp_info.setLayout(QGridLayout())
@@ -567,35 +556,40 @@ class NewDatasetDialog(QDialog):
         for label, widget in zip(labels, widgets):
             self._add_info_field(label, widget)
 
-        # ----- Toolbar
-
+        # Setup the dataset name.
         self._dset_name = QLineEdit()
         self._dset_name.setEnabled(False)
 
+        dataset_name_layout = QGridLayout()
+        dataset_name_layout.setContentsMargins(0, 0, 0, 0)
+        dataset_name_layout.setColumnStretch(1, 1)
+        dataset_name_layout.addWidget(QLabel('Dataset name:'), 0, 0)
+        dataset_name_layout.addWidget(self._dset_name, 0, 1)
+
+        # Setup the toolbar.
+        self._progress_label = QLabel("File {} of {}".format(
+            self._import_progress, self._len_filenames))
+
         self.btn_ok = QPushButton('Import')
-        self.btn_ok.setMinimumWidth(100)
         self.btn_ok.setEnabled(False)
         self.btn_ok.clicked.connect(self.accept_dataset)
 
+        self.btn_skip = QPushButton('Skip')
+        self.btn_skip.setEnabled(False)
+        self.btn_skip.clicked.connect(self.load_next_queued_dataset)
+
         btn_cancel = QPushButton('Cancel')
-        btn_cancel.setMinimumWidth(100)
         btn_cancel.clicked.connect(self.close)
 
-        # Tool layout
-
         toolbar = QGridLayout()
-
-        toolbar.addWidget(QLabel('Dataset name :'), 0, 0)
-        toolbar.addWidget(self._dset_name, 0, 1)
-        toolbar.addWidget(self.btn_ok, 0, 3)
+        toolbar.setContentsMargins(0, 15, 0, 0)
+        toolbar.addWidget(self._progress_label, 0, 0)
+        toolbar.setColumnStretch(1, 100)
+        toolbar.addWidget(self.btn_ok, 0, 2)
+        toolbar.addWidget(self.btn_skip, 0, 3)
         toolbar.addWidget(btn_cancel, 0, 4)
 
-        toolbar.setSpacing(10)
-        toolbar.setColumnStretch(2, 100)
-        toolbar.setContentsMargins(0, 15, 0, 0)  # (L, T, R, B)
-
-        # ---- Main Layout
-
+        # Setup the main layout.
         layout = QGridLayout(self)
 
         layout.addLayout(grp_dset, 0, 0)
@@ -662,7 +656,6 @@ class NewDatasetDialog(QDialog):
         return self._alt.value()
 
     # ---- Dataset Handlers
-
     def select_dataset(self):
         """Opens a dialog to select a single datafile."""
 
@@ -687,8 +680,6 @@ class NewDatasetDialog(QDialog):
             print('Path does not exist. Cannot open %s.' % filename)
             return
 
-        # Load the Data :
-
         QApplication.setOverrideCursor(Qt.WaitCursor)
         self.ConsoleSignal.emit(
             "<font color=black>Loading %s data...</font>" % self._datatype)
@@ -707,11 +698,23 @@ class NewDatasetDialog(QDialog):
         self.update_gui(filename)
         QApplication.restoreOverrideCursor()
 
+    def load_datasets(self, filenames):
+        """Start the process of loading datasets from a list of file names."""
+        self._len_filenames = len(filenames)
+        self._queued_filenames = filenames
+        self._import_progress = 1
+        current_filename = self._queued_filenames.pop(0)
+        self.btn_skip.setEnabled(len(self._queued_filenames) > 0)
+        self.load_dataset(current_filename)
+
     def update_gui(self, filename=None):
         """
         Display the values stored in the dataset. Disable the UI and show
         an error message if the dataset is not valid.
         """
+        self._progress_label.setText("File {} of {}".format(
+            self._import_progress, self._len_filenames))
+
         if filename is not None:
             self.directory.setText(filename)
         else:
@@ -742,6 +745,7 @@ class NewDatasetDialog(QDialog):
                 self._stn_name.setText(self._dataset.metadata['Station Name'])
                 self._sid.setText(self._dataset.metadata['Station ID'])
                 dsetname = self._dataset.metadata['Station Name']
+
             # We replace the invalid characters to avoid problems when
             # saving the dataset to the hdf5 format.
             for char in INVALID_CHARS:
@@ -753,6 +757,13 @@ class NewDatasetDialog(QDialog):
         self.btn_ok.setEnabled(self._dataset is not None)
         self.grp_info.setEnabled(self._dataset is not None)
         self._dset_name.setEnabled(self._dataset is not None)
+
+    def load_next_queued_dataset(self):
+        """Load the data from the next data file in the queue."""
+        self._import_progress += 1
+        current_filename = self._queued_filenames.pop(0)
+        self.btn_skip.setEnabled(len(self._queued_filenames) > 0)
+        self.load_dataset(current_filename)
 
     def accept_dataset(self):
         """Accept and emit the dataset."""
@@ -801,12 +812,15 @@ class NewDatasetDialog(QDialog):
             self._dataset.metadata['Latitude'] = self.latitude
             self._dataset.metadata['Longitude'] = self.longitude
             self._dataset.metadata['Elevation'] = self.altitude
-        self.hide()
         self.sig_new_dataset_imported.emit(self.name, self._dataset)
-        self.close()
+
+        if len(self._queued_filenames):
+            self.load_next_queued_dataset()
+        else:
+            self.hide()
+            self.close()
 
     # ---- Display Handlers
-
     def close(self):
         """Qt method override."""
         super(NewDatasetDialog, self).close()
