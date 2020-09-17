@@ -13,7 +13,6 @@ import os
 import os.path as osp
 
 # ---- Third party imports
-from appconfigs.base import get_home_dir
 import numpy as np
 from PyQt5.QtCore import Qt, QCoreApplication
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -22,15 +21,15 @@ from PyQt5.QtWidgets import (
     QLineEdit, QPushButton, QFileDialog, QApplication, QDialog, QGroupBox)
 
 # ---- Local library imports
-from gwhat.config.main import CONF
+from gwhat.config.ospath import (
+    get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.meteo.weather_viewer import WeatherViewer, ExportWeatherButton
 from gwhat.utils.icons import QToolButtonSmall
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import calc_dist_from_coord
 from gwhat.projet.reader_waterlvl import WLDataFrame
-from gwhat.projet.reader_projet import (INVALID_CHARS, is_dsetname_valid,
-                                        make_dsetname_valid)
+from gwhat.projet.reader_projet import INVALID_CHARS, is_dsetname_valid
 from gwhat.meteo.weather_reader import WXDataFrame
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.widgets.spinboxes import StrSpinBox
@@ -40,7 +39,6 @@ class DataManager(QWidget):
 
     wldsetChanged = QSignal(object)
     wxdsetChanged = QSignal(object)
-    sig_workdir_changed = QSignal(str)
     sig_new_console_msg = QSignal(str)
 
     def __init__(self, parent=None, projet=None, pm=None, pytesting=False):
@@ -197,8 +195,6 @@ class DataManager(QWidget):
         self.new_waterlvl_win.set_projet(projet)
         self.new_weather_win.set_projet(projet)
 
-        self.sig_workdir_changed.emit(self.workdir)
-
     # ---- Utilities
 
     def emit_warning(self, msg):
@@ -251,13 +247,10 @@ class DataManager(QWidget):
         dialog = QFileDialog(self)
         dialog.setWindowTitle('Select Water Level Data Files')
         dialog.setNameFilters(['(*.csv;*.xls;*.xlsx)'])
-        directory = CONF.get('main', 'select_file_dialog_dir', get_home_dir())
-        dialog.setDirectory(
-            directory if osp.exists(directory) else get_home_dir())
+        dialog.setDirectory(get_select_file_dialog_dir())
         dialog.setFileMode(QFileDialog.ExistingFiles)
         if dialog.exec_():
-            CONF.set('main', 'select_file_dialog_dir',
-                     dialog.directory().absolutePath())
+            set_select_file_dialog_dir(dialog.directory().absolutePath())
             filenames = dialog.selectedFiles()
             self.import_wldatasets(filenames)
 
@@ -370,13 +363,10 @@ class DataManager(QWidget):
         dialog = QFileDialog(self)
         dialog.setWindowTitle('Select Weather Data Files')
         dialog.setNameFilters(['(*.csv;*.xls;*.xlsx)'])
-        directory = CONF.get('main', 'select_file_dialog_dir', get_home_dir())
-        dialog.setDirectory(
-            directory if osp.exists(directory) else get_home_dir())
+        dialog.setDirectory(get_select_file_dialog_dir())
         dialog.setFileMode(QFileDialog.ExistingFiles)
         if dialog.exec_():
-            CONF.set('main', 'select_file_dialog_dir',
-                     dialog.directory().absolutePath())
+            set_select_file_dialog_dir(dialog.directory().absolutePath())
             filenames = dialog.selectedFiles()
             self.import_wxdatasets(filenames)
 
@@ -518,7 +508,6 @@ class NewDatasetDialog(QDialog):
                             Qt.WindowCloseButtonHint)
 
         self.set_projet(projet)
-        self.workdir = os.path.dirname(os.getcwd())
         self._dataset = None
         self._len_filenames = 0
         self._queued_filenames = []
@@ -656,7 +645,6 @@ class NewDatasetDialog(QDialog):
             self._projet = None
         else:
             self._projet = projet
-            self.workdir = os.path.dirname(projet.filename)
 
     @property
     def name(self):
@@ -696,20 +684,12 @@ class NewDatasetDialog(QDialog):
     # ---- Dataset Handlers
     def select_dataset(self):
         """Opens a dialog to select a single datafile."""
-
-        if self._datatype == 'water level':
-            exts = '(*.csv;*.xls;*.xlsx)'
-        elif self._datatype == 'daily weather':
-            exts = '(*.csv;*.out;*.xls;*.xlsx)'
         filename, _ = QFileDialog.getOpenFileName(
-            self, 'Select a %s data file' % self._datatype,
-            self.workdir, exts)
-
-        for i in range(5):
-            QCoreApplication.processEvents()
-
+            self, 'Select a {} data file'.format(self._datatype),
+            get_select_file_dialog_dir(),
+            '(*.csv;*.xls;*.xlsx)')
         if filename:
-            self.workdir = os.path.dirname(filename)
+            set_select_file_dialog_dir(osp.dirname(filename))
             self.load_dataset(filename)
 
     def load_dataset(self, filename):

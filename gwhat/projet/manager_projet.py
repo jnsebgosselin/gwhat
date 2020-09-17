@@ -24,6 +24,8 @@ from PyQt5.QtWidgets import (
     QMessageBox, QDialog, QLineEdit, QToolButton, QFileDialog)
 
 # ---- Local imports
+from gwhat.config.ospath import (
+    get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.config.main import CONF
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.utils import icons
@@ -83,14 +85,13 @@ class ProjetManager(QWidget):
         Show a dialog that allows users to select an existing GWHAT
         project file.
         """
-        directory = CONF.get('main', 'select_file_dialog_dir', get_home_dir())
         filename, _ = QFileDialog.getOpenFileName(
-            self.parent(), 'Open Project', directory,
+            self.parent(), 'Open Project', get_select_file_dialog_dir(),
             'Gwhat Project (*.gwt ; *.what)')
 
         if filename:
             filename = osp.abspath(filename)
-            CONF.set('main', 'select_file_dialog_dir', osp.dirname(filename))
+            set_select_file_dialog_dir(osp.dirname(filename))
             self.projectfile = filename
             self.load_project(filename)
 
@@ -245,12 +246,10 @@ class ProjetManager(QWidget):
     def show_newproject_dialog(self):
         """Show the dialog to create a new project."""
         self.new_projet_dialog.reset_UI()
-        self.new_projet_dialog.set_directory(
-            CONF.get('project', 'new_project_dialog_dir', get_home_dir()))
+        self.new_projet_dialog.set_directory(get_select_file_dialog_dir())
         self.new_projet_dialog.show()
         if self.new_projet_dialog.result():
-            CONF.set('project', 'new_project_dialog_dir',
-                     self.new_projet_dialog.directory())
+            set_select_file_dialog_dir(self.new_projet_dialog.directory())
 
     def close(self):
         """Close this project manager."""

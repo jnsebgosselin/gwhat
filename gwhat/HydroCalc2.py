@@ -68,7 +68,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.set_wldset)
         self.dmngr.wxdsetChanged.connect(self.set_wxdset)
-        self.dmngr.sig_workdir_changed.connect(self.set_dialog_dir)
 
         # Setup recharge calculation tool.
         self.rechg_eval_widget = RechgEvalWidget(parent=self)
