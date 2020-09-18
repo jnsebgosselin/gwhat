@@ -27,6 +27,8 @@ from gwhat.projet.manager_data import (DataManager, QFileDialog, QMessageBox,
 DATADIR = osp.join(osp.dirname(osp.realpath(__file__)), 'data')
 WXFILENAME = osp.join(DATADIR, 'sample_weather_datafile.csv')
 WLFILENAME = osp.join(DATADIR, 'sample_water_level_datafile.csv')
+WLFILENAME2 = osp.join(DATADIR, 'sample_water_level_datafile2.csv')
+WLFILENAME3 = osp.join(DATADIR, 'sample_water_level_datafile3.csv')
 
 
 # ---- Pytest Fixtures
@@ -124,19 +126,22 @@ def test_delete_weather_data(datamanager, mocker, qtbot):
 def test_import_waterlevel_data(datamanager, mocker, qtbot):
     """
     Test that importing water level data in gwhat projects is
-    working as expected."""
+    working as expected.
+    """
     datamanager.new_waterlvl_win.setModal(False)
     new_waterlvl_dialog = datamanager.new_waterlvl_win
 
-    # Mock the file dialog to return the path of the weather datafile.
+    # Mock the file dialog to return the path of the weather datafiles.
     mocker.patch.object(
         QFileDialog, 'exec_', return_value=True)
     mocker.patch.object(
-        QFileDialog, 'selectedFiles', return_value=[WLFILENAME])
+        QFileDialog, 'selectedFiles',
+        return_value=[WLFILENAME, WLFILENAME2, WLFILENAME3])
 
     with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_loaded):
         qtbot.mouseClick(datamanager.btn_load_wl, Qt.LeftButton)
 
+    assert new_waterlvl_dialog.directory.text() == WLFILENAME
     assert new_waterlvl_dialog.name == "PO01 - Calixa-Lavallée"
     assert new_waterlvl_dialog.station_name == "PO01 - Calixa-Lavallée"
     assert new_waterlvl_dialog.station_id == "3040002"
@@ -145,12 +150,69 @@ def test_import_waterlevel_data(datamanager, mocker, qtbot):
     assert new_waterlvl_dialog.longitude == -73.28024
     assert new_waterlvl_dialog.altitude == 19.51
 
+    assert new_waterlvl_dialog.isVisible()
+    assert new_waterlvl_dialog.btn_skip.isEnabled()
+    assert new_waterlvl_dialog._queued_filenames == [WLFILENAME2, WLFILENAME3]
+    assert new_waterlvl_dialog._import_progress == 1
+    assert new_waterlvl_dialog._len_filenames == 3
+
     # Import the water level dataset into the project.
     with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_imported):
         qtbot.mouseClick(new_waterlvl_dialog.btn_ok, Qt.LeftButton)
+
     assert datamanager.wldataset_count() == 1
     assert datamanager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
     assert datamanager.get_current_wldset().name == "PO01 - Calixa-Lavallée"
+
+    # Assert that the dataset from the second input data file was loaded
+    # as expected.
+    assert new_waterlvl_dialog.directory.text() == WLFILENAME2
+    assert new_waterlvl_dialog.name == "test_well_02"
+    assert new_waterlvl_dialog.station_name == "test_well_02"
+    assert new_waterlvl_dialog.station_id == "3040002"
+    assert new_waterlvl_dialog.province == "QC"
+    assert new_waterlvl_dialog.latitude == 42.02
+    assert new_waterlvl_dialog.longitude == -72.02
+    assert new_waterlvl_dialog.altitude == 22.02
+
+    assert new_waterlvl_dialog.isVisible()
+    assert new_waterlvl_dialog.btn_skip.isEnabled()
+    assert new_waterlvl_dialog._queued_filenames == [WLFILENAME3]
+    assert new_waterlvl_dialog._import_progress == 2
+
+    # Skip the import of this dataset.
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_loaded):
+        qtbot.mouseClick(new_waterlvl_dialog.btn_skip, Qt.LeftButton)
+
+    assert datamanager.wldataset_count() == 1
+    assert datamanager.wldsets_cbox.currentText() == "PO01 - Calixa-Lavallée"
+    assert datamanager.get_current_wldset().name == "PO01 - Calixa-Lavallée"
+
+    # Assert that the dataset from the second input data file was loaded
+    # as expected.
+    assert new_waterlvl_dialog.directory.text() == WLFILENAME3
+    assert new_waterlvl_dialog.name == "test_well_03"
+    assert new_waterlvl_dialog.station_name == "test_well_03"
+    assert new_waterlvl_dialog.station_id == "3040003"
+    assert new_waterlvl_dialog.province == "QC"
+    assert new_waterlvl_dialog.latitude == 43.03
+    assert new_waterlvl_dialog.longitude == -73.03
+    assert new_waterlvl_dialog.altitude == 33.03
+
+    assert new_waterlvl_dialog.isVisible()
+    assert not new_waterlvl_dialog.btn_skip.isEnabled()
+    assert new_waterlvl_dialog._queued_filenames == []
+    assert new_waterlvl_dialog._import_progress == 3
+
+    # Import the water level dataset into the project.
+    with qtbot.waitSignal(new_waterlvl_dialog.sig_new_dataset_imported):
+        qtbot.mouseClick(new_waterlvl_dialog.btn_ok, Qt.LeftButton)
+
+    assert datamanager.wldataset_count() == 2
+    assert datamanager.wldsets_cbox.currentText() == "test_well_03"
+    assert datamanager.get_current_wldset().name == "test_well_03"
+
+    assert not new_waterlvl_dialog.isVisible()
 
 
 def test_delete_waterlevel_data(datamanager, mocker, qtbot):
