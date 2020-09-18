@@ -28,6 +28,8 @@ from PyQt5.QtWidgets import (
     QTableWidgetItem, QLabel, QHBoxLayout, QHeaderView)
 
 # ---- Local library imports
+from gwhat.config.ospath import (
+    get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.colors2 import ColorsReader
 from gwhat.common import StyleDB
 from gwhat.utils import icons
@@ -215,14 +217,14 @@ class WeatherViewer(DialogWindow):
         staname = self.wxdset.metadata['Station Name']
 
         defaultname = 'WeatherAverages_%s (%d-%d)' % (staname, yrmin, yrmax)
-        ddir = os.path.join(self.save_fig_dir, defaultname)
+        ddir = os.path.join(get_select_file_dialog_dir(), defaultname)
 
         filename, ftype = QFileDialog.getSaveFileName(
             self, 'Save graph', ddir, '*.pdf;;*.svg')
         if filename:
             if not filename.endswith(ftype[1:]):
                 filename += ftype[1:]
-            self.save_fig_dir = os.path.dirname(filename)
+            set_select_file_dialog_dir(os.path.dirname(filename))
             self.fig_weather_normals.figure.savefig(filename)
 
     def save_normals(self):
@@ -234,7 +236,7 @@ class WeatherViewer(DialogWindow):
             self.wxdset.metadata['Station Name'],
             self.year_rng.lower_bound,
             self.year_rng.upper_bound)
-        ddir = osp.join(self.save_fig_dir, defaultname)
+        ddir = osp.join(get_select_file_dialog_dir(), defaultname)
 
         # Open a dialog to get a save file name.
         filename, ftype = QFileDialog.getSaveFileName(
@@ -242,7 +244,7 @@ class WeatherViewer(DialogWindow):
         if filename:
             if not filename.endswith(ftype[1:]):
                 filename += ftype[1:]
-            self.save_fig_dir = osp.dirname(filename)
+            set_select_file_dialog_dir(osp.dirname(filename))
 
             # Organise the content to save to file.
             hheader = ['', 'JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL',
@@ -913,7 +915,6 @@ if __name__ == '__main__':
     wxdset = project.get_wxdset('Marieville')
 
     w = WeatherViewer()
-    w.save_fig_dir = os.getcwd()
 
     w.set_lang('French')
     w.set_weather_dataset(wxdset)
