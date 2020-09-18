@@ -22,7 +22,9 @@ BRFOUT_FNAME = osp.join(
     __install_dir__, 'tests', 'data', 'sample_BRFOutput.txt')
 
 
+# =============================================================================
 # ---- Tests BRFManager
+# =============================================================================
 def test_read_brf_output():
     """Test reading output data textfile from the KGS_BRF software."""
     dataf = read_brf_output(BRFOUT_FNAME)
@@ -63,4 +65,4 @@ def test_read_brf_output():
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
+    pytest.main(['-x', __file__, '-v', '-rw'])

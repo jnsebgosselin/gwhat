@@ -7,8 +7,7 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: Standard Libraries
-
+# ---- Standard library imports
 import os
 import os.path as osp
 import requests
@@ -16,8 +15,7 @@ import zipfile
 import io
 
 
-# ---- Imports: Third Parties
-
+# ---- Third party imports
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtGui import QImage
@@ -142,23 +140,29 @@ class BRFManager(myqt.QFrameLayout):
         self.setContentsMargins(10, 10, 10, 10)
 
         # Detrend and Correct Options
-        self.baro_spinbox = myqt.QDoubleSpinBox(100, 0, show_buttons=True)
+        self.baro_spinbox = QSpinBox()
         self.baro_spinbox.setRange(0, 9999)
+        self.baro_spinbox.setValue(CONF.get('brf', 'nbr_of_baro_lags'))
         self.baro_spinbox.setKeyboardTracking(True)
 
-        self.earthtides_spinbox = myqt.QDoubleSpinBox(
-            100, 0, show_buttons=True)
+        self.earthtides_spinbox = QSpinBox()
         self.earthtides_spinbox.setRange(0, 9999)
+        self.earthtides_spinbox.setValue(
+            CONF.get('brf', 'nbr_of_earthtides_lags'))
         self.earthtides_spinbox.setKeyboardTracking(True)
+        self.earthtides_spinbox.setEnabled(
+            CONF.get('brf', 'compute_with_earthtides'))
 
         self.earthtides_cbox = QCheckBox('Nbr of ET lags :')
-        self.earthtides_cbox.setChecked(True)
-        self.earthtides_cbox.stateChanged.connect(
+        self.earthtides_cbox.setChecked(
+            CONF.get('brf', 'compute_with_earthtides'))
+        self.earthtides_cbox.toggled.connect(
             lambda: self.earthtides_spinbox.setEnabled(
                 self.earthtides_cbox.isChecked()))
 
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
-        self.detrend_waterlevels_cbox.setChecked(True)
+        self.detrend_waterlevels_cbox.setChecked(
+            CONF.get('brf', 'detrend_waterlevels'))
 
         # Setup options layout.
         options_layout = QGridLayout()
@@ -233,6 +237,14 @@ class BRFManager(myqt.QFrameLayout):
         """"Clos this brf manager"""
         CONF.set('brf', 'graphs_labels_language',
                  self.viewer.btn_language.language)
+        CONF.set('brf', 'compute_with_earthtides',
+                 self.earthtides_cbox.isChecked())
+        CONF.set('brf', 'nbr_of_earthtides_lags',
+                 self.earthtides_spinbox.value())
+        CONF.set('brf', 'nbr_of_baro_lags',
+                 self.baro_spinbox.value())
+        CONF.set('brf', 'detrend_waterlevels',
+                 self.detrend_waterlevels_cbox.isChecked())
         super().close()
 
     @property
@@ -322,9 +334,9 @@ class BRFManager(myqt.QFrameLayout):
         """
         self.kgs_brf_installer = KGSBRFInstaller()
         self.kgs_brf_installer.sig_kgs_brf_installed.connect(
-                self.__uninstall_kgs_brf_installer)
-        self.addWidget(self.kgs_brf_installer, 0, 0,
-                       self.rowCount(), self.columnCount())
+            self.__uninstall_kgs_brf_installer)
+        self.addWidget(
+            self.kgs_brf_installer, 0, 0, self.rowCount(), self.columnCount())
 
     def __uninstall_kgs_brf_installer(self):
         """
@@ -442,7 +454,7 @@ class BRFViewer(QWidget):
         self.current_brf.setAlignment(Qt.AlignCenter)
         self.current_brf.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.current_brf.setCorrectionMode(
-                QAbstractSpinBox.CorrectToNearestValue)
+            QAbstractSpinBox.CorrectToNearestValue)
         self.current_brf.valueChanged.connect(self.navigate_brf)
         self.current_brf.setValue(0)
 
@@ -625,7 +637,7 @@ class BRFViewer(QWidget):
 
         dialog = QFileDialog()
         fname, ftype = dialog.getSaveFileName(
-                self, "Save Figure", ddir, '*.pdf;;*.svg')
+            self, "Save Figure", ddir, '*.pdf;;*.svg')
         ftype = ftype.replace('*', '')
         if fname:
             if not osp.samefile(osp.dirname(ddir), osp.dirname(fname)):
@@ -656,7 +668,7 @@ class BRFViewer(QWidget):
 
         dialog = QFileDialog()
         fname, ftype = dialog.getSaveFileName(
-                self, "Export Data", ddir, "*.xlsx;;*.xls;;*.csv")
+            self, "Export Data", ddir, "*.xlsx;;*.xls;;*.csv")
         ftype = ftype.replace('*', '')
         if fname:
             if not osp.samefile(osp.dirname(ddir), osp.dirname(fname)):
@@ -755,7 +767,7 @@ class BRFOptionsPanel(QWidget):
         self._markersize['widget'].setValue(5)
         self._markersize['widget'].setRange(0, 25)
         self._markersize['widget'].valueChanged.connect(
-                self._graphconf_changed)
+            self._graphconf_changed)
 
         # ---- Y-Axis Options Widgets
 
@@ -792,7 +804,7 @@ class BRFOptionsPanel(QWidget):
         self._xlim['units'].addItems(['Hours', 'Days'])
         self._xlim['units'].setCurrentIndex(1)
         self._xlim['units'].currentIndexChanged.connect(
-                self.time_units_changed)
+            self.time_units_changed)
         self._xlim['min'] = QSpinBox()
         self._xlim['min'].setValue(0)
         self._xlim['min'].setSingleStep(1)

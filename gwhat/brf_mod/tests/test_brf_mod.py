@@ -6,23 +6,26 @@
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
 
-# Standard library imports
+# ---- Standard library imports
 import os
 import os.path as osp
+os.environ['GWHAT_PYTEST'] = 'True'
 
-# Third party imports
+# ---- Third party imports
 import pytest
 from PyQt5.QtCore import Qt
 
-# Local imports
-from gwhat.brf_mod.kgs_gui import (BRFManager, KGSBRFInstaller, QMessageBox,
-                                   QFileDialog)
+# ---- Local imports
+from gwhat.brf_mod.kgs_gui import (
+    BRFManager, KGSBRFInstaller, QMessageBox, QFileDialog)
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.reader_waterlvl import WLDataFrame
+from gwhat.config.main import CONF
 
 
+# =============================================================================
 # ---- Pytest Fixtures
-
+# =============================================================================
 @pytest.fixture(scope="module")
 def project(tmp_path_factory):
     # Create a project and add add the wldset to it.
@@ -46,13 +49,19 @@ def wldataset(project):
 
 @pytest.fixture
 def brfmanager(qtbot):
+    # We need to reset the configs to defaults after each test to make sure
+    # they can be run independently one from another.
+    CONF.reset_to_defaults()
+
     brfmanager = BRFManager(None)
     qtbot.addWidget(brfmanager)
     qtbot.addWidget(brfmanager.viewer)
     return brfmanager
 
 
+# =============================================================================
 # ---- Tests BRFManager
+# =============================================================================
 @pytest.mark.skipif(os.environ.get('CI', None) is None,
                     reason="We do not want to run this locally")
 def test_install_kgs_brf(brfmanager, mocker, qtbot):
@@ -125,8 +134,9 @@ def test_calcul_brf(brfmanager, wldataset, qtbot):
     assert brfmanager.viewer.tbar.isEnabled()
 
 
+# =============================================================================
 # ---- Tests BRFViewer
-
+# =============================================================================
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
 def test_save_brf_figure(brfmanager, wldataset, mocker, qtbot,
@@ -177,7 +187,7 @@ def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
     assert(graph_opt_panel.xmin is None)
     assert(graph_opt_panel.xmax is None)
     assert(graph_opt_panel.xscale is None)
-    assert(graph_opt_panel.time_units is 'auto')
+    assert(graph_opt_panel.time_units == 'auto')
 
     graph_opt_panel._xlim['auto'].setChecked(False)
     assert(graph_opt_panel.xmin == 0)
@@ -248,5 +258,4 @@ def test_del_all_brf_result(brfmanager, wldataset, mocker, qtbot):
 
 
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
-    # pytest.main()
+    pytest.main(['-x', __file__, '-v', '-rw'])
