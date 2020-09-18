@@ -26,8 +26,9 @@ from PyQt5.QtWidgets import (QSpinBox, QDoubleSpinBox, QWidget, QDateEdit,
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
 
-# ---- Imports: local
-
+# ---- Local imports
+from gwhat.config.ospath import (
+    get_select_file_dialog_dir, set_select_file_dialog_dir)
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
 from gwhat.colors2 import ColorsReader, ColorsSetupWin
@@ -61,12 +62,6 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.color_palette_win = ColorsSetupWin(self)
         self.color_palette_win.newColorSetupSent.connect(self.update_colors)
-
-        # Memory path variable:
-
-        self.save_fig_dir = self.workdir
-
-        # Generate UI:
 
         self.__initUI__()
 
@@ -678,14 +673,15 @@ class HydroprintGUI(myqt.DialogWindow):
 
         ffmat = "*.pdf;;*.svg;;*.png"
         fname = find_unique_filename(osp.join(
-            self.save_fig_dir, 'hydrograph_%s.pdf' % self.wldset['Well']))
+            get_select_file_dialog_dir(),
+            'hydrograph_{}.pdf'.format(self.wldset['Well'])))
 
         fname, ftype = QFileDialog.getSaveFileName(
             self, "Save Figure", fname, ffmat)
         if fname:
             ftype = ftype.replace('*', '')
             fname = fname if fname.endswith(ftype) else fname + ftype
-            self.save_fig_dir = os.path.dirname(fname)
+            set_select_file_dialog_dir(os.path.dirname(fname))
 
             try:
                 self.save_figure(fname)
