@@ -140,12 +140,11 @@ class BRFManager(myqt.QFrameLayout):
         self.setContentsMargins(10, 10, 10, 10)
 
         # Detrend and Correct Options
-        self.baro_spinbox = myqt.QDoubleSpinBox(100, 0, show_buttons=True)
+        self.baro_spinbox = QSpinBox()
         self.baro_spinbox.setRange(0, 9999)
         self.baro_spinbox.setKeyboardTracking(True)
 
-        self.earthtides_spinbox = myqt.QDoubleSpinBox(
-            100, 0, show_buttons=True)
+        self.earthtides_spinbox = QSpinBox()
         self.earthtides_spinbox.setRange(0, 9999)
         self.earthtides_spinbox.setKeyboardTracking(True)
 
