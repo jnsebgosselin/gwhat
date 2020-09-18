@@ -7,13 +7,15 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-
 import os
 import os.path as osp
 
 # ---- Third party imports
-
 from PyQt5.QtWidgets import QApplication, QFileDialog, QMessageBox
+
+# ---- Local imports
+from gwhat.config.ospath import (
+    get_select_file_dialog_dir, set_select_file_dialog_dir)
 
 
 class SaveFileMixin(object):
@@ -22,11 +24,11 @@ class SaveFileMixin(object):
 
     @property
     def dialog_dir(self):
-        return self.__ddir
+        return get_select_file_dialog_dir()
 
     def set_dialog_dir(self, dirname):
         """Set the default dialog directory to dirname."""
-        self.__ddir = os.getcwd() if dirname is None else dirname
+        set_select_file_dialog_dir(dirname)
 
     def select_savefilename(self, title, fname, ffmat):
         """Open a dialog where the user can select a file name."""

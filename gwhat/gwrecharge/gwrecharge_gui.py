@@ -337,8 +337,8 @@ class ExportGLUEButton(ExportDataButton):
     MODEL_TYPE = GLUEDataFrameBase
     TOOLTIP = "Export GLUE data."
 
-    def __init__(self, model=None, workdir=None, parent=None):
-        super(ExportGLUEButton, self).__init__(model, workdir, parent)
+    def __init__(self, model=None, parent=None):
+        super(ExportGLUEButton, self).__init__(model, parent)
         self.setIconSize(get_iconsize('small'))
 
     def setup_menu(self):
