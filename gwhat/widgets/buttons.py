@@ -360,20 +360,14 @@ class ExportDataButton(DropdownToolButton, SaveFileMixin):
     """
     MODELCLS = object
 
-    def __init__(self, model=None, workdir=None, parent=None):
+    def __init__(self, model=None, parent=None):
         DropdownToolButton.__init__(self, 'export_data', parent)
         SaveFileMixin.__init__(self)
-
-        self.set_dialog_dir(workdir)
         self.set_model(model)
 
     @property
     def model(self):
         return self.__model
-
-    def set_workdir(self, workdir):
-        """Set the working directory of the button."""
-        self.set_dialog_dir(workdir)
 
     def set_model(self, model):
         """Set the data model of the button."""

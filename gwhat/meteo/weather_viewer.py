@@ -862,8 +862,8 @@ class ExportWeatherButton(ExportDataButton):
     MODEL_TYPE = WXDataFrameBase
     TOOLTIP = "Export weather data."
 
-    def __init__(self, model=None, workdir=None, parent=None):
-        super(ExportWeatherButton, self).__init__(model, workdir, parent)
+    def __init__(self, model=None, parent=None):
+        super(ExportWeatherButton, self).__init__(model, parent)
 
     def setup_menu(self):
         """Setup the menu of the button tailored to the model."""
