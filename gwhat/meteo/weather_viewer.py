@@ -48,7 +48,7 @@ class WeatherViewer(DialogWindow):
     various stats about the dataset, etc...
     """
 
-    def __init__(self, parent=None, workdir=None):
+    def __init__(self, parent=None):
         super(WeatherViewer, self).__init__(parent, False, False)
 
         self.wxdset = None
@@ -56,7 +56,6 @@ class WeatherViewer(DialogWindow):
         self.meteo_dir = os.getcwd()
 
         self.__initUI__()
-        self.set_workdir(workdir)
 
     def __initUI__(self):
         self.setWindowTitle('Weather Averages')
@@ -164,11 +163,6 @@ class WeatherViewer(DialogWindow):
         """Sets the language of all the labels in the figure."""
         self.fig_weather_normals.set_lang(lang)
         self.fig_weather_normals.draw()
-
-    def set_workdir(self, workdir):
-        """Set the working directory of the widget."""
-        self.save_fig_dir = os.getcwd() if workdir is None else workdir
-        self.btn_export.set_workdir(self.save_fig_dir)
 
     def set_weather_dataset(self, wxdset):
         """
