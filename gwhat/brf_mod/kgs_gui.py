@@ -319,9 +319,9 @@ class BRFManager(myqt.QFrameLayout):
         """
         self.kgs_brf_installer = KGSBRFInstaller()
         self.kgs_brf_installer.sig_kgs_brf_installed.connect(
-                self.__uninstall_kgs_brf_installer)
-        self.addWidget(self.kgs_brf_installer, 0, 0,
-                       self.rowCount(), self.columnCount())
+            self.__uninstall_kgs_brf_installer)
+        self.addWidget(
+            self.kgs_brf_installer, 0, 0, self.rowCount(), self.columnCount())
 
     def __uninstall_kgs_brf_installer(self):
         """
@@ -439,7 +439,7 @@ class BRFViewer(QWidget):
         self.current_brf.setAlignment(Qt.AlignCenter)
         self.current_brf.setButtonSymbols(QAbstractSpinBox.NoButtons)
         self.current_brf.setCorrectionMode(
-                QAbstractSpinBox.CorrectToNearestValue)
+            QAbstractSpinBox.CorrectToNearestValue)
         self.current_brf.valueChanged.connect(self.navigate_brf)
         self.current_brf.setValue(0)
 
@@ -622,7 +622,7 @@ class BRFViewer(QWidget):
 
         dialog = QFileDialog()
         fname, ftype = dialog.getSaveFileName(
-                self, "Save Figure", ddir, '*.pdf;;*.svg')
+            self, "Save Figure", ddir, '*.pdf;;*.svg')
         ftype = ftype.replace('*', '')
         if fname:
             if not osp.samefile(osp.dirname(ddir), osp.dirname(fname)):
@@ -653,7 +653,7 @@ class BRFViewer(QWidget):
 
         dialog = QFileDialog()
         fname, ftype = dialog.getSaveFileName(
-                self, "Export Data", ddir, "*.xlsx;;*.xls;;*.csv")
+            self, "Export Data", ddir, "*.xlsx;;*.xls;;*.csv")
         ftype = ftype.replace('*', '')
         if fname:
             if not osp.samefile(osp.dirname(ddir), osp.dirname(fname)):
@@ -752,7 +752,7 @@ class BRFOptionsPanel(QWidget):
         self._markersize['widget'].setValue(5)
         self._markersize['widget'].setRange(0, 25)
         self._markersize['widget'].valueChanged.connect(
-                self._graphconf_changed)
+            self._graphconf_changed)
 
         # ---- Y-Axis Options Widgets
 
@@ -789,7 +789,7 @@ class BRFOptionsPanel(QWidget):
         self._xlim['units'].addItems(['Hours', 'Days'])
         self._xlim['units'].setCurrentIndex(1)
         self._xlim['units'].currentIndexChanged.connect(
-                self.time_units_changed)
+            self.time_units_changed)
         self._xlim['min'] = QSpinBox()
         self._xlim['min'].setValue(0)
         self._xlim['min'].setSingleStep(1)
