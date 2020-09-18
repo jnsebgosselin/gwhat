@@ -16,8 +16,8 @@ import pytest
 from PyQt5.QtCore import Qt
 
 # ---- Local imports
-from gwhat.brf_mod.kgs_gui import (BRFManager, KGSBRFInstaller, QMessageBox,
-                                   QFileDialog)
+from gwhat.brf_mod.kgs_gui import (
+    BRFManager, KGSBRFInstaller, QMessageBox, QFileDialog)
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.reader_waterlvl import WLDataFrame
 from gwhat.config.main import CONF
