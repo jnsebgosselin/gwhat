@@ -7,8 +7,7 @@
 # Licensed under the terms of the GNU General Public License.
 
 
-# ---- Imports: Standard Libraries
-
+# ---- Standard library imports
 import os
 import os.path as osp
 import requests
@@ -16,8 +15,7 @@ import zipfile
 import io
 
 
-# ---- Imports: Third Parties
-
+# ---- Third party imports
 from PyQt5.QtCore import Qt, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtGui import QImage
