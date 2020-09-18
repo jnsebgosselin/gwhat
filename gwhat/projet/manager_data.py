@@ -141,7 +141,7 @@ class DataManager(QWidget):
             "Show the normals for the current weather dataset.")
         btn_weather_normals.clicked.connect(self.show_weather_normals)
 
-        self.btn_export_weather = ExportWeatherButton(workdir=self.workdir)
+        self.btn_export_weather = ExportWeatherButton()
         self.btn_export_weather.setIconSize(icons.get_iconsize('small'))
 
         wx_toolbar = ToolBarWidget()
@@ -167,14 +167,6 @@ class DataManager(QWidget):
         return grpbox
 
     @property
-    def workdir(self):
-        """Return the path where the project hdf5 file is saved."""
-        if self.projet is None:
-            return osp.dirname(os.getcwd())
-        else:
-            return osp.dirname(self.projet.filename)
-
-    @property
     def projet(self):
         """Return the projet object."""
         return self._projet
@@ -190,7 +182,6 @@ class DataManager(QWidget):
             self.wldset_changed()
 
         self.btn_export_weather.set_model(self.get_current_wxdset())
-        self.btn_export_weather.set_workdir(self.workdir)
 
         self.new_waterlvl_win.set_projet(projet)
         self.new_weather_win.set_projet(projet)
@@ -476,8 +467,6 @@ class DataManager(QWidget):
             return
         if self.weather_avg_graph is None:
             self.weather_avg_graph = WeatherViewer()
-
-        self.weather_avg_graph.set_workdir(self.workdir)
         self.weather_avg_graph.set_weather_dataset(self.get_current_wxdset())
         self.weather_avg_graph.show()
 
