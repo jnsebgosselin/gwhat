@@ -32,7 +32,12 @@ DEFAULTS = [
          }
      ),
     ('brf',
-        {'graphs_labels_language': 'english'}
+        {'graphs_labels_language': 'english',
+         'compute_with_earthtides': True,
+         'nbr_of_earthtides_lags': 100,
+         'nbr_of_baro_lags': 100,
+         'detrend_waterlevels': True,
+         }
      ),
 ]
 
