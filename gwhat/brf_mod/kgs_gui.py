@@ -142,20 +142,27 @@ class BRFManager(myqt.QFrameLayout):
         # Detrend and Correct Options
         self.baro_spinbox = QSpinBox()
         self.baro_spinbox.setRange(0, 9999)
+        self.baro_spinbox.setValue(CONF.get('brf', 'nbr_of_baro_lags'))
         self.baro_spinbox.setKeyboardTracking(True)
 
         self.earthtides_spinbox = QSpinBox()
         self.earthtides_spinbox.setRange(0, 9999)
+        self.earthtides_spinbox.setValue(
+            CONF.get('brf', 'nbr_of_earthtides_lags'))
         self.earthtides_spinbox.setKeyboardTracking(True)
+        self.earthtides_spinbox.setEnabled(
+            CONF.get('brf', 'compute_with_earthtides'))
 
         self.earthtides_cbox = QCheckBox('Nbr of ET lags :')
-        self.earthtides_cbox.setChecked(True)
-        self.earthtides_cbox.stateChanged.connect(
+        self.earthtides_cbox.setChecked(
+            CONF.get('brf', 'compute_with_earthtides'))
+        self.earthtides_cbox.toggled.connect(
             lambda: self.earthtides_spinbox.setEnabled(
                 self.earthtides_cbox.isChecked()))
 
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
-        self.detrend_waterlevels_cbox.setChecked(True)
+        self.detrend_waterlevels_cbox.setChecked(
+            CONF.get('brf', 'detrend_waterlevels'))
 
         # Setup options layout.
         options_layout = QGridLayout()
@@ -230,6 +237,14 @@ class BRFManager(myqt.QFrameLayout):
         """"Clos this brf manager"""
         CONF.set('brf', 'graphs_labels_language',
                  self.viewer.btn_language.language)
+        CONF.set('brf', 'compute_with_earthtides',
+                 self.earthtides_cbox.isChecked())
+        CONF.set('brf', 'nbr_of_earthtides_lags',
+                 self.earthtides_spinbox.value())
+        CONF.set('brf', 'nbr_of_baro_lags',
+                 self.baro_spinbox.value())
+        CONF.set('brf', 'detrend_waterlevels',
+                 self.detrend_waterlevels_cbox.isChecked())
         super().close()
 
     @property
