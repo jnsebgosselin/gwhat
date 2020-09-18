@@ -52,7 +52,6 @@ class HydroprintGUI(myqt.DialogWindow):
         self.__updateUI = True
 
         # Child widgets:
-
         self.dmngr = datamanager
         self.dmngr.wldsetChanged.connect(self.wldset_changed)
         self.dmngr.wxdsetChanged.connect(self.wxdset_changed)
@@ -430,14 +429,14 @@ class HydroprintGUI(myqt.DialogWindow):
             self.hydrograph.gluedf = self.wldset.get_glue_at(-1)
 
         # Load the manual measurements.
-
         fname = os.path.join(
-            self.workdir, "Water Levels", 'waterlvl_manual_measurements')
+            osp.dirname(self.dmngr.projet.filename),
+            "Water Levels",
+            'waterlvl_manual_measurements')
         tmeas, wlmeas = load_waterlvl_measures(fname, self.wldset['Well'])
         self.wldset.set_wlmeas(tmeas, wlmeas)
 
         # Setup the layout of the hydrograph.
-
         layout = self.wldset.get_layout()
         if layout is not None:
             msg = ("Loading existing graph layout for well %s." %
