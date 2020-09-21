@@ -18,10 +18,20 @@ Instructions for installing GWHAT are available [here](https://gwhat.readthedocs
 
 # About GWHAT
 
-GWHAT (Ground-Water Hydrograph Analysis Toolbox) is a free and open source interactive computer program whose main focus is the interpretation of observation well hydrographs in order to evaluate groundwater recharge with a method combining a daily soil moisture balance and an aquifer
-water budget applicable to unconfined aquifers. The method is described in detail in the PhD thesis of Jean-Sébastien Gosselin which is available [here](http://espace.inrs.ca/id/eprint/5122/).
+GWHAT (Ground-Water Hydrograph Analysis Toolbox) is a free and open source
+interactive computer program whose main focus is the interpretation of
+observation well hydrographs in order to evaluate groundwater recharge with
+a method combining a daily soil moisture balance and an aquifer
+water budget applicable to unconfined aquifers. The method is described in
+detail in the PhD thesis of Jean-Sébastien Gosselin which
+is available [here](http://espace.inrs.ca/id/eprint/5122/).
 
-GWHAT is written in the Python 3 programming language and is currently maintained and developed by Jean-Sébastien Gosselin at [INRS-ETE](http://ete.inrs.ca/). If you encounter any problems or errors during program execution, have any questions, or have specific suggestions on how to improve GWHAT, please open an issue in our  [issues tracker](https://github.com/jnsebgosselin/gwhat/issues).
+GWHAT is written in the Python 3 programming language and is currently
+maintained and developed by Jean-Sébastien Gosselin
+at [INRS-ETE](http://ete.inrs.ca/). If you encounter any problems or errors
+during program execution, have any questions, or have specific suggestions
+on how to improve GWHAT, please open an issue
+in our  [issues tracker](https://github.com/jnsebgosselin/gwhat/issues).
 
 
 Last edited: 18/19/2020
