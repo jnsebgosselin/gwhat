@@ -26,12 +26,12 @@ water budget applicable to unconfined aquifers. The method is described in
 detail in the PhD thesis of Jean-Sébastien Gosselin that
 is available [here](http://espace.inrs.ca/id/eprint/5122/).
 
-In addition, GWHAT includes a tool to quickly calculate the barometric
+In addition, GWHAT includes a tool to easily and quickly calculate the barometric
 response function (BRF) of wells, provided that barometric and earth tide data
-are available along with water levels.This tool simply consists of a
-user-friendly front end to the 
+are available along with water levels.
+The tool consists of a user-friendly front end to the 
 [KGS Barometric Response Function Software (KGS_BRF)](http://www.kgs.ku.edu/HighPlains/OHP/index_program/brf.html).
-that consist of an implementation of the method described by
+that implements the method described by
 [Butler et al., 2010](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.2010.00768.x)).
 The calculated BRF can be used to reliably determine the type of aquifer
 (unconfined, semi-confined, or confined) in which the wells are installed
