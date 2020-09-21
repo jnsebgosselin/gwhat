@@ -693,28 +693,24 @@ class BRFViewer(QWidget):
         if self.wldset is None or self.wldset.brf_count() == 0:
             self.brf_canvas.figure.empty_BRF()
         else:
-            name = self.wldset.get_brfname_at(self.current_brf.value()-1)
-            databrf = self.wldset.get_brf(name)
-            well = self.wldset['Well']
-
-            msize = self.graph_opt_panel.markersize
-            draw_line = self.graph_opt_panel.draw_line
-
-            ymin = self.graph_opt_panel.ymin
-            ymax = self.graph_opt_panel.ymax
-            yscale = self.graph_opt_panel.yscale
-
-            xmin = self.graph_opt_panel.xmin
-            xmax = self.graph_opt_panel.xmax
-            xscale = self.graph_opt_panel.xscale
-            time_units = self.graph_opt_panel.time_units
-
-            date0 = databrf.date_start.strftime(format='%d/%m/%y %H:%M')
-            date1 = databrf.date_end.strftime(format='%d/%m/%y %H:%M')
+            databrf = self.wldset.get_brf(
+                self.wldset.get_brfname_at(self.current_brf.value() - 1))
+            errors = (databrf['sdA'].values if
+                      self.graph_opt_panel.show_ebar else [])
             self.brf_canvas.figure.plot_BRF(
-                databrf['Lag'].values, databrf['SumA'].values,
-                databrf['sdA'].values, date0, date1, well, msize, draw_line,
-                [ymin, ymax], [xmin, xmax], time_units, xscale, yscale)
+                databrf['Lag'].values,
+                databrf['SumA'].values,
+                errors,
+                databrf.date_start.strftime(format='%d/%m/%y %H:%M'),
+                databrf.date_end.strftime(format='%d/%m/%y %H:%M'),
+                self.wldset['Well'],
+                self.graph_opt_panel.markersize,
+                self.graph_opt_panel.draw_line,
+                [self.graph_opt_panel.ymin, self.graph_opt_panel.ymax],
+                [self.graph_opt_panel.xmin, self.graph_opt_panel.xmax],
+                self.graph_opt_panel.time_units,
+                self.graph_opt_panel.xscale,
+                self.graph_opt_panel.yscale)
         self.brf_canvas.draw()
 
     def show(self):
