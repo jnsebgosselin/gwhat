@@ -20,11 +20,25 @@ Instructions for installing GWHAT are available [here](https://gwhat.readthedocs
 
 GWHAT (Ground-Water Hydrograph Analysis Toolbox) is a free and open source
 interactive computer program whose main focus is the interpretation of
-observation well hydrographs in order to evaluate groundwater recharge with
+observation well hydrographs to evaluate groundwater recharge with
 a method combining a daily soil moisture balance and an aquifer
 water budget applicable to unconfined aquifers. The method is described in
-detail in the PhD thesis of Jean-Sébastien Gosselin which
+detail in the PhD thesis of Jean-Sébastien Gosselin that
 is available [here](http://espace.inrs.ca/id/eprint/5122/).
+
+In addition, GWHAT includes a tool to quickly calculate the barometric
+response function (BRF) of wells, provided that barometric and earth tide data
+are available along with water levels.This tool simply consists of a
+user-friendly front end to the 
+[KGS Barometric Response Function Software (KGS_BRF)](http://www.kgs.ku.edu/HighPlains/OHP/index_program/brf.html).
+that consist of an implementation of the method described by
+[Butler et al., 2010](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.2010.00768.x)).
+The calculated BRF can be used to reliably determine the type of aquifer
+(unconfined, semi-confined, or confined) in which the wells are installed
+([Rasmussen and Crawford, 1997](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.1997.tb00111.x),
+[Spane, 2002](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2001wr000701))
+and to reliably identify the wells that can be used to assess groundwater
+recharge with the method available in GWHAT.
 
 GWHAT is written in the Python 3 programming language and is currently
 maintained and developed by Jean-Sébastien Gosselin
@@ -32,6 +46,5 @@ at [INRS-ETE](http://ete.inrs.ca/). If you encounter any problems or errors
 during program execution, have any questions, or have specific suggestions
 on how to improve GWHAT, please open an issue
 in our  [issues tracker](https://github.com/jnsebgosselin/gwhat/issues).
-
 
 Last edited: 18/19/2020
