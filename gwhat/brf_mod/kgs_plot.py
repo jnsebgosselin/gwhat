@@ -39,8 +39,7 @@ class BRFFigure(Figure):
         self.__figlang = lang
         self.__figlabels = FigureLabels(lang)
 
-        # ---- Figure Creation
-
+        # Setup the matplotlib figure.
         fig_width = 8
         fig_height = 5
 
@@ -52,23 +51,20 @@ class BRFFigure(Figure):
         bottom_margin = 0.75
         top_margin = 0.25
 
-        # ---- Axe Setup
-
+        # Setup the axes.
         ax = self.add_axes([left_margin/fig_width, bottom_margin/fig_height,
                             1 - (left_margin + right_margin)/fig_width,
                             1 - (bottom_margin + top_margin)/fig_height],
                            zorder=1)
         ax.set_visible(False)
 
-        # ---- Ticks Setup
-
+        # Setup the ticks.
         ax.xaxis.set_ticks_position('bottom')
         ax.yaxis.set_ticks_position('left')
         ax.tick_params(axis='both', which='major', direction='out',
                        gridOn=True)
 
-        # ---- Artists Init
-
+        # Initialize the matplotlib artists.
         self.line, = ax.plot([], [], ls='-', color='blue', linewidth=1.5,
                              zorder=20, clip_on=True)
 
