@@ -26,19 +26,19 @@ water budget applicable to unconfined aquifers. The method is described in
 detail in the PhD thesis of Jean-Sébastien Gosselin that
 is available [here](http://espace.inrs.ca/id/eprint/5122/).
 
-In addition, GWHAT includes a tool to easily and quickly calculate the barometric
-response function (BRF) of wells, provided that barometric and earth tide data
-are available along with water levels.
+In addition, GWHAT includes a tool to easily and quickly calculate the
+barometric response function (BRF) of wells, provided that barometric and
+earth tide data is available along with the water level data.
 The tool consists of a user-friendly front end to the 
 [KGS Barometric Response Function Software (KGS_BRF)](http://www.kgs.ku.edu/HighPlains/OHP/index_program/brf.html).
 that implements the method described by
-[Butler et al., 2010](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.2010.00768.x)).
-The calculated BRF can be used to reliably determine the type of aquifer
+[Butler et al., 2010](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.2010.00768.x).
+The calculated BRF can be used to determine the type of aquifer
 (unconfined, semi-confined, or confined) in which the wells are installed
 ([Rasmussen and Crawford, 1997](https://ngwa.onlinelibrary.wiley.com/doi/10.1111/j.1745-6584.1997.tb00111.x),
 [Spane, 2002](https://agupubs.onlinelibrary.wiley.com/doi/full/10.1029/2001wr000701))
-and to reliably identify the wells that can be used to assess groundwater
-recharge with the method available in GWHAT.
+and thus provide a reliable means to identify wells that can be used
+to assess groundwater recharge in unconfined conditions.
 
 GWHAT is written in the Python 3 programming language and is currently
 maintained and developed by Jean-Sébastien Gosselin
