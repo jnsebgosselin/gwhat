@@ -754,11 +754,11 @@ class BRFOptionsPanel(QWidget):
         # ---- Line and Markers Style Widgets
 
         self._errorbar = QCheckBox('Show error bars')
-        self._errorbar.setCheckState(Qt.Checked)
+        self._errorbar.setChecked(True)
         self._errorbar.stateChanged.connect(self._graphconf_changed)
 
         self._drawline = QCheckBox('Draw line')
-        self._drawline.setCheckState(Qt.Unchecked)
+        self._drawline.setChecked(False)
         self._drawline.stateChanged.connect(self._graphconf_changed)
 
         self._markersize = {}
@@ -898,17 +898,16 @@ class BRFOptionsPanel(QWidget):
         self.sig_graphconf_changed.emit()
 
     # ---- Graph Panel Properties
-
     @property
     def time_units(self):
-        if self._xlim['auto'].checkState() == Qt.Checked:
+        if self._xlim['auto'].isChecked():
             return 'auto'
         else:
             return self._xlim['units'].currentText().lower()
 
     @property
     def xmin(self):
-        if self._xlim['auto'].checkState() == Qt.Checked:
+        if self._xlim['auto'].isChecked():
             return None
         else:
             if self.time_units == 'hours':
@@ -918,7 +917,7 @@ class BRFOptionsPanel(QWidget):
 
     @property
     def xmax(self):
-        if self._xlim['auto'].checkState() == Qt.Checked:
+        if self._xlim['auto'].isChecked():
             return None
         else:
             if self.time_units == 'hours':
@@ -928,7 +927,7 @@ class BRFOptionsPanel(QWidget):
 
     @property
     def xscale(self):
-        if self._xlim['auto'].checkState() == Qt.Checked:
+        if self._xlim['auto'].isChecked():
             return None
         else:
             if self.time_units == 'hours':
@@ -938,32 +937,32 @@ class BRFOptionsPanel(QWidget):
 
     @property
     def ymin(self):
-        if self._ylim['auto'].checkState() == Qt.Checked:
+        if self._ylim['auto'].isChecked():
             return None
         else:
             return self._ylim['min'].value()
 
     @property
     def ymax(self):
-        if self._ylim['auto'].checkState() == Qt.Checked:
+        if self._ylim['auto'].isChecked():
             return None
         else:
             return self._ylim['max'].value()
 
     @property
     def yscale(self):
-        if self._ylim['auto'].checkState() == Qt.Checked:
+        if self._ylim['auto'].isChecked():
             return None
         else:
             return self._ylim['scale'].value()
 
     @property
     def show_ebar(self):
-        return self._errorbar.checkState() == Qt.Checked
+        return self._errorbar.isChecked()
 
     @property
     def draw_line(self):
-        return self._drawline.checkState() == Qt.Checked
+        return self._drawline.isChecked()
 
     @property
     def markersize(self):
