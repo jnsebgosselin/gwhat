@@ -132,6 +132,8 @@ class BRFManager(myqt.QFrameLayout):
         self.viewer = BRFViewer(wldset, parent)
         self.viewer.btn_language.set_language(
             CONF.get('brf', 'graphs_labels_language'))
+        if CONF.get('brf', 'graph_opt_panel_is_visible', False):
+            self.viewer.toggle_graphpannel()
 
         self.kgs_brf_installer = None
         self.__initGUI__()
@@ -237,6 +239,8 @@ class BRFManager(myqt.QFrameLayout):
         """"Clos this brf manager"""
         CONF.set('brf', 'graphs_labels_language',
                  self.viewer.btn_language.language)
+        CONF.set('brf', 'graph_opt_panel_is_visible',
+                 self.viewer._graph_opt_panel_is_visible)
         CONF.set('brf', 'compute_with_earthtides',
                  self.earthtides_cbox.isChecked())
         CONF.set('brf', 'nbr_of_earthtides_lags',
@@ -532,6 +536,7 @@ class BRFViewer(QDialog):
         # Setup the graph options panel.
         self.graph_opt_panel = BRFOptionsPanel()
         self.graph_opt_panel.sig_graphconf_changed.connect(self.plot_brf)
+        self._graph_opt_panel_is_visible = False
 
         # Setup the main layout.
         main_layout = QGridLayout(self)
@@ -555,16 +560,16 @@ class BRFViewer(QDialog):
 
     # ---- Toolbar Handlers
     def toggle_graphpannel(self):
-        if self.graph_opt_panel.isVisible() is True:
-            # Hide the panel.
-            self.graph_opt_panel.setVisible(False)
-            self.btn_setp.setAutoRaise(True)
-            self.btn_setp.setToolTip('Show graph layout parameters...')
-        else:
-            # Show the panel.
-            self.graph_opt_panel.setVisible(True)
-            self.btn_setp.setAutoRaise(False)
-            self.btn_setp.setToolTip('Hide graph layout parameters...')
+        """
+        Hide or show the BRF graph option panel.
+        """
+        self._graph_opt_panel_is_visible = not self._graph_opt_panel_is_visible
+        self.graph_opt_panel.setVisible(self._graph_opt_panel_is_visible)
+        self.btn_setp.setAutoRaise(not self._graph_opt_panel_is_visible)
+        self.btn_setp.setToolTip(
+            'Show graph layout parameters...' if
+            self._graph_opt_panel_is_visible is False else
+            'Hide graph layout parameters...')
 
     def navigate_brf(self):
         if self.sender() == self.btn_prev:
