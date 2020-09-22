@@ -241,6 +241,8 @@ class BRFManager(myqt.QFrameLayout):
                  self.viewer.btn_language.language)
         CONF.set('brf', 'graph_opt_panel_is_visible',
                  self.viewer._graph_opt_panel_is_visible)
+        self.viewer.close()
+
         CONF.set('brf', 'compute_with_earthtides',
                  self.earthtides_cbox.isChecked())
         CONF.set('brf', 'nbr_of_earthtides_lags',
