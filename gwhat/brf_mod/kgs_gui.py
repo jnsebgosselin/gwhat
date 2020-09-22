@@ -538,6 +538,7 @@ class BRFViewer(QDialog):
         main_layout.addWidget(self.fig_frame, 0, 2)
         main_layout.addWidget(self.graph_opt_panel, 0, 3)
         main_layout.setColumnStretch(1, 100)
+        main_layout.setSizeConstraint(main_layout.SetFixedSize)
 
     @property
     def savedir(self):
@@ -559,17 +560,11 @@ class BRFViewer(QDialog):
             self.graph_opt_panel.setVisible(False)
             self.btn_setp.setAutoRaise(True)
             self.btn_setp.setToolTip('Show graph layout parameters...')
-
-            w = self.size().width() - self.graph_opt_panel.size().width()
-            self.setFixedWidth(w)
         else:
             # Show the panel.
             self.graph_opt_panel.setVisible(True)
             self.btn_setp.setAutoRaise(False)
             self.btn_setp.setToolTip('Hide graph layout parameters...')
-
-            w = self.size().width() + self.graph_opt_panel.size().width()
-            self.setFixedWidth(w)
 
     def navigate_brf(self):
         if self.sender() == self.btn_prev:
