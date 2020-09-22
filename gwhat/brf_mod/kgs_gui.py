@@ -16,14 +16,13 @@ import io
 
 
 # ---- Third party imports
-from PyQt5.QtCore import Qt, QPoint
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtGui import QImage
-from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
-                             QApplication, QSpinBox, QAbstractSpinBox,
-                             QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-                             QDesktopWidget, QMessageBox, QFileDialog,
-                             QComboBox, QLayout, QDialog)
+from PyQt5.QtWidgets import (
+    QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
+    QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
+    QMessageBox, QFileDialog, QComboBox, QLayout, QDialog)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
