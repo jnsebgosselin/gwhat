@@ -516,8 +516,7 @@ class BRFViewer(QDialog):
         self.tbar.setColumnStretch(row, 100)
         self.tbar.setContentsMargins(10, 0, 10, 10)  # (l, t, r, b)
 
-        # ---- Graph Canvas
-
+        # Setup the graph canvas.
         self.fig_frame = QFrame()
         self.fig_frame.setFrameStyle(StyleDB().frame)
         self.fig_frame.setObjectName("figframe")
@@ -530,19 +529,15 @@ class BRFViewer(QDialog):
         fflay.addWidget(self.tbar, 1, 0)
         fflay.addWidget(self.brf_canvas, 0, 0)
 
-        # ---- Graph Options Panel
-
+        # Setup the graph options panel.
         self.graph_opt_panel = BRFOptionsPanel()
         self.graph_opt_panel.sig_graphconf_changed.connect(self.plot_brf)
 
-        # ---- Main Layout
-
-        ml = QGridLayout(self)
-
-        ml.addWidget(self.fig_frame, 0, 2)
-        ml.addWidget(self.graph_opt_panel, 0, 3)
-
-        ml.setColumnStretch(1, 100)
+        # Setup the main layout.
+        main_layout = QGridLayout(self)
+        main_layout.addWidget(self.fig_frame, 0, 2)
+        main_layout.addWidget(self.graph_opt_panel, 0, 3)
+        main_layout.setColumnStretch(1, 100)
 
     @property
     def savedir(self):
