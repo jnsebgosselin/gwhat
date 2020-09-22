@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import (QLabel, QDateTimeEdit, QCheckBox, QPushButton,
                              QApplication, QSpinBox, QAbstractSpinBox,
                              QGridLayout, QDoubleSpinBox, QFrame, QWidget,
                              QDesktopWidget, QMessageBox, QFileDialog,
-                             QComboBox, QLayout)
+                             QComboBox, QLayout, QDialog)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -419,7 +419,7 @@ class BRFManager(myqt.QFrameLayout):
             return
 
 
-class BRFViewer(QWidget):
+class BRFViewer(QDialog):
     """
     Window that is used to show all the results produced with for the
     currently selected water level dataset.
@@ -715,18 +715,6 @@ class BRFViewer(QWidget):
 
     def show(self):
         super(BRFViewer, self).show()
-        qr = self.frameGeometry()
-        if self.parentWidget():
-            parent = self.parentWidget()
-
-            wp = parent.frameGeometry().width()
-            hp = parent.frameGeometry().height()
-            cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
-        else:
-            cp = QDesktopWidget().availableGeometry().center()
-
-        qr.moveCenter(cp)
-        self.move(qr.topLeft())
         self.fig_frame.setFixedSize(self.fig_frame.size())
         self.setFixedSize(self.size())
 
