@@ -93,6 +93,8 @@ class MainWindow(QMainWindow):
         # Generate the GUI.
         self.__initUI__()
         splash.finish(self)
+        self._restore_window_geometry()
+        self._restore_window_state()
 
         # Load the last opened project.
         projectfile = get_path_from_configs('main', 'last_project_filepath')
@@ -219,6 +221,19 @@ class MainWindow(QMainWindow):
         super().show()
 
     # ---- Main window settings
+    def _restore_window_geometry(self):
+        """
+        Restore the geometry of this mainwindow from the value saved
+        in the config.
+        """
+        hexstate = CONF.get('main', 'window/geometry', None)
+        if hexstate:
+            hexstate = hexstate_to_qbytearray(hexstate)
+            self.restoreGeometry(hexstate)
+        else:
+            from sardes.config.gui import INIT_MAINWINDOW_SIZE
+            self.resize(*INIT_MAINWINDOW_SIZE)
+
     def _save_window_geometry(self):
         """
         Save the geometry of this mainwindow to the config.
@@ -226,6 +241,16 @@ class MainWindow(QMainWindow):
         hexstate = qbytearray_to_hexstate(self.saveGeometry())
         CONF.set('main', 'window/geometry', hexstate)
 
+    def _restore_window_state(self):
+        """
+        Restore the state of this mainwindow’s toolbars and dockwidgets from
+        the value saved in the config.
+        """
+        # Then we appply saved configuration if it exists.
+        hexstate = CONF.get('main', 'window/state', None)
+        if hexstate:
+            hexstate = hexstate_to_qbytearray(hexstate)
+            self.restoreState(hexstate)
 
     def _save_window_state(self):
         """
