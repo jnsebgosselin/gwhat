@@ -63,6 +63,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         SaveFileMixin.__init__(self)
 
         self._navig_and_select_tools = []
+        self._last_toggled_navig_and_select_tool = None
         self._wldset = None
 
         self.dmngr = datamanager
@@ -76,11 +77,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Setup BRF calculation tool.
         self.brf_eval_widget = BRFManager(parent=self)
         self.brf_eval_widget.sig_brfperiod_changed.connect(self.plot_brfperiod)
-        self.brf_eval_widget.btn_seldata.sig_value_changed.connect(
-            lambda: self.toggle_brfperiod_selection(
-                self.brf_eval_widget.btn_seldata.value())
-            )
-        self.register_navig_and_select_tool(self.brf_eval_widget.btn_seldata)
+        self.brf_eval_widget.sig_select_brfperiod_requested.connect(
+            self.toggle_brfperiod_selection)
 
         self.__figbckground = None
         self.__addPeakVisible = True
@@ -556,7 +554,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
         super().close()
 
     # ---- MRC handlers
-
     def btn_show_mrc_isclicked(self):
         """Handle when the button to draw of hide the mrc is clicked."""
         if self.btn_show_mrc.value() is False:
@@ -643,13 +640,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         mrc2rechg(self.time, self.water_lvl, A, B,
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
 
-    # ---- BRF handlers
+    # ---- BRF selection
     def plot_brfperiod(self):
         """
         Plot on the graph the vertical lines that are used to define the period
         over which the BRF is evaluated.
         """
-        if (self.brf_eval_widget.btn_seldata.value() is False and
+        if (not self.brf_eval_widget.is_brfperiod_selection_toggled() and
                 self.brf_eval_widget.isVisible()):
             brfperiod = self.brf_eval_widget.get_brfperiod()
         else:
@@ -667,17 +664,37 @@ class WLCalc(DialogWindow, SaveFileMixin):
         the graph.
         """
         if self.wldset is None:
-            self.brf_eval_widget.btn_seldata.setValue(False, silent=True)
+            self.brf_eval_widget.toggle_brfperiod_selection(False)
             if value is True:
-                self.emit_warning("Please import a valid water "
-                                  "level dataset first.")
+                self.emit_warning(
+                    "Please import a valid water level dataset first.")
             return
 
-        self.brf_eval_widget.btn_seldata.setValue(value, silent=True)
         if value is True:
-            self.toggle_navig_and_select_tools(
-                self.brf_eval_widget.btn_seldata)
+            self._last_toggled_navig_and_select_tool = None
+            for tool in self._navig_and_select_tools:
+                if tool.value() is True:
+                    self._last_toggled_navig_and_select_tool = tool
+                    tool.setValue(False)
+                    break
+        else:
+            self.brf_eval_widget.toggle_brfperiod_selection(False)
+            if self._last_toggled_navig_and_select_tool is not None:
+                self._last_toggled_navig_and_select_tool.setValue(True)
         self.plot_brfperiod()
+
+    def on_brf_select(self):
+        """
+        Handle when a period has been selected for the BRF calculation.
+        """
+        if all(self._selected_brfperiod):
+            brfperiod = [None, None]
+            for i in range(2):
+                x = self._selected_brfperiod[i] - (
+                        self.dt4xls2mpl * self.dformat)
+                brfperiod[i] = self.time[np.argmin(np.abs(x - self.time))]
+            self.brf_eval_widget.set_brfperiod(brfperiod)
+        self.toggle_brfperiod_selection(False)
 
     # ---- Peaks handlers
     def find_peak(self):
@@ -747,6 +764,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         for tool in self._navig_and_select_tools:
             if tool not in keep_toggled:
                 tool.setValue(False)
+
+        # Reset BRF selection.
+        self.brf_eval_widget.toggle_brfperiod_selection(False)
+        self.plot_brfperiod()
 
     @property
     def zoom_is_active(self):
@@ -1311,7 +1332,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """
         return(self.btn_delpeak.autoRaise() and
                self.btn_addpeak.autoRaise() and
-               self.brf_eval_widget.btn_seldata.autoRaise())
+               not self.brf_eval_widget.is_brfperiod_selection_toggled())
 
     def on_fig_leave(self, event):
         """Handle when the mouse cursor leaves the graph."""
@@ -1325,19 +1346,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def on_axes_leave(self, event):
         """Handle when the mouse cursor leaves an axe."""
         self.toolbar.set_cursor(1)
-
-    def on_brf_select(self):
-        """
-        Handle when a period has been selected for the BRF calculation.
-        """
-        if all(self._selected_brfperiod):
-            brfperiod = [None, None]
-            for i in range(2):
-                x = self._selected_brfperiod[i] - (
-                        self.dt4xls2mpl * self.dformat)
-                brfperiod[i] = self.time[np.argmin(np.abs(x - self.time))]
-            self.brf_eval_widget.set_brfperiod(brfperiod)
-        self.toggle_brfperiod_selection(False)
 
     def on_rect_select(self):
         """
@@ -1398,7 +1406,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         if self.rect_select_is_active and self.__mouse_btn_is_pressed:
             self._draw_rect_selection(x, y)
-        if (self.brf_eval_widget.btn_seldata.value() and
+        if (self.brf_eval_widget.is_brfperiod_selection_toggled() and
                 self.__mouse_btn_is_pressed):
             self._draw_brf_selection(x)
 
@@ -1451,7 +1459,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self._rect_selection[1] = (event.xdata, event.ydata)
             self._rect_selector.set_visible(False)
             self.on_rect_select()
-        if self.brf_eval_widget.btn_seldata.value() is True:
+        if self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[1] = event.xdata
             self._brf_selector.set_visible(False)
             self.on_brf_select()
@@ -1530,7 +1538,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
             self.__addPeakVisible = False
             self.draw()
-        elif self.brf_eval_widget.btn_seldata.value() is True:
+        elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[0] = event.xdata
         elif self.rect_select_is_active:
             self._rect_selection[0] = (event.xdata, event.ydata)
