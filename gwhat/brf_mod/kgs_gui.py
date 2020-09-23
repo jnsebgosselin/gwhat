@@ -33,11 +33,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # ---- Local imports
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
-from gwhat.widgets.buttons import LangToolButton, OnOffToolButton
+from gwhat.widgets.buttons import LangToolButton
 from gwhat.common import StyleDB
 from gwhat.config.main import CONF
 from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
+from gwhat.utils.icons import QToolButtonNormal, get_icon
 from gwhat.utils.dates import qdatetime_from_xldate
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
@@ -123,11 +123,12 @@ class KGSBRFInstaller(myqt.QFrameLayout):
 
 class BRFManager(myqt.QFrameLayout):
     sig_brfperiod_changed = QSignal(list)
+    sig_select_brfperiod_requested = QSignal(bool)
 
     def __init__(self, wldset=None, parent=None):
         super(BRFManager, self).__init__(parent)
+        self._brfperiod_selection_toggled = False
 
-        # Setup the BRF results viewer.
         self.viewer = BRFViewer(wldset, parent)
         self.viewer.btn_language.set_language(
             CONF.get('brf', 'graphs_labels_language'))
@@ -192,9 +193,14 @@ class BRFManager(myqt.QFrameLayout):
         self.date_end_edit.dateChanged.connect(
             lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
 
-        self.btn_seldata = OnOffToolButton('select_range', size='small')
-        self.btn_seldata.setToolTip("Select a BRF calculation period with "
-                                    "the mouse cursor on the graph.")
+        self._select_brfperiod_btn = QPushButton('Select')
+        self._select_brfperiod_btn.setIcon(get_icon('select_range'))
+        self._select_brfperiod_btn.setToolTip(
+            "Select a BRF calculation period.")
+        self._select_brfperiod_btn.setCheckable(True)
+        self._select_brfperiod_btn.setFocusPolicy(Qt.NoFocus)
+        self._select_brfperiod_btn.toggled.connect(
+            self.toggle_brfperiod_selection)
 
         # Setup BRF date range layout.
         daterange_layout = QGridLayout()
@@ -202,18 +208,16 @@ class BRFManager(myqt.QFrameLayout):
         daterange_layout.addWidget(self.date_start_edit, 0, 2)
         daterange_layout.addWidget(QLabel('BRF End :'), 1, 0)
         daterange_layout.addWidget(self.date_end_edit, 1, 2)
+        daterange_layout.addWidget(self._select_brfperiod_btn, 2, 0, 1, 3)
         daterange_layout.setColumnStretch(1, 100)
-        daterange_layout.setContentsMargins(0, 0, 0, 0)
-
-        seldata_layout = QGridLayout()
-        seldata_layout.addWidget(self.btn_seldata, 0, 0)
-        seldata_layout.setRowStretch(1, 100)
-        seldata_layout.setContentsMargins(0, 0, 0, 0)
 
         # Setup the toolbar.
         btn_comp = QPushButton('Compute BRF')
-        btn_comp.clicked.connect(self.calc_brf)
+        btn_comp.setToolTip(
+            "Compute the barometric response function (BRF) of the well.")
+        btn_comp.setIcon(get_icon('play_start'))
         btn_comp.setFocusPolicy(Qt.NoFocus)
+        btn_comp.clicked.connect(self.calc_brf)
 
         self.btn_show = QToolButtonSmall(icons.get_icon('search'))
         self.btn_show.clicked.connect(self.viewer.show)
@@ -309,7 +313,7 @@ class BRFManager(myqt.QFrameLayout):
         """Set the namespace for the wldset in the widget."""
         self.wldset = wldset
         self.viewer.set_wldset(wldset)
-        self.btn_seldata.setAutoRaise(True)
+        self.toggle_brfperiod_selection(False)
         self.setEnabled(wldset is not None)
         if wldset is not None:
             xldates = self.wldset.xldates
@@ -330,6 +334,21 @@ class BRFManager(myqt.QFrameLayout):
             widget.setMinimumDateTime(qdatetime_from_xldate(daterange[0]))
             widget.setMaximumDateTime(qdatetime_from_xldate(daterange[1]))
             widget.blockSignals(False)
+
+    def toggle_brfperiod_selection(self, toggle):
+        """
+        Toggle the brf selection on or off in the gui.
+        """
+        self._brfperiod_selection_toggled = toggle
+        if toggle is True:
+            self.sig_select_brfperiod_requested.emit(toggle)
+        self._select_brfperiod_btn.blockSignals(True)
+        self._select_brfperiod_btn.setChecked(toggle)
+        self._select_brfperiod_btn.blockSignals(False)
+
+    def is_brfperiod_selection_toggled(self):
+        """Return whether the BRF period selection is toggled."""
+        return self._brfperiod_selection_toggled
 
     # ---- KGS BRF installer
     def __install_kgs_brf_installer(self):
