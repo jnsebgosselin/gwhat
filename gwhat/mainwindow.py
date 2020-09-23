@@ -91,7 +91,6 @@ class MainWindow(QMainWindow):
         # Generate the GUI.
         self.__initUI__()
         splash.finish(self)
-        self.showMaximized()
 
         # Load the last opened project.
         projectfile = get_path_from_configs('main', 'last_project_filepath')
@@ -205,6 +204,12 @@ class MainWindow(QMainWindow):
         self.tab_hydrocalc.close()
         print('Closing GWHAT')
         event.accept()
+
+    def show(self):
+        """
+        Extend Qt method.
+        """
+        super().show()
 
 
 def except_hook(cls, exception, traceback):
