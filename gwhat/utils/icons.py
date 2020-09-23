@@ -136,7 +136,7 @@ FA_ICONS = {
         {'color': GREEN, 'scale_factor': 1.5}],
     'save': [
         ('fa.save',),
-        {'color': COLOR}],
+        {'color': COLOR, 'scale_factor': 1.1}],
     'search': [
         ('fa5s.search',),
         {'color': COLOR, 'scale_factor': 1.0}],
@@ -149,6 +149,9 @@ FA_ICONS = {
     'report_bug': [
         ('mdi.bug',),
         {'color': COLOR, 'scale_factor': 1.4}],
+    'zoom_to_rect': [
+        ('mdi.selection-search',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     }
 
 ICON_SIZES = {'large': (32, 32),
