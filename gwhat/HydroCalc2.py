@@ -21,7 +21,7 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
-    QTabWidget, QApplication, QWidget)
+    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar)
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -41,7 +41,7 @@ import gwhat.common.widgets as myqt
 from gwhat.common.widgets import DialogWindow
 from gwhat.common import StyleDB
 from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal
+from gwhat.utils.icons import QToolButtonNormal, get_iconsize
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.brf_mod import BRFManager
 from gwhat.widgets.buttons import OnOffToolButton
@@ -134,6 +134,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Put figure canvas in a QFrame widget.
 
         self.fig_frame_widget = myqt.QFrameLayout()
+        self.fig_frame_widget.setMinimumSize(200, 200)
         self.fig_frame_widget.addWidget(self.canvas, 0, 0)
 
         self.fig_frame_widget.setFrameStyle(StyleDB().frame)
@@ -363,7 +364,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_commit_changes.setEnabled(False)
 
         # Setup the layout.
-        toolbar = ToolBarWidget()
+        toolbar = QToolBar()
         for btn in [self.btn_home, self.btn_fit_waterlevels, self.btn_pan,
                     self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
@@ -372,8 +373,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     self.btn_rect_select, self.btn_clear_select,
                     self.btn_del_select, self.btn_undo_changes,
                     self.btn_clear_changes, self.btn_commit_changes]:
-            toolbar.addWidget(btn)
-
+            if btn is None:
+                toolbar.addSeparator()
+            else:
+                toolbar.addWidget(btn)
         return toolbar
 
     def _setup_mrc_tool(self):
@@ -460,13 +463,21 @@ class WLCalc(DialogWindow, SaveFileMixin):
         return self.mrc_eval_widget
 
     def __initUI__(self):
-        self.setWindowTitle('Hydrograph Analysis')
-        toolbar = self._setup_toolbar()
-        self.mrc_eval_widget = self._setup_mrc_tool()
+        # Setup the left widget.
+        left_widget = QMainWindow()
 
-        # ---- Tool Tab Area
+        toolbar = self._setup_toolbar()
+        toolbar.setStyleSheet("QToolBar {border: 0px;}")
+        toolbar.setFloatable(False)
+        toolbar.setMovable(False)
+        toolbar.setIconSize(get_iconsize('normal'))
+        left_widget.addToolBar(Qt.TopToolBarArea, toolbar)
+        left_widget.setCentralWidget(self.fig_frame_widget)
+
+        # Setup the tools tab area.
 
         tooltab = QTabWidget()
+        self.mrc_eval_widget = self._setup_mrc_tool()
         tooltab.addTab(self.mrc_eval_widget, 'MRC')
         tooltab.setTabToolTip(
             0, ("<p>A tool to evaluate the master recession curve"
@@ -485,33 +496,22 @@ class WLCalc(DialogWindow, SaveFileMixin):
             lambda: self.toggle_brfperiod_selection(False))
 
         # ---- Right Panel
-
         self.right_panel = myqt.QFrameLayout()
-
-        row = 0
-        self.right_panel.addWidget(self.dmngr, row, 0)
-        row += 1
-        self.right_panel.addWidget(tooltab, row, 0)
-        row += 1
-        self.right_panel.setRowStretch(row, 100)
-
+        self.right_panel.addWidget(self.dmngr, 0, 0)
+        self.right_panel.addWidget(tooltab, 1, 0)
+        self.right_panel.setRowStretch(2, 100)
         self.right_panel.setSpacing(15)
 
         # ---- Setup the main layout
+        main_layout = QGridLayout(self)
 
-        mainGrid = QGridLayout(self)
+        main_layout.addWidget(left_widget, 0, 0)
+        main_layout.addWidget(VSep(), 0, 1)
+        main_layout.addWidget(self.right_panel, 0, 2)
 
-        mainGrid.addWidget(toolbar, 0, 0)
-        mainGrid.addWidget(self.fig_frame_widget, 1, 0, 2, 1)
-        mainGrid.addWidget(VSep(), 0, 1, 3, 1)
-        mainGrid.addWidget(self.right_panel, 0, 2, 2, 1)
-
-        mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-        mainGrid.setHorizontalSpacing(15)
-        mainGrid.setRowStretch(1, 100)
-        # mainGrid.setRowStretch(2, 100)
-        mainGrid.setColumnStretch(0, 100)
-        mainGrid.setColumnMinimumWidth(2, 250)
+        main_layout.setHorizontalSpacing(15)
+        main_layout.setColumnStretch(0, 100)
+        main_layout.setColumnMinimumWidth(2, 250)
 
     @property
     def water_lvl(self):
