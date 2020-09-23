@@ -152,22 +152,21 @@ class MainWindow(QMainWindow):
         self.sync_datamanagers()
 
         # Setup the splitter widget.
-        splitter = QSplitter(Qt.Vertical, parent=self)
-        splitter.addWidget(self.tab_widget)
-        splitter.addWidget(self.main_console)
+        self._splitter = QSplitter(Qt.Vertical, parent=self)
+        self._splitter.addWidget(self.tab_widget)
+        self._splitter.addWidget(self.main_console)
 
-        splitter.setCollapsible(0, True)
-        splitter.setStretchFactor(0, 100)
-        # Forces initially the main_console to its minimal height:
-        splitter.setSizes([100, 1])
+        self._splitter.setCollapsible(0, True)
+        self._splitter.setStretchFactor(0, 100)
+        # Force initially the main_console to its minimal height.
+        self._splitter.setSizes([100, 1])
 
         # Setup the layout of the main widget.
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
 
         mainGrid = QGridLayout(main_widget)
-
-        mainGrid.addWidget(splitter, 0, 0)
+        mainGrid.addWidget(self._splitter, 0, 0)
         mainGrid.addWidget(
             self.tab_hydrocalc.rechg_eval_widget.progressbar, 3, 0)
 
@@ -252,6 +251,11 @@ class MainWindow(QMainWindow):
             hexstate = hexstate_to_qbytearray(hexstate)
             self.restoreState(hexstate)
 
+        hexstate = CONF.get('main', 'splitter/state', None)
+        if hexstate:
+            hexstate = hexstate_to_qbytearray(hexstate)
+            self._splitter.restoreState(hexstate)
+
     def _save_window_state(self):
         """
         Save the state of this mainwindow’s toolbars and dockwidgets to
@@ -259,6 +263,9 @@ class MainWindow(QMainWindow):
         """
         hexstate = qbytearray_to_hexstate(self.saveState())
         CONF.set('main', 'window/state', hexstate)
+
+        hexstate = qbytearray_to_hexstate(self._splitter.saveState())
+        CONF.set('main', 'splitter/state', hexstate)
 
 
 def except_hook(cls, exception, traceback):
