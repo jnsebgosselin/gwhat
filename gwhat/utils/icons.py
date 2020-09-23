@@ -53,7 +53,6 @@ GWHAT_ICONS = {
     'toggleMode': 'toggleMode2',
     'undo': 'undo',
     'clear_search': 'clear-search',
-    'home': 'home',
     'mrc_calc': 'MRCalc',
     'edit': 'edit',
     'add_point': 'add_point',
@@ -123,6 +122,9 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1.3}],
     'folder_open': [
         ('mdi.folder-open',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'home': [
+        ('mdi.home',),
         {'color': COLOR, 'scale_factor': 1.3}],
     'info': [
         ('mdi.information-outline',),
