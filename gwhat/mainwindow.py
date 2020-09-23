@@ -60,6 +60,8 @@ from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
 from gwhat.common import StyleDB
 from gwhat.utils import icons
+from gwhat.utils.qthelpers import (
+    qbytearray_to_hexstate, hexstate_to_qbytearray)
 
 freeze_support()
 
@@ -197,12 +199,17 @@ class MainWindow(QMainWindow):
         self.tab_hydrograph.setEnabled(True)
         self.tab_hydrocalc.setEnabled(True)
 
+    # ---- Qt method override/extension
     def closeEvent(self, event):
         """Qt method override to close the project before close the app."""
+        self._save_window_geometry()
+        self._save_window_state()
+
         print('Closing projet')
         self.pmanager.close()
-        self.tab_hydrocalc.close()
+
         print('Closing GWHAT')
+        self.tab_hydrocalc.close()
         event.accept()
 
     def show(self):
@@ -210,6 +217,23 @@ class MainWindow(QMainWindow):
         Extend Qt method.
         """
         super().show()
+
+    # ---- Main window settings
+    def _save_window_geometry(self):
+        """
+        Save the geometry of this mainwindow to the config.
+        """
+        hexstate = qbytearray_to_hexstate(self.saveGeometry())
+        CONF.set('main', 'window/geometry', hexstate)
+
+
+    def _save_window_state(self):
+        """
+        Save the state of this mainwindow’s toolbars and dockwidgets to
+        the config.
+        """
+        hexstate = qbytearray_to_hexstate(self.saveState())
+        CONF.set('main', 'window/state', hexstate)
 
 
 def except_hook(cls, exception, traceback):
