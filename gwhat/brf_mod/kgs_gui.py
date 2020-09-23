@@ -22,7 +22,8 @@ from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-    QMessageBox, QFileDialog, QComboBox, QLayout, QDialog)
+    QMessageBox, QFileDialog, QComboBox, QLayout, QDialog,
+    QGroupBox)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -33,11 +34,11 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 # ---- Local imports
 import gwhat.common.widgets as myqt
 from gwhat.widgets.layout import VSep, HSep
-from gwhat.widgets.buttons import LangToolButton, OnOffToolButton
+from gwhat.widgets.buttons import LangToolButton
 from gwhat.common import StyleDB
 from gwhat.config.main import CONF
 from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
+from gwhat.utils.icons import QToolButtonNormal, get_icon
 from gwhat.utils.dates import qdatetime_from_xldate
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
@@ -123,11 +124,12 @@ class KGSBRFInstaller(myqt.QFrameLayout):
 
 class BRFManager(myqt.QFrameLayout):
     sig_brfperiod_changed = QSignal(list)
+    sig_select_brfperiod_requested = QSignal(bool)
 
     def __init__(self, wldset=None, parent=None):
         super(BRFManager, self).__init__(parent)
+        self._brfperiod_selection_toggled = False
 
-        # Setup the BRF results viewer.
         self.viewer = BRFViewer(wldset, parent)
         self.viewer.btn_language.set_language(
             CONF.get('brf', 'graphs_labels_language'))
@@ -166,14 +168,14 @@ class BRFManager(myqt.QFrameLayout):
             CONF.get('brf', 'detrend_waterlevels'))
 
         # Setup options layout.
-        options_layout = QGridLayout()
+        options_grpbox = QGroupBox()
+        options_layout = QGridLayout(options_grpbox)
         options_layout.addWidget(QLabel('Nbr of BP lags :'), 0, 0)
         options_layout.addWidget(self.baro_spinbox, 0, 2)
         options_layout.addWidget(self.earthtides_cbox, 1, 0)
         options_layout.addWidget(self.earthtides_spinbox, 1, 2)
         options_layout.addWidget(self.detrend_waterlevels_cbox, 2, 0, 1, 3)
         options_layout.setColumnStretch(1, 100)
-        options_layout.setContentsMargins(0, 0, 0, 0)
 
         # Setup BRF date range widgets.
         self.date_start_edit = QDateTimeEdit()
@@ -192,44 +194,49 @@ class BRFManager(myqt.QFrameLayout):
         self.date_end_edit.dateChanged.connect(
             lambda: self.wldset.save_brfperiod(self.get_brfperiod()))
 
-        self.btn_seldata = OnOffToolButton('select_range', size='small')
-        self.btn_seldata.setToolTip("Select a BRF calculation period with "
-                                    "the mouse cursor on the graph.")
+        self._select_brfperiod_btn = QPushButton('Select')
+        self._select_brfperiod_btn.setIcon(get_icon('select_range'))
+        self._select_brfperiod_btn.setToolTip(
+            "Select a BRF calculation period.")
+        self._select_brfperiod_btn.setCheckable(True)
+        self._select_brfperiod_btn.setFocusPolicy(Qt.NoFocus)
+        self._select_brfperiod_btn.toggled.connect(
+            self.toggle_brfperiod_selection)
 
         # Setup BRF date range layout.
-        daterange_layout = QGridLayout()
+        daterange_grpbox = QGroupBox()
+        daterange_layout = QGridLayout(daterange_grpbox)
         daterange_layout.addWidget(QLabel('BRF Start :'), 0, 0)
         daterange_layout.addWidget(self.date_start_edit, 0, 2)
         daterange_layout.addWidget(QLabel('BRF End :'), 1, 0)
         daterange_layout.addWidget(self.date_end_edit, 1, 2)
+        daterange_layout.addWidget(self._select_brfperiod_btn, 2, 0, 1, 3)
         daterange_layout.setColumnStretch(1, 100)
-        daterange_layout.setContentsMargins(0, 0, 0, 0)
-
-        seldata_layout = QGridLayout()
-        seldata_layout.addWidget(self.btn_seldata, 0, 0)
-        seldata_layout.setRowStretch(1, 100)
-        seldata_layout.setContentsMargins(0, 0, 0, 0)
 
         # Setup the toolbar.
         btn_comp = QPushButton('Compute BRF')
-        btn_comp.clicked.connect(self.calc_brf)
+        btn_comp.setToolTip(
+            "Compute the barometric response function (BRF) of the well.")
+        btn_comp.setIcon(get_icon('play_start'))
         btn_comp.setFocusPolicy(Qt.NoFocus)
+        btn_comp.clicked.connect(self.calc_brf)
 
-        self.btn_show = QToolButtonSmall(icons.get_icon('search'))
-        self.btn_show.clicked.connect(self.viewer.show)
+        self._show_brf_results_btn = QPushButton('Show BRF')
+        self._show_brf_results_btn.setIcon(get_icon('search'))
+        self._show_brf_results_btn.setToolTip(
+            "Show the BRF previously calculated for the well.")
+        self._show_brf_results_btn.setFocusPolicy(Qt.NoFocus)
+        self._show_brf_results_btn.clicked.connect(self.viewer.show)
 
         # Setup the main Layout.
-        self.addLayout(daterange_layout, 0, 0)
-        self.addLayout(seldata_layout, 0, 1)
-        self.setRowMinimumHeight(1, 15)
-        self.addLayout(options_layout, 2, 0)
-        self.setRowMinimumHeight(3, 15)
-        self.setRowStretch(3, 100)
-        self.addWidget(btn_comp, 4, 0)
-        self.addWidget(self.btn_show, 4, 1)
-        self.setColumnStretch(0, 100)
+        self.addWidget(daterange_grpbox, 0, 0)
+        self.addWidget(options_grpbox, 1, 0)
+        self.setRowMinimumHeight(2, 15)
+        self.setRowStretch(2, 100)
+        self.addWidget(self._show_brf_results_btn, 4, 0)
+        self.addWidget(btn_comp, 5, 0)
 
-        # ---- Install Panel
+        # Setup the install KGS_BRF panel
         if not KGSBRFInstaller().kgsbrf_is_installed():
             self.__install_kgs_brf_installer()
 
@@ -309,7 +316,7 @@ class BRFManager(myqt.QFrameLayout):
         """Set the namespace for the wldset in the widget."""
         self.wldset = wldset
         self.viewer.set_wldset(wldset)
-        self.btn_seldata.setAutoRaise(True)
+        self.toggle_brfperiod_selection(False)
         self.setEnabled(wldset is not None)
         if wldset is not None:
             xldates = self.wldset.xldates
@@ -330,6 +337,21 @@ class BRFManager(myqt.QFrameLayout):
             widget.setMinimumDateTime(qdatetime_from_xldate(daterange[0]))
             widget.setMaximumDateTime(qdatetime_from_xldate(daterange[1]))
             widget.blockSignals(False)
+
+    def toggle_brfperiod_selection(self, toggle):
+        """
+        Toggle the brf selection on or off in the gui.
+        """
+        self._brfperiod_selection_toggled = toggle
+        if toggle is True:
+            self.sig_select_brfperiod_requested.emit(toggle)
+        self._select_brfperiod_btn.blockSignals(True)
+        self._select_brfperiod_btn.setChecked(toggle)
+        self._select_brfperiod_btn.blockSignals(False)
+
+    def is_brfperiod_selection_toggled(self):
+        """Return whether the BRF period selection is toggled."""
+        return self._brfperiod_selection_toggled
 
     # ---- KGS BRF installer
     def __install_kgs_brf_installer(self):

@@ -41,7 +41,6 @@ GWHAT_ICONS = {
     'forward': 'start_all',
     'refresh': 'refresh',
     'stop': 'process-stop',
-    'search': 'search',
     'settings': 'settings',
     'staList': 'note',
     'plus_sign': 'plus_sign',
@@ -131,6 +130,12 @@ FA_ICONS = {
     'pan': [
         ('mdi.pan',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'play_start': [
+        ('mdi.play',),
+        {'color': GREEN, 'scale_factor': 1.5}],
+    'search': [
+        ('fa5s.search',),
+        {'color': COLOR, 'scale_factor': 1.0}],
     'undo_changes': [
         ('mdi.undo-variant',),
         {'color': COLOR, 'scale_factor': 1.3}],
