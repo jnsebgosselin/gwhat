@@ -22,7 +22,8 @@ from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-    QMessageBox, QFileDialog, QComboBox, QLayout, QDialog)
+    QMessageBox, QFileDialog, QComboBox, QLayout, QDialog,
+    QGroupBox)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -167,14 +168,14 @@ class BRFManager(myqt.QFrameLayout):
             CONF.get('brf', 'detrend_waterlevels'))
 
         # Setup options layout.
-        options_layout = QGridLayout()
+        options_grpbox = QGroupBox()
+        options_layout = QGridLayout(options_grpbox)
         options_layout.addWidget(QLabel('Nbr of BP lags :'), 0, 0)
         options_layout.addWidget(self.baro_spinbox, 0, 2)
         options_layout.addWidget(self.earthtides_cbox, 1, 0)
         options_layout.addWidget(self.earthtides_spinbox, 1, 2)
         options_layout.addWidget(self.detrend_waterlevels_cbox, 2, 0, 1, 3)
         options_layout.setColumnStretch(1, 100)
-        options_layout.setContentsMargins(0, 0, 0, 0)
 
         # Setup BRF date range widgets.
         self.date_start_edit = QDateTimeEdit()
@@ -203,7 +204,8 @@ class BRFManager(myqt.QFrameLayout):
             self.toggle_brfperiod_selection)
 
         # Setup BRF date range layout.
-        daterange_layout = QGridLayout()
+        daterange_grpbox = QGroupBox()
+        daterange_layout = QGridLayout(daterange_grpbox)
         daterange_layout.addWidget(QLabel('BRF Start :'), 0, 0)
         daterange_layout.addWidget(self.date_start_edit, 0, 2)
         daterange_layout.addWidget(QLabel('BRF End :'), 1, 0)
@@ -227,17 +229,14 @@ class BRFManager(myqt.QFrameLayout):
         self._show_brf_results_btn.clicked.connect(self.viewer.show)
 
         # Setup the main Layout.
-        self.addLayout(daterange_layout, 0, 0)
-        self.addLayout(seldata_layout, 0, 1)
-        self.setRowMinimumHeight(1, 15)
-        self.addLayout(options_layout, 2, 0)
-        self.setRowMinimumHeight(3, 15)
-        self.setRowStretch(3, 100)
-        self.addWidget(btn_comp, 4, 0)
-        self.addWidget(self.btn_show, 4, 1)
-        self.setColumnStretch(0, 100)
+        self.addWidget(daterange_grpbox, 0, 0)
+        self.addWidget(options_grpbox, 1, 0)
+        self.setRowMinimumHeight(2, 15)
+        self.setRowStretch(2, 100)
+        self.addWidget(self._show_brf_results_btn, 4, 0)
+        self.addWidget(btn_comp, 5, 0)
 
-        # ---- Install Panel
+        # Setup the install KGS_BRF panel
         if not KGSBRFInstaller().kgsbrf_is_installed():
             self.__install_kgs_brf_installer()
 
