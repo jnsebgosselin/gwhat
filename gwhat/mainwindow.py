@@ -230,7 +230,7 @@ class MainWindow(QMainWindow):
             hexstate = hexstate_to_qbytearray(hexstate)
             self.restoreGeometry(hexstate)
         else:
-            from sardes.config.gui import INIT_MAINWINDOW_SIZE
+            from gwhat.config.gui import INIT_MAINWINDOW_SIZE
             self.resize(*INIT_MAINWINDOW_SIZE)
 
     def _save_window_geometry(self):
