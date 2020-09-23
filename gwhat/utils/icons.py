@@ -71,7 +71,6 @@ GWHAT_ICONS = {
     'load_graph_config': 'load_config',
     'closest_meteo': 'closest_meteo',
     'draw_hydrograph': 'stock_image',
-    'save': 'save',
     'meteo': 'meteo',
     'work': 'work',
     'color_picker': 'color_picker',
@@ -135,6 +134,9 @@ FA_ICONS = {
     'play_start': [
         ('mdi.play',),
         {'color': GREEN, 'scale_factor': 1.5}],
+    'save': [
+        ('fa.save',),
+        {'color': COLOR}],
     'search': [
         ('fa5s.search',),
         {'color': COLOR, 'scale_factor': 1.0}],
