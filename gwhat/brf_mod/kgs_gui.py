@@ -219,8 +219,12 @@ class BRFManager(myqt.QFrameLayout):
         btn_comp.setFocusPolicy(Qt.NoFocus)
         btn_comp.clicked.connect(self.calc_brf)
 
-        self.btn_show = QToolButtonSmall(icons.get_icon('search'))
-        self.btn_show.clicked.connect(self.viewer.show)
+        self._show_brf_results_btn = QPushButton('Show BRF')
+        self._show_brf_results_btn.setIcon(get_icon('search'))
+        self._show_brf_results_btn.setToolTip(
+            "Show the BRF previously calculated for the well.")
+        self._show_brf_results_btn.setFocusPolicy(Qt.NoFocus)
+        self._show_brf_results_btn.clicked.connect(self.viewer.show)
 
         # Setup the main Layout.
         self.addLayout(daterange_layout, 0, 0)
