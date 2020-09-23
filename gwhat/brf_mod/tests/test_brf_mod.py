@@ -145,7 +145,7 @@ def test_save_brf_figure(brfmanager, wldataset, mocker, qtbot,
     brfmanager.show()
     brfmanager.set_wldset(wldataset)
 
-    qtbot.mouseClick(brfmanager.btn_show, Qt.LeftButton)
+    qtbot.mouseClick(brfmanager._show_brf_results_btn, Qt.LeftButton)
     qtbot.waitExposed(brfmanager.viewer)
 
     # Save the figure in the file system.
@@ -166,7 +166,7 @@ def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
 
     graph_opt_panel = brfmanager.viewer.graph_opt_panel
 
-    qtbot.mouseClick(brfmanager.btn_show, Qt.LeftButton)
+    qtbot.mouseClick(brfmanager._show_brf_results_btn, Qt.LeftButton)
     qtbot.waitExposed(brfmanager.viewer)
 
     # Toggle on the panel and assert it is shown correctly.
