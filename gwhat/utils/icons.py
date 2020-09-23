@@ -130,6 +130,9 @@ FA_ICONS = {
     'pan': [
         ('mdi.pan',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'play_start': [
+        ('mdi.play',),
+        {'color': GREEN, 'scale_factor': 1.5}],
     'search': [
         ('fa5s.search',),
         {'color': COLOR, 'scale_factor': 1.0}],
