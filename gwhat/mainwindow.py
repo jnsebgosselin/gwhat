@@ -149,6 +149,8 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         self.tab_widget.setCornerWidget(self.pmanager)
         self.tab_widget.currentChanged.connect(self.sync_datamanagers)
+        self.tab_widget.setCurrentIndex(
+            CONF.get('main', 'mainwindow_current_tab'))
         self.sync_datamanagers()
 
         # Setup the splitter widget.
@@ -180,14 +182,15 @@ class MainWindow(QMainWindow):
 
     def sync_datamanagers(self):
         """
-        Move the data manager from tab _Plot Hydrograph_ to tab
-        _Analyze Hydrograph_ and vice-versa.
+        Move the data manager from tab 'Plot Hydrograph' to tab
+        'Analyze Hydrograph' and vice-versa.
         """
         current = self.tab_widget.tabBar().currentIndex()
         if current == 0:
             self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
         elif current == 1:
-            self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
+            self.tab_hydrocalc.right_panel.layout().addWidget(
+                self.dmanager, 0, 0)
 
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""
@@ -205,6 +208,8 @@ class MainWindow(QMainWindow):
         """Qt method override to close the project before close the app."""
         self._save_window_geometry()
         self._save_window_state()
+        CONF.set(
+            'main', 'mainwindow_current_tab', self.tab_widget.currentIndex())
 
         print('Closing projet')
         self.pmanager.close()

@@ -127,6 +127,12 @@ FA_ICONS = {
     'language': [
         ('mdi.web',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'link': [
+        ('mdi.link',),
+        {'color': COLOR, 'scale_factor': 1, 'rotated': 90}],
+    'link_off': [
+        ('mdi.link-off',),
+        {'color': COLOR, 'scale_factor': 1, 'rotated': 90}],
     'pan': [
         ('mdi.pan',),
         {'color': COLOR, 'scale_factor': 1.3}],

@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
     QMessageBox, QFileDialog, QComboBox, QLayout, QDialog,
-    QGroupBox)
+    QGroupBox, QToolButton)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -129,6 +129,7 @@ class BRFManager(myqt.QFrameLayout):
     def __init__(self, wldset=None, parent=None):
         super(BRFManager, self).__init__(parent)
         self._brfperiod_selection_toggled = False
+        self._bp_and_et_lags_are_linked = False
 
         self.viewer = BRFViewer(wldset, parent)
         self.viewer.btn_language.set_language(
@@ -147,6 +148,8 @@ class BRFManager(myqt.QFrameLayout):
         self.baro_spinbox.setRange(0, 9999)
         self.baro_spinbox.setValue(CONF.get('brf', 'nbr_of_baro_lags'))
         self.baro_spinbox.setKeyboardTracking(True)
+        self.baro_spinbox.valueChanged.connect(
+            lambda value: self._handle_lag_value_changed(self.baro_spinbox))
 
         self.earthtides_spinbox = QSpinBox()
         self.earthtides_spinbox.setRange(0, 9999)
@@ -155,6 +158,9 @@ class BRFManager(myqt.QFrameLayout):
         self.earthtides_spinbox.setKeyboardTracking(True)
         self.earthtides_spinbox.setEnabled(
             CONF.get('brf', 'compute_with_earthtides'))
+        self.earthtides_spinbox.valueChanged.connect(
+            lambda value: self._handle_lag_value_changed(
+                self.earthtides_spinbox))
 
         self.earthtides_cbox = QCheckBox('Nbr of ET lags :')
         self.earthtides_cbox.setChecked(
@@ -163,19 +169,39 @@ class BRFManager(myqt.QFrameLayout):
             lambda: self.earthtides_spinbox.setEnabled(
                 self.earthtides_cbox.isChecked()))
 
+        self._link_lags_button = QToolButton()
+        self._link_lags_button.setAutoRaise(True)
+        self._link_lags_button.setFixedWidth(24)
+        self._link_lags_button.setIconSize(icons.get_iconsize('normal'))
+        self._link_lags_button.clicked.connect(
+            lambda checked: self.toggle_link_bp_and_et_lags(
+                not self._bp_and_et_lags_are_linked))
+        self.toggle_link_bp_and_et_lags(
+            CONF.get('brf', 'bp_and_et_lags_are_linked', False))
+
         self.detrend_waterlevels_cbox = QCheckBox('Detrend water levels')
         self.detrend_waterlevels_cbox.setChecked(
             CONF.get('brf', 'detrend_waterlevels'))
+
+        # Lags spinboxes layout.
+        lags_layout = QGridLayout()
+        lags_layout.setContentsMargins(0, 0, 0, 0)
+        lags_layout.setHorizontalSpacing(2)
+        lags_layout.addWidget(self.baro_spinbox, 0, 0)
+        lags_layout.addWidget(self.earthtides_spinbox, 1, 0)
+        lags_layout.addWidget(self._link_lags_button, 0, 1, 2, 1)
 
         # Setup options layout.
         options_grpbox = QGroupBox()
         options_layout = QGridLayout(options_grpbox)
         options_layout.addWidget(QLabel('Nbr of BP lags :'), 0, 0)
-        options_layout.addWidget(self.baro_spinbox, 0, 2)
         options_layout.addWidget(self.earthtides_cbox, 1, 0)
-        options_layout.addWidget(self.earthtides_spinbox, 1, 2)
-        options_layout.addWidget(self.detrend_waterlevels_cbox, 2, 0, 1, 3)
-        options_layout.setColumnStretch(1, 100)
+        options_layout.addLayout(lags_layout, 0, 1, 2, 1)
+        options_layout.addWidget(self.detrend_waterlevels_cbox, 2, 0, 1, 2)
+        options_layout.setColumnStretch(0, 100)
+        margins = options_layout.contentsMargins()
+        margins.setRight(2)
+        options_layout.setContentsMargins(margins)
 
         # Setup BRF date range widgets.
         self.date_start_edit = QDateTimeEdit()
@@ -249,6 +275,8 @@ class BRFManager(myqt.QFrameLayout):
                  self.viewer._graph_opt_panel_is_visible)
         self.viewer.close()
 
+        CONF.set('brf', 'bp_and_et_lags_are_linked',
+                 self._bp_and_et_lags_are_linked)
         CONF.set('brf', 'compute_with_earthtides',
                  self.earthtides_cbox.isChecked())
         CONF.set('brf', 'nbr_of_earthtides_lags',
@@ -352,6 +380,31 @@ class BRFManager(myqt.QFrameLayout):
     def is_brfperiod_selection_toggled(self):
         """Return whether the BRF period selection is toggled."""
         return self._brfperiod_selection_toggled
+
+    def toggle_link_bp_and_et_lags(self, toggle):
+        """
+        Toggle on or off the linking of the BP and ET lags values.
+        """
+        self._bp_and_et_lags_are_linked = toggle
+        self._link_lags_button.setIcon(icons.get_icon(
+            'link' if toggle else 'link_off'))
+        if toggle is True:
+            self._handle_lag_value_changed(self.baro_spinbox)
+
+    def _handle_lag_value_changed(self, sender):
+        """
+        Handle when the value of either the barometric pressure
+        or earth tide lags change.
+        """
+        if self._bp_and_et_lags_are_linked:
+            if sender == self.baro_spinbox:
+                self.earthtides_spinbox.blockSignals(True)
+                self.earthtides_spinbox.setValue(self.baro_spinbox.value())
+                self.earthtides_spinbox.blockSignals(False)
+            else:
+                self.baro_spinbox.blockSignals(True)
+                self.baro_spinbox.setValue(self.earthtides_spinbox.value())
+                self.baro_spinbox.blockSignals(False)
 
     # ---- KGS BRF installer
     def __install_kgs_brf_installer(self):
