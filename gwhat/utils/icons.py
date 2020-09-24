@@ -82,7 +82,6 @@ GWHAT_ICONS = {
     'zoom_to_rect': 'zoom_to_rect',
     'show_glue_wl': 'show_glue_wl',
     'show_meteo': 'show_meteo',
-    'language': 'language',
     'manual_measures': 'manual_measures',
     'rect_select': 'rect_select',
     'rect_select_clear': 'rect_select_clear'
@@ -127,6 +126,9 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1.3}],
     'info': [
         ('mdi.information-outline',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'language': [
+        ('mdi.web',),
         {'color': COLOR, 'scale_factor': 1.3}],
     'pan': [
         ('mdi.pan',),
