@@ -36,6 +36,7 @@ from xlrd.xldate import xldate_from_date_tuple
 
 
 # ---- Local imports
+from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 from gwhat.common.widgets import DialogWindow
 from gwhat.common import StyleDB
@@ -466,25 +467,25 @@ class WLCalc(DialogWindow, SaveFileMixin):
         left_widget.setCentralWidget(self.fig_frame_widget)
 
         # Setup the tools tab area.
-
-        tooltab = QTabWidget()
+        self.tools_tabwidget = QTabWidget()
         self.mrc_eval_widget = self._setup_mrc_tool()
-        tooltab.addTab(self.mrc_eval_widget, 'MRC')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.mrc_eval_widget, 'MRC')
+        self.tools_tabwidget.setTabToolTip(
             0, ("<p>A tool to evaluate the master recession curve"
                 " of the hydrograph.</p>"))
-        tooltab.addTab(self.rechg_eval_widget, 'Recharge')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
+        self.tools_tabwidget.setTabToolTip(
             1, ("<p>A tool to evaluate groundwater recharge and its"
                 " uncertainty from observed water levels and daily "
                 " weather data.</p>"))
-        tooltab.addTab(self.brf_eval_widget, 'BRF')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.brf_eval_widget, 'BRF')
+        self.tools_tabwidget.setTabToolTip(
             2, ("<p>A tool to evaluate the barometric response function of"
                 " the well.</p>"))
-
-        tooltab.currentChanged.connect(
+        self.tools_tabwidget.currentChanged.connect(
             lambda: self.toggle_brfperiod_selection(False))
+        self.tools_tabwidget.setCurrentIndex(
+            CONF.get('hydrocalc', 'current_tool_index'))
 
         # Setup the right panel.
         self.right_panel = QFrame()
@@ -543,6 +544,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def close(self):
         """Close this groundwater level calc window."""
+        CONF.set('hydrocalc', 'current_tool_index',
+                 self.tools_tabwidget.currentIndex())
         self.brf_eval_widget.close()
         super().close()
 
