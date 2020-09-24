@@ -116,8 +116,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def _setup_mpl_canvas(self):
 
-        # ---- Setup the canvas
-
+        # Setup the figure canvas.
         self.fig = MplFigure(facecolor='white')
         self.canvas = FigureCanvasQTAgg(self.fig)
 
@@ -129,11 +128,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
         self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
 
-        # ---- Setup the canvas frame
-
-        # Put figure canvas in a QFrame widget.
 
         self.fig_frame_widget = myqt.QFrameLayout()
+        # Put figure canvas in a QFrame widget so that it has a frame.
         self.fig_frame_widget.setMinimumSize(200, 200)
         self.fig_frame_widget.addWidget(self.canvas, 0, 0)
 
@@ -141,21 +138,18 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
 
-        # ----- Setup the axes
-
-        # Water Level (Host) :
+        # Setup the Water Level (Host) axe.
         ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
         ax0.patch.set_visible(False)
         ax0.invert_yaxis()
 
-        # Precipitation :
+        # Setup the Precipitation axe.
         ax1 = ax0.twinx()
         ax1.patch.set_visible(False)
         ax1.set_zorder(50)
         ax1.set_navigate(False)
 
-        # ---- Setup ticks
-
+        # Setup the ticks
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out')
 
@@ -400,8 +394,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.MRC_results.setSizePolicy(
             QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
 
-        # ---- MRC toolbar
-
+        # Setup the MRC toolbar
         self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
         self.btn_undo.setToolTip('Undo')
         self.btn_undo.setEnabled(False)
@@ -438,8 +431,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     self.btn_delpeak, self.btn_save_mrc]:
             mrc_tb.addWidget(btn)
 
-        # ---- MRC Layout ----
-
+        # Setup the MRC Layout.
         self.mrc_eval_widget = QWidget()
         mrc_lay = QGridLayout(self.mrc_eval_widget)
 
