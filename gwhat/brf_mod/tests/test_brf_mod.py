@@ -56,6 +56,7 @@ def brfmanager(qtbot):
     brfmanager = BRFManager(None)
     qtbot.addWidget(brfmanager)
     qtbot.addWidget(brfmanager.viewer)
+    brfmanager.show()
     return brfmanager
 
 
@@ -66,7 +67,6 @@ def brfmanager(qtbot):
                     reason="We do not want to run this locally")
 def test_install_kgs_brf(brfmanager, mocker, qtbot):
     """Test the installation of the kgs_brf software."""
-    brfmanager.show()
     assert brfmanager
     assert brfmanager.kgs_brf_installer
 
@@ -123,7 +123,6 @@ def test_set_brfperiod(brfmanager, wldataset, qtbot):
                     reason="This feature is not supported on Linux")
 def test_calcul_brf(brfmanager, wldataset, qtbot):
     """Calcul the brf and assert the the results are plotted as expected."""
-    brfmanager.show()
     brfmanager.set_wldset(wldataset)
     assert brfmanager.get_brfperiod() == [41384.0, 41416.0]
 
@@ -142,7 +141,6 @@ def test_calcul_brf(brfmanager, wldataset, qtbot):
 def test_save_brf_figure(brfmanager, wldataset, mocker, qtbot,
                          tmp_path_factory):
     """Test that the BRF figures are saved correctly from the GUI."""
-    brfmanager.show()
     brfmanager.set_wldset(wldataset)
 
     qtbot.mouseClick(brfmanager._show_brf_results_btn, Qt.LeftButton)
@@ -161,7 +159,6 @@ def test_save_brf_figure(brfmanager, wldataset, mocker, qtbot,
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
 def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
-    brfmanager.show()
     brfmanager.set_wldset(wldataset)
 
     graph_opt_panel = brfmanager.viewer.graph_opt_panel
@@ -222,7 +219,6 @@ def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
                     reason="This feature is not supported on Linux")
 def test_del_brf_result(brfmanager, wldataset, mocker, qtbot):
     """Test that the BRF results are deleted correctly."""
-    brfmanager.show()
     brfmanager.set_wldset(wldataset)
 
     # Delete the brf and assert the GUI is updated as expected.
@@ -236,7 +232,6 @@ def test_del_brf_result(brfmanager, wldataset, mocker, qtbot):
                     reason="This feature is not supported on Linux")
 def test_del_all_brf_result(brfmanager, wldataset, mocker, qtbot):
     """Test that the BRF results are deleted correctly."""
-    brfmanager.show()
     brfmanager.set_wldset(wldataset)
 
     # Create BRF results X2.
@@ -255,6 +250,36 @@ def test_del_all_brf_result(brfmanager, wldataset, mocker, qtbot):
     qtbot.mouseClick(brfmanager.viewer.btn_del_all, Qt.LeftButton)
     assert brfmanager.viewer.current_brf.value() == 0
     assert brfmanager.viewer.tbar.isEnabled() is False
+
+
+@pytest.mark.skipif(os.name == 'posix',
+                    reason="This feature is not supported on Linux")
+def test_sync_bp_and_et_lags(brfmanager, wldataset, qtbot):
+    """Test that linking the BP and ET is working as expected."""
+    brfmanager.set_wldset(wldataset)
+    assert brfmanager._bp_and_et_lags_are_linked is False
+    assert brfmanager.nlag_baro == 100
+    assert brfmanager.nlag_earthtides == 100
+
+    # Change the lag value for the barometric pressure.
+    brfmanager.baro_spinbox.setValue(96)
+    assert brfmanager.nlag_baro == 96
+    assert brfmanager.nlag_earthtides == 100
+
+    # Link the BP and ET lag values.
+    qtbot.mouseClick(brfmanager._link_lags_button, Qt.LeftButton)
+    assert brfmanager._bp_and_et_lags_are_linked is True
+    assert brfmanager.nlag_baro == 96
+    assert brfmanager.nlag_earthtides == 96
+
+    # Change the lag value for the barometric pressure.
+    brfmanager.baro_spinbox.setValue(95)
+    assert brfmanager.nlag_baro == 95
+    assert brfmanager.nlag_earthtides == 95
+
+    # Unlink the BP and ET lag values.
+    qtbot.mouseClick(brfmanager._link_lags_button, Qt.LeftButton)
+    assert brfmanager._bp_and_et_lags_are_linked is False
 
 
 if __name__ == "__main__":
