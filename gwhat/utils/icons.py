@@ -63,7 +63,6 @@ GWHAT_ICONS = {
     'showDataDots': 'show_datadots',
     'stratigraphy': 'stratigraphy',
     'recharge': 'recharge',
-    'calendar': 'Calendar',
     'page_setup': 'page_setup',
     'fit_y': 'fit_y',
     'fit_x': 'fit_x',
@@ -92,6 +91,9 @@ GREEN = '#00aa00'
 RED = '#aa0000'
 
 FA_ICONS = {
+    'calendar': [
+        ('mdi.calendar-question',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'clear_changes': [
         ('mdi.close-circle-outline',),
         {'color': RED, 'scale_factor': 1.3}],
