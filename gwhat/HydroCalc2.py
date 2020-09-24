@@ -21,7 +21,7 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
-    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar)
+    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame)
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -37,7 +37,6 @@ from xlrd.xldate import xldate_from_date_tuple
 
 # ---- Local imports
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-import gwhat.common.widgets as myqt
 from gwhat.common.widgets import DialogWindow
 from gwhat.common import StyleDB
 from gwhat.utils import icons
@@ -128,15 +127,15 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
         self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
 
-
-        self.fig_frame_widget = myqt.QFrameLayout()
         # Put figure canvas in a QFrame widget so that it has a frame.
+        self.fig_frame_widget = QFrame()
         self.fig_frame_widget.setMinimumSize(200, 200)
-        self.fig_frame_widget.addWidget(self.canvas, 0, 0)
-
         self.fig_frame_widget.setFrameStyle(StyleDB().frame)
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
+        fig_frame_layout = QGridLayout(self.fig_frame_widget)
+        fig_frame_layout.setContentsMargins(0, 0, 0, 0)
+        fig_frame_layout.addWidget(self.canvas, 0, 0)
 
         # Setup the Water Level (Host) axe.
         ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
@@ -487,12 +486,14 @@ class WLCalc(DialogWindow, SaveFileMixin):
         tooltab.currentChanged.connect(
             lambda: self.toggle_brfperiod_selection(False))
 
-        # ---- Right Panel
-        self.right_panel = myqt.QFrameLayout()
-        self.right_panel.addWidget(self.dmngr, 0, 0)
-        self.right_panel.addWidget(tooltab, 1, 0)
-        self.right_panel.setRowStretch(2, 100)
-        self.right_panel.setSpacing(15)
+        # Setup the right panel.
+        self.right_panel = QFrame()
+        right_panel_layout = QGridLayout(self.right_panel)
+        right_panel_layout.setContentsMargins(0, 0, 0, 0)
+        right_panel_layout.addWidget(self.dmngr, 0, 0)
+        right_panel_layout.addWidget(self.tools_tabwidget, 1, 0)
+        right_panel_layout.setRowStretch(2, 100)
+        right_panel_layout.setSpacing(15)
 
         # ---- Setup the main layout
         main_layout = QGridLayout(self)

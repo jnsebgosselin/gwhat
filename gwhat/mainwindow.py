@@ -189,7 +189,8 @@ class MainWindow(QMainWindow):
         if current == 0:
             self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
         elif current == 1:
-            self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
+            self.tab_hydrocalc.right_panel.layout().addWidget(
+                self.dmanager, 0, 0)
 
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""
