@@ -25,7 +25,6 @@ GWHAT_ICONS = {
     'expand_range_vert': 'expand_range_vert',
     'calc_brf': 'start',
     'setup': 'page_setup',
-    'new_project': 'new_project',
     'openFolder': 'folder',
     'clear': 'clear-search',
     'importFile': 'open_project',
