@@ -17,11 +17,11 @@ import os.path as osp
 from PyQt5.QtCore import Qt, QDate, QCoreApplication, QPoint
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import pyqtSlot as QSlot
-from PyQt5.QtWidgets import (QSpinBox, QDoubleSpinBox, QWidget, QDateEdit,
-                             QAbstractSpinBox, QGridLayout, QFrame,
-                             QMessageBox, QComboBox, QLabel, QTabWidget,
-                             QFileDialog, QApplication, QPushButton,
-                             QDesktopWidget, QGroupBox)
+from PyQt5.QtWidgets import (
+    QSpinBox, QDoubleSpinBox, QWidget, QDateEdit, QAbstractSpinBox,
+    QGridLayout, QFrame, QMessageBox, QComboBox, QLabel, QTabWidget,
+    QFileDialog, QApplication, QPushButton, QDesktopWidget, QGroupBox,
+    QMainWindow, QToolBar)
 
 from xlrd.xldate import xldate_from_date_tuple
 from xlrd import xldate_as_tuple
@@ -32,7 +32,7 @@ from gwhat.config.ospath import (
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
 from gwhat.colors2 import ColorsReader, ColorsSetupWin
-from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
+from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall, get_iconsize
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
 from gwhat.common.utils import find_unique_filename
@@ -65,9 +65,12 @@ class HydroprintGUI(myqt.DialogWindow):
         self.__initUI__()
 
     def __initUI__(self):
+        # =====================================================================
+        # Setup the left widget.
+        # =====================================================================
+        left_widget = QMainWindow()
 
-        # ---- Toolbar
-
+        # Setup the toolbar buttons.
         self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
         btn_save.setToolTip('Save the well hydrograph')
 
@@ -109,8 +112,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.btn_language.sig_lang_changed.connect(self.layout_changed)
         self.btn_language.setIconSize(icons.get_iconsize('normal'))
 
-        # ---- Zoom Panel
-
+        # Setup the zoom panel.
         btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
         btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
         btn_zoom_out.clicked.connect(self.zoom_out)
@@ -133,60 +135,33 @@ class HydroprintGUI(myqt.DialogWindow):
         zoom_pan.addWidget(btn_zoom_in, 0, 1)
         zoom_pan.addWidget(self.zoom_disp, 0, 2)
 
-        # LAYOUT :
+        # Setup the toolbar of the left widget.
+        toolbar = QToolBar()
+        toolbar.setStyleSheet("QToolBar {border: 0px;}")
+        toolbar.setFloatable(False)
+        toolbar.setMovable(False)
+        toolbar.setIconSize(get_iconsize('normal'))
+        left_widget.addToolBar(Qt.TopToolBarArea, toolbar)
 
-        btn_list = [btn_save, btn_draw,
-                    self.btn_load_layout, self.btn_save_layout, VSep(),
-                    btn_bestfit_waterlvl, btn_bestfit_time, VSep(),
-                    self.btn_page_setup, btn_color_pick, self.btn_language,
-                    VSep(), zoom_pan]
+        btn_list = [
+            btn_save, btn_draw, self.btn_load_layout, self.btn_save_layout,
+            None, btn_bestfit_waterlvl, btn_bestfit_time, None,
+            self.btn_page_setup, btn_color_pick, self.btn_language,
+            None, zoom_pan]
+        for col, widget in enumerate(btn_list):
+            if widget is None:
+                toolbar.addSeparator()
+            else:
+                toolbar.addWidget(widget)
 
-        subgrid_toolbar = QGridLayout()
-        toolbar_widget = QWidget()
-
-        row = 0
-        for col, btn in enumerate(btn_list):
-            subgrid_toolbar.addWidget(btn, row, col)
-
-        subgrid_toolbar.setSpacing(5)
-        subgrid_toolbar.setContentsMargins(0, 0, 0, 0)
-        subgrid_toolbar.setColumnStretch(col + 1, 100)
-
-        toolbar_widget.setLayout(subgrid_toolbar)
-
-        # ---- LEFT PANEL
-
-        # SubGrid Hydrograph Frame :
-
+        # Setup the hydrograph frame.
         self.hydrograph = hydrograph.Hydrograph()
         self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
         self.hydrograph_scrollarea.zoomChanged.connect(self.zoom_disp.setValue)
 
-        grid_hydrograph = QGridLayout()
-        grid_hydrograph.addWidget(self.hydrograph_scrollarea, 0, 0)
-        grid_hydrograph.setRowStretch(0, 500)
-        grid_hydrograph.setColumnStretch(0, 500)
-        grid_hydrograph.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
+        left_widget.setCentralWidget(self.hydrograph_scrollarea)
 
-        # ASSEMBLING SubGrids :
-
-        grid_layout = QGridLayout()
-        self.grid_layout_widget = QFrame()
-
-        row = 0
-        grid_layout.addWidget(toolbar_widget, row, 0)
-        row += 1
-        grid_layout.addLayout(grid_hydrograph, row, 0)
-
-        grid_layout.setContentsMargins(0, 0, 0, 0)  # (L, T, R, B)
-        grid_layout.setSpacing(5)
-        grid_layout.setColumnStretch(0, 500)
-        grid_layout.setRowStretch(1, 500)
-
-        self.grid_layout_widget.setLayout(grid_layout)
-
-        # ---- Right Panel
-
+        # Setup the right panel.
         self.tabscales = self.__init_scalesTabWidget__()
 
         self.right_panel = myqt.QFrameLayout()
@@ -196,20 +171,14 @@ class HydroprintGUI(myqt.DialogWindow):
 
         self.right_panel.setSpacing(15)
 
-        # ---- MAIN GRID
-
-        mainGrid = QGridLayout()
-
-        mainGrid.addWidget(self.grid_layout_widget, 0, 0)
-        mainGrid.addWidget(VSep(), 0, 1)
-        mainGrid.addWidget(self.right_panel, 0, 2)
-
-        mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-        mainGrid.setSpacing(15)
-        mainGrid.setColumnStretch(0, 500)
-        mainGrid.setColumnMinimumWidth(2, 250)
-
-        self.setLayout(mainGrid)
+        # Setup the main layout.
+        main_layout = QGridLayout(self)
+        main_layout.addWidget(left_widget, 0, 0)
+        main_layout.addWidget(VSep(), 0, 1)
+        main_layout.addWidget(self.right_panel, 0, 2)
+        main_layout.setSpacing(15)
+        main_layout.setColumnStretch(0, 500)
+        main_layout.setColumnMinimumWidth(2, 250)
 
         # ---- EVENTS
 
