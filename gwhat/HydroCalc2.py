@@ -21,7 +21,7 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
-    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar)
+    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame)
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -36,8 +36,8 @@ from xlrd.xldate import xldate_from_date_tuple
 
 
 # ---- Local imports
+from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-import gwhat.common.widgets as myqt
 from gwhat.common.widgets import DialogWindow
 from gwhat.common import StyleDB
 from gwhat.utils import icons
@@ -116,8 +116,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def _setup_mpl_canvas(self):
 
-        # ---- Setup the canvas
-
+        # Setup the figure canvas.
         self.fig = MplFigure(facecolor='white')
         self.canvas = FigureCanvasQTAgg(self.fig)
 
@@ -129,33 +128,28 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
         self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
 
-        # ---- Setup the canvas frame
-
-        # Put figure canvas in a QFrame widget.
-
-        self.fig_frame_widget = myqt.QFrameLayout()
+        # Put figure canvas in a QFrame widget so that it has a frame.
+        self.fig_frame_widget = QFrame()
         self.fig_frame_widget.setMinimumSize(200, 200)
-        self.fig_frame_widget.addWidget(self.canvas, 0, 0)
-
         self.fig_frame_widget.setFrameStyle(StyleDB().frame)
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
+        fig_frame_layout = QGridLayout(self.fig_frame_widget)
+        fig_frame_layout.setContentsMargins(0, 0, 0, 0)
+        fig_frame_layout.addWidget(self.canvas, 0, 0)
 
-        # ----- Setup the axes
-
-        # Water Level (Host) :
+        # Setup the Water Level (Host) axe.
         ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
         ax0.patch.set_visible(False)
         ax0.invert_yaxis()
 
-        # Precipitation :
+        # Setup the Precipitation axe.
         ax1 = ax0.twinx()
         ax1.patch.set_visible(False)
         ax1.set_zorder(50)
         ax1.set_navigate(False)
 
-        # ---- Setup ticks
-
+        # Setup the ticks
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out')
 
@@ -400,8 +394,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.MRC_results.setSizePolicy(
             QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
 
-        # ---- MRC toolbar
-
+        # Setup the MRC toolbar
         self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
         self.btn_undo.setToolTip('Undo')
         self.btn_undo.setEnabled(False)
@@ -438,8 +431,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     self.btn_delpeak, self.btn_save_mrc]:
             mrc_tb.addWidget(btn)
 
-        # ---- MRC Layout ----
-
+        # Setup the MRC Layout.
         self.mrc_eval_widget = QWidget()
         mrc_lay = QGridLayout(self.mrc_eval_widget)
 
@@ -475,32 +467,34 @@ class WLCalc(DialogWindow, SaveFileMixin):
         left_widget.setCentralWidget(self.fig_frame_widget)
 
         # Setup the tools tab area.
-
-        tooltab = QTabWidget()
+        self.tools_tabwidget = QTabWidget()
         self.mrc_eval_widget = self._setup_mrc_tool()
-        tooltab.addTab(self.mrc_eval_widget, 'MRC')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.mrc_eval_widget, 'MRC')
+        self.tools_tabwidget.setTabToolTip(
             0, ("<p>A tool to evaluate the master recession curve"
                 " of the hydrograph.</p>"))
-        tooltab.addTab(self.rechg_eval_widget, 'Recharge')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
+        self.tools_tabwidget.setTabToolTip(
             1, ("<p>A tool to evaluate groundwater recharge and its"
                 " uncertainty from observed water levels and daily "
                 " weather data.</p>"))
-        tooltab.addTab(self.brf_eval_widget, 'BRF')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.brf_eval_widget, 'BRF')
+        self.tools_tabwidget.setTabToolTip(
             2, ("<p>A tool to evaluate the barometric response function of"
                 " the well.</p>"))
-
-        tooltab.currentChanged.connect(
+        self.tools_tabwidget.currentChanged.connect(
             lambda: self.toggle_brfperiod_selection(False))
+        self.tools_tabwidget.setCurrentIndex(
+            CONF.get('hydrocalc', 'current_tool_index'))
 
-        # ---- Right Panel
-        self.right_panel = myqt.QFrameLayout()
-        self.right_panel.addWidget(self.dmngr, 0, 0)
-        self.right_panel.addWidget(tooltab, 1, 0)
-        self.right_panel.setRowStretch(2, 100)
-        self.right_panel.setSpacing(15)
+        # Setup the right panel.
+        self.right_panel = QFrame()
+        right_panel_layout = QGridLayout(self.right_panel)
+        right_panel_layout.setContentsMargins(0, 0, 0, 0)
+        right_panel_layout.addWidget(self.dmngr, 0, 0)
+        right_panel_layout.addWidget(self.tools_tabwidget, 1, 0)
+        right_panel_layout.setRowStretch(2, 100)
+        right_panel_layout.setSpacing(15)
 
         # ---- Setup the main layout
         main_layout = QGridLayout(self)
@@ -550,6 +544,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def close(self):
         """Close this groundwater level calc window."""
+        CONF.set('hydrocalc', 'current_tool_index',
+                 self.tools_tabwidget.currentIndex())
         self.brf_eval_widget.close()
         super().close()
 

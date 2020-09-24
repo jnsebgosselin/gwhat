@@ -28,8 +28,12 @@ DEFAULTS = [
         {'fontsize_global': 14,
          'fontsize_console': 12,
          'fontsize_menubar': 12,
-         'last_project_filepath': '../Projects/Example/Example.gwt'
+         'last_project_filepath': '../Projects/Example/Example.gwt',
+         'mainwindow_current_tab': 0
          }
+     ),
+    ('hydrocalc',
+        {'current_tool_index': 0}
      ),
     ('brf',
         {'graphs_labels_language': 'english',
