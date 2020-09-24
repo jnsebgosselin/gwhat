@@ -48,7 +48,6 @@ GWHAT_ICONS = {
     'fromdate': 'calendar_fromdate',
     'select_range': 'select_range',
     'zoom_out': 'zoom_out',
-    'zoom_in': 'zoom_in',
     'toggleMode': 'toggleMode2',
     'undo': 'undo',
     'clear_search': 'clear-search',
@@ -151,6 +150,9 @@ FA_ICONS = {
     'report_bug': [
         ('mdi.bug',),
         {'color': COLOR, 'scale_factor': 1.4}],
+    'zoom_in': [
+        ('mdi.plus-circle-outline',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     'zoom_to_rect': [
         ('mdi.selection-search',),
         {'color': COLOR, 'scale_factor': 1.2}],
