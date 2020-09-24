@@ -182,8 +182,8 @@ class MainWindow(QMainWindow):
 
     def sync_datamanagers(self):
         """
-        Move the data manager from tab _Plot Hydrograph_ to tab
-        _Analyze Hydrograph_ and vice-versa.
+        Move the data manager from tab 'Plot Hydrograph' to tab
+        'Analyze Hydrograph' and vice-versa.
         """
         current = self.tab_widget.tabBar().currentIndex()
         if current == 0:
