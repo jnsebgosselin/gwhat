@@ -149,6 +149,8 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         self.tab_widget.setCornerWidget(self.pmanager)
         self.tab_widget.currentChanged.connect(self.sync_datamanagers)
+        self.tab_widget.setCurrentIndex(
+            CONF.get('main', 'mainwindow_current_tab'))
         self.sync_datamanagers()
 
         # Setup the splitter widget.
@@ -205,6 +207,8 @@ class MainWindow(QMainWindow):
         """Qt method override to close the project before close the app."""
         self._save_window_geometry()
         self._save_window_state()
+        CONF.set(
+            'main', 'mainwindow_current_tab', self.tab_widget.currentIndex())
 
         print('Closing projet')
         self.pmanager.close()
