@@ -20,16 +20,45 @@ class FigureLabels(object):
     LANGUAGES = ['english', 'french']
 
     def __init__(self, language):
-        if language.lower() == 'french':
+        self.language = language.lower()
+        if self.language == 'french':
             self.lag = 'Lag temporel (jours)'
             self.lag_hr = 'Lag temporel (heures)'
             self.A = 'Réponse barométrique cumulative'
-            self.title = 'Puits %s du %s au %s'
         else:
             self.lag = 'Time Lag (days)'
             self.lag_hr = 'Time Lag (hours)'
             self.A = 'Cumulative Response Function'
-            self.title = ('Well %s from %s to %s')
+
+    def title(self, well_name):
+        if self.language == 'french':
+            return 'BRF évaluée pour le puits {}'.format(well_name)
+        else:
+            return 'BRF computed for well {}'.format(well_name)
+
+    def period(self, datetime_start, datetime_end):
+        datetime_start = datetime_start.strftime(format='%d/%m/%y %H:%M')
+        datetime_end = datetime_end.strftime(format='%d/%m/%y %H:%M')
+        if self.language == 'french':
+            return "pour la période du {} au {}".format(
+                datetime_start, datetime_end)
+        else:
+            return "for the period {} to {}".format(
+                datetime_start, datetime_end)
+
+    def subtitle(self, nlags_bp, nlags_et, wl_corr):
+        if self.language == 'french':
+            return (
+                "Nbre lags pression baro = {:.0f} ; "
+                "Nbre lags marées terrestres = {:.0f} ; "
+                "Tendance des niveaux d'eau corrigée = {}"
+                ).format(nlags_bp, nlags_et, 'oui' if wl_corr else 'non')
+        else:
+            return (
+                "No. lags barometric pressure = {:.0f} ; "
+                "No. lags Earth tides = {:.0f} ; "
+                "Water levels detrended = {}"
+                ).format(nlags_bp, nlags_et, 'yes' if wl_corr else 'no')
 
 
 class BRFFigure(Figure):
@@ -42,20 +71,21 @@ class BRFFigure(Figure):
         # Setup the matplotlib figure.
         fig_width = 8
         fig_height = 5
-
         self.set_size_inches(fig_width, fig_height)
         self.patch.set_facecolor('white')
 
         left_margin = 0.8
         right_margin = 0.25
         bottom_margin = 0.75
-        top_margin = 0.25
+        top_margin = 0.675
 
         # Setup the axes.
-        ax = self.add_axes([left_margin/fig_width, bottom_margin/fig_height,
-                            1 - (left_margin + right_margin)/fig_width,
-                            1 - (bottom_margin + top_margin)/fig_height],
-                           zorder=1)
+        ax = self.add_axes(
+            [left_margin / fig_width,
+             bottom_margin / fig_height,
+             1 - (left_margin + right_margin) / fig_width,
+             1 - (bottom_margin + top_margin) / fig_height],
+            zorder=1)
         ax.set_visible(False)
 
         # Setup the ticks.
@@ -74,10 +104,19 @@ class BRFFigure(Figure):
 
         self.errbar, = ax.plot([], [])
 
-        offset = ScaledTranslation(0, -5/72, self.dpi_scale_trans)
-
-        self.title = ax.text(0.5, 1, '', ha='center', va='top', fontsize=14,
-                             transform=ax.transAxes+offset)
+        # Initialize the figure title.
+        offset = ScaledTranslation(0, 36/72, self.dpi_scale_trans)
+        self.title = ax.text(
+            0.5, 1, '', ha='center', va='bottom', fontsize=14,
+            transform=ax.transAxes + offset)
+        offset = ScaledTranslation(0, 18/72, self.dpi_scale_trans)
+        self.period = ax.text(
+            0.5, 1, '', ha='center', va='bottom', fontsize=14,
+            transform=ax.transAxes + offset)
+        offset = ScaledTranslation(0, 2/72, self.dpi_scale_trans)
+        self.subtitle = ax.text(
+            0.5, 1, '', ha='center', va='bottom', fontsize=10,
+            transform=ax.transAxes + offset)
 
     @property
     def fig_labels(self):
@@ -100,14 +139,17 @@ class BRFFigure(Figure):
         ax = self.axes[0]
         ax.set_visible(False)
 
-    def plot_BRF(self, lag, A, err, date0, date1, well, msize=0,
-                 draw_line=True, ylim=[None, None], xlim=[None, None],
-                 time_units='auto', xscl=None, yscl=None):
+    def plot(self, brfdata, well, show_ebar=True, msize=0,
+             draw_line=True, ylim=[None, None], xlim=[None, None],
+             time_units='auto', xscl=None, yscl=None):
+        lag = brfdata['Lag'].values
+        A = brfdata['SumA'].values
+        err = brfdata['sdA'].values if show_ebar else []
+
         ax = self.axes[0]
         ax.set_visible(True)
 
-        # ---- Xticks labels time_units
-
+        # Setup xticks labels time units.
         if time_units not in ['days', 'hours', 'auto']:
             raise ValueError("time_units value must be either :",
                              ['days', 'hours', 'auto'])
@@ -118,20 +160,16 @@ class BRFFigure(Figure):
             xlim[0] = None if xlim[0] is None else xlim[0]*24
             xlim[1] = None if xlim[1] is None else xlim[1]*24
 
-        # ---- Axis Labels
-
+        # Setup the label of the axis.
         if time_units == 'hours':
             ax.set_xlabel(self.fig_labels.lag_hr, fontsize=14, labelpad=8)
         else:
             ax.set_xlabel(self.fig_labels.lag, fontsize=14, labelpad=8)
+        ax.set_ylabel(self.fig_labels.A, fontsize=14, labelpad=10)
 
-        ax.set_ylabel(self.fig_labels.A, fontsize=14)
-
-        # ---- Axis Limits
-
+        # Setup the limit of the axis.
         xmin = 0 if xlim[0] is None else xlim[0]
         xmax = np.max(lag) if xlim[1] is None else xlim[1]
-
         if ylim[0] is None:
             if len(err) > 0:
                 ymin = min(np.floor(np.min(A-err)/0.2)*0.2, 0)
@@ -150,7 +188,7 @@ class BRFFigure(Figure):
             ymax = ylim[1]
         ymax = min(10, ymax)
 
-        # ---- Setup xticks and yticks
+        # Setup the xticks and yticks.
         yscl = 0.2 if yscl is None else yscl
         ax.set_yticks(np.arange(ymin, ymax+yscl, yscl))
 
@@ -174,8 +212,7 @@ class BRFFigure(Figure):
 
         ax.axis([xmin, xmax+10**-12, ymin-10**-12, ymax+10**-12])
 
-        # ---- Update the data
-
+        # Update the data.
         self.line.set_xdata(lag)
         self.line.set_ydata(A)
         self.line.set_visible(draw_line)
@@ -194,4 +231,13 @@ class BRFFigure(Figure):
                                           color='0.75', clip_on=True)
         else:
             self.errbar, = ax.plot([], [])
-        self.title.set_text(self.fig_labels.title % (well, date0, date1))
+
+        # Draw the title and subtitles.
+        self.title.set_text(self.fig_labels.title(well))
+        self.period.set_text(
+            self.fig_labels.period(brfdata.date_start, brfdata.date_end))
+        self.subtitle.set_text(
+            self.fig_labels.subtitle(
+                len(brfdata.loc[:, 'A'].dropna()) - 1,
+                len(brfdata.loc[:, 'B'].dropna()) - 1,
+                brfdata.detrending == 'Yes'))
