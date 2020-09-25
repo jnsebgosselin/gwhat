@@ -520,9 +520,7 @@ class BRFViewer(QDialog):
         self.set_wldset(wldset)
 
     def __initGUI__(self):
-
-        # ---- Navigator
-
+        # Setup the navigation buttons and widgets.
         self.btn_prev = QToolButtonNormal(icons.get_icon('go_previous'))
         self.btn_prev.clicked.connect(self.navigate_brf)
 
@@ -547,10 +545,7 @@ class BRFViewer(QDialog):
         self.btn_language.sig_lang_changed.connect(self.plot_brf)
         self.btn_language.setIconSize(icons.get_iconsize('normal'))
 
-        # ---- Toolbar
-
-        # Generate the buttons :
-
+        # Generate the toolbar buttons.
         self.btn_del = QToolButtonNormal(icons.get_icon('delete_data'))
         self.btn_del.setToolTip('Delete current BRF results')
         self.btn_del.clicked.connect(self.del_brf)
@@ -576,10 +571,9 @@ class BRFViewer(QDialog):
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
-        # Generate the layout :
-
         self.tbar = myqt.QFrameLayout()
 
+        # Setup the toolbar.
         buttons = [btn_save, self.btn_copy, self.btn_export, self.btn_del,
                    self.btn_del_all, VSep(), self.btn_prev, self.current_brf,
                    self.total_brf, self.btn_next, VSep(), self.btn_setp,

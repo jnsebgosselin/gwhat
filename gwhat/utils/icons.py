@@ -89,6 +89,9 @@ FA_ICONS = {
     'calendar': [
         ('mdi.calendar-question',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'calendar_sync': [
+        ('mdi.calendar-sync',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'clear_changes': [
         ('mdi.close-circle-outline',),
         {'color': RED, 'scale_factor': 1.3}],
