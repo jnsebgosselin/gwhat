@@ -137,6 +137,8 @@ class BRFManager(myqt.QFrameLayout):
             CONF.get('brf', 'graphs_labels_language'))
         if CONF.get('brf', 'graph_opt_panel_is_visible', False):
             self.viewer.toggle_graphpannel()
+        self.viewer.sig_sync_brfperiod_request.connect(
+            lambda period: self.set_brfperiod(period, silent=False))
 
         self.kgs_brf_installer = None
         self.__initGUI__()
@@ -328,7 +330,7 @@ class BRFManager(myqt.QFrameLayout):
         dend = xldate_from_datetime_tuple(
             (year, month, day, hour, minute, 0), 0)
 
-        return [dstart, dend]
+        return (dstart, dend)
 
     def set_brfperiod(self, period, silent=True):
         """
@@ -521,6 +523,7 @@ class BRFViewer(QDialog):
     Window that is used to show all the results produced with for the
     currently selected water level dataset.
     """
+    sig_sync_brfperiod_request = QSignal(tuple)
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
@@ -588,13 +591,18 @@ class BRFViewer(QDialog):
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
+        self.sync_brfperiod_btn = QToolButtonNormal(
+            icons.get_icon('calendar_sync'))
+        self.sync_brfperiod_btn.clicked.connect(
+            self.request_sync_brfperiod_with_manager)
 
         # Setup the toolbar.
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
         buttons = [btn_save, self.btn_copy, self.btn_export, self.btn_del,
                    self.btn_del_all, None, self.btn_prev, self.current_brf,
-                   self.total_brf, self.btn_next, None, self.btn_language]
+                   self.total_brf, self.btn_next, None,
+                   self.sync_brfperiod_btn, self.btn_language]
         for button in buttons:
             if button is None:
                 self.toolbar.addSeparator()
