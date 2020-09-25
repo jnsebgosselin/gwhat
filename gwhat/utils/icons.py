@@ -141,7 +141,7 @@ FA_ICONS = {
         {'color': GREEN, 'scale_factor': 1.5}],
     'save': [
         ('fa.save',),
-        {'color': COLOR, 'scale_factor': 1.1}],
+        {'color': COLOR, 'scale_factor': 1.3}],
     'search': [
         ('fa5s.search',),
         {'color': COLOR, 'scale_factor': 1.0}],
@@ -150,7 +150,7 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1.3}],
     'copy_clipboard': [
         ('mdi.content-copy',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'color': COLOR, 'scale_factor': 1.2}],
     'report_bug': [
         ('mdi.bug',),
         {'color': COLOR, 'scale_factor': 1.4}],
