@@ -309,8 +309,12 @@ class BRFManager(myqt.QFrameLayout):
 
     def get_brfperiod(self):
         """
-        Get the period over which the BRF would be evaluated as a list of
-        two numerical Excel date values.
+        Get the period over which the BRF would be evaluated.
+
+        Returns
+        -------
+        brfperiod
+            A tuple of two numerical Excel date values.
         """
         year, month, day = self.date_start_edit.date().getDate()
         hour = self.date_start_edit.time().hour()
@@ -331,6 +335,11 @@ class BRFManager(myqt.QFrameLayout):
         Set the value of the date_start_edit and date_end_edit widgets used to
         define the period over which the BRF is evaluated. Also save the
         period to the waterlevel dataset.
+
+        Parameters
+        ----------
+        daterange : 2-length tuple of int
+            A tuple of two numerical Excel date values.
         """
         period = np.sort(period).tolist()
         widgets = (self.date_start_edit, self.date_end_edit)
@@ -358,8 +367,13 @@ class BRFManager(myqt.QFrameLayout):
 
     def set_daterange(self, daterange):
         """
-        Set the minimum and maximum value of date_start_edit and date_end_edit
-        widgets from the specified list of Excel numeric dates.
+        Set the minimum and maximum value of the date_start_edit and
+        date_end_edit widgets from the specified Excel numeric dates.
+
+        Parameters
+        ----------
+        daterange : 2-length tuple of int
+            A tuple of two numerical Excel date values.
         """
         for widget in (self.date_start_edit, self.date_end_edit):
             widget.blockSignals(True)
