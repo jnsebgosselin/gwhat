@@ -759,6 +759,26 @@ class BRFViewer(QDialog):
         """Export the current BRF data to to file."""
         self.wldset.export_brf_to_csv(fname, self.current_brf.value()-1)
 
+    def request_sync_brfperiod_with_manager(self):
+        """
+        Request a synchronisation between the BRF period set in the manager and
+        that used for computing the BRF currently shown in the viewer.
+
+        Send signal containing a tuple of 2 Excel numerical dates
+        corresponding to the period that was used to compute the BRF that
+        is currently shown in the viewer.
+        """
+        if self.wldset is None or self.wldset.brf_count() == 0:
+            return
+
+        databrf = self.wldset.get_brf(
+            self.wldset.get_brfname_at(self.current_brf.value() - 1))
+        xls_date_start = xldate_from_datetime_tuple(
+            databrf.date_start.timetuple()[:6], 0)
+        xls_date_end = xldate_from_datetime_tuple(
+            databrf.date_end.timetuple()[:6], 0)
+        self.sig_sync_brfperiod_request.emit((xls_date_start, xls_date_end))
+
     # ---- Others
     def set_wldset(self, wldset):
         self.wldset = wldset
