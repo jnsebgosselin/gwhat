@@ -330,7 +330,7 @@ class BRFManager(myqt.QFrameLayout):
 
         return [dstart, dend]
 
-    def set_brfperiod(self, period):
+    def set_brfperiod(self, period, silent=True):
         """
         Set the value of the date_start_edit and date_end_edit widgets used to
         define the period over which the BRF is evaluated. Also save the
@@ -349,6 +349,8 @@ class BRFManager(myqt.QFrameLayout):
                 widget.setDateTime(qdatetime_from_xldate(xldate))
                 widget.blockSignals(False)
         self.wldset.save_brfperiod(period)
+        if silent is False:
+            self.sig_brfperiod_changed.emit(period)
 
     def set_wldset(self, wldset):
         """Set the namespace for the wldset in the widget."""
