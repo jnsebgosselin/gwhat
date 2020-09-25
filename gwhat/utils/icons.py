@@ -89,9 +89,6 @@ FA_ICONS = {
     'calendar': [
         ('mdi.calendar-question',),
         {'color': COLOR, 'scale_factor': 1.3}],
-    'calendar_sync': [
-        ('mdi.calendar-sync',),
-        {'color': COLOR, 'scale_factor': 1.3}],
     'clear_changes': [
         ('mdi.close-circle-outline',),
         {'color': RED, 'scale_factor': 1.3}],
@@ -106,6 +103,9 @@ FA_ICONS = {
                      {'scale_factor': 0.6,
                       'offset': (0.3, 0.3),
                       'color': COLOR}]}],
+    'content_duplicate': [
+        ('mdi.content-duplicate',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     'commit_changes': [
         ('mdi.check-circle-outline',),
         {'color': GREEN, 'scale_factor': 1.3}],
