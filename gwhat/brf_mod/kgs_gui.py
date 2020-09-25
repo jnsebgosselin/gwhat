@@ -124,7 +124,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
 
 
 class BRFManager(myqt.QFrameLayout):
-    sig_brfperiod_changed = QSignal(list)
+    sig_brfperiod_changed = QSignal(tuple)
     sig_select_brfperiod_requested = QSignal(bool)
 
     def __init__(self, wldset=None, parent=None):
@@ -137,8 +137,7 @@ class BRFManager(myqt.QFrameLayout):
             CONF.get('brf', 'graphs_labels_language'))
         if CONF.get('brf', 'graph_opt_panel_is_visible', False):
             self.viewer.toggle_graphpannel()
-        self.viewer.sig_sync_brfperiod_request.connect(
-            lambda period: self.set_brfperiod(period, silent=False))
+        self.viewer.sig_sync_request.connect(self.setup_from_brfdata)
 
         self.kgs_brf_installer = None
         self.__initGUI__()
@@ -332,7 +331,7 @@ class BRFManager(myqt.QFrameLayout):
 
         return (dstart, dend)
 
-    def set_brfperiod(self, period, silent=True):
+    def set_brfperiod(self, period):
         """
         Set the value of the date_start_edit and date_end_edit widgets used to
         define the period over which the BRF is evaluated. Also save the
@@ -351,8 +350,6 @@ class BRFManager(myqt.QFrameLayout):
                 widget.setDateTime(qdatetime_from_xldate(xldate))
                 widget.blockSignals(False)
         self.wldset.save_brfperiod(period)
-        if silent is False:
-            self.sig_brfperiod_changed.emit(period)
 
     def set_wldset(self, wldset):
         """Set the namespace for the wldset in the widget."""
@@ -409,6 +406,33 @@ class BRFManager(myqt.QFrameLayout):
             'link' if toggle else 'link_off'))
         if toggle is True:
             self._handle_lag_value_changed(self.baro_spinbox)
+
+    def setup_from_brfdata(self, brfdata):
+        """
+        Setup the BRF parameters to reflect those saved in the provided
+        BRF results dataset.
+        """
+        # Setup the lags.
+        nlag_bp = len(brfdata.loc[:, 'A'].dropna()) - 1
+        nlag_et = len(brfdata.loc[:, 'B'].dropna()) - 1
+
+        self.earthtides_cbox.setChecked(nlag_et != -1)
+        if nlag_bp != nlag_et and nlag_et != -1:
+            self.toggle_link_bp_and_et_lags(False)
+        self.baro_spinbox.setValue(nlag_bp)
+        if nlag_et != -1:
+            self.earthtides_spinbox.setValue(nlag_et)
+
+        # Setup the detrending paramenter.
+        self.detrend_waterlevels_cbox.setChecked(brfdata.detrending == 'Yes')
+
+        # Setup the BRF period.
+        xls_date_start = xldate_from_datetime_tuple(
+            brfdata.date_start.timetuple()[:6], 0)
+        xls_date_end = xldate_from_datetime_tuple(
+            brfdata.date_end.timetuple()[:6], 0)
+        self.set_brfperiod((xls_date_start, xls_date_end))
+        self.sig_brfperiod_changed.emit((xls_date_start, xls_date_end))
 
     def _handle_lag_value_changed(self, sender):
         """
@@ -523,7 +547,7 @@ class BRFViewer(QDialog):
     Window that is used to show all the results produced with for the
     currently selected water level dataset.
     """
-    sig_sync_brfperiod_request = QSignal(tuple)
+    sig_sync_request = QSignal(object)
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
@@ -591,10 +615,10 @@ class BRFViewer(QDialog):
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
-        self.sync_brfperiod_btn = QToolButtonNormal(
-            icons.get_icon('calendar_sync'))
-        self.sync_brfperiod_btn.clicked.connect(
-            self.request_sync_brfperiod_with_manager)
+        self.sync_with_manager_btn = QToolButtonNormal(
+            icons.get_icon('content_duplicate'))
+        self.sync_with_manager_btn.clicked.connect(
+            self.request_sync_with_manager)
 
         # Setup the toolbar.
         self.toolbar = QToolBar()
@@ -602,7 +626,7 @@ class BRFViewer(QDialog):
         buttons = [btn_save, self.btn_copy, self.btn_export, self.btn_del,
                    self.btn_del_all, None, self.btn_prev, self.current_brf,
                    self.total_brf, self.btn_next, None,
-                   self.sync_brfperiod_btn, self.btn_language]
+                   self.sync_with_manager_btn, self.btn_language]
         for button in buttons:
             if button is None:
                 self.toolbar.addSeparator()
@@ -767,7 +791,7 @@ class BRFViewer(QDialog):
         """Export the current BRF data to to file."""
         self.wldset.export_brf_to_csv(fname, self.current_brf.value()-1)
 
-    def request_sync_brfperiod_with_manager(self):
+    def request_sync_with_manager(self):
         """
         Request a synchronisation between the BRF period set in the manager and
         that used for computing the BRF currently shown in the viewer.
@@ -778,14 +802,9 @@ class BRFViewer(QDialog):
         """
         if self.wldset is None or self.wldset.brf_count() == 0:
             return
-
         databrf = self.wldset.get_brf(
             self.wldset.get_brfname_at(self.current_brf.value() - 1))
-        xls_date_start = xldate_from_datetime_tuple(
-            databrf.date_start.timetuple()[:6], 0)
-        xls_date_end = xldate_from_datetime_tuple(
-            databrf.date_end.timetuple()[:6], 0)
-        self.sig_sync_brfperiod_request.emit((xls_date_start, xls_date_end))
+        self.sig_sync_request.emit(databrf)
 
     # ---- Others
     def set_wldset(self, wldset):
