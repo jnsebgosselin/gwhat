@@ -22,8 +22,8 @@ from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-    QMessageBox, QFileDialog, QComboBox, QLayout, QDialog,
-    QGroupBox, QToolButton, QToolBar)
+    QMessageBox, QFileDialog, QComboBox, QDialog, QGroupBox, QToolButton,
+    QToolBar)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
