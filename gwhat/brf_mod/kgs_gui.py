@@ -1107,9 +1107,3 @@ if __name__ == "__main__":
     brfwin.viewer.toggle_graphpannel()
 
     sys.exit(app.exec_())
-
-#    plt.close('all')
-    # produce_par_file()
-    # run_kgsbrf()
-    # load_BRFOutput(show_ebar=True, msize=5, draw_line=False)
-#    plt.show()
