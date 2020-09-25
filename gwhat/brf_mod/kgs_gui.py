@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
     QMessageBox, QFileDialog, QComboBox, QLayout, QDialog,
-    QGroupBox, QToolButton)
+    QGroupBox, QToolButton, QToolBar)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -571,37 +571,33 @@ class BRFViewer(QDialog):
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
-        self.tbar = myqt.QFrameLayout()
 
         # Setup the toolbar.
+        self.toolbar = QToolBar()
+        self.toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
         buttons = [btn_save, self.btn_copy, self.btn_export, self.btn_del,
-                   self.btn_del_all, VSep(), self.btn_prev, self.current_brf,
-                   self.total_brf, self.btn_next, VSep(), self.btn_setp,
-                   self.btn_language]
-
-        for btn in buttons:
-            if isinstance(btn, QLayout):
-                self.tbar.addLayout(btn, 1, self.tbar.columnCount())
+                   self.btn_del_all, None, self.btn_prev, self.current_brf,
+                   self.total_brf, self.btn_next, None, self.btn_language]
+        for button in buttons:
+            if button is None:
+                self.toolbar.addSeparator()
             else:
-                self.tbar.addWidget(btn, 1, self.tbar.columnCount())
-
-        row = self.tbar.columnCount()
-        self.tbar.addWidget(HSep(), 0, 0, 1, row+1)
-        self.tbar.setColumnStretch(row, 100)
-        self.tbar.setContentsMargins(10, 0, 10, 10)  # (l, t, r, b)
+                self.toolbar.addWidget(button)
+        self.toolbar.addWidget(create_toolbar_stretcher())
+        self.toolbar.addWidget(self.btn_setp)
 
         # Setup the graph canvas.
+        self.brf_canvas = FigureCanvasQTAgg(BRFFigure())
+
         self.fig_frame = QFrame()
         self.fig_frame.setFrameStyle(StyleDB().frame)
         self.fig_frame.setObjectName("figframe")
         self.fig_frame.setStyleSheet("#figframe {background-color:white;}")
 
-        self.brf_canvas = FigureCanvasQTAgg(BRFFigure())
-
-        fflay = QGridLayout(self.fig_frame)
-        fflay.setContentsMargins(0, 0, 0, 0)   # (left, top, right, bottom)
-        fflay.addWidget(self.tbar, 1, 0)
-        fflay.addWidget(self.brf_canvas, 0, 0)
+        fig_frame_layout = QGridLayout(self.fig_frame)
+        fig_frame_layout.addWidget(self.brf_canvas, 0, 0)
+        fig_frame_layout.addWidget(HSep(), 1, 0)
+        fig_frame_layout.addWidget(self.toolbar, 2, 0)
 
         # Setup the graph options panel.
         self.graph_opt_panel = BRFOptionsPanel()
@@ -687,7 +683,7 @@ class BRFViewer(QDialog):
         self.current_brf.setMaximum(count)
         curnt = self.current_brf.value()
 
-        self.tbar.setEnabled(count > 0)
+        self.toolbar.setEnabled(count > 0)
         self.btn_prev.setEnabled(curnt > 1)
         self.btn_next.setEnabled(curnt < count)
         self.btn_del.setEnabled(count > 0)
