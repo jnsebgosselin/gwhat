@@ -25,7 +25,6 @@ GWHAT_ICONS = {
     'expand_range_vert': 'expand_range_vert',
     'calc_brf': 'start',
     'setup': 'page_setup',
-    'new_project': 'new_project',
     'openFolder': 'folder',
     'clear': 'clear-search',
     'importFile': 'open_project',
@@ -43,17 +42,13 @@ GWHAT_ICONS = {
     'stop': 'process-stop',
     'settings': 'settings',
     'staList': 'note',
-    'plus_sign': 'plus_sign',
     'add2list': 'add2list',
     'todate': 'calendar_todate',
     'fromdate': 'calendar_fromdate',
     'select_range': 'select_range',
-    'zoom_out': 'zoom_out',
-    'zoom_in': 'zoom_in',
     'toggleMode': 'toggleMode2',
     'undo': 'undo',
     'clear_search': 'clear-search',
-    'home': 'home',
     'mrc_calc': 'MRCalc',
     'edit': 'edit',
     'add_point': 'add_point',
@@ -64,7 +59,6 @@ GWHAT_ICONS = {
     'showDataDots': 'show_datadots',
     'stratigraphy': 'stratigraphy',
     'recharge': 'recharge',
-    'calendar': 'Calendar',
     'page_setup': 'page_setup',
     'fit_y': 'fit_y',
     'fit_x': 'fit_x',
@@ -72,7 +66,6 @@ GWHAT_ICONS = {
     'load_graph_config': 'load_config',
     'closest_meteo': 'closest_meteo',
     'draw_hydrograph': 'stock_image',
-    'save': 'save',
     'meteo': 'meteo',
     'work': 'work',
     'color_picker': 'color_picker',
@@ -81,10 +74,8 @@ GWHAT_ICONS = {
     'fill_all_data': 'fill_all_data',
     'showGrid': 'grid',
     'export_data': 'export-data',
-    'zoom_to_rect': 'zoom_to_rect',
     'show_glue_wl': 'show_glue_wl',
     'show_meteo': 'show_meteo',
-    'language': 'language',
     'manual_measures': 'manual_measures',
     'rect_select': 'rect_select',
     'rect_select_clear': 'rect_select_clear'
@@ -95,6 +86,9 @@ GREEN = '#00aa00'
 RED = '#aa0000'
 
 FA_ICONS = {
+    'calendar': [
+        ('mdi.calendar-question',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'clear_changes': [
         ('mdi.close-circle-outline',),
         {'color': RED, 'scale_factor': 1.3}],
@@ -124,8 +118,14 @@ FA_ICONS = {
     'folder_open': [
         ('mdi.folder-open',),
         {'color': COLOR, 'scale_factor': 1.3}],
+    'home': [
+        ('mdi.home',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'info': [
         ('mdi.information-outline',),
+        {'color': COLOR, 'scale_factor': 1.3}],
+    'language': [
+        ('mdi.web',),
         {'color': COLOR, 'scale_factor': 1.3}],
     'link': [
         ('mdi.link',),
@@ -139,6 +139,9 @@ FA_ICONS = {
     'play_start': [
         ('mdi.play',),
         {'color': GREEN, 'scale_factor': 1.5}],
+    'save': [
+        ('fa.save',),
+        {'color': COLOR, 'scale_factor': 1.3}],
     'search': [
         ('fa5s.search',),
         {'color': COLOR, 'scale_factor': 1.0}],
@@ -147,10 +150,19 @@ FA_ICONS = {
         {'color': COLOR, 'scale_factor': 1.3}],
     'copy_clipboard': [
         ('mdi.content-copy',),
-        {'color': COLOR, 'scale_factor': 1.3}],
+        {'color': COLOR, 'scale_factor': 1.2}],
     'report_bug': [
         ('mdi.bug',),
         {'color': COLOR, 'scale_factor': 1.4}],
+    'zoom_in': [
+        ('mdi.plus-circle-outline',),
+        {'color': COLOR, 'scale_factor': 1.2}],
+    'zoom_out': [
+        ('mdi.minus-circle-outline',),
+        {'color': COLOR, 'scale_factor': 1.2}],
+    'zoom_to_rect': [
+        ('mdi.selection-search',),
+        {'color': COLOR, 'scale_factor': 1.2}],
     }
 
 ICON_SIZES = {'large': (32, 32),

@@ -137,7 +137,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Setup the toolbar of the left widget.
         toolbar = QToolBar()
-        toolbar.setStyleSheet("QToolBar {border: 0px;}")
+        toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
         toolbar.setFloatable(False)
         toolbar.setMovable(False)
         toolbar.setIconSize(get_iconsize('normal'))

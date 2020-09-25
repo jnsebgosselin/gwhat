@@ -459,7 +459,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         left_widget = QMainWindow()
 
         toolbar = self._setup_toolbar()
-        toolbar.setStyleSheet("QToolBar {border: 0px;}")
+        toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
         toolbar.setFloatable(False)
         toolbar.setMovable(False)
         toolbar.setIconSize(get_iconsize('normal'))
