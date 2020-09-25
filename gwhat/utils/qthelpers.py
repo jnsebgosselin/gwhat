@@ -10,7 +10,8 @@
 """Qt utilities"""
 
 # ---- Third party imports
-from qtpy.QtCore import QByteArray
+from PyQt5.QtCore import QByteArray
+from PyQt5.QtWidgets import QWidget, QSizePolicy
 
 
 def qbytearray_to_hexstate(qba):
@@ -21,3 +22,10 @@ def qbytearray_to_hexstate(qba):
 def hexstate_to_qbytearray(hexstate):
     """Convert a str hexstate to a QByteArray object."""
     return QByteArray().fromHex(str(hexstate).encode('utf-8'))
+
+
+def create_toolbar_stretcher():
+    """Create a stretcher to be used in a toolbar """
+    stretcher = QWidget()
+    stretcher.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+    return stretcher
