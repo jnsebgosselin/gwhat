@@ -549,6 +549,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.brf_eval_widget.close()
         super().close()
 
+    def showEvent(self, event):
+        """Extend Qt method"""
+        # This is required to make sure the BRF is plotted correctly on
+        # restart.
+        self.plot_brfperiod()
+        super().showEvent(event)
+
     # ---- MRC handlers
     def btn_show_mrc_isclicked(self):
         """Handle when the button to draw of hide the mrc is clicked."""

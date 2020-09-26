@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
 import os
@@ -126,11 +127,12 @@ def test_calcul_brf(brfmanager, wldataset, qtbot):
     brfmanager.set_wldset(wldataset)
     assert brfmanager.get_brfperiod() == [41384.0, 41416.0]
 
-    assert brfmanager.viewer.tbar.isEnabled() is False
+    assert brfmanager.viewer.toolbar.isEnabled() is False
     assert brfmanager.viewer.current_brf.value() == 0
+
     brfmanager.calc_brf()
     assert brfmanager.viewer.current_brf.value() == 1
-    assert brfmanager.viewer.tbar.isEnabled()
+    assert brfmanager.viewer.toolbar.isEnabled()
 
 
 # =============================================================================
@@ -217,6 +219,39 @@ def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
 
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
+def test_import_viewer_params_in_manager(brfmanager, wldataset, mocker, qtbot):
+    """
+    Test importing the parameters of the BRF shown in the viewer in the manager
+    is working as expected.
+    """
+    brfmanager.set_wldset(wldataset)
+    brfmanager.viewer.show()
+
+    # Change the parameters in the manager.
+    brfmanager.baro_spinbox.setValue(95)
+    brfmanager.earthtides_spinbox.setValue(72)
+    brfmanager.set_brfperiod([41390, 41415])
+    brfmanager.earthtides_cbox.setChecked(False)
+    brfmanager.detrend_waterlevels_cbox.setChecked(False)
+
+    # Assert that the value were correctly changed in the manager.
+    assert brfmanager.get_brfperiod() == [41390, 41415]
+    assert brfmanager.nlag_baro == 95
+    assert brfmanager.nlag_earthtides == -1
+    assert brfmanager.detrend_waterlevels is False
+
+    # Sync the parameters of the used to compute the BRF currently showen in
+    # the viewer with the manager.
+    qtbot.mouseClick(brfmanager.viewer.import_params_in_manager_btn,
+                     Qt.LeftButton)
+    assert brfmanager.get_brfperiod() == [41384.0, 41416.0]
+    assert brfmanager.nlag_baro == 100
+    assert brfmanager.nlag_earthtides == 100
+    assert brfmanager.detrend_waterlevels is True
+
+
+@pytest.mark.skipif(os.name == 'posix',
+                    reason="This feature is not supported on Linux")
 def test_del_brf_result(brfmanager, wldataset, mocker, qtbot):
     """Test that the BRF results are deleted correctly."""
     brfmanager.set_wldset(wldataset)
@@ -225,7 +260,7 @@ def test_del_brf_result(brfmanager, wldataset, mocker, qtbot):
     assert brfmanager.viewer.current_brf.value() == 1
     qtbot.mouseClick(brfmanager.viewer.btn_del, Qt.LeftButton)
     assert brfmanager.viewer.current_brf.value() == 0
-    assert brfmanager.viewer.tbar.isEnabled() is False
+    assert brfmanager.viewer.toolbar.isEnabled() is False
 
 
 @pytest.mark.skipif(os.name == 'posix',
@@ -249,7 +284,7 @@ def test_del_all_brf_result(brfmanager, wldataset, mocker, qtbot):
     mocker.patch.object(QMessageBox, 'question', return_value=QMessageBox.Yes)
     qtbot.mouseClick(brfmanager.viewer.btn_del_all, Qt.LeftButton)
     assert brfmanager.viewer.current_brf.value() == 0
-    assert brfmanager.viewer.tbar.isEnabled() is False
+    assert brfmanager.viewer.toolbar.isEnabled() is False
 
 
 @pytest.mark.skipif(os.name == 'posix',

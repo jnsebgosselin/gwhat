@@ -22,8 +22,8 @@ from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
-    QMessageBox, QFileDialog, QComboBox, QLayout, QDialog,
-    QGroupBox, QToolButton)
+    QMessageBox, QFileDialog, QComboBox, QDialog, QGroupBox, QToolButton,
+    QToolBar)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -40,6 +40,7 @@ from gwhat.config.main import CONF
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_icon
 from gwhat.utils.dates import qdatetime_from_xldate
+from gwhat.utils.qthelpers import create_toolbar_stretcher
 from gwhat import brf_mod as bm
 from gwhat.brf_mod import __install_dir__
 from gwhat.brf_mod.kgs_plot import BRFFigure
@@ -123,7 +124,7 @@ class KGSBRFInstaller(myqt.QFrameLayout):
 
 
 class BRFManager(myqt.QFrameLayout):
-    sig_brfperiod_changed = QSignal(list)
+    sig_brfperiod_changed = QSignal(tuple)
     sig_select_brfperiod_requested = QSignal(bool)
 
     def __init__(self, wldset=None, parent=None):
@@ -136,6 +137,8 @@ class BRFManager(myqt.QFrameLayout):
             CONF.get('brf', 'graphs_labels_language'))
         if CONF.get('brf', 'graph_opt_panel_is_visible', False):
             self.viewer.toggle_graphpannel()
+        self.viewer.sig_import_params_in_manager_request.connect(
+            self.import_current_viewer_brf_parameters)
 
         self.kgs_brf_installer = None
         self.__initGUI__()
@@ -308,8 +311,12 @@ class BRFManager(myqt.QFrameLayout):
 
     def get_brfperiod(self):
         """
-        Get the period over which the BRF would be evaluated as a list of
-        two numerical Excel date values.
+        Get the period over which the BRF would be evaluated.
+
+        Returns
+        -------
+        brfperiod
+            A list of two numerical Excel date values.
         """
         year, month, day = self.date_start_edit.date().getDate()
         hour = self.date_start_edit.time().hour()
@@ -330,6 +337,11 @@ class BRFManager(myqt.QFrameLayout):
         Set the value of the date_start_edit and date_end_edit widgets used to
         define the period over which the BRF is evaluated. Also save the
         period to the waterlevel dataset.
+
+        Parameters
+        ----------
+        daterange : 2-length tuple of int
+            A list of two numerical Excel date values.
         """
         period = np.sort(period).tolist()
         widgets = (self.date_start_edit, self.date_end_edit)
@@ -357,8 +369,13 @@ class BRFManager(myqt.QFrameLayout):
 
     def set_daterange(self, daterange):
         """
-        Set the minimum and maximum value of date_start_edit and date_end_edit
-        widgets from the specified list of Excel numeric dates.
+        Set the minimum and maximum value of the date_start_edit and
+        date_end_edit widgets from the specified Excel numeric dates.
+
+        Parameters
+        ----------
+        daterange : 2-length tuple of int
+            A list of two numerical Excel date values.
         """
         for widget in (self.date_start_edit, self.date_end_edit):
             widget.blockSignals(True)
@@ -390,6 +407,38 @@ class BRFManager(myqt.QFrameLayout):
             'link' if toggle else 'link_off'))
         if toggle is True:
             self._handle_lag_value_changed(self.baro_spinbox)
+
+    def import_current_viewer_brf_parameters(self):
+        """
+        Setup the BRF parameters to reflect those saved in the provided
+        BRF results dataset.
+        """
+        if self.wldset is None or self.wldset.brf_count() == 0:
+            return
+        brfdata = self.wldset.get_brf(
+            self.wldset.get_brfname_at(self.viewer.current_brf.value() - 1))
+
+        # Setup the lags.
+        nlag_bp = len(brfdata.loc[:, 'A'].dropna()) - 1
+        nlag_et = len(brfdata.loc[:, 'B'].dropna()) - 1
+
+        self.earthtides_cbox.setChecked(nlag_et != -1)
+        if nlag_bp != nlag_et and nlag_et != -1:
+            self.toggle_link_bp_and_et_lags(False)
+        self.baro_spinbox.setValue(nlag_bp)
+        if nlag_et != -1:
+            self.earthtides_spinbox.setValue(nlag_et)
+
+        # Setup the detrending paramenter.
+        self.detrend_waterlevels_cbox.setChecked(brfdata.detrending == 'Yes')
+
+        # Setup the BRF period.
+        xls_date_start = xldate_from_datetime_tuple(
+            brfdata.date_start.timetuple()[:6], 0)
+        xls_date_end = xldate_from_datetime_tuple(
+            brfdata.date_end.timetuple()[:6], 0)
+        self.set_brfperiod((xls_date_start, xls_date_end))
+        self.sig_brfperiod_changed.emit((xls_date_start, xls_date_end))
 
     def _handle_lag_value_changed(self, sender):
         """
@@ -504,6 +553,7 @@ class BRFViewer(QDialog):
     Window that is used to show all the results produced with for the
     currently selected water level dataset.
     """
+    sig_import_params_in_manager_request = QSignal()
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
@@ -520,9 +570,7 @@ class BRFViewer(QDialog):
         self.set_wldset(wldset)
 
     def __initGUI__(self):
-
-        # ---- Navigator
-
+        # Setup the navigation buttons and widgets.
         self.btn_prev = QToolButtonNormal(icons.get_icon('go_previous'))
         self.btn_prev.clicked.connect(self.navigate_brf)
 
@@ -547,10 +595,7 @@ class BRFViewer(QDialog):
         self.btn_language.sig_lang_changed.connect(self.plot_brf)
         self.btn_language.setIconSize(icons.get_iconsize('normal'))
 
-        # ---- Toolbar
-
-        # Generate the buttons :
-
+        # Generate the toolbar buttons.
         self.btn_del = QToolButtonNormal(icons.get_icon('delete_data'))
         self.btn_del.setToolTip('Delete current BRF results')
         self.btn_del.clicked.connect(self.del_brf)
@@ -576,38 +621,38 @@ class BRFViewer(QDialog):
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
-        # Generate the layout :
+        self.import_params_in_manager_btn = QToolButtonNormal(
+            icons.get_icon('content_duplicate'))
+        self.import_params_in_manager_btn.clicked.connect(
+            lambda _: self.sig_import_params_in_manager_request.emit())
 
-        self.tbar = myqt.QFrameLayout()
-
+        # Setup the toolbar.
+        self.toolbar = QToolBar()
+        self.toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
         buttons = [btn_save, self.btn_copy, self.btn_export, self.btn_del,
-                   self.btn_del_all, VSep(), self.btn_prev, self.current_brf,
-                   self.total_brf, self.btn_next, VSep(), self.btn_setp,
-                   self.btn_language]
-
-        for btn in buttons:
-            if isinstance(btn, QLayout):
-                self.tbar.addLayout(btn, 1, self.tbar.columnCount())
+                   self.btn_del_all, None, self.btn_prev, self.current_brf,
+                   self.total_brf, self.btn_next, None,
+                   self.import_params_in_manager_btn, self.btn_language]
+        for button in buttons:
+            if button is None:
+                self.toolbar.addSeparator()
             else:
-                self.tbar.addWidget(btn, 1, self.tbar.columnCount())
-
-        row = self.tbar.columnCount()
-        self.tbar.addWidget(HSep(), 0, 0, 1, row+1)
-        self.tbar.setColumnStretch(row, 100)
-        self.tbar.setContentsMargins(10, 0, 10, 10)  # (l, t, r, b)
+                self.toolbar.addWidget(button)
+        self.toolbar.addWidget(create_toolbar_stretcher())
+        self.toolbar.addWidget(self.btn_setp)
 
         # Setup the graph canvas.
+        self.brf_canvas = FigureCanvasQTAgg(BRFFigure())
+
         self.fig_frame = QFrame()
         self.fig_frame.setFrameStyle(StyleDB().frame)
         self.fig_frame.setObjectName("figframe")
         self.fig_frame.setStyleSheet("#figframe {background-color:white;}")
 
-        self.brf_canvas = FigureCanvasQTAgg(BRFFigure())
-
-        fflay = QGridLayout(self.fig_frame)
-        fflay.setContentsMargins(0, 0, 0, 0)   # (left, top, right, bottom)
-        fflay.addWidget(self.tbar, 1, 0)
-        fflay.addWidget(self.brf_canvas, 0, 0)
+        fig_frame_layout = QGridLayout(self.fig_frame)
+        fig_frame_layout.addWidget(self.brf_canvas, 0, 0)
+        fig_frame_layout.addWidget(HSep(), 1, 0)
+        fig_frame_layout.addWidget(self.toolbar, 2, 0)
 
         # Setup the graph options panel.
         self.graph_opt_panel = BRFOptionsPanel()
@@ -693,7 +738,7 @@ class BRFViewer(QDialog):
         self.current_brf.setMaximum(count)
         curnt = self.current_brf.value()
 
-        self.tbar.setEnabled(count > 0)
+        self.toolbar.setEnabled(count > 0)
         self.btn_prev.setEnabled(curnt > 1)
         self.btn_next.setEnabled(curnt < count)
         self.btn_del.setEnabled(count > 0)
@@ -1080,9 +1125,3 @@ if __name__ == "__main__":
     brfwin.viewer.toggle_graphpannel()
 
     sys.exit(app.exec_())
-
-#    plt.close('all')
-    # produce_par_file()
-    # run_kgsbrf()
-    # load_BRFOutput(show_ebar=True, msize=5, draw_line=False)
-#    plt.show()
