@@ -818,24 +818,24 @@ class BRFViewer(QDialog):
         if self.wldset is None or self.wldset.brf_count() == 0:
             self.brf_canvas.figure.empty_BRF()
         else:
-            databrf = self.wldset.get_brf(
+            brfdata = self.wldset.get_brf(
                 self.wldset.get_brfname_at(self.current_brf.value() - 1))
-            errors = (databrf['sdA'].values if
-                      self.graph_opt_panel.show_ebar else [])
-            self.brf_canvas.figure.plot_BRF(
-                databrf['Lag'].values,
-                databrf['SumA'].values,
-                errors,
-                databrf.date_start.strftime(format='%d/%m/%y %H:%M'),
-                databrf.date_end.strftime(format='%d/%m/%y %H:%M'),
-                self.wldset['Well'],
-                self.graph_opt_panel.markersize,
-                self.graph_opt_panel.draw_line,
-                [self.graph_opt_panel.ymin, self.graph_opt_panel.ymax],
-                [self.graph_opt_panel.xmin, self.graph_opt_panel.xmax],
-                self.graph_opt_panel.time_units,
-                self.graph_opt_panel.xscale,
-                self.graph_opt_panel.yscale)
+
+            well_name = self.wldset['Well']
+            if self.wldset['Well ID']:
+                well_name += ' ({})'.format(self.wldset['Well ID'])
+
+            self.brf_canvas.figure.plot(
+                brfdata,
+                well_name,
+                show_ebar=self.graph_opt_panel.show_ebar,
+                msize=self.graph_opt_panel.markersize,
+                draw_line=self.graph_opt_panel.draw_line,
+                ylim=[self.graph_opt_panel.ymin, self.graph_opt_panel.ymax],
+                xlim=[self.graph_opt_panel.xmin, self.graph_opt_panel.xmax],
+                time_units=self.graph_opt_panel.time_units,
+                xscl=self.graph_opt_panel.xscale,
+                yscl=self.graph_opt_panel.yscale)
         self.brf_canvas.draw()
 
     def show(self):
