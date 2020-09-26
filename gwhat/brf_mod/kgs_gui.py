@@ -561,10 +561,8 @@ class BRFViewer(QDialog):
 
         self.setWindowTitle('BRF Results Viewer')
         self.setWindowIcon(icons.get_icon('master'))
-        self.setWindowFlags(Qt.Window |
-                            Qt.CustomizeWindowHint |
-                            Qt.WindowMinimizeButtonHint |
-                            Qt.WindowCloseButtonHint)
+        self.setWindowFlags(
+            Qt.Window | Qt.CustomizeWindowHint | Qt.WindowCloseButtonHint)
 
         self.__initGUI__()
         self.set_wldset(wldset)
