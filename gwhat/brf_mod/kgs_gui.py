@@ -133,8 +133,7 @@ class BRFManager(myqt.QFrameLayout):
         self._bp_and_et_lags_are_linked = False
 
         self.viewer = BRFViewer(wldset, parent)
-        self.viewer.btn_language.set_language(
-            CONF.get('brf', 'graphs_labels_language'))
+        self.viewer.set_language(CONF.get('brf', 'graphs_labels_language'))
         if CONF.get('brf', 'graph_opt_panel_is_visible', False):
             self.viewer.toggle_graphpannel()
         self.viewer.sig_import_params_in_manager_request.connect(
@@ -272,8 +271,7 @@ class BRFManager(myqt.QFrameLayout):
     # ---- Public API
     def close(self):
         """"Clos this brf manager"""
-        CONF.set('brf', 'graphs_labels_language',
-                 self.viewer.btn_language.language)
+        CONF.set('brf', 'graphs_labels_language', self.viewer.get_language())
         CONF.set('brf', 'graph_opt_panel_is_visible',
                  self.viewer._graph_opt_panel_is_visible)
         self.viewer.close()
@@ -586,13 +584,6 @@ class BRFViewer(QDialog):
 
         self.total_brf = QLabel(' / 0')
 
-        # Setup the language button.
-        self.btn_language = LangToolButton()
-        self.btn_language.setToolTip(
-            "Set the language of the text shown in the graph.")
-        self.btn_language.sig_lang_changed.connect(self.plot_brf)
-        self.btn_language.setIconSize(icons.get_iconsize('normal'))
-
         # Generate the toolbar buttons.
         self.btn_del = QToolButtonNormal(icons.get_icon('delete_data'))
         self.btn_del.setToolTip('Delete current BRF results')
@@ -630,7 +621,7 @@ class BRFViewer(QDialog):
         buttons = [btn_save, self.btn_copy, self.btn_export, self.btn_del,
                    self.btn_del_all, None, self.btn_prev, self.current_brf,
                    self.total_brf, self.btn_next, None,
-                   self.import_params_in_manager_btn, self.btn_language]
+                   self.import_params_in_manager_btn]
         for button in buttons:
             if button is None:
                 self.toolbar.addSeparator()
@@ -802,8 +793,14 @@ class BRFViewer(QDialog):
         if wldset is not None:
             self.update_brfnavigate_state()
 
+    def get_language(self):
+        return self.graph_opt_panel.get_language()
+
+    def set_language(self, language):
+        return self.graph_opt_panel.set_language(language)
+
     def plot_brf(self):
-        self.brf_canvas.figure.set_language(self.btn_language.language)
+        self.brf_canvas.figure.set_language(self.get_language())
         if self.wldset is None or self.wldset.brf_count() == 0:
             self.brf_canvas.figure.empty_BRF()
         else:
@@ -955,14 +952,30 @@ class BRFOptionsPanel(QWidget):
         xlim_grouplayout.addWidget(self._xlim['scale'], 3, 1)
         xlim_grouplayout.setColumnStretch(0, 1)
 
-        # ---- Graph Panel Layout
+        # Setup the language widget.
+        self.language_combobox = QComboBox()
+        self.language_combobox.addItems(['English', 'French'])
+        self.language_combobox.setCurrentIndex(0)
+        self.language_combobox.setToolTip(
+            "Set the language of the text shown in the graph.")
+        self.language_combobox.currentIndexChanged.connect(
+            self._graphconf_changed)
 
+        language_layout = QGridLayout()
+        language_layout.setContentsMargins(0, 0, 0, 0)
+        language_layout.addWidget(QLabel('Language :'), 0, 0)
+        language_layout.addWidget(self.language_combobox, 0, 1)
+        language_layout.setColumnStretch(1, 1)
+
+        # Setup the main layout.
         layout = QGridLayout(self)
-        layout.setContentsMargins(10, 0, 10, 0)
+        layout.setSpacing(10)
+        layout.setContentsMargins(10, 0, 0, 0)
         layout.addWidget(line_and_marker_groupbox, 0, 0)
         layout.addWidget(self.ylim_groupbox, 1, 0)
         layout.addWidget(self.xlim_groupbox, 2, 0)
-        layout.setRowStretch(3, 100)
+        layout.addLayout(language_layout, 3, 0)
+        layout.setRowStretch(4, 1)
 
     def _graphconf_changed(self):
         """
@@ -1034,6 +1047,16 @@ class BRFOptionsPanel(QWidget):
     @property
     def markersize(self):
         return self._markersize['widget'].value()
+
+    def get_language(self):
+        return self.language_combobox.currentText().lower()
+
+    def set_language(self, language):
+        for i in range(self.language_combobox.count()):
+            if self.language_combobox.itemText(i).lower() == language.lower():
+                self.language_combobox.setCurrentIndex(i)
+                self._graphconf_changed()
+                break
 
     # ---- Handlers
     def _time_units_changed(self):
