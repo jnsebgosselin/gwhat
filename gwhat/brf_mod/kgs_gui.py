@@ -584,7 +584,7 @@ class BRFViewer(QDialog):
         self.current_brf.valueChanged.connect(self.navigate_brf)
         self.current_brf.setValue(0)
 
-        self.total_brf = QLabel('/ 0')
+        self.total_brf = QLabel(' / 0')
 
         # Setup the language button.
         self.btn_language = LangToolButton()
@@ -730,7 +730,7 @@ class BRFViewer(QDialog):
 
     def update_brfnavigate_state(self):
         count = self.wldset.brf_count()
-        self.total_brf.setText('/ %d' % count)
+        self.total_brf.setText(' / %d' % count)
 
         self.current_brf.setMinimum(min(count, 1))
         self.current_brf.setMaximum(count)
