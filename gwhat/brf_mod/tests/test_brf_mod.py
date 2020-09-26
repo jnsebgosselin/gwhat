@@ -178,7 +178,7 @@ def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
     assert(graph_opt_panel.ymax is None)
     assert(graph_opt_panel.yscale is None)
 
-    graph_opt_panel._ylim['auto'].setChecked(False)
+    graph_opt_panel.ylim_groupbox.setChecked(True)
     assert(graph_opt_panel.ymin == 0)
     assert(graph_opt_panel.ymax == 1)
 
@@ -188,7 +188,7 @@ def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
     assert(graph_opt_panel.xscale is None)
     assert(graph_opt_panel.time_units == 'auto')
 
-    graph_opt_panel._xlim['auto'].setChecked(False)
+    graph_opt_panel.xlim_groupbox.setChecked(True)
     assert(graph_opt_panel.xmin == 0)
     assert(graph_opt_panel._xlim['min'].value() == 0)
     assert(graph_opt_panel.xmax == 1)
