@@ -1327,7 +1327,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.vguide.set_xdata(x)
             self.fig.axes[0].draw_artist(self.vguide)
 
-    # ----- Handlers: Mouse events
+    # ----- Mouse Event Handlers
     def is_all_btn_raised(self):
         """
         Return whether all of the tool buttons that can block the panning and
@@ -1387,12 +1387,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         fig = self.fig
         fig.canvas.restore_region(self.__figbckground)
 
-        # ---- Draw the cursor guide and the xy coordinates on the graph.
-
-        # Trace a red vertical guide (line) that folows the mouse marker :
-
+        # Draw the vertical cursor guide.
         x, y = event.xdata, event.ydata
         self._draw_mouse_cursor(x, y)
+
+        # Draw the xy coordinates on the graph.
         if all((x, y)):
             self.xycoord.set_visible(True)
             if self.dformat == 0:
