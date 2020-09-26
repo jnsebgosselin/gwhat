@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
     QMessageBox, QFileDialog, QComboBox, QDialog, QGroupBox, QToolButton,
-    QToolBar)
+    QToolBar, QGroupBox)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -849,8 +849,7 @@ class BRFOptionsPanel(QWidget):
         self.setVisible(False)
 
     def __initGUI__(self):
-        # ---- Line and Markers Style Widgets
-
+        # Setup the line and marker options.
         self._errorbar = QCheckBox('Show error bars')
         self._errorbar.setChecked(True)
         self._errorbar.stateChanged.connect(self._graphconf_changed)
@@ -867,8 +866,15 @@ class BRFOptionsPanel(QWidget):
         self._markersize['widget'].valueChanged.connect(
             self._graphconf_changed)
 
-        # ---- Y-Axis Options Widgets
+        line_and_marker_groupbox = QGroupBox()
+        line_and_marker_layout = QGridLayout(line_and_marker_groupbox)
+        line_and_marker_layout.addWidget(self._errorbar, 0, 0, 1, 2)
+        line_and_marker_layout.addWidget(self._drawline, 1, 0, 1, 2)
+        line_and_marker_layout.addWidget(self._markersize['label'], 2, 0)
+        line_and_marker_layout.addWidget(self._markersize['widget'], 2, 1)
+        line_and_marker_layout.setColumnStretch(0, 1)
 
+        # Setup yaxis options.
         self._ylim = {}
         self._ylim['min'] = QDoubleSpinBox()
         self._ylim['min'].setValue(0)
@@ -891,18 +897,28 @@ class BRFOptionsPanel(QWidget):
         self._ylim['scale'].setRange(0.01, 1)
         self._ylim['scale'].setEnabled(True)
         self._ylim['scale'].valueChanged.connect(self._graphconf_changed)
-        self._ylim['auto'] = QCheckBox('')
-        self._ylim['auto'].setCheckState(Qt.Checked)
-        self._ylim['auto'].stateChanged.connect(self.axis_autocheck_changed)
 
-        # ---- X-Axis Options Widgets
+        self.ylim_groupbox = QGroupBox('Vertical Axis Options')
+        self.ylim_groupbox.setCheckable(True)
+        self.ylim_groupbox.setChecked(False)
+        self.ylim_groupbox.toggled.connect(lambda _: self._graphconf_changed())
 
+        ylim_grouplayout = QGridLayout(self.ylim_groupbox)
+        ylim_grouplayout.addWidget(QLabel('Minimum :'), 0, 0)
+        ylim_grouplayout.addWidget(self._ylim['min'], 0, 1)
+        ylim_grouplayout.addWidget(QLabel('Maximum :'), 1, 0)
+        ylim_grouplayout.addWidget(self._ylim['max'], 1, 1)
+        ylim_grouplayout.addWidget(QLabel('Scale :'), 2, 0)
+        ylim_grouplayout.addWidget(self._ylim['scale'], 2, 1)
+        ylim_grouplayout.setColumnStretch(0, 1)
+
+        # Setup xaxis options.
         self._xlim = {}
         self._xlim['units'] = QComboBox()
         self._xlim['units'].addItems(['Hours', 'Days'])
         self._xlim['units'].setCurrentIndex(1)
         self._xlim['units'].currentIndexChanged.connect(
-            self.time_units_changed)
+            self._time_units_changed)
         self._xlim['min'] = QSpinBox()
         self._xlim['min'].setValue(0)
         self._xlim['min'].setSingleStep(1)
@@ -922,72 +938,31 @@ class BRFOptionsPanel(QWidget):
         self._xlim['scale'].setRange(0.1, 99)
         self._xlim['scale'].setEnabled(True)
         self._xlim['scale'].valueChanged.connect(self._graphconf_changed)
-        self._xlim['auto'] = QCheckBox('')
-        self._xlim['auto'].setCheckState(Qt.Checked)
-        self._xlim['auto'].stateChanged.connect(self.axis_autocheck_changed)
 
-        self.axis_autocheck_changed()
+        self.xlim_groupbox = QGroupBox('Horizontal Axis Options')
+        self.xlim_groupbox.setCheckable(True)
+        self.xlim_groupbox.setChecked(False)
+        self.xlim_groupbox.toggled.connect(lambda _: self._graphconf_changed())
 
-        # ---- Axis Options Layout
-
-        axlayout = QGridLayout()
-
-        row = 0
-        axlayout.addWidget(QLabel('y-axis limits:'), 0, 0, 1, 2)
-        row += 1
-        axlayout.addWidget(QLabel('   Minimum :'), row, 0)
-        axlayout.addWidget(self._ylim['min'], row, 1)
-        row += 1
-        axlayout.addWidget(QLabel('   Maximum :'), row, 0)
-        axlayout.addWidget(self._ylim['max'], row, 1)
-        row += 1
-        axlayout.addWidget(QLabel('   Scale :'), row, 0)
-        axlayout.addWidget(self._ylim['scale'], row, 1)
-        row += 1
-        axlayout.addWidget(QLabel('   Auto :'), row, 0)
-        axlayout.addWidget(self._ylim['auto'], row, 1)
-        row += 1
-        axlayout.setRowMinimumHeight(row, 15)
-        row += 1
-        axlayout.addWidget(QLabel('x-axis limits:'), row, 0, 1, 2)
-        row += 1
-        axlayout.addWidget(QLabel('   Time units :'), row, 0)
-        axlayout.addWidget(self._xlim['units'], row, 1)
-        row += 1
-        axlayout.addWidget(QLabel('   Minimum :'), row, 0)
-        axlayout.addWidget(self._xlim['min'], row, 1)
-        row += 1
-        axlayout.addWidget(QLabel('   Maximum :'), row, 0)
-        axlayout.addWidget(self._xlim['max'], row, 1)
-        row += 1
-        axlayout.addWidget(QLabel('   Scale :'), row, 0)
-        axlayout.addWidget(self._xlim['scale'], row, 1)
-        row += 1
-        axlayout.addWidget(QLabel('   Auto :'), row, 0)
-        axlayout.addWidget(self._xlim['auto'], row, 1)
-
-        axlayout.setColumnStretch(3, 100)
-        axlayout.setContentsMargins(0, 0, 0, 0)  # (left, top, right, bottom)
+        xlim_grouplayout = QGridLayout(self.xlim_groupbox)
+        xlim_grouplayout.addWidget(QLabel('Time units :'), 0, 0)
+        xlim_grouplayout.addWidget(self._xlim['units'], 0, 1)
+        xlim_grouplayout.addWidget(QLabel('Minimum :'), 1, 0)
+        xlim_grouplayout.addWidget(self._xlim['min'], 1, 1)
+        xlim_grouplayout.addWidget(QLabel('Maximum :'), 2, 0)
+        xlim_grouplayout.addWidget(self._xlim['max'], 2, 1)
+        xlim_grouplayout.addWidget(QLabel('Scale :'), 3, 0)
+        xlim_grouplayout.addWidget(self._xlim['scale'], 3, 1)
+        xlim_grouplayout.setColumnStretch(0, 1)
 
         # ---- Graph Panel Layout
 
         layout = QGridLayout(self)
-        layout.setContentsMargins(10, 0, 10, 0)  # (l, t, r, b)
-
-        row = 0
-        layout.addWidget(self._errorbar, row, 1, 1, 2)
-        row += 1
-        layout.addWidget(self._drawline, row, 1, 1, 2)
-        row += 1
-        layout.addWidget(self._markersize['label'], row, 1)
-        layout.addWidget(self._markersize['widget'], row, 2)
-        row += 1
-        layout.addWidget(HSep(), row, 1, 1, 2)
-        row += 1
-        layout.addLayout(axlayout, row, 1, 1, 2)
-        row += 1
-        layout.setRowMinimumHeight(row, 15)
-        layout.setRowStretch(row, 100)
+        layout.setContentsMargins(10, 0, 10, 0)
+        layout.addWidget(line_and_marker_groupbox, 0, 0)
+        layout.addWidget(self.ylim_groupbox, 1, 0)
+        layout.addWidget(self.xlim_groupbox, 2, 0)
+        layout.setRowStretch(3, 100)
 
     def _graphconf_changed(self):
         """
@@ -998,61 +973,55 @@ class BRFOptionsPanel(QWidget):
     # ---- Graph Panel Properties
     @property
     def time_units(self):
-        if self._xlim['auto'].isChecked():
+        if not self.xlim_groupbox.isChecked():
             return 'auto'
         else:
             return self._xlim['units'].currentText().lower()
 
     @property
     def xmin(self):
-        if self._xlim['auto'].isChecked():
+        if not self.xlim_groupbox.isChecked():
             return None
         else:
             if self.time_units == 'hours':
-                return self._xlim['min'].value()/24
+                return self._xlim['min'].value() / 24
             else:
                 return self._xlim['min'].value()
 
     @property
     def xmax(self):
-        if self._xlim['auto'].isChecked():
+        if not self.xlim_groupbox.isChecked():
             return None
         else:
             if self.time_units == 'hours':
-                return self._xlim['max'].value()/24
+                return self._xlim['max'].value() / 24
             else:
                 return self._xlim['max'].value()
 
     @property
     def xscale(self):
-        if self._xlim['auto'].isChecked():
+        if not self.xlim_groupbox.isChecked():
             return None
         else:
             if self.time_units == 'hours':
-                return self._xlim['scale'].value()/24
+                return self._xlim['scale'].value() / 24
             else:
                 return self._xlim['scale'].value()
 
     @property
     def ymin(self):
-        if self._ylim['auto'].isChecked():
-            return None
-        else:
-            return self._ylim['min'].value()
+        return (self._ylim['min'].value() if self.ylim_groupbox.isChecked()
+                else None)
 
     @property
     def ymax(self):
-        if self._ylim['auto'].isChecked():
-            return None
-        else:
-            return self._ylim['max'].value()
+        return (self._ylim['max'].value() if self.ylim_groupbox.isChecked()
+                else None)
 
     @property
     def yscale(self):
-        if self._ylim['auto'].isChecked():
-            return None
-        else:
-            return self._ylim['scale'].value()
+        return (self._ylim['scale'].value() if self.ylim_groupbox.isChecked()
+                else None)
 
     @property
     def show_ebar(self):
@@ -1067,8 +1036,7 @@ class BRFOptionsPanel(QWidget):
         return self._markersize['widget'].value()
 
     # ---- Handlers
-
-    def time_units_changed(self):
+    def _time_units_changed(self):
         """ Handles when the time_units combobox selection changes."""
         for xlim in [self._xlim['min'], self._xlim['max'],
                      self._xlim['scale']]:
@@ -1078,22 +1046,6 @@ class BRFOptionsPanel(QWidget):
             elif self._xlim['units'].currentText() == 'Days':
                 xlim.setValue(xlim.value()/24)
             xlim.blockSignals(False)
-
-        self._graphconf_changed()
-
-    def axis_autocheck_changed(self):
-        """
-        Handles when the Auto checkbox state change for the
-        limits of the y-axis or the x-axis.
-        """
-        self._ylim['min'].setEnabled(not self._ylim['auto'].isChecked())
-        self._ylim['max'].setEnabled(not self._ylim['auto'].isChecked())
-        self._ylim['scale'].setEnabled(not self._ylim['auto'].isChecked())
-
-        self._xlim['units'].setEnabled(not self._xlim['auto'].isChecked())
-        self._xlim['min'].setEnabled(not self._xlim['auto'].isChecked())
-        self._xlim['max'].setEnabled(not self._xlim['auto'].isChecked())
-        self._xlim['scale'].setEnabled(not self._xlim['auto'].isChecked())
 
         self._graphconf_changed()
 
