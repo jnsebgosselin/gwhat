@@ -137,7 +137,7 @@ class BRFManager(myqt.QFrameLayout):
             CONF.get('brf', 'graphs_labels_language'))
         if CONF.get('brf', 'graph_opt_panel_is_visible', False):
             self.viewer.toggle_graphpannel()
-        self.viewer.sig_sync_request.connect(self.setup_from_brfdata)
+        self.viewer.sig_setup_manager_request.connect(self.setup_from_brfdata)
 
         self.kgs_brf_installer = None
         self.__initGUI__()
@@ -547,7 +547,7 @@ class BRFViewer(QDialog):
     Window that is used to show all the results produced with for the
     currently selected water level dataset.
     """
-    sig_sync_request = QSignal(object)
+    sig_setup_manager_request = QSignal(object)
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
@@ -615,9 +615,9 @@ class BRFViewer(QDialog):
         self.btn_setp.setToolTip('Show graph layout parameters...')
         self.btn_setp.clicked.connect(self.toggle_graphpannel)
 
-        self.sync_with_manager_btn = QToolButtonNormal(
+        self.import_params_in_manager_btn = QToolButtonNormal(
             icons.get_icon('content_duplicate'))
-        self.sync_with_manager_btn.clicked.connect(
+        self.import_params_in_manager_btn.clicked.connect(
             self.request_sync_with_manager)
 
         # Setup the toolbar.
@@ -626,7 +626,7 @@ class BRFViewer(QDialog):
         buttons = [btn_save, self.btn_copy, self.btn_export, self.btn_del,
                    self.btn_del_all, None, self.btn_prev, self.current_brf,
                    self.total_brf, self.btn_next, None,
-                   self.sync_with_manager_btn, self.btn_language]
+                   self.import_params_in_manager_btn, self.btn_language]
         for button in buttons:
             if button is None:
                 self.toolbar.addSeparator()
@@ -791,20 +791,16 @@ class BRFViewer(QDialog):
         """Export the current BRF data to to file."""
         self.wldset.export_brf_to_csv(fname, self.current_brf.value()-1)
 
-    def request_sync_with_manager(self):
+    def request_setup_manager_from_brfdata(self):
         """
-        Request a synchronisation between the BRF period set in the manager and
-        that used for computing the BRF currently shown in the viewer.
-
-        Send signal containing a tuple of 2 Excel numerical dates
-        corresponding to the period that was used to compute the BRF that
-        is currently shown in the viewer.
+        Emit a signal to request that the manager parameters be defined
+        according to the BRF data transmitted in the signal.
         """
         if self.wldset is None or self.wldset.brf_count() == 0:
             return
         databrf = self.wldset.get_brf(
             self.wldset.get_brfname_at(self.current_brf.value() - 1))
-        self.sig_sync_request.emit(databrf)
+        self.sig_setup_manager_request.emit(databrf)
 
     # ---- Others
     def set_wldset(self, wldset):
