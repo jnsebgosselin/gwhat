@@ -64,9 +64,7 @@ class FigureLabels(object):
 class BRFFigure(Figure):
     def __init__(self, lang='English'):
         super(BRFFigure, self).__init__()
-        lang = lang if lang.lower() in FigureLabels.LANGUAGES else 'English'
-        self.__figlang = lang
-        self.__figlabels = FigureLabels(lang)
+        self.set_language(lang)
 
         # Setup the matplotlib figure.
         fig_width = 8
@@ -118,22 +116,14 @@ class BRFFigure(Figure):
             0.5, 1, '', ha='center', va='bottom', fontsize=10,
             transform=ax.transAxes + offset)
 
-    @property
-    def fig_labels(self):
-        return self.__figlabels
-
-    @property
-    def fig_language(self):
-        return self.__figlang
-
     def set_language(self, lang):
         """
         Sets the language of the figure labels and update the labels
         of the axis, but not the title of the figure.
         """
         lang = lang if lang.lower() in FigureLabels.LANGUAGES else 'English'
-        self.__figlang = lang
-        self.__figlabels = FigureLabels(lang)
+        self.fig_language = lang
+        self.fig_labels = FigureLabels(lang)
 
     def empty_BRF(self):
         ax = self.axes[0]
