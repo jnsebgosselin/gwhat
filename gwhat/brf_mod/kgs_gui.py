@@ -970,7 +970,7 @@ class BRFOptionsPanel(QWidget):
         # Setup the main layout.
         layout = QGridLayout(self)
         layout.setSpacing(10)
-        layout.setContentsMargins(10, 0, 0, 0)
+        layout.setContentsMargins(5, 0, 0, 0)
         layout.addWidget(line_and_marker_groupbox, 0, 0)
         layout.addWidget(self.ylim_groupbox, 1, 0)
         layout.addWidget(self.xlim_groupbox, 2, 0)
