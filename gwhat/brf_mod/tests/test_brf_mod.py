@@ -219,7 +219,7 @@ def test_graph_panel(brfmanager, wldataset, mocker, qtbot):
 
 @pytest.mark.skipif(os.name == 'posix',
                     reason="This feature is not supported on Linux")
-def test_import_viewer_params_to_manager(brfmanager, wldataset, mocker, qtbot):
+def test_import_viewer_params_in_manager(brfmanager, wldataset, mocker, qtbot):
     """
     Test importing the parameters of the BRF shown in the viewer in the manager
     is working as expected.

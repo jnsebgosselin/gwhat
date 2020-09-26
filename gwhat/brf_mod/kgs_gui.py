@@ -137,7 +137,8 @@ class BRFManager(myqt.QFrameLayout):
             CONF.get('brf', 'graphs_labels_language'))
         if CONF.get('brf', 'graph_opt_panel_is_visible', False):
             self.viewer.toggle_graphpannel()
-        self.viewer.sig_setup_manager_request.connect(self.setup_from_brfdata)
+        self.viewer.sig_import_params_in_manager_request.connect(
+            self.import_current_viewer_brf_parameters)
 
         self.kgs_brf_installer = None
         self.__initGUI__()
@@ -407,11 +408,16 @@ class BRFManager(myqt.QFrameLayout):
         if toggle is True:
             self._handle_lag_value_changed(self.baro_spinbox)
 
-    def setup_from_brfdata(self, brfdata):
+    def import_current_viewer_brf_parameters(self):
         """
         Setup the BRF parameters to reflect those saved in the provided
         BRF results dataset.
         """
+        if self.wldset is None or self.wldset.brf_count() == 0:
+            return
+        brfdata = self.wldset.get_brf(
+            self.wldset.get_brfname_at(self.viewer.current_brf.value() - 1))
+
         # Setup the lags.
         nlag_bp = len(brfdata.loc[:, 'A'].dropna()) - 1
         nlag_et = len(brfdata.loc[:, 'B'].dropna()) - 1
@@ -547,7 +553,7 @@ class BRFViewer(QDialog):
     Window that is used to show all the results produced with for the
     currently selected water level dataset.
     """
-    sig_setup_manager_request = QSignal(object)
+    sig_import_params_in_manager_request = QSignal()
 
     def __init__(self, wldset=None, parent=None):
         super(BRFViewer, self).__init__(parent)
@@ -618,7 +624,7 @@ class BRFViewer(QDialog):
         self.import_params_in_manager_btn = QToolButtonNormal(
             icons.get_icon('content_duplicate'))
         self.import_params_in_manager_btn.clicked.connect(
-            self.request_sync_with_manager)
+            lambda _: self.sig_import_params_in_manager_request.emit())
 
         # Setup the toolbar.
         self.toolbar = QToolBar()
@@ -790,17 +796,6 @@ class BRFViewer(QDialog):
     def export_brf_data(self, fname):
         """Export the current BRF data to to file."""
         self.wldset.export_brf_to_csv(fname, self.current_brf.value()-1)
-
-    def request_setup_manager_from_brfdata(self):
-        """
-        Emit a signal to request that the manager parameters be defined
-        according to the BRF data transmitted in the signal.
-        """
-        if self.wldset is None or self.wldset.brf_count() == 0:
-            return
-        databrf = self.wldset.get_brf(
-            self.wldset.get_brfname_at(self.current_brf.value() - 1))
-        self.sig_setup_manager_request.emit(databrf)
 
     # ---- Others
     def set_wldset(self, wldset):
