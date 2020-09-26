@@ -73,9 +73,9 @@ class BRFFigure(Figure):
         self.patch.set_facecolor('white')
 
         left_margin = 0.8
-        right_margin = 0.25
-        bottom_margin = 0.75
-        top_margin = 0.675
+        right_margin = 0.2
+        bottom_margin = 0.6
+        top_margin = 0.8
 
         # Setup the axes.
         ax = self.add_axes(
@@ -103,11 +103,11 @@ class BRFFigure(Figure):
         self.errbar, = ax.plot([], [])
 
         # Initialize the figure title.
-        offset = ScaledTranslation(0, 36/72, self.dpi_scale_trans)
+        offset = ScaledTranslation(0, 40/72, self.dpi_scale_trans)
         self.title = ax.text(
             0.5, 1, '', ha='center', va='bottom', fontsize=14,
             transform=ax.transAxes + offset)
-        offset = ScaledTranslation(0, 18/72, self.dpi_scale_trans)
+        offset = ScaledTranslation(0, 22/72, self.dpi_scale_trans)
         self.period = ax.text(
             0.5, 1, '', ha='center', va='bottom', fontsize=14,
             transform=ax.transAxes + offset)
