@@ -315,7 +315,7 @@ class BRFManager(myqt.QFrameLayout):
         Returns
         -------
         brfperiod
-            A tuple of two numerical Excel date values.
+            A list of two numerical Excel date values.
         """
         year, month, day = self.date_start_edit.date().getDate()
         hour = self.date_start_edit.time().hour()
@@ -329,7 +329,7 @@ class BRFManager(myqt.QFrameLayout):
         dend = xldate_from_datetime_tuple(
             (year, month, day, hour, minute, 0), 0)
 
-        return (dstart, dend)
+        return [dstart, dend]
 
     def set_brfperiod(self, period):
         """
@@ -340,7 +340,7 @@ class BRFManager(myqt.QFrameLayout):
         Parameters
         ----------
         daterange : 2-length tuple of int
-            A tuple of two numerical Excel date values.
+            A list of two numerical Excel date values.
         """
         period = np.sort(period).tolist()
         widgets = (self.date_start_edit, self.date_end_edit)
@@ -374,7 +374,7 @@ class BRFManager(myqt.QFrameLayout):
         Parameters
         ----------
         daterange : 2-length tuple of int
-            A tuple of two numerical Excel date values.
+            A list of two numerical Excel date values.
         """
         for widget in (self.date_start_edit, self.date_end_edit):
             widget.blockSignals(True)
