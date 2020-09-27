@@ -612,6 +612,9 @@ class BRFViewer(QDialog):
 
         self.import_params_in_manager_btn = QToolButtonNormal(
             icons.get_icon('content_duplicate'))
+        self.import_params_in_manager_btn.setToolTip(
+            'Set the parameters of the BRF tool to the values that were '
+            'used to calculate the BRF currently displayed in this viewer.')
         self.import_params_in_manager_btn.clicked.connect(
             lambda _: self.sig_import_params_in_manager_request.emit())
 
