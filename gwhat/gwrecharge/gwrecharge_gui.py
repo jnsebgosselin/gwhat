@@ -175,7 +175,7 @@ class RechgEvalWidget(QFrame):
                                      QSizePolicy.Preferred))
 
         # Setup the main layout.
-        main_layout = QGridLayout()
+        main_layout = QGridLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 10)
         main_layout.addWidget(qtitle, 0, 0)
         main_layout.addWidget(HSep(), 1, 0)
