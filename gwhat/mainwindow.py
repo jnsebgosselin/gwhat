@@ -179,12 +179,8 @@ class MainWindow(QMainWindow):
         Move the data manager from tab 'Plot Hydrograph' to tab
         'Analyze Hydrograph' and vice-versa.
         """
-        current = self.tab_widget.tabBar().currentIndex()
-        if current == 0:
-            self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
-        elif current == 1:
-            self.tab_hydrocalc.right_panel.layout().addWidget(
-                self.dmanager, 0, 0)
+        self.tab_widget.currentWidget().right_panel.layout().addWidget(
+            self.dmanager, 0, 0)
 
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""
