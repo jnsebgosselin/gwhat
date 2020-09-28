@@ -14,12 +14,9 @@ from gwhat.utils import icons
 
 from PyQt5.QtCore import Qt, QSize, QPoint, QUrl
 from PyQt5.QtCore import pyqtSignal as QSignal
-from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import (QGridLayout, QLabel, QFrame, QMessageBox,
-                             QComboBox, QDoubleSpinBox, QAbstractSpinBox,
-                             QGroupBox, QWidget, QDialog, QDesktopWidget,
-                             QTextBrowser, QPushButton, QStyle, QScrollArea,
-                             QToolButton)
+from PyQt5.QtWidgets import (
+    QGridLayout, QMessageBox, QComboBox, QDoubleSpinBox, QAbstractSpinBox,
+    QWidget, QDialog, QDesktopWidget, QPushButton, QStyle, QScrollArea)
 
 
 class MyQComboBox(QComboBox):
