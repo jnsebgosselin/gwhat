@@ -23,7 +23,7 @@ from PyQt5.QtWidgets import (
     QLabel, QDateTimeEdit, QCheckBox, QPushButton, QApplication, QSpinBox,
     QAbstractSpinBox, QGridLayout, QDoubleSpinBox, QFrame, QWidget,
     QMessageBox, QFileDialog, QComboBox, QDialog, QGroupBox, QToolButton,
-    QToolBar, QGroupBox)
+    QToolBar)
 
 from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
 import numpy as np
@@ -33,9 +33,8 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 # ---- Local imports
 import gwhat.common.widgets as myqt
-from gwhat.widgets.layout import VSep, HSep
-from gwhat.widgets.buttons import LangToolButton
-from gwhat.common import StyleDB
+from gwhat.widgets.layout import HSep
+from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_icon
@@ -637,7 +636,7 @@ class BRFViewer(QDialog):
         self.brf_canvas = FigureCanvasQTAgg(BRFFigure())
 
         self.fig_frame = QFrame()
-        self.fig_frame.setFrameStyle(StyleDB().frame)
+        self.fig_frame.setFrameStyle(FRAME_SYLE)
         self.fig_frame.setObjectName("figframe")
         self.fig_frame.setStyleSheet("#figframe {background-color:white;}")
 

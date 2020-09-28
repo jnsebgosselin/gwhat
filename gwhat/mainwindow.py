@@ -58,7 +58,6 @@ import gwhat.HydroCalc2 as HydroCalc
 from gwhat.widgets.tabwidget import TabWidget
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
-from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.qthelpers import (
     qbytearray_to_hexstate, hexstate_to_qbytearray)
@@ -114,14 +113,9 @@ class MainWindow(QMainWindow):
         self.main_console.setLineWrapMode(QTextEdit.NoWrap)
         self.main_console.setOpenExternalLinks(True)
 
-        style = 'Regular'
-        family = StyleDB().fontfamily
-        size = CONF.get('main', 'fontsize_console')
-        fontSS = ('font-style: %s;'
-                  'font-size: %s;'
-                  'font-family: %s;'
-                  ) % (style, size, family)
-        self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
+        fontsize = CONF.get('main', 'fontsize_console')
+        self.main_console.setStyleSheet(
+            "QWidget {font-style: Regular; font-size: %s;}" % fontsize)
 
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
