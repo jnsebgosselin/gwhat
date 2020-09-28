@@ -22,18 +22,6 @@ from PyQt5.QtWidgets import (QGridLayout, QLabel, QFrame, QMessageBox,
                              QToolButton)
 
 
-class MyQLineLayout(QGridLayout):
-
-    def __init__(self, widgets, parent=None):
-        super(MyQLineLayout, self).__init__(parent)
-
-        for i, widget in enumerate(widgets):
-            self.addWidget(widget, 0, i)
-
-        self.setContentsMargins(0, 0, 0, 0)  # (l, t, r, b)
-        self.setColumnStretch(self.columnCount(), 100)
-
-
 class MyQComboBox(QComboBox):
     def __init__(self, parent=None):
         super(MyQComboBox, self).__init__(parent)
