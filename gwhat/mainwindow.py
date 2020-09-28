@@ -60,6 +60,8 @@ from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
 from gwhat.common import StyleDB
 from gwhat.utils import icons
+from gwhat.utils.qthelpers import (
+    qbytearray_to_hexstate, hexstate_to_qbytearray)
 
 freeze_support()
 
@@ -91,7 +93,8 @@ class MainWindow(QMainWindow):
         # Generate the GUI.
         self.__initUI__()
         splash.finish(self)
-        self.showMaximized()
+        self._restore_window_geometry()
+        self._restore_window_state()
 
         # Load the last opened project.
         projectfile = get_path_from_configs('main', 'last_project_filepath')
@@ -146,25 +149,26 @@ class MainWindow(QMainWindow):
         self.tab_widget.addTab(self.tab_hydrocalc, 'Analyze Hydrograph')
         self.tab_widget.setCornerWidget(self.pmanager)
         self.tab_widget.currentChanged.connect(self.sync_datamanagers)
+        self.tab_widget.setCurrentIndex(
+            CONF.get('main', 'mainwindow_current_tab'))
         self.sync_datamanagers()
 
         # Setup the splitter widget.
-        splitter = QSplitter(Qt.Vertical, parent=self)
-        splitter.addWidget(self.tab_widget)
-        splitter.addWidget(self.main_console)
+        self._splitter = QSplitter(Qt.Vertical, parent=self)
+        self._splitter.addWidget(self.tab_widget)
+        self._splitter.addWidget(self.main_console)
 
-        splitter.setCollapsible(0, True)
-        splitter.setStretchFactor(0, 100)
-        # Forces initially the main_console to its minimal height:
-        splitter.setSizes([100, 1])
+        self._splitter.setCollapsible(0, True)
+        self._splitter.setStretchFactor(0, 100)
+        # Force initially the main_console to its minimal height.
+        self._splitter.setSizes([100, 1])
 
         # Setup the layout of the main widget.
         main_widget = QWidget()
         self.setCentralWidget(main_widget)
 
         mainGrid = QGridLayout(main_widget)
-
-        mainGrid.addWidget(splitter, 0, 0)
+        mainGrid.addWidget(self._splitter, 0, 0)
         mainGrid.addWidget(
             self.tab_hydrocalc.rechg_eval_widget.progressbar, 3, 0)
 
@@ -178,14 +182,15 @@ class MainWindow(QMainWindow):
 
     def sync_datamanagers(self):
         """
-        Move the data manager from tab _Plot Hydrograph_ to tab
-        _Analyze Hydrograph_ and vice-versa.
+        Move the data manager from tab 'Plot Hydrograph' to tab
+        'Analyze Hydrograph' and vice-versa.
         """
         current = self.tab_widget.tabBar().currentIndex()
         if current == 0:
             self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
         elif current == 1:
-            self.tab_hydrocalc.right_panel.addWidget(self.dmanager, 0, 0)
+            self.tab_hydrocalc.right_panel.layout().addWidget(
+                self.dmanager, 0, 0)
 
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""
@@ -198,13 +203,74 @@ class MainWindow(QMainWindow):
         self.tab_hydrograph.setEnabled(True)
         self.tab_hydrocalc.setEnabled(True)
 
+    # ---- Qt method override/extension
     def closeEvent(self, event):
         """Qt method override to close the project before close the app."""
+        self._save_window_geometry()
+        self._save_window_state()
+        CONF.set(
+            'main', 'mainwindow_current_tab', self.tab_widget.currentIndex())
+
         print('Closing projet')
         self.pmanager.close()
-        self.tab_hydrocalc.close()
+
         print('Closing GWHAT')
+        self.tab_hydrocalc.close()
         event.accept()
+
+    def show(self):
+        """
+        Extend Qt method.
+        """
+        super().show()
+
+    # ---- Main window settings
+    def _restore_window_geometry(self):
+        """
+        Restore the geometry of this mainwindow from the value saved
+        in the config.
+        """
+        hexstate = CONF.get('main', 'window/geometry', None)
+        if hexstate:
+            hexstate = hexstate_to_qbytearray(hexstate)
+            self.restoreGeometry(hexstate)
+        else:
+            from gwhat.config.gui import INIT_MAINWINDOW_SIZE
+            self.resize(*INIT_MAINWINDOW_SIZE)
+
+    def _save_window_geometry(self):
+        """
+        Save the geometry of this mainwindow to the config.
+        """
+        hexstate = qbytearray_to_hexstate(self.saveGeometry())
+        CONF.set('main', 'window/geometry', hexstate)
+
+    def _restore_window_state(self):
+        """
+        Restore the state of this mainwindow’s toolbars and dockwidgets from
+        the value saved in the config.
+        """
+        # Then we appply saved configuration if it exists.
+        hexstate = CONF.get('main', 'window/state', None)
+        if hexstate:
+            hexstate = hexstate_to_qbytearray(hexstate)
+            self.restoreState(hexstate)
+
+        hexstate = CONF.get('main', 'splitter/state', None)
+        if hexstate:
+            hexstate = hexstate_to_qbytearray(hexstate)
+            self._splitter.restoreState(hexstate)
+
+    def _save_window_state(self):
+        """
+        Save the state of this mainwindow’s toolbars and dockwidgets to
+        the config.
+        """
+        hexstate = qbytearray_to_hexstate(self.saveState())
+        CONF.set('main', 'window/state', hexstate)
+
+        hexstate = qbytearray_to_hexstate(self._splitter.saveState())
+        CONF.set('main', 'splitter/state', hexstate)
 
 
 def except_hook(cls, exception, traceback):

@@ -21,7 +21,7 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
-    QTabWidget, QApplication, QWidget)
+    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame)
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -36,12 +36,12 @@ from xlrd.xldate import xldate_from_date_tuple
 
 
 # ---- Local imports
+from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-import gwhat.common.widgets as myqt
 from gwhat.common.widgets import DialogWindow
 from gwhat.common import StyleDB
 from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal
+from gwhat.utils.icons import QToolButtonNormal, get_iconsize
 from gwhat.widgets.buttons import ToolBarWidget
 from gwhat.brf_mod import BRFManager
 from gwhat.widgets.buttons import OnOffToolButton
@@ -63,6 +63,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         SaveFileMixin.__init__(self)
 
         self._navig_and_select_tools = []
+        self._last_toggled_navig_and_select_tool = None
         self._wldset = None
 
         self.dmngr = datamanager
@@ -76,11 +77,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Setup BRF calculation tool.
         self.brf_eval_widget = BRFManager(parent=self)
         self.brf_eval_widget.sig_brfperiod_changed.connect(self.plot_brfperiod)
-        self.brf_eval_widget.btn_seldata.sig_value_changed.connect(
-            lambda: self.toggle_brfperiod_selection(
-                self.brf_eval_widget.btn_seldata.value())
-            )
-        self.register_navig_and_select_tool(self.brf_eval_widget.btn_seldata)
+        self.brf_eval_widget.sig_select_brfperiod_requested.connect(
+            self.toggle_brfperiod_selection)
 
         self.__figbckground = None
         self.__addPeakVisible = True
@@ -118,8 +116,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def _setup_mpl_canvas(self):
 
-        # ---- Setup the canvas
-
+        # Setup the figure canvas.
         self.fig = MplFigure(facecolor='white')
         self.canvas = FigureCanvasQTAgg(self.fig)
 
@@ -131,32 +128,28 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
         self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
 
-        # ---- Setup the canvas frame
-
-        # Put figure canvas in a QFrame widget.
-
-        self.fig_frame_widget = myqt.QFrameLayout()
-        self.fig_frame_widget.addWidget(self.canvas, 0, 0)
-
+        # Put figure canvas in a QFrame widget so that it has a frame.
+        self.fig_frame_widget = QFrame()
+        self.fig_frame_widget.setMinimumSize(200, 200)
         self.fig_frame_widget.setFrameStyle(StyleDB().frame)
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
+        fig_frame_layout = QGridLayout(self.fig_frame_widget)
+        fig_frame_layout.setContentsMargins(0, 0, 0, 0)
+        fig_frame_layout.addWidget(self.canvas, 0, 0)
 
-        # ----- Setup the axes
-
-        # Water Level (Host) :
+        # Setup the Water Level (Host) axe.
         ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
         ax0.patch.set_visible(False)
         ax0.invert_yaxis()
 
-        # Precipitation :
+        # Setup the Precipitation axe.
         ax1 = ax0.twinx()
         ax1.patch.set_visible(False)
         ax1.set_zorder(50)
         ax1.set_navigate(False)
 
-        # ---- Setup ticks
-
+        # Setup the ticks
         ax0.xaxis.set_ticks_position('bottom')
         ax0.tick_params(axis='x', direction='out')
 
@@ -365,7 +358,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.btn_commit_changes.setEnabled(False)
 
         # Setup the layout.
-        toolbar = ToolBarWidget()
+        toolbar = QToolBar()
         for btn in [self.btn_home, self.btn_fit_waterlevels, self.btn_pan,
                     self.btn_zoom_to_rect, None,
                     self.btn_wl_style, self.btn_dateFormat, None,
@@ -374,8 +367,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     self.btn_rect_select, self.btn_clear_select,
                     self.btn_del_select, self.btn_undo_changes,
                     self.btn_clear_changes, self.btn_commit_changes]:
-            toolbar.addWidget(btn)
-
+            if btn is None:
+                toolbar.addSeparator()
+            else:
+                toolbar.addWidget(btn)
         return toolbar
 
     def _setup_mrc_tool(self):
@@ -399,8 +394,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         self.MRC_results.setSizePolicy(
             QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
 
-        # ---- MRC toolbar
-
+        # Setup the MRC toolbar
         self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
         self.btn_undo.setToolTip('Undo')
         self.btn_undo.setEnabled(False)
@@ -437,8 +431,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     self.btn_delpeak, self.btn_save_mrc]:
             mrc_tb.addWidget(btn)
 
-        # ---- MRC Layout ----
-
+        # Setup the MRC Layout.
         self.mrc_eval_widget = QWidget()
         mrc_lay = QGridLayout(self.mrc_eval_widget)
 
@@ -462,58 +455,57 @@ class WLCalc(DialogWindow, SaveFileMixin):
         return self.mrc_eval_widget
 
     def __initUI__(self):
-        self.setWindowTitle('Hydrograph Analysis')
+        # Setup the left widget.
+        left_widget = QMainWindow()
+
         toolbar = self._setup_toolbar()
+        toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
+        toolbar.setFloatable(False)
+        toolbar.setMovable(False)
+        toolbar.setIconSize(get_iconsize('normal'))
+        left_widget.addToolBar(Qt.TopToolBarArea, toolbar)
+        left_widget.setCentralWidget(self.fig_frame_widget)
+
+        # Setup the tools tab area.
+        self.tools_tabwidget = QTabWidget()
         self.mrc_eval_widget = self._setup_mrc_tool()
-
-        # ---- Tool Tab Area
-
-        tooltab = QTabWidget()
-        tooltab.addTab(self.mrc_eval_widget, 'MRC')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.mrc_eval_widget, 'MRC')
+        self.tools_tabwidget.setTabToolTip(
             0, ("<p>A tool to evaluate the master recession curve"
                 " of the hydrograph.</p>"))
-        tooltab.addTab(self.rechg_eval_widget, 'Recharge')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.rechg_eval_widget, 'Recharge')
+        self.tools_tabwidget.setTabToolTip(
             1, ("<p>A tool to evaluate groundwater recharge and its"
                 " uncertainty from observed water levels and daily "
                 " weather data.</p>"))
-        tooltab.addTab(self.brf_eval_widget, 'BRF')
-        tooltab.setTabToolTip(
+        self.tools_tabwidget.addTab(self.brf_eval_widget, 'BRF')
+        self.tools_tabwidget.setTabToolTip(
             2, ("<p>A tool to evaluate the barometric response function of"
                 " the well.</p>"))
-
-        tooltab.currentChanged.connect(
+        self.tools_tabwidget.currentChanged.connect(
             lambda: self.toggle_brfperiod_selection(False))
+        self.tools_tabwidget.setCurrentIndex(
+            CONF.get('hydrocalc', 'current_tool_index'))
 
-        # ---- Right Panel
-
-        self.right_panel = myqt.QFrameLayout()
-
-        row = 0
-        self.right_panel.addWidget(self.dmngr, row, 0)
-        row += 1
-        self.right_panel.addWidget(tooltab, row, 0)
-        row += 1
-        self.right_panel.setRowStretch(row, 100)
-
-        self.right_panel.setSpacing(15)
+        # Setup the right panel.
+        self.right_panel = QFrame()
+        right_panel_layout = QGridLayout(self.right_panel)
+        right_panel_layout.setContentsMargins(0, 0, 0, 0)
+        right_panel_layout.addWidget(self.dmngr, 0, 0)
+        right_panel_layout.addWidget(self.tools_tabwidget, 1, 0)
+        right_panel_layout.setRowStretch(2, 100)
+        right_panel_layout.setSpacing(15)
 
         # ---- Setup the main layout
+        main_layout = QGridLayout(self)
 
-        mainGrid = QGridLayout(self)
+        main_layout.addWidget(left_widget, 0, 0)
+        main_layout.addWidget(VSep(), 0, 1)
+        main_layout.addWidget(self.right_panel, 0, 2)
 
-        mainGrid.addWidget(toolbar, 0, 0)
-        mainGrid.addWidget(self.fig_frame_widget, 1, 0, 2, 1)
-        mainGrid.addWidget(VSep(), 0, 1, 3, 1)
-        mainGrid.addWidget(self.right_panel, 0, 2, 2, 1)
-
-        mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-        mainGrid.setHorizontalSpacing(15)
-        mainGrid.setRowStretch(1, 100)
-        # mainGrid.setRowStretch(2, 100)
-        mainGrid.setColumnStretch(0, 100)
-        mainGrid.setColumnMinimumWidth(2, 250)
+        main_layout.setHorizontalSpacing(15)
+        main_layout.setColumnStretch(0, 100)
+        main_layout.setColumnMinimumWidth(2, 250)
 
     @property
     def water_lvl(self):
@@ -552,11 +544,19 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
     def close(self):
         """Close this groundwater level calc window."""
+        CONF.set('hydrocalc', 'current_tool_index',
+                 self.tools_tabwidget.currentIndex())
         self.brf_eval_widget.close()
         super().close()
 
-    # ---- MRC handlers
+    def showEvent(self, event):
+        """Extend Qt method"""
+        # This is required to make sure the BRF is plotted correctly on
+        # restart.
+        self.plot_brfperiod()
+        super().showEvent(event)
 
+    # ---- MRC handlers
     def btn_show_mrc_isclicked(self):
         """Handle when the button to draw of hide the mrc is clicked."""
         if self.btn_show_mrc.value() is False:
@@ -643,13 +643,13 @@ class WLCalc(DialogWindow, SaveFileMixin):
         mrc2rechg(self.time, self.water_lvl, A, B,
                   self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
 
-    # ---- BRF handlers
+    # ---- BRF selection
     def plot_brfperiod(self):
         """
         Plot on the graph the vertical lines that are used to define the period
         over which the BRF is evaluated.
         """
-        if (self.brf_eval_widget.btn_seldata.value() is False and
+        if (not self.brf_eval_widget.is_brfperiod_selection_toggled() and
                 self.brf_eval_widget.isVisible()):
             brfperiod = self.brf_eval_widget.get_brfperiod()
         else:
@@ -667,17 +667,37 @@ class WLCalc(DialogWindow, SaveFileMixin):
         the graph.
         """
         if self.wldset is None:
-            self.brf_eval_widget.btn_seldata.setValue(False, silent=True)
+            self.brf_eval_widget.toggle_brfperiod_selection(False)
             if value is True:
-                self.emit_warning("Please import a valid water "
-                                  "level dataset first.")
+                self.emit_warning(
+                    "Please import a valid water level dataset first.")
             return
 
-        self.brf_eval_widget.btn_seldata.setValue(value, silent=True)
         if value is True:
-            self.toggle_navig_and_select_tools(
-                self.brf_eval_widget.btn_seldata)
+            self._last_toggled_navig_and_select_tool = None
+            for tool in self._navig_and_select_tools:
+                if tool.value() is True:
+                    self._last_toggled_navig_and_select_tool = tool
+                    tool.setValue(False)
+                    break
+        else:
+            self.brf_eval_widget.toggle_brfperiod_selection(False)
+            if self._last_toggled_navig_and_select_tool is not None:
+                self._last_toggled_navig_and_select_tool.setValue(True)
         self.plot_brfperiod()
+
+    def on_brf_select(self):
+        """
+        Handle when a period has been selected for the BRF calculation.
+        """
+        if all(self._selected_brfperiod):
+            brfperiod = [None, None]
+            for i in range(2):
+                x = self._selected_brfperiod[i] - (
+                        self.dt4xls2mpl * self.dformat)
+                brfperiod[i] = self.time[np.argmin(np.abs(x - self.time))]
+            self.brf_eval_widget.set_brfperiod(brfperiod)
+        self.toggle_brfperiod_selection(False)
 
     # ---- Peaks handlers
     def find_peak(self):
@@ -747,6 +767,10 @@ class WLCalc(DialogWindow, SaveFileMixin):
         for tool in self._navig_and_select_tools:
             if tool not in keep_toggled:
                 tool.setValue(False)
+
+        # Reset BRF selection.
+        self.brf_eval_widget.toggle_brfperiod_selection(False)
+        self.plot_brfperiod()
 
     @property
     def zoom_is_active(self):
@@ -1311,7 +1335,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         """
         return(self.btn_delpeak.autoRaise() and
                self.btn_addpeak.autoRaise() and
-               self.brf_eval_widget.btn_seldata.autoRaise())
+               not self.brf_eval_widget.is_brfperiod_selection_toggled())
 
     def on_fig_leave(self, event):
         """Handle when the mouse cursor leaves the graph."""
@@ -1325,19 +1349,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
     def on_axes_leave(self, event):
         """Handle when the mouse cursor leaves an axe."""
         self.toolbar.set_cursor(1)
-
-    def on_brf_select(self):
-        """
-        Handle when a period has been selected for the BRF calculation.
-        """
-        if all(self._selected_brfperiod):
-            brfperiod = [None, None]
-            for i in range(2):
-                x = self._selected_brfperiod[i] - (
-                        self.dt4xls2mpl * self.dformat)
-                brfperiod[i] = self.time[np.argmin(np.abs(x - self.time))]
-            self.brf_eval_widget.set_brfperiod(brfperiod)
-        self.toggle_brfperiod_selection(False)
 
     def on_rect_select(self):
         """
@@ -1398,7 +1409,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         if self.rect_select_is_active and self.__mouse_btn_is_pressed:
             self._draw_rect_selection(x, y)
-        if (self.brf_eval_widget.btn_seldata.value() and
+        if (self.brf_eval_widget.is_brfperiod_selection_toggled() and
                 self.__mouse_btn_is_pressed):
             self._draw_brf_selection(x)
 
@@ -1451,7 +1462,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self._rect_selection[1] = (event.xdata, event.ydata)
             self._rect_selector.set_visible(False)
             self.on_rect_select()
-        if self.brf_eval_widget.btn_seldata.value() is True:
+        if self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[1] = event.xdata
             self._brf_selector.set_visible(False)
             self.on_brf_select()
@@ -1530,7 +1541,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
             self.__addPeakVisible = False
             self.draw()
-        elif self.brf_eval_widget.btn_seldata.value() is True:
+        elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[0] = event.xdata
         elif self.rect_select_is_active:
             self._rect_selection[0] = (event.xdata, event.ydata)
