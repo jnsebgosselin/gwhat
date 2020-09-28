@@ -129,11 +129,13 @@ class HydroprintGUI(myqt.DialogWindow):
         self.zoom_disp.setRange(0, 9999)
         self.zoom_disp.setValue(100)
 
-        zoom_pan = myqt.QFrameLayout()
-        zoom_pan.setSpacing(3)
-        zoom_pan.addWidget(btn_zoom_out, 0, 0)
-        zoom_pan.addWidget(btn_zoom_in, 0, 1)
-        zoom_pan.addWidget(self.zoom_disp, 0, 2)
+        zoom_pan = QFrame()
+        zoom_pan_layout = QGridLayout(zoom_pan)
+        zoom_pan_layout.setContentsMargins(0, 0, 0, 0)
+        zoom_pan_layout.setSpacing(3)
+        zoom_pan_layout.addWidget(btn_zoom_out, 0, 0)
+        zoom_pan_layout.addWidget(btn_zoom_in, 0, 1)
+        zoom_pan_layout.addWidget(self.zoom_disp, 0, 2)
 
         # Setup the toolbar of the left widget.
         toolbar = QToolBar()
@@ -164,12 +166,13 @@ class HydroprintGUI(myqt.DialogWindow):
         # Setup the right panel.
         self.tabscales = self.__init_scalesTabWidget__()
 
-        self.right_panel = myqt.QFrameLayout()
-        self.right_panel.addWidget(self.dmngr, 0, 0)
-        self.right_panel.addWidget(self.tabscales, 1, 0)
-        self.right_panel.setRowStretch(2, 100)
-
-        self.right_panel.setSpacing(15)
+        self.right_panel = QFrame()
+        right_panel_layout = QGridLayout(self.right_panel)
+        right_panel_layout.setContentsMargins(0, 0, 0, 0)
+        right_panel_layout.addWidget(self.dmngr, 0, 0)
+        right_panel_layout.addWidget(self.tabscales, 1, 0)
+        right_panel_layout.setRowStretch(2, 100)
+        right_panel_layout.setSpacing(15)
 
         # Setup the main layout.
         main_layout = QGridLayout(self)

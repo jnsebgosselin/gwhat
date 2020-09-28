@@ -20,21 +20,19 @@ import matplotlib as mpl
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 from matplotlib.figure import Figure as MplFigure
 
-from PyQt5.QtCore import Qt, QEvent
+from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
-    QGridLayout, QAbstractSpinBox, QApplication, QComboBox, QDoubleSpinBox,
+    QGridLayout, QAbstractSpinBox, QApplication, QDoubleSpinBox,
     QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
-    QSizePolicy, QSpinBox, QTabWidget, QToolBar, QVBoxLayout, QWidget, QStyle)
+    QSpinBox, QTabWidget, QWidget, QStyle, QFrame)
 
 
-# ---- Imports: local
-
+# ---- Local imports
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
-from gwhat.common.widgets import QFrameLayout
 from gwhat.mplFigViewer3 import ImageViewer
 from gwhat.widgets.buttons import LangToolButton, ToolBarWidget
 from gwhat.widgets.layout import VSep
@@ -696,12 +694,13 @@ class FigManagerBase(QWidget):
         self.zoom_disp.setValue(100)
         self.figviewer.zoomChanged.connect(self.zoom_disp.setValue)
 
-        zoom_pan = QFrameLayout()
-        zoom_pan.setSpacing(3)
-        zoom_pan.addWidget(btn_zoom_out, 0, 0)
-        zoom_pan.addWidget(btn_zoom_in, 0, 1)
-        zoom_pan.addWidget(self.zoom_disp, 0, 2)
-        zoom_pan.setContentsMargins(5, 0, 5, 0)  # (L, T, R, B)
+        zoom_pan = QFrame()
+        zoom_pan_layout = QGridLayout(zoom_pan)
+        zoom_pan_layout.setContentsMargins(5, 0, 5, 0)
+        zoom_pan_layout.setSpacing(3)
+        zoom_pan_layout.addWidget(btn_zoom_out, 0, 0)
+        zoom_pan_layout.addWidget(btn_zoom_in, 0, 1)
+        zoom_pan_layout.addWidget(self.zoom_disp, 0, 2)
 
         return zoom_pan
 
