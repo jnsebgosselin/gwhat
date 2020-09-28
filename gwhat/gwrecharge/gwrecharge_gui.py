@@ -16,11 +16,11 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (QWidget, QGridLayout, QPushButton, QProgressBar,
                              QLabel, QSizePolicy, QScrollArea, QApplication,
-                             QMessageBox)
+                             QMessageBox, QFrame)
 
 # ---- Local imports
 from gwhat.widgets.buttons import ExportDataButton
-from gwhat.common.widgets import QFrameLayout, QDoubleSpinBox
+from gwhat.common.widgets import QDoubleSpinBox
 from gwhat.widgets.layout import HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
@@ -29,7 +29,7 @@ from gwhat.utils.icons import QToolButtonSmall, get_iconsize
 from gwhat.utils import icons
 
 
-class RechgEvalWidget(QFrameLayout):
+class RechgEvalWidget(QFrame):
 
     sig_new_gluedf = QSignal(GLUEDataFrameBase)
 
@@ -121,45 +121,45 @@ class RechgEvalWidget(QFrameLayout):
                 self.setAlignment(Qt.AlignCenter)
 
         # ---- Parameters
-
-        params_group = QFrameLayout()
-        params_group.setContentsMargins(10, 5, 10, 0)  # (L, T, R, B)
+        params_group = QFrame()
         params_group.setObjectName("viewport")
         params_group.setStyleSheet("#viewport {background-color:transparent;}")
 
+        params_group_layout = QGridLayout(params_group)
+        params_group_layout.setContentsMargins(10, 5, 10, 0)
         row = 0
-        params_group.addWidget(QLabel('Sy :'), row, 0)
-        params_group.addWidget(self.QSy_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.QSy_max, row, 3)
+        params_group_layout.addWidget(QLabel('Sy :'), row, 0)
+        params_group_layout.addWidget(self.QSy_min, row, 1)
+        params_group_layout.addWidget(QLabelCentered('to'), row, 2)
+        params_group_layout.addWidget(self.QSy_max, row, 3)
         row += 1
-        params_group.addWidget(QLabel('RAS<sub>max</sub> :'), row, 0)
-        params_group.addWidget(self.QRAS_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.QRAS_max, row, 3)
-        params_group.addWidget(QLabel('mm'), row, 4)
+        params_group_layout.addWidget(QLabel('RAS<sub>max</sub> :'), row, 0)
+        params_group_layout.addWidget(self.QRAS_min, row, 1)
+        params_group_layout.addWidget(QLabelCentered('to'), row, 2)
+        params_group_layout.addWidget(self.QRAS_max, row, 3)
+        params_group_layout.addWidget(QLabel('mm'), row, 4)
         row += 1
-        params_group.addWidget(QLabel('Cro :'), row, 0)
-        params_group.addWidget(self.CRO_min, row, 1)
-        params_group.addWidget(QLabelCentered('to'), row, 2)
-        params_group.addWidget(self.CRO_max, row, 3)
+        params_group_layout.addWidget(QLabel('Cro :'), row, 0)
+        params_group_layout.addWidget(self.CRO_min, row, 1)
+        params_group_layout.addWidget(QLabelCentered('to'), row, 2)
+        params_group_layout.addWidget(self.CRO_max, row, 3)
         row += 1
-        params_group.setRowMinimumHeight(row, 10)
+        params_group_layout.setRowMinimumHeight(row, 10)
         row += 1
-        params_group.addWidget(QLabel('Tmelt :'), row, 0)
-        params_group.addWidget(self._Tmelt, row, 1)
-        params_group.addWidget(QLabel('°C'), row, 2, 1, 3)
+        params_group_layout.addWidget(QLabel('Tmelt :'), row, 0)
+        params_group_layout.addWidget(self._Tmelt, row, 1)
+        params_group_layout.addWidget(QLabel('°C'), row, 2, 1, 3)
         row += 1
-        params_group.addWidget(QLabel('CM :'), row, 0)
-        params_group.addWidget(self._CM, row, 1)
-        params_group.addWidget(QLabel('mm/°C'), row, 2, 1, 3)
+        params_group_layout.addWidget(QLabel('CM :'), row, 0)
+        params_group_layout.addWidget(self._CM, row, 1)
+        params_group_layout.addWidget(QLabel('mm/°C'), row, 2, 1, 3)
         row += 1
-        params_group.addWidget(QLabel('deltaT :'), row, 0)
-        params_group.addWidget(self._deltaT, row, 1)
-        params_group.addWidget(QLabel('days'), row, 2, 1, 3)
+        params_group_layout.addWidget(QLabel('deltaT :'), row, 0)
+        params_group_layout.addWidget(self._deltaT, row, 1)
+        params_group_layout.addWidget(QLabel('days'), row, 2, 1, 3)
         row += 1
-        params_group.setRowStretch(row, 100)
-        params_group.setColumnStretch(5, 100)
+        params_group_layout.setRowStretch(row, 100)
+        params_group_layout.setColumnStretch(5, 100)
 
         # ---- Layout ----
 
@@ -174,18 +174,17 @@ class RechgEvalWidget(QFrameLayout):
         sa.setSizePolicy(QSizePolicy(QSizePolicy.Ignored,
                                      QSizePolicy.Preferred))
 
-        # ---- Main Layout
-
-        self.addWidget(qtitle, 0, 0)
-        self.addWidget(HSep(), 1, 0)
-        self.addWidget(sa, 2, 0)
-        self.addWidget(HSep(), 3, 0)
-        self.setRowMinimumHeight(4, 5)
-        self.addWidget(self.setup_toolbar(), 5, 0)
-
-        self.setRowStretch(2, 100)
-        self.setVerticalSpacing(5)
-        self.setContentsMargins(0, 0, 0, 10)   # (L, T, R, B)
+        # Setup the main layout.
+        main_layout = QGridLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 10)
+        main_layout.addWidget(qtitle, 0, 0)
+        main_layout.addWidget(HSep(), 1, 0)
+        main_layout.addWidget(sa, 2, 0)
+        main_layout.addWidget(HSep(), 3, 0)
+        main_layout.setRowMinimumHeight(4, 5)
+        main_layout.addWidget(self.setup_toolbar(), 5, 0)
+        main_layout.setRowStretch(2, 100)
+        main_layout.setVerticalSpacing(5)
 
     def setup_toolbar(self):
         """Setup the toolbar of the widget. """
