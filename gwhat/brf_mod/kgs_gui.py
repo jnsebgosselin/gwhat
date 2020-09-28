@@ -163,7 +163,7 @@ class BRFManager(QFrame):
             lambda value: self._handle_lag_value_changed(
                 self.earthtides_spinbox))
 
-        self.earthtides_cbox = QCheckBox('Nbr of ET lags :')
+        self.earthtides_cbox = QCheckBox('No. of ET lags :')
         self.earthtides_cbox.setChecked(
             CONF.get('brf', 'compute_with_earthtides'))
         self.earthtides_cbox.toggled.connect(
@@ -195,7 +195,7 @@ class BRFManager(QFrame):
         # Setup options layout.
         options_grpbox = QGroupBox()
         options_layout = QGridLayout(options_grpbox)
-        options_layout.addWidget(QLabel('Nbr of BP lags :'), 0, 0)
+        options_layout.addWidget(QLabel('No. of BP lags :'), 0, 0)
         options_layout.addWidget(self.earthtides_cbox, 1, 0)
         options_layout.addLayout(lags_layout, 0, 1, 2, 1)
         options_layout.addWidget(self.detrend_waterlevels_cbox, 2, 0, 1, 2)
