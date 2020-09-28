@@ -68,9 +68,9 @@ class KGSBRFInstaller(QFrame):
         layout.setContentsMargins(0, 0, 0, 0)
         layout.addWidget(self.install_btn, 1, 1)
         layout.setRowStretch(0, 100)
-        layout.setRowStretch(self.rowCount(), 100)
+        layout.setRowStretch(layout.rowCount(), 100)
         layout.setColumnStretch(0, 100)
-        layout.setColumnStretch(self.columnCount(), 100)
+        layout.setColumnStretch(layout.columnCount(), 100)
 
     @property
     def install_dir(self):
