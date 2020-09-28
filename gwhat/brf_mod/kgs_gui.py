@@ -260,10 +260,9 @@ class BRFManager(QFrame):
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.addWidget(daterange_grpbox, 0, 0)
         main_layout.addWidget(options_grpbox, 1, 0)
-        main_layout.setRowMinimumHeight(2, 15)
         main_layout.setRowStretch(2, 100)
-        main_layout.addWidget(self._show_brf_results_btn, 4, 0)
-        main_layout.addWidget(btn_comp, 5, 0)
+        main_layout.addWidget(self._show_brf_results_btn, 3, 0)
+        main_layout.addWidget(btn_comp, 4, 0)
 
         # Setup the install KGS_BRF panel
         if not KGSBRFInstaller().kgsbrf_is_installed():
