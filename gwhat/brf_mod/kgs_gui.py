@@ -462,8 +462,9 @@ class BRFManager(QFrame):
         self.kgs_brf_installer = KGSBRFInstaller()
         self.kgs_brf_installer.sig_kgs_brf_installed.connect(
             self.__uninstall_kgs_brf_installer)
-        self.addWidget(
-            self.kgs_brf_installer, 0, 0, self.rowCount(), self.columnCount())
+        self.layout().addWidget(
+            self.kgs_brf_installer,
+            0, 0, self.layout().rowCount(), self.layout().columnCount())
 
     def __uninstall_kgs_brf_installer(self):
         """
