@@ -505,7 +505,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
-        main_layout.setColumnMinimumWidth(2, 250)
 
     @property
     def water_lvl(self):
