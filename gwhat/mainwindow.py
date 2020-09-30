@@ -86,7 +86,6 @@ class MainWindow(QMainWindow):
 
         # Setup the data manager.
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
-        self.dmanager.setMaximumWidth(250)
         self.dmanager.sig_new_console_msg.connect(self.write2console)
 
         # Generate the GUI.
