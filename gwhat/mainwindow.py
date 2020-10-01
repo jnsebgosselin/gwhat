@@ -86,7 +86,6 @@ class MainWindow(QMainWindow):
 
         # Setup the data manager.
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
-        self.dmanager.setMaximumWidth(250)
         self.dmanager.sig_new_console_msg.connect(self.write2console)
 
         # Generate the GUI.
@@ -179,6 +178,14 @@ class MainWindow(QMainWindow):
         Move the data manager from tab 'Plot Hydrograph' to tab
         'Analyze Hydrograph' and vice-versa.
         """
+        max_width = self.dmanager.sizeHint().width()
+        for i in range(self.tab_widget.count()):
+            max_width = max(
+                max_width,
+                self.tab_widget.widget(i).right_panel.sizeHint().width())
+        for i in range(self.tab_widget.count()):
+            self.tab_widget.widget(i).layout().setColumnMinimumWidth(
+                2, max_width)
         self.tab_widget.currentWidget().right_panel.layout().addWidget(
             self.dmanager, 0, 0)
 
@@ -273,8 +280,6 @@ def except_hook(cls, exception, traceback):
     """
     sys.__excepthook__(cls, exception, traceback)
 
-
-# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     sys.excepthook = except_hook

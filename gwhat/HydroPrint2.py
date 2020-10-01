@@ -181,7 +181,6 @@ class HydroprintGUI(myqt.DialogWindow):
         main_layout.addWidget(self.right_panel, 0, 2)
         main_layout.setSpacing(15)
         main_layout.setColumnStretch(0, 500)
-        main_layout.setColumnMinimumWidth(2, 250)
 
         # ---- EVENTS
 
