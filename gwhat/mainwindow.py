@@ -58,7 +58,6 @@ import gwhat.HydroCalc2 as HydroCalc
 from gwhat.widgets.tabwidget import TabWidget
 from gwhat.projet.manager_projet import ProjetManager
 from gwhat.projet.manager_data import DataManager
-from gwhat.common import StyleDB
 from gwhat.utils import icons
 from gwhat.utils.qthelpers import (
     qbytearray_to_hexstate, hexstate_to_qbytearray)
@@ -87,7 +86,6 @@ class MainWindow(QMainWindow):
 
         # Setup the data manager.
         self.dmanager = DataManager(parent=self, pm=self.pmanager)
-        self.dmanager.setMaximumWidth(250)
         self.dmanager.sig_new_console_msg.connect(self.write2console)
 
         # Generate the GUI.
@@ -114,14 +112,9 @@ class MainWindow(QMainWindow):
         self.main_console.setLineWrapMode(QTextEdit.NoWrap)
         self.main_console.setOpenExternalLinks(True)
 
-        style = 'Regular'
-        family = StyleDB().fontfamily
-        size = CONF.get('main', 'fontsize_console')
-        fontSS = ('font-style: %s;'
-                  'font-size: %s;'
-                  'font-family: %s;'
-                  ) % (style, size, family)
-        self.main_console.setStyleSheet("QWidget{%s}" % fontSS)
+        fontsize = CONF.get('main', 'fontsize_console')
+        self.main_console.setStyleSheet(
+            "QWidget {font-style: Regular; font-size: %s;}" % fontsize)
 
         msg = '<font color=black>Thanks for using %s.</font>' % __appname__
         self.write2console(msg)
@@ -185,12 +178,16 @@ class MainWindow(QMainWindow):
         Move the data manager from tab 'Plot Hydrograph' to tab
         'Analyze Hydrograph' and vice-versa.
         """
-        current = self.tab_widget.tabBar().currentIndex()
-        if current == 0:
-            self.tab_hydrograph.right_panel.addWidget(self.dmanager, 0, 0)
-        elif current == 1:
-            self.tab_hydrocalc.right_panel.layout().addWidget(
-                self.dmanager, 0, 0)
+        max_width = self.dmanager.sizeHint().width()
+        for i in range(self.tab_widget.count()):
+            max_width = max(
+                max_width,
+                self.tab_widget.widget(i).right_panel.sizeHint().width())
+        for i in range(self.tab_widget.count()):
+            self.tab_widget.widget(i).layout().setColumnMinimumWidth(
+                2, max_width)
+        self.tab_widget.currentWidget().right_panel.layout().addWidget(
+            self.dmanager, 0, 0)
 
     def new_project_loaded(self):
         """Handles when a new project is loaded in the project manager."""
@@ -283,8 +280,6 @@ def except_hook(cls, exception, traceback):
     """
     sys.__excepthook__(cls, exception, traceback)
 
-
-# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     sys.excepthook = except_hook

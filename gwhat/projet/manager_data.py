@@ -105,7 +105,7 @@ class DataManager(QWidget):
         self.well_info_widget = StrSpinBox()
 
         # ---- Setup the main layout.
-        grpbox = QGroupBox('Water Level Dataset : ')
+        grpbox = QGroupBox('Water Level Dataset')
         layout = QGridLayout(grpbox)
         layout.setSpacing(5)
 
@@ -156,7 +156,7 @@ class DataManager(QWidget):
 
         # ---- Main Layout
 
-        grpbox = QGroupBox('Weather Dataset : ')
+        grpbox = QGroupBox('Weather Dataset')
         layout = QGridLayout(grpbox)
         layout.setSpacing(5)
 

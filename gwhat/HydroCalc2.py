@@ -39,7 +39,7 @@ from xlrd.xldate import xldate_from_date_tuple
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
 from gwhat.common.widgets import DialogWindow
-from gwhat.common import StyleDB
+from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
 from gwhat.widgets.buttons import ToolBarWidget
@@ -131,7 +131,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
         # Put figure canvas in a QFrame widget so that it has a frame.
         self.fig_frame_widget = QFrame()
         self.fig_frame_widget.setMinimumSize(200, 200)
-        self.fig_frame_widget.setFrameStyle(StyleDB().frame)
+        self.fig_frame_widget.setFrameStyle(FRAME_SYLE)
         self.fig_frame_widget.setLineWidth(2)
         self.fig_frame_widget.setMidLineWidth(1)
         fig_frame_layout = QGridLayout(self.fig_frame_widget)
@@ -505,7 +505,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
-        main_layout.setColumnMinimumWidth(2, 250)
 
     @property
     def water_lvl(self):

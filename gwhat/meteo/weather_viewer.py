@@ -31,8 +31,8 @@ from PyQt5.QtWidgets import (
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 from gwhat.colors2 import ColorsReader
-from gwhat.common import StyleDB
 from gwhat.utils import icons
+from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
 from gwhat.common.widgets import DialogWindow
 from gwhat.widgets.buttons import RangeSpinBoxes
@@ -736,7 +736,7 @@ class GridWeatherNormals(QTableWidget):
 
     def initUI(self):
 
-        self.setFrameStyle(StyleDB().frame)
+        self.setFrameStyle(FRAME_SYLE)
         self.setShowGrid(False)
         self.setAlternatingRowColors(True)
 
