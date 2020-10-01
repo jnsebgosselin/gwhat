@@ -178,6 +178,14 @@ class MainWindow(QMainWindow):
         Move the data manager from tab 'Plot Hydrograph' to tab
         'Analyze Hydrograph' and vice-versa.
         """
+        max_width = self.dmanager.sizeHint().width()
+        for i in range(self.tab_widget.count()):
+            max_width = max(
+                max_width,
+                self.tab_widget.widget(i).right_panel.sizeHint().width())
+        for i in range(self.tab_widget.count()):
+            self.tab_widget.widget(i).layout().setColumnMinimumWidth(
+                2, max_width)
         self.tab_widget.currentWidget().right_panel.layout().addWidget(
             self.dmanager, 0, 0)
 
