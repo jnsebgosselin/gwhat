@@ -20,6 +20,7 @@ from collections.abc import Mapping
 from abc import abstractmethod
 
 # ---- Third party imports
+import numpy as np
 import pandas as pd
 from pandas.errors import EmptyDataError
 import xlrd
