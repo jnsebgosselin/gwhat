@@ -28,6 +28,10 @@ from gwhat.utils.dates import datetimeindex_to_xldates
      'basic_weather_datafile.xls',
      'basic_weather_datafile.csv'])
 def test_read_weather_datafile(filename):
+    """
+    Test that the basic function to read weather data input file is
+    working as expected.
+    """
     filename = osp.join(osp.dirname(__file__), filename)
     metadata, data = read_weather_datafile(filename)
 
@@ -63,9 +67,8 @@ def test_read_weather_datafile(filename):
     assert np.array_equal(expected_values, data.astype(str).values)
 
 
-@pytest.mark.parametrize("ext", ['.csv', '.xls', '.xlsx'])
-def test_read_weather_data(ext):
-    fmeteo = osp.join(osp.dirname(__file__), "sample_weather_datafile" + ext)
+def test_read_weather_data():
+    fmeteo = osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx")
     wxdset = WXDataFrame(fmeteo)
 
     # Assert that the dataset was loaded correctly and that the 3 lines that
