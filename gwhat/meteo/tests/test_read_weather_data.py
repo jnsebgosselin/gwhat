@@ -25,7 +25,17 @@ from gwhat.utils.dates import datetimeindex_to_xldates
 @pytest.mark.parametrize(
     "filename", ['basic_weather_datafile.xlsx', 'basic_weather_datafile.csv'])
 def test_read_weather_datafile(filename):
+    filename = osp.join(osp.dirname(__file__), filename)
     metadata, data = read_weather_datafile(filename)
+
+    # Assert metadata.
+    assert metadata['filename'] == filename
+    assert metadata['Station Name'] == 'MARIEVILLE'
+    assert metadata['Station ID'] == '7024627'
+    assert metadata['Location'] == 'QUEBEC'
+    assert metadata['Latitude'] == 45.4
+    assert metadata['Longitude'] == -73.13
+    assert metadata['Elevation'] == 38
 
     # Assert dataset columns.
     expected_columns = ['Tmax', 'Tmin', 'Tavg', 'Ptot']
