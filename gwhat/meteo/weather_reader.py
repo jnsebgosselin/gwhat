@@ -205,8 +205,8 @@ class WXDataFrame(WXDataFrameBase):
     def __iter__(self):
         raise NotImplementedError
 
-    def __len__(self, key):
-        raise NotImplementedError
+    def __len__(self):
+        return len(self.data)
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
