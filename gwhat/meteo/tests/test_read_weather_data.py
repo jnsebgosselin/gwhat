@@ -19,7 +19,6 @@ import pytest
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrame, read_weather_datafile
-from gwhat.utils.dates import datetimeindex_to_xldates
 
 
 @pytest.mark.parametrize(
