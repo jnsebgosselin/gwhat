@@ -295,7 +295,7 @@ def read_weather_datafile(filename):
 
     # Read the file.
     root, ext = osp.splitext(filename)
-    if ext == '.csv':
+    if ext in ['.csv', '.out']:
         with open(filename, 'r') as csvfile:
             data = list(csv.reader(csvfile, delimiter=','))
     elif ext in ['.xls', '.xlsx']:
@@ -303,7 +303,7 @@ def read_weather_datafile(filename):
         data = data.values.tolist()
     else:
         raise ValueError("Supported file format are: ",
-                         ['.csv', '.xls', '.xlsx'])
+                         ['.csv', '.out', '.xls', '.xlsx'])
 
     # Read the metadata and try to find the row where the
     # numerical data begin.
