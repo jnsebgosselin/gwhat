@@ -207,6 +207,9 @@ class WXDataFrame(WXDataFrameBase):
     def __len__(self):
         return len(self.data)
 
+    def __str__(self):
+        return self.data.__str__()
+
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
         print('-' * 78)
