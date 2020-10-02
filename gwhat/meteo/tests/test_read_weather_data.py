@@ -67,42 +67,43 @@ def test_read_weather_datafile(filename):
     assert np.array_equal(expected_values, data.astype(str).values)
 
 
-def test_read_weather_data():
+def test_init_wxdataframe_from_input_file():
+    """
+    Test that the WXDataFrame can be initiated properly from an input
+    weather datafile.
+    """
     fmeteo = osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx")
     wxdset = WXDataFrame(fmeteo)
 
-    # Assert that the dataset was loaded correctly and that the 3 lines that
-    # were removed manually from the dataset were added back. The lines were
-    # removed for december 18, 19, and 20 of 2017.
+    assert len(wxdset) == 366 + 365 + 365
 
-    assert len(wxdset.data) == 2188 + 3
+    # Assert time was read correctly.
     assert np.all(np.diff(wxdset.data.index) == np.timedelta64(1, 'D'))
-    assert wxdset.get_data_period() == (2010, 2015)
-
-    assert np.array_equal(datetimeindex_to_xldates(wxdset.data.index),
-                          np.arange(40179, 42369 + 1))
-    assert np.array_equal(wxdset.data.index,
-                          pd.date_range(start=dt.datetime(2010, 1, 1),
-                                        end=dt.datetime(2015, 12, 31),
-                                        freq='D'))
-    assert np.array_equal(wxdset.data.index.year.unique(),
-                          np.arange(2010, 2015 + 1))
-    assert np.array_equal(wxdset.data.index.month.unique(),
-                          np.arange(1, 13))
+    assert wxdset.get_data_period() == (2000, 2002)
+    assert np.array_equal(
+        wxdset.get_xldates(),
+        np.arange(36526, 36526 + 366 + 365 + 365))
+    assert np.array_equal(
+        wxdset.data.index,
+        pd.date_range(start=dt.datetime(2000, 1, 1),
+                      end=dt.datetime(2002, 12, 31),
+                      freq='D'))
 
     # Assert the data for a sample of the dataset.
-    assert np.array_equal(wxdset.data['Ptot'][-15:-10],
-                          np.array([14, 0, 0, 0, 8.5]))
-    assert np.array_equal(wxdset.data['Rain'][-15:-10],
-                          np.array([14, 0, 0, 0, 0]))
-    assert np.array_equal(wxdset.data['Snow'][-15:-10],
-                          np.array([0, 0, 0, 0, 8.5]))
-    assert np.array_equal(np.round(wxdset.data['Tavg'][-15:-10], 3),
-                          np.array([4.300, 3.100, 1.900, 0.700, -0.500]))
-    assert np.array_equal(np.round(wxdset.data['Tmax'][-15:-10], 3),
-                          np.array([9.000, 7.750, 6.500, 5.250, 4.000]))
-    assert np.array_equal(np.round(wxdset.data['Tmin'][-15:-10], 3),
-                          np.array([-0.500, -1.125, -1.750, -2.375, -3.00]))
+
+    # Note that the data for the 04/01/2000 are missing from the dataset
+    # completely and the first data for the average temperature is missing.
+    assert np.array_equal(
+        wxdset.data['Tmax'][:5],
+        np.array([2, 9, 2.5, 0.5 * (2.5 + -8), -8]))
+    assert np.array_equal(
+        wxdset.data['Tmin'][:5],
+        np.array([-12.8, -6, -3.5, 0.5 * (-3.5 + -10.5), -10.5]))
+    assert np.array_equal(
+        wxdset.data['Tavg'][:5],
+        np.array([0, 1.5, -0.5, 0.5 * (-0.5 + -9.3), -9.3]))
+    assert np.array_equal(
+        wxdset.data['Ptot'][:5], np.array([0, 6.8, 6, 0, 0]))
 
 
 if __name__ == "__main__":

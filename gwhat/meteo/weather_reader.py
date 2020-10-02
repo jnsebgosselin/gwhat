@@ -243,12 +243,11 @@ class WXDataFrame(WXDataFrameBase):
                 self.missing_value_indexes[var] = (
                     self.missing_value_indexes[var]
                     .append(self.data.index[pd.isnull(self.data[var])])
-                    .drop_duplicates()
-                    )
+                    .drop_duplicates())
 
         # Fill missing with values with in-stations linear interpolation for
         # temperature based variables.
-        for var in TEMP_VARIABLES:
+        for var in ['Tmax', 'Tavg', 'Tmin', 'PET']:
             if var in self.data.columns:
                 self.data[var] = self.data[var].interpolate()
 
