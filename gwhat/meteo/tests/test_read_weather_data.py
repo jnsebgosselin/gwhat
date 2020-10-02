@@ -23,7 +23,10 @@ from gwhat.utils.dates import datetimeindex_to_xldates
 
 
 @pytest.mark.parametrize(
-    "filename", ['basic_weather_datafile.xlsx', 'basic_weather_datafile.csv'])
+    "filename",
+    ['basic_weather_datafile.xlsx',
+     'basic_weather_datafile.xls',
+     'basic_weather_datafile.csv'])
 def test_read_weather_datafile(filename):
     filename = osp.join(osp.dirname(__file__), filename)
     metadata, data = read_weather_datafile(filename)
