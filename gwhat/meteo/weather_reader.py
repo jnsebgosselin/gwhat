@@ -331,7 +331,9 @@ def read_weather_datafile(filename):
                 break
     else:
         raise ValueError("Cannot find the beginning of the data.")
-    # Read the numerical data from the file.
+
+    # Extract and format the numerical data from the file.
+    data = pd.DataFrame(data[i + 1:], columns=data[i])
 
     # The data must contain the following columns :
     # (1) Tmax, (2) Tavg, (3) Tmin, (4) Ptot.
@@ -339,12 +341,6 @@ def read_weather_datafile(filename):
     # (5) Rain, (6) Snow, (7) PET
     # The dataframe must use a datetime index.
 
-    if ext in ['.csv', '.out']:
-        data = pd.read_csv(filename, dtype='str', skiprows=i)
-    elif ext in ['.xls', '.xlsx']:
-        data = pd.read_excel(filename, dtype='str', skiprows=i)
-
-    # Format the data columns.
     column_names_regexes = OrderedDict([
         ('Year', r'(year)'),
         ('Month', r'(month)'),
@@ -365,11 +361,13 @@ def read_weather_datafile(filename):
         else:
             data = data.drop([column], axis=1)
 
-    # Format the type of the data.
-    for col in ['Year', 'Month', 'Day']:
-        data[col] = data[col].astype(int)
-    for col in ['Tmax', 'Tmin', 'Tavg', 'Ptot']:
-        data[col] = data[col].astype(float)
+    for col in data.columns:
+        try:
+            data[col] = pd.to_numeric(data[col])
+        except ValueError:
+            data[col] = pd.to_numeric(data[col], errors='coerce')
+            print("Some {} data could not be converted to numeric value"
+                  .format(col))
 
     # We now create the time indexes for the dataframe form the year,
     # month, and day data.
