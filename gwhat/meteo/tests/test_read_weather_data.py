@@ -10,14 +10,16 @@
 import os
 import datetime as dt
 import os.path as osp
+from datetime import datetime
 
 # ---- Third party imports
 import numpy as np
+from numpy import nan
 import pandas as pd
 import pytest
 
 # ---- Local library imports
-from gwhat.meteo.weather_reader import WXDataFrame
+from gwhat.meteo.weather_reader import WXDataFrame, read_weather_datafile
 from gwhat.utils.dates import datetimeindex_to_xldates
 
 
@@ -58,6 +60,33 @@ def test_read_weather_data(ext):
                           np.array([9.000, 7.750, 6.500, 5.250, 4.000]))
     assert np.array_equal(np.round(wxdset.data['Tmin'][-15:-10], 3),
                           np.array([-0.500, -1.125, -1.750, -2.375, -3.00]))
+@pytest.mark.parametrize(
+    "filename", ['basic_weather_datafile.xlsx', 'basic_weather_datafile.csv'])
+def test_read_weather_datafile(filename):
+    metadata, data = read_weather_datafile(filename)
+
+    # Assert dataset columns.
+    expected_columns = ['Tmax', 'Tmin', 'Tavg', 'Ptot']
+    assert data.columns.values.tolist() == expected_columns
+
+    # Assert dataset times.
+    expected_datetimes = [
+        '2000-01-01 00:00', '2000-01-02 00:00', '2000-01-03 00:00',
+        '2000-01-04 00:00', '2000-01-05 00:00']
+    assert (data.index.strftime("%Y-%m-%d %H:%M").values.tolist() ==
+            expected_datetimes)
+
+    # We need to compare the values as strings because comparing two nan
+    # values always yield False.
+    expected_values = np.array(
+        [['2.0', '-12.8', '-4.9', '0.0'],
+         ['nan', '-6.0', '1.5', '6.8'],
+         ['nan', '-3.5', '-0.5', '6.0'],
+         ['nan', 'nan', 'nan', 'nan'],
+         ['nan', 'nan', 'nan', 'nan']
+         ])
+    assert np.array_equal(expected_values, data.astype(str).values)
+
 
 
 if __name__ == "__main__":
