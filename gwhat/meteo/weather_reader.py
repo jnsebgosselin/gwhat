@@ -124,10 +124,8 @@ class WXDataFrameBase(Mapping):
         Return a numpy array containing the Excel numerical dates
         corresponding to the dates of the dataset.
         """
-        print('Converting datetimes to xldates...', end=' ')
         timedeltas = self.data.index - xldate_as_datetime(4000, 0)
         xldates = timedeltas.total_seconds() / (3600 * 24) + 4000
-        print('done')
         return xldates.values
 
     # ---- utilities
@@ -334,6 +332,7 @@ def read_weather_datafile(filename):
 
     # Extract and format the numerical data from the file.
     data = pd.DataFrame(data[i + 1:], columns=data[i])
+    data = data.replace(r'(?i)^\s*$|nan|none', np.nan, regex=True)
 
     # The data must contain the following columns :
     # (1) Tmax, (2) Tavg, (3) Tmin, (4) Ptot.
@@ -461,8 +460,6 @@ if __name__ == '__main__':
     fmeteo = ("C:/Users/User/gwhat/gwhat/meteo/tests/"
               "sample_weather_datafile.xlsx")
     metadata2, data2 = read_weather_datafile(fmeteo)
-    
-    
 
     # wxdset = WXDataFrame(fmeteo)
     # data = wxdset.data
