@@ -22,6 +22,7 @@ from abc import abstractmethod
 # ---- Third party imports
 import pandas as pd
 from pandas.errors import EmptyDataError
+import xlrd
 from xlrd.xldate import xldate_as_datetime
 
 # ---- Local library imports
@@ -289,16 +290,19 @@ def read_weather_datafile(filename):
                 'Location': '',
                 'Latitude': 0,
                 'Longitude': 0,
-                'Elevation': 0,
-                }
+                'Elevation': 0}
 
-    # Make sur the type of the file is supported.
+    # Read the file.
     root, ext = osp.splitext(filename)
-    if ext not in FILE_EXTS:
-        raise ValueError("Supported file format are: ", FILE_EXTS)
+    if ext == '.csv':
+        with open(filename, 'r') as csvfile:
+            data = list(csv.reader(csvfile, delimiter=','))
+    elif ext in ['.xls', '.xlsx']:
+        data = pd.read_excel(filename, dtype='str', header=None)
+        data = data.values.tolist()
     else:
-        print("Loading daily weather time series from {}..."
-              .format(osp.basename(filename)))
+        raise ValueError("Supported file format are: ",
+                         ['.csv', '.xls', '.xlsx'])
 
     # Read the metadata and try to find the row where the
     # numerical data begin.
@@ -308,29 +312,9 @@ def read_weather_datafile(filename):
         'Latitude': (r'(latitude)', float),
         'Longitude': (r'(longitude)', float),
         'Location': (r'(location|province)', str),
-        'Elevation': (r'(elevation|altitude)', float)
-        }
-
-    i = 0
-    while True:
-        print(i)
-        try:
-            if ext == '.csv':
-                row = pd.read_csv(
-                    filename, dtype='str', header=None, nrows=1, skiprows=i
-                    ).values[0]
-            elif ext == '.xls':
-                row = pd.read_excel(
-                    filename, dtype='str', header=None, nrows=1, skiprows=i
-                    ).values[0]
-            elif ext == '.xlsx':
-                row = pd.read_excel(
-                    filename, dtype='str', header=None, nrows=1, skiprows=i,
-                    engine='openpyxl').values[0]
-        except (EmptyDataError, IndexError):
-            raise ValueError('Cannot find the start of the data.')
+        'Elevation': (r'(elevation|altitude)', float)}
+    for i, row in enumerate(data):
         if len(row) == 0 or pd.isnull(row[0]):
-            i += 1
             continue
 
         label = row[0].replace(" ", "").replace("_", "")
@@ -343,10 +327,10 @@ def read_weather_datafile(filename):
                 else:
                     break
         else:
-            if re.search(r'(time|datetime|year)', label, re.IGNORECASE):
+            if re.search(r'(year)', label, re.IGNORECASE):
                 break
-        i += 1
-
+    else:
+        raise ValueError("Cannot find the beginning of the data.")
     # Read the numerical data from the file.
 
     # The data must contain the following columns :
@@ -472,15 +456,24 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
 # %% if __name__ == '__main__'
 
 if __name__ == '__main__':
-    fmeteo = ("D:/Desktop/Meteo_station_1973a2019.csv")
-    wxdset = WXDataFrame(fmeteo)
-    data = wxdset.data
+    fmeteo = ("C:/Users/User/gwhat/gwhat/meteo/tests/"
+              "basic_weather_datafile.csv")
+    metadata, data = read_weather_datafile(fmeteo)
 
-    monthly_values = wxdset.get_monthly_values()
-    yearly_values = wxdset.get_yearly_values()
+    fmeteo = ("C:/Users/User/gwhat/gwhat/meteo/tests/"
+              "sample_weather_datafile.xlsx")
+    metadata2, data2 = read_weather_datafile(fmeteo)
+    
+    
 
-    monthly_normals = wxdset.get_monthly_normals()
-    yearly_normals = wxdset.get_yearly_normals()
+    # wxdset = WXDataFrame(fmeteo)
+    # data = wxdset.data
 
-    print(monthly_normals, end='\n\n')
-    print(yearly_normals)
+    # monthly_values = wxdset.get_monthly_values()
+    # yearly_values = wxdset.get_yearly_values()
+
+    # monthly_normals = wxdset.get_monthly_normals()
+    # yearly_normals = wxdset.get_yearly_normals()
+
+    # print(monthly_normals, end='\n\n')
+    # print(yearly_normals)
