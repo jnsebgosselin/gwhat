@@ -453,25 +453,9 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
     return table
 
 
-# %% if __name__ == '__main__'
-
 if __name__ == '__main__':
-    fmeteo = ("C:/Users/User/gwhat/gwhat/meteo/tests/"
-              "basic_weather_datafile.csv")
-    metadata, data = read_weather_datafile(fmeteo)
-
-    fmeteo = ("C:/Users/User/gwhat/gwhat/meteo/tests/"
-              "sample_weather_datafile.xlsx")
-    metadata2, data2 = read_weather_datafile(fmeteo)
-
-    # wxdset = WXDataFrame(fmeteo)
-    # data = wxdset.data
-
-    # monthly_values = wxdset.get_monthly_values()
-    # yearly_values = wxdset.get_yearly_values()
-
-    # monthly_normals = wxdset.get_monthly_normals()
-    # yearly_normals = wxdset.get_yearly_normals()
-
-    # print(monthly_normals, end='\n\n')
-    # print(yearly_normals)
+    from gwhat import __rootdir__
+    fmeteo = osp.join(
+        __rootdir__, "meteo", "tests", "sample_weather_datafile.xlsx")
+    wxdset = WXDataFrame(fmeteo)
+    print(wxdset)
