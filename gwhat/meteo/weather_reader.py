@@ -146,7 +146,8 @@ class WXDataFrameBase(Mapping):
         group = self.data.groupby(
             [self.data.index.year, self.data.index.month])
         df = pd.concat(
-            [group[PRECIP_VARIABLES].sum(), group[TEMP_VARIABLES].mean()],
+            [group[['Ptot', 'Rain', 'Snow', 'PET']].sum(),
+             group[['Tmax', 'Tavg', 'Tmin']].mean()],
             axis=1)
         df.index.rename(['Year', 'Month'], inplace=True)
         return df
@@ -158,7 +159,8 @@ class WXDataFrameBase(Mapping):
         """
         group = self.data.groupby(self.data.index.year)
         df = pd.concat(
-            [group[PRECIP_VARIABLES].sum(), group[TEMP_VARIABLES].mean()],
+            [group[['Ptot', 'Rain', 'Snow', 'PET']].sum(),
+             group[['Tmax', 'Tavg', 'Tmin']].mean()],
             axis=1)
         df.index.rename('Year', inplace=True)
         return df
