@@ -33,9 +33,7 @@ from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
 
 
-PRECIP_VARIABLES = ['Ptot', 'Rain', 'Snow']
-TEMP_VARIABLES = ['Tmax', 'Tavg', 'Tmin', 'PET']
-METEO_VARIABLES = PRECIP_VARIABLES + TEMP_VARIABLES
+METEO_VARIABLES = ['Ptot', 'Rain', 'Snow', 'PET', 'Tmax', 'Tavg', 'Tmin']
 VARLABELS_MAP = {'Ptot': 'Ptot (mm)',
                  'Rain': 'Rain (mm)',
                  'Snow': 'Snow (mm)',
