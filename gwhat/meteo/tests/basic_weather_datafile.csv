@@ -1,0 +1,13 @@
+Station Name,MARIEVILLE
+Province,QUEBEC
+Latitude,45.4
+Longitude,-73.13
+Elevation,38
+Climate Identifier,7024627
+
+Year,Month,Day,Max Temp (deg C),Min Temp (deg C),Mean Temp (deg C),Total Precip (mm),Other
+2000,1,1,2,-12.8,-4.9,0,1
+2000,1,2,,-6,1.5,6.8,2
+2000,1,3,nan,-3.5,-0.5,6,3
+2000,1,4,nan,nan,nan,nan,nan
+2000,1,5,,,,,

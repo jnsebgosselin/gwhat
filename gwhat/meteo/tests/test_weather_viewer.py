@@ -30,7 +30,7 @@ def savepath(tmpdir):
 @pytest.fixture
 def wxdataset():
     return WXDataFrame(osp.join(
-        osp.dirname(__file__), "sample_weather_datafile.csv"))
+        osp.dirname(__file__), "sample_weather_datafile.xlsx"))
 
 
 @pytest.fixture()
