@@ -64,10 +64,9 @@ utilisateurs_gwhat.docx
 backup/
 */Backup/
 references/
-/Projects/
+Projects/
 */Revision/
 .spyproject/
-@ new-prô'jèt!/
 releases/*.zip
 releases/build
 releases/dist

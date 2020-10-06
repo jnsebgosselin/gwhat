@@ -71,8 +71,8 @@ def test_init_wxdataframe_from_input_file():
     Test that the WXDataFrame can be initiated properly from an input
     weather datafile.
     """
-    fmeteo = osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx")
-    wxdset = WXDataFrame(fmeteo)
+    wxdset = WXDataFrame(
+        osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx"))
 
     assert len(wxdset) == 366 + 365 + 365
 
@@ -103,6 +103,84 @@ def test_init_wxdataframe_from_input_file():
         np.array([0, 1.5, -0.5, 0.5 * (-0.5 + -9.3), -9.3]))
     assert np.array_equal(
         wxdset.data['Ptot'][:5], np.array([0, 6.8, 6, 0, 0]))
+
+
+def test_wxdata_monthly_yearly_values():
+    """
+    Test that monthly and yearly values are calculated as expected from the
+    daily values.
+    """
+    wxdset = WXDataFrame(
+        osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx"))
+
+    # Assert monthly values.
+    monthly = wxdset.get_monthly_values()
+
+    assert round(monthly.loc[(2001, 1), 'Ptot'], 1) == 82.6
+    assert round(monthly.loc[(2001, 1), 'Rain'], 1) == 30.6
+    assert round(monthly.loc[(2001, 1), 'Snow'], 1) == 52.0
+    assert round(monthly.loc[(2001, 1), 'PET'], 1) == 1.0
+    assert round(monthly.loc[(2001, 1), 'Tmax'], 1) == -5.3
+    assert round(monthly.loc[(2001, 1), 'Tavg'], 1) == -9.7
+    assert round(monthly.loc[(2001, 1), 'Tmin'], 1) == -14.1
+
+    assert round(monthly.loc[(2001, 6), 'Ptot'], 1) == 103.1
+    assert round(monthly.loc[(2001, 6), 'Rain'], 1) == 103.1
+    assert round(monthly.loc[(2001, 6), 'Snow'], 1) == 0.0
+    assert round(monthly.loc[(2001, 6), 'PET'], 1) == 111.1
+    assert round(monthly.loc[(2001, 6), 'Tmax'], 1) == 22.1
+    assert round(monthly.loc[(2001, 6), 'Tavg'], 1) == 17.1
+    assert round(monthly.loc[(2001, 6), 'Tmin'], 1) == 12.2
+
+    # Assert yearly values.
+    yearly = wxdset.get_yearly_values()
+
+    assert round(yearly.loc[2001, 'Ptot'], 1) == 1145.5
+    assert round(yearly.loc[2001, 'Rain'], 1) == 865.6
+    assert round(yearly.loc[2001, 'Snow'], 1) == 279.9
+    assert round(yearly.loc[2001, 'PET'], 1) == 613.4
+    assert round(yearly.loc[2001, 'Tmax'], 1) == 10.9
+    assert round(yearly.loc[2001, 'Tavg'], 1) == 6.3
+    assert round(yearly.loc[2001, 'Tmin'], 1) == 1.7
+
+
+def test_wxdata_monthly_yearly_normals():
+    """
+    Test that monthly and yearly normals are calculated as expected from the
+    daily values.
+    """
+    wxdset = WXDataFrame(
+        osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx"))
+
+    # Assert monthly normals.
+    monthly_normals = wxdset.get_monthly_normals()
+
+    assert round(monthly_normals.loc[1, 'Ptot'], 1) == 81.1
+    assert round(monthly_normals.loc[1, 'Rain'], 1) == 29.1
+    assert round(monthly_normals.loc[1, 'Snow'], 1) == 52.0
+    assert round(monthly_normals.loc[1, 'PET'], 1) == 0.9
+    assert round(monthly_normals.loc[1, 'Tmax'], 1) == -5.4
+    assert round(monthly_normals.loc[1, 'Tavg'], 1) == -9.7
+    assert round(monthly_normals.loc[1, 'Tmin'], 1) == -14.2
+
+    assert round(monthly_normals.loc[6, 'Ptot'], 1) == 103.1
+    assert round(monthly_normals.loc[6, 'Rain'], 1) == 103.1
+    assert round(monthly_normals.loc[6, 'Snow'], 1) == 0.0
+    assert round(monthly_normals.loc[6, 'PET'], 1) == 111.1
+    assert round(monthly_normals.loc[6, 'Tmax'], 1) == 22.1
+    assert round(monthly_normals.loc[6, 'Tavg'], 1) == 17.1
+    assert round(monthly_normals.loc[6, 'Tmin'], 1) == 12.2
+
+    # Assert yearly normals.
+    yearly_normals = wxdset.get_yearly_normals()
+
+    assert round(yearly_normals.loc['Ptot'], 1) == 1144.0
+    assert round(yearly_normals.loc['Rain'], 1) == 864.1
+    assert round(yearly_normals.loc['Snow'], 1) == 279.9
+    assert round(yearly_normals.loc['PET'], 1) == 613.1
+    assert round(yearly_normals.loc['Tmax'], 1) == 10.8
+    assert round(yearly_normals.loc['Tavg'], 1) == 6.3
+    assert round(yearly_normals.loc['Tmin'], 1) == 1.7
 
 
 if __name__ == "__main__":
