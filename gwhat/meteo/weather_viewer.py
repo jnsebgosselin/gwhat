@@ -323,6 +323,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.__figlang = lang
         self.__figlabels = FigureLabels(lang)
         self.normals = None
+        self._dummy_ax = None
 
         fw, fh = 8.5, 5.
         fig = MplFigure(figsize=(fw, fh), facecolor='white')
@@ -635,14 +636,15 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         x0, x1 = ax1.get_position().x0, ax1.get_position().x1
         y0, y1 = ax1.get_position().y0, ax3.get_position().y1
-
-        dummy_ax = self.figure.add_axes(
-            [x0, y0, x1 - x0, y1 - y0], label='dummy')
-        dummy_ax.patch.set_visible(False)
-        dummy_ax.axis('off')
-
-        dummy_plot, = dummy_ax.plot([], [], clip_on=True)
-
+        pos = [x0, y0, x1 - x0, y1 - y0]
+        if self._dummy_ax is None:
+            self._dummy_ax = self.figure.add_axes(pos, label='dummy')
+        else:
+            self._dummy_ax.clear()
+            self._dummy_ax.set_position(pos)
+        self._dummy_ax.patch.set_visible(False)
+        self._dummy_ax.axis('off')
+        dummy_plot, = self._dummy_ax.plot([], [], clip_on=True)
         clip_bbox = dummy_plot.get_clip_box()
 
         for line in ax1.lines:
