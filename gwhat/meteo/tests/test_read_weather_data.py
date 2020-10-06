@@ -105,5 +105,44 @@ def test_init_wxdataframe_from_input_file():
         wxdset.data['Ptot'][:5], np.array([0, 6.8, 6, 0, 0]))
 
 
+def test_wxdata_monthly_yearly_values():
+    """
+    Test that monthly and yearly values are calculated as expected from the
+    daily values.
+    """
+    wxdset = WXDataFrame(
+        osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx"))
+
+    # Assert monthly values.
+    monthly = wxdset.get_monthly_values()
+
+    assert round(monthly.loc[(2001, 1), 'Ptot'], 1) == 82.6
+    assert round(monthly.loc[(2001, 1), 'Rain'], 1) == 30.6
+    assert round(monthly.loc[(2001, 1), 'Snow'], 1) == 52.0
+    assert round(monthly.loc[(2001, 1), 'PET'], 1) == 1.0
+    assert round(monthly.loc[(2001, 1), 'Tmax'], 1) == -5.3
+    assert round(monthly.loc[(2001, 1), 'Tavg'], 1) == -9.7
+    assert round(monthly.loc[(2001, 1), 'Tmin'], 1) == -14.1
+
+    assert round(monthly.loc[(2001, 6), 'Ptot'], 1) == 103.1
+    assert round(monthly.loc[(2001, 6), 'Rain'], 1) == 103.1
+    assert round(monthly.loc[(2001, 6), 'Snow'], 1) == 0.0
+    assert round(monthly.loc[(2001, 6), 'PET'], 1) == 111.1
+    assert round(monthly.loc[(2001, 6), 'Tmax'], 1) == 22.1
+    assert round(monthly.loc[(2001, 6), 'Tavg'], 1) == 17.1
+    assert round(monthly.loc[(2001, 6), 'Tmin'], 1) == 12.2
+
+    # Assert yearly values.
+    yearly = wxdset.get_yearly_values()
+
+    assert round(yearly.loc[2001, 'Ptot'], 1) == 1145.5
+    assert round(yearly.loc[2001, 'Rain'], 1) == 865.6
+    assert round(yearly.loc[2001, 'Snow'], 1) == 279.9
+    assert round(yearly.loc[2001, 'PET'], 1) == 613.4
+    assert round(yearly.loc[2001, 'Tmax'], 1) == 10.9
+    assert round(yearly.loc[2001, 'Tavg'], 1) == 6.3
+    assert round(yearly.loc[2001, 'Tmin'], 1) == 1.7
+
+
 if __name__ == "__main__":
     pytest.main(['-x', __file__, '-v', '-rw'])
