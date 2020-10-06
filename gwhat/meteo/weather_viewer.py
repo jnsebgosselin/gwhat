@@ -337,9 +337,9 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # ---- Yearly Avg Labels
 
-        # The yearly yearly averages for the mean air temperature and
-        # the total precipitation are displayed in <ax3>, which is placed on
-        # top of the axes that display the data (<ax0> and <ax1>).
+        # The yearly averages for the mean air temperature and total
+        # precipitation are displayed in ax3, which is placed on
+        # top of the axes that display the data (ax0 and ax1).
 
         ax3 = fig.add_axes([0, 0, 1, 1], zorder=1, label='axe3')
         ax3.patch.set_visible(False)
@@ -393,15 +393,13 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         axh = y0 - bottom_margin
         y0 = y0 - axh
 
-        # Precipitation :
-
         ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1, label='axe0')
+        # Setup the axe for precipitation.
         ax0.patch.set_visible(False)
         ax0.spines['top'].set_visible(False)
         ax0.set_axisbelow(True)
 
-        # Air Temperature :
-
+        # Setup the axe for air temperature.
         ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=5,
                            sharex=ax0, label='axe1')
 
@@ -517,15 +515,13 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         rec1 = Rectangle((0, 0), 1, 1, fc=colors.rgb['Snow'], ec='none')
         rec2 = Rectangle((0, 0), 1, 1, fc=colors.rgb['Rain'], ec='none')
 
-        # Define the legend labels and markers :
-
+        # Define the legend labels and markers.
         lines = [ax.lines[0], ax.lines[1], ax.lines[2], rec2, rec1]
         labels = [self.fig_labels.Tmax, self.fig_labels.Tavg,
                   self.fig_labels.Tmin, self.fig_labels.rain,
                   self.fig_labels.snow]
 
-        # Plot the legend :
-
+        # Plot the legend.
         leg = ax.legend(lines, labels, numpoints=1, fontsize=13,
                         borderaxespad=0, loc='upper left', borderpad=0,
                         bbox_to_anchor=(0, 1), bbox_transform=transform)
@@ -629,10 +625,10 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.plot_air_temp(Tmax_norm, Tavg_norm, Tmin_norm)
         self.update_yearly_avg()
 
-        # ---- Clipping
+        # Setup the clipping of the axes.
 
-        # There is currently a bug regarding this. So we need to do a
-        # workaround
+        # Note that there is currently a bug regarding this, so we
+        # need to do a workaround.
 
         x0, x1 = ax1.get_position().x0, ax1.get_position().x1
         y0, y1 = ax1.get_position().y0, ax3.get_position().y1
@@ -673,8 +669,6 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             else:
                 ax0.set_xlabel("%d - %d" % (yearmin, yearmax), fontsize=16,
                                labelpad=10)
-
-    # ---- Plot the Data
 
     def plot_precip(self, PNORM, SNORM):
 
