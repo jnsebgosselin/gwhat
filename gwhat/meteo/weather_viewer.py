@@ -341,7 +341,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # precipitation are displayed in ax3, which is placed on
         # top of the axes that display the data (ax0 and ax1).
 
-        ax3 = fig.add_axes([0, 0, 1, 1], zorder=1, label='axe3')
+        ax3 = fig.add_axes([0, 0, 1, 1], zorder=1, label='yearly_averages')
         ax3.patch.set_visible(False)
         ax3.spines['bottom'].set_visible(False)
         ax3.tick_params(axis='both', bottom=False, top=False, left=False,
@@ -393,15 +393,15 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         axh = y0 - bottom_margin
         y0 = y0 - axh
 
-        ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1, label='axe0')
         # Setup the axe for precipitation.
+        ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1, label='precipitation')
         ax0.patch.set_visible(False)
         ax0.spines['top'].set_visible(False)
         ax0.set_axisbelow(True)
 
         # Setup the axe for air temperature.
         ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=5,
-                           sharex=ax0, label='axe1')
+                           sharex=ax0, label='temperature')
 
         # ---- Initialize the Artists
 
