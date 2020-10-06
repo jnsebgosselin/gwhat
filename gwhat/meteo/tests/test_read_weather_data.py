@@ -71,8 +71,8 @@ def test_init_wxdataframe_from_input_file():
     Test that the WXDataFrame can be initiated properly from an input
     weather datafile.
     """
-    fmeteo = osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx")
-    wxdset = WXDataFrame(fmeteo)
+    wxdset = WXDataFrame(
+        osp.join(osp.dirname(__file__), "sample_weather_datafile.xlsx"))
 
     assert len(wxdset) == 366 + 365 + 365
 
