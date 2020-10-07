@@ -389,6 +389,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self._axe_precip.set_xticks(xpos_major)
         self._axe_airtemp.tick_params(
             axis='x', which='both', bottom=False, top=False, labelbottom=False)
+        self._axe_precip.set_xlim(0, 12)
 
         # Setup minor xticks.
         xpos_minor = [0.5 + i for i in range(12)]
@@ -398,24 +399,19 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self._axe_precip.xaxis.set_ticklabels(
             self.fig_labels.month_names, minor=True)
 
-        # ---- Y-ticks Formatting
-
-        # Precipitation
+        # Format the yticks for the precipitation axis.
         self._axe_precip.yaxis.set_ticks_position('right')
         self._axe_precip.tick_params(axis='y', direction='out', labelsize=13)
 
         self._axe_precip.tick_params(axis='y', which='minor', direction='out')
         self._axe_precip.yaxis.set_ticklabels([], minor=True)
 
-        # Air Temperature
+        # Format the yticks for the temperature axis.
         self._axe_airtemp.yaxis.set_ticks_position('left')
         self._axe_airtemp.tick_params(axis='y', direction='out', labelsize=13)
 
         self._axe_airtemp.tick_params(axis='y', which='minor', direction='out')
         self._axe_airtemp.yaxis.set_ticklabels([], minor=True)
-
-        # ---- Limits of the Axes
-        self._axe_precip.set_xlim(0, 12)
 
         # ---- Legend
         self.plot_legend()
