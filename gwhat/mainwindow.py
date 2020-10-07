@@ -210,6 +210,7 @@ class MainWindow(QMainWindow):
 
         print('Closing projet')
         self.pmanager.close()
+        self.dmanager.close()
 
         print('Closing GWHAT')
         self.tab_hydrocalc.close()

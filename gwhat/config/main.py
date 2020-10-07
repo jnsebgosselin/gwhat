@@ -43,6 +43,9 @@ DEFAULTS = [
          'detrend_waterlevels': True,
          }
      ),
+    ('weather_normals_viewer',
+        {'graphs_labels_language': 'english'}
+     ),
 ]
 
 

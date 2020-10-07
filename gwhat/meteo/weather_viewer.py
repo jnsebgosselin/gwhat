@@ -90,11 +90,11 @@ class WeatherViewer(DialogWindow):
             "Show the monthly weather normals data table.")
         btn_showStats.clicked.connect(self.show_monthly_grid)
 
-        btn_language = LangToolButton()
-        btn_language.setToolTip(
+        self.btn_language = LangToolButton()
+        self.btn_language.setToolTip(
             "Set the language of the text shown in the graph.")
-        btn_language.sig_lang_changed.connect(self.set_lang)
-        btn_language.setIconSize(icons.get_iconsize('normal'))
+        self.btn_language.sig_lang_changed.connect(self.set_language)
+        self.btn_language.setIconSize(icons.get_iconsize('normal'))
 
         # Instantiate and define a layout for the year range widget.
 
@@ -123,7 +123,7 @@ class WeatherViewer(DialogWindow):
         self.toolbar = QToolBar()
         self.toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
         buttons = [btn_save, self.btn_copy, self.btn_export, btn_showStats,
-                   btn_language, None, self.year_rng]
+                   self.btn_language, None, self.year_rng]
         for button in buttons:
             if button is None:
                 self.toolbar.addSeparator()
@@ -157,10 +157,17 @@ class WeatherViewer(DialogWindow):
                                 self.grid_weather_normals.calcul_height())
             self.sender().setAutoRaise(True)
 
-    def set_lang(self, lang):
+    def get_language(self):
+        """Return the language used for the figure labels."""
+        return self.btn_language.language
+
+    def set_language(self, language):
         """Sets the language of all the labels in the figure."""
-        self.fig_weather_normals.set_lang(lang)
-        self.fig_weather_normals.draw()
+        if language.lower() != self.btn_language.language.lower():
+            self.btn_language.set_language(language)
+        else:
+            self.fig_weather_normals.set_lang(language)
+            self.fig_weather_normals.draw()
 
     def set_weather_dataset(self, wxdset):
         """
@@ -813,7 +820,7 @@ if __name__ == '__main__':
 
     w = WeatherViewer()
 
-    w.set_lang('French')
+    w.set_language('French')
     w.set_weather_dataset(wxdset)
     w.show()
 
