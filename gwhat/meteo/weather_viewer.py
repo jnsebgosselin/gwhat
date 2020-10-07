@@ -820,7 +820,7 @@ if __name__ == '__main__':
 
     w = WeatherViewer()
 
-    w.set_lang('French')
+    w.set_language('French')
     w.set_weather_dataset(wxdset)
     w.show()
 
