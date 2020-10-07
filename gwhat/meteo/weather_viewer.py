@@ -273,39 +273,39 @@ class FigureLabels(object):
 
         # Legend :
 
-        self.Pyrly = 'Annual total precipitation = %0.0f mm'
-        self.Tyrly = 'Average annual air temperature = %0.1f °C'
+        self.Pyrly = 'Annual precipitation = %0.0f mm'
+        self.Tyrly = 'Average annual temperature = %0.1f °C'
         self.rain = 'Rain'
         self.snow = 'Snow'
-        self.Tmax = 'Temp. max.'
-        self.Tmin = 'Temp. min.'
-        self.Tavg = 'Temp. mean'
+        self.Tmax = 'Maximum Temperature'
+        self.Tmin = 'Minimum Temperature'
+        self.Tavg = 'Average Temperature'
 
         # Labels :
 
-        self.Tlabel = 'Monthly Air Temperature (°C)'
-        self.Plabel = 'Monthly Total Precipitation (mm)'
-        self.month_names = ["JAN", "FEB", "MAR", "APR", "MAY", "JUN",
-                            "JUL", "AUG", "SEP", "OCT", "NOV", "DEC"]
+        self.Tlabel = 'Temperature (°C)'
+        self.Plabel = 'Precipitation (mm)'
+        self.month_names = ["jan", "feb", "mar", "apr", "may", "jun",
+                            "jul", "aug", "sep", "oct", "nov", "dec"]
 
         if language.lower() == 'french':
 
             # Legend :
 
-            self.Pyrly = 'Précipitations totales annuelles = %0.0f mm'
+            self.Pyrly = 'Précipitations annuelles = %0.0f mm'
             self.Tyrly = 'Température moyenne annuelle = %0.1f °C'
             self.rain = 'Pluie'
             self.snow = 'Neige'
-            self.Tmax = 'Températures max.'
-            self.Tmin = 'Températures min.'
-            self.Tavg = 'Températures moy.'
+            self.Tmax = 'Température maximale'
+            self.Tmin = 'Température minimale'
+            self.Tavg = 'Température moyenne'
 
             # Labels :
 
-            self.Tlabel = 'Températures moyennes mensuelles (°C)'
-            self.Plabel = 'Précipitations totales mensuelles (mm)'
-            self.month_names = ["JAN", "FÉV", "MAR", "AVR", "MAI", "JUN",
-                                "JUL", "AOÛ", "SEP", "OCT", "NOV", "DÉC"]
+            self.Tlabel = 'Température (°C)'
+            self.Plabel = 'Précipitation (mm)'
+            self.month_names = ["jan", "fév", "mar", "avr", "mai", "jun",
+                                "jul", "aoû", "sep", "oct", "nov", "déc"]
 
 
 class FigWeatherNormals(FigureCanvasQTAgg):
