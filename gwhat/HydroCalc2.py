@@ -1326,7 +1326,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.vguide.set_xdata(x)
             self.fig.axes[0].draw_artist(self.vguide)
 
-    # ----- Handlers: Mouse events
+    # ----- Mouse Event Handlers
     def is_all_btn_raised(self):
         """
         Return whether all of the tool buttons that can block the panning and
@@ -1386,12 +1386,11 @@ class WLCalc(DialogWindow, SaveFileMixin):
         fig = self.fig
         fig.canvas.restore_region(self.__figbckground)
 
-        # ---- Draw the cursor guide and the xy coordinates on the graph.
-
-        # Trace a red vertical guide (line) that folows the mouse marker :
-
+        # Draw the vertical cursor guide.
         x, y = event.xdata, event.ydata
         self._draw_mouse_cursor(x, y)
+
+        # Draw the xy coordinates on the graph.
         if all((x, y)):
             self.xycoord.set_visible(True)
             if self.dformat == 0:
@@ -1403,7 +1402,6 @@ class WLCalc(DialogWindow, SaveFileMixin):
                     y, date[2], date[1], date[0]))
             ax0.draw_artist(self.xycoord)
         else:
-            self.vguide.set_visible(False)
             self.xycoord.set_visible(False)
 
         if self.rect_select_is_active and self.__mouse_btn_is_pressed:
@@ -1452,6 +1450,8 @@ class WLCalc(DialogWindow, SaveFileMixin):
         been clicked.
         """
         self.__mouse_btn_is_pressed = False
+        self.vguide.set_color('black')
+
         # Disconnect the pan and zoom callback before drawing the canvas again.
         if self.pan_is_active:
             self.toolbar.release_pan(event)
@@ -1542,6 +1542,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
             self.draw()
         elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[0] = event.xdata
+            self.vguide.set_color('red')
+            self.draw()
+            self.on_mouse_move(event)
         elif self.rect_select_is_active:
             self._rect_selection[0] = (event.xdata, event.ydata)
         else:
