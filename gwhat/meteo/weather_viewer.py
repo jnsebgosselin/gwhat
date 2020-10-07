@@ -157,10 +157,17 @@ class WeatherViewer(DialogWindow):
                                 self.grid_weather_normals.calcul_height())
             self.sender().setAutoRaise(True)
 
-    def set_lang(self, lang):
+    def get_language(self):
+        """Return the language used for the figure labels."""
+        return self.btn_language.language
+
+    def set_language(self, language):
         """Sets the language of all the labels in the figure."""
-        self.fig_weather_normals.set_lang(lang)
-        self.fig_weather_normals.draw()
+        if language.lower() != self.btn_language.language.lower():
+            self.btn_language.set_language(language)
+        else:
+            self.fig_weather_normals.set_lang(language)
+            self.fig_weather_normals.draw()
 
     def set_weather_dataset(self, wxdset):
         """
