@@ -333,7 +333,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         left_margin = 1 / fw
         right_margin = 1 / fw
         bottom_margin = 0.7 / fh
-        top_margin = 16 / 72 / fh
+        top_margin = 20 / 72 / fh
 
         # Setup the axe to plot precipitation.
         x0 = left_margin
