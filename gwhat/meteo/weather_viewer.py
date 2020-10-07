@@ -25,7 +25,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtWidgets import (
     QMenu, QToolButton, QGridLayout, QFileDialog, QApplication, QTableWidget,
-    QTableWidgetItem, QLabel, QHBoxLayout, QHeaderView)
+    QTableWidgetItem, QLabel, QHBoxLayout, QHeaderView, QToolBar)
 
 # ---- Local library imports
 from gwhat.config.ospath import (
@@ -91,7 +91,7 @@ class WeatherViewer(DialogWindow):
         btn_language.sig_lang_changed.connect(self.set_lang)
         btn_language.setIconSize(icons.get_iconsize('normal'))
 
-        # Instantiate and define a layout for the year range widget :
+        # Instantiate and define a layout for the year range widget.
 
         self.year_rng = RangeSpinBoxes(1000, 9999)
         self.year_rng.setRange(1800, datetime.now().year)
@@ -114,38 +114,29 @@ class WeatherViewer(DialogWindow):
         qgrid.addWidget(QLabel('to'))
         qgrid.addLayout(lay_expand)
 
-        # Generate the layout of the toolbar :
+        # Setup the toolbar.
+        self.toolbar = QToolBar()
+        self.toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
+        buttons = [btn_save, self.btn_copy, self.btn_export, btn_showStats,
+                   btn_language, None, self.year_rng]
+        for button in buttons:
+            if button is None:
+                self.toolbar.addSeparator()
+            else:
+                self.toolbar.addWidget(button)
 
-        toolbar_widget = ToolBarWidget()
-        for btn in [btn_save, self.btn_export, btn_showStats, btn_language,
-                    None, self.year_rng]:
-            toolbar_widget.addWidget(btn)
-
-        # ---- Main Layout
-
-        # Initialize the widgets :
-
+        # Setup the figure widget.
         self.fig_weather_normals = FigWeatherNormals()
         self.grid_weather_normals = GridWeatherNormals()
         self.grid_weather_normals.hide()
 
-        # Generate the layout :
-
-        mainGrid = QGridLayout()
-
-        row = 0
-        mainGrid.addWidget(toolbar_widget, row, 0)
-        row += 1
-        mainGrid.addWidget(self.fig_weather_normals, row, 0)
-        row += 1
-        mainGrid.addWidget(self.grid_weather_normals, row, 0)
-
-        mainGrid.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-        mainGrid.setSpacing(10)
-        mainGrid.setRowStretch(row, 500)
-        mainGrid.setColumnStretch(0, 500)
-
-        self.setLayout(mainGrid)
+        # Setup the main layout.
+        main_layout = QGridLayout(self)
+        main_layout.addWidget(self.toolbar, 0, 0)
+        main_layout.addWidget(self.fig_weather_normals, 1, 0)
+        main_layout.addWidget(self.grid_weather_normals, 2, 0)
+        main_layout.setRowStretch(2, 1)
+        main_layout.setColumnStretch(0, 1)
 
     def show_monthly_grid(self):
         if self.grid_weather_normals.isHidden():
