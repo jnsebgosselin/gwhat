@@ -448,7 +448,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # Define the legend labels and markers.
         lines = [rain_rec, snow_rec, self._axe_airtemp.lines[0],
-                 self._axe_airtemp.lines[1], self._axe_airtemp.lines[2]]
+                 (self._axe_airtemp.lines[1], self._axe_airtemp.lines[3]),
+                 self._axe_airtemp.lines[2]]
         labels = [self.fig_labels.rain, self.fig_labels.snow,
                   self.fig_labels.Tmax, self.fig_labels.Tavg,
                   self.fig_labels.Tmin]
