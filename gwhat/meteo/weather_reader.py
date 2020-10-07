@@ -22,8 +22,9 @@ from abc import abstractmethod
 # ---- Third party imports
 import numpy as np
 import pandas as pd
+from pandas.errors import EmptyDataError
 import xlrd
-from xlrd.xldate import xldate_from_datetime_tuple, xldate_as_datetime
+from xlrd.xldate import xldate_as_datetime
 
 # ---- Local library imports
 from gwhat.meteo.evapotranspiration import calcul_thornthwaite
@@ -32,9 +33,7 @@ from gwhat.utils.math import nan_as_text_tolist
 from gwhat import __namever__
 
 
-PRECIP_VARIABLES = ['Ptot', 'Rain', 'Snow']
-TEMP_VARIABLES = ['Tmax', 'Tavg', 'Tmin', 'PET']
-METEO_VARIABLES = PRECIP_VARIABLES + TEMP_VARIABLES
+METEO_VARIABLES = ['Ptot', 'Rain', 'Snow', 'PET', 'Tmax', 'Tavg', 'Tmin']
 VARLABELS_MAP = {'Ptot': 'Ptot (mm)',
                  'Rain': 'Rain (mm)',
                  'Snow': 'Snow (mm)',
@@ -124,10 +123,8 @@ class WXDataFrameBase(Mapping):
         Return a numpy array containing the Excel numerical dates
         corresponding to the dates of the dataset.
         """
-        print('Converting datetimes to xldates...', end=' ')
         timedeltas = self.data.index - xldate_as_datetime(4000, 0)
         xldates = timedeltas.total_seconds() / (3600 * 24) + 4000
-        print('done')
         return xldates.values
 
     # ---- utilities
@@ -147,7 +144,8 @@ class WXDataFrameBase(Mapping):
         group = self.data.groupby(
             [self.data.index.year, self.data.index.month])
         df = pd.concat(
-            [group[PRECIP_VARIABLES].sum(), group[TEMP_VARIABLES].mean()],
+            [group[['Ptot', 'Rain', 'Snow', 'PET']].sum(),
+             group[['Tmax', 'Tavg', 'Tmin']].mean()],
             axis=1)
         df.index.rename(['Year', 'Month'], inplace=True)
         return df
@@ -159,7 +157,8 @@ class WXDataFrameBase(Mapping):
         """
         group = self.data.groupby(self.data.index.year)
         df = pd.concat(
-            [group[PRECIP_VARIABLES].sum(), group[TEMP_VARIABLES].mean()],
+            [group[['Ptot', 'Rain', 'Snow', 'PET']].sum(),
+             group[['Tmax', 'Tavg', 'Tmin']].mean()],
             axis=1)
         df.index.rename('Year', inplace=True)
         return df
@@ -206,8 +205,11 @@ class WXDataFrame(WXDataFrameBase):
     def __iter__(self):
         raise NotImplementedError
 
-    def __len__(self, key):
-        raise NotImplementedError
+    def __len__(self):
+        return len(self.data)
+
+    def __str__(self):
+        return self.data.__str__()
 
     def __load_dataset__(self, filename):
         """Loads the dataset from a file and saves it in the store."""
@@ -242,12 +244,11 @@ class WXDataFrame(WXDataFrameBase):
                 self.missing_value_indexes[var] = (
                     self.missing_value_indexes[var]
                     .append(self.data.index[pd.isnull(self.data[var])])
-                    .drop_duplicates()
-                    )
+                    .drop_duplicates())
 
         # Fill missing with values with in-stations linear interpolation for
         # temperature based variables.
-        for var in TEMP_VARIABLES:
+        for var in ['Tmax', 'Tavg', 'Tmin', 'PET']:
             if var in self.data.columns:
                 self.data[var] = self.data[var].interpolate()
 
@@ -275,98 +276,74 @@ class WXDataFrame(WXDataFrameBase):
         print('-' * 78)
 
 
-# ---- Base functions: file and data manipulation
-def open_weather_datafile(filename):
-    """
-    Open the csv datafile and try to guess the delimiter.
-    Return None if this fails.
-    """
-    root, ext = os.path.splitext(filename)
-    if ext not in FILE_EXTS:
-        raise ValueError("Supported file format are: ", FILE_EXTS)
-    else:
-        print('Loading daily weather time series from "%s"...' %
-              osp.basename(filename))
-
-    if ext in ['.csv', '.out']:
-        for dlm in ['\t', ',', ';']:
-            with open(filename, 'r') as csvfile:
-                reader = list(csv.reader(csvfile, delimiter=dlm))
-            for row in reader:
-                if re.search(r'(time|datetime|year)',
-                             ''.join(row).replace(" ", "").replace("_", ""),
-                             re.IGNORECASE):
-                    if len(row) >= 2:
-                        return reader
-                    else:
-                        break
-        else:
-            print("Failed to open %s." % os.path.basename(filename))
-            return None
-    elif ext in ['.xls', '.xlsx']:
-        with xlrd.open_workbook(filename, on_demand=True) as wb:
-            sheet = wb.sheet_by_index(0)
-            reader = [sheet.row_values(rowx, start_colx=0, end_colx=None) for
-                      rowx in range(sheet.nrows)]
-            return reader
-
-
 def read_weather_datafile(filename):
+    """
+    Read the weather data from the provided filename.
+
+    Parameters
+    ----------
+    filename : str
+        The absolute path of an input weather data file.
+    """
     metadata = {'filename': filename,
                 'Station Name': '',
                 'Station ID': '',
                 'Location': '',
                 'Latitude': 0,
                 'Longitude': 0,
-                'Elevation': 0,
-                }
-    # Data is a pandas dataframe with the following required columns:
+                'Elevation': 0}
+
+    # Read the file.
+    root, ext = osp.splitext(filename)
+    if ext in ['.csv', '.out']:
+        with open(filename, 'r') as csvfile:
+            data = list(csv.reader(csvfile, delimiter=','))
+    elif ext in ['.xls', '.xlsx']:
+        data = pd.read_excel(filename, dtype='str', header=None)
+        data = data.values.tolist()
+    else:
+        raise ValueError("Supported file format are: ",
+                         ['.csv', '.out', '.xls', '.xlsx'])
+
+    # Read the metadata and try to find the row where the
+    # numerical data begin.
+    header_regex_type = {
+        'Station Name': (r'(stationname|name)', str),
+        'Station ID': (r'(stationid|id|climateidentifier)', str),
+        'Latitude': (r'(latitude)', float),
+        'Longitude': (r'(longitude)', float),
+        'Location': (r'(location|province)', str),
+        'Elevation': (r'(elevation|altitude)', float)}
+    for i, row in enumerate(data):
+        if len(row) == 0 or pd.isnull(row[0]):
+            continue
+
+        label = row[0].replace(" ", "").replace("_", "")
+        for key, (regex, dtype) in header_regex_type.items():
+            if re.search(regex, label, re.IGNORECASE):
+                try:
+                    metadata[key] = dtype(row[1])
+                except ValueError:
+                    print("Wrong format for entry '{}'.".format(key))
+                else:
+                    break
+        else:
+            if re.search(r'(year)', label, re.IGNORECASE):
+                break
+    else:
+        raise ValueError("Cannot find the beginning of the data.")
+
+    # Extract and format the numerical data from the file.
+    data = pd.DataFrame(data[i + 1:], columns=data[i])
+    data = data.replace(r'(?i)^\s*$|nan|none', np.nan, regex=True)
+
+    # The data must contain the following columns :
     # (1) Tmax, (2) Tavg, (3) Tmin, (4) Ptot.
     # The dataframe can also have these optional columns:
     # (5) Rain, (6) Snow, (7) PET
     # The dataframe must use a datetime index.
 
-    # Get info from header and grab the data from the file.
-    reader = open_weather_datafile(filename)
-    if reader is None:
-        return None, None
-
-    HEADER_REGEX = {
-        'Station Name': r'(stationname|name)',
-        'Station ID': r'(stationid|id|climateidentifier)',
-        'Latitude': r'(latitude)',
-        'Longitude': r'(longitude)',
-        'Location': r'(location|province)',
-        'Elevation': r'(elevation|altitude)'
-        }
-    HEADER_TYPE = {
-        'Station Name': str,
-        'Station ID': str,
-        'Location': str,
-        'Latitude': float,
-        'Longitude': float,
-        'Elevation': float
-        }
-
-    for i, row in enumerate(reader):
-        if len(row) == 0:
-            continue
-
-        label = row[0].replace(" ", "").replace("_", "")
-        for key, regex in HEADER_REGEX.items():
-            if re.search(regex, label, re.IGNORECASE):
-                try:
-                    metadata[key] = HEADER_TYPE[key](row[1])
-                except ValueError:
-                    # The default value will be kept.
-                    print('Wrong format for entry "%s".' % key)
-        else:
-            if re.search(r'(time|datetime|year)', label, re.IGNORECASE):
-                istart = i + 1
-                break
-
-    # Fetch the valid columns from the data header.
-    COL_REGEX = OrderedDict([
+    column_names_regexes = OrderedDict([
         ('Year', r'(year)'),
         ('Month', r'(month)'),
         ('Day', r'(day)'),
@@ -376,45 +353,37 @@ def read_weather_datafile(filename):
         ('Ptot', r'(totalprecip)'),
         ('PET', r'(etp|evapo)'),
         ('Rain', r'(rain)'),
-        ('Snow', r'(snow)')
-        ])
-    columns = []
-    indexes = []
-    for i, label in enumerate(row):
-        label = label.replace(" ", "").replace("_", "")
-        for column, regex in COL_REGEX.items():
-            if re.search(regex, label, re.IGNORECASE):
-                columns.append(column)
-                indexes.append(i)
+        ('Snow', r'(snow)')])
+    for i, column in enumerate(data.columns):
+        column_ = column.replace(" ", "").replace("_", "")
+        for key, regex in column_names_regexes.items():
+            if re.search(regex, column_, re.IGNORECASE):
+                data = data.rename(columns={column: key})
                 break
+        else:
+            data = data.drop([column], axis=1)
 
-    # Format the numerical data.
-    data = np.array(reader[istart:])[:, indexes]
-    data = np.char.strip(data, ' ')
-    data[data == ''] = np.nan
-    data = np.char.replace(data, ',', '.')
-    data = data.astype('float')
-    data = clean_endsof_file(data)
-
-    # Format the data into a pandas dataframe.
-    data = pd.DataFrame(data, columns=columns)
-    for col in ['Year', 'Month', 'Day']:
-        data[col] = data[col].astype(int)
-    for col in ['Tmax', 'Tmin', 'Tavg', 'Ptot']:
-        data[col] = data[col].astype(float)
+    for col in data.columns:
+        try:
+            data[col] = pd.to_numeric(data[col])
+        except ValueError:
+            data[col] = pd.to_numeric(data[col], errors='coerce')
+            print("Some {} data could not be converted to numeric value"
+                  .format(col))
 
     # We now create the time indexes for the dataframe form the year,
     # month, and day data.
     data = data.set_index(pd.to_datetime(dict(
         year=data['Year'], month=data['Month'], day=data['Day'])))
-    data.drop(labels=['Year', 'Month', 'Day'], axis=1, inplace=True)
+    data = data.drop(labels=['Year', 'Month', 'Day'], axis=1)
+    data.index.names = ['Datetime']
 
     # We print some comment if optional data was loaded from the file.
-    if 'PET' in columns:
+    if 'PET' in data.columns:
         print('Potential evapotranspiration imported from datafile.')
-    if 'Rain' in columns:
+    if 'Rain' in data.columns:
         print('Rain data imported from datafile.')
-    if 'Snow' in columns:
+    if 'Snow' in data.columns:
         print('Snow data imported from datafile.')
 
     return metadata, data
@@ -444,44 +413,6 @@ def load_weather_log(fname, varname):
             day = int(float(reader[i][3]))
             datetimes.append(dt.datetime(year, month, day))
     return pd.DatetimeIndex(datetimes)
-
-
-def clean_endsof_file(data):
-    """
-    Remove nan values at the beginning and end of the record if any.
-    """
-
-    # ---- Beginning ----
-
-    n = len(data[:, 0])
-    while True:
-        if len(data[:, 0]) == 0:
-            print('Dataset is empty.')
-            return None
-
-        if np.all(np.isnan(data[0, 3:])):
-            data = np.delete(data, 0, axis=0)
-        else:
-            break
-
-    if n < len(data[:, 0]):
-        print('%d empty' % (n - len(data[:, 0])) +
-              ' rows of data removed at the beginning of the dataset.')
-
-    # ---- End ----
-
-    n = len(data[:, 0])
-    while True:
-        if np.all(np.isnan(data[-1, 3:])):
-            data = np.delete(data, -1, axis=0)
-        else:
-            break
-
-    if n < len(data[:, 0]):
-        print('%d empty' % (n - len(data[:, 0])) +
-              ' rows of data removed at the end of the dataset.')
-
-    return data
 
 
 # ----- Base functions: secondary variables
@@ -522,18 +453,9 @@ def generate_weather_HTML(staname, prov, lat, climID, lon, alt):
     return table
 
 
-# %% if __name__ == '__main__'
-
 if __name__ == '__main__':
-    fmeteo = ("D:/Desktop/Meteo_station_1973a2019.csv")
+    from gwhat import __rootdir__
+    fmeteo = osp.join(
+        __rootdir__, "meteo", "tests", "sample_weather_datafile.xlsx")
     wxdset = WXDataFrame(fmeteo)
-    data = wxdset.data
-
-    monthly_values = wxdset.get_monthly_values()
-    yearly_values = wxdset.get_yearly_values()
-
-    monthly_normals = wxdset.get_monthly_normals()
-    yearly_normals = wxdset.get_yearly_normals()
-
-    print(monthly_normals, end='\n\n')
-    print(yearly_normals)
+    print(wxdset)
