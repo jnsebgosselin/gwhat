@@ -333,147 +333,91 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         left_margin = 1 / fw
         right_margin = 1 / fw
         bottom_margin = 0.7 / fh
-        top_margin = 0.1 / fh
+        top_margin = 16 / 72 / fh
 
-        # ---- Yearly Avg Labels
-
-        # The yearly averages for the mean air temperature and total
-        # precipitation are displayed in ax3, which is placed on
-        # top of the axes that display the data (ax0 and ax1).
-
-        ax3 = fig.add_axes([0, 0, 1, 1], zorder=1, label='yearly_averages')
-        ax3.patch.set_visible(False)
-        ax3.spines['bottom'].set_visible(False)
-        ax3.tick_params(axis='both', bottom=False, top=False, left=False,
-                        right=False, labelbottom=False, labeltop=False,
-                        labelleft=False, labelright=False)
-
-        # Mean Annual Air Temperature :
-
-        # Places first label at the top left corner of <ax3> with a horizontal
-        # padding of 5 points and downward padding of 3 points.
-
-        dx, dy = 5/72., -3/72.
-        padding = ScaledTranslation(dx, dy, fig.dpi_scale_trans)
-        transform = ax3.transAxes + padding
-
-        ax3.text(0., 1., 'Mean Annual Air Temperature',
-                 fontsize=13, va='top', transform=transform)
-
-        # Mean Annual Precipitation :
-
-        # Get the bounding box of the first label.
-
-        renderer = self.get_renderer()
-        bbox = ax3.texts[0].get_window_extent(renderer)
-        bbox = bbox.transformed(ax3.transAxes.inverted())
-
-        # Places second label below the first label with a horizontal
-        # padding of 5 points and downward padding of 3 points.
-
-        ax3.text(0., bbox.y0, 'Mean Annual Precipitation',
-                 fontsize=13, va='top', transform=transform)
-
-        bbox = ax3.texts[1].get_window_extent(renderer)
-        bbox = bbox.transformed(fig.transFigure.inverted())
-
-        # Update geometry :
-
-        # Updates the geometry and position of <ax3> to accomodate the text.
-
+        # Setup the axe to plot precipitation.
         x0 = left_margin
+        y0 = bottom_margin
         axw = 1 - (left_margin + right_margin)
-        axh = 1 - bbox.y0 - (dy / fw)
-        y0 = 1 - axh - top_margin
-
-        ax3.set_position([x0, y0, axw, axh])
-
-        # ---- Data Axes
-
-        axh = y0 - bottom_margin
-        y0 = y0 - axh
-
+        axh = 1 - (bottom_margin + top_margin)
         # Setup the axe for precipitation.
-        ax0 = fig.add_axes([x0, y0, axw, axh], zorder=1, label='precipitation')
-        ax0.patch.set_visible(False)
-        ax0.spines['top'].set_visible(False)
-        ax0.set_axisbelow(True)
+        self._axe_precip = fig.add_axes(
+            [x0, y0, axw, axh], zorder=1, label='precipitation')
+        self._axe_precip.patch.set_visible(False)
+        self._axe_precip.set_axisbelow(True)
 
-        # Setup the axe for air temperature.
-        ax1 = fig.add_axes(ax0.get_position(), frameon=False, zorder=5,
-                           sharex=ax0, label='temperature')
+        # Setup the axe to plot air temperature.
+        self._axe_airtemp = fig.add_axes(
+            self._axe_precip.get_position(), frameon=False, zorder=5,
+            sharex=self._axe_precip, label='temperature')
 
-        # ---- Initialize the Artists
+        # Setup the air temperature and total precipitation
+        # yearly average text artists.
+        padding = ScaledTranslation(0/72, 3/72, fig.dpi_scale_trans)
+        self._axe_precip.text(
+            0, 1, 'Mean Annual Air Temperature', fontsize=10,
+            va='bottom', ha='left',
+            transform=self._axe_precip.transAxes + padding)
+        self._axe_precip.text(
+            1, 1, 'Mean Annual Precipitation', fontsize=10,
+            va='bottom', ha='right',
+            transform=self._axe_precip.transAxes + padding)
+
+        # Initialize the Artists.
 
         # This is only to initiates the artists and to set their parameters
         # in advance. The plotting of the data is actually done by calling
-        # the <plot_monthly_normals> method.
+        # the 'plot_monthly_normals' method.
 
-        XPOS = np.arange(-0.5, 12.51, 1)
-        XPOS[0] = 0
-        XPOS[-1] = 12
-        y = range(len(XPOS))
+        # Dashed lines for Tmax, Tavg, and Tmin.
+        xpos = [0] + [0.5 + i for i in range(12)] + [12]
         colors = ['#990000', '#FF0000', '#FF6666']
-
-        # Dashed lines for Tmax, Tavg, and Tmin :
-
         for i in range(3):
-            ax1.plot(XPOS, y, color=colors[i], ls='--', lw=1.5, zorder=100)
+            self._axe_airtemp.plot(
+                xpos, xpos, color=colors[i], ls='--', lw=1.5, zorder=100)
 
-        # Markers for Tavg :
+        # Markers for Tavg.
+        self._axe_airtemp.plot(
+            xpos[1:-1], xpos[1:-1], color=colors[1], marker='o', ls='none',
+            ms=6, zorder=100, mec=colors[1], mfc='white', mew=1.5)
 
-        ax1.plot(XPOS[1:-1], y[1:-1], color=colors[1], marker='o', ls='none',
-                 ms=6, zorder=100, mec=colors[1], mfc='white', mew=1.5)
+        # Setup major xticks.
+        xpos_major = [0 + i for i in range(13)]
+        self._axe_precip.xaxis.set_ticks_position('bottom')
+        self._axe_precip.tick_params(axis='x', direction='out')
+        self._axe_precip.xaxis.set_ticklabels([])
+        self._axe_precip.set_xticks(xpos_major)
+        self._axe_airtemp.tick_params(
+            axis='x', which='both', bottom=False, top=False, labelbottom=False)
 
-        # ---- Xticks Formatting
-
-        Xmin0 = 0
-        Xmax0 = 12.001
-
-        # Major ticks
-        ax0.xaxis.set_ticks_position('bottom')
-        ax0.tick_params(axis='x', direction='out')
-        ax0.xaxis.set_ticklabels([])
-        ax0.set_xticks(np.arange(Xmin0, Xmax0))
-
-        ax1.tick_params(axis='x', which='both', bottom=False, top=False,
-                        labelbottom=False)
-
-        # Minor ticks
-        ax0.set_xticks(np.arange(Xmin0 + 0.5, Xmax0 + 0.49, 1), minor=True)
-        ax0.tick_params(axis='x', which='minor', direction='out',
-                        length=0, labelsize=13)
-        ax0.xaxis.set_ticklabels(self.fig_labels.month_names, minor=True)
+        # Setup minor xticks.
+        xpos_minor = [0.5 + i for i in range(12)]
+        self._axe_precip.set_xticks(xpos_minor, minor=True)
+        self._axe_precip.tick_params(
+            axis='x', which='minor', direction='out', length=0, labelsize=13)
+        self._axe_precip.xaxis.set_ticklabels(
+            self.fig_labels.month_names, minor=True)
 
         # ---- Y-ticks Formatting
 
         # Precipitation
-        ax0.yaxis.set_ticks_position('right')
-        ax0.tick_params(axis='y', direction='out', labelsize=13)
+        self._axe_precip.yaxis.set_ticks_position('right')
+        self._axe_precip.tick_params(axis='y', direction='out', labelsize=13)
 
-        ax0.tick_params(axis='y', which='minor', direction='out')
-        ax0.yaxis.set_ticklabels([], minor=True)
+        self._axe_precip.tick_params(axis='y', which='minor', direction='out')
+        self._axe_precip.yaxis.set_ticklabels([], minor=True)
 
         # Air Temperature
-        ax1.yaxis.set_ticks_position('left')
-        ax1.tick_params(axis='y', direction='out', labelsize=13)
+        self._axe_airtemp.yaxis.set_ticks_position('left')
+        self._axe_airtemp.tick_params(axis='y', direction='out', labelsize=13)
 
-        ax1.tick_params(axis='y', which='minor', direction='out')
-        ax1.yaxis.set_ticklabels([], minor=True)
-
-        # ---- Grid Parameters
-
-    #    ax0.grid(axis='y', color=[0.5, 0.5, 0.5], linestyle=':', linewidth=1,
-    #             dashes=[1, 5])
-    #    ax0.grid(axis='y', color=[0.75, 0.75, 0.75], linestyle='-',
-#                 linewidth=0.5)
+        self._axe_airtemp.tick_params(axis='y', which='minor', direction='out')
+        self._axe_airtemp.yaxis.set_ticklabels([], minor=True)
 
         # ---- Limits of the Axes
-
-        ax0.set_xlim(Xmin0, Xmax0)
+        self._axe_precip.set_xlim(0, 12)
 
         # ---- Legend
-
         self.plot_legend()
 
     @property
@@ -492,7 +436,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # Update the labels in the plot :
         self.plot_legend()
-        self.figure.axes[1].xaxis.set_ticklabels(
+        self._axe_precip.xaxis.set_ticklabels(
             self.fig_labels.month_names, minor=True)
         if self.normals is not None:
             self.set_axes_labels()
@@ -500,40 +444,37 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
     def plot_legend(self):
         """Plot the legend of the figure."""
-        ax = self.figure.axes[2]
-
-        # bbox transform :
-
-        padding = ScaledTranslation(5/72, -5/72, self.figure.dpi_scale_trans)
-        transform = ax.transAxes + padding
-
-        # Define proxy artists :
-
+        # Define the proxy artists.
         colors = ColorsReader()
         colors.load_colors_db()
-
-        rec1 = Rectangle((0, 0), 1, 1, fc=colors.rgb['Snow'], ec='none')
-        rec2 = Rectangle((0, 0), 1, 1, fc=colors.rgb['Rain'], ec='none')
+        snow_rec = Rectangle((0, 0), 1, 1, fc=colors.rgb['Snow'], ec='none')
+        rain_rec = Rectangle((0, 0), 1, 1, fc=colors.rgb['Rain'], ec='none')
 
         # Define the legend labels and markers.
-        lines = [ax.lines[0], ax.lines[1], ax.lines[2], rec2, rec1]
-        labels = [self.fig_labels.Tmax, self.fig_labels.Tavg,
-                  self.fig_labels.Tmin, self.fig_labels.rain,
-                  self.fig_labels.snow]
+        lines = [rain_rec, snow_rec, self._axe_airtemp.lines[0],
+                 self._axe_airtemp.lines[1], self._axe_airtemp.lines[2]]
+        labels = [self.fig_labels.rain, self.fig_labels.snow,
+                  self.fig_labels.Tmax, self.fig_labels.Tavg,
+                  self.fig_labels.Tmin]
 
         # Plot the legend.
-        leg = ax.legend(lines, labels, numpoints=1, fontsize=13,
-                        borderaxespad=0, loc='upper left', borderpad=0,
-                        bbox_to_anchor=(0, 1), bbox_transform=transform)
+        leg = self._axe_precip.legend(
+            lines, labels, numpoints=1, fontsize=13, ncol=3,
+            loc='upper left', mode='expand')
         leg.draw_frame(False)
 
-    def plot_monthly_normals(self, normals):
+    def plot_monthly_normals(self, normals, ygrid_are_aligned=False):
         """Plot the normals on the figure."""
-
         self.normals = normals
 
-        # Assign local variables :
+        legend = self._axe_precip.get_legend()
+        legend_bbox = legend.get_window_extent(self.get_renderer())
+        legend_height_precip = legend_bbox.transformed(
+            self._axe_precip.transData.inverted()).height
+        legend_height_airtemp = legend_bbox.transformed(
+            self._axe_airtemp.transData.inverted()).height
 
+        # Assign local variables.
         Tmax_norm = normals['data']['Tmax'].values
         Tmin_norm = normals['data']['Tmin'].values
         Tavg_norm = normals['data']['Tavg'].values
@@ -549,18 +490,19 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         SCA1 = np.arange(-100, 100, Yscale1)
 
         # ---- Precipitation ----
+        ptot_max_value = np.max(Ptot_norm) + legend_height_precip
+        indx = np.where(SCA0 > ptot_max_value)[0][0]
+        Ymax0 = SCA0[indx]
 
-        indx = np.where(SCA0 > np.max(Ptot_norm))[0][0]
-        Ymax0 = SCA0[indx + 1]
+        print(np.max(Ptot_norm), legend_height_precip, ptot_max_value, Ymax0)
 
-        indx = np.where(SCA0 <= np.min(Snow_norm))[0][-1]
-        Ymin0 = SCA0[indx]
+        Ymin0 = 0
 
         NZGrid0 = (Ymax0 - Ymin0) / Yscale0
 
         # ---- Temperature ----
-
-        indx = np.where(SCA1 > np.max(Tmax_norm))[0][0]
+        airtemp_max_value = np.max(Tmax_norm) + legend_height_airtemp
+        indx = np.where(SCA1 > airtemp_max_value)[0][0]
         Ymax1 = SCA1[indx]
 
         indx = np.where(SCA1 < np.min(Tmin_norm))[0][-1]
@@ -568,16 +510,14 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         NZGrid1 = (Ymax1 - Ymin1) / Yscale1
 
-        # ---- Uniformization Of The Grids ----
-
-        if NZGrid0 > NZGrid1:
-            Ymin1 = Ymax1 - NZGrid0 * Yscale1
-        elif NZGrid0 < NZGrid1:
-            Ymax0 = Ymin0 + NZGrid1 * Yscale0
-        elif NZGrid0 == NZGrid1:
-            pass
-
-        # ---- Adjust Space For Text ----
+        # Align the vertical grid for the precipitation and air temperature.
+        if ygrid_are_aligned:
+            if NZGrid0 > NZGrid1:
+                Ymin1 = Ymax1 - NZGrid0 * Yscale1
+            elif NZGrid0 < NZGrid1:
+                Ymax0 = Ymin0 + NZGrid1 * Yscale0
+            elif NZGrid0 == NZGrid1:
+                pass
 
         # In case there is a need to force the value
         # ----
@@ -589,30 +529,26 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         # Define the fomatting of the yticks :
 
-        ax0 = self.figure.axes[1]
-        ax1 = self.figure.axes[2]
-        ax3 = self.figure.axes[0]
-
         # ---- Precip (host) ----
 
         yticks = np.arange(Ymin0, Ymax0 + Yscale0 / 10, Yscale0)
-        ax0.set_yticks(yticks)
+        self._axe_precip.set_yticks(yticks)
 
         yticks_minor = np.arange(yticks[0], yticks[-1], 5)
-        ax0.set_yticks(yticks_minor, minor=True)
+        self._axe_precip.set_yticks(yticks_minor, minor=True)
 
         # ---- Air Temp ----
 
         yticks1 = np.arange(Ymin1, Ymax1 + Yscale1 / 10., Yscale1)
-        ax1.set_yticks(yticks1)
+        self._axe_airtemp.set_yticks(yticks1)
 
         yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1 / 5.)
-        ax1.set_yticks(yticks1_minor, minor=True)
+        self._axe_airtemp.set_yticks(yticks1_minor, minor=True)
 
         # Set the range of the axis :
 
-        ax0.set_ylim(Ymin0, Ymax0)
-        ax1.set_ylim(Ymin1, Ymax1)
+        self._axe_precip.set_ylim(Ymin0, Ymax0)
+        self._axe_airtemp.set_ylim(Ymin1, Ymax1)
 
         # ---- LABELS
 
@@ -625,50 +561,28 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         self.plot_air_temp(Tmax_norm, Tavg_norm, Tmin_norm)
         self.update_yearly_avg()
 
-        # Setup the clipping of the axes.
-
-        # Note that there is currently a bug regarding this, so we
-        # need to do a workaround.
-
-        x0, x1 = ax1.get_position().x0, ax1.get_position().x1
-        y0, y1 = ax1.get_position().y0, ax3.get_position().y1
-        pos = [x0, y0, x1 - x0, y1 - y0]
-        if self._dummy_ax is None:
-            self._dummy_ax = self.figure.add_axes(pos, label='dummy')
-        else:
-            self._dummy_ax.clear()
-            self._dummy_ax.set_position(pos)
-        self._dummy_ax.patch.set_visible(False)
-        self._dummy_ax.axis('off')
-        dummy_plot, = self._dummy_ax.plot([], [], clip_on=True)
-        clip_bbox = dummy_plot.get_clip_box()
-
-        for line in ax1.lines:
-            line.set_clip_box(clip_bbox)
-
     def set_axes_labels(self):
         """Sets the labels of the y axis."""
         # Set the label fo the precipitation :
-        ax0 = self.figure.axes[1]
-        ax0.set_ylabel(self.fig_labels.Plabel, va='bottom',
-                       fontsize=16, rotation=270)
-        ax0.yaxis.set_label_coords(1.09, 0.5)
+        self._axe_precip.set_ylabel(
+            self.fig_labels.Plabel, va='bottom', fontsize=16, rotation=270)
+        self._axe_precip.yaxis.set_label_coords(1.09, 0.5)
 
         # Set the label fo the air temperature :
-        ax1 = self.figure.axes[2]
-        ax1.set_ylabel(self.fig_labels.Tlabel, va='bottom', fontsize=16)
-        ax1.yaxis.set_label_coords(-0.09, 0.5)
+        self._axe_airtemp.set_ylabel(
+            self.fig_labels.Tlabel, va='bottom', fontsize=16)
+        self._axe_airtemp.yaxis.set_label_coords(-0.09, 0.5)
 
     def set_year_range(self):
         """Sets the year range label that is displayed below the x axis."""
         if self.normals is not None:
-            ax0 = self.figure.axes[1]
             yearmin, yearmax = self.normals['period']
             if yearmin == yearmax:
-                ax0.set_xlabel("%d" % yearmin, fontsize=16, labelpad=10)
+                self._axe_precip.set_xlabel(
+                    "%d" % yearmin, fontsize=16, labelpad=10)
             else:
-                ax0.set_xlabel("%d - %d" % (yearmin, yearmax), fontsize=16,
-                               labelpad=10)
+                self._axe_precip.set_xlabel(
+                    "%d - %d" % (yearmin, yearmax), fontsize=16, labelpad=10)
 
     def plot_precip(self, PNORM, SNORM):
 
@@ -687,36 +601,34 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         Snow = np.vstack((SNORM * 0, SNORM,
                           SNORM, SNORM * 0)).transpose().flatten()
 
-        # Plot the data :
-
-        ax = self.figure.axes[1]
-        for collection in reversed(ax.collections):
+        # Plot the data.
+        for collection in reversed(self._axe_precip.collections):
             collection.remove()
 
         colors = ColorsReader()
         colors.load_colors_db()
 
-        ax.fill_between(Xpos, 0, Ptot, edgecolor='none',
-                        color=colors.rgb['Rain'])
-        ax.fill_between(Xpos, 0, Snow, edgecolor='none',
-                        color=colors.rgb['Snow'])
+        self._axe_precip.fill_between(
+            Xpos, 0, Ptot, edgecolor='none', color=colors.rgb['Rain'])
+        self._axe_precip.fill_between(
+            Xpos, 0, Snow, edgecolor='none', color=colors.rgb['Snow'])
 
     def plot_air_temp(self, Tmax_norm, Tavg_norm, Tmin_norm):
         for i, Tnorm in enumerate([Tmax_norm, Tavg_norm, Tmin_norm]):
             T0 = (Tnorm[-1] + Tnorm[0]) / 2
             T = np.hstack((T0, Tnorm, T0))
-            self.figure.axes[2].lines[i].set_ydata(T)
-        self.figure.axes[2].lines[3].set_ydata(Tavg_norm)
+            self._axe_airtemp.lines[i].set_ydata(T)
+        self._axe_airtemp.lines[3].set_ydata(Tavg_norm)
 
     def update_yearly_avg(self):
         Tavg_norm = self.normals['data']['Tavg'].values
         Ptot_norm = self.normals['data']['Ptot'].values
-        ax = self.figure.axes[0]
+        ax = self._axe_precip
 
-        # Update the position of the labels.
-        bbox = ax.texts[0].get_window_extent(self.get_renderer())
-        bbox = bbox.transformed(ax.transAxes.inverted())
-        ax.texts[1].set_position((0, bbox.y0))
+        # # Update the position of the labels.
+        # bbox = ax.texts[0].get_window_extent(self.get_renderer())
+        # bbox = bbox.transformed(ax.transAxes.inverted())
+        # ax.texts[1].set_position((0, bbox.y0))
 
         # Update the text of the labels.
         ax.texts[0].set_text(self.fig_labels.Tyrly % np.mean(Tavg_norm))
