@@ -8,6 +8,7 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard library imports
+import io
 import sys
 import os
 import os.path as osp
@@ -23,6 +24,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
+from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
     QMenu, QToolButton, QGridLayout, QFileDialog, QApplication, QTableWidget,
     QTableWidgetItem, QLabel, QHBoxLayout, QHeaderView, QToolBar)
@@ -38,8 +40,7 @@ from gwhat.common.widgets import DialogWindow
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.common.utils import save_content_to_file
 from gwhat.meteo.weather_reader import WXDataFrameBase
-from gwhat.widgets.buttons import (ExportDataButton, LangToolButton,
-                                   ToolBarWidget)
+from gwhat.widgets.buttons import ExportDataButton, LangToolButton
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -71,11 +72,15 @@ class WeatherViewer(DialogWindow):
         menu_save.addAction('Save normals graph as...', self.save_graph)
         menu_save.addAction('Save normals table as...', self.save_normals)
 
-        btn_save = QToolButtonNormal(icons.get_icon('save'))
+        btn_save = QToolButtonNormal('save')
         btn_save.setToolTip('Save normals')
         btn_save.setMenu(menu_save)
         btn_save.setPopupMode(QToolButton.InstantPopup)
         btn_save.setStyleSheet("QToolButton::menu-indicator {image: none;}")
+
+        self.btn_copy = QToolButtonNormal('copy_clipboard')
+        self.btn_copy.setToolTip('Copy figure to clipboard as image.')
+        self.btn_copy.clicked.connect(self.copyfig_figure_to_clipboard)
 
         self.btn_export = ExportWeatherButton()
         self.btn_export.setIconSize(icons.get_iconsize('normal'))
@@ -201,6 +206,13 @@ class WeatherViewer(DialogWindow):
         normals = {'data': self.wxdset.get_monthly_normals(period),
                    'period': period}
         return normals
+
+    def copyfig_figure_to_clipboard(self):
+        """Saves the current figure to the clipboard."""
+        buf = io.BytesIO()
+        self.fig_weather_normals.figure.savefig(buf, dpi=150)
+        QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
+        buf.close()
 
     def save_graph(self):
         yrmin = self.year_rng.lower_bound
