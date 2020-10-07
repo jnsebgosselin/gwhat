@@ -469,10 +469,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
 
         legend = self._axe_precip.get_legend()
         legend_bbox = legend.get_window_extent(self.get_renderer())
-        legend_height_precip = legend_bbox.transformed(
-            self._axe_precip.transData.inverted()).height
-        legend_height_airtemp = legend_bbox.transformed(
-            self._axe_airtemp.transData.inverted()).height
+        legend_bbox = legend_bbox.transformed(
+            self._axe_precip.transAxes.inverted())
 
         # Assign local variables.
         Tmax_norm = normals['data']['Tmax'].values
@@ -483,66 +481,57 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         Snow_norm = Ptot_norm - Rain_norm
 
         # Define the range of the axis.
-        Yscale0 = 10 if np.sum(Ptot_norm) < 500 else 20  # Precipitation (mm)
-        Yscale1 = 5  # Temperature (deg C)
+        precip_scale = 10 if np.sum(Ptot_norm) < 500 else 20
+        airtemp_scale = 5
 
-        SCA0 = np.arange(0, 10000, Yscale0)
-        SCA1 = np.arange(-100, 100, Yscale1)
+        SCA0 = np.arange(0, 10000, precip_scale)
+        SCA1 = np.arange(-100, 100, airtemp_scale)
 
-        # ---- Precipitation ----
-        ptot_max_value = np.max(Ptot_norm) + legend_height_precip
+        # ---- Precipitation
+        ptot_max_value = np.max(Ptot_norm) / (1 - legend_bbox.height)
         indx = np.where(SCA0 > ptot_max_value)[0][0]
         Ymax0 = SCA0[indx]
-
-        print(np.max(Ptot_norm), legend_height_precip, ptot_max_value, Ymax0)
-
         Ymin0 = 0
 
-        NZGrid0 = (Ymax0 - Ymin0) / Yscale0
+        NZGrid0 = (Ymax0 - Ymin0) / precip_scale
 
-        # ---- Temperature ----
-        airtemp_max_value = np.max(Tmax_norm) + legend_height_airtemp
+        # ---- Temperature
+        airtemp_max_value = np.max(Tmax_norm) / (1 - legend_bbox.height)
         indx = np.where(SCA1 > airtemp_max_value)[0][0]
         Ymax1 = SCA1[indx]
 
         indx = np.where(SCA1 < np.min(Tmin_norm))[0][-1]
         Ymin1 = SCA1[indx]
 
-        NZGrid1 = (Ymax1 - Ymin1) / Yscale1
+        NZGrid1 = (Ymax1 - Ymin1) / airtemp_scale
 
         # Align the vertical grid for the precipitation and air temperature.
         if ygrid_are_aligned:
             if NZGrid0 > NZGrid1:
-                Ymin1 = Ymax1 - NZGrid0 * Yscale1
+                Ymin1 = Ymax1 - NZGrid0 * airtemp_scale
             elif NZGrid0 < NZGrid1:
-                Ymax0 = Ymin0 + NZGrid1 * Yscale0
+                Ymax0 = Ymin0 + NZGrid1 * precip_scale
             elif NZGrid0 == NZGrid1:
                 pass
 
-        # In case there is a need to force the value
-        # ----
+        # In case there is a need to force the value.
         if False:
             Ymax0 = 100
             Ymax1 = 30
             Ymin1 = -20
-        # ----
 
-        # Define the fomatting of the yticks :
-
-        # ---- Precip (host) ----
-
-        yticks = np.arange(Ymin0, Ymax0 + Yscale0 / 10, Yscale0)
+        # Define the yticks for precipitation.
+        yticks = np.arange(Ymin0, Ymax0 + precip_scale / 10, precip_scale)
         self._axe_precip.set_yticks(yticks)
 
         yticks_minor = np.arange(yticks[0], yticks[-1], 5)
         self._axe_precip.set_yticks(yticks_minor, minor=True)
 
-        # ---- Air Temp ----
-
-        yticks1 = np.arange(Ymin1, Ymax1 + Yscale1 / 10., Yscale1)
+        # Define the yticks for air temperature.
+        yticks1 = np.arange(Ymin1, Ymax1 + airtemp_scale / 10, airtemp_scale)
         self._axe_airtemp.set_yticks(yticks1)
 
-        yticks1_minor = np.arange(yticks1[0], yticks1[-1], Yscale1 / 5.)
+        yticks1_minor = np.arange(yticks1[0], yticks1[-1], airtemp_scale / 5)
         self._axe_airtemp.set_yticks(yticks1_minor, minor=True)
 
         # Set the range of the axis :
