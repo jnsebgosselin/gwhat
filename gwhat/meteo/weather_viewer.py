@@ -303,7 +303,7 @@ class FigureLabels(object):
             # Labels :
 
             self.Tlabel = 'Température (°C)'
-            self.Plabel = 'Précipitation (mm)'
+            self.Plabel = 'Précipitations (mm)'
             self.month_names = ["jan", "fév", "mar", "avr", "mai", "jun",
                                 "jul", "aoû", "sep", "oct", "nov", "déc"]
 
