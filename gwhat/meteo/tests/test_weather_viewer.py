@@ -13,6 +13,8 @@ import os.path as osp
 
 # ---- Third party imports
 import pytest
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication
 
 # ---- Local library imports
 from gwhat.meteo.weather_reader import WXDataFrame
@@ -83,5 +85,17 @@ def test_save_normals_to_file(weather_viewer, mocker, tmpdir):
     assert osp.exists(filepath)
 
 
+def test_copyfig_figure_to_clipboard(weather_viewer, qtbot):
+    """
+    Test that copying the weather normals figure to the clipboard is
+    working as expected.
+    """
+    QApplication.clipboard().clear()
+    assert QApplication.clipboard().image().isNull()
+
+    qtbot.mouseClick(weather_viewer.btn_copy, Qt.LeftButton)
+    assert not QApplication.clipboard().image().isNull()
+
+
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
+    pytest.main(['-x', __file__, '-v', '-rw'])
