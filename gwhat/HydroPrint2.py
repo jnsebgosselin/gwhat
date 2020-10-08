@@ -815,7 +815,6 @@ class HydroprintGUI(myqt.DialogWindow):
         # Save the colors :
 
         cdb = ColorsManager()
-        cdb.load_colors()
         layout['colors'] = cdb.RGB
 
         # Save the layout :

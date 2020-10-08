@@ -25,6 +25,21 @@ from gwhat.common.utils import save_content_to_csv
 class ColorsManager(QObject):
     def __init__(self):
         super().__init__()
+        self.reset_defaults()
+        self.load_colors()
+
+    @property
+    def rgb(self):
+        rgb = OrderedDict()
+        for key in self.RGB.keys():
+            rgb[key] = [x / 255 for x in self.RGB[key]]
+        return rgb
+
+    def keys(self):
+        return list(self.RGB.keys())
+
+    def reset_defaults(self):
+        """Reset the color settings to default values."""
         self.RGB = OrderedDict()
         self.RGB['Tair'] = [255, 212, 212]
         self.RGB['Rain'] = [23, 52, 88]
@@ -40,16 +55,6 @@ class ColorsManager(QObject):
         self.labels['WL solid'] = 'Water Level (solid line)'
         self.labels['WL data'] = 'Water Level (data dots)'
         self.labels['WL obs'] = 'Water Level (man. obs.)'
-
-    @property
-    def rgb(self):
-        rgb = OrderedDict()
-        for key in self.RGB.keys():
-            rgb[key] = [x / 255 for x in self.RGB[key]]
-        return rgb
-
-    def keys(self):
-        return list(self.RGB.keys())
 
     def load_colors(self):
         """Load the color settings."""

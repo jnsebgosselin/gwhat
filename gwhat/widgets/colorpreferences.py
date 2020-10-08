@@ -31,7 +31,6 @@ class ColorsSetupDialog(QDialog):
         self.__initUI__()
 
     def __initUI__(self):
-
         # Settup the buttons.
         toolbar_widget = QWidget()
 
@@ -57,11 +56,8 @@ class ColorsSetupDialog(QDialog):
 
         # Setup the colors.
         colorsDB = ColorsManager()
-        colorsDB.load_colors()
-
         colorGrid_widget = QWidget()
-
-        self.colorGrid_layout = QGridLayout()
+        self.colorGrid_layout = QGridLayout(colorGrid_widget)
         for i, key in enumerate(colorsDB.keys()):
             self.colorGrid_layout.addWidget(
                 QLabel('%s :' % colorsDB.labels[key]), i, 0)
@@ -75,8 +71,6 @@ class ColorsSetupDialog(QDialog):
         self.load_colors()
         self.colorGrid_layout.setColumnStretch(2, 100)
 
-        colorGrid_widget.setLayout(self.colorGrid_layout)
-
         # Setup the main layout.
         main_layout = QGridLayout(self)
         main_layout.addWidget(colorGrid_widget, 0, 0)
@@ -84,25 +78,25 @@ class ColorsSetupDialog(QDialog):
         main_layout.setSizeConstraint(main_layout.SetFixedSize)
 
     def load_colors(self):
-        colorsDB = ColorsManager()
-        colorsDB.load_colors()
-        for row, key in enumerate(colorsDB.keys()):
+        colors_manager = ColorsManager()
+        for row, key in enumerate(colors_manager.keys()):
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
-            item.setStyleSheet("background-color: rgb(%i,%i,%i)" %
-                               (colorsDB.RGB[key][0],
-                                colorsDB.RGB[key][1],
-                                colorsDB.RGB[key][2])
-                               )
+            item.setStyleSheet(
+                "background-color: rgb(%i,%i,%i)" %
+                (colors_manager.RGB[key][0],
+                 colors_manager.RGB[key][1],
+                 colors_manager.RGB[key][2]))
 
     def reset_defaults(self):
-        colorsDB = ColorsManager()
-        for row, key in enumerate(colorsDB.keys()):
+        colors_manager = ColorsManager()
+        colors_manager.reset_defaults()
+        for row, key in enumerate(colors_manager.keys()):
             btn = self.colorGrid_layout.itemAtPosition(row, 3).widget()
-            btn.setStyleSheet("background-color: rgb(%i,%i,%i)" %
-                              (colorsDB.RGB[key][0],
-                               colorsDB.RGB[key][1],
-                               colorsDB.RGB[key][2])
-                              )
+            btn.setStyleSheet(
+                "background-color: rgb(%i,%i,%i)" %
+                (colors_manager.RGB[key][0],
+                 colors_manager.RGB[key][1],
+                 colors_manager.RGB[key][2]))
 
     def pick_color(self):
         sender = self.sender()
@@ -116,12 +110,12 @@ class ColorsSetupDialog(QDialog):
         self.close()
 
     def btn_apply_isClicked(self):
-        colorsDB = ColorsManager()
-        for row, key in enumerate(colorsDB.keys()):
+        colors_manager = ColorsManager()
+        for row, key in enumerate(colors_manager.keys()):
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             rgb = item.palette().base().color().getRgb()[:-1]
-            colorsDB.RGB[key] = [rgb[0], rgb[1], rgb[2]]
-        colorsDB.save_colors()
+            colors_manager.RGB[key] = [rgb[0], rgb[1], rgb[2]]
+        colors_manager.save_colors()
         self.newColorSetupSent.emit(True)
 
     def closeEvent(self, event):

@@ -99,9 +99,7 @@ class Hydrograph(Figure):
         self.language = 'english'
 
         # Database :
-
         self.colorsDB = ColorsManager()
-        self.colorsDB.load_colors()
 
         # Scales :
 
