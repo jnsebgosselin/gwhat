@@ -52,14 +52,14 @@ class ColorPreferencesDialog(QDialog):
         self.load_colors()
 
         # Settup the buttons.
-        btn_apply = QPushButton('Apply')
-        btn_apply.clicked.connect(self.btn_apply_isClicked)
-        btn_cancel = QPushButton('Cancel')
-        btn_cancel.clicked.connect(self.close)
-        btn_OK = QPushButton('OK')
-        btn_OK.clicked.connect(self.btn_OK_isClicked)
-        btn_reset = QPushButton('Reset Defaults')
-        btn_reset.clicked.connect(self.reset_defaults)
+        self.btn_apply = QPushButton('Apply')
+        self.btn_apply.clicked.connect(self.btn_apply_isClicked)
+        self.btn_cancel = QPushButton('Cancel')
+        self.btn_cancel.clicked.connect(self.close)
+        self.btn_ok = QPushButton('OK')
+        self.btn_ok.clicked.connect(self.btn_OK_isClicked)
+        self.btn_reset = QPushButton('Reset Defaults')
+        self.btn_reset.clicked.connect(self.reset_defaults)
 
         toolbar_widget = QWidget()
         toolbar_layout = QGridLayout(toolbar_widget)
