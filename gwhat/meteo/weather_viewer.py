@@ -27,7 +27,7 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
     QMenu, QToolButton, QGridLayout, QFileDialog, QApplication, QTableWidget,
-    QTableWidgetItem, QLabel, QHBoxLayout, QHeaderView, QToolBar)
+    QTableWidgetItem, QLabel, QHBoxLayout, QHeaderView, QToolBar, QDialog)
 
 # ---- Local library imports
 from gwhat.config.ospath import (
@@ -35,7 +35,6 @@ from gwhat.config.ospath import (
 from gwhat.utils import icons
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
-from gwhat.common.widgets import DialogWindow
 from gwhat.widgets.buttons import RangeSpinBoxes
 from gwhat.common.utils import save_content_to_file
 from gwhat.meteo.weather_reader import WXDataFrameBase
@@ -44,14 +43,18 @@ from gwhat.widgets.buttons import ExportDataButton, LangToolButton
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
 
-class WeatherViewer(DialogWindow):
+class WeatherViewer(QDialog):
     """
     GUI that allows to plot weather normals, save the graphs to file, see
     various stats about the dataset, etc...
     """
 
     def __init__(self, parent=None):
-        super(WeatherViewer, self).__init__(parent, False, False)
+        super().__init__(parent)
+        self.setWindowFlags(
+            Qt.Window | Qt.WindowMinimizeButtonHint | Qt.WindowCloseButtonHint)
+        self.setWindowTitle('Weather Normals Viewer')
+        self.setWindowIcon(icons.get_icon('master'))
 
         self.wxdset = None
         self.normals = None
@@ -60,8 +63,6 @@ class WeatherViewer(DialogWindow):
         self.__initUI__()
 
     def __initUI__(self):
-        self.setWindowTitle('Weather Averages')
-        self.setWindowIcon(icons.get_icon('master'))
 
         # ---- Toolbar
 
@@ -141,6 +142,7 @@ class WeatherViewer(DialogWindow):
         main_layout.addWidget(self.grid_weather_normals, 2, 0)
         main_layout.setRowStretch(2, 1)
         main_layout.setColumnStretch(0, 1)
+        main_layout.setSizeConstraint(main_layout.SetFixedSize)
 
     def show_monthly_grid(self):
         if self.grid_weather_normals.isHidden():
