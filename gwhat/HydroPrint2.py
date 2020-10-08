@@ -43,12 +43,12 @@ from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.widgets.buttons import LangToolButton
 
 
-class HydroprintGUI(myqt.DialogWindow):
+class HydroprintGUI(QWidget):
 
     ConsoleSignal = QSignal(str)
 
     def __init__(self, datamanager, parent=None):
-        super(HydroprintGUI, self).__init__(parent, maximize=True)
+        super().__init__(parent)
 
         self.__updateUI = True
 
@@ -365,6 +365,9 @@ class HydroprintGUI(myqt.DialogWindow):
         tabscales.addTab(widget_weather_scale, 'Weather')
 
         return tabscales
+
+    def emit_warning(self, message, title='Warning'):
+        QMessageBox.warning(self, title, message, QMessageBox.Ok)
 
     def close(self):
         """Close HydroPrint widget."""
