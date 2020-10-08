@@ -89,57 +89,6 @@ class QDoubleSpinBox(QDoubleSpinBox):
         return self.__value
 
 
-class DialogWindow(QDialog):
-
-    def __init__(self, parent=None, resizable=False, maximize=True):
-        super(DialogWindow, self).__init__(parent)
-
-        self.__firstshow = True
-        if maximize is True:
-            self.__resizable = True
-            self.setWindowFlags(Qt.Window)
-        else:
-            self.__resizable = resizable
-            self.setWindowFlags(Qt.Window |
-                                Qt.WindowMinimizeButtonHint |
-                                Qt.WindowCloseButtonHint)
-
-        self.setWindowIcon(icons.get_icon('master'))
-
-    def emit_warning(self, msg, title='Warning'):
-        btn = QMessageBox.Ok
-        QMessageBox.warning(self, title, msg, btn)
-
-    def show(self):
-        if self.__firstshow is True:
-            self.__firstshow = False
-
-            self.setAttribute(Qt.WA_DontShowOnScreen, True)
-            super(DialogWindow, self).show()
-            super(DialogWindow, self).close()
-            self.setAttribute(Qt.WA_DontShowOnScreen, False)
-
-            qr = self.frameGeometry()
-            if self.parentWidget():
-                parent = self.parentWidget()
-                wp = parent.frameGeometry().width()
-                hp = parent.frameGeometry().height()
-                cp = parent.mapToGlobal(QPoint(wp/2, hp/2))
-            else:
-                cp = QDesktopWidget().availableGeometry().center()
-            qr.moveCenter(cp)
-            self.move(qr.topLeft())
-
-            super(DialogWindow, self).show()
-
-            if self.__resizable is False:
-                self.setFixedSize(self.size())
-        else:
-            super(DialogWindow, self).show()
-
-        self.raise_()
-
-
 class QToolPanel(QWidget):
     """
     A custom widget that mimicks the behavior of the "Tools" sidepanel in
