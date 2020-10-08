@@ -19,7 +19,7 @@ from PyQt5.QtWidgets import (
 from gwhat.config.colors import ColorsManager
 
 
-class ColorsSetupDialog(QDialog):
+class ColorPreferencesDialog(QDialog):
 
     sig_color_preferences_changed = QSignal(bool)
 
@@ -118,6 +118,6 @@ class ColorsSetupDialog(QDialog):
 if __name__ == '__main__':
     import sys
     app = QApplication(sys.argv)
-    w = ColorsSetupDialog()
-    w.show()
+    dialog = ColorPreferencesDialog()
+    dialog.show()
     sys.exit(app.exec_())
