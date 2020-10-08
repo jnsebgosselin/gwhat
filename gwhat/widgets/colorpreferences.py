@@ -31,6 +31,23 @@ class ColorsSetupDialog(QDialog):
         self.__initUI__()
 
     def __initUI__(self):
+        # Setup the colors.
+        colorsDB = ColorsManager()
+        colorGrid_widget = QWidget()
+        self.colorGrid_layout = QGridLayout(colorGrid_widget)
+        for i, key in enumerate(colorsDB.keys()):
+            self.colorGrid_layout.addWidget(
+                QLabel('%s :' % colorsDB.labels[key]), i, 0)
+
+            btn = QToolButton()
+            btn.setAutoRaise(True)
+            btn.setFocusPolicy(Qt.NoFocus)
+            btn.clicked.connect(self.pick_color)
+
+            self.colorGrid_layout.addWidget(btn, i, 3)
+        self.load_colors()
+        self.colorGrid_layout.setColumnStretch(2, 100)
+
         # Settup the buttons.
         toolbar_widget = QWidget()
 
@@ -53,23 +70,6 @@ class ColorsSetupDialog(QDialog):
         toolbar_layout.setRowStretch(0, 100)
 
         toolbar_widget.setLayout(toolbar_layout)
-
-        # Setup the colors.
-        colorsDB = ColorsManager()
-        colorGrid_widget = QWidget()
-        self.colorGrid_layout = QGridLayout(colorGrid_widget)
-        for i, key in enumerate(colorsDB.keys()):
-            self.colorGrid_layout.addWidget(
-                QLabel('%s :' % colorsDB.labels[key]), i, 0)
-
-            btn = QToolButton()
-            btn.setAutoRaise(True)
-            btn.setFocusPolicy(Qt.NoFocus)
-            btn.clicked.connect(self.pick_color)
-
-            self.colorGrid_layout.addWidget(btn, i, 3)
-        self.load_colors()
-        self.colorGrid_layout.setColumnStretch(2, 100)
 
         # Setup the main layout.
         main_layout = QGridLayout(self)
