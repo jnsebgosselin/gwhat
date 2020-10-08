@@ -59,7 +59,7 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win = PageSetupWin(self)
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
 
-        self.color_palette_win = ColorsSetupWin(self)
+        self.color_palette_win = ColorsSetupDialog(parent)
         self.color_palette_win.newColorSetupSent.connect(self.update_colors)
 
         self.__initUI__()
@@ -812,7 +812,7 @@ class HydroprintGUI(myqt.DialogWindow):
         # Save the colors :
 
         cdb = ColorsManager()
-        cdb.load_colors_db()
+        cdb.load_colors()
         layout['colors'] = cdb.RGB
 
         # Save the layout :

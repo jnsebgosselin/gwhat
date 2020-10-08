@@ -125,7 +125,8 @@ class MainWindow(QMainWindow):
 
         # Setup the tab plot hydrograph.
         splash.showMessage("Initializing plot hydrograph...")
-        self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
+        self.tab_hydrograph = HydroPrint.HydroprintGUI(
+            self.dmanager, parent=self)
         self.tab_hydrograph.ConsoleSignal.connect(self.write2console)
 
         # Setup the tab analyse hydrograph.

@@ -452,7 +452,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         """Plot the legend of the figure."""
         # Define the proxy artists.
         colors = ColorsManager()
-        colors.load_colors_db()
+        colors.load_colors()
         snow_rec = Rectangle((0, 0), 1, 1, fc=colors.rgb['Snow'], ec='none')
         rain_rec = Rectangle((0, 0), 1, 1, fc=colors.rgb['Rain'], ec='none')
 
@@ -602,7 +602,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
             collection.remove()
 
         colors = ColorsManager()
-        colors.load_colors_db()
+        colors.load_colors()
 
         self._axe_precip.fill_between(
             Xpos, 0, Ptot, edgecolor='none', color=colors.rgb['Rain'])

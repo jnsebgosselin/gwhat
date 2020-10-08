@@ -48,33 +48,32 @@ class ColorsManager(object):
     def rgb(self):
         rgb = OrderedDict()
         for key in self.RGB.keys():
-            rgb[key] = [x/255 for x in self.RGB[key]]
+            rgb[key] = [x / 255 for x in self.RGB[key]]
         return rgb
 
     def keys(self):
         return list(self.RGB.keys())
 
-    def load_colors_db(self):
-        """Load the color settings from Colors.db."""
-        fname = 'Colors.db'
-        if not os.path.exists(fname):
-            self.save_colors_db()
-
+    def load_colors(self):
+        """Load the color settings."""
+        filename = osp.join(CONFIG_DIR, 'colors.txt')
+        if not os.path.exists(filename):
+            self.save_colors()
         else:
-            with open(fname, 'r') as f:
+            with open(filename, 'r') as f:
                 reader = list(csv.reader(f, delimiter=','))
 
             for row in reader:
                 self.RGB[row[0]] = [int(x) for x in row[1:]]
 
-    def save_colors_db(self):
-        """Save the color settings to Colors.db."""
-        fname = 'Colors.db'
+    def save_colors(self):
+        """Save the color settings."""
+        filename = osp.join(CONFIG_DIR, 'colors.txt')
         fcontent = []
         for key in self.RGB.keys():
             fcontent.append([key])
             fcontent[-1].extend(self.RGB[key])
-        save_content_to_csv(fname, fcontent)
+        save_content_to_csv(filename, fcontent)
 
 
 class ColorsSetupWin(myqt.DialogWindow):

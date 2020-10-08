@@ -101,7 +101,7 @@ class Hydrograph(Figure):
         # Database :
 
         self.colorsDB = ColorsManager()
-        self.colorsDB.load_colors_db()
+        self.colorsDB.load_colors()
 
         # Scales :
 
@@ -589,7 +589,7 @@ class Hydrograph(Figure):
         if not self.__isHydrographExists:
             return
 
-        self.colorsDB.load_colors_db()
+        self.colorsDB.load_colors()
         self.l1_ax2.set_color(self.colorsDB.rgb['WL solid'])
         self.l2_ax2.set_color(self.colorsDB.rgb['WL data'])
         self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])
