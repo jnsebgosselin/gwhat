@@ -63,10 +63,10 @@ class ColorPreferencesDialog(QDialog):
 
         toolbar_widget = QWidget()
         toolbar_layout = QGridLayout(toolbar_widget)
-        toolbar_layout.addWidget(btn_reset, 1, 0, 1, 3)
-        toolbar_layout.addWidget(btn_OK, 2, 0)
-        toolbar_layout.addWidget(btn_cancel, 2, 1)
-        toolbar_layout.addWidget(btn_apply, 2, 2)
+        toolbar_layout.addWidget(self.btn_reset, 1, 0, 1, 3)
+        toolbar_layout.addWidget(self.btn_ok, 2, 0)
+        toolbar_layout.addWidget(self.btn_cancel, 2, 1)
+        toolbar_layout.addWidget(self.btn_apply, 2, 2)
         toolbar_layout.setColumnStretch(3, 100)
         toolbar_layout.setRowStretch(0, 100)
 
