@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import (
 # ---- Local library imports
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
-from gwhat.colors2 import ColorsManager
+from gwhat.config.colors import ColorsManager
 from gwhat.utils import icons
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal

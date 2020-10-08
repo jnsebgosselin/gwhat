@@ -30,7 +30,7 @@ from xlrd import xldate_as_tuple
 # ---- Local imports
 from gwhat.utils.dates import datetimeindex_to_xldates
 from gwhat.common.utils import calc_dist_from_coord
-from gwhat.colors2 import ColorsManager
+from gwhat.config.colors import ColorsManager
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
