@@ -31,8 +31,7 @@ from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
-from gwhat.config.colors import ColorsManager
-from gwhat.colors2 import ColorsSetupDialog
+from gwhat.widgets.colorpreferences import ColorsManager, ColorsSetupDialog
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall, get_iconsize
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt

@@ -26,6 +26,8 @@ class ColorsSetupDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle('Colors Palette Setup')
+        self.setWindowFlags(
+            self.windowFlags() & ~Qt.WindowContextHelpButtonHint)
         self.__initUI__()
 
     def __initUI__(self):
@@ -79,6 +81,7 @@ class ColorsSetupDialog(QDialog):
         main_layout = QGridLayout(self)
         main_layout.addWidget(colorGrid_widget, 0, 0)
         main_layout.addWidget(toolbar_widget, 1, 0)
+        main_layout.setSizeConstraint(main_layout.SetFixedSize)
 
     def load_colors(self):
         colorsDB = ColorsManager()
