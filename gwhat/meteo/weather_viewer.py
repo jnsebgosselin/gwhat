@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import (
 # ---- Local library imports
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
-from gwhat.colors2 import ColorsReader
+from gwhat.colors2 import ColorsManager
 from gwhat.utils import icons
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
@@ -451,7 +451,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
     def plot_legend(self):
         """Plot the legend of the figure."""
         # Define the proxy artists.
-        colors = ColorsReader()
+        colors = ColorsManager()
         colors.load_colors_db()
         snow_rec = Rectangle((0, 0), 1, 1, fc=colors.rgb['Snow'], ec='none')
         rain_rec = Rectangle((0, 0), 1, 1, fc=colors.rgb['Rain'], ec='none')
@@ -601,7 +601,7 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         for collection in reversed(self._axe_precip.collections):
             collection.remove()
 
-        colors = ColorsReader()
+        colors = ColorsManager()
         colors.load_colors_db()
 
         self._axe_precip.fill_between(

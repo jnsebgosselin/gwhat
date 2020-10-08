@@ -31,7 +31,7 @@ from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
-from gwhat.colors2 import ColorsReader, ColorsSetupWin
+from gwhat.colors2 import ColorsManager, ColorsSetupDialog
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall, get_iconsize
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
@@ -811,7 +811,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Save the colors :
 
-        cdb = ColorsReader()
+        cdb = ColorsManager()
         cdb.load_colors_db()
         layout['colors'] = cdb.RGB
 

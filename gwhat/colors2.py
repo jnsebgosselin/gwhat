@@ -1,35 +1,32 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
-from __future__ import division, unicode_literals
-
-# Standard library imports :
-
+# ---- Standard imports
 import os
+import os.path as osp
 import csv
 from collections import OrderedDict
 
-# Third party imports :
-
+# ---- Third party imports
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QWidget, QPushButton, QGridLayout, QLabel,
-                             QToolButton, QColorDialog, QApplication)
+from PyQt5.QtWidgets import (
+    QApplication, QColorDialog, QDialog, QGridLayout, QLabel, QPushButton,
+    QToolButton, QWidget)
 
-import numpy as np
 
-# Local imports :
-
-import gwhat.common.widgets as myqt
+# ---- Local imports
+from gwhat.config.main import CONFIG_DIR
 from gwhat.common.utils import save_content_to_csv
 
 
-class ColorsReader(object):
+class ColorsManager(object):
     def __init__(self):
         self.RGB = OrderedDict()
         self.RGB['Tair'] = [255, 212, 212]
@@ -120,8 +117,8 @@ class ColorsSetupWin(myqt.DialogWindow):
 
         # ---- Color Grid ----
 
-        colorsDB = ColorsReader()
-        colorsDB.load_colors_db()
+        colorsDB = ColorsManager()
+        colorsDB.load_colors()
 
         colorGrid_widget = QWidget()
 
