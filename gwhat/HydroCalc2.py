@@ -21,7 +21,8 @@ from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QComboBox, QTextEdit, QSizePolicy, QPushButton, QLabel,
-    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame)
+    QTabWidget, QApplication, QWidget, QMainWindow, QToolBar, QFrame,
+    QMessageBox)
 
 import matplotlib as mpl
 import matplotlib.dates as mdates
@@ -38,7 +39,6 @@ from xlrd.xldate import xldate_from_date_tuple
 # ---- Local imports
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-from gwhat.common.widgets import DialogWindow
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
@@ -49,7 +49,7 @@ from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
 
 
-class WLCalc(DialogWindow, SaveFileMixin):
+class WLCalc(QWidget, SaveFileMixin):
     """
     This is the interface where are plotted the water level time series. It is
     possible to dynamically zoom and span the data, change the display,
@@ -59,7 +59,7 @@ class WLCalc(DialogWindow, SaveFileMixin):
     sig_new_mrc = QSignal()
 
     def __init__(self, datamanager, parent=None):
-        DialogWindow.__init__(self, parent, maximize=True)
+        QWidget.__init__(self, parent)
         SaveFileMixin.__init__(self)
 
         self._navig_and_select_tools = []
@@ -505,6 +505,9 @@ class WLCalc(DialogWindow, SaveFileMixin):
 
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
+
+    def emit_warning(self, message, title='Warning'):
+        QMessageBox.warning(self, title, message, QMessageBox.Ok)
 
     @property
     def water_lvl(self):
