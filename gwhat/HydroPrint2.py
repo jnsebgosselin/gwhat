@@ -60,7 +60,8 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
 
         self.color_palette_win = ColorsSetupDialog(parent)
-        self.color_palette_win.newColorSetupSent.connect(self.update_colors)
+        self.color_palette_win.sig_color_preferences_changed.connect(
+            self.update_colors)
 
         self.__initUI__()
 

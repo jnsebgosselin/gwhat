@@ -21,7 +21,7 @@ from gwhat.config.colors import ColorsManager
 
 class ColorsSetupDialog(QDialog):
 
-    newColorSetupSent = QSignal(bool)
+    sig_color_preferences_changed = QSignal(bool)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -108,7 +108,7 @@ class ColorsSetupDialog(QDialog):
             rgb = button.palette().base().color().getRgb()[:-1]
             colors_manager.RGB[button.color_key] = [rgb[0], rgb[1], rgb[2]]
         colors_manager.save_colors()
-        self.newColorSetupSent.emit(True)
+        self.sig_color_preferences_changed.emit(True)
 
     def showEvent(self, event):
         self.load_colors()
