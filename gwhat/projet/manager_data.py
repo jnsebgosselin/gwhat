@@ -480,6 +480,7 @@ class DataManager(QWidget):
                 CONF.get('weather_normals_viewer', 'graphs_labels_language'))
         self.weather_avg_graph.set_weather_dataset(self.get_current_wxdset())
         self.weather_avg_graph.show()
+        self.weather_avg_graph.raise_()
 
 
 class NewDatasetDialog(QDialog):

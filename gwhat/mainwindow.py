@@ -125,7 +125,8 @@ class MainWindow(QMainWindow):
 
         # Setup the tab plot hydrograph.
         splash.showMessage("Initializing plot hydrograph...")
-        self.tab_hydrograph = HydroPrint.HydroprintGUI(self.dmanager)
+        self.tab_hydrograph = HydroPrint.HydroprintGUI(
+            self.dmanager, parent=self)
         self.tab_hydrograph.ConsoleSignal.connect(self.write2console)
 
         # Setup the tab analyse hydrograph.
@@ -214,6 +215,7 @@ class MainWindow(QMainWindow):
 
         print('Closing GWHAT')
         self.tab_hydrocalc.close()
+        self.tab_hydrograph.close()
         event.accept()
 
     def show(self):

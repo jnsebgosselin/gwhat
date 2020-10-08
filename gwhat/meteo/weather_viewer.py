@@ -32,7 +32,6 @@ from PyQt5.QtWidgets import (
 # ---- Local library imports
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
-from gwhat.colors2 import ColorsReader
 from gwhat.utils import icons
 from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils.icons import QToolButtonVRectSmall, QToolButtonNormal
@@ -451,10 +450,8 @@ class FigWeatherNormals(FigureCanvasQTAgg):
     def plot_legend(self):
         """Plot the legend of the figure."""
         # Define the proxy artists.
-        colors = ColorsReader()
-        colors.load_colors_db()
-        snow_rec = Rectangle((0, 0), 1, 1, fc=colors.rgb['Snow'], ec='none')
-        rain_rec = Rectangle((0, 0), 1, 1, fc=colors.rgb['Rain'], ec='none')
+        snow_rec = Rectangle((0, 0), 1, 1, fc='#a5a5a5', ec='none')
+        rain_rec = Rectangle((0, 0), 1, 1, fc='#173458', ec='none')
 
         # Define the legend labels and markers.
         lines = [rain_rec, snow_rec, self._axe_airtemp.lines[0],
@@ -600,14 +597,10 @@ class FigWeatherNormals(FigureCanvasQTAgg):
         # Plot the data.
         for collection in reversed(self._axe_precip.collections):
             collection.remove()
-
-        colors = ColorsReader()
-        colors.load_colors_db()
-
         self._axe_precip.fill_between(
-            Xpos, 0, Ptot, edgecolor='none', color=colors.rgb['Rain'])
+            Xpos, 0, Ptot, edgecolor='none', color='#173458')
         self._axe_precip.fill_between(
-            Xpos, 0, Snow, edgecolor='none', color=colors.rgb['Snow'])
+            Xpos, 0, Snow, edgecolor='none', color='#a5a5a5')
 
     def plot_air_temp(self, Tmax_norm, Tavg_norm, Tmin_norm):
         for i, Tnorm in enumerate([Tmax_norm, Tavg_norm, Tmin_norm]):

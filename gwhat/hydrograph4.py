@@ -30,7 +30,7 @@ from xlrd import xldate_as_tuple
 # ---- Local imports
 from gwhat.utils.dates import datetimeindex_to_xldates
 from gwhat.common.utils import calc_dist_from_coord
-from gwhat.colors2 import ColorsReader
+from gwhat.config.colors import ColorsManager
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 
@@ -99,9 +99,7 @@ class Hydrograph(Figure):
         self.language = 'english'
 
         # Database :
-
-        self.colorsDB = ColorsReader()
-        self.colorsDB.load_colors_db()
+        self.colorsDB = ColorsManager()
 
         # Scales :
 
@@ -589,7 +587,7 @@ class Hydrograph(Figure):
         if not self.__isHydrographExists:
             return
 
-        self.colorsDB.load_colors_db()
+        self.colorsDB.load_colors()
         self.l1_ax2.set_color(self.colorsDB.rgb['WL solid'])
         self.l2_ax2.set_color(self.colorsDB.rgb['WL data'])
         self.h_WLmes.set_color(self.colorsDB.rgb['WL obs'])

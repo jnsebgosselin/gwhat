@@ -31,7 +31,8 @@ from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 import gwhat.hydrograph4 as hydrograph
 import gwhat.mplFigViewer3 as mplFigViewer
-from gwhat.colors2 import ColorsReader, ColorsSetupWin
+from gwhat.widgets.colorpreferences import (
+    ColorsManager, ColorPreferencesDialog)
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall, get_iconsize
 from gwhat.utils import icons
 import gwhat.common.widgets as myqt
@@ -59,8 +60,9 @@ class HydroprintGUI(myqt.DialogWindow):
         self.page_setup_win = PageSetupWin(self)
         self.page_setup_win.newPageSetupSent.connect(self.layout_changed)
 
-        self.color_palette_win = ColorsSetupWin(self)
-        self.color_palette_win.newColorSetupSent.connect(self.update_colors)
+        self.color_palette_win = ColorPreferencesDialog(parent)
+        self.color_palette_win.sig_color_preferences_changed.connect(
+            self.update_colors)
 
         self.__initUI__()
 
@@ -364,12 +366,16 @@ class HydroprintGUI(myqt.DialogWindow):
 
         return tabscales
 
+    def close(self):
+        """Close HydroPrint widget."""
+        self.color_palette_win.close()
+        super().close()
+
     @property
     def workdir(self):
         return self.dmngr.workdir
 
     # ---- Utilities
-
     def zoom_in(self):
         self.hydrograph_scrollarea.zoomIn()
 
@@ -381,7 +387,6 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
     # ---- Datasets Handlers
-
     @property
     def wldset(self):
         return self.dmngr.get_current_wldset()
@@ -811,8 +816,7 @@ class HydroprintGUI(myqt.DialogWindow):
 
         # Save the colors :
 
-        cdb = ColorsReader()
-        cdb.load_colors_db()
+        cdb = ColorsManager()
         layout['colors'] = cdb.RGB
 
         # Save the layout :
