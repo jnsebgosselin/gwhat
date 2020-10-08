@@ -35,7 +35,7 @@ class ColorPreferencesDialog(QDialog):
         colors_manager = ColorsManager()
         colorGrid_widget = QWidget()
         self.colorGrid_layout = QGridLayout(colorGrid_widget)
-        self._color_buttons = []
+        self._color_buttons = {}
         for i, key in enumerate(colors_manager.keys()):
             self.colorGrid_layout.addWidget(
                 QLabel('{} :'.format(colors_manager.labels[key])), i, 0)
@@ -47,7 +47,7 @@ class ColorPreferencesDialog(QDialog):
             btn.setToolTip('Click to select a new color.')
             btn.color_key = key
             self.colorGrid_layout.addWidget(btn, i, 1)
-            self._color_buttons.append(btn)
+            self._color_buttons[key] = btn
         self.colorGrid_layout.setColumnStretch(0, 100)
         self.load_colors()
 
@@ -78,18 +78,18 @@ class ColorPreferencesDialog(QDialog):
 
     def load_colors(self):
         colors_manager = ColorsManager()
-        for button in self._color_buttons:
+        for key, button in self._color_buttons.items():
             button.setStyleSheet(
                 "background-color: rgb(%i,%i,%i)" %
-                tuple(colors_manager.RGB[button.color_key]))
+                tuple(colors_manager.RGB[key]))
 
     def reset_defaults(self):
         colors_manager = ColorsManager()
         colors_manager.reset_defaults()
-        for button in self._color_buttons:
+        for key, button in self._color_buttons.items():
             button.setStyleSheet(
                 "background-color: rgb(%i,%i,%i)" %
-                tuple(colors_manager.RGB[button.color_key]))
+                tuple(colors_manager.RGB[key]))
 
     def pick_color(self):
         sender = self.sender()
@@ -104,9 +104,9 @@ class ColorPreferencesDialog(QDialog):
 
     def btn_apply_isClicked(self):
         colors_manager = ColorsManager()
-        for button in self._color_buttons:
-            rgb = button.palette().base().color().getRgb()[:-1]
-            colors_manager.RGB[button.color_key] = [rgb[0], rgb[1], rgb[2]]
+        for key, button in self._color_buttons.items():
+            button_rgb = list(button.palette().base().color().getRgb()[:-1])
+            colors_manager.RGB[key] = button_rgb
         colors_manager.save_colors()
         self.sig_color_preferences_changed.emit(True)
 
