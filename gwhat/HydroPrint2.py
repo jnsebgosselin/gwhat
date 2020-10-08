@@ -364,12 +364,16 @@ class HydroprintGUI(myqt.DialogWindow):
 
         return tabscales
 
+    def close(self):
+        """Close HydroPrint widget."""
+        self.color_palette_win.close()
+        super().close()
+
     @property
     def workdir(self):
         return self.dmngr.workdir
 
     # ---- Utilities
-
     def zoom_in(self):
         self.hydrograph_scrollarea.zoomIn()
 
@@ -381,7 +385,6 @@ class HydroprintGUI(myqt.DialogWindow):
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
     # ---- Datasets Handlers
-
     @property
     def wldset(self):
         return self.dmngr.get_current_wldset()

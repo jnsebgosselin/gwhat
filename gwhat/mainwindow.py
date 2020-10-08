@@ -215,6 +215,7 @@ class MainWindow(QMainWindow):
 
         print('Closing GWHAT')
         self.tab_hydrocalc.close()
+        self.tab_hydrograph.close()
         event.accept()
 
     def show(self):
