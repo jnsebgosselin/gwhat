@@ -76,19 +76,16 @@ class ColorsManager(object):
         save_content_to_csv(filename, fcontent)
 
 
-class ColorsSetupWin(myqt.DialogWindow):
+class ColorsSetupDialog(QDialog):
 
     newColorSetupSent = QSignal(bool)
 
     def __init__(self, parent=None):
-        super(ColorsSetupWin, self).__init__(parent)
-
+        super().__init__(parent)
         self.setWindowTitle('Colors Palette Setup')
-        self.setWindowFlags(Qt.Window)
-
         self.__initUI__()
 
-    def __initUI__(self):  # ==================================================
+    def __initUI__(self):
 
         # ---- Toolbar ----
 
@@ -137,21 +134,14 @@ class ColorsSetupWin(myqt.DialogWindow):
 
         colorGrid_widget.setLayout(self.colorGrid_layout)
 
-        # ---- Main Layout ----
-
-        main_layout = QGridLayout()
+        # Setup the main layout.
+        main_layout = QGridLayout(self)
         main_layout.addWidget(colorGrid_widget, 0, 0)
         main_layout.addWidget(toolbar_widget, 1, 0)
-        self.setLayout(main_layout)
-
-    # =========================================================================
 
     def load_colors(self):
-
-        colorsDB = ColorsReader()
-        colorsDB.load_colors_db()
-
-        nrow = self.colorGrid_layout.rowCount()
+        colorsDB = ColorsManager()
+        colorsDB.load_colors()
         for row, key in enumerate(colorsDB.keys()):
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             item.setStyleSheet("background-color: rgb(%i,%i,%i)" %
@@ -161,10 +151,7 @@ class ColorsSetupWin(myqt.DialogWindow):
                                )
 
     def reset_defaults(self):
-
-        colorsDB = ColorsReader()
-
-        nrow = self.colorGrid_layout.rowCount()
+        colorsDB = ColorsManager()
         for row, key in enumerate(colorsDB.keys()):
             btn = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             btn.setStyleSheet("background-color: rgb(%i,%i,%i)" %
@@ -180,30 +167,21 @@ class ColorsSetupWin(myqt.DialogWindow):
             rgb = color.getRgb()[:-1]
             sender.setStyleSheet("background-color: rgb(%i,%i,%i)" % rgb)
 
-    # =========================================================================
-
     def btn_OK_isClicked(self):
         self.btn_apply_isClicked()
         self.close()
 
     def btn_apply_isClicked(self):
-
-        colorsDB = ColorsReader()
-
-        nrow = self.colorGrid_layout.rowCount()
+        colorsDB = ColorsManager()
         for row, key in enumerate(colorsDB.keys()):
             item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
             rgb = item.palette().base().color().getRgb()[:-1]
-
-            colorsDB.RGB[key] = np.array([rgb[0], rgb[1], rgb[2]])
-
-        colorsDB.save_colors_db()
+            colorsDB.RGB[key] = [rgb[0], rgb[1], rgb[2]]
+        colorsDB.save_colors()
         self.newColorSetupSent.emit(True)
 
-    # =========================================================================
-
     def closeEvent(self, event):
-        super(ColorsSetupWin, self).closeEvent(event)
+        super().closeEvent(event)
         self.load_colors()
 
         # If cancel or X is clicked, the parameters will be reset to
@@ -213,10 +191,7 @@ class ColorsSetupWin(myqt.DialogWindow):
 
 if __name__ == '__main__':
     import sys
-
     app = QApplication(sys.argv)
-
-    w = ColorsSetupWin()
+    w = ColorsSetupDialog()
     w.show()
-
     sys.exit(app.exec_())
