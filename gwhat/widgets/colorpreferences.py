@@ -32,25 +32,26 @@ class ColorsSetupDialog(QDialog):
 
     def __initUI__(self):
         # Setup the colors.
-        colorsDB = ColorsManager()
+        colors_manager = ColorsManager()
         colorGrid_widget = QWidget()
         self.colorGrid_layout = QGridLayout(colorGrid_widget)
-        for i, key in enumerate(colorsDB.keys()):
+        self._color_buttons = []
+        for i, key in enumerate(colors_manager.keys()):
             self.colorGrid_layout.addWidget(
-                QLabel('%s :' % colorsDB.labels[key]), i, 0)
+                QLabel('{} :'.format(colors_manager.labels[key])), i, 0)
 
             btn = QToolButton()
             btn.setAutoRaise(True)
             btn.setFocusPolicy(Qt.NoFocus)
             btn.clicked.connect(self.pick_color)
-
-            self.colorGrid_layout.addWidget(btn, i, 3)
+            btn.setToolTip('Click to select a new color.')
+            btn.color_key = key
+            self.colorGrid_layout.addWidget(btn, i, 1)
+            self._color_buttons.append(btn)
+        self.colorGrid_layout.setColumnStretch(0, 100)
         self.load_colors()
-        self.colorGrid_layout.setColumnStretch(2, 100)
 
         # Settup the buttons.
-        toolbar_widget = QWidget()
-
         btn_apply = QPushButton('Apply')
         btn_apply.clicked.connect(self.btn_apply_isClicked)
         btn_cancel = QPushButton('Cancel')
@@ -60,43 +61,35 @@ class ColorsSetupDialog(QDialog):
         btn_reset = QPushButton('Reset Defaults')
         btn_reset.clicked.connect(self.reset_defaults)
 
-        toolbar_layout = QGridLayout()
+        toolbar_widget = QWidget()
+        toolbar_layout = QGridLayout(toolbar_widget)
         toolbar_layout.addWidget(btn_reset, 1, 0, 1, 3)
         toolbar_layout.addWidget(btn_OK, 2, 0)
         toolbar_layout.addWidget(btn_cancel, 2, 1)
         toolbar_layout.addWidget(btn_apply, 2, 2)
-
         toolbar_layout.setColumnStretch(3, 100)
         toolbar_layout.setRowStretch(0, 100)
 
-        toolbar_widget.setLayout(toolbar_layout)
-
         # Setup the main layout.
         main_layout = QGridLayout(self)
-        main_layout.addWidget(colorGrid_widget, 0, 0)
-        main_layout.addWidget(toolbar_widget, 1, 0)
+        main_layout.addWidget(colorGrid_widget, 1, 0)
+        main_layout.addWidget(toolbar_widget, 2, 0)
         main_layout.setSizeConstraint(main_layout.SetFixedSize)
 
     def load_colors(self):
         colors_manager = ColorsManager()
-        for row, key in enumerate(colors_manager.keys()):
-            item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
-            item.setStyleSheet(
+        for button in self._color_buttons:
+            button.setStyleSheet(
                 "background-color: rgb(%i,%i,%i)" %
-                (colors_manager.RGB[key][0],
-                 colors_manager.RGB[key][1],
-                 colors_manager.RGB[key][2]))
+                tuple(colors_manager.RGB[button.color_key]))
 
     def reset_defaults(self):
         colors_manager = ColorsManager()
         colors_manager.reset_defaults()
-        for row, key in enumerate(colors_manager.keys()):
-            btn = self.colorGrid_layout.itemAtPosition(row, 3).widget()
-            btn.setStyleSheet(
+        for button in self._color_buttons:
+            button.setStyleSheet(
                 "background-color: rgb(%i,%i,%i)" %
-                (colors_manager.RGB[key][0],
-                 colors_manager.RGB[key][1],
-                 colors_manager.RGB[key][2]))
+                tuple(colors_manager.RGB[button.color_key]))
 
     def pick_color(self):
         sender = self.sender()
@@ -111,20 +104,15 @@ class ColorsSetupDialog(QDialog):
 
     def btn_apply_isClicked(self):
         colors_manager = ColorsManager()
-        for row, key in enumerate(colors_manager.keys()):
-            item = self.colorGrid_layout.itemAtPosition(row, 3).widget()
-            rgb = item.palette().base().color().getRgb()[:-1]
-            colors_manager.RGB[key] = [rgb[0], rgb[1], rgb[2]]
+        for button in self._color_buttons:
+            rgb = button.palette().base().color().getRgb()[:-1]
+            colors_manager.RGB[button.color_key] = [rgb[0], rgb[1], rgb[2]]
         colors_manager.save_colors()
         self.newColorSetupSent.emit(True)
 
-    def closeEvent(self, event):
-        super().closeEvent(event)
+    def showEvent(self, event):
         self.load_colors()
-
-        # If cancel or X is clicked, the parameters will be reset to
-        # the values they had the last time "Accept" button was
-        # clicked.
+        super().showEvent(event)
 
 
 if __name__ == '__main__':
