@@ -1017,7 +1017,7 @@ class Hydrograph(Figure):
         for i in range(len(self.xlabels)):
             self.xlabels[i].remove()
 
-        padding = ScaledTranslation(0, -5/72, self.dpi_scale_trans)
+        padding = ScaledTranslation(0, -6/72, self.dpi_scale_trans)
 
         self.xlabels = []
         for i in range(len(xticks_info[1])):
