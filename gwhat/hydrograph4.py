@@ -1179,60 +1179,45 @@ class Hydrograph(Figure):
 
         # Transform to data coord :
 
-        n = self.date_labels_pattern
         month_names = LabelDatabase(self.language).month_names
 
         xticks_labels_offset = sdx
 
         xticks_labels = []
-        xticks_position = [self.TIMEmin]
+        xticks_position = []
         xticks_labels_position = []
+        xticks_minor_position = []
 
-        if self.datemode.lower() == 'month':
+        i = 0
+        next_xtick_pos = self.TIMEmin
+        while True:
+            datetuple = xldate_as_tuple(next_xtick_pos, 0)
+            year = datetuple[0]
+            month = datetuple[1]
+            month_range = monthrange(year, month)[1]
 
-            i = 0
-            while xticks_position[i] < self.TIMEmax:
-
-                year = xldate_as_tuple(xticks_position[i], 0)[0]
-                month = xldate_as_tuple(xticks_position[i], 0)[1]
-
-                month_range = monthrange(year, month)[1]
-
-                xticks_position.append(xticks_position[i] + month_range)
-
-                if i % n == 0:
-
-                    xticks_labels_position.append(xticks_position[i] +
-                                                  0.5 * month_range +
-                                                  xticks_labels_offset)
-
-                    xticks_labels.append("%s '%s" % (month_names[month - 1],
-                                                     str(year)[-2:]))
-
-                i += 1
-
-        elif self.datemode.lower() == 'year':
-
-            i = 0
-            year = xldate_as_tuple(xticks_position[i], 0)[0]
-            while xticks_position[i] < self.TIMEmax:
-
-                xticks_position.append(
-                                     xldate_from_date_tuple((year+1, 1, 1), 0))
-                year_range = xticks_position[i+1] - xticks_position[i]
-
-                if i % n == 0:
-
-                    xticks_labels_position.append(xticks_position[i] +
-                                                  0.5 * year_range +
-                                                  xticks_labels_offset)
-
+            xticks_minor_position.append(next_xtick_pos)
+            if i % self.date_labels_pattern == 0:
+                xticks_position.append(next_xtick_pos)
+                xticks_labels_position.append(
+                    next_xtick_pos + xticks_labels_offset)
+                if self.datemode.lower() == 'month':
+                    xticks_labels.append("{} '{}".format(
+                        month_names[month - 1], str(year)[-2:]))
+                elif self.datemode.lower() == 'year':
                     xticks_labels.append("%d" % year)
 
-                year += 1
-                i += 1
+            if self.datemode.lower() == 'month':
+                next_xtick_pos = next_xtick_pos + month_range
+            elif self.datemode.lower() == 'year':
+                next_xtick_pos = xldate_from_date_tuple((year + 1, 1, 1), 0)
 
-        return xticks_position, xticks_labels_position, xticks_labels
+            if next_xtick_pos > self.TIMEmax:
+                break
+            i += 1
+
+        return (xticks_position, xticks_labels_position, xticks_labels,
+                xticks_minor_position)
 
 
 def filt_data(time, waterlvl, N):
