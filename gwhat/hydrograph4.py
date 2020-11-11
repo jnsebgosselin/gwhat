@@ -1043,11 +1043,11 @@ class Hydrograph(Figure):
             offset = ScaledTranslation(0, dy/72, self.dpi_scale_trans)
             self.figTitle.set_text(labelDB.title % self.wldset['Well'])
             self.figTitle.set_transform(self.ax0.transAxes + offset)
-        self.ax1.set_xticks(xticks_info[3], minor=True)
+
         # Set whether the title is visible or not.
         self.text1.set_visible(self.meteo_on and self.isGraphTitle)
         self.figTitle.set_visible(self.isGraphTitle)
-
+        self.ax1.set_xticks(xticks_info[3], minor=True)
     def setup_waterlvl_scale(self):
         """Update the y scale of the water levels."""
         NZGrid = self.NZGrid if self.meteo_on else self.NZGrid - 2
