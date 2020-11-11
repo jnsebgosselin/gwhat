@@ -9,4 +9,4 @@ matplotlib == 3.1.*
 requests
 h5py>=2.8
 qtawesome
-pandas
+pandas == 0.25.*
