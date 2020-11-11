@@ -77,7 +77,6 @@ environment/
 
 build_ext.bat
 gwrecharge_calculs.c
-Colors.db
 kgs_brf.exe
 WHAT.pref
 BRFInput.txt
