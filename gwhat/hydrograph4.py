@@ -1142,8 +1142,6 @@ class Hydrograph(Figure):
 
     def make_xticks_info(self):
 
-        # ---------------------------------------- horizontal text alignment --
-
         # The strategy here is to:
         # 1. render some random text ;
         # 2. get the height of its bounding box ;
@@ -1170,8 +1168,7 @@ class Hydrograph(Figure):
 
         dx = bbox.height * np.sin(np.radians(45))
 
-        # Scale dx to axe dimension :
-
+        # Scale dx to axe dimension.
         bbox = self.ax1.get_window_extent(renderer)  # in pixels
         bbox = bbox.transformed(self.dpi_scale_trans.inverted())  # in inches
 
