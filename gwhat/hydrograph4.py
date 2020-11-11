@@ -1014,6 +1014,7 @@ class Hydrograph(Figure):
         """
         xticks_info = self.make_xticks_info()
         self.ax1.set_xticks(xticks_info[0])
+        self.ax1.set_xticks(xticks_info[3], minor=True)
 
         for i in range(len(self.xlabels)):
             self.xlabels[i].remove()
@@ -1047,7 +1048,7 @@ class Hydrograph(Figure):
         # Set whether the title is visible or not.
         self.text1.set_visible(self.meteo_on and self.isGraphTitle)
         self.figTitle.set_visible(self.isGraphTitle)
-        self.ax1.set_xticks(xticks_info[3], minor=True)
+
     def setup_waterlvl_scale(self):
         """Update the y scale of the water levels."""
         NZGrid = self.NZGrid if self.meteo_on else self.NZGrid - 2
