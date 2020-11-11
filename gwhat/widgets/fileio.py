@@ -7,7 +7,6 @@
 # Licensed under the terms of the GNU General Public License.
 
 # ---- Standard library imports
-import os
 import os.path as osp
 
 # ---- Third party imports
