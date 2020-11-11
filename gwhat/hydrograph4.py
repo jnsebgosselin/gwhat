@@ -1006,11 +1006,12 @@ class Hydrograph(Figure):
         self.ax1.axis([self.TIMEmin, self.TIMEmax, 0, self.NZGrid])
 
     def setup_xticklabels(self):
-        """Setup the xtick labels."""
+        """
+        Setup the xtick labels.
 
-        # Labels are placed manually because this is around 25% faster than
-        # using the minor ticks.
-
+        Note that labels are placed manually because this is around 25% faster
+        than using the minor ticks.
+        """
         xticks_info = self.make_xticks_info()
         self.ax1.set_xticks(xticks_info[0])
 
