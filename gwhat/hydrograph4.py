@@ -1118,28 +1118,30 @@ class Hydrograph(Figure):
         self.patch.set_linewidth(self._figframe_lw)
 
     def set_gridLines(self):
+        """Setup the grid lines."""
 
         # 0 -> None, 1 -> "-" 2 -> ":"
-
+        grid_color = [0.35, 0.35, 0.35]
         if self.gridLines == 0:
             for ax in self.axes:
                 ax._gridOn = False
-
         elif self.gridLines == 1:
-            self.ax4.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle='-',
-                          linewidth=0.5, which='minor')
-            self.axLow.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle='-',
-                            linewidth=0.5)
-            self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle='-',
-                          linewidth=0.5)
-
+            self.ax4.grid(axis='y', color=grid_color, linestyle='-',
+                          linewidth=0.25, which='minor')
+            self.axLow.grid(axis='y', color=grid_color, linestyle='-',
+                            linewidth=0.25)
+            self.ax1.grid(axis='x', color=grid_color, linestyle='-',
+                          linewidth=0.25)
         else:
-            self.ax4.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
-                          linewidth=0.5, dashes=[0.5, 5], which='minor')
-            self.axLow.grid(axis='y', color=[0.35, 0.35, 0.35], linestyle=':',
-                            linewidth=0.5, dashes=[0.5, 5])
-            self.ax1.grid(axis='x', color=[0.35, 0.35, 0.35], linestyle=':',
-                          linewidth=0.5, dashes=[0.5, 5])
+            self.ax4.grid(
+                axis='y', color=grid_color, linewidth=0.5, dashes=[1, 5],
+                dash_capstyle='butt', which='minor')
+            self.axLow.grid(
+                axis='y', color=grid_color, linewidth=0.5, dashes=[1, 5],
+                dash_capstyle='butt')
+            self.ax1.grid(
+                axis='x', color=grid_color, linewidth=0.5, dashes=[1, 5],
+                dash_capstyle='butt')
 
     def make_xticks_info(self):
 
