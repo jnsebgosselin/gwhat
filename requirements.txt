@@ -1,7 +1,7 @@
 appconfigs
 pyqt5 == 5.12.*
 xlsxwriter
-xlrd
+xlrd == 1.*
 xlwt
 cython>=0.25.2
 numpy == 1.16.*
