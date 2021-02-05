@@ -6,7 +6,6 @@ Licensed under the terms of the GNU-GPLv3
 # Project details and build status
 
 [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](./LICENSE)
-[![Documentation Status](https://readthedocs.org/projects/gwhat/badge/?version=latest)](http://gwhat.readthedocs.io)
 [![Build status](https://ci.appveyor.com/api/projects/status/7f2sr3ccd807ydjc/branch/master?svg=true)](https://ci.appveyor.com/project/jnsebgosselin/gwhat/branch/master)
 [![codecov](https://codecov.io/gh/jnsebgosselin/gwhat/branch/master/graph/badge.svg)](https://codecov.io/gh/jnsebgosselin/gwhat)
 
