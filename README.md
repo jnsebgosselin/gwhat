@@ -10,7 +10,6 @@ Licensed under the terms of the GNU-GPLv3
 [![codecov](https://codecov.io/gh/jnsebgosselin/gwhat/branch/master/graph/badge.svg)](https://codecov.io/gh/jnsebgosselin/gwhat)
 
 
-You can read the GWHAT documentation [here](https://gwhat.readthedocs.io).<br>
 You can download the latest version of GWHAT [here](https://github.com/jnsebgosselin/gwhat/releases/latest).<br>
 Instructions for installing GWHAT are available [here](https://gwhat.readthedocs.io/en/latest/getting_started.html).<br>
 The roadmap of the project can be consulted [here](https://github.com/jnsebgosselin/gwhat/milestones).
