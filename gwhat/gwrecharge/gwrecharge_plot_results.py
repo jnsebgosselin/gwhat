@@ -1541,7 +1541,7 @@ class FigAvgMonthlyBudget(FigCanvasBase):
         if 'ymin' not in self.setp.keys():
             self.setp['ymin'] = 0
         if 'ymax' not in self.setp.keys():
-            self.setp['ymax'] = np.max(avg_mly) + 10
+            self.setp['ymax'] = np.max([x for x in avg_mly.values()]) + 10
         if 'yscl' not in self.setp.keys():
             self.setp['yscl'] = 50
         if 'yscl minor' not in self.setp.keys():
