@@ -13,19 +13,49 @@ import os.path as osp
 os.environ['GWHAT_PYTEST'] = 'True'
 
 # ---- Third party imports
+import numpy as np
 import pytest
 
 # ---- Local imports
+from gwhat.common.utils import save_content_to_file
 from gwhat.projet.reader_projet import ProjetReader
 from gwhat.projet.manager_projet import (
     ProjetManager, QFileDialog, QMessageBox, CONF)
+from gwhat.projet.reader_waterlvl import WLDataFrame
+from gwhat.utils.math import nan_as_text_tolist
 
 NAME = "test @ prô'jèt!"
 LAT = 45.40
 LON = 73.15
 
 
+# =============================================================================
 # ---- Pytest Fixtures
+# =============================================================================
+@pytest.fixture
+def testfile(tmp_path):
+    """Create  a testfile containing a waterlevel dataset."""
+    columns = ['Date', 'WL(mbgs)']
+    n_data = 33000
+    time_data = np.arange(1000, n_data + 1000)
+    wl_data = np.random.rand(n_data)
+    datastack = np.vstack([time_data, wl_data]).transpose()
+
+    filename = osp.join(tmp_path, 'waterlvl_testfile.csv')
+    fcontent = [
+        ['Well ID', 3040002],
+        ['Latitude', 45.74581],
+        ['Longitude', -73.28024],
+        ['Altitude', 19.51],
+        ['Province', 'QC'],
+        ['', '']]
+    fcontent.append(columns)
+    fcontent.extend(nan_as_text_tolist(datastack))
+    save_content_to_file(filename, fcontent)
+
+    return filename
+
+
 @pytest.fixture
 def projectpath(tmpdir):
     """A path to a non existing project file."""
@@ -80,7 +110,9 @@ def projmanager(qtbot):
     return projmanager
 
 
+# =============================================================================
 # ---- Tests
+# =============================================================================
 def test_create_new_projet(projmanager, mocker, projectpath):
     """
     Test the creation of a new project.
@@ -358,5 +390,72 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
     assert len(projmanager.project_selector.menu.actions()) == 4
 
 
+def test_store_mrc(project, testfile):
+    """
+    Test that MRC data and results are saved as expected
+    in GWHAT project files.
+    """
+    project.add_wldset('dataset_test', WLDataFrame(testfile))
+    wldset = project.get_wldset('dataset_test')
+    assert wldset.mrc_exists() is False
+
+    # Add MRC data to the test dataset.
+    A = 1
+    B = 2
+    peak_indx = [2, 100, 30000, 33000]
+    recess_time = np.arange(0, 1000, 0.1).tolist()
+    recess_wlvl = np.random.rand(len(recess_time)).tolist()
+
+    wldset.set_mrc(A, B, peak_indx, recess_time, recess_wlvl)
+    assert wldset.mrc_exists() is True
+    assert wldset['mrc/params'].tolist() == [A, B]
+    assert wldset['mrc/peak_indx'].tolist() == peak_indx
+    assert wldset['mrc/time'].tolist() == recess_time
+    assert wldset['mrc/recess'].tolist() == recess_wlvl
+
+
+def test_mrc_backward_compatibility(project, testfile):
+    """
+    Test that converting mrc peak_indx data from int16 to int64 is
+    working as expected.
+
+    This is a test to ensure backward compatibility with projects created
+    with GWHAT version 0.5.0 and older.
+
+    See jnsebgosselin/gwhat#358.
+    """
+    # Add the dataset to the test project.
+    project.add_wldset('dataset_test', WLDataFrame(testfile))
+    wldset = project.get_wldset('dataset_test')
+
+    # Make sure that the namespace was created automatically for the mrc
+    # and that the peak_indx has the right dtype.
+    assert wldset['mrc/peak_indx'].tolist() == []
+    assert wldset['mrc/peak_indx'].dtype == np.dtype('int64')
+
+    # Save peak_indx data to the project file as int16 to reproduce a
+    # project file created with GWHAT version 0.5.0 and older.
+    del wldset.dset['mrc/peak_indx']
+    wldset.dset.file.flush()
+
+    peak_indx = [2, 100, 30000, 33000]
+    wldset.dset['mrc'].create_dataset(
+        'peak_indx', data=np.array([]), dtype='int16', maxshape=(None,))
+    wldset.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
+    wldset.dset['mrc/peak_indx'][:] = np.array(peak_indx)
+    wldset.dset.file.flush()
+
+    assert wldset['mrc/peak_indx'].dtype == np.dtype('int16')
+    assert wldset['mrc/peak_indx'].tolist() == [2, 100, 30000, 32767]
+    # Note that the maximum value that can be stored in a int16 is 32767. This
+    # is why the 33000 was clipped to 32767.
+
+    # Fetch the test waterlevel dataset again from the project and make sure
+    # that the peak_indx data were converted as expected to int64.
+    wldset = project.get_wldset('dataset_test')
+    assert wldset['mrc/peak_indx'].dtype == np.dtype('int64')
+    assert wldset['mrc/peak_indx'].tolist() == [2, 100, 30000, 32767]
+
+
 if __name__ == "__main__":
-    pytest.main(['-x', os.path.basename(__file__), '-v', '-rw'])
+    pytest.main(['-x', __file__, '-v', '-rw'])
