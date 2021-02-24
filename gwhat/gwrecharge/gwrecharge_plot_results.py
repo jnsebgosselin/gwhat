@@ -1,19 +1,18 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 # ---- Standard library imports
-
 import os
 import os.path as osp
 import datetime
 
 # ---- Imports: third parties
-
 from xlrd.xldate import xldate_from_date_tuple
 import numpy as np
 import matplotlib as mpl
@@ -62,6 +61,7 @@ class FigureStackManager(QWidget):
         self.setWindowIcon(icons.get_icon('master'))
         self.figmanagers = []
         self.setup()
+        self.set_gluedf(None)
 
     def setup(self):
         """Setup the FigureStackManager withthe provided options."""
@@ -1541,7 +1541,7 @@ class FigAvgMonthlyBudget(FigCanvasBase):
         if 'ymin' not in self.setp.keys():
             self.setp['ymin'] = 0
         if 'ymax' not in self.setp.keys():
-            self.setp['ymax'] = np.max(avg_mly) + 10
+            self.setp['ymax'] = np.max([x for x in avg_mly.values()]) + 10
         if 'yscl' not in self.setp.keys():
             self.setp['yscl'] = 50
         if 'yscl minor' not in self.setp.keys():
