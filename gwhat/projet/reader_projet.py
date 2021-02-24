@@ -253,7 +253,7 @@ class ProjetReader(object):
             mrc.attrs['exists'] = 0
             mrc.create_dataset('params', data=(0, 0), dtype='float64')
             mrc.create_dataset('peak_indx', data=np.array([]),
-                               dtype='int16', maxshape=(None,))
+                               dtype='int64', maxshape=(None,))
             mrc.create_dataset('recess', data=np.array([]),
                                dtype='float64', maxshape=(None,))
             mrc.create_dataset('time', data=np.array([]),
