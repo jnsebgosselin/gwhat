@@ -289,8 +289,8 @@ class WLDataFrameBase(Mapping):
         """Loads the dataset and save it in a store."""
         raise NotImplementedError
 
-    def __len__(self, key):
-        return len(self._datetimes)
+    def __len__(self):
+        return len(self._dataf)
 
     def __setitem__(self, key, value):
         return NotImplementedError
