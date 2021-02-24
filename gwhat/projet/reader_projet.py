@@ -441,6 +441,24 @@ class WLDataFrameHDF5(WLDataFrameBase):
             mrc.create_dataset('time', data=np.array([]),
                                dtype='float64', maxshape=(None,))
             self.dset.file.flush()
+        if self.dset['mrc/peak_indx'].dtype == np.dtype('int16'):
+            # We need to raise the dtype to 'int64' to avoid problems
+            # when datasets have indexes that are larger than 32767.
+            # See jnsebgosselin/gwhat#358.
+
+            # The only way to do that in HDF5 is to delete the dataset and
+            # create a new one with the right dtype.
+            print('Converting peak_inx values from int16 to int64.')
+            peak_indx = self.dset['mrc/peak_indx'][...].astype(int)
+            del self.dset['mrc/peak_indx']
+            self.dset.file.flush()
+
+            self.dset['mrc'].create_dataset(
+                'peak_indx', data=np.array([]),
+                dtype='int64', maxshape=(None,))
+            self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
+            self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
+            self.dset.file.flush()
 
     def __getitem__(self, key):
         if key in list(self.dset.attrs.keys()):
