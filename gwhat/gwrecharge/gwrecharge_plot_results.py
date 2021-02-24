@@ -61,6 +61,7 @@ class FigureStackManager(QWidget):
         self.setWindowIcon(icons.get_icon('master'))
         self.figmanagers = []
         self.setup()
+        self.set_gluedf(None)
 
     def setup(self):
         """Setup the FigureStackManager withthe provided options."""
