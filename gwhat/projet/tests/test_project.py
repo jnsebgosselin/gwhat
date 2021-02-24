@@ -414,5 +414,48 @@ def test_store_mrc(project, testfile):
     assert wldset['mrc/recess'].tolist() == recess_wlvl
 
 
+def test_mrc_backward_compatibility(project, testfile):
+    """
+    Test that converting mrc peak_indx data from int16 to int64 is
+    working as expected.
+
+    This is a test to ensure backward compatibility with projects created
+    with GWHAT version 0.5.0 and older.
+
+    See jnsebgosselin/gwhat#358.
+    """
+    # Add the dataset to the test project.
+    project.add_wldset('dataset_test', WLDataFrame(testfile))
+    wldset = project.get_wldset('dataset_test')
+
+    # Make sure that the namespace was created automatically for the mrc
+    # and that the peak_indx has the right dtype.
+    assert wldset['mrc/peak_indx'].tolist() == []
+    assert wldset['mrc/peak_indx'].dtype == np.dtype('int64')
+
+    # Save peak_indx data to the project file as int16 to reproduce a
+    # project file created with GWHAT version 0.5.0 and older.
+    del wldset.dset['mrc/peak_indx']
+    wldset.dset.file.flush()
+
+    peak_indx = [2, 100, 30000, 33000]
+    wldset.dset['mrc'].create_dataset(
+        'peak_indx', data=np.array([]), dtype='int16', maxshape=(None,))
+    wldset.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
+    wldset.dset['mrc/peak_indx'][:] = np.array(peak_indx)
+    wldset.dset.file.flush()
+
+    assert wldset['mrc/peak_indx'].dtype == np.dtype('int16')
+    assert wldset['mrc/peak_indx'].tolist() == [2, 100, 30000, 32767]
+    # Note that the maximum value that can be stored in a int16 is 32767. This
+    # is why the 33000 was clipped to 32767.
+
+    # Fetch the test waterlevel dataset again from the project and make sure
+    # that the peak_indx data were converted as expected to int64.
+    wldset = project.get_wldset('dataset_test')
+    assert wldset['mrc/peak_indx'].dtype == np.dtype('int64')
+    assert wldset['mrc/peak_indx'].tolist() == [2, 100, 30000, 32767]
+
+
 if __name__ == "__main__":
     pytest.main(['-x', __file__, '-v', '-rw'])
