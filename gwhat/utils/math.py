@@ -50,7 +50,7 @@ def convert_date_to_datetime(years, months, days):
 
 def nan_as_text_tolist(arr):
     """
-    Convert the float nan are to text while converting a numpy 2d array to a
+    Convert the float nan to text while converting a numpy 2d array to a
     list, so that it is possible to save to an Excel file.
     """
     if np.isnan(arr).any():
