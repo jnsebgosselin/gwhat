@@ -430,6 +430,17 @@ class WLDataFrameHDF5(WLDataFrameBase):
             # Added in version 0.3.1 (see PR #184)
             self.dset.create_group('glue')
             self.dset.file.flush()
+        if 'mrc' not in list(self.dset.keys()):
+            mrc = self.dset.create_group('mrc')
+            mrc.attrs['exists'] = 0
+            mrc.create_dataset('params', data=(0, 0), dtype='float64')
+            mrc.create_dataset('peak_indx', data=np.array([]),
+                               dtype='int64', maxshape=(None,))
+            mrc.create_dataset('recess', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('time', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            self.dset.file.flush()
 
     def __getitem__(self, key):
         if key in list(self.dset.attrs.keys()):
@@ -474,8 +485,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
         grp = self.dset.require_group('manual')
         return grp['Time'][...], grp['WL'][...]
 
-    # ---- Master recession curve
-
+    # ---- Master Recession Curve
     def set_mrc(self, A, B, peak_indx, time, recess):
         """Save the mrc results to the hdf5 project file."""
         self.dset['mrc/params'][:] = (A, B)
@@ -495,16 +505,6 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
     def mrc_exists(self):
         """Return whether a mrc results is saved in the hdf5 project file."""
-        if 'mrc' not in list(self.dset.keys()):
-            mrc = self.dset.create_group('mrc')
-            mrc.attrs['exists'] = 0
-            mrc.create_dataset('params', data=(0, 0), dtype='float64')
-            mrc.create_dataset('peak_indx', data=np.array([]),
-                               dtype='int16', maxshape=(None,))
-            mrc.create_dataset('recess', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            mrc.create_dataset('time', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
         return bool(self.dset['mrc'].attrs['exists'])
 
     def save_mrc_tofile(self, filename):
