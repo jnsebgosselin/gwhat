@@ -813,13 +813,20 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
+    def draw(self):
+        """
+        Extend matplotlib canvas class draw method to automatically
+        adjust the figure margins width.
+        """
+        super().draw()
+        self.refresh_margins(silent=True)
+
     def plot(self, glue_data):
         """Plot the data."""
         if self.ax0 is None:
             self.setup_ax()
         self.clear_ax()
         self.__plot__(glue_data)
-        self.refresh_margins()
 
     def __plot__(self, glue_data):
         """
@@ -870,12 +877,62 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
     def refresh_margins(self, silent=False):
         """Refresh the axes marings using the values defined in setp."""
-        left = self.setp['left margin']/self.setp['fwidth']
-        top = self.setp['top margin']/self.setp['fheight']
-        right = self.setp['right margin']/self.setp['fwidth']
-        bottom = self.setp['bottom margin']/self.setp['fheight']
+        if self.ax0 is None:
+            return
+
+        figheight = self.figure.get_figheight()
+        figwidth = self.figure.get_figwidth()
+        figborderpad = 0.15
+
+        figbbox = self.figure.bbox
+        ax = self.ax0
+        axbbox = self.ax0.bbox
+
+        renderer = self.get_renderer()
+        bbox_xaxis_bottom, bbox_xaxis_top = (
+            ax.xaxis.get_ticklabel_extents(renderer))
+        bbox_yaxis_left, bbox_yaxis_right = (
+            ax.yaxis.get_ticklabel_extents(renderer))
+
+        bbox_yaxis_label = ax.yaxis.label.get_window_extent(renderer)
+        bbox_xaxis_label = ax.xaxis.label.get_window_extent(renderer)
+
+        # Calculate left margin width.
+        left_margin = (
+            figborderpad / figwidth +
+            (axbbox.x0 - bbox_yaxis_label.x0) / figbbox.width)
+
+        # Calculate right margin width.
+        right_margin = (
+            figborderpad / figwidth +
+            max((bbox_xaxis_bottom.x1 - axbbox.x1) / figbbox.width,
+                (bbox_xaxis_top.x1 - axbbox.x1) / figbbox.width,
+                0))
+
+        # Calculate top margin height.
+        top_margin = (
+            figborderpad / figheight +
+            max((bbox_yaxis_left.y1 - axbbox.y1) / figbbox.height,
+                (bbox_yaxis_right.y1 - axbbox.y1) / figbbox.height,
+                0))
+
+        # Calculate bottom margin height.
+        xticklabels_max_y0 = max(
+            [xticklabel.get_window_extent(renderer).y0 for
+             xticklabel in self.xticklabels] + [0])
+        bottom_margin = (
+            figborderpad / figheight +
+            max((axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
+                (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
+                (axbbox.y0 - xticklabels_max_y0) / figbbox.height,
+                0))
+
+        # Setup axe position.
         for ax in self.figure.axes:
-            ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
+            ax.set_position([
+                left_margin, bottom_margin,
+                1 - left_margin - right_margin,
+                1 - top_margin - bottom_margin])
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
