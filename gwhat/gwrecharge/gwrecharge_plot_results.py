@@ -862,13 +862,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
         # Calculate bottom margin height.
         bottom_margin = self.setp['bottom margin']
         if bottom_margin is None:
-            xticklabels_max_y0 = max(
+            xticklabels_min_y0 = max(
                 [xticklabel.get_window_extent(renderer).y0 for
-                 xticklabel in self.xticklabels] + [0])
+                 xticklabel in self.xticklabels] + [axbbox.y0])
             bottom_margin = max(
                 (axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
                 (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
-                (axbbox.y0 - xticklabels_max_y0) / figbbox.height,
+                (axbbox.y0 - xticklabels_min_y0) / figbbox.height,
                 0) + figborderpad / figheight
 
         # Setup axe position.
