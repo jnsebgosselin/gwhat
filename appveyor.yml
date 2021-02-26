@@ -45,7 +45,7 @@ test_script:
 
 after_test:
   # Install requirements for packaging GWHAT.
-  - python -m pip install pyinstaller==3.6 pywin32 tornado
+  - python -m pip install pyinstaller==4.2 pywin32 tornado
 
   # Package GWHAT with PyInstaller.
   - cmd: set PYTHONPATH=C:\projects\gwhat;%PYTHONPATH%
