@@ -811,7 +811,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
         """Refresh the axes marings using the values defined in setp."""
         if self.ax0 is None:
             return
-        
+
         figheight = self.figure.get_figheight()
         figwidth = self.figure.get_figwidth()
         figborderpad = 0.15
@@ -837,28 +837,26 @@ class FigCanvasBase(FigureCanvasQTAgg):
         # Calculate left margin width.
         left_margin = self.setp['left margin']
         if left_margin is None:
-            left_margin = (
-                figborderpad / figwidth +
-                (axbbox.x0 - bbox_yaxis_label.x0) / figbbox.width)
+            left_margin = max(
+                (axbbox.x0 - bbox_yaxis_label.x0) / figbbox.width,
+                0) + figborderpad / figwidth
 
         # Calculate right margin width.
         right_margin = self.setp['right margin']
         if right_margin is None:
-            right_margin = (
-                figborderpad / figwidth +
-                max((bbox_xaxis_bottom.x1 - axbbox.x1) / figbbox.width,
-                    (bbox_xaxis_top.x1 - axbbox.x1) / figbbox.width,
-                    0))
+            right_margin = max(
+                (bbox_xaxis_bottom.x1 - axbbox.x1) / figbbox.width,
+                (bbox_xaxis_top.x1 - axbbox.x1) / figbbox.width,
+                0) + figborderpad / figwidth
 
         # Calculate top margin height.
         top_margin = self.setp['top margin']
         if top_margin is None:
-            top_margin = figborderpad / figheight
-            top_margin += max(
+            top_margin = max(
                 (bbox_yaxis_left.y1 - axbbox.y1) / figbbox.height,
                 (bbox_yaxis_right.y1 - axbbox.y1) / figbbox.height,
                 (legend_bbox.y1 - axbbox.y1) / figbbox.height,
-                0)
+                0) + figborderpad / figheight
 
         # Calculate bottom margin height.
         bottom_margin = self.setp['bottom margin']
@@ -866,12 +864,11 @@ class FigCanvasBase(FigureCanvasQTAgg):
             xticklabels_max_y0 = max(
                 [xticklabel.get_window_extent(renderer).y0 for
                  xticklabel in self.xticklabels] + [0])
-            bottom_margin = (
-                figborderpad / figheight +
-                max((axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
-                    (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
-                    (axbbox.y0 - xticklabels_max_y0) / figbbox.height,
-                    0))
+            bottom_margin = max(
+                (axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
+                (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
+                (axbbox.y0 - xticklabels_max_y0) / figbbox.height,
+                0) + figborderpad / figheight
 
         # Setup axe position.
         for ax in self.figure.axes:
