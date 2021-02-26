@@ -54,7 +54,7 @@ COLORS = {'precip': [0/255, 25/255, 51/255],
 
 class FigureStackManager(QWidget):
     def __init__(self, parent=None):
-        super(FigureStackManager, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimumSize(1250, 650)
         self.setWindowTitle('Recharge Results')
         self.setWindowFlags(Qt.Window)
@@ -147,7 +147,7 @@ class FigureStackManager(QWidget):
             self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
         else:
             self.resize(self.size())
-            super(FigureStackManager, self).show()
+            super().show()
         self.plot_results()
 
 
@@ -160,7 +160,7 @@ class FigSetpPanelManager(QWidget):
     """
 
     def __init__(self, figcanvas, parent=None):
-        super(FigSetpPanelManager, self).__init__(parent)
+        super().__init__(parent)
         self.figsetp_panels = []
         self.set_figcanvas(figcanvas)
         self.setup()
@@ -201,7 +201,7 @@ class FigSetpPanelManager(QWidget):
 
 class SetpPanelBase(QWidget):
     def __init__(self, parent=None):
-        super(SetpPanelBase, self).__init__(parent)
+        super().__init__(parent)
         layout = QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -212,7 +212,7 @@ class SetpPanelBase(QWidget):
 
 class MarginSizePanel(SetpPanelBase):
     def __init__(self, parent=None):
-        super(MarginSizePanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -275,7 +275,7 @@ class MarginSizePanel(SetpPanelBase):
 
 class TextOptPanel(SetpPanelBase):
     def __init__(self, **kwargs):
-        super(TextOptPanel, self).__init__(parent=None)
+        super().__init__(parent=None)
         self.setup(**kwargs)
 
     def setup(self, xlabelsize=True, xticksize=True, ylabelsize=True,
@@ -412,7 +412,7 @@ class TextOptPanel(SetpPanelBase):
 class FigSizePanel(SetpPanelBase):
 
     def __init__(self, parent=None):
-        super(FigSizePanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -484,7 +484,7 @@ class FigSizePanel(SetpPanelBase):
 class YearLimitsPanel(SetpPanelBase):
 
     def __init__(self, parent=None):
-        super(YearLimitsPanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -540,7 +540,7 @@ class YearLimitsPanel(SetpPanelBase):
 
 class YAxisOptPanel(SetpPanelBase):
     def __init__(self, parent=None):
-        super(YAxisOptPanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -626,7 +626,7 @@ class FigManagerBase(QWidget):
     Abstract manager to show the results from GLUE.
     """
     def __init__(self, figure_canvas, setp_panels=[], parent=None):
-        super(FigManagerBase, self).__init__(parent)
+        super().__init__(parent)
         self.savefig_dir = os.getcwd()
 
         self.figcanvas = figure_canvas(setp={})
@@ -647,7 +647,7 @@ class FigManagerBase(QWidget):
         layout.setRowStretch(1, 100)
 
     def resizeEvent(self, event):
-        super(FigManagerBase, self).resizeEvent(event)
+        super().resizeEvent(event)
         self.figsetp_manager.setMinimumWidth(
             self.figsetp_manager.view.minimumSizeHint().width() +
             2*self.figsetp_manager.scrollarea.frameWidth() +
@@ -754,7 +754,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
     MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
 
     def __init__(self, setp={}):
-        super(FigCanvasBase, self).__init__(MplFigure())
+        super().__init__(MplFigure())
         self.xticklabels = []
         self.notes = []
         self._xticklabels_yt = 0
@@ -966,7 +966,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
     MARGINS = [1, 0.15, 0.15, 1.1]
 
     def __init__(self, setp={}):
-        super(FigWaterBudgetGLUE, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 2
 
     def plot(self, glue_df):
@@ -1128,7 +1128,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
     def setup_ylimits(self):
         """Setup the limits of the yaxis."""
-        super(FigWaterBudgetGLUE, self).setup_ylimits()
+        super().setup_ylimits()
         self.setup_xticklabels()
 
     def setup_language(self):
@@ -1183,7 +1183,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
     FIGNAME = "gw_rechg_glue"
 
     def __init__(self, setp={}):
-        super(FigYearlyRechgGLUE, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 4
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
@@ -1310,7 +1310,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def setup_ylimits(self):
         """Setup the limits of the yaxis"""
-        super(FigYearlyRechgGLUE, self).setup_ylimits()
+        super().setup_ylimits()
         self.setup_xticklabels()
 
     def setup_axes_labels(self):
@@ -1383,7 +1383,7 @@ class FigAvgYearlyBudget(FigCanvasBase):
     MARGINS = [1, 0.15, 0.15, 0.35]
 
     def __init__(self, setp={}):
-        super(FigAvgYearlyBudget, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 5
         self.bar_handles = []
         self.setp['xticks size'] = 12
@@ -1507,7 +1507,7 @@ class FigAvgMonthlyBudget(FigCanvasBase):
     MARGINS = [1, 0.35, 0.15, 0.35]
 
     def __init__(self, setp={}):
-        super(FigAvgMonthlyBudget, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 5
         self.lg_handles = []
         self.setp['xticks size'] = 14
