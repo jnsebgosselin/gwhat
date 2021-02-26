@@ -54,7 +54,7 @@ COLORS = {'precip': [0/255, 25/255, 51/255],
 
 class FigureStackManager(QWidget):
     def __init__(self, parent=None):
-        super(FigureStackManager, self).__init__(parent)
+        super().__init__(parent)
         self.setMinimumSize(1250, 650)
         self.setWindowTitle('Recharge Results')
         self.setWindowFlags(Qt.Window)
@@ -73,27 +73,23 @@ class FigureStackManager(QWidget):
         fig_rechg_glue = FigManagerBase(
             FigYearlyRechgGLUE,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
         fig_watbudg_glue = FigManagerBase(
             FigWaterBudgetGLUE,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
         fig_avg_yearly_budg = FigManagerBase(
             FigAvgYearlyBudget,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          TextOptPanel(xlabelsize=False, legendsize=False)])
         fig_avg_monthly_budg = FigManagerBase(
             FigAvgMonthlyBudget,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          TextOptPanel(xlabelsize=False, notesize=False)])
 
@@ -147,7 +143,7 @@ class FigureStackManager(QWidget):
             self.setWindowState(self.windowState() & ~Qt.WindowMinimized)
         else:
             self.resize(self.size())
-            super(FigureStackManager, self).show()
+            super().show()
         self.plot_results()
 
 
@@ -160,7 +156,7 @@ class FigSetpPanelManager(QWidget):
     """
 
     def __init__(self, figcanvas, parent=None):
-        super(FigSetpPanelManager, self).__init__(parent)
+        super().__init__(parent)
         self.figsetp_panels = []
         self.set_figcanvas(figcanvas)
         self.setup()
@@ -201,7 +197,7 @@ class FigSetpPanelManager(QWidget):
 
 class SetpPanelBase(QWidget):
     def __init__(self, parent=None):
-        super(SetpPanelBase, self).__init__(parent)
+        super().__init__(parent)
         layout = QGridLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
 
@@ -210,72 +206,9 @@ class SetpPanelBase(QWidget):
         figcanvas.sig_newfig_plotted.connect(self.update_from_setp)
 
 
-class MarginSizePanel(SetpPanelBase):
-    def __init__(self, parent=None):
-        super(MarginSizePanel, self).__init__(parent)
-        self.setup()
-
-    def setup(self):
-        """Setup the gui of the panel."""
-        self.layout().addWidget(self._setup_margins_grpbox())
-        self.layout().setRowStretch(self.layout().rowCount(), 100)
-
-    @property
-    def fig_margins(self):
-        return [self._spb_margins[loc].value() for loc in LOCS]
-
-    def _setup_margins_grpbox(self):
-        """
-        Setup a group box with spin boxes that allows to set the figure
-        margins size in inches.
-        """
-        grpbox = QGroupBox("Margins Size :")
-        layout = QGridLayout(grpbox)
-
-        self._spb_margins = {}
-        for row, loc in enumerate(LOCS):
-            self._spb_margins[loc] = QDoubleSpinBox()
-            self._spb_margins[loc].setSingleStep(0.05)
-            self._spb_margins[loc].setMinimum(0)
-            self._spb_margins[loc].setSuffix('  in')
-            self._spb_margins[loc].setAlignment(Qt.AlignCenter)
-            self._spb_margins[loc].setKeyboardTracking(False)
-            self._spb_margins[loc].valueChanged.connect(self._margins_changed)
-
-            layout.addWidget(QLabel("%s :" % loc), row, 0)
-            layout.addWidget(self._spb_margins[loc], row, 2)
-        layout.setColumnStretch(1, 100)
-        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-
-        return grpbox
-
-    @QSlot()
-    def _margins_changed(self):
-        """Handle when one of the margin size is changed by the user."""
-        self.figcanvas.set_axes_margins_inches(self.fig_margins)
-
-    @QSlot(dict)
-    def update_from_setp(self, setp):
-        self._spb_margins['left'].blockSignals(True)
-        self._spb_margins['left'].setValue(setp['left margin'])
-        self._spb_margins['left'].blockSignals(False)
-
-        self._spb_margins['right'].blockSignals(True)
-        self._spb_margins['right'].setValue(setp['right margin'])
-        self._spb_margins['right'].blockSignals(False)
-
-        self._spb_margins['top'].blockSignals(True)
-        self._spb_margins['top'].setValue(setp['top margin'])
-        self._spb_margins['top'].blockSignals(False)
-
-        self._spb_margins['bottom'].blockSignals(True)
-        self._spb_margins['bottom'].setValue(setp['bottom margin'])
-        self._spb_margins['bottom'].blockSignals(False)
-
-
 class TextOptPanel(SetpPanelBase):
     def __init__(self, **kwargs):
-        super(TextOptPanel, self).__init__(parent=None)
+        super().__init__(parent=None)
         self.setup(**kwargs)
 
     def setup(self, xlabelsize=True, xticksize=True, ylabelsize=True,
@@ -412,7 +345,7 @@ class TextOptPanel(SetpPanelBase):
 class FigSizePanel(SetpPanelBase):
 
     def __init__(self, parent=None):
-        super(FigSizePanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -484,7 +417,7 @@ class FigSizePanel(SetpPanelBase):
 class YearLimitsPanel(SetpPanelBase):
 
     def __init__(self, parent=None):
-        super(YearLimitsPanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -540,7 +473,7 @@ class YearLimitsPanel(SetpPanelBase):
 
 class YAxisOptPanel(SetpPanelBase):
     def __init__(self, parent=None):
-        super(YAxisOptPanel, self).__init__(parent)
+        super().__init__(parent)
         self.setup()
 
     def setup(self):
@@ -620,13 +553,13 @@ class YAxisOptPanel(SetpPanelBase):
 
 
 # ---- Figure managers
-
 class FigManagerBase(QWidget):
     """
     Abstract manager to show the results from GLUE.
     """
+
     def __init__(self, figure_canvas, setp_panels=[], parent=None):
-        super(FigManagerBase, self).__init__(parent)
+        super().__init__(parent)
         self.savefig_dir = os.getcwd()
 
         self.figcanvas = figure_canvas(setp={})
@@ -647,7 +580,7 @@ class FigManagerBase(QWidget):
         layout.setRowStretch(1, 100)
 
     def resizeEvent(self, event):
-        super(FigManagerBase, self).resizeEvent(event)
+        super().resizeEvent(event)
         self.figsetp_manager.setMinimumWidth(
             self.figsetp_manager.view.minimumSizeHint().width() +
             2*self.figsetp_manager.scrollarea.frameWidth() +
@@ -720,7 +653,7 @@ class FigManagerBase(QWidget):
         ffmat = "*.pdf;;*.svg;;*.png"
 
         fname, ftype = QFileDialog.getSaveFileName(
-                self, "Save Figure", figname, ffmat)
+            self, "Save Figure", figname, ffmat)
         if fname:
             ftype = ftype.replace('*', '')
             fname = fname if fname.endswith(ftype) else fname + ftype
@@ -751,10 +684,9 @@ class FigCanvasBase(FigureCanvasQTAgg):
               'light grey': '0.85'}
 
     FWIDTH, FHEIGHT = 8.5, 5
-    MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
 
     def __init__(self, setp={}):
-        super(FigCanvasBase, self).__init__(MplFigure())
+        super().__init__(MplFigure())
         self.xticklabels = []
         self.notes = []
         self._xticklabels_yt = 0
@@ -773,13 +705,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if 'fheight' not in self.setp.keys():
             self.setp['fheight'] = self.FHEIGHT
         if 'left margin' not in self.setp.keys():
-            self.setp['left margin'] = self.MARGINS[0]
+            self.setp['left margin'] = None
         if 'top margin' not in self.setp.keys():
-            self.setp['top margin'] = self.MARGINS[1]
+            self.setp['top margin'] = None
         if 'right margin' not in self.setp.keys():
-            self.setp['right margin'] = self.MARGINS[2]
+            self.setp['right margin'] = None
         if 'bottom margin' not in self.setp.keys():
-            self.setp['bottom margin'] = self.MARGINS[3]
+            self.setp['bottom margin'] = None
         if 'xlabel size' not in self.setp.keys():
             self.setp['xlabel size'] = 16
         if 'xticks size' not in self.setp.keys():
@@ -813,11 +745,27 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
-    def plot(self):
+    def draw(self):
+        """
+        Extend matplotlib canvas class draw method to automatically
+        adjust the figure margins width.
+        """
+        super().draw()
+        self.refresh_margins(silent=True)
+
+    def plot(self, glue_data):
         """Plot the data."""
         if self.ax0 is None:
             self.setup_ax()
         self.clear_ax()
+        self.__plot__(glue_data)
+
+    def __plot__(self, glue_data):
+        """
+        This method needs to be reimplemented in all figure canvas that
+        inherit this base class.
+        """
+        raise NotImplementedError
 
     def set_language(self, language):
         """Set the language of the text shown in the figure."""
@@ -861,12 +809,73 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
     def refresh_margins(self, silent=False):
         """Refresh the axes marings using the values defined in setp."""
-        left = self.setp['left margin']/self.setp['fwidth']
-        top = self.setp['top margin']/self.setp['fheight']
-        right = self.setp['right margin']/self.setp['fwidth']
-        bottom = self.setp['bottom margin']/self.setp['fheight']
+        if self.ax0 is None:
+            return
+
+        figheight = self.figure.get_figheight()
+        figwidth = self.figure.get_figwidth()
+        figborderpad = 0.15
+
+        figbbox = self.figure.bbox
+        ax = self.ax0
+        axbbox = self.ax0.bbox
+
+        renderer = self.get_renderer()
+        bbox_xaxis_bottom, bbox_xaxis_top = (
+            ax.xaxis.get_ticklabel_extents(renderer))
+        bbox_yaxis_left, bbox_yaxis_right = (
+            ax.yaxis.get_ticklabel_extents(renderer))
+
+        bbox_yaxis_label = ax.yaxis.label.get_window_extent(renderer)
+        bbox_xaxis_label = ax.xaxis.label.get_window_extent(renderer)
+
+        if self.ax0.get_legend() is not None:
+            legend_bbox = self.ax0.get_legend().get_window_extent(renderer)
+        else:
+            legend_bbox = self.ax0.bbox
+
+        # Calculate left margin width.
+        left_margin = self.setp['left margin']
+        if left_margin is None:
+            left_margin = max(
+                (axbbox.x0 - bbox_yaxis_label.x0) / figbbox.width,
+                0) + figborderpad / figwidth
+
+        # Calculate right margin width.
+        right_margin = self.setp['right margin']
+        if right_margin is None:
+            right_margin = max(
+                (bbox_xaxis_bottom.x1 - axbbox.x1) / figbbox.width,
+                (bbox_xaxis_top.x1 - axbbox.x1) / figbbox.width,
+                0) + figborderpad / figwidth
+
+        # Calculate top margin height.
+        top_margin = self.setp['top margin']
+        if top_margin is None:
+            top_margin = max(
+                (bbox_yaxis_left.y1 - axbbox.y1) / figbbox.height,
+                (bbox_yaxis_right.y1 - axbbox.y1) / figbbox.height,
+                (legend_bbox.y1 - axbbox.y1) / figbbox.height,
+                0) + figborderpad / figheight
+
+        # Calculate bottom margin height.
+        bottom_margin = self.setp['bottom margin']
+        if bottom_margin is None:
+            xticklabels_max_y0 = max(
+                [xticklabel.get_window_extent(renderer).y0 for
+                 xticklabel in self.xticklabels] + [0])
+            bottom_margin = max(
+                (axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
+                (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
+                (axbbox.y0 - xticklabels_max_y0) / figbbox.height,
+                0) + figborderpad / figheight
+
+        # Setup axe position.
         for ax in self.figure.axes:
-            ax.set_position([left, bottom, 1-left-right, 1-top-bottom])
+            ax.set_position([
+                left_margin, bottom_margin,
+                1 - left_margin - right_margin,
+                1 - top_margin - bottom_margin])
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
@@ -963,14 +972,12 @@ class FigCanvasBase(FigureCanvasQTAgg):
 class FigWaterBudgetGLUE(FigCanvasBase):
     FIGNAME = "water_budget_glue"
     FWIDTH, FHEIGHT = 15, 7
-    MARGINS = [1, 0.15, 0.15, 1.1]
 
     def __init__(self, setp={}):
-        super(FigWaterBudgetGLUE, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 2
 
-    def plot(self, glue_df):
-        super(FigWaterBudgetGLUE, self).plot()
+    def __plot__(self, glue_df):
         ax = self.ax0
 
         glue_yrly = glue_df['hydrol yearly budget']
@@ -1128,7 +1135,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
 
     def setup_ylimits(self):
         """Setup the limits of the yaxis."""
-        super(FigWaterBudgetGLUE, self).setup_ylimits()
+        super().setup_ylimits()
         self.setup_xticklabels()
 
     def setup_language(self):
@@ -1179,17 +1186,15 @@ class FigYearlyRechgGLUE(FigCanvasBase):
     uncertainty.
     """
 
-    MARGINS = [1, 0.15, 0.15, 0.9]  # left, top, right, bottom
     FIGNAME = "gw_rechg_glue"
 
     def __init__(self, setp={}):
-        super(FigYearlyRechgGLUE, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 4
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
 
-    def plot(self, glue_data):
-        super(FigYearlyRechgGLUE, self).plot()
+    def __plot__(self, glue_data):
         ax0 = self.ax0
         self.ax0.set_axisbelow(True)
 
@@ -1310,7 +1315,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
 
     def setup_ylimits(self):
         """Setup the limits of the yaxis"""
-        super(FigYearlyRechgGLUE, self).setup_ylimits()
+        super().setup_ylimits()
         self.setup_xticklabels()
 
     def setup_axes_labels(self):
@@ -1380,10 +1385,9 @@ class FigAvgYearlyBudget(FigCanvasBase):
     """
     FIGNAME = "avg_yearly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
-    MARGINS = [1, 0.15, 0.15, 0.35]
 
     def __init__(self, setp={}):
-        super(FigAvgYearlyBudget, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 5
         self.bar_handles = []
         self.setp['xticks size'] = 12
@@ -1391,9 +1395,7 @@ class FigAvgYearlyBudget(FigCanvasBase):
         self.setp['notes size'] = 12
         self.setp['ylabel size'] = 16
 
-    def plot(self, glue_df):
-        super(FigAvgYearlyBudget, self).plot()
-
+    def __plot__(self, glue_df):
         avg_yrly = {
             'evapo': np.nanmean(glue_df['yearly budget']['evapo']),
             'runoff': np.nanmean(glue_df['yearly budget']['runoff']),
@@ -1504,10 +1506,9 @@ class FigAvgMonthlyBudget(FigCanvasBase):
     """
     FIGNAME = "avg_monthly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
-    MARGINS = [1, 0.35, 0.15, 0.35]
 
     def __init__(self, setp={}):
-        super(FigAvgMonthlyBudget, self).__init__(setp)
+        super().__init__(setp)
         self._xticklabels_yt = 5
         self.lg_handles = []
         self.setp['xticks size'] = 14
@@ -1516,9 +1517,8 @@ class FigAvgMonthlyBudget(FigCanvasBase):
         self.setp['ylabel size'] = 16
         self.setp['legend size'] = 12
 
-    def plot(self, glue_df):
+    def __plot__(self, glue_df):
         """Plot the results."""
-        super(FigAvgMonthlyBudget, self).plot()
         avg_mly = {
             'evapo': np.nanmean(
                 glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
