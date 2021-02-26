@@ -684,7 +684,6 @@ class FigCanvasBase(FigureCanvasQTAgg):
               'light grey': '0.85'}
 
     FWIDTH, FHEIGHT = 8.5, 5
-    MARGINS = [1, 0.15, 0.15, 0.65]  # left, top, right, bottom
 
     def __init__(self, setp={}):
         super().__init__(MplFigure())
@@ -706,13 +705,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if 'fheight' not in self.setp.keys():
             self.setp['fheight'] = self.FHEIGHT
         if 'left margin' not in self.setp.keys():
-            self.setp['left margin'] = self.MARGINS[0]
+            self.setp['left margin'] = None
         if 'top margin' not in self.setp.keys():
-            self.setp['top margin'] = self.MARGINS[1]
+            self.setp['top margin'] = None
         if 'right margin' not in self.setp.keys():
-            self.setp['right margin'] = self.MARGINS[2]
+            self.setp['right margin'] = None
         if 'bottom margin' not in self.setp.keys():
-            self.setp['bottom margin'] = self.MARGINS[3]
+            self.setp['bottom margin'] = None
         if 'xlabel size' not in self.setp.keys():
             self.setp['xlabel size'] = 16
         if 'xticks size' not in self.setp.keys():
@@ -831,34 +830,42 @@ class FigCanvasBase(FigureCanvasQTAgg):
         bbox_xaxis_label = ax.xaxis.label.get_window_extent(renderer)
 
         # Calculate left margin width.
-        left_margin = (
-            figborderpad / figwidth +
-            (axbbox.x0 - bbox_yaxis_label.x0) / figbbox.width)
+        left_margin = self.setp['left margin']
+        if left_margin is None:
+            left_margin = (
+                figborderpad / figwidth +
+                (axbbox.x0 - bbox_yaxis_label.x0) / figbbox.width)
 
         # Calculate right margin width.
-        right_margin = (
-            figborderpad / figwidth +
-            max((bbox_xaxis_bottom.x1 - axbbox.x1) / figbbox.width,
-                (bbox_xaxis_top.x1 - axbbox.x1) / figbbox.width,
-                0))
+        right_margin = self.setp['right margin']
+        if right_margin is None:
+            right_margin = (
+                figborderpad / figwidth +
+                max((bbox_xaxis_bottom.x1 - axbbox.x1) / figbbox.width,
+                    (bbox_xaxis_top.x1 - axbbox.x1) / figbbox.width,
+                    0))
 
         # Calculate top margin height.
-        top_margin = (
-            figborderpad / figheight +
-            max((bbox_yaxis_left.y1 - axbbox.y1) / figbbox.height,
-                (bbox_yaxis_right.y1 - axbbox.y1) / figbbox.height,
-                0))
+        top_margin = self.setp['top margin']
+        if top_margin is None:
+            top_margin = (
+                figborderpad / figheight +
+                max((bbox_yaxis_left.y1 - axbbox.y1) / figbbox.height,
+                    (bbox_yaxis_right.y1 - axbbox.y1) / figbbox.height,
+                    0))
 
         # Calculate bottom margin height.
-        xticklabels_max_y0 = max(
-            [xticklabel.get_window_extent(renderer).y0 for
-             xticklabel in self.xticklabels] + [0])
-        bottom_margin = (
-            figborderpad / figheight +
-            max((axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
-                (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
-                (axbbox.y0 - xticklabels_max_y0) / figbbox.height,
-                0))
+        bottom_margin = self.setp['bottom margin']
+        if bottom_margin is None:
+            xticklabels_max_y0 = max(
+                [xticklabel.get_window_extent(renderer).y0 for
+                 xticklabel in self.xticklabels] + [0])
+            bottom_margin = (
+                figborderpad / figheight +
+                max((axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
+                    (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
+                    (axbbox.y0 - xticklabels_max_y0) / figbbox.height,
+                    0))
 
         # Setup axe position.
         for ax in self.figure.axes:
@@ -962,7 +969,6 @@ class FigCanvasBase(FigureCanvasQTAgg):
 class FigWaterBudgetGLUE(FigCanvasBase):
     FIGNAME = "water_budget_glue"
     FWIDTH, FHEIGHT = 15, 7
-    MARGINS = [1, 0.15, 0.15, 1.1]
 
     def __init__(self, setp={}):
         super().__init__(setp)
@@ -1177,7 +1183,6 @@ class FigYearlyRechgGLUE(FigCanvasBase):
     uncertainty.
     """
 
-    MARGINS = [1, 0.15, 0.15, 0.9]  # left, top, right, bottom
     FIGNAME = "gw_rechg_glue"
 
     def __init__(self, setp={}):
@@ -1377,7 +1382,6 @@ class FigAvgYearlyBudget(FigCanvasBase):
     """
     FIGNAME = "avg_yearly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
-    MARGINS = [1, 0.15, 0.15, 0.35]
 
     def __init__(self, setp={}):
         super().__init__(setp)
@@ -1499,7 +1503,6 @@ class FigAvgMonthlyBudget(FigCanvasBase):
     """
     FIGNAME = "avg_monthly_water_budget"
     FWIDTH, FHEIGHT = 8, 4.5
-    MARGINS = [1, 0.35, 0.15, 0.35]
 
     def __init__(self, setp={}):
         super().__init__(setp)
