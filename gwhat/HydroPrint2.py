@@ -30,7 +30,7 @@ from xlrd import xldate_as_tuple
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
 import gwhat.hydrograph4 as hydrograph
-import gwhat.mplFigViewer3 as mplFigViewer
+import gwhat.widgets.mplfigureviewer as mplFigViewer
 from gwhat.widgets.colorpreferences import (
     ColorsManager, ColorPreferencesDialog)
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall, get_iconsize
