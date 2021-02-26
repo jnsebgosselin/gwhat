@@ -862,7 +862,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
         # Calculate bottom margin height.
         bottom_margin = self.setp['bottom margin']
         if bottom_margin is None:
-            xticklabels_min_y0 = max(
+            xticklabels_min_y0 = min(
                 [xticklabel.get_window_extent(renderer).y0 for
                  xticklabel in self.xticklabels] + [axbbox.y0])
             bottom_margin = max(
