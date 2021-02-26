@@ -750,8 +750,8 @@ class FigCanvasBase(FigureCanvasQTAgg):
         Extend matplotlib canvas class draw method to automatically
         adjust the figure margins width.
         """
-        super().draw()
         self.refresh_margins(silent=True)
+        super().draw()
 
     def plot(self, glue_data):
         """Plot the data."""
@@ -811,6 +811,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
         """Refresh the axes marings using the values defined in setp."""
         if self.ax0 is None:
             return
+        super().draw()
 
         figheight = self.figure.get_figheight()
         figwidth = self.figure.get_figwidth()
