@@ -813,11 +813,20 @@ class FigCanvasBase(FigureCanvasQTAgg):
         if not silent:
             self.sig_fig_changed.emit(self.figure)
 
-    def plot(self):
+    def plot(self, glue_data):
         """Plot the data."""
         if self.ax0 is None:
             self.setup_ax()
         self.clear_ax()
+        self.__plot__(glue_data)
+        self.refresh_margins()
+
+    def __plot__(self, glue_data):
+        """
+        This method needs to be reimplemented in all figure canvas that
+        inherit this base class.
+        """
+        raise NotImplementedError
 
     def set_language(self, language):
         """Set the language of the text shown in the figure."""
@@ -969,8 +978,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         super().__init__(setp)
         self._xticklabels_yt = 2
 
-    def plot(self, glue_df):
-        super().plot()
+    def __plot__(self, glue_df):
         ax = self.ax0
 
         glue_yrly = glue_df['hydrol yearly budget']
@@ -1188,8 +1196,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.setp['legend size'] = 12
         self.setp['xticks size'] = 12
 
-    def plot(self, glue_data):
-        super().plot()
+    def __plot__(self, glue_data):
         ax0 = self.ax0
         self.ax0.set_axisbelow(True)
 
@@ -1391,9 +1398,7 @@ class FigAvgYearlyBudget(FigCanvasBase):
         self.setp['notes size'] = 12
         self.setp['ylabel size'] = 16
 
-    def plot(self, glue_df):
-        super().plot()
-
+    def __plot__(self, glue_df):
         avg_yrly = {
             'evapo': np.nanmean(glue_df['yearly budget']['evapo']),
             'runoff': np.nanmean(glue_df['yearly budget']['runoff']),
@@ -1516,9 +1521,8 @@ class FigAvgMonthlyBudget(FigCanvasBase):
         self.setp['ylabel size'] = 16
         self.setp['legend size'] = 12
 
-    def plot(self, glue_df):
+    def __plot__(self, glue_df):
         """Plot the results."""
-        super().plot()
         avg_mly = {
             'evapo': np.nanmean(
                 glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
