@@ -73,27 +73,23 @@ class FigureStackManager(QWidget):
         fig_rechg_glue = FigManagerBase(
             FigYearlyRechgGLUE,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
         fig_watbudg_glue = FigManagerBase(
             FigWaterBudgetGLUE,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
         fig_avg_yearly_budg = FigManagerBase(
             FigAvgYearlyBudget,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          TextOptPanel(xlabelsize=False, legendsize=False)])
         fig_avg_monthly_budg = FigManagerBase(
             FigAvgMonthlyBudget,
             setp_panels=[FigSizePanel(),
-                         MarginSizePanel(),
                          YAxisOptPanel(),
                          TextOptPanel(xlabelsize=False, notesize=False)])
 
@@ -208,69 +204,6 @@ class SetpPanelBase(QWidget):
     def register_figcanvas(self, figcanvas):
         self.figcanvas = figcanvas
         figcanvas.sig_newfig_plotted.connect(self.update_from_setp)
-
-
-class MarginSizePanel(SetpPanelBase):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setup()
-
-    def setup(self):
-        """Setup the gui of the panel."""
-        self.layout().addWidget(self._setup_margins_grpbox())
-        self.layout().setRowStretch(self.layout().rowCount(), 100)
-
-    @property
-    def fig_margins(self):
-        return [self._spb_margins[loc].value() for loc in LOCS]
-
-    def _setup_margins_grpbox(self):
-        """
-        Setup a group box with spin boxes that allows to set the figure
-        margins size in inches.
-        """
-        grpbox = QGroupBox("Margins Size :")
-        layout = QGridLayout(grpbox)
-
-        self._spb_margins = {}
-        for row, loc in enumerate(LOCS):
-            self._spb_margins[loc] = QDoubleSpinBox()
-            self._spb_margins[loc].setSingleStep(0.05)
-            self._spb_margins[loc].setMinimum(0)
-            self._spb_margins[loc].setSuffix('  in')
-            self._spb_margins[loc].setAlignment(Qt.AlignCenter)
-            self._spb_margins[loc].setKeyboardTracking(False)
-            self._spb_margins[loc].valueChanged.connect(self._margins_changed)
-
-            layout.addWidget(QLabel("%s :" % loc), row, 0)
-            layout.addWidget(self._spb_margins[loc], row, 2)
-        layout.setColumnStretch(1, 100)
-        layout.setContentsMargins(10, 10, 10, 10)  # (L, T, R, B)
-
-        return grpbox
-
-    @QSlot()
-    def _margins_changed(self):
-        """Handle when one of the margin size is changed by the user."""
-        self.figcanvas.set_axes_margins_inches(self.fig_margins)
-
-    @QSlot(dict)
-    def update_from_setp(self, setp):
-        self._spb_margins['left'].blockSignals(True)
-        self._spb_margins['left'].setValue(setp['left margin'])
-        self._spb_margins['left'].blockSignals(False)
-
-        self._spb_margins['right'].blockSignals(True)
-        self._spb_margins['right'].setValue(setp['right margin'])
-        self._spb_margins['right'].blockSignals(False)
-
-        self._spb_margins['top'].blockSignals(True)
-        self._spb_margins['top'].setValue(setp['top margin'])
-        self._spb_margins['top'].blockSignals(False)
-
-        self._spb_margins['bottom'].blockSignals(True)
-        self._spb_margins['bottom'].setValue(setp['bottom margin'])
-        self._spb_margins['bottom'].blockSignals(False)
 
 
 class TextOptPanel(SetpPanelBase):
@@ -620,11 +553,11 @@ class YAxisOptPanel(SetpPanelBase):
 
 
 # ---- Figure managers
-
 class FigManagerBase(QWidget):
     """
     Abstract manager to show the results from GLUE.
     """
+
     def __init__(self, figure_canvas, setp_panels=[], parent=None):
         super().__init__(parent)
         self.savefig_dir = os.getcwd()
