@@ -1462,31 +1462,17 @@ class FigAvgYearlyBudget(FigCanvasBase):
 
     def setup_xticklabels(self):
         """Setup the labels of the xaxis."""
+        self.ax0.tick_params(
+            axis='x', gridOn=False, length=0, pad=5,
+            labelsize=self.setp['xticks size'])
+
         if self.setp['language'] == 'french':
-            labels = ['Évapotranspiration', 'Ruissellement',
-                      'Recharge', 'Précipitations']
+            ticklabels = ['Évapotranspiration', 'Ruissellement',
+                          'Recharge', 'Précipitations']
         else:
-            labels = ['Evapotranspiration', 'Runoff',
-                      'Recharge', 'Precipitation']
-
-        self.ax0.tick_params(axis='x', gridOn=False, length=0)
-        self.ax0.xaxis.set_ticklabels([])
-        for label in self.xticklabels:
-            label.remove()
-        self.xticklabels = []
-
-        # Draw the labels anew.
-        for i, label in enumerate(labels):
-            self.xticklabels.append(self.ax0.text(
-                i+1, self.setp['ymin'], label, rotation=0,
-                va='bottom', ha='center', fontsize=self.setp['xticks size']))
-
-        # Calculate and set the transform of the xticklabels.
-        yt = self._get_xaxis_labelpad()
-        offset = mpl.transforms.ScaledTranslation(
-            0, -yt/72, self.figure.dpi_scale_trans)
-        for xticklabel in self.xticklabels:
-            xticklabel.set_transform(self.ax0.transData + offset)
+            ticklabels = ['Evapotranspiration', 'Runoff',
+                          'Recharge', 'Precipitation']
+        self.ax0.xaxis.set_ticklabels(ticklabels)
 
     def setup_yticklabels(self):
         """Setup the labels of the yaxis."""
