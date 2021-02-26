@@ -720,7 +720,7 @@ class FigManagerBase(QWidget):
         ffmat = "*.pdf;;*.svg;;*.png"
 
         fname, ftype = QFileDialog.getSaveFileName(
-                self, "Save Figure", figname, ffmat)
+            self, "Save Figure", figname, ffmat)
         if fname:
             ftype = ftype.replace('*', '')
             fname = fname if fname.endswith(ftype) else fname + ftype
