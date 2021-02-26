@@ -811,7 +811,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
         """Refresh the axes marings using the values defined in setp."""
         if self.ax0 is None:
             return
-
+        
         figheight = self.figure.get_figheight()
         figwidth = self.figure.get_figwidth()
         figborderpad = 0.15
@@ -828,6 +828,11 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
         bbox_yaxis_label = ax.yaxis.label.get_window_extent(renderer)
         bbox_xaxis_label = ax.xaxis.label.get_window_extent(renderer)
+
+        if self.ax0.get_legend() is not None:
+            legend_bbox = self.ax0.get_legend().get_window_extent(renderer)
+        else:
+            legend_bbox = self.ax0.bbox
 
         # Calculate left margin width.
         left_margin = self.setp['left margin']
@@ -848,11 +853,12 @@ class FigCanvasBase(FigureCanvasQTAgg):
         # Calculate top margin height.
         top_margin = self.setp['top margin']
         if top_margin is None:
-            top_margin = (
-                figborderpad / figheight +
-                max((bbox_yaxis_left.y1 - axbbox.y1) / figbbox.height,
-                    (bbox_yaxis_right.y1 - axbbox.y1) / figbbox.height,
-                    0))
+            top_margin = figborderpad / figheight
+            top_margin += max(
+                (bbox_yaxis_left.y1 - axbbox.y1) / figbbox.height,
+                (bbox_yaxis_right.y1 - axbbox.y1) / figbbox.height,
+                (legend_bbox.y1 - axbbox.y1) / figbbox.height,
+                0)
 
         # Calculate bottom margin height.
         bottom_margin = self.setp['bottom margin']
