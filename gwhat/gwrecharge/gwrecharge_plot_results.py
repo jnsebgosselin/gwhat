@@ -32,7 +32,7 @@ from PyQt5.QtWidgets import (
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
-from gwhat.mplFigViewer3 import ImageViewer
+from gwhat.widgets.mplfigureviewer import ImageViewer
 from gwhat.widgets.buttons import LangToolButton, ToolBarWidget
 from gwhat.widgets.layout import VSep
 
