@@ -970,7 +970,7 @@ class FigWaterBudgetGLUE(FigCanvasBase):
         self._xticklabels_yt = 2
 
     def plot(self, glue_df):
-        super(FigWaterBudgetGLUE, self).plot()
+        super().plot()
         ax = self.ax0
 
         glue_yrly = glue_df['hydrol yearly budget']
@@ -1189,7 +1189,7 @@ class FigYearlyRechgGLUE(FigCanvasBase):
         self.setp['xticks size'] = 12
 
     def plot(self, glue_data):
-        super(FigYearlyRechgGLUE, self).plot()
+        super().plot()
         ax0 = self.ax0
         self.ax0.set_axisbelow(True)
 
@@ -1392,7 +1392,7 @@ class FigAvgYearlyBudget(FigCanvasBase):
         self.setp['ylabel size'] = 16
 
     def plot(self, glue_df):
-        super(FigAvgYearlyBudget, self).plot()
+        super().plot()
 
         avg_yrly = {
             'evapo': np.nanmean(glue_df['yearly budget']['evapo']),
@@ -1518,7 +1518,7 @@ class FigAvgMonthlyBudget(FigCanvasBase):
 
     def plot(self, glue_df):
         """Plot the results."""
-        super(FigAvgMonthlyBudget, self).plot()
+        super().plot()
         avg_mly = {
             'evapo': np.nanmean(
                 glue_df['monthly budget']['evapo'][:, :, 2], axis=0),
