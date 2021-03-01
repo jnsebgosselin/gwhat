@@ -212,7 +212,7 @@ class ProjetReader(object):
         """
         print("Getting wldset {}...".format(name), end=' ')
         if name in self.wldsets:
-            self.db['wldsets'].attrs['last_opened'] = name
+            self.set_last_opened_wldset(name)
             print('done')
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
@@ -338,7 +338,7 @@ class ProjetReader(object):
         print("Getting wxdset {}...".format(name), end=' ')
         if name in self.wxdsets:
             print('done')
-            self.db['wxdsets'].attrs['last_opened'] = name
+            self.set_last_opened_wxdset(name)
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
             print('failed')
