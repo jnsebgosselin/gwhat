@@ -750,8 +750,8 @@ class FigCanvasBase(FigureCanvasQTAgg):
         Extend matplotlib canvas class draw method to automatically
         adjust the figure margins width.
         """
-        super().draw()
         self.refresh_margins(silent=True)
+        super().draw()
 
     def plot(self, glue_data):
         """Plot the data."""
@@ -811,6 +811,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
         """Refresh the axes marings using the values defined in setp."""
         if self.ax0 is None:
             return
+        super().draw()
 
         figheight = self.figure.get_figheight()
         figwidth = self.figure.get_figwidth()
@@ -861,13 +862,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
         # Calculate bottom margin height.
         bottom_margin = self.setp['bottom margin']
         if bottom_margin is None:
-            xticklabels_max_y0 = max(
+            xticklabels_min_y0 = min(
                 [xticklabel.get_window_extent(renderer).y0 for
-                 xticklabel in self.xticklabels] + [0])
+                 xticklabel in self.xticklabels] + [axbbox.y0])
             bottom_margin = max(
                 (axbbox.y0 - bbox_xaxis_label.y0) / figbbox.height,
                 (axbbox.y0 - bbox_xaxis_bottom.y0) / figbbox.height,
-                (axbbox.y0 - xticklabels_max_y0) / figbbox.height,
+                (axbbox.y0 - xticklabels_min_y0) / figbbox.height,
                 0) + figborderpad / figheight
 
         # Setup axe position.
@@ -1461,31 +1462,17 @@ class FigAvgYearlyBudget(FigCanvasBase):
 
     def setup_xticklabels(self):
         """Setup the labels of the xaxis."""
+        self.ax0.tick_params(
+            axis='x', gridOn=False, length=0, pad=5,
+            labelsize=self.setp['xticks size'])
+
         if self.setp['language'] == 'french':
-            labels = ['Évapotranspiration', 'Ruissellement',
-                      'Recharge', 'Précipitations']
+            ticklabels = ['Évapotranspiration', 'Ruissellement',
+                          'Recharge', 'Précipitations']
         else:
-            labels = ['Evapotranspiration', 'Runoff',
-                      'Recharge', 'Precipitation']
-
-        self.ax0.tick_params(axis='x', gridOn=False, length=0)
-        self.ax0.xaxis.set_ticklabels([])
-        for label in self.xticklabels:
-            label.remove()
-        self.xticklabels = []
-
-        # Draw the labels anew.
-        for i, label in enumerate(labels):
-            self.xticklabels.append(self.ax0.text(
-                i+1, self.setp['ymin'], label, rotation=0,
-                va='bottom', ha='center', fontsize=self.setp['xticks size']))
-
-        # Calculate and set the transform of the xticklabels.
-        yt = self._get_xaxis_labelpad()
-        offset = mpl.transforms.ScaledTranslation(
-            0, -yt/72, self.figure.dpi_scale_trans)
-        for xticklabel in self.xticklabels:
-            xticklabel.set_transform(self.ax0.transData + offset)
+            ticklabels = ['Evapotranspiration', 'Runoff',
+                          'Recharge', 'Precipitation']
+        self.ax0.xaxis.set_ticklabels(ticklabels)
 
     def setup_yticklabels(self):
         """Setup the labels of the yaxis."""
