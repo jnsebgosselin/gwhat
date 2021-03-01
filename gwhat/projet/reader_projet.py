@@ -194,11 +194,17 @@ class ProjetReader(object):
 
     def get_last_opened_wldset(self):
         """
-        Return the name of the last opened water level dataset in the project
-        if any.
+        Return the name of the last opened water level dataset if any.
         """
         name = self.db['wldsets'].attrs['last_opened']
         return None if name == 'None' else name
+
+    def set_last_opened_wldset(self, name):
+        """
+        Set the name of the last opened water level dataset.
+        """
+        self.db['wldsets'].attrs['last_opened'] = name
+        self.db.flush()
 
     def get_wldset(self, name):
         """
@@ -206,7 +212,7 @@ class ProjetReader(object):
         """
         print("Getting wldset {}...".format(name), end=' ')
         if name in self.wldsets:
-            self.db['wldsets'].attrs['last_opened'] = name
+            self.set_last_opened_wldset(name)
             print('done')
             return WLDataFrameHDF5(self.db['wldsets/%s' % name])
         else:
@@ -313,11 +319,17 @@ class ProjetReader(object):
 
     def get_last_opened_wxdset(self):
         """
-        Return the name of the last opened weather dataset in the project
-        if any.
+        Return the name of the last opened weather dataset if any.
         """
         name = self.db['wxdsets'].attrs['last_opened']
         return None if name == 'None' else name
+
+    def set_last_opened_wxdset(self, name):
+        """
+        Set the name of the last opened weather dataset.
+        """
+        self.db['wxdsets'].attrs['last_opened'] = name
+        self.db.flush()
 
     def get_wxdset(self, name):
         """
@@ -326,7 +338,7 @@ class ProjetReader(object):
         print("Getting wxdset {}...".format(name), end=' ')
         if name in self.wxdsets:
             print('done')
-            self.db['wxdsets'].attrs['last_opened'] = name
+            self.set_last_opened_wxdset(name)
             return WXDataFrameHDF5(self.db['wxdsets/%s' % name])
         else:
             print('failed')
