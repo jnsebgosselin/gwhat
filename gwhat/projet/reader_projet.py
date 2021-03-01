@@ -199,6 +199,13 @@ class ProjetReader(object):
         name = self.db['wldsets'].attrs['last_opened']
         return None if name == 'None' else name
 
+    def set_last_opened_wldset(self, name):
+        """
+        Set the name of the last opened water level dataset.
+        """
+        self.db['wldsets'].attrs['last_opened'] = name
+        self.db.flush()
+
     def get_wldset(self, name):
         """
         Return the water level dataset corresponding to the provided name.
@@ -316,6 +323,13 @@ class ProjetReader(object):
         """
         name = self.db['wxdsets'].attrs['last_opened']
         return None if name == 'None' else name
+
+    def set_last_opened_wxdset(self, name):
+        """
+        Set the name of the last opened weather dataset.
+        """
+        self.db['wxdsets'].attrs['last_opened'] = name
+        self.db.flush()
 
     def get_wxdset(self, name):
         """
