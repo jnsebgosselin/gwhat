@@ -25,16 +25,16 @@ from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QDoubleSpinBox,
     QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
-    QSpinBox, QTabWidget, QWidget, QStyle, QFrame)
+    QSpinBox, QTabWidget, QWidget, QStyle, QFrame, QMainWindow, QToolBar)
 
 
 # ---- Local imports
-from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
 from gwhat.common.utils import find_unique_filename
+from gwhat.utils import icons
+from gwhat.utils.icons import get_iconsize
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.widgets.mplfigureviewer import ImageViewer
-from gwhat.widgets.buttons import LangToolButton, ToolBarWidget
-from gwhat.widgets.layout import VSep
+from gwhat.widgets.buttons import LangToolButton
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 LOCS = ['left', 'top', 'right', 'bottom']
@@ -70,24 +70,24 @@ class FigureStackManager(QWidget):
         layout.addWidget(self.stack, 0, 0)
 
     def setup_stack(self):
-        fig_rechg_glue = FigManagerBase(
+        fig_rechg_glue = FigureManager(
             FigYearlyRechgGLUE,
             setp_panels=[FigSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
-        fig_watbudg_glue = FigManagerBase(
+        fig_watbudg_glue = FigureManager(
             FigWaterBudgetGLUE,
             setp_panels=[FigSizePanel(),
                          YAxisOptPanel(),
                          YearLimitsPanel(),
                          TextOptPanel()])
-        fig_avg_yearly_budg = FigManagerBase(
+        fig_avg_yearly_budg = FigureManager(
             FigAvgYearlyBudget,
             setp_panels=[FigSizePanel(),
                          YAxisOptPanel(),
                          TextOptPanel(xlabelsize=False, legendsize=False)])
-        fig_avg_monthly_budg = FigManagerBase(
+        fig_avg_monthly_budg = FigureManager(
             FigAvgMonthlyBudget,
             setp_panels=[FigSizePanel(),
                          YAxisOptPanel(),
@@ -147,8 +147,9 @@ class FigureStackManager(QWidget):
         self.plot_results()
 
 
+# =============================================================================
 # ---- Figure setp panels
-
+# =============================================================================
 class FigSetpPanelManager(QWidget):
     """
     A widget that hold the panels that contains widget to setup the figure
@@ -552,8 +553,10 @@ class YAxisOptPanel(SetpPanelBase):
             self._spb_yscl.value(), self._spb_yscl_minor.value())
 
 
+# =============================================================================
 # ---- Figure managers
-class FigManagerBase(QWidget):
+# =============================================================================
+class FigureManager(QWidget):
     """
     Abstract manager to show the results from GLUE.
     """
@@ -562,22 +565,33 @@ class FigManagerBase(QWidget):
         super().__init__(parent)
         self.savefig_dir = os.getcwd()
 
+        # We do not make FigureManager inherit directly from QMainWindow
+        # because we want to control the margins around the FigureManager
+        # layout and toolbar.
+
         self.figcanvas = figure_canvas(setp={})
         self.figviewer = ImageViewer()
         self.figcanvas.sig_fig_changed.connect(self.figviewer.load_mpl_figure)
 
-        self.setup_toolbar()
         self.figsetp_manager = FigSetpPanelManager(self.figcanvas)
         for setp_panel in setp_panels:
             self.figsetp_manager.add_figsetp_panel(setp_panel)
 
-        layout = QGridLayout(self)
-        layout.addWidget(self.toolbar, 0, 0, 1, 2)
-        layout.addWidget(self.figviewer, 1, 0)
-        layout.addWidget(self.figsetp_manager, 1, 1)
+        central_widget = QWidget()
+        central_widget_layout = QGridLayout(central_widget)
+        central_widget_layout.setContentsMargins(0, 0, 0, 0)
+        central_widget_layout.addWidget(self.figviewer, 0, 0)
+        central_widget_layout.addWidget(self.figsetp_manager, 0, 1)
+        central_widget_layout.setColumnStretch(0, 1)
 
-        layout.setColumnStretch(0, 100)
-        layout.setRowStretch(1, 100)
+        # Setup main widget.
+        self.main_widget = QMainWindow()
+        self.main_widget.setCentralWidget(central_widget)
+        self.main_widget.addToolBar(Qt.TopToolBarArea, self.create_toolbar())
+
+        # Setup main layout.
+        main_layout = QGridLayout(self)
+        main_layout.addWidget(self.main_widget)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -587,36 +601,56 @@ class FigManagerBase(QWidget):
             QApplication.style().pixelMetric(QStyle.PM_ScrollBarExtent)
             )
 
-    def setup_toolbar(self):
-        """Setup the toolbar of the figure manager."""
-
-        self.btn_save = QToolButtonNormal(icons.get_icon('save'))
-        self.btn_save.setToolTip('Save current graph as...')
-        self.btn_save.clicked.connect(self._select_savefig_path)
+    def create_toolbar(self):
+        """Return the toolbar of the figure manager."""
+        # Create toolbars widgets.
+        self.btn_save = create_toolbutton(
+            parent=self,
+            icon='save',
+            tip='Save current graph as...',
+            triggered=self._select_savefig_path)
 
         self.btn_language = LangToolButton()
         self.btn_language.setToolTip(
             "Set the language of the text shown in the graph.")
         self.btn_language.sig_lang_changed.connect(self._language_changed)
-        self.btn_language.setIconSize(icons.get_iconsize('normal'))
+        self.btn_language.setIconSize(get_iconsize('normal'))
 
-        zoom_widget = self._setup_zoom_widget()
+        zoom_widget = self.create_zoom_widget()
 
-        self.toolbar = ToolBarWidget()
-        for btn in [self.btn_save, VSep(), zoom_widget, VSep(),
-                    self.btn_language]:
-            self.toolbar.addWidget(btn)
+        # Setup toolbar.
+        toolbar = QToolBar()
+        toolbar.setStyleSheet("QToolBar {border: 0px; spacing:1px;}")
+        toolbar.setFloatable(False)
+        toolbar.setMovable(False)
+        toolbar.setIconSize(get_iconsize('normal'))
 
-    def _setup_zoom_widget(self):
-        """Setup a toolbar widget to zoom in and zoom out the figure."""
+        widgets = [self.btn_save, None, zoom_widget, None, self.btn_language]
+        for widget in widgets:
+            if widget is None:
+                toolbar.addSeparator()
+            else:
+                toolbar.addWidget(widget)
 
-        btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
-        btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
-        btn_zoom_out.clicked.connect(self.figviewer.zoomOut)
+        return toolbar
 
-        btn_zoom_in = QToolButtonSmall(icons.get_icon('zoom_in'))
-        btn_zoom_in.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
-        btn_zoom_in.clicked.connect(self.figviewer.zoomIn)
+    def create_zoom_widget(self):
+        """Return a toolbar widget to zoom in and zoom out the figure."""
+
+        btn_zoom_out = create_toolbutton(
+            parent=self,
+            icon='zoom_out',
+            tip='Zoom out (ctrl + mouse-wheel-down)',
+            iconsize=get_iconsize('normal'),
+            triggered=self.figviewer.zoomOut
+            )
+        btn_zoom_in = create_toolbutton(
+            parent=self,
+            icon='zoom_in',
+            tip='Zoom in (ctrl + mouse-wheel-up)',
+            iconsize=get_iconsize('normal'),
+            triggered=self.figviewer.zoomIn
+            )
 
         self.zoom_disp = QSpinBox()
         self.zoom_disp.setAlignment(Qt.AlignCenter)
@@ -629,7 +663,7 @@ class FigManagerBase(QWidget):
 
         zoom_pan = QFrame()
         zoom_pan_layout = QGridLayout(zoom_pan)
-        zoom_pan_layout.setContentsMargins(5, 0, 5, 0)
+        zoom_pan_layout.setContentsMargins(0, 0, 0, 0)
         zoom_pan_layout.setSpacing(3)
         zoom_pan_layout.addWidget(btn_zoom_out, 0, 0)
         zoom_pan_layout.addWidget(btn_zoom_in, 0, 1)
@@ -670,8 +704,9 @@ class FigManagerBase(QWidget):
             self._select_savefig_path()
 
 
+# =============================================================================
 # ---- Figure canvas
-
+# =============================================================================
 class FigCanvasBase(FigureCanvasQTAgg):
     """
     This is the base figure format to plot GLUE results.
