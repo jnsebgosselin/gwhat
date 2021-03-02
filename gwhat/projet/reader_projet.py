@@ -573,8 +573,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
         save_content_to_file(filename, fcontent)
 
-    # ---- GLUE water budget and water level evaluation
-
+    # ---- GLUE data
     def glue_idnums(self):
         """Return the id numbers of all the previously saved GLUE results"""
         return list(self.dset['glue'].keys())
@@ -963,7 +962,7 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
     """
 
     def __init__(self, data, *args, **kwargs):
-        super(GLUEDataFrameHDF5, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__load_data__(data)
 
     def __getitem__(self, key):
