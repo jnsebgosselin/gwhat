@@ -573,8 +573,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
         save_content_to_file(filename, fcontent)
 
-    # ---- GLUE water budget and water level evaluation
-
+    # ---- GLUE data
     def glue_idnums(self):
         """Return the id numbers of all the previously saved GLUE results"""
         return list(self.dset['glue'].keys())
@@ -963,20 +962,12 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
     """
 
     def __init__(self, data, *args, **kwargs):
-        super(GLUEDataFrameHDF5, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
         self.__load_data__(data)
 
     def __getitem__(self, key):
         """Return the value saved in the store at key."""
-        if key not in self.store.keys():
-            raise KeyError(key)
-
-        if isinstance(self.store[key], h5py._hl.dataset.Dataset):
-            return self.store[key][...]
-        elif isinstance(self.store[key], h5py._hl.group.Group):
-            return load_dict_from_h5grp(self.store[key])
-        else:
-            return None
+        return self.store[key]
 
     def __setitem__(self, key, value):
         raise NotImplementedError
@@ -987,9 +978,9 @@ class GLUEDataFrameHDF5(GLUEDataFrameBase):
     def __len__(self):
         raise NotImplementedError
 
-    def __load_data__(self, data):
+    def __load_data__(self, glue_h5grp):
         """Saves the h5py glue data to the store."""
-        self.store = data
+        self.store = load_dict_from_h5grp(glue_h5grp)
 
 
 def is_dsetname_valid(dsetname):
