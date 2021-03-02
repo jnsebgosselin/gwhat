@@ -29,18 +29,17 @@ from xlrd import xldate_as_tuple
 # ---- Local imports
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
-import gwhat.hydrograph4 as hydrograph
-import gwhat.widgets.mplfigureviewer as mplFigViewer
-from gwhat.widgets.colorpreferences import (
-    ColorsManager, ColorPreferencesDialog)
-from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall, get_iconsize
-from gwhat.utils import icons
-import gwhat.common.widgets as myqt
+from gwhat.gwrecharge.glue import GLUEDataFrameBase
+from gwhat.hydrograph4 import Hydrograph
+from gwhat.utils.icons import get_iconsize, get_icon
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
-from gwhat.widgets.layout import OnOffToggleWidget, VSep
-from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.widgets.buttons import LangToolButton
+from gwhat.widgets.colorpreferences import (
+    ColorsManager, ColorPreferencesDialog)
+from gwhat.widgets.layout import OnOffToggleWidget, VSep
+import gwhat.widgets.mplfigureviewer as mplFigViewer
 
 
 class HydroprintGUI(QWidget):
