@@ -29,18 +29,17 @@ from xlrd import xldate_as_tuple
 # ---- Local imports
 from gwhat.config.ospath import (
     get_select_file_dialog_dir, set_select_file_dialog_dir)
-import gwhat.hydrograph4 as hydrograph
-import gwhat.widgets.mplfigureviewer as mplFigViewer
-from gwhat.widgets.colorpreferences import (
-    ColorsManager, ColorPreferencesDialog)
-from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall, get_iconsize
-from gwhat.utils import icons
-import gwhat.common.widgets as myqt
+from gwhat.gwrecharge.glue import GLUEDataFrameBase
+from gwhat.hydrograph4 import Hydrograph
+from gwhat.utils.icons import get_iconsize, get_icon
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.common.utils import find_unique_filename
 from gwhat.projet.reader_waterlvl import load_waterlvl_measures
-from gwhat.widgets.layout import OnOffToggleWidget, VSep
-from gwhat.gwrecharge.glue import GLUEDataFrameBase
 from gwhat.widgets.buttons import LangToolButton
+from gwhat.widgets.colorpreferences import (
+    ColorsManager, ColorPreferencesDialog)
+from gwhat.widgets.layout import OnOffToggleWidget, VSep
+import gwhat.widgets.mplfigureviewer as mplFigViewer
 
 
 class HydroprintGUI(QWidget):
@@ -68,61 +67,83 @@ class HydroprintGUI(QWidget):
 
     def __initUI__(self):
         # =====================================================================
-        # Setup the left widget.
+        # Setup the left side layout.
         # =====================================================================
         left_widget = QMainWindow()
 
         # Setup the toolbar buttons.
-        self.btn_save = btn_save = QToolButtonNormal(icons.get_icon('save'))
-        btn_save.setToolTip('Save the well hydrograph')
+        self.btn_save = btn_save = create_toolbutton(
+            parent=self,
+            icon='save',
+            tip='Save the well hydrograph',
+            triggered=self.select_save_path
+            )
+        # The button draw is usefull for debugging purposes
+        btn_draw = create_toolbutton(
+            parent=self,
+            icon='refresh',
+            tip='Force a refresh of the well hydrograph',
+            triggered=self.draw_hydrograph
+            )
+        self.btn_load_layout = create_toolbutton(
+            parent=self,
+            icon='load_graph_config',
+            tip=("Load graph layout for the current water level "
+                 "datafile if it exists."),
+            triggered=self.load_layout_isClicked
+            )
+        self.btn_save_layout = create_toolbutton(
+            parent=self,
+            icon='save_graph_config',
+            tip='Save current graph layout',
+            triggered=self.save_layout_isClicked
+            )
 
-        # btn_draw is usefull for debugging purposes
-        btn_draw = QToolButtonNormal(icons.get_icon('refresh'))
-        btn_draw.setToolTip('Force a refresh of the well hydrograph')
-        btn_draw.hide()
-
-        self.btn_load_layout = QToolButtonNormal(
-                icons.get_icon('load_graph_config'))
-        self.btn_load_layout.setToolTip(
-                "<p>Load graph layout for the current water level "
-                " datafile if it exists</p>")
-        self.btn_load_layout.clicked.connect(self.load_layout_isClicked)
-
-        self.btn_save_layout = QToolButtonNormal(
-                icons.get_icon('save_graph_config'))
-        self.btn_save_layout.setToolTip('Save current graph layout')
-        self.btn_save_layout.clicked.connect(self.save_layout_isClicked)
-
-        btn_bestfit_waterlvl = QToolButtonNormal(icons.get_icon('fit_y'))
-        btn_bestfit_waterlvl.setToolTip('Best fit the water level scale')
-
-        btn_bestfit_time = QToolButtonNormal(icons.get_icon('fit_x'))
-        btn_bestfit_time.setToolTip('Best fit the time scale')
-
-        self.btn_page_setup = QToolButtonNormal(icons.get_icon('page_setup'))
-        self.btn_page_setup.setToolTip('Show the page setup window')
-        self.btn_page_setup.clicked.connect(self.page_setup_win.show)
-
-        btn_color_pick = QToolButtonNormal(icons.get_icon('color_picker'))
-        btn_color_pick.setToolTip('<p>Show a window to setup the color palette'
-                                  ' used to draw the hydrograph</p.')
-        btn_color_pick.clicked.connect(self.color_palette_win.show)
-
+        btn_bestfit_waterlvl = create_toolbutton(
+            parent=self,
+            icon='fit_y',
+            tip='Best fit the water level scale',
+            triggered=self.best_fit_waterlvl
+            )
+        btn_bestfit_time = create_toolbutton(
+            parent=self,
+            icon='fit_x',
+            tip='Best fit the time scale',
+            triggered=self.best_fit_time
+            )
+        self.btn_page_setup = create_toolbutton(
+            parent=self,
+            icon='page_setup',
+            tip='Show the page setup window',
+            triggered=self.page_setup_win.show
+            )
+        btn_color_pick = create_toolbutton(
+            parent=self,
+            icon='color_picker',
+            tip=("Show a window to setup the color palette "
+                 "used to draw the hydrograph."),
+            triggered=self.color_palette_win.show
+            )
         self.btn_language = LangToolButton()
         self.btn_language.setToolTip(
             "Set the language of the text shown in the graph.")
         self.btn_language.sig_lang_changed.connect(self.layout_changed)
-        self.btn_language.setIconSize(icons.get_iconsize('normal'))
 
         # Setup the zoom panel.
-        btn_zoom_out = QToolButtonSmall(icons.get_icon('zoom_out'))
-        btn_zoom_out.setToolTip('Zoom out (ctrl + mouse-wheel-down)')
-        btn_zoom_out.clicked.connect(self.zoom_out)
-
-        btn_zoom_in = QToolButtonSmall(icons.get_icon('zoom_in'))
-        btn_zoom_in.setToolTip('Zoom in (ctrl + mouse-wheel-up)')
-        btn_zoom_in.clicked.connect(self.zoom_in)
-
+        btn_zoom_out = create_toolbutton(
+            parent=self,
+            icon='zoom_out',
+            tip='Zoom out (ctrl + mouse-wheel-down)',
+            triggered=self.zoom_out,
+            iconsize=get_iconsize('normal')
+            )
+        btn_zoom_in = create_toolbutton(
+            parent=self,
+            icon='zoom_in',
+            tip='Zoom in (ctrl + mouse-wheel-up)',
+            triggered=self.zoom_in,
+            iconsize=get_iconsize('normal')
+            )
         self.zoom_disp = QSpinBox()
         self.zoom_disp.setAlignment(Qt.AlignCenter)
         self.zoom_disp.setButtonSymbols(QAbstractSpinBox.NoButtons)
@@ -159,13 +180,15 @@ class HydroprintGUI(QWidget):
                 toolbar.addWidget(widget)
 
         # Setup the hydrograph frame.
-        self.hydrograph = hydrograph.Hydrograph()
+        self.hydrograph = Hydrograph()
         self.hydrograph_scrollarea = mplFigViewer.ImageViewer()
         self.hydrograph_scrollarea.zoomChanged.connect(self.zoom_disp.setValue)
 
         left_widget.setCentralWidget(self.hydrograph_scrollarea)
 
-        # Setup the right panel.
+        # =====================================================================
+        # Setup the right side layout.
+        # =====================================================================
         self.tabscales = self.__init_scalesTabWidget__()
 
         self.right_panel = QFrame()
@@ -176,29 +199,18 @@ class HydroprintGUI(QWidget):
         right_panel_layout.setRowStretch(2, 100)
         right_panel_layout.setSpacing(15)
 
+        self.Ptot_scale.valueChanged.connect(self.layout_changed)
+        self.qweather_bin.currentIndexChanged.connect(self.layout_changed)
+
+        # =====================================================================
         # Setup the main layout.
+        # =====================================================================
         main_layout = QGridLayout(self)
         main_layout.addWidget(left_widget, 0, 0)
         main_layout.addWidget(VSep(), 0, 1)
         main_layout.addWidget(self.right_panel, 0, 2)
         main_layout.setSpacing(15)
         main_layout.setColumnStretch(0, 500)
-
-        # ---- EVENTS
-
-        # Toolbox Layout :
-
-        btn_bestfit_waterlvl.clicked.connect(self.best_fit_waterlvl)
-        btn_bestfit_time.clicked.connect(self.best_fit_time)
-        btn_draw.clicked.connect(self.draw_hydrograph)
-        btn_save.clicked.connect(self.select_save_path)
-
-        # Hydrograph Layout :
-
-        self.Ptot_scale.valueChanged.connect(self.layout_changed)
-        self.qweather_bin.currentIndexChanged.connect(self.layout_changed)
-
-        # ---- Init Image
 
         self.hydrograph_scrollarea.load_mpl_figure(self.hydrograph)
 
@@ -838,7 +850,7 @@ class PageSetupWin(QWidget):
         super(PageSetupWin, self).__init__(parent)
 
         self.setWindowTitle('Page and Figure Setup')
-        self.setWindowIcon(icons.get_icon('master'))
+        self.setWindowIcon(get_icon('master'))
         self.setWindowFlags(Qt.Window |
                             Qt.CustomizeWindowHint |
                             Qt.WindowCloseButtonHint)

@@ -169,7 +169,7 @@ FA_ICONS = {
     }
 
 ICON_SIZES = {'large': (32, 32),
-              'normal': (28, 28),
+              'normal': (24, 24),
               'small': (20, 20)}
 
 
