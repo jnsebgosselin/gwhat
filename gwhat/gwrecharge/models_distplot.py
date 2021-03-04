@@ -106,7 +106,7 @@ class ModelsDistplotWidget(QMainWindow):
         text = (
             """
             Nbr of Models = {}<br><br>
-            Ranges<hr>
+            Ranges<br>---
             <table>
               <tr>
                 <td>RMSE</td>
@@ -177,7 +177,7 @@ class ModelsDistplotWidget(QMainWindow):
             selectmodels_text += (
                 """
                 <br><br>
-                Ranges<hr>
+                Ranges<br>---
                 <table style="width:100%">
                   <tr>
                     <td>RMSE</td>
