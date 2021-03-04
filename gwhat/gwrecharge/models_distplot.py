@@ -65,24 +65,27 @@ class ModelsDistplotWidget(QMainWindow):
         # Models Info Group.
         self.models_label = QLabel()
         self.models_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
+        self.models_label.setTextFormat(Qt.RichText)
 
-        self.models_grpbox = QGroupBox('Models Info')
+        self.models_grpbox = QGroupBox('MODELS INFO')
         self.models_layout = QGridLayout(self.models_grpbox)
         self.models_layout.addWidget(self.models_label, 0, 0)
+        self.models_layout.setRowStretch(1, 1)
 
         # Selected Models Info Group.
         self.selectmodels_label = QLabel()
         self.selectmodels_label.setTextInteractionFlags(
             Qt.TextSelectableByMouse)
 
-        self.selectmodels_grpbox = QGroupBox('Selected Models Info')
+        self.selectmodels_grpbox = QGroupBox('SELECTED MODELS INFO')
         self.selectmodels_layout = QGridLayout(self.selectmodels_grpbox)
         self.selectmodels_layout.addWidget(self.selectmodels_label, 0, 0)
+        self.selectmodels_layout.setRowStretch(1, 1)
 
         # Setup the central widget.
         self.central_widget = QWidget()
         self.central_layout = QGridLayout(self.central_widget)
-        self.central_layout.addWidget(self.figcanvas, 0, 0, 2, 1)
+        self.central_layout.addWidget(self.figcanvas, 0, 0, 3, 1)
         self.central_layout.addWidget(self.models_grpbox, 0, 1)
         self.central_layout.addWidget(self.selectmodels_grpbox, 1, 1)
         self.central_layout.setColumnStretch(0, 1)
@@ -99,28 +102,32 @@ class ModelsDistplotWidget(QMainWindow):
         rasmax = self.glue_data['params']['RASmax']
         sy = self.glue_data['params']['Sy']
         text = (
-            "Nbr of Models = {}"
-            "\n\n"
-            "RMSE min = {:0.1f} mm\n"
-            "RMSE avg = {:0.1f} mm\n"
-            "RMSE max = {:0.1f} mm\n"
-            "\n"
-            "CRu min = {:0.1f}\n"
-            "CRu avg = {:0.1f}\n"
-            "CRu max = {:0.1f}\n"
-            "\n"
-            "RASmax min = {:0.2f} mm\n"
-            "RASmax avg = {:0.2f} mm\n"
-            "RASmax max = {:0.2f} mm\n"
-            "\n"
-            "Sy min = {:0.2f}\n"
-            "Sy avg = {:0.2f}\n"
-            "Sy max = {:0.2f}\n\n"
-            ).format(len(rmse),
-                     np.min(rmse), np.mean(rmse), np.max(rmse),
-                     np.min(cru), np.mean(cru), np.max(cru),
-                     np.min(rasmax), np.mean(rasmax), np.max(rasmax),
-                     np.min(sy), np.mean(sy), np.max(sy))
+            """
+            Nbr of Models = {}<br><br>
+            Ranges:<br>---
+            <table style="width:100%">
+              <tr>
+                <td>RMSE =</td>
+                <td>{:0.1f} - {:0.1f} mm</td>
+              </tr>
+              <tr>
+                <td>CRu =</td>
+                <td>{:0.1f} - {:0.1f}</td>
+              </tr>
+              <tr>
+                <td>RASmax =</td>
+                <td>{:0.2f} - {:0.2f} mm</td>
+              </tr>
+              <tr>
+                <td>Sy =</td>
+                <td>{:0.2f} - {:0.2f}</td>
+              </tr>
+            </table>
+            """).format(len(rmse),
+                        np.min(rmse), np.max(rmse),
+                        np.min(cru), np.max(cru),
+                        np.min(rasmax), np.max(rasmax),
+                        np.min(sy), np.max(sy))
         self.models_label.setText(text)
 
     def set_rmse_treshold(self, rmse_treshold=None):
@@ -133,33 +140,45 @@ class ModelsDistplotWidget(QMainWindow):
 
         where = np.where(rmse_data <= rmse_treshold)[0]
         selectmodels_text = (
-            "RMSE Treshold = {:0.1f} mm\n"
-            "Models % = {:0.1f}\n"
-            "Nbr of Models = {}"
+            "RMSE Cutoff = {:0.1f} mm<br>"
+            "Nbr of Models = {}<br>"
+            "Models % = {:0.1f}"
             ).format(rmse_treshold,
-                     len(where) / len(rmse_data) * 100,
-                     len(where))
+                     len(where),
+                     len(where) / len(rmse_data) * 100)
 
         if len(where) > 0:
+            rmse = self.glue_data['RMSE'][where]
             cru = self.glue_data['params']['Cru'][where]
             rasmax = self.glue_data['params']['RASmax'][where]
             sy = self.glue_data['params']['Sy'][where]
             selectmodels_text += (
-                "\n\n"
-                "CRu min = {:0.1f}\n"
-                "CRu avg = {:0.1f}\n"
-                "CRu max = {:0.1f}\n"
-                "\n"
-                "RASmax min = {:0.2f} mm\n"
-                "RASmax avg = {:0.2f} mm\n"
-                "RASmax max = {:0.2f} mm\n"
-                "\n"
-                "Sy min = {:0.2f}\n"
-                "Sy avg = {:0.2f}\n"
-                "Sy max = {:0.2f}\n\n"
-                ).format(np.min(cru), np.mean(cru), np.max(cru),
-                         np.min(rasmax), np.mean(rasmax), np.max(rasmax),
-                         np.min(sy), np.mean(sy), np.max(sy))
+                """
+                <br><br>
+                Ranges:<br>---
+                <table style="width:100%">
+                  <tr>
+                    <td>RMSE =</td>
+                    <td>{:0.1f} - {:0.1f} mm</td>
+                  </tr>
+                  <tr>
+                    <td>CRu =</td>
+                    <td>{:0.1f} - {:0.1f}</td>
+                  </tr>
+                  <tr>
+                    <td>RASmax =</td>
+                    <td>{:0.2f} - {:0.2f} mm</td>
+                  </tr>
+                  <tr>
+                    <td>Sy =</td>
+                    <td>{:0.2f} - {:0.2f}</td>
+                  </tr>
+                </table>
+                """
+                ).format(np.min(rmse), np.max(rmse),
+                         np.min(cru), np.max(cru),
+                         np.min(rasmax), np.max(rasmax),
+                         np.min(sy), np.max(sy))
         self.selectmodels_label.setText(selectmodels_text)
 
     def set_gluedf(self, glue_data):
@@ -270,12 +289,10 @@ class ModelsDistplotCursor(AxesWidget):
         self.ax.draw_artist(self.infotext)
 
     def onpress(self, event):
-        print('onpress')
         if event.button == 1:
             self._selected_rmse_treshold = event.xdata
 
     def onrelease(self, event):
-        print('onrelease')
         if event.button != 1:
             return
 
@@ -292,7 +309,6 @@ class ModelsDistplotCursor(AxesWidget):
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
-        print('onmove')
         if self.ignore(event):
             return
         if not self.canvas.widgetlock.available(self):
