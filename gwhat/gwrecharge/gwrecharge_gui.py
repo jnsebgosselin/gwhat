@@ -340,6 +340,12 @@ class RechgEvalWidget(QFrame):
             self.figstack.set_gluedf(glue_dataframe)
             self.modelsdistplot.set_gluedf(glue_dataframe)
 
+    def close(self):
+        """Extend Qt method to close child windows."""
+        self.figstack.close()
+        self.modelsdistplot.close()
+        super().close()
+
 
 class ExportGLUEButton(ExportDataButton):
     """

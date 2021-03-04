@@ -549,6 +549,7 @@ class WLCalc(QWidget, SaveFileMixin):
         CONF.set('hydrocalc', 'current_tool_index',
                  self.tools_tabwidget.currentIndex())
         self.brf_eval_widget.close()
+        self.rechg_eval_widget.close()
         super().close()
 
     def showEvent(self, event):
