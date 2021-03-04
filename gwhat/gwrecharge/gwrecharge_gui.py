@@ -26,8 +26,9 @@ from gwhat.widgets.layout import HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
-from gwhat.utils.icons import QToolButtonSmall, get_iconsize
-from gwhat.utils import icons
+from gwhat.gwrecharge.models_distplot import ModelsDistplotWidget
+from gwhat.utils.icons import QToolButtonSmall, get_iconsize, get_icon
+from gwhat.utils.qthelpers import create_toolbutton
 
 
 class RechgEvalWidget(QFrame):
@@ -42,6 +43,7 @@ class RechgEvalWidget(QFrame):
         self.wxdset = None
         self.wldset = None
         self.figstack = FigureStackManager(parent=self)
+        self.modelsdistplot = ModelsDistplotWidget(parent=self)
 
         self.progressbar = QProgressBar()
         self.progressbar.setValue(0)
@@ -49,7 +51,6 @@ class RechgEvalWidget(QFrame):
         self.__initUI__()
 
         # Set the worker and thread mechanics
-
         self.rechg_worker = RechgEvalWorker()
         self.rechg_worker.sig_glue_finished.connect(self.receive_glue_calcul)
         self.rechg_worker.sig_glue_progress.connect(self.progressbar.setValue)
@@ -194,17 +195,26 @@ class RechgEvalWidget(QFrame):
         btn_calib = QPushButton('Compute Recharge')
         btn_calib.clicked.connect(self.btn_calibrate_isClicked)
 
-        self.btn_show_result = QToolButtonSmall(icons.get_icon('search'))
+        self.btn_show_result = QToolButtonSmall(get_icon('search'))
         self.btn_show_result.clicked.connect(self.figstack.show)
         self.btn_show_result.setToolTip("Show GLUE results.")
 
         self.btn_save_glue = ExportGLUEButton(self.wxdset)
 
+        self.btn_modelsdistplot = create_toolbutton(
+            parent=self,
+            icon='models_dist',
+            tip='Display the model distribution plot.',
+            triggered=self.modelsdistplot.show,
+            iconsize=get_iconsize('normal')
+            )
+
         layout = QGridLayout(toolbar)
         layout.addWidget(btn_calib, 0, 0)
         layout.addWidget(self.btn_show_result, 0, 1)
-        layout.addWidget(self.btn_save_glue, 0, 2)
-        layout.setContentsMargins(10, 0, 10, 0)  # (L, T, R, B)
+        layout.addWidget(self.btn_modelsdistplot, 0, 2)
+        layout.addWidget(self.btn_save_glue, 0, 3)
+        layout.setContentsMargins(10, 0, 10, 0)
 
         return toolbar
 
@@ -215,6 +225,7 @@ class RechgEvalWidget(QFrame):
         gluedf = None if wldset is None else wldset.get_glue_at(-1)
         self._setup_ranges_from_wldset(gluedf)
         self.figstack.set_gluedf(gluedf)
+        self.modelsdistplot.set_gluedf(gluedf)
         self.btn_save_glue.set_model(gluedf)
 
     def set_wxdset(self, wxdset):
@@ -327,6 +338,7 @@ class RechgEvalWidget(QFrame):
 
             self.btn_save_glue.set_model(glue_dataframe)
             self.figstack.set_gluedf(glue_dataframe)
+            self.modelsdistplot.set_gluedf(glue_dataframe)
 
 
 class ExportGLUEButton(ExportDataButton):
@@ -417,8 +429,6 @@ class ExportGLUEButton(ExportDataButton):
                 self.save_water_levels_tofile(savefilename)
             QApplication.restoreOverrideCursor()
 
-
-# %% ---- if __name__ == '__main__'
 
 if __name__ == '__main__':
     from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
