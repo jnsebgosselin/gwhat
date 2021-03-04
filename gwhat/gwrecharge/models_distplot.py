@@ -30,11 +30,7 @@ from PyQt5.QtWidgets import (
 
 
 # ---- Local imports
-from gwhat.utils import icons
-from gwhat.utils.icons import QToolButtonNormal, QToolButtonSmall
-from gwhat.widgets.mplfigureviewer import ImageViewer
-from gwhat.widgets.buttons import LangToolButton, ToolBarWidget
-from gwhat.widgets.layout import VSep
+from gwhat.utils.icons import get_icon
 
 mpl.rc('font', **{'family': 'sans-serif', 'sans-serif': ['Arial']})
 LOCS = ['left', 'top', 'right', 'bottom']
@@ -49,9 +45,9 @@ COLORS = {'precip': [0/255, 25/255, 51/255],
 class ModelsDistplotWidget(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setMinimumSize(850, 300)
+        self.setMinimumSize(850, 450)
         self.setWindowTitle('Models Distribution')
-        self.setWindowIcon(icons.get_icon('master'))
+        self.setWindowIcon(get_icon('models_dist'))
 
         self.setup()
         self.set_gluedf(None)
@@ -62,12 +58,16 @@ class ModelsDistplotWidget(QMainWindow):
         self.figcanvas.sig_rmse_treshold_selected.connect(
             self.set_rmse_treshold)
 
+        ft = QApplication.instance().font()
+        ft.setPointSize(ft.pointSize() - 1)
+
         # Models Info Group.
         self.models_label = QLabel()
         self.models_label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.models_label.setTextFormat(Qt.RichText)
+        self.models_label.setFont(ft)
 
-        self.models_grpbox = QGroupBox('MODELS INFO')
+        self.models_grpbox = QGroupBox("Models info")
         self.models_layout = QGridLayout(self.models_grpbox)
         self.models_layout.addWidget(self.models_label, 0, 0)
         self.models_layout.setRowStretch(1, 1)
@@ -76,8 +76,10 @@ class ModelsDistplotWidget(QMainWindow):
         self.selectmodels_label = QLabel()
         self.selectmodels_label.setTextInteractionFlags(
             Qt.TextSelectableByMouse)
+        self.selectmodels_label.setTextFormat(Qt.RichText)
+        self.selectmodels_label.setFont(ft)
 
-        self.selectmodels_grpbox = QGroupBox('SELECTED MODELS INFO')
+        self.selectmodels_grpbox = QGroupBox("Cutoff models info")
         self.selectmodels_layout = QGridLayout(self.selectmodels_grpbox)
         self.selectmodels_layout.addWidget(self.selectmodels_label, 0, 0)
         self.selectmodels_layout.setRowStretch(1, 1)
@@ -104,22 +106,26 @@ class ModelsDistplotWidget(QMainWindow):
         text = (
             """
             Nbr of Models = {}<br><br>
-            Ranges:<br>---
-            <table style="width:100%">
+            Ranges<hr>
+            <table>
               <tr>
-                <td>RMSE =</td>
+                <td>RMSE</td>
+                <td>: </td>
                 <td>{:0.1f} - {:0.1f} mm</td>
               </tr>
               <tr>
-                <td>CRu =</td>
+                <td>CRu</td>
+                <td>: </td>
                 <td>{:0.1f} - {:0.1f}</td>
               </tr>
               <tr>
-                <td>RASmax =</td>
+                <td>RASmax</td>
+                <td>: </td>
                 <td>{:0.2f} - {:0.2f} mm</td>
               </tr>
               <tr>
-                <td>Sy =</td>
+                <td>Sy</td>
+                <td>: </td>
                 <td>{:0.2f} - {:0.2f}</td>
               </tr>
             </table>
@@ -140,9 +146,25 @@ class ModelsDistplotWidget(QMainWindow):
 
         where = np.where(rmse_data <= rmse_treshold)[0]
         selectmodels_text = (
-            "RMSE Cutoff = {:0.1f} mm<br>"
-            "Nbr of Models = {}<br>"
-            "Models % = {:0.1f}"
+            """
+            <table style="width:100%">
+              <tr>
+                <td>RMSE Cutoff</td>
+                <td>: </td>
+                <td>{:0.1f} mm</td>
+              </tr>
+              <tr>
+                <td>Nbr of Models</td>
+                <td>: </td>
+                <td>{}</td>
+              </tr>
+              <tr>
+                <td>Models %</td>
+                <td>: </td>
+                <td>{:0.1f}</td>
+              </tr>
+            </table>
+            """
             ).format(rmse_treshold,
                      len(where),
                      len(where) / len(rmse_data) * 100)
@@ -155,22 +177,26 @@ class ModelsDistplotWidget(QMainWindow):
             selectmodels_text += (
                 """
                 <br><br>
-                Ranges:<br>---
+                Ranges<hr>
                 <table style="width:100%">
                   <tr>
-                    <td>RMSE =</td>
+                    <td>RMSE</td>
+                    <td>: </td>
                     <td>{:0.1f} - {:0.1f} mm</td>
                   </tr>
                   <tr>
-                    <td>CRu =</td>
+                    <td>CRu</td>
+                    <td>: </td>
                     <td>{:0.1f} - {:0.1f}</td>
                   </tr>
                   <tr>
-                    <td>RASmax =</td>
+                    <td>RASmax</td>
+                    <td>: </td>
                     <td>{:0.2f} - {:0.2f} mm</td>
                   </tr>
                   <tr>
-                    <td>Sy =</td>
+                    <td>Sy</td>
+                    <td>: </td>
                     <td>{:0.2f} - {:0.2f}</td>
                   </tr>
                 </table>
@@ -495,6 +521,11 @@ if __name__ == '__main__':
     project.db.close()
 
     app = QApplication(sys.argv)
+
+    ft = app.font()
+    ft.setFamily('Segoe UI')
+    ft.setPointSize(10)
+    app.setFont(ft)
 
     distplotwidget = ModelsDistplotWidget()
     distplotwidget.show()
