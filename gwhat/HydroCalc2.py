@@ -572,10 +572,11 @@ class WLCalc(QWidget, SaveFileMixin):
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx,
-                                  self.MRC_type.currentIndex())
 
         print('MRC Parameters: A=%f, B=%f' % (A, B))
+        A, B, recess, RMSE = calculate_mrc(
+            self.time, self.water_lvl, self.peak_indx,
+            self.MRC_type.currentIndex())
         if A is None:
             QApplication.restoreOverrideCursor()
             return
@@ -592,7 +593,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Store and plot the results.
         print('Saving MRC interpretation in dataset...')
-        self.wldset.set_mrc(A, B, self.peak_indx, self.time, hp)
+        self.wldset.set_mrc(A, B, self.peak_indx, self.time, recess)
         self.btn_save_mrc.setEnabled(True)
         self.draw_mrc()
         self.sig_new_mrc.emit()
@@ -1824,10 +1825,7 @@ def local_extrema(x, Deltan):
     return n_j, kadd
 
 
-# =============================================================================
-
-
-def mrc_calc(t, h, ipeak, MRCTYPE=1):
+def calculate_mrc(t, h, ipeak, MRCTYPE=1):
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
     the aquifer from the water level time series using a modified Gauss-Newton
