@@ -16,6 +16,7 @@ import datetime
 
 # ---- Third party imports
 import numpy as np
+import pandas as pd
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -572,24 +573,23 @@ class WLCalc(QWidget, SaveFileMixin):
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-
-        print('MRC Parameters: A=%f, B=%f' % (A, B))
         A, B, recess, RMSE = calculate_mrc(
             self.time, self.water_lvl, self.peak_indx,
             self.MRC_type.currentIndex())
-        if A is None:
-            QApplication.restoreOverrideCursor()
-            return
 
-        # Display result :
-
-        txt = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
-        self.MRC_results.setText(txt)
-        txt = '%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
-        self.MRC_results.append(txt)
-        self.MRC_results.append('\nwhere h is the depth to water '
-                                'table in mbgs and ∂h/∂t is the recession '
-                                'rate in mm/d.')
+        print('MRC Parameters: A={}, B={}'
+              .format('None' if pd.isnull(A) else '{:0.3f}'.format(A),
+                      'None' if pd.isnull(B) else '{:0.3f}'.format(B))
+              )
+        if pd.isnull(A):
+            text = ''
+        else:
+            text = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
+            text += '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
+            text += ('\nwhere h is the depth to water '
+                     'table in mbgs and ∂h/∂t is the recession '
+                     'rate in mm/d.')
+        self.MRC_results.setText(text)
 
         # Store and plot the results.
         print('Saving MRC interpretation in dataset...')
@@ -1842,7 +1842,10 @@ def calculate_mrc(t, h, ipeak, MRCTYPE=1):
              MODE = 1 -> exponential (dh/dt = -a*h + b)
 
     """
-    A, B, hp, RMSE = None, None, None, None
+    A = np.nan
+    B = np.nan
+    hp = t.copy() * np.nan
+    RMSE = np.nan
 
     # ---- Check Min/Max
     if len(ipeak) == 0:
