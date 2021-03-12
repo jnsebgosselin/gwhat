@@ -451,7 +451,8 @@ class WLDataFrameHDF5(WLDataFrameBase):
         if 'mrc' not in list(self.dset.keys()):
             mrc = self.dset.create_group('mrc')
             mrc.attrs['exists'] = 0
-            mrc.create_dataset('params', data=(0, 0), dtype='float64')
+            mrc.create_dataset('params', data=(np.nan, np.nan),
+                               dtype='float64')
             mrc.create_dataset('peak_indx', data=np.array([]),
                                dtype='int64', maxshape=(None,))
             mrc.create_dataset('recess', data=np.array([]),
@@ -538,6 +539,14 @@ class WLDataFrameHDF5(WLDataFrameBase):
         self.dset['mrc'].attrs['exists'] = 1
 
         self.dset.file.flush()
+
+    def get_mrc(self):
+        """Return the mrc results stored in the hdf5 project file."""
+        return {
+            'params': self['mrc/params'].tolist(),
+            'peak_indx': self['mrc/peak_indx'].astype(int),
+            'time': self['mrc/time'].copy(),
+            'recess': self['mrc/recess'].copy()}
 
     def mrc_exists(self):
         """Return whether a mrc results is saved in the hdf5 project file."""

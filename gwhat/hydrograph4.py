@@ -860,8 +860,8 @@ class Hydrograph(Figure):
             self._mrc_plt.set_visible(False)
         else:
             self._mrc_plt.set_visible(True)
-            self._mrc_plt.set_data(
-                self.wldset['mrc/time'], self.wldset['mrc/recess'])
+            mrc_data = self.wldset.get_mrc()
+            self._mrc_plt.set_data(mrc_data['time'], mrc_data['recess'])
 
     def draw_waterlvl(self):
         """

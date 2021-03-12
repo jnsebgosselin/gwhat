@@ -15,6 +15,7 @@ from time import perf_counter
 
 # ---- Third party imports
 import numpy as np
+import pandas as pd
 from PyQt5.QtCore import QObject
 from PyQt5.QtCore import pyqtSignal as QSignal
 
@@ -94,11 +95,11 @@ class RechgEvalWorker(QObject):
         # Setup water level data.
 
         self.wldset = wldset
-        self.A, self.B = wldset['mrc/params']
+        self.A, self.B = wldset.get_mrc()['params']
         self.twlvl, self.wlobs = self.make_data_daily(
             wldset.xldates, wldset['WL'])
 
-        if not self.A and not self.B:
+        if pd.isnull(self.A) and pd.isnull(self.B):
             error = ("Groundwater recharge cannot be computed because a"
                      " master recession curve (MRC) must be defined first.")
             return error
@@ -227,13 +228,9 @@ class RechgEvalWorker(QObject):
 
         # Save the water levels simulated with the mrc, as well as and values
         # of the parameters that characterized this mrc.
-        glue_rawdata['mrc'] = {}
-        glue_rawdata['mrc']['params'] = self.wldset['mrc/params']
-        glue_rawdata['mrc']['time'] = self.wldset['mrc/time']
-        glue_rawdata['mrc']['levels'] = self.wldset['mrc/recess']
+        glue_rawdata['mrc'] = self.wldset.get_mrc()
 
         # Store the models output that will need to be processed with GLUE.
-
         glue_rawdata['hydrograph'] = sets_waterlevels
         glue_rawdata['recharge'] = set_recharge
         glue_rawdata['etr'] = set_evapo
