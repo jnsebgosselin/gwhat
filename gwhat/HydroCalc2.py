@@ -16,6 +16,7 @@ import datetime
 
 # ---- Third party imports
 import numpy as np
+import pandas as pd
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
@@ -572,27 +573,27 @@ class WLCalc(QWidget, SaveFileMixin):
 
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
-        A, B, hp, RMSE = mrc_calc(self.time, self.water_lvl, self.peak_indx,
-                                  self.MRC_type.currentIndex())
+        A, B, recess, RMSE = calculate_mrc(
+            self.time, self.water_lvl, self.peak_indx,
+            self.MRC_type.currentIndex())
 
-        print('MRC Parameters: A=%f, B=%f' % (A, B))
-        if A is None:
-            QApplication.restoreOverrideCursor()
-            return
-
-        # Display result :
-
-        txt = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
-        self.MRC_results.setText(txt)
-        txt = '%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
-        self.MRC_results.append(txt)
-        self.MRC_results.append('\nwhere h is the depth to water '
-                                'table in mbgs and ∂h/∂t is the recession '
-                                'rate in mm/d.')
+        print('MRC Parameters: A={}, B={}'
+              .format('None' if pd.isnull(A) else '{:0.3f}'.format(A),
+                      'None' if pd.isnull(B) else '{:0.3f}'.format(B))
+              )
+        if pd.isnull(A):
+            text = ''
+        else:
+            text = '∂h/∂t (mm/d) = -%0.2f h + %0.2f' % (A*1000, B*1000)
+            text += '\n%s = %f m' % (self.MRC_ObjFnType.currentText(), RMSE)
+            text += ('\nwhere h is the depth to water '
+                     'table in mbgs and ∂h/∂t is the recession '
+                     'rate in mm/d.')
+        self.MRC_results.setText(text)
 
         # Store and plot the results.
         print('Saving MRC interpretation in dataset...')
-        self.wldset.set_mrc(A, B, self.peak_indx, self.time, hp)
+        self.wldset.set_mrc(A, B, self.peak_indx, self.time, recess)
         self.btn_save_mrc.setEnabled(True)
         self.draw_mrc()
         self.sig_new_mrc.emit()
@@ -602,8 +603,8 @@ class WLCalc(QWidget, SaveFileMixin):
     def load_mrc_from_wldset(self):
         """Load saved MRC results from the project hdf5 file."""
         if self.wldset is not None and self.wldset.mrc_exists():
-            self.peak_indx = self.wldset['mrc/peak_indx'].astype(int)
-            self.peak_memory[0] = self.wldset['mrc/peak_indx'].astype(int)
+            self.peak_indx = self.wldset.get_mrc['peak_indx']
+            self.peak_memory[0] = self.peak_indx.copy()
             self.btn_save_mrc.setEnabled(True)
         else:
             self.peak_indx = np.array([]).astype(int)
@@ -635,7 +636,7 @@ class WLCalc(QWidget, SaveFileMixin):
         if not self.wldset.mrc_exists():
             print('Need to calculate MRC equation first.')
             return
-        A, B = self.wldset['mrc/params']
+        A, B = self.wldset.get_mrc('params')
         if not os.path.exists(self.soilFilename):
             print('A ".sol" file is needed for the calculation of' +
                   ' groundwater recharge from the MRC')
@@ -1273,9 +1274,10 @@ class WLCalc(QWidget, SaveFileMixin):
         if (self.wldset is not None and self.btn_show_mrc.value() and
                 self.wldset.mrc_exists()):
             self._mrc_plt.set_visible(True)
+            mrc_data = self.wldset.get_mrc()
             self._mrc_plt.set_data(
-                self.wldset['mrc/time'] + self.dt4xls2mpl * self.dformat,
-                self.wldset['mrc/recess'])
+                mrc_data['time'] + self.dt4xls2mpl * self.dformat,
+                mrc_data['recess'])
         else:
             self._mrc_plt.set_visible(False)
 
@@ -1824,17 +1826,14 @@ def local_extrema(x, Deltan):
     return n_j, kadd
 
 
-# =============================================================================
-
-
-def mrc_calc(t, h, ipeak, MRCTYPE=1):
+def calculate_mrc(t, h, ipeak, MRCTYPE=1):
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
     the aquifer from the water level time series using a modified Gauss-Newton
     optimization method.
 
-    INPUTS
-    ------
+    Parameters
+    ----------
     h : water level time series in mbgs
     t : time in days
     ipeak: sequence of indices where the maxima and minima are located in h
@@ -1844,11 +1843,12 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
              MODE = 1 -> exponential (dh/dt = -a*h + b)
 
     """
-
-    A, B, hp, RMSE = None, None, None, None
+    A = np.nan
+    B = np.nan
+    hp = t.copy() * np.nan
+    RMSE = np.nan
 
     # ---- Check Min/Max
-
     if len(ipeak) == 0:
         print('No extremum selected')
         return A, B, hp, RMSE
@@ -1863,7 +1863,6 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
         return A, B, hp, RMSE
 
     # ---- Optimization
-
     print('\n---- MRC calculation started ----\n')
     print('MRCTYPE = %s' % (['Linear', 'Exponential'][MRCTYPE]))
 
@@ -1891,9 +1890,8 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
     elif MRCTYPE == 1:
         NP = 2
 
-    while 1:
-        # Calculating Jacobian (X) Numerically :
-
+    while True:
+        # Calculating Jacobian (X) Numerically.
         hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
         XB = (hdB[tindx] - hp[tindx]) / tolmax
 
@@ -1906,14 +1904,12 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
 
         X = Xt.transpose()
 
-        # Solving Linear System :
-
+        # Solving Linear System.
         dh = h[tindx] - hp[tindx]
         XtX = np.dot(Xt, X)
         Xtdh = np.dot(Xt, dh)
 
-        # Scaling :
-
+        # Scaling.
         C = np.dot(Xt, X) * np.identity(NP)
         for j in range(NP):
             C[j, j] = C[j, j] ** -0.5
@@ -1921,29 +1917,25 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
         Ct = C.transpose()
         Cinv = np.linalg.inv(C)
 
-        # Constructing right hand side :
-
+        # Constructing right hand side.
         CtXtdh = np.dot(Ct, Xtdh)
 
-        # Constructing left hand side :
-
+        # Constructing left hand side.
         CtXtX = np.dot(Ct, XtX)
         CtXtXC = np.dot(CtXtX, C)
 
+        # Loop for the Marquardt parameter (m)
         m = 0
-        while 1:  # loop for the Marquardt parameter (m)
+        while True:
 
-            # Constructing left hand side (continued) :
-
+            # Constructing left hand side (continued).
             CtXtXCImr = CtXtXC + np.identity(NP) * m
             CtXtXCImrCinv = np.dot(CtXtXCImr, Cinv)
 
-            # Calculating parameter change vector :
-
+            # Calculating parameter change vector.
             dr = np.linalg.tensorsolve(CtXtXCImrCinv, CtXtdh, axes=None)
 
-            # Checking Marquardt condition :
-
+            # Checking Marquardt condition.
             NUM = np.dot(dr.transpose(), CtXtdh)
             DEN1 = np.dot(dr.transpose(), dr)
             DEN2 = np.dot(CtXtdh.transpose(), CtXtdh)
@@ -1954,40 +1946,34 @@ def mrc_calc(t, h, ipeak, MRCTYPE=1):
             else:
                 break
 
-        # Storing old parameter values :
-
+        # Storing old parameter values.
         Aold = np.copy(A)
         Bold = np.copy(B)
         RMSEold = np.copy(RMSE)
 
-        while 1:  # Loop for Damping (to prevent overshoot)
-
-            # Calculating new parameter values :
-
+        # Loop for Damping (to prevent overshoot).
+        while True:
+            # Calculating new parameter values.
             if MRCTYPE == 1:
                 A = Aold + dr[0]
                 B = Bold + dr[1]
             elif MRCTYPE == 0:
                 B = Bold + dr[0, 0]
 
-            # Applying parameter bound-constraints :
+            # Applying parameter lower bound-constraints.
+            A = np.max((A, 0))
 
-            A = np.max((A, 0))  # lower bound
-
-            # Solving for new parameter values :
-
+            # Solving for new parameter values.
             hp = calc_synth_hydrograph(A, B, h, dt, ipeak)
             RMSE = np.sqrt(np.mean((h[tindx]-hp[tindx])**2))
 
-            # Checking overshoot :
-
+            # Checking overshoot.
             if (RMSE - RMSEold) > 0.001:
                 dr = dr * 0.5
             else:
                 break
 
-        # Checking tolerance :
-
+        # Checking tolerance.
         tolA = np.abs(A - Aold)
         tolB = np.abs(B - Bold)
         tol = np.max((tolA, tolB))
