@@ -540,6 +540,14 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
         self.dset.file.flush()
 
+    def get_mrc(self):
+        """Return the mrc results stored in the hdf5 project file."""
+        return {
+            'params': self['mrc/params'].tolist(),
+            'peak_indx': self['mrc/peak_indx'].astype(int),
+            'time': self['mrc/time'].copy(),
+            'recess': self['mrc/recess'].copy()}
+
     def mrc_exists(self):
         """Return whether a mrc results is saved in the hdf5 project file."""
         return bool(self.dset['mrc'].attrs['exists'])
