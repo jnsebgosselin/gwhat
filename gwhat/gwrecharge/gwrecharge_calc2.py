@@ -199,7 +199,7 @@ class RechgEvalWorker(QObject):
 
             self.sig_glue_progress.emit((it+1)/N*100)
         print("GLUE computed in {:0.1f} sec".format(perf_counter()-time_start))
-        self._print_model_params_summary(set_Sy, set_Cru, set_RASmax)
+        self._print_model_params_summary(set_Sy, set_Cru, set_RASmax, set_RMSE)
 
         # ---- Format results
         glue_rawdata = {}
@@ -264,7 +264,8 @@ class RechgEvalWorker(QObject):
 
         return glue_dataf
 
-    def _print_model_params_summary(self, set_Sy, set_Cru, set_RASmax):
+    def _print_model_params_summary(self, set_Sy, set_Cru, set_RASmax,
+                                    set_rmse):
         """
         Print a summary of the range of parameter values that were used to
         produce the set of behavioural models.
@@ -278,6 +279,9 @@ class RechgEvalWorker(QObject):
             print('range RASmax = %d to %d' % range_rasmax)
             range_cru = (np.min(set_Cru), np.max(set_Cru))
             print('range Cru = %0.3f to %0.3f' % range_cru)
+            range_rmse = (np.min(set_rmse), np.max(set_rmse))
+            print('range RMSE = %0.1f to %0.1f' % range_rmse)
+            print('mean RMSE = %0.1f' % np.mean(set_rmse))
             print('-'*78)
         else:
             print("The number of behavioural model produced is 0.")
