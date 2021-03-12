@@ -392,7 +392,7 @@ def test_restore_corrupt_project(projmanager, mocker, projectfile, bakfile):
 
 def test_store_mrc(project, testfile):
     """
-    Test that MRC data and results are saved as expected
+    Test that MRC data and results are saved and retrieved as expected
     in GWHAT project files.
     """
     project.add_wldset('dataset_test', WLDataFrame(testfile))
@@ -408,10 +408,12 @@ def test_store_mrc(project, testfile):
 
     wldset.set_mrc(A, B, peak_indx, recess_time, recess_wlvl)
     assert wldset.mrc_exists() is True
-    assert wldset['mrc/params'].tolist() == [A, B]
-    assert wldset['mrc/peak_indx'].tolist() == peak_indx
-    assert wldset['mrc/time'].tolist() == recess_time
-    assert wldset['mrc/recess'].tolist() == recess_wlvl
+
+    mrc_data = wldset.get_mrc()
+    assert mrc_data['params'] == [A, B]
+    assert mrc_data['peak_indx'].tolist() == peak_indx
+    assert mrc_data['time'].tolist() == recess_time
+    assert mrc_data['recess'].tolist() == recess_wlvl
 
 
 def test_mrc_backward_compatibility(project, testfile):

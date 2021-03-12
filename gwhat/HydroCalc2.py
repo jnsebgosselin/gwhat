@@ -603,8 +603,8 @@ class WLCalc(QWidget, SaveFileMixin):
     def load_mrc_from_wldset(self):
         """Load saved MRC results from the project hdf5 file."""
         if self.wldset is not None and self.wldset.mrc_exists():
-            self.peak_indx = self.wldset['mrc/peak_indx'].astype(int)
-            self.peak_memory[0] = self.wldset['mrc/peak_indx'].astype(int)
+            self.peak_indx = self.wldset.get_mrc['peak_indx']
+            self.peak_memory[0] = self.peak_indx.copy()
             self.btn_save_mrc.setEnabled(True)
         else:
             self.peak_indx = np.array([]).astype(int)
@@ -636,7 +636,7 @@ class WLCalc(QWidget, SaveFileMixin):
         if not self.wldset.mrc_exists():
             print('Need to calculate MRC equation first.')
             return
-        A, B = self.wldset['mrc/params']
+        A, B = self.wldset.get_mrc('params')
         if not os.path.exists(self.soilFilename):
             print('A ".sol" file is needed for the calculation of' +
                   ' groundwater recharge from the MRC')
@@ -1274,9 +1274,10 @@ class WLCalc(QWidget, SaveFileMixin):
         if (self.wldset is not None and self.btn_show_mrc.value() and
                 self.wldset.mrc_exists()):
             self._mrc_plt.set_visible(True)
+            mrc_data = self.wldset.get_mrc()
             self._mrc_plt.set_data(
-                self.wldset['mrc/time'] + self.dt4xls2mpl * self.dformat,
-                self.wldset['mrc/recess'])
+                mrc_data['time'] + self.dt4xls2mpl * self.dformat,
+                mrc_data['recess'])
         else:
             self._mrc_plt.set_visible(False)
 
