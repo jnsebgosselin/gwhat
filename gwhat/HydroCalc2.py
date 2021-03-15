@@ -375,7 +375,8 @@ class WLCalc(QWidget, SaveFileMixin):
         self.mrc_selector.sig_span_selected.connect(
             self._handle_mrcperiod_selected)
         self._mrc_period_xdata = []
-        self._mrc_period_artists = []
+        self._mrc_period_axvspans = []
+        self._mrc_period_memory = [[]]
 
         # ---- MRC parameters
         self.MRC_type = QComboBox()
@@ -583,7 +584,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
         for i in reversed(range(len(self._mrc_period_xdata))):
             period_xdata = self._mrc_period_xdata[i]
-            period_artist = self._mrc_period_artists[i]
+            period_artist = self._mrc_period_axvspans[i]
 
             if xmin >= period_xdata[0] and xmax <= period_xdata[1]:
                 # This means this mrc period is fully enclosed within
@@ -596,13 +597,13 @@ class WLCalc(QWidget, SaveFileMixin):
 
                 period_artist.remove()
                 del self._mrc_period_xdata[i]
-                del self._mrc_period_artists[i]
+                del self._mrc_period_axvspans[i]
             elif period_xdata[1] >= xmin and period_xdata[1] <= xmax:
                 xmin = min(period_xdata[0], xmin)
 
                 period_artist.remove()
                 del self._mrc_period_xdata[i]
-                del self._mrc_period_artists[i]
+                del self._mrc_period_axvspans[i]
 
         self._mrc_period_xdata.append((xmin, xmax))
         self._mrc_period_artists.append(self.fig.axes[0].axvspan(
