@@ -633,20 +633,6 @@ class WLCalc(QWidget, SaveFileMixin):
                 self.save_mrc_tofile(savefilename)
             QApplication.restoreOverrideCursor()
 
-    def btn_mrc2rechg_isClicked(self):
-        if not self.wldset.mrc_exists():
-            print('Need to calculate MRC equation first.')
-            return
-        A, B = self.wldset.get_mrc()['params']
-        if not os.path.exists(self.soilFilename):
-            print('A ".sol" file is needed for the calculation of' +
-                  ' groundwater recharge from the MRC')
-            return
-
-        self.SOILPROFIL.load_info(self.soilFilename)
-        mrc2rechg(self.time, self.water_lvl, A, B,
-                  self.SOILPROFIL.zlayer, self.SOILPROFIL.Sy)
-
     # ---- BRF selection
     def plot_brfperiod(self):
         """
