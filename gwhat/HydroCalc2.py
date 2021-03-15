@@ -1387,7 +1387,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 self.__mouse_btn_is_pressed):
             self._draw_brf_selection(x)
 
-        # ---- Remove Peak Cursor
+        # Remove Peak Cursor
         if self.btn_delpeak.value() and len(self.peak_indx) > 0:
             # For deleting peak in the graph. Will put a cross on top of the
             # peak to delete if some proximity conditions are met.
