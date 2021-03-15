@@ -1192,7 +1192,7 @@ class WLCalc(QWidget, SaveFileMixin):
         water levels that were predicted with the MRC.
         """
         self._draw_mrc_wl()
-        self._draw_mrc_peaks()
+        self._draw_mrc_periods()
         self.draw()
 
     def _draw_obs_wl(self, draw=True):
@@ -1218,11 +1218,21 @@ class WLCalc(QWidget, SaveFileMixin):
         else:
             self._mrc_plt.set_visible(False)
 
-    def _draw_mrc_peaks(self):
+    def _draw_mrc_periods(self):
         """Draw the periods that will be used to compute the MRC."""
         self.btn_undo.setEnabled(len(self.peak_memory) > 1)
         if self.wldset is not None and self.btn_show_mrc.value():
+            for axvspan, xdata in zip(
+                    self._mrc_period_artists, self._mrc_period_xdata):
+                xmin = xdata[0] + (self.dt4xls2mpl * self.dformat)
+                xmax = xdata[1] + (self.dt4xls2mpl * self.dformat)
+                axvspan.set_visible(
+                    self.wldset is not None and self.btn_show_mrc.value())
+                axvspan.xy = [[xmin, 1], [xmin, 0],
+                              [xmax, 0], [xmax, 1]]
         else:
+            for axvspan in self._mrc_period_artists:
+                axvspan.set_visible(False)
 
     def _draw_rect_selection(self, x2, y2):
         """Draw the rectangle of the rectangular selection tool."""
