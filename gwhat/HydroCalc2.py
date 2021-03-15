@@ -604,7 +604,7 @@ class WLCalc(QWidget, SaveFileMixin):
     def load_mrc_from_wldset(self):
         """Load saved MRC results from the project hdf5 file."""
         if self.wldset is not None and self.wldset.mrc_exists():
-            self.peak_indx = self.wldset.get_mrc['peak_indx']
+            self.peak_indx = self.wldset.get_mrc()['peak_indx']
             self.peak_memory[0] = self.peak_indx.copy()
             self.btn_save_mrc.setEnabled(True)
         else:
@@ -637,7 +637,7 @@ class WLCalc(QWidget, SaveFileMixin):
         if not self.wldset.mrc_exists():
             print('Need to calculate MRC equation first.')
             return
-        A, B = self.wldset.get_mrc('params')
+        A, B = self.wldset.get_mrc()['params']
         if not os.path.exists(self.soilFilename):
             print('A ".sol" file is needed for the calculation of' +
                   ' groundwater recharge from the MRC')
