@@ -1621,7 +1621,7 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         return False
 
 
-def calculate_mrc(t, h, ipeak, MRCTYPE=1):
+def calculate_mrc(t, h, ipeak, mrctype=1):
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
     the aquifer from the water level time series using a modified Gauss-Newton
@@ -1633,7 +1633,7 @@ def calculate_mrc(t, h, ipeak, MRCTYPE=1):
     t : time in days
     ipeak: sequence of indices where the maxima and minima are located in h
 
-    MRCTYPE: MRC equation type
+    mrctype: MRC equation type
              MODE = 0 -> linear (dh/dt = b)
              MODE = 1 -> exponential (dh/dt = -a*h + b)
 
@@ -1659,11 +1659,11 @@ def calculate_mrc(t, h, ipeak, MRCTYPE=1):
 
     # ---- Optimization
     print('\n---- MRC calculation started ----\n')
-    print('MRCTYPE = %s' % (['Linear', 'Exponential'][MRCTYPE]))
+    print('mrctype = %s' % (['Linear', 'Exponential'][mrctype]))
 
     tstart = clock()
 
-    # If MRCTYPE is 0, then the parameter A is kept to a value of 0 throughout
+    # If mrctype is 0, then the parameter A is kept to a value of 0 throughout
     # the entire optimization process and only paramter B is optimized.
 
     dt = np.diff(t)
@@ -1680,9 +1680,9 @@ def calculate_mrc(t, h, ipeak, MRCTYPE=1):
     print('A = %0.3f ; B= %0.3f; RMSE = %f' % (A, B, RMSE))
 
     # NP: number of parameters
-    if MRCTYPE == 0:
+    if mrctype == 0:
         NP = 1
-    elif MRCTYPE == 1:
+    elif mrctype == 1:
         NP = 2
 
     while True:
@@ -1690,11 +1690,11 @@ def calculate_mrc(t, h, ipeak, MRCTYPE=1):
         hdB = calc_synth_hydrograph(A, B + tolmax, h, dt, ipeak)
         XB = (hdB[tindx] - hp[tindx]) / tolmax
 
-        if MRCTYPE == 1:
+        if mrctype == 1:
             hdA = calc_synth_hydrograph(A + tolmax, B, h, dt, ipeak)
             XA = (hdA[tindx] - hp[tindx]) / tolmax
             Xt = np.vstack((XA, XB))
-        elif MRCTYPE == 0:
+        elif mrctype == 0:
             Xt = XB
 
         X = Xt.transpose()
@@ -1749,10 +1749,10 @@ def calculate_mrc(t, h, ipeak, MRCTYPE=1):
         # Loop for Damping (to prevent overshoot).
         while True:
             # Calculating new parameter values.
-            if MRCTYPE == 1:
+            if mrctype == 1:
                 A = Aold + dr[0]
                 B = Bold + dr[1]
-            elif MRCTYPE == 0:
+            elif mrctype == 0:
                 B = Bold + dr[0, 0]
 
             # Applying parameter lower bound-constraints.
