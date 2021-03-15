@@ -569,6 +569,45 @@ class WLCalc(QWidget, SaveFileMixin):
         super().showEvent(event)
 
     # ---- MRC handlers
+    def _handle_mrcperiod_selected(self, xdata):
+        """
+        Handle when a new mrc period is selectedby the user.
+        """
+        try:
+            xmin = min(xdata) - self.dt4xls2mpl * self.dformat
+            xmax = max(xdata) - self.dt4xls2mpl * self.dformat
+        except TypeError:
+            return
+
+        for i in reversed(range(len(self._mrc_period_xdata))):
+            period_xdata = self._mrc_period_xdata[i]
+            period_artist = self._mrc_period_artists[i]
+
+            if xmin >= period_xdata[0] and xmax <= period_xdata[1]:
+                # This means this mrc period is fully enclosed within
+                # another period previously selected by the user,
+                # so we discard it completely.
+                return
+
+            if period_xdata[0] >= xmin and period_xdata[0] <= xmax:
+                xmax = max(period_xdata[1], xmax)
+
+                period_artist.remove()
+                del self._mrc_period_xdata[i]
+                del self._mrc_period_artists[i]
+            elif period_xdata[1] >= xmin and period_xdata[1] <= xmax:
+                xmin = min(period_xdata[0], xmin)
+
+                period_artist.remove()
+                del self._mrc_period_xdata[i]
+                del self._mrc_period_artists[i]
+
+        self._mrc_period_xdata.append((xmin, xmax))
+        self._mrc_period_artists.append(self.wl_axes.axvspan(
+            xmin, xmax, visible=True, color='red', linewidth=1,
+            ls='-', alpha=0.1))
+        self.draw_mrc()
+
     def btn_show_mrc_isclicked(self):
         """Handle when the button to draw of hide the mrc is clicked."""
         if self.btn_show_mrc.value() is False:
