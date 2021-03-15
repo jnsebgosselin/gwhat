@@ -122,7 +122,7 @@ class WLCalc(QWidget, SaveFileMixin):
         self.fig = MplFigure(facecolor='white')
         self.canvas = FigureCanvasQTAgg(self.fig)
 
-        self.canvas.mpl_connect('button_press_event', self.onclick)
+        self.canvas.mpl_connect('button_press_event', self.onpress)
         self.canvas.mpl_connect('button_release_event', self.onrelease)
         self.canvas.mpl_connect('resize_event', self.setup_ax_margins)
         self.canvas.mpl_connect('motion_notify_event', self.onmove)
@@ -1482,7 +1482,7 @@ class WLCalc(QWidget, SaveFileMixin):
             self.draw_mrc()
         self.onmove(event)
 
-    def onclick(self, event):
+    def onpress(self, event):
         """Handle when the graph is clicked with the mouse."""
         self.__mouse_btn_is_pressed = True
         x, y = event.x, event.y
