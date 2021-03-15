@@ -85,7 +85,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         self.__figbckground = None
         self._axes_widgets = []
-        self.__addPeakVisible = True
         self.__mouse_btn_is_pressed = False
 
         # Calcul the delta between the datum of Excel and Maplotlib numeric
@@ -239,11 +238,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.xycoord = ax0.text(
             1, 0, '', ha='right', transform=ax0.transAxes + offset)
         self.xycoord.set_visible(False)
-
-        # Peaks :
-        self._peaks_plt, = ax0.plot(
-            [], [], color='white', clip_on=True, zorder=30, marker='o',
-            linestyle='None', mec='red', mew=1.5)
 
         # Cross Remove Peaks :
         self.xcross, = ax0.plot(1, 0, color='red', clip_on=True,
@@ -1002,11 +996,6 @@ class WLCalc(QWidget, SaveFileMixin):
         elif self.dformat == 0:
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
 
-        # Adjust the water levels, peak, MRC ant weather time frame.
-        if len(self.peak_indx) > 0:  # Peaks
-            self._peaks_plt.set_xdata(
-                self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat)
-
         self._draw_obs_wl()
         self.draw_meas_wl()
         self.draw_mrc()
@@ -1215,12 +1204,7 @@ class WLCalc(QWidget, SaveFileMixin):
         """Draw the periods that will be used to compute the MRC."""
         self.btn_undo.setEnabled(len(self.peak_memory) > 1)
         if self.wldset is not None and self.btn_show_mrc.value():
-            self._peaks_plt.set_visible(True)
-            self._peaks_plt.set_data(
-                self.time[self.peak_indx] + (self.dt4xls2mpl * self.dformat),
-                self.water_lvl[self.peak_indx])
         else:
-            self._peaks_plt.set_visible(False)
 
     def _draw_rect_selection(self, x2, y2):
         """Draw the rectangle of the rectangular selection tool."""
