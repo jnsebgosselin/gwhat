@@ -1483,6 +1483,9 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         super().set_active(False)
 
     def set_active(self, active):
+        """
+        Set whether the selector is active.
+        """
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
@@ -1490,14 +1493,24 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         super().set_active(active)
 
     def clear(self):
-        """Internal event handler to clear the cursor."""
+        """
+        Clear the selector.
+
+        This method must be called by the canvas BEFORE making a copy of
+        the canvas background.
+        """
         self.__axvspan_visible = self.axvspan.get_visible()
         self.__axvline_visible = self.axvline.get_visible()
         self.axvspan.set_visible(False)
         self.axvline.set_visible(False)
 
     def restore(self):
-        """Internal event handler to restore the cursor."""
+        """
+        Restore the selector.
+
+        This method must be called by the canvas AFTER a copy has been made
+        of the canvas background.
+        """
         self.axvspan.set_visible(self.__axvspan_visible)
         self.ax.draw_artist(self.axvspan)
 
@@ -1534,7 +1547,7 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         self._update()
 
     def onmove(self, event):
-        """Internal event handler to draw the cursor when the mouse moves."""
+        """Handler to draw the selector when the mouse cursor moves."""
         if self.ignore(event):
             return
         if not self.canvas.widgetlock.available(self):
