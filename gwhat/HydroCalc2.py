@@ -606,9 +606,6 @@ class WLCalc(QWidget, SaveFileMixin):
                 del self._mrc_period_axvspans[i]
 
         self._mrc_period_xdata.append((xmin, xmax))
-        self._mrc_period_artists.append(self.fig.axes[0].axvspan(
-            xmin, xmax, visible=True, color='red', linewidth=1,
-            ls='-', alpha=0.1))
         self.draw_mrc()
 
     def btn_show_mrc_isclicked(self):
