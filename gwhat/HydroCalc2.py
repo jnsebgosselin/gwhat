@@ -704,26 +704,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.toggle_brfperiod_selection(False)
 
     # ---- Peaks handlers
-    def find_peak(self):
-
-        n_j, n_add = local_extrema(self.water_lvl, 4 * 5)
-
-        # Removing first and last point if necessary to always start with a
-        # maximum and end with a minimum.
-
-        # WARNING: y axis is inverted. Consequently, the logic needs to be
-        #          inverted also
-
-        if n_j[0] > 0:
-            n_j = np.delete(n_j, 0)
-
-        if n_j[-1] < 0:
-            n_j = np.delete(n_j, -1)
-
-        self.peak_indx = np.abs(n_j).astype(int)
-        self.peak_memory.append(self.peak_indx)
-        self.draw_mrc()
-
     def btn_addpeak_isclicked(self):
         """Handle when the button add_peak is clicked."""
         if self.btn_addpeak.value():
