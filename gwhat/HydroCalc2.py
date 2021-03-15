@@ -624,7 +624,7 @@ class WLCalc(QWidget, SaveFileMixin):
         QApplication.setOverrideCursor(Qt.WaitCursor)
 
         A, B, recess, RMSE = calculate_mrc(
-            self.time, self.water_lvl, self.peak_indx,
+            self.time, self.water_lvl, self._mrc_period_xdata,
             self.MRC_type.currentIndex())
 
         print('MRC Parameters: A={}, B={}'
@@ -1622,7 +1622,7 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         return False
 
 
-def calculate_mrc(t, h, ipeak, mrctype=1):
+def calculate_mrc(t, h, periods, mrctype=1):
     """
     Calculate the equation parameters of the Master Recession Curve (MRC) of
     the aquifer from the water level time series using a modified Gauss-Newton
@@ -1632,7 +1632,9 @@ def calculate_mrc(t, h, ipeak, mrctype=1):
     ----------
     h : water level time series in mbgs
     t : time in days
-    ipeak: sequence of indices where the maxima and minima are located in h
+    periods: sequence of tuples containing the boundaries, in XLS numerical
+             date format, of the periods selected by the user to evaluate
+             the MRC.
 
     mrctype: MRC equation type
              MODE = 0 -> linear (dh/dt = b)
@@ -1644,16 +1646,25 @@ def calculate_mrc(t, h, ipeak, mrctype=1):
     hp = t.copy() * np.nan
     RMSE = np.nan
 
-    # ---- Check Min/Max
-    if len(ipeak) == 0:
-        print('No extremum selected')
+    # Convert xlsdate periods into index periods.
+    ipeak = []
+    minpeak = []
+    maxpeak = []
+    for period in periods:
+        indx0 = np.argmin(np.abs(t - period[0]))
+        indx1 = np.argmin(np.abs(t - period[1]))
+        if np.abs(indx1 - indx0) < 2:
+            continue
+        minpeak.append(max(indx0, indx1))
+        maxpeak.append(min(indx0, indx1))
+        ipeak.extend([maxpeak[-1], minpeak[-1]])
+
+    # Check Min/Max
+    if len(minpeak) == 0:
+        print('No valid mrc period is currently selected')
         return A, B, hp, RMSE
 
-    ipeak = np.sort(ipeak)
-    maxpeak = ipeak[:-1:2]
-    minpeak = ipeak[1::2]
     dpeak = (h[maxpeak] - h[minpeak]) * -1  # WARNING: Don't forget it is mbgs
-
     if np.any(dpeak < 0):
         print('There is a problem with the pair-ditribution of min-max')
         return A, B, hp, RMSE
