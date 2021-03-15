@@ -748,8 +748,7 @@ class WLCalc(QWidget, SaveFileMixin):
             self.peak_memory.append(self.peak_indx)
             self.draw_mrc()
 
-    # ---- Navig and selec tools
-
+    # ---- Navigation and selection tools
     def register_navig_and_select_tool(self, tool):
         """
         Add the tool to the list of tools that are available to interactively
@@ -1447,11 +1446,10 @@ class WLCalc(QWidget, SaveFileMixin):
                 self.xcross.set_visible(False)
         else:
             self.xcross.set_visible(False)
-
         ax0.draw_artist(self.xcross)
 
         # Update the canvas
-        self.fig.canvas.blit()
+        self.canvas.blit()
 
     def onrelease(self, event):
         """
