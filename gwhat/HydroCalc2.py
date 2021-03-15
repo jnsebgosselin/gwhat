@@ -285,11 +285,6 @@ class WLCalc(QWidget, SaveFileMixin):
             '<p>Show water lvl data as dots instead of a continuous line</p>')
         self.btn_wl_style.sig_value_changed.connect(self.setup_wl_style)
 
-        self.btn_strati = QToolButtonNormal(icons.get_icon('stratigraphy'))
-        self.btn_strati.setToolTip('Toggle on and off the display of the soil'
-                                   ' stratigraphic layers')
-        self.btn_strati.clicked.connect(self.btn_strati_isClicked)
-
         self.btn_dateFormat = QToolButtonNormal(icons.get_icon('calendar'))
         self.btn_dateFormat.setToolTip(
             'Show x-axis tick labels as Excel numeric format.')
@@ -878,9 +873,6 @@ class WLCalc(QWidget, SaveFileMixin):
         self.draw_meas_wl()
         self.draw_glue_wl()
         self.draw_weather()
-        if not self.btn_strati.autoRaise():
-            # Plot stratigraphy.
-            self.display_soil_layer()
 
         self.setup_axis_range()
         self.setup_xticklabels_format()
@@ -1008,86 +1000,6 @@ class WLCalc(QWidget, SaveFileMixin):
         # ---------------------------------------------- plot water levels ----
 
         self.plt_wlpre.set_data(self.synth_hydrograph.DATE, WLpre/1000.)
-
-        self.draw()
-
-    def btn_strati_isClicked(self):
-
-        # Attribute Action :
-
-        if self.btn_strati.autoRaise():
-            self.btn_strati.setAutoRaise(False)
-            self.display_soil_layer()
-        else:
-            self.btn_strati.setAutoRaise(True)
-            self.hide_soil_layer()
-
-    def hide_soil_layer(self):
-
-        for i in range(len(self.zlayer)):
-            self.layers[i].remove()
-            self.stratLines[i].remove()
-        self.stratLines[i+1].remove()
-
-        self.draw()
-
-    def display_soil_layer(self):
-
-        # Check :
-
-        if not os.path.exists(self.soilFilename):
-            print('No ".sol" file found for this well.')
-            self.btn_strati.setAutoRaise(True)
-            return
-
-        # Load soil column info :
-
-        with open(self.soilFilename, 'r') as f:
-            reader = list(csv.reader(f, delimiter=','))
-
-        NLayer = len(reader)
-
-        self.zlayer = np.empty(NLayer).astype(float)
-        self.soilName = np.empty(NLayer).astype(str)
-        self.Sy = np.empty(NLayer).astype(float)
-        self.soilColor = np.empty(NLayer).astype(str)
-
-        for i in range(NLayer):
-            self.zlayer[i] = reader[i][0]
-            self.soilName[i] = reader[i][1]
-            self.Sy[i] = reader[i][2]
-            try:
-                self.soilColor[i] = reader[i][3]
-                print(reader[i][3])
-            except Exception:
-                self.soilColor[i] = '#FFFFFF'
-
-        print(self.soilColor)
-
-        # Plot layers and lines :
-
-        self.layers = [0] * len(self.zlayer)
-        self.stratLines = [0] * (len(self.zlayer)+1)
-
-        up = 0
-        self.stratLines[0], = self.ax0.plot([0, 99999], [up, up],
-                                            color="black",
-                                            linewidth=1)
-        for i in range(len(self.zlayer)):
-
-            down = self.zlayer[i]
-
-            self.stratLines[i+1], = self.ax0.plot([0, 99999], [down, down],
-                                                  color="black",
-                                                  linewidth=1)
-            try:
-                self.layers[i] = self.ax0.fill_between(
-                    [0, 99999], up, down, color=self.soilColor[i], zorder=0)
-            except Exception:
-                self.layers[i] = self.ax0.fill_between(
-                    [0, 99999], up, down, color='#FFFFFF', zorder=0)
-
-            up = down
 
         self.draw()
 
