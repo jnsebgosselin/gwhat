@@ -408,7 +408,7 @@ class WLCalc(QWidget, SaveFileMixin):
             icon='clear_search',
             iconsize=get_iconsize('normal'),
             tip='Clear all extremum from the graph',
-            triggered=self.clear_all_peaks)
+            triggered=self.clear_all_mrcperiods)
 
         self.btn_addpeak = OnOffToolButton('add_point', size='normal')
         self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
@@ -754,15 +754,11 @@ class WLCalc(QWidget, SaveFileMixin):
             self.btn_show_mrc.setValue(True)
         self.draw()
 
-    def clear_all_peaks(self):
-        """Clear all peaks from the graph."""
-        if len(self.peak_indx) > 0:
-            self.peak_indx = np.array([]).astype(int)
-            self.peak_memory.append(self.peak_indx)
-        for i in reversed(range(len(self._mrc_period_xdata))):
-            del self._mrc_period_xdata[i]
-            self._mrc_period_artists[i].remove()
-            del self._mrc_period_artists[i]
+    def clear_all_mrcperiods(self):
+        """Clear all mrc periods from the graph."""
+        if len(self._mrc_period_xdata) > 0:
+            self._mrc_period_xdata = []
+            self.peak_memory.append([])
         self.draw_mrc()
 
     # ---- Navigation and selection tools
