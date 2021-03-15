@@ -17,7 +17,7 @@ import datetime
 # ---- Third party imports
 import numpy as np
 import pandas as pd
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QObject
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
 from PyQt5.QtWidgets import (
@@ -26,6 +26,7 @@ from PyQt5.QtWidgets import (
     QMessageBox)
 
 import matplotlib as mpl
+from matplotlib.widgets import AxesWidget
 import matplotlib.dates as mdates
 from matplotlib.figure import Figure as MplFigure
 from matplotlib.patches import Rectangle
@@ -83,6 +84,7 @@ class WLCalc(QWidget, SaveFileMixin):
             self.toggle_brfperiod_selection)
 
         self.__figbckground = None
+        self._axes_widgets = []
         self.__addPeakVisible = True
         self.__mouse_btn_is_pressed = False
 
@@ -513,6 +515,12 @@ class WLCalc(QWidget, SaveFileMixin):
 
         main_layout.setHorizontalSpacing(15)
         main_layout.setColumnStretch(0, 100)
+
+    def install_axeswidget(self, axes_widget):
+        """
+        Install the provided axes widget in the WLCalc.
+        """
+        self._axes_widgets.append(axes_widget)
 
     def emit_warning(self, message, title='Warning'):
         QMessageBox.warning(self, title, message, QMessageBox.Ok)
