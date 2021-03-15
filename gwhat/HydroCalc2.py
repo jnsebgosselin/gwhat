@@ -397,14 +397,15 @@ class WLCalc(QWidget, SaveFileMixin):
             QSizePolicy(QSizePolicy.Ignored, QSizePolicy.Preferred))
 
         # Setup the MRC toolbar
-        self.btn_undo = QToolButtonNormal(icons.get_icon('undo'))
-        self.btn_undo.setToolTip('Undo')
+        self.btn_undo = create_toolbutton(
+            parent=self, icon='undo', tip='Undo', triggered=self.undo)
         self.btn_undo.setEnabled(False)
-        self.btn_undo.clicked.connect(self.undo)
 
-        self.btn_clearPeak = QToolButtonNormal(icons.get_icon('clear_search'))
-        self.btn_clearPeak.setToolTip('Clear all extremum from the graph')
-        self.btn_clearPeak.clicked.connect(self.clear_all_peaks)
+        self.btn_clearPeak = create_toolbutton(
+            parent=self,
+            icon='clear_search',
+            tip='Clear all extremum from the graph',
+            triggered=self.clear_all_peaks)
 
         self.btn_addpeak = OnOffToolButton('add_point', size='normal')
         self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
@@ -419,9 +420,11 @@ class WLCalc(QWidget, SaveFileMixin):
             " from the graph</p>")
         self.register_navig_and_select_tool(self.btn_delpeak)
 
-        self.btn_save_mrc = QToolButtonNormal(icons.get_icon('save'))
-        self.btn_save_mrc.setToolTip('Save calculated MRC to file.')
-        self.btn_save_mrc.clicked.connect(self.save_mrc_tofile)
+        self.btn_save_mrc = create_toolbutton(
+            parent=self,
+            icon='save',
+            tip='Save calculated MRC to file.',
+            triggered=self.save_mrc_tofile)
 
         self.btn_MRCalc = QPushButton('Compute MRC')
         self.btn_MRCalc.clicked.connect(self.btn_MRCalc_isClicked)
