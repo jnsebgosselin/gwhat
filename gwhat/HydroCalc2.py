@@ -229,7 +229,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Vertical guide line under cursor.
         self.vguide = ax0.axvline(
-            -1, color='black', zorder=40,  linestyle='--', lw=1, visible=False)
+            -1, color='black', zorder=40, linestyle='--', lw=1, visible=False)
 
         # x and y coorrdinate labels displayed at the right-bottom corner
         # of the graph
@@ -697,7 +697,7 @@ class WLCalc(QWidget, SaveFileMixin):
             brfperiod = [None, None]
             for i in range(2):
                 x = self._selected_brfperiod[i] - (
-                        self.dt4xls2mpl * self.dformat)
+                    self.dt4xls2mpl * self.dformat)
                 brfperiod[i] = self.time[np.argmin(np.abs(x - self.time))]
             self.brf_eval_widget.set_brfperiod(brfperiod)
         self.toggle_brfperiod_selection(False)
