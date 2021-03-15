@@ -1489,33 +1489,6 @@ class WLCalc(QWidget, SaveFileMixin):
                 # hide the cross outside of the plotting area :
                 self.xcross.set_visible(False)
                 self.draw_mrc()
-        elif not self.btn_addpeak.autoRaise():
-            xclic = event.xdata
-            if xclic is None:
-                return
-
-            # http://matplotlib.org/examples/pylab_examples/cursor_demo.html
-
-            x = self.time + self.dt4xls2mpl * self.dformat
-            y = self.water_lvl
-
-            d = np.abs(xclic - x)
-            indx = np.argmin(d)
-
-            if len(self.peak_indx) > 0:
-                if indx in self.peak_indx:
-                    print('There is already a peak at this time.')
-                    return
-
-                if np.min(np.abs(x[self.peak_indx] - x[indx])) < 1:
-                    print('There is a peak at less than 1 days.')
-                    return
-
-            self.peak_indx = np.append(self.peak_indx, indx)
-            self.peak_memory.append(self.peak_indx)
-
-            self.__addPeakVisible = False
-            self.draw()
         elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[0] = event.xdata
             self.vguide.set_color('red')
