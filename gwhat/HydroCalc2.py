@@ -401,7 +401,7 @@ class WLCalc(QWidget, SaveFileMixin):
             icon='undo',
             iconsize=get_iconsize('normal'),
             tip='Undo',
-            triggered=self.undo)
+            triggered=self.undo_mrc_period)
         self.btn_undo.setEnabled(False)
 
         self.btn_clearPeak = create_toolbutton(
@@ -854,10 +854,14 @@ class WLCalc(QWidget, SaveFileMixin):
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
         self.setup_ax_margins()
 
-    def undo(self):
-        if len(self.peak_memory) > 1:
-            self.peak_indx = self.peak_memory[-2]
-            del self.peak_memory[-1]
+    def undo_mrc_period(self):
+        """
+        Undo the last operation performed by the user on the selection
+        of mrc periods.
+        """
+        if len(self._mrc_period_memory) > 1:
+            self._mrc_period_xdata = self._mrc_period_memory[-2]
+            del self._mrc_period_memory[-1]
             self.draw_mrc()
 
     # ---- Water level edit tools
