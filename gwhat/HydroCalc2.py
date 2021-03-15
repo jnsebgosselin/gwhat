@@ -124,7 +124,7 @@ class WLCalc(QWidget, SaveFileMixin):
         self.canvas.mpl_connect('button_press_event', self.onclick)
         self.canvas.mpl_connect('button_release_event', self.onrelease)
         self.canvas.mpl_connect('resize_event', self.setup_ax_margins)
-        self.canvas.mpl_connect('motion_notify_event', self.on_mouse_move)
+        self.canvas.mpl_connect('motion_notify_event', self.onmove)
         self.canvas.mpl_connect('figure_leave_event', self.on_fig_leave)
         self.canvas.mpl_connect('axes_enter_event', self.on_axes_enter)
         self.canvas.mpl_connect('axes_leave_event', self.on_axes_leave)
@@ -1378,7 +1378,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 )[0].tolist()
             self.draw_select_wl()
 
-    def on_mouse_move(self, event):
+    def onmove(self, event):
         """
         Draw the vertical mouse guideline and the x and y coordinates of the
         mouse cursor on the graph.
@@ -1478,7 +1478,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 return
             self.__addPeakVisible = True
             self.draw_mrc()
-        self.on_mouse_move(event)
+        self.onmove(event)
 
     def onclick(self, event):
         """Handle when the graph is clicked with the mouse."""
@@ -1549,7 +1549,7 @@ class WLCalc(QWidget, SaveFileMixin):
             self._selected_brfperiod[0] = event.xdata
             self.vguide.set_color('red')
             self.draw()
-            self.on_mouse_move(event)
+            self.onmove(event)
         elif self.rect_select_is_active:
             self._rect_selection[0] = (event.xdata, event.ydata)
         else:
