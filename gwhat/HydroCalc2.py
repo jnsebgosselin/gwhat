@@ -107,7 +107,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Soil Profiles :
         self.soilFilename = []
-        self.SOILPROFIL = SoilProfil()
 
         # Initialize the GUI
         self.precip_bwidth = 7
@@ -1789,50 +1788,6 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
             hp[imax+j+1] = (LUMP1 * hp[imax+j] + LUMP2) * LUMP3
 
     return hp
-
-
-
-class SoilProfil():
-    """
-    zlayer = Position of the layer boundaries in mbgs where 0 is the ground
-             surface. There is one more element in zlayer than the total number
-             of layer.
-
-    soilName = Soil texture description.
-
-    Sy = Soil specific yield.
-    """
-
-    def __init__(self):
-
-        self.zlayer = []
-        self.soilName = []
-        self.Sy = []
-        self.color = []
-
-    def load_info(self, filename):
-
-        # ---- load soil column info ----
-
-        with open(filename, 'r') as f:
-            reader = list(csv.reader(f, delimiter=','))
-
-        NLayer = len(reader)
-
-        self.zlayer = np.empty(NLayer+1).astype(float)
-        self.soilName = np.empty(NLayer).astype(str)
-        self.Sy = np.empty(NLayer).astype(float)
-        self.color = np.empty(NLayer).astype(str)
-
-        self.zlayer[0] = 0
-        for i in range(NLayer):
-            self.zlayer[i+1] = reader[i][0]
-            self.soilName[i] = reader[i][1]
-            self.Sy[i] = reader[i][2]
-            try:
-                self.color[i] = reader[i][3]
-            except Exception:
-                self.color[i] = '#FFFFFF'
 
 
 def mrc2rechg(t, ho, A, B, z, Sy):
