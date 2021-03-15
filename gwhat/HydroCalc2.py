@@ -1454,6 +1454,7 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         self.axvline.set_visible(False)
 
     def restore(self):
+        """Internal event handler to restore the cursor."""
         self.axvspan.set_visible(True)
         self.ax.draw_artist(self.axvspan)
 
@@ -1461,20 +1462,33 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         self.ax.draw_artist(self.axvline)
 
     def onpress(self, event):
-        if event.button == 1 and event.xdata:
-            self._onpress_xdata = event.xdata
-            self.axvline.set_color('red')
-            self._update()
+        """Handler for the button_press_event event."""
+        if event.button not in [1, 3] or event.xdata:
+            if self._onpress_button in [None, event.button]:
+                self._onpress_button = event.button
+                self._onpress_xdata.append(event.xdata)
+                self.axvline.set_visible(False)
+        self._update()
 
     def onrelease(self, event):
-        if event.button == 1:
-            xdata = (self._onpress_xdata, event.xdata)
-            self._onpress_xdata = None
-            self.axvline.set_color('black')
-            self.axvline.set_visible(False)
-            self.axvspan.set_visible(False)
-            self._update()
-            self.sig_span_selected.emit(xdata)
+        if event.button == self._onpress_button:
+            self._onrelease_xdata = self._onpress_xdata
+            if len(self._onrelease_xdata) == 1:
+                self.axvline.set_color('red')
+                self.axvline.set_visible(True)
+                self.axvspan.set_visible(True)
+            elif len(self._onrelease_xdata) == 2:
+                self.axvline.set_color('black')
+                self.axvline.set_visible(True)
+                self.axvspan.set_visible(False)
+
+                onrelease_xdata = tuple(self._onrelease_xdata)
+                onpress_button = int(self._onpress_button)
+                self._onrelease_xdata = []
+                self._onpress_button = None
+                self._onpress_xdata = []
+                self.sig_span_selected.emit(onrelease_xdata, onpress_button)
+        self._update()
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
@@ -1484,25 +1498,34 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
             return
         if not self.visible:
             return
+
         if event.xdata is None:
             self.axvline.set_visible(False)
             self.axvspan.set_visible(False)
-            return
-
-        if self._onpress_xdata is None:
+        elif len(self._onpress_xdata) == 0 and len(self._onrelease_xdata) == 0:
             self.axvline.set_visible(True)
             self.axvline.set_xdata((event.xdata, event.xdata))
 
             self.axvspan.set_visible(False)
-        else:
+        elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 0:
+            self.axvline.set_visible(False)
+            self.axvspan.set_visible(False)
+        elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 1:
             self.axvline.set_visible(True)
             self.axvline.set_xdata((event.xdata, event.xdata))
 
             self.axvspan.set_visible(True)
-            self.axvspan.xy = [[self._onpress_xdata, 1],
-                               [self._onpress_xdata, 0],
+            self.axvspan.xy = [[self._onrelease_xdata[0], 1],
+                               [self._onrelease_xdata[0], 0],
                                [event.xdata, 0],
                                [event.xdata, 1]]
+        elif len(self._onpress_xdata) == 2 and len(self._onrelease_xdata) == 1:
+            self.axvline.set_visible(False)
+            self.axvspan.set_visible(True)
+            self.axvspan.xy = [[self._onpress_xdata[0], 1],
+                               [self._onpress_xdata[0], 0],
+                               [self._onpress_xdata[1], 0],
+                               [self._onpress_xdata[1], 1]]
         self._update()
 
     def _update(self):
@@ -1778,8 +1801,6 @@ def mrc2rechg(t, ho, A, B, z, Sy):
 
     return RECHG
 
-
-# %% if __name__ == '__main__'
 
 if __name__ == '__main__':
     import sys
