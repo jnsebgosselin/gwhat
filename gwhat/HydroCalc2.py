@@ -1546,15 +1546,17 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         elif len(self._onpress_xdata) == 0 and len(self._onrelease_xdata) == 0:
             self.axvline.set_visible(True)
             self.axvline.set_xdata((event.xdata, event.xdata))
-
             self.axvspan.set_visible(False)
         elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 0:
             self.axvline.set_visible(False)
-            self.axvspan.set_visible(False)
+            self.axvspan.set_visible(True)
+            self.axvspan.xy = [[self._onpress_xdata[0], 1],
+                               [self._onpress_xdata[0], 0],
+                               [self._onpress_xdata[0], 0],
+                               [self._onpress_xdata[0], 1]]
         elif len(self._onpress_xdata) == 1 and len(self._onrelease_xdata) == 1:
             self.axvline.set_visible(True)
             self.axvline.set_xdata((event.xdata, event.xdata))
-
             self.axvspan.set_visible(True)
             self.axvspan.xy = [[self._onrelease_xdata[0], 1],
                                [self._onrelease_xdata[0], 0],
