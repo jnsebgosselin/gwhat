@@ -452,9 +452,6 @@ class WLCalc(QWidget, SaveFileMixin):
         mrc_lay.setRowStretch(row, 100)
         row += 1
         mrc_lay.addWidget(self.btn_MRCalc, row, 0, 1, 3)
-
-        mrc_lay.setContentsMargins(10, 10, 10, 10)
-        mrc_lay.setSpacing(5)
         mrc_lay.setColumnStretch(2, 500)
 
         return self.mrc_eval_widget
