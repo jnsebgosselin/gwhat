@@ -1421,7 +1421,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
 
 class WLCalcVSpanSelector(AxesWidget, QObject):
-    sig_span_selected = QSignal(tuple)
+    sig_span_selected = QSignal(tuple, int)
 
     def __init__(self, ax, useblit=True):
         AxesWidget.__init__(self, ax)
@@ -1435,16 +1435,18 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
             alpha=0.1)
 
         self.axvline = ax.axvline(
-            ax.get_ybound()[0], visible=False, color='red', linewidth=1,
+            ax.get_ybound()[0], visible=False, color='black', linewidth=1,
             ls='--', animated=self.useblit)
 
-        self._onpress_xdata = None
-        self._onrelease_xdata = None
+        self._onpress_xdata = []
+        self._onpress_button = None
+        self._onrelease_xdata = []
         super().set_active(False)
 
     def set_active(self, active):
-        self._onpress_xdata = None
-        self._onrelease_xdata = None
+        self._onpress_xdata = []
+        self._onpress_button = None
+        self._onrelease_xdata = []
         self.axvline.set_color('black')
         super().set_active(active)
 
