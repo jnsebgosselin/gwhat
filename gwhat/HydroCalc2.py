@@ -691,6 +691,13 @@ class WLCalc(QWidget, SaveFileMixin):
             del self._mrc_period_memory[-1]
             self.draw_mrc()
 
+    def clear_all_mrcperiods(self):
+        """Clear all mrc periods from the graph."""
+        if len(self._mrc_period_xdata) > 0:
+            self._mrc_period_xdata = []
+            self.peak_memory.append([])
+        self.draw_mrc()
+
     # ---- BRF selection
     def plot_brfperiod(self):
         """
@@ -762,13 +769,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self.toggle_navig_and_select_tools(self.btn_delpeak)
             self.btn_show_mrc.setValue(True)
         self.draw()
-
-    def clear_all_mrcperiods(self):
-        """Clear all mrc periods from the graph."""
-        if len(self._mrc_period_xdata) > 0:
-            self._mrc_period_xdata = []
-            self.peak_memory.append([])
-        self.draw_mrc()
 
     # ---- Navigation and selection tools
     def register_navig_and_select_tool(self, tool):
