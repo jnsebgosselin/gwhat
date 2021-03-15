@@ -1491,15 +1491,17 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
 
     def clear(self):
         """Internal event handler to clear the cursor."""
+        self.__axvspan_visible = self.axvspan.get_visible()
+        self.__axvline_visible = self.axvline.get_visible()
         self.axvspan.set_visible(False)
         self.axvline.set_visible(False)
 
     def restore(self):
         """Internal event handler to restore the cursor."""
-        self.axvspan.set_visible(True)
+        self.axvspan.set_visible(self.__axvspan_visible)
         self.ax.draw_artist(self.axvspan)
 
-        self.axvline.set_visible(True)
+        self.axvline.set_visible(self.__axvline_visible)
         self.ax.draw_artist(self.axvline)
 
     def onpress(self, event):
