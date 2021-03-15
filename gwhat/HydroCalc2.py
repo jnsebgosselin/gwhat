@@ -653,13 +653,13 @@ class WLCalc(QWidget, SaveFileMixin):
 
     def load_mrc_from_wldset(self):
         """Load saved MRC results from the project hdf5 file."""
-        if self.wldset is not None and self.wldset.mrc_exists():
-            self.peak_indx = self.wldset.get_mrc()['peak_indx']
-            self.peak_memory[0] = self.peak_indx.copy()
+        if self.wldset is not None:
+            self._mrc_period_xdata = self.wldset.get_mrc()['peak_indx']
+            self._mrc_period_memory[0] = self._mrc_period_xdata.copy()
             self.btn_save_mrc.setEnabled(True)
         else:
-            self.peak_indx = np.array([]).astype(int)
-            self.peak_memory = []
+            self._mrc_period_xdata = []
+            self._mrc_period_memory = []
             self.btn_save_mrc.setEnabled(False)
         self.draw_mrc()
 
