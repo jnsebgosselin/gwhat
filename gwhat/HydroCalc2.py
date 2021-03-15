@@ -1217,19 +1217,23 @@ class WLCalc(QWidget, SaveFileMixin):
 
     def _draw_mrc_periods(self):
         """Draw the periods that will be used to compute the MRC."""
-        self.btn_undo.setEnabled(len(self.peak_memory) > 1)
+        self.btn_undo.setEnabled(len(self._mrc_period_memory) > 1)
+        for axvspan in self._mrc_period_axvspans:
+            axvspan.set_visible(False)
         if self.wldset is not None and self.btn_show_mrc.value():
-            for axvspan, xdata in zip(
-                    self._mrc_period_artists, self._mrc_period_xdata):
+            for i, xdata in enumerate(self._mrc_period_xdata):
                 xmin = xdata[0] + (self.dt4xls2mpl * self.dformat)
                 xmax = xdata[1] + (self.dt4xls2mpl * self.dformat)
-                axvspan.set_visible(
-                    self.wldset is not None and self.btn_show_mrc.value())
-                axvspan.xy = [[xmin, 1], [xmin, 0],
-                              [xmax, 0], [xmax, 1]]
-        else:
-            for axvspan in self._mrc_period_artists:
-                axvspan.set_visible(False)
+                try:
+                    axvspan = self._mrc_period_axvspans[i]
+                    axvspan.set_visible(True)
+                    axvspan.xy = [[xmin, 1], [xmin, 0],
+                                  [xmax, 0], [xmax, 1]]
+                except IndexError:
+                    axvspan = self.fig.axes[0].axvspan(
+                        xmin, xmax, visible=True, color='red', linewidth=1,
+                        ls='-', alpha=0.1)
+                    self._mrc_period_axvspans.append(axvspan)
 
     def _draw_rect_selection(self, x2, y2):
         """Draw the rectangle of the rectangular selection tool."""
