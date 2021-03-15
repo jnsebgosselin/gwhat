@@ -398,12 +398,17 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Setup the MRC toolbar
         self.btn_undo = create_toolbutton(
-            parent=self, icon='undo', tip='Undo', triggered=self.undo)
+            parent=self,
+            icon='undo',
+            iconsize=get_iconsize('normal'),
+            tip='Undo',
+            triggered=self.undo)
         self.btn_undo.setEnabled(False)
 
         self.btn_clearPeak = create_toolbutton(
             parent=self,
             icon='clear_search',
+            iconsize=get_iconsize('normal'),
             tip='Clear all extremum from the graph',
             triggered=self.clear_all_peaks)
 
@@ -423,6 +428,7 @@ class WLCalc(QWidget, SaveFileMixin):
         self.btn_save_mrc = create_toolbutton(
             parent=self,
             icon='save',
+            iconsize=get_iconsize('normal'),
             tip='Save calculated MRC to file.',
             triggered=self.save_mrc_tofile)
 
