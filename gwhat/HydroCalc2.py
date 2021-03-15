@@ -38,13 +38,14 @@ from xlrd.xldate import xldate_from_date_tuple
 
 
 # ---- Local imports
+from gwhat.brf_mod import BRFManager
+from gwhat.config.gui import FRAME_SYLE
 from gwhat.config.main import CONF
 from gwhat.gwrecharge.gwrecharge_gui import RechgEvalWidget
-from gwhat.config.gui import FRAME_SYLE
 from gwhat.utils import icons
 from gwhat.utils.icons import QToolButtonNormal, get_iconsize
+from gwhat.utils.qthelpers import create_toolbutton
 from gwhat.widgets.buttons import ToolBarWidget
-from gwhat.brf_mod import BRFManager
 from gwhat.widgets.buttons import OnOffToolButton
 from gwhat.widgets.layout import VSep
 from gwhat.widgets.fileio import SaveFileMixin
