@@ -644,7 +644,8 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Store and plot the results.
         print('Saving MRC interpretation in dataset...')
-        self.wldset.set_mrc(A, B, self.peak_indx, self.time, recess)
+        self.wldset.set_mrc(
+            A, B, self._mrc_period_xdata, self.time, recess)
         self.btn_save_mrc.setEnabled(True)
         self.draw_mrc()
         self.sig_new_mrc.emit()
