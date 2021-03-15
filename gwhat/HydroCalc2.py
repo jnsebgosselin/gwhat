@@ -141,7 +141,7 @@ class WLCalc(QWidget, SaveFileMixin):
         fig_frame_layout.addWidget(self.canvas, 0, 0)
 
         # Setup the Water Level (Host) axe.
-        ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
+        self.wl_axes = ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
         ax0.patch.set_visible(False)
         ax0.invert_yaxis()
 
@@ -368,8 +368,15 @@ class WLCalc(QWidget, SaveFileMixin):
     def _setup_mrc_tool(self):
         """Setup the tool to evaluate the MRC."""
 
-        # ---- MRC parameters
+        # Setup the mrc period selector.
+        self.mrc_selector = WLCalcVSpanSelector(self.wl_axes)
+        self.install_axeswidget(self.mrc_selector)
+        self.mrc_selector.sig_span_selected.connect(
+            self._handle_mrcperiod_selected)
+        self._mrc_period_xdata = []
+        self._mrc_period_artists = []
 
+        # ---- MRC parameters
         self.MRC_type = QComboBox()
         self.MRC_type.addItems(['Linear', 'Exponential'])
         self.MRC_type.setCurrentIndex(1)
@@ -563,7 +570,7 @@ class WLCalc(QWidget, SaveFileMixin):
         super().showEvent(event)
 
     # ---- MRC handlers
-    def _handle_mrcperiod_selected(self, xdata):
+    def _handle_mrcperiod_selected(self, xdata, button):
         """
         Handle when a new mrc period is selectedby the user.
         """
@@ -736,6 +743,7 @@ class WLCalc(QWidget, SaveFileMixin):
         if self.btn_addpeak.value():
             self.toggle_navig_and_select_tools(self.btn_addpeak)
             self.btn_show_mrc.setValue(True)
+        self.mrc_selector.set_active(self.btn_addpeak.value())
         self.draw()
 
     def btn_delpeak_isclicked(self):
@@ -750,7 +758,11 @@ class WLCalc(QWidget, SaveFileMixin):
         if len(self.peak_indx) > 0:
             self.peak_indx = np.array([]).astype(int)
             self.peak_memory.append(self.peak_indx)
-            self.draw_mrc()
+        for i in reversed(range(len(self._mrc_period_xdata))):
+            del self._mrc_period_xdata[i]
+            self._mrc_period_artists[i].remove()
+            del self._mrc_period_artists[i]
+        self.draw_mrc()
 
     # ---- Navigation and selection tools
     def register_navig_and_select_tool(self, tool):
@@ -1052,8 +1064,14 @@ class WLCalc(QWidget, SaveFileMixin):
         self.vguide.set_visible(False)
         self.xycoord.set_visible(False)
         self.xcross.set_visible(False)
+        for widget in self._axes_widgets:
+            widget.clear()
+
         self.canvas.draw()
         self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
+
+        for widget in self._axes_widgets:
+            widget.restore()
 
     def draw_meas_wl(self):
         """Draw the water level measured manually in the well."""
@@ -1359,6 +1377,11 @@ class WLCalc(QWidget, SaveFileMixin):
             self.xcross.set_visible(False)
         ax0.draw_artist(self.xcross)
 
+        # Update all axes widget.
+        for widget in self._axes_widgets:
+            if widget.get_active():
+                widget.onmove(event)
+
         # Update the canvas
         self.canvas.blit()
 
@@ -1384,14 +1407,12 @@ class WLCalc(QWidget, SaveFileMixin):
             self._brf_selector.set_visible(False)
             self.on_brf_select()
 
-        if self.is_all_btn_raised():
-            self.draw()
-        else:
-            if event.button != 1:
-                return
-            self.__addPeakVisible = True
-            self.draw_mrc()
-        self.onmove(event)
+        # Update all axes widget.
+        for widget in self._axes_widgets:
+            if widget.get_active():
+                widget.onrelease(event)
+
+        self.draw()
 
     def onpress(self, event):
         """Handle when the graph is clicked with the mouse."""
