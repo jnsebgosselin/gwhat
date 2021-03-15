@@ -681,6 +681,16 @@ class WLCalc(QWidget, SaveFileMixin):
                 self.save_mrc_tofile(savefilename)
             QApplication.restoreOverrideCursor()
 
+    def undo_mrc_period(self):
+        """
+        Undo the last operation performed by the user on the selection
+        of mrc periods.
+        """
+        if len(self._mrc_period_memory) > 1:
+            self._mrc_period_xdata = self._mrc_period_memory[-2]
+            del self._mrc_period_memory[-1]
+            self.draw_mrc()
+
     # ---- BRF selection
     def plot_brfperiod(self):
         """
@@ -853,16 +863,6 @@ class WLCalc(QWidget, SaveFileMixin):
             xlim = ax0.get_xlim()
             ax0.set_xlim(xlim[0] - self.dt4xls2mpl, xlim[1] - self.dt4xls2mpl)
         self.setup_ax_margins()
-
-    def undo_mrc_period(self):
-        """
-        Undo the last operation performed by the user on the selection
-        of mrc periods.
-        """
-        if len(self._mrc_period_memory) > 1:
-            self._mrc_period_xdata = self._mrc_period_memory[-2]
-            del self._mrc_period_memory[-1]
-            self.draw_mrc()
 
     # ---- Water level edit tools
     def delete_selected_wl(self):
