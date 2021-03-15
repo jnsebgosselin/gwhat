@@ -1500,6 +1500,98 @@ class WLCalc(QWidget, SaveFileMixin):
             self.draw()
 
 
+
+class WLCalcVSpanSelector(AxesWidget, QObject):
+    sig_span_selected = QSignal(tuple)
+
+    def __init__(self, ax, useblit=True):
+        AxesWidget.__init__(self, ax)
+        QObject.__init__(self)
+        self.visible = True
+        self.useblit = useblit and self.canvas.supports_blit
+
+        self.axvspan = ax.axvspan(
+            ax.get_xbound()[0], ax.get_xbound()[0], visible=False,
+            color='red', linewidth=1, ls='--', animated=self.useblit,
+            alpha=0.1)
+
+        self.axvline = ax.axvline(
+            ax.get_ybound()[0], visible=False, color='red', linewidth=1,
+            ls='--', animated=self.useblit)
+
+        self._onpress_xdata = None
+        self._onrelease_xdata = None
+        super().set_active(False)
+
+    def set_active(self, active):
+        self._onpress_xdata = None
+        self._onrelease_xdata = None
+        self.axvline.set_color('black')
+        super().set_active(active)
+
+    def clear(self):
+        """Internal event handler to clear the cursor."""
+        self.axvspan.set_visible(False)
+        self.axvline.set_visible(False)
+
+    def restore(self):
+        self.axvspan.set_visible(True)
+        self.ax.draw_artist(self.axvspan)
+
+        self.axvline.set_visible(True)
+        self.ax.draw_artist(self.axvline)
+
+    def onpress(self, event):
+        if event.button == 1 and event.xdata:
+            self._onpress_xdata = event.xdata
+            self.axvline.set_color('red')
+            self._update()
+
+    def onrelease(self, event):
+        if event.button == 1:
+            xdata = (self._onpress_xdata, event.xdata)
+            self._onpress_xdata = None
+            self.axvline.set_color('black')
+            self.axvline.set_visible(False)
+            self.axvspan.set_visible(False)
+            self._update()
+            self.sig_span_selected.emit(xdata)
+
+    def onmove(self, event):
+        """Internal event handler to draw the cursor when the mouse moves."""
+        if self.ignore(event):
+            return
+        if not self.canvas.widgetlock.available(self):
+            return
+        if not self.visible:
+            return
+        if event.xdata is None:
+            self.axvline.set_visible(False)
+            self.axvspan.set_visible(False)
+            return
+
+        if self._onpress_xdata is None:
+            self.axvline.set_visible(True)
+            self.axvline.set_xdata((event.xdata, event.xdata))
+
+            self.axvspan.set_visible(False)
+        else:
+            self.axvline.set_visible(True)
+            self.axvline.set_xdata((event.xdata, event.xdata))
+
+            self.axvspan.set_visible(True)
+            self.axvspan.xy = [[self._onpress_xdata, 1],
+                               [self._onpress_xdata, 0],
+                               [event.xdata, 0],
+                               [event.xdata, 1]]
+        self._update()
+
+    def _update(self):
+        self.ax.draw_artist(self.axvline)
+        self.ax.draw_artist(self.axvspan)
+        return False
+
+
 def local_extrema(x, Deltan):
     """
     Code adapted from a MATLAB script at
