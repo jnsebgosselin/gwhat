@@ -1988,8 +1988,6 @@ def calc_synth_hydrograph(A, B, h, dt, ipeak):
     return hp
 
 
-# =============================================================================
-
 
 class SoilProfil():
     """
