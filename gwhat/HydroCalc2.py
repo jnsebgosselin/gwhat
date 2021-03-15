@@ -142,7 +142,7 @@ class WLCalc(QWidget, SaveFileMixin):
         fig_frame_layout.addWidget(self.canvas, 0, 0)
 
         # Setup the Water Level (Host) axe.
-        self.wl_axes = ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
+        ax0 = self.fig.add_axes([0, 0, 1, 1], zorder=100)
         ax0.patch.set_visible(False)
         ax0.invert_yaxis()
 
@@ -370,7 +370,7 @@ class WLCalc(QWidget, SaveFileMixin):
         """Setup the tool to evaluate the MRC."""
 
         # Setup the mrc period selector.
-        self.mrc_selector = WLCalcVSpanSelector(self.wl_axes)
+        self.mrc_selector = WLCalcVSpanSelector(self.fig.axes[0])
         self.install_axeswidget(self.mrc_selector)
         self.mrc_selector.sig_span_selected.connect(
             self._handle_mrcperiod_selected)
@@ -605,7 +605,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 del self._mrc_period_artists[i]
 
         self._mrc_period_xdata.append((xmin, xmax))
-        self._mrc_period_artists.append(self.wl_axes.axvspan(
+        self._mrc_period_artists.append(self.fig.axes[0].axvspan(
             xmin, xmax, visible=True, color='red', linewidth=1,
             ls='-', alpha=0.1))
         self.draw_mrc()
