@@ -84,7 +84,7 @@ class WLCalc(QWidget, SaveFileMixin):
         self.brf_eval_widget.sig_select_brfperiod_requested.connect(
             self.toggle_brfperiod_selection)
 
-        self.__figbckground = None
+        self._figbckground = None
         self._axes_widgets = []
         self.__mouse_btn_is_pressed = False
 
@@ -1069,7 +1069,7 @@ class WLCalc(QWidget, SaveFileMixin):
             widget.clear()
 
         self.canvas.draw()
-        self.__figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
+        self._figbckground = self.fig.canvas.copy_from_bbox(self.fig.bbox)
 
         for widget in self._axes_widgets:
             widget.restore()
@@ -1331,8 +1331,7 @@ class WLCalc(QWidget, SaveFileMixin):
             return
 
         ax0 = self.fig.axes[0]
-        fig = self.fig
-        fig.canvas.restore_region(self.__figbckground)
+        self.canvas.restore_region(self._figbckground)
 
         # Draw the vertical cursor guide.
         x, y = event.xdata, event.ydata
