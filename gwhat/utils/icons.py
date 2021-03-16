@@ -54,8 +54,6 @@ GWHAT_ICONS = {
     'add_point': 'add_point',
     'erase': 'erase',
     'erase2': 'erase2',
-    'findPeak': 'find_peak',
-    'findPeak2': 'find_peak2',
     'showDataDots': 'show_datadots',
     'stratigraphy': 'stratigraphy',
     'recharge': 'recharge',

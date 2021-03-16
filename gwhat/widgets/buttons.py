@@ -409,7 +409,7 @@ class OnOffToolButton(QToolButtonBase):
         if value != self.value():
             self.setAutoRaise(not bool(value))
             self._setup_icon()
-            if not silent:
+            if silent is False:
                 self.sig_value_changed.emit(self.value())
 
     def _setup_icon(self):
