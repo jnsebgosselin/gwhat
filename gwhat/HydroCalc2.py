@@ -1451,7 +1451,7 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
 
         self.axvspan = ax.axvspan(
             ax.get_xbound()[0], ax.get_xbound()[0], visible=False,
-            color='red', linewidth=1, ls='--', animated=self.useblit,
+            color='red', linewidth=1, ls='-', animated=self.useblit,
             alpha=0.1)
 
         self.axvline = ax.axvline(
@@ -1470,7 +1470,6 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         self._onpress_xdata = []
         self._onpress_button = None
         self._onrelease_xdata = []
-        self.axvline.set_color('black')
         super().set_active(active)
 
     def clear(self):
@@ -1522,7 +1521,6 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
         if event.button == self._onpress_button:
             self._onrelease_xdata = self._onpress_xdata.copy()
             if len(self._onrelease_xdata) == 1:
-                self.axvline.set_color('red')
                 self.axvline.set_visible(True)
                 self.axvspan.set_visible(True)
                 if event.xdata:
@@ -1532,7 +1530,6 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
                                        [event.xdata, 0],
                                        [event.xdata, 1]]
             elif len(self._onrelease_xdata) == 2:
-                self.axvline.set_color('black')
                 self.axvline.set_visible(True)
                 self.axvspan.set_visible(False)
                 if event.xdata:
