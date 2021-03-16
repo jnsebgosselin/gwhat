@@ -234,10 +234,10 @@ class WLCalc(QWidget, SaveFileMixin):
             1, 0, '', ha='right', transform=ax0.transAxes + offset)
         self.xycoord.set_visible(False)
 
-        # Cross Remove Peaks :
-        self.xcross, = ax0.plot(1, 0, color='red', clip_on=True,
-                                zorder=20, marker='x', linestyle='None',
-                                markersize=15, markeredgewidth=3)
+        # Axes span highlight.
+        self.axvspan_highlight = self.fig.axes[0].axvspan(
+            0, 1, visible=False, color='red', linewidth=1,
+            ls='-', alpha=0.3)
 
     def _setup_toolbar(self):
         """Setup the main toolbar of the water level calc tool."""
@@ -1057,7 +1057,7 @@ class WLCalc(QWidget, SaveFileMixin):
         """Draw the canvas and save a snapshot of the background figure."""
         self.vguide.set_visible(False)
         self.xycoord.set_visible(False)
-        self.xcross.set_visible(False)
+        self.axvspan_highlight.set_visible(False)
         for widget in self._axes_widgets:
             widget.clear()
 
@@ -1354,35 +1354,24 @@ class WLCalc(QWidget, SaveFileMixin):
                 self.__mouse_btn_is_pressed):
             self._draw_brf_selection(x)
 
-        # Remove Peak Cursor
-        if self.btn_delpeak.value() and len(self.peak_indx) > 0:
-            # For deleting peak in the graph. Will put a cross on top of the
-            # peak to delete if some proximity conditions are met.
-
-            x = event.x
-            y = event.y
-
-            xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
-            ypeak = self.water_lvl[self.peak_indx]
-
-            xt = np.empty(len(xpeak))
-            yt = np.empty(len(ypeak))
-
-            for i, (xp, yp) in enumerate(zip(xpeak, ypeak)):
-                xt[i], yt[i] = ax0.transData.transform((xp, yp))
-
-            d = ((xt - x)**2 + (yt - y)**2)**0.5
-            if np.min(d) < 15:
-                # Put the cross over the nearest peak.
-                indx = np.argmin(d)
-                self.xcross.set_xdata(xpeak[indx])
-                self.xcross.set_ydata(ypeak[indx])
-                self.xcross.set_visible(True)
+        # Remove mrc period.
+        if self.btn_delpeak.value() and len(self._mrc_period_axvspans) > 0:
+            if event.xdata:
+                for xdata in self._mrc_period_xdata:
+                    xdata_min = xdata[0] + (self.dt4xls2mpl * self.dformat)
+                    xdata_max = xdata[1] + (self.dt4xls2mpl * self.dformat)
+                    if event.xdata >= xdata_min and event.xdata <= xdata_max:
+                        self.axvspan_highlight.set_visible(True)
+                        self.axvspan_highlight.xy = [[xdata_min, 1],
+                                                     [xdata_min, 0],
+                                                     [xdata_max, 0],
+                                                     [xdata_max, 1]]
+                        break
+                else:
+                    self.axvspan_highlight.set_visible(False)
             else:
-                self.xcross.set_visible(False)
-        else:
-            self.xcross.set_visible(False)
-        ax0.draw_artist(self.xcross)
+                self.axvspan_highlight.set_visible(False)
+            ax0.draw_artist(self.axvspan_highlight)
 
         # Update all axes widget.
         for widget in self._axes_widgets:
@@ -1424,41 +1413,21 @@ class WLCalc(QWidget, SaveFileMixin):
     def onpress(self, event):
         """Handle when the graph is clicked with the mouse."""
         self.__mouse_btn_is_pressed = True
-        x, y = event.x, event.y
-        if x is None or y is None or self.wldset is None:
+        if event.x is None or event.y is None or self.wldset is None:
             return
 
-        if self.btn_delpeak.value():
-            if len(self.peak_indx) == 0:
-                return
-
-            xt = np.empty(len(self.peak_indx))
-            yt = np.empty(len(self.peak_indx))
-            xpeak = self.time[self.peak_indx] + self.dt4xls2mpl * self.dformat
-            ypeak = self.water_lvl[self.peak_indx]
-
-            ax = self.fig.axes[0]
-            for i in range(len(self.peak_indx)):
-                xt[i], yt[i] = ax.transData.transform((xpeak[i], ypeak[i]))
-
-            r = ((xt - x)**2 + (yt - y)**2)**0.5
-            if np.min(r) < 15:
-                indx = np.argmin(r)
-
-                # Update the plot :
-                self.xcross.set_xdata(xpeak[indx])
-                self.xcross.set_ydata(ypeak[indx])
-
-                # Remove peak from peak index sequence :
-                self.peak_indx = np.delete(self.peak_indx, indx)
-                self.peak_memory.append(self.peak_indx)
-
-                xpeak = np.delete(xpeak, indx)
-                ypeak = np.delete(ypeak, indx)
-
-                # hide the cross outside of the plotting area :
-                self.xcross.set_visible(False)
-                self.draw_mrc()
+        # Remove mrc period.
+        if self.btn_delpeak.value() and len(self._mrc_period_xdata) > 0:
+            for i, xdata in enumerate(self._mrc_period_xdata):
+                xdata_min = xdata[0] + (self.dt4xls2mpl * self.dformat)
+                xdata_max = xdata[1] + (self.dt4xls2mpl * self.dformat)
+                if event.xdata >= xdata_min and event.xdata <= xdata_max:
+                    del self._mrc_period_xdata[i]
+                    self._mrc_period_memory.append(
+                        self._mrc_period_xdata.copy())
+                    self.axvspan_highlight.set_visible(False)
+                    self.draw_mrc()
+                    break
         elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[0] = event.xdata
             self.vguide.set_color('red')
@@ -1469,6 +1438,12 @@ class WLCalc(QWidget, SaveFileMixin):
         else:
             self.draw()
 
+        # Update all axes widget.
+        for widget in self._axes_widgets:
+            if widget.get_active():
+                widget.onpress(event)
+
+        self.draw()
 
 
 class WLCalcVSpanSelector(AxesWidget, QObject):
