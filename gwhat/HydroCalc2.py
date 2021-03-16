@@ -567,7 +567,7 @@ class WLCalc(QWidget, SaveFileMixin):
     # ---- MRC handlers
     def add_mrcperiod(self, xdata):
         """
-        Handle when a new mrc period is selectedby the user.
+        Add a a new mrc period using the provided xdata.
         """
         try:
             xmin = min(xdata) - self.dt4xls2mpl * self.dformat
@@ -577,8 +577,6 @@ class WLCalc(QWidget, SaveFileMixin):
 
         for i in reversed(range(len(self._mrc_period_xdata))):
             period_xdata = self._mrc_period_xdata[i]
-            period_artist = self._mrc_period_axvspans[i]
-
             if xmin >= period_xdata[0] and xmax <= period_xdata[1]:
                 # This means this mrc period is fully enclosed within
                 # another period previously selected by the user,
@@ -587,16 +585,10 @@ class WLCalc(QWidget, SaveFileMixin):
 
             if period_xdata[0] >= xmin and period_xdata[0] <= xmax:
                 xmax = max(period_xdata[1], xmax)
-
-                period_artist.remove()
                 del self._mrc_period_xdata[i]
-                del self._mrc_period_axvspans[i]
             elif period_xdata[1] >= xmin and period_xdata[1] <= xmax:
                 xmin = min(period_xdata[0], xmin)
-
-                period_artist.remove()
                 del self._mrc_period_xdata[i]
-                del self._mrc_period_axvspans[i]
 
         self._mrc_period_xdata.append((xmin, xmax))
         self._mrc_period_memory.append(self._mrc_period_xdata.copy())
