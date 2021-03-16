@@ -460,21 +460,21 @@ class WLDataFrameHDF5(WLDataFrameBase):
             mrc.create_dataset('time', data=np.array([]),
                                dtype='float64', maxshape=(None,))
             self.dset.file.flush()
-        if self.dset['mrc/peak_indx'].dtype == np.dtype('int16'):
-            # We need to raise the dtype to 'int64' to avoid problems
-            # when datasets have indexes that are larger than 32767.
-            # See jnsebgosselin/gwhat#358.
+        if self.dset['mrc/peak_indx'].dtype != np.dtype('float64'):
+            # We need to convert peak_indx data to the format used in
+            # GWHAT >= 0.5.1. See jnsebgosselin/gwhat#370.
+            print('Converting peak_inx values to the new format '
+                  'used in gwhat >= 0.5.1.')
+            peak_indx = self.dset['mrc/peak_indx'][...].astype(float)
 
             # The only way to do that in HDF5 is to delete the dataset and
             # create a new one with the right dtype.
-            print('Converting peak_inx values from int16 to int64.')
-            peak_indx = self.dset['mrc/peak_indx'][...].astype(int)
             del self.dset['mrc/peak_indx']
             self.dset.file.flush()
 
             self.dset['mrc'].create_dataset(
                 'peak_indx', data=np.array([]),
-                dtype='int64', maxshape=(None,))
+                dtype='float64', maxshape=(None,))
             self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
             self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
             self.dset.file.flush()
@@ -527,6 +527,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
         """Save the mrc results to the hdf5 project file."""
         self.dset['mrc/params'][:] = (A, B)
 
+        peak_indx = np.array(peak_indx).flatten()
         self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
         self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
 
@@ -542,9 +543,15 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
     def get_mrc(self):
         """Return the mrc results stored in the hdf5 project file."""
+        peak_indx = self['mrc/peak_indx'].copy()
+        m = 2
+        n = len(peak_indx) // m
+        peak_indx = list(map(
+            tuple, peak_indx[:n * m].reshape((n, m))
+            ))
         return {
             'params': self['mrc/params'].tolist(),
-            'peak_indx': self['mrc/peak_indx'].astype(int),
+            'peak_indx': peak_indx,
             'time': self['mrc/time'].copy(),
             'recess': self['mrc/recess'].copy()}
 
