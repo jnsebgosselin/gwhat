@@ -402,16 +402,16 @@ def test_store_mrc(project, testfile):
     # Add MRC data to the test dataset.
     A = 1
     B = 2
-    peak_indx = [2, 100, 30000, 33000]
+    periods = [(2, 100), (30000, 33000)]
     recess_time = np.arange(0, 1000, 0.1).tolist()
     recess_wlvl = np.random.rand(len(recess_time)).tolist()
 
-    wldset.set_mrc(A, B, peak_indx, recess_time, recess_wlvl)
+    wldset.set_mrc(A, B, periods, recess_time, recess_wlvl)
     assert wldset.mrc_exists() is True
 
     mrc_data = wldset.get_mrc()
     assert mrc_data['params'] == [A, B]
-    assert mrc_data['peak_indx'].tolist() == peak_indx
+    assert mrc_data['peak_indx'] == periods
     assert mrc_data['time'].tolist() == recess_time
     assert mrc_data['recess'].tolist() == recess_wlvl
 
