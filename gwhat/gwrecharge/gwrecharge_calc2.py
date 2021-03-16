@@ -135,7 +135,16 @@ class RechgEvalWorker(QObject):
             if len(indx) > 0:
                 hd[i] = h[indx[-1]]
 
-        return td, hd
+        # We need to remove nan values at the start and the end of the series
+        # to avoid problems when computing synthetic hydrographs.
+        for istart in range(len(hd)):
+            if not np.isnan(hd[istart]):
+                break
+        for iend in reversed(range(len(hd))):
+            if not np.isnan(hd[iend]):
+                break
+
+        return td[istart:iend], hd[istart:iend]
 
     def produce_params_combinations(self):
         """
@@ -184,18 +193,18 @@ class RechgEvalWorker(QObject):
         for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
             rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
             SyOpt, RMSE, wlvlest = self.optimize_specific_yield(
-                    Sy0, self.wlobs*1000, rechg[ts:te])
-            Sy0 = SyOpt
-
-            if SyOpt >= min(self.Sy) and SyOpt <= max(self.Sy):
-                set_RMSE.append(RMSE)
-                set_recharge.append(rechg)
-                sets_waterlevels.append(wlvlest)
-                set_Sy.append(SyOpt)
-                set_RASmax.append(rasmax)
-                set_Cru.append(cro)
-                set_evapo.append(etr)
-                set_runoff.append(ru)
+                Sy0, self.wlobs*1000, rechg[ts:te])
+            if SyOpt is not None:
+                Sy0 = SyOpt
+                if SyOpt >= min(self.Sy) and SyOpt <= max(self.Sy):
+                    set_RMSE.append(RMSE)
+                    set_recharge.append(rechg)
+                    sets_waterlevels.append(wlvlest)
+                    set_Sy.append(SyOpt)
+                    set_RASmax.append(rasmax)
+                    set_Cru.append(cro)
+                    set_evapo.append(etr)
+                    set_runoff.append(ru)
 
             self.sig_glue_progress.emit((it+1)/N*100)
         print("GLUE computed in {:0.1f} sec".format(perf_counter()-time_start))
@@ -302,8 +311,6 @@ class RechgEvalWorker(QObject):
         """
         nonan_indx = np.where(~np.isnan(wlobs))
 
-        # ---- Gauss-Newton
-
         tolmax = 0.001
         Sy = Sy0
         dSy = 0.01
@@ -316,7 +323,7 @@ class RechgEvalWorker(QObject):
             it += 1
             if it > 100:
                 print('Not converging.')
-                break
+                return None, None, None
 
             # Calculating Jacobian (X) Numerically.
             wlvl = self.calc_hydrograph(rechg, Sy * (1+dSy))
@@ -406,7 +413,10 @@ class RechgEvalWorker(QObject):
         # I should check this out.
 
         A, B = self.A, self.B
-        wlobs = self.wlobs*1000
+        wlobs = self.wlobs.copy() * 1000
+        if np.isnan(wlobs[0]) or np.isnan(wlobs[-1]):
+            raise ValueError('The observed water level time series either '
+                             'starts or ends with a nann value.')
         if nscheme == 'backward':
             wlpre = np.zeros(len(RECHG)+1) * np.nan
             wlpre[0] = wlobs[-1]
