@@ -407,14 +407,14 @@ class WLCalc(QWidget, SaveFileMixin):
         self.btn_addpeak = OnOffToolButton('add_point', size='normal')
         self.btn_addpeak.sig_value_changed.connect(self.btn_addpeak_isclicked)
         self.btn_addpeak.setToolTip(
-            "<p>Toggle edit mode to manually add extremums to the graph</p>")
+            "Left-click on the graph to select the recession periods "
+            "to use for the MRC assessment.")
         self.register_navig_and_select_tool(self.btn_addpeak)
 
         self.btn_delpeak = OnOffToolButton('erase', size='normal')
         self.btn_delpeak.clicked.connect(self.btn_delpeak_isclicked)
         self.btn_delpeak.setToolTip(
-            "<p>Toggle edit mode to manually remove extremums"
-            " from the graph</p>")
+            "Left-click on a selected recession period to remove it.")
         self.register_navig_and_select_tool(self.btn_delpeak)
 
         self.btn_save_mrc = create_toolbutton(
