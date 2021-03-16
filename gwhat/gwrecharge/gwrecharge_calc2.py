@@ -135,7 +135,16 @@ class RechgEvalWorker(QObject):
             if len(indx) > 0:
                 hd[i] = h[indx[-1]]
 
-        return td, hd
+        # We need to remove nan values at the start and the end of the series
+        # to avoid problems when computing synthetic hydrographs.
+        for istart in range(len(hd)):
+            if not np.isnan(hd[istart]):
+                break
+        for iend in reversed(range(len(hd))):
+            if not np.isnan(hd[iend]):
+                break
+
+        return td[istart:iend], hd[istart:iend]
 
     def produce_params_combinations(self):
         """
