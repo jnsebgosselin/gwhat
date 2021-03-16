@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-
-# Copyright © 2014-2018 GWHAT Project Contributors
+# -----------------------------------------------------------------------------
+# Copyright © GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
 # Licensed under the terms of the GNU General Public License.
+# -----------------------------------------------------------------------------
 
 from __future__ import division, unicode_literals
 
@@ -257,17 +258,6 @@ class ProjetReader(object):
             grp.attrs['Municipality'] = df['Municipality']
             grp.attrs['Province'] = df['Province']
 
-            # Master Recession Curve
-            mrc = grp.create_group('mrc')
-            mrc.attrs['exists'] = 0
-            mrc.create_dataset('params', data=(0, 0), dtype='float64')
-            mrc.create_dataset('peak_indx', data=np.array([]),
-                               dtype='int64', maxshape=(None,))
-            mrc.create_dataset('recess', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            mrc.create_dataset('time', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-
             # Barometric Response Function
             grp.create_group('brf')
 
@@ -423,6 +413,20 @@ class WLDataFrameHDF5(WLDataFrameBase):
         columns = tuple(columns)
         self._dataf = WLDataset(data, columns)
 
+        # Setup the structure for the Master Recession Curve
+        if 'mrc' not in list(self.dset.keys()):
+            mrc = self.dset.create_group('mrc')
+            mrc.attrs['exists'] = 0
+            mrc.create_dataset('params', data=(np.nan, np.nan),
+                               dtype='float64')
+            mrc.create_dataset('peak_indx', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('recess', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('time', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            self.dset.file.flush()
+
         # Make older datasets compatible with newer format.
         if isinstance(self.dset['Time'][0], (int, float)):
             # Time needs to be converted from Excel numeric dates
@@ -448,33 +452,21 @@ class WLDataFrameHDF5(WLDataFrameBase):
             # Added in version 0.3.1 (see PR #184)
             self.dset.create_group('glue')
             self.dset.file.flush()
-        if 'mrc' not in list(self.dset.keys()):
-            mrc = self.dset.create_group('mrc')
-            mrc.attrs['exists'] = 0
-            mrc.create_dataset('params', data=(np.nan, np.nan),
-                               dtype='float64')
-            mrc.create_dataset('peak_indx', data=np.array([]),
-                               dtype='int64', maxshape=(None,))
-            mrc.create_dataset('recess', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            mrc.create_dataset('time', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            self.dset.file.flush()
-        if self.dset['mrc/peak_indx'].dtype == np.dtype('int16'):
-            # We need to raise the dtype to 'int64' to avoid problems
-            # when datasets have indexes that are larger than 32767.
-            # See jnsebgosselin/gwhat#358.
+        if self.dset['mrc/peak_indx'].dtype != np.dtype('float64'):
+            # We need to convert peak_indx data to the format used in
+            # GWHAT >= 0.5.1. See jnsebgosselin/gwhat#370.
+            print('Convert peak_inx values to the new format '
+                  'used in gwhat >= 0.5.1.')
+            peak_indx = self.dset['mrc/peak_indx'][...].astype(float)
 
             # The only way to do that in HDF5 is to delete the dataset and
             # create a new one with the right dtype.
-            print('Converting peak_inx values from int16 to int64.')
-            peak_indx = self.dset['mrc/peak_indx'][...].astype(int)
             del self.dset['mrc/peak_indx']
             self.dset.file.flush()
 
             self.dset['mrc'].create_dataset(
                 'peak_indx', data=np.array([]),
-                dtype='int64', maxshape=(None,))
+                dtype='float64', maxshape=(None,))
             self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
             self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
             self.dset.file.flush()
@@ -527,6 +519,7 @@ class WLDataFrameHDF5(WLDataFrameBase):
         """Save the mrc results to the hdf5 project file."""
         self.dset['mrc/params'][:] = (A, B)
 
+        peak_indx = np.array(peak_indx).flatten()
         self.dset['mrc/peak_indx'].resize(np.shape(peak_indx))
         self.dset['mrc/peak_indx'][:] = np.array(peak_indx)
 
@@ -542,9 +535,15 @@ class WLDataFrameHDF5(WLDataFrameBase):
 
     def get_mrc(self):
         """Return the mrc results stored in the hdf5 project file."""
+        peak_indx = self['mrc/peak_indx'].copy()
+        m = 2
+        n = len(peak_indx) // m
+        peak_indx = list(map(
+            tuple, peak_indx[:n * m].reshape((n, m))
+            ))
         return {
             'params': self['mrc/params'].tolist(),
-            'peak_indx': self['mrc/peak_indx'].astype(int),
+            'peak_indx': peak_indx,
             'time': self['mrc/time'].copy(),
             'recess': self['mrc/recess'].copy()}
 
