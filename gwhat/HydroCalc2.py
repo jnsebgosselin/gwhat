@@ -565,7 +565,7 @@ class WLCalc(QWidget, SaveFileMixin):
         super().showEvent(event)
 
     # ---- MRC handlers
-    def add_mrcperiod(self, xdata, button):
+    def add_mrcperiod(self, xdata):
         """
         Handle when a new mrc period is selectedby the user.
         """
