@@ -257,17 +257,6 @@ class ProjetReader(object):
             grp.attrs['Municipality'] = df['Municipality']
             grp.attrs['Province'] = df['Province']
 
-            # Master Recession Curve
-            mrc = grp.create_group('mrc')
-            mrc.attrs['exists'] = 0
-            mrc.create_dataset('params', data=(0, 0), dtype='float64')
-            mrc.create_dataset('peak_indx', data=np.array([]),
-                               dtype='int64', maxshape=(None,))
-            mrc.create_dataset('recess', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            mrc.create_dataset('time', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-
             # Barometric Response Function
             grp.create_group('brf')
 
@@ -423,6 +412,20 @@ class WLDataFrameHDF5(WLDataFrameBase):
         columns = tuple(columns)
         self._dataf = WLDataset(data, columns)
 
+        # Setup the structure for the Master Recession Curve
+        if 'mrc' not in list(self.dset.keys()):
+            mrc = self.dset.create_group('mrc')
+            mrc.attrs['exists'] = 0
+            mrc.create_dataset('params', data=(np.nan, np.nan),
+                               dtype='float64')
+            mrc.create_dataset('peak_indx', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('recess', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            mrc.create_dataset('time', data=np.array([]),
+                               dtype='float64', maxshape=(None,))
+            self.dset.file.flush()
+
         # Make older datasets compatible with newer format.
         if isinstance(self.dset['Time'][0], (int, float)):
             # Time needs to be converted from Excel numeric dates
@@ -448,22 +451,10 @@ class WLDataFrameHDF5(WLDataFrameBase):
             # Added in version 0.3.1 (see PR #184)
             self.dset.create_group('glue')
             self.dset.file.flush()
-        if 'mrc' not in list(self.dset.keys()):
-            mrc = self.dset.create_group('mrc')
-            mrc.attrs['exists'] = 0
-            mrc.create_dataset('params', data=(np.nan, np.nan),
-                               dtype='float64')
-            mrc.create_dataset('peak_indx', data=np.array([]),
-                               dtype='int64', maxshape=(None,))
-            mrc.create_dataset('recess', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            mrc.create_dataset('time', data=np.array([]),
-                               dtype='float64', maxshape=(None,))
-            self.dset.file.flush()
         if self.dset['mrc/peak_indx'].dtype != np.dtype('float64'):
             # We need to convert peak_indx data to the format used in
             # GWHAT >= 0.5.1. See jnsebgosselin/gwhat#370.
-            print('Converting peak_inx values to the new format '
+            print('Convert peak_inx values to the new format '
                   'used in gwhat >= 0.5.1.')
             peak_indx = self.dset['mrc/peak_indx'][...].astype(float)
 
