@@ -594,6 +594,19 @@ class WLCalc(QWidget, SaveFileMixin):
         self._mrc_period_memory.append(self._mrc_period_xdata.copy())
         self.draw_mrc()
 
+    def remove_mrcperiod(self, xdata):
+        """
+        Remove the mrc period at xdata if any.
+        """
+        for i, period_xdata in enumerate(self._mrc_period_xdata):
+            period_xmin = period_xdata[0] + (self.dt4xls2mpl * self.dformat)
+            period_xmax = period_xdata[1] + (self.dt4xls2mpl * self.dformat)
+            if xdata >= period_xmin and xdata <= period_xmax:
+                del self._mrc_period_xdata[i]
+                self._mrc_period_memory.append(self._mrc_period_xdata.copy())
+                self.draw_mrc()
+                break
+
     def btn_show_mrc_isclicked(self):
         """Handle when the button to draw of hide the mrc is clicked."""
         if self.btn_show_mrc.value() is False:
@@ -1346,7 +1359,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 self.__mouse_btn_is_pressed):
             self._draw_brf_selection(x)
 
-        # Remove mrc period.
+        # Draw mrc period highlight.
         if self.btn_delpeak.value() and len(self._mrc_period_axvspans) > 0:
             if event.xdata:
                 for xdata in self._mrc_period_xdata:
@@ -1410,16 +1423,8 @@ class WLCalc(QWidget, SaveFileMixin):
 
         # Remove mrc period.
         if self.btn_delpeak.value() and len(self._mrc_period_xdata) > 0:
-            for i, xdata in enumerate(self._mrc_period_xdata):
-                xdata_min = xdata[0] + (self.dt4xls2mpl * self.dformat)
-                xdata_max = xdata[1] + (self.dt4xls2mpl * self.dformat)
-                if event.xdata >= xdata_min and event.xdata <= xdata_max:
-                    del self._mrc_period_xdata[i]
-                    self._mrc_period_memory.append(
-                        self._mrc_period_xdata.copy())
-                    self.axvspan_highlight.set_visible(False)
-                    self.draw_mrc()
-                    break
+            self.axvspan_highlight.set_visible(False)
+            self.remove_mrcperiod(event.xdata)
         elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self._selected_brfperiod[0] = event.xdata
             self.vguide.set_color('red')
@@ -1427,8 +1432,6 @@ class WLCalc(QWidget, SaveFileMixin):
             self.onmove(event)
         elif self.rect_select_is_active:
             self._rect_selection[0] = (event.xdata, event.ydata)
-        else:
-            self.draw()
 
         # Update all axes widget.
         for widget in self._axes_widgets:
