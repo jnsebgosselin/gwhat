@@ -372,8 +372,7 @@ class WLCalc(QWidget, SaveFileMixin):
         # Setup the mrc period selector.
         self.mrc_selector = WLCalcVSpanSelector(self.fig.axes[0])
         self.install_axeswidget(self.mrc_selector)
-        self.mrc_selector.sig_span_selected.connect(
-            self._handle_mrcperiod_selected)
+        self.mrc_selector.sig_span_selected.connect(self.add_mrcperiod)
         self._mrc_period_xdata = []
         self._mrc_period_axvspans = []
         self._mrc_period_memory = [[], ]
@@ -572,7 +571,7 @@ class WLCalc(QWidget, SaveFileMixin):
         super().showEvent(event)
 
     # ---- MRC handlers
-    def _handle_mrcperiod_selected(self, xdata, button):
+    def add_mrcperiod(self, xdata, button):
         """
         Handle when a new mrc period is selectedby the user.
         """
@@ -1478,7 +1477,7 @@ class WLCalc(QWidget, SaveFileMixin):
 
 
 class WLCalcVSpanSelector(AxesWidget, QObject):
-    sig_span_selected = QSignal(tuple, int)
+    sig_span_selected = QSignal(tuple)
 
     def __init__(self, ax, useblit=True):
         AxesWidget.__init__(self, ax)
@@ -1537,7 +1536,7 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
 
     def onpress(self, event):
         """Handler for the button_press_event event."""
-        if event.button in [1, 3] and event.xdata:
+        if event.button == 1 and event.xdata:
             if self._onpress_button in [None, event.button]:
                 self._onpress_button = event.button
                 self._onpress_xdata.append(event.xdata)
@@ -1576,11 +1575,10 @@ class WLCalcVSpanSelector(AxesWidget, QObject):
                     self.axvline.set_xdata((event.xdata, event.xdata))
 
                 onrelease_xdata = tuple(self._onrelease_xdata)
-                onpress_button = int(self._onpress_button)
                 self._onpress_button = None
                 self._onpress_xdata = []
                 self._onrelease_xdata = []
-                self.sig_span_selected.emit(onrelease_xdata, onpress_button)
+                self.sig_span_selected.emit(onrelease_xdata)
         self._update()
 
     def onmove(self, event):
