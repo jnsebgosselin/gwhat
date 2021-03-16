@@ -14,7 +14,6 @@ import os
 import os.path as osp
 import datetime
 
-
 # ---- Third party imports
 import numpy as np
 import pandas as pd
@@ -37,7 +36,6 @@ from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT
 
 from xlrd import xldate_as_tuple
 from xlrd.xldate import xldate_from_date_tuple
-
 
 # ---- Local imports
 from gwhat.brf_mod import BRFManager
@@ -97,10 +95,6 @@ class WLCalc(QWidget, SaveFileMixin):
         # The date format can either be 0 for Excel format or 1 for Matplotlib
         # format.
         self.dformat = 1
-
-        # Recession Curve Parameters :
-        self.peak_indx = np.array([]).astype(int)
-        self.peak_memory = [np.array([]).astype(int)]
 
         # Selected water level data.
         self.wl_selected_i = []
@@ -605,6 +599,7 @@ class WLCalc(QWidget, SaveFileMixin):
                 del self._mrc_period_axvspans[i]
 
         self._mrc_period_xdata.append((xmin, xmax))
+        self._mrc_period_memory.append(self._mrc_period_xdata.copy())
         self.draw_mrc()
 
     def btn_show_mrc_isclicked(self):
@@ -694,7 +689,7 @@ class WLCalc(QWidget, SaveFileMixin):
         """Clear all mrc periods from the graph."""
         if len(self._mrc_period_xdata) > 0:
             self._mrc_period_xdata = []
-            self.peak_memory.append([])
+            self._mrc_period_memory.append([])
         self.draw_mrc()
 
     # ---- BRF selection
@@ -903,8 +898,8 @@ class WLCalc(QWidget, SaveFileMixin):
     # ---- Drawing methods
     def setup_hydrograph(self):
         """Setup the hydrograph after a new wldset has been set."""
-        self.peak_indx = np.array([]).astype(int)
-        self.peak_memory = [np.array([]).astype(int)]
+        self._mrc_period_xdata = []
+        self._mrc_period_memory = [[], ]
         self.btn_undo.setEnabled(False)
 
         self.clear_selected_wl()
