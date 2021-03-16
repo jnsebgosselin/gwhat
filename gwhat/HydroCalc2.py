@@ -1268,13 +1268,12 @@ class WLCalc(QWidget, SaveFileMixin):
         """Draw a vertical and horizontal line at the specified xy position."""
         if not all((x, y)):
             self.vguide.set_visible(False)
-        elif (self.pan_is_active or self.zoom_is_active or
-              self.rect_select_is_active):
-            self.vguide.set_visible(False)
-        else:
+        elif self.brf_eval_widget.is_brfperiod_selection_toggled():
             self.vguide.set_visible(True)
             self.vguide.set_xdata(x)
             self.fig.axes[0].draw_artist(self.vguide)
+        else:
+            self.vguide.set_visible(False)
 
     # ----- Mouse Event Handlers
     def is_all_btn_raised(self):
