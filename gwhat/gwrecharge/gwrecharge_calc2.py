@@ -415,7 +415,10 @@ class RechgEvalWorker(QObject):
         # I should check this out.
 
         A, B = self.A, self.B
-        wlobs = self.wlobs*1000
+        wlobs = self.wlobs.copy() * 1000
+        if np.isnan(wlobs[0]) or np.isnan(wlobs[-1]):
+            raise ValueError('The observed water level time series either '
+                             'starts or ends with a nann value.')
         if nscheme == 'backward':
             wlpre = np.zeros(len(RECHG)+1) * np.nan
             wlpre[0] = wlobs[-1]
