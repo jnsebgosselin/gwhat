@@ -193,18 +193,18 @@ class RechgEvalWorker(QObject):
         for it, (cro, rasmax) in enumerate(product(U_Cro, U_RAS)):
             rechg, ru, etr, ras, pacc = self.surf_water_budget(cro, rasmax)
             SyOpt, RMSE, wlvlest = self.optimize_specific_yield(
-                    Sy0, self.wlobs*1000, rechg[ts:te])
-            Sy0 = SyOpt
-
-            if SyOpt >= min(self.Sy) and SyOpt <= max(self.Sy):
-                set_RMSE.append(RMSE)
-                set_recharge.append(rechg)
-                sets_waterlevels.append(wlvlest)
-                set_Sy.append(SyOpt)
-                set_RASmax.append(rasmax)
-                set_Cru.append(cro)
-                set_evapo.append(etr)
-                set_runoff.append(ru)
+                Sy0, self.wlobs*1000, rechg[ts:te])
+            if SyOpt is not None:
+                Sy0 = SyOpt
+                if SyOpt >= min(self.Sy) and SyOpt <= max(self.Sy):
+                    set_RMSE.append(RMSE)
+                    set_recharge.append(rechg)
+                    sets_waterlevels.append(wlvlest)
+                    set_Sy.append(SyOpt)
+                    set_RASmax.append(rasmax)
+                    set_Cru.append(cro)
+                    set_evapo.append(etr)
+                    set_runoff.append(ru)
 
             self.sig_glue_progress.emit((it+1)/N*100)
         print("GLUE computed in {:0.1f} sec".format(perf_counter()-time_start))
@@ -311,8 +311,6 @@ class RechgEvalWorker(QObject):
         """
         nonan_indx = np.where(~np.isnan(wlobs))
 
-        # ---- Gauss-Newton
-
         tolmax = 0.001
         Sy = Sy0
         dSy = 0.01
@@ -325,7 +323,7 @@ class RechgEvalWorker(QObject):
             it += 1
             if it > 100:
                 print('Not converging.')
-                break
+                return None, None, None
 
             # Calculating Jacobian (X) Numerically.
             wlvl = self.calc_hydrograph(rechg, Sy * (1+dSy))
