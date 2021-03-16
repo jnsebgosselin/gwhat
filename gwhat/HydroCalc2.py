@@ -686,7 +686,7 @@ class WLCalc(QWidget, SaveFileMixin):
         of mrc periods.
         """
         if len(self._mrc_period_memory) > 1:
-            self._mrc_period_xdata = self._mrc_period_memory[-2]
+            self._mrc_period_xdata = self._mrc_period_memory[-2].copy()
             del self._mrc_period_memory[-1]
             self.draw_mrc()
 
