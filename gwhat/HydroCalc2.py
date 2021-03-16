@@ -652,7 +652,7 @@ class WLCalc(QWidget, SaveFileMixin):
         """Load saved MRC results from the project hdf5 file."""
         if self.wldset is not None:
             self._mrc_period_xdata = self.wldset.get_mrc()['peak_indx']
-            self._mrc_period_memory[0] = [self._mrc_period_xdata.copy()]
+            self._mrc_period_memory[0] = self._mrc_period_xdata.copy()
             self.btn_save_mrc.setEnabled(True)
         else:
             self._mrc_period_xdata = []
