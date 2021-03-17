@@ -26,7 +26,7 @@ from PyQt5.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QDoubleSpinBox,
     QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
     QSpinBox, QTabWidget, QWidget, QStyle, QFrame, QMainWindow,
-    QGroupBox)
+    QGroupBox, QToolBar, QDoubleSpinBox)
 
 
 # ---- Local imports
@@ -93,6 +93,41 @@ class ModelsDistplotWidget(QMainWindow):
         self.central_layout.setColumnStretch(0, 1)
         self.central_layout.setRowStretch(2, 1)
         self.setCentralWidget(self.central_widget)
+
+        self.setup_toolbar()
+
+    def setup_toolbar(self):
+        """
+        Setup the toolbar of this mainwindow.
+        """
+        self.setContextMenuPolicy(Qt.NoContextMenu)
+        toolbar = QToolBar()
+        toolbar.setFloatable(False)
+        toolbar.setMovable(False)
+        toolbar.setStyleSheet(
+            "QToolBar {spacing:1px; padding: 5px;}")
+        self.addToolBar(Qt.TopToolBarArea, toolbar)
+
+        # Setup the bins widget.
+        bins_tooltip = "Number of equal-width bins in the range."
+        bins_label = QLabel('Bins nbr:')
+        bins_label.setToolTip(bins_tooltip)
+
+        self.bins_sbox = QDoubleSpinBox()
+        self.bins_sbox.setDecimals(0)
+        self.bins_sbox.setMaximum(999)
+        self.bins_sbox.setMinimum(1)
+        self.bins_sbox.setValue(30)
+        self.bins_sbox.setToolTip(bins_tooltip)
+        self.bins_sbox.valueChanged.connect(self.figcanvas.figure.set_bins_nbr)
+
+        bins_widget = QWidget()
+        bins_layout = QGridLayout(bins_widget)
+        bins_layout.setContentsMargins(0, 0, 0, 0)
+        bins_layout.addWidget(bins_label, 0, 0)
+        bins_layout.addWidget(self.bins_sbox, 0, 1)
+
+        toolbar.addWidget(bins_widget)
 
     def update_models_info(self):
         if self.glue_data is None:
@@ -364,8 +399,8 @@ class ModelsDistplotCursor(AxesWidget):
 
 
 class ModelsDistplotFigure(Figure):
-    def __init__(self, *args, **kargs):
-        super().__init__(*args, **kargs)
+    def __init__(self, bins_nbr=30):
+        super().__init__()
         self.set_facecolor('white')
         self.set_tight_layout(True)
         self.setp = {
@@ -383,6 +418,7 @@ class ModelsDistplotFigure(Figure):
         self.hist_obj = None
         self.glue_data = None
         self.cursor = None
+        self.bins_nbr = bins_nbr
 
         self.setup_axes()
 
@@ -476,23 +512,36 @@ class ModelsDistplotFigure(Figure):
                 1 - top_margin - bottom_margin])
 
     def plot(self, glue_data):
+        """
+        Generate the histogram plot using the RMSE values of the models stored
+        in glue_data.
+        """
         self.glue_data = glue_data
-        glue_rmse = glue_data['RMSE']
+        self._draw_hist()
 
-        rmse_min = np.floor(np.min(glue_rmse))
-        rmse_max = np.ceil(np.max(glue_rmse))
-        bins = np.arange(rmse_min, rmse_max + 1, 0.5)
+    def _draw_hist(self):
+        """
+        Draw the histogram of the models RMSE.
+        """
+        glue_rmse = self.glue_data['RMSE']
 
         self.ax0.set_visible(True)
         if self.hist_obj is not None:
-            self.hist_obj.remove()
-        self.ax0.hist(
-            glue_rmse, color='blue', edgecolor='black', bins=bins)
+            for patch in self.hist_obj:
+                patch.remove()
+        n, bins, self.hist_obj = self.ax0.hist(
+            glue_rmse, color='blue', edgecolor='black', bins=self.bins_nbr)
 
-        self.ax0.axis(xmin=bins[0] - 0.5, xmax=bins[-1])
+        bins_width = bins[1] - bins[0]
+        self.ax0.axis(
+            ymin=0, ymax=np.max(n) + 1,
+            xmin=bins[0] - bins_width / 2, xmax=bins[-1] + bins_width / 2,
+            )
 
         if self.cursor is None:
             self.cursor = ModelsDistplotCursor(self.ax0)
+
+        self.canvas.draw()
 
     def tight_layout(self, force_update=False):
         """
@@ -509,6 +558,13 @@ class ModelsDistplotFigure(Figure):
         super().set_size_inches(*args, **kargs)
         self.tight_layout()
 
+    def set_bins_nbr(self, bins_nbr):
+        """
+        Set the number of equal-width bins to plot in the histogram.
+        """
+        self.bins_nbr = int(bins_nbr)
+        self._draw_hist()
+
 
 if __name__ == '__main__':
     from gwhat.projet.reader_projet import ProjetReader
@@ -517,7 +573,7 @@ if __name__ == '__main__':
              "Éval recharge (GWHAT)/evaluate_recharge/evaluate_recharge.gwt")
 
     project = ProjetReader(fname)
-    wldset = project.get_wldset('Mercier (03090001)')
+    wldset = project.get_wldset('Mercier_v2 (03090001)')
     glue_data = wldset.get_glue_at(-1)
     project.db.close()
 
