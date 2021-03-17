@@ -94,10 +94,10 @@ class RechgEvalWidget(QFrame):
 
         # Runoff coefficient (Cro) :
 
-        self.CRO_min = QDoubleSpinBox(0.1, 3)
+        self.CRO_min = QDoubleSpinBox(0.1, 2)
         self.CRO_min.setRange(0, 1)
 
-        self.CRO_max = QDoubleSpinBox(0.3, 3)
+        self.CRO_max = QDoubleSpinBox(0.3, 2)
         self.CRO_max.setRange(0, 1)
 
         # Snowmelt parameters :

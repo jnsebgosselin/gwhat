@@ -116,17 +116,17 @@ class ModelsDistplotWidget(QMainWindow):
               <tr>
                 <td>CRu</td>
                 <td>: </td>
-                <td>{:0.1f} - {:0.1f}</td>
+                <td>{:0.2f} - {:0.2f}</td>
               </tr>
               <tr>
                 <td>RASmax</td>
                 <td>: </td>
-                <td>{:0.2f} - {:0.2f} mm</td>
+                <td>{:0.0f} - {:0.0f} mm</td>
               </tr>
               <tr>
                 <td>Sy</td>
                 <td>: </td>
-                <td>{:0.2f} - {:0.2f}</td>
+                <td>{:0.3f} - {:0.3f}</td>
               </tr>
             </table>
             """).format(len(rmse),
@@ -187,17 +187,17 @@ class ModelsDistplotWidget(QMainWindow):
                   <tr>
                     <td>CRu</td>
                     <td>: </td>
-                    <td>{:0.1f} - {:0.1f}</td>
+                    <td>{:0.2f} - {:0.2f}</td>
                   </tr>
                   <tr>
                     <td>RASmax</td>
                     <td>: </td>
-                    <td>{:0.2f} - {:0.2f} mm</td>
+                    <td>{:0.0f} - {:0.0f} mm</td>
                   </tr>
                   <tr>
                     <td>Sy</td>
                     <td>: </td>
-                    <td>{:0.2f} - {:0.2f}</td>
+                    <td>{:0.3f} - {:0.3f}</td>
                   </tr>
                 </table>
                 """
