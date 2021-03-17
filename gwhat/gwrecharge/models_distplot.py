@@ -248,12 +248,12 @@ class ModelsDistplotWidget(QMainWindow):
         """Set the namespace for the GLUE results dataset."""
         self.glue_data = glue_data
         self.update_models_info()
+        self.set_rmse_treshold(None)
         if glue_data is None:
             self.figcanvas.clear_figure()
         else:
             QApplication.setOverrideCursor(Qt.WaitCursor)
             self.figcanvas.plot_results(glue_data)
-        self.set_rmse_treshold(None)
             QApplication.restoreOverrideCursor()
 
     def show(self):
