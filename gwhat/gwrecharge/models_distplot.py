@@ -423,7 +423,7 @@ class ModelsDistplotFigure(Figure):
         self.setup_axes()
 
     def setup_axes(self):
-        """Plot the data."""
+        """Setup the axes of the figure."""
         self.ax0 = self.add_axes([0, 0, 1, 1])
         self.ax0.patch.set_visible(False)
         for axis in ['top', 'bottom', 'left', 'right']:
@@ -438,6 +438,7 @@ class ModelsDistplotFigure(Figure):
             labelpad=self.ylabelpad)
 
     def setup_margins(self):
+        """Setup the margins of the figure."""
         if self.ax0 is None:
             return
         figborderpad = self.setp['figure_border']
