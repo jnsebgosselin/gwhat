@@ -488,12 +488,8 @@ class ModelsDistplotFigure(Figure):
                 self.cursor.infotextheight + self.cursor.infotextpad if
                 self.cursor else 0
                 )
-            yaxis_height = max(
-                bbox_yaxis_left.y1 - axbbox.y1,
-                bbox_yaxis_right.y1 - axbbox.y1,
-                0)
             top_margin = (
-                yaxis_height + figborderpad + cursorinfotext_height
+                figborderpad + cursorinfotext_height
                 ) / figbbox.height
 
         # Calculate bottom margin height.
