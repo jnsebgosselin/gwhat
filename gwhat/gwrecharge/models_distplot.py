@@ -173,8 +173,10 @@ class ModelsDistplotWidget(QMainWindow):
 
     def set_rmse_treshold(self, rmse_treshold=None):
         if self.glue_data is None:
+            self.selectmodels_label.setText('')
             return
 
+        # Update the left panel info.
         rmse_data = self.glue_data['RMSE']
         if rmse_treshold is None:
             rmse_treshold = np.max(rmse_data)
@@ -251,7 +253,7 @@ class ModelsDistplotWidget(QMainWindow):
         else:
             QApplication.setOverrideCursor(Qt.WaitCursor)
             self.figcanvas.plot_results(glue_data)
-            self.set_rmse_treshold(None)
+        self.set_rmse_treshold(None)
             QApplication.restoreOverrideCursor()
 
     def show(self):
@@ -311,11 +313,11 @@ class ModelsDistplotCursor(AxesWidget):
         self.useblit = useblit and self.canvas.supports_blit
 
         self.linev = ax.axvline(
-            ax.get_ybound()[0], visible=False, color='red', linewidth=1,
+            ax.get_xbound()[1], visible=False, color='red', linewidth=1,
             ls='--', animated=self.useblit)
 
         self.treshold_vline = ax.axvline(
-            ax.get_ybound()[0], visible=False, color='red', linewidth=1,
+            ax.get_xbound()[1], visible=False, color='red', linewidth=1,
             animated=False)
 
         scaled_translation = ScaledTranslation(
@@ -528,6 +530,13 @@ class ModelsDistplotFigure(Figure):
         """
         self.glue_data = glue_data
         self._draw_hist()
+        if self.cursor is None:
+            self.cursor = ModelsDistplotCursor(self.ax0)
+        else:
+            self.cursor.clear()
+            self.canvas.sig_rmse_treshold_selected.emit(
+                self.cursor._selected_rmse_treshold)
+            self.canvas.draw_idle()
 
     def _draw_hist(self):
         """
@@ -547,9 +556,6 @@ class ModelsDistplotFigure(Figure):
             ymin=0, ymax=np.max(n) + 1,
             xmin=bins[0] - bins_width / 2, xmax=bins[-1] + bins_width / 2,
             )
-
-        if self.cursor is None:
-            self.cursor = ModelsDistplotCursor(self.ax0)
 
         self.canvas.draw()
 
