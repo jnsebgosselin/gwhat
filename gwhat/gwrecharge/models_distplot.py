@@ -284,7 +284,8 @@ class ModelsDistplotCursor(AxesWidget):
             animated=False)
 
         scaled_translation = ScaledTranslation(
-            0, self.infotextpad/72, self.ax.figure.dpi_scale_trans)
+            self.infotextpad/72, self.infotextpad/72,
+            self.ax.figure.dpi_scale_trans)
         self.infotext = ax.text(
             0, 1, '', va='bottom', ha='left', rotation=0,
             fontsize=self.infotextheight,
@@ -296,9 +297,9 @@ class ModelsDistplotCursor(AxesWidget):
         if glue_data is not None and xdata is not None:
             where = np.where(glue_data['RMSE'] <= xdata)[0]
             percent = len(where) / len(glue_data['RMSE']) * 100
-            text = ("{:0.1f} of the models have a RMSE less "
+            text = ("{} models ({:0.1f}%) have a RMSE less "
                     "than or equal to {:0.1f} mm.").format(
-                        percent, xdata)
+                        len(where), percent, xdata)
         else:
             text = ''
         self.infotext.set_text(text)
