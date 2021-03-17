@@ -340,13 +340,26 @@ class ModelsDistplotCursor(AxesWidget):
         self.infotext.set_text(text)
 
     def clear(self):
-        """Internal event handler to clear the cursor."""
+        """
+        Clear the cursor.
+
+        This method must be called by the canvas BEFORE making a copy of
+        the canvas background.
+        """
+        self.__linev_visible = self.linev.get_visible()
+        self.__infotext_visible = self.infotext.get_visible()
         self.linev.set_visible(False)
         self.infotext.set_visible(False)
 
     def restore(self):
-        self.linev.set_visible(True)
-        self.infotext.set_visible(True)
+        """
+        Restore the cursor.
+
+        This method must be called by the canvas AFTER a copy has been made
+        of the canvas background.
+        """
+        self.linev.set_visible(self.__linev_visible)
+        self.infotext.set_visible(self.__infotext_visible)
         self.ax.draw_artist(self.linev)
         self.ax.draw_artist(self.infotext)
 
