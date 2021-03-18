@@ -109,22 +109,19 @@ class ModelsDistplotWidget(QMainWindow):
         self.addToolBar(Qt.TopToolBarArea, toolbar)
 
         # Setup the bins widget.
-        bins_tooltip = "Number of equal-width bins in the range."
-        bins_label = QLabel('Bins nbr:')
-        bins_label.setToolTip(bins_tooltip)
-
         self.bins_sbox = QDoubleSpinBox()
         self.bins_sbox.setDecimals(0)
         self.bins_sbox.setMaximum(999)
         self.bins_sbox.setMinimum(1)
         self.bins_sbox.setValue(30)
-        self.bins_sbox.setToolTip(bins_tooltip)
         self.bins_sbox.valueChanged.connect(self.figcanvas.figure.set_bins_nbr)
 
         bins_widget = QWidget()
+        bins_widget.setToolTip("Number of equal-width bins in the range.")
+
         bins_layout = QGridLayout(bins_widget)
-        bins_layout.setContentsMargins(0, 0, 0, 0)
-        bins_layout.addWidget(bins_label, 0, 0)
+        bins_layout.setContentsMargins(5, 0, 0, 0)
+        bins_layout.addWidget(QLabel('Bins nbr:'), 0, 0)
         bins_layout.addWidget(self.bins_sbox, 0, 1)
 
         toolbar.addWidget(bins_widget)
