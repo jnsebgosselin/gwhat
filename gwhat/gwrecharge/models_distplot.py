@@ -548,9 +548,13 @@ class ModelsDistplotFigure(Figure):
         n, bins, self.hist_obj = self.ax0.hist(
             glue_rmse, color='blue', edgecolor='black', bins=self.bins_nbr)
 
+        renderer = self.canvas.get_renderer()
+        ax_bbox = self.ax0.yaxis.label.get_window_extent(renderer)
+
         bins_width = bins[1] - bins[0]
         self.ax0.axis(
-            ymin=0, ymax=np.max(n) + 1,
+            ymin=0,
+            ymax=(ax_bbox.height * np.max(n)) / (ax_bbox.height - 3),
             xmin=bins[0] - bins_width / 2, xmax=bins[-1] + bins_width / 2,
             )
 
