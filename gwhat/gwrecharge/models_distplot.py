@@ -307,6 +307,7 @@ class ModelsDistplotCursor(AxesWidget):
         self.infotextheight = 10
 
         self._selected_rmse_treshold = None
+        self._cleared_rmse_treshold = False
         self.connect_event('motion_notify_event', self.onmove)
         self.connect_event('button_press_event', self.onpress)
         self.connect_event('button_release_event', self.onrelease)
@@ -342,6 +343,11 @@ class ModelsDistplotCursor(AxesWidget):
         else:
             text = ''
         self.infotext.set_text(text)
+
+    def clear_rmse_treshold(self):
+        """Clear the RMSE treshold vertical line."""
+        self._selected_rmse_treshold = None
+        self.draw_rmse_treshold()
 
     def set_rmse_treshold(self, value):
         """Set änd plot a new value for the RMSE treshold vertical line."""
@@ -385,13 +391,18 @@ class ModelsDistplotCursor(AxesWidget):
     def onpress(self, event):
         if event.button == 1:
             self._selected_rmse_treshold = event.xdata
+        elif event.button == 3:
+            self._cleared_rmse_treshold = True
 
     def onrelease(self, event):
-        if event.button != 1:
-            return
-        self.set_rmse_treshold(event.xdata)
-        self.canvas.sig_rmse_treshold_selected.emit(
-            self._selected_rmse_treshold)
+        if event.button == 1:
+            self.set_rmse_treshold(event.xdata)
+            self.canvas.sig_rmse_treshold_selected.emit(
+                self._selected_rmse_treshold)
+        elif event.button == 3 and self._cleared_rmse_treshold is True:
+            self._cleared_rmse_treshold = False
+            self.clear_rmse_treshold()
+            self.canvas.sig_rmse_treshold_selected.emit(None)
 
     def onmove(self, event):
         """Internal event handler to draw the cursor when the mouse moves."""
