@@ -612,6 +612,13 @@ class FigureManager(QWidget):
             tip='Save current graph as...',
             triggered=self._select_savefig_path)
 
+        self.btn_copy_to_clipboard = create_toolbutton(
+            self, icon='copy_clipboard',
+            text="Copy",
+            tip="Put a copy of the figure on the Clipboard.",
+            triggered=self.figcanvas.copy_to_clipboard,
+            shortcut='Ctrl+C')
+
         self.btn_language = LangToolButton()
         self.btn_language.setToolTip(
             "Set the language of the text shown in the graph.")
@@ -627,7 +634,8 @@ class FigureManager(QWidget):
         toolbar.setMovable(False)
         toolbar.setIconSize(get_iconsize('normal'))
 
-        widgets = [self.btn_save, None, zoom_widget, None, self.btn_language]
+        widgets = [self.btn_save, self.btn_copy_to_clipboard, None,
+                   zoom_widget, None, self.btn_language]
         for widget in widgets:
             if widget is None:
                 toolbar.addSeparator()
