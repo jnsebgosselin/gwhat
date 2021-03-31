@@ -346,6 +346,10 @@ class RechgEvalWidget(QFrame):
         self.progressbar.hide()
         self.setEnabled(True)
 
+    def close(self):
+        """Extend Qt method to close child windows."""
+        self.figstack.close()
+        super().close()
 
 
 class ExportGLUEButton(ExportDataButton):
