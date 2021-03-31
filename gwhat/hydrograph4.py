@@ -539,8 +539,9 @@ class Hydrograph(Figure):
                 lg_labels.append(labelDB[2])
 
                 # Missing Data Markers
-                lg_handles.append(self.lmiss_ax4)
-                lg_labels.append(labelDB[3])
+                if len(self.lmiss_ax4.get_xdata()):
+                    lg_handles.append(self.lmiss_ax4)
+                    lg_labels.append(labelDB[3])
 
             # Continuous Line Datalogger
             lg_handles.append(self.l1_ax2)
