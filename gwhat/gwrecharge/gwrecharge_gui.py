@@ -441,19 +441,12 @@ class ExportGLUEButton(ExportDataButton):
             QApplication.restoreOverrideCursor()
 
 
-# %% ---- if __name__ == '__main__'
-
 if __name__ == '__main__':
-    from gwhat.gwrecharge.gwrecharge_calc2 import load_glue_from_npy
-    from gwhat.gwrecharge.glue import GLUEDataFrame
     import sys
 
     app = QApplication(sys.argv)
 
-    GLUE_RAWDATA = load_glue_from_npy('glue_rawdata.npy')
-    GLUE_DF = GLUEDataFrame(GLUE_RAWDATA)
-
-    BTN_EXPORT_GLUE = ExportGLUEButton(GLUE_DF)
-    BTN_EXPORT_GLUE.show()
+    widget = RechgEvalWidget()
+    widget.show()
 
     sys.exit(app.exec_())
