@@ -293,6 +293,11 @@ class ModelsDistplotCanvas(FigureCanvasQTAgg):
         if self.figure.cursor is not None:
             self.figure.cursor.restore()
 
+    def set_rmse_treshold(self, rmse_treshold):
+        """Set the value of the RMSE treshold in the figure cursor."""
+        if self.figure.cursor:
+            self.figure.cursor.set_rmse_treshold(rmse_treshold)
+
 
 class ModelsDistplotCursor(AxesWidget):
 
@@ -338,6 +343,21 @@ class ModelsDistplotCursor(AxesWidget):
             text = ''
         self.infotext.set_text(text)
 
+    def set_rmse_treshold(self, value):
+        """Set änd plot a new value for the RMSE treshold vertical line."""
+        self._selected_rmse_treshold = value
+        self.draw_rmse_treshold()
+
+    def draw_rmse_treshold(self):
+        """Draw the RMSE treshold vertical line."""
+        if self._selected_rmse_treshold is not None:
+            self.treshold_vline.set_xdata(
+                (self._selected_rmse_treshold, self._selected_rmse_treshold))
+            self.treshold_vline.set_visible(True)
+        else:
+            self.treshold_vline.set_visible(False)
+        self.canvas.draw_idle()
+
     def clear(self):
         """
         Clear the cursor.
@@ -369,15 +389,7 @@ class ModelsDistplotCursor(AxesWidget):
     def onrelease(self, event):
         if event.button != 1:
             return
-
-        if self._selected_rmse_treshold is not None:
-            self.treshold_vline.set_xdata(
-                (self._selected_rmse_treshold, self._selected_rmse_treshold))
-            self.treshold_vline.set_visible(True)
-        else:
-            self.treshold_vline.set_visible(False)
-        self.canvas.draw_idle()
-
+        self.set_rmse_treshold(event.xdata)
         self.canvas.sig_rmse_treshold_selected.emit(
             self._selected_rmse_treshold)
 
