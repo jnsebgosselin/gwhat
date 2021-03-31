@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Copyright © 2014-2018 GWHAT Project Contributors
+# Copyright © 2014-2021 GWHAT Project Contributors
 # https://github.com/jnsebgosselin/gwhat
 #
 # This file is part of GWHAT (Ground-Water Hydrograph Analysis Toolbox).
@@ -13,41 +13,26 @@
 # moving forward, and remember to keep your UI out of the way.
 # http://blog.teamtreehouse.com/10-user-interface-design-fundamentals
 
-from __future__ import division, unicode_literals, print_function
-
 print('Starting GWHAT...')
 
-import matplotlib as mpl
-mpl.use('Qt5Agg')
-
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import (QApplication, QMainWindow, QTextEdit, QSplitter,
-                             QWidget, QGridLayout, QTextBrowser)
-import sys
-app = QApplication(sys.argv)
-
-from gwhat.widgets.splash import SplashScrn
-splash = SplashScrn()
-
-import platform
-
-ft = app.font()
-ft.setPointSize(11)
-if platform.system() == 'Windows':
-    ft.setFamily('Segoe UI')
-app.setFont(ft)
+from gwhat.utils.qthelpers import create_qapplication
+app = create_qapplication()
 
 from gwhat import __namever__, __appname__
+from gwhat.widgets.splash import SplashScrn
+splash = SplashScrn()
 splash.showMessage("Starting %s..." % __namever__)
 
 # ---- Standard library imports
+import sys
+import platform
 from time import ctime
-import os.path as osp
-
 from multiprocessing import freeze_support
-import tkinter
-import tkinter.filedialog
-import tkinter.messagebox
+
+# ---- Third party imports
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import (QMainWindow, QTextEdit, QSplitter,
+                             QWidget, QGridLayout, QTextBrowser)
 
 # ---- Local imports
 from gwhat.config.main import CONF
@@ -217,12 +202,6 @@ class MainWindow(QMainWindow):
         self.tab_hydrocalc.close()
         self.tab_hydrograph.close()
         event.accept()
-
-    def show(self):
-        """
-        Extend Qt method.
-        """
-        super().show()
 
     # ---- Main window settings
     def _restore_window_geometry(self):

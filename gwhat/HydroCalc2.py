@@ -1867,13 +1867,9 @@ if __name__ == '__main__':
     from projet.manager_data import DataManager
     from projet.reader_projet import ProjetReader
     from gwhat import __rootdir__
+    from gwhat.utils.qthelpers import create_qapplication
 
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(11)
-    app.setFont(ft)
+    app = create_qapplication()
 
     pf = osp.join(__rootdir__, '../Projects/Example/Example.gwt')
     pr = ProjetReader(pf)
