@@ -9,10 +9,16 @@
 
 """Qt utilities"""
 
+# ---- Standard imports
+import sys
+import platform
+
 # ---- Third party imports
 from PyQt5.QtCore import QByteArray, Qt, QSize
-from PyQt5.QtWidgets import QWidget, QSizePolicy, QToolButton
+from PyQt5.QtWidgets import (
+    QWidget, QSizePolicy, QToolButton, QApplication, QStyleFactory)
 
+# ---- Local imports
 from gwhat.utils.icons import get_icon
 
 
@@ -24,6 +30,24 @@ def qbytearray_to_hexstate(qba):
 def hexstate_to_qbytearray(hexstate):
     """Convert a str hexstate to a QByteArray object."""
     return QByteArray().fromHex(str(hexstate).encode('utf-8'))
+
+
+def create_qapplication():
+    """Create a QApplication instance if it doesn't already exist"""
+    qapp = QApplication.instance()
+    if qapp is None:
+        print('Creating a QApplication...')
+        qapp = QApplication(sys.argv)
+
+        if platform.system() == 'Windows':
+            print('Setting style for Windows OS...')
+            qapp.setStyle(QStyleFactory.create('WindowsVista'))
+
+            ft = qapp.font()
+            ft.setPointSize(10)
+            ft.setFamily('Segoe UI')
+            qapp.setFont(ft)
+    return qapp
 
 
 def create_toolbar_stretcher():
