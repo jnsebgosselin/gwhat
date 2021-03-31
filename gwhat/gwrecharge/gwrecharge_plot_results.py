@@ -8,6 +8,7 @@
 # -----------------------------------------------------------------------------
 
 # ---- Standard library imports
+import io
 import os
 import os.path as osp
 import datetime
@@ -22,6 +23,7 @@ from matplotlib.figure import Figure as MplFigure
 from PyQt5.QtCore import Qt
 from PyQt5.QtCore import pyqtSlot as QSlot
 from PyQt5.QtCore import pyqtSignal as QSignal
+from PyQt5.QtGui import QImage
 from PyQt5.QtWidgets import (
     QGridLayout, QAbstractSpinBox, QApplication, QDoubleSpinBox,
     QFileDialog, QGroupBox, QLabel, QMessageBox, QScrollArea, QScrollBar,
@@ -762,6 +764,13 @@ class FigCanvasBase(FigureCanvasQTAgg):
 
         self.figure.set_size_inches(self.setp['fwidth'], self.setp['fheight'])
         self.refresh_margins()
+
+    def copy_to_clipboard(self):
+        """Put a copy of the figure on the clipboard."""
+        buf = io.BytesIO()
+        self.figure.savefig(buf)
+        QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
+        buf.close()
 
     def clear_ax(self, silent=True):
         """Clear the main axe."""
