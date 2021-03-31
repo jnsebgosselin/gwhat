@@ -93,11 +93,23 @@ class RechgEvalWidget(QFrame):
 
         # Runoff coefficient (Cro) :
 
-        self.CRO_min = QDoubleSpinBox(0.1, 3)
+        # Setup the runoff coefficient (Cro) range.
+        cro_tooltip = (
+            """
+            The runoff coefficient (Cro) is a dimensionless coefficient
+            relating the amount of runoff to the amount of precipitation
+            received. It is a larger value for areas with low infiltration
+            and high runoff (pavement, steep gradient), and lower for
+            permeable, well vegetated areas (forest, flat land).
+            """
+            )
+        self.CRO_min = QDoubleSpinBox(0.1, 2)
         self.CRO_min.setRange(0, 1)
+        self.CRO_min.setToolTip(cro_tooltip)
 
-        self.CRO_max = QDoubleSpinBox(0.3, 3)
+        self.CRO_max = QDoubleSpinBox(0.3, 2)
         self.CRO_max.setRange(0, 1)
+        self.CRO_max.setToolTip(cro_tooltip)
 
         # Snowmelt parameters :
 
