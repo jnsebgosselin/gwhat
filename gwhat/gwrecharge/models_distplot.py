@@ -585,6 +585,7 @@ class ModelsDistplotFigure(Figure):
 
 if __name__ == '__main__':
     from gwhat.projet.reader_projet import ProjetReader
+    from gwhat.utils.qthelpers import create_qapplication
     import sys
     fname = ("D:/OneDrive/INRS/2017 - Projet INRS PACC/"
              "Éval recharge (GWHAT)/evaluate_recharge/evaluate_recharge.gwt")
@@ -594,12 +595,7 @@ if __name__ == '__main__':
     glue_data = wldset.get_glue_at(-1)
     project.db.close()
 
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(10)
-    app.setFont(ft)
+    app = create_qapplication()
 
     distplotwidget = ModelsDistplotWidget()
     distplotwidget.show()
