@@ -34,7 +34,7 @@ class RechgEvalWidget(QFrame):
 
     sig_new_gluedf = QSignal(GLUEDataFrameBase)
 
-    def __init__(self, parent):
+    def __init__(self, parent=None):
         super(RechgEvalWidget, self).__init__(parent)
         self.setWindowTitle('Recharge Calibration Setup')
         self.setWindowFlags(Qt.Window)
