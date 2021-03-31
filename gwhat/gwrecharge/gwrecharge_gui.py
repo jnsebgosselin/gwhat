@@ -41,7 +41,7 @@ class RechgEvalWidget(QFrame):
 
         self.wxdset = None
         self.wldset = None
-        self.figstack = FigureStackManager(parent=self)
+        self.figstack = FigureStackManager()
 
         self.progressbar = QProgressBar()
         self.progressbar.setValue(0)
