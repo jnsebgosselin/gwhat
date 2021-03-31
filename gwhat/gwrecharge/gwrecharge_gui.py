@@ -228,18 +228,34 @@ class RechgEvalWidget(QFrame):
         to produce the last GLUE results saved into the project.
         """
         if gluedf is not None:
-            self.QSy_min.setValue(min(gluedf['ranges']['Sy']))
-            self.QSy_max.setValue(max(gluedf['ranges']['Sy']))
-
-            self.CRO_min.setValue(min(gluedf['ranges']['Cro']))
-            self.CRO_max.setValue(max(gluedf['ranges']['Cro']))
-
-            self.QRAS_min.setValue(min(gluedf['ranges']['RASmax']))
-            self.QRAS_max.setValue(max(gluedf['ranges']['RASmax']))
-
-            self._Tmelt.setValue(gluedf['params']['tmelt'])
-            self._CM.setValue(gluedf['params']['CM'])
-            self._deltaT.setValue(gluedf['params']['deltat'])
+            try:
+                # This was introduced in gwhat 0.5.1.
+                self.rmsecutoff_sbox.setValue(gluedf['cutoff']['rmse_cutoff'])
+                self.rmsecutoff_cbox.setChecked(
+                    gluedf['cutoff']['rmse_cutoff_enabled'])
+            except KeyError:
+                pass
+            try:
+                self.QSy_min.setValue(min(gluedf['ranges']['Sy']))
+                self.QSy_max.setValue(max(gluedf['ranges']['Sy']))
+            except KeyError:
+                pass
+            try:
+                self.CRO_min.setValue(min(gluedf['ranges']['Cro']))
+                self.CRO_max.setValue(max(gluedf['ranges']['Cro']))
+            except KeyError:
+                pass
+            try:
+                self.QRAS_min.setValue(min(gluedf['ranges']['RASmax']))
+                self.QRAS_max.setValue(max(gluedf['ranges']['RASmax']))
+            except KeyError:
+                pass
+            try:
+                self._Tmelt.setValue(gluedf['params']['tmelt'])
+                self._CM.setValue(gluedf['params']['CM'])
+                self._deltaT.setValue(gluedf['params']['deltat'])
+            except KeyError:
+                pass
 
     def get_Range(self, name):
         if name == 'Sy':
