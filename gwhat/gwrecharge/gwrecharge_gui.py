@@ -257,13 +257,16 @@ class RechgEvalWidget(QFrame):
             except KeyError:
                 pass
 
-    def get_Range(self, name):
+    def get_params_range(self, name):
         if name == 'Sy':
-            return [self.QSy_min.value(), self.QSy_max.value()]
+            return (min(self.QSy_min.value(), self.QSy_max.value()),
+                    max(self.QSy_min.value(), self.QSy_max.value()))
         elif name == 'RASmax':
-            return [self.QRAS_min.value(), self.QRAS_max.value()]
+            return (min(self.QRAS_min.value(), self.QRAS_max.value()),
+                    max(self.QRAS_min.value(), self.QRAS_max.value()))
         elif name == 'Cro':
-            return [self.CRO_min.value(), self.CRO_max.value()]
+            return (min(self.CRO_min.value(), self.CRO_max.value()),
+                    max(self.CRO_min.value(), self.CRO_max.value()))
         else:
             raise ValueError('Name must be either Sy, Rasmax or Cro.')
 
@@ -291,18 +294,19 @@ class RechgEvalWidget(QFrame):
         Start the method to evaluate ground-water recharge and its
         uncertainty.
         """
-        # Set the parameter ranges.
+        # Set the model parameter ranges.
+        self.rechg_worker.Sy = self.get_params_range('Sy')
+        self.rechg_worker.Cro = self.get_params_range('Cro')
+        self.rechg_worker.RASmax = self.get_params_range('RASmax')
 
-        self.rechg_worker.Sy = self.get_Range('Sy')
-        self.rechg_worker.Cro = self.get_Range('Cro')
-        self.rechg_worker.RASmax = self.get_Range('RASmax')
-
+        # Set the value of the secondary model parameters.
         self.rechg_worker.TMELT = self.Tmelt
         self.rechg_worker.CM = self.CM
         self.rechg_worker.deltat = self.deltaT
 
         # Set the data and check for errors.
 
+        # Set the data and check for errors.
         error = self.rechg_worker.load_data(self.wxdset, self.wldset)
         if error is not None:
             QMessageBox.warning(self, 'Warning', error, QMessageBox.Ok)
