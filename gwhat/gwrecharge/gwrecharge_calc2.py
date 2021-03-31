@@ -44,7 +44,7 @@ class RechgEvalWorker(QObject):
         self.TMELT = 0
         self.CM = 4
         self.deltat = 0
-
+        # Models parameters space.
         self.Sy = (0, 1)
         self.Cro = (0, 1)
         self.RASmax = (0, 150)
