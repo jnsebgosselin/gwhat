@@ -776,7 +776,7 @@ class FigCanvasBase(FigureCanvasQTAgg):
     def copy_to_clipboard(self):
         """Put a copy of the figure on the clipboard."""
         buf = io.BytesIO()
-        self.figure.savefig(buf)
+        self.figure.savefig(buf, dpi=300)
         QApplication.clipboard().setImage(QImage.fromData(buf.getvalue()))
         buf.close()
 
