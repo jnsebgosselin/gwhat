@@ -309,8 +309,9 @@ class RechgEvalWidget(QFrame):
             return
 
         # Start the computation of groundwater recharge.
-
+        self.setEnabled(False)
         self.progressbar.show()
+
         waittime = 0
         while self.rechg_thread.isRunning():
             time.sleep(0.1)
@@ -326,7 +327,6 @@ class RechgEvalWidget(QFrame):
         been evaluated.
         """
         self.rechg_thread.quit()
-        self.progressbar.hide()
         if glue_dataframe is None:
             msg = ("Recharge evaluation was not possible because all"
                    " the models produced were deemed non-behavioural."
@@ -343,6 +343,9 @@ class RechgEvalWidget(QFrame):
 
             self.btn_save_glue.set_model(glue_dataframe)
             self.figstack.set_gluedf(glue_dataframe)
+        self.progressbar.hide()
+        self.setEnabled(True)
+
 
 
 class ExportGLUEButton(ExportDataButton):
