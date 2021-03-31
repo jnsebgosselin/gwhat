@@ -73,6 +73,41 @@ class ModelsDistplotWidget(QMainWindow):
         self.models_layout.setRowStretch(1, 1)
 
         # Selected Models Info Group.
+        rmse_cutoff_tooltip = (
+            "RMSE cutoff value"
+            "<br><br>"
+            "The RMSE cutoff value is reprensented by a plain red vertical "
+            "line on the graph. Cutoff models info are calculated from the "
+            "family of models whose RMSE falls below that cutoff value."
+            "<br><br>"
+            "You can also select a new RMSE cutoff value by clicking "
+            "with the left button of the mouse on the graph and you "
+            "can clear the treshold by clicking with the right button."
+            )
+        self.rmse_cutoff_sbox = QDoubleSpinBox()
+        self.rmse_cutoff_sbox.setDecimals(1)
+        self.rmse_cutoff_sbox.setSingleStep(0.1)
+        self.rmse_cutoff_sbox.setRange(0, 9999)
+        self.rmse_cutoff_sbox.setValue(0)
+        self.rmse_cutoff_sbox.setSpecialValueText('None')
+        self.rmse_cutoff_sbox.setKeyboardTracking(False)
+        self.rmse_cutoff_sbox.setButtonSymbols(QDoubleSpinBox.NoButtons)
+        self.rmse_cutoff_sbox.valueChanged.connect(
+            self._handle_rmse_treshold_changed)
+
+        rmse_cutoff_widget = QWidget()
+        rmse_cutoff_widget.setToolTip(rmse_cutoff_tooltip)
+
+        ft = rmse_cutoff_widget.font()
+        ft.setPointSize(ft.pointSize() - 1)
+        rmse_cutoff_widget.setFont(ft)
+
+        rmse_cutoff_layout = QGridLayout(rmse_cutoff_widget)
+        rmse_cutoff_layout.setContentsMargins(2, 0, 0, 0)
+        rmse_cutoff_layout.addWidget(QLabel('RMSE cutoff:'), 0, 0)
+        rmse_cutoff_layout.addWidget(self.rmse_cutoff_sbox, 0, 1)
+        rmse_cutoff_layout.addWidget(QLabel('mm'), 0, 2)
+
         self.selectmodels_label = QLabel()
         self.selectmodels_label.setTextInteractionFlags(
             Qt.TextSelectableByMouse)
@@ -81,8 +116,10 @@ class ModelsDistplotWidget(QMainWindow):
 
         self.selectmodels_grpbox = QGroupBox("Cutoff models info")
         self.selectmodels_layout = QGridLayout(self.selectmodels_grpbox)
-        self.selectmodels_layout.addWidget(self.selectmodels_label, 0, 0)
-        self.selectmodels_layout.setRowStretch(1, 1)
+        self.selectmodels_layout.addWidget(rmse_cutoff_widget, 0, 0)
+        self.selectmodels_layout.addWidget(self.selectmodels_label, 1, 0)
+        self.selectmodels_layout.setRowStretch(2, 1)
+        self.selectmodels_layout.setSpacing(2)
 
         # Setup the central widget.
         self.central_widget = QWidget()
@@ -168,10 +205,23 @@ class ModelsDistplotWidget(QMainWindow):
                         np.min(sy), np.max(sy))
         self.models_label.setText(text)
 
+    def _handle_rmse_treshold_changed(self, value):
+        value = None if value == 0 else value
+        self.figcanvas.set_rmse_treshold(value)
+        self.set_rmse_treshold(value)
+
     def set_rmse_treshold(self, rmse_treshold=None):
         if self.glue_data is None:
             self.selectmodels_label.setText('')
+            self.rmse_cutoff_sbox.blockSignals(True)
+            self.rmse_cutoff_sbox.setValue(0)
+            self.rmse_cutoff_sbox.blockSignals(False)
             return
+        else:
+            self.rmse_cutoff_sbox.blockSignals(True)
+            self.rmse_cutoff_sbox.setValue(
+                0 if rmse_treshold is None else rmse_treshold)
+            self.rmse_cutoff_sbox.blockSignals(False)
 
         # Update the left panel info.
         rmse_data = self.glue_data['RMSE']
@@ -182,11 +232,6 @@ class ModelsDistplotWidget(QMainWindow):
         selectmodels_text = (
             """
             <table style="width:100%">
-              <tr>
-                <td>RMSE Cutoff</td>
-                <td>: </td>
-                <td>{:0.1f} mm</td>
-              </tr>
               <tr>
                 <td>Nbr of Models</td>
                 <td>: </td>
@@ -199,9 +244,7 @@ class ModelsDistplotWidget(QMainWindow):
               </tr>
             </table>
             """
-            ).format(rmse_treshold,
-                     len(where),
-                     len(where) / len(rmse_data) * 100)
+            ).format(len(where), len(where) / len(rmse_data) * 100)
 
         if len(where) > 0:
             rmse = self.glue_data['RMSE'][where]
