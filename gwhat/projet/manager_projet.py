@@ -497,15 +497,11 @@ class NewProject(QDialog):
 
 if __name__ == '__main__':
     import sys
+    from gwhat.utils.qthelpers import create_qapplication
 
     f = 'C:/Users/jnsebgosselin/Desktop/Project4Testing/Project4Testing.what'
 
-    app = QApplication(sys.argv)
-
-    ft = app.font()
-    ft.setFamily('Segoe UI')
-    ft.setPointSize(11)
-    app.setFont(ft)
+    app = create_qapplication()
 
     pm = ProjetManager(projet=None)
     pm.show()
@@ -513,4 +509,4 @@ if __name__ == '__main__':
     dm = DataManager(pm=pm)
     dm.show()
 
-    app.exec_()
+    sys.exit(app.exec_())

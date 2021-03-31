@@ -12,6 +12,7 @@ import os.path as osp
 
 # ---- Third party imports
 import pytest
+from PyQt5.QtGui import QImage
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication
 
@@ -36,7 +37,7 @@ def project():
 @pytest.fixture()
 def figstackmanager(qtbot):
     figstackmanager = FigureStackManager()
-    # qtbot.addWidget(figstackmanager)
+    qtbot.addWidget(figstackmanager)
     figstackmanager.show()
     qtbot.waitForWindowShown(figstackmanager)
     return figstackmanager
@@ -61,5 +62,27 @@ def test_figstackmanager(figstackmanager, project):
         figstackmanager.stack.setCurrentIndex(index)
 
 
+def test_copy_to_clipboard(qtbot, figstackmanager, project):
+    """
+    Test that copying figures to the clipboard works as expected.
+    """
+    wldset = project.get_wldset('3040002_15min')
+    figstackmanager.set_gluedf(wldset.get_glue_at(-1))
+
+    for index in range(figstackmanager.stack.count()):
+        figstackmanager.stack.setCurrentIndex(index)
+        qtbot.wait(300)
+
+        QApplication.clipboard().clear()
+        assert QApplication.clipboard().text() == ''
+        assert QApplication.clipboard().image().isNull()
+
+        qtbot.mouseClick(
+            figstackmanager.figmanagers[index].btn_copy_to_clipboard,
+            Qt.LeftButton)
+
+        assert not QApplication.clipboard().image().isNull()
+
+
 if __name__ == "__main__":
-    pytest.main(['-x', __file__, '-v', '-rw', '-s'])
+    pytest.main(['-x', __file__, '-v', '-rw'])
