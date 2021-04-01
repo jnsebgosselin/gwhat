@@ -81,13 +81,11 @@ class RechgEvalWidget(QFrame):
         syrange_tooltip = (
             """
             <b>Specific yield (Sy) range</b>
-            <br><br>
-            Only models with an estimated specific yield  that falls inside
-            this range of values are retained as behavioural.
-            <br><br>
-            According to Meinzer (1923), the <b>specific yield</b> is the
+            <p>According to Meinzer (1923), the <i>specific yield</i> is the
             ratio of the volume of water a rock or soil yield by gravity
-            after being saturated to its own volume.
+            after being saturated to its own volume.</p>
+            <p>Only models with an estimated specific yield  that falls inside
+            this range of values are retained as behavioural.</p>
             """
             )
 
@@ -108,11 +106,15 @@ class RechgEvalWidget(QFrame):
         # Setup the runoff coefficient (Cro) range.
         cro_tooltip = (
             """
-            The runoff coefficient (Cro) is a dimensionless coefficient
+            <b>Runoff coefficient (Cro) range</b>
+            <p>The <i>runoff coefficient</i> is a dimensionless coefficient
             relating the amount of runoff to the amount of precipitation
             received. It is a larger value for areas with low infiltration
             and high runoff (pavement, steep gradient), and lower for
-            permeable, well vegetated areas (forest, flat land).
+            permeable, well vegetated areas (forest, flat land).</p>
+            <p>Groudwater recharge will be evaluated for a set of evenly
+            spaced Cro values within the specified range using an
+            increment of 0.01.</p>
             """
             )
         cro_label = QLabel('Cro:')
