@@ -1631,7 +1631,7 @@ def calculate_mrc(t, h, periods, mrctype=1):
         return A, B, hp, RMSE
 
     # ---- Optimization
-    print('\n---- MRC calculation started ----\n')
+    print('---- MRC calculation started ----')
     print('mrctype = %s' % (['Linear', 'Exponential'][mrctype]))
 
     tstart = clock()
@@ -1750,7 +1750,7 @@ def calculate_mrc(t, h, periods, mrctype=1):
 
     tend = clock()
     print('TIME = %0.3f sec' % (tend-tstart))
-    print('\n---- FIN ----\n')
+    print('---- FIN ----')
 
     return A, B, hp, RMSE
 

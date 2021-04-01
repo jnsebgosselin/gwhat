@@ -45,11 +45,14 @@ class RechgEvalWorker(QObject):
         self.CM = 4
         self.deltat = 0
 
+        # Models parameters space.
         self.Sy = (0, 1)
         self.Cro = (0, 1)
         self.RASmax = (0, 150)
-
         self.glue_pardist_res = 'fine'
+
+        self.rmse_cutoff = 0
+        self.rmse_cutoff_enabled = 0
 
     @property
     def language(self):
@@ -196,7 +199,13 @@ class RechgEvalWorker(QObject):
                 Sy0, self.wlobs*1000, rechg[ts:te])
             if SyOpt is not None:
                 Sy0 = SyOpt
-                if SyOpt >= min(self.Sy) and SyOpt <= max(self.Sy):
+
+                # Check if the model respected the cutoff criteria if any.
+                rmse_cutoff_value = (
+                    self.rmse_cutoff if self.rmse_cutoff_enabled else RMSE)
+                if (SyOpt >= self.Sy[0] and
+                        SyOpt <= self.Sy[1] and
+                        RMSE <= rmse_cutoff_value):
                     set_RMSE.append(RMSE)
                     set_recharge.append(rechg)
                     sets_waterlevels.append(wlvlest)
@@ -213,16 +222,19 @@ class RechgEvalWorker(QObject):
         # ---- Format results
         glue_rawdata = {}
         glue_rawdata['count'] = len(set_RMSE)
-        glue_rawdata['RMSE'] = set_RMSE
-        glue_rawdata['params'] = {'Sy': set_Sy,
-                                  'RASmax': set_RASmax,
-                                  'Cru': set_Cru,
+        glue_rawdata['RMSE'] = np.array(set_RMSE)
+        glue_rawdata['params'] = {'Sy': np.array(set_Sy),
+                                  'RASmax': np.array(set_RASmax),
+                                  'Cru': np.array(set_Cru),
                                   'tmelt': self.TMELT,
                                   'CM': self.CM,
                                   'deltat': self.deltat}
         glue_rawdata['ranges'] = {'Sy': self.Sy,
                                   'Cro': self.Cro,
                                   'RASmax': self.RASmax}
+        glue_rawdata['cutoff'] = {
+            'rmse_cutoff': self.rmse_cutoff,
+            'rmse_cutoff_enabled': self.rmse_cutoff_enabled}
 
         glue_rawdata['water levels'] = {}
         glue_rawdata['water levels']['time'] = self.twlvl
@@ -434,7 +446,6 @@ class RechgEvalWorker(QObject):
 
     @staticmethod
     def mrc2rechg(t, hobs, A, B, z, Sy):
-
         """
         Calculate groundwater recharge from the Master Recession Curve (MRC)
         equation defined by the parameters A and B, the water level time series
