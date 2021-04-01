@@ -204,29 +204,36 @@ class RechgEvalWidget(QFrame):
 
 
         # ---- Layout ----
+        # Setup the scroll area.
+        scroll_area_widget = QFrame()
+        scroll_area_widget.setObjectName("viewport")
+        scroll_area_widget.setStyleSheet(
+            "#viewport {background-color:transparent;}")
+
+        scroll_area_layout = QGridLayout(scroll_area_widget)
+        scroll_area_layout.setContentsMargins(10, 5, 10, 0)
+
+        scroll_area_layout.addWidget(params_space_group, 0, 0)
+        scroll_area_layout.addWidget(secondary_group, 1, 0)
+        scroll_area_layout.setRowStretch(3, 100)
 
         qtitle = QLabel('Parameter Range')
         qtitle.setAlignment(Qt.AlignCenter)
 
-        sa = QScrollArea()
-        sa.setWidget(params_group)
-        sa.setWidgetResizable(True)
-        sa.setFrameStyle(0)
-        sa.setStyleSheet("QScrollArea {background-color:transparent;}")
-        sa.setSizePolicy(QSizePolicy(QSizePolicy.Ignored,
-                                     QSizePolicy.Preferred))
+        scroll_area = QScrollArea()
+        scroll_area.setWidget(scroll_area_widget)
+        scroll_area.setWidgetResizable(True)
+        scroll_area.setFrameStyle(0)
+        scroll_area.setStyleSheet(
+            "QScrollArea {background-color:transparent;}")
 
         # Setup the main layout.
         main_layout = QGridLayout(self)
         main_layout.setContentsMargins(0, 0, 0, 10)
-        main_layout.addWidget(qtitle, 0, 0)
-        main_layout.addWidget(HSep(), 1, 0)
-        main_layout.addWidget(sa, 2, 0)
-        main_layout.addWidget(HSep(), 3, 0)
-        main_layout.setRowMinimumHeight(4, 5)
-        main_layout.addWidget(self.setup_toolbar(), 5, 0)
-        main_layout.setRowStretch(2, 100)
-        main_layout.setVerticalSpacing(5)
+        main_layout.addWidget(scroll_area, 0, 0)
+        main_layout.addWidget(self.setup_toolbar(), 1, 0)
+        main_layout.setRowStretch(0, 1)
+        main_layout.setVerticalSpacing(10)
 
     def setup_toolbar(self):
         """Setup the toolbar of the widget. """
