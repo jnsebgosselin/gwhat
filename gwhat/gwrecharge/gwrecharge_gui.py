@@ -335,6 +335,13 @@ class RechgEvalWidget(QFrame):
         """
         if gluedf is not None:
             try:
+                # This was introduced in gwhat 0.5.1.
+                self.rmsecutoff_sbox.setValue(gluedf['cutoff']['rmse_cutoff'])
+                self.rmsecutoff_cbox.setChecked(
+                    gluedf['cutoff']['rmse_cutoff_enabled'])
+            except KeyError:
+                pass
+            try:
                 self.QSy_min.setValue(min(gluedf['ranges']['Sy']))
                 self.QSy_max.setValue(max(gluedf['ranges']['Sy']))
             except KeyError:
@@ -403,6 +410,10 @@ class RechgEvalWidget(QFrame):
         self.rechg_worker.TMELT = self.Tmelt
         self.rechg_worker.CM = self.CM
         self.rechg_worker.deltat = self.deltaT
+
+        self.rechg_worker.rmse_cutoff = self.rmsecutoff_sbox.value()
+        self.rechg_worker.rmse_cutoff_enabled = int(
+            self.rmsecutoff_cbox.isChecked())
 
         # Set the data and check for errors.
         error = self.rechg_worker.load_data(self.wxdset, self.wldset)
