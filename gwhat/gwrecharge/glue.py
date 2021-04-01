@@ -246,6 +246,7 @@ class GLUEDataFrame(GLUEDataFrameBase):
         self.store['RMSE'] = data['RMSE']
         self.store['params'] = data['params']
         self.store['ranges'] = data['ranges']
+        self.store['cutoff'] = data['cutoff']
 
         # Store the piezometric and weather stations info.
         self.store['wlinfo'] = data['wlinfo']
