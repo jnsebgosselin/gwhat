@@ -1,6 +1,6 @@
 ![Logo](https://github.com/jnsebgosselin/WHAT/blob/master/Images/WHAT_banner_lowres(150).png)
 ====
-Copyright 2014-2020 © GWHAT Project Contributors.<br>
+Copyright 2014-2021 © GWHAT Project Contributors.<br>
 Licensed under the terms of the GNU-GPLv3
 
 # Project details and build status
