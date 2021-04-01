@@ -268,14 +268,14 @@ class RechgEvalWidget(QFrame):
             "All models whose RMSE falls above this RMSE cutoff value "
             "are discarded as non-behavioural.")
 
-        self.rmsecutoff_cbox = QCheckBox('RMSE:')
-        self.rmsecutoff_cbox.setToolTip(rmsecutoff_tooltip)
-        self.rmsecutoff_cbox.toggled.connect(self.rmsecutoff_sbox.setEnabled)
-
         self.rmsecutoff_sbox = QDoubleSpinBox(0, 1)
         self.rmsecutoff_sbox.setRange(0, 99999)
         self.rmsecutoff_sbox.setEnabled(False)
         self.rmsecutoff_sbox.setToolTip(rmsecutoff_tooltip)
+
+        self.rmsecutoff_cbox = QCheckBox('RMSE:')
+        self.rmsecutoff_cbox.setToolTip(rmsecutoff_tooltip)
+        self.rmsecutoff_cbox.toggled.connect(self.rmsecutoff_sbox.setEnabled)
 
         rmsecutoff_label = QLabel('mm')
         rmsecutoff_label.setToolTip(rmsecutoff_tooltip)
