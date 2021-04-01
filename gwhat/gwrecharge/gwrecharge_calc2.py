@@ -434,7 +434,6 @@ class RechgEvalWorker(QObject):
 
     @staticmethod
     def mrc2rechg(t, hobs, A, B, z, Sy):
-
         """
         Calculate groundwater recharge from the Master Recession Curve (MRC)
         equation defined by the parameters A and B, the water level time series
