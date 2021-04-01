@@ -26,7 +26,6 @@ from gwhat.widgets.layout import HSep
 from gwhat.gwrecharge.gwrecharge_calc2 import RechgEvalWorker
 from gwhat.gwrecharge.gwrecharge_plot_results import FigureStackManager
 from gwhat.gwrecharge.glue import GLUEDataFrameBase
-from gwhat.gwrecharge.models_distplot import ModelsDistplotWidget
 from gwhat.utils.icons import QToolButtonSmall, get_iconsize, get_icon
 from gwhat.utils.qthelpers import create_toolbutton
 
