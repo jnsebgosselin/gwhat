@@ -44,7 +44,7 @@ class RechgEvalWorker(QObject):
         self.TMELT = 0
         self.CM = 4
         self.deltat = 0
-
+        # Models parameters space.
         self.Sy = (0, 1)
         self.Cro = (0, 1)
         self.RASmax = (0, 150)
@@ -213,10 +213,10 @@ class RechgEvalWorker(QObject):
         # ---- Format results
         glue_rawdata = {}
         glue_rawdata['count'] = len(set_RMSE)
-        glue_rawdata['RMSE'] = set_RMSE
-        glue_rawdata['params'] = {'Sy': set_Sy,
-                                  'RASmax': set_RASmax,
-                                  'Cru': set_Cru,
+        glue_rawdata['RMSE'] = np.array(set_RMSE)
+        glue_rawdata['params'] = {'Sy': np.array(set_Sy),
+                                  'RASmax': np.array(set_RASmax),
+                                  'Cru': np.array(set_Cru),
                                   'tmelt': self.TMELT,
                                   'CM': self.CM,
                                   'deltat': self.deltat}
@@ -434,7 +434,6 @@ class RechgEvalWorker(QObject):
 
     @staticmethod
     def mrc2rechg(t, hobs, A, B, z, Sy):
-
         """
         Calculate groundwater recharge from the Master Recession Curve (MRC)
         equation defined by the parameters A and B, the water level time series
